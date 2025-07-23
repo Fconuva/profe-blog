@@ -1,25 +1,28 @@
-const { documentToHtmlString } = require('@contentful/rich-text-html-renderer');
+    const { documentToHtmlString } = require('@contentful/rich-text-html-renderer');
 
-module.exports = function(eleventyConfig) {
-  // Copia archivos estáticos (como la carpeta de imágenes) a la salida final
-  eleventyConfig.addPassthroughCopy("imagenes");
+    module.exports = function(eleventyConfig) {
+      // Copia carpetas y archivos estáticos
+      eleventyConfig.addPassthroughCopy("imagenes");
+      eleventyConfig.addPassthroughCopy("*.html"); // Copia todos los archivos HTML a la raíz
+      eleventyConfig.addPassthroughCopy("sitemap.xml");
 
-  // Filtro para convertir el Rich Text de Contentful a HTML
-  eleventyConfig.addShortcode("documentToHtml", (document) => {
-    return documentToHtmlString(document);
-  });
+      // Filtro para Rich Text de Contentful
+      eleventyConfig.addShortcode("documentToHtml", (document) => {
+        return documentToHtmlString(document);
+      });
 
-  // Filtro para formatear fechas
-  eleventyConfig.addFilter("readableDate", (dateObj) => {
-    return new Date(dateObj).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
-  });
+      // Filtro para fechas
+      eleventyConfig.addFilter("readableDate", (dateObj) => {
+        return new Date(dateObj).toLocaleDateString('es-CL', { year: 'numeric', month: 'long', day: 'numeric' });
+      });
 
-  return {
-    dir: {
-      input: ".",
-      includes: "_includes",
-      data: "_data",
-      output: "_site" // La carpeta donde se generará el sitio final
-    }
-  };
-};
+      return {
+        dir: {
+          input: ".",
+          includes: "_includes",
+          data: "_data",
+          output: "_site"
+        }
+      };
+    };
+    

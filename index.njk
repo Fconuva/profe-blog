@@ -1,0 +1,32 @@
+---
+layout: layout.njk
+title: "Blog de un Profesor"
+---
+
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-4xl font-black text-blue-700 mb-8">{{ title }}</h1>
+    
+    <div class="space-y-12">
+        {# Bucle que recorre los artículos obtenidos de Contentful #}
+        {% for post in contentful %}
+            <article>
+                <h2 class="text-3xl font-bold mb-2">
+                    {# Usamos post.title que coincide con el campo "Title" de Contentful #}
+                    <a href="/blog/{{ post.title | slug }}/" class="text-gray-800 hover:text-blue-700">{{ post.title }}</a>
+                </h2>
+                {# Usamos post.fecha que coincide con el nuevo campo "Fecha" #}
+                <p class="text-gray-500 mb-4">{{ post.fecha | readableDate }}</p>
+                
+                {# Usamos post.image que coincide con el campo "Image" #}
+                {% if post.image %}
+                    <img src="https://{{ post.image.fields.file.url }}" alt="{{ post.image.fields.description }}" class="rounded-lg mb-4">
+                {% endif %}
+
+                {# Usamos post.body que coincide con el campo "Body" #}
+                <div class="prose max-w-none">
+                    {% documentToHtml post.body %}
+                </div>
+            </article>
+        {% endfor %}
+    </div>
+</div>

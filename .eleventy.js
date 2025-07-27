@@ -6,7 +6,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("sitemap.xml");
   eleventyConfig.addPassthroughCopy("googlef1002b0f2fdf6e22.html");
 
-  // Copia de páginas HTML estáticas y carpetas
+  // Copia de páginas HTML y carpetas que no son procesadas por Nunjucks
   eleventyConfig.addPassthroughCopy("portafolio.html");
   eleventyConfig.addPassthroughCopy("BINGO.html");
   eleventyConfig.addPassthroughCopy("rosco.html");
@@ -15,6 +15,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("formulario-contexto");
   eleventyConfig.addPassthroughCopy("contacto");
   eleventyConfig.addPassthroughCopy("galeria"); // Nueva carpeta de galería
+  eleventyConfig.addPassthroughCopy("success");
 
   // Filtro para Rich Text de Contentful
   eleventyConfig.addShortcode("documentToHtml", (document) => {

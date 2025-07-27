@@ -4,7 +4,7 @@ title: "Página Principal"
 ---
 
 <!-- Encabezado Principal (Hero) con Carrusel Enlazado -->
-<header id="inicio" class="relative w-full h-80 md:h-96 lg:h-[450px] overflow-hidden">
+<header id="inicio" class="relative w-full h-80 md:h-96 lg:h-[450px] overflow-hidden group">
     <a href="contacto.html" class="absolute inset-0 z-10" aria-label="Contactar">
         <!-- Slides del Carrusel -->
         <div class="hero-slide active" style="background-image: url('/imagenes/banner1.jpg');"></div>
@@ -12,6 +12,18 @@ title: "Página Principal"
         <!-- Se añadió una clase para el ajuste de la imagen -->
         <div class="hero-slide banner-evaluacion" style="background-image: url('/imagenes/banner3.jpg');"></div>
     </a>
+
+    <!-- BOTONES DE NAVEGACIÓN DEL CARRUSEL -->
+    <button id="prev-slide-btn" class="absolute top-1/2 left-4 transform -translate-y-1/2 z-20 bg-black bg-opacity-30 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+        </svg>
+    </button>
+    <button id="next-slide-btn" class="absolute top-1/2 right-4 transform -translate-y-1/2 z-20 bg-black bg-opacity-30 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+    </button>
 </header>
 
 <!-- El resto del contenido de la página principal -->
@@ -68,3 +80,52 @@ title: "Página Principal"
         </div>
     </div>
 </section>
+
+<!-- SCRIPT PARA EL CARRUSEL ACTUALIZADO -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const slides = document.querySelectorAll('.hero-slide');
+        const prevBtn = document.getElementById('prev-slide-btn');
+        const nextBtn = document.getElementById('next-slide-btn');
+        
+        if (slides.length > 0) {
+            let currentSlide = 0;
+            let slideInterval = setInterval(nextSlide, 5000);
+
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.classList.toggle('active', i === index);
+                });
+            }
+
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function prevSlide() {
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(currentSlide);
+            }
+
+            function resetInterval() {
+                clearInterval(slideInterval);
+                slideInterval = setInterval(nextSlide, 5000);
+            }
+
+            nextBtn.addEventListener('click', (e) => {
+                e.preventDefault(); // Evita que el enlace 'a' se active
+                e.stopPropagation(); // Detiene la propagación del clic al enlace 'a'
+                nextSlide();
+                resetInterval();
+            });
+
+            prevBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                prevSlide();
+                resetInterval();
+            });
+        }
+    });
+</script>

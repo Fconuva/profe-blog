@@ -7,14 +7,18 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("googlef1002b0f2fdf6e22.html");
 
   // Copia de páginas HTML y carpetas que no son procesadas por Nunjucks
+  // Estandarizamos a minúsculas para evitar errores
   eleventyConfig.addPassthroughCopy("portafolio.html");
-  eleventyConfig.addPassthroughCopy("BINGO.html");
+  eleventyConfig.addPassthroughCopy("bingo.html");
   eleventyConfig.addPassthroughCopy("rosco.html");
   eleventyConfig.addPassthroughCopy("ruleta.html");
   eleventyConfig.addPassthroughCopy("simulador.html");
+  eleventyConfig.addPassthroughCopy("generador-cv.html"); // Añadido por si falta
+  eleventyConfig.addPassthroughCopy("tesis.html"); // Añadido por si falta
+
   eleventyConfig.addPassthroughCopy("formulario-contexto");
   eleventyConfig.addPassthroughCopy("contacto");
-  eleventyConfig.addPassthroughCopy("galeria"); // Nueva carpeta de galería
+  eleventyConfig.addPassthroughCopy("galeria");
   eleventyConfig.addPassthroughCopy("success");
 
   // Filtro para Rich Text de Contentful

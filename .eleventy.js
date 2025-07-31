@@ -3,12 +3,12 @@ const { documentToHtmlString } = require('@contentful/rich-text-html-renderer');
 module.exports = function(eleventyConfig) {
   // Copia de recursos estáticos
   eleventyConfig.addPassthroughCopy("css");
-  eleventyConfig.addPassthroughCopy("main.js"); // <--- AÑADIDO
+  eleventyConfig.addPassthroughCopy("main.js");
   eleventyConfig.addPassthroughCopy("imagenes");
   eleventyConfig.addPassthroughCopy("sitemap.xml");
   eleventyConfig.addPassthroughCopy("googlef1002b0f2fdf6e22.html");
 
-  // Copia de páginas HTML y carpetas
+  // Copia de páginas HTML y carpetas ESTATICAS
   eleventyConfig.addPassthroughCopy("portafolio.html");
   eleventyConfig.addPassthroughCopy("bingo.html");
   eleventyConfig.addPassthroughCopy("rosco.html");
@@ -19,8 +19,10 @@ module.exports = function(eleventyConfig) {
   
   eleventyConfig.addPassthroughCopy("formulario-contexto");
   eleventyConfig.addPassthroughCopy("contacto");
-  eleventyConfig.addPassthroughCopy("tips-carrera-docente"); // <--- ACTUALIZADO DE "galeria"
   eleventyConfig.addPassthroughCopy("success");
+  
+  // La línea incorrecta para "tips-carrera-docente" ha sido eliminada.
+  // Eleventy procesará los archivos .njk de esa carpeta automáticamente.
 
   // Filtros para Plantillas
   eleventyConfig.addShortcode("documentToHtml", (document) => {

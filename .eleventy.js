@@ -17,6 +17,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addPassthroughCopy("main.js");
   eleventyConfig.addPassthroughCopy("imagenes");
+  // Allow Netlify _redirects file to be copied to output
+  eleventyConfig.addPassthroughCopy("_redirects");
   eleventyConfig.addPassthroughCopy("sitemap.xml");
 
   // Evitar procesar archivos HTML raíz que duplican carpetas con index.html

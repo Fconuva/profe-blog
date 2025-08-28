@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Juego de Bingo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+        /* Estilos para la bola principal */
+        .ball {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+            box-shadow: inset -5px -5px 10px rgba(0,0,0,0.3), 2px 2px 5px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        .ball-b { background: linear-gradient(135deg, #4299e1, #3182ce); }
+        .ball-i { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .ball-n { background: linear-gradient(135deg, #f7fafc, #e2e8f0); color: #2d3748; text-shadow: none;}
+        .ball-g { background: linear-gradient(135deg, #48bb78, #38a169); }
+        .ball-o { background: linear-gradient(135deg, #f6ad55, #ed8936); }
+
+        /* Estilos para las bolas del historial */
+        .history-ball {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        /* Estilos para el tablero */
+        .board-number {
+            transition: all 0.3s ease;
+            width: 100%;
+            aspect-ratio: 1 / 1;
+        }
+        .board-number.called {
+            transform: scale(1.1);
+            color: white;
+        }
+        .board-number.called.b { background-color: #3182ce; }
+        .board-number.called.i { background-color: #dc2626; }
+        .board-number.called.n { background-color: #a0aec0; }
+        .board-number.called.g { background-color: #38a169; }
+        .board-number.called.o { background-color: #ed8936; }
+
+        /* Animación de la tómbola */
+        @keyframes spin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.05); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+        .tombola-animation {
+            animation: spin 5s linear infinite;
+        }
+        
+        /* Animación de pulso para títulos BINGO */
+        @keyframes pulse-b { 0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #4299e1, 0 0 15px #4299e1; } 50% { text-shadow: 0 0 10px #fff, 0 0 20px #3182ce, 0 0 30px #3182ce; } }
+        @keyframes pulse-i { 0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #ef4444, 0 0 15px #ef4444; } 50% { text-shadow: 0 0 10px #fff, 0 0 20px #dc2626, 0 0 30px #dc2626; } }
+        @keyframes pulse-n { 0%, 100% { text-shadow: 0 0 5px #ccc, 0 0 10px #a0aec0, 0 0 15px #a0aec0; } 50% { text-shadow: 0 0 10px #ccc, 0 0 20px #718096, 0 0 30px #718096; } }
+        @keyframes pulse-g { 0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #48bb78, 0 0 15px #48bb78; } 50% { text-shadow: 0 0 10px #fff, 0 0 20px #38a169, 0 0 30px #38a169; } }
+        @keyframes pulse-o { 0%, 100% { text-shadow: 0 0 5px #fff, 0 0 10px #f6ad55, 0 0 15px #f6ad55; } 50% { text-shadow: 0 0 10px #fff, 0 0 20px #ed8936, 0 0 30px #ed8936; } }
+
+        .bingo-title-letter.b { animation: pulse-b 2s infinite ease-in-out; }
+        .bingo-title-letter.i { animation: pulse-i 2s infinite ease-in-out; }
+        .bingo-title-letter.n { animation: pulse-n 2s infinite ease-in-out; }
+        .bingo-title-letter.g { animation: pulse-g 2s infinite ease-in-out; }
+        .bingo-title-letter.o { animation: pulse-o 2s infinite ease-in-out; }
+
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <div class="container mx-auto p-4 max-w-5xl">
+        <header class="text-center my-6">
+            <h1 class="text-4xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 via-red-500 to-orange-500">
+                SALA DE BINGO
+            </h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">Presiona "Siguiente Número" para empezar a jugar.</p>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Columna Izquierda: Tómbola, Controles e Historial -->
+            <div class="md:col-span-1 flex flex-col items-center space-y-6 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <h2 class="text-2xl font-semibold">Tómbola</h2>
+                <div id="tombola" class="w-48 h-48 bg-gray-200 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                    <svg id="tombola-icon" xmlns="http://www.w3.org/2000/svg" width="96" height="96" fill="currentColor" class="bi bi-dice-5-fill text-gray-500 dark:text-gray-400 tombola-animation" viewBox="0 0 16 16">
+                      <path d="M3.055 8.247a.5.5 0 1 0 .707.707.5.5 0 0 0-.707-.707zm0 4.242a.5.5 0 1 0 .707.708.5.5 0 0 0-.707-.708zm0-8.484a.5.5 0 1 0 .708.707.5.5 0 0 0-.708-.707zm4.242 0a.5.5 0 1 0 .707.707.5.5 0 0 0-.707-.707zm4.243 0a.5.5 0 1 0 .707.707.5.5 0 0 0-.707-.707zm0 4.242a.5.5 0 1 0 .707.708.5.5 0 0 0-.707-.708zm0 4.243a.5.5 0 1 0 .708-.707.5.5 0 0 0-.708.707zm-4.243 0a.5.5 0 1 0 .707-.707.5.5 0 0 0-.707.707zM12 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h8z"/>
+                    </svg>
+                </div>
+
+                <div id="current-number-display" class="w-48 h-48 flex items-center justify-center">
+                    <div id="placeholder-text" class="text-gray-400 dark:text-gray-500 text-center">Esperando número...</div>
+                </div>
+
+                <div class="w-full space-y-3 pt-4">
+                    <button id="next-number-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">
+                        Siguiente Número
+                    </button>
+                    <button id="reset-btn" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">
+                        Reiniciar Juego
+                    </button>
+                </div>
+
+                <!-- Historial de Números Llamados -->
+                <div class="w-full pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-center mb-3">Historial</h3>
+                    <div id="called-numbers-list" class="flex flex-wrap-reverse gap-2 justify-center h-48 overflow-y-auto p-2 bg-gray-100 dark:bg-gray-900 rounded-lg">
+                        <!-- Bolas del historial se agregan aquí -->
+                    </div>
+                </div>
+                
+                <!-- Generador de Cartones -->
+                <div class="w-full pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <h3 class="text-xl font-semibold text-center mb-3">Imprimir Cartones</h3>
+                    <div class="space-y-3">
+                        <input type="number" id="card-quantity" min="1" max="100" value="6" class="w-full p-2 border border-gray-300 dark:border-gray-600 rounded-lg text-center bg-gray-50 dark:bg-gray-700">
+                        <button id="generate-cards-btn" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-lg transition-transform transform hover:scale-105 shadow-md">
+                            Generar y Descargar Cartones
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Columna Derecha: Tablero de Números -->
+            <div class="md:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                <div class="grid grid-cols-5 gap-2 text-center mb-4">
+                    <div class="text-4xl font-bold text-blue-500 bingo-title-letter b">B</div>
+                    <div class="text-4xl font-bold text-red-500 bingo-title-letter i">I</div>
+                    <div class="text-4xl font-bold text-gray-400 bingo-title-letter n">N</div>
+                    <div class="text-4xl font-bold text-green-500 bingo-title-letter g">G</div>
+                    <div class="text-4xl font-bold text-orange-500 bingo-title-letter o">O</div>
+                </div>
+                <div id="bingo-board" class="grid grid-cols-15 gap-1 md:gap-2">
+                    <!-- Los números se generarán aquí con JS -->
+                </div>
+            </div>
+        </main>
+        
+        <footer class="text-center mt-8 text-sm text-gray-500 dark:text-gray-400">
+            <p>Creado con HTML, TailwindCSS y JavaScript.</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- Elementos del DOM ---
+            const board = document.getElementById('bingo-board');
+            const nextBtn = document.getElementById('next-number-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const currentNumberDisplay = document.getElementById('current-number-display');
+            const tombolaIcon = document.getElementById('tombola-icon');
+            const placeholderText = document.getElementById('placeholder-text');
+            const calledNumbersList = document.getElementById('called-numbers-list');
+            const generateCardsBtn = document.getElementById('generate-cards-btn');
+            const cardQuantityInput = document.getElementById('card-quantity');
+
+            // --- Estado del Juego ---
+            const TOTAL_NUMBERS = 75;
+            let availableNumbers = [];
+            let calledNumbers = new Set();
+            let synth;
+            let speech = new SpeechSynthesisUtterance();
+            speech.lang = "es-ES";
+            speech.volume = 1;
+            speech.rate = 0.9;
+            speech.pitch = 1;
+
+            // --- Inicialización ---
+            function init() {
+                if (!synth) {
+                    synth = new Tone.Synth().toDestination();
+                }
+                availableNumbers = Array.from({ length: TOTAL_NUMBERS }, (_, i) => i + 1);
+                shuffleArray(availableNumbers);
+                calledNumbers.clear();
+
+                board.innerHTML = '';
+                const boardFragment = document.createDocumentFragment();
+                for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+                    const numberCell = document.createElement('div');
+                    numberCell.id = `number-${i}`;
+                    numberCell.textContent = i;
+                    numberCell.className = `board-number flex items-center justify-center font-semibold bg-gray-200 dark:bg-gray-700 rounded-md text-sm md:text-base`;
+                    boardFragment.appendChild(numberCell);
+                }
+                board.appendChild(boardFragment);
+                
+                reorderBoardForBingo();
+
+                currentNumberDisplay.innerHTML = '';
+                currentNumberDisplay.appendChild(placeholderText);
+                placeholderText.textContent = "Esperando número...";
+                placeholderText.style.display = 'block';
+                tombolaIcon.classList.add('tombola-animation');
+                
+                calledNumbersList.innerHTML = '';
+
+                nextBtn.disabled = false;
+                nextBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                console.log("Juego de Bingo inicializado.");
+            }
+
+            // --- Lógica del Juego ---
+            function drawNextNumber() {
+                if (availableNumbers.length === 0) {
+                    nextBtn.disabled = true;
+                    nextBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    placeholderText.textContent = "¡Fin del juego!";
+                    tombolaIcon.classList.remove('tombola-animation');
+                    return;
+                }
+
+                if (Tone.context.state !== 'running') {
+                    Tone.start();
+                }
+
+                const number = availableNumbers.pop();
+                calledNumbers.add(number);
+                const letter = getBingoLetter(number);
+
+                const cell = document.getElementById(`number-${number}`);
+                cell.classList.add('called', letter.toLowerCase());
+
+                displayCurrentBall(number, letter);
+                updateHistory(number, letter);
+                playSound();
+                speakNumber(number, letter);
+            }
+
+            function displayCurrentBall(number, letter) {
+                placeholderText.style.display = 'none';
+                currentNumberDisplay.innerHTML = ''; 
+                
+                const ball = document.createElement('div');
+                ball.className = `ball ball-${letter.toLowerCase()}`;
+                
+                const letterSpan = document.createElement('span');
+                letterSpan.textContent = letter;
+                letterSpan.className = 'text-2xl absolute -top-1 -left-1 opacity-50';
+
+                const numberSpan = document.createElement('span');
+                numberSpan.textContent = number;
+
+                ball.appendChild(letterSpan);
+                ball.appendChild(numberSpan);
+
+                currentNumberDisplay.appendChild(ball);
+            }
+
+            function updateHistory(number, letter) {
+                const historyBall = document.createElement('div');
+                historyBall.className = `history-ball ball-${letter.toLowerCase()}`;
+                historyBall.textContent = number;
+                calledNumbersList.prepend(historyBall);
+            }
+
+            function playSound() {
+                try {
+                    synth.triggerAttackRelease("C4", "8n");
+                } catch (error) {
+                    console.error("Error al reproducir el sonido:", error);
+                }
+            }
+
+            function speakNumber(number, letter) {
+                speech.text = `${letter}. ${number}`;
+                window.speechSynthesis.speak(speech);
+            }
+
+            // --- Generador de Cartones ---
+            function generateBingoCard() {
+                const card = {
+                    B: new Set(), I: new Set(), N: new Set(), G: new Set(), O: new Set()
+                };
+
+                // Generar números para cada columna
+                while(card.B.size < 5) card.B.add(Math.floor(Math.random() * 15) + 1);
+                while(card.I.size < 5) card.I.add(Math.floor(Math.random() * 15) + 16);
+                while(card.N.size < 4) card.N.add(Math.floor(Math.random() * 15) + 31); // 4 números para N
+                while(card.G.size < 5) card.G.add(Math.floor(Math.random() * 15) + 46);
+                while(card.O.size < 5) card.O.add(Math.floor(Math.random() * 15) + 61);
+
+                // Convertir Sets a Arrays para poder ordenarlos
+                const finalCard = {
+                    B: Array.from(card.B).sort((a,b) => a-b),
+                    I: Array.from(card.I).sort((a,b) => a-b),
+                    N: Array.from(card.N).sort((a,b) => a-b),
+                    G: Array.from(card.G).sort((a,b) => a-b),
+                    O: Array.from(card.O).sort((a,b) => a-b)
+                };
+                
+                // Insertar el espacio libre en el centro de la columna N
+                finalCard.N.splice(2, 0, 'FREE');
+                
+                return finalCard;
+            }
+
+            function generatePrintableHTML(quantity) {
+                let cardsHTML = '';
+                for (let i = 0; i < quantity; i++) {
+                    const cardData = generateBingoCard();
+                    cardsHTML += `
+                        <div class="bingo-card">
+                            <div class="header">B</div> <div class="header">I</div> <div class="header">N</div> <div class="header">G</div> <div class="header">O</div>
+                            ${[...Array(5)].map((_, rowIndex) => `
+                                <div class="cell">${cardData.B[rowIndex]}</div>
+                                <div class="cell">${cardData.I[rowIndex]}</div>
+                                <div class="cell">${cardData.N[rowIndex]}</div>
+                                <div class="cell">${cardData.G[rowIndex]}</div>
+                                <div class="cell">${cardData.O[rowIndex]}</div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                const printablePage = `
+                    <html>
+                        <head>
+                            <title>Cartones de Bingo para Imprimir</title>
+                            <style>
+                                @media print {
+                                    @page { size: A4; margin: 1cm; }
+                                    body { -webkit-print-color-adjust: exact; }
+                                }
+                                body { font-family: 'Poppins', sans-serif; display: flex; flex-wrap: wrap; gap: 20px; justify-content: center; }
+                                .bingo-card {
+                                    width: calc(50% - 20px);
+                                    max-width: 350px;
+                                    display: grid;
+                                    grid-template-columns: repeat(5, 1fr);
+                                    border: 2px solid black;
+                                    margin-bottom: 20px;
+                                    page-break-inside: avoid;
+                                }
+                                .header {
+                                    background-color: #007bff;
+                                    color: white;
+                                    font-size: 1.5rem;
+                                    font-weight: bold;
+                                    text-align: center;
+                                    padding: 5px;
+                                    border: 1px solid black;
+                                }
+                                .cell {
+                                    height: 50px;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    font-size: 1.2rem;
+                                    font-weight: 600;
+                                    border: 1px solid #ccc;
+                                }
+                                .cell:nth-child(13) { /* Espacio libre */
+                                    background-color: #f0f0f0;
+                                    font-size: 1rem;
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            ${cardsHTML}
+                        </body>
+                    </html>
+                `;
+                
+                const printWindow = window.open('', '_blank');
+                printWindow.document.write(printablePage);
+                printWindow.document.close();
+                printWindow.focus();
+                setTimeout(() => { printWindow.print(); }, 500);
+            }
+
+            // --- Funciones de Utilidad ---
+            function getBingoLetter(number) {
+                if (number <= 15) return 'B';
+                if (number <= 30) return 'I';
+                if (number <= 45) return 'N';
+                if (number <= 60) return 'G';
+                return 'O';
+            }
+
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+            }
+            
+            function reorderBoardForBingo() {
+                const columns = { B: [], I: [], N: [], G: [], O: [] };
+                for (let i = 1; i <= TOTAL_NUMBERS; i++) {
+                    const letter = getBingoLetter(i);
+                    const cell = document.getElementById(`number-${i}`);
+                    columns[letter].push(cell);
+                }
+
+                board.innerHTML = '';
+                board.className = 'grid grid-cols-5 gap-1 md:gap-2';
+
+                const letters = ['B', 'I', 'N', 'G', 'O'];
+                letters.forEach(letter => {
+                    const colDiv = document.createElement('div');
+                    colDiv.className = 'grid grid-rows-15 gap-1 md:gap-2';
+                    columns[letter].forEach(cell => colDiv.appendChild(cell));
+                    board.appendChild(colDiv);
+                });
+            }
+
+            // --- Event Listeners ---
+            nextBtn.addEventListener('click', drawNextNumber);
+            resetBtn.addEventListener('click', init);
+            generateCardsBtn.addEventListener('click', () => {
+                const quantity = parseInt(cardQuantityInput.value, 10);
+                if (quantity > 0 && quantity <= 100) {
+                    generatePrintableHTML(quantity);
+                } else {
+                    alert("Por favor, ingresa una cantidad entre 1 y 100.");
+                }
+            });
+
+            // --- Iniciar el juego ---
+            init();
+        });
+    </script>
+</body>
+</html>

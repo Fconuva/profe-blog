@@ -1,20 +1,36 @@
+const { createClient } = require('contentful');
 require('dotenv').config();
-const contentful = require('contentful');
-
-const client = contentful.createClient({
-  space: process.env.CONTENTFUL_SPACE_ID,
-  accessToken: process.env.CONTENTFUL_ACCESS_TOKEN,
-});
 
 module.exports = async function() {
+  const space = process.env.CONTENTFUL_SPACE_ID;
+  const deliveryToken = process.env.CONTENTFUL_ACCESS_TOKEN;
+  const previewToken = process.env.CONTENTFUL_PREVIEW_TOKEN;
+
+  if (!space || (!deliveryToken && !previewToken)) {
+    // No hay credenciales, devolver vacío para no romper la build
+    return [];
+  }
+
+  const usePreview = process.env.CONTENTFUL_USE_PREVIEW === 'true';
+  const accessToken = usePreview && previewToken ? previewToken : deliveryToken;
+  const host = usePreview && previewToken ? 'preview.contentful.com' : 'cdn.contentful.com';
+
   try {
-    const entries = await client.getEntries({
-      content_type: 'blogPage', // Usa el API ID de tu modelo de contenido
-      order: '-fields.fecha' // Ordena los artículos por fecha, del más nuevo al más viejo
+    const client = createClient({
+      space,
+      accessToken,
+      host
     });
-    return entries.items.map(item => item.fields);
-  } catch (error) {
-    console.error("Error al obtener datos de Contentful:", error);
+
+    const entries = await client.getEntries();
+    // Mapear a un formato simple para templates
+    return entries.items.map(item => ({
+      ...item.fields,
+      sys: item.sys
+    }));
+  } catch (err) {
+    // Si falla, loguear y devolver vacío para no interrumpir el build
+    console.error('Error fetching Contentful entries:', err.message || err);
     return [];
   }
 };

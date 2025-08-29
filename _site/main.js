@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', () => {
             mobileMenuButton.setAttribute('aria-expanded', String(!expanded));
             mobileMenu.classList.toggle('hidden');
         });
-
         // Close on Escape
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {

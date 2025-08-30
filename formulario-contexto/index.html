@@ -6,6 +6,7 @@
     <title>Formulario de Contexto Profesional para Portafolio Docente 2025</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
@@ -318,8 +319,15 @@
 
     <script>
         function generarPDF() {
-            const { jsPDF } = window.jspdf;
-            const doc = new jsPDF();
+            try {
+                // Verificar que jsPDF esté cargado
+                if (typeof window.jspdf === 'undefined') {
+                    alert('Error: La librería jsPDF no se ha cargado correctamente. Por favor, recarga la página e intenta nuevamente.');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
 
             // Configuración del documento
             doc.setFont("helvetica");
@@ -349,7 +357,10 @@
                 yPosition += 10;
 
                 doc.setFont("helvetica", "normal");
-                const lines = doc.splitTextToSize(value || "No especificado", maxWidth);
+                const textValue = value || "No especificado";
+
+                // Usar una función más robusta para dividir texto
+                const lines = doc.splitTextToSize(textValue, maxWidth);
                 doc.text(lines, 20, yPosition);
                 yPosition += lines.length * 7 + 5;
             }
@@ -455,6 +466,10 @@
 
             // Descargar el PDF
             doc.save("formulario-contexto-profesional-2025.pdf");
+            } catch (error) {
+                console.error('Error al generar el PDF:', error);
+                alert('Ocurrió un error al generar el PDF. Por favor, verifica que todos los campos estén completos e intenta nuevamente. Error: ' + error.message);
+            }
         }
     </script>
 </body>

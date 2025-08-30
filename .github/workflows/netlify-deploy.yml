@@ -2,7 +2,8 @@ name: Build and deploy to Netlify
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, main ]
+  workflow_dispatch:
 
 jobs:
   build-deploy:
@@ -20,7 +21,8 @@ jobs:
           CONTENTFUL_SPACE_ID: ${{ secrets.CONTENTFUL_SPACE_ID }}
           CONTENTFUL_ACCESS_TOKEN: ${{ secrets.CONTENTFUL_ACCESS_TOKEN }}
           CONTENTFUL_PREVIEW_TOKEN: ${{ secrets.CONTENTFUL_PREVIEW_TOKEN }}
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
       - name: Build
         env:

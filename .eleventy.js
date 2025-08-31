@@ -53,8 +53,9 @@ module.exports = function(eleventyConfig) {
   // Ignorar específicamente cualquier index.html dentro de blog si existe
   eleventyConfig.ignores.add("blog/index.html");
   eleventyConfig.ignores.add("blog/post/index.html");
-  // Ignorar cualquier index.html en carpetas fuente que puedan entrar en conflicto
-  eleventyConfig.ignores.add("**/index.html");
+  // Solo ignorar index.html en carpetas que no queremos procesar
+  // PERMITIR que se procesen los index.html de las herramientas
+  // eleventyConfig.ignores.add("**/index.html");
   
   // La línea incorrecta para "tips-carrera-docente" ha sido eliminada.
   // Eleventy procesará los archivos .njk de esa carpeta automáticamente.

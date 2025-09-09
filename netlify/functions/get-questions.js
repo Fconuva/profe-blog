@@ -1,4 +1,4 @@
-const { neon } = require('@neon/serverless');
+const { neon } = require('@neondatabase/serverless');
 
 exports.handler = async (event, context) => {
   // Permitir GET y OPTIONS

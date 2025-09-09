@@ -41,6 +41,11 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("success");
   eleventyConfig.addPassthroughCopy("blog");
   eleventyConfig.addPassthroughCopy("Manuales");
+  // Copiar carpetas de la sección privada y herramientas temporales
+  eleventyConfig.addPassthroughCopy("privado");
+  eleventyConfig.addPassthroughCopy("Temporales");
+  // Copiar carpeta de funciones de Netlify
+  eleventyConfig.addPassthroughCopy("netlify");
 
   // Evitar procesar archivos HTML raíz que duplican carpetas con index.html
   const duplicates = [
@@ -53,6 +58,10 @@ module.exports = function(eleventyConfig) {
   // Ignorar específicamente cualquier index.html dentro de blog si existe
   eleventyConfig.ignores.add("blog/index.html");
   eleventyConfig.ignores.add("blog/post/index.html");
+  // Ignorar archivos en carpetas que se copian tal cual
+  eleventyConfig.ignores.add("privado/**");
+  eleventyConfig.ignores.add("Temporales/**");
+  eleventyConfig.ignores.add("netlify/**");
   // Solo ignorar index.html en carpetas que no queremos procesar
   // PERMITIR que se procesen los index.html de las herramientas
   // eleventyConfig.ignores.add("**/index.html");

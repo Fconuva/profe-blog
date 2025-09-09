@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Interrogación: La Metamorfosis (Adaptativa)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0;400;0;700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Lora', serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        
+        <header class="bg-white shadow-md rounded-xl p-6 mb-8 text-center border-l-4 border-purple-800">
+            <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Herramienta de Interrogación Adaptativa</h1>
+            <p class="text-xl md:text-2xl text-gray-700 mt-2">"La Metamorfosis" de Franz Kafka</p>
+        </header>
+
+        <!-- Pantalla de Inicio -->
+        <div id="setup-screen" class="bg-white shadow-md rounded-xl p-8 max-w-lg mx-auto">
+            <h2 class="text-2xl font-bold mb-6 text-center">Iniciar Nueva Evaluación</h2>
+            <div class="space-y-4">
+                <div>
+                    <label for="student-name" class="block text-sm font-medium text-gray-700">Nombre del Estudiante</label>
+                    <input type="text" id="student-name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: Javiera Rojas">
+                </div>
+                <div>
+                    <label for="student-course" class="block text-sm font-medium text-gray-700">Curso</label>
+                    <input type="text" id="student-course" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Ej: NM3-A">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Tipo de Evaluación (Adaptación)</label>
+                    <div class="mt-2 flex space-x-4 bg-gray-50 p-2 rounded-md">
+                        <label class="flex items-center">
+                            <input type="radio" name="evaluation-type" value="regular" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
+                            <span class="ml-2 text-sm text-gray-600">Regular</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="evaluation-type" value="neet" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                            <span class="ml-2 text-sm text-gray-600">NEET</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="evaluation-type" value="neep" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300">
+                            <span class="ml-2 text-sm text-gray-600">NEEP</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-8">
+                <button id="start-button" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Comenzar Interrogación
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Interrogación -->
+        <div id="interrogation-screen" class="hidden">
+            <div class="bg-white shadow-md rounded-xl p-8">
+                <div class="flex justify-between items-start border-b-2 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-2xl font-bold">Evaluando a: <span id="eval-student-name" class="text-indigo-600"></span></h2>
+                        <p class="text-gray-600">Curso: <span id="eval-student-course"></span></p>
+                        <p id="eval-type-display" class="text-sm font-medium text-purple-700 mt-1"></p>
+                    </div>
+                    <div id="final-score-container" class="text-right">
+                        <!-- El resultado se mostrará aquí -->
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">Preguntas Seleccionadas (Marcar puntaje y descartar una)</h3>
+                <div id="questions-container" class="space-y-6">
+                    <!-- Las preguntas se cargarán aquí dinámicamente -->
+                </div>
+
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button id="finalize-button" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                        Finalizar y Registrar Evaluación
+                    </button>
+                    <button id="cancel-button" class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados -->
+        <div id="results-screen" class="mt-12">
+            <div class="bg-white shadow-md rounded-xl p-8">
+                <div class="flex flex-col sm:flex-row justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold">Registro de Evaluaciones</h2>
+                    <div class="flex gap-2 mt-4 sm:mt-0">
+                        <button id="export-json" class="py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">Guardar Avance (JSON)</button>
+                        <label for="import-json" class="cursor-pointer py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-600 hover:bg-gray-700">
+                            Cargar Avance (JSON)
+                            <input type="file" id="import-json" class="hidden" accept=".json">
+                        </label>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estudiante</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Curso</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Puntaje Final</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nota</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Los resultados se agregarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal para Respuesta Ideal -->
+    <div id="answer-modal" class="modal fixed inset-0 bg-gray-800 bg-opacity-75 items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold">Respuesta Ideal</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+                </div>
+                <div id="modal-question" class="font-semibold mb-2"></div>
+                <div id="modal-answer" class="text-gray-700 prose"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // --- BANCO DE PREGUNTAS Y RESPUESTAS (PARA "LA METAMORFOSIS") ---
+        const questionBank = [
+            // Nivel Básico
+            { id: 1, level: 'Básico', question: '¿En qué se transforma Gregorio Samsa al despertar una mañana?', answer: 'Se transforma en un monstruoso insecto.' },
+            { id: 2, level: 'Básico', question: '¿Cuál era la profesión de Gregorio antes de su transformación?', answer: 'Era viajante de comercio, vendía telas.' },
+            { id: 3, level: 'Básico', question: '¿Quién es la primera persona que intenta ver a Gregorio en su habitación después de que no sale a trabajar?', answer: 'El procurista (gerente) de su trabajo.' },
+            { id: 4, level: 'Básico', question: 'Nombra a los tres miembros de la familia directa de Gregorio que viven con él.', answer: 'Su padre, su madre y su hermana Grete.' },
+            { id: 5, level: 'Básico', question: '¿Quién se encarga de alimentar a Gregorio al principio de su transformación?', answer: 'Su hermana Grete.' },
+            { id: 6, level: 'Básico', question: '¿Qué tipo de alimentos prefiere Gregorio después de convertirse en insecto?', answer: 'Prefiere alimentos en descomposición o podridos, como verduras viejas y queso rancio.' },
+            { id: 7, level: 'Básico', question: '¿Qué objeto le lanza su padre a Gregorio que se le incrusta en la espalda y le causa una grave herida?', answer: 'Una manzana.' },
+            { id: 8, level: 'Básico', question: 'Para ayudar económicamente, ¿qué trabajo consigue Grete?', answer: 'Consigue un trabajo como dependienta en una tienda.' },
+            { id: 9, level: 'Básico', question: '¿Qué hace la familia con la habitación de Gregorio para ganar más espacio y dinero?', answer: 'Alquilan una de las habitaciones de la casa a tres inquilinos.' },
+            { id: 10, level: 'Básico', question: '¿Qué instrumento musical toca Grete?', answer: 'Toca el violín.' },
+            { id: 11, level: 'Básico', question: '¿Qué ocurre cuando los inquilinos ven a Gregorio por primera vez?', answer: 'Se horrorizan, se niegan a pagar el alquiler y anuncian que se irán de inmediato sin pagar.' },
+            { id: 12, level: 'Básico', question: '¿Quién es la primera persona en proponer que deben deshacerse de Gregorio?', answer: 'Su hermana Grete.' },
+            { id: 13, level: 'Básico', question: '¿Cómo muere Gregorio?', answer: 'Muere solo en su habitación, debilitado por la herida de la manzana, la falta de alimento adecuado y la tristeza. Muere de inanición y agotamiento.' },
+            { id: 14, level: 'Básico', question: '¿Quién se encarga de deshacerse del cadáver de Gregorio?', answer: 'La asistenta (la criada).' },
+            { id: 15, level: 'Básico', question: '¿Qué hace la familia Samsa el día de la muerte de Gregorio?', answer: 'Salen de paseo al campo en tranvía, sintiéndose aliviados y optimistas sobre el futuro.' },
+
+            // Nivel Intermedio
+            { id: 16, level: 'Intermedio', question: 'Analiza la reacción inicial de Gregorio ante su transformación. ¿Por qué se preocupa más por su trabajo que por su nuevo cuerpo?', answer: 'Su principal preocupación es haber perdido el tren y cómo justificará su ausencia ante su jefe. Esto demuestra su profunda alienación y cómo su identidad estaba completamente definida por su rol de proveedor económico, al punto que la responsabilidad laboral eclipsa el horror de su propia metamorfosis.' },
+            { id: 17, level: 'Intermedio', question: 'Describe cómo evoluciona la actitud de Grete hacia Gregorio a lo largo de la obra.', answer: 'Al principio, Grete es la única que muestra compasión y se encarga de cuidarlo. Sin embargo, con el tiempo, el deber se convierte en una carga y su compasión se transforma en resentimiento y repulsión. Al final, es ella quien lidera la idea de que "eso" ya no es su hermano y deben deshacerse de él.' },
+            { id: 18, level: 'Intermedio', question: '¿Qué simboliza la manzana que el padre le arroja a Gregorio?', answer: 'La manzana simboliza el ataque, la violencia y el rechazo definitivo por parte de su padre. Puede interpretarse como una referencia bíblica al fruto prohibido y la "caída", marcando el punto de no retorno en el sufrimiento de Gregorio y sellando su destino.' },
+            { id: 19, level: 'Intermedio', question: '¿Por qué Gregorio se aferra al cuadro de la mujer envuelta en pieles cuando Grete y su madre intentan vaciar su habitación?', answer: 'El cuadro es el último vestigio de su humanidad. Es un objeto que él mismo colocó y que representa la belleza, el arte y un mundo que ha perdido. Aferrarse a él es un intento desesperado por conservar una parte de su antigua identidad humana frente al vaciamiento de su espacio vital.' },
+            { id: 20, level: 'Intermedio', question: 'Analiza el cambio en el padre de Gregorio después de la transformación de su hijo.', answer: 'Antes de la metamorfosis, el padre era un hombre fracasado y dependiente de Gregorio. Después, se ve forzado a volver a trabajar y recupera su autoridad y vitalidad. Se viste con un uniforme de ordenanza, que simboliza su nuevo rol autoritario. Paradójicamente, la desgracia de Gregorio revitaliza al padre.' },
+            { id: 21, level: 'Intermedio', question: '¿Qué rol juegan los tres inquilinos en la historia?', answer: 'Los inquilinos representan a la sociedad exterior, con su obsesión por el orden y la normalidad. Su presencia acelera la crisis final de la familia. Su reacción de horror al ver a Gregorio es lo que finalmente empuja a Grete a sentenciar que deben deshacerse de él. Simbolizan el juicio del mundo exterior.' },
+            { id: 22, level: 'Intermedio', question: '¿Cómo cambia la dinámica de poder dentro de la familia Samsa a lo largo de la novela?', answer: 'Al principio, Gregorio ostenta todo el poder económico como único proveedor. Tras su transformación, pierde todo su poder y se convierte en una carga. El poder se transfiere al padre, quien vuelve a trabajar, y a Grete, que madura y asume responsabilidades. La familia se reestructura completamente en torno a la ausencia funcional de Gregorio.' },
+            { id: 23, level: 'Intermedio', question: '¿Por qué la comunicación entre Gregorio y su familia fracasa constantemente?', answer: 'Fracasa porque, aunque Gregorio entiende perfectamente lo que su familia dice, ellos solo oyen ruidos ininteligibles de animal cuando él intenta hablar. Esta barrera de comunicación es una metáfora central de la alienación y la soledad: la incapacidad de ser comprendido por los demás, incluso por los más cercanos.' },
+            { id: 24, level: 'Intermedio', question: 'Explica el significado del título. ¿Solo Gregorio sufre una metamorfosis?', answer: 'No, toda la familia sufre una metamorfosis. Gregorio sufre una transformación física, pero su familia experimenta una transformación psicológica y social. Grete pasa de ser una niña a una mujer joven y pragmática. El padre pasa de la pasividad a la autoridad. La familia en su conjunto pasa de la dependencia a la autosuficiencia, a costa de la deshumanización de Gregorio.' },
+            { id: 25, level: 'Intermedio', question: '¿Qué representa la puerta de la habitación de Gregorio?', answer: 'La puerta es un símbolo crucial de la conexión y la separación. Al principio, Gregorio lucha por abrirla para unirse al mundo. A medida que avanza la historia, la puerta se mantiene cerrada la mayor parte del tiempo, simbolizando su aislamiento. Cada vez que se abre, se produce un conflicto. La puerta es la frontera física entre su mundo de insecto y el mundo humano.' },
+            { id: 26, level: 'Intermedio', question: '¿Cuál es la importancia del hecho de que Gregorio fuera el sostén económico de la familia?', answer: 'Es fundamental. Su valor para la familia estaba directamente ligado a su capacidad de ganar dinero. Una vez que pierde esa capacidad, pierde su utilidad y, gradualmente, su estatus como miembro de la familia. La obra critica una visión utilitarista de las relaciones humanas, donde el afecto está condicionado por el beneficio económico.' },
+            { id: 27, level: 'Intermedio', question: 'Analiza la reacción de la madre de Gregorio. ¿Por qué parece tan débil y se desmaya constantemente?', answer: 'La madre representa un amor maternal genuino pero ineficaz. Su debilidad física (asma) y emocional le impide actuar. Quiere ayudar a su hijo, pero el horror de su nueva forma se lo impide, provocándole desmayos. Simboliza un afecto que, sin la fuerza para superar la repulsión, resulta inútil.' },
+            { id: 28, level: 'Intermedio', question: '¿Qué nos dice sobre la familia el hecho de que empiecen a usar la habitación de Gregorio como un almacén de trastos viejos?', answer: 'Este acto simboliza la deshumanización final de Gregorio. Su espacio vital, su último refugio, es invadido y convertido en un basurero. Esto refleja que la familia ya no lo considera un miembro con necesidades o dignidad, sino simplemente un estorbo que ocupa un espacio que podría tener un mejor uso.' },
+            { id: 29, level: 'Intermedio', question: '¿Por qué Grete decide tocar el violín para los inquilinos?', answer: 'Grete toca para mostrar su talento y su nueva madurez, buscando la aprobación y el respeto de los inquilinos, que representan el mundo exterior. Es un acto que la posiciona como el nuevo centro cultural y de esperanza de la familia, en contraste directo con Gregorio, que ahora es la vergüenza oculta.' },
+            { id: 30, level: 'Intermedio', question: '¿Qué simboliza el alivio y la esperanza de la familia al final de la obra?', answer: 'Su alivio y optimismo final es profundamente perturbador. Simboliza que la muerte de Gregorio ha sido una liberación para ellos. Se han deshecho de la carga y ahora pueden planificar un futuro próspero, centrado en casar a Grete. Muestra que su supervivencia y bienestar se construyeron directamente sobre el sacrificio y olvido de Gregorio.' },
+
+            // Nivel Complejo
+            { id: 31, level: 'Complejo', question: 'Discute la novela como una crítica a la alienación del individuo en la sociedad moderna y el mundo laboral.', answer: 'La novela es una potente alegoría de la alienación. Gregorio está tan consumido por su trabajo monótono y deshumanizante que su identidad se reduce a su función económica. Su transformación en insecto puede leerse como la manifestación física de esta deshumanización. Ha perdido su individualidad y se ha convertido en algo "monstruoso" e inútil para el sistema capitalista y para su propia familia, que lo valora solo por su capacidad de producir.' },
+            { id: 32, level: 'Complejo', question: 'Analiza el concepto de lo "absurdo" en la obra. ¿Por qué no se da ninguna explicación a la metamorfosis?', answer: 'La falta de explicación es central para el concepto de lo absurdo. La metamorfosis simplemente "ocurre", sin causa ni lógica, como muchos eventos en la vida. El absurdo reside en el contraste entre este hecho extraordinario y la reacción mundana y pragmática de los personajes. Kafka presenta un universo donde lo ilógico irrumpe en lo cotidiano, y el ser humano debe enfrentarse a ello sin respuestas, reflejando la falta de sentido inherente a la existencia.' },
+            { id: 33, level: 'Complejo', question: '¿Puede considerarse a Gregorio un "parásito" antes de su transformación, a pesar de ser el sostén de la familia?', answer: 'Esta es una interpretación paradójica pero válida. Aunque Gregorio sostiene económicamente a la familia, emocional y psicológicamente podría ser visto como alguien que ha renunciado a su propia vida y deseos para alimentar la pasividad de su familia. Su sacrificio permite que su padre no trabaje y que su hermana no desarrolle su potencial. En cierto modo, su rol de proveedor crea una dinámica parasitaria donde él es el huésped que nutre la inacción de los demás.' },
+            { id: 34, level: 'Complejo', question: 'Reflexiona sobre la culpa como tema central. ¿Se siente Gregorio culpable? ¿Debería sentirse culpable su familia?', answer: 'Gregorio se siente constantemente culpable: por no ir a trabajar, por ser una carga, por asustar a su familia. Su culpa es irracional y es un síntoma de su opresión. Por otro lado, la familia actúa sin sentir una culpa evidente; sus acciones se justifican por la necesidad y la conveniencia. La obra expone una inversión moral: la víctima se siente culpable, mientras que los victimarios actúan con una justificación pragmática, lo que es una profunda crítica a la moral burguesa.' },
+            { id: 35, level: 'Complejo', question: '¿Cómo explora la obra los límites del amor familiar y la compasión?', answer: 'La novela explora brutalmente cómo el amor familiar y la compasión tienen límites. El afecto de la familia Samsa demuestra ser condicional, dependiente de la "normalidad" y la utilidad de Gregorio. Cuando él se convierte en una carga repulsiva y económicamente inútil, el amor se desvanece y es reemplazado por el pragmatismo y el deseo de supervivencia. La obra sugiere que, bajo presión, los lazos familiares pueden ser más frágiles de lo que parecen.' },
+            { id: 36, level: 'Complejo', question: 'Discute el estilo de escritura de Kafka (el "estilo kafkiano"). ¿Cómo contribuye el lenguaje preciso y burocrático a la atmósfera de la novela?', answer: 'El estilo kafkiano se caracteriza por una prosa clara, precisa y casi notarial para describir eventos fantásticos y angustiantes. Este lenguaje desapasionado crea un contraste aterrador con el horror de la situación. Al describir la monstruosa transformación de Gregorio con la misma objetividad que un informe burocrático, Kafka intensifica la sensación de extrañamiento y pesadilla.' },
+            { id: 37, level: 'Complejo', question: '¿Es la transformación de Gregorio una liberación o una condena?', answer: 'Es ambas cosas. Es una condena porque lo aísla, le causa un inmenso sufrimiento físico y emocional, y lo lleva a la muerte. Sin embargo, también es una liberación. Lo libera de su trabajo odiado, de su rol de esclavo económico y de las expectativas familiares. Como insecto, por momentos, explora nuevas sensaciones y formas de moverse que nunca tuvo como humano. Es una liberación trágica que solo se consuma en la muerte.' },
+            { id: 38, level: 'Complejo', question: 'Analiza la obra como una crítica a la institución de la familia burguesa.', answer: 'La familia Samsa es un microcosmos de la familia burguesa, obsesionada con las apariencias, el estatus social y la seguridad económica. La obra la presenta como una institución opresiva y parasitaria. El afecto es transaccional y la lealtad se basa en la conveniencia. Cuando Gregorio deja de cumplir su función productiva, la estructura familiar no lo cuida, sino que lo expulsa para asegurar su propia supervivencia y "respetabilidad".' },
+            { id: 39, level: 'Complejo', question: '¿Qué simbolismo se puede encontrar en el hecho de que Gregorio sea un "insecto"?', answer: 'El insecto (identificado como "Ungeziefer", que significa alimaña o parásito) simboliza lo insignificante, lo repulsivo y lo deshumanizado. Es un ser que se arrastra, que vive en la suciedad y que provoca asco. Su forma de insecto es la metáfora perfecta para alguien que se siente aplastado, sin valor y marginado por la sociedad y su propia familia.' },
+            { id: 40, level: 'Complejo', question: 'La historia está narrada desde una perspectiva muy cercana a Gregorio. ¿Cómo afectaría a la historia si estuviera narrada desde el punto de vista de Grete?', answer: 'Si fuera narrada por Grete, la historia probablemente comenzaría como un relato de compasión y sacrificio. Veríamos su esfuerzo y la carga que representa cuidar a su hermano. Sin embargo, gradualmente, la narración se volvería más resentida y justificaría su decisión final como un acto necesario de autopreservación. Perderíamos el acceso a la conciencia torturada de Gregorio y ganaríamos una visión más pragmática y quizás autoindulgente de la tragedia.' },
+            { id: 41, level: 'Complejo', question: '¿Por qué Gregorio no intenta escapar de la habitación?', answer: 'Gregorio no escapa por una mezcla de incapacidad física, miedo al mundo exterior y, lo más importante, un residuo de lealtad y amor por su familia. A pesar de cómo lo tratan, todavía se considera parte de la familia y no quiere abandonarlos ni causarles más problemas. Su encierro es tanto físico como psicológico.' },
+            { id: 42, level: 'Complejo', question: '¿Se puede interpretar la metamorfosis como una enfermedad mental o una profunda depresión?', answer: 'Sí, es una interpretación psicoanalítica muy común. La transformación puede ser una metáfora de una crisis mental severa, como la depresión. El aislamiento en la habitación, la incapacidad para comunicarse, la pérdida de interés en las actividades humanas (como la comida normal) y la sensación de ser una carga monstruosa son todos síntomas clásicos de una depresión profunda. Su muerte final podría leerse como el abandono total ante la enfermedad.' },
+            { id: 43, level: 'Complejo', question: 'Discute la importancia del cuerpo en la obra. ¿Cómo se relaciona el cuerpo con la identidad?', answer: 'El cuerpo es fundamental. La identidad de Gregorio está atada a su cuerpo humano y funcional. Cuando su cuerpo cambia, su identidad se desmorona. La obra explora cómo nuestra percepción de nosotros mismos y la percepción que otros tienen de nosotros está intrínsecamente ligada a nuestra forma física. Al tener un cuerpo "monstruoso", Gregorio es despojado de su identidad humana a los ojos de los demás, sin importar que su mente siga siendo la misma.' },
+            { id: 44, level: 'Complejo', question: 'La asistenta es la única que trata a Gregorio con cierta naturalidad, aunque sea brusca. ¿Qué representa ella?', answer: 'La asistenta representa una perspectiva externa y sin pretensiones. A diferencia de la familia, ella no tiene un vínculo emocional previo con Gregorio, por lo que no experimenta la misma crisis. Lo ve simplemente como lo que es: un bicho grande y extraño. Su pragmatismo y falta de horror (lo llama "escarabajo viejo") contrastan con la angustia de la familia, mostrando otra forma, aunque insensible, de lidiar con lo anormal.' },
+            { id: 45, level: 'Complejo', question: '¿Hay algún elemento de humor negro en la novela? ¿Dónde?', answer: 'Sí, hay un humor negro y sutil. Por ejemplo, la preocupación de Gregorio por perder el tren mientras es un insecto gigante es absurdamente cómica. La escena en que intenta girar la llave con su boca de insecto, o las dificultades que tiene para maniobrar su nuevo cuerpo, tienen un componente de comedia física (slapstick) macabra. Este humor acentúa lo absurdo y trágico de la situación.' },
+            { id: 46, level: 'Complejo', question: 'Analiza el rol del procurista (el gerente). ¿Qué representa en el contexto de la obra?', answer: 'El procurista es la encarnación del sistema laboral opresivo y burocrático. No le interesa el bienestar de Gregorio, solo su rendimiento. Su discurso está lleno de acusaciones y sospechas, reflejando una relación laboral basada en la desconfianza. Es el primer representante del mundo exterior que rechaza al nuevo Gregorio, simbolizando cómo el sistema expulsa a quienes dejan de ser productivos.' },
+            { id: 47, level: 'Complejo', question: '¿Cómo usa Kafka el espacio (la casa, la habitación) para reflejar el estado psicológico de Gregorio?', answer: 'El espacio es un mapa de la psique de Gregorio. La habitación es, al mismo tiempo, una prisión y un refugio. El resto de la casa es el "mundo humano" al que ya no puede acceder. Su mundo se encoge progresivamente: primero está confinado a su cuarto, luego los muebles (sus recuerdos) son retirados, y finalmente el cuarto se convierte en un basurero. La degradación del espacio refleja su propia degradación interna.' },
+            { id: 48, level: 'Complejo', question: 'Si la familia dependía tanto de Gregorio, ¿por qué no buscaron ayuda o una solución en lugar de ocultarlo?', answer: 'Su decisión de ocultarlo se debe a la vergüenza y al miedo al juicio social. Para una familia burguesa, admitir que su hijo se ha convertido en un insecto sería una catástrofe social, una mancha en su respetabilidad. Prefieren lidiar con el problema en privado, aunque eso signifique el fin de Gregorio, antes que exponer su "anormalidad" al mundo. La apariencia es más importante que el bienestar de su hijo.' },
+            { id: 49, level: 'Complejo', question: '¿Es la muerte de Gregorio un sacrificio?', answer: 'Sí, puede ser vista como un sacrificio final. Al escuchar a Grete decir que debe desaparecer, Gregorio parece estar de acuerdo y muere esa misma noche. Su muerte es conveniente para la familia y les permite seguir adelante. Él mismo parece aceptarla como una forma de liberar a su familia de la carga que representa, completando su rol de mártir familiar de una manera trágica y definitiva.' },
+            { id: 50, level: 'Complejo', question: 'Si tuvieras que definir el mensaje central de "La Metamorfosis" en una frase, ¿cuál sería? Justifica tu elección.', answer: 'El mensaje central podría ser: "El valor de una persona en la sociedad moderna a menudo se mide por su utilidad, y una vez que esta desaparece, el amor y la humanidad pueden desvanecerse con ella". Elijo esta frase porque encapsula tanto la crítica al sistema laboral (utilidad) como la fragilidad de los lazos familiares (amor, humanidad), que son los dos pilares sobre los que se construye la tragedia de Gregorio Samsa.' }
+        ];
+
+        const neetQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,34,35,40,41,48,50];
+        const neepQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,48];
+
+        // --- ESTADO DE LA APLICACIÓN ---
+        let evaluations = [];
+        let currentEvaluation = {};
+
+        // --- ELEMENTOS DEL DOM ---
+        const setupScreen = document.getElementById('setup-screen');
+        const interrogationScreen = document.getElementById('interrogation-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const startButton = document.getElementById('start-button');
+        const finalizeButton = document.getElementById('finalize-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const questionsContainer = document.getElementById('questions-container');
+        const studentNameInput = document.getElementById('student-name');
+        const studentCourseInput = document.getElementById('student-course');
+        const resultsTableBody = document.getElementById('results-table-body');
+        const exportButton = document.getElementById('export-json');
+        const importInput = document.getElementById('import-json');
+        const modal = document.getElementById('answer-modal');
+        const closeModalButton = document.getElementById('close-modal');
+
+        // --- LÓGICA DE LA APLICACIÓN ---
+
+        startButton.addEventListener('click', () => {
+            const studentName = studentNameInput.value.trim();
+            const studentCourse = studentCourseInput.value.trim();
+            const evalType = document.querySelector('input[name="evaluation-type"]:checked').value;
+
+            if (!studentName || !studentCourse) {
+                alert('Por favor, ingresa el nombre y el curso del estudiante.');
+                return;
+            }
+
+            let selectedQuestionBank = questionBank;
+            if (evalType === 'neet') {
+                selectedQuestionBank = questionBank.filter(q => neetQuestionIds.includes(q.id));
+            } else if (evalType === 'neep') {
+                selectedQuestionBank = questionBank.filter(q => neepQuestionIds.includes(q.id));
+            }
+
+            currentEvaluation = {
+                id: Date.now(),
+                studentName,
+                studentCourse,
+                evalType,
+                questions: getRandomQuestions(8, selectedQuestionBank),
+                scores: {},
+                excludedQuestion: null
+            };
+            
+            document.getElementById('eval-student-name').textContent = studentName;
+            document.getElementById('eval-student-course').textContent = studentCourse;
+            
+            let typeText = "Regular";
+            if(evalType === 'neet') typeText = "NEET";
+            if(evalType === 'neep') typeText = "NEEP";
+            document.getElementById('eval-type-display').textContent = `Tipo de Evaluación: ${typeText}`;
+            
+            renderQuestions();
+            setupScreen.classList.add('hidden');
+            interrogationScreen.classList.remove('hidden');
+            document.getElementById('final-score-container').innerHTML = '';
+        });
+
+        finalizeButton.addEventListener('click', () => {
+            if (Object.keys(currentEvaluation.scores).length < 8 || currentEvaluation.excludedQuestion === null) {
+                alert('Por favor, califica todas las preguntas y selecciona una para descartar.');
+                return;
+            }
+            
+            const { score, grade } = calculateFinalScore();
+            currentEvaluation.finalScore = score;
+            currentEvaluation.finalGrade = grade;
+
+            evaluations.push(currentEvaluation);
+            renderResultsTable();
+            resetInterrogation();
+        });
+
+        cancelButton.addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres cancelar esta evaluación? El progreso no se guardará.')) {
+                resetInterrogation();
+            }
+        });
+        
+        function renderQuestions() {
+            questionsContainer.innerHTML = '';
+            currentEvaluation.questions.forEach((q, index) => {
+                const questionId = `q-${q.id}`;
+                const questionBlock = document.createElement('div');
+                questionBlock.className = 'p-4 border rounded-lg bg-gray-50';
+                questionBlock.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <p class="font-semibold flex-1">${index + 1}. ${q.question} <span class="text-xs text-gray-500 font-normal">(${q.level})</span></p>
+                        <button data-question-id="${q.id}" class="show-answer-btn ml-4 text-sm text-indigo-600 hover:underline flex-shrink-0">Ver Respuesta Ideal</button>
+                    </div>
+                    <div class="mt-3 flex items-center justify-between gap-4 flex-wrap">
+                        <div class="flex items-center gap-4">
+                            <span class="text-sm font-medium">Puntaje:</span>
+                            <div class="flex gap-3">
+                                ${[0, 0.5, 1.0].map(score => `
+                                    <label class="flex items-center cursor-pointer">
+                                        <input type="radio" name="score-${questionId}" value="${score}" class="score-input" data-question-id="${q.id}">
+                                        <span class="ml-1.5 text-sm">${score.toFixed(1)}</span>
+                                    </label>
+                                `).join('')}
+                            </div>
+                        </div>
+                        <div class="flex items-center">
+                             <label class="flex items-center cursor-pointer">
+                                <input type="radio" name="exclude-question" value="${q.id}" class="exclude-input">
+                                <span class="ml-1.5 text-sm text-red-600 font-medium">Descartar</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+                questionsContainer.appendChild(questionBlock);
+            });
+
+            questionsContainer.querySelectorAll('.show-answer-btn').forEach(btn => {
+                btn.addEventListener('click', () => showAnswerModal(btn.dataset.questionId));
+            });
+            questionsContainer.querySelectorAll('.score-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    currentEvaluation.scores[e.target.dataset.questionId] = parseFloat(e.target.value);
+                    updateLiveScore();
+                });
+            });
+            questionsContainer.querySelectorAll('.exclude-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    currentEvaluation.excludedQuestion = parseInt(e.target.value);
+                    updateLiveScore();
+                });
+            });
+        }
+        
+        function updateLiveScore() {
+            const scoredCount = Object.keys(currentEvaluation.scores).length;
+            const isExcluded = currentEvaluation.excludedQuestion !== null;
+            if (scoredCount < 8 || !isExcluded) {
+                document.getElementById('final-score-container').innerHTML = '';
+                return;
+            }
+            const { score, grade } = calculateFinalScore();
+            document.getElementById('final-score-container').innerHTML = `
+                <p class="text-lg font-bold">Nota Parcial: <span class="text-green-600">${grade.toFixed(1)}</span></p>
+                <p class="text-sm text-gray-500">Puntaje: ${score.toFixed(1)} / 7.0</p>
+            `;
+        }
+
+        function calculateFinalScore() {
+            let totalScore = 0;
+            currentEvaluation.questions.forEach(q => {
+                if (q.id !== currentEvaluation.excludedQuestion) {
+                    totalScore += currentEvaluation.scores[q.id] || 0;
+                }
+            });
+            
+            const maxScore = 7.0;
+            let grade = (totalScore / maxScore) * 6 + 1;
+            if (grade < 1) grade = 1.0;
+            if (grade > 7) grade = 7.0;
+
+            return { score: totalScore, grade: grade };
+        }
+
+        function resetInterrogation() {
+            studentNameInput.value = '';
+            studentCourseInput.value = '';
+            currentEvaluation = {};
+            interrogationScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        }
+
+        function renderResultsTable() {
+            resultsTableBody.innerHTML = '';
+            evaluations.forEach((ev, index) => {
+                const row = document.createElement('tr');
+                row.className = index % 2 === 0 ? 'bg-white' : 'bg-gray-50';
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${ev.studentName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${ev.studentCourse}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${ev.evalType.toUpperCase()}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500">${ev.finalScore.toFixed(1)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold ${ev.finalGrade >= 4.0 ? 'text-blue-600' : 'text-red-600'}">${ev.finalGrade.toFixed(1)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button data-eval-index="${index}" class="generate-pdf-btn text-indigo-600 hover:text-indigo-900">Generar PDF</button>
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
+            });
+
+            document.querySelectorAll('.generate-pdf-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const evalData = evaluations[e.target.dataset.evalIndex];
+                    generatePDF(evalData);
+                });
+            });
+        }
+        
+        function getRandomQuestions(num, sourceBank) {
+            const shuffled = [...sourceBank].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        function showAnswerModal(questionId) {
+            const questionData = questionBank.find(q => q.id == questionId);
+            document.getElementById('modal-question').textContent = questionData.question;
+            document.getElementById('modal-answer').textContent = questionData.answer;
+            modal.classList.add('active');
+        }
+
+        closeModalButton.addEventListener('click', () => modal.classList.remove('active'));
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+
+        exportButton.addEventListener('click', () => {
+            if (evaluations.length === 0) {
+                alert('No hay evaluaciones para guardar.');
+                return;
+            }
+            const dataStr = JSON.stringify(evaluations, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            const exportFileDefaultName = `evaluaciones_metamorfosis_${new Date().toISOString().slice(0,10)}.json`;
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+        });
+
+        importInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        evaluations = importedData;
+                        renderResultsTable();
+                        alert('Datos cargados exitosamente.');
+                    } else {
+                        throw new Error('El archivo no tiene el formato correcto.');
+                    }
+                } catch (error) {
+                    alert('Error al cargar el archivo: ' + error.message);
+                }
+            };
+            reader.readAsText(file);
+            importInput.value = '';
+        });
+
+        function generatePDF(evalData) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFont("Lora", "bold");
+            doc.setFontSize(18);
+            doc.text("Informe de Evaluación - La Metamorfosis", 105, 20, { align: "center" });
+
+            doc.setFont("Inter", "normal");
+            doc.setFontSize(12);
+            doc.text(`Estudiante: ${evalData.studentName}`, 20, 40);
+            doc.text(`Curso: ${evalData.studentCourse}`, 20, 47);
+            
+            let evalTypeText = "Regular";
+            if (evalData.evalType === 'neet') evalTypeText = "NEET (Necesidades Educativas Especiales Transitorias)";
+            if (evalData.evalType === 'neep') evalTypeText = "NEEP (Necesidades Educativas Especiales Permanentes)";
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(`Tipo de Evaluación: ${evalTypeText}`, 20, 54);
+            doc.setTextColor(0);
+
+
+            doc.setFont("Lora", "bold");
+            doc.setFontSize(14);
+            doc.text(`Resultado Final`, 20, 65);
+            
+            doc.setFont("Inter", "normal");
+            doc.setFontSize(12);
+            doc.setTextColor(evalData.finalGrade >= 4.0 ? 0 : 200, 0, 0);
+            doc.text(`Nota: ${evalData.finalGrade.toFixed(1)}`, 20, 73);
+            doc.setTextColor(0, 0, 0);
+            doc.text(`Puntaje: ${evalData.finalScore.toFixed(1)} / 7.0`, 20, 80);
+
+            const tableColumn = ["Pregunta", "Puntaje", "Estado"];
+            const tableRows = [];
+
+            evalData.questions.forEach(q => {
+                const score = evalData.scores[q.id];
+                const status = q.id === evalData.excludedQuestion ? "Descartada" : "Evaluada";
+                const questionRow = [
+                    doc.splitTextToSize(q.question, 120), // Wrap text
+                    score.toFixed(1),
+                    status
+                ];
+                tableRows.push(questionRow);
+            });
+
+            doc.autoTable({
+                head: [tableColumn],
+                body: tableRows,
+                startY: 90,
+                theme: 'grid',
+                headStyles: { fillColor: [31, 41, 55] }, // bg-gray-800
+                styles: { font: "Inter", fontSize: 9, cellPadding: 2 },
+                columnStyles: {
+                    0: { cellWidth: 130 },
+                    1: { cellWidth: 'auto', halign: 'center' },
+                    2: { cellWidth: 'auto', halign: 'center' }
+                }
+            });
+
+            doc.save(`informe_${evalData.studentName.replace(/\s/g, '_')}.pdf`);
+        }
+    </script>
+</body>
+</html>

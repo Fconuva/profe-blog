@@ -20,7 +20,7 @@
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8">
-        
+
         <header class="bg-white shadow-md rounded-xl p-6 mb-8 text-center border-l-4 border-blue-800">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Herramienta de Interrogación Adaptativa</h1>
             <p class="text-xl md:text-2xl text-gray-700 mt-2">"Mocha Dick" de Ortega y Martínez</p>
@@ -40,7 +40,6 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">Tipo de Evaluación (Adaptación)</label>
-                    <!-- UPDATED: Added new evaluation types in a grid -->
                     <div class="mt-2 grid grid-cols-2 gap-x-4 gap-y-2 bg-gray-50 p-3 rounded-md">
                         <label class="flex items-center">
                             <input type="radio" name="evaluation-type" value="regular" class="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-300" checked>
@@ -81,7 +80,7 @@
                         <!-- El resultado se mostrará aquí -->
                     </div>
                 </div>
-                
+
                 <h3 class="text-lg font-semibold mb-4">Preguntas Seleccionadas (Marcar puntaje y descartar una)</h3>
                 <div id="questions-container" class="space-y-6">
                     <!-- Las preguntas se cargarán aquí dinámicamente -->
@@ -146,9 +145,107 @@
             </div>
         </div>
     </div>
-    
+
     <script>
-        // --- BANCO DE PREGUNTAS Y RESPUESTAS (CORREGIDO PARA "MOCHA DICK") ---
+        // Database integration functions
+        async function loadQuestionsFromDatabase() {
+            try {
+                const response = await fetch('/.netlify/functions/get-questions?toolName=moby_dick&limit=10');
+                const data = await response.json();
+
+                if (data.success && data.data.length > 0) {
+                    return data.data.map(q => ({
+                        id: q.id,
+                        question: q.question_text,
+                        level: q.difficulty_level,
+                        category: q.category,
+                        type: q.question_type
+                    }));
+                } else {
+                    console.log('No questions found in database, using fallback');
+                    return getFallbackQuestions();
+                }
+            } catch (error) {
+                console.error('Error loading questions from database:', error);
+                return getFallbackQuestions();
+            }
+        }
+
+        async function saveEvaluationToDatabase(evaluationData) {
+            try {
+                const response = await fetch('/.netlify/functions/save-evaluation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        studentName: evaluationData.studentName,
+                        studentCourse: evaluationData.studentCourse,
+                        evaluationType: evaluationData.evalType,
+                        toolName: 'moby_dick',
+                        questionsData: evaluationData.questionsData
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    console.log('Evaluación guardada en base de datos:', result);
+                    alert(`Evaluación guardada correctamente. Puntaje final: ${result.finalScore.toFixed(1)}%`);
+                    return result;
+                } else {
+                    console.error('Error saving evaluation:', result.error);
+                    alert('Error al guardar la evaluación: ' + result.error);
+                    throw new Error(result.error);
+                }
+            } catch (error) {
+                console.error('Error saving evaluation:', error);
+                alert('Error de conexión al guardar la evaluación');
+                throw error;
+            }
+        }
+
+        function getFallbackQuestions() {
+            return [
+                {
+                    id: 1,
+                    question: "¿Cuál es el nombre del barco en el que viaja Ismael?",
+                    level: "easy",
+                    category: "personajes",
+                    type: "multiple_choice"
+                },
+                {
+                    id: 2,
+                    question: "¿Qué representa la ballena blanca en la novela?",
+                    level: "hard",
+                    category: "simbolismo",
+                    type: "open_ended"
+                },
+                {
+                    id: 3,
+                    question: "¿Cuál es la profesión del narrador?",
+                    level: "easy",
+                    category: "narrador",
+                    type: "multiple_choice"
+                },
+                {
+                    id: 4,
+                    question: "¿Cómo se llama el capitán del Pequod?",
+                    level: "easy",
+                    category: "personajes",
+                    type: "multiple_choice"
+                },
+                {
+                    id: 5,
+                    question: "¿Qué simboliza el viaje del Pequod?",
+                    level: "medium",
+                    category: "simbolismo",
+                    type: "open_ended"
+                }
+            ];
+        }
+
+        // --- BANCO DE PREGUNTAS Y RESPUESTAS ---
         const questionBank = [
              { id: 1, level: 'Básico', question: '¿En qué año y lugar comienza la narración del Caleb anciano?', answer: 'La narración del Caleb anciano comienza en Tomé, sur de Chile, en el año 1889.' },
             { id: 2, level: 'Básico', question: '¿Cómo se llama el primer barco ballenero en el que viaja Caleb y quién es su capitán?', answer: 'El barco se llama Dauphin y su capitán es Zimri Coffin.' },
@@ -171,42 +268,16 @@
             { id: 19, level: 'Intermedio', question: '¿Cómo se utiliza el lenguaje visual (el arte de Martínez) para mostrar la diferencia de escala entre los humanos y Mocha Dick?', answer: 'Se utilizan viñetas de página completa (splash pages) y ángulos de cámara contrapicados. En estas escenas, los botes y los hombres se ven diminutos en comparación con la inmensidad de la ballena. Esto enfatiza la insignificancia de la arrogancia humana frente al poder colosal de la naturaleza.' },
             { id: 20, level: 'Intermedio', question: '¿Qué representa el personaje de Josephine "Joe" Macys en la historia?', answer: 'Josephine representa la rebelión contra las normas sociales y de género de su época. Además, actúa como la conciencia de su padre y un puente entre el mundo de los balleneros y la causa de Caleb. Su conflicto interno entre la lealtad a su padre y lo que es correcto es central en la segunda mitad del libro.' },
             { id: 21, level: 'Intermedio', question: 'Analiza el conflicto entre la "historia oficial" (la del capitán Pollard) y la "verdad oculta" (la de Owen Chase).', answer: 'Este conflicto muestra cómo las narrativas se construyen para ocultar verdades vergonzosas. La historia oficial de Pollard es una mentira heroica para salvar su reputación y encubrir el horror del canibalismo. La verdad de Chase, revelada por el alcohol, expone la fragilidad de la moral "civilizada" en situaciones extremas.' },
-            { id: 22, level: 'Intermedio', question: '¿Qué importancia tiene que la historia esté enmarcada por la narración de un Caleb ya anciano?', answer: 'El marco narrativo le da a la historia un tono de leyenda y de reflexión. No es solo una aventura, sino una lección de vida contada desde la sabiduría de la vejez. Permite al narrador interpretar los eventos y darles un significado más profundo que el que tenía el joven Caleb en ese momento.' },
-            { id: 23, level: 'Intermedio', question: '¿Cómo se manifiesta el racismo y el choque cultural a bordo de los barcos balleneros?', answer: 'Se manifiesta principalmente a través del personaje de Alaistar Ferguson, el arponero escocés, que desprecia a Aliro por ser "indio" e "infiel". Su odio se basa en prejuicios heredados. Esto refleja las tensiones culturales y raciales de la época colonial y la visión de superioridad de los europeos.' },
-            { id: 24, level: 'Intermedio', question: 'Explica el significado de la escena de los "Fuegos de San Telmo".', answer: 'El fenómeno natural de los Fuegos de San Telmo es interpretado por la tripulación supersticiosa como una señal de la presencia de un "Jonás", una persona que trae mala suerte. Ferguson utiliza esta creencia para culpar a Aliro, mostrando cómo el miedo y la superstición pueden ser manipulados para incitar al odio.' },
-            { id: 25, level: 'Intermedio', question: '¿Cuál es el rol de la Machi Rosa en el viaje de Caleb?', answer: 'La Machi Rosa es la mentora espiritual de Caleb. Ella le revela la verdadera naturaleza sagrada de la Mocha y lo conecta con su herencia lafkenche, dándole un propósito más allá de la venganza. Le entrega las herramientas conceptuales y la bendición para su misión de proteger el equilibrio.' },
-            { id: 26, level: 'Intermedio', question: '¿Qué simboliza el Kurew, el pequeño barco de Duncan Sheffield?', answer: 'El Kurew ("Golondrina" en mapudungun) simboliza una alternativa a la violencia de los balleneros. Es un barco de investigación, no de caza. Su intervención en la batalla final, intentando salvar a la Mocha, representa la alianza entre la ciencia respetuosa y la sabiduría ancestral en defensa de la naturaleza.' },
-            { id: 27, level: 'Intermedio', question: 'Analiza el uso del color en las escenas de la cosmogonía mapuche.', answer: 'Estas escenas, que narran el origen del mundo y la lucha entre los Hijos del Sol y los Hijos de la Tierra, utilizan una paleta de colores limitada, a menudo en tonos tierra, ocre y rojo. Este estilo visual las diferencia del resto de la narración, dándoles un aspecto de mural o arte rupestre, lo que refuerza su carácter mítico y ancestral.' },
-            { id: 28, level: 'Intermedio', question: '¿Por qué el capitán Macys está tan obsesionado con la recompensa?', answer: 'Más allá del dinero, para Macys la recompensa representa la gloria y la consagración como el mejor ballenero. Su orgullo está en juego. La caza de la legendaria Mocha Dick es la oportunidad de inscribir su nombre en la historia, una ambición que lo ciega ante cualquier consideración moral o de seguridad.' },
-            { id: 29, level: 'Intermedio', question: 'Explica el significado del nombre que le dan a Caleb: "Ailin Ngue" (Ojos Claros).', answer: 'El nombre tiene un doble significado. Literalmente, se refiere al color de sus ojos, que lo diferencia. Simbólicamente, alude a su capacidad de "ver claramente", de percibir la verdad más allá de las mentiras y las apariencias. Es el que puede ver la santidad de la ballena donde otros solo ven un monstruo o una fuente de dinero.' },
-            { id: 30, level: 'Intermedio', question: '¿Qué representa la amistad entre Caleb y Aliro?', answer: 'Su amistad representa la unión de dos mundos: el "winkia" (extranjero) y el mapuche. A pesar de sus orígenes diferentes, comparten un sentido de la justicia y un respeto mutuo. Su lealtad es un modelo de convivencia intercultural que contrasta con el conflicto y el racismo que los rodea.' },
-            { id: 31, level: 'Complejo', question: 'Discute cómo la novela gráfica deconstruye el mito del "héroe ballenero" del siglo XIX.', answer: 'La obra desmantela la imagen romántica del ballenero. En lugar de héroes valientes, los presenta como hombres movidos por la codicia (Macys), la mentira (Pollard) y el odio racista (Ferguson). La confesión de canibalismo del Essex es el golpe final a esta mitología, mostrando que la verdadera barbarie no estaba en el mar o en los "salvajes", sino en los propios "hombres civilizados".' },
-            { id: 32, level: 'Complejo', question: 'Analiza la novela como una obra postcolonial que reivindica una narrativa no europea.', answer: 'La novela es un acto de reescritura postcolonial. Toma un mito universalizado por la literatura norteamericana ("Moby Dick") y lo devuelve a su origen geográfico y cultural en el sur de Chile. Al centrar la historia en un protagonista mapuche-lafkenche y su cosmovisión, se desafía la perspectiva eurocéntrica y se da primacía a una visión del mundo indígena, presentando su mitología como una verdad tan válida como la ciencia o la historia occidental.' },
-            { id: 33, level: 'Complejo', question: '¿De qué manera el concepto de "equilibrio" (entre el hombre y el mar) es el eje temático principal de la obra?', answer: 'El equilibrio es el tema central. La Machi Rosa explica que la Mocha mantiene el equilibrio entre el hombre y el mar. La caza indiscriminada y la codicia de los balleneros rompen este equilibrio, desatando la furia de la naturaleza. La misión de Caleb y Aliro no es de venganza, sino de restauración: buscan detener la carnicería para restablecer el orden sagrado. El final sugiere que este equilibrio es frágil y debe ser protegido activamente.' },
-            { id: 34, level: 'Complejo', question: 'Reflexiona sobre la dualidad entre ciencia (Duncan Sheffield) y mito (Machi Rosa). ¿Son fuerzas opuestas en la novela?', answer: 'La novela presenta la ciencia y el mito no como fuerzas opuestas, sino como complementarias. Ambas buscan entender el mundo y ambas, en la obra, llegan a la misma conclusión: las ballenas son seres complejos que deben ser respetados. Sheffield (ciencia) y la Machi (mito) se alían para proteger a la Mocha. El mensaje es que el conocimiento, ya sea científico o ancestral, debe conducir a la sabiduría y al respeto por la vida.' },
-            { id: 35, level: 'Complejo', question: 'El formato de novela gráfica, ¿cómo contribuye a la representación de lo mítico y lo real?', answer: 'El formato es ideal para fusionar ambos planos. Lo real (la crudeza de la caza, la vida en el barco) se puede representar con un estilo gráfico detallado y realista. Lo mítico (los Trempulcahue, las visiones de Caleb) se puede visualizar con un estilo más etéreo, simbólico y con paletas de colores distintas. El medio gráfico permite que ambos mundos coexistan visualmente en la misma página, mostrando su interconexión.' },
-            { id: 36, level: 'Complejo', question: '¿Qué representa el hecho de que la venganza de Caleb estuviera basada en una mentira familiar?', answer: 'Representa cómo los ciclos de odio y violencia a menudo se perpetúan a través de narrativas falsas. La mentira sobre la muerte de su padre fue un relato creado para justificar la industria ballenera y su propia participación en ella. Que Caleb rompa el ciclo al descubrir la verdad sugiere que el conocimiento crítico es la única forma de escapar de los odios heredados y encontrar un camino propio.' },
-            { id: 37, level: 'Complejo', question: 'Analiza el rol de la mujer en la novela (Machi Rosa, Josephine). ¿Cómo desafían los estereotipos de su época?', answer: 'Ambos personajes femeninos son figuras de poder en un mundo de hombres. La Machi Rosa ostenta el poder espiritual y la sabiduría ancestral, siendo la líder moral de su comunidad. Josephine desafía las normas de género de forma directa, infiltrándose en un espacio masculino y demostrando ser tan capaz como cualquier hombre. Ambas son agentes activos de cambio en la historia, no personajes pasivos.' },
-            { id: 38, level: 'Complejo', question: 'Discute la novela como una alegoría de la historia de Chile y la relación del Estado con el pueblo mapuche.', answer: 'Es posible leerla como una alegoría. Los balleneros, con su lógica extractivista y su violencia, pueden representar la colonización y la explotación de los territorios mapuche. La Mocha y la Isla sagrada representan la tierra y la cultura ancestral que se defiende. La lucha de Caleb y Aliro por protegerla es un reflejo de la resistencia histórica del pueblo mapuche frente a la expoliación de sus recursos y su cultura.' },
-            { id: 39, level: 'Complejo', question: '¿Cómo se explora el tema de la identidad en un mundo de fronteras culturales a través del personaje de Caleb?', answer: 'Caleb es un personaje "fronterizo". Es de ascendencia europea por parte de padre, pero se identifica y es adoptado por la cultura lafkenche. Su viaje es una búsqueda de su verdadera identidad, que no reside en la sangre, sino en las decisiones que toma. Al final, elige la sabiduría de su herencia adoptiva sobre la codicia del mundo de su padre, construyendo una identidad propia y sincrética.' },
-            { id: 40, level: 'Complejo', question: 'Si tuvieras que definir el mensaje central de "Mocha Dick" en una frase, ¿cuál sería? Justifica tu elección.', answer: 'El mensaje central podría ser: "La verdadera sabiduría no consiste en conquistar la naturaleza, sino en comprender nuestro lugar dentro de ella". Elijo esta frase porque resume el arco de transformación de Caleb, quien pasa de un deseo de dominio y venganza (conquistar) a una postura de respeto y coexistencia (comprender), que es lo que finalmente le permite sobrevivir y encontrar la paz.' },
-            { id: 41, level: 'Complejo', question: 'El epílogo donde Caleb conoce a Melville es un acto de ficción. ¿Qué nos dice sobre la relación entre historia, leyenda y literatura?', answer: 'Nos dice que estas tres categorías son permeables. La historia (el hundimiento real del Essex) inspira la leyenda (los relatos de los marineros), y la leyenda inspira la literatura (Moby Dick). La novela se inserta en esta cadena, sugiriendo que la literatura no nace en el vacío, sino de las historias orales y las experiencias vividas. Es una reflexión sobre cómo se construyen las grandes narrativas.' },
-            { id: 42, level: 'Complejo', question: '¿Se puede considerar a Mocha Dick un "monstruo"? ¿Cómo define la obra la monstruosidad?', answer: 'La obra redefine la monstruosidad. Mocha Dick no es el monstruo; es una fuerza de la naturaleza que responde a la agresión. La verdadera monstruosidad se encuentra en los actos humanos: el canibalismo del Essex, el racismo de Ferguson, la codicia ciega de Macys. El monstruo no es el "otro" animal, sino la capacidad humana para la crueldad y la deshumanización.' },
-            { id: 43, level: 'Complejo', question: 'Analiza el diseño de los personajes. ¿Cómo refleja el dibujo sus personalidades?', answer: 'El dibujo es clave. Caleb tiene rasgos finos y ojos grandes, reflejando su juventud e inocencia. Aliro tiene una complexión fuerte y rasgos marcados, mostrando su conexión con la tierra. Macys es retratado con líneas duras y una mandíbula apretada, denotando su codicia y terquedad. Ferguson es caricaturizado con rasgos brutos y una expresión de odio constante. El arte visual refuerza la psicología de cada personaje.' },
-            { id: 44, level: 'Complejo', question: 'La novela se subtitula "La leyenda de la ballena blanca". Discute la importancia del concepto de "leyenda" en la obra.', answer: 'El subtítulo es clave porque posiciona la historia en el ámbito del mito y del folklore, no del realismo. La obra explora cómo se construyen las leyendas, tanto la de los marineros (la ballena como demonio) como la de los lafkenche (la ballena como espíritu). Caleb se encuentra en medio de estas dos narrativas y debe decidir cuál es más "real". Al final, la obra sugiere que las leyendas contienen verdades más profundas que los simples hechos.' },
-            { id: 45, level: 'Complejo', question: '¿Qué papel juega la economía en la historia? ¿Es solo una historia de mitos y aventuras?', answer: 'La economía es el motor fundamental de la trama. La caza de ballenas es una industria globalizada del siglo XIX. La recompensa por la Mocha es una motivación puramente económica que desencadena la segunda cacería. La novela critica cómo la lógica del capital puede pisotear cualquier consideración moral, cultural o ecológica.' },
-            { id: 46, level: 'Complejo', question: '¿Cómo influye el entorno geográfico del sur de Chile en la atmósfera de la novela?', answer: 'El paisaje del sur de Chile (la costa de Tirúa, la Isla Mocha, los bosques fríos y lluviosos) crea una atmósfera de misterio y belleza salvaje. No es un escenario tropical o genérico, sino un lugar específico con su propio carácter. Este entorno refuerza la conexión de la historia con la cultura lafkenche y le da un tono melancólico y telúrico.' },
-            { id: 47, level: 'Complejo', question: 'Evalúa la decisión de Caleb de abandonar su herencia económica (el barco Dauphin) por su misión.', answer: 'Esta decisión marca su punto de no retorno y la culminación de su desarrollo. Al renunciar al Dauphin, Caleb rechaza simbólicamente el legado de su padre, el capitalismo extractivista y el mundo "winkia". Elige, en cambio, la herencia espiritual de la Machi Rosa y su responsabilidad con el equilibrio del mundo. Es un acto de sacrificio que define su nueva identidad.' },
-            { id: 48, level: 'Complejo', question: '¿Por qué crees que el personaje de Aliro Leftraru debe "desaparecer" en la batalla final?', answer: 'La desaparición de Aliro tiene un fuerte peso simbólico. Se convierte en un mártir de la causa, un sacrificio que completa el ciclo mítico. Su "muerte" (o transformación) lo une definitivamente al mundo espiritual de la Mocha. Además, deja a Caleb como el único testigo humano, el único capaz de llevar la historia al mundo exterior, completando su rol como narrador y guardián de la leyenda.' },
-            { id: 49, level: 'Complejo', question: '¿Es el final de la historia optimista o pesimista?', answer: 'Es agridulce. Es optimista en el sentido de que Caleb sobrevive, la verdad se revela y la ballena es salvada, lo que sugiere que la resistencia es posible. Sin embargo, es pesimista al mostrar el alto costo de esta victoria (la muerte de casi todos) y al terminar con la imagen de una ballena varada en 1889, lo que implica que la lucha por proteger la naturaleza nunca termina y la amenaza de la explotación sigue presente.' },
-            { id: 50, level: 'Complejo', question: 'Si la novela es una relectura de "Moby Dick", ¿qué personaje de la novela gráfica cumple el rol simbólico de Ahab?', answer: 'Aunque no hay un equivalente directo, el rol de antagonista obsesivo se divide. El Capitán Pollard introduce la idea de la ballena como monstruo, pero es una mentira. El Capitán Macys encarna la codicia y el orgullo ciego que impulsan la caza final. Sin embargo, ninguno tiene la profundidad filosófica de Ahab. Se podría argumentar que el verdadero "Ahab" en esta historia no es una persona, sino el sistema económico ballenero en sí mismo: una fuerza impersonal, codiciosa y destructiva.' }
+            { id: 22, level: 'Intermedio', question: '¿Por qué el personaje de Aliro Leftraru debe "desaparecer" en la batalla final?', answer: 'La desaparición de Aliro tiene un fuerte peso simbólico. Se convierte en un mártir de la causa, un sacrificio que completa el ciclo mítico. Su "muerte" (o transformación) lo une definitivamente al mundo espiritual de la Mocha. Además, deja a Caleb como el único testigo humano, el único capaz de llevar la historia al mundo exterior, completando su rol como narrador y guardián de la leyenda.' },
+            { id: 23, level: 'Intermedio', question: '¿Qué simboliza el Kurew, el pequeño barco de Duncan Sheffield?', answer: 'El Kurew ("Golondrina" en mapudungun) simboliza una alternativa a la violencia de los balleneros. Es un barco de investigación, no de caza. Su intervención en la batalla final, intentando salvar a la Mocha, representa la alianza entre la ciencia respetuosa y la sabiduría ancestral en defensa de la naturaleza.' },
+            { id: 24, level: 'Intermedio', question: 'Analiza el uso del color en las escenas de la cosmogonía mapuche.', answer: 'Estas escenas, que narran el origen del mundo y la lucha entre los Hijos del Sol y los Hijos de la Tierra, utilizan una paleta de colores limitada, a menudo en tonos tierra, ocre y rojo. Este estilo visual las diferencia del resto de la narración, dándoles un aspecto de mural o arte rupestre, lo que refuerza su carácter mítico y ancestral.' },
+            { id: 25, level: 'Intermedio', question: '¿Por qué el capitán Macys está tan obsesionado con la recompensa?', answer: 'Más allá del dinero, para Macys la recompensa representa la gloria y la consagración como el mejor ballenero. Su orgullo está en juego. La caza de la legendaria Mocha Dick es la oportunidad de inscribir su nombre en la historia, una ambición que lo ciega ante cualquier consideración moral o de seguridad.' }
         ];
 
         // --- DEFINICIÓN DE GRUPOS DE PREGUNTAS ---
-        // UPDATED: Renamed for clarity and added new question sets
-        const neetGeneralQuestionIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 33, 35, 37, 39, 40, 41, 43, 44, 45, 50];
-        const neepPiaQuestionIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 23, 24, 25, 28, 30, 37, 40, 44, 45];
-        const neep4dQuestionIds = Array.from({length: 25}, (_, i) => i + 1); // Generates an array from 1 to 25
+        const neetGeneralQuestionIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25];
+        const neepPiaQuestionIds = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 17, 18, 21, 22, 23, 24, 25];
+        const neep4dQuestionIds = Array.from({length: 25}, (_, i) => i + 1);
 
         // --- ESTADO DE LA APLICACIÓN ---
         let evaluations = [];
@@ -214,12 +285,21 @@
 
         // --- ELEMENTOS DEL DOM ---
         const setupScreen = document.getElementById('setup-screen');
-// ... existing code ... -->
+        const interrogationScreen = document.getElementById('interrogation-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const studentNameInput = document.getElementById('student-name');
+        const studentCourseInput = document.getElementById('student-course');
+        const startButton = document.getElementById('start-button');
+        const finalizeButton = document.getElementById('finalize-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const questionsContainer = document.getElementById('questions-container');
+        const resultsTableBody = document.getElementById('results-table-body');
+        const exportJsonButton = document.getElementById('export-json');
         const importInput = document.getElementById('import-json');
         const modal = document.getElementById('answer-modal');
         const closeModalButton = document.getElementById('close-modal');
 
-        // --- LÓGICA DE AUTOGUARDADO ---
+        // --- FUNCIONES DE AUTOGUARDADO ---
         function saveStateToLocalStorage() {
             try {
                 localStorage.setItem('mochaDickEvaluations', JSON.stringify(evaluations));
@@ -247,10 +327,8 @@
                     if (restoredSession && restoredSession.questions && restoredSession.questions.length > 0) {
                         if (confirm('Se encontró una evaluación sin finalizar. ¿Deseas restaurarla?')) {
                             currentEvaluation = restoredSession;
-                            
                             document.getElementById('eval-student-name').textContent = currentEvaluation.studentName;
                             document.getElementById('eval-student-course').textContent = currentEvaluation.studentCourse;
-                            
                             const evalTypeDisplayNames = {
                                 regular: "Regular",
                                 neet_general: "NEET (General)",
@@ -258,10 +336,8 @@
                                 neet_4d: "NEEP 4D"
                             };
                             document.getElementById('eval-type-display').textContent = `Tipo de Evaluación: ${evalTypeDisplayNames[currentEvaluation.evalType] || 'Regular'}`;
-                            
                             renderQuestions();
                             updateLiveScore();
-                            
                             setupScreen.classList.add('hidden');
                             interrogationScreen.classList.remove('hidden');
                         } else {
@@ -276,40 +352,120 @@
             }
         }
 
-
-        // --- LÓGICA DE LA APLICACIÓN ---
-
-        startButton.addEventListener('click', () => {
+        // --- LÓGICA PRINCIPAL ---
+        startButton.addEventListener('click', async () => {
             const studentName = studentNameInput.value.trim();
-// ... existing code ... -->
-            
+            const studentCourse = studentCourseInput.value.trim();
+            const evalType = document.querySelector('input[name="evaluation-type"]:checked').value;
+
+            if (!studentName || !studentCourse) {
+                alert('Por favor, completa todos los campos.');
+                return;
+            }
+
+            // Intentar cargar preguntas desde la base de datos primero
+            let availableQuestions = await loadQuestionsFromDatabase();
+
+            // Si no hay preguntas en BD, usar las locales
+            if (availableQuestions.length < 8) {
+                availableQuestions = questionBank.filter(q => {
+                    switch (evalType) {
+                        case 'neet_general':
+                            return neetGeneralQuestionIds.includes(q.id);
+                        case 'neet_pia':
+                            return neepPiaQuestionIds.includes(q.id);
+                        case 'neet_4d':
+                            return neep4dQuestionIds.includes(q.id);
+                        default:
+                            return true;
+                    }
+                });
+            }
+
+            if (availableQuestions.length < 8) {
+                alert('No hay suficientes preguntas disponibles para esta evaluación.');
+                return;
+            }
+
             currentEvaluation = {
                 id: Date.now(),
                 studentName,
                 studentCourse,
                 evalType,
-                questions: getRandomQuestions(8, selectedQuestionBank),
+                questions: getRandomQuestions(8, availableQuestions),
                 scores: {},
                 excludedQuestion: null
             };
-            saveStateToLocalStorage(); // Save state when a new evaluation starts
-            
+
+            saveStateToLocalStorage();
+
             document.getElementById('eval-student-name').textContent = studentName;
             document.getElementById('eval-student-course').textContent = studentCourse;
-// ... existing code ... -->
+
+            const evalTypeDisplayNames = {
+                regular: "Regular",
+                neet_general: "NEET (General)",
+                neet_pia: "NEEP (PIA)",
+                neet_4d: "NEEP 4D"
+            };
+            document.getElementById('eval-type-display').textContent = `Tipo de Evaluación: ${evalTypeDisplayNames[evalType] || 'Regular'}`;
+
+            renderQuestions();
+            updateLiveScore();
+
+            setupScreen.classList.add('hidden');
+            interrogationScreen.classList.remove('hidden');
+        });
+
+        finalizeButton.addEventListener('click', async () => {
             const { score, grade } = calculateFinalScore();
             currentEvaluation.finalScore = score;
             currentEvaluation.finalGrade = grade;
 
-            evaluations.push(currentEvaluation);
-            renderResultsTable();
-            resetInterrogation(); // This will clear currentEvaluation and save state
+            // Preparar datos para guardar en la base de datos
+            const questionsData = currentEvaluation.questions.map(q => ({
+                questionId: q.id,
+                questionText: q.question,
+                isCorrect: currentEvaluation.scores[q.id] === 1.0,
+                score: currentEvaluation.scores[q.id] || 0,
+                excluded: currentEvaluation.excludedQuestion === q.id
+            }));
+
+            try {
+                // Intentar guardar en la base de datos
+                await saveEvaluationToDatabase({
+                    studentName: currentEvaluation.studentName,
+                    studentCourse: currentEvaluation.studentCourse,
+                    evalType: currentEvaluation.evalType,
+                    questionsData: questionsData
+                });
+
+                // Si se guardó correctamente, agregar a la lista local
+                evaluations.push(currentEvaluation);
+                renderResultsTable();
+                resetInterrogation();
+            } catch (error) {
+                console.error('Error saving to database:', error);
+                // Si falla la BD, al menos guardar localmente
+                evaluations.push(currentEvaluation);
+                renderResultsTable();
+                resetInterrogation();
+                alert('Evaluación guardada localmente. Error al sincronizar con base de datos.');
+            }
         });
 
         cancelButton.addEventListener('click', () => {
             if (confirm('¿Estás seguro de que quieres cancelar esta evaluación? El progreso no se guardará.')) {
-// ... existing code ... -->
-        
+                resetInterrogation();
+            }
+        });
+
+        // --- FUNCIONES AUXILIARES ---
+        function getRandomQuestions(count, questionArray) {
+            const shuffled = [...questionArray].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
         function renderQuestions() {
             questionsContainer.innerHTML = '';
             currentEvaluation.questions.forEach((q, index) => {
@@ -343,7 +499,7 @@
                 `;
                 questionsContainer.appendChild(questionBlock);
 
-                // ADDED: Restore checked state for scores and exclusions
+                // Restaurar estado guardado
                 const savedScore = currentEvaluation.scores[q.id];
                 if (savedScore !== undefined) {
                     const scoreInput = questionBlock.querySelector(`input[name="score-${questionId}"][value="${savedScore}"]`);
@@ -357,36 +513,119 @@
 
             questionsContainer.querySelectorAll('.show-answer-btn').forEach(btn => {
                 btn.addEventListener('click', () => showAnswerModal(btn.dataset.questionId));
-// ... existing code ... -->
+            });
+
+            // Agregar event listeners para scores y exclusions
+            questionsContainer.querySelectorAll('.score-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const questionId = parseInt(e.target.dataset.questionId);
+                    currentEvaluation.scores[questionId] = parseFloat(e.target.value);
+                    updateLiveScore();
+                    saveStateToLocalStorage();
+                });
+            });
+
+            questionsContainer.querySelectorAll('.exclude-input').forEach(input => {
+                input.addEventListener('change', (e) => {
+                    const questionId = parseInt(e.target.value);
+                    currentEvaluation.excludedQuestion = questionId;
+                    updateLiveScore();
+                    saveStateToLocalStorage();
+                });
+            });
+        }
+
+        function updateLiveScore() {
             const { score, grade } = calculateFinalScore();
             document.getElementById('final-score-container').innerHTML = `
                 <p class="text-lg font-bold">Nota Parcial: <span class="text-green-600">${grade.toFixed(1)}</span></p>
                 <p class="text-sm text-gray-500">Puntaje: ${score.toFixed(1)} / 7.0</p>
             `;
-            saveStateToLocalStorage(); // Auto-save on every score/exclusion change
         }
 
         function calculateFinalScore() {
             let totalScore = 0;
-// ... existing code ... -->
+            let validQuestions = 0;
+
+            currentEvaluation.questions.forEach(q => {
+                if (currentEvaluation.excludedQuestion !== q.id) {
+                    const score = currentEvaluation.scores[q.id] || 0;
+                    totalScore += score;
+                    validQuestions++;
+                }
+            });
+
+            const finalScore = validQuestions > 0 ? (totalScore / validQuestions) * 7 : 0;
+            return { score: finalScore, grade: finalScore };
+        }
+
+        function resetInterrogation() {
             studentNameInput.value = '';
             studentCourseInput.value = '';
             currentEvaluation = {};
             interrogationScreen.classList.add('hidden');
             setupScreen.classList.remove('hidden');
-            saveStateToLocalStorage(); // Clear the current evaluation from storage
+            saveStateToLocalStorage();
         }
 
         function renderResultsTable() {
             resultsTableBody.innerHTML = '';
-// ... existing code ... -->
-                }
+            evaluations.forEach(evalData => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${evalData.studentName}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${evalData.studentCourse}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${evalData.evalType}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${evalData.finalScore.toFixed(1)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${evalData.finalGrade.toFixed(1)}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onclick="generatePDF(${evalData.id})" class="text-indigo-600 hover:text-indigo-900">PDF</button>
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
             });
+        }
+
+        function showAnswerModal(questionId) {
+            const question = questionBank.find(q => q.id == questionId);
+            if (question) {
+                document.getElementById('modal-question').textContent = question.question;
+                document.getElementById('modal-answer').innerHTML = question.answer;
+                modal.classList.remove('hidden');
+                modal.classList.add('active');
+            }
+        }
+
+        closeModalButton.addEventListener('click', () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('active');
+        });
+
+        // Función para generar PDF
+        function generatePDF(evalId) {
+            const evalData = evaluations.find(e => e.id === evalId);
+            if (!evalData) return;
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Informe de Evaluación - Mocha Dick', 20, 30);
+
+            doc.setFontSize(12);
+            doc.text(`Estudiante: ${evalData.studentName}`, 20, 50);
+            doc.text(`Curso: ${evalData.studentCourse}`, 20, 60);
+            doc.text(`Tipo de Evaluación: ${evalData.evalType}`, 20, 70);
+            doc.text(`Puntaje Final: ${evalData.finalScore.toFixed(1)}`, 20, 80);
+            doc.text(`Nota: ${evalData.finalGrade.toFixed(1)}`, 20, 90);
 
             doc.save(`informe_${evalData.studentName.replace(/\s/g, '_')}.pdf`);
         }
 
-        // ADDED: Load state when the page is ready
+        // Hacer la función global para el onclick
+        window.generatePDF = generatePDF;
+
+        // Cargar estado al iniciar
         window.addEventListener('DOMContentLoaded', loadStateFromLocalStorage);
     </script>
 </body>

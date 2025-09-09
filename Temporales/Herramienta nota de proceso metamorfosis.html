@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Herramienta de Interrogación: La Metamorfosis (Adaptativa)</title>
+    <title>Herramienta de Interrogación: La Metamorfosis (Adaptiva)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -15,12 +15,14 @@
         h1, h2, h3 { font-family: 'Lora', serif; }
         .modal { display: none; }
         .modal.active { display: flex; }
+        .loading { display: inline-block; width: 20px; height: 20px; border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8">
-        
+
         <header class="bg-white shadow-md rounded-xl p-6 mb-8 text-center border-l-4 border-purple-800">
             <h1 class="text-3xl md:text-4xl font-bold text-gray-900">Herramienta de Interrogación Adaptativa</h1>
             <p class="text-xl md:text-2xl text-gray-700 mt-2">"La Metamorfosis" de Franz Kafka</p>
@@ -76,7 +78,7 @@
                         <!-- El resultado se mostrará aquí -->
                     </div>
                 </div>
-                
+
                 <h3 class="text-lg font-semibold mb-4">Preguntas Seleccionadas (Marcar puntaje y descartar una)</h3>
                 <div id="questions-container" class="space-y-6">
                     <!-- Las preguntas se cargarán aquí dinámicamente -->
@@ -141,10 +143,14 @@
             </div>
         </div>
     </div>
-    
+
     <script>
-        // --- BANCO DE PREGUNTAS Y RESPUESTAS (PARA "LA METAMORFOSIS") ---
-        const questionBank = [
+        // --- CONFIGURACIÓN DE BASE DE DATOS ---
+        const API_BASE_URL = '/.netlify/functions';
+        const TOOL_NAME = 'metamorfosis';
+
+        // --- BANCO DE PREGUNTAS LOCAL (FALLBACK) ---
+        const localQuestionBank = [
             // Nivel Básico
             { id: 1, level: 'Básico', question: '¿En qué se transforma Gregorio Samsa al despertar una mañana?', answer: 'Se transforma en un monstruoso insecto.' },
             { id: 2, level: 'Básico', question: '¿Cuál era la profesión de Gregorio antes de su transformación?', answer: 'Era viajante de comercio, vendía telas.' },
@@ -173,7 +179,7 @@
             { id: 23, level: 'Intermedio', question: '¿Por qué la comunicación entre Gregorio y su familia fracasa constantemente?', answer: 'Fracasa porque, aunque Gregorio entiende perfectamente lo que su familia dice, ellos solo oyen ruidos ininteligibles de animal cuando él intenta hablar. Esta barrera de comunicación es una metáfora central de la alienación y la soledad: la incapacidad de ser comprendido por los demás, incluso por los más cercanos.' },
             { id: 24, level: 'Intermedio', question: 'Explica el significado del título. ¿Solo Gregorio sufre una metamorfosis?', answer: 'No, toda la familia sufre una metamorfosis. Gregorio sufre una transformación física, pero su familia experimenta una transformación psicológica y social. Grete pasa de ser una niña a una mujer joven y pragmática. El padre pasa de la pasividad a la autoridad. La familia en su conjunto pasa de la dependencia a la autosuficiencia, a costa de la deshumanización de Gregorio.' },
             { id: 25, level: 'Intermedio', question: '¿Qué representa la puerta de la habitación de Gregorio?', answer: 'La puerta es un símbolo crucial de la conexión y la separación. Al principio, Gregorio lucha por abrirla para unirse al mundo. A medida que avanza la historia, la puerta se mantiene cerrada la mayor parte del tiempo, simbolizando su aislamiento. Cada vez que se abre, se produce un conflicto. La puerta es la frontera física entre su mundo de insecto y el mundo humano.' },
-            { id: 26, level: 'Intermedio', question: '¿Cuál es la importancia del hecho de que Gregorio fuera el sostén económico de la familia?', answer: 'Es fundamental. Su valor para la familia estaba directamente ligado a su capacidad de ganar dinero. Una vez que pierde esa capacidad, pierde su utilidad y, gradualmente, su estatus como miembro de la familia. La obra critica una visión utilitarista de las relaciones humanas, donde el afecto está condicionado por el beneficio económico.' },
+            { id: 26, level: 'Intermedio', question: '¿Por qué Gregorio se aferra al cuadro de la mujer envuelta en pieles cuando Grete y su madre intentan vaciar su habitación?', answer: 'El cuadro es el último vestigio de su humanidad. Es un objeto que él mismo colocó y que representa la belleza, el arte y un mundo que ha perdido. Aferrarse a él es un intento desesperado por conservar una parte de su antigua identidad humana frente al vaciamiento de su espacio vital.' },
             { id: 27, level: 'Intermedio', question: 'Analiza la reacción de la madre de Gregorio. ¿Por qué parece tan débil y se desmaya constantemente?', answer: 'La madre representa un amor maternal genuino pero ineficaz. Su debilidad física (asma) y emocional le impide actuar. Quiere ayudar a su hijo, pero el horror de su nueva forma se lo impide, provocándole desmayos. Simboliza un afecto que, sin la fuerza para superar la repulsión, resulta inútil.' },
             { id: 28, level: 'Intermedio', question: '¿Qué nos dice sobre la familia el hecho de que empiecen a usar la habitación de Gregorio como un almacén de trastos viejos?', answer: 'Este acto simboliza la deshumanización final de Gregorio. Su espacio vital, su último refugio, es invadido y convertido en un basurero. Esto refleja que la familia ya no lo considera un miembro con necesidades o dignidad, sino simplemente un estorbo que ocupa un espacio que podría tener un mejor uso.' },
             { id: 29, level: 'Intermedio', question: '¿Por qué Grete decide tocar el violín para los inquilinos?', answer: 'Grete toca para mostrar su talento y su nueva madurez, buscando la aprobación y el respeto de los inquilinos, que representan el mundo exterior. Es un acto que la posiciona como el nuevo centro cultural y de esperanza de la familia, en contraste directo con Gregorio, que ahora es la vergüenza oculta.' },
@@ -187,7 +193,7 @@
             { id: 35, level: 'Complejo', question: '¿Cómo explora la obra los límites del amor familiar y la compasión?', answer: 'La novela explora brutalmente cómo el amor familiar y la compasión tienen límites. El afecto de la familia Samsa demuestra ser condicional, dependiente de la "normalidad" y la utilidad de Gregorio. Cuando él se convierte en una carga repulsiva y económicamente inútil, el amor se desvanece y es reemplazado por el pragmatismo y el deseo de supervivencia. La obra sugiere que, bajo presión, los lazos familiares pueden ser más frágiles de lo que parecen.' },
             { id: 36, level: 'Complejo', question: 'Discute el estilo de escritura de Kafka (el "estilo kafkiano"). ¿Cómo contribuye el lenguaje preciso y burocrático a la atmósfera de la novela?', answer: 'El estilo kafkiano se caracteriza por una prosa clara, precisa y casi notarial para describir eventos fantásticos y angustiantes. Este lenguaje desapasionado crea un contraste aterrador con el horror de la situación. Al describir la monstruosa transformación de Gregorio con la misma objetividad que un informe burocrático, Kafka intensifica la sensación de extrañamiento y pesadilla.' },
             { id: 37, level: 'Complejo', question: '¿Es la transformación de Gregorio una liberación o una condena?', answer: 'Es ambas cosas. Es una condena porque lo aísla, le causa un inmenso sufrimiento físico y emocional, y lo lleva a la muerte. Sin embargo, también es una liberación. Lo libera de su trabajo odiado, de su rol de esclavo económico y de las expectativas familiares. Como insecto, por momentos, explora nuevas sensaciones y formas de moverse que nunca tuvo como humano. Es una liberación trágica que solo se consuma en la muerte.' },
-            { id: 38, level: 'Complejo', question: 'Analiza la obra como una crítica a la institución de la familia burguesa.', answer: 'La familia Samsa es un microcosmos de la familia burguesa, obsesionada con las apariencias, el estatus social y la seguridad económica. La obra la presenta como una institución opresiva y parasitaria. El afecto es transaccional y la lealtad se basa en la conveniencia. Cuando Gregorio deja de cumplir su función productiva, la estructura familiar no lo cuida, sino que lo expulsa para asegurar su propia supervivencia y "respetabilidad".' },
+            { id: 38, level: 'Complejo', question: 'Analiza la obra como una crítica a la institución de la familia burguesa.', answer: 'La familia Samsa es un microcosmos de la familia burguesa, obsesionada con las apariencias, el estatus social y la seguridad económica. La obra la presenta como una institución opresiva y parasitaria. El afecto es transaccional y la lealtad se basa en la conveniencia. Cuando Gregorio deja de cumplir su función productiva, la familia no lo cuida, sino que lo expulsa para asegurar su propia supervivencia y "respetabilidad".' },
             { id: 39, level: 'Complejo', question: '¿Qué simbolismo se puede encontrar en el hecho de que Gregorio sea un "insecto"?', answer: 'El insecto (identificado como "Ungeziefer", que significa alimaña o parásito) simboliza lo insignificante, lo repulsivo y lo deshumanizado. Es un ser que se arrastra, que vive en la suciedad y que provoca asco. Su forma de insecto es la metáfora perfecta para alguien que se siente aplastado, sin valor y marginado por la sociedad y su propia familia.' },
             { id: 40, level: 'Complejo', question: 'La historia está narrada desde una perspectiva muy cercana a Gregorio. ¿Cómo afectaría a la historia si estuviera narrada desde el punto de vista de Grete?', answer: 'Si fuera narrada por Grete, la historia probablemente comenzaría como un relato de compasión y sacrificio. Veríamos su esfuerzo y la carga que representa cuidar a su hermano. Sin embargo, gradualmente, la narración se volvería más resentida y justificaría su decisión final como un acto necesario de autopreservación. Perderíamos el acceso a la conciencia torturada de Gregorio y ganaríamos una visión más pragmática y quizás autoindulgente de la tragedia.' },
             { id: 41, level: 'Complejo', question: '¿Por qué Gregorio no intenta escapar de la habitación?', answer: 'Gregorio no escapa por una mezcla de incapacidad física, miedo al mundo exterior y, lo más importante, un residuo de lealtad y amor por su familia. A pesar de cómo lo tratan, todavía se considera parte de la familia y no quiere abandonarlos ni causarles más problemas. Su encierro es tanto físico como psicológico.' },
@@ -205,9 +211,95 @@
         const neetQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,34,35,40,41,48,50];
         const neepQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,48];
 
+        // --- FUNCIONES DE BASE DE DATOS ---
+        async function loadQuestionsFromDatabase() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: TOOL_NAME })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.questions && data.questions.length > 0) {
+                    console.log('Preguntas cargadas desde la base de datos');
+                    return data.questions;
+                } else {
+                    throw new Error('No se pudieron cargar las preguntas desde la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al cargar preguntas desde la base de datos, usando fallback local:', error);
+                return localQuestionBank;
+            }
+        }
+
+        async function saveEvaluationToDatabase(evaluation) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/save-evaluation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        tool: TOOL_NAME,
+                        evaluation: evaluation
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Evaluación guardada en la base de datos');
+                    return true;
+                } else {
+                    throw new Error('Error al guardar en la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al guardar en la base de datos, usando localStorage:', error);
+                return false;
+            }
+        }
+
+        async function loadEvaluationsFromDatabase() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get-evaluations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: TOOL_NAME })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.evaluations) {
+                    console.log('Evaluaciones cargadas desde la base de datos');
+                    return data.evaluations;
+                } else {
+                    throw new Error('No se pudieron cargar las evaluaciones desde la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al cargar evaluaciones desde la base de datos, usando localStorage:', error);
+                return null;
+            }
+        }
+
         // --- ESTADO DE LA APLICACIÓN ---
         let evaluations = [];
         let currentEvaluation = {};
+        let questionBank = [];
 
         // --- ELEMENTOS DEL DOM ---
         const setupScreen = document.getElementById('setup-screen');
@@ -225,15 +317,58 @@
         const modal = document.getElementById('answer-modal');
         const closeModalButton = document.getElementById('close-modal');
 
+        // --- INICIALIZACIÓN ---
+        async function initializeApp() {
+            try {
+                // Mostrar indicador de carga
+                startButton.disabled = true;
+                startButton.innerHTML = '<div class="loading mr-2"></div> Cargando preguntas...';
+
+                // Cargar preguntas desde la base de datos
+                questionBank = await loadQuestionsFromDatabase();
+
+                // Cargar evaluaciones desde la base de datos
+                const dbEvaluations = await loadEvaluationsFromDatabase();
+                if (dbEvaluations) {
+                    evaluations = dbEvaluations;
+                    renderResultsTable();
+                } else {
+                    // Fallback a localStorage
+                    const savedEvaluations = localStorage.getItem(`evaluations_${TOOL_NAME}`);
+                    if (savedEvaluations) {
+                        evaluations = JSON.parse(savedEvaluations);
+                        renderResultsTable();
+                    }
+                }
+
+                // Restaurar estado normal del botón
+                startButton.disabled = false;
+                startButton.innerHTML = 'Comenzar Interrogación';
+
+                console.log('Aplicación inicializada correctamente');
+            } catch (error) {
+                console.error('Error al inicializar la aplicación:', error);
+                // Usar fallback local
+                questionBank = localQuestionBank;
+                startButton.disabled = false;
+                startButton.innerHTML = 'Comenzar Interrogación';
+            }
+        }
+
         // --- LÓGICA DE LA APLICACIÓN ---
 
-        startButton.addEventListener('click', () => {
+        startButton.addEventListener('click', async () => {
             const studentName = studentNameInput.value.trim();
             const studentCourse = studentCourseInput.value.trim();
             const evalType = document.querySelector('input[name="evaluation-type"]:checked').value;
 
             if (!studentName || !studentCourse) {
                 alert('Por favor, ingresa el nombre y el curso del estudiante.');
+                return;
+            }
+
+            if (questionBank.length === 0) {
+                alert('Error: No se pudieron cargar las preguntas. Intenta recargar la página.');
                 return;
             }
 
@@ -253,32 +388,42 @@
                 scores: {},
                 excludedQuestion: null
             };
-            
+
             document.getElementById('eval-student-name').textContent = studentName;
             document.getElementById('eval-student-course').textContent = studentCourse;
-            
+
             let typeText = "Regular";
             if(evalType === 'neet') typeText = "NEET";
             if(evalType === 'neep') typeText = "NEEP";
             document.getElementById('eval-type-display').textContent = `Tipo de Evaluación: ${typeText}`;
-            
+
             renderQuestions();
             setupScreen.classList.add('hidden');
             interrogationScreen.classList.remove('hidden');
             document.getElementById('final-score-container').innerHTML = '';
         });
 
-        finalizeButton.addEventListener('click', () => {
+        finalizeButton.addEventListener('click', async () => {
             if (Object.keys(currentEvaluation.scores).length < 8 || currentEvaluation.excludedQuestion === null) {
                 alert('Por favor, califica todas las preguntas y selecciona una para descartar.');
                 return;
             }
-            
+
             const { score, grade } = calculateFinalScore();
             currentEvaluation.finalScore = score;
             currentEvaluation.finalGrade = grade;
 
-            evaluations.push(currentEvaluation);
+            // Intentar guardar en la base de datos primero
+            const savedToDB = await saveEvaluationToDatabase(currentEvaluation);
+
+            if (savedToDB) {
+                evaluations.push(currentEvaluation);
+            } else {
+                // Fallback a localStorage
+                evaluations.push(currentEvaluation);
+                localStorage.setItem(`evaluations_${TOOL_NAME}`, JSON.stringify(evaluations));
+            }
+
             renderResultsTable();
             resetInterrogation();
         });
@@ -288,7 +433,7 @@
                 resetInterrogation();
             }
         });
-        
+
         function renderQuestions() {
             questionsContainer.innerHTML = '';
             currentEvaluation.questions.forEach((q, index) => {
@@ -339,7 +484,7 @@
                 });
             });
         }
-        
+
         function updateLiveScore() {
             const scoredCount = Object.keys(currentEvaluation.scores).length;
             const isExcluded = currentEvaluation.excludedQuestion !== null;
@@ -361,7 +506,7 @@
                     totalScore += currentEvaluation.scores[q.id] || 0;
                 }
             });
-            
+
             const maxScore = 7.0;
             let grade = (totalScore / maxScore) * 6 + 1;
             if (grade < 1) grade = 1.0;
@@ -403,7 +548,7 @@
                 });
             });
         }
-        
+
         function getRandomQuestions(num, sourceBank) {
             const shuffled = [...sourceBank].sort(() => 0.5 - Math.random());
             return shuffled.slice(0, num);
@@ -411,9 +556,11 @@
 
         function showAnswerModal(questionId) {
             const questionData = questionBank.find(q => q.id == questionId);
-            document.getElementById('modal-question').textContent = questionData.question;
-            document.getElementById('modal-answer').textContent = questionData.answer;
-            modal.classList.add('active');
+            if (questionData) {
+                document.getElementById('modal-question').textContent = questionData.question;
+                document.getElementById('modal-answer').textContent = questionData.answer;
+                modal.classList.add('active');
+            }
         }
 
         closeModalButton.addEventListener('click', () => modal.classList.remove('active'));
@@ -431,7 +578,7 @@
             const dataStr = JSON.stringify(evaluations, null, 2);
             const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
             const exportFileDefaultName = `evaluaciones_metamorfosis_${new Date().toISOString().slice(0,10)}.json`;
-            
+
             const linkElement = document.createElement('a');
             linkElement.setAttribute('href', dataUri);
             linkElement.setAttribute('download', exportFileDefaultName);
@@ -447,6 +594,12 @@
                     const importedData = JSON.parse(e.target.result);
                     if (Array.isArray(importedData)) {
                         evaluations = importedData;
+                        // Intentar guardar en la base de datos
+                        evaluations.forEach(async (eval) => {
+                            await saveEvaluationToDatabase(eval);
+                        });
+                        // También guardar en localStorage como respaldo
+                        localStorage.setItem(`evaluations_${TOOL_NAME}`, JSON.stringify(evaluations));
                         renderResultsTable();
                         alert('Datos cargados exitosamente.');
                     } else {
@@ -472,11 +625,11 @@
             doc.setFontSize(12);
             doc.text(`Estudiante: ${evalData.studentName}`, 20, 40);
             doc.text(`Curso: ${evalData.studentCourse}`, 20, 47);
-            
+
             let evalTypeText = "Regular";
             if (evalData.evalType === 'neet') evalTypeText = "NEET (Necesidades Educativas Especiales Transitorias)";
             if (evalData.evalType === 'neep') evalTypeText = "NEEP (Necesidades Educativas Especiales Permanentes)";
-            
+
             doc.setFontSize(10);
             doc.setTextColor(100);
             doc.text(`Tipo de Evaluación: ${evalTypeText}`, 20, 54);
@@ -486,7 +639,7 @@
             doc.setFont("Lora", "bold");
             doc.setFontSize(14);
             doc.text(`Resultado Final`, 20, 65);
-            
+
             doc.setFont("Inter", "normal");
             doc.setFontSize(12);
             doc.setTextColor(evalData.finalGrade >= 4.0 ? 0 : 200, 0, 0);
@@ -524,6 +677,9 @@
 
             doc.save(`informe_${evalData.studentName.replace(/\s/g, '_')}.pdf`);
         }
+
+        // --- INICIAR LA APLICACIÓN ---
+        document.addEventListener('DOMContentLoaded', initializeApp);
     </script>
 </body>
 </html>

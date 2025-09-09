@@ -3,302 +3,1013 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Asistente de Creación de Curriculum Vitae</title>
+    <title>Generador de CV Profesional - Francisco Núñez</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Roboto+Slab:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
         }
-        .roboto-slab {
-            font-family: 'Roboto Slab', serif;
+
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
-        #cv-preview {
+
+        .cv-preview {
             font-family: 'Inter', sans-serif;
-            color: #374151;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            background: white;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
             width: 210mm;
             min-height: 297mm;
             transform-origin: top left;
+            transition: all 0.3s ease;
         }
-        #cv-preview h2 {
+
+        .cv-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .cv-section h2 {
             font-family: 'Roboto Slab', serif;
             font-size: 1.25rem;
             font-weight: 700;
-            color: #1e3a8a;
-            border-bottom: 2px solid #93c5fd;
-            padding-bottom: 0.25rem;
-            margin-bottom: 0.75rem;
+            color: #1e40af;
+            border-bottom: 3px solid #3b82f6;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
             display: flex;
             align-items: center;
         }
-        .skill-tag {
-            background-color: #e0e7ff;
-            color: #3730a3;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            display: inline-block;
+
+        .cv-section h2 i {
+            margin-right: 0.5rem;
+            color: #3b82f6;
         }
+
+        .skill-tag {
+            background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+            color: #1e40af;
+            padding: 0.375rem 0.875rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border: 1px solid #93c5fd;
+            transition: all 0.2s ease;
+        }
+
+        .skill-tag:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(59, 130, 246, 0.2);
+        }
+
         .value-item {
             display: flex;
             align-items: center;
+            padding: 0.5rem;
+            background: #f8fafc;
+            border-radius: 0.5rem;
+            border-left: 4px solid #3b82f6;
+            transition: all 0.2s ease;
         }
+
+        .value-item:hover {
+            background: #e2e8f0;
+            transform: translateX(2px);
+        }
+
         .value-item::before {
             content: '✓';
-            color: #1e3a8a;
-            margin-right: 0.5rem;
+            color: #10b981;
+            margin-right: 0.75rem;
             font-weight: 600;
+            font-size: 1.1em;
         }
+
+        .form-section {
+            background: white;
+            border-radius: 1rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .form-section:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .form-section summary {
+            font-weight: 600;
+            color: #374151;
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+        }
+
+        .form-section summary::after {
+            content: '▼';
+            transition: transform 0.3s ease;
+            font-size: 0.875rem;
+        }
+
+        .form-section[open] summary::after {
+            transform: rotate(180deg);
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            transition: all 0.2s ease;
+            background: #fafafa;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .item-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+
+        .item-card:hover {
+            background: #e2e8f0;
+            border-color: #cbd5e1;
+        }
+
+        .remove-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+
+        .photo-upload-area {
+            border: 2px dashed #d1d5db;
+            border-radius: 0.5rem;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .photo-upload-area:hover {
+            border-color: #3b82f6;
+            background: #eff6ff;
+        }
+
+        .photo-upload-area.dragover {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e5e7eb;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #10b981);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
         @media print {
-            body { margin: 0; padding: 0; }
-            .no-print { display: none; }
-            #cv-preview { width: 100%; min-height: 0; box-shadow: none; margin: 0; border: none; }
+            body { margin: 0; padding: 0; background: white; }
+            .no-print { display: none !important; }
+            .cv-preview {
+                width: 100%;
+                min-height: 0;
+                box-shadow: none;
+                margin: 0;
+                border: none;
+                transform: none;
+            }
+        }
+
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .loading-spinner {
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #3b82f6;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Navigation Styles */
+        .header-enhanced {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .professional-name {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-link {
+            color: #374151;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #3b82f6;
+        }
+
+        .btn-premium {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .interactive-hover {
+            transition: all 0.3s ease;
+        }
+
+        .interactive-hover:hover {
+            transform: scale(1.05);
+        }
+
+        .interactive-text {
+            transition: color 0.3s ease;
         }
     </style>
 </head>
 <body class="p-4 sm:p-8">
     <!-- Navigation Bar -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <!-- Logo/Name -->
-                <a href="/" class="text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
-                    Francisco Núñez
+    <header class="header-enhanced sticky top-0 z-50 no-print" role="banner">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center" role="navigation" aria-label="Main navigation">
+            <a href="/" class="flex items-center space-x-3" aria-label="Inicio">
+                <img src="/imagenes/logo-profe-francisco-nuevo.svg" alt="Logo Profe Francisco - Átomo del Conocimiento" class="h-12 w-auto interactive-hover rounded-lg"/>
+                <span class="text-lg font-extrabold professional-name interactive-text">Francisco Javier Núñez</span>
+            </a>
+
+            <div class="hidden md:flex items-center space-x-6">
+                <a href="/#sobre-mi" class="nav-link interactive-hover interactive-text relative group">
+                    Sobre Mí
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full"></span>
                 </a>
+                <a href="/#servicios" class="nav-link interactive-hover interactive-text relative group">
+                    Servicios
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="/#apps" class="nav-link interactive-hover interactive-text relative group">
+                    Herramientas
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="/tips-carrera-docente/" class="nav-link interactive-hover interactive-text relative group">
+                    Tips Docentes
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="/portafolio/" class="nav-link interactive-hover interactive-text relative group">
+                    Portafolio
+                    <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-300 group-hover:w-full"></span>
+                </a>
+                <a href="/generador-cv/" class="nav-link interactive-hover interactive-text relative group text-blue-600 font-semibold">
+                    Generador CV
+                    <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-blue-500 to-purple-500"></span>
+                </a>
+                <a href="/contacto/" class="btn-premium">Contacto</a>
+            </div>
 
-                <!-- Desktop Navigation -->
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Inicio</a>
-                    <a href="/portafolio" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Portafolio</a>
-                    <a href="/blog" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Blog</a>
-                    <a href="/contacto" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contacto</a>
-                    <a href="/galeria" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Galería</a>
-                    <a href="/generador-cv" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Generador CV</a>
-                </div>
-
-                <!-- Mobile Menu Button -->
-                <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-blue-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            <div class="md:hidden">
+                <button id="mobile-menu-button" class="text-gray-800 dark:text-gray-200 focus:outline-none p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors" aria-expanded="false" aria-controls="mobile-menu">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
                     </svg>
                 </button>
             </div>
+        </nav>
 
-            <!-- Mobile Navigation Menu -->
-            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200">
-                <div class="flex flex-col space-y-4 pt-4">
-                    <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Inicio</a>
-                    <a href="/portafolio" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Portafolio</a>
-                    <a href="/blog" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Blog</a>
-                    <a href="/contacto" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contacto</a>
-                    <a href="/galeria" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Galería</a>
-                    <a href="/generador-cv" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Generador CV</a>
-                </div>
-            </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 shadow-lg" role="menu">
+            <a href="/#sobre-mi" class="block py-3 px-6 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Sobre Mí</a>
+            <a href="/#servicios" class="block py-3 px-6 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Servicios</a>
+            <a href="/#apps" class="block py-3 px-6 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Herramientas</a>
+            <a href="/tips-carrera-docente/" class="block py-3 px-6 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Tips Docentes</a>
+            <a href="/portafolio/" class="block py-3 px-6 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Portafolio</a>
+            <a href="/generador-cv/" class="block py-3 px-6 text-blue-600 dark:text-blue-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Generador CV</a>
+            <a href="/contacto/" class="block py-3 px-6 text-blue-600 dark:text-blue-400 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors" role="menuitem">Contacto</a>
         </div>
-    </nav>
-    <div class="max-w-7xl mx-auto">
-        
-        <div class="mb-8 no-print">
-             <a href="/" class="inline-flex items-center text-gray-600 hover:text-gray-900 font-semibold mb-4">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>
-                Volver a la página principal
-            </a>
-            <h1 class="roboto-slab text-4xl font-bold text-gray-800 text-center">Asistente de Creación de CV</h1>
-            <p class="text-gray-600 mt-2 text-center">Crea un currículum profesional enfocado en tus habilidades y potencial.</p>
+    </header>
+
+    <div class="max-w-7xl mx-auto pt-24 px-4 sm:px-8">
+        <div class="mb-8 no-print text-center">
+            <h1 class="text-4xl lg:text-5xl font-bold text-white mb-4 animate-fade-in">
+                <i class="fas fa-file-alt text-blue-300 mr-3"></i>
+                Generador de CV Profesional
+            </h1>
+            <p class="text-xl text-white/90 max-w-2xl mx-auto">
+                Crea un currículum vitae moderno y profesional que destaque tus habilidades y experiencia
+            </p>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div class="bg-white p-6 rounded-xl shadow-lg no-print">
-                <h2 class="roboto-slab text-2xl font-bold text-gray-700 border-b pb-2 mb-6">Completa tus Datos</h2>
-                
-                <details class="mb-4" open>
-                    <summary class="font-semibold text-lg cursor-pointer text-gray-800">Datos Personales</summary>
-                    <div class="mt-4 border-t pt-4 space-y-2">
-                        <input type="text" id="full-name" placeholder="Nombre Completo" class="w-full p-2 border rounded" data-target="#cv-full-name">
-                        <input type="text" id="title" placeholder="Título Profesional" class="w-full p-2 border rounded" data-target="#cv-title">
-                        <input type="email" id="email" placeholder="Correo Electrónico" class="w-full p-2 border rounded" data-target="#cv-email">
-                        <input type="tel" id="phone" placeholder="Teléfono" class="w-full p-2 border rounded" data-target="#cv-phone">
-                        <input type="text" id="address" placeholder="Dirección, Ciudad" class="w-full p-2 border rounded" data-target="#cv-address">
-                        <div class="bg-gray-50 p-3 rounded-lg">
-                            <label class="block text-sm font-medium text-gray-700 mb-2">Foto de Perfil (Opcional):</label>
-                            <input type="file" id="photo-upload" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                            <button id="camera-btn" class="w-full mt-2 bg-green-100 text-green-800 text-sm font-semibold p-2 rounded-lg hover:bg-green-200">Usar Cámara</button>
-                            <div id="camera-view" class="hidden mt-4">
-                                <video id="video" class="w-full rounded-lg" autoplay></video>
-                                <button id="capture-btn" class="w-full mt-2 bg-red-500 text-white p-2 rounded-lg hover:bg-red-600">Capturar Foto</button>
-                            </div>
-                            <canvas id="canvas" class="hidden"></canvas>
+            <!-- Form Panel -->
+            <div class="space-y-6 no-print">
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                            <i class="fas fa-edit text-blue-600"></i>
+                            Información Personal
+                        </h2>
+                        <div class="text-sm text-gray-500">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Paso 1 de 5
                         </div>
                     </div>
-                </details>
-                <details class="mb-4"><summary class="font-semibold text-lg cursor-pointer text-gray-800">Perfil Profesional</summary><div class="mt-4 border-t pt-4"><textarea id="profile" rows="4" placeholder="Escribe un breve resumen sobre ti..." class="w-full p-2 border rounded" data-target="#cv-profile"></textarea></div></details>
-                <details class="mb-4"><summary class="font-semibold text-lg cursor-pointer text-gray-800">Formación Académica</summary><div class="mt-4 border-t pt-4"><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2"><input type="text" id="education-degree" placeholder="Título Obtenido" class="w-full p-2 border rounded"><input type="text" id="education-institution" placeholder="Institución" class="w-full p-2 border rounded"><input type="text" id="education-year" placeholder="Año Egreso" class="w-full p-2 border rounded"></div><button id="add-education-btn" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 font-bold mb-2">Agregar Formación</button><div id="education-list" class="space-y-2"></div></div></details>
-                <details class="mb-4"><summary class="font-semibold text-lg cursor-pointer text-gray-800">Cursos y Capacitaciones</summary><div class="mt-4 border-t pt-4"><div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2"><input type="text" id="course-name" placeholder="Nombre del Curso" class="w-full p-2 border rounded"><input type="text" id="course-institution" placeholder="Institución" class="w-full p-2 border rounded"><input type="text" id="course-year" placeholder="Año" class="w-full p-2 border rounded"></div><button id="add-course-btn" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600 font-bold mb-2">Agregar Curso</button><div id="courses-list" class="space-y-2"></div></div></details>
-                <details class="mb-4"><summary class="font-semibold text-lg cursor-pointer text-gray-800">Habilidades y Conocimientos</summary><div class="mt-4 border-t pt-4"><div class="flex gap-2 mb-2"><input type="text" id="skill-input" placeholder="Ej: Microsoft Office..." class="w-full p-2 border rounded"><button id="add-skill-btn" class="bg-blue-500 text-white px-4 rounded hover:bg-blue-600 font-bold">+</button></div><div id="skills-list" class="flex flex-wrap gap-2"></div></div></details>
-                <details class="mb-4"><summary class="font-semibold text-lg cursor-pointer text-gray-800">Valores y Competencias</summary><div class="mt-4 border-t pt-4"><div class="flex gap-2 mb-2"><input type="text" id="value-input" placeholder="Ej: Trabajo en Equipo..." class="w-full p-2 border rounded"><button id="add-value-btn" class="bg-blue-500 text-white px-4 rounded hover:bg-blue-600 font-bold">+</button></div><div id="values-list" class="space-y-1"></div></div></details>
-                <div class="mt-8 text-center"><button id="generate-pdf-btn" class="bg-green-600 text-white font-bold py-3 px-8 rounded-lg hover:bg-green-700">Descargar CV en PDF</button></div>
+
+                    <div class="space-y-4">
+                        <input type="text" id="full-name" placeholder="Nombre Completo" class="input-field" data-target="#cv-full-name">
+                        <input type="text" id="title" placeholder="Título Profesional" class="input-field" data-target="#cv-title">
+                        <input type="email" id="email" placeholder="Correo Electrónico" class="input-field" data-target="#cv-email">
+                        <input type="tel" id="phone" placeholder="Teléfono" class="input-field" data-target="#cv-phone">
+                        <input type="text" id="address" placeholder="Dirección, Ciudad" class="input-field" data-target="#cv-address">
+                    </div>
+                </div>
+
+                <!-- Photo Upload Section -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-camera text-green-600"></i>
+                        Foto de Perfil
+                    </h3>
+
+                    <div class="photo-upload-area" id="photo-upload-area">
+                        <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                        <p class="text-gray-600 mb-2">Arrastra una imagen aquí o haz clic para seleccionar</p>
+                        <p class="text-sm text-gray-500">PNG, JPG hasta 5MB</p>
+                        <input type="file" id="photo-upload" accept="image/*" class="hidden">
+                    </div>
+
+                    <div class="flex gap-2 mt-4">
+                        <button id="camera-btn" class="btn-secondary flex-1">
+                            <i class="fas fa-camera"></i>
+                            Usar Cámara
+                        </button>
+                    </div>
+
+                    <div id="camera-view" class="hidden mt-4">
+                        <video id="video" class="w-full rounded-lg border-2 border-gray-300" autoplay></video>
+                        <div class="flex gap-2 mt-2">
+                            <button id="capture-btn" class="btn-primary flex-1">
+                                <i class="fas fa-camera"></i>
+                                Capturar
+                            </button>
+                            <button id="cancel-camera-btn" class="btn-secondary flex-1">
+                                <i class="fas fa-times"></i>
+                                Cancelar
+                            </button>
+                        </div>
+                    </div>
+                    <canvas id="canvas" class="hidden"></canvas>
+                </div>
+
+                <!-- Profile Section -->
+                <div class="glass-effect rounded-xl p-6">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                        <i class="fas fa-user text-purple-600"></i>
+                        Perfil Profesional
+                    </h3>
+                    <textarea id="profile" rows="4" placeholder="Describe tu experiencia, objetivos profesionales y lo que te hace único..." class="input-field" data-target="#cv-profile"></textarea>
+                </div>
+
+                <!-- Education Section -->
+                <div class="form-section">
+                    <summary class="font-semibold text-lg cursor-pointer text-gray-800">
+                        <i class="fas fa-graduation-cap text-blue-600 mr-2"></i>
+                        Formación Académica
+                    </summary>
+                    <div class="mt-4 border-t pt-4 space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" id="education-degree" placeholder="Título/Carrera" class="input-field">
+                            <input type="text" id="education-institution" placeholder="Institución" class="input-field">
+                            <input type="text" id="education-year" placeholder="Año de egreso" class="input-field">
+                        </div>
+                        <button id="add-education-btn" class="btn-primary w-full">
+                            <i class="fas fa-plus"></i>
+                            Agregar Formación
+                        </button>
+                        <div id="education-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Courses Section -->
+                <div class="form-section">
+                    <summary class="font-semibold text-lg cursor-pointer text-gray-800">
+                        <i class="fas fa-certificate text-green-600 mr-2"></i>
+                        Cursos y Capacitaciones
+                    </summary>
+                    <div class="mt-4 border-t pt-4 space-y-3">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input type="text" id="course-name" placeholder="Nombre del curso" class="input-field">
+                            <input type="text" id="course-institution" placeholder="Institución" class="input-field">
+                            <input type="text" id="course-year" placeholder="Año" class="input-field">
+                        </div>
+                        <button id="add-course-btn" class="btn-primary w-full">
+                            <i class="fas fa-plus"></i>
+                            Agregar Curso
+                        </button>
+                        <div id="courses-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Skills Section -->
+                <div class="form-section">
+                    <summary class="font-semibold text-lg cursor-pointer text-gray-800">
+                        <i class="fas fa-tools text-orange-600 mr-2"></i>
+                        Habilidades y Conocimientos
+                    </summary>
+                    <div class="mt-4 border-t pt-4 space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="skill-input" placeholder="Ej: Microsoft Office, Inglés avanzado..." class="input-field">
+                            <button id="add-skill-btn" class="btn-primary px-4">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div id="skills-list" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Values Section -->
+                <div class="form-section">
+                    <summary class="font-semibold text-lg cursor-pointer text-gray-800">
+                        <i class="fas fa-heart text-red-600 mr-2"></i>
+                        Valores y Competencias
+                    </summary>
+                    <div class="mt-4 border-t pt-4 space-y-3">
+                        <div class="flex gap-2">
+                            <input type="text" id="value-input" placeholder="Ej: Trabajo en equipo, Liderazgo..." class="input-field">
+                            <button id="add-value-btn" class="btn-primary px-4">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                        <div id="values-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="glass-effect rounded-xl p-6">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button id="generate-pdf-btn" class="btn-secondary flex-1">
+                            <i class="fas fa-download"></i>
+                            Descargar PDF
+                        </button>
+                        <button id="preview-btn" class="btn-primary flex-1">
+                            <i class="fas fa-eye"></i>
+                            Vista Previa
+                        </button>
+                    </div>
+                    <div class="progress-bar mt-4">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                </div>
             </div>
 
-            <div class="bg-gray-200 p-4 rounded-xl flex justify-center items-start">
-                <div id="cv-preview" class="bg-white p-8 rounded-lg">
-                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 border-b-2 border-gray-200 pb-4">
-                        <div class="flex-shrink-0"><img id="cv-photo" src="https://placehold.co/128x128/e0e7ff/3730a3?text=Foto" alt="Foto de Perfil" class="w-32 h-32 rounded-full object-cover border-4 border-gray-200"></div>
-                        <div class="text-center sm:text-left"><h1 id="cv-full-name" class="text-3xl lg:text-4xl font-bold text-gray-800">Tu Nombre Completo</h1><p id="cv-title" class="text-lg lg:text-xl text-blue-800 mt-1">Tu Título Profesional</p><div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start flex-wrap gap-x-4 gap-y-1 text-sm mt-3 text-gray-500"><span id="cv-email">tu.correo@email.com</span><span class="hidden sm:inline">|</span><span id="cv-phone">+569 1234 5678</span><span class="hidden sm:inline">|</span><span id="cv-address">Tu Dirección, Comuna, Ciudad</span></div></div>
+            <!-- Preview Panel -->
+            <div class="bg-gray-100 p-4 rounded-xl flex justify-center items-start sticky top-24">
+                <div id="cv-preview" class="cv-preview p-8 rounded-lg animate-fade-in">
+                    <!-- Header Section -->
+                    <div class="flex flex-col sm:flex-row items-center space-y-4 sm:space-y-0 sm:space-x-6 border-b-2 border-gray-200 pb-6 mb-6">
+                        <div class="flex-shrink-0">
+                            <img id="cv-photo" src="https://placehold.co/128x128/e0e7ff/3730a3?text=Foto" alt="Foto de Perfil" class="w-32 h-32 rounded-full object-cover border-4 border-blue-200 shadow-lg">
+                        </div>
+                        <div class="text-center sm:text-left flex-1">
+                            <h1 id="cv-full-name" class="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">Tu Nombre Completo</h1>
+                            <p id="cv-title" class="text-xl text-blue-600 font-medium mb-3">Tu Título Profesional</p>
+                            <div class="flex flex-col sm:flex-row items-center justify-center sm:justify-start flex-wrap gap-x-4 gap-y-2 text-sm text-gray-600">
+                                <span class="flex items-center gap-1">
+                                    <i class="fas fa-envelope text-blue-500"></i>
+                                    <span id="cv-email">tu.correo@email.com</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fas fa-phone text-green-500"></i>
+                                    <span id="cv-phone">+569 1234 5678</span>
+                                </span>
+                                <span class="flex items-center gap-1">
+                                    <i class="fas fa-map-marker-alt text-red-500"></i>
+                                    <span id="cv-address">Tu Dirección, Ciudad</span>
+                                </span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="mt-6"><h2><svg class="w-6 h-6 mr-2 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>Perfil Profesional</h2><p id="cv-profile" class="text-sm leading-relaxed">Aquí va tu resumen profesional...</p></div>
-                    <div id="cv-education-container" class="mt-6"><h2><svg class="w-6 h-6 mr-2 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"></path><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-9.998 12.078 12.078 0 01.665-6.479L12 14z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0v6"></path></svg>Formación Académica</h2><div id="cv-education-list" class="space-y-4 mt-2"></div></div>
-                    <div id="cv-courses-container" class="mt-6 hidden"><h2><svg class="w-6 h-6 mr-2 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>Cursos y Capacitaciones</h2><div id="cv-courses-list" class="space-y-4 mt-2"></div></div>
-                    <div id="cv-skills-container" class="mt-6"><h2><svg class="w-6 h-6 mr-2 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M12 6V3m0 18v-3M5.636 5.636l-1.414-1.414M19.778 19.778l-1.414-1.414M18.364 5.636l1.414-1.414M4.222 19.778l1.414-1.414M12 12a6 6 0 100-12 6 6 0 000 12z"></path></svg>Habilidades y Conocimientos</h2><div id="cv-skills-list" class="flex flex-wrap gap-2 mt-2"></div></div>
-                    <div id="cv-values-container" class="mt-6"><h2><svg class="w-6 h-6 mr-2 text-blue-800" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>Valores y Competencias</h2><div id="cv-values-list" class="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 text-sm"></div></div>
+
+                    <!-- Profile Section -->
+                    <div class="cv-section" id="cv-profile-container">
+                        <h2>
+                            <i class="fas fa-user"></i>
+                            Perfil Profesional
+                        </h2>
+                        <p id="cv-profile" class="text-gray-700 leading-relaxed text-justify">
+                            Aquí va tu resumen profesional que destaque tu experiencia y objetivos...
+                        </p>
+                    </div>
+
+                    <!-- Education Section -->
+                    <div class="cv-section" id="cv-education-container">
+                        <h2>
+                            <i class="fas fa-graduation-cap"></i>
+                            Formación Académica
+                        </h2>
+                        <div id="cv-education-list" class="space-y-4">
+                            <div class="border-l-4 border-blue-500 pl-4">
+                                <h3 class="font-semibold text-lg text-gray-800">Licenciatura en Educación</h3>
+                                <p class="text-gray-600">Universidad de Chile</p>
+                                <p class="text-sm text-gray-500">2015 - 2019</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Courses Section -->
+                    <div class="cv-section hidden" id="cv-courses-container">
+                        <h2>
+                            <i class="fas fa-certificate"></i>
+                            Cursos y Capacitaciones
+                        </h2>
+                        <div id="cv-courses-list" class="space-y-4"></div>
+                    </div>
+
+                    <!-- Skills Section -->
+                    <div class="cv-section" id="cv-skills-container">
+                        <h2>
+                            <i class="fas fa-tools"></i>
+                            Habilidades y Conocimientos
+                        </h2>
+                        <div id="cv-skills-list" class="flex flex-wrap gap-2">
+                            <span class="skill-tag">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                Comunicación
+                            </span>
+                            <span class="skill-tag">
+                                <i class="fas fa-star text-yellow-500"></i>
+                                Liderazgo
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Values Section -->
+                    <div class="cv-section" id="cv-values-container">
+                        <h2>
+                            <i class="fas fa-heart"></i>
+                            Valores y Competencias
+                        </h2>
+                        <div id="cv-values-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            <div class="value-item">Responsabilidad</div>
+                            <div class="value-item">Trabajo en equipo</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const { jsPDF } = window.jspdf;
+    class CVGenerator {
+        constructor() {
+            this.data = {
+                personal: {},
+                education: [],
+                courses: [],
+                skills: [],
+                values: []
+            };
+            this.init();
+        }
 
-        const inputs = document.querySelectorAll('input[data-target], textarea[data-target]');
-        inputs.forEach(input => {
-            input.addEventListener('input', (e) => {
-                const targetElement = document.querySelector(e.target.dataset.target);
-                if (targetElement) {
-                    targetElement.textContent = e.target.value || e.target.placeholder;
+        init() {
+            this.setupEventListeners();
+            this.setupPhotoUpload();
+            this.setupCamera();
+            this.updateProgress();
+        }
+
+        setupEventListeners() {
+            // Real-time preview updates
+            const inputs = document.querySelectorAll('input[data-target], textarea[data-target]');
+            inputs.forEach(input => {
+                input.addEventListener('input', (e) => this.updatePreview(e));
+                input.addEventListener('blur', (e) => this.updatePreview(e));
+            });
+
+            // Dynamic list management
+            this.setupDynamicList('education', ['education-degree', 'education-institution', 'education-year']);
+            this.setupDynamicList('courses', ['course-name', 'course-institution', 'course-year']);
+            this.setupDynamicList('skills', ['skill-input']);
+            this.setupDynamicList('values', ['value-input']);
+
+            // PDF generation
+            document.getElementById('generate-pdf-btn').addEventListener('click', () => this.generatePDF());
+
+            // Preview button
+            document.getElementById('preview-btn').addEventListener('click', () => this.showPreview());
+
+            // Mobile menu
+            this.setupMobileMenu();
+        }
+
+        updatePreview(event) {
+            const targetElement = document.querySelector(event.target.dataset.target);
+            if (targetElement) {
+                const value = event.target.value.trim();
+                targetElement.textContent = value || event.target.placeholder;
+            }
+            this.updateProgress();
+        }
+
+        setupDynamicList(type, inputIds) {
+            const addBtn = document.getElementById(`add-${type}-btn`);
+            const listContainer = document.getElementById(`${type}-list`);
+            const cvListContainer = document.getElementById(`cv-${type}-list`);
+            const cvSectionContainer = document.getElementById(`cv-${type}-container`);
+            const inputs = inputIds.map(id => document.getElementById(id));
+
+            const addItem = () => {
+                const values = inputs.map(input => input.value.trim());
+                if (values.some(val => val !== '')) {
+                    this.data[type].push(values);
+                    inputs.forEach(input => input.value = '');
+                    this.renderList(type, listContainer, cvListContainer, cvSectionContainer);
+                    inputs[0].focus();
+                    this.updateProgress();
+                }
+            };
+
+            addBtn.addEventListener('click', addItem);
+
+            // Enter key support
+            inputs.forEach(input => {
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addItem();
+                    }
+                });
+            });
+        }
+
+        renderList(type, listContainer, cvListContainer, cvSectionContainer) {
+            listContainer.innerHTML = '';
+            cvListContainer.innerHTML = '';
+
+            if (cvSectionContainer) {
+                cvSectionContainer.classList.toggle('hidden', this.data[type].length === 0);
+            }
+
+            this.data[type].forEach((item, index) => {
+                // Form list item
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'item-card';
+                itemDiv.innerHTML = `
+                    <span class="font-medium">${item.map(val => val || 'N/A').join(' - ')}</span>
+                    <button class="remove-btn" onclick="cvGenerator.removeItem('${type}', ${index})">
+                        <i class="fas fa-times"></i>
+                    </button>
+                `;
+                listContainer.appendChild(itemDiv);
+
+                // CV preview item
+                const cvItem = this.createCvItem(type, item);
+                cvListContainer.appendChild(cvItem);
+            });
+        }
+
+        createCvItem(type, item) {
+            const div = document.createElement('div');
+
+            switch(type) {
+                case 'education':
+                case 'courses':
+                    div.innerHTML = `
+                        <div class="border-l-4 border-blue-500 pl-4 mb-4">
+                            <h3 class="font-semibold text-lg text-gray-800">${item[0] || 'Título'}</h3>
+                            <p class="text-gray-600">${item[1] || 'Institución'}</p>
+                            <p class="text-sm text-gray-500">${item[2] || 'Año'}</p>
+                        </div>
+                    `;
+                    break;
+                case 'skills':
+                    div.innerHTML = `<span class="skill-tag"><i class="fas fa-star text-yellow-500"></i>${item[0]}</span>`;
+                    break;
+                case 'values':
+                    div.innerHTML = `<div class="value-item">${item[0]}</div>`;
+                    break;
+            }
+
+            return div;
+        }
+
+        removeItem(type, index) {
+            this.data[type].splice(index, 1);
+            const listContainer = document.getElementById(`${type}-list`);
+            const cvListContainer = document.getElementById(`cv-${type}-list`);
+            const cvSectionContainer = document.getElementById(`cv-${type}-container`);
+            this.renderList(type, listContainer, cvListContainer, cvSectionContainer);
+            this.updateProgress();
+        }
+
+        setupPhotoUpload() {
+            const uploadArea = document.getElementById('photo-upload-area');
+            const fileInput = document.getElementById('photo-upload');
+            const cvPhoto = document.getElementById('cv-photo');
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    this.handleFileUpload(files[0]);
                 }
             });
-            input.dispatchEvent(new Event('input'));
-        });
 
-        const photoUpload = document.getElementById('photo-upload');
-        const cameraBtn = document.getElementById('camera-btn');
-        const cameraView = document.getElementById('camera-view');
-        const video = document.getElementById('video');
-        const canvas = document.getElementById('canvas');
-        const captureBtn = document.getElementById('capture-btn');
-        const cvPhoto = document.getElementById('cv-photo');
-        let stream;
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files[0]) {
+                    this.handleFileUpload(e.target.files[0]);
+                }
+            });
+        }
 
-        photoUpload.addEventListener('change', (event) => {
-            if (event.target.files && event.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = (e) => { cvPhoto.src = e.target.result; };
-                reader.readAsDataURL(event.target.files[0]);
+        handleFileUpload(file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                alert('La imagen es demasiado grande. Máximo 5MB.');
+                return;
             }
-        });
-        
-        cameraBtn.addEventListener('click', async () => {
-            cameraView.classList.toggle('hidden');
-            if (!cameraView.classList.contains('hidden')) {
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('cv-photo').src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        setupCamera() {
+            const cameraBtn = document.getElementById('camera-btn');
+            const cameraView = document.getElementById('camera-view');
+            const video = document.getElementById('video');
+            const canvas = document.getElementById('canvas');
+            const captureBtn = document.getElementById('capture-btn');
+            const cancelBtn = document.getElementById('cancel-camera-btn');
+            const cvPhoto = document.getElementById('cv-photo');
+
+            let stream;
+
+            cameraBtn.addEventListener('click', async () => {
+                cameraView.classList.remove('hidden');
                 try {
-                    stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+                    stream = await navigator.mediaDevices.getUserMedia({
+                        video: { width: 640, height: 480 }
+                    });
                     video.srcObject = stream;
                 } catch (err) {
-                    console.error("Error accessing camera: ", err);
-                    cameraView.classList.add('hidden');
+                    alert('Error al acceder a la cámara: ' + err.message);
                 }
-            } else if (stream) {
-                stream.getTracks().forEach(track => track.stop());
-            }
-        });
-        
-        captureBtn.addEventListener('click', () => {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
-            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
-            cvPhoto.src = canvas.toDataURL('image/png');
+            });
+
+            captureBtn.addEventListener('click', () => {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                canvas.getContext('2d').drawImage(video, 0, 0);
+                cvPhoto.src = canvas.toDataURL('image/jpeg', 0.8);
+                this.stopCamera(stream);
+                cameraView.classList.add('hidden');
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                this.stopCamera(stream);
+                cameraView.classList.add('hidden');
+            });
+        }
+
+        stopCamera(stream) {
             if (stream) {
                 stream.getTracks().forEach(track => track.stop());
             }
-            cameraView.classList.add('hidden');
-        });
+        }
 
-        function setupDynamicList(options) {
-            const addBtn = document.getElementById(options.addBtnId);
-            const listContainer = document.getElementById(options.listId);
-            const cvListContainer = document.getElementById(options.cvListId);
-            const cvSectionContainer = document.getElementById(options.cvSectionId);
-            const inputs = options.inputIds.map(id => document.getElementById(id));
-            let items = [];
+        updateProgress() {
+            const inputs = document.querySelectorAll('input[data-target], textarea[data-target]');
+            const filledInputs = Array.from(inputs).filter(input => input.value.trim() !== '');
+            const totalItems = Object.values(this.data).reduce((sum, arr) => sum + arr.length, 0);
+            const totalFields = inputs.length + 4; // 4 sections
+            const progress = ((filledInputs.length + totalItems) / totalFields) * 100;
 
-            function handleAdd() {
-                const values = inputs.map(input => input.value.trim());
-                if (values.some(val => val !== '')) {
-                    items.push(values);
-                    inputs.forEach(input => input.value = '');
-                    render();
-                    inputs[0].focus();
-                }
-            }
+            document.getElementById('progress-fill').style.width = Math.min(progress, 100) + '%';
+        }
 
-            addBtn.addEventListener('click', handleAdd);
-            const lastInput = inputs[inputs.length - 1];
-            if(lastInput) {
-                lastInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') { e.preventDefault(); handleAdd(); }
+        setupMobileMenu() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    const expanded = mobileMenuButton.getAttribute('aria-expanded') === 'true';
+                    mobileMenuButton.setAttribute('aria-expanded', !expanded);
                 });
-            }
 
-            function render() {
-                listContainer.innerHTML = '';
-                cvListContainer.innerHTML = '';
-                if (cvSectionContainer) cvSectionContainer.classList.toggle('hidden', items.length === 0);
-
-                items.forEach((item, index) => {
-                    const itemDiv = document.createElement('div');
-                    itemDiv.className = 'flex items-center justify-between bg-gray-100 p-2 rounded text-sm';
-                    itemDiv.innerHTML = `<span>${item.map(val => val || '?').join(' - ')}</span>`;
-                    const removeBtn = document.createElement('button');
-                    removeBtn.className = 'text-red-500 hover:text-red-700 font-bold ml-2';
-                    removeBtn.textContent = 'X';
-                    removeBtn.onclick = () => { items.splice(index, 1); render(); };
-                    itemDiv.appendChild(removeBtn);
-                    listContainer.appendChild(itemDiv);
-                    const cvItem = options.renderCvItem(item);
-                    cvListContainer.appendChild(cvItem);
+                document.addEventListener('click', (event) => {
+                    if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuButton.setAttribute('aria-expanded', 'false');
+                    }
                 });
             }
         }
 
-        setupDynamicList({ addBtnId: 'add-education-btn', listId: 'education-list', cvListId: 'cv-education-list', cvSectionId: 'cv-education-container', inputIds: ['education-degree', 'education-institution', 'education-year'], renderCvItem: (item) => { const d = document.createElement('div'); d.innerHTML = `<p class="font-semibold text-md">${item[0]||''}</p><p class="text-sm">${item[1]||''}</p><p class="text-sm text-gray-500">${item[2]||''}</p>`; return d; } });
-        setupDynamicList({ addBtnId: 'add-course-btn', listId: 'courses-list', cvListId: 'cv-courses-list', cvSectionId: 'cv-courses-container', inputIds: ['course-name', 'course-institution', 'course-year'], renderCvItem: (item) => { const d = document.createElement('div'); d.innerHTML = `<p class="font-semibold text-md">${item[0]||''}</p><p class="text-sm">${item[1]||''}</p><p class="text-sm text-gray-500">${item[2]||''}</p>`; return d; } });
-        setupDynamicList({ addBtnId: 'add-skill-btn', listId: 'skills-list', cvListId: 'cv-skills-list', cvSectionId: 'cv-skills-container', inputIds: ['skill-input'], renderCvItem: (item) => { const s = document.createElement('span'); s.className = 'skill-tag'; s.textContent = item[0]; return s; } });
-        setupDynamicList({ addBtnId: 'add-value-btn', listId: 'values-list', cvListId: 'cv-values-list', cvSectionId: 'cv-values-container', inputIds: ['value-input'], renderCvItem: (item) => { const p = document.createElement('p'); p.className = 'value-item'; p.textContent = item[0]; return p; } });
+        showPreview() {
+            // Force update all preview elements
+            const inputs = document.querySelectorAll('input[data-target], textarea[data-target]');
+            inputs.forEach(input => {
+                const event = new Event('input');
+                input.dispatchEvent(event);
+            });
 
-        document.getElementById('generate-pdf-btn').addEventListener('click', () => {
+            // Scroll to preview
+            document.getElementById('cv-preview').scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+        }
+
+        async generatePDF() {
             const btn = document.getElementById('generate-pdf-btn');
-            const originalText = btn.textContent;
-            btn.textContent = 'Generando...';
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<div class="loading-spinner mr-2"></div> Generando...';
             btn.disabled = true;
-            window.print();
-            btn.textContent = originalText;
-            btn.disabled = false;
-        });
-    });
-    </script>
-    <script>
-        // Mobile menu toggle functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
 
-            mobileMenuButton.addEventListener('click', function() {
-                mobileMenu.classList.toggle('hidden');
-            });
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
 
-            // Close mobile menu when clicking outside
-            document.addEventListener('click', function(event) {
-                if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
-                    mobileMenu.classList.add('hidden');
+                const cvElement = document.getElementById('cv-preview');
+
+                // Configure html2canvas options for better quality
+                const canvas = await html2canvas(cvElement, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    width: 210 * 3.78, // A4 width in pixels at 300 DPI
+                    height: 297 * 3.78  // A4 height in pixels at 300 DPI
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.95);
+                const imgWidth = 210;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+                // Center the content vertically if it's shorter than A4
+                let yPosition = 0;
+                if (imgHeight < 297) {
+                    yPosition = (297 - imgHeight) / 2;
                 }
-            });
-        });
+
+                pdf.addImage(imgData, 'JPEG', 0, yPosition, imgWidth, imgHeight);
+
+                // Generate filename with current date
+                const date = new Date().toISOString().split('T')[0];
+                const fileName = `CV_${document.getElementById('full-name').value || 'SinNombre'}_${date}.pdf`;
+
+                pdf.save(fileName);
+
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error al generar el PDF. Por favor, intenta nuevamente.');
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+    }
+
+    // Initialize the CV generator
+    const cvGenerator = new CVGenerator();
     </script>
 </body>
 </html>

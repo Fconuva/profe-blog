@@ -1,4 +1,5 @@
 module.exports = function(eleventyConfig) {
+  // Trigger deploy
   // Copiar archivos estáticos
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addPassthroughCopy("js");

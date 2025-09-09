@@ -53,45 +53,8 @@
 
     <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
 
-        <!-- Login Screen -->
-        <div id="login-screen" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-md mx-auto slide-up">
-            <div class="text-center mb-8">
-                <i class="fas fa-lock text-6xl text-blue-500 mb-4"></i>
-                <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Acceso Restringido</h2>
-                <p class="text-gray-600 dark:text-gray-400">Ingresa tus credenciales para acceder a la herramienta</p>
-            </div>
-
-            <div class="space-y-6">
-                <div class="glass-effect dark:dark-glass rounded-xl p-6">
-                    <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        <i class="fas fa-user mr-2 text-blue-500"></i>Usuario
-                    </label>
-                    <input type="text" id="username" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ingresa tu usuario">
-                </div>
-
-                <div class="glass-effect dark:dark-glass rounded-xl p-6">
-                    <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                        <i class="fas fa-key mr-2 text-green-500"></i>Contraseña
-                    </label>
-                    <input type="password" id="password" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ingresa tu contraseña">
-                </div>
-
-                <div id="login-error" class="hidden bg-red-100 dark:bg-red-900 border border-red-400 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                    <span id="login-error-text">Credenciales incorrectas</span>
-                </div>
-            </div>
-
-            <div class="mt-8">
-                <button id="login-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105 transition-all duration-200">
-                    <i class="fas fa-sign-in-alt mr-2"></i>
-                    Iniciar Sesión
-                </button>
-            </div>
-        </div>
-
         <!-- Header Mejorado -->
-        <header id="main-header" class="hidden bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 mb-8 text-center border-l-8 border-blue-600 fade-in">
+        <header id="main-header" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 mb-8 text-center border-l-8 border-blue-600 fade-in">
             <div class="flex items-center justify-center mb-4">
                 <i class="fas fa-book-open text-4xl text-blue-600 mr-4"></i>
                 <div>
@@ -107,9 +70,6 @@
                 <span class="flex items-center"><i class="fas fa-brain mr-2 text-purple-500"></i>Evaluación Inteligente</span>
                 <span class="flex items-center"><i class="fas fa-save mr-2 text-green-500"></i>Autoguardado</span>
                 <span class="flex items-center"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Profesional</span>
-                <button onclick="logout()" class="flex items-center text-red-500 hover:text-red-700 transition-colors">
-                    <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
-                </button>
             </div>
         </header>
 
@@ -373,12 +333,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
         // Configuración de jsPDF
         const { jsPDF } = window.jspdf;
 
-        // Credenciales de acceso
-        const validCredentials = [
-            { username: 'admin', password: 'admin123' },
-            { username: 'PIE', password: '12345678' }
-        ];
-
         // Variables globales mejoradas
         let currentStudent = null;
         let currentEvaluationType = 'regular';
@@ -386,16 +340,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
         let evaluations = JSON.parse(localStorage.getItem('mochaDickEvaluations') || '[]');
         let autoSaveInterval = null;
         let isDarkMode = localStorage.getItem('darkMode') === 'true';
-        let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-
-        // Verificar login al cargar
-        if (!isLoggedIn) {
-            document.getElementById('login-screen').classList.remove('hidden');
-            document.getElementById('main-header').classList.add('hidden');
-        } else {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('main-header').classList.remove('hidden');
-        }
 
         // Aplicar tema oscuro si está activado
         if (isDarkMode) {
@@ -412,17 +356,11 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             document.getElementById('theme-toggle-btn').innerHTML = icon;
         });
 
-        // Base de datos de preguntas mejorada
+        // Base de datos de preguntas mejorada (solo texto para interrogación oral)
         const questionsDatabase = [
             {
                 id: 1,
                 question: "¿Cuál es el nombre completo del protagonista en 'Mocha Dick'?",
-                answers: [
-                    { text: "José Antonio Mocha Dick", score: 1.0 },
-                    { text: "José Mocha Dick", score: 0.5 },
-                    { text: "Antonio Mocha Dick", score: 0.5 },
-                    { text: "Mocha Dick", score: 0.0 }
-                ],
                 idealAnswer: "José Antonio Mocha Dick es el nombre completo del protagonista. Este nombre refleja tanto su herencia española como su apodo legendario.",
                 difficulty: "basic",
                 category: "character"
@@ -430,12 +368,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 2,
                 question: "¿Qué representa simbólicamente la ballena blanca en la obra?",
-                answers: [
-                    { text: "La obsesión destructiva y la locura", score: 1.0 },
-                    { text: "La naturaleza indomable", score: 0.5 },
-                    { text: "La riqueza del mar", score: 0.5 },
-                    { text: "Un simple animal marino", score: 0.0 }
-                ],
                 idealAnswer: "La ballena blanca simboliza la obsesión destructiva que lleva a la locura. Representa lo inalcanzable y lo que consume la vida del protagonista.",
                 difficulty: "intermediate",
                 category: "symbolism"
@@ -443,12 +375,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 3,
                 question: "¿Cuál es el conflicto principal de la novela?",
-                answers: [
-                    { text: "La lucha entre el hombre y la naturaleza indomable", score: 1.0 },
-                    { text: "La rivalidad entre pescadores", score: 0.5 },
-                    { text: "Problemas económicos", score: 0.5 },
-                    { text: "Conflictos familiares", score: 0.0 }
-                ],
                 idealAnswer: "El conflicto principal es la lucha entre el hombre y la naturaleza indomable, representada por la ballena blanca que simboliza lo incontrolable.",
                 difficulty: "intermediate",
                 category: "plot"
@@ -456,12 +382,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 4,
                 question: "¿Qué tema central desarrolla Ortega y Martínez en la obra?",
-                answers: [
-                    { text: "La obsesión y sus consecuencias destructivas", score: 1.0 },
-                    { text: "El amor romántico", score: 0.5 },
-                    { text: "La aventura marina", score: 0.5 },
-                    { text: "La vida cotidiana", score: 0.0 }
-                ],
                 idealAnswer: "El tema central es la obsesión y sus consecuencias destructivas. La novela muestra cómo una fijación puede llevar a la ruina total.",
                 difficulty: "advanced",
                 category: "theme"
@@ -469,12 +389,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 5,
                 question: "¿Cómo se manifiesta la locura del protagonista?",
-                answers: [
-                    { text: "A través de su obsesión por cazar la ballena blanca", score: 1.0 },
-                    { text: "Por su comportamiento errático", score: 0.5 },
-                    { text: "Por sus alucinaciones", score: 0.5 },
-                    { text: "Por su agresividad", score: 0.0 }
-                ],
                 idealAnswer: "La locura se manifiesta principalmente a través de su obsesión por cazar la ballena blanca, que lo lleva a sacrificar todo en su vida.",
                 difficulty: "advanced",
                 category: "character"
@@ -482,12 +396,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 6,
                 question: "¿Qué elementos realistas incluye la novela?",
-                answers: [
-                    { text: "Descripciones detalladas de la pesca ballenera", score: 1.0 },
-                    { text: "Personajes históricos", score: 0.5 },
-                    { text: "Lugares reales", score: 0.5 },
-                    { text: "Elementos fantásticos", score: 0.0 }
-                ],
                 idealAnswer: "La novela incluye elementos realistas como descripciones detalladas de la pesca ballenera y referencias a técnicas y lugares reales.",
                 difficulty: "intermediate",
                 category: "style"
@@ -495,12 +403,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 7,
                 question: "¿Cuál es el desenlace de la historia?",
-                answers: [
-                    { text: "La destrucción total del protagonista", score: 1.0 },
-                    { text: "La captura de la ballena", score: 0.5 },
-                    { text: "El abandono de la pesca", score: 0.5 },
-                    { text: "Un final feliz", score: 0.0 }
-                ],
                 idealAnswer: "El desenlace muestra la destrucción total del protagonista, quien pierde todo por su obsesión, incluyendo su vida.",
                 difficulty: "basic",
                 category: "plot"
@@ -508,12 +410,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 8,
                 question: "¿Qué influencia literaria se puede identificar en la obra?",
-                answers: [
-                    { text: "Moby Dick de Herman Melville", score: 1.0 },
-                    { text: "Otras novelas de aventuras", score: 0.5 },
-                    { text: "Literatura española clásica", score: 0.5 },
-                    { text: "Literatura chilena contemporánea", score: 0.0 }
-                ],
                 idealAnswer: "La obra está claramente influenciada por 'Moby Dick' de Herman Melville, adaptando el mito de la ballena blanca al contexto chileno.",
                 difficulty: "advanced",
                 category: "literary"
@@ -521,12 +417,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 9,
                 question: "¿Cómo se representa el mar en la novela?",
-                answers: [
-                    { text: "Como una fuerza poderosa e indomable", score: 1.0 },
-                    { text: "Como un lugar pacífico", score: 0.5 },
-                    { text: "Como un espacio de recreación", score: 0.5 },
-                    { text: "Como un lugar peligroso solo por las ballenas", score: 0.0 }
-                ],
                 idealAnswer: "El mar se representa como una fuerza poderosa e indomable que desafía el control humano y representa lo desconocido.",
                 difficulty: "intermediate",
                 category: "setting"
@@ -534,12 +424,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 10,
                 question: "¿Qué crítica social incluye la obra?",
-                answers: [
-                    { text: "La explotación laboral en la pesca", score: 1.0 },
-                    { text: "Problemas ambientales", score: 0.5 },
-                    { text: "Desigualdad social", score: 0.5 },
-                    { text: "Conflictos políticos", score: 0.0 }
-                ],
                 idealAnswer: "La obra incluye crítica social sobre la explotación laboral en la pesca y las condiciones inhumanas de los trabajadores del mar.",
                 difficulty: "advanced",
                 category: "social"
@@ -547,12 +431,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 11,
                 question: "¿Cuál es la estructura narrativa de la novela?",
-                answers: [
-                    { text: "Narración en tercera persona con saltos temporales", score: 1.0 },
-                    { text: "Narración lineal cronológica", score: 0.5 },
-                    { text: "Narración en primera persona", score: 0.5 },
-                    { text: "Estructura fragmentada", score: 0.0 }
-                ],
                 idealAnswer: "La novela utiliza una narración en tercera persona con saltos temporales que muestran la evolución de la obsesión del protagonista.",
                 difficulty: "advanced",
                 category: "structure"
@@ -560,12 +438,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 12,
                 question: "¿Qué simboliza el nombre 'Mocha Dick'?",
-                answers: [
-                    { text: "La transformación del hombre en mito", score: 1.0 },
-                    { text: "Un simple apodo de pescador", score: 0.5 },
-                    { text: "Un nombre familiar", score: 0.5 },
-                    { text: "Un nombre inventado", score: 0.0 }
-                ],
                 idealAnswer: "El nombre 'Mocha Dick' simboliza la transformación del hombre común en una figura mítica, similar a la ballena que persigue.",
                 difficulty: "intermediate",
                 category: "symbolism"
@@ -573,12 +445,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 13,
                 question: "¿Cómo se desarrolla el personaje a lo largo de la obra?",
-                answers: [
-                    { text: "De pescador racional a obseso irracional", score: 1.0 },
-                    { text: "De pobre a rico", score: 0.5 },
-                    { text: "De joven a adulto", score: 0.5 },
-                    { text: "Sin cambios significativos", score: 0.0 }
-                ],
                 idealAnswer: "El personaje se desarrolla de un pescador racional y experimentado a un hombre completamente obseso e irracional.",
                 difficulty: "intermediate",
                 category: "character"
@@ -586,12 +452,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 14,
                 question: "¿Qué recursos literarios predominan en la obra?",
-                answers: [
-                    { text: "Descripciones detalladas y simbolismo", score: 1.0 },
-                    { text: "Diálogos extensos", score: 0.5 },
-                    { text: "Monólogos interiores", score: 0.5 },
-                    { text: "Narración simple", score: 0.0 }
-                ],
                 idealAnswer: "Predominan las descripciones detalladas del mar y la pesca, junto con un fuerte uso del simbolismo para representar ideas abstractas.",
                 difficulty: "advanced",
                 category: "style"
@@ -599,12 +459,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 15,
                 question: "¿Cuál es el contexto histórico de la novela?",
-                answers: [
-                    { text: "Chile de principios del siglo XX", score: 1.0 },
-                    { text: "Época colonial", score: 0.5 },
-                    { text: "Siglo XIX", score: 0.5 },
-                    { text: "Época contemporánea", score: 0.0 }
-                ],
                 idealAnswer: "La novela está ambientada en Chile de principios del siglo XX, durante la época de la pesca ballenera industrial.",
                 difficulty: "basic",
                 category: "context"
@@ -612,12 +466,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 16,
                 question: "¿Qué mensaje transmite la obra sobre la naturaleza humana?",
-                answers: [
-                    { text: "La obsesión puede destruir al ser humano", score: 1.0 },
-                    { text: "El hombre puede controlar la naturaleza", score: 0.5 },
-                    { text: "La naturaleza es benevolente", score: 0.5 },
-                    { text: "El hombre es superior a la naturaleza", score: 0.0 }
-                ],
                 idealAnswer: "La obra transmite que la obsesión puede destruir completamente al ser humano, llevándolo a perder todo contacto con la realidad.",
                 difficulty: "advanced",
                 category: "theme"
@@ -625,12 +473,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 17,
                 question: "¿Cómo se relaciona el protagonista con otros personajes?",
-                answers: [
-                    { text: "Se aísla progresivamente de los demás", score: 1.0 },
-                    { text: "Mantiene relaciones estrechas", score: 0.5 },
-                    { text: "Forma nuevas amistades", score: 0.5 },
-                    { text: "Sin cambios en sus relaciones", score: 0.0 }
-                ],
                 idealAnswer: "El protagonista se aísla progresivamente de los demás, perdiendo sus relaciones familiares y sociales por su obsesión.",
                 difficulty: "intermediate",
                 category: "character"
@@ -638,12 +480,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 18,
                 question: "¿Qué tipo de lenguaje utiliza el autor?",
-                answers: [
-                    { text: "Lenguaje poético y descriptivo", score: 1.0 },
-                    { text: "Lenguaje coloquial", score: 0.5 },
-                    { text: "Lenguaje técnico", score: 0.5 },
-                    { text: "Lenguaje simple", score: 0.0 }
-                ],
                 idealAnswer: "El autor utiliza un lenguaje poético y descriptivo, especialmente en las escenas relacionadas con el mar y la ballena.",
                 difficulty: "intermediate",
                 category: "style"
@@ -651,12 +487,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 19,
                 question: "¿Qué importancia tiene el paisaje en la obra?",
-                answers: [
-                    { text: "Refleja el estado emocional de los personajes", score: 1.0 },
-                    { text: "Es un simple escenario", score: 0.5 },
-                    { text: "Proporciona información histórica", score: 0.5 },
-                    { text: "No tiene importancia", score: 0.0 }
-                ],
                 idealAnswer: "El paisaje refleja el estado emocional de los personajes, especialmente el mar que simboliza la turbulencia interior del protagonista.",
                 difficulty: "advanced",
                 category: "setting"
@@ -664,12 +494,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 20,
                 question: "¿Qué valores cuestiona la obra?",
-                answers: [
-                    { text: "El progreso tecnológico sin ética", score: 1.0 },
-                    { text: "Los valores tradicionales", score: 0.5 },
-                    { text: "La religión", score: 0.5 },
-                    { text: "La educación", score: 0.0 }
-                ],
                 idealAnswer: "La obra cuestiona el progreso tecnológico sin ética, mostrando cómo la industrialización de la pesca afecta a los trabajadores.",
                 difficulty: "advanced",
                 category: "social"
@@ -677,12 +501,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 21,
                 question: "¿Cómo termina la relación del protagonista con su familia?",
-                answers: [
-                    { text: "Se destruye completamente", score: 1.0 },
-                    { text: "Se fortalece", score: 0.5 },
-                    { text: "Permanece igual", score: 0.5 },
-                    { text: "Mejora", score: 0.0 }
-                ],
                 idealAnswer: "La relación del protagonista con su familia se destruye completamente debido a su obsesión que lo aleja de sus seres queridos.",
                 difficulty: "intermediate",
                 category: "character"
@@ -690,12 +508,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 22,
                 question: "¿Qué rol juega la comunidad en la historia?",
-                answers: [
-                    { text: "Testigo impotente de la locura del protagonista", score: 1.0 },
-                    { text: "Apoya al protagonista", score: 0.5 },
-                    { text: "Se opone activamente", score: 0.5 },
-                    { text: "No participa", score: 0.0 }
-                ],
                 idealAnswer: "La comunidad actúa como testigo impotente de la locura del protagonista, incapaz de detener su descenso hacia la destrucción.",
                 difficulty: "intermediate",
                 category: "social"
@@ -703,12 +515,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 23,
                 question: "¿Cuál es el tono general de la obra?",
-                answers: [
-                    { text: "Trágico y ominoso", score: 1.0 },
-                    { text: "Optimista", score: 0.5 },
-                    { text: "Humorístico", score: 0.5 },
-                    { text: "Neutral", score: 0.0 }
-                ],
                 idealAnswer: "El tono general de la obra es trágico y ominoso, creando una atmósfera de inevitable destrucción.",
                 difficulty: "intermediate",
                 category: "style"
@@ -716,12 +522,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 24,
                 question: "¿Qué enseñanza deja la novela?",
-                answers: [
-                    { text: "La obsesión conduce inevitablemente a la ruina", score: 1.0 },
-                    { text: "La perseverancia siempre triunfa", score: 0.5 },
-                    { text: "El hombre puede vencer a la naturaleza", score: 0.5 },
-                    { text: "No hay enseñanzas morales", score: 0.0 }
-                ],
                 idealAnswer: "La enseñanza principal es que la obsesión conduce inevitablemente a la ruina, destruyendo tanto al individuo como a quienes lo rodean.",
                 difficulty: "basic",
                 category: "theme"
@@ -729,12 +529,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
             {
                 id: 25,
                 question: "¿Cómo se representa el tiempo en la novela?",
-                answers: [
-                    { text: "A través de saltos temporales que muestran la evolución", score: 1.0 },
-                    { text: "De manera lineal", score: 0.5 },
-                    { text: "Como algo cíclico", score: 0.5 },
-                    { text: "Sin importancia", score: 0.0 }
-                ],
                 idealAnswer: "El tiempo se representa a través de saltos temporales que muestran la evolución gradual de la obsesión del protagonista.",
                 difficulty: "advanced",
                 category: "structure"
@@ -773,29 +567,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                 if (data.lastSaved) {
                     showNotification(`Datos cargados. Último guardado: ${new Date(data.lastSaved).toLocaleString()}`, 'info');
                 }
-            }
-        }
-
-        // Función para verificar login
-        function checkLogin(username, password) {
-            return validCredentials.some(cred => cred.username === username && cred.password === password);
-        }
-
-        // Función para manejar login
-        function handleLogin() {
-            const username = document.getElementById('username').value.trim();
-            const password = document.getElementById('password').value;
-
-            if (checkLogin(username, password)) {
-                isLoggedIn = true;
-                localStorage.setItem('isLoggedIn', 'true');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('main-header').classList.remove('hidden');
-                showNotification('Bienvenido al sistema', 'success');
-            } else {
-                document.getElementById('login-error').classList.remove('hidden');
-                document.getElementById('login-error-text').textContent = 'Credenciales incorrectas. Inténtalo de nuevo.';
-                showNotification('Credenciales incorrectas', 'error');
             }
         }
 
@@ -877,13 +648,10 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
-                        ${question.answers.map((answer, answerIndex) => `
-                            <label class="flex items-center p-3 bg-white dark:bg-gray-800 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 transition-all duration-200 border-2 border-transparent hover:border-blue-300">
-                                <input type="radio" name="question-${question.id}" value="${answer.score}" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" data-question-id="${question.id}">
-                                <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">${answer.text}</span>
-                                <span class="ml-auto text-xs text-gray-500">(${answer.score} pts)</span>
-                            </label>
-                        `).join('')}
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all duration-200">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Puntaje Manual (0, 0.5, 1.0)</label>
+                            <input type="number" step="0.5" min="0" max="1" name="question-${question.id}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.0" data-question-id="${question.id}">
+                        </div>
                     </div>
 
                     <div class="flex items-center justify-between">
@@ -925,6 +693,8 @@ Nombre Estudiante 3 - Curso 3"></textarea>
         function calculateScore() {
             let totalScore = 0;
             let excludedCount = 0;
+            let hasInvalidScore = false;
+
             const questionElements = document.querySelectorAll('[id^="exclude-"]');
 
             questionElements.forEach(checkbox => {
@@ -938,15 +708,25 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                 return null;
             }
 
-            const radioButtons = document.querySelectorAll('input[type="radio"]:checked');
-            radioButtons.forEach(radio => {
-                const questionId = radio.name.split('-')[1];
+            const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+            scoreInputs.forEach(input => {
+                const questionId = input.name.split('-')[1];
                 const excludeCheckbox = document.getElementById(`exclude-${questionId}`);
 
                 if (!excludeCheckbox.checked) {
-                    totalScore += parseFloat(radio.value);
+                    const score = parseFloat(input.value) || 0;
+                    // Validar que el puntaje esté en los valores permitidos
+                    if (score !== 0 && score !== 0.5 && score !== 1.0) {
+                        showNotification('Los puntajes deben ser 0, 0.5 o 1.0', 'warning');
+                        hasInvalidScore = true;
+                        return; // Salir del forEach
+                    }
+                    totalScore += score;
                 }
             });
+
+            // Si se encontró un puntaje inválido, retornar null
+            if (hasInvalidScore) return null;
 
             return totalScore;
         }
@@ -1568,16 +1348,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
 
         // Event Listeners
         document.addEventListener('DOMContentLoaded', function() {
-            // Event listener para login
-            document.getElementById('login-button').addEventListener('click', handleLogin);
-
-            // Permitir login con Enter
-            document.getElementById('password').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    handleLogin();
-                }
-            });
-
             loadFromLocalStorage();
             renderResults();
 
@@ -1643,11 +1413,15 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                     type: currentEvaluationType,
                     finalScore: score,
                     date: new Date().toISOString(),
-                    questions: selectedQuestions.map(q => ({
-                        question: q.question,
-                        selectedAnswer: document.querySelector(`input[name="question-${q.id}"]:checked`)?.parentElement?.textContent?.trim() || 'No respondida',
-                        score: parseFloat(document.querySelector(`input[name="question-${q.id}"]:checked`)?.value || 0)
-                    }))
+                    questions: selectedQuestions.map(q => {
+                        const scoreInput = document.querySelector(`input[name="question-${q.id}"]`);
+                        const scoreValue = parseFloat(scoreInput?.value) || 0;
+                        return {
+                            question: q.question,
+                            selectedAnswer: `Puntaje asignado: ${scoreValue}`,
+                            score: scoreValue
+                        };
+                    })
                 };
 
                 evaluations.push(evaluation);
@@ -1765,14 +1539,30 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                 document.getElementById('bulk-students').value = '';
             });
 
+            // Validación de inputs numéricos
+            document.addEventListener('input', function(e) {
+                if (e.target.type === 'number' && e.target.name.startsWith('question-')) {
+                    const value = parseFloat(e.target.value);
+                    if (value < 0) e.target.value = 0;
+                    if (value > 1) e.target.value = 1;
+                    // Forzar valores permitidos
+                    if (value !== 0 && value !== 0.5 && value !== 1 && value !== 1.0) {
+                        if (value < 0.25) e.target.value = 0;
+                        else if (value < 0.75) e.target.value = 0.5;
+                        else e.target.value = 1;
+                    }
+                }
+            });
+
             // Actualizar barra de progreso
             setInterval(() => {
-                const answered = document.querySelectorAll('input[type="radio"]:checked').length;
-                const total = selectedQuestions.length;
+                const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+                const answered = Array.from(scoreInputs).filter(input => input.value !== '' && input.value !== null && input.value !== undefined).length;
+                const total = selectedQuestions ? selectedQuestions.length : 8;
                 const progress = total > 0 ? (answered / total) * 100 : 0;
 
                 document.getElementById('progress-bar').style.width = `${progress}%`;
-                document.getElementById('progress-text').textContent = `${answered}/${total} preguntas`;
+                document.getElementById('progress-text').textContent = `${answered}/${total} preguntas evaluadas`;
             }, 1000);
         });
 

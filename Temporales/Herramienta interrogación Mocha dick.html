@@ -197,16 +197,9 @@
                         <p class="text-gray-600 dark:text-gray-400">Gestiona y exporta todas las evaluaciones realizadas</p>
                     </div>
                     <div class="flex flex-wrap gap-3">
-                        <button id="export-json" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105 transition-all duration-200">
-                            <i class="fas fa-download mr-2"></i>Guardar Avance (JSON)
-                        </button>
                         <button id="remove-duplicates" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform hover:scale-105 transition-all duration-200">
                             <i class="fas fa-trash-alt mr-2"></i>Eliminar Duplicados
                         </button>
-                        <label for="import-json" class="cursor-pointer py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-gray-600 to-gray-700 hover:from-gray-700 hover:to-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transform hover:scale-105 transition-all duration-200">
-                            <i class="fas fa-upload mr-2"></i>Cargar Avance (JSON)
-                            <input type="file" id="import-json" class="hidden" accept=".json">
-                        </label>
                         <button id="export-all-pdf" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-105 transition-all duration-200">
                             <i class="fas fa-file-pdf mr-2"></i>Exportar Todo (PDF)
                         </button>
@@ -1103,12 +1096,13 @@ Nombre Estudiante 3 - Curso 3"></textarea>
         // Función para exportar PDF completo
         function exportCompletePDF() {
             if (evaluations.length === 0) {
-                showNotification('No hay evaluaciones para exportar', 'warning');
+                showNotification('No hay evaluaciones para exportar. Realiza algunas evaluaciones primero.', 'warning');
                 return;
             }
 
-            const doc = new jsPDF();
-            const pageWidth = doc.internal.pageSize.width;
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.width;
 
             // Portada
             doc.setFillColor(102, 126, 234);
@@ -1194,6 +1188,10 @@ Nombre Estudiante 3 - Curso 3"></textarea>
 
             doc.save(`Reporte_Completo_Mocha_Dick_${new Date().toISOString().split('T')[0]}.pdf`);
             showNotification('Reporte completo exportado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showNotification('Error al generar el PDF. Revisa la consola para más detalles.', 'error');
+            }
         }
 
         // Función para eliminar duplicados
@@ -1456,44 +1454,6 @@ Nombre Estudiante 3 - Curso 3"></textarea>
                     document.getElementById('final-score-container').innerHTML = '';
                     showNotification('Evaluación cancelada', 'info');
                 }
-            });
-
-            // Exportar JSON
-            document.getElementById('export-json').addEventListener('click', function() {
-                const dataStr = JSON.stringify({ evaluations: evaluations, exportedAt: new Date().toISOString() }, null, 2);
-                const dataBlob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(dataBlob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `evaluaciones_mocha_dick_${new Date().toISOString().split('T')[0]}.json`;
-                link.click();
-                URL.revokeObjectURL(url);
-                showNotification('Archivo JSON exportado', 'success');
-            });
-
-            // Importar JSON
-            document.getElementById('import-json').addEventListener('change', function(e) {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        try {
-                            const data = JSON.parse(e.target.result);
-                            if (data.evaluations && Array.isArray(data.evaluations)) {
-                                evaluations = [...evaluations, ...data.evaluations];
-                                saveToLocalStorage();
-                                renderResults();
-                                showNotification(`Se importaron ${data.evaluations.length} evaluaciones`, 'success');
-                            } else {
-                                showNotification('Formato de archivo inválido', 'error');
-                            }
-                        } catch (error) {
-                            showNotification('Error al leer el archivo', 'error');
-                        }
-                    };
-                    reader.readAsText(file);
-                }
-                e.target.value = '';
             });
 
             // Exportar PDF completo

@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Pauta de Cotejo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; z-index: 50; }
+        .modal.active { display: flex; }
+        .student-header { cursor: pointer; }
+        .student-table-wrapper { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-in-out; }
+        .is-open + .student-table-wrapper { max-height: 5000px; }
+        .toggle-icon { transition: transform 0.3s; }
+        .is-open .toggle-icon { transform: rotate(180deg); }
+        .editable-indicator { border-bottom: 2px dashed #9ca3af; cursor: pointer; }
+        .editable-indicator:hover { background-color: #f3f4f6; }
+        
+        /* Mejoras visuales profesionales */
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-shadow { box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.15); }
+        
+        .evaluation-btn { 
+            min-width: 40px; 
+            min-height: 40px; 
+            border-radius: 8px; 
+            font-weight: 600; 
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+        }
+        .evaluation-btn:hover { transform: scale(1.05); }
+        .evaluation-btn.logrado { background: linear-gradient(135deg, #10b981, #059669); color: white; border-color: #059669; }
+        .evaluation-btn.no-logrado { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border-color: #dc2626; }
+        .evaluation-btn.pendiente { background: #f3f4f6; color: #6b7280; border-color: #d1d5db; }
+        
+        .phase-header { 
+            background: linear-gradient(135deg, #f8fafc, #e2e8f0); 
+            border-left: 4px solid #3b82f6;
+            font-weight: 600;
+        }
+        
+        .student-row { 
+            transition: all 0.2s ease; 
+            border-left: 4px solid transparent;
+        }
+        .student-row:hover { 
+            background-color: #f8fafc; 
+            border-left-color: #3b82f6;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #059669);
+            transition: width 0.3s ease;
+        }
+        
+        .grade-display {
+            font-size: 1.25rem;
+            font-weight: 700;
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-align: center;
+            min-width: 80px;
+        }
+        .grade-excellent { background: linear-gradient(135deg, #10b981, #059669); color: white; }
+        .grade-good { background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; }
+        .grade-regular { background: linear-gradient(135deg, #f59e0b, #d97706); color: white; }
+        .grade-insufficient { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        
+        .scale-selector {
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: #1f2937;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.875rem;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 to-blue-50 text-gray-800 min-h-screen">
+
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8 text-center relative">
+            <div class="gradient-bg text-white p-8 rounded-2xl card-shadow mb-6">
+                <h1 class="text-5xl font-bold mb-2">Pauta de Cotejo Profesional</h1>
+                <p class="text-xl opacity-90">
+                    <span id="header-teacher-name"></span> <span id="header-establishment"></span>
+                </p>
+                <button id="edit-user-info-btn" class="absolute top-4 right-4 bg-white bg-opacity-20 text-white p-3 rounded-full shadow-lg hover:bg-opacity-30 transition-all" title="Editar Datos del Docente">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Panel de Control Mejorado -->
+        <div class="bg-white p-6 rounded-2xl card-shadow card-hover mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <div class="tooltip">
+                        <label for="pauta-select" class="text-lg font-semibold text-gray-700">Pauta:</label>
+                        <span class="tooltiptext">Selecciona la pauta de evaluación que deseas usar</span>
+                    </div>
+                    <select id="pauta-select" class="border-2 border-gray-200 rounded-xl shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 px-4 py-2 bg-white"></select>
+                    <button id="delete-pauta-btn" class="bg-gradient-to-r from-red-500 to-red-600 text-white p-3 rounded-xl shadow-lg hover:shadow-xl transition-all hidden" title="Eliminar Pauta">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div id="controls" class="flex flex-wrap gap-3">
+                    <button id="add-pauta-btn" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all card-hover">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg>
+                            Nueva Pauta
+                        </span>
+                    </button>
+                    <button id="manage-structure-btn" class="bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all card-hover hidden">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                            </svg>
+                            Gestionar Estructura
+                        </span>
+                    </button>
+                    <button id="manage-students-btn" class="bg-gradient-to-r from-green-500 to-emerald-500 text-white font-semibold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transition-all card-hover hidden">
+                        <span class="flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                            </svg>
+                            Gestionar Alumnos
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Configuración de Escala de Evaluación -->
+        <div id="scale-config" class="bg-white p-6 rounded-2xl card-shadow card-hover mb-6 hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 00-2-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H9z"></path>
+                </svg>
+                Configuración de Escala de Evaluación
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="scale-selector">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tipo de Escala</label>
+                    <select id="scale-type" class="w-full border-gray-300 rounded-lg p-2">
+                        <option value="binary">Binaria (Logrado/No Logrado)</option>
+                        <option value="levels">Por Niveles (4 niveles)</option>
+                        <option value="numeric">Numérica (1.0 - 7.0)</option>
+                    </select>
+                </div>
+                <div class="scale-selector">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nota Mínima de Aprobación</label>
+                    <input type="number" id="min-grade" min="1" max="7" step="0.1" value="4.0" class="w-full border-gray-300 rounded-lg p-2">
+                </div>
+                <div class="scale-selector">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Ponderación (%)</label>
+                    <input type="number" id="weight-percentage" min="1" max="100" value="100" class="w-full border-gray-300 rounded-lg p-2">
+                </div>
+            </div>
+        </div>
+
+        <div id="checklist-container" class="space-y-4">
+            <div id="welcome-message" class="text-center py-16 bg-white rounded-xl shadow-md">
+                <h2 class="text-2xl font-semibold text-gray-700">¡Bienvenido!</h2>
+                <p class="text-gray-500 mt-2">Crea una nueva pauta para empezar a evaluar.</p>
+            </div>
+        </div>
+
+        <!-- Gestión de Datos -->
+        <div class="bg-white p-6 rounded-xl shadow-md mt-6 flex flex-wrap items-center justify-center gap-4">
+            <h3 class="text-lg font-semibold text-gray-700 w-full text-center mb-2">Gestión de Datos</h3>
+            <button id="export-pdf-btn" class="bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-teal-700 transition-colors disabled:bg-gray-400" disabled>Exportar a PDF</button>
+            <button id="export-json-btn" class="bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-800 transition-colors">Exportar Todo (JSON)</button>
+            <button id="import-json-btn" class="bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md hover:bg-gray-800 transition-colors">Importar Todo (JSON)</button>
+            <input type="file" id="import-file-input" class="hidden" accept=".json">
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div id="user-info-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg"><h2 class="text-2xl font-bold mb-6">Información del Docente</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="teacher-name-input" placeholder="Nombre del Docente" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="subject-input" placeholder="Asignatura/Módulo" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="semester-input" placeholder="Semestre" class="w-full border-gray-300 rounded-lg p-3"><input type="number" id="year-input" placeholder="Año" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="establishment-input" placeholder="Establecimiento" class="w-full border-gray-300 rounded-lg p-3 col-span-1 md:col-span-2"></div><div class="flex justify-end gap-4 mt-6"><button id="confirm-user-info" class="bg-blue-600 text-white">Guardar Información</button></div></div></div>
+    <div id="add-pauta-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-6">Crear Nueva Pauta</h2><input type="text" id="pauta-name-input" placeholder="Ej: Pauta Taller Mecánica 1" class="w-full border-gray-300 rounded-lg p-3 mb-4"><div class="flex justify-end gap-4"><button class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-add-pauta" class="bg-blue-600 text-white">Guardar</button></div></div></div>
+    <div id="manage-structure-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-2xl"><h2 class="text-2xl font-bold mb-4">Gestionar Estructura de la Pauta</h2><div id="structure-editor" class="space-y-4 max-h-96 overflow-y-auto pr-4"></div><div class="mt-4 flex gap-4"><input type="text" id="new-phase-input" placeholder="Nombre de la nueva fase" class="flex-grow border-gray-300 rounded-lg p-2"><button id="add-phase-btn" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Añadir Fase</button></div><div class="flex justify-end gap-4 mt-6"><button class="modal-cancel bg-gray-200">Cerrar</button></div></div></div>
+    <div id="manage-students-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg"><h2 class="text-2xl font-bold mb-4">Gestionar Alumnos</h2><div class="mb-4"><h3 class="text-lg font-semibold mb-2">Lista de Alumnos Actuales</h3><div id="student-list-container" class="border rounded-lg p-2 bg-gray-50"></div></div><div class="mb-6"><h3 class="text-lg font-semibold mb-2">Añadir Nuevos Alumnos</h3><textarea id="student-name-input" placeholder="Un nombre por línea para añadir..." rows="4" class="w-full border-gray-300 rounded-lg p-3"></textarea></div><div class="flex justify-end gap-4"><button class="modal-cancel bg-gray-200">Cerrar</button><button id="confirm-manage-students" class="bg-green-600 text-white">Guardar Cambios</button></div></div></div>
+    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 id="confirm-modal-title" class="text-2xl font-bold mb-4">Confirmar Acción</h2><p id="confirm-modal-text" class="mb-6">¿Estás seguro?</p><div class="flex justify-end gap-4"><button id="confirm-modal-cancel" class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-modal-ok" class="bg-red-600 text-white">Confirmar</button></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+
+            let data = {};
+            let userInfo = {};
+            let currentPautaId = null;
+            let studentsToDelete = new Set();
+
+            const loadData = () => {
+                data = JSON.parse(localStorage.getItem('pautaCotejoData')) || { pautas: {} };
+                userInfo = JSON.parse(localStorage.getItem('pautaCotejoUserInfo')) || {};
+            };
+
+            const saveData = () => {
+                localStorage.setItem('pautaCotejoData', JSON.stringify(data));
+                localStorage.setItem('pautaCotejoUserInfo', JSON.stringify(userInfo));
+            };
+
+            const updateUserInfoUI = () => {
+                document.getElementById('header-teacher-name').textContent = userInfo.teacherName || '';
+                document.getElementById('header-establishment').textContent = userInfo.establishment ? `- ${userInfo.establishment}` : '';
+            };
+
+            const loadPautas = () => {
+                const pautaSelect = document.getElementById('pauta-select');
+                const savedPautaId = currentPautaId;
+                pautaSelect.innerHTML = '<option value="">-- Selecciona una pauta --</option>';
+                
+                const sortedPautas = Object.values(data.pautas).sort((a, b) => a.name.localeCompare(b.name));
+                sortedPautas.forEach(pauta => {
+                    const option = document.createElement('option');
+                    option.value = pauta.id;
+                    option.textContent = pauta.name;
+                    pautaSelect.appendChild(option);
+                });
+                
+                if (savedPautaId && data.pautas[savedPautaId]) {
+                    pautaSelect.value = savedPautaId;
+                }
+                handlePautaChange();
+            };
+
+            const handlePautaChange = () => {
+                currentPautaId = document.getElementById('pauta-select').value;
+                const showControls = !!currentPautaId;
+                
+                ['manage-structure-btn', 'manage-students-btn', 'delete-pauta-btn'].forEach(id => 
+                    document.getElementById(id).classList.toggle('hidden', !showControls)
+                );
+                ['export-pdf-btn'].forEach(id => 
+                    document.getElementById(id).disabled = !showControls
+                );
+                
+                document.getElementById('welcome-message').classList.toggle('hidden', showControls);
+                
+                if (currentPautaId) {
+                    renderPauta();
+                } else {
+                    document.getElementById('checklist-container').innerHTML = 
+                        '<div id="welcome-message" class="text-center py-16 bg-white rounded-xl shadow-md"><h2 class="text-2xl font-semibold text-gray-700">¡Bienvenido!</h2><p class="text-gray-500 mt-2">Crea una nueva pauta para empezar a evaluar.</p></div>';
+                }
+            };
+
+            const calculateGrade = (studentData, phases, scale) => {
+                const completedCount = Object.keys(studentData).filter(key => 
+                    studentData[key]?.status === 'logrado'
+                ).length;
+                const totalCount = phases.length;
+                const percentage = totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+                
+                if (scale === 'percentage') return percentage.toFixed(1) + '%';
+                if (scale === 'fraction') return `${completedCount}/${totalCount}`;
+                
+                // Escala 1-7 (chilena) con 60% de exigencia
+                return calculateGradeWithRequirement(percentage, 60);
+            };
+
+            const calculateGradeWithRequirement = (percentage, requirement = 60) => {
+                // Sistema chileno con 60% de exigencia para nota 4.0
+                if (percentage >= 100) return 7.0;
+                if (percentage >= 95) return 6.5;
+                if (percentage >= 90) return 6.0;
+                if (percentage >= 85) return 5.5;
+                if (percentage >= 80) return 5.0;
+                if (percentage >= 75) return 4.5;
+                if (percentage >= requirement) return 4.0; // 60% = nota 4.0
+                if (percentage >= 50) return 3.5;
+                if (percentage >= 40) return 3.0;
+                if (percentage >= 30) return 2.5;
+                if (percentage >= 20) return 2.0;
+                if (percentage >= 10) return 1.5;
+                return 1.0;
+            };
+
+            const getGradeClass = (grade, scale) => {
+                if (scale === 'percentage') {
+                    const num = parseFloat(grade);
+                    if (num >= 90) return 'grade-excellent';
+                    if (num >= 70) return 'grade-good';
+                    if (num >= 50) return 'grade-regular';
+                    return 'grade-insufficient';
+                }
+                
+                if (scale === 'chilean') {
+                    if (grade >= 6.0) return 'grade-excellent';
+                    if (grade >= 4.0) return 'grade-good';
+                    if (grade >= 3.0) return 'grade-regular';
+                    return 'grade-insufficient';
+                }
+                
+                return 'grade-good';
+            };
+
+            const renderPauta = () => {
+                if (!currentPautaId || !data.pautas[currentPautaId]) return;
+                
+                const pauta = data.pautas[currentPautaId];
+                const container = document.getElementById('checklist-container');
+                
+                if (!pauta.students || Object.keys(pauta.students).length === 0) {
+                    container.innerHTML = '<div class="text-center py-16 bg-white rounded-xl card-shadow"><h2 class="text-2xl font-semibold text-gray-700">Sin estudiantes</h2><p class="text-gray-500 mt-2">Añade estudiantes para comenzar la evaluación.</p></div>';
+                    return;
+                }
+                
+                const students = Object.values(pauta.students).sort((a, b) => (a.listNumber || 0) - (b.listNumber || 0));
+                const phases = pauta.structure || [];
+                const scale = pauta.gradeScale || 'chilean';
+                
+                // Agregar selector de escala al inicio
+                const scaleSelector = `
+                    <div class="bg-white rounded-xl card-shadow p-4 mb-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-lg font-semibold text-gray-700">Escala de Calificación</h3>
+                            <select id="grade-scale-select" class="border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                                <option value="chilean" ${scale === 'chilean' ? 'selected' : ''}>Escala 1.0 - 7.0 (Chilena)</option>
+                                <option value="percentage" ${scale === 'percentage' ? 'selected' : ''}>Porcentaje (0% - 100%)</option>
+                                <option value="fraction" ${scale === 'fraction' ? 'selected' : ''}>Fracción (X/Y)</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+                
+                container.innerHTML = scaleSelector + students.map(student => {
+                    const studentData = pauta.evaluations?.[student.id] || {};
+                    const completedCount = Object.keys(studentData).length;
+                    const grade = calculateGrade(studentData, phases, scale);
+                    const gradeClass = getGradeClass(grade, scale);
+                    const progressPercentage = phases.length > 0 ? (completedCount / phases.length) * 100 : 0;
+                    
+                    return `
+                        <div class="bg-white rounded-xl card-shadow overflow-hidden mb-4 card-hover">
+                            <div class="student-header gradient-bg text-white p-4 flex justify-between items-center" data-student-id="${student.id}">
+                                <div class="flex items-center gap-4">
+                                    <span class="font-bold text-lg bg-white bg-opacity-20 rounded-full w-10 h-10 flex items-center justify-center">${student.listNumber || ''}</span>
+                                    <div>
+                                        <h3 class="text-xl font-semibold">${student.name}</h3>
+                                        <div class="progress-bar mt-2" style="width: 200px;">
+                                            <div class="progress-fill" style="width: ${progressPercentage}%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex items-center gap-4">
+                                    <div class="text-center">
+                                        <div class="grade-display ${gradeClass}">${grade}</div>
+                                        <div class="text-sm opacity-90">${completedCount}/${phases.length} completado</div>
+                                    </div>
+                                    <svg class="toggle-icon w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                            <div class="student-table-wrapper">
+                                <div class="p-4 space-y-2">
+                                    ${phases.map((phase, index) => {
+                                        const evaluationData = studentData[phase.id];
+                                        const isCompleted = evaluationData?.completed || false;
+                                        const status = evaluationData?.status || 'pendiente';
+                                        
+                                        return `
+                                            <div class="student-row flex items-center justify-between p-4 rounded-lg border border-gray-200">
+                                                <div class="flex items-center gap-3">
+                                                    <span class="phase-header px-3 py-1 rounded-full text-sm">${index + 1}</span>
+                                                    <span class="flex-grow font-medium">${phase.name}</span>
+                                                </div>
+                                                <div class="flex items-center gap-2">
+                                                    <div class="tooltip">
+                                                        <button class="evaluation-btn ${status}" 
+                                                                data-student-id="${student.id}" 
+                                                                data-phase-id="${phase.id}"
+                                                                data-current-status="${status}">
+                                                            ${status === 'logrado' ? '✓' : status === 'no-logrado' ? '✗' : '○'}
+                                                        </button>
+                                                        <span class="tooltiptext">
+                                                            ${status === 'logrado' ? 'Logrado - Clic para cambiar' : 
+                                                              status === 'no-logrado' ? 'No Logrado - Clic para cambiar' : 
+                                                              'Pendiente - Clic para evaluar'}
+                                                        </span>
+                                                    </div>
+                                                    <button class="text-gray-400 hover:text-blue-600 p-1 rounded" 
+                                                            data-student-id="${student.id}" 
+                                                            data-phase-id="${phase.id}"
+                                                            onclick="editPhaseNote(this)" title="Añadir nota">
+                                                        📝
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Agregar event listener para el selector de escala
+                document.getElementById('grade-scale-select')?.addEventListener('change', (e) => {
+                    data.pautas[currentPautaId].gradeScale = e.target.value;
+                    saveData();
+                    renderPauta();
+                });
+            };
+
+            // Modales
+            const modals = {
+                userInfo: document.getElementById('user-info-modal'),
+                addPauta: document.getElementById('add-pauta-modal'),
+                manageStructure: document.getElementById('manage-structure-modal'),
+                manageStudents: document.getElementById('manage-students-modal')
+            };
+
+            const openModal = (modal) => modal.classList.add('active');
+            const closeModal = (modal) => {
+                modal.classList.remove('active');
+                modal.querySelectorAll('input, textarea').forEach(i => {
+                    i.value = '';
+                    i.classList.remove('border-red-500');
+                });
+            };
+
+            // Event Listeners
+            document.getElementById('edit-user-info-btn').addEventListener('click', () => {
+                document.getElementById('teacher-name-input').value = userInfo.teacherName || '';
+                document.getElementById('subject-input').value = userInfo.subject || '';
+                document.getElementById('semester-input').value = userInfo.semester || '';
+                document.getElementById('year-input').value = userInfo.year || '';
+                document.getElementById('establishment-input').value = userInfo.establishment || '';
+                openModal(modals.userInfo);
+            });
+
+            document.getElementById('confirm-user-info').addEventListener('click', () => {
+                userInfo.teacherName = document.getElementById('teacher-name-input').value.trim();
+                userInfo.subject = document.getElementById('subject-input').value.trim();
+                userInfo.semester = document.getElementById('semester-input').value.trim();
+                userInfo.year = document.getElementById('year-input').value.trim();
+                userInfo.establishment = document.getElementById('establishment-input').value.trim();
+                saveData();
+                updateUserInfoUI();
+                closeModal(modals.userInfo);
+            });
+
+            document.getElementById('add-pauta-btn').addEventListener('click', () => {
+                openModal(modals.addPauta);
+            });
+
+            document.getElementById('confirm-add-pauta').addEventListener('click', () => {
+                const nameInput = document.getElementById('pauta-name-input');
+                const name = nameInput.value.trim();
+                if (!name) {
+                    nameInput.classList.add('border-red-500');
+                    nameInput.focus();
+                    return;
+                }
+                
+                const id = `pauta_${Date.now()}`;
+                data.pautas[id] = {
+                    id,
+                    name,
+                    structure: [
+                        { id: 'fase1', name: 'Preparación del área de trabajo' },
+                        { id: 'fase2', name: 'Uso correcto de herramientas' },
+                        { id: 'fase3', name: 'Aplicación de procedimientos' },
+                        { id: 'fase4', name: 'Limpieza y orden final' }
+                    ],
+                    students: {},
+                    evaluations: {}
+                };
+                
+                currentPautaId = id;
+                saveData();
+                loadPautas();
+                closeModal(modals.addPauta);
+            });
+
+            document.getElementById('manage-structure-btn').addEventListener('click', () => {
+                const container = document.getElementById('structure-editor');
+                const phases = data.pautas[currentPautaId].structure || [];
+                
+                container.innerHTML = phases.map((phase, index) => 
+                    `<div class="flex items-center gap-4 p-3 border rounded-lg bg-gray-50">
+                        <span class="flex-grow font-medium">${phase.name}</span>
+                        <button data-phase-id="${phase.id}" class="edit-phase-btn text-blue-600 hover:text-blue-800 p-1 rounded" title="Editar">✏️</button>
+                        <button data-phase-id="${phase.id}" class="delete-phase-btn text-red-600 hover:text-red-800 p-1 rounded" title="Eliminar">🗑️</button>
+                    </div>`
+                ).join('');
+                
+                openModal(modals.manageStructure);
+            });
+
+            document.getElementById('manage-students-btn').addEventListener('click', () => {
+                studentsToDelete.clear();
+                const container = document.getElementById('student-list-container');
+                const students = Object.values(data.pautas[currentPautaId].students || {}).sort((a,b) => (a.listNumber || 0) - (b.listNumber || 0));
+                
+                if (students.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center">No hay alumnos en esta pauta.</p>';
+                } else {
+                    container.innerHTML = students.map(student => 
+                        `<div class="flex justify-between items-center p-2 border-b gap-4">
+                            <input type="number" data-student-id="${student.id}" value="${student.listNumber || ''}" class="list-number-input w-16 text-center border rounded p-1">
+                            <span class="flex-grow">${student.name}</span>
+                            <button data-student-id="${student.id}" class="delete-student-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button>
+                        </div>`
+                    ).join('');
+                }
+                openModal(modals.manageStudents);
+            });
+
+            // Gestión de estructura
+            document.getElementById('add-phase-btn').addEventListener('click', () => {
+                const input = document.getElementById('new-phase-input');
+                const name = input.value.trim();
+                if (!name) return;
+                
+                const pauta = data.pautas[currentPautaId];
+                const id = `fase_${Date.now()}`;
+                pauta.structure.push({ id, name });
+                
+                input.value = '';
+                saveData();
+                
+                // Actualizar la vista del editor
+                const container = document.getElementById('structure-editor');
+                const phases = pauta.structure;
+                container.innerHTML = phases.map((phase, index) => 
+                    `<div class="flex items-center gap-4 p-3 border rounded-lg bg-gray-50">
+                        <span class="flex-grow font-medium">${phase.name}</span>
+                        <button data-phase-id="${phase.id}" class="edit-phase-btn text-blue-600 hover:text-blue-800 p-1 rounded" title="Editar">✏️</button>
+                        <button data-phase-id="${phase.id}" class="delete-phase-btn text-red-600 hover:text-red-800 p-1 rounded" title="Eliminar">🗑️</button>
+                    </div>`
+                ).join('');
+                
+                renderPauta(); // Actualizar la vista principal
+            });
+
+            // Event delegation para estructura
+            document.getElementById('structure-editor').addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-phase-btn')) {
+                    const phaseId = e.target.dataset.phaseId;
+                    const pauta = data.pautas[currentPautaId];
+                    pauta.structure = pauta.structure.filter(p => p.id !== phaseId);
+                    
+                    // Limpiar evaluaciones de esta fase
+                    Object.keys(pauta.evaluations).forEach(studentId => {
+                        if (pauta.evaluations[studentId][phaseId]) {
+                            delete pauta.evaluations[studentId][phaseId];
+                        }
+                    });
+                    
+                    saveData();
+                    
+                    // Actualizar vista del editor
+                    const container = document.getElementById('structure-editor');
+                    const phases = pauta.structure;
+                    container.innerHTML = phases.map((phase, index) => 
+                        `<div class="flex items-center gap-4 p-3 border rounded-lg bg-gray-50">
+                            <span class="flex-grow font-medium">${phase.name}</span>
+                            <button data-phase-id="${phase.id}" class="edit-phase-btn text-blue-600 hover:text-blue-800 p-1 rounded" title="Editar">✏️</button>
+                            <button data-phase-id="${phase.id}" class="delete-phase-btn text-red-600 hover:text-red-800 p-1 rounded" title="Eliminar">🗑️</button>
+                        </div>`
+                    ).join('');
+                    
+                    renderPauta(); // Actualizar la vista principal
+                }
+                
+                if (e.target.classList.contains('edit-phase-btn')) {
+                    const phaseId = e.target.dataset.phaseId;
+                    const pauta = data.pautas[currentPautaId];
+                    const phase = pauta.structure.find(p => p.id === phaseId);
+                    
+                    const newName = prompt('Nuevo nombre para la fase:', phase.name);
+                    if (newName && newName.trim()) {
+                        phase.name = newName.trim();
+                        saveData();
+                        
+                        // Actualizar vista del editor
+                        const container = document.getElementById('structure-editor');
+                        const phases = pauta.structure;
+                        container.innerHTML = phases.map((phase, index) => 
+                            `<div class="flex items-center gap-4 p-3 border rounded-lg bg-gray-50">
+                                <span class="flex-grow font-medium">${phase.name}</span>
+                                <button data-phase-id="${phase.id}" class="edit-phase-btn text-blue-600 hover:text-blue-800 p-1 rounded" title="Editar">✏️</button>
+                                <button data-phase-id="${phase.id}" class="delete-phase-btn text-red-600 hover:text-red-800 p-1 rounded" title="Eliminar">🗑️</button>
+                            </div>`
+                        ).join('');
+                        
+                        renderPauta(); // Actualizar la vista principal
+                    }
+                }
+            });
+
+            document.getElementById('confirm-manage-students').addEventListener('click', () => {
+                if (!currentPautaId) return;
+                
+                const pauta = data.pautas[currentPautaId];
+                
+                // Actualizar números de lista
+                document.querySelectorAll('.list-number-input').forEach(input => {
+                    const studentId = input.dataset.studentId;
+                    if (pauta.students[studentId]) {
+                        pauta.students[studentId].listNumber = parseInt(input.value, 10) || 0;
+                    }
+                });
+                
+                // Eliminar estudiantes marcados
+                studentsToDelete.forEach(id => {
+                    delete pauta.students[id];
+                    delete pauta.evaluations[id];
+                });
+                
+                // Añadir nuevos estudiantes
+                const names = document.getElementById('student-name-input').value.trim().split('\n').filter(Boolean);
+                if (names.length > 0) {
+                    const existingStudents = Object.values(pauta.students || {});
+                    let maxListNumber = Math.max(0, ...existingStudents.map(s => s.listNumber || 0));
+                    
+                    names.forEach((name, index) => {
+                        const id = `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        pauta.students[id] = {
+                            id,
+                            name,
+                            listNumber: maxListNumber + index + 1
+                        };
+                    });
+                }
+                
+                saveData();
+                renderPauta();
+                closeModal(modals.manageStudents);
+            });
+
+            // Función global para editar notas de fase
+            window.editPhaseNote = function(button) {
+                const studentId = button.dataset.studentId;
+                const phaseId = button.dataset.phaseId;
+                const pauta = data.pautas[currentPautaId];
+                const phase = pauta.structure.find(p => p.id === phaseId);
+                const student = pauta.students[studentId];
+                
+                const currentNote = pauta.evaluations[studentId]?.[phaseId]?.note || '';
+                const newNote = prompt(`Nota para ${student.name} - ${phase.name}:`, currentNote);
+                
+                if (newNote !== null) {
+                    if (!pauta.evaluations[studentId]) {
+                        pauta.evaluations[studentId] = {};
+                    }
+                    if (!pauta.evaluations[studentId][phaseId]) {
+                        pauta.evaluations[studentId][phaseId] = { status: 'pendiente', completed: false };
+                    }
+                    
+                    pauta.evaluations[studentId][phaseId].note = newNote.trim();
+                    saveData();
+                    renderPauta();
+                }
+            };
+
+            // Event delegation para botones dinámicos
+            document.getElementById('checklist-container').addEventListener('click', (e) => {
+                // Botón de evaluación - debe ir ANTES del toggle para evitar conflictos
+                if (e.target.classList.contains('evaluation-btn')) {
+                    e.stopPropagation(); // Evitar que se propague al header
+                    
+                    const studentId = e.target.dataset.studentId;
+                    const phaseId = e.target.dataset.phaseId;
+                    const currentStatus = e.target.dataset.currentStatus;
+                    
+                    if (!data.pautas[currentPautaId].evaluations[studentId]) {
+                        data.pautas[currentPautaId].evaluations[studentId] = {};
+                    }
+                    
+                    // Ciclo de estados: pendiente -> logrado -> no-logrado -> pendiente
+                    let newStatus;
+                    if (currentStatus === 'pendiente') {
+                        newStatus = 'logrado';
+                    } else if (currentStatus === 'logrado') {
+                        newStatus = 'no-logrado';
+                    } else {
+                        newStatus = 'pendiente';
+                    }
+                    
+                    if (newStatus === 'pendiente') {
+                        delete data.pautas[currentPautaId].evaluations[studentId][phaseId];
+                    } else {
+                        data.pautas[currentPautaId].evaluations[studentId][phaseId] = {
+                            status: newStatus,
+                            completed: newStatus === 'logrado',
+                            timestamp: new Date().toISOString(),
+                            note: data.pautas[currentPautaId].evaluations[studentId][phaseId]?.note || ''
+                        };
+                    }
+                    
+                    saveData();
+                    renderPauta();
+                    return; // Salir para evitar el toggle
+                }
+                
+                // Toggle estudiante - solo si no se hizo clic en un botón de evaluación
+                if (e.target.closest('.student-header') && !e.target.classList.contains('evaluation-btn')) {
+                    const header = e.target.closest('.student-header');
+                    header.classList.toggle('is-open');
+                }
+            });
+
+            document.getElementById('student-list-container').addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-student-btn')) {
+                    const studentId = e.target.dataset.studentId;
+                    studentsToDelete.add(studentId);
+                    e.target.parentElement.classList.add('bg-red-100', 'line-through');
+                    e.target.disabled = true;
+                }
+            });
+
+            document.getElementById('pauta-select').addEventListener('change', handlePautaChange);
+
+            // Cerrar modales
+            document.querySelectorAll('.modal-cancel').forEach(btn => {
+                btn.addEventListener('click', () => closeModal(btn.closest('.modal')));
+            });
+
+            // Exportar PDF
+            document.getElementById('export-pdf-btn').addEventListener('click', () => {
+                if (!currentPautaId) return;
+                
+                const doc = new jsPDF();
+                const pauta = data.pautas[currentPautaId];
+                const students = Object.values(pauta.students || {}).sort((a,b) => (a.listNumber || 0) - (b.listNumber || 0));
+                const phases = pauta.structure || [];
+                const evaluations = pauta.evaluations || {};
+                const scale = pauta.gradeScale || 'chilean';
+                
+                // Header del PDF
+                doc.setFontSize(16);
+                doc.text(userInfo.establishment || 'Establecimiento', 14, 22);
+                doc.setFontSize(12);
+                doc.text(`Docente: ${userInfo.teacherName || ''}`, 14, 30);
+                doc.text(`Asignatura: ${userInfo.subject || ''}`, 14, 36);
+                doc.text(`Pauta: ${pauta.name}`, 105, 30, { align: 'center' });
+                doc.text(`Semestre: ${userInfo.semester || ''} / Año: ${userInfo.year || ''}`, 105, 36, { align: 'center' });
+                doc.setFontSize(11);
+                doc.setTextColor(100);
+                doc.text(`Fecha de exportación: ${new Date().toLocaleDateString()}`, 200, 36, { align: 'right' });
+                
+                // Preparar datos para la tabla
+                const head = [['N°', 'Nombre Alumno']];
+                phases.forEach((phase, index) => {
+                    head[0].push(`${index + 1}. ${phase.name}`);
+                });
+                head[0].push('Nota Final', '% Logro');
+                
+                const body = students.map(student => {
+                    const studentData = evaluations[student.id] || {};
+                    const row = [student.listNumber || '', student.name];
+                    
+                    let completedCount = 0;
+                    phases.forEach(phase => {
+                        const evaluation = studentData[phase.id];
+                        if (evaluation?.status === 'logrado') {
+                            row.push('✓');
+                            completedCount++;
+                        } else if (evaluation?.status === 'no-logrado') {
+                            row.push('✗');
+                        } else {
+                            row.push('-');
+                        }
+                    });
+                    
+                    const percentage = phases.length > 0 ? (completedCount / phases.length) * 100 : 0;
+                    const grade = calculateGradeWithRequirement(percentage, 60); // 60% de exigencia
+                    
+                    row.push(grade.toFixed(1));
+                    row.push(percentage.toFixed(1) + '%');
+                    
+                    return row;
+                });
+                
+                // Crear tabla
+                doc.autoTable({
+                    head: head,
+                    body: body,
+                    startY: 45,
+                    theme: 'grid',
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [66, 139, 202] },
+                    didDrawCell: (data) => {
+                        // Colorear celdas según el resultado
+                        if (data.column.index >= 2 && data.column.index < head[0].length - 2) {
+                            const cellValue = data.cell.text[0];
+                            if (cellValue === '✓') {
+                                doc.setFillColor(144, 238, 144); // Verde claro
+                            } else if (cellValue === '✗') {
+                                doc.setFillColor(255, 182, 193); // Rosa claro
+                            }
+                        }
+                        
+                        // Colorear nota final
+                        if (data.column.index === head[0].length - 2) {
+                            const grade = parseFloat(data.cell.text[0]);
+                            if (grade >= 4.0) {
+                                doc.setFillColor(144, 238, 144); // Verde - Aprobado
+                            } else {
+                                doc.setFillColor(255, 182, 193); // Rosa - Reprobado
+                            }
+                        }
+                    }
+                });
+                
+                // Agregar leyenda
+                const finalY = doc.lastAutoTable.finalY || 100;
+                doc.setFontSize(12);
+                doc.text('Leyenda:', 14, finalY + 15);
+                doc.setFontSize(10);
+                doc.text('✓ = Logrado    ✗ = No Logrado    - = Pendiente', 14, finalY + 22);
+                doc.text('Escala de Calificación: 1.0 - 7.0 (60% de exigencia para nota 4.0)', 14, finalY + 29);
+                doc.text('Nota 4.0 = 60% de logro    Nota 7.0 = 100% de logro', 14, finalY + 36);
+                
+                // Guardar PDF
+                doc.save(`${pauta.name}_evaluacion.pdf`);
+            });
+
+            // Exportar JSON
+            document.getElementById('export-json-btn').addEventListener('click', () => {
+                const jsonString = JSON.stringify({ userInfo, data }, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'pauta_cotejo_datos.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            // Importar JSON
+            document.getElementById('import-json-btn').addEventListener('click', () => {
+                document.getElementById('import-file-input').click();
+            });
+
+            document.getElementById('import-file-input').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported && typeof imported.data.pautas === 'object' && typeof imported.userInfo === 'object') {
+                            data = imported.data;
+                            userInfo = imported.userInfo;
+                            saveData();
+                            currentPautaId = null;
+                            updateUserInfoUI();
+                            loadPautas();
+                        } else {
+                            alert('El archivo JSON no tiene el formato correcto.');
+                        }
+                    } catch (error) {
+                        alert('Error al leer el archivo JSON.');
+                        console.error(error);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            });
+
+            // Inicializar aplicación
+            loadData();
+            updateUserInfoUI();
+            loadPautas();
+            
+            if (!userInfo.teacherName) {
+                openModal(modals.userInfo);
+            }
+        });
+    </script>
+</body>
+</html>

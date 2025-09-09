@@ -1,0 +1,141 @@
+const fs = require('fs');
+const path = require('path');
+
+function updateManifest() {
+    const manifestPath = path.join(__dirname, '..', 'manifest.json');
+    
+    // Leer el manifest actual
+    let manifest = {};
+    if (fs.existsSync(manifestPath)) {
+        manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    }
+    
+    // Configuración actualizada del manifest
+    const updatedManifest = {
+        "name": "Herramienta de Nota de Proceso",
+        "short_name": "NotaProceso",
+        "description": "Herramienta profesional para registro de notas de proceso y pautas de cotejo educativas",
+        "version": "1.0.0",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#667eea",
+        "theme_color": "#667eea",
+        "orientation": "portrait-primary",
+        "scope": "/",
+        "lang": "es",
+        "dir": "ltr",
+        "categories": ["education", "productivity", "utilities"],
+        "screenshots": [
+            {
+                "src": "icons/screenshot-desktop.png",
+                "sizes": "1280x720",
+                "type": "image/png",
+                "form_factor": "wide",
+                "label": "Vista de escritorio de la aplicación"
+            },
+            {
+                "src": "icons/screenshot-mobile.png", 
+                "sizes": "390x844",
+                "type": "image/png",
+                "form_factor": "narrow",
+                "label": "Vista móvil de la aplicación"
+            }
+        ],
+        "icons": [
+            {
+                "src": "icons/icon-72x72.png",
+                "sizes": "72x72",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-96x96.png",
+                "sizes": "96x96", 
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-128x128.png",
+                "sizes": "128x128",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-144x144.png",
+                "sizes": "144x144",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-152x152.png",
+                "sizes": "152x152",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png",
+                "purpose": "any maskable"
+            },
+            {
+                "src": "icons/icon-384x384.png",
+                "sizes": "384x384",
+                "type": "image/png",
+                "purpose": "any"
+            },
+            {
+                "src": "icons/icon-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png",
+                "purpose": "any maskable"
+            }
+        ],
+        "shortcuts": [
+            {
+                "name": "Nota de Proceso",
+                "short_name": "Proceso",
+                "description": "Acceso directo a la herramienta de nota de proceso",
+                "url": "/nota-proceso",
+                "icons": [
+                    {
+                        "src": "icons/icon-192x192.png",
+                        "sizes": "192x192"
+                    }
+                ]
+            },
+            {
+                "name": "Pauta de Cotejo", 
+                "short_name": "Cotejo",
+                "description": "Acceso directo a la pauta de cotejo",
+                "url": "/pauta-cotejo",
+                "icons": [
+                    {
+                        "src": "icons/icon-192x192.png",
+                        "sizes": "192x192"
+                    }
+                ]
+            }
+        ],
+        "related_applications": [],
+        "prefer_related_applications": false,
+        "edge_side_panel": {
+            "preferred_width": 400
+        },
+        "launch_handler": {
+            "client_mode": "navigate-existing"
+        }
+    };
+    
+    // Escribir el manifest actualizado
+    fs.writeFileSync(manifestPath, JSON.stringify(updatedManifest, null, 2));
+    console.log('✅ Manifest.json actualizado');
+    
+    return updatedManifest;
+}
+
+if (require.main === module) {
+    updateManifest();
+}
+
+module.exports = { updateManifest };

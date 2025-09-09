@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Evaluación Docente</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Herramienta completa para registro y gestión de notas de proceso educativo">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="NotaProceso">
+    
+    <!-- PWA Links -->
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="32x32" href="./icons/icon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./icons/icon-16x16.png">
+    <link rel="apple-touch-icon" href="./icons/icon-192x192.png">
+    
+    <!-- Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="./css/styles.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <!-- Status Indicator -->
+    <div id="status-indicator" class="status-indicator status-online">
+        🟢 En línea
+    </div>
+
+    <!-- Install Prompt -->
+    <div id="install-prompt" class="install-prompt">
+        <div class="flex items-center justify-between">
+            <div>
+                <h3 class="font-semibold">¡Instala la aplicación!</h3>
+                <p class="text-sm opacity-90">Accede más rápido y úsala sin conexión</p>
+            </div>
+            <div class="flex gap-2 ml-4">
+                <button id="install-btn" class="btn btn-primary">
+                    Instalar
+                </button>
+                <button id="dismiss-install" class="btn btn-outline">
+                    ✕
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container mx-auto p-4 md:p-8">
+        <!-- Header -->
+        <header class="mb-12">
+            <!-- Logo en esquina superior izquierda -->
+            <div class="flex items-center justify-start mb-6">
+                <img src="./logo.png" alt="Logo Herramienta de Evaluación" class="w-12 h-12 mr-4 rounded-lg shadow-md">
+                <div>
+                    <h1 class="text-3xl md:text-4xl font-bold text-gray-800">Herramienta de Evaluación Docente</h1>
+                    <p class="text-lg md:text-xl text-gray-600">Elige el tipo de evaluación que deseas realizar</p>
+                </div>
+            </div>
+
+            <!-- App Status -->
+            <div class="flex items-center justify-center gap-4 mt-6 text-sm text-gray-500">
+                <span id="app-version">v1.0.0</span>
+                <span>•</span>
+                <span id="last-sync">Última sincronización: <span id="sync-time">Ahora</span></span>
+                <span>•</span>
+                <button id="sync-btn" class="btn btn-link">
+                    🔄 Sincronizar
+                </button>
+            </div>
+        </header>
+
+        <!-- Navigation Cards -->
+        <main class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <!-- Nota de Proceso Card -->
+            <div class="app-card bg-white p-8 rounded-2xl shadow-lg cursor-pointer" onclick="navigateToTool('nota-proceso')">
+                <div class="mb-6">
+                    <div class="w-16 h-16 mx-auto bg-indigo-100 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-3">Nota de Proceso</h2>
+                <p class="text-gray-600 mb-4">Ideal para el seguimiento continuo en clases, con múltiples tipos de calificación por actividad (rúbrica, logrado/no logrado, nota directa).</p>
+                <div class="flex items-center text-sm text-gray-500">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Disponible offline</span>
+                </div>
+            </div>
+
+            <!-- Pauta de Cotejo Card -->
+            <div class="app-card bg-white p-8 rounded-2xl shadow-lg cursor-pointer" onclick="navigateToTool('pauta-cotejo')">
+                <div class="mb-6">
+                    <div class="w-16 h-16 mx-auto bg-teal-100 rounded-2xl flex items-center justify-center mb-4">
+                        <svg class="w-8 h-8 text-teal-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                </div>
+                <h2 class="text-2xl font-bold text-gray-800 mb-3">Pauta de Cotejo</h2>
+                <p class="text-gray-600 mb-4">Perfecta para evaluar proyectos o trabajos prácticos en talleres, con indicadores personalizables y evaluación binaria (logrado/no logrado).</p>
+                <div class="flex items-center text-sm text-gray-500">
+                    <span class="bg-green-100 text-green-800 px-2 py-1 rounded-full">Disponible offline</span>
+                </div>
+            </div>
+        </main>
+
+        <!-- Quick Stats -->
+        <section class="mt-12 bg-white p-6 rounded-2xl shadow-lg">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Resumen de Datos</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div>
+                    <div class="text-2xl font-bold text-indigo-600" id="total-courses">0</div>
+                    <div class="text-sm text-gray-500">Cursos</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-green-600" id="total-students">0</div>
+                    <div class="text-sm text-gray-500">Estudiantes</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-blue-600" id="total-assignments">0</div>
+                    <div class="text-sm text-gray-500">Evaluaciones</div>
+                </div>
+                <div>
+                    <div class="text-2xl font-bold text-purple-600" id="total-checklists">0</div>
+                    <div class="text-sm text-gray-500">Pautas</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>&copy; 2024 Herramienta de Evaluación Docente. Desarrollado para educadores.</p>
+            <div class="mt-2 flex items-center justify-center gap-4">
+                <button id="clear-data-btn" class="btn btn-danger">Limpiar Datos</button>
+                <span>•</span>
+                <button id="export-all-btn" class="btn btn-primary">Exportar Todo</button>
+                <span>•</span>
+                <button id="about-btn" class="btn btn-secondary">Acerca de</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style="display: none;">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl text-center">
+            <div class="loading-spinner mx-auto mb-4"></div>
+            <p class="text-gray-700">Cargando herramienta...</p>
+        </div>
+    </div>
+
+    <script>
+        // PWA Installation and Service Worker Registration
+        let deferredPrompt;
+        let isInstalled = false;
+
+        // Check if app is installed
+        if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+            isInstalled = true;
+        }
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                        updateSyncTime();
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+
+        // Handle install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            if (!isInstalled) {
+                document.getElementById('install-prompt').style.display = 'block';
+            }
+        });
+
+        // Install button click
+        document.getElementById('install-btn').addEventListener('click', () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                        document.getElementById('install-prompt').style.display = 'none';
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // Dismiss install prompt
+        document.getElementById('dismiss-install').addEventListener('click', () => {
+            document.getElementById('install-prompt').style.display = 'none';
+        });
+
+        // Online/Offline status
+        function updateOnlineStatus() {
+            const statusIndicator = document.getElementById('status-indicator');
+            if (navigator.onLine) {
+                statusIndicator.className = 'status-indicator status-online';
+                statusIndicator.textContent = '🟢 En línea';
+            } else {
+                statusIndicator.className = 'status-indicator status-offline';
+                statusIndicator.textContent = '🔴 Sin conexión';
+            }
+        }
+
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // Navigation function
+        function navigateToTool(tool) {
+            // Use Electron's IPC to navigate
+            if (window.electronAPI && window.electronAPI.navigateTo) {
+                window.electronAPI.navigateTo(tool);
+            } else {
+                // Fallback: try to navigate using a simple approach
+                console.warn('Electron API not available, using fallback navigation');
+                if (tool === 'nota-proceso') {
+                    window.location.href = 'nota de proceso.html';
+                } else if (tool === 'pauta-cotejo') {
+                    window.location.href = 'pauta de cotejo.html';
+                }
+            }
+        }
+
+        // Update sync time
+        function updateSyncTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            document.getElementById('sync-time').textContent = timeString;
+        }
+
+        // Sync button
+        document.getElementById('sync-btn').addEventListener('click', () => {
+            updateSyncTime();
+            // Here you could implement actual sync logic
+            console.log('Manual sync triggered');
+        });
+
+        // Load statistics
+        function loadStats() {
+            try {
+                // Load from nota de proceso
+                const gradebookData = JSON.parse(localStorage.getItem('gradebookDataLocal')) || { courses: {} };
+                const courses = Object.keys(gradebookData.courses).length;
+                
+                let totalStudents = 0;
+                let totalAssignments = 0;
+                
+                Object.values(gradebookData.courses).forEach(course => {
+                    totalStudents += Object.keys(course.students || {}).length;
+                    totalAssignments += Object.keys(course.assignments || {}).length;
+                });
+
+                // Load from pauta de cotejo (assuming similar structure)
+                const checklistData = JSON.parse(localStorage.getItem('checklistDataLocal')) || { pautas: {} };
+                const checklists = Object.keys(checklistData.pautas || {}).length;
+
+                // Update UI
+                document.getElementById('total-courses').textContent = courses;
+                document.getElementById('total-students').textContent = totalStudents;
+                document.getElementById('total-assignments').textContent = totalAssignments;
+                document.getElementById('total-checklists').textContent = checklists;
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Clear all data
+        document.getElementById('clear-data-btn').addEventListener('click', () => {
+            if (confirm('¿Estás seguro de que quieres eliminar todos los datos? Esta acción no se puede deshacer.')) {
+                localStorage.clear();
+                loadStats();
+                alert('Todos los datos han sido eliminados.');
+            }
+        });
+
+        // Export all data
+        document.getElementById('export-all-btn').addEventListener('click', () => {
+            const allData = {
+                gradebook: JSON.parse(localStorage.getItem('gradebookDataLocal')) || {},
+                gradebookUserInfo: JSON.parse(localStorage.getItem('gradebookUserInfo')) || {},
+                checklist: JSON.parse(localStorage.getItem('checklistDataLocal')) || {},
+                checklistUserInfo: JSON.parse(localStorage.getItem('checklistUserInfo')) || {},
+                exportDate: new Date().toISOString()
+            };
+
+            const blob = new Blob([JSON.stringify(allData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `herramienta-evaluacion-completa-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        // About button
+        document.getElementById('about-btn').addEventListener('click', () => {
+            alert('Herramienta de Evaluación Docente v1.0.0\n\nDesarrollada para facilitar el registro y gestión de notas de proceso educativo.\n\nCaracterísticas:\n• Funciona sin conexión\n• Exportación a PDF\n• Respaldo de datos\n• Interfaz responsive');
+        });
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', () => {
+            updateOnlineStatus();
+            loadStats();
+            updateSyncTime();
+        });
+
+        // Refresh stats when returning to page
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                loadStats();
+                updateSyncTime();
+            }
+        });
+    </script>
+    
+    <!-- Módulos JavaScript -->
+    <script src="./js/modules/storage.js"></script>
+    <script src="./js/modules/grades.js"></script>
+    <script src="./js/app.js"></script>
+</body>
+</html>

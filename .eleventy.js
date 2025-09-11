@@ -28,7 +28,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("rosco.html");
   eleventyConfig.ignores.add("simulador.html");
   eleventyConfig.ignores.add("tesis.html");
-  eleventyConfig.ignores.add("pagina inicio.html");
   eleventyConfig.ignores.add("pauta de cotejo.html");
   eleventyConfig.ignores.add("ruleta.html");
 

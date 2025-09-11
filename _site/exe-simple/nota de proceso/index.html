@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Nota de Proceso</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; z-index: 50; }
+        .modal.active { display: flex; }
+        .table-container { max-height: 65vh; overflow: auto; }
+        
+        .grade-table {
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        .grade-table th, .grade-table td {
+            white-space: nowrap;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .grade-table thead th {
+            background-color: #f3f4f6;
+        }
+        .grade-table th:first-child, .grade-table td:first-child { position: sticky; left: 0; z-index: 10; min-width: 60px; }
+        .grade-table th:nth-child(2), .grade-table td:nth-child(2) { position: sticky; left: 80px; z-index: 10; min-width: 200px; }
+        .grade-table td:first-child, .grade-table td:nth-child(2) { background-color: white; }
+        .grade-table tr:hover td:first-child, .grade-table tr:hover td:nth-child(2) { background-color: #f9fafb; }
+        .grade-table thead th:first-child, .grade-table thead th:nth-child(2) { z-index: 11; }
+
+
+        .vertical-header {
+            writing-mode: vertical-rl;
+            transform: rotate(180deg);
+            text-align: left;
+            height: 160px;
+            font-size: 0.875rem;
+            padding-bottom: 8px;
+            width: 60px;
+        }
+        .vertical-header > div {
+           display: flex;
+           align-items: flex-end;
+           justify-content: space-between;
+           height: 100%;
+        }
+
+        .summary-col { min-width: 150px; }
+        .spacer-col { width: 99%; }
+
+        .exam-input { width: 70px; text-align: center; border: 1px solid #d1d5db; border-radius: 0.375rem; padding: 4px; }
+        .exam-input:focus { outline: 2px solid #4f46e5; }
+        .grade-cell { cursor: pointer; font-weight: bold; font-size: 1.125rem; transition: background-color 0.2s ease-in-out; }
+        .note-7 { background-color: #dbeafe; color: #1e40af; }
+        .note-5 { background-color: #dcfce7; color: #166534; }
+        .note-3 { background-color: #fef9c3; color: #854d0e; }
+        .note-1 { background-color: #fee2e2; color: #991b1b; }
+        #student-list-container { max-height: 200px; overflow-y: auto; }
+        .header-actions { writing-mode: horizontal-tb; transform: none; display: flex; align-items: center; }
+        .header-actions button { opacity: 0.2; transition: opacity 0.2s; }
+        th:hover .header-actions button { opacity: 1; }
+        .tooltip-container { position: relative; display: inline-block; }
+        .tooltip-text { visibility: hidden; width: 220px; background-color: #333; color: #fff; text-align: center; border-radius: 6px; padding: 8px; position: absolute; z-index: 60; bottom: 125%; left: 50%; margin-left: -110px; opacity: 0; transition: opacity 0.3s; white-space: normal; font-size: 0.875rem; font-weight: normal; }
+        .tooltip-container:hover .tooltip-text { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <!-- Contenedor Principal -->
+    <div class="container mx-auto p-4 md:p-8">
+        <header class="mb-8 text-center relative">
+            <h1 class="text-4xl font-bold text-gray-900">Herramienta de Nota de Proceso</h1>
+            <p class="text-lg text-gray-600 mt-2">
+                <span id="header-teacher-name"></span> <span id="header-establishment"></span>
+            </p>
+            <button id="edit-user-info-btn" class="btn btn-secondary absolute top-0 right-0" title="Editar Datos del Docente">&#9881;</button>
+        </header>
+
+        <!-- Panel de Control -->
+        <div class="bg-white p-6 rounded-xl shadow-md mb-6 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-4 flex-wrap">
+                <div class="tooltip-container"><label for="course-select" class="text-lg font-semibold">Curso:</label><span class="tooltip-text">Selecciona el curso que deseas ver o editar.</span></div>
+                <select id="course-select" class="border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></select>
+                <div class="tooltip-container">
+                    <button id="edit-course-btn" class="btn btn-warning hidden">Configurar Curso</button>
+                    <span class="tooltip-text">Edita el nombre del curso y configura la nota ponderada.</span>
+                </div>
+                <button id="delete-course-btn" class="btn btn-danger p-2 hidden" title="Eliminar Curso">&#128465;</button>
+            </div>
+            <div id="controls" class="flex flex-wrap gap-3">
+                <div class="tooltip-container"><button id="add-course-btn" class="btn btn-primary">Nuevo Curso</button><span class="tooltip-text">Crea un nuevo curso.</span></div>
+                <div class="tooltip-container"><button id="manage-students-btn" class="btn btn-success hidden">Gestionar Alumnos</button><span class="tooltip-text">Añade, edita el N° de lista o elimina alumnos del curso actual.</span></div>
+                <div class="tooltip-container"><button id="add-assignment-btn" class="btn btn-info hidden">Añadir Evaluación</button><span class="tooltip-text">Añade una nueva columna de evaluación para el curso actual.</span></div>
+            </div>
+        </div>
+
+        <!-- Contenedor de la Tabla -->
+        <div id="gradebook-container" class="bg-white p-6 rounded-xl shadow-md">
+             <div id="welcome-message" class="text-center py-16">
+                <h2 class="text-2xl font-semibold text-gray-700">¡Bienvenido!</h2>
+                <p class="text-gray-500 mt-2">Crea un nuevo curso para empezar a registrar calificaciones.</p>
+            </div>
+            <div id="table-wrapper" class="table-container hidden">
+                <table class="grade-table"><thead id="gradebook-head"></thead><tbody id="gradebook-body"></tbody></table>
+            </div>
+        </div>
+
+        <!-- Leyendas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div id="assignment-legend-container" class="bg-white p-6 rounded-xl shadow-md hidden">
+                <h3 class="text-xl font-bold mb-4 text-center">Leyenda de Evaluaciones</h3>
+                <div id="assignment-legend-list" class="space-y-2 text-sm"></div>
+            </div>
+            <div id="legend-container" class="bg-white p-6 rounded-xl shadow-md hidden">
+                 <h3 class="text-xl font-bold mb-4 text-center">Leyenda de Calificaciones</h3>
+                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-4 text-sm">
+                    <div class="p-3 rounded-lg note-7"><strong class="block text-lg">7.0</strong>Logro Destacado</div>
+                    <div class="p-3 rounded-lg note-5"><strong class="block text-lg">5.0</strong>Logro Adecuado</div>
+                    <div class="p-3 rounded-lg note-3"><strong class="block text-lg">3.0</strong>Logro Básico</div>
+                    <div class="p-3 rounded-lg note-1"><strong class="block text-lg">1.0</strong>No Logrado</div>
+                 </div>
+            </div>
+        </div>
+
+
+        <!-- Contenedor de Estadísticas y Datos -->
+        <div id="stats-container" class="bg-white p-6 rounded-xl shadow-md mt-6 hidden"></div>
+        <div class="bg-white p-6 rounded-xl shadow-md mt-6 flex flex-wrap items-center justify-center gap-4">
+            <h3 class="text-lg font-semibold text-gray-700 w-full text-center mb-2">Gestión de Datos</h3>
+            <button id="export-pdf-btn" class="btn btn-info disabled" disabled>Exportar Curso a PDF</button>
+            <button id="export-json-btn" class="btn btn-secondary">Exportar Todo (JSON)</button>
+            <button id="import-json-btn" class="btn btn-secondary">Importar Todo (JSON)</button>
+            <input type="file" id="import-file-input" class="hidden" accept=".json">
+        </div>
+    </div>
+
+    <!-- Modales -->
+    <div id="user-info-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg"><h2 class="text-2xl font-bold mb-6">Información del Docente</h2><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><input type="text" id="teacher-name-input" placeholder="Nombre del Docente" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="subject-input" placeholder="Asignatura" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="semester-input" placeholder="Semestre" class="w-full border-gray-300 rounded-lg p-3"><input type="number" id="year-input" placeholder="Año" class="w-full border-gray-300 rounded-lg p-3"><input type="text" id="establishment-input" placeholder="Establecimiento" class="w-full border-gray-300 rounded-lg p-3 col-span-1 md:col-span-2"></div><div class="flex justify-end gap-4 mt-6">                <button id="confirm-user-info" class="btn btn-primary">Guardar Información</button></div></div></div>
+    <div id="add-course-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-6">Crear Nuevo Curso</h2><input type="text" id="course-name-input" placeholder="Ej: IVº AÑO 'A' 2025" class="w-full border-gray-300 rounded-lg p-3 mb-4"><div class="border-t pt-4 mt-4"><h3 class="text-lg font-semibold mb-2 text-gray-700">Nota Ponderada</h3><div class="flex items-center mb-4"><input id="add-ponderada-enabled-checkbox" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"><label for="add-ponderada-enabled-checkbox" class="ml-2 block text-sm text-gray-900">Activar Nota Ponderada (Opcional)</label></div><div id="add-ponderada-options" class="hidden space-y-4"><input type="text" id="add-ponderada-name-input" placeholder="Nombre (Ej: Proyecto Final)" class="w-full border-gray-300 rounded-lg p-3"><input type="number" id="add-ponderada-weight-input" min="1" max="99" placeholder="Ponderación (%)" class="w-full border-gray-300 rounded-lg p-3"></div></div><div class="flex justify-end gap-4 mt-6"><button class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-add-course" class="bg-blue-600 text-white">Guardar</button></div></div></div>
+    <div id="edit-course-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-6">Editar Curso</h2><input type="text" id="edit-course-name-input" class="w-full border-gray-300 rounded-lg p-3 mb-4"><div class="border-t pt-4 mt-4"><h3 class="text-lg font-semibold mb-2 text-gray-700">Nota Ponderada</h3><div class="flex items-center mb-4"><input id="edit-ponderada-enabled-checkbox" type="checkbox" class="h-4 w-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"><label for="edit-ponderada-enabled-checkbox" class="ml-2 block text-sm text-gray-900">Activar Nota Ponderada (Opcional)</label></div><div id="edit-ponderada-options" class="hidden space-y-4"><input type="text" id="edit-ponderada-name-input" placeholder="Nombre (Ej: Proyecto Final)" class="w-full border-gray-300 rounded-lg p-3"><input type="number" id="edit-ponderada-weight-input" min="1" max="99" placeholder="Ponderación (%)" class="w-full border-gray-300 rounded-lg p-3"></div></div><div class="flex justify-end gap-4 mt-6"><button class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-edit-course" class="bg-yellow-500 text-white">Actualizar</button></div></div></div>
+    <div id="manage-students-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-lg"><h2 class="text-2xl font-bold mb-4">Gestionar Alumnos</h2><div class="mb-4"><h3 class="text-lg font-semibold mb-2">Lista de Alumnos Actuales</h3><div id="student-list-container" class="border rounded-lg p-2 bg-gray-50"></div></div><div class="mb-6"><h3 class="text-lg font-semibold mb-2">Añadir Nuevos Alumnos</h3><textarea id="student-name-input" placeholder="Un nombre por línea para añadir..." rows="4" class="w-full border-gray-300 rounded-lg p-3"></textarea></div><div class="flex justify-end gap-4"><button class="modal-cancel bg-gray-200">Cerrar</button><button id="confirm-manage-students" class="bg-green-600 text-white">Guardar Cambios</button></div></div></div>
+    <div id="add-assignment-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-6">Añadir Nueva Evaluación</h2><input type="date" id="assignment-date-input" class="w-full border-gray-300 rounded-lg p-3 mb-4"><input type="text" id="assignment-desc-input" placeholder="Descripción (Ej: Guía 1)" class="w-full border-gray-300 rounded-lg p-3 mb-4"><div class="border-t pt-4 mt-4"><h3 class="text-lg font-semibold mb-2 text-gray-700">Tipo de Calificación</h3><select id="assignment-type-select" class="w-full border-gray-300 rounded-lg p-3"><option value="rubrica">Rúbrica (7.0, 5.0, 3.0, 1.0)</option><option value="logrado">Logrado / No Logrado (✓ / X)</option><option value="directa">Nota Directa (Manual)</option></select></div><div class="flex justify-end gap-4 mt-6"><button class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-add-assignment" class="bg-indigo-600 text-white">Guardar</button></div></div></div>
+    <div id="edit-assignment-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 class="text-2xl font-bold mb-6">Editar Evaluación</h2><input type="date" id="edit-assignment-date-input" class="w-full border-gray-300 rounded-lg p-3 mb-4"><input type="text" id="edit-assignment-desc-input" placeholder="Descripción" class="w-full border-gray-300 rounded-lg p-3 mb-6"><div class="flex justify-end gap-4"><button class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-edit-assignment" class="bg-yellow-500 text-white">Actualizar</button></div></div></div>
+    <div id="confirm-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-xl shadow-2xl p-8 w-full max-w-md"><h2 id="confirm-modal-title" class="text-2xl font-bold mb-4">Confirmar Acción</h2><p id="confirm-modal-text" class="mb-6">¿Estás seguro?</p><div class="flex justify-end gap-4"><button id="confirm-modal-cancel" class="modal-cancel bg-gray-200">Cancelar</button><button id="confirm-modal-ok" class="bg-red-600 text-white">Confirmar</button></div></div></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const { jsPDF } = window.jspdf;
+
+            let data = {};
+            let userInfo = {};
+            let currentCourseId = null;
+            let studentsToDelete = new Set();
+            let assignmentToEditId = null;
+
+            const GRADING_SCALE = [7.0, 5.0, 3.0, 1.0];
+            const LOGRADO_SCALE = [7.0, 1.0];
+
+            const loadData = () => {
+                data = JSON.parse(localStorage.getItem('gradebookDataLocal')) || { courses: {} };
+                userInfo = JSON.parse(localStorage.getItem('gradebookUserInfo')) || {};
+            };
+            const saveData = () => {
+                localStorage.setItem('gradebookDataLocal', JSON.stringify(data));
+                localStorage.setItem('gradebookUserInfo', JSON.stringify(userInfo));
+            };
+
+            const calculateFinalGrade = (processGrade, ponderadaGrade, ponderadaWeight) => {
+                const numPonderadaGrade = parseFloat(ponderadaGrade);
+                if (isNaN(numPonderadaGrade) || numPonderadaGrade < 1.0 || numPonderadaGrade > 7.0) return processGrade;
+                const ponderadaW = ponderadaWeight / 100;
+                const processW = 1 - ponderadaW;
+                return (processGrade * processW) + (numPonderadaGrade * ponderadaW);
+            };
+            
+            const updateUserInfoUI = () => {
+                document.getElementById('header-teacher-name').textContent = userInfo.teacherName || '';
+                document.getElementById('header-establishment').textContent = userInfo.establishment ? `- ${userInfo.establishment}` : '';
+            };
+
+            const loadCourses = () => {
+                const courseSelect = document.getElementById('course-select');
+                const savedCourseId = currentCourseId;
+                courseSelect.innerHTML = '<option value="">-- Selecciona un curso --</option>';
+                const sortedCourses = Object.values(data.courses).sort((a, b) => a.name.localeCompare(b.name));
+                sortedCourses.forEach(course => {
+                    const option = document.createElement('option');
+                    option.value = course.id;
+                    option.textContent = course.name;
+                    courseSelect.appendChild(option);
+                });
+                if (savedCourseId && data.courses[savedCourseId]) {
+                    courseSelect.value = savedCourseId;
+                }
+                handleCourseChange();
+            };
+
+            const handleCourseChange = () => {
+                currentCourseId = document.getElementById('course-select').value;
+                const showControls = !!currentCourseId;
+                ['manage-students-btn', 'edit-course-btn', 'delete-course-btn', 'add-assignment-btn'].forEach(id => document.getElementById(id).classList.toggle('hidden', !showControls));
+                ['export-pdf-btn'].forEach(id => document.getElementById(id).disabled = !showControls);
+                ['welcome-message'].forEach(id => document.getElementById(id).classList.toggle('hidden', showControls));
+                ['table-wrapper', 'stats-container', 'legend-container', 'assignment-legend-container'].forEach(id => document.getElementById(id).classList.toggle('hidden', !showControls));
+                
+                if (currentCourseId) {
+                    redrawTable();
+                } else {
+                    document.getElementById('gradebook-head').innerHTML = '';
+                    document.getElementById('gradebook-body').innerHTML = '';
+                    document.getElementById('stats-container').innerHTML = '';
+                }
+            };
+
+            const redrawTable = () => {
+                if (!currentCourseId || !data.courses[currentCourseId]) return;
+
+                const head = document.getElementById('gradebook-head');
+                const body = document.getElementById('gradebook-body');
+                const course = data.courses[currentCourseId];
+                
+                const students = Object.values(course.students || {}).sort((a,b) => (a.listNumber || 0) - (b.listNumber || 0));
+                const assignments = Object.values(course.assignments || {}).sort((a,b) => new Date(a.date) - new Date(b.date));
+                const grades = course.grades || {};
+                const studentExtraData = course.studentExtraData || {};
+                
+                const allFinalGrades = [];
+
+                let headerHTML = '<tr><th class="text-center">N°</th><th class="text-left">Nombre Alumno</th>';
+                assignments.forEach((a, index) => {
+                    let typeIcon = '📋'; // Rúbrica
+                    if (a.type === 'logrado') typeIcon = '✓';
+                    if (a.type === 'directa') typeIcon = '#';
+
+                    headerHTML += `<th class="vertical-header relative group"><div class="tooltip-container"><div><span>${new Date(a.date).toLocaleDateString()}<strong class="ml-2">${index + 1}</strong> <span class="text-lg">${typeIcon}</span></span><div class="header-actions"><button data-assignment-id="${a.id}" class="edit-assignment-btn text-blue-600 p-1 rounded-full hover:bg-blue-100" title="Editar Evaluación">&#9998;</button><button data-assignment-id="${a.id}" class="delete-assignment-btn text-red-600 p-1 rounded-full hover:bg-red-100" title="Eliminar Evaluación">&#128465;</button></div></div><span class="tooltip-text">${index + 1}: ${a.description}</span></div></th>`;
+                });
+
+                headerHTML += `<th class="spacer-col"></th>`;
+
+                const processWeight = course.isPonderadaEnabled ? 100 - (course.ponderadaWeight || 40) : 100;
+                headerHTML += `<th class="text-center tooltip-container summary-col">Proceso (${processWeight}%)<span class="tooltip-text">Promedio de todas las evaluaciones de proceso. Las celdas vacías no se consideran.</span></th>`;
+                if (course.isPonderadaEnabled) {
+                    const ponderadaName = course.ponderadaName || 'Nota Ponderada';
+                    const ponderadaWeight = course.ponderadaWeight || 40;
+                    headerHTML += `<th class="text-center tooltip-container summary-col">${ponderadaName} (${ponderadaWeight}%)<span class="tooltip-text">Ingresa aquí la nota de la evaluación ponderada.</span></th>`;
+                    headerHTML += `<th class="text-center tooltip-container summary-col">Nota Final<span class="tooltip-text">Calificación final calculada con las ponderaciones definidas.</span></th>`;
+                }
+                headerHTML += '</tr>';
+                head.innerHTML = headerHTML;
+                
+                body.innerHTML = students.map(student => {
+                    let totalNotesSum = 0;
+                    let notesCount = 0;
+
+                    const assignmentsHTML = assignments.map(a => {
+                        const gradeKey = `${student.id}-${a.id}`;
+                        const note = grades[gradeKey];
+                        
+                        if (a.type === 'directa') {
+                            if (note) { totalNotesSum += parseFloat(note); notesCount++; }
+                            return `<td class="text-center" data-student-id="${student.id}" data-assignment-id="${a.id}"><input type="number" class="exam-input direct-grade-input" min="1" max="7" step="0.1" value="${note || ''}"></td>`;
+                        }
+                        
+                        let noteText = '&nbsp;', noteClass = '';
+                        if (note) {
+                            totalNotesSum += note;
+                            notesCount++;
+                            if (a.type === 'logrado') {
+                                noteText = note === 7.0 ? '✓' : 'X';
+                            } else {
+                                noteText = note.toFixed(1);
+                            }
+                            noteClass = `note-${Math.floor(note)}`;
+                        }
+                        return `<td class="grade-cell text-center ${noteClass}" data-student-id="${student.id}" data-assignment-id="${a.id}">${noteText}</td>`;
+                    }).join('');
+
+                    const processGrade = notesCount > 0 ? (totalNotesSum / notesCount) : 1.0;
+                    const ponderadaGrade = studentExtraData[student.id]?.ponderadaGrade || '';
+                    const finalGrade = course.isPonderadaEnabled ? calculateFinalGrade(processGrade, ponderadaGrade, course.ponderadaWeight) : processGrade;
+                    if (!isNaN(finalGrade)) allFinalGrades.push(finalGrade);
+
+                    let rowHTML = `<tr class="hover:bg-gray-50 bg-white"><td class="font-semibold text-center">${student.listNumber || ''}</td><td class="font-medium">${student.name}</td>${assignmentsHTML}`;
+                    rowHTML += `<td class="spacer-col"></td>`;
+                    rowHTML += `<td class="text-center font-bold summary-col">${processGrade.toFixed(1)}</td>`;
+                    if (course.isPonderadaEnabled) {
+                        rowHTML += `<td class="text-center summary-col"><input type="number" class="exam-input ponderada-grade-input" min="1" max="7" step="0.1" value="${ponderadaGrade}" data-student-id="${student.id}"></td>`;
+                        rowHTML += `<td class="text-center font-bold text-lg ${finalGrade < 4.0 ? 'text-red-600' : 'text-blue-600'} summary-col">${finalGrade.toFixed(1)}</td>`;
+                    }
+                    rowHTML += '</tr>';
+                    return rowHTML;
+                }).join('');
+                
+                updateStats(allFinalGrades);
+                redrawAssignmentLegend(assignments);
+            };
+
+            const redrawAssignmentLegend = (assignments) => {
+                const container = document.getElementById('assignment-legend-container');
+                const list = document.getElementById('assignment-legend-list');
+                if (assignments.length > 0) {
+                    container.classList.remove('hidden');
+                    list.innerHTML = assignments.map((a, index) => `<p><strong>${index + 1}:</strong> ${a.description}</p>`).join('');
+                } else {
+                    container.classList.add('hidden');
+                }
+            };
+
+            const updateStats = (grades) => {
+                const statsContainer = document.getElementById('stats-container');
+                if (grades.length === 0) {
+                    statsContainer.innerHTML = '<p class="text-center text-gray-500">No hay suficientes datos para mostrar estadísticas.</p>'; return;
+                }
+                const sum = grades.reduce((a, b) => a + b, 0);
+                const average = (sum / grades.length).toFixed(2);
+                const approved = grades.filter(g => g >= 4.0).length;
+                const failed = grades.length - approved;
+                const highest = Math.max(...grades).toFixed(1);
+                const lowest = Math.min(...grades).toFixed(1);
+
+                statsContainer.innerHTML = `<h3 class="text-xl font-bold mb-4 text-center">Estadísticas del Curso</h3><div class="grid grid-cols-2 md:grid-cols-5 gap-4 text-center"><div><p class="text-sm text-gray-500">Promedio</p><p class="text-2xl font-bold">${average}</p></div><div><p class="text-sm text-gray-500">Aprobados</p><p class="text-2xl font-bold text-green-600">${approved}</p></div><div><p class="text-sm text-gray-500">Reprobados</p><p class="text-2xl font-bold text-red-600">${failed}</p></div><div><p class="text-sm text-gray-500">Nota Máxima</p><p class="text-2xl font-bold text-blue-600">${highest}</p></div><div><p class="text-sm text-gray-500">Nota Mínima</p><p class="text-2xl font-bold text-orange-600">${lowest}</p></div></div>`;
+            };
+
+            const modals = { userInfo: document.getElementById('user-info-modal'), addCourse: document.getElementById('add-course-modal'), editCourse: document.getElementById('edit-course-modal'), manageStudents: document.getElementById('manage-students-modal'), addAssignment: document.getElementById('add-assignment-modal'), editAssignment: document.getElementById('edit-assignment-modal') };
+            const openModal = (modal) => modal.classList.add('active');
+            const closeModal = (modal) => { modal.classList.remove('active'); modal.querySelectorAll('input, textarea').forEach(i => { i.value = ''; i.classList.remove('border-red-500'); }); };
+            
+            const confirmModal = {
+                modal: document.getElementById('confirm-modal'), title: document.getElementById('confirm-modal-title'), text: document.getElementById('confirm-modal-text'), okBtn: document.getElementById('confirm-modal-ok'), cancelBtn: document.getElementById('confirm-modal-cancel'), _resolve: null,
+                show(text, title = 'Confirmar Acción') { this.title.textContent = title; this.text.textContent = text; this.modal.classList.add('active'); return new Promise(r => this._resolve = r); },
+                hide(result) { this.modal.classList.remove('active'); if (this._resolve) this._resolve(result); }
+            };
+            confirmModal.okBtn.addEventListener('click', () => confirmModal.hide(true));
+            confirmModal.cancelBtn.addEventListener('click', () => confirmModal.hide(false));
+
+            document.getElementById('edit-user-info-btn').addEventListener('click', () => {
+                document.getElementById('teacher-name-input').value = userInfo.teacherName || '';
+                document.getElementById('subject-input').value = userInfo.subject || '';
+                document.getElementById('semester-input').value = userInfo.semester || '';
+                document.getElementById('year-input').value = userInfo.year || '';
+                document.getElementById('establishment-input').value = userInfo.establishment || '';
+                openModal(modals.userInfo);
+            });
+            document.getElementById('confirm-user-info').addEventListener('click', () => {
+                userInfo.teacherName = document.getElementById('teacher-name-input').value.trim();
+                userInfo.subject = document.getElementById('subject-input').value.trim();
+                userInfo.semester = document.getElementById('semester-input').value.trim();
+                userInfo.year = document.getElementById('year-input').value.trim();
+                userInfo.establishment = document.getElementById('establishment-input').value.trim();
+                saveData();
+                updateUserInfoUI();
+                closeModal(modals.userInfo);
+            });
+
+            document.getElementById('add-course-btn').addEventListener('click', () => openModal(modals.addCourse));
+            document.getElementById('manage-students-btn').addEventListener('click', () => {
+                studentsToDelete.clear();
+                const container = document.getElementById('student-list-container');
+                const students = Object.values(data.courses[currentCourseId].students || {}).sort((a,b) => (a.listNumber || 0) - (b.listNumber || 0));
+                if (students.length === 0) {
+                    container.innerHTML = '<p class="text-gray-500 text-center">No hay alumnos en este curso.</p>';
+                } else {
+                    container.innerHTML = students.map(student => `<div class="flex justify-between items-center p-2 border-b gap-4"><input type="number" data-student-id="${student.id}" value="${student.listNumber || ''}" class="list-number-input w-16 text-center border rounded p-1"><span class="flex-grow">${student.name}</span><button data-student-id="${student.id}" class="delete-student-btn text-red-500 hover:text-red-700 font-bold text-xl">&times;</button></div>`).join('');
+                }
+                openModal(modals.manageStudents);
+            });
+            document.getElementById('add-assignment-btn').addEventListener('click', () => { document.getElementById('assignment-date-input').valueAsDate = new Date(); openModal(modals.addAssignment); });
+            
+            document.getElementById('add-ponderada-enabled-checkbox').addEventListener('change', (e) => {
+                document.getElementById('add-ponderada-options').classList.toggle('hidden', !e.target.checked);
+            });
+            document.getElementById('edit-ponderada-enabled-checkbox').addEventListener('change', (e) => {
+                document.getElementById('edit-ponderada-options').classList.toggle('hidden', !e.target.checked);
+            });
+
+            document.getElementById('edit-course-btn').addEventListener('click', () => {
+                const course = data.courses[currentCourseId];
+                if(course) {
+                    document.getElementById('edit-course-name-input').value = course.name;
+                    const checkbox = document.getElementById('edit-ponderada-enabled-checkbox');
+                    const options = document.getElementById('edit-ponderada-options');
+                    checkbox.checked = course.isPonderadaEnabled || false;
+                    document.getElementById('edit-ponderada-name-input').value = course.ponderadaName || 'Proyecto';
+                    document.getElementById('edit-ponderada-weight-input').value = course.ponderadaWeight || 40;
+                    options.classList.toggle('hidden', !checkbox.checked);
+                    openModal(modals.editCourse);
+                }
+            });
+            
+            document.querySelectorAll('.modal-cancel').forEach(btn => btn.addEventListener('click', () => closeModal(btn.closest('.modal'))));
+            
+            document.getElementById('confirm-add-course').addEventListener('click', () => {
+                const nameInput = document.getElementById('course-name-input');
+                const name = nameInput.value.trim();
+                if (!name) { nameInput.classList.add('border-red-500'); nameInput.focus(); return; }
+                const id = `course_${Date.now()}`;
+                const isPonderadaEnabled = document.getElementById('add-ponderada-enabled-checkbox').checked;
+                const ponderadaName = document.getElementById('add-ponderada-name-input').value.trim() || 'Nota Ponderada';
+                const ponderadaWeight = parseInt(document.getElementById('add-ponderada-weight-input').value) || 40;
+                data.courses[id] = { id, name, isPonderadaEnabled, ponderadaName, ponderadaWeight, students: {}, assignments: {}, grades: {}, studentExtraData: {} };
+                currentCourseId = id;
+                saveData(); loadCourses(); closeModal(modals.addCourse);
+            });
+            
+            document.getElementById('confirm-edit-course').addEventListener('click', () => {
+                const name = document.getElementById('edit-course-name-input').value.trim();
+                if (name && currentCourseId) {
+                    const course = data.courses[currentCourseId];
+                    course.name = name;
+                    course.isPonderadaEnabled = document.getElementById('edit-ponderada-enabled-checkbox').checked;
+                    course.ponderadaName = document.getElementById('edit-ponderada-name-input').value.trim() || 'Nota Ponderada';
+                    course.ponderadaWeight = parseInt(document.getElementById('edit-ponderada-weight-input').value) || 40;
+                    saveData(); loadCourses(); closeModal(modals.editCourse);
+                }
+            });
+
+            document.getElementById('delete-course-btn').addEventListener('click', async () => {
+                if (!currentCourseId) return;
+                const courseName = data.courses[currentCourseId].name;
+                if (await confirmModal.show(`¿Estás seguro de que quieres eliminar el curso "${courseName}"? Esta acción no se puede deshacer.`)) {
+                    delete data.courses[currentCourseId];
+                    currentCourseId = null;
+                    saveData(); loadCourses();
+                }
+            });
+
+            document.getElementById('student-list-container').addEventListener('click', (e) => {
+                const target = e.target.closest('.delete-student-btn');
+                if (target) {
+                    const studentId = target.dataset.studentId;
+                    studentsToDelete.add(studentId);
+                    target.parentElement.classList.add('bg-red-100', 'line-through');
+                    target.disabled = true;
+                }
+            });
+
+            document.getElementById('confirm-manage-students').addEventListener('click', () => {
+                if (!currentCourseId) return;
+                const course = data.courses[currentCourseId];
+                document.querySelectorAll('.list-number-input').forEach(input => {
+                    const studentId = input.dataset.studentId;
+                    if (course.students[studentId]) {
+                        course.students[studentId].listNumber = parseInt(input.value, 10) || 0;
+                    }
+                });
+                studentsToDelete.forEach(id => { delete course.students[id]; });
+                const names = document.getElementById('student-name-input').value.trim().split('\n').filter(Boolean);
+                if (names.length > 0) {
+                    const existingStudents = Object.values(course.students || {});
+                    let maxListNumber = Math.max(0, ...existingStudents.map(s => s.listNumber || 0));
+                    names.forEach((name, index) => {
+                        const id = `student_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                        course.students[id] = { id, name, listNumber: maxListNumber + index + 1 };
+                    });
+                }
+                saveData(); redrawTable(); closeModal(modals.manageStudents);
+            });
+
+            document.getElementById('confirm-add-assignment').addEventListener('click', () => {
+                const date = document.getElementById('assignment-date-input').value;
+                const description = document.getElementById('assignment-desc-input').value.trim();
+                const type = document.getElementById('assignment-type-select').value;
+                if (date && description && currentCourseId) {
+                    const course = data.courses[currentCourseId];
+                    const id = `assign_${Date.now()}`;
+                    course.assignments[id] = { id, date, description, type };
+                    saveData(); redrawTable(); closeModal(modals.addAssignment);
+                }
+            });
+
+            document.getElementById('confirm-edit-assignment').addEventListener('click', () => {
+                const date = document.getElementById('edit-assignment-date-input').value;
+                const description = document.getElementById('edit-assignment-desc-input').value.trim();
+                if (date && description && currentCourseId && assignmentToEditId) {
+                    const assignment = data.courses[currentCourseId].assignments[assignmentToEditId];
+                    if (assignment) {
+                        assignment.date = date;
+                        assignment.description = description;
+                        saveData(); redrawTable(); closeModal(modals.editAssignment);
+                    }
+                }
+                assignmentToEditId = null;
+            });
+
+            document.getElementById('gradebook-head').addEventListener('click', async (e) => {
+                const editBtn = e.target.closest('.edit-assignment-btn');
+                const deleteBtn = e.target.closest('.delete-assignment-btn');
+                if (editBtn) {
+                    assignmentToEditId = editBtn.dataset.assignmentId;
+                    const assignment = data.courses[currentCourseId].assignments[assignmentToEditId];
+                    if (assignment) {
+                        document.getElementById('edit-assignment-date-input').value = assignment.date;
+                        document.getElementById('edit-assignment-desc-input').value = assignment.description;
+                        openModal(modals.editAssignment);
+                    }
+                }
+                if (deleteBtn) {
+                    const assignmentId = deleteBtn.dataset.assignmentId;
+                    const assignment = data.courses[currentCourseId].assignments[assignmentId];
+                    if (await confirmModal.show(`¿Eliminar la evaluación "${assignment.description}"? Se borrarán todas sus calificaciones.`)) {
+                        delete data.courses[currentCourseId].assignments[assignmentId];
+                        const grades = data.courses[currentCourseId].grades;
+                        Object.keys(grades).forEach(key => { if (key.endsWith(`-${assignmentId}`)) delete grades[key]; });
+                        saveData(); redrawTable();
+                    }
+                }
+            });
+
+            document.getElementById('gradebook-body').addEventListener('click', (e) => {
+                const target = e.target.closest('.grade-cell');
+                if (!target || !currentCourseId) return;
+                const { studentId, assignmentId } = target.dataset;
+                const gradeKey = `${studentId}-${assignmentId}`;
+                const course = data.courses[currentCourseId];
+                const assignment = course.assignments[assignmentId];
+                if (!assignment || assignment.type === 'directa') return;
+
+                const currentNote = course.grades[gradeKey];
+                let scale = GRADING_SCALE;
+                if (assignment.type === 'logrado') {
+                    scale = LOGRADO_SCALE;
+                }
+
+                const currentIndex = currentNote ? scale.indexOf(currentNote) : -1;
+                const nextIndex = (currentIndex + 1) % (scale.length + 1);
+                
+                if (nextIndex < scale.length) {
+                    course.grades[gradeKey] = scale[nextIndex];
+                } else {
+                    delete course.grades[gradeKey];
+                }
+                saveData(); redrawTable();
+            });
+
+            document.getElementById('gradebook-body').addEventListener('change', (e) => {
+                const target = e.target;
+                const course = data.courses[currentCourseId];
+                if (target.classList.contains('ponderada-grade-input')) {
+                    const { studentId } = target.dataset;
+                    if (!course.studentExtraData[studentId]) course.studentExtraData[studentId] = {};
+                    course.studentExtraData[studentId].ponderadaGrade = target.value;
+                }
+                if (target.classList.contains('direct-grade-input')) {
+                    const { studentId, assignmentId } = target.dataset;
+                    const gradeKey = `${studentId}-${assignmentId}`;
+                    const value = parseFloat(target.value);
+                    if (!isNaN(value) && value >= 1 && value <= 7) {
+                        course.grades[gradeKey] = value;
+                    } else {
+                        delete course.grades[gradeKey];
+                    }
+                }
+                saveData(); redrawTable();
+            });
+            
+            document.getElementById('course-select').addEventListener('change', handleCourseChange);
+
+            document.getElementById('export-json-btn').addEventListener('click', () => {
+                const jsonString = JSON.stringify({ userInfo, data }, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url; a.download = 'datos_calificaciones.json';
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+
+            document.getElementById('import-json-btn').addEventListener('click', () => {
+                document.getElementById('import-file-input').click();
+            });
+
+            document.getElementById('import-file-input').addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (imported && typeof imported.data.courses === 'object' && typeof imported.userInfo === 'object') {
+                            data = imported.data;
+                            userInfo = imported.userInfo;
+                            saveData(); 
+                            currentCourseId = null; 
+                            updateUserInfoUI();
+                            loadCourses();
+                        } else { alert('El archivo JSON no tiene el formato correcto.'); }
+                    } catch (error) { alert('Error al leer el archivo JSON.'); console.error(error); }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            });
+
+            document.getElementById('export-pdf-btn').addEventListener('click', () => {
+                if (!currentCourseId) return;
+                const doc = new jsPDF();
+                const course = data.courses[currentCourseId];
+                const students = Object.values(course.students || {}).sort((a,b) => (a.listNumber || 0) - (b.listNumber || 0));
+                const assignments = Object.values(course.assignments || {}).sort((a,b) => new Date(a.date) - new Date(b.date));
+                const grades = course.grades || {};
+                const studentExtraData = course.studentExtraData || {};
+
+                doc.setFontSize(16); doc.text(userInfo.establishment || 'Establecimiento', 14, 22);
+                doc.setFontSize(12);
+                doc.text(`Docente: ${userInfo.teacherName || ''}`, 14, 30);
+                doc.text(`Asignatura: ${userInfo.subject || ''}`, 14, 36);
+                doc.text(`Curso: ${course.name}`, 105, 30, { align: 'center' });
+                doc.text(`Semestre: ${userInfo.semester || ''} / Año: ${userInfo.year || ''}`, 105, 36, { align: 'center' });
+                doc.setFontSize(11); doc.setTextColor(100); doc.text(`Fecha de exportación: ${new Date().toLocaleDateString()}`, 200, 36, { align: 'right' });
+
+                const processWeight = course.isPonderadaEnabled ? 100 - (course.ponderadaWeight || 40) : 100;
+                const head = [['N°', 'Nombre Alumno', `Proceso (${processWeight}%)`]];
+                if (course.isPonderadaEnabled) {
+                    const ponderadaName = course.ponderadaName || 'Nota Ponderada';
+                    const ponderadaWeight = course.ponderadaWeight || 40;
+                    head[0].push(`${ponderadaName} (${ponderadaWeight}%)`, 'Nota Final');
+                }
+
+                const body = students.map(student => {
+                    let totalNotesSum = 0, notesCount = 0;
+                    assignments.forEach(a => { 
+                        const note = grades[`${student.id}-${a.id}`];
+                        if (note) { totalNotesSum += note; notesCount++; }
+                    });
+                    const processGrade = notesCount > 0 ? (totalNotesSum / notesCount) : 1.0;
+                    const ponderadaGrade = studentExtraData[student.id]?.ponderadaGrade || '';
+                    const finalGrade = course.isPonderadaEnabled ? calculateFinalGrade(processGrade, ponderadaGrade, course.ponderadaWeight) : processGrade;
+                    const row = [student.listNumber || '', student.name, processGrade.toFixed(1)];
+                    if (course.isPonderadaEnabled) { row.push(ponderadaGrade, finalGrade.toFixed(1)); }
+                    return row;
+                });
+
+                doc.autoTable({
+                    head: head, body: body, startY: 45, theme: 'grid',
+                    didDrawCell: (data) => {
+                        const gradeColumns = ['Proceso', 'Nota Final', course.ponderadaName];
+                        const columnName = data.column.header?.toString();
+                        if (gradeColumns.some(gc => columnName?.includes(gc))) {
+                            const grade = parseFloat(data.cell.text[0]);
+                            if (!isNaN(grade)) {
+                                let color;
+                                if (grade < 4.0) color = [255, 204, 204]; else if (grade < 5.0) color = [255, 255, 204]; else if (grade < 6.0) color = [204, 255, 204]; else if (grade >= 6.0) color = [204, 229, 255];
+                                if (color) doc.setFillColor(...color);
+                            }
+                        }
+                    }
+                });
+                
+                const finalY = doc.lastAutoTable.finalY || 10;
+                doc.setFontSize(12); doc.text("Estadísticas del Curso", 14, finalY + 15);
+                const statsNode = document.getElementById('stats-container');
+                doc.autoTable({
+                    body: [
+                        ['Promedio General', statsNode.querySelector('div:nth-child(1) p:nth-child(2)')?.textContent || 'N/A'],
+                        ['Alumnos Aprobados', statsNode.querySelector('div:nth-child(2) p:nth-child(2)')?.textContent || 'N/A'],
+                        ['Alumnos Reprobados', statsNode.querySelector('div:nth-child(3) p:nth-child(2)')?.textContent || 'N/A'],
+                    ],
+                    startY: finalY + 20, theme: 'plain'
+                });
+                doc.save(`${course.name}_calificaciones.pdf`);
+            });
+
+            // --- INICIAR LA APLICACIÓN ---
+            loadData();
+            updateUserInfoUI();
+            loadCourses();
+            if (!userInfo.teacherName) {
+                openModal(modals.userInfo);
+            }
+        });
+    </script>
+</body>
+</html>

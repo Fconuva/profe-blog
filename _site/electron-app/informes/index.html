@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informes y Estadísticas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .modal { display: none; z-index: 50; }
+        .modal.active { display: flex; }
+        .chart-container { position: relative; height: 300px; width: 100%; }
+        .title-bar {
+            height: 32px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            -webkit-app-region: drag;
+            user-select: none;
+        }
+        .title-bar .title {
+            font-size: 13px;
+            font-weight: 500;
+            color: #495057;
+        }
+        .title-bar .controls {
+            display: flex;
+            -webkit-app-region: no-drag;
+        }
+        .title-bar .controls button {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #6c757d;
+            font-size: 12px;
+            transition: background-color 0.2s;
+        }
+        .title-bar .controls button:hover {
+            background: #e9ecef;
+        }
+        .title-bar .controls button.close:hover {
+            background: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="title-bar">
+        <div class="title">Informes y Estadísticas</div>
+        <div class="controls">
+            <button onclick="window.electronAPI.minimize()">─</button>
+            <button onclick="window.electronAPI.maximize()">⬜</button>
+            <button class="close" onclick="window.electronAPI.close()">✕</button>
+        </div>
+    </div>
+    <div class="min-h-screen">
+        <header class="bg-white shadow-sm border-b">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center py-4">
+                    <div class="flex items-center">
+                        <img src="./logo-small.png" alt="Logo" class="w-10 h-10 mr-3 rounded-lg">
+                        <div>
+                            <h1 class="text-2xl font-bold text-gray-900">Informes y Estadísticas</h1>
+                            <p class="text-gray-600">Análisis detallado de rendimiento académico</p>
+                        </div>
+                    </div>
+                    <button onclick="window.electronAPI.navigate('index')" class="btn btn-primary">
+                        ← Volver al Inicio
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informe de Curso</h3>
+                    <p class="text-gray-600 mb-4">Estadísticas generales, distribución de notas y gráficos de rendimiento.</p>
+                    <button onclick="generateCourseReport()" class="btn btn-primary w-full">
+                        Generar PDF
+                    </button>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informe de Estudiante</h3>
+                    <p class="text-gray-600 mb-4">Progreso individual, actividades con bajo rendimiento y recomendaciones.</p>
+                    <button onclick="generateStudentReport()" class="btn btn-success w-full">
+                        Generar PDF
+                    </button>
+                </div>
+
+                <div class="bg-white p-6 rounded-lg shadow-sm border">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Informe de Actividad</h3>
+                    <p class="text-gray-600 mb-4">Análisis detallado de una actividad específica.</p>
+                    <button onclick="generateActivityReport()" class="btn btn-info w-full">
+                        Generar PDF
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Vista Previa de Estadísticas</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Distribución de Notas</h4>
+                        <div class="chart-container">
+                            <canvas id="gradesChart"></canvas>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-medium text-gray-900 mb-2">Progreso Estudiantil</h4>
+                        <div class="chart-container">
+                            <canvas id="progressChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Load data from localStorage (assuming same structure as other pages)
+        let data = JSON.parse(localStorage.getItem('notaProcesoData') || '{}');
+        let userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}');
+
+        function generateCourseReport() {
+            if (!data.courses || Object.keys(data.courses).length === 0) {
+                alert('No hay datos de cursos disponibles');
+                return;
+            }
+
+            const courseId = Object.keys(data.courses)[0]; // For demo, take first course
+            const course = data.courses[courseId];
+            const students = Object.values(course.students || {});
+            const assignments = Object.values(course.assignments || {});
+            const grades = course.grades || {};
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header
+            doc.setFontSize(20);
+            doc.text('Informe de Curso', 105, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Curso: ${course.name}`, 20, 35);
+            doc.text(`Docente: ${userInfo.teacherName || 'N/A'}`, 20, 45);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 150, 35);
+
+            // Statistics
+            let allGrades = [];
+            students.forEach(student => {
+                assignments.forEach(assignment => {
+                    const grade = grades[`${student.id}-${assignment.id}`];
+                    if (grade) allGrades.push(grade);
+                });
+            });
+
+            const mean = allGrades.length > 0 ? (allGrades.reduce((a,b) => a+b, 0) / allGrades.length).toFixed(2) : 'N/A';
+            const median = allGrades.length > 0 ? calculateMedian(allGrades).toFixed(2) : 'N/A';
+            const mode = allGrades.length > 0 ? calculateMode(allGrades) : 'N/A';
+            const approved = allGrades.filter(g => g >= 4.0).length;
+            const total = allGrades.length;
+
+            doc.setFontSize(14);
+            doc.text('Estadísticas Generales', 20, 65);
+            doc.setFontSize(11);
+            doc.text(`Promedio: ${mean}`, 20, 75);
+            doc.text(`Mediana: ${median}`, 20, 85);
+            doc.text(`Moda: ${mode}`, 20, 95);
+            doc.text(`Aprobados: ${approved}/${total}`, 20, 105);
+
+            // Simple bar chart representation
+            doc.setFontSize(14);
+            doc.text('Distribución de Notas', 20, 125);
+            const ranges = ['1.0-2.9', '3.0-3.9', '4.0-4.9', '5.0-5.9', '6.0-7.0'];
+            const counts = ranges.map(range => {
+                const [min, max] = range.split('-').map(Number);
+                return allGrades.filter(g => g >= min && g <= max).length;
+            });
+
+            let y = 135;
+            ranges.forEach((range, i) => {
+                doc.text(`${range}: ${counts[i]}`, 20, y);
+                y += 10;
+            });
+
+            doc.save(`informe_curso_${course.name}.pdf`);
+        }
+
+        function generateStudentReport() {
+            if (!data.courses || Object.keys(data.courses).length === 0) {
+                alert('No hay datos disponibles');
+                return;
+            }
+
+            const courseId = Object.keys(data.courses)[0];
+            const course = data.courses[courseId];
+            const students = Object.values(course.students || {});
+            const assignments = Object.values(course.assignments || {}).sort((a,b) => new Date(a.date) - new Date(b.date));
+            const grades = course.grades || {};
+
+            if (students.length === 0) {
+                alert('No hay estudiantes registrados');
+                return;
+            }
+
+            const student = students[0]; // For demo, take first student
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Informe de Estudiante', 105, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Estudiante: ${student.name}`, 20, 35);
+            doc.text(`Curso: ${course.name}`, 20, 45);
+            doc.text(`Fecha: ${new Date().toLocaleDateString()}`, 150, 35);
+
+            // Grades over time
+            doc.setFontSize(14);
+            doc.text('Progreso a lo largo del tiempo', 20, 65);
+
+            let y = 75;
+            assignments.forEach(assignment => {
+                const grade = grades[`${student.id}-${assignment.id}`];
+                const gradeText = grade ? grade.toFixed(1) : 'N/A';
+                doc.text(`${assignment.name}: ${gradeText}`, 20, y);
+                y += 10;
+            });
+
+            // Low performance activities
+            const lowGrades = assignments.filter(assignment => {
+                const grade = grades[`${student.id}-${assignment.id}`];
+                return grade && grade < 4.0;
+            });
+
+            if (lowGrades.length > 0) {
+                doc.setFontSize(14);
+                doc.text('Actividades con bajo rendimiento', 20, y + 10);
+                y += 20;
+                lowGrades.forEach(activity => {
+                    const grade = grades[`${student.id}-${activity.id}`];
+                    doc.text(`${activity.name}: ${grade.toFixed(1)}`, 20, y);
+                    y += 10;
+                });
+            }
+
+            doc.save(`informe_estudiante_${student.name}.pdf`);
+        }
+
+        function generateActivityReport() {
+            if (!data.courses || Object.keys(data.courses).length === 0) {
+                alert('No hay datos disponibles');
+                return;
+            }
+
+            const courseId = Object.keys(data.courses)[0];
+            const course = data.courses[courseId];
+            const assignments = Object.values(course.assignments || {});
+            const students = Object.values(course.students || {});
+            const grades = course.grades || {};
+
+            if (assignments.length === 0) {
+                alert('No hay actividades registradas');
+                return;
+            }
+
+            const assignment = assignments[0]; // For demo, take first assignment
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFontSize(20);
+            doc.text('Informe de Actividad', 105, 20, { align: 'center' });
+            doc.setFontSize(12);
+            doc.text(`Actividad: ${assignment.name}`, 20, 35);
+            doc.text(`Fecha: ${assignment.date}`, 20, 45);
+            doc.text(`Curso: ${course.name}`, 150, 35);
+
+            // Grades for this activity
+            const activityGrades = students.map(student => {
+                const grade = grades[`${student.id}-${assignment.id}`];
+                return {
+                    name: student.name,
+                    grade: grade || 0
+                };
+            }).filter(s => s.grade > 0);
+
+            const mean = activityGrades.length > 0 ? (activityGrades.reduce((a,b) => a+b.grade, 0) / activityGrades.length).toFixed(2) : 'N/A';
+            const approved = activityGrades.filter(s => s.grade >= 4.0).length;
+
+            doc.setFontSize(14);
+            doc.text('Estadísticas', 20, 65);
+            doc.setFontSize(11);
+            doc.text(`Promedio: ${mean}`, 20, 75);
+            doc.text(`Aprobados: ${approved}/${activityGrades.length}`, 20, 85);
+
+            doc.save(`informe_actividad_${assignment.name}.pdf`);
+        }
+
+        function calculateMedian(arr) {
+            const sorted = arr.slice().sort((a,b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        }
+
+        function calculateMode(arr) {
+            const freq = {};
+            arr.forEach(num => freq[num] = (freq[num] || 0) + 1);
+            let mode = null;
+            let maxCount = 0;
+            for (const [num, count] of Object.entries(freq)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    mode = num;
+                }
+            }
+            return mode;
+        }
+
+        // Initialize charts
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!data.courses || Object.keys(data.courses).length === 0) return;
+
+            const courseId = Object.keys(data.courses)[0];
+            const course = data.courses[courseId];
+            const students = Object.values(course.students || {});
+            const assignments = Object.values(course.assignments || {});
+            const grades = course.grades || {};
+
+            // Grades distribution chart
+            let allGrades = [];
+            students.forEach(student => {
+                assignments.forEach(assignment => {
+                    const grade = grades[`${student.id}-${assignment.id}`];
+                    if (grade) allGrades.push(grade);
+                });
+            });
+
+            const ctx1 = document.getElementById('gradesChart').getContext('2d');
+            new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['1.0-2.9', '3.0-3.9', '4.0-4.9', '5.0-5.9', '6.0-7.0'],
+                    datasets: [{
+                        label: 'Número de notas',
+                        data: [
+                            allGrades.filter(g => g >= 1.0 && g < 3.0).length,
+                            allGrades.filter(g => g >= 3.0 && g < 4.0).length,
+                            allGrades.filter(g => g >= 4.0 && g < 5.0).length,
+                            allGrades.filter(g => g >= 5.0 && g < 6.0).length,
+                            allGrades.filter(g => g >= 6.0 && g <= 7.0).length
+                        ],
+                        backgroundColor: ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+
+            // Progress chart (simplified)
+            const ctx2 = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: assignments.map(a => a.name.substring(0, 10)),
+                    datasets: [{
+                        label: 'Promedio de clase',
+                        data: assignments.map(assignment => {
+                            const assignmentGrades = students.map(student => grades[`${student.id}-${assignment.id}`]).filter(g => g);
+                            return assignmentGrades.length > 0 ? assignmentGrades.reduce((a,b) => a+b, 0) / assignmentGrades.length : 0;
+                        }),
+                        borderColor: '#3b82f6',
+                        tension: 0.1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
+                }
+            });
+        });
+    </script>
+</body>
+</html>

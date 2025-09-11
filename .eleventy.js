@@ -24,7 +24,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("nota de proceso.html");
 
   // Ignorar archivos HTML que tienen equivalentes en subdirectorios
-  eleventyConfig.ignores.add("portafolio.html");
   eleventyConfig.ignores.add("rosco.html");
   eleventyConfig.ignores.add("simulador.html");
   eleventyConfig.ignores.add("tesis.html");

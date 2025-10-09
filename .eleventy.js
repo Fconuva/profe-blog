@@ -1,4 +1,4 @@
-module.exports = function(eleventyConfig) {
+﻿module.exports = function(eleventyConfig) {
   // Trigger deploy
   // Copiar archivos estáticos
   eleventyConfig.addPassthroughCopy("css");
@@ -18,10 +18,13 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("logo.png");
   eleventyConfig.addPassthroughCopy("*.ico");
 
-  // Copiar archivos HTML específicos como estáticos (solo los que no están en conflicto)
+  // Copiar archivos HTML específicos como estáticos
   eleventyConfig.addPassthroughCopy("bingo.html");
   eleventyConfig.addPassthroughCopy("generador-cv.html");
   eleventyConfig.addPassthroughCopy("nota de proceso.html");
+
+  // Nueva sección: Paseo de Docentes
+  eleventyConfig.addPassthroughCopy("paseo-docentes");
 
   // Ignorar archivos HTML que tienen equivalentes en subdirectorios
   eleventyConfig.ignores.add("portafolio.html");

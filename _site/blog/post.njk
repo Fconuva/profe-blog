@@ -1,0 +1,29 @@
+    ---
+    layout: layout.njk
+    pagination:
+        data: contentful
+        size: 1
+        alias: post
+        # El permalink ahora usa post.entryTitle para crear la URL
+    permalink: "/blog/{{ post.entryTitle | slug }}/" 
+    ---
+
+    {# Usamos post.entryTitle para el título de la página #}
+    {% set title = post.entryTitle %}
+
+    <div class="max-w-3xl mx-auto">
+        <h1 class="text-5xl font-black text-blue-700 mb-4">{{ post.entryTitle }}</h1>
+        <p class="text-gray-500 mb-8">{{ post.fecha | readableDate }}</p>
+
+        {% if post.image %}
+            {% set imgUrl = 'https://' + post.image.fields.file.url %}
+            {% responsiveImage imgUrl, post.image.fields.description or post.entryTitle, "(min-width: 1024px) 1024px, 100vw" %}
+        {% endif %}
+
+        <div class="prose lg:prose-xl max-w-none">
+            {% documentToHtml post.body %}
+        </div>
+        
+        <a href="/blog/" class="mt-12 inline-block text-blue-700 font-bold hover:underline">&larr; Volver a todos los artículos</a>
+    </div>
+    

@@ -1,0 +1,1536 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Interrogación: Mocha Dick (Adaptativa V2)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0;400;0;700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin-autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Lora', serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        .bounce-in { animation: bounceIn 0.6s ease-out; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.1); }
+        .dark-glass { backdrop-filter: blur(10px); background: rgba(0, 0, 0, 0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+
+        .student-card { transition: all 0.3s ease; }
+        .student-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        .progress-bar { transition: width 0.5s ease; }
+
+        .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .theme-toggle button { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s; }
+        .theme-toggle button:hover { transform: scale(1.1); }
+
+        body.dark { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #e2e8f0; }
+        body.dark .glass-effect { background: rgba(0, 0, 0, 0.3); }
+        body.dark .student-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(75, 85, 99, 0.3); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen">
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn" class="flex items-center justify-center">
+            <i class="fas fa-moon text-gray-800 text-xl"></i>
+        </button>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+
+        <!-- Header Mejorado -->
+        <header id="main-header" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 mb-8 text-center border-l-8 border-blue-600 fade-in">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-book-open text-4xl text-blue-600 mr-4"></i>
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                        Herramienta de Interrogación Adaptativa
+                    </h1>
+                    <p class="text-2xl md:text-3xl text-gray-700 dark:text-gray-300 mt-2 font-medium">
+                        "Mocha Dick" de Ortega y Martínez
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
+                <span class="flex items-center"><i class="fas fa-brain mr-2 text-purple-500"></i>Evaluación Inteligente</span>
+                <span class="flex items-center"><i class="fas fa-save mr-2 text-green-500"></i>Autoguardado</span>
+                <span class="flex items-center"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Profesional</span>
+            </div>
+        </header>
+
+        <!-- Barra de Progreso -->
+        <div id="progress-container" class="hidden mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Progreso de Evaluación</h3>
+                    <span id="progress-text" class="text-sm text-gray-600 dark:text-gray-400">0/8 preguntas</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div id="progress-bar" class="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Inicio Mejorada -->
+        <div id="setup-screen" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl mx-auto slide-up">
+            <div class="text-center mb-8">
+                <i class="fas fa-plus-circle text-6xl text-blue-500 mb-4"></i>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Iniciar Nueva Evaluación</h2>
+                <p class="text-gray-600 dark:text-gray-400">Configure los parámetros para comenzar la evaluación adaptativa</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="student-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-user mr-2 text-blue-500"></i>Nombre del Estudiante
+                    </label>
+                    <input type="text" id="student-name" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ej: Javiera Rojas">
+                </div>
+
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="student-course" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-graduation-cap mr-2 text-green-500"></i>Curso
+                    </label>
+                    <input type="text" id="student-course" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ej: NM4-B">
+                </div>
+
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fas fa-cogs mr-2 text-purple-500"></i>Tipo de Evaluación (Adaptación)
+                    </label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="regular" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300" checked>
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Regular</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neet_general" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEET (General)</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neet_pia" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEEP (PIA)</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-blue-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neet_4d" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEEP 4D</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="start-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transform hover:scale-105 transition-all duration-200">
+                    <i class="fas fa-play mr-2"></i>
+                    Comenzar Interrogación
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Interrogación Mejorada -->
+        <div id="interrogation-screen" class="hidden">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8">
+                <div class="flex justify-between items-start border-b-2 border-gray-200 dark:border-gray-700 pb-6 mb-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-graduate text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Evaluando a: <span id="eval-student-name" class="text-blue-600"></span></h2>
+                            <p class="text-gray-600 dark:text-gray-400">Curso: <span id="eval-student-course"></span></p>
+                            <p id="eval-type-display" class="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1"></p>
+                        </div>
+                    </div>
+                    <div id="final-score-container" class="text-right bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded-xl p-4">
+                        <!-- El resultado se mostrará aquí -->
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
+                        <i class="fas fa-question-circle mr-2 text-blue-500"></i>
+                        Preguntas Seleccionadas (Marcar puntaje y descartar una)
+                    </h3>
+                </div>
+
+                <div id="questions-container" class="space-y-6">
+                    <!-- Las preguntas se cargarán aquí dinámicamente -->
+                </div>
+
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button id="finalize-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-all duration-200">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Finalizar y Registrar Evaluación
+                    </button>
+                    <button id="cancel-button" class="w-full flex justify-center py-2 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados Mejorada -->
+        <div id="results-screen" class="mt-12">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8">
+                <div class="flex flex-col lg:flex-row justify-between items-center mb-8">
+                    <div class="mb-4 lg:mb-0">
+                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white flex items-center mb-2">
+                            <i class="fas fa-chart-line mr-3 text-blue-500"></i>
+                            Registro de Evaluaciones
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400">Gestiona y exporta todas las evaluaciones realizadas</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button id="remove-duplicates" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform hover:scale-105 transition-all duration-200">
+                            <i class="fas fa-trash-alt mr-2"></i>Eliminar Duplicados
+                        </button>
+                        <button id="export-all-pdf" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-105 transition-all duration-200">
+                            <i class="fas fa-file-pdf mr-2"></i>Exportar Todo (PDF)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estadísticas -->
+                <div id="stats-container" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <!-- Las estadísticas se cargarán aquí -->
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div class="flex-1">
+                        <input type="text" id="search-input" placeholder="Buscar estudiante..." class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-700 dark:text-white transition-all duration-200">
+                    </div>
+                    <select id="filter-type" class="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-700 dark:text-white">
+                        <option value="all">Todos los tipos</option>
+                        <option value="regular">Regular</option>
+                        <option value="neet_general">NEET General</option>
+                        <option value="neet_pia">NEEP PIA</option>
+                        <option value="neet_4d">NEEP 4D</option>
+                    </select>
+                </div>
+
+                <!-- Tabla Mejorada -->
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gradient-to-r from-blue-600 to-purple-600">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Estudiante</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Curso</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Puntaje</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Nota</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Los resultados se agregarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div id="pagination-container" class="flex justify-center mt-8">
+                    <!-- La paginación se agregará aquí -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal para Respuesta Ideal Mejorado -->
+    <div id="answer-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+                        <i class="fas fa-lightbulb mr-3 text-yellow-500"></i>
+                        Respuesta Ideal
+                    </h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none transition-colors">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div id="modal-question" class="font-semibold text-lg mb-4 text-gray-800 dark:text-white"></div>
+                <div id="modal-answer" class="text-gray-700 dark:text-gray-300 prose prose-lg max-w-none leading-relaxed"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Agregar Múltiples Estudiantes -->
+    <div id="bulk-add-modal" class="modal fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4 z-50">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-8">
+                <div class="flex justify-between items-center border-b border-gray-200 dark:border-gray-700 pb-4 mb-6">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white flex items-center">
+                        <i class="fas fa-users mr-3 text-blue-500"></i>
+                        Agregar Múltiples Estudiantes
+                    </h3>
+                    <button id="close-bulk-modal" class="text-gray-500 hover:text-gray-800 dark:text-gray-400 dark:hover:text-white text-3xl leading-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Lista de Estudiantes (una por línea)</label>
+                        <textarea id="bulk-students" rows="10" class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-gray-700 dark:text-white" placeholder="Nombre Estudiante 1 - Curso 1
+Nombre Estudiante 2 - Curso 2
+Nombre Estudiante 3 - Curso 3"></textarea>
+                    </div>
+
+                    <div class="flex gap-4">
+                        <button id="add-bulk-students" class="flex-1 py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-all duration-200">
+                            <i class="fas fa-plus mr-2"></i>Agregar Estudiantes
+                        </button>
+                        <button id="clear-bulk" class="py-3 px-6 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <i class="fas fa-trash mr-2"></i>Limpiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Respuesta Ideal -->
+    <div id="answer-modal" class="modal fixed inset-0 bg-gray-800 bg-opacity-75 items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold">Respuesta Ideal</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+                </div>
+                <div id="modal-question" class="font-semibold mb-2"></div>
+                <div id="modal-answer" class="text-gray-700 prose"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // Variables globales mejoradas
+        let currentStudent = null;
+        let currentEvaluationType = 'regular';
+        let selectedQuestions = [];
+        let evaluations = JSON.parse(localStorage.getItem('mochaDickEvaluations') || '[]');
+        let autoSaveInterval = null;
+        let isDarkMode = localStorage.getItem('darkMode') === 'true';
+
+        // Aplicar tema oscuro si está activado
+        if (isDarkMode) {
+            document.body.classList.add('dark');
+            document.getElementById('theme-toggle-btn').innerHTML = '<i class="fas fa-sun text-yellow-400 text-xl"></i>';
+        }
+
+        // Toggle tema oscuro
+        document.getElementById('theme-toggle-btn').addEventListener('click', () => {
+            isDarkMode = !isDarkMode;
+            document.body.classList.toggle('dark');
+            localStorage.setItem('darkMode', isDarkMode);
+            const icon = isDarkMode ? '<i class="fas fa-sun text-yellow-400 text-xl"></i>' : '<i class="fas fa-moon text-gray-800 text-xl"></i>';
+            document.getElementById('theme-toggle-btn').innerHTML = icon;
+        });
+
+        // Base de datos de preguntas mejorada (solo texto para interrogación oral)
+        const questionsDatabase = [
+            {
+                id: 1,
+                question: "¿Cuál es el nombre completo del protagonista en 'Mocha Dick'?",
+                idealAnswer: "José Antonio Mocha Dick es el nombre completo del protagonista. Este nombre refleja tanto su herencia española como su apodo legendario.",
+                difficulty: "basic",
+                category: "character"
+            },
+            {
+                id: 2,
+                question: "¿Qué representa simbólicamente la ballena blanca en la obra?",
+                idealAnswer: "La ballena blanca simboliza la obsesión destructiva que lleva a la locura. Representa lo inalcanzable y lo que consume la vida del protagonista.",
+                difficulty: "intermediate",
+                category: "symbolism"
+            },
+            {
+                id: 3,
+                question: "¿Cuál es el conflicto principal de la novela?",
+                idealAnswer: "El conflicto principal es la lucha entre el hombre y la naturaleza indomable, representada por la ballena blanca que simboliza lo incontrolable.",
+                difficulty: "intermediate",
+                category: "plot"
+            },
+            {
+                id: 4,
+                question: "¿Qué tema central desarrolla Ortega y Martínez en la obra?",
+                idealAnswer: "El tema central es la obsesión y sus consecuencias destructivas. La novela muestra cómo una fijación puede llevar a la ruina total.",
+                difficulty: "advanced",
+                category: "theme"
+            },
+            {
+                id: 5,
+                question: "¿Cómo se manifiesta la locura del protagonista?",
+                idealAnswer: "La locura se manifiesta principalmente a través de su obsesión por cazar la ballena blanca, que lo lleva a sacrificar todo en su vida.",
+                difficulty: "advanced",
+                category: "character"
+            },
+            {
+                id: 6,
+                question: "¿Qué elementos realistas incluye la novela?",
+                idealAnswer: "La novela incluye elementos realistas como descripciones detalladas de la pesca ballenera y referencias a técnicas y lugares reales.",
+                difficulty: "intermediate",
+                category: "style"
+            },
+            {
+                id: 7,
+                question: "¿Cuál es el desenlace de la historia?",
+                idealAnswer: "El desenlace muestra la destrucción total del protagonista, quien pierde todo por su obsesión, incluyendo su vida.",
+                difficulty: "basic",
+                category: "plot"
+            },
+            {
+                id: 8,
+                question: "¿Qué influencia literaria se puede identificar en la obra?",
+                idealAnswer: "La obra está claramente influenciada por 'Moby Dick' de Herman Melville, adaptando el mito de la ballena blanca al contexto chileno.",
+                difficulty: "advanced",
+                category: "literary"
+            },
+            {
+                id: 9,
+                question: "¿Cómo se representa el mar en la novela?",
+                idealAnswer: "El mar se representa como una fuerza poderosa e indomable que desafía el control humano y representa lo desconocido.",
+                difficulty: "intermediate",
+                category: "setting"
+            },
+            {
+                id: 10,
+                question: "¿Qué crítica social incluye la obra?",
+                idealAnswer: "La obra incluye crítica social sobre la explotación laboral en la pesca y las condiciones inhumanas de los trabajadores del mar.",
+                difficulty: "advanced",
+                category: "social"
+            },
+            {
+                id: 11,
+                question: "¿Cuál es la estructura narrativa de la novela?",
+                idealAnswer: "La novela utiliza una narración en tercera persona con saltos temporales que muestran la evolución de la obsesión del protagonista.",
+                difficulty: "advanced",
+                category: "structure"
+            },
+            {
+                id: 12,
+                question: "¿Qué simboliza el nombre 'Mocha Dick'?",
+                idealAnswer: "El nombre 'Mocha Dick' simboliza la transformación del hombre común en una figura mítica, similar a la ballena que persigue.",
+                difficulty: "intermediate",
+                category: "symbolism"
+            },
+            {
+                id: 13,
+                question: "¿Cómo se desarrolla el personaje a lo largo de la obra?",
+                idealAnswer: "El personaje se desarrolla de un pescador racional y experimentado a un hombre completamente obseso e irracional.",
+                difficulty: "intermediate",
+                category: "character"
+            },
+            {
+                id: 14,
+                question: "¿Qué recursos literarios predominan en la obra?",
+                idealAnswer: "Predominan las descripciones detalladas del mar y la pesca, junto con un fuerte uso del simbolismo para representar ideas abstractas.",
+                difficulty: "advanced",
+                category: "style"
+            },
+            {
+                id: 15,
+                question: "¿Cuál es el contexto histórico de la novela?",
+                idealAnswer: "La novela está ambientada en Chile de principios del siglo XX, durante la época de la pesca ballenera industrial.",
+                difficulty: "basic",
+                category: "context"
+            },
+            {
+                id: 16,
+                question: "¿Qué mensaje transmite la obra sobre la naturaleza humana?",
+                idealAnswer: "La obra transmite que la obsesión puede destruir completamente al ser humano, llevándolo a perder todo contacto con la realidad.",
+                difficulty: "advanced",
+                category: "theme"
+            },
+            {
+                id: 17,
+                question: "¿Cómo se relaciona el protagonista con otros personajes?",
+                idealAnswer: "El protagonista se aísla progresivamente de los demás, perdiendo sus relaciones familiares y sociales por su obsesión.",
+                difficulty: "intermediate",
+                category: "character"
+            },
+            {
+                id: 18,
+                question: "¿Qué tipo de lenguaje utiliza el autor?",
+                idealAnswer: "El autor utiliza un lenguaje poético y descriptivo, especialmente en las escenas relacionadas con el mar y la ballena.",
+                difficulty: "intermediate",
+                category: "style"
+            },
+            {
+                id: 19,
+                question: "¿Qué importancia tiene el paisaje en la obra?",
+                idealAnswer: "El paisaje refleja el estado emocional de los personajes, especialmente el mar que simboliza la turbulencia interior del protagonista.",
+                difficulty: "advanced",
+                category: "setting"
+            },
+            {
+                id: 20,
+                question: "¿Qué valores cuestiona la obra?",
+                idealAnswer: "La obra cuestiona el progreso tecnológico sin ética, mostrando cómo la industrialización de la pesca afecta a los trabajadores.",
+                difficulty: "advanced",
+                category: "social"
+            },
+            {
+                id: 21,
+                question: "¿Cómo termina la relación del protagonista con su familia?",
+                idealAnswer: "La relación del protagonista con su familia se destruye completamente debido a su obsesión que lo aleja de sus seres queridos.",
+                difficulty: "intermediate",
+                category: "character"
+            },
+            {
+                id: 22,
+                question: "¿Qué rol juega la comunidad en la historia?",
+                idealAnswer: "La comunidad actúa como testigo impotente de la locura del protagonista, incapaz de detener su descenso hacia la destrucción.",
+                difficulty: "intermediate",
+                category: "social"
+            },
+            {
+                id: 23,
+                question: "¿Cuál es el tono general de la obra?",
+                idealAnswer: "El tono general de la obra es trágico y ominoso, creando una atmósfera de inevitable destrucción.",
+                difficulty: "intermediate",
+                category: "style"
+            },
+            {
+                id: 24,
+                question: "¿Qué enseñanza deja la novela?",
+                idealAnswer: "La enseñanza principal es que la obsesión conduce inevitablemente a la ruina, destruyendo tanto al individuo como a quienes lo rodean.",
+                difficulty: "basic",
+                category: "theme"
+            },
+            {
+                id: 25,
+                question: "¿Cómo se representa el tiempo en la novela?",
+                idealAnswer: "El tiempo se representa a través de saltos temporales que muestran la evolución gradual de la obsesión del protagonista.",
+                difficulty: "advanced",
+                category: "structure"
+            }
+        ];
+
+        // Funciones de autoguardado mejoradas
+        function startAutoSave() {
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            autoSaveInterval = setInterval(() => {
+                saveToLocalStorage();
+                showNotification('Progreso guardado automáticamente', 'success');
+            }, 30000); // Cada 30 segundos
+        }
+
+        function stopAutoSave() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = null;
+            }
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                evaluations: evaluations,
+                lastSaved: new Date().toISOString(),
+                version: '2.0'
+            };
+            localStorage.setItem('mochaDickEvaluations', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const data = JSON.parse(localStorage.getItem('mochaDickEvaluations') || '{}');
+            if (data.evaluations) {
+                evaluations = data.evaluations;
+                if (data.lastSaved) {
+                    showNotification(`Datos cargados. Último guardado: ${new Date(data.lastSaved).toLocaleString()}`, 'info');
+                }
+            }
+        }
+
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            } text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'
+                    } mr-2"></i>
+                    <span>${message}</span>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Función para seleccionar preguntas adaptativas
+        function selectAdaptiveQuestions(evaluationType) {
+            let availableQuestions = [...questionsDatabase];
+            let selected = [];
+
+            // Filtrar preguntas según el tipo de evaluación
+            switch(evaluationType) {
+                case 'neet_general':
+                    availableQuestions = availableQuestions.filter(q => q.difficulty !== 'advanced');
+                    break;
+                case 'neet_pia':
+                    availableQuestions = availableQuestions.filter(q => q.difficulty === 'basic' || q.difficulty === 'intermediate');
+                    break;
+                case 'neet_4d':
+                    availableQuestions = availableQuestions.filter(q => q.difficulty === 'basic');
+                    break;
+                default: // regular
+                    // Todas las preguntas disponibles
+                    break;
+            }
+
+            // Seleccionar 8 preguntas aleatorias
+            for (let i = 0; i < 8 && availableQuestions.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+                selected.push(availableQuestions.splice(randomIndex, 1)[0]);
+            }
+
+            return selected;
+        }
+
+        // Función para renderizar preguntas
+        function renderQuestions(questions) {
+            const container = document.getElementById('questions-container');
+            container.innerHTML = '';
+
+            questions.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 p-6 rounded-xl shadow-lg slide-up';
+                questionDiv.style.animationDelay = `${index * 0.1}s`;
+
+                questionDiv.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex-1">${index + 1}. ${question.question}</h4>
+                        <button class="show-answer-btn ml-4 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm" data-question-id="${question.id}">
+                            <i class="fas fa-lightbulb mr-1"></i>Ver Respuesta Ideal
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-transparent hover:border-blue-300 transition-all duration-200">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Puntaje Manual (0, 0.5, 1.0)</label>
+                            <input type="number" step="0.5" min="0" max="1" name="question-${question.id}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.0" data-question-id="${question.id}">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="exclude-${question.id}" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded">
+                            <label for="exclude-${question.id}" class="text-sm text-red-600 font-medium">Descartar esta pregunta</label>
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span class="px-2 py-1 bg-${question.difficulty === 'basic' ? 'green' : question.difficulty === 'intermediate' ? 'yellow' : 'red'}-100 text-${question.difficulty === 'basic' ? 'green' : question.difficulty === 'intermediate' ? 'yellow' : 'red'}-800 rounded-full text-xs font-medium">
+                                ${question.difficulty === 'basic' ? 'Básico' : question.difficulty === 'intermediate' ? 'Intermedio' : 'Avanzado'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(questionDiv);
+            });
+
+            // Agregar event listeners para los botones de respuesta ideal
+            document.querySelectorAll('.show-answer-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const questionId = parseInt(e.target.closest('.show-answer-btn').dataset.questionId);
+                    const question = questionsDatabase.find(q => q.id === questionId);
+                    if (question) {
+                        showIdealAnswer(question);
+                    }
+                });
+            });
+        }
+
+        // Función para mostrar respuesta ideal
+        function showIdealAnswer(question) {
+            document.getElementById('modal-question').textContent = question.question;
+            document.getElementById('modal-answer').innerHTML = question.idealAnswer;
+            document.getElementById('answer-modal').classList.add('active');
+        }
+
+        // Función para calcular puntaje
+        function calculateScore() {
+            let totalScore = 0;
+            let excludedCount = 0;
+            let hasInvalidScore = false;
+
+            const questionElements = document.querySelectorAll('[id^="exclude-"]');
+
+            questionElements.forEach(checkbox => {
+                if (checkbox.checked) {
+                    excludedCount++;
+                }
+            });
+
+            if (excludedCount !== 1) {
+                showNotification('Debes descartar exactamente UNA pregunta', 'warning');
+                return null;
+            }
+
+            const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+            scoreInputs.forEach(input => {
+                const questionId = input.name.split('-')[1];
+                const excludeCheckbox = document.getElementById(`exclude-${questionId}`);
+
+                if (!excludeCheckbox.checked) {
+                    const score = parseFloat(input.value) || 0;
+                    // Validar que el puntaje esté en los valores permitidos
+                    if (score !== 0 && score !== 0.5 && score !== 1.0) {
+                        showNotification('Los puntajes deben ser 0, 0.5 o 1.0', 'warning');
+                        hasInvalidScore = true;
+                        return; // Salir del forEach
+                    }
+                    totalScore += score;
+                }
+            });
+
+            // Si se encontró un puntaje inválido, retornar null
+            if (hasInvalidScore) return null;
+
+            return totalScore;
+        }
+
+        // Función para convertir puntaje a nota
+        function scoreToGrade(score) {
+            if (score >= 6.0) return { grade: 'MB', color: 'text-green-600', bg: 'bg-green-100' };
+            if (score >= 5.0) return { grade: 'B', color: 'text-blue-600', bg: 'bg-blue-100' };
+            if (score >= 4.0) return { grade: 'S', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+            if (score >= 3.0) return { grade: 'I', color: 'text-orange-600', bg: 'bg-orange-100' };
+            return { grade: 'R', color: 'text-red-600', bg: 'bg-red-100' };
+        }
+
+        // Función para renderizar resultados
+        function renderResults() {
+            const tbody = document.getElementById('results-table-body');
+            tbody.innerHTML = '';
+
+            // Ordenar por fecha (más reciente primero)
+            const sortedEvaluations = [...evaluations].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedEvaluations.forEach((evaluation, index) => {
+                const gradeInfo = scoreToGrade(evaluation.finalScore);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white font-bold text-sm">${evaluation.studentName.charAt(0)}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${evaluation.studentName}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${evaluation.course}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            evaluation.type === 'regular' ? 'bg-blue-100 text-blue-800' :
+                            evaluation.type === 'neet_general' ? 'bg-green-100 text-green-800' :
+                            evaluation.type === 'neet_pia' ? 'bg-purple-100 text-purple-800' :
+                            'bg-orange-100 text-orange-800'
+                        }">
+                            ${evaluation.type === 'regular' ? 'Regular' :
+                              evaluation.type === 'neet_general' ? 'NEET General' :
+                              evaluation.type === 'neet_pia' ? 'NEEP PIA' : 'NEEP 4D'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
+                        ${evaluation.finalScore.toFixed(1)}/7.0
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-sm font-bold rounded-full ${gradeInfo.bg} ${gradeInfo.color}">
+                            ${gradeInfo.grade}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${new Date(evaluation.date).toLocaleDateString('es-ES')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" onclick="exportSinglePDF(${index})">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" onclick="deleteEvaluation(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        // Función para actualizar estadísticas
+        function updateStats() {
+            const statsContainer = document.getElementById('stats-container');
+            if (!statsContainer) return;
+
+            const totalEvaluations = evaluations.length;
+            const averageScore = totalEvaluations > 0 ? evaluations.reduce((sum, e) => sum + e.finalScore, 0) / totalEvaluations : 0;
+            const mbCount = evaluations.filter(e => e.finalScore >= 6.0).length;
+            const passingCount = evaluations.filter(e => e.finalScore >= 4.0).length;
+
+            statsContainer.innerHTML = `
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-blue-100">Total Evaluaciones</p>
+                            <p class="text-2xl font-bold">${totalEvaluations}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-green-100">Promedio General</p>
+                            <p class="text-2xl font-bold">${averageScore.toFixed(1)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-trophy text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-purple-100">Evaluaciones MB</p>
+                            <p class="text-2xl font-bold">${mbCount}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-yellow-100">Aprobados</p>
+                            <p class="text-2xl font-bold">${passingCount}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Función para eliminar evaluación
+        function deleteEvaluation(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta evaluación?')) {
+                evaluations.splice(index, 1);
+                saveToLocalStorage();
+                renderResults();
+                showNotification('Evaluación eliminada', 'success');
+            }
+        }
+
+        // Función para exportar PDF individual mejorado
+        function exportSinglePDF(index) {
+            const evaluation = evaluations[index];
+            if (!evaluation) return;
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.width;
+            const pageHeight = doc.internal.pageSize.height;
+
+            // Función auxiliar para agregar encabezado
+            function addHeader(title, subtitle) {
+                // Gradiente de fondo
+                doc.setFillColor(102, 126, 234);
+                doc.rect(0, 0, pageWidth, 50, 'F');
+
+                doc.setFillColor(118, 75, 162);
+                doc.rect(0, 50, pageWidth, 25, 'F');
+
+                // Logo/Ícono (círculo con inicial)
+                doc.setFillColor(255, 255, 255);
+                doc.circle(25, 25, 15, 'F');
+                doc.setTextColor(102, 126, 234);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text(evaluation.studentName.charAt(0), 25, 30, { align: 'center' });
+
+                // Título principal
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(22);
+                doc.setFont('helvetica', 'bold');
+                doc.text(title, pageWidth/2, 25, { align: 'center' });
+
+                // Subtítulo
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                doc.text(subtitle, pageWidth/2, 65, { align: 'center' });
+
+                // Fecha de generación
+                doc.setFontSize(8);
+                doc.setTextColor(200, 200, 200);
+                doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`, pageWidth - 20, 15, { align: 'right' });
+            }
+
+            // Página 1: Portada
+            addHeader('EVALUACIÓN LITERARIA', '"Mocha Dick" - José Antonio Ortega y Martínez');
+
+            // Información del estudiante en un recuadro elegante
+            doc.setTextColor(0, 0, 0);
+            let yPos = 100;
+
+            // Recuadro de información
+            doc.setFillColor(248, 250, 252);
+            doc.rect(20, yPos - 10, pageWidth - 40, 80, 'F');
+            doc.setDrawColor(102, 126, 234);
+            doc.setLineWidth(2);
+            doc.rect(20, yPos - 10, pageWidth - 40, 80);
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('INFORMACIÓN DEL ESTUDIANTE', pageWidth/2, yPos, { align: 'center' });
+
+            yPos += 20;
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'normal');
+
+            // Crear tabla de información
+            const studentInfo = [
+                ['Nombre del Estudiante:', evaluation.studentName],
+                ['Curso:', evaluation.course],
+                ['Tipo de Evaluación:', evaluation.type === 'regular' ? 'Regular' :
+                                       evaluation.type === 'neet_general' ? 'NEET General' :
+                                       evaluation.type === 'neet_pia' ? 'NEEP PIA' : 'NEEP 4D'],
+                ['Fecha de Evaluación:', new Date(evaluation.date).toLocaleDateString('es-ES')],
+                ['Fecha de Reporte:', new Date().toLocaleDateString('es-ES')]
+            ];
+
+            studentInfo.forEach(([label, value]) => {
+                doc.setFont('helvetica', 'bold');
+                doc.text(label, 30, yPos);
+                doc.setFont('helvetica', 'normal');
+                doc.text(value, 100, yPos);
+                yPos += 10;
+            });
+
+            // Resultados destacados
+            yPos += 20;
+            doc.setFillColor(102, 126, 234);
+            doc.rect(20, yPos - 5, pageWidth - 40, 40, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('RESULTADO FINAL', pageWidth/2, yPos + 5, { align: 'center' });
+
+            const gradeInfo = scoreToGrade(evaluation.finalScore);
+            doc.setFontSize(24);
+            doc.text(`${evaluation.finalScore.toFixed(1)}/7.0`, pageWidth/2, yPos + 20, { align: 'center' });
+
+            doc.setFontSize(14);
+            doc.text(`Nota: ${gradeInfo.grade}`, pageWidth/2, yPos + 30, { align: 'center' });
+
+            // Nueva página para detalles
+            doc.addPage();
+            addHeader('DETALLE DE EVALUACIÓN', 'Análisis de Preguntas y Respuestas');
+
+            // Estadísticas de rendimiento
+            yPos = 90;
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'bold');
+            doc.text('ESTADÍSTICAS DE RENDIMIENTO', 20, yPos);
+
+            yPos += 20;
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+
+            const stats = [
+                ['Preguntas Respondidas:', `${evaluation.questions ? evaluation.questions.length : 0}/8`],
+                ['Puntuación Promedio por Pregunta:', `${(evaluation.finalScore / 7).toFixed(2)}/1.0`],
+                ['Nivel de Logro:', gradeInfo.grade === 'MB' ? 'Excelente' :
+                                   gradeInfo.grade === 'B' ? 'Muy Bueno' :
+                                   gradeInfo.grade === 'S' ? 'Satisfactorio' :
+                                   gradeInfo.grade === 'I' ? 'Insuficiente' : 'Deficiente']
+            ];
+
+            stats.forEach(([label, value]) => {
+                doc.text(`${label} ${value}`, 20, yPos);
+                yPos += 8;
+            });
+
+            // Tabla de preguntas detallada
+            yPos += 20;
+            if (evaluation.questions && evaluation.questions.length > 0) {
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('DETALLE DE PREGUNTAS', 20, yPos);
+                yPos += 10;
+
+                const tableData = evaluation.questions.map((q, idx) => [
+                    (idx + 1).toString(),
+                    q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question,
+                    q.selectedAnswer || 'No respondida',
+                    q.score ? q.score.toString() : '0'
+                ]);
+
+                doc.autoTable({
+                    startY: yPos,
+                    head: [['N°', 'Pregunta', 'Respuesta Seleccionada', 'Puntaje']],
+                    body: tableData,
+                    theme: 'grid',
+                    styles: {
+                        fontSize: 8,
+                        cellPadding: 4,
+                        overflow: 'linebreak',
+                        cellWidth: 'wrap'
+                    },
+                    headStyles: {
+                        fillColor: [102, 126, 234],
+                        textColor: 255,
+                        fontStyle: 'bold'
+                    },
+                    columnStyles: {
+                        0: { cellWidth: 15 },
+                        1: { cellWidth: 70 },
+                        2: { cellWidth: 60 },
+                        3: { cellWidth: 20 }
+                    },
+                    alternateRowStyles: { fillColor: [248, 250, 252] },
+                    margin: { left: 20, right: 20 }
+                });
+            }
+
+            // Comentarios y recomendaciones
+            const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : yPos + 100;
+
+            if (finalY < pageHeight - 60) {
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('COMENTARIOS Y RECOMENDACIONES', 20, finalY);
+
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+                let commentY = finalY + 15;
+
+                const comments = [];
+                if (evaluation.finalScore >= 6.0) {
+                    comments.push('• Excelente comprensión de la obra y sus temas principales.');
+                    comments.push('• Dominio destacado de los elementos literarios analizados.');
+                    comments.push('• Recomendable profundizar en otras obras del autor.');
+                } else if (evaluation.finalScore >= 4.0) {
+                    comments.push('• Buena comprensión general de la obra.');
+                    comments.push('• Se recomienda revisar conceptos específicos de simbolismo.');
+                    comments.push('• Sugerimos releer pasajes clave de la novela.');
+                } else {
+                    comments.push('• Es necesario revisar los conceptos básicos de la obra.');
+                    comments.push('• Recomendamos estudiar con mayor detenimiento los personajes.');
+                    comments.push('• Se sugiere consultar material adicional sobre el autor.');
+                }
+
+                comments.forEach(comment => {
+                    if (commentY < pageHeight - 30) {
+                        doc.text(comment, 20, commentY);
+                        commentY += 8;
+                    }
+                });
+            }
+
+            // Footer en todas las páginas
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+
+                // Línea divisoria
+                doc.setDrawColor(200, 200, 200);
+                doc.setLineWidth(0.5);
+                doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+
+                // Información del footer
+                doc.text('Herramienta de Interrogación Adaptativa - Mocha Dick v2.0', pageWidth/2, pageHeight - 15, { align: 'center' });
+                doc.text(`Página ${i} de ${pageCount}`, pageWidth/2, pageHeight - 8, { align: 'center' });
+
+                // Logo pequeño en esquina
+                doc.setFillColor(102, 126, 234);
+                doc.circle(15, pageHeight - 12, 3, 'F');
+            }
+
+            // Guardar el PDF
+            const fileName = `Evaluacion_${evaluation.studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date(evaluation.date).toISOString().split('T')[0]}.pdf`;
+            doc.save(fileName);
+            showNotification('PDF profesional generado exitosamente', 'success');
+        }
+
+        // Función para exportar PDF completo
+        function exportCompletePDF() {
+            if (evaluations.length === 0) {
+                showNotification('No hay evaluaciones para exportar. Realiza algunas evaluaciones primero.', 'warning');
+                return;
+            }
+
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.width;
+
+            // Portada
+            doc.setFillColor(102, 126, 234);
+            doc.rect(0, 0, pageWidth, 80, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(28);
+            doc.setFont('helvetica', 'bold');
+            doc.text('REPORTE COMPLETO', pageWidth/2, 30, { align: 'center' });
+            doc.text('Evaluaciones Mocha Dick', pageWidth/2, 50, { align: 'center' });
+
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Total de evaluaciones: ${evaluations.length}`, pageWidth/2, 70, { align: 'center' });
+
+            // Estadísticas generales
+            doc.addPage();
+            doc.setTextColor(0, 0, 0);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Estadísticas Generales', 20, 30);
+
+            const totalScore = evaluations.reduce((sum, e) => sum + e.finalScore, 0);
+            const averageScore = totalScore / evaluations.length;
+            const mbCount = evaluations.filter(e => e.finalScore >= 6.0).length;
+            const bCount = evaluations.filter(e => e.finalScore >= 5.0 && e.finalScore < 6.0).length;
+            const sCount = evaluations.filter(e => e.finalScore >= 4.0 && e.finalScore < 5.0).length;
+            const iCount = evaluations.filter(e => e.finalScore >= 3.0 && e.finalScore < 4.0).length;
+            const rCount = evaluations.filter(e => e.finalScore < 3.0).length;
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'normal');
+            let yPos = 50;
+            doc.text(`Promedio general: ${averageScore.toFixed(2)}/7.0`, 20, yPos);
+            yPos += 10;
+            doc.text(`Evaluaciones MB (6.0+): ${mbCount}`, 20, yPos);
+            yPos += 10;
+            doc.text(`Evaluaciones B (5.0-5.9): ${bCount}`, 20, yPos);
+            yPos += 10;
+            doc.text(`Evaluaciones S (4.0-4.9): ${sCount}`, 20, yPos);
+            yPos += 10;
+            doc.text(`Evaluaciones I (3.0-3.9): ${iCount}`, 20, yPos);
+            yPos += 10;
+            doc.text(`Evaluaciones R (<3.0): ${rCount}`, 20, yPos);
+
+            // Tabla de todas las evaluaciones
+            doc.addPage();
+            const tableData = evaluations.map(e => [
+                e.studentName,
+                e.course,
+                e.type === 'regular' ? 'Regular' : e.type === 'neet_general' ? 'NEET General' : e.type === 'neet_pia' ? 'NEEP PIA' : 'NEEP 4D',
+                e.finalScore.toFixed(1),
+                scoreToGrade(e.finalScore).grade,
+                new Date(e.date).toLocaleDateString('es-ES')
+            ]);
+
+            doc.autoTable({
+                startY: 30,
+                head: [['Estudiante', 'Curso', 'Tipo', 'Puntaje', 'Nota', 'Fecha']],
+                body: tableData,
+                theme: 'grid',
+                styles: { fontSize: 8, cellPadding: 3 },
+                headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+                columnStyles: {
+                    0: { cellWidth: 40 },
+                    1: { cellWidth: 25 },
+                    2: { cellWidth: 30 },
+                    3: { cellWidth: 20 },
+                    4: { cellWidth: 15 },
+                    5: { cellWidth: 25 }
+                }
+            });
+
+            // Footer en cada página
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFontSize(8);
+                doc.setTextColor(128, 128, 128);
+                doc.text(`Página ${i} de ${pageCount}`, pageWidth/2, doc.internal.pageSize.height - 10, { align: 'center' });
+                doc.text('Generado por Herramienta de Interrogación Mocha Dick v2.0', pageWidth/2, doc.internal.pageSize.height - 5, { align: 'center' });
+            }
+
+            doc.save(`Reporte_Completo_Mocha_Dick_${new Date().toISOString().split('T')[0]}.pdf`);
+            showNotification('Reporte completo exportado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showNotification('Error al generar el PDF. Revisa la consola para más detalles.', 'error');
+            }
+        }
+
+        // Función para eliminar duplicados
+        function removeDuplicates() {
+            const uniqueEvaluations = [];
+            const seen = new Set();
+
+            evaluations.forEach(evaluation => {
+                const key = `${evaluation.studentName}-${evaluation.course}-${evaluation.date}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueEvaluations.push(evaluation);
+                }
+            });
+
+            const removedCount = evaluations.length - uniqueEvaluations.length;
+            evaluations = uniqueEvaluations;
+            saveToLocalStorage();
+            renderResults();
+
+            if (removedCount > 0) {
+                showNotification(`Se eliminaron ${removedCount} evaluaciones duplicadas`, 'success');
+            } else {
+                showNotification('No se encontraron evaluaciones duplicadas', 'info');
+            }
+        }
+
+        // Función para filtrar resultados
+        function filterResults() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+
+            const filteredEvaluations = evaluations.filter(evaluation => {
+                const matchesSearch = evaluation.studentName.toLowerCase().includes(searchTerm) ||
+                                    evaluation.course.toLowerCase().includes(searchTerm);
+                const matchesType = filterType === 'all' || evaluation.type === filterType;
+
+                return matchesSearch && matchesType;
+            });
+
+            renderFilteredResults(filteredEvaluations);
+        }
+
+        // Función para renderizar resultados filtrados
+        function renderFilteredResults(filteredEvaluations) {
+            const tbody = document.getElementById('results-table-body');
+            tbody.innerHTML = '';
+
+            filteredEvaluations.forEach((evaluation, originalIndex) => {
+                const gradeInfo = scoreToGrade(evaluation.finalScore);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white font-bold text-sm">${evaluation.studentName.charAt(0)}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${evaluation.studentName}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${evaluation.course}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            evaluation.type === 'regular' ? 'bg-blue-100 text-blue-800' :
+                            evaluation.type === 'neet_general' ? 'bg-green-100 text-green-800' :
+                            evaluation.type === 'neet_pia' ? 'bg-purple-100 text-purple-800' :
+                            'bg-orange-100 text-orange-800'
+                        }">
+                            ${evaluation.type === 'regular' ? 'Regular' :
+                              evaluation.type === 'neet_general' ? 'NEET General' :
+                              evaluation.type === 'neet_pia' ? 'NEEP PIA' : 'NEEP 4D'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
+                        ${evaluation.finalScore.toFixed(1)}/7.0
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-sm font-bold rounded-full ${gradeInfo.bg} ${gradeInfo.color}">
+                            ${gradeInfo.grade}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${new Date(evaluation.date).toLocaleDateString('es-ES')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 transition-colors" onclick="exportSinglePDF(${originalIndex})">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors" onclick="deleteEvaluation(${originalIndex})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Función para agregar múltiples estudiantes
+        function addBulkStudents() {
+            const bulkText = document.getElementById('bulk-students').value.trim();
+            if (!bulkText) {
+                showNotification('Ingresa la lista de estudiantes', 'warning');
+                return;
+            }
+
+            const lines = bulkText.split('\n');
+            let addedCount = 0;
+
+            lines.forEach(line => {
+                const trimmedLine = line.trim();
+                if (trimmedLine) {
+                    // Intentar parsear el formato "Nombre - Curso"
+                    const parts = trimmedLine.split(' - ');
+                    if (parts.length >= 2) {
+                        const studentName = parts[0].trim();
+                        const course = parts.slice(1).join(' - ').trim();
+
+                        // Verificar si ya existe
+                        const exists = evaluations.some(e => e.studentName === studentName && e.course === course);
+                        if (!exists) {
+                            evaluations.push({
+                                studentName: studentName,
+                                course: course,
+                                type: 'regular',
+                                finalScore: 0,
+                                date: new Date().toISOString(),
+                                questions: []
+                            });
+                            addedCount++;
+                        }
+                    }
+                }
+            });
+
+            if (addedCount > 0) {
+                saveToLocalStorage();
+                renderResults();
+                document.getElementById('bulk-students').value = '';
+                document.getElementById('bulk-add-modal').classList.remove('active');
+                showNotification(`Se agregaron ${addedCount} estudiantes`, 'success');
+            } else {
+                showNotification('No se pudieron agregar estudiantes o ya existen', 'warning');
+            }
+        }
+
+        // Event Listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            loadFromLocalStorage();
+            renderResults();
+
+            // Botón de inicio
+            document.getElementById('start-button').addEventListener('click', function() {
+                const studentName = document.getElementById('student-name').value.trim();
+                const studentCourse = document.getElementById('student-course').value.trim();
+                const evaluationType = document.querySelector('input[name="evaluation-type"]:checked').value;
+
+                if (!studentName || !studentCourse) {
+                    showNotification('Completa todos los campos', 'warning');
+                    return;
+                }
+
+                currentStudent = { name: studentName, course: studentCourse };
+                currentEvaluationType = evaluationType;
+
+                // Seleccionar preguntas adaptativas
+                selectedQuestions = selectAdaptiveQuestions(evaluationType);
+
+                // Mostrar pantalla de interrogación
+                document.getElementById('setup-screen').classList.add('hidden');
+                document.getElementById('interrogation-screen').classList.remove('hidden');
+                document.getElementById('progress-container').classList.remove('hidden');
+
+                // Renderizar preguntas
+                renderQuestions(selectedQuestions);
+
+                // Actualizar información del estudiante
+                document.getElementById('eval-student-name').textContent = studentName;
+                document.getElementById('eval-student-course').textContent = studentCourse;
+                document.getElementById('eval-type-display').textContent = evaluationType === 'regular' ? 'Regular' :
+                                                                          evaluationType === 'neet_general' ? 'NEET General' :
+                                                                          evaluationType === 'neet_pia' ? 'NEEP PIA' : 'NEEP 4D';
+
+                // Iniciar autoguardado
+                startAutoSave();
+
+                showNotification('Evaluación iniciada', 'success');
+            });
+
+            // Botón de finalizar
+            document.getElementById('finalize-button').addEventListener('click', function() {
+                const score = calculateScore();
+                if (score === null) return;
+
+                const gradeInfo = scoreToGrade(score);
+
+                // Mostrar resultado final
+                document.getElementById('final-score-container').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-800 dark:text-white mb-2">${score.toFixed(1)}/7.0</div>
+                        <div class="inline-block px-4 py-2 rounded-full text-lg font-bold ${gradeInfo.bg} ${gradeInfo.color}">
+                            Nota: ${gradeInfo.grade}
+                        </div>
+                    </div>
+                `;
+
+                // Guardar evaluación localmente
+                const evaluation = {
+                    studentName: currentStudent.name,
+                    course: currentStudent.course,
+                    type: currentEvaluationType,
+                    finalScore: score,
+                    date: new Date().toISOString(),
+                    questions: selectedQuestions.map(q => {
+                        const scoreInput = document.querySelector(`input[name="question-${q.id}"]`);
+                        const scoreValue = parseFloat(scoreInput?.value) || 0;
+                        return {
+                            question: q.question,
+                            selectedAnswer: `Puntaje asignado: ${scoreValue}`,
+                            score: scoreValue
+                        };
+                    })
+                };
+
+                evaluations.push(evaluation);
+                saveToLocalStorage();
+
+                // Detener autoguardado
+                stopAutoSave();
+
+                // Actualizar resultados
+                renderResults();
+
+                showNotification('Evaluación guardada exitosamente', 'success');
+
+                // Resetear formulario después de 2 segundos
+                setTimeout(() => {
+                    document.getElementById('interrogation-screen').classList.add('hidden');
+                    document.getElementById('setup-screen').classList.remove('hidden');
+                    document.getElementById('progress-container').classList.add('hidden');
+                    document.getElementById('student-name').value = '';
+                    document.getElementById('student-course').value = '';
+                    document.getElementById('final-score-container').innerHTML = '';
+                }, 2000);
+            });
+
+            // Botón de cancelar
+            document.getElementById('cancel-button').addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres cancelar la evaluación?')) {
+                    stopAutoSave();
+                    document.getElementById('interrogation-screen').classList.add('hidden');
+                    document.getElementById('setup-screen').classList.remove('hidden');
+                    document.getElementById('progress-container').classList.add('hidden');
+                    document.getElementById('final-score-container').innerHTML = '';
+                    showNotification('Evaluación cancelada', 'info');
+                }
+            });
+
+            // Exportar PDF completo
+            document.getElementById('export-all-pdf').addEventListener('click', exportCompletePDF);
+
+            // Eliminar duplicados
+            document.getElementById('remove-duplicates').addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres eliminar las evaluaciones duplicadas?')) {
+                    removeDuplicates();
+                }
+            });
+
+            // Modal de respuesta ideal
+            document.getElementById('close-modal').addEventListener('click', function() {
+                document.getElementById('answer-modal').classList.remove('active');
+            });
+
+            // Cerrar modal al hacer clic fuera
+            document.getElementById('answer-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+
+            // Filtros y búsqueda
+            document.getElementById('search-input').addEventListener('input', filterResults);
+            document.getElementById('filter-type').addEventListener('change', filterResults);
+
+            // Modal de agregar múltiples estudiantes
+            document.getElementById('bulk-add-modal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+
+            document.getElementById('close-bulk-modal').addEventListener('click', function() {
+                document.getElementById('bulk-add-modal').classList.remove('active');
+            });
+
+            document.getElementById('add-bulk-students').addEventListener('click', addBulkStudents);
+
+            document.getElementById('clear-bulk').addEventListener('click', function() {
+                document.getElementById('bulk-students').value = '';
+            });
+
+            // Validación de inputs numéricos
+            document.addEventListener('input', function(e) {
+                if (e.target.type === 'number' && e.target.name.startsWith('question-')) {
+                    const value = parseFloat(e.target.value);
+                    if (value < 0) e.target.value = 0;
+                    if (value > 1) e.target.value = 1;
+                    // Forzar valores permitidos
+                    if (value !== 0 && value !== 0.5 && value !== 1 && value !== 1.0) {
+                        if (value < 0.25) e.target.value = 0;
+                        else if (value < 0.75) e.target.value = 0.5;
+                        else e.target.value = 1;
+                    }
+                }
+            });
+
+            // Actualizar barra de progreso
+            setInterval(() => {
+                const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+                const answered = Array.from(scoreInputs).filter(input => input.value !== '' && input.value !== null && input.value !== undefined).length;
+                const total = selectedQuestions ? selectedQuestions.length : 8;
+                const progress = total > 0 ? (answered / total) * 100 : 0;
+
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                document.getElementById('progress-text').textContent = `${answered}/${total} preguntas evaluadas`;
+            }, 1000);
+        });
+
+        // Funciones globales para los botones
+        window.exportSinglePDF = exportSinglePDF;
+        window.deleteEvaluation = deleteEvaluation;
+        window.removeDuplicates = removeDuplicates;
+    </script>
+</body>
+</html>
+

@@ -44,6 +44,11 @@ module.exports = function(eleventyConfig) {
   // Copiar carpetas de la sección privada y herramientas temporales
   eleventyConfig.addPassthroughCopy("privado");
   eleventyConfig.addPassthroughCopy("Temporales");
+  // Copiar formulario temporal del paseo de docentes
+  eleventyConfig.addPassthroughCopy("paseo-docentes");
+  // Copiar archivo de pruebas demo
+  eleventyConfig.addPassthroughCopy("paseo-docentes-demo.html");
+  eleventyConfig.addPassthroughCopy("test-script.js");
   // Copiar carpeta de funciones de Netlify
   eleventyConfig.addPassthroughCopy("netlify");
 

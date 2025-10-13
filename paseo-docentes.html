@@ -7,30 +7,9 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js';
-        import { getFirestore, collection, doc, setDoc, getDoc, onSnapshot, query, where, getDocs, updateDoc, deleteDoc } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js';
-        import { getAuth, signInAnonymously } from 'https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js';
-
-        // ⚠️ IMPORTANTE: Reemplaza con tus credenciales reales de Firebase
-        // Obtén estas credenciales en: https://console.firebase.google.com/
-        // Tu proyecto → ⚙️ Configuración → Tus apps → Configuración de Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDGC9vR8kQvX3xJ9zL2nY0wP1tU4mK5vE8",  // ← REEMPLAZAR
-            authDomain: "profefranciscopancho-blog.firebaseapp.com",  // ← REEMPLAZAR
-            projectId: "profefranciscopancho-blog",  // ← REEMPLAZAR
-            storageBucket: "profefranciscopancho-blog.firebasestorage.app",  // ← REEMPLAZAR
-            messagingSenderId: "123456789012",  // ← REEMPLAZAR
-            appId: "1:123456789012:web:abcdef1234567890"  // ← REEMPLAZAR
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const auth = getAuth(app);
-
-        signInAnonymously(auth).catch((error) => {
-            console.error("Error en autenticación:", error);
-        });
+    <script>
+        // ✅ Usando Netlify DB (PostgreSQL con Neon) - Sin configuración externa necesaria
+        // Las credenciales se manejan automáticamente a través de variables de entorno de Netlify
 
         window.App = {
             currentStep: 1,
@@ -92,6 +71,13 @@
             });
             
             window.App.currentStep = stepNumber;
+            
+            // Iniciar auto-refresh en el paso de selección de asientos
+            if (stepNumber === 4) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
         }
 
         function validatePersonalData() {
@@ -146,27 +132,21 @@
             seatsContainer.innerHTML = '<p class="text-center text-gray-600 py-8">🔄 Cargando asientos disponibles...</p>';
 
             try {
-                const reservasRef = collection(db, 'paseo-docentes-reservas');
-                const q = query(reservasRef, where('transporte', '==', 'bus'));
+                // Llamar a la Netlify Function para obtener las reservas
+                const response = await fetch('/api/reservations');
+                const data = await response.json();
                 
-                onSnapshot(q, (snapshot) => {
-                    const occupiedSeats = new Set();
-                    snapshot.forEach((doc) => {
-                        const data = doc.data();
-                        if (data.asiento) {
-                            occupiedSeats.add(data.asiento);
-                        }
-                    });
-                    
+                if (data.success) {
+                    const occupiedSeats = new Set(
+                        data.reservations.map(r => r.asiento).filter(Boolean)
+                    );
                     renderSeats(occupiedSeats);
-                }, (error) => {
-                    console.error("Error en snapshot:", error);
-                    // Si hay error de Firebase, mostrar todos los asientos disponibles
+                } else {
+                    console.error("Error loading reservations:", data.error);
                     renderSeats(new Set());
-                });
+                }
             } catch (error) {
                 console.error("Error cargando asientos:", error);
-                // Si Firebase no está configurado, mostrar todos los asientos disponibles
                 renderSeats(new Set());
             }
         }
@@ -238,6 +218,27 @@
             loadBusSeats();
         };
 
+        // Auto-recargar asientos cada 10 segundos cuando estamos en el paso de selección
+        let autoRefreshInterval = null;
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(() => {
+                if (window.App.currentStep === 4) {
+                    loadBusSeats();
+                }
+            }, 10000); // Cada 10 segundos
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
         window.confirmReservation = async function() {
             if (!window.App.selectedSeat) {
                 alert('Por favor selecciona un asiento');
@@ -261,16 +262,23 @@
         };
 
         async function saveReservation() {
-            const reservaId = Date.now().toString();
-            window.App.reservationId = reservaId;
-            
-            const reservaData = {
-                ...window.App.userData,
-                fecha: new Date().toISOString(),
-                id: reservaId
-            };
+            // Enviar datos a la Netlify Function
+            const response = await fetch('/api/create-reservation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(window.App.userData)
+            });
 
-            await setDoc(doc(db, 'paseo-docentes-reservas', reservaId), reservaData);
+            const data = await response.json();
+            
+            if (!data.success) {
+                throw new Error(data.error || 'Error al guardar la reserva');
+            }
+            
+            window.App.reservationId = data.reservation.id;
+            return data.reservation;
         }
 
         function showFinalMessage(type) {

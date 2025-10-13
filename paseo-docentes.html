@@ -149,9 +149,16 @@
             event.target.classList.add('bg-blue-600', 'text-white');
         };
 
-        async function loadBusSeats() {
+        // Variable para guardar el estado anterior de los asientos
+        let previousOccupiedSeats = null;
+
+        async function loadBusSeats(silent = false) {
             const seatsContainer = document.getElementById('seatsContainer');
-            seatsContainer.innerHTML = '<p class="text-center text-gray-600 py-8">🔄 Cargando asientos disponibles...</p>';
+            
+            // Solo mostrar "Cargando..." en la primera carga
+            if (!silent) {
+                seatsContainer.innerHTML = '<p class="text-center text-gray-600 py-8">🔄 Cargando asientos disponibles...</p>';
+            }
 
             try {
                 // Llamar a la Netlify Function para obtener las reservas
@@ -169,14 +176,21 @@
                             };
                         }
                     });
-                    renderSeats(occupiedSeatsMap);
+                    
+                    // Verificar si hubo cambios
+                    const currentSeatsJSON = JSON.stringify(occupiedSeatsMap);
+                    if (previousOccupiedSeats !== currentSeatsJSON) {
+                        previousOccupiedSeats = currentSeatsJSON;
+                        renderSeats(occupiedSeatsMap);
+                    }
+                    // Si no hubo cambios, no re-renderizamos (evita parpadeo)
                 } else {
                     console.error("Error loading reservations:", data.error);
-                    renderSeats({});
+                    if (!silent) renderSeats({});
                 }
             } catch (error) {
                 console.error("Error cargando asientos:", error);
-                renderSeats({});
+                if (!silent) renderSeats({});
             }
         }
 
@@ -308,7 +322,8 @@
             }
             autoRefreshInterval = setInterval(() => {
                 if (window.App.currentStep === 4) {
-                    loadBusSeats();
+                    // Usar modo "silent" para actualizar sin parpadeo
+                    loadBusSeats(true);
                 }
             }, 10000); // Cada 10 segundos
         }
@@ -521,9 +536,11 @@
                         </div>
                     `;
                     
-                    // Recargar asientos si estamos en ese paso
+                    // Recargar asientos si estamos en ese paso (sin parpadeo)
                     if (window.App.currentStep === 4) {
-                        setTimeout(() => loadBusSeats(), 2000);
+                        // Resetear el estado previo para forzar actualización
+                        previousOccupiedSeats = null;
+                        setTimeout(() => loadBusSeats(false), 2000);
                     }
                 } else {
                     resultDiv.innerHTML = '<p class="text-red-600">❌ Error al cancelar la reserva. Intenta de nuevo.</p>';

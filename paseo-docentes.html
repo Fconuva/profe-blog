@@ -171,7 +171,7 @@
         function renderSeats(occupiedSeatsMap) {
             const seatsContainer = document.getElementById('seatsContainer');
             const totalSeats = 46;
-            const seatsPerRow = 4; // 4 asientos por fila: 2 + pasillo + 2
+            const seatsPerRow = 4; // 4 asientos por fila (2 izq + 2 der)
             
             let html = '<div class="mb-4 p-4 bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg border-2 border-gray-300 shadow-inner max-w-md mx-auto">';
             
@@ -181,36 +181,31 @@
             html += '<p class="text-xs text-gray-600">Conductor ➡️</p>';
             html += '</div>';
             
-            // Renderizar asientos en formato de bus (4 por fila: 2-2)
+            // Renderizar asientos en formato de bus
+            // Patrón: 1-2 | Pasillo | 3-4, luego 5-6 | Pasillo | 7-8, etc.
             html += '<div class="space-y-1.5">';
             
             for (let i = 0; i < totalSeats; i += seatsPerRow) {
-                html += '<div class="flex justify-center gap-2 items-start">';
+                html += '<div class="flex justify-center gap-3 items-start">';
                 
-                // Lado izquierdo: 2 asientos
+                // Lado izquierdo: 2 asientos (1-2, 5-6, 9-10, etc.)
+                html += '<div class="flex gap-1.5">';
                 const seat1 = i + 1;
                 const seat2 = i + 2;
-                
-                if (seat1 <= totalSeats) {
-                    html += renderSingleSeat(seat1, occupiedSeatsMap);
-                }
-                if (seat2 <= totalSeats) {
-                    html += renderSingleSeat(seat2, occupiedSeatsMap);
-                }
+                if (seat1 <= totalSeats) html += renderSingleSeat(seat1, occupiedSeatsMap);
+                if (seat2 <= totalSeats) html += renderSingleSeat(seat2, occupiedSeatsMap);
+                html += '</div>';
                 
                 // Pasillo
-                html += '<div class="w-6 flex items-center justify-center text-gray-400 text-xs font-semibold">|</div>';
+                html += '<div class="w-6 flex items-center justify-center text-gray-400 text-xs font-semibold" style="writing-mode: vertical-lr;">|</div>';
                 
-                // Lado derecho: 2 asientos
+                // Lado derecho: 2 asientos (3-4, 7-8, 11-12, etc.)
+                html += '<div class="flex gap-1.5">';
                 const seat3 = i + 3;
                 const seat4 = i + 4;
-                
-                if (seat3 <= totalSeats) {
-                    html += renderSingleSeat(seat3, occupiedSeatsMap);
-                }
-                if (seat4 <= totalSeats) {
-                    html += renderSingleSeat(seat4, occupiedSeatsMap);
-                }
+                if (seat3 <= totalSeats) html += renderSingleSeat(seat3, occupiedSeatsMap);
+                if (seat4 <= totalSeats) html += renderSingleSeat(seat4, occupiedSeatsMap);
+                html += '</div>';
                 
                 html += '</div>';
             }

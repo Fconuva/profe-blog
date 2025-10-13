@@ -41,9 +41,21 @@
                     return;
                 }
                 if (window.App.userData.transporte === 'propio') {
-                    saveReservation().then(() => {
-                        showFinalMessage('transporte-propio');
-                    });
+                    // Deshabilitar botón para evitar clics múltiples
+                    const nextBtn = event.target;
+                    if (nextBtn.disabled) return;
+                    
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '⏳ Guardando...';
+                    
+                    saveReservation()
+                        .then(() => {
+                            showFinalMessage('transporte-propio');
+                        })
+                        .catch(() => {
+                            nextBtn.disabled = false;
+                            nextBtn.innerHTML = 'Siguiente';
+                        });
                     return;
                 }
                 loadBusSeats();
@@ -315,8 +327,12 @@
             }
 
             const confirmBtn = event.target;
+            
+            // Evitar clics múltiples
+            if (confirmBtn.disabled) return;
+            
             confirmBtn.disabled = true;
-            confirmBtn.textContent = 'Guardando...';
+            confirmBtn.innerHTML = '⏳ Guardando...';
 
             try {
                 window.App.userData.asiento = window.App.selectedSeat;
@@ -324,9 +340,14 @@
                 showFinalMessage('reserva-completa');
             } catch (error) {
                 console.error("Error guardando reserva:", error);
-                alert('Error al guardar la reserva. Por favor intenta de nuevo.');
+                
+                // Verificar si es error de duplicado (ya manejado en saveReservation)
+                if (error.message !== 'Email duplicado') {
+                    alert('Error al guardar la reserva. Por favor intenta de nuevo.');
+                }
+                
                 confirmBtn.disabled = false;
-                confirmBtn.textContent = 'Confirmar Reserva';
+                confirmBtn.innerHTML = 'Confirmar Reserva';
             }
         };
 
@@ -607,6 +628,17 @@
         
         .step-indicator.active ~ .step-indicator-line {
             background-color: #2563eb;
+        }
+        
+        /* Animación de carga para botones */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed !important;
         }
     </style>
 </head>

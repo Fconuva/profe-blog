@@ -328,11 +328,128 @@
             const data = await response.json();
             
             if (!data.success) {
+                // Si el error es por email duplicado, ofrecer opciones
+                if (data.error === 'Este email ya está registrado' && data.existing) {
+                    const existing = data.existing;
+                    const asientoText = existing.asiento ? `asiento ${existing.asiento}` : 'transporte propio';
+                    const message = `Ya existe una reserva con el email ${window.App.userData.email}:\n\n` +
+                                  `Nombre: ${existing.nombre} ${existing.apellido}\n` +
+                                  `Transporte: ${asientoText}\n\n` +
+                                  `¿Deseas cancelar esa reserva para crear una nueva?`;
+                    
+                    if (confirm(message)) {
+                        showCancelModal();
+                    }
+                    throw new Error('Email duplicado');
+                }
                 throw new Error(data.error || 'Error al guardar la reserva');
             }
             
             window.App.reservationId = data.reservation.id;
             return data.reservation;
+        }
+
+        // Funciones para gestionar reservas existentes
+        window.showCancelModal = function() {
+            document.getElementById('cancelModal').classList.remove('hidden');
+        };
+
+        window.hideCancelModal = function() {
+            document.getElementById('cancelModal').classList.add('hidden');
+            document.getElementById('cancelEmail').value = '';
+            document.getElementById('cancelResult').innerHTML = '';
+        };
+
+        window.checkReservation = async function() {
+            const email = document.getElementById('cancelEmail').value.trim();
+            const resultDiv = document.getElementById('cancelResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<p class="text-red-600">Por favor ingresa tu email</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="text-gray-600">🔍 Buscando tu reserva...</p>';
+
+            try {
+                const response = await fetch('/api/check-reservation', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success && data.reservation) {
+                    const r = data.reservation;
+                    const asientoText = r.asiento ? `Asiento ${r.asiento}` : 'Transporte propio';
+                    const fecha = new Date(r.created_at).toLocaleString('es-ES');
+                    
+                    resultDiv.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-300 rounded-lg p-4 mb-4">
+                            <p class="font-semibold text-blue-900 mb-2">✓ Reserva encontrada:</p>
+                            <p class="text-blue-800"><strong>Nombre:</strong> ${r.nombre} ${r.apellido}</p>
+                            <p class="text-blue-800"><strong>Email:</strong> ${r.email}</p>
+                            <p class="text-blue-800"><strong>Teléfono:</strong> ${r.telefono}</p>
+                            <p class="text-blue-800"><strong>Transporte:</strong> ${asientoText}</p>
+                            <p class="text-blue-700 text-sm mt-2">Registrado: ${fecha}</p>
+                        </div>
+                        <button onclick="confirmDelete('${email}')" 
+                                class="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-700 transition">
+                            🗑️ Cancelar esta reserva
+                        </button>
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p class="text-yellow-600">⚠️ No se encontró ninguna reserva con este email</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error al buscar la reserva. Intenta de nuevo.</p>';
+            }
+        };
+
+        window.confirmDelete = function(email) {
+            if (confirm('¿Estás seguro de que deseas cancelar tu reserva? Esta acción no se puede deshacer.')) {
+                deleteReservation(email);
+            }
+        };
+
+        async function deleteReservation(email) {
+            const resultDiv = document.getElementById('cancelResult');
+            resultDiv.innerHTML = '<p class="text-gray-600">🔄 Cancelando reserva...</p>';
+
+            try {
+                const response = await fetch('/api/delete-reservation', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                            <p class="font-semibold text-green-900 mb-2">✅ Reserva cancelada exitosamente</p>
+                            <p class="text-green-800">Ya puedes cerrar esta ventana y hacer una nueva inscripción si lo deseas.</p>
+                        </div>
+                    `;
+                    
+                    // Recargar asientos si estamos en ese paso
+                    if (window.App.currentStep === 4) {
+                        setTimeout(() => loadBusSeats(), 2000);
+                    }
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Error al cancelar la reserva. Intenta de nuevo.</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error al cancelar la reserva. Intenta de nuevo.</p>';
+            }
         }
 
         function showFinalMessage(type) {
@@ -431,6 +548,10 @@
             <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">🏖️ Paseo de Docentes 2024</h1>
             <p class="text-gray-600 text-lg">Inscripción y Reserva de Asientos</p>
             <p class="text-blue-600 font-semibold mt-2">📅 Viernes 08 de Noviembre</p>
+            <button onclick="showCancelModal()" 
+                    class="mt-4 text-sm text-blue-600 hover:text-blue-800 underline">
+                ¿Ya te inscribiste? Gestiona tu reserva aquí
+            </button>
         </div>
 
         <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
@@ -557,6 +678,44 @@
 
         <div class="text-center mt-8 text-gray-600">
             <p>¿Necesitas ayuda? Contacta a <a href="mailto:contacto@profefranciscopancho.com" class="text-blue-600 hover:underline">contacto@profefranciscopancho.com</a></p>
+        </div>
+    </div>
+
+    <!-- Modal para gestionar reserva -->
+    <div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">📋 Gestionar Reserva</h2>
+                <button onclick="hideCancelModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
+                    ×
+                </button>
+            </div>
+            
+            <p class="text-gray-600 mb-4">
+                Ingresa tu email para ver o cancelar tu reserva:
+            </p>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                <input type="email" 
+                       id="cancelEmail" 
+                       placeholder="tu@email.com"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       onkeypress="if(event.key==='Enter') checkReservation()">
+            </div>
+            
+            <button onclick="checkReservation()" 
+                    class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition mb-4">
+                🔍 Buscar mi reserva
+            </button>
+            
+            <div id="cancelResult" class="mt-4"></div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-500 text-center">
+                    Si cancelás tu reserva, podrás volver a inscribirte con el mismo email.
+                </p>
+            </div>
         </div>
     </div>
 </body>

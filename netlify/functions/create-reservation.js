@@ -44,6 +44,24 @@ export default async (req, context) => {
     // Conectar a la base de datos
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
 
+    // Verificar si el email ya está registrado
+    const existingEmail = await sql`
+      SELECT id, nombre, apellido, asiento, transporte FROM paseo_docentes_reservas 
+      WHERE email = ${email}
+      LIMIT 1
+    `;
+
+    if (existingEmail.length > 0) {
+      return new Response(JSON.stringify({
+        success: false,
+        error: 'Este email ya está registrado',
+        existing: existingEmail[0]
+      }), {
+        status: 409,
+        headers
+      });
+    }
+
     // Verificar si el asiento ya está ocupado (si se seleccionó uno)
     if (asiento && transporte === 'bus') {
       const existingSeat = await sql`

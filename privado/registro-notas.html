@@ -2260,67 +2260,162 @@
             }
         }
 
-        // Construir prompt para la IA
+        // Construir prompt MEJORADO Y DETALLADO para la IA
         function buildAIPrompt(studentName, level, levelInfo, percentage, points, totalTasks, oasAnalysis, focus, courseData) {
-            let prompt = `Eres un profesor experto de Lenguaje y Comunicación en Chile. Debes escribir una retroalimentación pedagógica profesional para un estudiante de educación media.
+            let prompt = `Eres un profesor experto de Lenguaje y Comunicación de Chile con 15 años de experiencia en Educación Media. Debes escribir una retroalimentación pedagógica profesional, específica y fundamentada curricularmente.
 
-INFORMACIÓN DEL ESTUDIANTE:
-- Nombre: ${studentName}
-- Curso: ${courseData.courseName}
-- Nivel de rendimiento: ${levelInfo.nivel} (${percentage}% de tareas completadas: ${points}/${totalTasks})
-- Rango de nota: ${levelInfo.nota}
+═══════════════════════════════════════════════════
+📊 CONTEXTO DEL ESTUDIANTE
+═══════════════════════════════════════════════════
+Nombre: ${studentName}
+Curso: ${courseData.courseName}
+Nivel de desempeño: ${levelInfo.nivel.toUpperCase()}
+Porcentaje de logro: ${percentage}% (${points} de ${totalTasks} tareas completadas)
+Rango de calificación: ${levelInfo.nota}
 
 `;
 
-            // Agregar información de OAs si existe
+            // Agregar análisis detallado de OAs
             if (oasAnalysis && (oasAnalysis.cumplidos.length > 0 || oasAnalysis.noCumplidos.length > 0)) {
-                prompt += `OBJETIVOS DE APRENDIZAJE (OAs) DEL CURRÍCULUM:\n\n`;
+                prompt += `═══════════════════════════════════════════════════
+🎯 ANÁLISIS CURRICULAR (BASES CURRICULARES MINEDUC)
+═══════════════════════════════════════════════════\n\n`;
                 
                 if (oasAnalysis.cumplidos.length > 0) {
-                    prompt += `✅ OAs LOGRADOS:\n`;
-                    oasAnalysis.cumplidos.forEach(oa => {
-                        prompt += `- ${oa.codigo}: ${oa.texto.substring(0, 150)}... (Tareas: ${oa.tareas.join(', ')})\n`;
+                    prompt += `✅ OBJETIVOS DE APRENDIZAJE LOGRADOS (${oasAnalysis.cumplidos.length}):\n`;
+                    oasAnalysis.cumplidos.forEach((oa, index) => {
+                        if (index < 4) { // Máximo 4 para no saturar
+                            prompt += `\n[${oa.codigo}] ${oa.unidad}:\n`;
+                            prompt += `   Descriptor: ${oa.texto.substring(0, 180)}...\n`;
+                            prompt += `   Evidencias: ${oa.tareas.join(', ')}\n`;
+                        }
                     });
+                    if (oasAnalysis.cumplidos.length > 4) {
+                        prompt += `\n   + ${oasAnalysis.cumplidos.length - 4} OA(s) adicional(es) cumplido(s)\n`;
+                    }
                     prompt += `\n`;
                 }
                 
                 if (oasAnalysis.noCumplidos.length > 0) {
-                    prompt += `⚠️ OAs POR LOGRAR:\n`;
-                    oasAnalysis.noCumplidos.forEach(oa => {
-                        prompt += `- ${oa.codigo}: ${oa.texto.substring(0, 150)}... (Tareas pendientes: ${oa.tareas.join(', ')})\n`;
+                    prompt += `⚠️ OBJETIVOS POR CONSOLIDAR (${oasAnalysis.noCumplidos.length}):\n`;
+                    oasAnalysis.noCumplidos.forEach((oa, index) => {
+                        if (index < 4) {
+                            prompt += `\n[${oa.codigo}] ${oa.unidad}:\n`;
+                            prompt += `   Descriptor: ${oa.texto.substring(0, 180)}...\n`;
+                            prompt += `   Tareas descendidas: ${oa.tareas.join(', ')}\n`;
+                        }
                     });
+                    if (oasAnalysis.noCumplidos.length > 4) {
+                        prompt += `\n   + ${oasAnalisis.noCumplidos.length - 4} OA(s) adicional(es) pendiente(s)\n`;
+                    }
                     prompt += `\n`;
                 }
             }
 
-            // Agregar enfoque específico
-            const enfoques = {
-                'general': 'Escribe una retroalimentación integral que abarque todos los aspectos del desempeño.',
-                'oas': 'Enfócate específicamente en los Objetivos de Aprendizaje, mencionando explícitamente cuáles ha logrado y cuáles debe reforzar.',
-                'motivacional': 'Enfatiza los logros del estudiante, reconoce su esfuerzo y proyecta su potencial de manera motivadora.',
-                'estrategias': 'Proporciona estrategias y acciones concretas que el estudiante puede implementar para mejorar.',
-                'formativa': 'Usa un lenguaje descriptivo y orientador, evitando juicios y enfocándote en el proceso de aprendizaje.'
+            // Enfoques pedagógicos detallados
+            const enfoquesDetallados = {
+                'general': `
+═══════════════════════════════════════════════════
+📋 ENFOQUE: RETROALIMENTACIÓN INTEGRAL
+═══════════════════════════════════════════════════
+Elabora una retroalimentación comprehensiva que:
+• Reconozca logros específicos evidenciados en las tareas completadas
+• Identifique áreas descendidas con precisión diagnóstica
+• Establezca relaciones entre los OAs y las competencias comunicativas desarrolladas
+• Proyecte próximos desafíos de aprendizaje basados en el perfil de egreso
+• Incluya sugerencias pedagógicas concretas y contextualizadas`,
+
+                'oas': `
+═══════════════════════════════════════════════════
+🎯 ENFOQUE: ANÁLISIS CURRICULAR POR OBJETIVOS
+═══════════════════════════════════════════════════
+Centra la retroalimentación en los Objetivos de Aprendizaje:
+• Menciona explícitamente cada OA cumplido (usa los códigos: OA1, OA2, etc.)
+• Explica cómo las tareas evidencian el logro de cada OA
+• Detalla las brechas en los OAs no cumplidos
+• Relaciona los OAs con habilidades del siglo XXI (pensamiento crítico, comunicación efectiva)
+• Propone actividades remediales específicas para cada OA descendido`,
+
+                'motivacional': `
+═══════════════════════════════════════════════════
+💪 ENFOQUE: RECONOCIMIENTO Y MOTIVACIÓN
+═══════════════════════════════════════════════════
+Escribe con énfasis en el potencial y logros del estudiante:
+• Inicia reconociendo fortalezas específicas demostradas en las tareas
+• Usa lenguaje que empodere y genere autoconfianza académica
+• Conecta los logros actuales con capacidades futuras
+• Presenta las dificultades como oportunidades de crecimiento
+• Proyecta expectativas positivas pero realistas sobre su trayectoria
+• Termina con un desafío inspirador y alcanzable`,
+
+                'estrategias': `
+═══════════════════════════════════════════════════
+📖 ENFOQUE: ESTRATEGIAS Y ACCIONES CONCRETAS
+═══════════════════════════════════════════════════
+Proporciona un plan de acción específico:
+• Lista estrategias metacognitivas de comprensión lectora (inferencias, síntesis, evaluación)
+• Sugiere técnicas de escritura recursiva (planificación-redacción-revisión)
+• Recomienda organizadores gráficos específicos (mapas conceptuales, esquemas)
+• Propone rutinas de estudio y gestión del tiempo
+• Incluye recursos digitales o bibliográficos de apoyo
+• Establece metas SMART (específicas, medibles, alcanzables, relevantes, temporales)`,
+
+                'formativa': `
+═══════════════════════════════════════════════════
+🌱 ENFOQUE: EVALUACIÓN PARA EL APRENDIZAJE
+═══════════════════════════════════════════════════
+Retroalimentación procesual y descriptiva:
+• Usa lenguaje descriptivo en lugar de calificativo
+• Enfócate en el proceso más que en el resultado final
+• Identifica patrones de error para orientar la mejora
+• Promueve la autorregulación y reflexión metacognitiva
+• Sugiere estrategias de autoevaluación y coevaluación
+• Establece próximos pasos claros en el continuo de aprendizaje
+• Evita juicios absolutos, enfatiza el progreso incremental`
             };
 
-            prompt += `ENFOQUE SOLICITADO: ${enfoques[focus]}\n\n`;
+            prompt += enfoquesDetallados[focus] || enfoquesDetallados['general'];
 
-            prompt += `INSTRUCCIONES:
-1. Escribe en segunda persona (tú/tu), dirigiéndote directamente al estudiante
-2. Usa un tono profesional pero cercano y motivador
-3. Menciona específicamente los OAs cuando sea relevante (usando los códigos como OA1, OA2, etc.)
-4. La retroalimentación debe tener entre 150-250 palabras
-5. Incluye aspectos logrados, áreas de mejora y sugerencias concretas
-6. Usa lenguaje técnico pedagógico apropiado para Chile (Bases Curriculares MINEDUC)
-7. Sé específico con las tareas mencionadas
-8. Termina con una frase motivacional o desafío
+            prompt += `
 
-NO USES:
-- Emojis excesivos (máximo 2-3 en toda la retroalimentación)
-- Lenguaje informal o coloquial
-- Frases genéricas sin sustento
-- Más de 250 palabras
+═══════════════════════════════════════════════════
+📝 ESPECIFICACIONES DE REDACCIÓN
+═══════════════════════════════════════════════════
+ESTRUCTURA OBLIGATORIA:
+1. Introducción contextualizada (2-3 oraciones sobre el desempeño general)
+2. Análisis de OAs cumplidos con evidencias específicas de tareas
+3. Identificación de OAs descendidos y diagnóstico de brechas
+4. Orientaciones pedagógicas y/o estrategias concretas
+5. Cierre proyectivo y motivacional
 
-GENERA LA RETROALIMENTACIÓN AHORA:`;
+ESTILO Y TONO:
+✓ Segunda persona (tú/tu) - Dirigirse directamente al estudiante
+✓ Lenguaje técnico-pedagógico apropiado (Bases Curriculares, competencias, habilidades)
+✓ Tono profesional pero cercano y empático
+✓ Terminología MINEDUC: OAs, competencias comunicativas, perfil de egreso, evaluación formativa
+
+CONTENIDO ESPECÍFICO:
+✓ Citar códigos de OAs (ej: "Has demostrado logro del OA2 sobre...")
+✓ Mencionar nombres exactos de tareas como evidencia
+✓ Incluir vocabulario disciplinar: coherencia, cohesión, intertextualidad, análisis crítico, etc.
+✓ Referenciar unidades curriculares trabajadas
+
+EXTENSIÓN Y FORMATO:
+✓ Entre 200-300 palabras (ni muy breve ni excesivamente extensa)
+✓ Usar negrita para destacar conceptos clave: **OA1**, **comprensión lectora**, etc.
+✓ Sin emojis (lenguaje profesional)
+✓ Párrafos bien estructurados con conectores lógicos
+
+PROHIBIDO:
+✗ Lenguaje informal o coloquial ("choro", "bacán", "está bien nomás")
+✗ Frases genéricas sin sustento ("sigue así", "esfuérzate más")
+✗ Errores ortográficos o gramaticales
+✗ Copiar literal fragmentos de OAs sin contextualizarlos
+✗ Usar más de 300 palabras
+
+═══════════════════════════════════════════════════
+🎯 GENERA LA RETROALIMENTACIÓN PROFESIONAL AHORA
+═══════════════════════════════════════════════════`;
 
             return prompt;
         }
@@ -2340,8 +2435,11 @@ GENERA LA RETROALIMENTACIÓN AHORA:`;
                         }]
                     }],
                     generationConfig: {
-                        temperature: 0.7,
-                        maxOutputTokens: 1024,
+                        temperature: 0.8,  // Mayor creatividad manteniendo coherencia
+                        topK: 40,
+                        topP: 0.95,
+                        maxOutputTokens: 2048,  // Más tokens para retroalimentaciones detalladas
+                        candidateCount: 1
                     }
                 };
                 
@@ -2383,10 +2481,12 @@ GENERA LA RETROALIMENTACIÓN AHORA:`;
                     body: JSON.stringify({
                         inputs: prompt,
                         parameters: {
-                            max_new_tokens: 500,
-                            temperature: 0.7,
+                            max_new_tokens: 800,  // Más tokens para retroalimentaciones completas
+                            temperature: 0.85,  // Mayor creatividad
                             top_p: 0.95,
-                            return_full_text: false
+                            do_sample: true,
+                            return_full_text: false,
+                            repetition_penalty: 1.2  // Evitar repeticiones
                         }
                     })
                 });
@@ -2408,48 +2508,109 @@ GENERA LA RETROALIMENTACIÓN AHORA:`;
             }
         }
         
-        // Opción 3: Generador inteligente basado en plantillas (FALLBACK - siempre funciona)
+        // Opción 3: Generador inteligente PROFESIONAL basado en plantillas pedagógicas avanzadas
         function generateSmartFeedback(level, studentName, percentage, oasAnalysis, focus) {
-            const feedbackParts = [];
+            const feedback = [];
             
-            // Introducción personalizada
-            if (level === 'excelente') {
-                feedbackParts.push(`${studentName}, tu desempeño ha sido sobresaliente con un ${percentage}%. Has demostrado un dominio excepcional de los contenidos trabajados.`);
-            } else if (level === 'muy_bueno') {
-                feedbackParts.push(`${studentName}, has logrado un muy buen desempeño con un ${percentage}%. Tu trabajo demuestra compromiso y comprensión sólida de los contenidos.`);
-            } else if (level === 'bueno') {
-                feedbackParts.push(`${studentName}, tu desempeño es bueno con un ${percentage}%. Has alcanzado los objetivos de aprendizaje de manera satisfactoria.`);
-            } else if (level === 'suficiente') {
-                feedbackParts.push(`${studentName}, has alcanzado el nivel suficiente con un ${percentage}%. Tienes las bases necesarias, pero hay áreas donde puedes mejorar.`);
-            } else {
-                feedbackParts.push(`${studentName}, tu desempeño actual es ${percentage}%. Es importante que reforcemos juntos los contenidos trabajados.`);
+            // ============ INTRODUCCIÓN CONTEXTUALIZADA ============
+            const intros = {
+                'excelente': [
+                    `${studentName}, tu desempeño alcanza un nivel sobresaliente del ${percentage}%, lo cual evidencia un dominio excepcional de las competencias comunicativas desarrolladas en este período.`,
+                    `Es destacable tu capacidad para integrar conocimientos disciplinares, aplicar estrategias de comprensión lectora avanzadas y producir textos coherentes y cohesionados.`,
+                    `Tu trabajo demuestra autonomía intelectual y un pensamiento crítico desarrollado, características fundamentales para el perfil de egreso de la Educación Media.`
+                ],
+                'muy_bueno': [
+                    `${studentName}, has alcanzado un muy buen nivel de desempeño con un ${percentage}%, lo que refleja una comprensión sólida de los objetivos de aprendizaje abordados.`,
+                    `Tu trabajo demuestra capacidad de análisis, síntesis y aplicación de estrategias de lectura y escritura de manera efectiva, logrando cumplir con las expectativas curriculares establecidas.`,
+                    `Se observa un compromiso constante con tu proceso formativo y una progresión favorable en el desarrollo de habilidades comunicativas complejas.`
+                ],
+                'bueno': [
+                    `${studentName}, tu desempeño se sitúa en un nivel bueno con un ${percentage}%, alcanzando satisfactoriamente los aprendizajes esperados para este período.`,
+                    `Has logrado desarrollar competencias comunicativas fundamentales, demostrando comprensión de textos literarios y no literarios, así como capacidad para producir textos coherentes.`,
+                    `Tu trabajo evidencia esfuerzo y dedicación, y con mayor profundización en ciertos aspectos podrás alcanzar niveles superiores de desempeño.`
+                ],
+                'suficiente': [
+                    `${studentName}, has alcanzado el nivel suficiente con un ${percentage}%, lo que indica que has logrado los aprendizajes mínimos establecidos en las Bases Curriculares.`,
+                    `Si bien cumples con los objetivos básicos, existen oportunidades significativas para fortalecer tu comprensión lectora, producción textual y análisis crítico de discursos.`,
+                    `Es fundamental que fortalezcamos juntos las bases conceptuales y procedimentales para asegurar un desarrollo progresivo y sostenido de tus competencias comunicativas.`
+                ],
+                'insuficiente': [
+                    `${studentName}, tu desempeño actual del ${percentage}% indica que aún no has alcanzado los aprendizajes mínimos esperados, lo cual requiere atención pedagógica inmediata.`,
+                    `Es prioritario implementar un plan de acompañamiento personalizado que aborde las dificultades identificadas en comprensión lectora, producción textual y/o análisis crítico.`,
+                    `Trabajaremos colaborativamente para cerrar estas brechas de aprendizaje mediante estrategias diferenciadas y apoyo focalizado en las áreas descendidas.`
+                ],
+                'deficiente': [
+                    `${studentName}, tu desempeño del ${percentage}% refleja una situación crítica que demanda intervención pedagógica urgente y un compromiso renovado de tu parte.`,
+                    `Las dificultades observadas impactan significativamente tu desarrollo académico y requieren un plan remedial intensivo con evaluación formativa continua.`,
+                    `Es fundamental que asumas un rol activo en tu proceso de recuperación, solicitando apoyo oportuno y comprometiéndote con las actividades de nivelación propuestas.`
+                ]
+            };
+            
+            feedback.push((intros[level] || intros['suficiente']).join(' '));
+            
+            // ============ ANÁLISIS DETALLADO DE OAs ============
+            if (oasAnalysis) {
+                if (oasAnalysis.cumplidos.length > 0) {
+                    feedback.push(`\n\n**OBJETIVOS DE APRENDIZAJE LOGRADOS:**\n`);
+                    feedback.push(`Has demostrado competencia en ${oasAnalysis.cumplidos.length} objetivo(s) del currículum nacional, específicamente:`);
+                    
+                    oasAnalysis.cumplidos.forEach((oa, index) => {
+                        if (index < 3) { // Máximo 3 OAs para no hacer muy largo
+                            const oaDescripcion = oa.texto.substring(0, 120);
+                            feedback.push(`\n• **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Evidencia: ${oa.tareas.slice(0, 2).join(', ')}`);
+                        }
+                    });
+                    
+                    if (oasAnalysis.cumplidos.length > 3) {
+                        feedback.push(`\n• Y ${oasAnalysis.cumplidos.length - 3} objetivo(s) adicional(es) cumplido(s).`);
+                    }
+                }
+                
+                if (oasAnalysis.noCumplidos.length > 0) {
+                    feedback.push(`\n\n**OBJETIVOS POR CONSOLIDAR:**\n`);
+                    feedback.push(`Se identifican ${oasAnalysis.noCumplidos.length} objetivo(s) que requieren refuerzo pedagógico:`);
+                    
+                    oasAnalysis.noCumplidos.forEach((oa, index) => {
+                        if (index < 3) {
+                            const oaDescripcion = oa.texto.substring(0, 120);
+                            feedback.push(`\n• **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Tareas descendidas: ${oa.tareas.slice(0, 2).join(', ')}`);
+                        }
+                    });
+                    
+                    if (oasAnalysis.noCumplidos.length > 3) {
+                        feedback.push(`\n• Y ${oasAnalysis.noCumplidos.length - 3} objetivo(s) adicional(es) por trabajar.`);
+                    }
+                }
             }
             
-            // Análisis de OAs
-            if (oasAnalysis && oasAnalysis.cumplidos.length > 0) {
-                feedbackParts.push(`\n\n📚 Objetivos logrados: Has cumplido ${oasAnalysis.cumplidos.length} objetivo(s) de aprendizaje, lo cual demuestra tu capacidad para:`);
-                oasAnalysis.cumplidos.slice(0, 2).forEach(oa => {
-                    feedbackParts.push(`\n• ${oa.codigo} (${oa.unidad})`);
-                });
-            }
+            // ============ ESTRATEGIAS Y SUGERENCIAS SEGÚN ENFOQUE ============
+            const estrategias = {
+                'general': `\n\n**ORIENTACIONES PEDAGÓGICAS:**\nPara continuar fortaleciendo tus competencias comunicativas, te sugiero: (1) Mantener una lectura sistemática y analítica de textos diversos, aplicando estrategias metacognitivas; (2) Practicar la escritura recursiva, revisando y editando tus producciones; (3) Participar activamente en instancias de diálogo argumentativo, fundamentando tus interpretaciones con evidencia textual; (4) Establecer conexiones intertextuales y contextuales en tus análisis literarios.`,
+                
+                'oas': `\n\n**PLAN DE TRABAJO POR OBJETIVOS:**\nSegún las Bases Curriculares MINEDUC, los OAs descendidos requieren: (1) Revisión conceptual de los contenidos asociados mediante organizadores gráficos; (2) Aplicación guiada de estrategias de comprensión lectora (inferencias, síntesis, evaluación crítica); (3) Práctica de producción textual con retroalimentación formativa continua; (4) Evaluación procesual que permita monitorear tu progreso en cada competencia específica.`,
+                
+                'motivacional': `\n\n**RECONOCIMIENTO Y PROYECCIÓN:**\nTu trayectoria demuestra capacidad de superación y potencial para alcanzar niveles superiores de desempeño. Los logros alcanzados evidencian que cuando te comprometes con tu aprendizaje, los resultados son favorables. Te desafío a: (1) Reconocer tus fortalezas como punto de partida; (2) Establecer metas desafiantes pero alcanzables; (3) Perseverar ante las dificultades, entendiendo que el error es parte del proceso formativo; (4) Visualizarte como un lector y productor de textos competente y autónomo.`,
+                
+                'estrategias': `\n\n**ESTRATEGIAS CONCRETAS DE MEJORA:**\n1. **Comprensión lectora**: Aplica la estrategia SQA (Qué Sé, Qué quiero saber, Qué Aprendí) antes, durante y después de leer. Subraya ideas principales y elabora resúmenes progresivos.\n2. **Producción textual**: Utiliza el método de escritura recursiva (planificar-escribir-revisar-editar). Crea esquemas previos y revisa coherencia y cohesión.\n3. **Análisis crítico**: Cuestiona las intenciones del emisor, identifica sesgos ideológicos y contrasta múltiples perspectivas.\n4. **Gestión del aprendizaje**: Establece rutinas de estudio, utiliza técnicas de memorización comprensiva y autoevalúa tu progreso semanalmente.`,
+                
+                'formativa': `\n\n**RETROALIMENTACIÓN PARA EL APRENDIZAJE:**\nTu proceso de aprendizaje es progresivo y requiere ajustes permanentes. Te invito a: (1) Reflexionar metacognitivamente sobre tus estrategias lectoras y escriturales, identificando qué te funciona y qué necesitas modificar; (2) Solicitar retroalimentación específica sobre tus producciones antes de entregarlas; (3) Revisar las rúbricas de evaluación para autoregular tu desempeño; (4) Participar en instancias de coevaluación con tus pares, enriqueciendo así tu perspectiva; (5) Mantener un portafolio de aprendizajes que documente tu evolución.`
+            };
             
-            if (oasAnalysis && oasAnalysis.noCumplidos.length > 0) {
-                feedbackParts.push(`\n\n🎯 Áreas de mejora: Hay ${oasAnalysis.noCumplidos.length} objetivo(s) que requieren refuerzo:`);
-                oasAnalysis.noCumplidos.slice(0, 2).forEach(oa => {
-                    feedbackParts.push(`\n• ${oa.codigo} (${oa.unidad})`);
-                });
-            }
+            feedback.push(estrategias[focus] || estrategias['general']);
             
-            // Estrategias según el enfoque
-            if (focus === 'motivacional') {
-                feedbackParts.push(`\n\n💪 Recuerda: Cada desafío es una oportunidad para crecer. Tu esfuerzo y dedicación son fundamentales para alcanzar tus metas académicas.`);
-            } else if (focus === 'estrategias') {
-                feedbackParts.push(`\n\n📖 Sugerencias: Organiza tu estudio con técnicas como resúmenes, mapas conceptuales y práctica constante. Establece metas semanales alcanzables.`);
-            } else if (focus === 'formativa') {
-                feedbackParts.push(`\n\n🌱 Próximos pasos: Te invito a revisar los contenidos de las tareas no cumplidas y solicitar apoyo si lo necesitas. El aprendizaje es un proceso continuo.`);
-            }
+            // ============ CIERRE MOTIVACIONAL Y PROYECTIVO ============
+            const cierres = {
+                'excelente': `\n\nTu compromiso con la excelencia académica es ejemplar. Continúa desafiándote con lecturas complejas y producciones textuales que trasciendan lo escolar, proyectándote como un comunicador crítico y propositivo.`,
+                'muy_bueno': `\n\nTu dedicación y progreso son evidentes. Mantén esta trayectoria ascendente, profundizando en los aspectos que aún pueden perfeccionarse. El camino hacia la excelencia está al alcance de tu esfuerzo sostenido.`,
+                'bueno': `\n\nHas construido bases sólidas. El siguiente paso es profundizar tu análisis crítico y diversificar tus estrategias lectoras y escriturales. Con mayor sistematicidad, alcanzarás niveles superiores de desempeño.`,
+                'suficiente': `\n\nEstás en el umbral del desarrollo de competencias más complejas. Es el momento de intensificar tu compromiso y solicitar apoyo cuando lo necesites. Cada esfuerzo cuenta y te acerca a tus metas académicas.`,
+                'insuficiente': `\n\nEste es un momento clave para revertir la situación. Cuenta con mi apoyo pedagógico y el de tus pares. Juntos trabajaremos para que recuperes la confianza y alcances los aprendizajes esperados.`,
+                'deficiente': `\n\nLa recuperación es posible, pero requiere un compromiso inmediato y sostenido. No estás solo en este proceso: implementaremos un plan personalizado que respete tu ritmo pero exija tu máximo esfuerzo.`
+            };
             
-            return feedbackParts.join(' ');
+            feedback.push(cierres[level] || cierres['suficiente']);
+            
+            return feedback.join('');
         }
         
         // Función principal que intenta múltiples métodos

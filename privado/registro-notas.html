@@ -37,6 +37,51 @@
             .no-print {
                 display: none !important;
             }
+            /* Estilos de impresión para informes profesionales */
+            body {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            .bg-gradient-to-r, .bg-gradient-to-br {
+                background: #1e40af !important;
+                color: white !important;
+            }
+            canvas {
+                max-height: 300px !important;
+            }
+            .shadow-lg, .shadow-md {
+                box-shadow: none !important;
+                border: 1px solid #e5e7eb !important;
+            }
+            h3, h4, h5 {
+                page-break-after: avoid;
+            }
+            table {
+                page-break-inside: auto;
+            }
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            .space-y-6 > * {
+                margin-bottom: 1rem !important;
+            }
+        }
+        
+        /* Estilos adicionales para tablas responsivas */
+        .sticky {
+            position: sticky;
+            z-index: 10;
+        }
+        
+        /* Animaciones para carga */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .space-y-6 > * {
+            animation: fadeIn 0.5s ease-out;
         }
         /* Estilos para modales */
         .modal {
@@ -1228,54 +1273,875 @@
             });
         }
 
-        // Generar informe del curso
-        function generateCourseReport() {
+        // ==================== INFORME PROFESIONAL DEL CURSO ====================
+        async function generateCourseReport() {
             const reportDiv = document.getElementById('courseReportContent');
+            reportDiv.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p class="mt-2">Generando informe profesional...</p></div>';
+            
             const students = courseData.students;
             const activeStudents = students.filter(s => !s.retired);
+            const retiredCount = students.length - activeStudents.length;
             
+            // Calcular estadísticas avanzadas
             const grades = activeStudents.map(s => {
                 const points = s.grades.filter(g => g).length;
                 return calculateGrade(points, courseData.tasks.length);
             });
             
-            const avgGrade = grades.length > 0 ? grades.reduce((a, b) => a + b, 0) / grades.length : 0;
-            const passing = grades.filter(g => g >= 4.0).length;
-            const retiredCount = students.length - activeStudents.length;
+            const stats = calculateAdvancedStats(grades, activeStudents);
+            const taskAnalysis = analyzeTasksPerformance(activeStudents);
+            const oasAnalysis = await analyzeCourseOAs(activeStudents);
+            const recommendations = await generateCourseRecommendations(stats, taskAnalysis, oasAnalysis);
             
+            // Generar HTML del informe profesional
             reportDiv.innerHTML = `
-                <div class="space-y-4">
-                    <h4 class="font-bold text-lg">Informe de Rendimiento - ${courseData.courseName}</h4>
-                    <p><strong>Asignatura:</strong> ${courseData.subject}</p>
-                    <p><strong>Período:</strong> ${courseData.period}</p>
-                    <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CL')}</p>
-                    <p><strong>Porcentaje de Exigencia:</strong> ${courseData.config?.passingPercentage || 60}%</p>
+                <div class="space-y-6 print:space-y-4">
+                    ${buildReportHeader()}
+                    ${buildExecutiveSummary(stats, activeStudents.length, retiredCount)}
+                    ${buildDistributionChart(grades)}
+                    ${buildDetailedStatsTable(stats)}
+                    ${buildTasksAnalysisTable(taskAnalysis)}
+                    ${buildOAsAnalysisSection(oasAnalysis)}
+                    ${buildStudentsPerformanceTable(activeStudents)}
+                    ${buildRecommendationsSection(recommendations)}
+                </div>
+            `;
+        }
+        
+        // Calcular estadísticas avanzadas
+        function calculateAdvancedStats(grades, students) {
+            if (grades.length === 0) return null;
+            
+            const sorted = [...grades].sort((a, b) => a - b);
+            const total = grades.length;
+            const sum = grades.reduce((a, b) => a + b, 0);
+            const avg = sum / total;
+            
+            // Desviación estándar
+            const variance = grades.reduce((acc, g) => acc + Math.pow(g - avg, 2), 0) / total;
+            const stdDev = Math.sqrt(variance);
+            
+            // Cuartiles
+            const q1Index = Math.floor(total * 0.25);
+            const q2Index = Math.floor(total * 0.50);
+            const q3Index = Math.floor(total * 0.75);
+            
+            return {
+                total: students.length,
+                avg: avg,
+                median: sorted[q2Index],
+                min: Math.min(...grades),
+                max: Math.max(...grades),
+                stdDev: stdDev,
+                q1: sorted[q1Index],
+                q3: sorted[q3Index],
+                passing: grades.filter(g => g >= 4.0).length,
+                passingRate: (grades.filter(g => g >= 4.0).length / total * 100),
+                distribution: {
+                    excelente: grades.filter(g => g >= 6.0).length,
+                    bueno: grades.filter(g => g >= 5.0 && g < 6.0).length,
+                    suficiente: grades.filter(g => g >= 4.0 && g < 5.0).length,
+                    insuficiente: grades.filter(g => g < 4.0).length
+                }
+            };
+        }
+        
+        // Analizar rendimiento por tarea
+        function analyzeTasksPerformance(students) {
+            return courseData.tasks.map((task, index) => {
+                const completed = students.filter(s => s.grades[index]).length;
+                const pending = students.length - completed;
+                const percentage = students.length > 0 ? (completed / students.length * 100) : 0;
+                
+                let difficulty = 'Media';
+                if (percentage >= 80) difficulty = 'Fácil';
+                else if (percentage < 50) difficulty = 'Difícil';
+                
+                return {
+                    name: task.name,
+                    date: task.date || 'Sin fecha',
+                    completed: completed,
+                    pending: pending,
+                    total: students.length,
+                    percentage: percentage,
+                    difficulty: difficulty,
+                    oas: task.oas || []
+                };
+            });
+        }
+        
+        // Analizar OAs del curso completo
+        async function analyzeCourseOAs(students) {
+            const oasMap = new Map();
+            const oasData = await loadOAsData();
+            
+            for (const student of students) {
+                const studentOAs = await analyzeStudentOAs(student);
+                
+                // Contar OAs cumplidos
+                studentOAs.cumplidos.forEach(oa => {
+                    const key = oa.codigo;
+                    if (!oasMap.has(key)) {
+                        oasMap.set(key, {
+                            codigo: oa.codigo,
+                            texto: oa.texto,
+                            unidad: oa.unidad,
+                            nivel: oa.nivel,
+                            cumplidos: 0,
+                            noCumplidos: 0
+                        });
+                    }
+                    oasMap.get(key).cumplidos++;
+                });
+                
+                // Contar OAs no cumplidos
+                studentOAs.noCumplidos.forEach(oa => {
+                    const key = oa.codigo;
+                    if (!oasMap.has(key)) {
+                        oasMap.set(key, {
+                            codigo: oa.codigo,
+                            texto: oa.texto,
+                            unidad: oa.unidad,
+                            nivel: oa.nivel,
+                            cumplidos: 0,
+                            noCumplidos: 0
+                        });
+                    }
+                    oasMap.get(key).noCumplidos++;
+                });
+            }
+            
+            const oasArray = Array.from(oasMap.values()).map(oa => ({
+                ...oa,
+                totalStudents: students.length,
+                percentage: (oa.cumplidos / students.length * 100).toFixed(1)
+            }));
+            
+            // Ordenar por menor cumplimiento (OAs más descendidos primero)
+            oasArray.sort((a, b) => parseFloat(a.percentage) - parseFloat(b.percentage));
+            
+            return {
+                total: oasArray.length,
+                oas: oasArray,
+                critical: oasArray.filter(oa => parseFloat(oa.percentage) < 50),
+                good: oasArray.filter(oa => parseFloat(oa.percentage) >= 80)
+            };
+        }
+        
+        // Generar recomendaciones con IA
+        async function generateCourseRecommendations(stats, taskAnalysis, oasAnalysis) {
+            const recommendations = [];
+            
+            // Recomendaciones por promedio
+            if (stats.avg < 4.0) {
+                recommendations.push({
+                    type: 'critical',
+                    icon: '🚨',
+                    title: 'Promedio crítico del curso',
+                    text: `El promedio del curso (${stats.avg.toFixed(2)}) está bajo el nivel de aprobación. Se requiere intervención pedagógica inmediata con plan remedial.`
+                });
+            } else if (stats.avg < 4.5) {
+                recommendations.push({
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: 'Promedio descendido',
+                    text: `El promedio del curso (${stats.avg.toFixed(2)}) está cercano al límite. Implementar estrategias de reforzamiento y evaluación formativa continua.`
+                });
+            } else if (stats.avg >= 5.5) {
+                recommendations.push({
+                    type: 'success',
+                    icon: '✅',
+                    title: 'Excelente rendimiento general',
+                    text: `El promedio del curso (${stats.avg.toFixed(2)}) refleja un muy buen nivel. Continuar con estrategias efectivas y desafiar con actividades de mayor complejidad.`
+                });
+            }
+            
+            // Recomendaciones por tasa de aprobación
+            if (stats.passingRate < 60) {
+                recommendations.push({
+                    type: 'critical',
+                    icon: '📊',
+                    title: 'Tasa de aprobación crítica',
+                    text: `Solo el ${stats.passingRate.toFixed(1)}% aprueba. Revisar metodologías, criterios de evaluación y proporcionar apoyo diferenciado urgente.`
+                });
+            }
+            
+            // Recomendaciones por tareas descendidas
+            const difficultTasks = taskAnalysis.filter(t => t.percentage < 50);
+            if (difficultTasks.length > 0) {
+                const taskNames = difficultTasks.map(t => t.name).join(', ');
+                recommendations.push({
+                    type: 'warning',
+                    icon: '📝',
+                    title: 'Tareas con bajo cumplimiento',
+                    text: `Las tareas "${taskNames}" tienen menos del 50% de cumplimiento. Considerar: extender plazos, proporcionar andamiaje adicional o evaluar pertinencia de la actividad.`
+                });
+            }
+            
+            // Recomendaciones por OAs descendidos
+            if (oasAnalysis.critical.length > 0) {
+                const criticalOAs = oasAnalysis.critical.slice(0, 3).map(oa => `${oa.codigo} (${oa.unidad})`).join(', ');
+                recommendations.push({
+                    type: 'critical',
+                    icon: '🎯',
+                    title: 'Objetivos de Aprendizaje críticos',
+                    text: `Los OAs ${criticalOAs} tienen menos del 50% de logro. Priorizar reforzamiento de estos objetivos con estrategias didácticas focalizadas y evaluación diferenciada.`
+                });
+            }
+            
+            // Recomendación por dispersión
+            if (stats.stdDev > 1.5) {
+                recommendations.push({
+                    type: 'info',
+                    icon: '📈',
+                    title: 'Alta dispersión en rendimientos',
+                    text: `La desviación estándar (${stats.stdDev.toFixed(2)}) indica heterogeneidad significativa. Implementar diferenciación pedagógica, grupos colaborativos y tutorías entre pares.`
+                });
+            }
+            
+            // Si no hay problemas críticos, agregar recomendaciones positivas
+            if (recommendations.length === 0 || recommendations.filter(r => r.type === 'success').length > 0) {
+                recommendations.push({
+                    type: 'info',
+                    icon: '🌟',
+                    title: 'Mantener buenas prácticas',
+                    text: `El curso muestra un rendimiento sólido. Continuar con retroalimentación formativa, evaluación continua y desafíos graduados según capacidades individuales.`
+                });
+            }
+            
+            return recommendations;
+        }
+        
+        // ==================== CONSTRUCCIÓN DE SECCIONES DEL INFORME ====================
+        
+        // Header del informe
+        function buildReportHeader() {
+            const today = new Date().toLocaleDateString('es-CL', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+            
+            return `
+                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white p-6 rounded-lg shadow-lg print:bg-blue-900">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-2">📊 Informe de Rendimiento Académico</h3>
+                            <p class="text-lg font-semibold">${courseData.courseName}</p>
+                            <p class="text-sm opacity-90">Asignatura: ${courseData.subject} | Período: ${courseData.period}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-sm opacity-90">${today}</p>
+                            <p class="text-xs opacity-75">Generado automáticamente</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Resumen ejecutivo
+        function buildExecutiveSummary(stats, activeCount, retiredCount) {
+            if (!stats) return '<p>No hay datos suficientes.</p>';
+            
+            const gradeColor = stats.avg >= 5.5 ? 'green' : stats.avg >= 4.5 ? 'blue' : stats.avg >= 4.0 ? 'orange' : 'red';
+            const approvalColor = stats.passingRate >= 80 ? 'green' : stats.passingRate >= 60 ? 'blue' : 'red';
+            
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md border-l-4 border-blue-500">
+                    <h4 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-chart-line mr-2 text-blue-600"></i>
+                        Resumen Ejecutivo
+                    </h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div class="bg-gray-50 p-4 rounded text-center">
+                            <i class="fas fa-users text-2xl text-gray-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-gray-800">${stats.total}</p>
+                            <p class="text-sm text-gray-600">Estudiantes</p>
+                            ${retiredCount > 0 ? `<p class="text-xs text-red-600 mt-1">${retiredCount} retirado${retiredCount > 1 ? 's' : ''}</p>` : ''}
+                        </div>
+                        <div class="bg-${gradeColor}-50 p-4 rounded text-center">
+                            <i class="fas fa-calculator text-2xl text-${gradeColor}-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-${gradeColor}-800">${stats.avg.toFixed(2)}</p>
+                            <p class="text-sm text-${gradeColor}-600">Promedio Curso</p>
+                            <p class="text-xs text-gray-600 mt-1">Mediana: ${stats.median.toFixed(2)}</p>
+                        </div>
+                        <div class="bg-${approvalColor}-50 p-4 rounded text-center">
+                            <i class="fas fa-check-circle text-2xl text-${approvalColor}-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-${approvalColor}-800">${stats.passingRate.toFixed(1)}%</p>
+                            <p class="text-sm text-${approvalColor}-600">Aprobación</p>
+                            <p class="text-xs text-gray-600 mt-1">${stats.passing}/${stats.total} aprobados</p>
+                        </div>
+                        <div class="bg-purple-50 p-4 rounded text-center">
+                            <i class="fas fa-tasks text-2xl text-purple-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-purple-800">${courseData.tasks.length}</p>
+                            <p class="text-sm text-purple-600">Tareas</p>
+                            <p class="text-xs text-gray-600 mt-1">Evaluadas</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Gráfico de distribución de notas
+        function buildDistributionChart(grades) {
+            const chartId = 'distributionChart_' + Date.now();
+            
+            setTimeout(() => {
+                const ctx = document.getElementById(chartId);
+                if (!ctx) return;
+                
+                const distribution = {
+                    '1.0-1.9': grades.filter(g => g >= 1.0 && g < 2.0).length,
+                    '2.0-2.9': grades.filter(g => g >= 2.0 && g < 3.0).length,
+                    '3.0-3.9': grades.filter(g => g >= 3.0 && g < 4.0).length,
+                    '4.0-4.9': grades.filter(g => g >= 4.0 && g < 5.0).length,
+                    '5.0-5.9': grades.filter(g => g >= 5.0 && g < 6.0).length,
+                    '6.0-7.0': grades.filter(g => g >= 6.0 && g <= 7.0).length
+                };
+                
+                new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(distribution),
+                        datasets: [{
+                            label: 'Número de Estudiantes',
+                            data: Object.values(distribution),
+                            backgroundColor: [
+                                'rgba(220, 38, 38, 0.7)',
+                                'rgba(251, 146, 60, 0.7)',
+                                'rgba(251, 191, 36, 0.7)',
+                                'rgba(59, 130, 246, 0.7)',
+                                'rgba(34, 197, 94, 0.7)',
+                                'rgba(16, 185, 129, 0.7)'
+                            ],
+                            borderColor: [
+                                'rgb(220, 38, 38)',
+                                'rgb(251, 146, 60)',
+                                'rgb(251, 191, 36)',
+                                'rgb(59, 130, 246)',
+                                'rgb(34, 197, 94)',
+                                'rgb(16, 185, 129)'
+                            ],
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    font: { size: 14, weight: 'bold' },
+                                    padding: 15
+                                }
+                            },
+                            title: {
+                                display: true,
+                                text: 'Distribución de Calificaciones del Curso',
+                                font: { size: 16, weight: 'bold' },
+                                padding: { bottom: 20 }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 },
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        const percentage = ((context.parsed.y / grades.length) * 100).toFixed(1);
+                                        return `Estudiantes: ${context.parsed.y} (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 1,
+                                    font: { size: 12, weight: 'bold' }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Cantidad de Estudiantes',
+                                    font: { size: 13, weight: 'bold' }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: { size: 12, weight: 'bold' }
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Rango de Calificaciones',
+                                    font: { size: 13, weight: 'bold' }
+                                },
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }, 100);
+            
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <canvas id="${chartId}" class="w-full" style="max-height: 400px;"></canvas>
+                    <p class="text-xs text-gray-500 text-center mt-3">
+                        <i class="fas fa-info-circle"></i> 
+                        Este gráfico muestra cómo se distribuyen las calificaciones finales del curso
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Tabla de estadísticas detalladas
+        function buildDetailedStatsTable(stats) {
+            if (!stats) return '';
+            
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-table mr-2 text-indigo-600"></i>
+                        Estadísticas Detalladas
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Métrica</th>
+                                    <th class="px-6 py-3 text-center text-xs font-bold text-gray-700 uppercase tracking-wider">Valor</th>
+                                    <th class="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Interpretación</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Promedio</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold ${stats.avg >= 5.0 ? 'text-green-600' : stats.avg >= 4.0 ? 'text-blue-600' : 'text-red-600'}">${stats.avg.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">${getGradeInterpretation(stats.avg)}</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Mediana</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-800">${stats.median.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">Calificación central del curso</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Mínima</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-red-600">${stats.min.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">Estudiante con menor rendimiento</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Máxima</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-green-600">${stats.max.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">Estudiante con mayor rendimiento</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Desviación Estándar</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-purple-600">${stats.stdDev.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">${stats.stdDev > 1.5 ? 'Alta variabilidad entre estudiantes' : stats.stdDev > 1.0 ? 'Variabilidad moderada' : 'Grupo homogéneo'}</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Cuartil 1 (Q1)</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q1.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">25% de estudiantes bajo este valor</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50">
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Cuartil 3 (Q3)</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q3.toFixed(2)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">75% de estudiantes bajo este valor</td>
+                                </tr>
+                                <tr class="bg-blue-50 hover:bg-blue-100">
+                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-blue-900">Tasa de Aprobación</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-xl font-bold ${stats.passingRate >= 70 ? 'text-green-600' : stats.passingRate >= 50 ? 'text-orange-600' : 'text-red-600'}">${stats.passingRate.toFixed(1)}%</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-blue-900">${stats.passing} de ${stats.total} estudiantes aprobados</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                     
-                    <h5 class="font-bold mt-6">Resumen General:</h5>
-                    <ul class="list-disc ml-6 space-y-2">
-                        <li>Total de estudiantes: ${students.length}${retiredCount > 0 ? ` (${retiredCount} retirado${retiredCount > 1 ? 's' : ''})` : ''}</li>
-                        <li>Estudiantes activos: ${activeStudents.length}</li>
-                        <li>Promedio del curso: ${avgGrade.toFixed(2)}</li>
-                        <li>Tasa de aprobación: ${activeStudents.length > 0 ? (passing/activeStudents.length*100).toFixed(1) : 0}%</li>
-                        <li>Estudiantes aprobados: ${passing}</li>
-                        <li>Estudiantes reprobados: ${activeStudents.length - passing}</li>
-                    </ul>
+                    <div class="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                        <div class="bg-green-100 p-3 rounded text-center">
+                            <p class="text-2xl font-bold text-green-800">${stats.distribution.excelente}</p>
+                            <p class="text-xs font-semibold text-green-700">Excelente (6.0-7.0)</p>
+                        </div>
+                        <div class="bg-blue-100 p-3 rounded text-center">
+                            <p class="text-2xl font-bold text-blue-800">${stats.distribution.bueno}</p>
+                            <p class="text-xs font-semibold text-blue-700">Bueno (5.0-5.9)</p>
+                        </div>
+                        <div class="bg-yellow-100 p-3 rounded text-center">
+                            <p class="text-2xl font-bold text-yellow-800">${stats.distribution.suficiente}</p>
+                            <p class="text-xs font-semibold text-yellow-700">Suficiente (4.0-4.9)</p>
+                        </div>
+                        <div class="bg-red-100 p-3 rounded text-center">
+                            <p class="text-2xl font-bold text-red-800">${stats.distribution.insuficiente}</p>
+                            <p class="text-xs font-semibold text-red-700">Insuficiente (< 4.0)</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function getGradeInterpretation(avg) {
+            if (avg >= 6.5) return 'Rendimiento sobresaliente';
+            if (avg >= 6.0) return 'Rendimiento excelente';
+            if (avg >= 5.5) return 'Rendimiento muy bueno';
+            if (avg >= 5.0) return 'Rendimiento bueno';
+            if (avg >= 4.5) return 'Rendimiento suficiente';
+            if (avg >= 4.0) return 'Rendimiento mínimo aceptable';
+            if (avg >= 3.0) return 'Rendimiento insuficiente';
+            return 'Rendimiento crítico';
+        }
+        
+        // Tabla de análisis por tareas
+        function buildTasksAnalysisTable(taskAnalysis) {
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-clipboard-list mr-2 text-green-600"></i>
+                        Análisis de Tareas
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">#</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">Tarea</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Fecha</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Completado</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Pendiente</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">% Logro</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase">Dificultad</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase">OAs</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${taskAnalysis.map((task, index) => {
+                                    const percentageColor = task.percentage >= 80 ? 'green' : task.percentage >= 60 ? 'blue' : task.percentage >= 40 ? 'orange' : 'red';
+                                    const difficultyColor = task.difficulty === 'Fácil' ? 'green' : task.difficulty === 'Media' ? 'blue' : 'red';
+                                    
+                                    return `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-4 py-3 text-center font-bold text-gray-600">${index + 1}</td>
+                                            <td class="px-4 py-3 font-semibold text-gray-900">${task.name}</td>
+                                            <td class="px-4 py-3 text-center text-sm text-gray-600">${task.date}</td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-green-100 text-green-800">
+                                                    ${task.completed}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold ${task.pending > 0 ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}">
+                                                    ${task.pending}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <div class="flex items-center justify-center">
+                                                    <div class="w-full bg-gray-200 rounded-full h-2.5 mr-2" style="max-width: 80px;">
+                                                        <div class="bg-${percentageColor}-600 h-2.5 rounded-full" style="width: ${task.percentage}%"></div>
+                                                    </div>
+                                                    <span class="text-sm font-bold text-${percentageColor}-700">${task.percentage.toFixed(1)}%</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-4 py-3 text-center">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-${difficultyColor}-100 text-${difficultyColor}-800">
+                                                    ${task.difficulty}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-sm text-gray-700">
+                                                ${task.oas.length > 0 ? task.oas.join(', ') : '<span class="text-gray-400 italic">Sin OAs</span>'}
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">
+                        <i class="fas fa-lightbulb text-yellow-500"></i> 
+                        <strong>Dificultad calculada:</strong> Fácil (≥80% logro), Media (50-79%), Difícil (<50%)
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Sección de análisis de OAs
+        function buildOAsAnalysisSection(oasAnalysis) {
+            if (!oasAnalysis || oasAnalysis.total === 0) {
+                return `
+                    <div class="bg-yellow-50 p-6 rounded-lg border-l-4 border-yellow-400">
+                        <p class="text-yellow-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            No hay Objetivos de Aprendizaje asignados a las tareas de este curso.
+                        </p>
+                    </div>
+                `;
+            }
+            
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-bullseye mr-2 text-red-600"></i>
+                        Análisis de Objetivos de Aprendizaje (OAs)
+                    </h4>
                     
-                    <h5 class="font-bold mt-6">Análisis por Tarea:</h5>
-                    <ul class="list-disc ml-6 space-y-2">
-                        ${courseData.tasks.map((task, index) => {
-                            const completed = activeStudents.filter(s => s.grades[index]).length;
-                            const percentage = activeStudents.length > 0 ? (completed / activeStudents.length * 100).toFixed(1) : 0;
-                            return `<li>${task.name} ${task.date ? `(${task.date})` : ''}: ${completed}/${activeStudents.length} (${percentage}%)</li>`;
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-purple-50 p-4 rounded-lg text-center border-l-4 border-purple-500">
+                            <i class="fas fa-list-ol text-2xl text-purple-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-purple-800">${oasAnalysis.total}</p>
+                            <p class="text-sm font-semibold text-purple-700">OAs Totales Evaluados</p>
+                        </div>
+                        <div class="bg-red-50 p-4 rounded-lg text-center border-l-4 border-red-500">
+                            <i class="fas fa-exclamation-circle text-2xl text-red-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-red-800">${oasAnalysis.critical.length}</p>
+                            <p class="text-sm font-semibold text-red-700">OAs Críticos (<50%)</p>
+                        </div>
+                        <div class="bg-green-50 p-4 rounded-lg text-center border-l-4 border-green-500">
+                            <i class="fas fa-check-double text-2xl text-green-600 mb-2"></i>
+                            <p class="text-3xl font-bold text-green-800">${oasAnalysis.good.length}</p>
+                            <p class="text-sm font-semibold text-green-700">OAs Consolidados (≥80%)</p>
+                        </div>
+                    </div>
+                    
+                    ${oasAnalysis.critical.length > 0 ? `
+                        <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                            <h5 class="font-bold text-red-800 mb-3 flex items-center">
+                                <i class="fas fa-ambulance mr-2"></i>
+                                OAs PRIORITARIOS A REFORZAR
+                            </h5>
+                            <div class="space-y-2">
+                                ${oasAnalysis.critical.slice(0, 5).map(oa => `
+                                    <div class="bg-white p-3 rounded shadow-sm">
+                                        <div class="flex justify-between items-start mb-1">
+                                            <span class="font-bold text-red-700">${oa.codigo}</span>
+                                            <span class="text-sm font-bold px-2 py-1 rounded ${parseFloat(oa.percentage) < 30 ? 'bg-red-600 text-white' : 'bg-red-200 text-red-800'}">
+                                                ${oa.percentage}% logro
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-gray-700 mb-1">${oa.texto}</p>
+                                        <p class="text-xs text-gray-500">
+                                            <i class="fas fa-layer-group mr-1"></i>${oa.unidad} | 
+                                            <i class="fas fa-graduation-cap ml-2 mr-1"></i>${oa.nivel} |
+                                            <i class="fas fa-users ml-2 mr-1"></i>${oa.cumplidos}/${oa.totalStudents} cumplidos
+                                        </p>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <div class="overflow-x-auto">
+                        <h5 class="font-bold text-gray-800 mb-3">Detalle Completo de OAs</h5>
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase">Código</th>
+                                    <th class="px-3 py-2 text-left text-xs font-bold text-gray-700 uppercase">Objetivo de Aprendizaje</th>
+                                    <th class="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase">Unidad</th>
+                                    <th class="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase">Nivel</th>
+                                    <th class="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase">Cumplidos</th>
+                                    <th class="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase">% Logro</th>
+                                    <th class="px-3 py-2 text-center text-xs font-bold text-gray-700 uppercase">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${oasAnalysis.oas.map(oa => {
+                                    const percentage = parseFloat(oa.percentage);
+                                    let statusColor, statusText, statusIcon;
+                                    
+                                    if (percentage >= 80) {
+                                        statusColor = 'green';
+                                        statusText = 'Consolidado';
+                                        statusIcon = 'check-circle';
+                                    } else if (percentage >= 60) {
+                                        statusColor = 'blue';
+                                        statusText = 'En desarrollo';
+                                        statusIcon = 'spinner';
+                                    } else if (percentage >= 40) {
+                                        statusColor = 'orange';
+                                        statusText = 'En riesgo';
+                                        statusIcon = 'exclamation-triangle';
+                                    } else {
+                                        statusColor = 'red';
+                                        statusText = 'Crítico';
+                                        statusIcon = 'times-circle';
+                                    }
+                                    
+                                    return `
+                                        <tr class="hover:bg-gray-50">
+                                            <td class="px-3 py-2 font-bold text-${statusColor}-700">${oa.codigo}</td>
+                                            <td class="px-3 py-2 text-gray-900">${oa.texto}</td>
+                                            <td class="px-3 py-2 text-center text-xs text-gray-600">${oa.unidad}</td>
+                                            <td class="px-3 py-2 text-center">
+                                                <span class="inline-flex px-2 py-0.5 text-xs font-semibold rounded bg-indigo-100 text-indigo-800">
+                                                    ${oa.nivel}
+                                                </span>
+                                            </td>
+                                            <td class="px-3 py-2 text-center font-semibold text-gray-700">
+                                                ${oa.cumplidos}/${oa.totalStudents}
+                                            </td>
+                                            <td class="px-3 py-2 text-center">
+                                                <div class="flex items-center justify-center">
+                                                    <div class="w-full bg-gray-200 rounded-full h-2 mr-2" style="max-width: 60px;">
+                                                        <div class="bg-${statusColor}-600 h-2 rounded-full" style="width: ${percentage}%"></div>
+                                                    </div>
+                                                    <span class="text-xs font-bold text-${statusColor}-700">${percentage}%</span>
+                                                </div>
+                                            </td>
+                                            <td class="px-3 py-2 text-center">
+                                                <span class="inline-flex items-center px-2 py-0.5 text-xs font-bold rounded bg-${statusColor}-100 text-${statusColor}-800">
+                                                    <i class="fas fa-${statusIcon} mr-1"></i>
+                                                    ${statusText}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <p class="text-xs text-gray-500 mt-4">
+                        <i class="fas fa-info-circle text-blue-500"></i> 
+                        <strong>Interpretación:</strong> Consolidado (≥80%), En desarrollo (60-79%), En riesgo (40-59%), Crítico (<40%)
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Tabla de rendimiento individual de estudiantes
+        function buildStudentsPerformanceTable(students) {
+            return `
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h4 class="text-xl font-bold mb-4 flex items-center">
+                        <i class="fas fa-user-graduate mr-2 text-blue-600"></i>
+                        Rendimiento Individual por Estudiante
+                    </h4>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200 text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase sticky left-0 bg-gray-50">#</th>
+                                    <th class="px-4 py-3 text-left text-xs font-bold text-gray-700 uppercase sticky left-8 bg-gray-50">Estudiante</th>
+                                    ${courseData.tasks.map((task, index) => `
+                                        <th class="px-3 py-3 text-center text-xs font-bold text-gray-700 uppercase" title="${task.name}">
+                                            T${index + 1}
+                                        </th>
+                                    `).join('')}
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-blue-50">Completadas</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-green-50">Promedio</th>
+                                    <th class="px-4 py-3 text-center text-xs font-bold text-gray-700 uppercase bg-purple-50">Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody class="bg-white divide-y divide-gray-200">
+                                ${students.map((student, index) => {
+                                    const points = student.grades.filter(g => g).length;
+                                    const grade = calculateGrade(points, courseData.tasks.length);
+                                    const gradeColor = grade >= 5.5 ? 'green' : grade >= 4.5 ? 'blue' : grade >= 4.0 ? 'orange' : 'red';
+                                    const status = grade >= 4.0 ? 'Aprobado' : 'Reprobado';
+                                    const statusIcon = grade >= 4.0 ? 'check-circle' : 'times-circle';
+                                    
+                                    return `
+                                        <tr class="hover:bg-gray-50 ${student.retired ? 'opacity-50' : ''}">
+                                            <td class="px-4 py-3 text-center font-bold text-gray-600 sticky left-0 bg-white">${index + 1}</td>
+                                            <td class="px-4 py-3 font-semibold text-gray-900 sticky left-8 bg-white">
+                                                ${student.name}
+                                                ${student.retired ? '<span class="ml-2 text-xs text-red-600">(Retirado)</span>' : ''}
+                                            </td>
+                                            ${student.grades.map(g => `
+                                                <td class="px-3 py-3 text-center">
+                                                    ${g ? '<i class="fas fa-check text-green-600 font-bold"></i>' : '<i class="fas fa-times text-red-400"></i>'}
+                                                </td>
+                                            `).join('')}
+                                            <td class="px-4 py-3 text-center font-bold bg-blue-50">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-bold bg-blue-200 text-blue-900">
+                                                    ${points}/${courseData.tasks.length}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center font-bold bg-green-50">
+                                                <span class="text-lg font-bold text-${gradeColor}-700">
+                                                    ${grade.toFixed(2)}
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-3 text-center bg-purple-50">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-${gradeColor}-100 text-${gradeColor}-800">
+                                                    <i class="fas fa-${statusIcon} mr-1"></i>
+                                                    ${status}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    `;
+                                }).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="text-xs text-gray-500 mt-4">
+                        <i class="fas fa-info-circle text-blue-500"></i> 
+                        T1, T2, T3... = Tareas numeradas. ✔ = Completada, ✖ = Pendiente
+                    </p>
+                </div>
+            `;
+        }
+        
+        // Sección de recomendaciones
+        function buildRecommendationsSection(recommendations) {
+            if (!recommendations || recommendations.length === 0) {
+                return '<p class="text-gray-500">No hay recomendaciones disponibles.</p>';
+            }
+            
+            const typeStyles = {
+                'critical': { bg: 'red', icon: 'exclamation-circle', border: 'red-500' },
+                'warning': { bg: 'orange', icon: 'exclamation-triangle', border: 'orange-500' },
+                'success': { bg: 'green', icon: 'check-circle', border: 'green-500' },
+                'info': { bg: 'blue', icon: 'info-circle', border: 'blue-500' }
+            };
+            
+            return `
+                <div class="bg-gradient-to-br from-purple-50 to-indigo-50 p-6 rounded-lg shadow-md border-2 border-purple-300">
+                    <h4 class="text-xl font-bold mb-4 flex items-center text-purple-900">
+                        <i class="fas fa-lightbulb mr-2 text-yellow-500"></i>
+                        Recomendaciones Pedagógicas
+                    </h4>
+                    <p class="text-sm text-purple-800 mb-4 italic">
+                        <i class="fas fa-robot mr-1"></i>
+                        Análisis generado automáticamente basado en rendimiento del curso y cumplimiento de Objetivos de Aprendizaje
+                    </p>
+                    <div class="space-y-4">
+                        ${recommendations.map((rec, index) => {
+                            const style = typeStyles[rec.type] || typeStyles['info'];
+                            return `
+                                <div class="bg-white p-4 rounded-lg border-l-4 border-${style.border} shadow-sm hover:shadow-md transition-shadow">
+                                    <div class="flex items-start">
+                                        <div class="text-3xl mr-3">${rec.icon}</div>
+                                        <div class="flex-1">
+                                            <h5 class="font-bold text-${style.bg}-800 text-lg mb-2">${rec.title}</h5>
+                                            <p class="text-gray-700 leading-relaxed">${rec.text}</p>
+                                        </div>
+                                        <div class="ml-3">
+                                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-${style.bg}-100 text-${style.bg}-800">
+                                                <i class="fas fa-${style.icon} mr-1"></i>
+                                                ${rec.type.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
                         }).join('')}
-                    </ul>
-                    
-                    <h5 class="font-bold mt-6">Recomendaciones:</h5>
-                    <ul class="list-disc ml-6 space-y-2">
-                        ${avgGrade < 4.5 ? '<li class="text-red-600">⚠️ El promedio del curso está bajo. Se recomienda reforzar contenidos.</li>' : ''}
-                        ${activeStudents.length > 0 && passing < activeStudents.length * 0.7 ? '<li class="text-orange-600">⚠️ Menos del 70% aprobado. Considerar estrategias de apoyo.</li>' : ''}
-                        ${avgGrade >= 5.5 ? '<li class="text-green-600">✅ Excelente rendimiento general del curso.</li>' : ''}
-                    </ul>
+                    </div>
+                    <div class="mt-6 bg-white p-4 rounded-lg border border-purple-200">
+                        <p class="text-xs text-gray-600 leading-relaxed">
+                            <i class="fas fa-book-reader text-purple-600 mr-1"></i>
+                            <strong>Nota:</strong> Estas recomendaciones se basan en el Marco para la Buena Enseñanza (MBE 2021), 
+                            las Bases Curriculares de Lenguaje MINEDUC y análisis estadístico del rendimiento del curso. 
+                            Se sugiere complementar con observación directa del contexto áulico y entrevistas con estudiantes.
+                        </p>
+                    </div>
                 </div>
             `;
         }

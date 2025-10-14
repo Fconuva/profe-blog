@@ -91,18 +91,29 @@
                 margin-bottom: 0.75rem !important;
             }
             
-            /* Textarea en modo lectura para PDF */
+            /* Textarea en modo lectura para PDF - SIN SCROLL */
             textarea {
-                border: 1px solid #d1d5db !important;
+                border: none !important;
                 resize: none !important;
                 height: auto !important;
                 min-height: 0 !important;
-                overflow: hidden !important;
-                background: white !important;
+                max-height: none !important;
+                overflow: visible !important;
+                overflow-y: visible !important;
+                background: transparent !important;
                 padding: 0.5rem !important;
-                font-size: 12pt !important;
+                font-size: 11pt !important;
                 line-height: 1.6 !important;
                 font-family: 'Georgia', 'Times New Roman', serif !important;
+                white-space: pre-wrap !important;
+                word-wrap: break-word !important;
+                display: block !important;
+            }
+            
+            /* Contenedor de retroalimentación */
+            textarea#studentNotes_0,
+            textarea[id^="studentNotes_"] {
+                page-break-inside: auto !important;
             }
             
             /* Botones y elementos interactivos ocultos */
@@ -1394,78 +1405,86 @@
             const reportDiv = document.getElementById('courseReportContent');
             const downloadBtn = document.getElementById('downloadCourseReportBtn');
             
-            reportDiv.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p class="mt-2">Generando informe profesional...</p></div>';
-            downloadBtn.style.display = 'none';
-            
-            const students = courseData.students;
-            const activeStudents = students.filter(s => !s.retired);
-            const retiredCount = students.length - activeStudents.length;
-            
-            // Calcular estadísticas avanzadas
-            const grades = activeStudents.map(s => {
-                const points = s.grades.filter(g => g).length;
-                return calculateGrade(points, courseData.tasks.length);
-            });
-            
-            const stats = calculateAdvancedStats(grades, activeStudents);
-            const taskAnalysis = analyzeTasksPerformance(activeStudents);
-            const oasAnalysis = await analyzeCourseOAs(activeStudents);
-            const recommendations = await generateCourseRecommendations(stats, taskAnalysis, oasAnalysis);
-            
-            // Generar HTML del informe profesional
-            reportDiv.innerHTML = `
-                <div class="space-y-6 print:space-y-4">
-                    ${buildReportHeader()}
-                    ${buildExecutiveSummary(stats, activeStudents.length, retiredCount)}
-                    ${buildDistributionChart(grades)}
-                    ${buildDetailedStatsTable(stats)}
-                    ${buildTasksAnalysisTable(taskAnalysis)}
-                    ${buildOAsAnalysisSection(oasAnalysis)}
-                    ${buildStudentsPerformanceTable(activeStudents)}
-                    ${buildRecommendationsSection(recommendations)}
-                </div>
-            `;
-            
-            // Mostrar botón de descarga después de generar
-            downloadBtn.style.display = 'inline-flex';
+            try {
+                reportDiv.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p class="mt-2">Generando informe profesional...</p></div>';
+                downloadBtn.style.display = 'none';
+                
+                const students = courseData.students;
+                const activeStudents = students.filter(s => !s.retired);
+                const retiredCount = students.length - activeStudents.length;
+                
+                if (activeStudents.length === 0) {
+                    reportDiv.innerHTML = '<div class="text-center p-8 text-gray-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>No hay estudiantes activos para generar el informe.</p></div>';
+                    return;
+                }
+                
+                // Calcular estadísticas avanzadas
+                const grades = activeStudents.map(s => {
+                    const points = s.grades.filter(g => g).length;
+                    return calculateGrade(points, courseData.tasks.length);
+                });
+                
+                console.log('Calculando estadísticas...');
+                const stats = calculateAdvancedStats(grades, activeStudents);
+                
+                console.log('Analizando tareas...');
+                const taskAnalysis = analyzeTasksPerformance(activeStudents);
+                
+                console.log('Analizando OAs...');
+                const oasAnalysis = await analyzeCourseOAs(activeStudents);
+                
+                console.log('Generando recomendaciones...');
+                const recommendations = await generateCourseRecommendations(stats, taskAnalysis, oasAnalysis);
+                
+                console.log('Construyendo HTML del informe...');
+                // Generar HTML del informe profesional
+                reportDiv.innerHTML = `
+                    <div class="space-y-6 print:space-y-4">
+                        ${buildReportHeader()}
+                        ${buildExecutiveSummary(stats, activeStudents.length, retiredCount)}
+                        ${buildDistributionChart(grades)}
+                        ${buildDetailedStatsTable(stats)}
+                        ${buildTasksAnalysisTable(taskAnalysis)}
+                        ${buildOAsAnalysisSection(oasAnalysis)}
+                        ${buildStudentsPerformanceTable(activeStudents)}
+                        ${buildRecommendationsSection(recommendations)}
+                    </div>
+                `;
+                
+                console.log('Informe generado exitosamente');
+                // Mostrar botón de descarga después de generar
+                downloadBtn.style.display = 'inline-flex';
+                
+            } catch (error) {
+                console.error('Error generando informe:', error);
+                reportDiv.innerHTML = `
+                    <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6 text-center">
+                        <i class="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i>
+                        <h4 class="text-xl font-bold text-red-800 mb-2">Error al generar el informe</h4>
+                        <p class="text-red-700 mb-4">${error.message}</p>
+                        <p class="text-sm text-gray-600 mb-4">Detalles técnicos: ${error.stack ? error.stack.split('\n')[0] : 'No disponible'}</p>
+                        <button onclick="generateCourseReport()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold">
+                            <i class="fas fa-redo mr-2"></i>Reintentar
+                        </button>
+                    </div>
+                `;
+            }
         }
         
         // Descargar informe de curso como PDF
         function downloadCourseReportPDF() {
             const fileName = `Informe_Curso_${courseData.courseName.replace(/\s+/g, '_')}_${courseData.period.replace(/\s+/g, '_')}.pdf`;
             
-            const tempMessage = document.createElement('div');
-            tempMessage.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-                color: white;
-                padding: 30px 50px;
-                border-radius: 15px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                z-index: 10000;
-                text-align: center;
-                font-weight: bold;
-                font-size: 18px;
-            `;
-            tempMessage.innerHTML = `
-                <i class="fas fa-file-pdf text-4xl mb-3"></i>
-                <p>Generando PDF del Informe...</p>
-                <p class="text-sm font-normal mt-2 opacity-90">Se abrirá el diálogo de impresión</p>
-                <p class="text-xs font-normal mt-1 opacity-75">Seleccione "Guardar como PDF" como destino</p>
-            `;
-            document.body.appendChild(tempMessage);
-            
             const originalTitle = document.title;
             document.title = fileName.replace('.pdf', '');
             
+            // Abrir diálogo de impresión directamente sin mensaje (para evitar que aparezca en el PDF)
+            window.print();
+            
+            // Restaurar título después
             setTimeout(() => {
-                window.print();
-                document.body.removeChild(tempMessage);
                 document.title = originalTitle;
-            }, 500);
+            }, 1000);
         }
         
         // Calcular estadísticas avanzadas
@@ -1532,60 +1551,105 @@
         
         // Analizar OAs del curso completo
         async function analyzeCourseOAs(students) {
-            const oasMap = new Map();
-            const oasData = await loadOAsData();
-            
-            for (const student of students) {
-                const studentOAs = await analyzeStudentOAs(student);
+            try {
+                const oasMap = new Map();
+                const oasData = await loadOAsData();
                 
-                // Contar OAs cumplidos
-                studentOAs.cumplidos.forEach(oa => {
-                    const key = oa.codigo;
-                    if (!oasMap.has(key)) {
-                        oasMap.set(key, {
-                            codigo: oa.codigo,
-                            texto: oa.texto,
-                            unidad: oa.unidad,
-                            nivel: oa.nivel,
-                            cumplidos: 0,
-                            noCumplidos: 0
-                        });
-                    }
-                    oasMap.get(key).cumplidos++;
-                });
+                // Si no hay datos de OAs o no hay tareas con OAs, retornar vacío
+                if (!oasData) {
+                    console.log('No hay datos de OAs disponibles');
+                    return {
+                        total: 0,
+                        oas: [],
+                        critical: [],
+                        good: []
+                    };
+                }
                 
-                // Contar OAs no cumplidos
-                studentOAs.noCumplidos.forEach(oa => {
-                    const key = oa.codigo;
-                    if (!oasMap.has(key)) {
-                        oasMap.set(key, {
-                            codigo: oa.codigo,
-                            texto: oa.texto,
-                            unidad: oa.unidad,
-                            nivel: oa.nivel,
-                            cumplidos: 0,
-                            noCumplidos: 0
-                        });
+                // Verificar si hay tareas con OAs asignados
+                const tasksWithOAs = courseData.tasks.filter(t => t.oas && t.oas.length > 0);
+                if (tasksWithOAs.length === 0) {
+                    console.log('No hay tareas con OAs asignados');
+                    return {
+                        total: 0,
+                        oas: [],
+                        critical: [],
+                        good: []
+                    };
+                }
+                
+                for (const student of students) {
+                    try {
+                        const studentOAs = await analyzeStudentOAs(student);
+                        
+                        if (!studentOAs) continue;
+                        
+                        // Contar OAs cumplidos
+                        if (studentOAs.cumplidos && Array.isArray(studentOAs.cumplidos)) {
+                            studentOAs.cumplidos.forEach(oa => {
+                                const key = oa.codigo;
+                                if (!oasMap.has(key)) {
+                                    oasMap.set(key, {
+                                        codigo: oa.codigo,
+                                        texto: oa.texto,
+                                        unidad: oa.unidad,
+                                        nivel: oa.nivel,
+                                        cumplidos: 0,
+                                        noCumplidos: 0
+                                    });
+                                }
+                                oasMap.get(key).cumplidos++;
+                            });
+                        }
+                        
+                        // Contar OAs no cumplidos
+                        if (studentOAs.noCumplidos && Array.isArray(studentOAs.noCumplidos)) {
+                            studentOAs.noCumplidos.forEach(oa => {
+                                const key = oa.codigo;
+                                if (!oasMap.has(key)) {
+                                    oasMap.set(key, {
+                                        codigo: oa.codigo,
+                                        texto: oa.texto,
+                                        unidad: oa.unidad,
+                                        nivel: oa.nivel,
+                                        cumplidos: 0,
+                                        noCumplidos: 0
+                                    });
+                                }
+                                oasMap.get(key).noCumplidos++;
+                            });
+                        }
+                    } catch (studentError) {
+                        console.error(`Error analizando OAs del estudiante ${student.name}:`, studentError);
+                        // Continuar con el siguiente estudiante
                     }
-                    oasMap.get(key).noCumplidos++;
-                });
+                }
+                
+                const oasArray = Array.from(oasMap.values()).map(oa => ({
+                    ...oa,
+                    totalStudents: students.length,
+                    percentage: students.length > 0 ? (oa.cumplidos / students.length * 100).toFixed(1) : '0.0'
+                }));
+                
+                // Ordenar por menor cumplimiento (OAs más descendidos primero)
+                oasArray.sort((a, b) => parseFloat(a.percentage) - parseFloat(b.percentage));
+                
+                return {
+                    total: oasArray.length,
+                    oas: oasArray,
+                    critical: oasArray.filter(oa => parseFloat(oa.percentage) < 50),
+                    good: oasArray.filter(oa => parseFloat(oa.percentage) >= 80)
+                };
+            } catch (error) {
+                console.error('Error en analyzeCourseOAs:', error);
+                // Retornar estructura vacía en caso de error
+                return {
+                    total: 0,
+                    oas: [],
+                    critical: [],
+                    good: []
+                };
             }
-            
-            const oasArray = Array.from(oasMap.values()).map(oa => ({
-                ...oa,
-                totalStudents: students.length,
-                percentage: (oa.cumplidos / students.length * 100).toFixed(1)
-            }));
-            
-            // Ordenar por menor cumplimiento (OAs más descendidos primero)
-            oasArray.sort((a, b) => parseFloat(a.percentage) - parseFloat(b.percentage));
-            
-            return {
-                total: oasArray.length,
-                oas: oasArray,
-                critical: oasArray.filter(oa => parseFloat(oa.percentage) < 50),
-                good: oasArray.filter(oa => parseFloat(oa.percentage) >= 80)
-            };
         }
         
         // Generar recomendaciones con IA
@@ -2475,70 +2539,22 @@
             const student = courseData.students[index];
             const fileName = `Informe_${student.name}_${student.lastName1}_${courseData.courseName.replace(/\s+/g, '_')}.pdf`;
             
-            // Mostrar mensaje antes de abrir el diálogo
-            const tempMessage = document.createElement('div');
-            tempMessage.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                color: white;
-                padding: 30px 50px;
-                border-radius: 15px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                z-index: 10000;
-                text-align: center;
-                font-weight: bold;
-                font-size: 18px;
-            `;
-            tempMessage.innerHTML = `
-                <i class="fas fa-file-pdf text-4xl mb-3"></i>
-                <p>Generando PDF...</p>
-                <p class="text-sm font-normal mt-2 opacity-90">Se abrirá el diálogo de impresión</p>
-                <p class="text-xs font-normal mt-1 opacity-75">Seleccione "Guardar como PDF" como destino</p>
-            `;
-            document.body.appendChild(tempMessage);
-            
-            // Agregar nombre sugerido al título temporal
             const originalTitle = document.title;
             document.title = fileName.replace('.pdf', '');
             
+            // Abrir diálogo de impresión directamente sin mensaje
+            window.print();
+            
+            // Restaurar título después
             setTimeout(() => {
-                window.print();
-                document.body.removeChild(tempMessage);
                 document.title = originalTitle;
-            }, 500);
+            }, 1000);
         }
         
         // Imprimir informe individual
         function printIndividualReport() {
-            const tempMessage = document.createElement('div');
-            tempMessage.style.cssText = `
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-                color: white;
-                padding: 30px 50px;
-                border-radius: 15px;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                z-index: 10000;
-                text-align: center;
-                font-weight: bold;
-                font-size: 18px;
-            `;
-            tempMessage.innerHTML = `
-                <i class="fas fa-print text-4xl mb-3"></i>
-                <p>Preparando impresión...</p>
-            `;
-            document.body.appendChild(tempMessage);
-            
-            setTimeout(() => {
-                window.print();
-                document.body.removeChild(tempMessage);
-            }, 300);
+            // Abrir diálogo de impresión directamente
+            window.print();
         }
 
         // Guardar configuración
@@ -2754,54 +2770,85 @@
 
         // Analizar OAs cumplidos y no cumplidos del estudiante
         async function analyzeStudentOAs(student) {
-            const oasCumplidos = new Map();
-            const oasNoCumplidos = new Map();
-            const oasData = await loadOAsData();
-            
-            courseData.tasks.forEach((task, taskIndex) => {
-                if (task.oas && task.oas.length > 0) {
-                    const cumplida = student.grades[taskIndex];
-                    
-                    task.oas.forEach(oaRef => {
-                        const key = `${oaRef.nivel}_${oaRef.unidad}_${oaRef.codigo}`;
-                        
-                        // Obtener detalles del OA
-                        if (oasData && oasData.niveles[oaRef.nivel]) {
-                            const unidades = oasData.niveles[oaRef.nivel].unidades;
-                            const unidad = unidades[parseInt(oaRef.unidad)];
-                            
-                            if (unidad && unidad.oas) {
-                                const oaDetalle = unidad.oas.find(oa => oa.codigo === oaRef.codigo);
-                                if (oaDetalle) {
-                                    const oaInfo = {
-                                        codigo: oaRef.codigo,
-                                        texto: oaDetalle.texto,
-                                        nivel: oasData.niveles[oaRef.nivel].nombre,
-                                        unidad: unidad.nombre
-                                    };
-                                    
-                                    if (cumplida) {
-                                        if (!oasCumplidos.has(key)) {
-                                            oasCumplidos.set(key, { ...oaInfo, tareas: [] });
-                                        }
-                                        oasCumplidos.get(key).tareas.push(task.name);
-                                    } else {
-                                        if (!oasNoCumplidos.has(key)) {
-                                            oasNoCumplidos.set(key, { ...oaInfo, tareas: [] });
-                                        }
-                                        oasNoCumplidos.get(key).tareas.push(task.name);
-                                    }
-                                }
-                            }
-                        }
-                    });
+            try {
+                const oasCumplidos = new Map();
+                const oasNoCumplidos = new Map();
+                const oasData = await loadOAsData();
+                
+                if (!oasData || !oasData.niveles) {
+                    console.log('No hay datos de OAs disponibles para analizar');
+                    return {
+                        cumplidos: [],
+                        noCumplidos: []
+                    };
                 }
-            });
-            
-            return {
-                cumplidos: Array.from(oasCumplidos.values()),
-                noCumplidos: Array.from(oasNoCumplidos.values())
-            };
+                
+                if (!courseData || !courseData.tasks) {
+                    return {
+                        cumplidos: [],
+                        noCumplidos: []
+                    };
+                }
+                
+                courseData.tasks.forEach((task, taskIndex) => {
+                    try {
+                        if (task.oas && Array.isArray(task.oas) && task.oas.length > 0) {
+                            const cumplida = student.grades[taskIndex];
+                            
+                            task.oas.forEach(oaRef => {
+                                try {
+                                    const key = `${oaRef.nivel}_${oaRef.unidad}_${oaRef.codigo}`;
+                                    
+                                    // Obtener detalles del OA
+                                    if (oasData.niveles[oaRef.nivel]) {
+                                        const unidades = oasData.niveles[oaRef.nivel].unidades;
+                                        const unidad = unidades[parseInt(oaRef.unidad)];
+                                        
+                                        if (unidad && unidad.oas) {
+                                            const oaDetalle = unidad.oas.find(oa => oa.codigo === oaRef.codigo);
+                                            if (oaDetalle) {
+                                                const oaInfo = {
+                                                    codigo: oaRef.codigo,
+                                                    texto: oaDetalle.texto,
+                                                    nivel: oasData.niveles[oaRef.nivel].nombre || oaRef.nivel,
+                                                    unidad: unidad.nombre || `Unidad ${oaRef.unidad}`
+                                                };
+                                                
+                                                if (cumplida) {
+                                                    if (!oasCumplidos.has(key)) {
+                                                        oasCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                                    }
+                                                    oasCumplidos.get(key).tareas.push(task.name);
+                                                } else {
+                                                    if (!oasNoCumplidos.has(key)) {
+                                                        oasNoCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                                    }
+                                                    oasNoCumplidos.get(key).tareas.push(task.name);
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (oaError) {
+                                    console.error(`Error procesando OA ${oaRef.codigo}:`, oaError);
+                                }
+                            });
+                        }
+                    } catch (taskError) {
+                        console.error(`Error procesando tarea ${task.name}:`, taskError);
+                    }
+                });
+                
+                return {
+                    cumplidos: Array.from(oasCumplidos.values()),
+                    noCumplidos: Array.from(oasNoCumplidos.values())
+                };
+            } catch (error) {
+                console.error('Error en analyzeStudentOAs:', error);
+                return {
+                    cumplidos: [],
+                    noCumplidos: []
+                };
+            }
         }
         
         function buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks, oasAnalysis) {

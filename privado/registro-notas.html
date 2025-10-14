@@ -361,13 +361,13 @@
 
     <!-- Modal: Agregar Tarea -->
     <div id="addTaskModal" class="modal">
-        <div class="modal-content">
+        <div class="modal-content" style="max-width: 700px;">
             <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
                 <h3 class="text-lg font-bold">
                     <i class="fas fa-plus mr-2"></i>Agregar Nueva Tarea
                 </h3>
             </div>
-            <div class="p-6">
+            <div class="p-6 max-h-[70vh] overflow-y-auto">
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Tarea</label>
@@ -377,6 +377,39 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Entrega</label>
                         <input type="date" id="taskDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         <p class="text-xs text-gray-500 mt-1" id="taskDayOfWeek"></p>
+                    </div>
+                    
+                    <!-- Selector de Nivel -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-graduation-cap mr-1"></i>Nivel (opcional)
+                        </label>
+                        <select id="taskLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="loadUnitsForTask()">
+                            <option value="">Sin especificar</option>
+                            <option value="tercero_medio">3° Medio</option>
+                            <option value="cuarto_medio">4° Medio</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Selector de Unidad -->
+                    <div id="taskUnitContainer" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-book mr-1"></i>Unidad
+                        </label>
+                        <select id="taskUnit" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="loadOAsForTask()">
+                            <option value="">Seleccione una unidad</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Selector de OAs -->
+                    <div id="taskOAsContainer" style="display:none;">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-bullseye mr-1"></i>Objetivos de Aprendizaje (OAs)
+                        </label>
+                        <div id="taskOAsList" class="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                            <!-- OAs se cargarán aquí dinámicamente -->
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Puede seleccionar múltiples OAs</p>
                     </div>
                 </div>
                 <div class="flex gap-3 mt-6">
@@ -719,6 +752,9 @@
             document.getElementById('taskName').value = '';
             document.getElementById('taskDate').value = '';
             document.getElementById('taskDayOfWeek').textContent = '';
+            document.getElementById('taskLevel').value = '';
+            document.getElementById('taskUnitContainer').style.display = 'none';
+            document.getElementById('taskOAsContainer').style.display = 'none';
             document.getElementById('addTaskModal').style.display = 'block';
         }
 
@@ -739,16 +775,32 @@
         function saveTask() {
             const name = document.getElementById('taskName').value.trim();
             const date = document.getElementById('taskDate').value;
+            const level = document.getElementById('taskLevel').value;
+            const unit = document.getElementById('taskUnit').value;
             
             if (!name) {
                 alert('Por favor ingresa el nombre de la tarea');
                 return;
             }
             
+            // Recopilar OAs seleccionados
+            const selectedOAs = [];
+            const checkboxes = document.querySelectorAll('input[name="taskOA"]:checked');
+            checkboxes.forEach(checkbox => {
+                selectedOAs.push({
+                    codigo: checkbox.value,
+                    nivel: checkbox.dataset.nivel,
+                    unidad: checkbox.dataset.unidad
+                });
+            });
+            
             const task = {
                 id: Date.now(),
                 name: name,
-                date: date || ''
+                date: date || '',
+                nivel: level || null,
+                unidad: unit || null,
+                oas: selectedOAs
             };
             courseData.tasks.push(task);
             
@@ -760,6 +812,12 @@
             closeAddTaskModal();
             renderTable();
             saveAllCourses();
+            
+            // Mostrar confirmación con OAs
+            if (selectedOAs.length > 0) {
+                const oasList = selectedOAs.map(oa => oa.codigo).join(', ');
+                showTemporaryMessage(`✅ Tarea "${name}" creada con OAs: ${oasList}`);
+            }
         }
 
         // Cerrar modal de agregar tarea
@@ -790,9 +848,21 @@
             courseData.tasks.forEach((task, index) => {
                 const th = document.createElement('th');
                 th.className = 'px-2 py-3 text-center text-xs font-medium uppercase';
+                
+                let oasInfo = '';
+                if (task.oas && task.oas.length > 0) {
+                    const oasList = task.oas.map(oa => oa.codigo).join(', ');
+                    oasInfo = `
+                        <div class="text-[10px] font-normal text-blue-300" title="${oasList}">
+                            <i class="fas fa-bullseye"></i> ${oasList}
+                        </div>
+                    `;
+                }
+                
                 th.innerHTML = `
                     <div>${task.name}</div>
                     <div class="text-[10px] font-normal">${task.date}</div>
+                    ${oasInfo}
                 `;
                 thead.insertBefore(th, thead.children[thead.children.length - 1]);
             });
@@ -1405,6 +1475,102 @@
             }
         }
 
+        // --- OBJETIVOS DE APRENDIZAJE ---
+        let oasData = null;
+
+        // Cargar OAs del currículum
+        async function loadOAsData() {
+            if (oasData) return oasData;
+            
+            try {
+                const response = await fetch('objetivos-aprendizaje-lenguaje.json');
+                oasData = await response.json();
+                return oasData;
+            } catch (error) {
+                console.error('Error cargando objetivos de aprendizaje:', error);
+                return null;
+            }
+        }
+
+        // Cargar unidades al seleccionar nivel
+        async function loadUnitsForTask() {
+            const level = document.getElementById('taskLevel').value;
+            const unitContainer = document.getElementById('taskUnitContainer');
+            const unitSelect = document.getElementById('taskUnit');
+            const oasContainer = document.getElementById('taskOAsContainer');
+            
+            if (!level) {
+                unitContainer.style.display = 'none';
+                oasContainer.style.display = 'none';
+                return;
+            }
+            
+            const data = await loadOAsData();
+            if (!data) return;
+            
+            const levelData = data.niveles[level];
+            if (!levelData) return;
+            
+            // Limpiar y poblar selector de unidades
+            unitSelect.innerHTML = '<option value="">Seleccione una unidad</option>';
+            Object.entries(levelData.unidades).forEach(([key, unidad]) => {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = `Unidad ${unidad.numero}: ${unidad.nombre}`;
+                unitSelect.appendChild(option);
+            });
+            
+            unitContainer.style.display = 'block';
+            oasContainer.style.display = 'none';
+        }
+
+        // Cargar OAs al seleccionar unidad
+        async function loadOAsForTask() {
+            const level = document.getElementById('taskLevel').value;
+            const unitKey = document.getElementById('taskUnit').value;
+            const oasContainer = document.getElementById('taskOAsContainer');
+            const oasList = document.getElementById('taskOAsList');
+            
+            if (!level || !unitKey) {
+                oasContainer.style.display = 'none';
+                return;
+            }
+            
+            const data = await loadOAsData();
+            if (!data) return;
+            
+            const unidad = data.niveles[level].unidades[unitKey];
+            if (!unidad) return;
+            
+            // Limpiar y poblar lista de OAs
+            oasList.innerHTML = '';
+            Object.entries(unidad.objetivos).forEach(([codigo, oa]) => {
+                const div = document.createElement('div');
+                div.className = 'bg-white border border-gray-300 rounded-lg p-3 hover:border-blue-400 transition-all';
+                div.innerHTML = `
+                    <label class="flex items-start cursor-pointer">
+                        <input type="checkbox" 
+                               class="mt-1 mr-3" 
+                               value="${codigo}" 
+                               data-nivel="${level}"
+                               data-unidad="${unitKey}"
+                               name="taskOA">
+                        <div class="flex-1">
+                            <div class="font-semibold text-blue-600 mb-1">${oa.codigo}</div>
+                            <div class="text-sm text-gray-700">${oa.texto.substring(0, 150)}...</div>
+                            <div class="text-xs text-gray-500 mt-1">
+                                <i class="fas fa-lightbulb mr-1"></i>
+                                Habilidades: ${oa.habilidades.join(', ')}
+                            </div>
+                        </div>
+                    </label>
+                `;
+                oasList.appendChild(div);
+            });
+            
+            oasContainer.style.display = 'block';
+        }
+
         // Determinar nivel de rendimiento según porcentaje
         function determinePerformanceLevel(percentage) {
             if (percentage >= 90) return 'excelente';
@@ -1425,6 +1591,9 @@
             const bank = await loadFeedbackBank();
             if (!bank) return;
             
+            // Analizar OAs del estudiante
+            const oasAnalysis = await analyzeStudentOAs(student);
+            
             const modal = document.getElementById('feedbackBankModal');
             const content = document.getElementById('feedbackBankContent');
             
@@ -1443,14 +1612,69 @@
             };
             const color = levelColors[level];
             
-            content.innerHTML = buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks);
+            content.innerHTML = buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks, oasAnalysis);
             modal.style.display = 'block';
         }
+
+        // Analizar OAs cumplidos y no cumplidos del estudiante
+        async function analyzeStudentOAs(student) {
+            const oasCumplidos = new Map();
+            const oasNoCumplidos = new Map();
+            const oasData = await loadOAsData();
+            
+            courseData.tasks.forEach((task, taskIndex) => {
+                if (task.oas && task.oas.length > 0) {
+                    const cumplida = student.grades[taskIndex];
+                    
+                    task.oas.forEach(oaRef => {
+                        const key = `${oaRef.nivel}_${oaRef.unidad}_${oaRef.codigo}`;
+                        
+                        // Obtener detalles del OA
+                        if (oasData && oasData.niveles[oaRef.nivel]) {
+                            const unidad = oasData.niveles[oaRef.nivel].unidades[oaRef.unidad];
+                            if (unidad && unidad.objetivos[oaRef.codigo]) {
+                                const oaDetalle = unidad.objetivos[oaRef.codigo];
+                                const oaInfo = {
+                                    codigo: oaRef.codigo,
+                                    texto: oaDetalle.texto,
+                                    nivel: oasData.niveles[oaRef.nivel].nombre,
+                                    unidad: unidad.nombre,
+                                    habilidades: oaDetalle.habilidades
+                                };
+                                
+                                if (cumplida) {
+                                    if (!oasCumplidos.has(key)) {
+                                        oasCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                    }
+                                    oasCumplidos.get(key).tareas.push(task.name);
+                                } else {
+                                    if (!oasNoCumplidos.has(key)) {
+                                        oasNoCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                    }
+                                    oasNoCumplidos.get(key).tareas.push(task.name);
+                                }
+                            }
+                        }
+                    });
+                }
+            });
+            
+            return {
+                cumplidos: Array.from(oasCumplidos.values()),
+                noCumplidos: Array.from(oasNoCumplidos.values())
+            };
+        }
         
-        function buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks) {
+        function buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks, oasAnalysis) {
             let html = `<div class="bg-white rounded-lg shadow-xl max-w-5xl mx-auto my-8">`;
             html += buildModalHeader(student, finalGrade, percentage, levelInfo, color);
             html += `<div class="p-6 max-h-[70vh] overflow-y-auto">`;
+            
+            // Sección de análisis de OAs
+            if (oasAnalysis && (oasAnalysis.cumplidos.length > 0 || oasAnalysis.noCumplidos.length > 0)) {
+                html += buildOAsAnalysisSection(oasAnalysis, color);
+            }
+            
             html += buildGeneralFeedbackSection(feedbacks.generales, student.name, color);
             html += buildSpecificFeedbackSection(feedbacks.especificas, color);
             html += buildSuggestionsSection(feedbacks.sugerencias);
@@ -1463,6 +1687,111 @@
             html += buildModalFooter();
             html += `</div>`;
             return html;
+        }
+
+        // Construir sección de análisis de OAs
+        function buildOAsAnalysisSection(oasAnalysis, color) {
+            let html = `
+                <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-bullseye text-blue-500 mr-2"></i>
+                        Análisis de Objetivos de Aprendizaje (OAs)
+                    </h4>
+            `;
+            
+            // OAs Cumplidos
+            if (oasAnalysis.cumplidos.length > 0) {
+                html += `
+                    <div class="mb-4">
+                        <h5 class="font-semibold text-green-700 mb-2 flex items-center">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            OAs Logrados (${oasAnalysis.cumplidos.length})
+                        </h5>
+                        <div class="space-y-2">
+                `;
+                
+                oasAnalysis.cumplidos.forEach(oa => {
+                    const tareasTexto = oa.tareas.join(', ');
+                    html += `
+                        <div class="bg-white border-l-4 border-green-500 p-3 rounded shadow-sm">
+                            <div class="flex items-start">
+                                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2 py-1 rounded mr-2">${oa.codigo}</span>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-700 font-medium">${oa.texto.substring(0, 120)}...</p>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-book mr-1"></i>${oa.nivel} - ${oa.unidad}
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-tasks mr-1"></i>Tareas: ${tareasTexto}
+                                    </div>
+                                </div>
+                                <button onclick="insertOAFeedback('${oa.codigo}', true, '${oa.texto.replace(/'/g, "\\'")}', '${tareasTexto}')" 
+                                        class="text-xs bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded">
+                                    <i class="fas fa-plus-circle mr-1"></i>Insertar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            // OAs No Cumplidos
+            if (oasAnalysis.noCumplidos.length > 0) {
+                html += `
+                    <div>
+                        <h5 class="font-semibold text-red-700 mb-2 flex items-center">
+                            <i class="fas fa-times-circle mr-2"></i>
+                            OAs Por Lograr (${oasAnalysis.noCumplidos.length})
+                        </h5>
+                        <div class="space-y-2">
+                `;
+                
+                oasAnalysis.noCumplidos.forEach(oa => {
+                    const tareasTexto = oa.tareas.join(', ');
+                    html += `
+                        <div class="bg-white border-l-4 border-red-500 p-3 rounded shadow-sm">
+                            <div class="flex items-start">
+                                <span class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded mr-2">${oa.codigo}</span>
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-700 font-medium">${oa.texto.substring(0, 120)}...</p>
+                                    <div class="text-xs text-gray-500 mt-1">
+                                        <i class="fas fa-book mr-1"></i>${oa.nivel} - ${oa.unidad}
+                                    </div>
+                                    <div class="text-xs text-gray-600 mt-1">
+                                        <i class="fas fa-tasks mr-1"></i>Tareas pendientes: ${tareasTexto}
+                                    </div>
+                                </div>
+                                <button onclick="insertOAFeedback('${oa.codigo}', false, '${oa.texto.replace(/'/g, "\\'")}', '${tareasTexto}')" 
+                                        class="text-xs bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded">
+                                    <i class="fas fa-plus-circle mr-1"></i>Insertar
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += `</div></div>`;
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+
+        // Insertar retroalimentación específica de OA
+        function insertOAFeedback(codigo, cumplido, texto, tareas) {
+            let feedback = '';
+            
+            if (cumplido) {
+                feedback = `✅ ${codigo}: Has logrado exitosamente este objetivo de aprendizaje en las siguientes tareas: ${tareas}. `;
+                feedback += `Tu desempeño refleja comprensión y dominio de: "${texto.substring(0, 100)}..."`;
+            } else {
+                feedback = `⚠️ ${codigo}: Es necesario reforzar este objetivo de aprendizaje. Tareas pendientes: ${tareas}. `;
+                feedback += `Debes trabajar en: "${texto.substring(0, 100)}..." Te sugiero revisar los contenidos y solicitar apoyo si es necesario.`;
+            }
+            
+            insertFeedback(feedback);
         }
         
         function buildModalHeader(student, finalGrade, percentage, levelInfo, color) {

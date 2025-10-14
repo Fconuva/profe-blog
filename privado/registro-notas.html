@@ -415,20 +415,28 @@
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
             loadAllCourses();
-            updateCourseSelector();
             
             // Si no hay cursos, crear uno por defecto
             if (allCourses.length === 0) {
                 createDefaultCourse();
             }
             
+            // Asegurar que hay un curso actual
+            if (!currentCourseId && allCourses.length > 0) {
+                currentCourseId = allCourses[0].id;
+            }
+            
+            // Actualizar selector DESPUÉS de asegurar currentCourseId
+            updateCourseSelector();
+            
             // Cargar el curso actual
             if (currentCourseId) {
                 loadCourse(currentCourseId);
+            } else {
+                // Si no hay curso, inicializar tabla vacía
+                renderTable();
+                populateStudentSelect();
             }
-            
-            renderTable();
-            populateStudentSelect();
             
             document.getElementById('logout-btn').addEventListener('click', function() {
                 sessionStorage.removeItem('isLoggedIn');
@@ -462,13 +470,16 @@
             const saved = localStorage.getItem('allCourses');
             if (saved) {
                 allCourses = JSON.parse(saved);
+                console.log('Cursos cargados:', allCourses.length, 'cursos');
             }
             
             const savedCurrentId = localStorage.getItem('currentCourseId');
             if (savedCurrentId) {
-                currentCourseId = parseInt(savedCurrentId);
+                currentCourseId = parseFloat(savedCurrentId); // Cambiar a parseFloat
+                console.log('ID de curso actual cargado:', currentCourseId);
             } else if (allCourses.length > 0) {
                 currentCourseId = allCourses[0].id;
+                console.log('ID de curso establecido al primero:', currentCourseId);
             }
         }
 
@@ -480,10 +491,13 @@
 
         // Cargar un curso específico
         function loadCourse(courseId) {
-            const course = allCourses.find(c => c.id === courseId);
+            // Convertir a número para comparación consistente
+            const numId = typeof courseId === 'string' ? parseFloat(courseId) : courseId;
+            const course = allCourses.find(c => c.id == numId); // Usar == para comparación flexible
+            
             if (course) {
                 courseData = course;
-                currentCourseId = courseId;
+                currentCourseId = course.id; // Usar el ID del curso encontrado
                 
                 // Asegurar que config existe con valores por defecto
                 if (!courseData.config) {
@@ -499,9 +513,9 @@
                 }
                 
                 // Actualizar campos del formulario
-                document.getElementById('courseName').value = courseData.courseName;
-                document.getElementById('subject').value = courseData.subject;
-                document.getElementById('period').value = courseData.period;
+                document.getElementById('courseName').value = courseData.courseName || '';
+                document.getElementById('subject').value = courseData.subject || '';
+                document.getElementById('period').value = courseData.period || '';
                 
                 // Cargar configuración si existe el campo
                 if (document.getElementById('passingPercentage')) {
@@ -509,18 +523,23 @@
                 }
                 
                 // Actualizar selector
-                document.getElementById('courseSelector').value = courseId;
+                document.getElementById('courseSelector').value = course.id;
                 
                 renderTable();
                 populateStudentSelect();
                 saveAllCourses();
+                
+                console.log('Curso cargado:', courseData.courseName, 'ID:', course.id);
+            } else {
+                console.error('No se encontró el curso con ID:', courseId, 'IDs disponibles:', allCourses.map(c => c.id));
             }
         }
 
         // Cambiar de curso
         function switchCourse() {
             const selector = document.getElementById('courseSelector');
-            const newCourseId = parseInt(selector.value);
+            const newCourseId = parseFloat(selector.value); // Usar parseFloat para soportar decimales
+            console.log('Cambiando a curso ID:', newCourseId);
             loadCourse(newCourseId);
         }
 
@@ -750,8 +769,18 @@
 
         // Renderizar tabla
         function renderTable() {
+            if (!courseData) {
+                console.warn('No hay courseData para renderizar');
+                return;
+            }
+            
             const thead = document.querySelector('#gradesTable thead tr');
             const tbody = document.getElementById('studentsTableBody');
+            
+            if (!thead || !tbody) {
+                console.error('No se encontraron elementos de la tabla');
+                return;
+            }
             
             // Limpiar y regenerar encabezados de tareas
             while (thead.children.length > 5) {
@@ -1183,7 +1212,17 @@
 
         // Poblar selector de estudiantes
         function populateStudentSelect() {
+            if (!courseData) {
+                console.warn('No hay courseData para poblar selector');
+                return;
+            }
+            
             const select = document.getElementById('studentSelect');
+            if (!select) {
+                console.warn('No se encontró el selector de estudiantes');
+                return;
+            }
+            
             select.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
             
             courseData.students.forEach((student, index) => {

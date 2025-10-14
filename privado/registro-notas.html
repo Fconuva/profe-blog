@@ -2298,6 +2298,10 @@
                                     const status = grade >= 4.0 ? 'Aprobado' : 'Reprobado';
                                     const statusIcon = grade >= 4.0 ? 'check-circle' : 'times-circle';
                                     
+                                    // Asegurar que grades tenga la longitud correcta (rellenar con null si es necesario)
+                                    const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
+                                    const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => studentGrades[i] || null);
+                                    
                                     return `
                                         <tr class="hover:bg-gray-50 ${student.retired ? 'opacity-50' : ''}">
                                             <td class="px-4 py-3 text-center font-bold text-gray-600 sticky left-0 bg-white">${index + 1}</td>
@@ -2305,7 +2309,7 @@
                                                 ${student.name || 'Sin nombre'}
                                                 ${student.retired ? '<span class="ml-2 text-xs text-red-600">(Retirado)</span>' : ''}
                                             </td>
-                                            ${(student.grades && Array.isArray(student.grades) ? student.grades : []).map(g => `
+                                            ${normalizedGrades.map(g => `
                                                 <td class="px-3 py-3 text-center">
                                                     ${g ? '<i class="fas fa-check text-green-600 font-bold"></i>' : '<i class="fas fa-times text-red-400"></i>'}
                                                 </td>

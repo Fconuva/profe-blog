@@ -6,11 +6,25 @@
     <title>Registro de Notas - Sistema de Evaluación</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        * {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+        }
         .student-row:hover {
             background-color: #f3f4f6;
+        }
+        .student-row.retired {
+            background-color: #f9fafb !important;
+            opacity: 0.6;
+        }
+        .student-row.retired td {
+            color: #9ca3af !important;
+            text-decoration: line-through;
         }
         .editable {
             cursor: pointer;
@@ -23,6 +37,28 @@
             .no-print {
                 display: none !important;
             }
+        }
+        /* Estilos para modales */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 0;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
     </style>
 </head>
@@ -252,7 +288,16 @@
                     </div>
 
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de Aprobación</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de Exigencia</label>
+                        <div class="flex items-center gap-4">
+                            <input type="number" id="passingPercentage" value="60" min="0" max="100" step="1" class="w-32 px-3 py-2 border border-gray-300 rounded-lg">
+                            <span class="text-sm text-gray-600">% (Por defecto: 60%)</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Este porcentaje determina la nota de aprobación (4.0)</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nota de Aprobación</label>
                         <input type="number" id="passingGrade" value="4.0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                     </div>
 
@@ -269,6 +314,82 @@
         </div>
 
     </main>
+
+    <!-- Modal: Editar Estudiante -->
+    <div id="editStudentModal" class="modal">
+        <div class="modal-content">
+            <div class="bg-indigo-600 text-white px-6 py-4 rounded-t-lg">
+                <h3 class="text-lg font-bold">
+                    <i class="fas fa-user-edit mr-2"></i>Editar Estudiante
+                </h3>
+            </div>
+            <div class="p-6">
+                <input type="hidden" id="editStudentIndex">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Número de Lista</label>
+                        <input type="number" id="editStudentNumber" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Apellido Paterno</label>
+                        <input type="text" id="editStudentLastName1" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Apellido Materno</label>
+                        <input type="text" id="editStudentLastName2" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+                        <input type="text" id="editStudentName" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="editStudentRetired" class="w-4 h-4 text-indigo-600 rounded mr-2">
+                        <label class="text-sm text-gray-700">Estudiante Retirado (no cuenta en estadísticas)</label>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="saveStudentEdit()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button onclick="closeEditStudentModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Agregar Tarea -->
+    <div id="addTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="bg-blue-600 text-white px-6 py-4 rounded-t-lg">
+                <h3 class="text-lg font-bold">
+                    <i class="fas fa-plus mr-2"></i>Agregar Nueva Tarea
+                </h3>
+            </div>
+            <div class="p-6">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre de la Tarea</label>
+                        <input type="text" id="taskName" placeholder="Ej: Guía 1, Ensayo, etc." class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Fecha de Entrega</label>
+                        <input type="date" id="taskDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                        <p class="text-xs text-gray-500 mt-1" id="taskDayOfWeek"></p>
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-6">
+                    <button onclick="saveTask()" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-save mr-2"></i>Agregar
+                    </button>
+                    <button onclick="closeAddTaskModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <style>
         .btn-action {
@@ -327,7 +448,8 @@
                 config: {
                     minGrade: 1.0,
                     maxGrade: 7.0,
-                    passingGrade: 4.0
+                    passingGrade: 4.0,
+                    passingPercentage: 60
                 }
             };
             allCourses.push(newCourse);
@@ -363,10 +485,28 @@
                 courseData = course;
                 currentCourseId = courseId;
                 
+                // Asegurar que config existe con valores por defecto
+                if (!courseData.config) {
+                    courseData.config = {
+                        minGrade: 1.0,
+                        maxGrade: 7.0,
+                        passingGrade: 4.0,
+                        passingPercentage: 60
+                    };
+                }
+                if (!courseData.config.passingPercentage) {
+                    courseData.config.passingPercentage = 60;
+                }
+                
                 // Actualizar campos del formulario
                 document.getElementById('courseName').value = courseData.courseName;
                 document.getElementById('subject').value = courseData.subject;
                 document.getElementById('period').value = courseData.period;
+                
+                // Cargar configuración si existe el campo
+                if (document.getElementById('passingPercentage')) {
+                    document.getElementById('passingPercentage').value = courseData.config.passingPercentage || 60;
+                }
                 
                 // Actualizar selector
                 document.getElementById('courseSelector').value = courseId;
@@ -422,7 +562,8 @@
                 config: {
                     minGrade: 1.0,
                     maxGrade: 7.0,
-                    passingGrade: 4.0
+                    passingGrade: 4.0,
+                    passingPercentage: 60
                 }
             };
             
@@ -481,7 +622,8 @@
                             lastName2: lastName2,
                             name: name,
                             grades: Array(courseData.tasks.length).fill(null),
-                            notes: ''
+                            notes: '',
+                            retired: false
                         };
                         courseData.students.push(student);
                         added++;
@@ -544,7 +686,8 @@
                     lastName2: lastName2.toUpperCase(),
                     name: name.toUpperCase(),
                     grades: Array(courseData.tasks.length).fill(null),
-                    notes: ''
+                    notes: '',
+                    retired: false
                 };
                 courseData.students.push(student);
                 renderTable();
@@ -552,27 +695,57 @@
             }
         }
 
-        // Agregar tarea
+        // Agregar tarea - Mostrar modal
         function addTask() {
-            const name = prompt('Nombre de la tarea:');
-            const date = prompt('Fecha (DD-MM-YYYY):');
-            
-            if (name) {
-                const task = {
-                    id: Date.now(),
-                    name: name,
-                    date: date || ''
-                };
-                courseData.tasks.push(task);
-                
-                // Agregar columna de nota a cada estudiante
-                courseData.students.forEach(student => {
-                    student.grades.push(null);
+            document.getElementById('taskName').value = '';
+            document.getElementById('taskDate').value = '';
+            document.getElementById('taskDayOfWeek').textContent = '';
+            document.getElementById('addTaskModal').style.display = 'block';
+        }
+
+        // Listener para mostrar día de la semana
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskDateInput = document.getElementById('taskDate');
+            if (taskDateInput) {
+                taskDateInput.addEventListener('change', function() {
+                    const date = new Date(this.value + 'T00:00:00');
+                    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+                    const dayName = days[date.getDay()];
+                    document.getElementById('taskDayOfWeek').textContent = `Día: ${dayName}`;
                 });
-                
-                renderTable();
-                saveAllCourses();
             }
+        });
+
+        // Guardar tarea desde modal
+        function saveTask() {
+            const name = document.getElementById('taskName').value.trim();
+            const date = document.getElementById('taskDate').value;
+            
+            if (!name) {
+                alert('Por favor ingresa el nombre de la tarea');
+                return;
+            }
+            
+            const task = {
+                id: Date.now(),
+                name: name,
+                date: date || ''
+            };
+            courseData.tasks.push(task);
+            
+            // Agregar columna de nota a cada estudiante
+            courseData.students.forEach(student => {
+                student.grades.push(null);
+            });
+            
+            closeAddTaskModal();
+            renderTable();
+            saveAllCourses();
+        }
+
+        // Cerrar modal de agregar tarea
+        function closeAddTaskModal() {
+            document.getElementById('addTaskModal').style.display = 'none';
         }
 
         // Renderizar tabla
@@ -612,6 +785,11 @@
                 const tr = document.createElement('tr');
                 tr.className = 'student-row';
                 
+                // Agregar clase si está retirado
+                if (student.retired) {
+                    tr.classList.add('retired');
+                }
+                
                 let totalPoints = 0;
                 let html = `
                     <td class="px-4 py-3 text-sm">${student.number}</td>
@@ -629,7 +807,7 @@
                         <td class="px-2 py-3 text-center">
                             <input type="checkbox" ${isChecked ? 'checked' : ''} 
                                    onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.checked)"
-                                   class="w-4 h-4 text-indigo-600 rounded">
+                                   class="w-4 h-4 text-indigo-600 rounded" ${student.retired ? 'disabled' : ''}>
                         </td>
                     `;
                 });
@@ -641,8 +819,11 @@
                 html += `
                     <td class="px-2 py-3 text-center font-bold text-indigo-600">${totalPoints}</td>
                     <td class="px-2 py-3 text-center font-bold text-lg ${finalGrade >= 4.0 ? 'text-green-600' : 'text-red-600'}">${finalGrade.toFixed(1)}</td>
-                    <td class="px-4 py-3 text-center no-print">
-                        <button onclick="deleteStudent(${studentIndex})" class="text-red-600 hover:text-red-800">
+                    <td class="px-4 py-3 text-center no-print space-x-2">
+                        <button onclick="showEditStudentModal(${studentIndex})" class="text-blue-600 hover:text-blue-800" title="Editar">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="deleteStudent(${studentIndex})" class="text-red-600 hover:text-red-800" title="Eliminar">
                             <i class="fas fa-trash"></i>
                         </button>
                     </td>
@@ -653,18 +834,62 @@
             });
         }
 
-        // Calcular nota
+        // Calcular nota basada en porcentaje de exigencia
         function calculateGrade(points, maxPoints) {
             if (maxPoints === 0) return 1.0;
-            const percentage = points / maxPoints;
-            return 1.0 + (percentage * 6.0);
+            
+            const percentage = (points / maxPoints) * 100;
+            const passingPercentage = courseData.config?.passingPercentage || 60;
+            
+            if (percentage >= passingPercentage) {
+                // De passingPercentage% a 100% → de 4.0 a 7.0
+                const factor = (percentage - passingPercentage) / (100 - passingPercentage);
+                return 4.0 + (factor * 3.0);
+            } else {
+                // De 0% a passingPercentage% → de 1.0 a 3.9
+                const factor = percentage / passingPercentage;
+                return 1.0 + (factor * 2.9);
+            }
         }
 
-        // Actualizar nota
+        // Actualizar nota (sin mensaje de confirmación)
         function updateGrade(studentIndex, gradeIndex, checked) {
             courseData.students[studentIndex].grades[gradeIndex] = checked;
             renderTable();
             saveAllCourses();
+        }
+
+        // Mostrar modal de edición de estudiante
+        function showEditStudentModal(index) {
+            const student = courseData.students[index];
+            document.getElementById('editStudentIndex').value = index;
+            document.getElementById('editStudentNumber').value = student.number;
+            document.getElementById('editStudentLastName1').value = student.lastName1;
+            document.getElementById('editStudentLastName2').value = student.lastName2;
+            document.getElementById('editStudentName').value = student.name;
+            document.getElementById('editStudentRetired').checked = student.retired || false;
+            document.getElementById('editStudentModal').style.display = 'block';
+        }
+
+        // Guardar edición de estudiante
+        function saveStudentEdit() {
+            const index = parseInt(document.getElementById('editStudentIndex').value);
+            const student = courseData.students[index];
+            
+            student.number = parseInt(document.getElementById('editStudentNumber').value);
+            student.lastName1 = document.getElementById('editStudentLastName1').value.toUpperCase();
+            student.lastName2 = document.getElementById('editStudentLastName2').value.toUpperCase();
+            student.name = document.getElementById('editStudentName').value.toUpperCase();
+            student.retired = document.getElementById('editStudentRetired').checked;
+            
+            closeEditStudentModal();
+            renderTable();
+            saveAllCourses();
+        }
+
+        // Cerrar modal de edición
+        function closeEditStudentModal() {
+            document.getElementById('editStudentModal').style.display = 'none';
         }
 
         // Eliminar estudiante
@@ -773,13 +998,16 @@
             const statsDiv = document.getElementById('generalStats');
             const students = courseData.students;
             
-            if (students.length === 0) {
+            // Filtrar estudiantes activos (no retirados)
+            const activeStudents = students.filter(s => !s.retired);
+            
+            if (activeStudents.length === 0) {
                 statsDiv.innerHTML = '<p class="text-gray-500">No hay datos disponibles</p>';
                 return;
             }
             
-            // Calcular estadísticas
-            const grades = students.map(s => {
+            // Calcular estadísticas solo con estudiantes activos
+            const grades = activeStudents.map(s => {
                 const points = s.grades.filter(g => g).length;
                 return calculateGrade(points, courseData.tasks.length);
             });
@@ -789,11 +1017,17 @@
             const minGrade = Math.min(...grades);
             const passing = grades.filter(g => g >= 4.0).length;
             const failing = grades.filter(g => g < 4.0).length;
+            const retiredCount = students.length - activeStudents.length;
             
             statsDiv.innerHTML = `
                 <div class="stat-item">
                     <div class="text-sm text-gray-600">Total Estudiantes</div>
                     <div class="text-2xl font-bold text-indigo-600">${students.length}</div>
+                    ${retiredCount > 0 ? `<div class="text-xs text-gray-500">(${retiredCount} retirado${retiredCount > 1 ? 's' : ''})</div>` : ''}
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Estudiantes Activos</div>
+                    <div class="text-2xl font-bold text-purple-600">${activeStudents.length}</div>
                 </div>
                 <div class="stat-item">
                     <div class="text-sm text-gray-600">Promedio del Curso</div>
@@ -809,11 +1043,11 @@
                 </div>
                 <div class="stat-item">
                     <div class="text-sm text-gray-600">Aprobados</div>
-                    <div class="text-2xl font-bold text-green-600">${passing} (${(passing/students.length*100).toFixed(0)}%)</div>
+                    <div class="text-2xl font-bold text-green-600">${passing} (${(passing/activeStudents.length*100).toFixed(0)}%)</div>
                 </div>
                 <div class="stat-item">
                     <div class="text-sm text-gray-600">Reprobados</div>
-                    <div class="text-2xl font-bold text-red-600">${failing} (${(failing/students.length*100).toFixed(0)}%)</div>
+                    <div class="text-2xl font-bold text-red-600">${failing} (${(failing/activeStudents.length*100).toFixed(0)}%)</div>
                 </div>
             `;
             
@@ -860,13 +1094,14 @@
                 }
             });
             
-            // Progreso por tarea
+            // Progreso por tarea (solo estudiantes activos)
             const ctx2 = document.getElementById('taskProgressChart');
             if (ctx2.chart) ctx2.chart.destroy();
             
+            const activeStudents = courseData.students.filter(s => !s.retired);
             const taskCompletion = courseData.tasks.map((task, index) => {
-                const completed = courseData.students.filter(s => s.grades[index]).length;
-                return (completed / courseData.students.length * 100).toFixed(1);
+                const completed = activeStudents.filter(s => s.grades[index]).length;
+                return activeStudents.length > 0 ? (completed / activeStudents.length * 100).toFixed(1) : 0;
             });
             
             ctx2.chart = new Chart(ctx2, {
@@ -898,14 +1133,16 @@
         function generateCourseReport() {
             const reportDiv = document.getElementById('courseReportContent');
             const students = courseData.students;
+            const activeStudents = students.filter(s => !s.retired);
             
-            const grades = students.map(s => {
+            const grades = activeStudents.map(s => {
                 const points = s.grades.filter(g => g).length;
                 return calculateGrade(points, courseData.tasks.length);
             });
             
-            const avgGrade = grades.reduce((a, b) => a + b, 0) / grades.length;
+            const avgGrade = grades.length > 0 ? grades.reduce((a, b) => a + b, 0) / grades.length : 0;
             const passing = grades.filter(g => g >= 4.0).length;
+            const retiredCount = students.length - activeStudents.length;
             
             reportDiv.innerHTML = `
                 <div class="space-y-4">
@@ -913,29 +1150,31 @@
                     <p><strong>Asignatura:</strong> ${courseData.subject}</p>
                     <p><strong>Período:</strong> ${courseData.period}</p>
                     <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CL')}</p>
+                    <p><strong>Porcentaje de Exigencia:</strong> ${courseData.config?.passingPercentage || 60}%</p>
                     
                     <h5 class="font-bold mt-6">Resumen General:</h5>
                     <ul class="list-disc ml-6 space-y-2">
-                        <li>Total de estudiantes: ${students.length}</li>
+                        <li>Total de estudiantes: ${students.length}${retiredCount > 0 ? ` (${retiredCount} retirado${retiredCount > 1 ? 's' : ''})` : ''}</li>
+                        <li>Estudiantes activos: ${activeStudents.length}</li>
                         <li>Promedio del curso: ${avgGrade.toFixed(2)}</li>
-                        <li>Tasa de aprobación: ${(passing/students.length*100).toFixed(1)}%</li>
+                        <li>Tasa de aprobación: ${activeStudents.length > 0 ? (passing/activeStudents.length*100).toFixed(1) : 0}%</li>
                         <li>Estudiantes aprobados: ${passing}</li>
-                        <li>Estudiantes reprobados: ${students.length - passing}</li>
+                        <li>Estudiantes reprobados: ${activeStudents.length - passing}</li>
                     </ul>
                     
                     <h5 class="font-bold mt-6">Análisis por Tarea:</h5>
                     <ul class="list-disc ml-6 space-y-2">
                         ${courseData.tasks.map((task, index) => {
-                            const completed = students.filter(s => s.grades[index]).length;
-                            const percentage = (completed / students.length * 100).toFixed(1);
-                            return `<li>${task.name}: ${completed}/${students.length} (${percentage}%)</li>`;
+                            const completed = activeStudents.filter(s => s.grades[index]).length;
+                            const percentage = activeStudents.length > 0 ? (completed / activeStudents.length * 100).toFixed(1) : 0;
+                            return `<li>${task.name} ${task.date ? `(${task.date})` : ''}: ${completed}/${activeStudents.length} (${percentage}%)</li>`;
                         }).join('')}
                     </ul>
                     
                     <h5 class="font-bold mt-6">Recomendaciones:</h5>
                     <ul class="list-disc ml-6 space-y-2">
                         ${avgGrade < 4.5 ? '<li class="text-red-600">⚠️ El promedio del curso está bajo. Se recomienda reforzar contenidos.</li>' : ''}
-                        ${passing < students.length * 0.7 ? '<li class="text-orange-600">⚠️ Menos del 70% aprobado. Considerar estrategias de apoyo.</li>' : ''}
+                        ${activeStudents.length > 0 && passing < activeStudents.length * 0.7 ? '<li class="text-orange-600">⚠️ Menos del 70% aprobado. Considerar estrategias de apoyo.</li>' : ''}
                         ${avgGrade >= 5.5 ? '<li class="text-green-600">✅ Excelente rendimiento general del curso.</li>' : ''}
                     </ul>
                 </div>
@@ -1052,10 +1291,12 @@
             courseData.config = {
                 minGrade: parseFloat(document.getElementById('minGrade').value),
                 maxGrade: parseFloat(document.getElementById('maxGrade').value),
-                passingGrade: parseFloat(document.getElementById('passingGrade').value)
+                passingGrade: parseFloat(document.getElementById('passingGrade').value),
+                passingPercentage: parseInt(document.getElementById('passingPercentage').value)
             };
+            renderTable(); // Recalcular notas con nuevo porcentaje
             saveAllCourses();
-            alert('✅ Configuración guardada');
+            alert('✅ Configuración guardada. Las notas se han recalculado.');
         }
 
         // Resetear datos
@@ -1082,6 +1323,19 @@
             }
         `;
         document.head.appendChild(style);
+
+        // Cerrar modales al hacer click fuera
+        window.onclick = function(event) {
+            const editModal = document.getElementById('editStudentModal');
+            const taskModal = document.getElementById('addTaskModal');
+            
+            if (event.target == editModal) {
+                editModal.style.display = 'none';
+            }
+            if (event.target == taskModal) {
+                taskModal.style.display = 'none';
+            }
+        }
     </script>
 
 </body>

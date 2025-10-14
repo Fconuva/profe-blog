@@ -1982,18 +1982,78 @@
         
         function buildQuickGeneratorSection(level, studentName, percentage, points, totalTasks) {
             return `
-                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-300 rounded-lg p-4">
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-300 rounded-lg p-4 mb-4">
                     <h4 class="text-lg font-bold text-gray-800 mb-3">
                         <i class="fas fa-magic text-purple-500 mr-2"></i>
                         Generador Rápido de Retroalimentación
                     </h4>
                     <button onclick="generateCompleteFeedback('${level}', '${studentName}', ${percentage}, ${points}, ${totalTasks})"
-                            class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg">
+                            class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg mb-2">
                         <i class="fas fa-wand-magic-sparkles mr-2"></i>
-                        Generar Retroalimentación Completa Automática
+                        Generar Retroalimentación Automática (Plantillas)
                     </button>
+                    <p class="text-xs text-gray-600 mt-1 mb-3 italic">
+                        Genera una retroalimentación usando plantillas predefinidas del banco.
+                    </p>
+                </div>
+                
+                <div class="bg-gradient-to-r from-cyan-50 to-blue-50 border-2 border-cyan-300 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-robot text-cyan-500 mr-2"></i>
+                        Generador con Inteligencia Artificial
+                    </h4>
+                    <p class="text-sm text-gray-700 mb-3">
+                        Genera retroalimentación personalizada usando IA que analiza el rendimiento del estudiante, 
+                        los OAs trabajados y el contexto curricular.
+                    </p>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-key mr-1"></i>API Key de Gemini AI
+                        </label>
+                        <div class="flex gap-2">
+                            <input type="password" 
+                                   id="geminiApiKey" 
+                                   placeholder="Ingresa tu API Key de Google Gemini" 
+                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                   value="${localStorage.getItem('geminiApiKey') || ''}">
+                            <button onclick="saveGeminiApiKey()" 
+                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">
+                            <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline">
+                                <i class="fas fa-external-link-alt mr-1"></i>Obtén tu API Key gratis aquí
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Enfoque de la retroalimentación:</label>
+                        <select id="aiFeedbackFocus" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            <option value="general">General - Visión completa del desempeño</option>
+                            <option value="oas">OAs - Enfocado en objetivos de aprendizaje</option>
+                            <option value="motivacional">Motivacional - Enfatizar logros y potencial</option>
+                            <option value="estrategias">Estrategias - Acciones concretas de mejora</option>
+                            <option value="formativa">Formativa - Descriptiva y orientadora</option>
+                        </select>
+                    </div>
+                    
+                    <button onclick="generateAIFeedback('${level}', '${studentName}', ${percentage}, ${points}, ${totalTasks})" 
+                            id="btnGenerateAI"
+                            class="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white px-6 py-3 rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all shadow-lg">
+                        <i class="fas fa-sparkles mr-2"></i>
+                        Generar con IA (Gemini)
+                    </button>
+                    
+                    <div id="aiLoadingIndicator" style="display:none;" class="mt-3 text-center text-cyan-600">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Generando retroalimentación con IA...
+                    </div>
+                    
                     <p class="text-xs text-gray-600 mt-2 italic">
-                        Genera una retroalimentación integral combinando elementos generales, específicos y sugerencias.
+                        💡 La IA analiza todo el contexto: rendimiento, OAs, nivel, y genera una retroalimentación 
+                        pedagógicamente fundamentada y personalizada.
                     </p>
                 </div>
             `;
@@ -2084,6 +2144,183 @@
                 div.style.transition = 'opacity 0.5s';
                 setTimeout(() => div.remove(), 500);
             }, 3000);
+        }
+
+        // --- INTEGRACIÓN CON IA (GEMINI) ---
+
+        // Guardar API Key de Gemini
+        function saveGeminiApiKey() {
+            const apiKey = document.getElementById('geminiApiKey').value.trim();
+            if (apiKey) {
+                localStorage.setItem('geminiApiKey', apiKey);
+                showTemporaryMessage('✅ API Key guardada correctamente');
+            } else {
+                alert('Por favor ingresa una API Key válida');
+            }
+        }
+
+        // Generar retroalimentación con IA (Gemini)
+        async function generateAIFeedback(level, studentName, percentage, points, totalTasks) {
+            const apiKey = localStorage.getItem('geminiApiKey');
+            
+            if (!apiKey) {
+                alert('⚠️ Por favor configura tu API Key de Gemini AI primero.\n\nPuedes obtenerla gratis en: https://makersuite.google.com/app/apikey');
+                return;
+            }
+            
+            const focus = document.getElementById('aiFeedbackFocus').value;
+            const loadingIndicator = document.getElementById('aiLoadingIndicator');
+            const btnGenerate = document.getElementById('btnGenerateAI');
+            
+            // Mostrar indicador de carga
+            loadingIndicator.style.display = 'block';
+            btnGenerate.disabled = true;
+            btnGenerate.classList.add('opacity-50', 'cursor-not-allowed');
+            
+            try {
+                // Obtener contexto del estudiante
+                const student = courseData.students[currentStudentIndexForFeedback];
+                const oasAnalysis = await analyzeStudentOAs(student);
+                const bank = feedbackData;
+                const levelInfo = bank.rangos_rendimiento[level];
+                
+                // Construir el prompt para la IA
+                const prompt = buildAIPrompt(
+                    studentName, 
+                    level, 
+                    levelInfo, 
+                    percentage, 
+                    points, 
+                    totalTasks, 
+                    oasAnalysis, 
+                    focus,
+                    courseData
+                );
+                
+                // Llamar a la API de Gemini
+                const feedback = await callGeminiAPI(apiKey, prompt);
+                
+                // Insertar la retroalimentación generada
+                if (feedback) {
+                    insertFeedback(feedback);
+                    showTemporaryMessage('✅ Retroalimentación generada con IA exitosamente');
+                    closeFeedbackBank();
+                }
+                
+            } catch (error) {
+                console.error('Error generando retroalimentación con IA:', error);
+                alert('❌ Error al generar retroalimentación con IA.\n\nDetalles: ' + error.message + '\n\nVerifica que tu API Key sea válida.');
+            } finally {
+                // Ocultar indicador de carga
+                loadingIndicator.style.display = 'none';
+                btnGenerate.disabled = false;
+                btnGenerate.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // Construir prompt para la IA
+        function buildAIPrompt(studentName, level, levelInfo, percentage, points, totalTasks, oasAnalysis, focus, courseData) {
+            let prompt = `Eres un profesor experto de Lenguaje y Comunicación en Chile. Debes escribir una retroalimentación pedagógica profesional para un estudiante de educación media.
+
+INFORMACIÓN DEL ESTUDIANTE:
+- Nombre: ${studentName}
+- Curso: ${courseData.courseName}
+- Nivel de rendimiento: ${levelInfo.nivel} (${percentage}% de tareas completadas: ${points}/${totalTasks})
+- Rango de nota: ${levelInfo.nota}
+
+`;
+
+            // Agregar información de OAs si existe
+            if (oasAnalysis && (oasAnalysis.cumplidos.length > 0 || oasAnalysis.noCumplidos.length > 0)) {
+                prompt += `OBJETIVOS DE APRENDIZAJE (OAs) DEL CURRÍCULUM:\n\n`;
+                
+                if (oasAnalysis.cumplidos.length > 0) {
+                    prompt += `✅ OAs LOGRADOS:\n`;
+                    oasAnalysis.cumplidos.forEach(oa => {
+                        prompt += `- ${oa.codigo}: ${oa.texto.substring(0, 150)}... (Tareas: ${oa.tareas.join(', ')})\n`;
+                    });
+                    prompt += `\n`;
+                }
+                
+                if (oasAnalysis.noCumplidos.length > 0) {
+                    prompt += `⚠️ OAs POR LOGRAR:\n`;
+                    oasAnalysis.noCumplidos.forEach(oa => {
+                        prompt += `- ${oa.codigo}: ${oa.texto.substring(0, 150)}... (Tareas pendientes: ${oa.tareas.join(', ')})\n`;
+                    });
+                    prompt += `\n`;
+                }
+            }
+
+            // Agregar enfoque específico
+            const enfoques = {
+                'general': 'Escribe una retroalimentación integral que abarque todos los aspectos del desempeño.',
+                'oas': 'Enfócate específicamente en los Objetivos de Aprendizaje, mencionando explícitamente cuáles ha logrado y cuáles debe reforzar.',
+                'motivacional': 'Enfatiza los logros del estudiante, reconoce su esfuerzo y proyecta su potencial de manera motivadora.',
+                'estrategias': 'Proporciona estrategias y acciones concretas que el estudiante puede implementar para mejorar.',
+                'formativa': 'Usa un lenguaje descriptivo y orientador, evitando juicios y enfocándote en el proceso de aprendizaje.'
+            };
+
+            prompt += `ENFOQUE SOLICITADO: ${enfoques[focus]}\n\n`;
+
+            prompt += `INSTRUCCIONES:
+1. Escribe en segunda persona (tú/tu), dirigiéndote directamente al estudiante
+2. Usa un tono profesional pero cercano y motivador
+3. Menciona específicamente los OAs cuando sea relevante (usando los códigos como OA1, OA2, etc.)
+4. La retroalimentación debe tener entre 150-250 palabras
+5. Incluye aspectos logrados, áreas de mejora y sugerencias concretas
+6. Usa lenguaje técnico pedagógico apropiado para Chile (Bases Curriculares MINEDUC)
+7. Sé específico con las tareas mencionadas
+8. Termina con una frase motivacional o desafío
+
+NO USES:
+- Emojis excesivos (máximo 2-3 en toda la retroalimentación)
+- Lenguaje informal o coloquial
+- Frases genéricas sin sustento
+- Más de 250 palabras
+
+GENERA LA RETROALIMENTACIÓN AHORA:`;
+
+            return prompt;
+        }
+
+        // Llamar a la API de Gemini
+        async function callGeminiAPI(apiKey, prompt) {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.7,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
+            };
+            
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error?.message || 'Error en la API de Gemini');
+            }
+            
+            const data = await response.json();
+            
+            if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
+                return data.candidates[0].content.parts[0].text.trim();
+            } else {
+                throw new Error('Respuesta inválida de la API');
+            }
         }
     </script>
 

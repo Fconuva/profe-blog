@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Notas - Sistema de Evaluación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .student-row:hover {
+            background-color: #f3f4f6;
+        }
+        .editable {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .editable:hover {
+            background-color: #dbeafe;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Auth Guard -->
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="text-white hover:text-gray-200">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </a>
+                    <span class="text-2xl font-bold text-white">
+                        <i class="fas fa-clipboard-list mr-2"></i>Registro de Notas
+                    </span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="exportToExcel()" class="text-white hover:text-gray-200">
+                        <i class="fas fa-file-excel mr-1"></i>Excel
+                    </button>
+                    <button onclick="window.print()" class="text-white hover:text-gray-200">
+                        <i class="fas fa-print mr-1"></i>Imprimir
+                    </button>
+                    <button id="logout-btn" class="text-white hover:text-gray-200">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        
+        <!-- Tabs -->
+        <div class="mb-6 no-print">
+            <div class="border-b border-gray-200">
+                <nav class="-mb-px flex space-x-8">
+                    <button onclick="showTab('curso')" id="tab-curso" class="tab-button border-b-2 border-indigo-500 text-indigo-600 py-4 px-1 text-sm font-medium">
+                        <i class="fas fa-users mr-2"></i>Gestión del Curso
+                    </button>
+                    <button onclick="showTab('informes')" id="tab-informes" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                        <i class="fas fa-chart-bar mr-2"></i>Informes y Estadísticas
+                    </button>
+                    <button onclick="showTab('individual')" id="tab-individual" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                        <i class="fas fa-user-graduate mr-2"></i>Informes Individuales
+                    </button>
+                    <button onclick="showTab('config')" id="tab-config" class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 py-4 px-1 text-sm font-medium">
+                        <i class="fas fa-cog mr-2"></i>Configuración
+                    </button>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Tab: Gestión del Curso -->
+        <div id="content-curso" class="tab-content">
+            <!-- Info del Curso -->
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nombre del Curso</label>
+                        <input type="text" id="courseName" class="w-full px-3 py-2 border border-gray-300 rounded-lg" value="IV° Año A - 2025" onchange="saveCourseInfo()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Asignatura</label>
+                        <input type="text" id="subject" class="w-full px-3 py-2 border border-gray-300 rounded-lg" value="Lenguaje y Comunicación" onchange="saveCourseInfo()">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                        <input type="text" id="period" class="w-full px-3 py-2 border border-gray-300 rounded-lg" value="Segundo Semestre 2025" onchange="saveCourseInfo()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="bg-white rounded-lg shadow-md p-4 mb-6 no-print">
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="addStudent()" class="btn-action bg-green-500 hover:bg-green-600">
+                        <i class="fas fa-user-plus mr-2"></i>Agregar Estudiante
+                    </button>
+                    <button onclick="addTask()" class="btn-action bg-blue-500 hover:bg-blue-600">
+                        <i class="fas fa-plus mr-2"></i>Agregar Tarea
+                    </button>
+                    <button onclick="document.getElementById('importCSV').click()" class="btn-action bg-purple-500 hover:bg-purple-600">
+                        <i class="fas fa-file-import mr-2"></i>Importar CSV
+                    </button>
+                    <input type="file" id="importCSV" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
+                    <button onclick="saveData()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
+                        <i class="fas fa-save mr-2"></i>Guardar Cambios
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla de Notas -->
+            <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="gradesTable">
+                        <thead class="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">N°</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Apellido Paterno</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Apellido Materno</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium uppercase">Nombre</th>
+                                <th class="px-4 py-3 text-center text-xs font-medium uppercase no-print">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="studentsTableBody" class="bg-white divide-y divide-gray-200">
+                            <!-- Generado dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Informes y Estadísticas -->
+        <div id="content-informes" class="tab-content hidden">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Estadísticas Generales -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-pie mr-2 text-indigo-500"></i>Estadísticas Generales
+                    </h3>
+                    <div id="generalStats" class="space-y-3">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- Distribución de Notas -->
+                <div class="bg-white rounded-lg shadow-md p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-chart-bar mr-2 text-indigo-500"></i>Distribución de Notas
+                    </h3>
+                    <canvas id="gradeDistributionChart"></canvas>
+                </div>
+
+                <!-- Progreso por Tarea -->
+                <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">
+                        <i class="fas fa-tasks mr-2 text-indigo-500"></i>Progreso por Tarea
+                    </h3>
+                    <canvas id="taskProgressChart"></canvas>
+                </div>
+
+                <!-- Informe Completo del Curso -->
+                <div class="bg-white rounded-lg shadow-md p-6 lg:col-span-2">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-bold text-gray-800">
+                            <i class="fas fa-file-alt mr-2 text-indigo-500"></i>Informe Completo del Curso
+                        </h3>
+                        <button onclick="generateCourseReport()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
+                            <i class="fas fa-file-pdf mr-2"></i>Generar PDF
+                        </button>
+                    </div>
+                    <div id="courseReportContent" class="text-gray-700">
+                        <!-- Generado dinámicamente -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Informes Individuales -->
+        <div id="content-individual" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-user-graduate mr-2 text-indigo-500"></i>Seleccionar Estudiante
+                </h3>
+                <select id="studentSelect" class="w-full px-4 py-2 border border-gray-300 rounded-lg" onchange="generateIndividualReport()">
+                    <option value="">-- Seleccione un estudiante --</option>
+                </select>
+            </div>
+
+            <div id="individualReportContent" class="bg-white rounded-lg shadow-md p-6 hidden">
+                <!-- Generado dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Tab: Configuración -->
+        <div id="content-config" class="tab-content hidden">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-cog mr-2 text-indigo-500"></i>Configuración del Sistema
+                </h3>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Escala de Notas</label>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs text-gray-600">Nota Mínima</label>
+                                <input type="number" id="minGrade" value="1.0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="text-xs text-gray-600">Nota Máxima</label>
+                                <input type="number" id="maxGrade" value="7.0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Porcentaje de Aprobación</label>
+                        <input type="number" id="passingGrade" value="4.0" step="0.1" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="saveConfig()" class="btn-action bg-green-500 hover:bg-green-600">
+                            <i class="fas fa-save mr-2"></i>Guardar Configuración
+                        </button>
+                        <button onclick="resetData()" class="btn-action bg-red-500 hover:bg-red-600">
+                            <i class="fas fa-trash mr-2"></i>Borrar Todos los Datos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <style>
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            font-weight: 500;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+        }
+        .tab-button {
+            border-bottom-width: 2px;
+        }
+    </style>
+
+    <script>
+        // Estructura de datos
+        let courseData = {
+            courseName: "IV° Año A - 2025",
+            subject: "Lenguaje y Comunicación",
+            period: "Segundo Semestre 2025",
+            students: [],
+            tasks: [],
+            config: {
+                minGrade: 1.0,
+                maxGrade: 7.0,
+                passingGrade: 4.0
+            }
+        };
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+            renderTable();
+            populateStudentSelect();
+            
+            document.getElementById('logout-btn').addEventListener('click', function() {
+                sessionStorage.removeItem('isLoggedIn');
+                window.location.href = 'index.html';
+            });
+        });
+
+        // Gestión de Tabs
+        function showTab(tab) {
+            // Ocultar todos los contenidos
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            // Mostrar el seleccionado
+            document.getElementById('content-' + tab).classList.remove('hidden');
+            
+            // Actualizar estilos de tabs
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('border-indigo-500', 'text-indigo-600');
+                btn.classList.add('border-transparent', 'text-gray-500');
+            });
+            document.getElementById('tab-' + tab).classList.add('border-indigo-500', 'text-indigo-600');
+            document.getElementById('tab-' + tab).classList.remove('border-transparent', 'text-gray-500');
+
+            // Actualizar contenido si es necesario
+            if (tab === 'informes') {
+                renderStatistics();
+            } else if (tab === 'individual') {
+                populateStudentSelect();
+            }
+        }
+
+        // Guardar/Cargar datos en localStorage
+        function saveData() {
+            localStorage.setItem('courseData', JSON.stringify(courseData));
+            alert('✅ Datos guardados correctamente');
+        }
+
+        function loadData() {
+            const saved = localStorage.getItem('courseData');
+            if (saved) {
+                courseData = JSON.parse(saved);
+                document.getElementById('courseName').value = courseData.courseName;
+                document.getElementById('subject').value = courseData.subject;
+                document.getElementById('period').value = courseData.period;
+            } else {
+                // Cargar datos de ejemplo del CSV
+                loadSampleData();
+            }
+        }
+
+        function saveCourseInfo() {
+            courseData.courseName = document.getElementById('courseName').value;
+            courseData.subject = document.getElementById('subject').value;
+            courseData.period = document.getElementById('period').value;
+            saveData();
+        }
+
+        // Cargar datos de ejemplo
+        function loadSampleData() {
+            // Por ahora vacío - se llenará al importar CSV o agregar manualmente
+            courseData.students = [];
+            courseData.tasks = [
+                {id: 1, name: 'Guía 1', date: '27-05-2025'},
+                {id: 2, name: 'Trabajo Grupal', date: '03-06-2025'},
+                {id: 3, name: 'Grupal 2', date: '10-06-2025'},
+                {id: 4, name: 'S24 Ultra', date: '14-07-2025'},
+                {id: 5, name: 'Solo S24', date: '21-07-2025'},
+                {id: 6, name: 'Curriculum', date: ''},
+                {id: 7, name: 'Correo', date: ''},
+                {id: 8, name: 'Informe', date: ''}
+            ];
+        }
+
+        // Agregar estudiante
+        function addStudent() {
+            const name = prompt('Nombre del estudiante:');
+            const lastName1 = prompt('Apellido paterno:');
+            const lastName2 = prompt('Apellido materno:');
+            
+            if (name && lastName1 && lastName2) {
+                const student = {
+                    id: Date.now(),
+                    number: courseData.students.length + 1,
+                    lastName1: lastName1.toUpperCase(),
+                    lastName2: lastName2.toUpperCase(),
+                    name: name.toUpperCase(),
+                    grades: Array(courseData.tasks.length).fill(null),
+                    notes: ''
+                };
+                courseData.students.push(student);
+                renderTable();
+                saveData();
+            }
+        }
+
+        // Agregar tarea
+        function addTask() {
+            const name = prompt('Nombre de la tarea:');
+            const date = prompt('Fecha (DD-MM-YYYY):');
+            
+            if (name) {
+                const task = {
+                    id: Date.now(),
+                    name: name,
+                    date: date || ''
+                };
+                courseData.tasks.push(task);
+                
+                // Agregar columna de nota a cada estudiante
+                courseData.students.forEach(student => {
+                    student.grades.push(null);
+                });
+                
+                renderTable();
+                saveData();
+            }
+        }
+
+        // Renderizar tabla
+        function renderTable() {
+            const thead = document.querySelector('#gradesTable thead tr');
+            const tbody = document.getElementById('studentsTableBody');
+            
+            // Limpiar y regenerar encabezados de tareas
+            while (thead.children.length > 5) {
+                thead.removeChild(thead.lastChild);
+            }
+            
+            courseData.tasks.forEach((task, index) => {
+                const th = document.createElement('th');
+                th.className = 'px-2 py-3 text-center text-xs font-medium uppercase';
+                th.innerHTML = `
+                    <div>${task.name}</div>
+                    <div class="text-[10px] font-normal">${task.date}</div>
+                `;
+                thead.insertBefore(th, thead.children[thead.children.length - 1]);
+            });
+            
+            // Agregar columnas de Puntos y Nota
+            const thPoints = document.createElement('th');
+            thPoints.className = 'px-2 py-3 text-center text-xs font-medium uppercase bg-indigo-600';
+            thPoints.textContent = 'PUNTOS';
+            thead.insertBefore(thPoints, thead.children[thead.children.length - 1]);
+            
+            const thGrade = document.createElement('th');
+            thGrade.className = 'px-2 py-3 text-center text-xs font-medium uppercase bg-purple-600';
+            thGrade.textContent = 'NOTA';
+            thead.insertBefore(thGrade, thead.children[thead.children.length - 1]);
+            
+            // Renderizar estudiantes
+            tbody.innerHTML = '';
+            courseData.students.forEach((student, studentIndex) => {
+                const tr = document.createElement('tr');
+                tr.className = 'student-row';
+                
+                let totalPoints = 0;
+                let html = `
+                    <td class="px-4 py-3 text-sm">${student.number}</td>
+                    <td class="px-4 py-3 text-sm font-medium">${student.lastName1}</td>
+                    <td class="px-4 py-3 text-sm">${student.lastName2}</td>
+                    <td class="px-4 py-3 text-sm">${student.name}</td>
+                `;
+                
+                // Columnas de tareas
+                student.grades.forEach((grade, gradeIndex) => {
+                    const isChecked = grade === true || grade === 1;
+                    if (isChecked) totalPoints++;
+                    
+                    html += `
+                        <td class="px-2 py-3 text-center">
+                            <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                                   onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.checked)"
+                                   class="w-4 h-4 text-indigo-600 rounded">
+                        </td>
+                    `;
+                });
+                
+                // Calcular nota
+                const maxPoints = courseData.tasks.length;
+                const finalGrade = calculateGrade(totalPoints, maxPoints);
+                
+                html += `
+                    <td class="px-2 py-3 text-center font-bold text-indigo-600">${totalPoints}</td>
+                    <td class="px-2 py-3 text-center font-bold text-lg ${finalGrade >= 4.0 ? 'text-green-600' : 'text-red-600'}">${finalGrade.toFixed(1)}</td>
+                    <td class="px-4 py-3 text-center no-print">
+                        <button onclick="deleteStudent(${studentIndex})" class="text-red-600 hover:text-red-800">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                `;
+                
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Calcular nota
+        function calculateGrade(points, maxPoints) {
+            if (maxPoints === 0) return 1.0;
+            const percentage = points / maxPoints;
+            return 1.0 + (percentage * 6.0);
+        }
+
+        // Actualizar nota
+        function updateGrade(studentIndex, gradeIndex, checked) {
+            courseData.students[studentIndex].grades[gradeIndex] = checked;
+            renderTable();
+            saveData();
+        }
+
+        // Eliminar estudiante
+        function deleteStudent(index) {
+            if (confirm('¿Está seguro de eliminar este estudiante?')) {
+                courseData.students.splice(index, 1);
+                renderTable();
+                saveData();
+            }
+        }
+
+        // Continúa en la parte 2...
+        
+    </script>
+
+    <script>
+        // Parte 2 del JavaScript - Importación y Exportación
+        
+        // Importar desde CSV
+        function importFromCSV(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const lines = text.split('\n');
+                
+                // Limpiar datos actuales
+                courseData.students = [];
+                
+                // Procesar líneas (empezar desde línea 3, donde están los datos)
+                for (let i = 2; i < lines.length; i++) {
+                    const line = lines[i];
+                    if (!line.trim()) continue;
+                    
+                    const columns = line.split(';');
+                    if (columns.length < 4) continue;
+                    
+                    const number = parseInt(columns[0]);
+                    if (isNaN(number)) continue;
+                    
+                    const student = {
+                        id: Date.now() + i,
+                        number: number,
+                        lastName1: columns[1]?.trim() || '',
+                        lastName2: columns[2]?.trim() || '',
+                        name: columns[3]?.trim() || '',
+                        grades: [],
+                        notes: ''
+                    };
+                    
+                    // Procesar notas (columnas 4 a 11 son las 8 tareas)
+                    for (let j = 4; j < 12; j++) {
+                        const value = columns[j]?.trim().toUpperCase();
+                        student.grades.push(value === 'VERDADERO' || value === 'TRUE' || value === '1');
+                    }
+                    
+                    courseData.students.push(student);
+                }
+                
+                alert(`✅ Se importaron ${courseData.students.length} estudiantes`);
+                renderTable();
+                saveData();
+            };
+            reader.readAsText(file);
+        }
+
+        // Exportar a Excel
+        function exportToExcel() {
+            const wb = XLSX.utils.book_new();
+            
+            // Preparar datos
+            const data = [
+                ['Curso:', courseData.courseName],
+                ['Asignatura:', courseData.subject],
+                ['Período:', courseData.period],
+                [],
+                ['N°', 'Apellido Paterno', 'Apellido Materno', 'Nombre', ...courseData.tasks.map(t => t.name), 'Puntos', 'Nota']
+            ];
+            
+            courseData.students.forEach(student => {
+                const totalPoints = student.grades.filter(g => g).length;
+                const finalGrade = calculateGrade(totalPoints, courseData.tasks.length);
+                
+                data.push([
+                    student.number,
+                    student.lastName1,
+                    student.lastName2,
+                    student.name,
+                    ...student.grades.map(g => g ? '✓' : ''),
+                    totalPoints,
+                    finalGrade.toFixed(1)
+                ]);
+            });
+            
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, 'Notas');
+            
+            const filename = `Notas_${courseData.courseName}_${new Date().toISOString().split('T')[0]}.xlsx`;
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Renderizar estadísticas
+        function renderStatistics() {
+            const statsDiv = document.getElementById('generalStats');
+            const students = courseData.students;
+            
+            if (students.length === 0) {
+                statsDiv.innerHTML = '<p class="text-gray-500">No hay datos disponibles</p>';
+                return;
+            }
+            
+            // Calcular estadísticas
+            const grades = students.map(s => {
+                const points = s.grades.filter(g => g).length;
+                return calculateGrade(points, courseData.tasks.length);
+            });
+            
+            const avgGrade = grades.reduce((a, b) => a + b, 0) / grades.length;
+            const maxGrade = Math.max(...grades);
+            const minGrade = Math.min(...grades);
+            const passing = grades.filter(g => g >= 4.0).length;
+            const failing = grades.filter(g => g < 4.0).length;
+            
+            statsDiv.innerHTML = `
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Total Estudiantes</div>
+                    <div class="text-2xl font-bold text-indigo-600">${students.length}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Promedio del Curso</div>
+                    <div class="text-2xl font-bold text-blue-600">${avgGrade.toFixed(2)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Nota Máxima</div>
+                    <div class="text-2xl font-bold text-green-600">${maxGrade.toFixed(1)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Nota Mínima</div>
+                    <div class="text-2xl font-bold text-red-600">${minGrade.toFixed(1)}</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Aprobados</div>
+                    <div class="text-2xl font-bold text-green-600">${passing} (${(passing/students.length*100).toFixed(0)}%)</div>
+                </div>
+                <div class="stat-item">
+                    <div class="text-sm text-gray-600">Reprobados</div>
+                    <div class="text-2xl font-bold text-red-600">${failing} (${(failing/students.length*100).toFixed(0)}%)</div>
+                </div>
+            `;
+            
+            renderCharts(grades);
+        }
+
+        // Renderizar gráficos
+        function renderCharts(grades) {
+            // Distribución de notas
+            const ctx1 = document.getElementById('gradeDistributionChart');
+            if (ctx1.chart) ctx1.chart.destroy();
+            
+            const distribution = {
+                '1.0-2.9': grades.filter(g => g < 3.0).length,
+                '3.0-3.9': grades.filter(g => g >= 3.0 && g < 4.0).length,
+                '4.0-4.9': grades.filter(g => g >= 4.0 && g < 5.0).length,
+                '5.0-5.9': grades.filter(g => g >= 5.0 && g < 6.0).length,
+                '6.0-7.0': grades.filter(g => g >= 6.0).length
+            };
+            
+            ctx1.chart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(distribution),
+                    datasets: [{
+                        label: 'Cantidad de Estudiantes',
+                        data: Object.values(distribution),
+                        backgroundColor: [
+                            '#ef4444',
+                            '#f59e0b',
+                            '#3b82f6',
+                            '#10b981',
+                            '#8b5cf6'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+            
+            // Progreso por tarea
+            const ctx2 = document.getElementById('taskProgressChart');
+            if (ctx2.chart) ctx2.chart.destroy();
+            
+            const taskCompletion = courseData.tasks.map((task, index) => {
+                const completed = courseData.students.filter(s => s.grades[index]).length;
+                return (completed / courseData.students.length * 100).toFixed(1);
+            });
+            
+            ctx2.chart = new Chart(ctx2, {
+                type: 'line',
+                data: {
+                    labels: courseData.tasks.map(t => t.name),
+                    datasets: [{
+                        label: '% de Cumplimiento',
+                        data: taskCompletion,
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // Generar informe del curso
+        function generateCourseReport() {
+            const reportDiv = document.getElementById('courseReportContent');
+            const students = courseData.students;
+            
+            const grades = students.map(s => {
+                const points = s.grades.filter(g => g).length;
+                return calculateGrade(points, courseData.tasks.length);
+            });
+            
+            const avgGrade = grades.reduce((a, b) => a + b, 0) / grades.length;
+            const passing = grades.filter(g => g >= 4.0).length;
+            
+            reportDiv.innerHTML = `
+                <div class="space-y-4">
+                    <h4 class="font-bold text-lg">Informe de Rendimiento - ${courseData.courseName}</h4>
+                    <p><strong>Asignatura:</strong> ${courseData.subject}</p>
+                    <p><strong>Período:</strong> ${courseData.period}</p>
+                    <p><strong>Fecha:</strong> ${new Date().toLocaleDateString('es-CL')}</p>
+                    
+                    <h5 class="font-bold mt-6">Resumen General:</h5>
+                    <ul class="list-disc ml-6 space-y-2">
+                        <li>Total de estudiantes: ${students.length}</li>
+                        <li>Promedio del curso: ${avgGrade.toFixed(2)}</li>
+                        <li>Tasa de aprobación: ${(passing/students.length*100).toFixed(1)}%</li>
+                        <li>Estudiantes aprobados: ${passing}</li>
+                        <li>Estudiantes reprobados: ${students.length - passing}</li>
+                    </ul>
+                    
+                    <h5 class="font-bold mt-6">Análisis por Tarea:</h5>
+                    <ul class="list-disc ml-6 space-y-2">
+                        ${courseData.tasks.map((task, index) => {
+                            const completed = students.filter(s => s.grades[index]).length;
+                            const percentage = (completed / students.length * 100).toFixed(1);
+                            return `<li>${task.name}: ${completed}/${students.length} (${percentage}%)</li>`;
+                        }).join('')}
+                    </ul>
+                    
+                    <h5 class="font-bold mt-6">Recomendaciones:</h5>
+                    <ul class="list-disc ml-6 space-y-2">
+                        ${avgGrade < 4.5 ? '<li class="text-red-600">⚠️ El promedio del curso está bajo. Se recomienda reforzar contenidos.</li>' : ''}
+                        ${passing < students.length * 0.7 ? '<li class="text-orange-600">⚠️ Menos del 70% aprobado. Considerar estrategias de apoyo.</li>' : ''}
+                        ${avgGrade >= 5.5 ? '<li class="text-green-600">✅ Excelente rendimiento general del curso.</li>' : ''}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Poblar selector de estudiantes
+        function populateStudentSelect() {
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">-- Seleccione un estudiante --</option>';
+            
+            courseData.students.forEach((student, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = `${student.lastName1} ${student.lastName2}, ${student.name}`;
+                select.appendChild(option);
+            });
+        }
+
+        // Generar informe individual
+        function generateIndividualReport() {
+            const select = document.getElementById('studentSelect');
+            const index = select.value;
+            
+            if (index === '') {
+                document.getElementById('individualReportContent').classList.add('hidden');
+                return;
+            }
+            
+            const student = courseData.students[index];
+            const points = student.grades.filter(g => g).length;
+            const finalGrade = calculateGrade(points, courseData.tasks.length);
+            
+            const reportDiv = document.getElementById('individualReportContent');
+            reportDiv.classList.remove('hidden');
+            
+            const completedTasks = [];
+            const pendingTasks = [];
+            
+            student.grades.forEach((grade, i) => {
+                if (grade) {
+                    completedTasks.push(courseData.tasks[i].name);
+                } else {
+                    pendingTasks.push(courseData.tasks[i].name);
+                }
+            });
+            
+            reportDiv.innerHTML = `
+                <div class="space-y-6">
+                    <div class="border-b pb-4">
+                        <h3 class="text-2xl font-bold text-gray-800">${student.name} ${student.lastName1} ${student.lastName2}</h3>
+                        <p class="text-gray-600">Curso: ${courseData.courseName} - ${courseData.subject}</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-indigo-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Nota Final</div>
+                            <div class="text-3xl font-bold ${finalGrade >= 4.0 ? 'text-green-600' : 'text-red-600'}">${finalGrade.toFixed(1)}</div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <div class="text-sm text-gray-600">Tareas Completadas</div>
+                            <div class="text-3xl font-bold text-blue-600">${points}/${courseData.tasks.length}</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 text-green-700">✅ Tareas Completadas:</h4>
+                        <ul class="list-disc ml-6 space-y-1">
+                            ${completedTasks.map(task => `<li class="text-green-600">${task}</li>`).join('')}
+                        </ul>
+                    </div>
+                    
+                    ${pendingTasks.length > 0 ? `
+                    <div>
+                        <h4 class="font-bold text-lg mb-3 text-orange-700">⏳ Tareas Pendientes:</h4>
+                        <ul class="list-disc ml-6 space-y-1">
+                            ${pendingTasks.map(task => `<li class="text-orange-600">${task}</li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : '<div class="bg-green-50 p-4 rounded-lg text-green-700 font-semibold">🎉 ¡Felicitaciones! Todas las tareas completadas.</div>'}
+                    
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-lg mb-3">📝 Retroalimentación:</h4>
+                        <textarea id="studentNotes_${index}" class="w-full h-32 p-3 border border-blue-200 rounded-lg" 
+                                  placeholder="Escriba aquí la retroalimentación personalizada para el estudiante..."
+                                  onchange="saveStudentNotes(${index}, this.value)">${student.notes || ''}</textarea>
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="window.print()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
+                            <i class="fas fa-print mr-2"></i>Imprimir Informe
+                        </button>
+                        <button onclick="downloadIndividualReport(${index})" class="btn-action bg-green-500 hover:bg-green-600">
+                            <i class="fas fa-download mr-2"></i>Descargar PDF
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Guardar notas del estudiante
+        function saveStudentNotes(index, notes) {
+            courseData.students[index].notes = notes;
+            saveData();
+        }
+
+        // Descargar informe individual (simulado)
+        function downloadIndividualReport(index) {
+            alert('Función de descarga PDF en desarrollo. Por ahora use el botón Imprimir y seleccione "Guardar como PDF".');
+        }
+
+        // Guardar configuración
+        function saveConfig() {
+            courseData.config = {
+                minGrade: parseFloat(document.getElementById('minGrade').value),
+                maxGrade: parseFloat(document.getElementById('maxGrade').value),
+                passingGrade: parseFloat(document.getElementById('passingGrade').value)
+            };
+            saveData();
+            alert('✅ Configuración guardada');
+        }
+
+        // Resetear datos
+        function resetData() {
+            if (confirm('⚠️ ¿Está COMPLETAMENTE SEGURO de borrar TODOS los datos? Esta acción NO se puede deshacer.')) {
+                if (confirm('Esta es su última oportunidad. ¿Confirma que desea borrar todo?')) {
+                    localStorage.removeItem('courseData');
+                    location.reload();
+                }
+            }
+        }
+
+        // Estilos adicionales
+        const style = document.createElement('style');
+        style.textContent = `
+            .stat-item {
+                padding: 1rem;
+                background-color: #f9fafb;
+                border-radius: 0.5rem;
+                border-left: 4px solid #6366f1;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+
+</body>
+</html>

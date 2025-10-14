@@ -2011,22 +2011,40 @@
                         <label class="block text-sm font-medium text-gray-700 mb-2">
                             <i class="fas fa-key mr-1"></i>API Key de Gemini AI
                         </label>
-                        <div class="flex gap-2">
-                            <input type="password" 
-                                   id="geminiApiKey" 
-                                   placeholder="Ingresa tu API Key de Google Gemini" 
-                                   class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                   value="${localStorage.getItem('geminiApiKey') || ''}">
-                            <button onclick="saveGeminiApiKey()" 
-                                    class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
-                                <i class="fas fa-save"></i> Guardar
-                            </button>
+                        
+                        <!-- Mensaje informativo: API Key ya configurada -->
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-3 mb-2">
+                            <p class="text-sm text-green-800">
+                                <i class="fas fa-check-circle mr-1"></i>
+                                <strong>API Key ya configurada</strong> - La IA está lista para usar
+                            </p>
+                            <p class="text-xs text-green-600 mt-1">
+                                Tu API Key personal está integrada en el sistema. No necesitas configurar nada más.
+                            </p>
                         </div>
-                        <p class="text-xs text-gray-500 mt-1">
-                            <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline">
-                                <i class="fas fa-external-link-alt mr-1"></i>Obtén tu API Key gratis aquí
-                            </a>
-                        </p>
+                        
+                        <!-- Campo opcional para cambiar la API Key (colapsado por defecto) -->
+                        <details class="text-sm">
+                            <summary class="cursor-pointer text-gray-600 hover:text-gray-800 mb-2">
+                                <i class="fas fa-cog mr-1"></i>Cambiar API Key (opcional)
+                            </summary>
+                            <div class="flex gap-2 mt-2">
+                                <input type="password" 
+                                       id="geminiApiKey" 
+                                       placeholder="Solo si quieres usar otra API Key diferente" 
+                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                                       value="${localStorage.getItem('geminiApiKey') || ''}">
+                                <button onclick="saveGeminiApiKey()" 
+                                        class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
+                                    <i class="fas fa-save"></i> Guardar
+                                </button>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">
+                                <a href="https://makersuite.google.com/app/apikey" target="_blank" class="text-blue-600 hover:underline">
+                                    <i class="fas fa-external-link-alt mr-1"></i>Obtén otra API Key aquí
+                                </a>
+                            </p>
+                        </details>
                     </div>
                     
                     <div class="mb-3">
@@ -2148,7 +2166,10 @@
 
         // --- INTEGRACIÓN CON IA (GEMINI) ---
 
-        // Guardar API Key de Gemini
+        // 🔑 API Key predeterminada (hardcodeada) - tu key personal siempre disponible
+        const DEFAULT_GEMINI_API_KEY = 'AIzaSyDl3Gp320sAbpEeOPf217ryya-4E0QT984';
+
+        // Guardar API Key de Gemini (opcional, solo si quieres usar otra diferente)
         function saveGeminiApiKey() {
             const apiKey = document.getElementById('geminiApiKey').value.trim();
             if (apiKey) {
@@ -2161,7 +2182,8 @@
 
         // Generar retroalimentación con IA (Gemini)
         async function generateAIFeedback(level, studentName, percentage, points, totalTasks) {
-            const apiKey = localStorage.getItem('geminiApiKey');
+            // Intenta obtener key personalizada, si no existe usa la predeterminada
+            const apiKey = localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
             
             if (!apiKey) {
                 alert('⚠️ Por favor configura tu API Key de Gemini AI primero.\n\nPuedes obtenerla gratis en: https://makersuite.google.com/app/apikey');

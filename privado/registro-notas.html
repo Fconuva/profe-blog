@@ -1580,25 +1580,72 @@
                 return [];
             }
             
+            // Validar que students sea un array
+            if (!students || !Array.isArray(students) || students.length === 0) {
+                console.warn('No hay estudiantes para analizar tareas');
+                return [];
+            }
+            
             return courseData.tasks.map((task, index) => {
-                const completed = students.filter(s => s.grades && s.grades[index]).length;
-                const pending = students.length - completed;
-                const percentage = students.length > 0 ? (completed / students.length * 100) : 0;
-                
-                let difficulty = 'Media';
-                if (percentage >= 80) difficulty = 'Fácil';
-                else if (percentage < 50) difficulty = 'Difícil';
-                
-                return {
-                    name: task.name || `Tarea ${index + 1}`,
-                    date: task.date || 'Sin fecha',
-                    completed: completed,
-                    pending: pending,
-                    total: students.length,
-                    percentage: percentage,
-                    difficulty: difficulty,
-                    oas: task.oas || []
-                };
+                try {
+                    // Validar que task existe
+                    if (!task) {
+                        console.warn(`Tarea en índice ${index} es null/undefined`);
+                        return {
+                            name: `Tarea ${index + 1}`,
+                            date: 'Sin fecha',
+                            completed: 0,
+                            pending: students.length,
+                            total: students.length,
+                            percentage: 0,
+                            difficulty: 'Media',
+                            oas: []
+                        };
+                    }
+                    
+                    // Contar completadas con validación robusta
+                    const completed = students.filter(s => {
+                        // Verificar que el estudiante y sus grades existen
+                        if (!s || !s.grades || !Array.isArray(s.grades)) return false;
+                        // Verificar que el índice existe en el array
+                        if (index >= s.grades.length) return false;
+                        // Verificar que la calificación es truthy
+                        return s.grades[index];
+                    }).length;
+                    
+                    const pending = students.length - completed;
+                    const percentage = students.length > 0 ? (completed / students.length * 100) : 0;
+                    
+                    let difficulty = 'Media';
+                    if (percentage >= 80) difficulty = 'Fácil';
+                    else if (percentage < 50) difficulty = 'Difícil';
+                    
+                    // Asegurar que oas sea un array
+                    const taskOas = task.oas && Array.isArray(task.oas) ? task.oas : [];
+                    
+                    return {
+                        name: task.name || `Tarea ${index + 1}`,
+                        date: task.date || 'Sin fecha',
+                        completed: completed,
+                        pending: pending,
+                        total: students.length,
+                        percentage: percentage,
+                        difficulty: difficulty,
+                        oas: taskOas
+                    };
+                } catch (taskError) {
+                    console.error(`Error analizando tarea ${index}:`, taskError);
+                    return {
+                        name: `Tarea ${index + 1}`,
+                        date: 'Sin fecha',
+                        completed: 0,
+                        pending: students.length,
+                        total: students.length,
+                        percentage: 0,
+                        difficulty: 'Media',
+                        oas: []
+                    };
+                }
             });
         }
         
@@ -2078,6 +2125,18 @@
         
         // Tabla de análisis por tareas
         function buildTasksAnalysisTable(taskAnalysis) {
+            // Validar que taskAnalysis sea un array
+            if (!taskAnalysis || !Array.isArray(taskAnalysis) || taskAnalysis.length === 0) {
+                return `
+                    <div class="bg-yellow-50 p-6 rounded-lg border-l-4 border-yellow-400">
+                        <p class="text-yellow-800">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            No hay tareas para analizar en este curso.
+                        </p>
+                    </div>
+                `;
+            }
+            
             return `
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h4 class="text-xl font-bold mb-4 flex items-center">
@@ -2132,7 +2191,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-700">
-                                                ${task.oas.length > 0 ? task.oas.join(', ') : '<span class="text-gray-400 italic">Sin OAs</span>'}
+                                                ${task.oas && Array.isArray(task.oas) && task.oas.length > 0 ? task.oas.join(', ') : '<span class="text-gray-400 italic">Sin OAs</span>'}
                                             </td>
                                         </tr>
                                     `;

@@ -1296,7 +1296,13 @@
                     ` : '<div class="bg-green-50 p-4 rounded-lg text-green-700 font-semibold">🎉 ¡Felicitaciones! Todas las tareas completadas.</div>'}
                     
                     <div class="bg-blue-50 p-4 rounded-lg">
-                        <h4 class="font-bold text-lg mb-3">📝 Retroalimentación:</h4>
+                        <div class="flex justify-between items-center mb-3">
+                            <h4 class="font-bold text-lg">📝 Retroalimentación:</h4>
+                            <button onclick="openFeedbackBank(${index}, ${finalGrade}, ${points}, ${courseData.tasks.length})" 
+                                    class="text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-md">
+                                <i class="fas fa-lightbulb mr-2"></i>Banco de Retroalimentaciones
+                            </button>
+                        </div>
                         <textarea id="studentNotes_${index}" class="w-full h-32 p-3 border border-blue-200 rounded-lg" 
                                   placeholder="Escriba aquí la retroalimentación personalizada para el estudiante..."
                                   onchange="saveStudentNotes(${index}, this.value)">${student.notes || ''}</textarea>
@@ -1367,6 +1373,7 @@
         window.onclick = function(event) {
             const editModal = document.getElementById('editStudentModal');
             const taskModal = document.getElementById('addTaskModal');
+            const feedbackModal = document.getElementById('feedbackBankModal');
             
             if (event.target == editModal) {
                 editModal.style.display = 'none';
@@ -1374,8 +1381,387 @@
             if (event.target == taskModal) {
                 taskModal.style.display = 'none';
             }
+            if (event.target == feedbackModal) {
+                feedbackModal.style.display = 'none';
+            }
+        }
+
+        // --- BANCO DE RETROALIMENTACIONES ---
+        let feedbackData = null;
+        let currentStudentIndexForFeedback = null;
+
+        // Cargar banco de retroalimentaciones
+        async function loadFeedbackBank() {
+            if (feedbackData) return feedbackData;
+            
+            try {
+                const response = await fetch('banco-retroalimentaciones.json');
+                feedbackData = await response.json();
+                return feedbackData;
+            } catch (error) {
+                console.error('Error cargando banco de retroalimentaciones:', error);
+                alert('Error al cargar el banco de retroalimentaciones');
+                return null;
+            }
+        }
+
+        // Determinar nivel de rendimiento según porcentaje
+        function determinePerformanceLevel(percentage) {
+            if (percentage >= 90) return 'excelente';
+            if (percentage >= 80) return 'muy_bueno';
+            if (percentage >= 70) return 'bueno';
+            if (percentage >= 60) return 'suficiente';
+            if (percentage >= 40) return 'insuficiente';
+            return 'deficiente';
+        }
+
+        // Abrir modal del banco de retroalimentaciones
+        async function openFeedbackBank(studentIndex, finalGrade, points, totalTasks) {
+            currentStudentIndexForFeedback = studentIndex;
+            const student = courseData.students[studentIndex];
+            const percentage = (points / totalTasks * 100).toFixed(0);
+            const level = determinePerformanceLevel(percentage);
+            
+            const bank = await loadFeedbackBank();
+            if (!bank) return;
+            
+            const modal = document.getElementById('feedbackBankModal');
+            const content = document.getElementById('feedbackBankContent');
+            
+            // Obtener retroalimentaciones del nivel correspondiente
+            const feedbacks = bank.retroalimentaciones[level];
+            const levelInfo = bank.rangos_rendimiento[level];
+            
+            // Color según nivel
+            const levelColors = {
+                'excelente': 'green',
+                'muy_bueno': 'blue',
+                'bueno': 'indigo',
+                'suficiente': 'yellow',
+                'insuficiente': 'orange',
+                'deficiente': 'red'
+            };
+            const color = levelColors[level];
+            
+            content.innerHTML = buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks);
+            modal.style.display = 'block';
+        }
+        
+        function buildFeedbackModalContent(student, finalGrade, percentage, level, levelInfo, feedbacks, color, points, totalTasks) {
+            let html = `<div class="bg-white rounded-lg shadow-xl max-w-5xl mx-auto my-8">`;
+            html += buildModalHeader(student, finalGrade, percentage, levelInfo, color);
+            html += `<div class="p-6 max-h-[70vh] overflow-y-auto">`;
+            html += buildGeneralFeedbackSection(feedbacks.generales, student.name, color);
+            html += buildSpecificFeedbackSection(feedbacks.especificas, color);
+            html += buildSuggestionsSection(feedbacks.sugerencias);
+            html += buildStrategiesSection(feedbacks.estrategias);
+            html += buildImprovementPlanSection(feedbacks.plan_mejora);
+            html += buildRecoveryPlanSection(feedbacks.plan_recuperacion);
+            html += buildChallengesSection(feedbacks.desafios, color);
+            html += buildQuickGeneratorSection(level, student.name, percentage, points, totalTasks);
+            html += `</div>`;
+            html += buildModalFooter();
+            html += `</div>`;
+            return html;
+        }
+        
+        function buildModalHeader(student, finalGrade, percentage, levelInfo, color) {
+            return `
+                <div class="bg-gradient-to-r from-${color}-500 to-${color}-600 text-white px-6 py-4 rounded-t-lg">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-2xl font-bold">
+                            <i class="fas fa-lightbulb mr-2"></i>Banco de Retroalimentaciones
+                        </h3>
+                        <button onclick="closeFeedbackBank()" class="text-white hover:text-gray-200">
+                            <i class="fas fa-times text-2xl"></i>
+                        </button>
+                    </div>
+                    <p class="mt-2 text-${color}-50">
+                        ${student.name} ${student.lastName1} - Nota: ${finalGrade.toFixed(1)} (${percentage}%) - 
+                        Nivel: <strong>${levelInfo.nivel}</strong>
+                    </p>
+                </div>
+            `;
+        }
+        
+        function buildGeneralFeedbackSection(generales, studentName, color) {
+            if (!generales || generales.length === 0) return '';
+            return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-comment-dots text-${color}-500 mr-2"></i>
+                        Retroalimentaciones Generales
+                    </h4>
+                    <div class="grid gap-3">
+                        ${generales.map(fb => buildFeedbackCard(fb, studentName, color)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildFeedbackCard(text, studentName, color) {
+            const displayText = text.replace('{nombre}', `<strong>${studentName}</strong>`);
+            const insertText = text.replace('{nombre}', studentName);
+            return `
+                <div class="bg-${color}-50 border-l-4 border-${color}-500 p-4 rounded hover:bg-${color}-100 cursor-pointer transition-all"
+                     onclick='insertFeedback(\`${insertText.replace(/'/g, "\\'")}\`)'>
+                    <p class="text-gray-700">${displayText}</p>
+                    <button class="mt-2 text-sm text-${color}-600 hover:text-${color}-800">
+                        <i class="fas fa-plus-circle mr-1"></i>Insertar
+                    </button>
+                </div>
+            `;
+        }
+        
+        function buildSpecificFeedbackSection(especificas, color) {
+            if (!especificas) return '';
+            let html = `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-book-open text-${color}-500 mr-2"></i>
+                        Retroalimentaciones por Área
+                    </h4>
+            `;
+            
+            if (especificas.lectura) {
+                html += buildAreaSection('📖 Lectura y Comprensión', especificas.lectura, 'blue');
+            }
+            if (especificas.escritura) {
+                html += buildAreaSection('✍️ Escritura y Producción de Textos', especificas.escritura, 'purple');
+            }
+            if (especificas.comunicacion_oral) {
+                html += buildAreaSection('🗣️ Comunicación Oral', especificas.comunicacion_oral, 'green');
+            }
+            
+            html += `</div>`;
+            return html;
+        }
+        
+        function buildAreaSection(title, items, color) {
+            return `
+                <div class="mb-4">
+                    <h5 class="font-semibold text-gray-700 mb-2">${title}</h5>
+                    <div class="grid gap-2">
+                        ${items.map(fb => `
+                            <div class="bg-${color}-50 border-l-4 border-${color}-400 p-3 rounded hover:bg-${color}-100 cursor-pointer transition-all"
+                                 onclick='insertFeedback(\`${fb.replace(/'/g, "\\'")}\`)'>
+                                <p class="text-sm text-gray-700">${fb}</p>
+                                <button class="mt-2 text-xs text-${color}-600 hover:text-${color}-800">
+                                    <i class="fas fa-plus-circle mr-1"></i>Insertar
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildSuggestionsSection(sugerencias) {
+            if (!sugerencias || sugerencias.length === 0) return '';
+            return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-lightbulb text-yellow-500 mr-2"></i>
+                        Sugerencias de Mejora
+                    </h4>
+                    <div class="grid gap-2">
+                        ${sugerencias.map(fb => buildSimpleFeedbackCard(fb, 'yellow')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildStrategiesSection(estrategias) {
+            if (!estrategias || estrategias.length === 0) return '';
+            return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-chalkboard-teacher text-indigo-500 mr-2"></i>
+                        Estrategias de Apoyo
+                    </h4>
+                    <div class="grid gap-2">
+                        ${estrategias.map(fb => buildSimpleFeedbackCard(fb, 'indigo')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildImprovementPlanSection(planMejora) {
+            if (!planMejora || planMejora.length === 0) return '';
+            return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-tasks text-orange-500 mr-2"></i>
+                        Plan de Mejora
+                    </h4>
+                    <div class="grid gap-2">
+                        ${planMejora.map(fb => buildSimpleFeedbackCard(fb, 'orange')).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildRecoveryPlanSection(planRecuperacion) {
+            if (!planRecuperacion || planRecuperacion.length === 0) return '';
+            return `
+                <div class="mb-6 bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-red-800 mb-3">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Plan de Recuperación Urgente
+                    </h4>
+                    <div class="grid gap-2">
+                        ${planRecuperacion.map(fb => `
+                            <div class="bg-white border-l-4 border-red-500 p-3 rounded hover:bg-red-50 cursor-pointer transition-all"
+                                 onclick='insertFeedback(\`${fb.replace(/'/g, "\\'")}\`)'>
+                                <p class="text-sm text-gray-700 font-medium">${fb}</p>
+                                <button class="mt-2 text-xs text-red-600 hover:text-red-800">
+                                    <i class="fas fa-plus-circle mr-1"></i>Insertar
+                                </button>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildChallengesSection(desafios, color) {
+            if (!desafios || desafios.length === 0) return '';
+            return `
+                <div class="mb-6">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3 border-b pb-2">
+                        <i class="fas fa-trophy text-${color}-500 mr-2"></i>
+                        Desafíos y Proyecciones
+                    </h4>
+                    <div class="grid gap-2">
+                        ${desafios.map(fb => buildSimpleFeedbackCard(fb, color)).join('')}
+                    </div>
+                </div>
+            `;
+        }
+        
+        function buildSimpleFeedbackCard(text, color) {
+            return `
+                <div class="bg-${color}-50 border-l-4 border-${color}-400 p-3 rounded hover:bg-${color}-100 cursor-pointer transition-all"
+                     onclick='insertFeedback(\`${text.replace(/'/g, "\\'")}\`)'>
+                    <p class="text-sm text-gray-700">${text}</p>
+                    <button class="mt-2 text-xs text-${color}-600 hover:text-${color}-800">
+                        <i class="fas fa-plus-circle mr-1"></i>Insertar
+                    </button>
+                </div>
+            `;
+        }
+        
+        function buildQuickGeneratorSection(level, studentName, percentage, points, totalTasks) {
+            return `
+                <div class="bg-gradient-to-r from-purple-100 to-indigo-100 border-2 border-purple-300 rounded-lg p-4">
+                    <h4 class="text-lg font-bold text-gray-800 mb-3">
+                        <i class="fas fa-magic text-purple-500 mr-2"></i>
+                        Generador Rápido de Retroalimentación
+                    </h4>
+                    <button onclick="generateCompleteFeedback('${level}', '${studentName}', ${percentage}, ${points}, ${totalTasks})"
+                            class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-6 py-3 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-lg">
+                        <i class="fas fa-wand-magic-sparkles mr-2"></i>
+                        Generar Retroalimentación Completa Automática
+                    </button>
+                    <p class="text-xs text-gray-600 mt-2 italic">
+                        Genera una retroalimentación integral combinando elementos generales, específicos y sugerencias.
+                    </p>
+                </div>
+            `;
+        }
+        
+        function buildModalFooter() {
+            return `
+                <div class="bg-gray-50 px-6 py-4 rounded-b-lg border-t">
+                    <button onclick="closeFeedbackBank()" 
+                            class="w-full bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-times mr-2"></i>Cerrar
+                    </button>
+                </div>
+            `;
+        }
+
+        // Insertar retroalimentación en el textarea
+        function insertFeedback(text) {
+            const textarea = document.getElementById(`studentNotes_${currentStudentIndexForFeedback}`);
+            const currentText = textarea.value;
+            
+            // Agregar con salto de línea si ya hay texto
+            if (currentText.trim()) {
+                textarea.value = currentText + '\n\n' + text;
+            } else {
+                textarea.value = text;
+            }
+            
+            // Guardar automáticamente
+            saveStudentNotes(currentStudentIndexForFeedback, textarea.value);
+            
+            // Feedback visual
+            const originalText = text.substring(0, 50) + '...';
+            showTemporaryMessage(`✅ Retroalimentación insertada: "${originalText}"`);
+        }
+
+        // Generar retroalimentación completa automática
+        function generateCompleteFeedback(level, studentName, percentage, points, totalTasks) {
+            const bank = feedbackData;
+            const feedbacks = bank.retroalimentaciones[level];
+            const levelInfo = bank.rangos_rendimiento[level];
+            
+            // Seleccionar aleatoriamente una de cada categoría
+            const general = feedbacks.generales[Math.floor(Math.random() * feedbacks.generales.length)];
+            
+            let completeFeedback = general.replace('{nombre}', studentName) + '\n\n';
+            
+            // Agregar específica si existe
+            if (feedbacks.especificas) {
+                const areas = Object.keys(feedbacks.especificas);
+                const randomArea = areas[Math.floor(Math.random() * areas.length)];
+                const especifica = feedbacks.especificas[randomArea][0];
+                completeFeedback += especifica + '\n\n';
+            }
+            
+            // Agregar sugerencia/estrategia/plan según nivel
+            if (feedbacks.desafios) {
+                completeFeedback += feedbacks.desafios[0];
+            } else if (feedbacks.sugerencias) {
+                completeFeedback += feedbacks.sugerencias[0];
+            } else if (feedbacks.estrategias) {
+                completeFeedback += feedbacks.estrategias[0];
+            } else if (feedbacks.plan_mejora) {
+                completeFeedback += feedbacks.plan_mejora[0];
+            }
+            
+            // Agregar contexto del rendimiento
+            completeFeedback += `\n\n📊 Resumen: Has completado ${points} de ${totalTasks} tareas (${percentage}%), alcanzando un nivel ${levelInfo.nivel}.`;
+            
+            insertFeedback(completeFeedback);
+            closeFeedbackBank();
+        }
+
+        // Cerrar modal del banco
+        function closeFeedbackBank() {
+            document.getElementById('feedbackBankModal').style.display = 'none';
+        }
+
+        // Mostrar mensaje temporal
+        function showTemporaryMessage(message) {
+            const div = document.createElement('div');
+            div.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in';
+            div.innerHTML = message;
+            document.body.appendChild(div);
+            
+            setTimeout(() => {
+                div.style.opacity = '0';
+                div.style.transition = 'opacity 0.5s';
+                setTimeout(() => div.remove(), 500);
+            }, 3000);
         }
     </script>
+
+    <!-- Modal del Banco de Retroalimentaciones -->
+    <div id="feedbackBankModal" class="modal">
+        <div id="feedbackBankContent"></div>
+    </div>
 
 </body>
 </html>

@@ -1483,7 +1483,7 @@
             if (oasData) return oasData;
             
             try {
-                const response = await fetch('objetivos-aprendizaje-lenguaje.json');
+                const response = await fetch('objetivos-aprendizaje-lenguaje-NUEVO.json');
                 oasData = await response.json();
                 return oasData;
             } catch (error) {
@@ -1513,9 +1513,9 @@
             
             // Limpiar y poblar selector de unidades
             unitSelect.innerHTML = '<option value="">Seleccione una unidad</option>';
-            Object.entries(levelData.unidades).forEach(([key, unidad]) => {
+            levelData.unidades.forEach((unidad, index) => {
                 const option = document.createElement('option');
-                option.value = key;
+                option.value = index;
                 option.textContent = `Unidad ${unidad.numero}: ${unidad.nombre}`;
                 unitSelect.appendChild(option);
             });
@@ -1527,11 +1527,11 @@
         // Cargar OAs al seleccionar unidad
         async function loadOAsForTask() {
             const level = document.getElementById('taskLevel').value;
-            const unitKey = document.getElementById('taskUnit').value;
+            const unitIndex = document.getElementById('taskUnit').value;
             const oasContainer = document.getElementById('taskOAsContainer');
             const oasList = document.getElementById('taskOAsList');
             
-            if (!level || !unitKey) {
+            if (!level || unitIndex === '') {
                 oasContainer.style.display = 'none';
                 return;
             }
@@ -1539,29 +1539,25 @@
             const data = await loadOAsData();
             if (!data) return;
             
-            const unidad = data.niveles[level].unidades[unitKey];
+            const unidad = data.niveles[level].unidades[parseInt(unitIndex)];
             if (!unidad) return;
             
             // Limpiar y poblar lista de OAs
             oasList.innerHTML = '';
-            Object.entries(unidad.objetivos).forEach(([codigo, oa]) => {
+            unidad.oas.forEach((oa) => {
                 const div = document.createElement('div');
                 div.className = 'bg-white border border-gray-300 rounded-lg p-3 hover:border-blue-400 transition-all';
                 div.innerHTML = `
                     <label class="flex items-start cursor-pointer">
                         <input type="checkbox" 
                                class="mt-1 mr-3" 
-                               value="${codigo}" 
+                               value="${oa.codigo}" 
                                data-nivel="${level}"
-                               data-unidad="${unitKey}"
+                               data-unidad="${unitIndex}"
                                name="taskOA">
                         <div class="flex-1">
                             <div class="font-semibold text-blue-600 mb-1">${oa.codigo}</div>
                             <div class="text-sm text-gray-700">${oa.texto.substring(0, 150)}...</div>
-                            <div class="text-xs text-gray-500 mt-1">
-                                <i class="fas fa-lightbulb mr-1"></i>
-                                Habilidades: ${oa.habilidades.join(', ')}
-                            </div>
                         </div>
                     </label>
                 `;
@@ -1631,27 +1627,30 @@
                         
                         // Obtener detalles del OA
                         if (oasData && oasData.niveles[oaRef.nivel]) {
-                            const unidad = oasData.niveles[oaRef.nivel].unidades[oaRef.unidad];
-                            if (unidad && unidad.objetivos[oaRef.codigo]) {
-                                const oaDetalle = unidad.objetivos[oaRef.codigo];
-                                const oaInfo = {
-                                    codigo: oaRef.codigo,
-                                    texto: oaDetalle.texto,
-                                    nivel: oasData.niveles[oaRef.nivel].nombre,
-                                    unidad: unidad.nombre,
-                                    habilidades: oaDetalle.habilidades
-                                };
-                                
-                                if (cumplida) {
-                                    if (!oasCumplidos.has(key)) {
-                                        oasCumplidos.set(key, { ...oaInfo, tareas: [] });
+                            const unidades = oasData.niveles[oaRef.nivel].unidades;
+                            const unidad = unidades[parseInt(oaRef.unidad)];
+                            
+                            if (unidad && unidad.oas) {
+                                const oaDetalle = unidad.oas.find(oa => oa.codigo === oaRef.codigo);
+                                if (oaDetalle) {
+                                    const oaInfo = {
+                                        codigo: oaRef.codigo,
+                                        texto: oaDetalle.texto,
+                                        nivel: oasData.niveles[oaRef.nivel].nombre,
+                                        unidad: unidad.nombre
+                                    };
+                                    
+                                    if (cumplida) {
+                                        if (!oasCumplidos.has(key)) {
+                                            oasCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                        }
+                                        oasCumplidos.get(key).tareas.push(task.name);
+                                    } else {
+                                        if (!oasNoCumplidos.has(key)) {
+                                            oasNoCumplidos.set(key, { ...oaInfo, tareas: [] });
+                                        }
+                                        oasNoCumplidos.get(key).tareas.push(task.name);
                                     }
-                                    oasCumplidos.get(key).tareas.push(task.name);
-                                } else {
-                                    if (!oasNoCumplidos.has(key)) {
-                                        oasNoCumplidos.set(key, { ...oaInfo, tareas: [] });
-                                    }
-                                    oasNoCumplidos.get(key).tareas.push(task.name);
                                 }
                             }
                         }

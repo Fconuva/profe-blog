@@ -1,0 +1,79 @@
+import { neon } from '@neondatabase/serverless';
+
+export default async (req, context) => {
+  // Solo permitir DELETE
+  if (req.method !== 'DELETE') {
+    return new Response(JSON.stringify({ error: 'Method not allowed' }), {
+      status: 405,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
+    const sql = neon(process.env.DATABASE_URL);
+    const body = await req.json();
+    
+    const { courseId, username = 'profesor' } = body;
+    
+    if (!courseId) {
+      return new Response(JSON.stringify({ 
+        error: 'Se requiere courseId' 
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Obtener el user_id
+    const [user] = await sql`
+      SELECT id FROM users WHERE username = ${username}
+    `;
+    
+    if (!user) {
+      return new Response(JSON.stringify({ 
+        error: 'Usuario no encontrado' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Eliminar el curso
+    const result = await sql`
+      DELETE FROM courses 
+      WHERE id = ${courseId} AND user_id = ${user.id}
+      RETURNING id
+    `;
+    
+    if (result.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Curso no encontrado' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    return new Response(JSON.stringify({ 
+      success: true,
+      message: 'Curso eliminado correctamente'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    console.error('Error en delete-course:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Error al eliminar curso',
+      details: error.message 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+};
+
+export const config = {
+  path: "/api/courses/delete"
+};

@@ -670,17 +670,113 @@
             saveAllCourses();
         }
 
-        // Cargar todos los cursos desde localStorage
-        function loadAllCourses() {
-            const saved = localStorage.getItem('allCourses');
-            if (saved) {
-                allCourses = JSON.parse(saved);
-                console.log('Cursos cargados:', allCourses.length, 'cursos');
+        // ============ SINCRONIZACIÓN CON BASE DE DATOS ============
+        
+        // Obtener username del usuario actual
+        function getCurrentUsername() {
+            return sessionStorage.getItem('username') || 'profesor';
+        }
+        
+        // Cargar cursos desde la base de datos
+        async function loadCoursesFromDatabase() {
+            try {
+                const username = getCurrentUsername();
+                console.log('🔄 Cargando cursos desde la base de datos para:', username);
+                
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (data.success && data.courses) {
+                    allCourses = data.courses;
+                    console.log('✅ Cursos cargados desde DB:', allCourses.length, 'cursos');
+                    
+                    // También guardar en localStorage como respaldo
+                    localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                    return true;
+                } else {
+                    console.warn('⚠️ No se pudieron cargar cursos de la DB, usando localStorage');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error cargando cursos desde DB:', error);
+                return false;
+            }
+        }
+        
+        // Sincronizar cursos con la base de datos
+        async function syncCoursesToDatabase() {
+            try {
+                const username = getCurrentUsername();
+                console.log('🔄 Sincronizando cursos a la base de datos...');
+                
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        courses: allCourses,
+                        username: username
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    console.log('✅ Cursos sincronizados:', data.message);
+                    
+                    // Mostrar notificación de éxito
+                    showSyncNotification('Cambios guardados en la nube', 'success');
+                    return true;
+                } else {
+                    console.error('❌ Error en sincronización:', data.error);
+                    showSyncNotification('Error al sincronizar', 'error');
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Error sincronizando a DB:', error);
+                showSyncNotification('Sin conexión - guardado local', 'warning');
+                return false;
+            }
+        }
+        
+        // Mostrar notificación de sincronización
+        function showSyncNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `fixed bottom-4 right-4 px-6 py-3 rounded-lg shadow-lg text-white font-semibold z-50 animate-fade-in ${
+                type === 'success' ? 'bg-green-500' : 
+                type === 'error' ? 'bg-red-500' : 
+                'bg-orange-500'
+            }`;
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'times-circle' : 'exclamation-triangle'} mr-2"></i>
+                ${message}
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Cargar todos los cursos (primero intenta DB, luego localStorage)
+        async function loadAllCourses() {
+            // Intentar cargar desde la base de datos
+            const loadedFromDB = await loadCoursesFromDatabase();
+            
+            // Si falla, cargar desde localStorage como respaldo
+            if (!loadedFromDB) {
+                const saved = localStorage.getItem('allCourses');
+                if (saved) {
+                    allCourses = JSON.parse(saved);
+                    console.log('📁 Cursos cargados desde localStorage:', allCourses.length, 'cursos');
+                }
             }
             
             const savedCurrentId = localStorage.getItem('currentCourseId');
             if (savedCurrentId) {
-                currentCourseId = parseFloat(savedCurrentId); // Cambiar a parseFloat
+                currentCourseId = parseFloat(savedCurrentId);
                 console.log('ID de curso actual cargado:', currentCourseId);
             } else if (allCourses.length > 0) {
                 currentCourseId = allCourses[0].id;
@@ -688,10 +784,14 @@
             }
         }
 
-        // Guardar todos los cursos
+        // Guardar todos los cursos (localStorage + sincronización con DB)
         function saveAllCourses() {
+            // Guardar localmente (inmediato)
             localStorage.setItem('allCourses', JSON.stringify(allCourses));
             localStorage.setItem('currentCourseId', currentCourseId);
+            
+            // Sincronizar con base de datos (asíncrono)
+            syncCoursesToDatabase();
         }
 
         // Cargar un curso específico
@@ -830,7 +930,7 @@
         }
 
         // Eliminar curso actual
-        function deleteCourse() {
+        async function deleteCourse() {
             if (allCourses.length === 1) {
                 alert('No puedes eliminar el único curso. Crea otro primero.');
                 return;
@@ -840,6 +940,7 @@
                 return;
             }
             
+            const courseIdToDelete = currentCourseId;
             const index = allCourses.findIndex(c => c.id === currentCourseId);
             allCourses.splice(index, 1);
             
@@ -848,6 +949,24 @@
             loadCourse(currentCourseId);
             updateCourseSelector();
             saveAllCourses();
+            
+            // Eliminar de la base de datos
+            try {
+                const username = getCurrentUsername();
+                await fetch('/api/courses/delete', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        courseId: courseIdToDelete,
+                        username: username
+                    })
+                });
+                console.log('✅ Curso eliminado de la base de datos');
+            } catch (error) {
+                console.error('❌ Error eliminando curso de DB:', error);
+            }
             
             alert('Curso eliminado');
         }

@@ -64,6 +64,26 @@
 
     <main class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         
+        <!-- Selector de Curso -->
+        <div class="bg-white rounded-lg shadow-md p-4 mb-6 no-print">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-4 flex-1">
+                    <label class="text-sm font-medium text-gray-700">Curso Activo:</label>
+                    <select id="courseSelector" onchange="switchCourse()" class="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-lg bg-white">
+                        <!-- Generado dinámicamente -->
+                    </select>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="showNewCourseModal()" class="btn-action bg-green-500 hover:bg-green-600">
+                        <i class="fas fa-plus mr-2"></i>Nuevo Curso
+                    </button>
+                    <button onclick="deleteCourse()" class="btn-action bg-red-500 hover:bg-red-600">
+                        <i class="fas fa-trash mr-2"></i>Eliminar Curso
+                    </button>
+                </div>
+            </div>
+        </div>
+        
         <!-- Tabs -->
         <div class="mb-6 no-print">
             <div class="border-b border-gray-200">
@@ -110,6 +130,9 @@
                     <button onclick="addStudent()" class="btn-action bg-green-500 hover:bg-green-600">
                         <i class="fas fa-user-plus mr-2"></i>Agregar Estudiante
                     </button>
+                    <button onclick="showBulkStudentModal()" class="btn-action bg-emerald-500 hover:bg-emerald-600">
+                        <i class="fas fa-users mr-2"></i>Agregar Varios Estudiantes
+                    </button>
                     <button onclick="addTask()" class="btn-action bg-blue-500 hover:bg-blue-600">
                         <i class="fas fa-plus mr-2"></i>Agregar Tarea
                     </button>
@@ -117,7 +140,7 @@
                         <i class="fas fa-file-import mr-2"></i>Importar CSV
                     </button>
                     <input type="file" id="importCSV" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
-                    <button onclick="saveData()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
+                    <button onclick="saveAllCourses(); alert('✅ Datos guardados correctamente');" class="btn-action bg-indigo-500 hover:bg-indigo-600">
                         <i class="fas fa-save mr-2"></i>Guardar Cambios
                     </button>
                 </div>
@@ -263,23 +286,26 @@
     </style>
 
     <script>
-        // Estructura de datos
-        let courseData = {
-            courseName: "IV° Año A - 2025",
-            subject: "Lenguaje y Comunicación",
-            period: "Segundo Semestre 2025",
-            students: [],
-            tasks: [],
-            config: {
-                minGrade: 1.0,
-                maxGrade: 7.0,
-                passingGrade: 4.0
-            }
-        };
+        // Estructura de datos - MULTI-CURSO
+        let allCourses = []; // Array de todos los cursos
+        let currentCourseId = null; // ID del curso activo
+        let courseData = null; // Datos del curso actual (referencia)
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+            loadAllCourses();
+            updateCourseSelector();
+            
+            // Si no hay cursos, crear uno por defecto
+            if (allCourses.length === 0) {
+                createDefaultCourse();
+            }
+            
+            // Cargar el curso actual
+            if (currentCourseId) {
+                loadCourse(currentCourseId);
+            }
+            
             renderTable();
             populateStudentSelect();
             
@@ -288,6 +314,189 @@
                 window.location.href = 'index.html';
             });
         });
+
+        // Crear curso por defecto
+        function createDefaultCourse() {
+            const newCourse = {
+                id: Date.now(),
+                courseName: "Mi Curso",
+                subject: "Asignatura",
+                period: new Date().getFullYear(),
+                students: [],
+                tasks: [],
+                config: {
+                    minGrade: 1.0,
+                    maxGrade: 7.0,
+                    passingGrade: 4.0
+                }
+            };
+            allCourses.push(newCourse);
+            currentCourseId = newCourse.id;
+            saveAllCourses();
+        }
+
+        // Cargar todos los cursos desde localStorage
+        function loadAllCourses() {
+            const saved = localStorage.getItem('allCourses');
+            if (saved) {
+                allCourses = JSON.parse(saved);
+            }
+            
+            const savedCurrentId = localStorage.getItem('currentCourseId');
+            if (savedCurrentId) {
+                currentCourseId = parseInt(savedCurrentId);
+            } else if (allCourses.length > 0) {
+                currentCourseId = allCourses[0].id;
+            }
+        }
+
+        // Guardar todos los cursos
+        function saveAllCourses() {
+            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            localStorage.setItem('currentCourseId', currentCourseId);
+        }
+
+        // Cargar un curso específico
+        function loadCourse(courseId) {
+            const course = allCourses.find(c => c.id === courseId);
+            if (course) {
+                courseData = course;
+                currentCourseId = courseId;
+                
+                // Actualizar campos del formulario
+                document.getElementById('courseName').value = courseData.courseName;
+                document.getElementById('subject').value = courseData.subject;
+                document.getElementById('period').value = courseData.period;
+                
+                // Actualizar selector
+                document.getElementById('courseSelector').value = courseId;
+                
+                renderTable();
+                populateStudentSelect();
+                saveAllCourses();
+            }
+        }
+
+        // Cambiar de curso
+        function switchCourse() {
+            const selector = document.getElementById('courseSelector');
+            const newCourseId = parseInt(selector.value);
+            loadCourse(newCourseId);
+        }
+
+        // Actualizar el selector de cursos
+        function updateCourseSelector() {
+            const selector = document.getElementById('courseSelector');
+            selector.innerHTML = '';
+            
+            allCourses.forEach(course => {
+                const option = document.createElement('option');
+                option.value = course.id;
+                option.textContent = `${course.courseName} - ${course.subject}`;
+                selector.appendChild(option);
+            });
+            
+            if (currentCourseId) {
+                selector.value = currentCourseId;
+            }
+        }
+
+        // Modal: Nuevo Curso
+        function showNewCourseModal() {
+            const courseName = prompt('Nombre del curso (ej: IV° Año A - 2025):');
+            if (!courseName) return;
+            
+            const subject = prompt('Asignatura:');
+            if (!subject) return;
+            
+            const period = prompt('Período:');
+            if (!period) return;
+            
+            const newCourse = {
+                id: Date.now(),
+                courseName: courseName,
+                subject: subject,
+                period: period,
+                students: [],
+                tasks: [],
+                config: {
+                    minGrade: 1.0,
+                    maxGrade: 7.0,
+                    passingGrade: 4.0
+                }
+            };
+            
+            allCourses.push(newCourse);
+            updateCourseSelector();
+            saveAllCourses();
+            loadCourse(newCourse.id);
+            
+            alert('Curso creado exitosamente');
+        }
+
+        // Eliminar curso actual
+        function deleteCourse() {
+            if (allCourses.length === 1) {
+                alert('No puedes eliminar el único curso. Crea otro primero.');
+                return;
+            }
+            
+            if (!confirm(`¿Eliminar el curso "${courseData.courseName}"? Esta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            const index = allCourses.findIndex(c => c.id === currentCourseId);
+            allCourses.splice(index, 1);
+            
+            // Cargar otro curso
+            currentCourseId = allCourses[0].id;
+            loadCourse(currentCourseId);
+            updateCourseSelector();
+            saveAllCourses();
+            
+            alert('Curso eliminado');
+        }
+
+        // Modal: Agregar varios estudiantes
+        function showBulkStudentModal() {
+            const input = prompt('Pega la lista de estudiantes (formato: N°\tApellido1\tApellido2\tNombre, una fila por línea):');
+            if (!input) return;
+            
+            const lines = input.trim().split('\n');
+            let added = 0;
+            
+            lines.forEach(line => {
+                const parts = line.split('\t');
+                if (parts.length >= 4) {
+                    const number = parseInt(parts[0]) || (courseData.students.length + 1);
+                    const lastName1 = parts[1].trim().toUpperCase();
+                    const lastName2 = parts[2].trim().toUpperCase();
+                    const name = parts[3].trim().toUpperCase();
+                    
+                    if (lastName1 && lastName2 && name) {
+                        const student = {
+                            id: Date.now() + added,
+                            number: number,
+                            lastName1: lastName1,
+                            lastName2: lastName2,
+                            name: name,
+                            grades: Array(courseData.tasks.length).fill(null),
+                            notes: ''
+                        };
+                        courseData.students.push(student);
+                        added++;
+                    }
+                }
+            });
+            
+            if (added > 0) {
+                renderTable();
+                saveAllCourses();
+                alert(`${added} estudiantes agregados exitosamente`);
+            } else {
+                alert('No se pudo agregar ningún estudiante. Verifica el formato.');
+            }
+        }
 
         // Gestión de Tabs
         function showTab(tab) {
@@ -313,45 +522,12 @@
         }
 
         // Guardar/Cargar datos en localStorage
-        function saveData() {
-            localStorage.setItem('courseData', JSON.stringify(courseData));
-            alert('✅ Datos guardados correctamente');
-        }
-
-        function loadData() {
-            const saved = localStorage.getItem('courseData');
-            if (saved) {
-                courseData = JSON.parse(saved);
-                document.getElementById('courseName').value = courseData.courseName;
-                document.getElementById('subject').value = courseData.subject;
-                document.getElementById('period').value = courseData.period;
-            } else {
-                // Cargar datos de ejemplo del CSV
-                loadSampleData();
-            }
-        }
-
         function saveCourseInfo() {
             courseData.courseName = document.getElementById('courseName').value;
             courseData.subject = document.getElementById('subject').value;
             courseData.period = document.getElementById('period').value;
-            saveData();
-        }
-
-        // Cargar datos de ejemplo
-        function loadSampleData() {
-            // Por ahora vacío - se llenará al importar CSV o agregar manualmente
-            courseData.students = [];
-            courseData.tasks = [
-                {id: 1, name: 'Guía 1', date: '27-05-2025'},
-                {id: 2, name: 'Trabajo Grupal', date: '03-06-2025'},
-                {id: 3, name: 'Grupal 2', date: '10-06-2025'},
-                {id: 4, name: 'S24 Ultra', date: '14-07-2025'},
-                {id: 5, name: 'Solo S24', date: '21-07-2025'},
-                {id: 6, name: 'Curriculum', date: ''},
-                {id: 7, name: 'Correo', date: ''},
-                {id: 8, name: 'Informe', date: ''}
-            ];
+            saveAllCourses();
+            updateCourseSelector();
         }
 
         // Agregar estudiante
@@ -372,7 +548,7 @@
                 };
                 courseData.students.push(student);
                 renderTable();
-                saveData();
+                saveAllCourses();
             }
         }
 
@@ -395,7 +571,7 @@
                 });
                 
                 renderTable();
-                saveData();
+                saveAllCourses();
             }
         }
 
@@ -488,7 +664,7 @@
         function updateGrade(studentIndex, gradeIndex, checked) {
             courseData.students[studentIndex].grades[gradeIndex] = checked;
             renderTable();
-            saveData();
+            saveAllCourses();
         }
 
         // Eliminar estudiante
@@ -496,7 +672,7 @@
             if (confirm('¿Está seguro de eliminar este estudiante?')) {
                 courseData.students.splice(index, 1);
                 renderTable();
-                saveData();
+                saveAllCourses();
             }
         }
 
@@ -552,7 +728,7 @@
                 
                 alert(`✅ Se importaron ${courseData.students.length} estudiantes`);
                 renderTable();
-                saveData();
+                saveAllCourses();
             };
             reader.readAsText(file);
         }
@@ -863,7 +1039,7 @@
         // Guardar notas del estudiante
         function saveStudentNotes(index, notes) {
             courseData.students[index].notes = notes;
-            saveData();
+            saveAllCourses();
         }
 
         // Descargar informe individual (simulado)
@@ -878,15 +1054,18 @@
                 maxGrade: parseFloat(document.getElementById('maxGrade').value),
                 passingGrade: parseFloat(document.getElementById('passingGrade').value)
             };
-            saveData();
+            saveAllCourses();
             alert('✅ Configuración guardada');
         }
 
         // Resetear datos
         function resetData() {
-            if (confirm('⚠️ ¿Está COMPLETAMENTE SEGURO de borrar TODOS los datos? Esta acción NO se puede deshacer.')) {
+            if (confirm('⚠️ ¿Está COMPLETAMENTE SEGURO de borrar TODOS los datos del curso actual? Esta acción NO se puede deshacer.')) {
                 if (confirm('Esta es su última oportunidad. ¿Confirma que desea borrar todo?')) {
-                    localStorage.removeItem('courseData');
+                    courseData.students = [];
+                    courseData.tasks = [];
+                    renderTable();
+                    saveAllCourses();
                     location.reload();
                 }
             }

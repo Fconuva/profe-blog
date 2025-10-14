@@ -15,11 +15,12 @@ Este proyecto usa **Neon Database** (PostgreSQL serverless) para almacenar los c
 
 ### 2. Configurar en Netlify
 
+✅ **YA ESTÁ CONFIGURADO** - La variable `NETLIFY_DATABASE_URL` ya está creada automáticamente por Neon.
+
+Si por alguna razón necesitas verificarla o cambiarla:
 1. Ve a tu proyecto en Netlify: **Site settings** → **Environment variables**
-2. Agrega una nueva variable:
-   - **Key**: `DATABASE_URL`
-   - **Value**: Tu connection string de Neon
-3. Guarda los cambios
+2. Busca `NETLIFY_DATABASE_URL`
+3. Debe tener el formato: `postgresql://user:password@ep-xxx.neon.tech/neondb`
 
 ### 3. Ejecutar el Script SQL
 

@@ -10,7 +10,7 @@ export default async (req, context) => {
   }
 
   try {
-    const sql = neon(process.env.DATABASE_URL);
+    const sql = neon(process.env.NETLIFY_DATABASE_URL);
     
     // Obtener username desde query params o usar 'profesor' por defecto
     const url = new URL(req.url);

@@ -1409,6 +1409,24 @@
                 reportDiv.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p class="mt-2">Generando informe profesional...</p></div>';
                 downloadBtn.style.display = 'none';
                 
+                // VALIDACIONES CRÍTICAS
+                if (!courseData) {
+                    throw new Error('No hay datos de curso cargados. Por favor, cree o importe un curso primero.');
+                }
+                
+                if (!courseData.students || !Array.isArray(courseData.students)) {
+                    throw new Error('No hay estudiantes en el curso. Agregue estudiantes antes de generar el informe.');
+                }
+                
+                if (!courseData.tasks || !Array.isArray(courseData.tasks)) {
+                    throw new Error('No hay tareas en el curso. Agregue tareas antes de generar el informe.');
+                }
+                
+                if (courseData.tasks.length === 0) {
+                    reportDiv.innerHTML = '<div class="text-center p-8 text-orange-500"><i class="fas fa-clipboard-list text-4xl mb-3"></i><p class="text-lg font-semibold mb-2">No hay tareas registradas</p><p class="text-sm text-gray-600">Agregue al menos una tarea para generar el informe del curso.</p></div>';
+                    return;
+                }
+                
                 const students = courseData.students;
                 const activeStudents = students.filter(s => !s.retired);
                 const retiredCount = students.length - activeStudents.length;
@@ -1420,7 +1438,7 @@
                 
                 // Calcular estadísticas avanzadas
                 const grades = activeStudents.map(s => {
-                    const points = s.grades.filter(g => g).length;
+                    const points = s.grades && Array.isArray(s.grades) ? s.grades.filter(g => g).length : 0;
                     return calculateGrade(points, courseData.tasks.length);
                 });
                 
@@ -1527,8 +1545,13 @@
         
         // Analizar rendimiento por tarea
         function analyzeTasksPerformance(students) {
+            if (!courseData || !courseData.tasks || !Array.isArray(courseData.tasks)) {
+                console.warn('No hay tareas para analizar');
+                return [];
+            }
+            
             return courseData.tasks.map((task, index) => {
-                const completed = students.filter(s => s.grades[index]).length;
+                const completed = students.filter(s => s.grades && s.grades[index]).length;
                 const pending = students.length - completed;
                 const percentage = students.length > 0 ? (completed / students.length * 100) : 0;
                 
@@ -1537,7 +1560,7 @@
                 else if (percentage < 50) difficulty = 'Difícil';
                 
                 return {
-                    name: task.name,
+                    name: task.name || `Tarea ${index + 1}`,
                     date: task.date || 'Sin fecha',
                     completed: completed,
                     pending: pending,
@@ -2241,6 +2264,10 @@
         
         // Tabla de rendimiento individual de estudiantes
         function buildStudentsPerformanceTable(students) {
+            if (!courseData || !courseData.tasks || !Array.isArray(courseData.tasks)) {
+                return '<div class="bg-yellow-50 p-6 rounded-lg"><p class="text-yellow-800">No hay tareas para mostrar el rendimiento.</p></div>';
+            }
+            
             return `
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h4 class="text-xl font-bold mb-4 flex items-center">
@@ -2265,7 +2292,7 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 ${students.map((student, index) => {
-                                    const points = student.grades.filter(g => g).length;
+                                    const points = student.grades && Array.isArray(student.grades) ? student.grades.filter(g => g).length : 0;
                                     const grade = calculateGrade(points, courseData.tasks.length);
                                     const gradeColor = grade >= 5.5 ? 'green' : grade >= 4.5 ? 'blue' : grade >= 4.0 ? 'orange' : 'red';
                                     const status = grade >= 4.0 ? 'Aprobado' : 'Reprobado';
@@ -2275,10 +2302,10 @@
                                         <tr class="hover:bg-gray-50 ${student.retired ? 'opacity-50' : ''}">
                                             <td class="px-4 py-3 text-center font-bold text-gray-600 sticky left-0 bg-white">${index + 1}</td>
                                             <td class="px-4 py-3 font-semibold text-gray-900 sticky left-8 bg-white">
-                                                ${student.name}
+                                                ${student.name || 'Sin nombre'}
                                                 ${student.retired ? '<span class="ml-2 text-xs text-red-600">(Retirado)</span>' : ''}
                                             </td>
-                                            ${student.grades.map(g => `
+                                            ${(student.grades && Array.isArray(student.grades) ? student.grades : []).map(g => `
                                                 <td class="px-3 py-3 text-center">
                                                     ${g ? '<i class="fas fa-check text-green-600 font-bold"></i>' : '<i class="fas fa-times text-red-400"></i>'}
                                                 </td>

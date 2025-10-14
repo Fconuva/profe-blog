@@ -37,34 +37,142 @@
             .no-print {
                 display: none !important;
             }
+            
             /* Estilos de impresión para informes profesionales */
             body {
                 print-color-adjust: exact;
                 -webkit-print-color-adjust: exact;
+                background: white !important;
             }
-            .bg-gradient-to-r, .bg-gradient-to-br {
-                background: #1e40af !important;
-                color: white !important;
+            
+            /* Preservar gradientes y colores */
+            .bg-gradient-to-r, .bg-gradient-to-br, .bg-gradient-to-br.from-green-50,
+            .bg-gradient-to-br.from-orange-50, .bg-gradient-to-br.from-blue-50,
+            .bg-gradient-to-r.from-green-100 {
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
             }
+            
+            /* Optimizar gráficos */
             canvas {
                 max-height: 300px !important;
+                page-break-inside: avoid;
             }
-            .shadow-lg, .shadow-md {
+            
+            /* Mejorar bordes y sombras */
+            .shadow-lg, .shadow-md, .shadow-sm {
                 box-shadow: none !important;
-                border: 1px solid #e5e7eb !important;
+                border: 1px solid #d1d5db !important;
             }
+            
+            /* Control de saltos de página */
             h3, h4, h5 {
                 page-break-after: avoid;
+                page-break-inside: avoid;
             }
+            
             table {
                 page-break-inside: auto;
             }
+            
             tr {
                 page-break-inside: avoid;
                 page-break-after: auto;
             }
+            
+            /* Secciones completas */
+            .print\\:break-inside-avoid {
+                page-break-inside: avoid;
+                break-inside: avoid;
+            }
+            
+            /* Espaciado optimizado */
             .space-y-6 > * {
-                margin-bottom: 1rem !important;
+                margin-bottom: 0.75rem !important;
+            }
+            
+            /* Textarea en modo lectura para PDF */
+            textarea {
+                border: 1px solid #d1d5db !important;
+                resize: none !important;
+                height: auto !important;
+                min-height: 0 !important;
+                overflow: hidden !important;
+                background: white !important;
+                padding: 0.5rem !important;
+                font-size: 12pt !important;
+                line-height: 1.6 !important;
+                font-family: 'Georgia', 'Times New Roman', serif !important;
+            }
+            
+            /* Botones y elementos interactivos ocultos */
+            button, .cursor-pointer {
+                display: none !important;
+            }
+            
+            /* Tarjetas de tareas */
+            .grid.grid-cols-1 {
+                display: block !important;
+            }
+            
+            .grid.grid-cols-1 > * {
+                margin-bottom: 0.5rem !important;
+                page-break-inside: avoid;
+            }
+            
+            /* Mejorar legibilidad */
+            body, p, li, span, div {
+                font-size: 11pt !important;
+                line-height: 1.5 !important;
+            }
+            
+            h3 {
+                font-size: 18pt !important;
+            }
+            
+            h4 {
+                font-size: 14pt !important;
+            }
+            
+            /* Encabezados con colores */
+            .text-green-800, .text-green-700 {
+                color: #15803d !important;
+            }
+            
+            .text-orange-800, .text-orange-700 {
+                color: #c2410c !important;
+            }
+            
+            .text-blue-900, .text-blue-800 {
+                color: #1e40af !important;
+            }
+            
+            /* Fondos de tarjetas */
+            .bg-green-500 {
+                background-color: #22c55e !important;
+            }
+            
+            .bg-orange-500 {
+                background-color: #f97316 !important;
+            }
+            
+            /* Bordes de colores */
+            .border-green-500, .border-green-200, .border-green-300 {
+                border-color: #22c55e !important;
+            }
+            
+            .border-orange-500, .border-orange-200 {
+                border-color: #f97316 !important;
+            }
+            
+            .border-blue-200 {
+                border-color: #93c5fd !important;
+            }
+            
+            /* Márgenes de página */
+            @page {
+                margin: 1.5cm;
+                size: letter;
             }
         }
         
@@ -283,12 +391,20 @@
                         <h3 class="text-lg font-bold text-gray-800">
                             <i class="fas fa-file-alt mr-2 text-indigo-500"></i>Informe Completo del Curso
                         </h3>
-                        <button onclick="generateCourseReport()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
-                            <i class="fas fa-file-pdf mr-2"></i>Generar PDF
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="generateCourseReport()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
+                                <i class="fas fa-sync-alt mr-2"></i>Generar Informe
+                            </button>
+                            <button id="downloadCourseReportBtn" onclick="downloadCourseReportPDF()" class="btn-action bg-green-500 hover:bg-green-600" style="display:none;">
+                                <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
+                            </button>
+                        </div>
                     </div>
                     <div id="courseReportContent" class="text-gray-700">
-                        <!-- Generado dinámicamente -->
+                        <div class="text-center py-12 text-gray-400">
+                            <i class="fas fa-chart-bar text-6xl mb-4"></i>
+                            <p class="text-lg">Haga clic en "Generar Informe" para crear el reporte profesional del curso</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -431,8 +547,8 @@
                         </label>
                         <select id="taskLevel" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="loadUnitsForTask()">
                             <option value="">Sin especificar</option>
-                            <option value="tercero_medio">3° Medio</option>
-                            <option value="cuarto_medio">4° Medio</option>
+                            <option value="3M">3° Medio</option>
+                            <option value="4M">4° Medio</option>
                         </select>
                     </div>
                     
@@ -1276,7 +1392,10 @@
         // ==================== INFORME PROFESIONAL DEL CURSO ====================
         async function generateCourseReport() {
             const reportDiv = document.getElementById('courseReportContent');
+            const downloadBtn = document.getElementById('downloadCourseReportBtn');
+            
             reportDiv.innerHTML = '<div class="text-center p-8"><i class="fas fa-spinner fa-spin text-3xl text-blue-500"></i><p class="mt-2">Generando informe profesional...</p></div>';
+            downloadBtn.style.display = 'none';
             
             const students = courseData.students;
             const activeStudents = students.filter(s => !s.retired);
@@ -1306,6 +1425,47 @@
                     ${buildRecommendationsSection(recommendations)}
                 </div>
             `;
+            
+            // Mostrar botón de descarga después de generar
+            downloadBtn.style.display = 'inline-flex';
+        }
+        
+        // Descargar informe de curso como PDF
+        function downloadCourseReportPDF() {
+            const fileName = `Informe_Curso_${courseData.courseName.replace(/\s+/g, '_')}_${courseData.period.replace(/\s+/g, '_')}.pdf`;
+            
+            const tempMessage = document.createElement('div');
+            tempMessage.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+                color: white;
+                padding: 30px 50px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                font-weight: bold;
+                font-size: 18px;
+            `;
+            tempMessage.innerHTML = `
+                <i class="fas fa-file-pdf text-4xl mb-3"></i>
+                <p>Generando PDF del Informe...</p>
+                <p class="text-sm font-normal mt-2 opacity-90">Se abrirá el diálogo de impresión</p>
+                <p class="text-xs font-normal mt-1 opacity-75">Seleccione "Guardar como PDF" como destino</p>
+            `;
+            document.body.appendChild(tempMessage);
+            
+            const originalTitle = document.title;
+            document.title = fileName.replace('.pdf', '');
+            
+            setTimeout(() => {
+                window.print();
+                document.body.removeChild(tempMessage);
+                document.title = originalTitle;
+            }, 500);
         }
         
         // Calcular estadísticas avanzadas
@@ -2215,41 +2375,89 @@
                         </div>
                     </div>
                     
-                    <div>
-                        <h4 class="font-bold text-lg mb-3 text-green-700">✅ Tareas Completadas:</h4>
-                        <ul class="list-disc ml-6 space-y-1">
-                            ${completedTasks.map(task => `<li class="text-green-600">${task}</li>`).join('')}
-                        </ul>
+                    <!-- Tareas Completadas - Diseño Visual Mejorado -->
+                    <div class="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-4 text-green-800 flex items-center">
+                            <i class="fas fa-check-circle text-2xl mr-2"></i>
+                            Tareas Completadas (${completedTasks.length})
+                        </h4>
+                        ${completedTasks.length > 0 ? `
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                                ${completedTasks.map((task, idx) => `
+                                    <div class="bg-white rounded-lg p-3 shadow-sm border-l-4 border-green-500 hover:shadow-md transition-all">
+                                        <div class="flex items-center">
+                                            <div class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3 flex-shrink-0">
+                                                ${idx + 1}
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-gray-800 truncate" title="${task}">${task}</p>
+                                                <p class="text-xs text-green-600">✓ Completada</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : '<p class="text-gray-500 italic">No hay tareas completadas aún</p>'}
                     </div>
                     
+                    <!-- Tareas Pendientes - Diseño Visual Mejorado -->
                     ${pendingTasks.length > 0 ? `
-                    <div>
-                        <h4 class="font-bold text-lg mb-3 text-orange-700">⏳ Tareas Pendientes:</h4>
-                        <ul class="list-disc ml-6 space-y-1">
-                            ${pendingTasks.map(task => `<li class="text-orange-600">${task}</li>`).join('')}
-                        </ul>
+                    <div class="bg-gradient-to-br from-orange-50 to-amber-50 border-2 border-orange-200 rounded-lg p-4">
+                        <h4 class="font-bold text-lg mb-4 text-orange-800 flex items-center">
+                            <i class="fas fa-hourglass-half text-2xl mr-2"></i>
+                            Tareas Pendientes (${pendingTasks.length})
+                        </h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                            ${pendingTasks.map((task, idx) => `
+                                <div class="bg-white rounded-lg p-3 shadow-sm border-l-4 border-orange-500 hover:shadow-md transition-all">
+                                    <div class="flex items-center">
+                                        <div class="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3 flex-shrink-0">
+                                            <i class="fas fa-exclamation"></i>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-gray-800 truncate" title="${task}">${task}</p>
+                                            <p class="text-xs text-orange-600">⏳ Por completar</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
                     </div>
-                    ` : '<div class="bg-green-50 p-4 rounded-lg text-green-700 font-semibold">🎉 ¡Felicitaciones! Todas las tareas completadas.</div>'}
+                    ` : '<div class="bg-gradient-to-r from-green-100 to-emerald-100 border-2 border-green-300 p-6 rounded-lg text-center"><div class="text-4xl mb-2">🎉</div><p class="text-green-800 font-bold text-lg">¡Felicitaciones!</p><p class="text-green-700">Todas las tareas están completadas</p></div>'}
                     
-                    <div class="bg-blue-50 p-4 rounded-lg">
-                        <div class="flex justify-between items-center mb-3">
-                            <h4 class="font-bold text-lg">📝 Retroalimentación:</h4>
+                    <!-- Retroalimentación Profesional - Sin Scroll -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg p-5 print:break-inside-avoid">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-bold text-xl text-blue-900 flex items-center">
+                                <i class="fas fa-comment-dots text-2xl mr-2"></i>
+                                Retroalimentación Pedagógica
+                            </h4>
                             <button onclick="openFeedbackBank(${index}, ${finalGrade}, ${points}, ${courseData.tasks.length})" 
-                                    class="text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-md">
+                                    class="text-sm bg-gradient-to-r from-purple-500 to-indigo-500 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-600 transition-all shadow-md hover:shadow-lg no-print">
                                 <i class="fas fa-lightbulb mr-2"></i>Banco de Retroalimentaciones
                             </button>
                         </div>
-                        <textarea id="studentNotes_${index}" class="w-full h-32 p-3 border border-blue-200 rounded-lg" 
-                                  placeholder="Escriba aquí la retroalimentación personalizada para el estudiante..."
-                                  onchange="saveStudentNotes(${index}, this.value)">${student.notes || ''}</textarea>
+                        <div class="bg-white rounded-lg border border-blue-200 p-4 print:border-gray-300">
+                            <textarea id="studentNotes_${index}" 
+                                      class="w-full min-h-[250px] p-4 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all resize-none print:border-none print:min-h-0 print:h-auto" 
+                                      placeholder="Escriba aquí la retroalimentación personalizada para el estudiante...&#10;&#10;✏️ Consejos:&#10;• Mencione logros específicos&#10;• Identifique áreas de mejora&#10;• Sugiera estrategias concretas&#10;• Use lenguaje motivador y constructivo"
+                                      onchange="saveStudentNotes(${index}, this.value)">${student.notes || ''}</textarea>
+                            ${student.notes ? `
+                                <div class="mt-3 pt-3 border-t border-blue-200 text-xs text-gray-600 flex items-center justify-between">
+                                    <span><i class="fas fa-save mr-1"></i>Retroalimentación guardada automáticamente</span>
+                                    <span>${(student.notes || '').split(/\s+/).length} palabras</span>
+                                </div>
+                            ` : ''}
+                        </div>
                     </div>
                     
-                    <div class="flex gap-3">
-                        <button onclick="window.print()" class="btn-action bg-indigo-500 hover:bg-indigo-600">
-                            <i class="fas fa-print mr-2"></i>Imprimir Informe
+                    <!-- Botones de Acción -->
+                    <div class="flex gap-3 no-print">
+                        <button onclick="downloadIndividualReportPDF(${index})" class="flex-1 btn-action bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all">
+                            <i class="fas fa-file-pdf mr-2"></i>Descargar PDF
                         </button>
-                        <button onclick="downloadIndividualReport(${index})" class="btn-action bg-green-500 hover:bg-green-600">
-                            <i class="fas fa-download mr-2"></i>Descargar PDF
+                        <button onclick="printIndividualReport()" class="flex-1 btn-action bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all">
+                            <i class="fas fa-print mr-2"></i>Imprimir
                         </button>
                     </div>
                 </div>
@@ -2262,9 +2470,75 @@
             saveAllCourses();
         }
 
-        // Descargar informe individual (simulado)
-        function downloadIndividualReport(index) {
-            alert('Función de descarga PDF en desarrollo. Por ahora use el botón Imprimir y seleccione "Guardar como PDF".');
+        // Descargar informe individual como PDF
+        function downloadIndividualReportPDF(index) {
+            const student = courseData.students[index];
+            const fileName = `Informe_${student.name}_${student.lastName1}_${courseData.courseName.replace(/\s+/g, '_')}.pdf`;
+            
+            // Mostrar mensaje antes de abrir el diálogo
+            const tempMessage = document.createElement('div');
+            tempMessage.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 30px 50px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                font-weight: bold;
+                font-size: 18px;
+            `;
+            tempMessage.innerHTML = `
+                <i class="fas fa-file-pdf text-4xl mb-3"></i>
+                <p>Generando PDF...</p>
+                <p class="text-sm font-normal mt-2 opacity-90">Se abrirá el diálogo de impresión</p>
+                <p class="text-xs font-normal mt-1 opacity-75">Seleccione "Guardar como PDF" como destino</p>
+            `;
+            document.body.appendChild(tempMessage);
+            
+            // Agregar nombre sugerido al título temporal
+            const originalTitle = document.title;
+            document.title = fileName.replace('.pdf', '');
+            
+            setTimeout(() => {
+                window.print();
+                document.body.removeChild(tempMessage);
+                document.title = originalTitle;
+            }, 500);
+        }
+        
+        // Imprimir informe individual
+        function printIndividualReport() {
+            const tempMessage = document.createElement('div');
+            tempMessage.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+                color: white;
+                padding: 30px 50px;
+                border-radius: 15px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                z-index: 10000;
+                text-align: center;
+                font-weight: bold;
+                font-size: 18px;
+            `;
+            tempMessage.innerHTML = `
+                <i class="fas fa-print text-4xl mb-3"></i>
+                <p>Preparando impresión...</p>
+            `;
+            document.body.appendChild(tempMessage);
+            
+            setTimeout(() => {
+                window.print();
+                document.body.removeChild(tempMessage);
+            }, 300);
         }
 
         // Guardar configuración

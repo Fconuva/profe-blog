@@ -820,6 +820,29 @@
 
         <!-- Tab: Configuración -->
         <div id="content-config" class="tab-content hidden">
+            <!-- Información de Modo Colaborativo -->
+            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md p-5 mb-6 border-l-4 border-blue-500">
+                <div class="flex items-start">
+                    <div class="flex-shrink-0">
+                        <i class="fas fa-users text-3xl text-blue-500"></i>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-bold text-blue-900 mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>Modo Colaborativo Activado
+                        </h3>
+                        <p class="text-sm text-blue-800 mb-2">
+                            <strong>Todos los usuarios comparten la misma base de datos.</strong>
+                        </p>
+                        <ul class="text-sm text-blue-700 space-y-1 list-disc list-inside">
+                            <li>Los cambios realizados por cualquier usuario son visibles para todos</li>
+                            <li>Alicia, Joselin, Pia y tú trabajan en los mismos cursos</li>
+                            <li>La sincronización se realiza automáticamente cada 30 segundos</li>
+                            <li>No es necesario compartir cursos manualmente</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
             <div class="bg-white rounded-lg shadow-md p-6">
                 <h3 class="text-lg font-bold text-gray-800 mb-4">
                     <i class="fas fa-cog mr-2 text-indigo-500"></i>Configuración del Sistema
@@ -1244,7 +1267,7 @@
                     return true;
                 }
                 
-                console.log('🔄 Sincronizando', allCourses.length, 'curso(s) a la nube...');
+                console.log('🔄 Sincronizando', allCourses.length, 'curso(s) a la base de datos compartida...');
                 
                 const response = await fetch('/api/courses/save', {
                     method: 'POST',
@@ -1252,8 +1275,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        courses: allCourses,
-                        username: username
+                        courses: allCourses
+                        // No necesita username - todos usan la misma base de datos compartida
                     })
                 });
                 
@@ -1769,13 +1792,24 @@
 
         // Cambiar de curso
         function switchCourse() {
+            // ⚠️ CRÍTICO: Guardar curso actual ANTES de cambiar
+            console.log('💾 Guardando curso actual antes de cambiar...');
+            saveAllCourses();
+            
             const selector = document.getElementById('courseSelector');
             const newCourseId = parseFloat(selector.value); // Usar parseFloat para soportar decimales
-            console.log('Cambiando a curso ID:', newCourseId);
-            loadCourse(newCourseId);
+            console.log('🔄 Cambiando a curso ID:', newCourseId);
             
-            // Limpiar y actualizar todas las secciones de informes
-            resetInformesSection();
+            // Pequeña pausa para asegurar que se guarde
+            setTimeout(() => {
+                loadCourse(newCourseId);
+                
+                // Limpiar y actualizar todas las secciones de informes
+                resetInformesSection();
+                
+                // Mostrar confirmación
+                showTemporaryMessage('✅ Curso anterior guardado y nuevo curso cargado', 'success');
+            }, 100);
         }
         
         // Resetear sección de informes al cambiar de curso
@@ -2376,7 +2410,6 @@
             
             showTemporaryMessage(`✅ Curso "${newName}" creado correctamente`, 'success');
         }
-
         // Exportar datos del curso
         function exportCourseData() {
             if (!courseData) return;

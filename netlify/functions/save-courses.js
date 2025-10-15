@@ -13,7 +13,7 @@ export default async (req, context) => {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
     const body = await req.json();
     
-    const { courses, username = 'profesor' } = body;
+    const { courses } = body;
     
     if (!courses || !Array.isArray(courses)) {
       return new Response(JSON.stringify({ 
@@ -24,19 +24,22 @@ export default async (req, context) => {
       });
     }
     
-    // Obtener el user_id
-    const [user] = await sql`
-      SELECT id FROM users WHERE username = ${username}
+    // MODO COLABORATIVO: Todos guardan en la misma base de datos compartida
+    // Usar siempre 'fconuva' como usuario base
+    const sharedUsername = 'fconuva';
+    
+    // Obtener o crear el user_id compartido
+    let [user] = await sql`
+      SELECT id FROM users WHERE username = ${sharedUsername}
     `;
     
     if (!user) {
-      // Crear el usuario si no existe
-      const [newUser] = await sql`
+      // Crear el usuario compartido si no existe
+      [user] = await sql`
         INSERT INTO users (username)
-        VALUES (${username})
+        VALUES (${sharedUsername})
         RETURNING id
       `;
-      user.id = newUser.id;
     }
     
     // Guardar o actualizar cada curso

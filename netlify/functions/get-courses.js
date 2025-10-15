@@ -12,29 +12,25 @@ export default async (req, context) => {
   try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
     
-    // Obtener username desde query params o usar 'profesor' por defecto
-    const url = new URL(req.url);
-    const username = url.searchParams.get('username') || 'profesor';
+    // MODO COLABORATIVO: Todos los usuarios ven los mismos cursos
+    // Usar siempre el usuario principal 'fconuva' como base de datos compartida
+    const sharedUsername = 'fconuva';
     
-    // Primero obtener el user_id
-    const [user] = await sql`
-      SELECT id FROM users WHERE username = ${username}
+    // Obtener el user_id del usuario compartido
+    let [user] = await sql`
+      SELECT id FROM users WHERE username = ${sharedUsername}
     `;
     
+    // Si no existe el usuario compartido, crearlo
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'Usuario no encontrado',
-        courses: []
-      }), {
-        status: 404,
-        headers: { 
-          'Content-Type': 'application/json',
-          'Cache-Control': 'no-cache'
-        }
-      });
+      [user] = await sql`
+        INSERT INTO users (username)
+        VALUES (${sharedUsername})
+        RETURNING id
+      `;
     }
     
-    // Obtener todos los cursos del usuario
+    // Obtener todos los cursos de la base de datos compartida
     const courses = await sql`
       SELECT 
         id,

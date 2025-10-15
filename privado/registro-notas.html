@@ -2028,6 +2028,91 @@
         async function generateCourseRecommendations(stats, taskAnalysis, oasAnalysis) {
             const recommendations = [];
             
+            // ============ INTENTAR GENERAR RECOMENDACIONES CON IA ============
+            try {
+                console.log('🤖 Intentando generar recomendaciones con IA...');
+                
+                // Preparar datos del curso para la IA
+                const courseContext = {
+                    curso: courseData.courseName,
+                    asignatura: courseData.subject,
+                    periodo: courseData.period,
+                    totalEstudiantes: courseData.students.filter(s => !s.retired).length,
+                    promedioGeneral: stats.avg.toFixed(2),
+                    tasaAprobacion: stats.passingRate.toFixed(1) + '%',
+                    desviacionEstandar: stats.stdDev.toFixed(2),
+                    tareasProblematicas: taskAnalysis.filter(t => t.percentage < 50).map(t => `${t.name} (${t.percentage}%)`),
+                    oasCriticos: oasAnalysis.critical.map(oa => `${oa.codigo} - ${oa.unidad} (${oa.percentage}%)`).slice(0, 3)
+                };
+                
+                const prompt = `Eres un asesor pedagógico experto en educación chilena. Analiza estos datos del curso y genera 3-4 recomendaciones pedagógicas específicas y accionables:
+
+CONTEXTO DEL CURSO:
+- Curso: ${courseContext.curso}
+- Asignatura: ${courseContext.asignatura}  
+- Período: ${courseContext.periodo}
+- Total estudiantes: ${courseContext.totalEstudiantes}
+
+MÉTRICAS DE RENDIMIENTO:
+- Promedio general: ${courseContext.promedioGeneral}
+- Tasa de aprobación: ${courseContext.tasaAprobacion}
+- Desviación estándar: ${courseContext.desviacionEstandar}
+
+TAREAS CON BAJO CUMPLIMIENTO (<50%):
+${courseContext.tareasProblematicas.length > 0 ? courseContext.tareasProblematicas.join('\n') : 'Ninguna'}
+
+OBJETIVOS DE APRENDIZAJE CRÍTICOS (<50%):
+${courseContext.oasCriticos.length > 0 ? courseContext.oasCriticos.join('\n') : 'Ninguno'}
+
+INSTRUCCIONES:
+1. Genera 3-4 recomendaciones pedagógicas concretas y aplicables
+2. Cada recomendación debe tener: título corto, tipo (critical/warning/success/info), y descripción de 2-3 líneas
+3. Usa lenguaje técnico-pedagógico apropiado para docentes
+4. Responde SOLO en formato JSON así:
+[
+  {"type": "critical", "icon": "🚨", "title": "Título", "text": "Descripción detallada"},
+  {"type": "warning", "icon": "⚠️", "title": "Título", "text": "Descripción detallada"}
+]
+
+RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
+
+                const apiKey = localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
+                
+                // Intentar Gemini primero
+                let aiResponse = null;
+                try {
+                    console.log('🔷 Intentando con Gemini API...');
+                    aiResponse = await callGeminiAPI(apiKey, prompt);
+                    console.log('✅ Gemini respondió:', aiResponse);
+                } catch (geminiError) {
+                    console.warn('❌ Gemini falló, intentando con HuggingFace...', geminiError);
+                    try {
+                        aiResponse = await callHuggingFaceAPI(prompt);
+                        console.log('✅ HuggingFace respondió:', aiResponse);
+                    } catch (hfError) {
+                        console.warn('❌ HuggingFace también falló', hfError);
+                    }
+                }
+                
+                // Parsear respuesta de IA
+                if (aiResponse) {
+                    // Extraer JSON de la respuesta (puede venir con texto extra)
+                    const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
+                    if (jsonMatch) {
+                        const aiRecommendations = JSON.parse(jsonMatch[0]);
+                        console.log('✅ Recomendaciones de IA parseadas:', aiRecommendations);
+                        return aiRecommendations;
+                    }
+                }
+                
+                console.warn('⚠️ No se pudieron generar recomendaciones con IA, usando reglas básicas...');
+            } catch (error) {
+                console.error('❌ Error al generar recomendaciones con IA:', error);
+                console.log('📝 Usando recomendaciones basadas en reglas...');
+            }
+            
+            // ============ RECOMENDACIONES BASADAS EN REGLAS (FALLBACK) ============
+            
             // Recomendaciones por promedio
             if (stats.avg < 4.0) {
                 recommendations.push({

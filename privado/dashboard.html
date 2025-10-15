@@ -95,10 +95,16 @@
                             <h3 class="ml-4 text-xl font-semibold text-gray-800">Migración Automática</h3>
                         </div>
                         <p class="text-gray-600 mb-4">¡NUEVO! Crea automáticamente 8 cursos completos con estudiantes y tareas predefinidas.</p>
-                        <button onclick="iniciarMigracionCompleta()" 
+                        <button onclick="limpiarTodoYMigrar()" 
                                 id="migracionBtn"
+                                class="inline-block w-full text-center bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors shadow-lg mb-2">
+                            <i class="fas fa-broom mr-2"></i>LIMPIAR TODO Y MIGRAR
+                        </button>
+                        <p class="text-xs text-gray-500 mb-2">⚠️ Esto borrará todos los cursos actuales y creará 8 nuevos cursos desde cero.</p>
+                        <button onclick="iniciarMigracionCompleta()" 
+                                id="migracionSoloBtn"
                                 class="inline-block w-full text-center bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors shadow-lg">
-                            <i class="fas fa-rocket mr-2"></i>INICIAR MIGRACIÓN
+                            <i class="fas fa-rocket mr-2"></i>SOLO AGREGAR CURSOS
                         </button>
                         <div id="migracionStatus" class="mt-4 hidden">
                             <div class="bg-green-50 border border-green-200 rounded-lg p-3">
@@ -170,8 +176,9 @@
                 statusText.textContent = 'Paso 2/3: Guardando en navegador...';
                 await new Promise(resolve => setTimeout(resolve, 500));
 
+                const baseTimestamp = Date.now();
                 const allCourses = cursosCompletos.map((curso, index) => ({
-                    id: index,
+                    id: baseTimestamp + index, // ID único basado en timestamp
                     ...curso,
                     config: {
                         subject: curso.subject,
@@ -179,7 +186,8 @@
                         gradeType: "Chileno",
                         maxGrade: 7.0,
                         minGrade: 1.0,
-                        passingGrade: 4.0
+                        passingGrade: 4.0,
+                        passingPercentage: 60
                     }
                 }));
 
@@ -295,6 +303,68 @@
                 });
             }
             return tareas;
+        }
+
+        // LIMPIAR TODO Y MIGRAR DESDE CERO
+        async function limpiarTodoYMigrar() {
+            const confirmar = confirm('⚠️ ADVERTENCIA: Esto borrará TODOS los cursos existentes (local y nube) y creará 8 cursos nuevos.\n\n¿Estás seguro de continuar?');
+            
+            if (!confirmar) {
+                return;
+            }
+
+            const btn = document.getElementById('migracionBtn');
+            const statusDiv = document.getElementById('migracionStatus');
+            const statusText = document.getElementById('statusText');
+
+            // Desactivar botones
+            btn.disabled = true;
+            document.getElementById('migracionSoloBtn').disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>LIMPIANDO...';
+            statusDiv.classList.remove('hidden');
+
+            try {
+                // Paso 1: Limpiar localStorage
+                statusText.textContent = 'Paso 1/4: Limpiando navegador...';
+                localStorage.removeItem('allCourses');
+                localStorage.removeItem('currentCourseId');
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Paso 2: Limpiar base de datos (borrar todos los cursos)
+                statusText.textContent = 'Paso 2/4: Limpiando base de datos...';
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                
+                // No hay endpoint específico para borrar todos, así que simplemente sobrescribiremos
+                // con un array vacío primero
+                await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        courses: []
+                    })
+                });
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Paso 3: Llamar a la migración normal
+                statusText.textContent = 'Paso 3/4: Creando nuevos cursos...';
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>CREANDO CURSOS...';
+                await iniciarMigracionCompleta();
+
+                // Éxito
+                statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>¡Limpieza y migración completadas!';
+                
+            } catch (error) {
+                console.error('Error en limpieza:', error);
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error: ' + error.message;
+                statusDiv.querySelector('div').classList.add('bg-red-50', 'border-red-200');
+                statusDiv.querySelector('p').classList.add('text-red-800');
+                
+                // Reactivar botones
+                btn.disabled = false;
+                document.getElementById('migracionSoloBtn').disabled = false;
+                btn.innerHTML = '<i class="fas fa-broom mr-2"></i>LIMPIAR TODO Y MIGRAR';
+            }
         }
     </script>
 

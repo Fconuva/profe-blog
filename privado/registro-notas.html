@@ -1534,7 +1534,13 @@
             ];
             
             courseData.students.forEach(student => {
-                const totalPoints = student.grades.filter(g => g).length;
+                // Validar y normalizar grades
+                const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
+                const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => 
+                    i < studentGrades.length ? studentGrades[i] : null
+                );
+                
+                const totalPoints = normalizedGrades.filter(g => g).length;
                 const finalGrade = calculateGrade(totalPoints, courseData.tasks.length);
                 
                 data.push([
@@ -1542,7 +1548,7 @@
                     student.lastName1,
                     student.lastName2,
                     student.name,
-                    ...student.grades.map(g => g ? '✓' : ''),
+                    ...normalizedGrades.map(g => g ? '✓' : ''),
                     totalPoints,
                     finalGrade.toFixed(1)
                 ]);
@@ -1570,7 +1576,9 @@
             
             // Calcular estadísticas solo con estudiantes activos
             const grades = activeStudents.map(s => {
-                const points = s.grades.filter(g => g).length;
+                // Validar y normalizar grades
+                const studentGrades = s.grades && Array.isArray(s.grades) ? s.grades : [];
+                const points = studentGrades.filter(g => g).length;
                 return calculateGrade(points, courseData.tasks.length);
             });
             
@@ -1662,7 +1670,10 @@
             
             const activeStudents = courseData.students.filter(s => !s.retired);
             const taskCompletion = courseData.tasks.map((task, index) => {
-                const completed = activeStudents.filter(s => s.grades[index]).length;
+                const completed = activeStudents.filter(s => {
+                    const grades = s.grades && Array.isArray(s.grades) ? s.grades : [];
+                    return grades[index];
+                }).length;
                 return activeStudents.length > 0 ? (completed / activeStudents.length * 100).toFixed(1) : 0;
             });
             
@@ -2452,7 +2463,7 @@
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-sm text-gray-700">
-                                                ${task.oas && Array.isArray(task.oas) && task.oas.length > 0 ? task.oas.map(oa => typeof oa === 'object' ? oa.codigo : oa).join(', ') : '<span class="text-gray-400 italic">Sin OAs</span>'}
+                                                ${task.oas && Array.isArray(task.oas) && task.oas.length > 0 ? task.oas.join(', ') : '<span class="text-gray-400 italic">Sin OAs</span>'}
                                             </td>
                                         </tr>
                                     `;
@@ -2642,21 +2653,37 @@
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
                                 ${students.map((student, index) => {
-                                    const points = student.grades && Array.isArray(student.grades) ? student.grades.filter(g => g).length : 0;
+                                    // Validar que student existe
+                                    if (!student) {
+                                        console.warn(`Estudiante en índice ${index} es null/undefined`);
+                                        return '';
+                                    }
+                                    
+                                    // Asegurar que grades existe y es un array
+                                    const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
+                                    
+                                    // Normalizar grades para que coincida con el número de tareas
+                                    const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => 
+                                        i < studentGrades.length ? studentGrades[i] : null
+                                    );
+                                    
+                                    // Calcular puntos con grades normalizadas
+                                    const points = normalizedGrades.filter(g => g).length;
                                     const grade = calculateGrade(points, courseData.tasks.length);
                                     const gradeColor = grade >= 5.5 ? 'green' : grade >= 4.5 ? 'blue' : grade >= 4.0 ? 'orange' : 'red';
                                     const status = grade >= 4.0 ? 'Aprobado' : 'Reprobado';
                                     const statusIcon = grade >= 4.0 ? 'check-circle' : 'times-circle';
                                     
-                                    // Asegurar que grades tenga la longitud correcta (rellenar con null si es necesario)
-                                    const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
-                                    const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => studentGrades[i] || null);
+                                    // Construir nombre completo del estudiante
+                                    const fullName = student.name || 
+                                                   `${student.lastName1 || ''} ${student.lastName2 || ''} ${student.name || ''}`.trim() ||
+                                                   'Sin nombre';
                                     
                                     return `
                                         <tr class="hover:bg-gray-50 ${student.retired ? 'opacity-50' : ''}">
                                             <td class="px-4 py-3 text-center font-bold text-gray-600 sticky left-0 bg-white">${index + 1}</td>
                                             <td class="px-4 py-3 font-semibold text-gray-900 sticky left-8 bg-white">
-                                                ${student.name || 'Sin nombre'}
+                                                ${fullName}
                                                 ${student.retired ? '<span class="ml-2 text-xs text-red-600">(Retirado)</span>' : ''}
                                             </td>
                                             ${normalizedGrades.map(g => `
@@ -2785,7 +2812,14 @@
             }
             
             const student = courseData.students[index];
-            const points = student.grades.filter(g => g).length;
+            
+            // Validar y normalizar grades
+            const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
+            const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => 
+                i < studentGrades.length ? studentGrades[i] : null
+            );
+            
+            const points = normalizedGrades.filter(g => g).length;
             const finalGrade = calculateGrade(points, courseData.tasks.length);
             
             const reportDiv = document.getElementById('individualReportContent');
@@ -2794,7 +2828,7 @@
             const completedTasks = [];
             const pendingTasks = [];
             
-            student.grades.forEach((grade, i) => {
+            normalizedGrades.forEach((grade, i) => {
                 if (grade) {
                     completedTasks.push(courseData.tasks[i].name);
                 } else {
@@ -3214,8 +3248,10 @@
                 
                 courseData.tasks.forEach((task, taskIndex) => {
                     try {
-                        if (task.oas && Array.isArray(task.oas) && task.oas.length > 0) {
-                            const cumplida = student.grades[taskIndex];
+                        if (task.oas && Array.isArray(task.oas) && task.oas.oas.length > 0) {
+                            // Validar grades antes de acceder
+                            const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
+                            const cumplida = studentGrades[taskIndex];
                             
                             task.oas.forEach(oaRef => {
                                 try {

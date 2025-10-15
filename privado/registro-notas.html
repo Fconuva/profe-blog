@@ -274,15 +274,17 @@
                     </select>
                 </div>
                 <div class="flex gap-2">
-                    <button onclick="manualSync()" class="btn-action bg-blue-500 hover:bg-blue-600" title="Sincronizar con la nube">
-                        <i class="fas fa-sync-alt mr-2"></i>Sincronizar
-                    </button>
                     <button onclick="showNewCourseModal()" class="btn-action bg-green-500 hover:bg-green-600">
                         <i class="fas fa-plus mr-2"></i>Nuevo Curso
                     </button>
                     <button onclick="deleteCourse()" class="btn-action bg-red-500 hover:bg-red-600">
                         <i class="fas fa-trash mr-2"></i>Eliminar Curso
                     </button>
+                    <!-- Indicador de sincronización -->
+                    <span id="syncIndicator" class="hidden items-center px-3 py-2 text-sm text-gray-600">
+                        <i class="fas fa-cloud-upload-alt mr-2 text-blue-500"></i>
+                        <span class="hidden md:inline">Sincronizando...</span>
+                    </span>
                 </div>
             </div>
         </div>
@@ -622,26 +624,33 @@
 
         // Inicializar
         document.addEventListener('DOMContentLoaded', async function() {
-            // Cargar cursos desde la base de datos (async)
+            console.log('🚀 Iniciando aplicación...');
+            
+            // PASO 1: Cargar cursos (con migración automática si es necesario)
             await loadAllCourses();
             
-            // Si no hay cursos, crear uno por defecto
+            // PASO 2: Sincronizar cambios pendientes en segundo plano
+            setTimeout(() => {
+                syncPendingChanges();
+            }, 2000);
+            
+            // PASO 3: Si no hay cursos, crear uno por defecto
             if (allCourses.length === 0) {
                 console.log('📝 No hay cursos, creando uno por defecto...');
                 createDefaultCourse();
             } else {
-                console.log(`✅ ${allCourses.length} curso(s) cargado(s)`);
+                console.log(`✅ ${allCourses.length} curso(s) disponible(s)`);
             }
             
-            // Asegurar que hay un curso actual
+            // PASO 4: Asegurar que hay un curso actual
             if (!currentCourseId && allCourses.length > 0) {
                 currentCourseId = allCourses[0].id;
             }
             
-            // Actualizar selector DESPUÉS de asegurar currentCourseId
+            // PASO 5: Actualizar interfaz
             updateCourseSelector();
             
-            // Cargar el curso actual
+            // PASO 6: Cargar el curso actual
             if (currentCourseId) {
                 loadCourse(currentCourseId);
             } else {
@@ -650,10 +659,14 @@
                 populateStudentSelect();
             }
             
+            // PASO 7: Configurar logout
             document.getElementById('logout-btn').addEventListener('click', function() {
                 sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('username');
                 window.location.href = 'index.html';
             });
+            
+            console.log('✅ Aplicación lista');
         });
 
         // Crear curso por defecto
@@ -710,11 +723,18 @@
             }
         }
         
-        // Sincronizar cursos con la base de datos
+        // Sincronizar cursos con la base de datos (silencioso)
         async function syncCoursesToDatabase() {
             try {
                 const username = getCurrentUsername();
-                console.log('🔄 Sincronizando cursos a la base de datos...');
+                
+                // Solo sincronizar si hay cursos
+                if (!allCourses || allCourses.length === 0) {
+                    console.log('⏭️ Sin cursos para sincronizar');
+                    return true;
+                }
+                
+                console.log('🔄 Sincronizando', allCourses.length, 'curso(s) a la nube...');
                 
                 const response = await fetch('/api/courses/save', {
                     method: 'POST',
@@ -727,22 +747,22 @@
                     })
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const data = await response.json();
                 
                 if (data.success) {
-                    console.log('✅ Cursos sincronizados:', data.message);
-                    
-                    // Mostrar notificación de éxito
-                    showSyncNotification('Cambios guardados en la nube', 'success');
+                    console.log('✅ Sincronización exitosa:', data.message);
                     return true;
                 } else {
-                    console.error('❌ Error en sincronización:', data.error);
-                    showSyncNotification('Error al sincronizar', 'error');
+                    console.warn('⚠️ Respuesta sin éxito:', data.error);
                     return false;
                 }
             } catch (error) {
-                console.error('❌ Error sincronizando a DB:', error);
-                showSyncNotification('Sin conexión - guardado local', 'warning');
+                // Silencioso: solo log, sin notificaciones molestas
+                console.warn('⚠️ Sincronización diferida (sin conexión o error):', error.message);
                 return false;
             }
         }
@@ -809,20 +829,58 @@
             }
         }
         
-        // Cargar todos los cursos (primero intenta DB, luego localStorage)
+        // Cargar todos los cursos con migración automática
         async function loadAllCourses() {
-            // Intentar cargar desde la base de datos
-            const loadedFromDB = await loadCoursesFromDatabase();
+            console.log('🔄 Iniciando carga de cursos...');
             
-            // Si falla, cargar desde localStorage como respaldo
-            if (!loadedFromDB) {
-                const saved = localStorage.getItem('allCourses');
-                if (saved) {
-                    allCourses = JSON.parse(saved);
-                    console.log('📁 Cursos cargados desde localStorage:', allCourses.length, 'cursos');
+            // PASO 1: Cargar desde localStorage primero (respaldo inmediato)
+            const saved = localStorage.getItem('allCourses');
+            let localCourses = [];
+            if (saved) {
+                try {
+                    localCourses = JSON.parse(saved);
+                    console.log('📁 Cursos en localStorage:', localCourses.length);
+                } catch (e) {
+                    console.error('Error parseando localStorage:', e);
                 }
             }
             
+            // PASO 2: Intentar cargar desde la base de datos
+            const loadedFromDB = await loadCoursesFromDatabase();
+            
+            // PASO 3: Migración automática si hay cursos locales pero no en DB
+            if (localCourses.length > 0 && (!allCourses || allCourses.length === 0)) {
+                console.log('🔄 Detectados', localCourses.length, 'cursos locales sin sincronizar');
+                console.log('📤 Iniciando migración automática a la nube...');
+                
+                // Cargar cursos locales en memoria
+                allCourses = localCourses;
+                
+                // Subir a la base de datos
+                try {
+                    const synced = await syncCoursesToDatabase();
+                    if (synced) {
+                        console.log('✅ Migración completada:', localCourses.length, 'cursos sincronizados');
+                        showSyncNotification('✅ Cursos migrados a la nube automáticamente', 'success');
+                    }
+                } catch (error) {
+                    console.error('❌ Error en migración automática:', error);
+                    // No pasa nada, seguimos trabajando con localStorage
+                }
+            }
+            
+            // PASO 4: Si no hay cursos en ningún lado, usar localStorage como respaldo
+            if (!allCourses || allCourses.length === 0) {
+                if (localCourses.length > 0) {
+                    allCourses = localCourses;
+                    console.log('📁 Usando cursos de localStorage:', allCourses.length);
+                } else {
+                    allCourses = [];
+                    console.log('📝 No hay cursos, se creará uno por defecto');
+                }
+            }
+            
+            // PASO 5: Configurar curso actual
             const savedCurrentId = localStorage.getItem('currentCourseId');
             if (savedCurrentId) {
                 currentCourseId = parseFloat(savedCurrentId);
@@ -831,16 +889,40 @@
                 currentCourseId = allCourses[0].id;
                 console.log('ID de curso establecido al primero:', currentCourseId);
             }
+            
+            console.log('✅ Carga completada:', allCourses.length, 'curso(s) disponible(s)');
         }
 
-        // Guardar todos los cursos (localStorage + sincronización con DB)
+        // Guardar todos los cursos (localStorage + sincronización automática con DB)
         function saveAllCourses() {
-            // Guardar localmente (inmediato)
+            // Guardar localmente (inmediato y confiable)
             localStorage.setItem('allCourses', JSON.stringify(allCourses));
             localStorage.setItem('currentCourseId', currentCourseId);
             
-            // Sincronizar con base de datos (asíncrono)
-            syncCoursesToDatabase();
+            // Sincronizar con base de datos (asíncrono, silencioso, no bloquea la UI)
+            // Si falla, no importa, localStorage ya tiene los datos
+            syncCoursesToDatabase().catch(error => {
+                console.warn('⚠️ Sincronización en segundo plano falló (no afecta el funcionamiento):', error.message);
+                // Guardar en cola de sincronización pendiente
+                markForLaterSync();
+            });
+        }
+        
+        // Marcar para sincronización posterior
+        function markForLaterSync() {
+            localStorage.setItem('needsSync', 'true');
+        }
+        
+        // Intentar sincronizar pendientes
+        async function syncPendingChanges() {
+            if (localStorage.getItem('needsSync') === 'true') {
+                console.log('🔄 Sincronizando cambios pendientes...');
+                const synced = await syncCoursesToDatabase();
+                if (synced) {
+                    localStorage.removeItem('needsSync');
+                    console.log('✅ Cambios pendientes sincronizados');
+                }
+            }
         }
 
         // Cargar un curso específico

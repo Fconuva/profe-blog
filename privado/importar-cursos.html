@@ -111,8 +111,12 @@
 
         // Importar todos los cursos
         async function importAllCourses() {
+            console.log('🔄 Iniciando importación de cursos...');
+            
             const fileInput = document.getElementById('csvFiles');
             const files = fileInput.files;
+            
+            console.log('📁 Archivos seleccionados:', files.length);
             
             if (files.length === 0) {
                 alert('Por favor selecciona al menos un archivo CSV');
@@ -120,6 +124,7 @@
             }
 
             loadExistingCourses();
+            console.log('📚 Cursos existentes cargados:', allCourses.length);
 
             const progressDiv = document.getElementById('progress');
             const progressBar = document.getElementById('progressBar');
@@ -140,8 +145,12 @@
                 progressBar.style.width = progress + '%';
                 progressText.textContent = `Procesando ${i + 1} de ${files.length}: ${file.name}`;
 
+                console.log(`📄 Procesando archivo ${i + 1}/${files.length}: ${file.name}`);
+
                 try {
                     const courseData = await parseCSV(file);
+                    console.log('✅ Curso parseado:', courseData);
+                    
                     if (courseData) {
                         allCourses.push(courseData);
                         successCount++;
@@ -152,8 +161,12 @@
                             students: courseData.students.length,
                             tasks: courseData.tasks.length
                         });
+                        console.log(`✅ Curso agregado: ${courseData.courseName} (${courseData.students.length} estudiantes, ${courseData.tasks.length} tareas)`);
+                    } else {
+                        console.warn('⚠️ parseCSV retornó null o undefined');
                     }
                 } catch (error) {
+                    console.error('❌ Error al procesar archivo:', error);
                     errorCount++;
                     results.push({
                         file: file.name,
@@ -162,6 +175,8 @@
                     });
                 }
             }
+            
+            console.log(`📊 Importación completada: ${successCount} exitosos, ${errorCount} errores`);
 
             // Establecer el primer curso como actual si no hay ninguno
             if (!currentCourseId && allCourses.length > 0) {
@@ -242,16 +257,24 @@
 
         // Parsear archivo CSV
         function parseCSV(file) {
+            console.log('📖 Parseando archivo:', file.name);
+            
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 
                 reader.onload = function(e) {
+                    console.log('📄 Archivo leído, procesando...');
+                    
                     try {
                         const text = e.target.result;
                         const lines = text.split('\n');
                         
+                        console.log('📋 Líneas detectadas:', lines.length);
+                        
                         if (lines.length < 4) {
-                            reject(new Error('Archivo CSV inválido o vacío'));
+                            const error = new Error('Archivo CSV inválido o vacío (menos de 4 líneas)');
+                            console.error('❌', error);
+                            reject(error);
                             return;
                         }
 

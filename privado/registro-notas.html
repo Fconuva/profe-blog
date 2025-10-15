@@ -94,29 +94,40 @@
                 margin-bottom: 0.75rem !important;
             }
             
-            /* Textarea en modo lectura para PDF - SIN SCROLL */
+            /* Textarea en modo lectura para PDF - SIN SCROLL, ALTURA AUTOMÁTICA */
             textarea {
-                border: none !important;
+                border: 1px solid #e5e7eb !important;
                 resize: none !important;
                 height: auto !important;
                 min-height: 0 !important;
                 max-height: none !important;
                 overflow: visible !important;
                 overflow-y: visible !important;
-                background: transparent !important;
-                padding: 0.5rem !important;
-                font-size: 11pt !important;
-                line-height: 1.6 !important;
+                background: white !important;
+                padding: 1rem !important;
+                font-size: 10pt !important;
+                line-height: 1.7 !important;
                 font-family: 'Georgia', 'Times New Roman', serif !important;
                 white-space: pre-wrap !important;
                 word-wrap: break-word !important;
                 display: block !important;
+                page-break-inside: avoid !important;
+                orphans: 3 !important;
+                widows: 3 !important;
             }
             
-            /* Contenedor de retroalimentación */
-            textarea#studentNotes_0,
+            /* Contenedor de retroalimentación - EVITAR CORTES */
+            .bg-gradient-to-br.from-blue-50 {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+                margin-bottom: 1rem !important;
+            }
+            
+            /* Forzar que el contenido del textarea sea visible completo */
             textarea[id^="studentNotes_"] {
                 page-break-inside: auto !important;
+                break-inside: auto !important;
+                min-height: fit-content !important;
             }
             
             /* Botones y elementos interactivos ocultos */
@@ -1667,7 +1678,7 @@
                 }
             });
             
-            // Progreso por tarea (solo estudiantes activos)
+            // Progreso por tarea (solo estudiantes activos) - Gráfico de barras horizontal compacto
             const ctx2 = document.getElementById('taskProgressChart');
             if (ctx2.chart) ctx2.chart.destroy();
             
@@ -1677,28 +1688,74 @@
                     const grades = s.grades && Array.isArray(s.grades) ? s.grades : [];
                     return grades[index];
                 }).length;
-                return activeStudents.length > 0 ? (completed / activeStudents.length * 100).toFixed(1) : 0;
+                const percentage = activeStudents.length > 0 ? (completed / activeStudents.length * 100) : 0;
+                return {
+                    percentage: parseFloat(percentage.toFixed(1)),
+                    completed: completed,
+                    total: activeStudents.length
+                };
             });
             
+            // Colores según porcentaje (verde >= 80%, amarillo >= 60%, rojo < 60%)
+            const backgroundColors = taskCompletion.map(t => 
+                t.percentage >= 80 ? 'rgba(34, 197, 94, 0.8)' : 
+                t.percentage >= 60 ? 'rgba(234, 179, 8, 0.8)' : 
+                'rgba(239, 68, 68, 0.8)'
+            );
+            
             ctx2.chart = new Chart(ctx2, {
-                type: 'line',
+                type: 'bar',
                 data: {
-                    labels: courseData.tasks.map(t => t.name),
+                    labels: courseData.tasks.map((t, i) => `T${i + 1}: ${t.name.substring(0, 25)}${t.name.length > 25 ? '...' : ''}`),
                     datasets: [{
-                        label: '% de Cumplimiento',
-                        data: taskCompletion,
-                        borderColor: '#6366f1',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4,
-                        fill: true
+                        label: '% Cumplimiento',
+                        data: taskCompletion.map(t => t.percentage),
+                        backgroundColor: backgroundColors,
+                        borderColor: backgroundColors.map(c => c.replace('0.8', '1')),
+                        borderWidth: 1
                     }]
                 },
                 options: {
+                    indexAxis: 'y', // Barras horizontales
                     responsive: true,
+                    maintainAspectRatio: true,
+                    aspectRatio: 2, // Más compacto
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const dataIndex = context.dataIndex;
+                                    const data = taskCompletion[dataIndex];
+                                    return [
+                                        `Cumplimiento: ${data.percentage}%`,
+                                        `Completaron: ${data.completed}/${data.total} estudiantes`
+                                    ];
+                                }
+                            }
+                        }
+                    },
                     scales: {
-                        y: {
+                        x: {
                             beginAtZero: true,
-                            max: 100
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 11
+                                }
+                            }
                         }
                     }
                 }
@@ -3246,20 +3303,121 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
         });
 
         // Descargar informe individual como PDF
-        function downloadIndividualReportPDF(index) {
+        async function downloadIndividualReportPDF(index) {
             const student = courseData.students[index];
             const fileName = `Informe_${student.name}_${student.lastName1}_${courseData.courseName.replace(/\s+/g, '_')}.pdf`;
             
-            const originalTitle = document.title;
-            document.title = fileName.replace('.pdf', '');
+            // Buscar el contenedor del informe individual
+            const reportElement = document.querySelector(`#individualReports > div:nth-child(${index + 1})`);
             
-            // Abrir diálogo de impresión directamente sin mensaje
-            window.print();
+            if (!reportElement) {
+                alert('⚠️ No se encontró el informe. Por favor, intenta nuevamente.');
+                return;
+            }
             
-            // Restaurar título después
-            setTimeout(() => {
-                document.title = originalTitle;
-            }, 1000);
+            // Mostrar mensaje de carga
+            const loadingMsg = document.createElement('div');
+            loadingMsg.id = 'pdf-loading';
+            loadingMsg.className = 'fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex items-center justify-center z-50';
+            loadingMsg.innerHTML = `
+                <div class="bg-white rounded-lg p-8 text-center shadow-2xl max-w-md">
+                    <i class="fas fa-file-pdf text-6xl text-red-500 mb-4 animate-pulse"></i>
+                    <h3 class="text-xl font-bold text-gray-800 mb-2">Generando PDF de ${student.name}</h3>
+                    <p class="text-gray-600 mb-3">Procesando informe individual...</p>
+                    <div class="mt-4">
+                        <div class="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-indigo-600 border-r-transparent"></div>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-4">⏱️ Esto puede tomar 10-15 segundos</p>
+                </div>
+            `;
+            document.body.appendChild(loadingMsg);
+            
+            try {
+                // Ocultar temporalmente los botones "no-print"
+                const noPrintElements = reportElement.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.style.display = 'none');
+                
+                // Esperar un momento para que se renderice
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                // Capturar con html2canvas con configuración optimizada para PDF
+                const canvas = await html2canvas(reportElement, {
+                    scale: 2.5, // Mayor calidad para texto legible
+                    useCORS: true,
+                    logging: false,
+                    backgroundColor: '#ffffff',
+                    windowWidth: 1200, // Ancho fijo para consistencia
+                    onclone: (clonedDoc) => {
+                        // Ajustar estilos en el documento clonado para mejor impresión
+                        const clonedElement = clonedDoc.querySelector(`#individualReports > div:nth-child(${index + 1})`);
+                        if (clonedElement) {
+                            clonedElement.style.maxWidth = '1200px';
+                            clonedElement.style.padding = '20px';
+                            
+                            // Ajustar textarea para que se vea como texto estático
+                            const textareas = clonedElement.querySelectorAll('textarea');
+                            textareas.forEach(textarea => {
+                                const div = clonedDoc.createElement('div');
+                                div.className = 'whitespace-pre-wrap text-gray-800 text-sm leading-relaxed';
+                                div.textContent = textarea.value;
+                                div.style.minHeight = '100px';
+                                div.style.padding = '12px';
+                                textarea.parentNode.replaceChild(div, textarea);
+                            });
+                        }
+                    }
+                });
+                
+                // Calcular dimensiones para PDF A4
+                const imgWidth = 210; // A4 width in mm
+                const pageHeight = 297; // A4 height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                
+                // Crear PDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                
+                // Si el contenido es más alto que una página, dividir en múltiples páginas
+                let heightLeft = imgHeight;
+                let position = 0;
+                const margin = 10; // margen superior/inferior
+                
+                // Primera página
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                
+                // Páginas adicionales si es necesario
+                while (heightLeft > margin) {
+                    position = -(pageHeight - margin) * (Math.ceil((imgHeight - heightLeft) / pageHeight));
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+                
+                // Descargar el PDF
+                pdf.save(fileName);
+                
+                // Restaurar elementos ocultos
+                noPrintElements.forEach(el => el.style.display = '');
+                
+                // Remover mensaje de carga
+                document.body.removeChild(loadingMsg);
+                
+                // Mostrar mensaje de éxito
+                showNotification(`✅ PDF de ${student.name} generado exitosamente`, 'success');
+                
+            } catch (error) {
+                console.error('Error generando PDF individual:', error);
+                document.body.removeChild(loadingMsg);
+                
+                // Restaurar elementos ocultos
+                const noPrintElements = reportElement.querySelectorAll('.no-print');
+                noPrintElements.forEach(el => el.style.display = '');
+                
+                alert(`❌ Error al generar el PDF de ${student.name}. Puedes intentar con la opción de imprimir (Ctrl+P).`);
+            }
         }
         
         // Imprimir informe individual

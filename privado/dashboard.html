@@ -200,6 +200,8 @@
                 return;
             }
             
+            console.log('🗑️ Intentando borrar curso:', { courseId, courseName });
+            
             try {
                 const username = sessionStorage.getItem('username') || 'fconuva';
                 const response = await fetch('/api/courses/delete', {
@@ -211,15 +213,19 @@
                     })
                 });
                 
+                const responseData = await response.json();
+                console.log('📤 Respuesta del servidor:', responseData);
+                
                 if (response.ok) {
                     alert('✅ Curso eliminado exitosamente');
                     verCursosActuales(); // Recargar lista
                 } else {
-                    alert('❌ Error al eliminar el curso');
+                    console.error('❌ Error del servidor:', responseData);
+                    alert(`❌ Error al eliminar el curso:\n${responseData.error || 'Error desconocido'}\n\nRevisa la consola para más detalles.`);
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('❌ Error de conexión');
+                console.error('❌ Error de conexión:', error);
+                alert('❌ Error de conexión. Revisa la consola.');
             }
         }
 
@@ -247,38 +253,62 @@
             statusDiv.classList.remove('hidden');
 
             try {
-                // Paso 1: Borrar localStorage COMPLETAMENTE (incluyendo flags)
-                statusText.textContent = 'Paso 1/3: Eliminando cursos del navegador...';
-                localStorage.clear(); // Limpiar TODO el localStorage
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // Paso 2: Borrar de la base de datos
-                statusText.textContent = 'Paso 2/3: Eliminando cursos de la base de datos...';
                 const username = sessionStorage.getItem('username') || 'fconuva';
                 
-                const response = await fetch('/api/courses/save', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: username,
-                        courses: [] // Array vacío = borrar todo
-                    })
-                });
-
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error('Error al limpiar la base de datos: ' + errorText);
+                // Paso 1: Obtener todos los cursos actuales de la BD
+                statusText.textContent = 'Paso 1/4: Obteniendo lista de cursos...';
+                const getResponse = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const getData = await getResponse.json();
+                
+                let cursosABorrar = [];
+                if (getData.success && getData.courses) {
+                    cursosABorrar = getData.courses;
+                    console.log('📋 Cursos a borrar:', cursosABorrar.length);
                 }
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
 
-                const responseData = await response.json();
-                console.log('Respuesta de borrado:', responseData);
+                // Paso 2: Borrar cada curso de la base de datos uno por uno
+                statusText.textContent = `Paso 2/4: Eliminando ${cursosABorrar.length} cursos de la base de datos...`;
+                
+                for (let i = 0; i < cursosABorrar.length; i++) {
+                    const curso = cursosABorrar[i];
+                    console.log(`🗑️ Borrando curso ${i + 1}/${cursosABorrar.length}: ${curso.courseName} (ID: ${curso.id})`);
+                    
+                    try {
+                        const deleteResponse = await fetch('/api/courses/delete', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                courseId: curso.id,
+                                username: username
+                            })
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            console.log(`✅ Curso ${curso.courseName} eliminado`);
+                        } else {
+                            const errorData = await deleteResponse.json();
+                            console.warn(`⚠️ No se pudo eliminar ${curso.courseName}:`, errorData);
+                        }
+                    } catch (e) {
+                        console.error(`❌ Error eliminando ${curso.courseName}:`, e);
+                    }
+                    
+                    statusText.textContent = `Paso 2/4: Eliminando ${i + 1}/${cursosABorrar.length} cursos...`;
+                }
                 
                 await new Promise(resolve => setTimeout(resolve, 500));
 
-                // Paso 3: Establecer bandera de "borrado total" para evitar re-migración
-                statusText.textContent = 'Paso 3/3: Finalizando limpieza...';
+                // Paso 3: Borrar localStorage COMPLETAMENTE
+                statusText.textContent = 'Paso 3/4: Limpiando navegador...';
+                localStorage.clear();
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Paso 4: Establecer bandera de "borrado total"
+                statusText.textContent = 'Paso 4/4: Finalizando limpieza...';
                 localStorage.setItem('totalWipeCompleted', Date.now().toString());
-                localStorage.setItem('allCourses', '[]'); // Array explícitamente vacío
+                localStorage.setItem('allCourses', '[]');
                 localStorage.setItem('currentCourseId', '');
                 await new Promise(resolve => setTimeout(resolve, 500));
 

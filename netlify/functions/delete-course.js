@@ -38,16 +38,41 @@ export default async (req, context) => {
       });
     }
     
-    // Eliminar el curso
-    const result = await sql`
-      DELETE FROM courses 
-      WHERE id = ${courseId} AND user_id = ${user.id}
-      RETURNING id
+    // Log para debug
+    console.log('Intentando eliminar curso:', { courseId, userId: user.id, username });
+    
+    // Primero buscar el curso para ver si existe
+    const existing = await sql`
+      SELECT id, course_name FROM courses 
+      WHERE user_id = ${user.id}
     `;
+    console.log('Cursos existentes:', existing);
+    
+    // Eliminar el curso (intentar con diferentes tipos de ID)
+    let result;
+    try {
+      result = await sql`
+        DELETE FROM courses 
+        WHERE id = ${courseId}::bigint AND user_id = ${user.id}
+        RETURNING id, course_name
+      `;
+    } catch (e) {
+      console.error('Error con bigint, intentando con int:', e);
+      result = await sql`
+        DELETE FROM courses 
+        WHERE id = ${parseInt(courseId)} AND user_id = ${user.id}
+        RETURNING id, course_name
+      `;
+    }
+    
+    console.log('Resultado de eliminación:', result);
     
     if (result.length === 0) {
       return new Response(JSON.stringify({ 
-        error: 'Curso no encontrado' 
+        error: 'Curso no encontrado',
+        courseId: courseId,
+        userId: user.id,
+        existingCourses: existing.map(c => ({ id: c.id, name: c.course_name }))
       }), {
         status: 404,
         headers: { 'Content-Type': 'application/json' }

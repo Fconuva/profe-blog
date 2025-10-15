@@ -85,6 +85,31 @@
                     </div>
                 </div>
 
+                <!-- Migración Automática Completa -->
+                <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden border-2 border-yellow-400">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
+                                <i class="fas fa-magic fa-lg"></i>
+                            </div>
+                            <h3 class="ml-4 text-xl font-semibold text-gray-800">Migración Automática</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">¡NUEVO! Crea automáticamente 8 cursos completos con estudiantes y tareas predefinidas.</p>
+                        <button onclick="iniciarMigracionCompleta()" 
+                                id="migracionBtn"
+                                class="inline-block w-full text-center bg-yellow-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors shadow-lg">
+                            <i class="fas fa-rocket mr-2"></i>INICIAR MIGRACIÓN
+                        </button>
+                        <div id="migracionStatus" class="mt-4 hidden">
+                            <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                                <p class="text-sm text-green-800 font-semibold">
+                                    <i class="fas fa-check-circle mr-2"></i><span id="statusText">Preparando...</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </section>
     </main>
@@ -94,6 +119,199 @@
             sessionStorage.removeItem('isLoggedIn');
             window.location.href = 'index.html';
         });
+
+        // MIGRACIÓN AUTOMÁTICA COMPLETA
+        async function iniciarMigracionCompleta() {
+            const btn = document.getElementById('migracionBtn');
+            const statusDiv = document.getElementById('migracionStatus');
+            const statusText = document.getElementById('statusText');
+
+            // Desactivar botón
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>PROCESANDO...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            statusDiv.classList.remove('hidden');
+
+            try {
+                // Paso 1: Preparar datos
+                statusText.textContent = 'Paso 1/3: Preparando 8 cursos...';
+                
+                const cursosCompletos = [
+                    {
+                        courseName: "3° Medio A",
+                        subject: "Lenguaje y Comunicación",
+                        period: "2024",
+                        students: generarEstudiantes(35),
+                        tasks: generarTareas(12)
+                    },
+                    {
+                        courseName: "3° Medio B",
+                        subject: "Lenguaje y Comunicación",
+                        period: "2024",
+                        students: generarEstudiantes(32),
+                        tasks: generarTareas(12)
+                    },
+                    {
+                        courseName: "4° Medio A",
+                        subject: "Lenguaje y Comunicación",
+                        period: "2024",
+                        students: generarEstudiantes(28),
+                        tasks: generarTareas(15)
+                    },
+                    {
+                        courseName: "4° Medio B",
+                        subject: "Lenguaje y Comunicación",
+                        period: "2024",
+                        students: generarEstudiantes(30),
+                        tasks: generarTareas(15)
+                    },
+                    {
+                        courseName: "3° Medio HC",
+                        subject: "Humanista Científico",
+                        period: "2024",
+                        students: generarEstudiantes(38),
+                        tasks: generarTareas(10)
+                    },
+                    {
+                        courseName: "3° Medio TP",
+                        subject: "Técnico Profesional",
+                        period: "2024",
+                        students: generarEstudiantes(25),
+                        tasks: generarTareas(10)
+                    },
+                    {
+                        courseName: "4° Medio HC",
+                        subject: "Humanista Científico",
+                        period: "2024",
+                        students: generarEstudiantes(36),
+                        tasks: generarTareas(14)
+                    },
+                    {
+                        courseName: "4° Medio TP",
+                        subject: "Técnico Profesional",
+                        period: "2024",
+                        students: generarEstudiantes(22),
+                        tasks: generarTareas(14)
+                    }
+                ];
+
+                // Paso 2: Guardar en localStorage
+                statusText.textContent = 'Paso 2/3: Guardando en navegador...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const allCourses = cursosCompletos.map((curso, index) => ({
+                    id: index,
+                    ...curso,
+                    config: {
+                        subject: curso.subject,
+                        period: curso.period,
+                        gradeType: "Chileno",
+                        maxGrade: 7.0,
+                        minGrade: 1.0,
+                        passingGrade: 4.0
+                    }
+                }));
+
+                localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                localStorage.setItem('currentCourseId', '0');
+
+                // Paso 3: Sincronizar con Neon Database
+                statusText.textContent = 'Paso 3/3: Sincronizando con base de datos...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        courses: allCourses
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al sincronizar con la base de datos');
+                }
+
+                // ¡ÉXITO!
+                statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>¡Migración completada! 8 cursos creados exitosamente.';
+                
+                // Cambiar color a verde
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-green-100', 'border-green-400');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-green-900');
+
+                // Mostrar botón de ir al sistema
+                setTimeout(() => {
+                    if (confirm('¡Migración exitosa! ¿Deseas ir al Sistema de Registro de Notas para ver los cursos?')) {
+                        window.location.href = 'registro-notas.html';
+                    } else {
+                        // Recargar página
+                        location.reload();
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error en migración:', error);
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error: ' + error.message;
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-red-50', 'border-red-200');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-red-800');
+                
+                // Reactivar botón
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket mr-2"></i>REINTENTAR MIGRACIÓN';
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        function generarEstudiantes(cantidad) {
+            const nombres = ['Matías', 'Valentina', 'Sebastián', 'Catalina', 'Diego', 'Fernanda', 'Benjamín', 'Javiera', 
+                           'Nicolás', 'Sofía', 'Lucas', 'Isidora', 'Gabriel', 'Martina', 'Tomás', 'Antonia',
+                           'Felipe', 'Emilia', 'Joaquín', 'Florencia', 'Agustín', 'Constanza', 'Vicente', 'Amanda',
+                           'Cristóbal', 'Josefa', 'Ignacio', 'Maite', 'Maximiliano', 'Trinidad', 'Rodrigo', 'Camila',
+                           'Andrés', 'Isabella', 'Santiago', 'Daniela', 'Francisco', 'Carolina', 'Pablo', 'Rosario'];
+            
+            const apellidos = ['González', 'Muñoz', 'Rojas', 'Díaz', 'Pérez', 'Soto', 'Contreras', 'Silva', 'Martínez',
+                             'Sepúlveda', 'Morales', 'Rodríguez', 'López', 'Fuentes', 'Hernández', 'Torres', 'Araya',
+                             'Flores', 'Espinoza', 'Valenzuela', 'Castillo', 'Reyes', 'Vargas', 'Núñez', 'Carrasco'];
+
+            const estudiantes = [];
+            for (let i = 0; i < cantidad; i++) {
+                const nombre = nombres[i % nombres.length];
+                const apellido1 = apellidos[Math.floor(Math.random() * apellidos.length)];
+                const apellido2 = apellidos[Math.floor(Math.random() * apellidos.length)];
+                
+                estudiantes.push({
+                    numero: i + 1,
+                    apellidoPaterno: apellido1,
+                    apellidoMaterno: apellido2,
+                    nombre: nombre,
+                    grades: []
+                });
+            }
+            return estudiantes;
+        }
+
+        function generarTareas(cantidad) {
+            const tiposTarea = ['Evaluación', 'Prueba', 'Trabajo', 'Exposición', 'Análisis', 'Ensayo', 'Lectura'];
+            const tareas = [];
+            
+            for (let i = 0; i < cantidad; i++) {
+                const tipo = tiposTarea[i % tiposTarea.length];
+                tareas.push({
+                    name: `${tipo} ${i + 1}`,
+                    weight: 1,
+                    oa: []
+                });
+            }
+            return tareas;
+        }
     </script>
 
 </body>

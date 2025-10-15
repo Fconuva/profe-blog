@@ -665,7 +665,7 @@
                     </h3>
                     <p class="text-sm text-gray-600 mb-4">Administra las tareas y evaluaciones del curso.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                         <button onclick="addTask()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-plus mr-2"></i>Agregar Tarea
                         </button>
@@ -674,6 +674,9 @@
                         </button>
                         <button onclick="showEditTasksModal()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-edit mr-2"></i>Editar Tareas
+                        </button>
+                        <button onclick="deleteMultipleTasks()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
+                            <i class="fas fa-trash-alt mr-2"></i>Eliminar Múltiples
                         </button>
                     </div>
                 </div>
@@ -2149,6 +2152,295 @@
             showTemporaryMessage(`✅ Tarea "${taskName}" eliminada correctamente`, 'success');
         }
 
+        // Editar tarea (solo admin)
+        function editTask(taskIndex) {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede editar tareas');
+                return;
+            }
+            
+            if (!courseData || !courseData.tasks || taskIndex < 0 || taskIndex >= courseData.tasks.length) {
+                alert('❌ Error: Tarea no encontrada');
+                return;
+            }
+            
+            const task = courseData.tasks[taskIndex];
+            
+            // Crear modal de edición
+            const modal = document.createElement('div');
+            modal.id = 'editTaskModal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.style.display = 'flex';
+            
+            const oasList = task.oas && task.oas.length > 0 
+                ? task.oas.map(oa => oa.codigo).join(', ') 
+                : 'Sin OAs';
+            
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-edit text-yellow-500 mr-2"></i>Editar Tarea
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Nombre de la Tarea
+                            </label>
+                            <input type="text" id="editTaskName" value="${task.name}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                Fecha
+                            </label>
+                            <input type="date" id="editTaskDate" value="${task.date}" 
+                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500">
+                        </div>
+                        
+                        <div class="bg-blue-50 p-3 rounded-lg">
+                            <p class="text-sm text-gray-700">
+                                <i class="fas fa-bullseye text-blue-500 mr-2"></i>
+                                <strong>OAs actuales:</strong> ${oasList}
+                            </p>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Para cambiar OAs, deberás eliminar y crear una nueva tarea.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex gap-3 mt-6">
+                        <button onclick="closeEditTaskModal()" 
+                                class="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </button>
+                        <button onclick="saveTaskEdit(${taskIndex})" 
+                                class="flex-1 px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg font-medium transition-colors">
+                            <i class="fas fa-save mr-2"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function closeEditTaskModal() {
+            const modal = document.getElementById('editTaskModal');
+            if (modal) modal.remove();
+        }
+        
+        function saveTaskEdit(taskIndex) {
+            const newName = document.getElementById('editTaskName').value.trim();
+            const newDate = document.getElementById('editTaskDate').value;
+            
+            if (!newName) {
+                alert('⚠️ El nombre de la tarea no puede estar vacío');
+                return;
+            }
+            
+            const oldName = courseData.tasks[taskIndex].name;
+            courseData.tasks[taskIndex].name = newName;
+            courseData.tasks[taskIndex].date = newDate;
+            
+            closeEditTaskModal();
+            saveAllCourses();
+            renderTable();
+            
+            showTemporaryMessage(`✅ Tarea actualizada: "${oldName}" → "${newName}"`, 'success');
+        }
+
+        // Mover tarea hacia arriba (solo admin)
+        function moveTaskUp(taskIndex) {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede reordenar tareas');
+                return;
+            }
+            
+            if (taskIndex <= 0 || taskIndex >= courseData.tasks.length) {
+                return;
+            }
+            
+            // Intercambiar tareas
+            const temp = courseData.tasks[taskIndex];
+            courseData.tasks[taskIndex] = courseData.tasks[taskIndex - 1];
+            courseData.tasks[taskIndex - 1] = temp;
+            
+            // Intercambiar notas de todos los estudiantes
+            courseData.students.forEach(student => {
+                const tempGrade = student.grades[taskIndex];
+                student.grades[taskIndex] = student.grades[taskIndex - 1];
+                student.grades[taskIndex - 1] = tempGrade;
+            });
+            
+            saveAllCourses();
+            renderTable();
+            showTemporaryMessage('✅ Tarea movida hacia la izquierda', 'success');
+        }
+
+        // Mover tarea hacia abajo (solo admin)
+        function moveTaskDown(taskIndex) {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede reordenar tareas');
+                return;
+            }
+            
+            if (taskIndex < 0 || taskIndex >= courseData.tasks.length - 1) {
+                return;
+            }
+            
+            // Intercambiar tareas
+            const temp = courseData.tasks[taskIndex];
+            courseData.tasks[taskIndex] = courseData.tasks[taskIndex + 1];
+            courseData.tasks[taskIndex + 1] = temp;
+            
+            // Intercambiar notas de todos los estudiantes
+            courseData.students.forEach(student => {
+                const tempGrade = student.grades[taskIndex];
+                student.grades[taskIndex] = student.grades[taskIndex + 1];
+                student.grades[taskIndex + 1] = tempGrade;
+            });
+            
+            saveAllCourses();
+            renderTable();
+            showTemporaryMessage('✅ Tarea movida hacia la derecha', 'success');
+        }
+
+        // Eliminar múltiples tareas (solo admin)
+        function deleteMultipleTasks() {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede eliminar tareas');
+                return;
+            }
+            
+            if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
+                alert('⚠️ No hay tareas para eliminar');
+                return;
+            }
+            
+            // Crear modal de selección
+            const modal = document.createElement('div');
+            modal.id = 'deleteMultipleTasksModal';
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.style.display = 'flex';
+            
+            let tasksList = '';
+            courseData.tasks.forEach((task, index) => {
+                tasksList += `
+                    <div class="flex items-center p-2 hover:bg-gray-50 rounded">
+                        <input type="checkbox" id="deleteTask${index}" value="${index}" 
+                               class="w-4 h-4 text-red-600 rounded mr-3">
+                        <label for="deleteTask${index}" class="flex-1 cursor-pointer">
+                            <span class="font-medium">${task.name}</span>
+                            <span class="text-xs text-gray-500 ml-2">${task.date || ''}</span>
+                        </label>
+                    </div>
+                `;
+            });
+            
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl p-6 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <h3 class="text-xl font-bold text-gray-800 mb-4">
+                        <i class="fas fa-trash-alt text-red-500 mr-2"></i>Eliminar Múltiples Tareas
+                    </h3>
+                    
+                    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-4">
+                        <p class="text-sm text-yellow-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            <strong>Advertencia:</strong> Esta acción eliminará las tareas seleccionadas 
+                            y todas sus notas asociadas. No se puede deshacer.
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4">
+                        <button onclick="selectAllTasks()" 
+                                class="text-sm text-blue-600 hover:text-blue-800 mr-4">
+                            <i class="fas fa-check-square mr-1"></i>Seleccionar Todas
+                        </button>
+                        <button onclick="deselectAllTasks()" 
+                                class="text-sm text-gray-600 hover:text-gray-800">
+                            <i class="fas fa-square mr-1"></i>Deseleccionar Todas
+                        </button>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg p-4 mb-4 max-h-96 overflow-y-auto">
+                        ${tasksList}
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="closeDeleteMultipleTasksModal()" 
+                                class="flex-1 px-4 py-2 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded-lg font-medium transition-colors">
+                            <i class="fas fa-times mr-2"></i>Cancelar
+                        </button>
+                        <button onclick="confirmDeleteMultipleTasks()" 
+                                class="flex-1 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors">
+                            <i class="fas fa-trash mr-2"></i>Eliminar Seleccionadas
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        function selectAllTasks() {
+            const checkboxes = document.querySelectorAll('[id^="deleteTask"]');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+        
+        function deselectAllTasks() {
+            const checkboxes = document.querySelectorAll('[id^="deleteTask"]');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+        
+        function closeDeleteMultipleTasksModal() {
+            const modal = document.getElementById('deleteMultipleTasksModal');
+            if (modal) modal.remove();
+        }
+        
+        function confirmDeleteMultipleTasks() {
+            const checkboxes = document.querySelectorAll('[id^="deleteTask"]:checked');
+            
+            if (checkboxes.length === 0) {
+                alert('⚠️ No has seleccionado ninguna tarea');
+                return;
+            }
+            
+            const selectedIndexes = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            const taskNames = selectedIndexes.map(i => courseData.tasks[i].name).join(', ');
+            
+            const confirmDelete = confirm(
+                `¿Estás seguro de eliminar ${checkboxes.length} tarea(s)?\n\n` +
+                `Tareas: ${taskNames}\n\n` +
+                `⚠️ Se eliminarán todas las notas de estas tareas para todos los estudiantes.\n` +
+                `Esta acción NO se puede deshacer.`
+            );
+            
+            if (!confirmDelete) return;
+            
+            // Ordenar índices de mayor a menor para eliminar sin problemas
+            selectedIndexes.sort((a, b) => b - a);
+            
+            // Eliminar tareas y notas
+            selectedIndexes.forEach(index => {
+                courseData.tasks.splice(index, 1);
+                courseData.students.forEach(student => {
+                    student.grades.splice(index, 1);
+                });
+            });
+            
+            closeDeleteMultipleTasksModal();
+            saveAllCourses();
+            renderTable();
+            
+            showTemporaryMessage(`✅ ${checkboxes.length} tarea(s) eliminada(s) correctamente`, 'success');
+        }
+
         // Cerrar modal de agregar tarea
         function closeAddTaskModal() {
             document.getElementById('addTaskModal').style.display = 'none';
@@ -2494,21 +2786,45 @@
                     `;
                 }
                 
-                // Botón de eliminar solo para admin
+                // Botones de gestión solo para admin
                 const userRole = sessionStorage.getItem('userRole') || 'teacher';
-                const deleteButton = userRole === 'admin' ? `
-                    <button onclick="deleteTask(${index})" 
-                            class="text-red-400 hover:text-red-200 text-xs mt-1 transition-colors"
-                            title="Eliminar tarea">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                const adminButtons = userRole === 'admin' ? `
+                    <div class="flex items-center justify-center gap-1 mt-1">
+                        ${index > 0 ? `
+                            <button onclick="moveTaskUp(${index})" 
+                                    class="text-blue-400 hover:text-blue-200 text-xs transition-colors"
+                                    title="Mover arriba">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                        ` : '<span class="w-4"></span>'}
+                        
+                        <button onclick="editTask(${index})" 
+                                class="text-yellow-400 hover:text-yellow-200 text-xs transition-colors"
+                                title="Editar tarea">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        
+                        <button onclick="deleteTask(${index})" 
+                                class="text-red-400 hover:text-red-200 text-xs transition-colors"
+                                title="Eliminar tarea">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                        
+                        ${index < courseData.tasks.length - 1 ? `
+                            <button onclick="moveTaskDown(${index})" 
+                                    class="text-blue-400 hover:text-blue-200 text-xs transition-colors"
+                                    title="Mover abajo">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        ` : '<span class="w-4"></span>'}
+                    </div>
                 ` : '';
                 
                 th.innerHTML = `
-                    <div>${task.name}</div>
+                    <div class="font-semibold">${task.name}</div>
                     <div class="text-[10px] font-normal">${task.date}</div>
                     ${oasInfo}
-                    ${deleteButton}
+                    ${adminButtons}
                 `;
                 thead.insertBefore(th, thead.children[thead.children.length - 1]);
             });

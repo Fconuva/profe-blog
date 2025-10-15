@@ -274,6 +274,9 @@
                     </select>
                 </div>
                 <div class="flex gap-2">
+                    <button onclick="manualSync()" class="btn-action bg-blue-500 hover:bg-blue-600" title="Sincronizar con la nube">
+                        <i class="fas fa-sync-alt mr-2"></i>Sincronizar
+                    </button>
                     <button onclick="showNewCourseModal()" class="btn-action bg-green-500 hover:bg-green-600">
                         <i class="fas fa-plus mr-2"></i>Nuevo Curso
                     </button>
@@ -618,12 +621,16 @@
         let courseData = null; // Datos del curso actual (referencia)
 
         // Inicializar
-        document.addEventListener('DOMContentLoaded', function() {
-            loadAllCourses();
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Cargar cursos desde la base de datos (async)
+            await loadAllCourses();
             
             // Si no hay cursos, crear uno por defecto
             if (allCourses.length === 0) {
+                console.log('📝 No hay cursos, creando uno por defecto...');
                 createDefaultCourse();
+            } else {
+                console.log(`✅ ${allCourses.length} curso(s) cargado(s)`);
             }
             
             // Asegurar que hay un curso actual
@@ -758,6 +765,48 @@
                 notification.style.opacity = '0';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
+        }
+        
+        // Sincronización manual (botón en interfaz)
+        async function manualSync() {
+            const btn = event.target.closest('button');
+            const icon = btn.querySelector('i');
+            
+            // Animar icono
+            icon.classList.add('fa-spin');
+            btn.disabled = true;
+            
+            try {
+                // Primero sincronizar a DB (subir)
+                console.log('📤 Subiendo cursos a la nube...');
+                const uploaded = await syncCoursesToDatabase();
+                
+                // Luego cargar desde DB (bajar)
+                console.log('📥 Descargando cursos desde la nube...');
+                const downloaded = await loadCoursesFromDatabase();
+                
+                if (uploaded || downloaded) {
+                    // Recargar interfaz
+                    updateCourseSelector();
+                    if (currentCourseId) {
+                        loadCourse(currentCourseId);
+                    } else if (allCourses.length > 0) {
+                        currentCourseId = allCourses[0].id;
+                        loadCourse(currentCourseId);
+                    }
+                    
+                    showSyncNotification('✅ Sincronización completa', 'success');
+                    console.log('✅ Sincronización bidireccional completada');
+                } else {
+                    showSyncNotification('⚠️ Sin cambios para sincronizar', 'warning');
+                }
+            } catch (error) {
+                console.error('❌ Error en sincronización manual:', error);
+                showSyncNotification('❌ Error al sincronizar', 'error');
+            } finally {
+                icon.classList.remove('fa-spin');
+                btn.disabled = false;
+            }
         }
         
         // Cargar todos los cursos (primero intenta DB, luego localStorage)

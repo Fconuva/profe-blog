@@ -262,6 +262,11 @@
                     </span>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <!-- Indicador de sincronización -->
+                    <div id="syncIndicator" class="hidden text-white text-sm flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
+                        <i class="fas fa-sync-alt fa-spin mr-2"></i>
+                        <span>Sincronizando...</span>
+                    </div>
                     <button onclick="exportToExcel()" class="text-white hover:text-gray-200">
                         <i class="fas fa-file-excel mr-1"></i>Excel
                     </button>
@@ -679,6 +684,9 @@
                 syncPendingChanges();
             }, 2000);
             
+            // PASO 2.5: Iniciar auto-refresh para sincronización en tiempo real
+            startAutoRefresh();
+            
             // PASO 3: Si no hay cursos, crear uno por defecto
             if (allCourses.length === 0) {
                 console.log('📝 No hay cursos, creando uno por defecto...');
@@ -975,6 +983,88 @@
                     localStorage.removeItem('needsSync');
                     console.log('✅ Cambios pendientes sincronizados');
                 }
+            }
+        }
+        
+        // Auto-refresh: Recargar datos desde la base de datos periódicamente
+        let autoRefreshInterval = null;
+        const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
+        
+        function startAutoRefresh() {
+            // Limpiar intervalo anterior si existe
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            
+            console.log('🔄 Auto-refresh activado (cada 30 segundos)');
+            
+            autoRefreshInterval = setInterval(async () => {
+                try {
+                    console.log('🔄 Auto-refresh: Verificando actualizaciones...');
+                    
+                    // Mostrar indicador de sincronización
+                    const syncIndicator = document.getElementById('syncIndicator');
+                    if (syncIndicator) {
+                        syncIndicator.classList.remove('hidden');
+                    }
+                    
+                    const username = sessionStorage.getItem('username') || 'fconuva';
+                    const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.courses) {
+                        const dbCourses = data.courses;
+                        
+                        // Guardar el curso actual antes de actualizar
+                        const currentId = currentCourseId;
+                        
+                        // Actualizar allCourses con los datos de la BD
+                        allCourses = dbCourses;
+                        localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                        
+                        // Si hay un curso cargado, recargarlo con datos actualizados
+                        if (currentId) {
+                            const updatedCourse = allCourses.find(c => c.id == currentId);
+                            if (updatedCourse) {
+                                // Verificar si hay cambios reales
+                                const hasChanges = JSON.stringify(courseData) !== JSON.stringify(updatedCourse);
+                                
+                                if (hasChanges) {
+                                    console.log('✨ Cambios detectados, actualizando vista...');
+                                    courseData = updatedCourse;
+                                    renderTable();
+                                    populateStudentSelect();
+                                    updateCourseSelector();
+                                    
+                                    // Mostrar notificación sutil
+                                    showNotification('📥 Datos actualizados desde la nube', 'info');
+                                }
+                            }
+                        }
+                        
+                        console.log('✅ Auto-refresh completado');
+                    }
+                } catch (error) {
+                    console.error('❌ Error en auto-refresh:', error);
+                    // No mostrar alerta para no molestar al usuario
+                } finally {
+                    // Ocultar indicador de sincronización después de 1 segundo
+                    setTimeout(() => {
+                        const syncIndicator = document.getElementById('syncIndicator');
+                        if (syncIndicator) {
+                            syncIndicator.classList.add('hidden');
+                        }
+                    }, 1000);
+                }
+            }, AUTO_REFRESH_INTERVAL);
+        }
+        
+        // Detener auto-refresh (si es necesario)
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+                console.log('⏸️ Auto-refresh detenido');
             }
         }
 
@@ -1328,6 +1418,50 @@
             }
         }
 
+        // Eliminar tarea (solo admin)
+        function deleteTask(taskIndex) {
+            // Verificar permisos
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            if (userRole !== 'admin') {
+                alert('⚠️ Solo el administrador puede eliminar tareas');
+                return;
+            }
+            
+            if (!courseData || !courseData.tasks || taskIndex < 0 || taskIndex >= courseData.tasks.length) {
+                alert('❌ Error: Tarea no encontrada');
+                return;
+            }
+            
+            const task = courseData.tasks[taskIndex];
+            const taskName = task.name || `Tarea ${taskIndex + 1}`;
+            
+            // Confirmar eliminación
+            const confirmDelete = confirm(
+                `¿Estás seguro de eliminar la tarea "${taskName}"?\n\n` +
+                `⚠️ Se eliminarán todas las notas de esta tarea para todos los estudiantes.\n` +
+                `Esta acción NO se puede deshacer.`
+            );
+            
+            if (!confirmDelete) return;
+            
+            // Eliminar tarea del array
+            courseData.tasks.splice(taskIndex, 1);
+            
+            // Eliminar la nota correspondiente de todos los estudiantes
+            courseData.students.forEach(student => {
+                if (student.grades && student.grades.length > taskIndex) {
+                    student.grades.splice(taskIndex, 1);
+                }
+            });
+            
+            // Guardar cambios y actualizar interfaz
+            saveAllCourses();
+            renderTable();
+            
+            // Mostrar confirmación
+            showTemporaryMessage(`✅ Tarea "${taskName}" eliminada correctamente`, 'success');
+        }
+
         // Cerrar modal de agregar tarea
         function closeAddTaskModal() {
             document.getElementById('addTaskModal').style.display = 'none';
@@ -1367,10 +1501,21 @@
                     `;
                 }
                 
+                // Botón de eliminar solo para admin
+                const userRole = sessionStorage.getItem('userRole') || 'teacher';
+                const deleteButton = userRole === 'admin' ? `
+                    <button onclick="deleteTask(${index})" 
+                            class="text-red-400 hover:text-red-200 text-xs mt-1 transition-colors"
+                            title="Eliminar tarea">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                ` : '';
+                
                 th.innerHTML = `
                     <div>${task.name}</div>
                     <div class="text-[10px] font-normal">${task.date}</div>
                     ${oasInfo}
+                    ${deleteButton}
                 `;
                 thead.insertBefore(th, thead.children[thead.children.length - 1]);
             });
@@ -3338,11 +3483,11 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             const student = courseData.students[index];
             const fileName = `Informe_${student.name}_${student.lastName1}_${courseData.courseName.replace(/\s+/g, '_')}.pdf`;
             
-            // Buscar el contenedor del informe individual
-            const reportElement = document.querySelector(`#individualReports > div:nth-child(${index + 1})`);
+            // Buscar el contenedor del informe individual (ID correcto)
+            const reportElement = document.getElementById('individualReportContent');
             
-            if (!reportElement) {
-                alert('⚠️ No se encontró el informe. Por favor, intenta nuevamente.');
+            if (!reportElement || reportElement.classList.contains('hidden') || !reportElement.innerHTML.trim()) {
+                alert('⚠️ No se encontró el informe. Por favor, genera el informe primero seleccionando un estudiante.');
                 return;
             }
             
@@ -3380,7 +3525,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                     windowWidth: 1200, // Ancho fijo para consistencia
                     onclone: (clonedDoc) => {
                         // Ajustar estilos en el documento clonado para mejor impresión
-                        const clonedElement = clonedDoc.querySelector(`#individualReports > div:nth-child(${index + 1})`);
+                        const clonedElement = clonedDoc.getElementById('individualReportContent');
                         if (clonedElement) {
                             clonedElement.style.maxWidth = '1200px';
                             clonedElement.style.padding = '20px';

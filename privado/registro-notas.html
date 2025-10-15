@@ -848,8 +848,12 @@
             // PASO 2: Intentar cargar desde la base de datos
             const loadedFromDB = await loadCoursesFromDatabase();
             
-            // PASO 3: Migración automática si hay cursos locales pero no en DB
-            if (localCourses.length > 0 && (!allCourses || allCourses.length === 0)) {
+            // PASO 3: Verificar si se hizo un borrado total reciente
+            const totalWipeTime = localStorage.getItem('totalWipeCompleted');
+            const recentWipe = totalWipeTime && (Date.now() - parseInt(totalWipeTime)) < 5 * 60 * 1000; // 5 minutos
+            
+            // PASO 4: Migración automática SOLO si NO hubo borrado total reciente
+            if (localCourses.length > 0 && (!allCourses || allCourses.length === 0) && !recentWipe) {
                 console.log('🔄 Detectados', localCourses.length, 'cursos locales sin sincronizar');
                 console.log('📤 Iniciando migración automática a la nube...');
                 
@@ -867,20 +871,24 @@
                     console.error('❌ Error en migración automática:', error);
                     // No pasa nada, seguimos trabajando con localStorage
                 }
+            } else if (recentWipe) {
+                console.log('⏭️ Borrado total detectado, omitiendo migración automática');
+                allCourses = []; // Forzar array vacío
+                localCourses = [];
             }
             
-            // PASO 4: Si no hay cursos en ningún lado, usar localStorage como respaldo
+            // PASO 5: Si no hay cursos en ningún lado, usar localStorage como respaldo (si no hubo wipe)
             if (!allCourses || allCourses.length === 0) {
-                if (localCourses.length > 0) {
+                if (localCourses.length > 0 && !recentWipe) {
                     allCourses = localCourses;
                     console.log('📁 Usando cursos de localStorage:', allCourses.length);
                 } else {
                     allCourses = [];
-                    console.log('📝 No hay cursos, se creará uno por defecto');
+                    console.log('📝 No hay cursos disponibles');
                 }
             }
             
-            // PASO 5: Configurar curso actual
+            // PASO 6: Configurar curso actual
             const savedCurrentId = localStorage.getItem('currentCourseId');
             if (savedCurrentId) {
                 currentCourseId = parseFloat(savedCurrentId);
@@ -1062,11 +1070,6 @@
 
         // Eliminar curso actual
         async function deleteCourse() {
-            if (allCourses.length === 1) {
-                alert('No puedes eliminar el único curso. Crea otro primero.');
-                return;
-            }
-            
             if (!confirm(`¿Eliminar el curso "${courseData.courseName}"? Esta acción no se puede deshacer.`)) {
                 return;
             }
@@ -1075,9 +1078,17 @@
             const index = allCourses.findIndex(c => c.id === currentCourseId);
             allCourses.splice(index, 1);
             
-            // Cargar otro curso
-            currentCourseId = allCourses[0].id;
-            loadCourse(currentCourseId);
+            // Si quedan cursos, cargar otro; si no, limpiar interfaz
+            if (allCourses.length > 0) {
+                currentCourseId = allCourses[0].id;
+                loadCourse(currentCourseId);
+            } else {
+                // No quedan cursos
+                currentCourseId = null;
+                courseData = null;
+                document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay cursos. Crea uno nuevo para comenzar.</td></tr>';
+            }
+            
             updateCourseSelector();
             saveAllCourses();
             

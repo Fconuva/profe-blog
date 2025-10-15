@@ -864,6 +864,38 @@
                     </div>
                 </div>
             </div>
+            
+            <!-- Sección de Diagnóstico de Base de Datos -->
+            <div class="bg-white rounded-lg shadow-md p-6 mt-6">
+                <h3 class="text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-database mr-2 text-blue-500"></i>Diagnóstico de Base de Datos
+                </h3>
+                
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded">
+                        <p class="text-sm text-gray-700 mb-2">
+                            <i class="fas fa-info-circle text-blue-500 mr-2"></i>
+                            Esta herramienta verifica el estado de la conexión con la base de datos Neon y la sincronización entre dispositivos.
+                        </p>
+                    </div>
+                    
+                    <div id="diagnosticResults" class="hidden space-y-3">
+                        <!-- Los resultados se mostrarán aquí -->
+                    </div>
+                    
+                    <div class="flex gap-3">
+                        <button onclick="runDatabaseDiagnostic()" class="btn-action bg-blue-500 hover:bg-blue-600">
+                            <i class="fas fa-stethoscope mr-2"></i>Ejecutar Diagnóstico
+                        </button>
+                        <button onclick="manualSync()" class="btn-action bg-purple-500 hover:bg-purple-600">
+                            <i class="fas fa-sync-alt mr-2"></i>Sincronización Manual
+                        </button>
+                        <button onclick="testDatabaseConnection()" class="btn-action bg-cyan-500 hover:bg-cyan-600">
+                            <i class="fas fa-plug mr-2"></i>Probar Conexión
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
     </main>
@@ -1263,6 +1295,202 @@
                 notification.style.opacity = '0';
                 setTimeout(() => notification.remove(), 300);
             }, 3000);
+        }
+        
+        // ============================================
+        // FUNCIONES DE DIAGNÓSTICO
+        // ============================================
+        
+        // Diagnóstico completo de base de datos
+        async function runDatabaseDiagnostic() {
+            const resultsDiv = document.getElementById('diagnosticResults');
+            resultsDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = `
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded animate-pulse">
+                    <p class="text-sm text-yellow-800">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Ejecutando diagnóstico completo...
+                    </p>
+                </div>
+            `;
+            
+            const results = [];
+            let allPassed = true;
+            
+            // Test 1: Conexión a la base de datos
+            try {
+                const username = getCurrentUsername();
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    results.push({
+                        test: 'Conexión a Base de Datos',
+                        status: 'success',
+                        message: `✅ Conectado correctamente a Neon Database`,
+                        details: `Usuario: ${username}`
+                    });
+                } else {
+                    results.push({
+                        test: 'Conexión a Base de Datos',
+                        status: 'error',
+                        message: `❌ Error de conexión`,
+                        details: data.error || 'Error desconocido'
+                    });
+                    allPassed = false;
+                }
+            } catch (error) {
+                results.push({
+                    test: 'Conexión a Base de Datos',
+                    status: 'error',
+                    message: `❌ No se pudo conectar`,
+                    details: error.message
+                });
+                allPassed = false;
+            }
+            
+            // Test 2: Verificar cursos en localStorage
+            const localCourses = localStorage.getItem('allCourses');
+            if (localCourses) {
+                try {
+                    const parsed = JSON.parse(localCourses);
+                    results.push({
+                        test: 'LocalStorage',
+                        status: 'success',
+                        message: `✅ ${parsed.length} curso(s) en almacenamiento local`,
+                        details: `Espacio usado: ${(JSON.stringify(parsed).length / 1024).toFixed(2)} KB`
+                    });
+                } catch (e) {
+                    results.push({
+                        test: 'LocalStorage',
+                        status: 'error',
+                        message: `❌ Error al leer localStorage`,
+                        details: e.message
+                    });
+                    allPassed = false;
+                }
+            } else {
+                results.push({
+                    test: 'LocalStorage',
+                    status: 'warning',
+                    message: `⚠️ No hay datos en localStorage`,
+                    details: 'Esto es normal si es la primera vez que usas la aplicación'
+                });
+            }
+            
+            // Test 3: Sincronización
+            try {
+                const synced = await syncCoursesToDatabase();
+                if (synced) {
+                    results.push({
+                        test: 'Sincronización',
+                        status: 'success',
+                        message: `✅ Sincronización funcionando correctamente`,
+                        details: `${allCourses.length} curso(s) sincronizado(s)`
+                    });
+                } else {
+                    results.push({
+                        test: 'Sincronización',
+                        status: 'warning',
+                        message: `⚠️ Sincronización con advertencias`,
+                        details: 'Los datos se guardan localmente, pero puede haber problemas de conexión'
+                    });
+                }
+            } catch (error) {
+                results.push({
+                    test: 'Sincronización',
+                    status: 'error',
+                    message: `❌ Error en sincronización`,
+                    details: error.message
+                });
+                allPassed = false;
+            }
+            
+            // Test 4: Auto-refresh
+            const autoRefreshActive = autoRefreshInterval !== null;
+            results.push({
+                test: 'Auto-Refresh',
+                status: autoRefreshActive ? 'success' : 'warning',
+                message: autoRefreshActive ? `✅ Auto-refresh activo (cada 30s)` : `⚠️ Auto-refresh desactivado`,
+                details: autoRefreshActive ? 'Los cambios de otros dispositivos se sincronizarán automáticamente' : 'Necesitas recargar manualmente'
+            });
+            
+            // Test 5: Verificar variables críticas
+            const criticalVarsOk = typeof allCourses !== 'undefined' && typeof courseData !== 'undefined';
+            results.push({
+                test: 'Variables del Sistema',
+                status: criticalVarsOk ? 'success' : 'error',
+                message: criticalVarsOk ? `✅ Todas las variables críticas están definidas` : `❌ Faltan variables críticas`,
+                details: `allCourses: ${allCourses ? allCourses.length : 'undefined'}, courseData: ${courseData ? 'OK' : 'undefined'}`
+            });
+            
+            // Mostrar resultados
+            let html = '';
+            
+            if (allPassed) {
+                html += `
+                    <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                        <p class="text-sm font-bold text-green-800">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            ✅ Todos los tests pasaron correctamente
+                        </p>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                        <p class="text-sm font-bold text-red-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            ⚠️ Se detectaron problemas
+                        </p>
+                    </div>
+                `;
+            }
+            
+            results.forEach(result => {
+                const bgColor = result.status === 'success' ? 'bg-green-50 border-green-300' : 
+                               result.status === 'warning' ? 'bg-yellow-50 border-yellow-300' : 
+                               'bg-red-50 border-red-300';
+                const textColor = result.status === 'success' ? 'text-green-800' : 
+                                 result.status === 'warning' ? 'text-yellow-800' : 
+                                 'text-red-800';
+                
+                html += `
+                    <div class="${bgColor} border-l-4 p-4 rounded">
+                        <p class="text-sm font-semibold ${textColor}">${result.test}</p>
+                        <p class="text-sm ${textColor} mt-1">${result.message}</p>
+                        <p class="text-xs text-gray-600 mt-1">${result.details}</p>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+        
+        // Probar conexión a la base de datos
+        async function testDatabaseConnection() {
+            const btn = event.target;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Probando...';
+            
+            try {
+                const username = getCurrentUsername();
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    showSyncNotification(`✅ Conexión exitosa - ${data.courses.length} curso(s) encontrado(s)`, 'success');
+                    console.log('📊 Datos de la base de datos:', data);
+                } else {
+                    showSyncNotification(`❌ Error: ${data.error || 'Error desconocido'}`, 'error');
+                }
+            } catch (error) {
+                showSyncNotification(`❌ Error de conexión: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         }
         
         // Sincronización manual (botón en interfaz)

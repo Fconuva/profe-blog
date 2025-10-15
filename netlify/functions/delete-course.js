@@ -13,7 +13,7 @@ export default async (req, context) => {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
     const body = await req.json();
     
-    const { courseId, username = 'profesor' } = body;
+    const { courseId } = body;
     
     if (!courseId) {
       return new Response(JSON.stringify({ 
@@ -24,18 +24,21 @@ export default async (req, context) => {
       });
     }
     
-    // Obtener el user_id
-    const [user] = await sql`
-      SELECT id FROM users WHERE username = ${username}
+    // MODO COLABORATIVO: Usar siempre 'fconuva' como usuario compartido
+    const sharedUsername = 'fconuva';
+    
+    // Obtener el user_id del usuario compartido
+    let [user] = await sql`
+      SELECT id FROM users WHERE username = ${sharedUsername}
     `;
     
     if (!user) {
-      return new Response(JSON.stringify({ 
-        error: 'Usuario no encontrado' 
-      }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      });
+      // Si no existe, crearlo
+      [user] = await sql`
+        INSERT INTO users (username)
+        VALUES (${sharedUsername})
+        RETURNING id
+      `;
     }
     
     // Log para debug

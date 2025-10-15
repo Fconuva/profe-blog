@@ -84,19 +84,47 @@
             this.querySelector('i').className = `fas fa-eye${type === 'password' ? '' : '-slash'}`;
         });
 
+        // Sistema de usuarios con roles
+        const USERS = {
+            'fconuva': {
+                password: 'xixo97879375',
+                role: 'admin',
+                fullName: 'Francisco (Administrador)'
+            },
+            'alicia': {
+                password: 'buenapalsorbo',
+                role: 'teacher',
+                fullName: 'Alicia (Profesora)'
+            },
+            'joselin': {
+                password: 'soymañosa',
+                role: 'teacher',
+                fullName: 'Joselin (Profesora)'
+            },
+            'pia': {
+                password: 'metaimo',
+                role: 'teacher',
+                fullName: 'Pia (Profesora)'
+            }
+        };
+
         loginForm.addEventListener('submit', function(e) {
             e.preventDefault();
             setLoadingState(true);
 
-            const username = usernameInput.value.trim();
+            const username = usernameInput.value.trim().toLowerCase();
             const password = passwordInput.value;
 
             // Simulate authentication
             setTimeout(() => {
-                if (username === 'fconuva' && password === 'xixo97879375') {
-                    showMessage('¡Inicio de sesión exitoso! Redirigiendo...', 'success');
+                const user = USERS[username];
+                
+                if (user && user.password === password) {
+                    showMessage(`¡Bienvenida ${user.fullName}! Redirigiendo...`, 'success');
                     sessionStorage.setItem('isLoggedIn', 'true');
-                    sessionStorage.setItem('username', username); // Guardar username para sincronización
+                    sessionStorage.setItem('username', username);
+                    sessionStorage.setItem('userRole', user.role);
+                    sessionStorage.setItem('userFullName', user.fullName);
                     setTimeout(() => {
                         window.location.href = 'dashboard.html';
                     }, 1000);

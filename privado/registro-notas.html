@@ -496,7 +496,7 @@
                         <button onclick="saveConfig()" class="btn-action bg-green-500 hover:bg-green-600">
                             <i class="fas fa-save mr-2"></i>Guardar Configuración
                         </button>
-                        <button onclick="resetData()" class="btn-action bg-red-500 hover:bg-red-600">
+                        <button id="resetDataBtn" onclick="resetData()" class="btn-action bg-red-500 hover:bg-red-600">
                             <i class="fas fa-trash mr-2"></i>Borrar Todos los Datos
                         </button>
                     </div>
@@ -636,9 +636,40 @@
         let currentCourseId = null; // ID del curso activo
         let courseData = null; // Datos del curso actual (referencia)
 
+        // Control de permisos por rol
+        function initializePermissions() {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            
+            if (userRole !== 'admin') {
+                // Ocultar botón de "Borrar Todos los Datos"
+                const resetBtn = document.getElementById('resetDataBtn');
+                if (resetBtn) {
+                    resetBtn.style.display = 'none';
+                }
+                
+                console.log('🔒 Permisos de profesora: Botón "Borrar Todo" ocultado');
+            }
+        }
+        
+        // Sobrescribir resetData para verificar permisos
+        const originalResetData = resetData;
+        function resetData() {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            
+            if (userRole !== 'admin') {
+                alert('⛔ Acción no permitida\n\nSolo el administrador puede borrar todos los datos del curso.\n\nPor favor, contacta al administrador si necesitas realizar esta acción.');
+                return;
+            }
+            
+            originalResetData();
+        }
+        
         // Inicializar
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Iniciando aplicación...');
+            
+            // PASO 0: Aplicar permisos según rol
+            initializePermissions();
             
             // PASO 1: Cargar cursos (con migración automática si es necesario)
             await loadAllCourses();

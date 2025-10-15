@@ -1729,9 +1729,16 @@
                     return;
                 }
                 
+                console.log('📊 Iniciando generación de informe...');
+                console.log('Curso:', courseData.courseName);
+                console.log('Total estudiantes:', courseData.students.length);
+                console.log('Total tareas:', courseData.tasks.length);
+                
                 const students = courseData.students;
                 const activeStudents = students.filter(s => !s.retired);
                 const retiredCount = students.length - activeStudents.length;
+                
+                console.log('Estudiantes activos:', activeStudents.length);
                 
                 if (activeStudents.length === 0) {
                     reportDiv.innerHTML = '<div class="text-center p-8 text-gray-500"><i class="fas fa-exclamation-triangle text-4xl mb-3"></i><p>No hay estudiantes activos para generar el informe.</p></div>';
@@ -1739,50 +1746,122 @@
                 }
                 
                 // Calcular estadísticas avanzadas
+                console.log('📈 Calculando calificaciones...');
                 const grades = activeStudents.map(s => {
                     const points = s.grades && Array.isArray(s.grades) ? s.grades.filter(g => g).length : 0;
                     return calculateGrade(points, courseData.tasks.length);
                 });
+                console.log('Calificaciones calculadas:', grades.length);
                 
-                console.log('Calculando estadísticas...');
+                console.log('📊 Calculando estadísticas avanzadas...');
                 const stats = calculateAdvancedStats(grades, activeStudents);
+                console.log('Estadísticas:', stats);
                 
-                console.log('Analizando tareas...');
+                console.log('📝 Analizando tareas...');
                 const taskAnalysis = analyzeTasksPerformance(activeStudents);
+                console.log('Tareas analizadas:', taskAnalysis ? taskAnalysis.length : 0);
                 
-                console.log('Analizando OAs...');
+                console.log('🎯 Analizando OAs...');
                 const oasAnalysis = await analyzeCourseOAs(activeStudents);
+                console.log('OAs analizados:', oasAnalysis);
                 
-                console.log('Generando recomendaciones...');
+                console.log('💡 Generando recomendaciones...');
                 const recommendations = await generateCourseRecommendations(stats, taskAnalysis, oasAnalysis);
+                console.log('Recomendaciones generadas:', recommendations ? recommendations.length : 0);
                 
-                console.log('Construyendo HTML del informe...');
-                // Generar HTML del informe profesional
+                console.log('🏗️ Construyendo HTML del informe...');
+                
+                // Generar cada sección con try-catch individual
+                let htmlSections = [];
+                
+                try {
+                    console.log('  → Header...');
+                    htmlSections.push(buildReportHeader());
+                } catch (e) {
+                    console.error('❌ Error en Header:', e);
+                    throw new Error(`Error en Header: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Executive Summary...');
+                    htmlSections.push(buildExecutiveSummary(stats, activeStudents.length, retiredCount));
+                } catch (e) {
+                    console.error('❌ Error en Executive Summary:', e);
+                    throw new Error(`Error en Executive Summary: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Distribution Chart...');
+                    htmlSections.push(buildDistributionChart(grades));
+                } catch (e) {
+                    console.error('❌ Error en Distribution Chart:', e);
+                    throw new Error(`Error en Distribution Chart: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Detailed Stats Table...');
+                    htmlSections.push(buildDetailedStatsTable(stats));
+                } catch (e) {
+                    console.error('❌ Error en Detailed Stats Table:', e);
+                    throw new Error(`Error en Detailed Stats Table: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Tasks Analysis Table...');
+                    htmlSections.push(buildTasksAnalysisTable(taskAnalysis));
+                } catch (e) {
+                    console.error('❌ Error en Tasks Analysis Table:', e);
+                    throw new Error(`Error en Tasks Analysis Table: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → OAs Analysis Section...');
+                    htmlSections.push(buildOAsAnalysisSection(oasAnalysis));
+                } catch (e) {
+                    console.error('❌ Error en OAs Analysis Section:', e);
+                    throw new Error(`Error en OAs Analysis Section: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Students Performance Table...');
+                    htmlSections.push(buildStudentsPerformanceTable(activeStudents));
+                } catch (e) {
+                    console.error('❌ Error en Students Performance Table:', e);
+                    throw new Error(`Error en Students Performance Table: ${e.message}`);
+                }
+                
+                try {
+                    console.log('  → Recommendations Section...');
+                    htmlSections.push(buildRecommendationsSection(recommendations));
+                } catch (e) {
+                    console.error('❌ Error en Recommendations Section:', e);
+                    throw new Error(`Error en Recommendations Section: ${e.message}`);
+                }
+                
+                // Ensamblar HTML completo
                 reportDiv.innerHTML = `
                     <div class="space-y-6 print:space-y-4">
-                        ${buildReportHeader()}
-                        ${buildExecutiveSummary(stats, activeStudents.length, retiredCount)}
-                        ${buildDistributionChart(grades)}
-                        ${buildDetailedStatsTable(stats)}
-                        ${buildTasksAnalysisTable(taskAnalysis)}
-                        ${buildOAsAnalysisSection(oasAnalysis)}
-                        ${buildStudentsPerformanceTable(activeStudents)}
-                        ${buildRecommendationsSection(recommendations)}
+                        ${htmlSections.join('\n')}
                     </div>
                 `;
                 
-                console.log('Informe generado exitosamente');
+                console.log('✅ Informe generado exitosamente');
                 // Mostrar botón de descarga después de generar
                 downloadBtn.style.display = 'inline-flex';
                 
             } catch (error) {
-                console.error('Error generando informe:', error);
+                console.error('❌ ERROR GENERANDO INFORME:', error);
+                console.error('Stack completo:', error.stack);
                 reportDiv.innerHTML = `
                     <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6 text-center">
                         <i class="fas fa-exclamation-circle text-5xl text-red-500 mb-4"></i>
                         <h4 class="text-xl font-bold text-red-800 mb-2">Error al generar el informe</h4>
                         <p class="text-red-700 mb-4">${error.message}</p>
                         <p class="text-sm text-gray-600 mb-4">Detalles técnicos: ${error.stack ? error.stack.split('\n')[0] : 'No disponible'}</p>
+                        <details class="text-left mb-4 bg-white p-4 rounded">
+                            <summary class="cursor-pointer font-semibold mb-2">Ver stack trace completo</summary>
+                            <pre class="text-xs text-gray-700 overflow-x-auto">${error.stack || 'No disponible'}</pre>
+                        </details>
                         <button onclick="generateCourseReport()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-semibold">
                             <i class="fas fa-redo mr-2"></i>Reintentar
                         </button>
@@ -2577,6 +2656,11 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 `;
             }
             
+            // Validar que critical y good sean arrays
+            const criticalOAs = oasAnalysis.critical && Array.isArray(oasAnalysis.critical) ? oasAnalysis.critical : [];
+            const goodOAs = oasAnalysis.good && Array.isArray(oasAnalysis.good) ? oasAnalysis.good : [];
+            const allOAs = oasAnalysis.oas && Array.isArray(oasAnalysis.oas) ? oasAnalysis.oas : [];
+            
             return `
                 <div class="bg-white p-6 rounded-lg shadow-md">
                     <h4 class="text-xl font-bold mb-4 flex items-center">
@@ -2592,24 +2676,24 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                         </div>
                         <div class="bg-red-50 p-4 rounded-lg text-center border-l-4 border-red-500">
                             <i class="fas fa-exclamation-circle text-2xl text-red-600 mb-2"></i>
-                            <p class="text-3xl font-bold text-red-800">${oasAnalysis.critical.length}</p>
+                            <p class="text-3xl font-bold text-red-800">${criticalOAs.length}</p>
                             <p class="text-sm font-semibold text-red-700">OAs Críticos (<50%)</p>
                         </div>
                         <div class="bg-green-50 p-4 rounded-lg text-center border-l-4 border-green-500">
                             <i class="fas fa-check-double text-2xl text-green-600 mb-2"></i>
-                            <p class="text-3xl font-bold text-green-800">${oasAnalysis.good.length}</p>
+                            <p class="text-3xl font-bold text-green-800">${goodOAs.length}</p>
                             <p class="text-sm font-semibold text-green-700">OAs Consolidados (≥80%)</p>
                         </div>
                     </div>
                     
-                    ${oasAnalysis.critical.length > 0 ? `
+                    ${criticalOAs.length > 0 ? `
                         <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded">
                             <h5 class="font-bold text-red-800 mb-3 flex items-center">
                                 <i class="fas fa-ambulance mr-2"></i>
                                 OAs PRIORITARIOS A REFORZAR
                             </h5>
                             <div class="space-y-2">
-                                ${oasAnalysis.critical.slice(0, 5).map(oa => `
+                                ${criticalOAs.slice(0, 5).map(oa => `
                                     <div class="bg-white p-3 rounded shadow-sm">
                                         <div class="flex justify-between items-start mb-1">
                                             <span class="font-bold text-red-700">${oa.codigo}</span>
@@ -2644,7 +2728,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                                 </tr>
                             </thead>
                             <tbody class="bg-white divide-y divide-gray-200">
-                                ${oasAnalysis.oas.map(oa => {
+                                ${allOAs.map(oa => {
                                     const percentage = parseFloat(oa.percentage);
                                     let statusColor, statusText, statusIcon;
                                     

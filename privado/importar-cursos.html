@@ -170,12 +170,42 @@
 
             saveAllCourses();
 
+            // SINCRONIZAR AUTOMÁTICAMENTE CON LA BASE DE DATOS
+            progressText.textContent = 'Sincronizando con la base de datos...';
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        courses: allCourses
+                    })
+                });
+
+                if (response.ok) {
+                    progressText.textContent = '✅ Sincronización completada';
+                    console.log('✅ Cursos sincronizados a la nube');
+                } else {
+                    console.warn('⚠️ Error al sincronizar:', await response.text());
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo sincronizar con la base de datos:', error);
+            }
+
             // Mostrar resultados
             let html = '<div class="space-y-3">';
             html += `<h3 class="text-xl font-bold mb-4">
                         <i class="fas fa-check-circle text-green-500 mr-2"></i>
                         Importación Completada: ${successCount} exitosos, ${errorCount} errores
                      </h3>`;
+            html += `<div class="bg-blue-50 border border-blue-300 rounded-lg p-3 mb-3">
+                        <p class="text-sm text-blue-800 font-semibold">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>
+                            Los cursos se han sincronizado automáticamente con la base de datos.
+                            <br>Ahora puedes acceder a ellos desde cualquier dispositivo.
+                        </p>
+                     </div>`;
             
             results.forEach(result => {
                 if (result.status === 'success') {
@@ -225,48 +255,92 @@
                             return;
                         }
 
-                        // Extraer nombre del curso de la segunda línea
-                        const courseLine = lines[1];
-                        const courseMatch = courseLine.match(/CURSO:\s+([IVº]+)\s+AÑO\s+"([A-Z])"/i) || 
-                                          courseLine.match(/CURSO:\s+([IVº]+)\s+AÑO\s+([A-Z])/i);
-                        
+                        // Extraer nombre del curso del nombre del archivo
                         let courseName = 'Curso Importado';
-                        if (courseMatch) {
-                            const year = courseMatch[1].replace('º', '°');
-                            const section = courseMatch[2];
-                            courseName = `${year} Año ${section} - 2025`;
-                        } else {
-                            // Extraer del nombre del archivo
-                            const fileMatch = file.name.match(/(\d°[A-Z]\s?(?:HC|TP))/i) || 
-                                            file.name.match(/([IVº]+°\s+[A-Z]\s+(?:HC|TP))/i);
-                            if (fileMatch) {
-                                courseName = fileMatch[1] + ' - 2025';
+                        let courseType = 'HC'; // HC o TP por defecto
+                        
+                        // Buscar en el nombre del archivo patrones como:
+                        // "3°AHC", "4°B HC", "III° A TP", "III° E TP"
+                        const fileNamePatterns = [
+                            /(\d)°([A-Z])\s?(HC|TP)/i,  // 3°AHC, 4°B HC
+                            /(III|IV)°\s+([A-Z])\s+(HC|TP)/i,  // III° A TP
+                            /([34])°([A-Z])(HC|TP)/i,  // Alternativa compacta
+                        ];
+                        
+                        for (const pattern of fileNamePatterns) {
+                            const match = file.name.match(pattern);
+                            if (match) {
+                                let year = match[1];
+                                const section = match[2];
+                                courseType = match[3].toUpperCase();
+                                
+                                // Convertir romano a número si es necesario
+                                if (year === 'III') year = '3';
+                                if (year === 'IV') year = '4';
+                                
+                                const courseTypeFull = courseType === 'HC' ? 'Humanista Científico' : 'Técnico Profesional';
+                                courseName = `${year}° Medio ${section} - ${courseType}`;
+                                break;
+                            }
+                        }
+                        
+                        // Si no se detectó del archivo, intentar de la segunda línea del CSV
+                        if (courseName === 'Curso Importado') {
+                            const courseLine = lines[1];
+                            const courseMatch = courseLine.match(/([IVº]+)\s+AÑO\s+"?([A-Z])"?/i);
+                            if (courseMatch) {
+                                let year = courseMatch[1].replace('º', '').replace('°', '');
+                                if (year === 'III') year = '3';
+                                if (year === 'IV') year = '4';
+                                const section = courseMatch[2];
+                                courseName = `${year}° Medio ${section}`;
                             }
                         }
 
-                        // Encontrar las columnas de tareas (línea 3)
-                        const headerLine = lines[2] || lines[3];
-                        const headers = headerLine.split(',');
+                        // Encontrar las columnas de tareas
+                        // Buscar en líneas 2 y 3 para detectar números de tareas
+                        const header1Line = lines[1]; // Puede contener nombres largos de tareas
+                        const header2Line = lines[2]; // Contiene números 1, 2, 3, 4...
+                        const headers1 = header1Line.split(',');
+                        const headers2 = header2Line.split(',');
                         
-                        // Identificar columnas de tareas (después de nombre y antes de PUNTOS/NOTA)
+                        // Identificar columnas de tareas buscando números secuenciales
                         const taskStartIndex = 4; // Después de Nº, Apellido1, Apellido2, Nombre
                         const taskHeaders = [];
                         
-                        for (let i = taskStartIndex; i < headers.length; i++) {
-                            const header = headers[i].trim().toUpperCase();
-                            if (header && header !== 'PUNTOS' && header !== 'NOTA' && header !== '' && !header.includes('FECHA')) {
+                        for (let i = taskStartIndex; i < headers2.length; i++) {
+                            const header = headers2[i]?.trim();
+                            const taskNumber = parseInt(header);
+                            
+                            // Si es un número, es una tarea
+                            if (!isNaN(taskNumber) && taskNumber > 0) {
+                                // Buscar nombre descriptivo en línea anterior
+                                let taskName = headers1[i]?.trim() || '';
+                                if (!taskName || taskName === '') {
+                                    taskName = `Tarea ${taskNumber}`;
+                                }
+                                
                                 taskHeaders.push({
                                     index: i,
-                                    name: header || `Tarea ${taskHeaders.length + 1}`
+                                    number: taskNumber,
+                                    name: taskName
                                 });
+                            } else {
+                                // Si ya no hay más números, terminamos
+                                const headerUpper = header?.toUpperCase() || '';
+                                if (headerUpper.includes('PUNTO') || headerUpper.includes('NOTA') || headerUpper === '') {
+                                    break;
+                                }
                             }
-                            if (header === 'PUNTOS' || header === 'NOTA') break;
                         }
 
                         const tasks = taskHeaders.map((th, idx) => ({
-                            id: Date.now() + idx,
+                            id: Date.now() + idx * 100,
                             name: th.name,
-                            date: ''
+                            date: '',
+                            nivel: null,
+                            unidad: null,
+                            oas: []
                         }));
 
                         // Procesar estudiantes (desde línea 4 en adelante)
@@ -308,14 +382,21 @@
                             return;
                         }
 
+                        const subjectName = courseType === 'HC' ? 
+                            'Lenguaje HC (Humanista Científico)' : 
+                            'Lenguaje TP (Técnico Profesional)';
+                        
                         const courseData = {
-                            id: Date.now() + Math.random(),
+                            id: Date.now() + Math.floor(Math.random() * 10000),
                             courseName: courseName,
-                            subject: 'Lenguaje y Comunicación',
-                            period: 'Segundo Semestre 2025',
+                            subject: subjectName,
+                            period: '2025',
                             students: students,
                             tasks: tasks,
                             config: {
+                                subject: subjectName,
+                                period: '2025',
+                                gradeType: 'Chileno',
                                 minGrade: 1.0,
                                 maxGrade: 7.0,
                                 passingGrade: 4.0,

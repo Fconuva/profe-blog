@@ -2868,12 +2868,34 @@
                 // Esperar un momento para que se renderice el mensaje
                 await new Promise(resolve => setTimeout(resolve, 100));
                 
-                // Usar html2canvas para capturar el contenido
+                // Usar html2canvas para capturar el contenido con ALTA CALIDAD
                 const canvas = await html2canvas(reportContent, {
-                    scale: 2, // Mayor calidad
+                    scale: 3, // MAYOR calidad (3x para texto súper nítido)
                     useCORS: true,
+                    allowTaint: true,
                     logging: false,
-                    backgroundColor: '#ffffff'
+                    backgroundColor: '#ffffff',
+                    imageTimeout: 0,
+                    removeContainer: true,
+                    letterRendering: true, // Mejor renderizado de texto
+                    windowWidth: 1400, // Ancho consistente
+                    onclone: (clonedDoc) => {
+                        // Mejorar contraste y claridad en el documento clonado
+                        const clonedContent = clonedDoc.getElementById('courseReportContent');
+                        if (clonedContent) {
+                            clonedContent.style.fontSmoothing = 'antialiased';
+                            clonedContent.style.webkitFontSmoothing = 'antialiased';
+                            // Convertir textarea a texto estático para mejor calidad
+                            const textareas = clonedContent.querySelectorAll('textarea');
+                            textareas.forEach(textarea => {
+                                const div = clonedDoc.createElement('div');
+                                div.className = textarea.className;
+                                div.style.cssText = 'white-space: pre-wrap; word-wrap: break-word; padding: 12px; line-height: 1.7;';
+                                div.textContent = textarea.value;
+                                textarea.parentNode.replaceChild(div, textarea);
+                            });
+                        }
+                    }
                 });
                 
                 // Obtener dimensiones
@@ -4248,28 +4270,33 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 // Esperar un momento para que se renderice
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
-                // Capturar con html2canvas con configuración optimizada para PDF
+                // Capturar con html2canvas con configuración ULTRA OPTIMIZADA para PDF
                 const canvas = await html2canvas(reportElement, {
-                    scale: 2.5, // Mayor calidad para texto legible
+                    scale: 3, // MÁXIMA calidad (3x para texto súper nítido y sin marca de agua)
                     useCORS: true,
+                    allowTaint: true,
                     logging: false,
                     backgroundColor: '#ffffff',
-                    windowWidth: 1200, // Ancho fijo para consistencia
+                    imageTimeout: 0,
+                    removeContainer: true,
+                    letterRendering: true, // Renderizado perfecto de texto
+                    windowWidth: 1400, // Ancho fijo mayor para más calidad
                     onclone: (clonedDoc) => {
-                        // Ajustar estilos en el documento clonado para mejor impresión
+                        // Ajustar estilos en el documento clonado para MÁXIMA calidad de impresión
                         const clonedElement = clonedDoc.getElementById('individualReportContent');
                         if (clonedElement) {
-                            clonedElement.style.maxWidth = '1200px';
+                            clonedElement.style.maxWidth = '1400px';
                             clonedElement.style.padding = '20px';
+                            clonedElement.style.fontSmoothing = 'antialiased';
+                            clonedElement.style.webkitFontSmoothing = 'antialiased';
                             
-                            // Ajustar textarea para que se vea como texto estático
+                            // Ajustar textarea para que se vea como texto estático NÍTIDO
                             const textareas = clonedElement.querySelectorAll('textarea');
                             textareas.forEach(textarea => {
                                 const div = clonedDoc.createElement('div');
                                 div.className = 'whitespace-pre-wrap text-gray-800 text-sm leading-relaxed';
+                                div.style.cssText = 'white-space: pre-wrap; word-wrap: break-word; padding: 12px; line-height: 1.7; font-family: system-ui; color: #1f2937;';
                                 div.textContent = textarea.value;
-                                div.style.minHeight = '100px';
-                                div.style.padding = '12px';
                                 textarea.parentNode.replaceChild(div, textarea);
                             });
                         }
@@ -5081,23 +5108,54 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
         }
 
         // Insertar retroalimentación en el textarea
+        // Formatear texto de IA con estructura y negritas
+        function formatAIText(text) {
+            if (!text) return text;
+            
+            // Convertir markdown **TEXTO** a formato legible con líneas separadoras
+            let formatted = text;
+            
+            // Reemplazar **TITULO:** con formato mejorado
+            formatted = formatted.replace(/\*\*([A-ZÁÉÍÓÚ\s]+):\*\*/g, '\n━━━━━━━━━━━━━━━━━━━━━━\n▶ $1:\n━━━━━━━━━━━━━━━━━━━━━━\n');
+            
+            // Reemplazar **Subtítulo** (sin dos puntos) con formato
+            formatted = formatted.replace(/\*\*([A-Z][^:*]+)\*\*/g, '\n▸ $1\n');
+            
+            // Limpiar dobles saltos de línea excesivos
+            formatted = formatted.replace(/\n{3,}/g, '\n\n');
+            
+            // Agregar espaciado después de listas numeradas
+            formatted = formatted.replace(/\((\d+)\)/g, '\n  ($1)');
+            
+            // Agregar espaciado en puntos principales
+            formatted = formatted.replace(/\n•\s/g, '\n  • ');
+            
+            return formatted.trim();
+        }
+        
         function insertFeedback(text) {
             const textarea = document.getElementById(`studentNotes_${currentStudentIndexForFeedback}`);
             const currentText = textarea.value;
             
+            // Formatear el texto antes de insertar
+            const formattedText = formatAIText(text);
+            
             // Agregar con salto de línea si ya hay texto
             if (currentText.trim()) {
-                textarea.value = currentText + '\n\n' + text;
+                textarea.value = currentText + '\n\n' + formattedText;
             } else {
-                textarea.value = text;
+                textarea.value = formattedText;
             }
+            
+            // Auto-ajustar altura del textarea
+            autoResizeTextarea(textarea);
             
             // Guardar automáticamente
             saveStudentNotes(currentStudentIndexForFeedback, textarea.value);
             
             // Feedback visual
             const originalText = text.substring(0, 50) + '...';
-            showTemporaryMessage(`✅ Retroalimentación insertada: "${originalText}"`);
+            showTemporaryMessage(`✅ Retroalimentación insertada y formateada: "${originalText}"`);
         }
 
         // Generar retroalimentación completa automática

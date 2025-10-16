@@ -42,7 +42,7 @@ export default async (req, context) => {
     }
     
     // Log para debug
-    console.log('Intentando eliminar curso:', { courseId, userId: user.id, username });
+    console.log('Intentando eliminar curso:', { courseId, userId: user.id, username: sharedUsername });
     
     // Primero buscar el curso para ver si existe
     const existing = await sql`

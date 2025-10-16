@@ -2974,16 +2974,55 @@
                 const text = e.target.result;
                 const lines = text.split('\n');
                 
-                if (lines.length < 3) {
-                    alert('❌ El archivo CSV no tiene el formato esperado');
+                if (lines.length < 1) {
+                    alert('❌ El archivo CSV está vacío');
                     return;
                 }
                 
-                // Detectar cuántas columnas de tareas hay en el CSV
-                const firstDataLine = lines[2].split(';');
-                const numTasksInCSV = firstDataLine.length - 4; // Restar las 4 primeras columnas (N°, Apellidos, Nombre)
+                // 🔍 DETECTAR AUTOMÁTICAMENTE DÓNDE EMPIEZAN LOS DATOS
+                let dataStartLine = -1;
+                let numTasksInCSV = 0;
                 
-                console.log(`📊 CSV detectado con ${numTasksInCSV} tareas`);
+                // Buscar la primera línea que empiece con un número (lista de estudiantes)
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
+                    
+                    const columns = line.split(/[;\t]/); // Soportar ; o TAB
+                    const firstCol = columns[0]?.trim();
+                    
+                    // Si la primera columna es un número, encontramos el inicio de datos
+                    if (firstCol && !isNaN(parseInt(firstCol)) && parseInt(firstCol) > 0) {
+                        dataStartLine = i;
+                        
+                        // Contar cuántas columnas de tareas hay (total - 4 columnas de datos personales)
+                        // Buscar cuántas columnas tienen valores tipo TRUE/FALSE
+                        let taskCount = 0;
+                        for (let j = 4; j < columns.length; j++) {
+                            const val = columns[j]?.trim().toUpperCase();
+                            // Si es TRUE/FALSE o está vacío (podría ser tarea), contarlo
+                            if (val === 'TRUE' || val === 'FALSE' || val === 'VERDADERO' || 
+                                val === 'FALSO' || val === '1' || val === '0' || val === '' ||
+                                val === 'X' || val === '✓') {
+                                taskCount++;
+                            } else {
+                                // Si encontramos algo que no es nota, dejamos de contar
+                                break;
+                            }
+                        }
+                        numTasksInCSV = taskCount;
+                        
+                        console.log(`🎯 Datos encontrados en línea ${i + 1}`);
+                        console.log(`📊 CSV detectado con ${numTasksInCSV} tareas`);
+                        break;
+                    }
+                }
+                
+                if (dataStartLine === -1) {
+                    alert('❌ No se encontraron datos válidos en el CSV.\n\nAsegúrate que el archivo tenga:\n- Número de lista en la primera columna\n- Apellidos y nombres en columnas siguientes');
+                    return;
+                }
+                
                 console.log(`📊 Curso actual tiene ${courseData.tasks.length} tareas`);
                 
                 // Si el CSV tiene más tareas que el curso actual, crear las faltantes
@@ -3016,20 +3055,20 @@
                 // Limpiar lista de estudiantes
                 courseData.students = [];
                 
-                // Procesar estudiantes (empezar desde línea 3, donde están los datos)
+                // Procesar estudiantes desde donde detectamos los datos
                 let studentsImported = 0;
-                for (let i = 2; i < lines.length; i++) {
-                    const line = lines[i];
-                    if (!line.trim()) continue;
+                for (let i = dataStartLine; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (!line) continue;
                     
-                    const columns = line.split(';');
+                    const columns = line.split(/[;\t]/); // Soportar ; o TAB
                     if (columns.length < 4) continue;
                     
-                    const number = parseInt(columns[0]);
-                    if (isNaN(number)) continue;
+                    const number = parseInt(columns[0]?.trim());
+                    if (isNaN(number) || number <= 0) continue;
                     
                     const student = {
-                        id: Date.now() + i,
+                        id: Date.now() + Math.random() * 10000,
                         number: number,
                         lastName1: columns[1]?.trim().toUpperCase() || '',
                         lastName2: columns[2]?.trim().toUpperCase() || '',
@@ -3040,9 +3079,10 @@
                     };
                     
                     // Procesar todas las notas disponibles en el CSV
-                    for (let j = 4; j < columns.length && j < 4 + courseData.tasks.length; j++) {
+                    for (let j = 4; j < 4 + numTasksInCSV; j++) {
                         const value = columns[j]?.trim().toUpperCase();
-                        const isChecked = value === 'VERDADERO' || value === 'TRUE' || value === '1' || value === 'X' || value === '✓';
+                        const isChecked = value === 'VERDADERO' || value === 'TRUE' || 
+                                         value === '1' || value === 'X' || value === '✓';
                         student.grades.push(isChecked);
                     }
                     

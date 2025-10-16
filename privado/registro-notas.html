@@ -2974,10 +2974,50 @@
                 const text = e.target.result;
                 const lines = text.split('\n');
                 
-                // Limpiar datos actuales
+                if (lines.length < 3) {
+                    alert('❌ El archivo CSV no tiene el formato esperado');
+                    return;
+                }
+                
+                // Detectar cuántas columnas de tareas hay en el CSV
+                const firstDataLine = lines[2].split(';');
+                const numTasksInCSV = firstDataLine.length - 4; // Restar las 4 primeras columnas (N°, Apellidos, Nombre)
+                
+                console.log(`📊 CSV detectado con ${numTasksInCSV} tareas`);
+                console.log(`📊 Curso actual tiene ${courseData.tasks.length} tareas`);
+                
+                // Si el CSV tiene más tareas que el curso actual, crear las faltantes
+                let tasksAdded = 0;
+                if (numTasksInCSV > courseData.tasks.length) {
+                    const tasksToAdd = numTasksInCSV - courseData.tasks.length;
+                    console.log(`➕ Creando ${tasksToAdd} tareas adicionales...`);
+                    
+                    for (let i = 0; i < tasksToAdd; i++) {
+                        const taskNumber = courseData.tasks.length + 1;
+                        const newTask = {
+                            id: Date.now() + i,
+                            name: `Tarea ${taskNumber}`,
+                            date: '',
+                            nivel: null,
+                            unidad: null,
+                            oas: []
+                        };
+                        courseData.tasks.push(newTask);
+                        
+                        // Agregar columna vacía a estudiantes existentes
+                        courseData.students.forEach(student => {
+                            student.grades.push(null);
+                        });
+                        
+                        tasksAdded++;
+                    }
+                }
+                
+                // Limpiar lista de estudiantes
                 courseData.students = [];
                 
-                // Procesar líneas (empezar desde línea 3, donde están los datos)
+                // Procesar estudiantes (empezar desde línea 3, donde están los datos)
+                let studentsImported = 0;
                 for (let i = 2; i < lines.length; i++) {
                     const line = lines[i];
                     if (!line.trim()) continue;
@@ -2991,27 +3031,49 @@
                     const student = {
                         id: Date.now() + i,
                         number: number,
-                        lastName1: columns[1]?.trim() || '',
-                        lastName2: columns[2]?.trim() || '',
-                        name: columns[3]?.trim() || '',
+                        lastName1: columns[1]?.trim().toUpperCase() || '',
+                        lastName2: columns[2]?.trim().toUpperCase() || '',
+                        name: columns[3]?.trim().toUpperCase() || '',
                         grades: [],
-                        notes: ''
+                        notes: '',
+                        retired: false
                     };
                     
-                    // Procesar notas (columnas 4 a 11 son las 8 tareas)
-                    for (let j = 4; j < 12; j++) {
+                    // Procesar todas las notas disponibles en el CSV
+                    for (let j = 4; j < columns.length && j < 4 + courseData.tasks.length; j++) {
                         const value = columns[j]?.trim().toUpperCase();
-                        student.grades.push(value === 'VERDADERO' || value === 'TRUE' || value === '1');
+                        const isChecked = value === 'VERDADERO' || value === 'TRUE' || value === '1' || value === 'X' || value === '✓';
+                        student.grades.push(isChecked);
+                    }
+                    
+                    // Completar con null si faltan notas
+                    while (student.grades.length < courseData.tasks.length) {
+                        student.grades.push(null);
                     }
                     
                     courseData.students.push(student);
+                    studentsImported++;
                 }
                 
-                alert(`✅ Se importaron ${courseData.students.length} estudiantes`);
+                // Mensaje de confirmación detallado
+                let message = `✅ Importación exitosa:\n`;
+                message += `\n• ${studentsImported} estudiante(s) importado(s)`;
+                message += `\n• ${courseData.tasks.length} tarea(s) en total`;
+                if (tasksAdded > 0) {
+                    message += `\n• ${tasksAdded} tarea(s) nueva(s) creada(s) automáticamente`;
+                }
+                
+                alert(message);
                 renderTable();
                 saveAllCourses();
+                
+                console.log('✅ Importación completada:', {
+                    estudiantes: studentsImported,
+                    tareas: courseData.tasks.length,
+                    tareasCreadas: tasksAdded
+                });
             };
-            reader.readAsText(file);
+            reader.readAsText(file, 'UTF-8'); // Especificar encoding UTF-8
         }
 
         // Exportar a Excel

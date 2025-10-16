@@ -1246,12 +1246,23 @@
                 if (data.success && data.courses) {
                     allCourses = data.courses;
                     
-                    // 🔧 ARREGLAR IDs INVÁLIDOS
-                    allCourses.forEach(course => {
-                        // Si el curso tiene ID 0 o inválido, generar uno nuevo
-                        if (!course.id || course.id === 0 || course.id === '0') {
+                    // 🔧 ARREGLAR IDs INVÁLIDOS Y DECIMALES
+                    let needsSync = false;
+                    allCourses = allCourses.filter(course => {
+                        // Detectar IDs problemáticos
+                        const isInvalid = !course.id || course.id === 0 || course.id === '0';
+                        const isDecimal = typeof course.id === 'number' && course.id % 1 !== 0;
+                        
+                        if (isInvalid) {
+                            // Generar nuevo ID
                             course.id = Date.now() + Math.random() * 10000;
-                            console.log(`🔧 Corrigiendo ID de curso "${course.courseName}":`, course.id);
+                            console.log(`🔧 Corrigiendo ID inválido de curso "${course.courseName}":`, course.id);
+                            needsSync = true;
+                        } else if (isDecimal) {
+                            // ELIMINAR cursos con IDs decimales (corruptos)
+                            console.log(`❌ ELIMINANDO curso corrupto "${course.courseName}" con ID decimal:`, course.id);
+                            needsSync = true;
+                            return false; // Filtrar (eliminar) este curso
                         }
                         
                         // Asegurar que tenga todas las propiedades necesarias
@@ -1263,6 +1274,8 @@
                             passingGrade: 4.0,
                             passingPercentage: 60
                         };
+                        
+                        return true; // Mantener este curso
                     });
                     
                     console.log('✅ Cursos cargados desde DB:', allCourses.length, 'cursos');
@@ -1270,8 +1283,9 @@
                     // También guardar en localStorage como respaldo
                     localStorage.setItem('allCourses', JSON.stringify(allCourses));
                     
-                    // Si corregimos IDs, guardar inmediatamente
-                    if (allCourses.some(c => !c.id || c.id === 0)) {
+                    // Si corregimos o eliminamos cursos, sincronizar inmediatamente
+                    if (needsSync) {
+                        console.log('🔄 Sincronizando cursos corregidos a la BD...');
                         await syncCoursesToDatabase();
                     }
                     

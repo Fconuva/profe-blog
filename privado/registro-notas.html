@@ -664,8 +664,8 @@
                         <button onclick="addTask()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-plus mr-2"></i>Agregar Tarea
                         </button>
-                        <button onclick="showTasksList()" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
-                            <i class="fas fa-list mr-2"></i>Ver Todas las Tareas
+                        <button onclick="addMultipleTasks()" class="bg-sky-500 hover:bg-sky-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
+                            <i class="fas fa-plus-square mr-2"></i>Agregar Varias
                         </button>
                         <button onclick="showEditTasksModal()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-edit mr-2"></i>Editar Tareas
@@ -681,20 +681,23 @@
                     <h3 class="text-xl font-bold text-orange-800 mb-4 flex items-center">
                         <i class="fas fa-clipboard-check mr-3"></i>Gestión de Notas
                     </h3>
-                    <p class="text-sm text-gray-600 mb-4">Herramientas para manipular las calificaciones del curso.</p>
+                    <p class="text-sm text-gray-600 mb-4">Herramientas para manipular las calificaciones del curso de forma masiva.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                         <button onclick="fillAllGrades(true)" class="bg-green-500 hover:bg-green-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-check-double mr-2"></i>Marcar Todo
                         </button>
                         <button onclick="fillAllGrades(false)" class="bg-red-500 hover:bg-red-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-times-circle mr-2"></i>Desmarcar Todo
                         </button>
+                        <button onclick="quickMarkTask(true)" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
+                            <i class="fas fa-check mr-2"></i>Marcar 1 Tarea
+                        </button>
+                        <button onclick="quickMarkTask(false)" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
+                            <i class="fas fa-times mr-2"></i>Desmarcar 1 Tarea
+                        </button>
                         <button onclick="fillTaskColumn()" class="bg-orange-500 hover:bg-orange-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-fill mr-2"></i>Llenar Columna
-                        </button>
-                        <button onclick="showBulkGradeEdit()" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
-                            <i class="fas fa-edit mr-2"></i>Edición Masiva
                         </button>
                     </div>
                 </div>
@@ -1920,7 +1923,30 @@
                 return;
             }
             
-            const courseIdToDelete = currentCourseId;
+            let courseIdToDelete = currentCourseId;
+            
+            // 🔧 FIX CRÍTICO: Si el ID es 0 o inválido, no intentar borrar de DB
+            if (!courseIdToDelete || courseIdToDelete === 0 || courseIdToDelete === '0') {
+                console.warn('⚠️ Curso con ID inválido, solo se eliminará localmente');
+                
+                const index = allCourses.findIndex(c => c.id === currentCourseId);
+                allCourses.splice(index, 1);
+                
+                if (allCourses.length > 0) {
+                    currentCourseId = allCourses[0].id;
+                    loadCourse(currentCourseId);
+                } else {
+                    currentCourseId = null;
+                    courseData = null;
+                    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay cursos. Crea uno nuevo para comenzar.</td></tr>';
+                }
+                
+                updateCourseSelector();
+                saveAllCourses();
+                showTemporaryMessage('✅ Curso eliminado correctamente', 'success');
+                return;
+            }
+            
             const index = allCourses.findIndex(c => c.id === currentCourseId);
             allCourses.splice(index, 1);
             
@@ -2701,6 +2727,91 @@
             renderTable();
             saveAllCourses();
             showTemporaryMessage(`✅ Columna "${courseData.tasks[index].name}" actualizada`, 'success');
+        }
+
+        // ⭐ NUEVA: Marcar/Desmarcar UNA tarea específica con 1 click
+        function quickMarkTask(value) {
+            if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
+                alert('⚠️ No hay tareas en el curso');
+                return;
+            }
+            
+            // Crear lista de tareas para seleccionar
+            let taskList = '📋 Selecciona la tarea:\n\n';
+            courseData.tasks.forEach((task, index) => {
+                taskList += `${index + 1}. ${task.name}${task.date ? ` (${task.date})` : ''}\n`;
+            });
+            
+            const taskIndex = prompt(taskList + '\nIngrese el número:');
+            if (!taskIndex) return;
+            
+            const index = parseInt(taskIndex) - 1;
+            if (index < 0 || index >= courseData.tasks.length) {
+                alert('❌ Número de tarea inválido');
+                return;
+            }
+            
+            // Marcar/Desmarcar para todos los estudiantes activos
+            courseData.students.forEach(student => {
+                if (!student.retired) {
+                    student.grades[index] = value;
+                }
+            });
+            
+            renderTable();
+            saveAllCourses();
+            
+            const action = value ? 'marcada ✓' : 'desmarcada ✗';
+            showTemporaryMessage(`✅ Tarea "${courseData.tasks[index].name}" ${action} para todos`, 'success');
+        }
+
+        // ⭐ NUEVA: Agregar múltiples tareas de una vez
+        function addMultipleTasks() {
+            if (!courseData) return;
+            
+            const input = prompt(
+                '📝 Ingresa los nombres de las tareas (una por línea):\n\n' +
+                'Ejemplo:\n' +
+                'Tarea 1\n' +
+                'Tarea 2\n' +
+                'Tarea 3'
+            );
+            
+            if (!input || !input.trim()) return;
+            
+            const lines = input.trim().split('\n');
+            let added = 0;
+            
+            lines.forEach(line => {
+                const taskName = line.trim();
+                if (taskName) {
+                    const newTask = {
+                        id: Date.now() + added,
+                        name: taskName,
+                        date: '',
+                        nivel: null,
+                        unidad: null,
+                        oas: []
+                    };
+                    
+                    courseData.tasks.push(newTask);
+                    
+                    // Agregar columna vacía para cada estudiante
+                    courseData.students.forEach(student => {
+                        student.grades.push(null);
+                    });
+                    
+                    added++;
+                }
+            });
+            
+            if (added > 0) {
+                renderTable();
+                saveAllCourses();
+                showTemporaryMessage(`✅ ${added} tarea(s) agregada(s) correctamente`, 'success');
+            } else {
+                alert('❌ No se agregó ninguna tarea');
+            }
         }
 
         // Edición masiva de notas

@@ -917,6 +917,9 @@
                         <button onclick="testDatabaseConnection()" class="btn-action bg-cyan-500 hover:bg-cyan-600">
                             <i class="fas fa-plug mr-2"></i>Probar Conexión
                         </button>
+                        <button onclick="cleanInvalidCourses()" class="btn-action bg-red-500 hover:bg-red-600">
+                            <i class="fas fa-broom mr-2"></i>Limpiar IDs Inválidos
+                        </button>
                     </div>
                 </div>
             </div>
@@ -1540,6 +1543,81 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
+            }
+        }
+        
+        // 🧹 LIMPIAR CURSOS CON IDS INVÁLIDOS O PROBLEMÁTICOS
+        async function cleanInvalidCourses() {
+            if (!confirm('⚠️ Esta acción eliminará cursos con IDs inválidos (0, decimales extraños, duplicados).\n\n¿Continuar?')) {
+                return;
+            }
+            
+            console.log('🧹 Iniciando limpieza de cursos problemáticos...');
+            
+            let cleaned = 0;
+            let fixed = 0;
+            const seenIds = new Set();
+            const validCourses = [];
+            
+            // Limpiar localmente primero
+            allCourses.forEach((course, index) => {
+                const id = course.id;
+                
+                // Detectar IDs problemáticos
+                const isInvalid = !id || id === 0 || id === '0';
+                const isDecimal = typeof id === 'number' && id % 1 !== 0;
+                const isDuplicate = seenIds.has(id);
+                
+                if (isInvalid) {
+                    console.log(`❌ Eliminando curso con ID inválido: "${course.courseName}" (ID: ${id})`);
+                    cleaned++;
+                } else if (isDecimal) {
+                    console.log(`🔧 Corrigiendo ID decimal: "${course.courseName}" (${id} → ${Math.floor(id)})`);
+                    course.id = Math.floor(id);
+                    seenIds.add(course.id);
+                    validCourses.push(course);
+                    fixed++;
+                } else if (isDuplicate) {
+                    console.log(`⚠️ ID duplicado detectado: "${course.courseName}" (ID: ${id}) - Generando nuevo ID`);
+                    course.id = Date.now() + Math.random() * 10000;
+                    seenIds.add(course.id);
+                    validCourses.push(course);
+                    fixed++;
+                } else {
+                    seenIds.add(id);
+                    validCourses.push(course);
+                }
+            });
+            
+            // Actualizar array de cursos
+            allCourses = validCourses;
+            
+            // Guardar localmente
+            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            
+            // Sincronizar con la base de datos
+            try {
+                console.log('☁️ Sincronizando cursos limpios con la base de datos...');
+                await syncCoursesToDatabase();
+                
+                // Recargar interfaz
+                updateCourseSelector();
+                if (allCourses.length > 0) {
+                    currentCourseId = allCourses[0].id;
+                    loadCourse(currentCourseId);
+                } else {
+                    currentCourseId = null;
+                    courseData = null;
+                }
+                
+                const message = `✅ Limpieza completada:\n• ${cleaned} curso(s) eliminado(s)\n• ${fixed} curso(s) corregido(s)\n• ${allCourses.length} curso(s) válido(s) restante(s)`;
+                alert(message);
+                console.log('✅ Limpieza exitosa');
+                
+                showSyncNotification('✅ Base de datos limpia', 'success');
+            } catch (error) {
+                console.error('❌ Error sincronizando después de limpieza:', error);
+                alert('⚠️ Cursos limpiados localmente, pero hubo un error al sincronizar con la base de datos.');
             }
         }
         

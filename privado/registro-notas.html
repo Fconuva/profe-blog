@@ -1803,6 +1803,12 @@
                         syncIndicator.classList.remove('hidden');
                     }
                     
+                    // 🔧 CAMBIO CRÍTICO: PRIMERO SUBIR, LUEGO BAJAR
+                    // Paso 1: Sincronizar cambios locales a la BD (SUBIR)
+                    console.log('📤 Auto-refresh: Subiendo cambios locales primero...');
+                    await syncCoursesToDatabase();
+                    
+                    // Paso 2: Verificar si hay actualizaciones de otros dispositivos (BAJAR)
                     const username = sessionStorage.getItem('username') || 'fconuva';
                     const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
                     const data = await response.json();
@@ -1810,31 +1816,49 @@
                     if (data.success && data.courses) {
                         const dbCourses = data.courses;
                         
-                        // Guardar el curso actual antes de actualizar
-                        const currentId = currentCourseId;
+                        // Comparar timestamps o cantidad de cambios
+                        const localHash = JSON.stringify(allCourses);
+                        const dbHash = JSON.stringify(dbCourses);
                         
-                        // Actualizar allCourses con los datos de la BD
-                        allCourses = dbCourses;
-                        localStorage.setItem('allCourses', JSON.stringify(allCourses));
-                        
-                        // Si hay un curso cargado, recargarlo con datos actualizados
-                        if (currentId) {
-                            const updatedCourse = allCourses.find(c => c.id == currentId);
-                            if (updatedCourse) {
-                                // Verificar si hay cambios reales
-                                const hasChanges = JSON.stringify(courseData) !== JSON.stringify(updatedCourse);
-                                
-                                if (hasChanges) {
-                                    console.log('✨ Cambios detectados, actualizando vista...');
-                                    courseData = updatedCourse;
-                                    renderTable();
-                                    populateStudentSelect();
-                                    updateCourseSelector();
+                        if (localHash !== dbHash) {
+                            console.log('🔄 Diferencias detectadas entre local y BD');
+                            
+                            // Guardar el curso actual antes de actualizar
+                            const currentId = currentCourseId;
+                            const currentCourseBackup = courseData ? JSON.parse(JSON.stringify(courseData)) : null;
+                            
+                            // Actualizar allCourses con los datos de la BD
+                            allCourses = dbCourses;
+                            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                            
+                            // Si hay un curso cargado, verificar si cambió
+                            if (currentId && currentCourseBackup) {
+                                const updatedCourse = allCourses.find(c => c.id == currentId);
+                                if (updatedCourse) {
+                                    // Comparar solo si realmente hay cambios significativos
+                                    const localStudentCount = currentCourseBackup.students?.length || 0;
+                                    const dbStudentCount = updatedCourse.students?.length || 0;
+                                    const localTaskCount = currentCourseBackup.tasks?.length || 0;
+                                    const dbTaskCount = updatedCourse.tasks?.length || 0;
                                     
-                                    // Mostrar notificación sutil
-                                    showNotification('📥 Datos actualizados desde la nube', 'info');
+                                    // Solo actualizar si hay diferencias estructurales significativas
+                                    if (localStudentCount !== dbStudentCount || localTaskCount !== dbTaskCount) {
+                                        console.log('⚠️ Cambios estructurales detectados, actualizando...');
+                                        courseData = updatedCourse;
+                                        renderTable();
+                                        populateStudentSelect();
+                                        updateCourseSelector();
+                                        showNotification('📥 Datos actualizados desde otro dispositivo', 'info');
+                                    } else {
+                                        console.log('✅ Sin cambios significativos, manteniendo datos locales');
+                                    }
                                 }
+                            } else {
+                                // No hay curso cargado, solo actualizar el selector
+                                updateCourseSelector();
                             }
+                        } else {
+                            console.log('✅ Local y BD están sincronizados');
                         }
                         
                         console.log('✅ Auto-refresh completado');

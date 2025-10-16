@@ -3212,33 +3212,33 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    const columns = line.split(/[;\t]/); // Soportar ; o TAB
+                    const columns = line.split(/[,;\t]/); // Soportar , ; o TAB
                     const firstCol = columns[0]?.trim();
                     
                     // Si la primera columna es un número, encontramos el inicio de datos
                     if (firstCol && !isNaN(parseInt(firstCol)) && parseInt(firstCol) > 0) {
                         dataStartLine = i;
                         
-                        // NUEVO: Contar todas las columnas después de las 4 primeras
-                        // Hasta encontrar columnas vacías consecutivas o fin de datos
-                        let consecutiveEmpty = 0;
+                        // MEJORADO: Contar solo columnas con valores TRUE/FALSE/1/0
+                        // Estas son las tareas reales, no las columnas de resumen
                         for (let j = 4; j < columns.length; j++) {
-                            const val = columns[j]?.trim();
+                            const val = columns[j]?.trim().toUpperCase();
                             
-                            if (!val || val === '') {
-                                consecutiveEmpty++;
-                                // Si encontramos 3 columnas vacías seguidas, detenemos
-                                if (consecutiveEmpty >= 3) {
-                                    break;
-                                }
+                            // Si es un valor de tarea (TRUE/FALSE/1/0/vacío), contarlo
+                            if (val === 'TRUE' || val === 'FALSE' || val === '1' || 
+                                val === '0' || val === '' || val === 'VERDADERO' || 
+                                val === 'FALSO') {
+                                numTasksInCSV++;
                             } else {
-                                consecutiveEmpty = 0;
-                                numTasksInCSV = j - 3; // Actualizar contador (j - 3 porque empezamos en 4)
+                                // Si encontramos algo diferente (número, texto), detenemos
+                                // Son columnas de resumen (PUNTOS, NOTA, etc.)
+                                console.log(`⏹️ Detención en columna ${j}: valor "${val}" no es TRUE/FALSE`);
+                                break;
                             }
                         }
                         
                         console.log(`🎯 Datos encontrados en línea ${i + 1}`);
-                        console.log(`📊 CSV detectado con ${numTasksInCSV} columnas de datos después de nombre`);
+                        console.log(`📊 CSV detectado con ${numTasksInCSV} TAREAS (columnas TRUE/FALSE)`);
                         console.log(`📋 Columnas totales en línea: ${columns.length}`);
                         console.log(`🔢 Primera línea de datos:`, columns.slice(0, 15).join(' | '));
                         break;
@@ -3288,7 +3288,7 @@
                     const line = lines[i].trim();
                     if (!line) continue;
                     
-                    const columns = line.split(/[;\t]/); // Soportar ; o TAB
+                    const columns = line.split(/[,;\t]/); // Soportar , ; o TAB
                     if (columns.length < 4) continue;
                     
                     const number = parseInt(columns[0]?.trim());

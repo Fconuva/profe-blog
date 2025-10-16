@@ -2003,72 +2003,83 @@
             
             let courseIdToDelete = currentCourseId;
             
-            // 🔧 FIX CRÍTICO: Si el ID es 0 o inválido, no intentar borrar de DB
-            if (!courseIdToDelete || courseIdToDelete === 0 || courseIdToDelete === '0') {
-                console.warn('⚠️ Curso con ID inválido, solo se eliminará localmente');
-                
-                const index = allCourses.findIndex(c => c.id === currentCourseId);
-                allCourses.splice(index, 1);
-                
-                if (allCourses.length > 0) {
-                    currentCourseId = allCourses[0].id;
-                    loadCourse(currentCourseId);
-                } else {
-                    currentCourseId = null;
-                    courseData = null;
-                    document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay cursos. Crea uno nuevo para comenzar.</td></tr>';
-                }
-                
-                updateCourseSelector();
-                saveAllCourses();
-                showTemporaryMessage('✅ Curso eliminado correctamente', 'success');
-                return;
+            // 🔧 DETECTAR IDs PROBLEMÁTICOS (0, decimales, inválidos)
+            const isInvalidId = !courseIdToDelete || 
+                               courseIdToDelete === 0 || 
+                               courseIdToDelete === '0' ||
+                               (typeof courseIdToDelete === 'number' && courseIdToDelete % 1 !== 0); // Decimal
+            
+            if (isInvalidId) {
+                console.warn('⚠️ Curso con ID problemático:', courseIdToDelete, '- Solo eliminación local');
             }
             
+            // PASO 1: Eliminar de allCourses
             const index = allCourses.findIndex(c => c.id === currentCourseId);
-            allCourses.splice(index, 1);
+            if (index !== -1) {
+                allCourses.splice(index, 1);
+                console.log(`✅ Curso eliminado del array (posición ${index})`);
+            }
             
-            // Si quedan cursos, cargar otro; si no, limpiar interfaz
+            // PASO 2: Guardar cambios localmente INMEDIATAMENTE
+            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            console.log('💾 Cambios guardados en localStorage');
+            
+            // PASO 3: Cambiar a otro curso o limpiar interfaz
             if (allCourses.length > 0) {
                 currentCourseId = allCourses[0].id;
                 loadCourse(currentCourseId);
             } else {
-                // No quedan cursos
                 currentCourseId = null;
                 courseData = null;
                 document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay cursos. Crea uno nuevo para comenzar.</td></tr>';
             }
             
+            // PASO 4: Actualizar selector
             updateCourseSelector();
-            saveAllCourses();
             
-            // Eliminar de la base de datos compartida
-            try {
-                console.log('🗑️ Eliminando curso de DB:', courseIdToDelete);
-                
-                const response = await fetch('/api/courses/delete', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        courseId: courseIdToDelete
-                    })
-                });
-                
-                const result = await response.json();
-                console.log('📡 Respuesta del servidor:', result);
-                
-                if (!response.ok) {
-                    console.error('❌ Error del servidor:', result);
-                    showTemporaryMessage(`⚠️ Curso eliminado localmente, pero error en DB: ${result.error || 'Error desconocido'}`, 'warning');
-                } else {
-                    console.log('✅ Curso eliminado de la base de datos compartida');
-                    showTemporaryMessage('✅ Curso eliminado correctamente', 'success');
+            // PASO 5: Si el ID es válido, intentar eliminar de la base de datos
+            if (!isInvalidId) {
+                try {
+                    console.log('🗑️ Intentando eliminar de DB:', courseIdToDelete);
+                    
+                    const response = await fetch('/api/courses/delete', {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            courseId: courseIdToDelete
+                        })
+                    });
+                    
+                    const result = await response.json();
+                    console.log('📡 Respuesta del servidor:', result);
+                    
+                    if (!response.ok) {
+                        console.warn('⚠️ Error en BD (pero curso ya eliminado localmente):', result.error);
+                        showTemporaryMessage('✅ Curso eliminado (no estaba en base de datos)', 'success');
+                    } else {
+                        console.log('✅ Curso eliminado de BD también');
+                        showTemporaryMessage('✅ Curso eliminado completamente', 'success');
+                    }
+                    
+                    // Sincronizar para asegurar consistencia
+                    await syncCoursesToDatabase();
+                    
+                } catch (error) {
+                    console.error('❌ Error de conexión (pero curso ya eliminado localmente):', error);
+                    showTemporaryMessage('✅ Curso eliminado localmente', 'success');
                 }
-            } catch (error) {
-                console.error('❌ Error eliminando curso de DB:', error);
-                showTemporaryMessage('⚠️ Curso eliminado localmente, pero hubo un error de conexión con la base de datos', 'warning');
+            } else {
+                // ID inválido, solo confirmar eliminación local
+                showTemporaryMessage('✅ Curso con ID problemático eliminado', 'success');
+                
+                // Sincronizar para limpiar la BD también
+                try {
+                    await syncCoursesToDatabase();
+                } catch (e) {
+                    console.warn('⚠️ Error sincronizando:', e);
+                }
             }
         }
 

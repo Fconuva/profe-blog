@@ -11,18 +11,37 @@ export default async (req, context) => {
 
   try {
     const sql = neon(process.env.NETLIFY_DATABASE_URL);
-    const body = await req.json();
     
-    const { courseId } = body;
-    
-    if (!courseId) {
+    // Leer el body del request
+    let body;
+    try {
+      body = await req.json();
+      console.log('📦 Body recibido:', body);
+    } catch (e) {
+      console.error('❌ Error parseando JSON:', e);
       return new Response(JSON.stringify({ 
-        error: 'Se requiere courseId' 
+        error: 'Error parseando request body',
+        details: e.message
       }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' }
       });
     }
+    
+    const { courseId } = body;
+    
+    if (!courseId) {
+      console.error('❌ courseId no proporcionado. Body:', body);
+      return new Response(JSON.stringify({ 
+        error: 'Se requiere courseId',
+        receivedBody: body
+      }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    console.log('🔑 courseId recibido:', courseId, 'tipo:', typeof courseId);
     
     // MODO COLABORATIVO: Usar siempre 'fconuva' como usuario compartido
     const sharedUsername = 'fconuva';

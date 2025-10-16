@@ -1239,10 +1239,36 @@
                 
                 if (data.success && data.courses) {
                     allCourses = data.courses;
+                    
+                    // 🔧 ARREGLAR IDs INVÁLIDOS
+                    allCourses.forEach(course => {
+                        // Si el curso tiene ID 0 o inválido, generar uno nuevo
+                        if (!course.id || course.id === 0 || course.id === '0') {
+                            course.id = Date.now() + Math.random() * 10000;
+                            console.log(`🔧 Corrigiendo ID de curso "${course.courseName}":`, course.id);
+                        }
+                        
+                        // Asegurar que tenga todas las propiedades necesarias
+                        course.tasks = course.tasks || [];
+                        course.students = course.students || [];
+                        course.config = course.config || {
+                            minGrade: 1.0,
+                            maxGrade: 7.0,
+                            passingGrade: 4.0,
+                            passingPercentage: 60
+                        };
+                    });
+                    
                     console.log('✅ Cursos cargados desde DB:', allCourses.length, 'cursos');
                     
                     // También guardar en localStorage como respaldo
                     localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                    
+                    // Si corregimos IDs, guardar inmediatamente
+                    if (allCourses.some(c => !c.id || c.id === 0)) {
+                        await syncCoursesToDatabase();
+                    }
+                    
                     return true;
                 } else {
                     console.warn('⚠️ No se pudieron cargar cursos de la DB, usando localStorage');
@@ -3004,25 +3030,28 @@
                     if (firstCol && !isNaN(parseInt(firstCol)) && parseInt(firstCol) > 0) {
                         dataStartLine = i;
                         
-                        // Contar cuántas columnas de tareas hay (total - 4 columnas de datos personales)
-                        // Buscar cuántas columnas tienen valores tipo TRUE/FALSE
-                        let taskCount = 0;
+                        // NUEVO: Contar todas las columnas después de las 4 primeras
+                        // Hasta encontrar columnas vacías consecutivas o fin de datos
+                        let consecutiveEmpty = 0;
                         for (let j = 4; j < columns.length; j++) {
-                            const val = columns[j]?.trim().toUpperCase();
-                            // Si es TRUE/FALSE o está vacío (podría ser tarea), contarlo
-                            if (val === 'TRUE' || val === 'FALSE' || val === 'VERDADERO' || 
-                                val === 'FALSO' || val === '1' || val === '0' || val === '' ||
-                                val === 'X' || val === '✓') {
-                                taskCount++;
+                            const val = columns[j]?.trim();
+                            
+                            if (!val || val === '') {
+                                consecutiveEmpty++;
+                                // Si encontramos 3 columnas vacías seguidas, detenemos
+                                if (consecutiveEmpty >= 3) {
+                                    break;
+                                }
                             } else {
-                                // Si encontramos algo que no es nota, dejamos de contar
-                                break;
+                                consecutiveEmpty = 0;
+                                numTasksInCSV = j - 3; // Actualizar contador (j - 3 porque empezamos en 4)
                             }
                         }
-                        numTasksInCSV = taskCount;
                         
                         console.log(`🎯 Datos encontrados en línea ${i + 1}`);
-                        console.log(`📊 CSV detectado con ${numTasksInCSV} tareas`);
+                        console.log(`📊 CSV detectado con ${numTasksInCSV} columnas de datos después de nombre`);
+                        console.log(`📋 Columnas totales en línea: ${columns.length}`);
+                        console.log(`🔢 Primera línea de datos:`, columns.slice(0, 15).join(' | '));
                         break;
                     }
                 }

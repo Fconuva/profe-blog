@@ -543,6 +543,10 @@
                     <button onclick="deleteCourse()" class="btn-action bg-red-500 hover:bg-red-600">
                         <i class="fas fa-trash mr-2"></i>Eliminar Curso
                     </button>
+                    <!-- Botón de sincronización manual -->
+                    <button onclick="manualSync()" class="btn-action bg-blue-500 hover:bg-blue-600" title="Sincronizar ahora (trabajo colaborativo)">
+                        <i class="fas fa-sync-alt mr-2"></i><span class="hidden md:inline">Sincronizar</span>
+                    </button>
                     <!-- Indicador de sincronización -->
                     <span id="syncIndicator" class="hidden items-center px-3 py-2 text-sm text-gray-600">
                         <i class="fas fa-cloud-upload-alt mr-2 text-blue-500"></i>
@@ -2239,7 +2243,7 @@
         
         // Auto-refresh: Recargar datos desde la base de datos periódicamente
         let autoRefreshInterval = null;
-        const AUTO_REFRESH_INTERVAL = 30000; // 30 segundos
+        const AUTO_REFRESH_INTERVAL = 5000; // 5 segundos (para trabajo colaborativo)
         
         function startAutoRefresh() {
             // Limpiar intervalo anterior si existe
@@ -2247,7 +2251,7 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            console.log('🔄 Auto-refresh activado (cada 30 segundos)');
+            console.log('🔄 Auto-refresh activado (cada 5 segundos para trabajo colaborativo)');
             
             autoRefreshInterval = setInterval(async () => {
                 try {
@@ -2283,25 +2287,31 @@
                             allCourses = merged;
                             setStorageItem('allCourses', JSON.stringify(allCourses));
 
-                            // If current course changed structurally (tasks/students) update view
+                            // MEJORA PARA TRABAJO COLABORATIVO: Actualizar vista SIEMPRE que haya cambios
                             const currentId = currentCourseId;
-                            const currentCourseBackup = courseData ? JSON.parse(JSON.stringify(courseData)) : null;
-                            if (currentId && currentCourseBackup) {
+                            if (currentId && courseData) {
                                 const updatedCourse = allCourses.find(c => c.id == currentId);
                                 if (updatedCourse) {
-                                    const localStudentCount = currentCourseBackup.students?.length || 0;
-                                    const dbStudentCount = updatedCourse.students?.length || 0;
-                                    const localTaskCount = currentCourseBackup.tasks?.length || 0;
-                                    const dbTaskCount = updatedCourse.tasks?.length || 0;
-                                    if (localStudentCount !== dbStudentCount || localTaskCount !== dbTaskCount) {
-                                        console.log('⚠️ Cambios estructurales detectados en el curso actual, actualizando vista...');
+                                    // Comparar datos completos del curso (incluyendo calificaciones)
+                                    const currentCourseHash = JSON.stringify(courseData);
+                                    const updatedCourseHash = JSON.stringify(updatedCourse);
+                                    
+                                    if (currentCourseHash !== updatedCourseHash) {
+                                        console.log('🔄 Cambios detectados en el curso actual, actualizando vista...');
                                         courseData = updatedCourse;
                                         renderTable();
                                         populateStudentSelect();
                                         updateCourseSelector();
-                                        showNotification('📥 Datos actualizados desde otro dispositivo', 'info');
+                                        
+                                        // Mostrar notificación sutil
+                                        const syncIndicator = document.getElementById('syncIndicator');
+                                        if (syncIndicator) {
+                                            syncIndicator.innerHTML = '<i class="fas fa-sync-alt animate-spin mr-2"></i>Sincronizado';
+                                            syncIndicator.classList.remove('bg-yellow-500');
+                                            syncIndicator.classList.add('bg-green-500');
+                                        }
                                     } else {
-                                        console.log('✅ Merge aplicado pero sin cambios estructurales significativos; manteniendo notas locales');
+                                        console.log('✅ No hay cambios en el curso actual');
                                     }
                                 }
                             } else {
@@ -2334,6 +2344,69 @@
                 clearInterval(autoRefreshInterval);
                 autoRefreshInterval = null;
                 console.log('⏸️ Auto-refresh detenido');
+            }
+        }
+
+        // Sincronización manual (para trabajo colaborativo)
+        async function manualSync() {
+            const btn = event.target.closest('button');
+            const originalHTML = btn.innerHTML;
+            
+            try {
+                // Cambiar botón a estado de carga
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-sync-alt fa-spin mr-2"></i><span class="hidden md:inline">Sincronizando...</span>';
+                
+                console.log('🔄 Sincronización manual iniciada...');
+                
+                // Mostrar indicador
+                const syncIndicator = document.getElementById('syncIndicator');
+                if (syncIndicator) {
+                    syncIndicator.classList.remove('hidden');
+                }
+                
+                // 1. Subir cambios locales
+                await syncCoursesToDatabase();
+                
+                // 2. Bajar cambios remotos
+                const username = getNamespacedUsername();
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (data.success && data.courses) {
+                    const merged = mergeCoursesByTimestamp(allCourses || [], data.courses || []);
+                    allCourses = merged;
+                    setStorageItem('allCourses', JSON.stringify(allCourses));
+                    
+                    // Actualizar vista del curso actual
+                    if (currentCourseId && courseData) {
+                        const updatedCourse = allCourses.find(c => c.id == currentCourseId);
+                        if (updatedCourse) {
+                            courseData = updatedCourse;
+                            renderTable();
+                            populateStudentSelect();
+                            updateCourseSelector();
+                        }
+                    }
+                    
+                    showNotification('✅ Sincronización completada', 'success');
+                    console.log('✅ Sincronización manual exitosa');
+                }
+            } catch (error) {
+                console.error('❌ Error en sincronización manual:', error);
+                showNotification('❌ Error al sincronizar', 'error');
+            } finally {
+                // Restaurar botón
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+                
+                // Ocultar indicador
+                setTimeout(() => {
+                    const syncIndicator = document.getElementById('syncIndicator');
+                    if (syncIndicator) {
+                        syncIndicator.classList.add('hidden');
+                    }
+                }, 1000);
             }
         }
 

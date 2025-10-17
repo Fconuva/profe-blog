@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpieza Automática</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-green-100 to-blue-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center mb-6">
+            <div class="inline-block p-4 bg-green-100 rounded-full mb-4">
+                <i class="fas fa-broom text-4xl text-green-600 animate-bounce"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                Limpieza Completa del Sistema
+            </h1>
+        </div>
+
+        <div id="progress" class="space-y-4"></div>
+    </div>
+
+    <script>
+        const progress = document.getElementById('progress');
+        
+        function log(message, type = 'info') {
+            const colors = {
+                info: 'bg-blue-100 border-blue-500 text-blue-800',
+                success: 'bg-green-100 border-green-500 text-green-800',
+                error: 'bg-red-100 border-red-500 text-red-800',
+                warning: 'bg-yellow-100 border-yellow-500 text-yellow-800'
+            };
+            
+            const icons = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                error: 'fa-times-circle',
+                warning: 'fa-exclamation-triangle'
+            };
+            
+            const div = document.createElement('div');
+            div.className = `${colors[type]} border-l-4 p-4 rounded-r animate-fade-in`;
+            div.innerHTML = `
+                <p class="flex items-center">
+                    <i class="fas ${icons[type]} mr-2"></i>
+                    <span>${message}</span>
+                </p>
+            `;
+            progress.appendChild(div);
+            progress.scrollTop = progress.scrollHeight;
+        }
+
+        async function cleanDatabase() {
+            log('🗄️ Limpiando base de datos remota...', 'info');
+            
+            const usernames = ['fconuva', 'francisco_fconuva', 'profesor2_profesor2'];
+            let successCount = 0;
+            
+            for (const username of usernames) {
+                try {
+                    const response = await fetch('/api/courses/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            courses: [],
+                            username: username
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        log(`✅ BD: ${username} limpiado`, 'success');
+                        successCount++;
+                    } else {
+                        log(`⚠️ BD: ${username} - ${data.error || 'Error desconocido'}`, 'warning');
+                    }
+                    
+                } catch (error) {
+                    log(`❌ BD: ${username} - ${error.message}`, 'error');
+                }
+                
+                // Pequeña pausa para visualizar progreso
+                await new Promise(resolve => setTimeout(resolve, 500));
+            }
+            
+            log(`Base de datos: ${successCount}/${usernames.length} usernames limpiados`, successCount === usernames.length ? 'success' : 'warning');
+            return successCount;
+        }
+
+        function cleanLocalStorage() {
+            log('💾 Limpiando localStorage...', 'info');
+            
+            const keysToRemove = [
+                // Datos antiguos sin namespace
+                'allCourses',
+                'currentCourseId',
+                
+                // Francisco
+                'francisco_allCourses',
+                'francisco_currentCourseId',
+                'francisco_totalWipeCompleted',
+                'francisco_needsSync',
+                'francisco_geminiApiKey',
+                
+                // Profesor 2
+                'profesor2_allCourses',
+                'profesor2_currentCourseId',
+                'profesor2_totalWipeCompleted',
+                'profesor2_needsSync',
+                'profesor2_geminiApiKey',
+                'profesor2_config'
+            ];
+            
+            let removedCount = 0;
+            keysToRemove.forEach(key => {
+                if (localStorage.getItem(key)) {
+                    localStorage.removeItem(key);
+                    log(`🗑️ Eliminado: ${key}`, 'success');
+                    removedCount++;
+                }
+            });
+            
+            if (removedCount === 0) {
+                log('localStorage ya estaba limpio', 'info');
+            } else {
+                log(`localStorage: ${removedCount} claves eliminadas`, 'success');
+            }
+            
+            return removedCount;
+        }
+
+        async function executeFullClean() {
+            log('🚀 Iniciando limpieza completa...', 'info');
+            
+            // Paso 1: Limpiar base de datos
+            const dbCleaned = await cleanDatabase();
+            
+            // Paso 2: Limpiar localStorage
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const localCleaned = cleanLocalStorage();
+            
+            // Resultado final
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            const finalDiv = document.createElement('div');
+            finalDiv.className = 'bg-gradient-to-r from-green-400 to-blue-500 text-white p-6 rounded-lg shadow-lg animate-fade-in mt-6';
+            finalDiv.innerHTML = `
+                <div class="text-center">
+                    <i class="fas fa-check-circle text-5xl mb-4"></i>
+                    <h2 class="text-2xl font-bold mb-4">¡Limpieza Completada!</h2>
+                    <div class="grid grid-cols-2 gap-4 text-sm mb-6">
+                        <div class="bg-white bg-opacity-20 rounded p-3">
+                            <div class="font-semibold">Base de Datos</div>
+                            <div class="text-2xl">${dbCleaned}/3</div>
+                        </div>
+                        <div class="bg-white bg-opacity-20 rounded p-3">
+                            <div class="font-semibold">localStorage</div>
+                            <div class="text-2xl">${localCleaned}</div>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <button onclick="window.location.href='dashboard.html'" 
+                                class="w-full bg-white text-green-600 px-6 py-3 rounded-lg hover:bg-gray-100 font-semibold transition">
+                            <i class="fas fa-home mr-2"></i>Ir al Dashboard
+                        </button>
+                        <button onclick="window.location.href='registro-notas.html?docente=francisco'" 
+                                class="w-full bg-white text-indigo-600 px-6 py-3 rounded-lg hover:bg-gray-100 font-semibold transition">
+                            <i class="fas fa-user mr-2"></i>Abrir como Francisco
+                        </button>
+                        <button onclick="window.location.href='setup-profesor2.html'" 
+                                class="w-full bg-white text-purple-600 px-6 py-3 rounded-lg hover:bg-gray-100 font-semibold transition">
+                            <i class="fas fa-cog mr-2"></i>Configurar Profesor 2
+                        </button>
+                    </div>
+                </div>
+            `;
+            progress.appendChild(finalDiv);
+        }
+
+        // Ejecutar automáticamente al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(executeFullClean, 500);
+        });
+    </script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .animate-bounce {
+            animation: bounce 1s infinite;
+        }
+    </style>
+</body>
+</html>

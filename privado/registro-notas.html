@@ -507,7 +507,7 @@
                         <i class="fas fa-arrow-left mr-2"></i>Volver
                     </a>
                     <span class="text-2xl font-bold text-white">
-                        <i class="fas fa-clipboard-list mr-2"></i>Registro de Notas
+                        <i class="fas fa-clipboard-list mr-2"></i>Registro de Notas - <span id="docenteNombre"></span>
                     </span>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -1158,6 +1158,70 @@
     </style>
 
     <script>
+        // ============================================================
+        // SISTEMA MULTI-DOCENTE
+        // ============================================================
+        
+        // Obtener parámetro de docente desde la URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const docenteParam = urlParams.get('docente') || 'francisco'; // Por defecto 'francisco'
+        
+        // Configuración de docentes
+        const DOCENTES_CONFIG = {
+            francisco: {
+                nombre: 'Prof. Francisco Conuva',
+                namespace: 'francisco',
+                color: 'indigo',
+                descripcion: '3° y 4° Medio - Lenguaje y Comunicación'
+            },
+            otro: {
+                nombre: 'Otro Docente',
+                namespace: 'otro',
+                color: 'purple',
+                descripcion: 'Espacio independiente'
+            }
+        };
+        
+        // Obtener configuración del docente actual
+        const DOCENTE_ACTUAL = DOCENTES_CONFIG[docenteParam] || DOCENTES_CONFIG.francisco;
+        
+        // Namespace para localStorage y DB
+        const STORAGE_PREFIX = `courses_${DOCENTE_ACTUAL.namespace}_`;
+        const DB_USERNAME = `${sessionStorage.getItem('username') || 'fconuva'}_${DOCENTE_ACTUAL.namespace}`;
+        
+        console.log(`👤 Sistema iniciado para: ${DOCENTE_ACTUAL.nombre}`);
+        console.log(`📦 Namespace: ${DOCENTE_ACTUAL.namespace}`);
+        console.log(`💾 Storage key: ${STORAGE_PREFIX}allCourses`);
+        console.log(`🗄️ DB username: ${DB_USERNAME}`);
+
+        // Helpers para acceso a localStorage con namespace
+        function getStorageItem(key) {
+            const namespacedKey = key === 'allCourses' || key === 'currentCourseId' 
+                ? `${STORAGE_PREFIX}${key}` 
+                : key;
+            return localStorage.getItem(namespacedKey);
+        }
+
+        function setStorageItem(key, value) {
+            const namespacedKey = key === 'allCourses' || key === 'currentCourseId' 
+                ? `${STORAGE_PREFIX}${key}` 
+                : key;
+            localStorage.setItem(namespacedKey, value);
+        }
+
+        function removeStorageItem(key) {
+            const namespacedKey = key === 'allCourses' || key === 'currentCourseId' 
+                ? `${STORAGE_PREFIX}${key}` 
+                : key;
+            localStorage.removeItem(namespacedKey);
+        }
+
+        // Obtener username con namespace para DB
+        function getNamespacedUsername() {
+            const baseUsername = sessionStorage.getItem('username') || 'fconuva';
+            return `${baseUsername}_${DOCENTE_ACTUAL.namespace}`;
+        }
+
         // Estructura de datos - MULTI-CURSO
         let allCourses = []; // Array de todos los cursos
         let currentCourseId = null; // ID del curso activo
@@ -1346,6 +1410,12 @@
         document.addEventListener('DOMContentLoaded', async function() {
             console.log('🚀 Iniciando aplicación...');
             
+            // PASO 0: Mostrar nombre del docente en el header
+            const docenteNombreElement = document.getElementById('docenteNombre');
+            if (docenteNombreElement) {
+                docenteNombreElement.textContent = DOCENTE_ACTUAL.nombre;
+            }
+            
             // PASO 0: Optimizaciones para móvil
             initializeMobileOptimizations();
             
@@ -1423,7 +1493,7 @@
         
         // Obtener username del usuario actual
         function getCurrentUsername() {
-            return sessionStorage.getItem('username') || 'profesor';
+            return getNamespacedUsername();
         }
         
         // Cargar cursos desde la base de datos
@@ -1440,7 +1510,7 @@
                     const remote = data.courses;
 
                     // Ensure local backup exists
-                    const saved = localStorage.getItem('allCourses');
+                    const saved = getStorageItem('allCourses');
                     let localBackup = [];
                     try { localBackup = saved ? JSON.parse(saved) : []; } catch (e) { localBackup = []; }
 
@@ -1466,7 +1536,7 @@
                     console.log('✅ Cursos combinados local+DB:', allCourses.length, 'cursos');
 
                     // Save merged to localStorage
-                    localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                    setStorageItem('allCourses', JSON.stringify(allCourses));
 
                     // If we removed corrupt remote courses, push corrected state
                     if (needsSync) {
@@ -1504,8 +1574,8 @@
                         'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({
-                        courses: allCourses
-                        // No necesita username - todos usan la misma base de datos compartida
+                        courses: allCourses,
+                        username: username // Enviar username con namespace para separación de datos por docente
                     })
                 });
                 
@@ -1602,7 +1672,7 @@
             }
             
             // Test 2: Verificar cursos en localStorage
-            const localCourses = localStorage.getItem('allCourses');
+            const localCourses = getStorageItem('allCourses');
             if (localCourses) {
                 try {
                     const parsed = JSON.parse(localCourses);
@@ -1792,7 +1862,7 @@
             allCourses = validCourses;
             
             // Guardar localmente
-            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            setStorageItem('allCourses', JSON.stringify(allCourses));
             
             // Sincronizar con la base de datos
             try {
@@ -1974,7 +2044,7 @@
             console.log('🔄 Iniciando carga de cursos...');
             
             // PASO 1: Cargar desde localStorage primero (respaldo inmediato)
-            const saved = localStorage.getItem('allCourses');
+            const saved = getStorageItem('allCourses');
             let localCourses = [];
             if (saved) {
                 try {
@@ -1989,7 +2059,7 @@
             const loadedFromDB = await loadCoursesFromDatabase();
             
             // PASO 3: Verificar si se hizo un borrado total reciente
-            const totalWipeTime = localStorage.getItem('totalWipeCompleted');
+            const totalWipeTime = getStorageItem('totalWipeCompleted');
             const recentWipe = totalWipeTime && (Date.now() - parseInt(totalWipeTime)) < 5 * 60 * 1000; // 5 minutos
             
             // PASO 4: Migración automática SOLO si NO hubo borrado total reciente
@@ -2029,7 +2099,7 @@
             }
             
             // PASO 6: Configurar curso actual
-            const savedCurrentId = localStorage.getItem('currentCourseId');
+            const savedCurrentId = getStorageItem('currentCourseId');
             if (savedCurrentId) {
                 currentCourseId = parseFloat(savedCurrentId);
                 console.log('ID de curso actual cargado:', currentCourseId);
@@ -2094,7 +2164,7 @@
 
             if (migrated) {
                 console.log('🔄 Migración de estructura de evaluación completada');
-                localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                setStorageItem('allCourses', JSON.stringify(allCourses));
             }
         }
 
@@ -2113,8 +2183,8 @@
             }
 
             // Guardar localmente (inmediato y confiable)
-            localStorage.setItem('allCourses', JSON.stringify(allCourses));
-            localStorage.setItem('currentCourseId', currentCourseId);
+            setStorageItem('allCourses', JSON.stringify(allCourses));
+            setStorageItem('currentCourseId', currentCourseId);
             
             // Sincronizar con base de datos (asíncrono, silencioso, no bloquea la UI)
             // Si falla, no importa, localStorage ya tiene los datos
@@ -2127,16 +2197,16 @@
         
         // Marcar para sincronización posterior
         function markForLaterSync() {
-            localStorage.setItem('needsSync', 'true');
+            setStorageItem('needsSync', 'true');
         }
         
         // Intentar sincronizar pendientes
         async function syncPendingChanges() {
-            if (localStorage.getItem('needsSync') === 'true') {
+            if (getStorageItem('needsSync') === 'true') {
                 console.log('🔄 Sincronizando cambios pendientes...');
                 const synced = await syncCoursesToDatabase();
                 if (synced) {
-                    localStorage.removeItem('needsSync');
+                    removeStorageItem('needsSync');
                     console.log('✅ Cambios pendientes sincronizados');
                 }
             }
@@ -2170,7 +2240,7 @@
                     await syncCoursesToDatabase();
                     
                     // Paso 2: Verificar si hay actualizaciones de otros dispositivos (BAJAR)
-                    const username = sessionStorage.getItem('username') || 'fconuva';
+                    const username = getNamespacedUsername();
                     const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
                     const data = await response.json();
                     
@@ -2186,7 +2256,7 @@
                             console.log('🔄 Auto-refresh: se detectaron diferencias y se aplicó merge por timestamps');
                             // Save merged result
                             allCourses = merged;
-                            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                            setStorageItem('allCourses', JSON.stringify(allCourses));
 
                             // If current course changed structurally (tasks/students) update view
                             const currentId = currentCourseId;
@@ -2414,7 +2484,7 @@
             }
             
             // PASO 2: Guardar cambios localmente INMEDIATAMENTE
-            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            setStorageItem('allCourses', JSON.stringify(allCourses));
             console.log('💾 Cambios guardados en localStorage');
             
             // PASO 3: Cambiar a otro curso o limpiar interfaz
@@ -4961,7 +5031,7 @@ INSTRUCCIONES:
 
 RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
 
-                const apiKey = localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
+                const apiKey = getStorageItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
                 
                 // Intentar Gemini primero
                 let aiResponse = null;
@@ -6781,7 +6851,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                                        id="geminiApiKey" 
                                        placeholder="Pega tu API Key aquí (opcional)" 
                                        class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                                       value="${localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY}">
+                                       value="${getStorageItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY}">
                                 <button onclick="saveGeminiApiKey()" 
                                         class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg text-sm">
                                     <i class="fas fa-save"></i> Guardar
@@ -6956,7 +7026,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
         function saveGeminiApiKey() {
             const apiKey = document.getElementById('geminiApiKey').value.trim();
             if (apiKey) {
-                localStorage.setItem('geminiApiKey', apiKey);
+                setStorageItem('geminiApiKey', apiKey);
                 showTemporaryMessage('✅ API Key guardada correctamente');
             } else {
                 alert('Por favor ingresa una API Key válida');
@@ -6966,7 +7036,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
         // Generar retroalimentación con IA (SISTEMA MULTI-IA CON FALLBACK)
         async function generateAIFeedback(level, studentName, percentage, points, totalTasks) {
             // Obtener API Key (opcional - el sistema funciona sin ella)
-            const apiKey = localStorage.getItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
+            const apiKey = getStorageItem('geminiApiKey') || DEFAULT_GEMINI_API_KEY;
             
             const focus = document.getElementById('aiFeedbackFocus').value;
             const loadingIndicator = document.getElementById('aiLoadingIndicator');

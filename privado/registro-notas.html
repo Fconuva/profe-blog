@@ -3833,6 +3833,29 @@
             return null;
         }
 
+        // Helper: Verificar si una tarea está completada (tiene calificación válida)
+        function isTaskCompleted(grade, task) {
+            if (!grade) return false;
+            
+            const gradeValue = getGradeValue(grade);
+            
+            // Si el valor es null o undefined, no está completada
+            if (gradeValue === null || gradeValue === undefined) {
+                return false;
+            }
+            
+            const evaluationType = task?.evaluationType || 'binary';
+            
+            // Para evaluaciones binarias: true = completada
+            if (evaluationType === EVALUATION_TYPES.BINARY) {
+                return gradeValue === true;
+            }
+            
+            // Para otros tipos: cualquier valor no-null es completada
+            // (porque ya pasó la validación anterior)
+            return true;
+        }
+
         // Renderizar tabla
         function renderTable() {
             if (!courseData) {
@@ -5889,7 +5912,10 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 i < studentGrades.length ? studentGrades[i] : null
             );
             
-            const points = normalizedGrades.filter(g => g).length;
+            // CORREGIDO: Usar isTaskCompleted() para contar puntos correctamente
+            const points = normalizedGrades.filter((grade, i) => 
+                isTaskCompleted(grade, courseData.tasks[i])
+            ).length;
             const finalGrade = calculateGrade(points, courseData.tasks.length);
             
             const reportDiv = document.getElementById('individualReportContent');
@@ -5898,11 +5924,13 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             const completedTasks = [];
             const pendingTasks = [];
             
+            // CORREGIDO: Usar isTaskCompleted() para determinar estado
             normalizedGrades.forEach((grade, i) => {
-                if (grade) {
-                    completedTasks.push(courseData.tasks[i].name);
+                const task = courseData.tasks[i];
+                if (isTaskCompleted(grade, task)) {
+                    completedTasks.push({ name: task.name, index: i + 1 });
                 } else {
-                    pendingTasks.push(courseData.tasks[i].name);
+                    pendingTasks.push({ name: task.name, index: i + 1 });
                 }
             });
             
@@ -5932,14 +5960,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                         </h4>
                         ${completedTasks.length > 0 ? `
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                                ${completedTasks.map((task, idx) => `
+                                ${completedTasks.map((task) => `
                                     <div class="bg-white rounded-lg p-3 shadow-sm border-l-4 border-green-500 hover:shadow-md transition-all">
                                         <div class="flex items-center">
                                             <div class="bg-green-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3 flex-shrink-0">
-                                                ${idx + 1}
+                                                ${task.index}
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-semibold text-gray-800 truncate" title="${task}">${task}</p>
+                                                <p class="text-sm font-semibold text-gray-800 truncate" title="${task.name}">${task.name}</p>
                                                 <p class="text-xs text-green-600">✓ Completada</p>
                                             </div>
                                         </div>
@@ -5957,14 +5985,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                             Tareas Pendientes (${pendingTasks.length})
                         </h4>
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            ${pendingTasks.map((task, idx) => `
+                            ${pendingTasks.map((task) => `
                                 <div class="bg-white rounded-lg p-3 shadow-sm border-l-4 border-orange-500 hover:shadow-md transition-all">
                                     <div class="flex items-center">
                                         <div class="bg-orange-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold mr-3 flex-shrink-0">
-                                            <i class="fas fa-exclamation"></i>
+                                            ${task.index}
                                         </div>
                                         <div class="flex-1 min-w-0">
-                                            <p class="text-sm font-semibold text-gray-800 truncate" title="${task}">${task}</p>
+                                            <p class="text-sm font-semibold text-gray-800 truncate" title="${task.name}">${task.name}</p>
                                             <p class="text-xs text-orange-600">⏳ Por completar</p>
                                         </div>
                                     </div>

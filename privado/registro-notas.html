@@ -1717,21 +1717,104 @@
             (localCourses || []).forEach(c => {
                 map.set(String(c.id), JSON.parse(JSON.stringify(c)));
             });
-            // Merge remote, prefer newer
+            // Merge remote con estrategia granular
             (remoteCourses || []).forEach(c => {
                 const key = String(c.id);
                 const existing = map.get(key);
                 if (!existing) {
+                    // Curso nuevo en remote
                     map.set(key, JSON.parse(JSON.stringify(c)));
                 } else {
-                    const localTime = existing.updatedAt || 0;
-                    const remoteTime = c.updatedAt || 0;
-                    if (remoteTime > localTime) {
-                        map.set(key, JSON.parse(JSON.stringify(c)));
-                    } // else keep local
+                    // Mismo curso existe en local y remote → usar merge granular nota por nota
+                    const merged = mergeCoursesGranular(existing, c);
+                    map.set(key, merged);
                 }
             });
             return Array.from(map.values());
+        }
+
+        // Merge granular: fusiona curso nota por nota, estudiante por estudiante
+        // Útil cuando dos usuarios editan el MISMO curso simultáneamente
+        function mergeCoursesGranular(localCourse, remoteCourse) {
+            if (!localCourse || !remoteCourse) {
+                return localCourse || remoteCourse;
+            }
+
+            // Si son cursos diferentes, devolver el más reciente por timestamp general
+            if (localCourse.id !== remoteCourse.id) {
+                const localTime = localCourse.updatedAt || 0;
+                const remoteTime = remoteCourse.updatedAt || 0;
+                return remoteTime > localTime ? remoteCourse : localCourse;
+            }
+
+            // Mismo curso: hacer merge granular
+            console.log(`🔬 Merge granular para curso ID ${localCourse.id}`);
+
+            // Empezar con una copia del curso local
+            const merged = JSON.parse(JSON.stringify(localCourse));
+
+            // Merge tareas (preferir remote si difieren)
+            if (remoteCourse.tasks && remoteCourse.tasks.length > 0) {
+                merged.tasks = JSON.parse(JSON.stringify(remoteCourse.tasks));
+            }
+
+            // Merge estudiantes: por cada estudiante, merge sus notas una por una
+            if (remoteCourse.students && Array.isArray(remoteCourse.students)) {
+                remoteCourse.students.forEach((remoteStudent, idx) => {
+                    const localStudent = merged.students[idx];
+                    
+                    if (!localStudent) {
+                        // Estudiante nuevo en remote, agregarlo
+                        merged.students.push(JSON.parse(JSON.stringify(remoteStudent)));
+                        return;
+                    }
+
+                    // Merge nota por nota
+                    if (remoteStudent.grades && Array.isArray(remoteStudent.grades)) {
+                        remoteStudent.grades.forEach((remoteGrade, gradeIdx) => {
+                            if (!localStudent.grades[gradeIdx]) {
+                                // No existe local, tomar remote
+                                localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
+                                return;
+                            }
+
+                            const localGrade = localStudent.grades[gradeIdx];
+                            const localTime = getGradeTimestamp(localGrade) || 0;
+                            const remoteTime = getGradeTimestamp(remoteGrade) || 0;
+
+                            // Comparar timestamps y tomar el más reciente
+                            if (remoteTime > localTime) {
+                                console.log(`  📝 Nota [${idx}][${gradeIdx}]: Remote más reciente (${remoteTime} > ${localTime})`);
+                                localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
+                            } else {
+                                console.log(`  ✅ Nota [${idx}][${gradeIdx}]: Local más reciente (${localTime} >= ${remoteTime})`);
+                            }
+                        });
+                    }
+
+                    // Merge otras propiedades del estudiante (nombre, número, retirado, etc.)
+                    // Preferir remote si tiene updatedAt más reciente (a nivel estudiante)
+                    const localStudentTime = localStudent.updatedAt || 0;
+                    const remoteStudentTime = remoteStudent.updatedAt || 0;
+                    if (remoteStudentTime > localStudentTime) {
+                        localStudent.number = remoteStudent.number;
+                        localStudent.lastName1 = remoteStudent.lastName1;
+                        localStudent.lastName2 = remoteStudent.lastName2;
+                        localStudent.name = remoteStudent.name;
+                        localStudent.retired = remoteStudent.retired;
+                        localStudent.notes = remoteStudent.notes;
+                        localStudent.updatedAt = remoteStudent.updatedAt;
+                    }
+                });
+            }
+
+            // Actualizar timestamp del curso al más reciente
+            const localCourseTime = new Date(localCourse.updatedAt || 0).getTime();
+            const remoteCourseTime = new Date(remoteCourse.updatedAt || 0).getTime();
+            merged.updatedAt = remoteCourseTime > localCourseTime ? remoteCourse.updatedAt : localCourse.updatedAt;
+
+            console.log(`✅ Merge granular completado para curso ${merged.id}`);
+            return merged;
         }
         
         // Cargar todos los cursos con migración automática
@@ -2207,7 +2290,7 @@
                             lastName1: lastName1,
                             lastName2: lastName2,
                             name: name,
-                            grades: Array(courseData.tasks.length).fill(null),
+                            grades: Array(courseData.tasks.length).fill(null).map(() => ({ value: null, updatedAt: new Date().toISOString() })),
                             notes: '',
                             retired: false
                         };
@@ -2271,7 +2354,7 @@
                     lastName1: lastName1.toUpperCase(),
                     lastName2: lastName2.toUpperCase(),
                     name: name.toUpperCase(),
-                    grades: Array(courseData.tasks.length).fill(null),
+                    grades: Array(courseData.tasks.length).fill(null).map(() => ({ value: null, updatedAt: new Date().toISOString() })),
                     notes: '',
                     retired: false
                 };
@@ -2340,7 +2423,7 @@
             
             // Agregar columna de nota a cada estudiante
             courseData.students.forEach(student => {
-                student.grades.push(null);
+                student.grades.push({ value: null, updatedAt: new Date().toISOString() });
             });
             
             closeAddTaskModal();
@@ -2876,9 +2959,13 @@
             
             if (!confirm) return;
             
+            const timestamp = new Date().toISOString();
             courseData.students.forEach(student => {
                 if (!student.retired) {
-                    student.grades = student.grades.map(() => value);
+                    student.grades = student.grades.map(() => ({
+                        value: value,
+                        updatedAt: timestamp
+                    }));
                 }
             });
             
@@ -2908,9 +2995,13 @@
             
             const value = confirm('¿Marcar como completada (Aceptar) o pendiente (Cancelar)?');
             
+            const timestamp = new Date().toISOString();
             courseData.students.forEach(student => {
                 if (!student.retired) {
-                    student.grades[index] = value;
+                    student.grades[index] = {
+                        value: value,
+                        updatedAt: timestamp
+                    };
                 }
             });
             
@@ -2942,9 +3033,13 @@
             }
             
             // Marcar/Desmarcar para todos los estudiantes activos
+            const timestamp = new Date().toISOString();
             courseData.students.forEach(student => {
                 if (!student.retired) {
-                    student.grades[index] = value;
+                    student.grades[index] = {
+                        value: value,
+                        updatedAt: timestamp
+                    };
                 }
             });
             
@@ -2988,7 +3083,7 @@
                     
                     // Agregar columna vacía para cada estudiante
                     courseData.students.forEach(student => {
-                        student.grades.push(null);
+                        student.grades.push({ value: null, updatedAt: new Date().toISOString() });
                     });
                     
                     added++;
@@ -3081,6 +3176,24 @@
         // Imprimir curso
         function printCourse() {
             window.print();
+        }
+
+        // Helper: Extraer el valor de una nota (compatible con formato antiguo y nuevo)
+        function getGradeValue(grade) {
+            // Formato nuevo: { value: boolean, updatedAt: string }
+            if (grade && typeof grade === 'object' && 'value' in grade) {
+                return grade.value;
+            }
+            // Formato antiguo: boolean o null directo
+            return grade;
+        }
+
+        // Helper: Extraer timestamp de una nota (si existe)
+        function getGradeTimestamp(grade) {
+            if (grade && typeof grade === 'object' && 'updatedAt' in grade) {
+                return grade.updatedAt;
+            }
+            return null;
         }
 
         // Renderizar tabla
@@ -3192,7 +3305,8 @@
                 
                 // Columnas de tareas
                 student.grades.forEach((grade, gradeIndex) => {
-                    const isChecked = grade === true || grade === 1;
+                    const gradeValue = getGradeValue(grade);
+                    const isChecked = gradeValue === true || gradeValue === 1;
                     if (isChecked) totalPoints++;
                     
                     html += `
@@ -3246,7 +3360,27 @@
 
         // Actualizar nota (sin mensaje de confirmación)
         function updateGrade(studentIndex, gradeIndex, checked) {
-            courseData.students[studentIndex].grades[gradeIndex] = checked;
+            const student = courseData.students[studentIndex];
+            
+            // Mantener compatibilidad con formato antiguo (solo valor) y nuevo formato (objeto con timestamp)
+            const currentGrade = student.grades[gradeIndex];
+            
+            // Si es formato antiguo (simple boolean/null), convertir a nuevo formato
+            if (currentGrade === null || currentGrade === true || currentGrade === false || typeof currentGrade !== 'object') {
+                student.grades[gradeIndex] = {
+                    value: checked,
+                    updatedAt: new Date().toISOString()
+                };
+            } else {
+                // Ya es formato nuevo, solo actualizar valor y timestamp
+                student.grades[gradeIndex] = {
+                    value: checked,
+                    updatedAt: new Date().toISOString()
+                };
+            }
+            
+            console.log(`📝 Nota actualizada: Estudiante ${studentIndex}, Tarea ${gradeIndex}, Valor: ${checked}, Timestamp: ${student.grades[gradeIndex].updatedAt}`);
+            
             renderTable();
             saveAllCourses();
         }
@@ -3384,7 +3518,7 @@
                         
                         // Agregar columna vacía a estudiantes existentes
                         courseData.students.forEach(student => {
-                            student.grades.push(null);
+                            student.grades.push({ value: null, updatedAt: new Date().toISOString() });
                         });
                         
                         tasksAdded++;
@@ -3418,16 +3552,17 @@
                     };
                     
                     // Procesar todas las notas disponibles en el CSV
+                    const timestamp = new Date().toISOString();
                     for (let j = 4; j < 4 + numTasksInCSV; j++) {
                         const value = columns[j]?.trim().toUpperCase();
                         const isChecked = value === 'VERDADERO' || value === 'TRUE' || 
                                          value === '1' || value === 'X' || value === '✓';
-                        student.grades.push(isChecked);
+                        student.grades.push({ value: isChecked, updatedAt: timestamp });
                     }
                     
                     // Completar con null si faltan notas
                     while (student.grades.length < courseData.tasks.length) {
-                        student.grades.push(null);
+                        student.grades.push({ value: null, updatedAt: timestamp });
                     }
                     
                     courseData.students.push(student);
@@ -3472,7 +3607,7 @@
                 // Validar y normalizar grades
                 const studentGrades = student.grades && Array.isArray(student.grades) ? student.grades : [];
                 const normalizedGrades = Array.from({ length: courseData.tasks.length }, (_, i) => 
-                    i < studentGrades.length ? studentGrades[i] : null
+                    i < studentGrades.length ? getGradeValue(studentGrades[i]) : null
                 );
                 
                 const totalPoints = normalizedGrades.filter(g => g).length;
@@ -3513,7 +3648,7 @@
             const grades = activeStudents.map(s => {
                 // Validar y normalizar grades
                 const studentGrades = s.grades && Array.isArray(s.grades) ? s.grades : [];
-                const points = studentGrades.filter(g => g).length;
+                const points = studentGrades.filter(g => getGradeValue(g)).length;
                 return calculateGrade(points, courseData.tasks.length);
             });
             
@@ -3729,7 +3864,7 @@
                 // Calcular estadísticas avanzadas
                 console.log('📈 Calculando calificaciones...');
                 const grades = activeStudents.map(s => {
-                    const points = s.grades && Array.isArray(s.grades) ? s.grades.filter(g => g).length : 0;
+                    const points = s.grades && Array.isArray(s.grades) ? s.grades.filter(g => getGradeValue(g)).length : 0;
                     return calculateGrade(points, courseData.tasks.length);
                 });
                 console.log('Calificaciones calculadas:', grades.length);
@@ -4046,8 +4181,8 @@
                         if (!s || !s.grades || !Array.isArray(s.grades)) return false;
                         // Verificar que el índice existe en el array
                         if (index >= s.grades.length) return false;
-                        // Verificar que la calificación es truthy
-                        return s.grades[index];
+                        // Verificar que la calificación es truthy (compatible con formato antiguo y nuevo)
+                        return getGradeValue(s.grades[index]);
                     }).length;
                     
                     const pending = students.length - completed;

@@ -1284,51 +1284,44 @@
                 const data = await response.json();
                 
                 if (data.success && data.courses) {
-                    allCourses = data.courses;
-                    
-                    // 🔧 ARREGLAR IDs INVÁLIDOS Y DECIMALES
+                    // Merge remote with local stored courses using timestamps to prefer newer changes
+                    const remote = data.courses;
+
+                    // Ensure local backup exists
+                    const saved = localStorage.getItem('allCourses');
+                    let localBackup = [];
+                    try { localBackup = saved ? JSON.parse(saved) : []; } catch (e) { localBackup = []; }
+
+                    // Preprocess remote: remove corrupt decimal IDs and ensure shape
                     let needsSync = false;
-                    allCourses = allCourses.filter(course => {
-                        // Detectar IDs problemáticos
-                        const isInvalid = !course.id || course.id === 0 || course.id === '0';
+                    const remoteClean = [];
+                    remote.forEach(course => {
                         const isDecimal = typeof course.id === 'number' && course.id % 1 !== 0;
-                        
-                        if (isInvalid) {
-                            // Generar nuevo ID
-                            course.id = Date.now() + Math.random() * 10000;
-                            console.log(`🔧 Corrigiendo ID inválido de curso "${course.courseName}":`, course.id);
+                        if (isDecimal) {
+                            console.log(`❌ ELIMINANDO curso corrupto del remoto "${course.courseName}" ID decimal:`, course.id);
                             needsSync = true;
-                        } else if (isDecimal) {
-                            // ELIMINAR cursos con IDs decimales (corruptos)
-                            console.log(`❌ ELIMINANDO curso corrupto "${course.courseName}" con ID decimal:`, course.id);
-                            needsSync = true;
-                            return false; // Filtrar (eliminar) este curso
+                            return; // skip
                         }
-                        
-                        // Asegurar que tenga todas las propiedades necesarias
                         course.tasks = course.tasks || [];
                         course.students = course.students || [];
-                        course.config = course.config || {
-                            minGrade: 1.0,
-                            maxGrade: 7.0,
-                            passingGrade: 4.0,
-                            passingPercentage: 60
-                        };
-                        
-                        return true; // Mantener este curso
+                        course.config = course.config || { minGrade:1.0,maxGrade:7.0,passingGrade:4.0,passingPercentage:60 };
+                        remoteClean.push(course);
                     });
-                    
-                    console.log('✅ Cursos cargados desde DB:', allCourses.length, 'cursos');
-                    
-                    // También guardar en localStorage como respaldo
+
+                    // Merge using updatedAt
+                    allCourses = mergeCoursesByTimestamp(localBackup, remoteClean);
+
+                    console.log('✅ Cursos combinados local+DB:', allCourses.length, 'cursos');
+
+                    // Save merged to localStorage
                     localStorage.setItem('allCourses', JSON.stringify(allCourses));
-                    
-                    // Si corregimos o eliminamos cursos, sincronizar inmediatamente
+
+                    // If we removed corrupt remote courses, push corrected state
                     if (needsSync) {
-                        console.log('🔄 Sincronizando cursos corregidos a la BD...');
+                        console.log('🔄 Sincronizando correcciones a la BD...');
                         await syncCoursesToDatabase();
                     }
-                    
+
                     return true;
                 } else {
                     console.warn('⚠️ No se pudieron cargar cursos de la DB, usando localStorage');
@@ -1716,6 +1709,30 @@
                 btn.disabled = false;
             }
         }
+
+        // Helper: merge local and remote courses preferring newer updatedAt
+        function mergeCoursesByTimestamp(localCourses, remoteCourses) {
+            const map = new Map();
+            // Index local
+            (localCourses || []).forEach(c => {
+                map.set(String(c.id), JSON.parse(JSON.stringify(c)));
+            });
+            // Merge remote, prefer newer
+            (remoteCourses || []).forEach(c => {
+                const key = String(c.id);
+                const existing = map.get(key);
+                if (!existing) {
+                    map.set(key, JSON.parse(JSON.stringify(c)));
+                } else {
+                    const localTime = existing.updatedAt || 0;
+                    const remoteTime = c.updatedAt || 0;
+                    if (remoteTime > localTime) {
+                        map.set(key, JSON.parse(JSON.stringify(c)));
+                    } // else keep local
+                }
+            });
+            return Array.from(map.values());
+        }
         
         // Cargar todos los cursos con migración automática
         async function loadAllCourses() {
@@ -1791,6 +1808,18 @@
 
         // Guardar todos los cursos (localStorage + sincronización automática con DB)
         function saveAllCourses() {
+            // Antes de guardar, actualizar timestamp del curso actual para resolver conflictos
+            try {
+                if (currentCourseId && allCourses && Array.isArray(allCourses)) {
+                    const idx = allCourses.findIndex(c => c.id == currentCourseId);
+                    if (idx !== -1) {
+                        allCourses[idx].updatedAt = Date.now();
+                    }
+                }
+            } catch (e) {
+                console.warn('⚠️ No se pudo actualizar timestamp del curso:', e.message);
+            }
+
             // Guardar localmente (inmediato y confiable)
             localStorage.setItem('allCourses', JSON.stringify(allCourses));
             localStorage.setItem('currentCourseId', currentCourseId);
@@ -1855,52 +1884,46 @@
                     
                     if (data.success && data.courses) {
                         const dbCourses = data.courses;
-                        
-                        // Comparar timestamps o cantidad de cambios
-                        const localHash = JSON.stringify(allCourses);
-                        const dbHash = JSON.stringify(dbCourses);
-                        
-                        if (localHash !== dbHash) {
-                            console.log('🔄 Diferencias detectadas entre local y BD');
-                            
-                            // Guardar el curso actual antes de actualizar
+
+                        // Merge remote DB with local using timestamps - prefer newer entries
+                        const merged = mergeCoursesByTimestamp(allCourses || [], dbCourses || []);
+                        const mergedHash = JSON.stringify(merged);
+                        const localHash = JSON.stringify(allCourses || []);
+
+                        if (mergedHash !== localHash) {
+                            console.log('🔄 Auto-refresh: se detectaron diferencias y se aplicó merge por timestamps');
+                            // Save merged result
+                            allCourses = merged;
+                            localStorage.setItem('allCourses', JSON.stringify(allCourses));
+
+                            // If current course changed structurally (tasks/students) update view
                             const currentId = currentCourseId;
                             const currentCourseBackup = courseData ? JSON.parse(JSON.stringify(courseData)) : null;
-                            
-                            // Actualizar allCourses con los datos de la BD
-                            allCourses = dbCourses;
-                            localStorage.setItem('allCourses', JSON.stringify(allCourses));
-                            
-                            // Si hay un curso cargado, verificar si cambió
                             if (currentId && currentCourseBackup) {
                                 const updatedCourse = allCourses.find(c => c.id == currentId);
                                 if (updatedCourse) {
-                                    // Comparar solo si realmente hay cambios significativos
                                     const localStudentCount = currentCourseBackup.students?.length || 0;
                                     const dbStudentCount = updatedCourse.students?.length || 0;
                                     const localTaskCount = currentCourseBackup.tasks?.length || 0;
                                     const dbTaskCount = updatedCourse.tasks?.length || 0;
-                                    
-                                    // Solo actualizar si hay diferencias estructurales significativas
                                     if (localStudentCount !== dbStudentCount || localTaskCount !== dbTaskCount) {
-                                        console.log('⚠️ Cambios estructurales detectados, actualizando...');
+                                        console.log('⚠️ Cambios estructurales detectados en el curso actual, actualizando vista...');
                                         courseData = updatedCourse;
                                         renderTable();
                                         populateStudentSelect();
                                         updateCourseSelector();
                                         showNotification('📥 Datos actualizados desde otro dispositivo', 'info');
                                     } else {
-                                        console.log('✅ Sin cambios significativos, manteniendo datos locales');
+                                        console.log('✅ Merge aplicado pero sin cambios estructurales significativos; manteniendo notas locales');
                                     }
                                 }
                             } else {
-                                // No hay curso cargado, solo actualizar el selector
                                 updateCourseSelector();
                             }
                         } else {
-                            console.log('✅ Local y BD están sincronizados');
+                            console.log('✅ Auto-refresh: no se detectaron diferencias tras merge');
                         }
-                        
+
                         console.log('✅ Auto-refresh completado');
                     }
                 } catch (error) {

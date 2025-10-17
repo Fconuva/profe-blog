@@ -1030,6 +1030,37 @@
                         <input type="date" id="taskDate" class="w-full px-3 py-2 border border-gray-300 rounded-lg">
                         <p class="text-xs text-gray-500 mt-1" id="taskDayOfWeek"></p>
                     </div>
+
+                    <!-- Tipo de Evaluación -->
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            <i class="fas fa-chart-line mr-1"></i>Tipo de Evaluación
+                        </label>
+                        <select id="taskEvaluationType" class="w-full px-3 py-2 border border-gray-300 rounded-lg" onchange="handleEvaluationTypeChange()">
+                            <option value="binary">✓ Binario (Completado/No completado)</option>
+                            <option value="logro">📊 Niveles de Logro (NL/ML/L/D)</option>
+                            <option value="rubrica">📝 Rúbrica (Criterios personalizados)</option>
+                            <option value="numeric">🔢 Nota Numérica (1.0 - 7.0)</option>
+                            <option value="percentage">📈 Porcentaje (0% - 100%)</option>
+                            <option value="conceptual">📋 Conceptual (I/S/B/MB)</option>
+                        </select>
+                        <p class="text-xs text-gray-500 mt-1" id="evaluationTypeDescription">
+                            Evaluación simple: marcado/desmarcado
+                        </p>
+                    </div>
+
+                    <!-- Configuración de Rúbrica (solo visible si se selecciona rubrica) -->
+                    <div id="rubricaConfigContainer" style="display:none;" class="border border-blue-200 rounded-lg p-4 bg-blue-50">
+                        <label class="block text-sm font-medium text-gray-700 mb-3">
+                            <i class="fas fa-list-check mr-1"></i>Criterios de la Rúbrica
+                        </label>
+                        <div id="rubricaCriteriaList" class="space-y-2 mb-3">
+                            <!-- Los criterios se agregarán dinámicamente -->
+                        </div>
+                        <button type="button" onclick="addRubricaCriterion()" class="text-sm text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-plus mr-1"></i>Agregar criterio
+                        </button>
+                    </div>
                     
                     <!-- Selector de Nivel -->
                     <div>
@@ -1076,6 +1107,41 @@
         </div>
     </div>
 
+    <!-- Modal: Evaluar con Rúbrica -->
+    <div id="rubricaModal" class="modal">
+        <div class="modal-content" style="max-width: 600px;">
+            <div class="bg-purple-600 text-white px-6 py-4 rounded-t-lg">
+                <h3 class="text-lg font-bold">
+                    <i class="fas fa-list-check mr-2"></i>Evaluar con Rúbrica
+                </h3>
+                <p class="text-sm mt-1" id="rubricaModalTitle">Tarea - Estudiante</p>
+            </div>
+            <div class="p-6">
+                <div id="rubricaModalCriteria" class="space-y-4 mb-4">
+                    <!-- Los criterios se cargarán dinámicamente -->
+                </div>
+                <div class="bg-gray-100 p-3 rounded-lg mb-4">
+                    <div class="flex justify-between items-center">
+                        <span class="font-medium">Puntaje Total:</span>
+                        <span class="text-2xl font-bold text-purple-600" id="rubricaTotalScore">0 / 0</span>
+                    </div>
+                    <div class="flex justify-between items-center mt-2">
+                        <span class="font-medium">Nota Estimada:</span>
+                        <span class="text-2xl font-bold" id="rubricaEstimatedGrade">-</span>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="saveRubricaGrade()" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-save mr-2"></i>Guardar
+                    </button>
+                    <button onclick="closeRubricaModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium">
+                        <i class="fas fa-times mr-2"></i>Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <style>
         .btn-action {
             padding: 0.5rem 1rem;
@@ -1096,6 +1162,92 @@
         let allCourses = []; // Array de todos los cursos
         let currentCourseId = null; // ID del curso activo
         let courseData = null; // Datos del curso actual (referencia)
+
+        // ============================================================
+        // SISTEMA DE EVALUACIÓN MULTINIVEL
+        // ============================================================
+        
+        const EVALUATION_TYPES = {
+            BINARY: 'binary',           // ✓/✗ (Completado/No completado)
+            LOGRO: 'logro',            // 4 Niveles de Logro
+            RUBRICA: 'rubrica',        // Rúbrica personalizable
+            NUMERIC: 'numeric',        // Nota 1.0-7.0 directa
+            PERCENTAGE: 'percentage',  // Porcentaje 0-100%
+            CONCEPTUAL: 'conceptual'   // MB/B/S/I
+        };
+
+        const LOGRO_LEVELS = {
+            NL: { label: 'No Logrado', value: 'NL', icon: '🔴', minGrade: 1.0, maxGrade: 3.9 },
+            ML: { label: 'Medianamente Logrado', value: 'ML', icon: '🟡', minGrade: 4.0, maxGrade: 4.9 },
+            L: { label: 'Logrado', value: 'L', icon: '🟢', minGrade: 5.0, maxGrade: 5.9 },
+            D: { label: 'Destacado', value: 'D', icon: '🔵', minGrade: 6.0, maxGrade: 7.0 }
+        };
+
+        const CONCEPTUAL_LEVELS = {
+            I: { label: 'Insuficiente', value: 'I', minGrade: 1.0, maxGrade: 3.9 },
+            S: { label: 'Suficiente', value: 'S', minGrade: 4.0, maxGrade: 5.4 },
+            B: { label: 'Bueno', value: 'B', minGrade: 5.5, maxGrade: 6.4 },
+            MB: { label: 'Muy Bueno', value: 'MB', minGrade: 6.5, maxGrade: 7.0 }
+        };
+
+        const DEFAULT_RUBRICA_CRITERIA = [
+            { name: 'Comprensión del contenido', weight: 25 },
+            { name: 'Aplicación práctica', weight: 25 },
+            { name: 'Creatividad y originalidad', weight: 25 },
+            { name: 'Presentación y ortografía', weight: 25 }
+        ];
+
+        // Convertir cualquier tipo de evaluación a escala común (1.0-7.0)
+        function convertToCommonScale(gradeValue, evaluationType, task) {
+            if (!gradeValue || gradeValue.value === null || gradeValue.value === undefined) {
+                return null;
+            }
+
+            const value = gradeValue.value;
+
+            switch (evaluationType) {
+                case EVALUATION_TYPES.BINARY:
+                    return value === true ? 7.0 : 1.0;
+
+                case EVALUATION_TYPES.LOGRO:
+                    const logro = Object.values(LOGRO_LEVELS).find(l => l.value === value);
+                    return logro ? (logro.minGrade + logro.maxGrade) / 2 : null;
+
+                case EVALUATION_TYPES.CONCEPTUAL:
+                    const conceptual = Object.values(CONCEPTUAL_LEVELS).find(l => l.value === value);
+                    return conceptual ? (conceptual.minGrade + conceptual.maxGrade) / 2 : null;
+
+                case EVALUATION_TYPES.NUMERIC:
+                    const num = parseFloat(value);
+                    return (num >= 1.0 && num <= 7.0) ? num : null;
+
+                case EVALUATION_TYPES.PERCENTAGE:
+                    const pct = parseFloat(value);
+                    if (pct >= 0 && pct <= 100) {
+                        return 1.0 + (pct / 100) * 6.0;
+                    }
+                    return null;
+
+                case EVALUATION_TYPES.RUBRICA:
+                    if (!gradeValue.rubricaScores || !task.rubricaCriteria) return null;
+                    const totalScore = gradeValue.rubricaScores.reduce((a, b) => a + b, 0);
+                    const maxScore = task.rubricaCriteria.reduce((a, c) => a + c.maxScore, 0);
+                    const percentage = (totalScore / maxScore) * 100;
+                    return 1.0 + (percentage / 100) * 6.0;
+
+                default:
+                    return null;
+            }
+        }
+
+        // Obtener color según nota
+        function getGradeColor(grade) {
+            if (!grade) return 'text-gray-400';
+            if (grade >= 6.0) return 'text-blue-600';
+            if (grade >= 5.0) return 'text-green-600';
+            if (grade >= 4.0) return 'text-yellow-600';
+            return 'text-red-600';
+        }
 
         // Control de permisos por rol
         function initializePermissions() {
@@ -1887,6 +2039,63 @@
             }
             
             console.log('✅ Carga completada:', allCourses.length, 'curso(s) disponible(s)');
+            
+            // PASO 7: Migración de estructura de evaluación
+            migrateEvaluationStructure();
+        }
+
+        // Migrar estructura de evaluación para cursos existentes
+        function migrateEvaluationStructure() {
+            if (!allCourses || allCourses.length === 0) return;
+
+            let migrated = false;
+
+            allCourses.forEach(course => {
+                if (!course.tasks || course.tasks.length === 0) return;
+
+                course.tasks.forEach(task => {
+                    // Si la tarea no tiene evaluationType, asignar 'binary' por defecto
+                    if (!task.evaluationType) {
+                        task.evaluationType = 'binary';
+                        migrated = true;
+                    }
+                });
+
+                // Migrar grades antiguas (boolean directo) a nuevo formato
+                if (course.students && course.students.length > 0) {
+                    course.students.forEach(student => {
+                        if (!student.grades) return;
+
+                        student.grades = student.grades.map((grade, index) => {
+                            const task = course.tasks[index];
+                            if (!task) return grade;
+
+                            // Si es formato antiguo (boolean/null directo)
+                            if (typeof grade !== 'object' || grade === null) {
+                                migrated = true;
+                                return {
+                                    value: grade,
+                                    updatedAt: new Date().toISOString(),
+                                    evaluationType: task.evaluationType || 'binary'
+                                };
+                            }
+
+                            // Si es formato nuevo pero le falta evaluationType
+                            if (!grade.evaluationType) {
+                                grade.evaluationType = task.evaluationType || 'binary';
+                                migrated = true;
+                            }
+
+                            return grade;
+                        });
+                    });
+                }
+            });
+
+            if (migrated) {
+                console.log('🔄 Migración de estructura de evaluación completada');
+                localStorage.setItem('allCourses', JSON.stringify(allCourses));
+            }
         }
 
         // Guardar todos los cursos (localStorage + sincronización automática con DB)
@@ -2364,11 +2573,241 @@
             }
         }
 
+        // ============================================================
+        // FUNCIONES DE EVALUACIÓN MULTINIVEL
+        // ============================================================
+
+        // Manejar cambio de tipo de evaluación
+        function handleEvaluationTypeChange() {
+            const type = document.getElementById('taskEvaluationType').value;
+            const descElement = document.getElementById('evaluationTypeDescription');
+            const rubricaContainer = document.getElementById('rubricaConfigContainer');
+
+            // Descripciones por tipo
+            const descriptions = {
+                binary: 'Evaluación simple: marcado/desmarcado (7.0 o 1.0)',
+                logro: 'Cuatro niveles: No Logrado, Medianamente Logrado, Logrado, Destacado',
+                rubrica: 'Evaluación con criterios personalizados y puntajes por dimensión',
+                numeric: 'Nota directa en escala 1.0 a 7.0',
+                percentage: 'Porcentaje que se convertirá automáticamente a nota 1-7',
+                conceptual: 'Evaluación cualitativa: Insuficiente, Suficiente, Bueno, Muy Bueno'
+            };
+
+            descElement.textContent = descriptions[type] || '';
+
+            // Mostrar configuración de rúbrica si corresponde
+            if (type === 'rubrica') {
+                rubricaContainer.style.display = 'block';
+                initializeRubricaCriteria();
+            } else {
+                rubricaContainer.style.display = 'none';
+            }
+        }
+
+        // Inicializar criterios de rúbrica con valores por defecto
+        function initializeRubricaCriteria() {
+            const container = document.getElementById('rubricaCriteriaList');
+            container.innerHTML = '';
+
+            DEFAULT_RUBRICA_CRITERIA.forEach((criterion, index) => {
+                addRubricaCriterionRow(criterion.name, criterion.weight, 4); // 4 puntos máx por defecto
+            });
+        }
+
+        // Agregar un nuevo criterio de rúbrica
+        function addRubricaCriterion() {
+            addRubricaCriterionRow('', 25, 4);
+        }
+
+        // Agregar fila de criterio de rúbrica
+        function addRubricaCriterionRow(name = '', weight = 25, maxScore = 4) {
+            const container = document.getElementById('rubricaCriteriaList');
+            const index = container.children.length;
+
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 items-center bg-white p-2 rounded border border-gray-200';
+            row.innerHTML = `
+                <input type="text" 
+                       class="flex-1 px-2 py-1 text-sm border border-gray-300 rounded" 
+                       placeholder="Nombre del criterio"
+                       value="${name}"
+                       data-criterion-index="${index}"
+                       data-criterion-field="name">
+                <input type="number" 
+                       class="w-16 px-2 py-1 text-sm border border-gray-300 rounded" 
+                       placeholder="Max"
+                       value="${maxScore}"
+                       min="1"
+                       max="10"
+                       title="Puntaje máximo"
+                       data-criterion-index="${index}"
+                       data-criterion-field="maxScore">
+                <button type="button" 
+                        onclick="removeRubricaCriterion(this)" 
+                        class="text-red-500 hover:text-red-700 px-2"
+                        title="Eliminar criterio">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            container.appendChild(row);
+        }
+
+        // Eliminar criterio de rúbrica
+        function removeRubricaCriterion(button) {
+            const container = document.getElementById('rubricaCriteriaList');
+            if (container.children.length > 1) {
+                button.parentElement.remove();
+            } else {
+                alert('❌ Debe haber al menos un criterio en la rúbrica');
+            }
+        }
+
+        // Obtener criterios configurados de rúbrica
+        function getRubricaCriteria() {
+            const container = document.getElementById('rubricaCriteriaList');
+            const criteria = [];
+
+            container.querySelectorAll('[data-criterion-field="name"]').forEach((input, index) => {
+                const name = input.value.trim();
+                const maxScoreInput = container.querySelector(`[data-criterion-index="${index}"][data-criterion-field="maxScore"]`);
+                const maxScore = parseInt(maxScoreInput?.value) || 4;
+
+                if (name) {
+                    criteria.push({
+                        name: name,
+                        maxScore: maxScore
+                    });
+                }
+            });
+
+            return criteria;
+        }
+
+        // Variables para el modal de rúbrica
+        let currentRubricaStudentIndex = null;
+        let currentRubricaGradeIndex = null;
+
+        // Abrir modal de rúbrica
+        function openRubricaModal(studentIndex, gradeIndex) {
+            const student = courseData.students[studentIndex];
+            const task = courseData.tasks[gradeIndex];
+            const currentGrade = student.grades[gradeIndex];
+
+            if (!task.rubricaCriteria || task.rubricaCriteria.length === 0) {
+                alert('⚠️ Esta tarea no tiene criterios de rúbrica definidos');
+                return;
+            }
+
+            currentRubricaStudentIndex = studentIndex;
+            currentRubricaGradeIndex = gradeIndex;
+
+            // Actualizar título
+            document.getElementById('rubricaModalTitle').textContent = 
+                `${task.name} - ${student.name} ${student.lastName1}`;
+
+            // Renderizar criterios
+            const container = document.getElementById('rubricaModalCriteria');
+            container.innerHTML = '';
+
+            const existingScores = (currentGrade && currentGrade.rubricaScores) || [];
+
+            task.rubricaCriteria.forEach((criterion, index) => {
+                const currentScore = existingScores[index] || 0;
+                
+                const criterionDiv = document.createElement('div');
+                criterionDiv.className = 'border border-gray-200 rounded-lg p-4 bg-white';
+                criterionDiv.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-medium text-sm">${criterion.name}</span>
+                        <span class="text-sm text-gray-600">
+                            <span class="rubrica-score-display font-bold text-purple-600">${currentScore}</span> / ${criterion.maxScore}
+                        </span>
+                    </div>
+                    <input type="range" 
+                           min="0" 
+                           max="${criterion.maxScore}" 
+                           value="${currentScore}"
+                           class="rubrica-slider w-full"
+                           data-criterion-index="${index}"
+                           oninput="updateRubricaScore()">
+                    <div class="flex justify-between text-xs text-gray-500 mt-1">
+                        ${generateRubricaLabels(criterion.maxScore)}
+                    </div>
+                `;
+                container.appendChild(criterionDiv);
+            });
+
+            updateRubricaScore();
+            document.getElementById('rubricaModal').style.display = 'block';
+        }
+
+        // Generar labels para los niveles de la rúbrica
+        function generateRubricaLabels(maxScore) {
+            const labels = ['No logrado'];
+            if (maxScore >= 3) labels.push('Básico');
+            if (maxScore >= 4) labels.push('Competente');
+            labels.push('Destacado');
+            
+            return labels.map(l => `<span>${l}</span>`).join('');
+        }
+
+        // Actualizar puntaje total de rúbrica
+        function updateRubricaScore() {
+            const sliders = document.querySelectorAll('.rubrica-slider');
+            const displays = document.querySelectorAll('.rubrica-score-display');
+            
+            let total = 0;
+            let maxTotal = 0;
+
+            sliders.forEach((slider, index) => {
+                const value = parseInt(slider.value);
+                total += value;
+                maxTotal += parseInt(slider.max);
+                
+                if (displays[index]) {
+                    displays[index].textContent = value;
+                }
+            });
+
+            document.getElementById('rubricaTotalScore').textContent = `${total} / ${maxTotal}`;
+
+            // Calcular nota estimada
+            const percentage = maxTotal > 0 ? (total / maxTotal) * 100 : 0;
+            const estimatedGrade = 1.0 + (percentage / 100) * 6.0;
+            const gradeColor = getGradeColor(estimatedGrade);
+            
+            document.getElementById('rubricaEstimatedGrade').textContent = estimatedGrade.toFixed(1);
+            document.getElementById('rubricaEstimatedGrade').className = `text-2xl font-bold ${gradeColor}`;
+        }
+
+        // Guardar evaluación de rúbrica
+        function saveRubricaGrade() {
+            const sliders = document.querySelectorAll('.rubrica-slider');
+            const scores = Array.from(sliders).map(s => parseInt(s.value));
+
+            const rubricaValue = {
+                rubricaScores: scores
+            };
+
+            updateGrade(currentRubricaStudentIndex, currentRubricaGradeIndex, rubricaValue);
+            closeRubricaModal();
+        }
+
+        // Cerrar modal de rúbrica
+        function closeRubricaModal() {
+            document.getElementById('rubricaModal').style.display = 'none';
+            currentRubricaStudentIndex = null;
+            currentRubricaGradeIndex = null;
+        }
+
         // Agregar tarea - Mostrar modal
         function addTask() {
             document.getElementById('taskName').value = '';
             document.getElementById('taskDate').value = '';
             document.getElementById('taskDayOfWeek').textContent = '';
+            document.getElementById('taskEvaluationType').value = 'binary';
+            document.getElementById('evaluationTypeDescription').textContent = 'Evaluación simple: marcado/desmarcado (7.0 o 1.0)';
+            document.getElementById('rubricaConfigContainer').style.display = 'none';
             document.getElementById('taskLevel').value = '';
             document.getElementById('taskUnitContainer').style.display = 'none';
             document.getElementById('taskOAsContainer').style.display = 'none';
@@ -2392,6 +2831,7 @@
         function saveTask() {
             const name = document.getElementById('taskName').value.trim();
             const date = document.getElementById('taskDate').value;
+            const evaluationType = document.getElementById('taskEvaluationType').value;
             const level = document.getElementById('taskLevel').value;
             const unit = document.getElementById('taskUnit').value;
             
@@ -2415,10 +2855,22 @@
                 id: Date.now(),
                 name: name,
                 date: date || '',
+                evaluationType: evaluationType, // Nuevo campo
                 nivel: level || null,
                 unidad: unit || null,
                 oas: selectedOAs
             };
+
+            // Si es tipo rúbrica, agregar criterios
+            if (evaluationType === 'rubrica') {
+                const criteria = getRubricaCriteria();
+                if (criteria.length === 0) {
+                    alert('⚠️ Debes definir al menos un criterio para la rúbrica');
+                    return;
+                }
+                task.rubricaCriteria = criteria;
+            }
+
             courseData.tasks.push(task);
             
             // Agregar columna de nota a cada estudiante
@@ -3178,6 +3630,88 @@
             window.print();
         }
 
+        // Renderizar celda de evaluación según tipo
+        function renderGradeCell(studentIndex, gradeIndex, grade, task, isRetired) {
+            const evaluationType = task.evaluationType || 'binary'; // Por defecto binario para retrocompatibilidad
+            const gradeValue = getGradeValue(grade);
+            const disabled = isRetired ? 'disabled' : '';
+
+            switch (evaluationType) {
+                case EVALUATION_TYPES.BINARY:
+                    const isChecked = gradeValue === true || gradeValue === 1;
+                    return `
+                        <input type="checkbox" ${isChecked ? 'checked' : ''} 
+                               onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.checked)"
+                               class="w-4 h-4 text-indigo-600 rounded" ${disabled}>
+                    `;
+
+                case EVALUATION_TYPES.LOGRO:
+                    const logroValue = gradeValue || '';
+                    return `
+                        <select onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.value)"
+                                class="w-full text-xs px-1 py-1 border rounded" ${disabled}>
+                            <option value="">-</option>
+                            <option value="NL" ${logroValue === 'NL' ? 'selected' : ''}>🔴 NL</option>
+                            <option value="ML" ${logroValue === 'ML' ? 'selected' : ''}>🟡 ML</option>
+                            <option value="L" ${logroValue === 'L' ? 'selected' : ''}>🟢 L</option>
+                            <option value="D" ${logroValue === 'D' ? 'selected' : ''}>🔵 D</option>
+                        </select>
+                    `;
+
+                case EVALUATION_TYPES.CONCEPTUAL:
+                    const conceptualValue = gradeValue || '';
+                    return `
+                        <select onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.value)"
+                                class="w-full text-xs px-1 py-1 border rounded" ${disabled}>
+                            <option value="">-</option>
+                            <option value="I" ${conceptualValue === 'I' ? 'selected' : ''}>I</option>
+                            <option value="S" ${conceptualValue === 'S' ? 'selected' : ''}>S</option>
+                            <option value="B" ${conceptualValue === 'B' ? 'selected' : ''}>B</option>
+                            <option value="MB" ${conceptualValue === 'MB' ? 'selected' : ''}>MB</option>
+                        </select>
+                    `;
+
+                case EVALUATION_TYPES.NUMERIC:
+                    const numericValue = gradeValue || '';
+                    return `
+                        <input type="number" 
+                               value="${numericValue}" 
+                               min="1.0" 
+                               max="7.0" 
+                               step="0.1"
+                               onchange="updateGrade(${studentIndex}, ${gradeIndex}, parseFloat(this.value))"
+                               class="w-full text-xs px-1 py-1 border rounded text-center" 
+                               placeholder="-" ${disabled}>
+                    `;
+
+                case EVALUATION_TYPES.PERCENTAGE:
+                    const pctValue = gradeValue || '';
+                    return `
+                        <input type="number" 
+                               value="${pctValue}" 
+                               min="0" 
+                               max="100" 
+                               step="1"
+                               onchange="updateGrade(${studentIndex}, ${gradeIndex}, parseInt(this.value))"
+                               class="w-full text-xs px-1 py-1 border rounded text-center" 
+                               placeholder="-" ${disabled}>
+                    `;
+
+                case EVALUATION_TYPES.RUBRICA:
+                    const rubricaLabel = grade && grade.rubricaScores ? '📝' : '-';
+                    return `
+                        <button onclick="openRubricaModal(${studentIndex}, ${gradeIndex})"
+                                class="w-full px-1 py-1 text-xs bg-blue-100 hover:bg-blue-200 rounded border border-blue-300"
+                                ${disabled}>
+                            ${rubricaLabel}
+                        </button>
+                    `;
+
+                default:
+                    return `<span class="text-gray-400">-</span>`;
+            }
+        }
+
         // Helper: Extraer el valor de una nota (compatible con formato antiguo y nuevo)
         function getGradeValue(grade) {
             // Formato nuevo: { value: boolean, updatedAt: string }
@@ -3304,27 +3838,32 @@
                 `;
                 
                 // Columnas de tareas
+                const gradesConverted = [];
                 student.grades.forEach((grade, gradeIndex) => {
-                    const gradeValue = getGradeValue(grade);
-                    const isChecked = gradeValue === true || gradeValue === 1;
-                    if (isChecked) totalPoints++;
-                    
-                    html += `
-                        <td class="px-2 py-3 text-center">
-                            <input type="checkbox" ${isChecked ? 'checked' : ''} 
-                                   onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.checked)"
-                                   class="w-4 h-4 text-indigo-600 rounded" ${student.retired ? 'disabled' : ''}>
-                        </td>
-                    `;
+                    const task = courseData.tasks[gradeIndex];
+                    if (!task) return;
+
+                    const cellHtml = renderGradeCell(studentIndex, gradeIndex, grade, task, student.retired);
+                    html += `<td class="px-2 py-3 text-center">${cellHtml}</td>`;
+
+                    // Convertir a escala común para el promedio
+                    const converted = convertToCommonScale(grade, task.evaluationType, task);
+                    if (converted !== null) {
+                        gradesConverted.push(converted);
+                    }
                 });
                 
-                // Calcular nota
-                const maxPoints = courseData.tasks.length;
-                const finalGrade = calculateGrade(totalPoints, maxPoints);
+                // Calcular nota promedio
+                const finalGrade = gradesConverted.length > 0
+                    ? gradesConverted.reduce((a, b) => a + b, 0) / gradesConverted.length
+                    : null;
+                
+                const gradeDisplay = finalGrade !== null ? finalGrade.toFixed(1) : '-';
+                const gradeColor = finalGrade !== null ? getGradeColor(finalGrade) : 'text-gray-400';
                 
                 html += `
-                    <td class="px-2 py-3 text-center font-bold text-indigo-600">${totalPoints}</td>
-                    <td class="px-2 py-3 text-center font-bold text-lg ${finalGrade >= 4.0 ? 'text-green-600' : 'text-red-600'}">${finalGrade.toFixed(1)}</td>
+                    <td class="px-2 py-3 text-center font-bold text-indigo-600">${gradesConverted.length}</td>
+                    <td class="px-2 py-3 text-center font-bold text-lg ${gradeColor}">${gradeDisplay}</td>
                     <td class="px-4 py-3 text-center no-print space-x-2">
                         <button onclick="showEditStudentModal(${studentIndex})" class="text-blue-600 hover:text-blue-800" title="Editar">
                             <i class="fas fa-edit"></i>
@@ -3359,27 +3898,59 @@
         }
 
         // Actualizar nota (sin mensaje de confirmación)
-        function updateGrade(studentIndex, gradeIndex, checked) {
+        function updateGrade(studentIndex, gradeIndex, value) {
             const student = courseData.students[studentIndex];
+            const task = courseData.tasks[gradeIndex];
             
-            // Mantener compatibilidad con formato antiguo (solo valor) y nuevo formato (objeto con timestamp)
-            const currentGrade = student.grades[gradeIndex];
+            if (!task) {
+                console.error('Tarea no encontrada');
+                return;
+            }
+
+            const evaluationType = task.evaluationType || 'binary';
             
-            // Si es formato antiguo (simple boolean/null), convertir a nuevo formato
-            if (currentGrade === null || currentGrade === true || currentGrade === false || typeof currentGrade !== 'object') {
-                student.grades[gradeIndex] = {
-                    value: checked,
-                    updatedAt: new Date().toISOString()
-                };
-            } else {
-                // Ya es formato nuevo, solo actualizar valor y timestamp
-                student.grades[gradeIndex] = {
-                    value: checked,
-                    updatedAt: new Date().toISOString()
-                };
+            // Validar valor según tipo
+            let validatedValue = value;
+            
+            switch (evaluationType) {
+                case EVALUATION_TYPES.BINARY:
+                    validatedValue = Boolean(value);
+                    break;
+                    
+                case EVALUATION_TYPES.LOGRO:
+                case EVALUATION_TYPES.CONCEPTUAL:
+                    validatedValue = value || null;
+                    break;
+                    
+                case EVALUATION_TYPES.NUMERIC:
+                    const num = parseFloat(value);
+                    validatedValue = (num >= 1.0 && num <= 7.0) ? num : null;
+                    break;
+                    
+                case EVALUATION_TYPES.PERCENTAGE:
+                    const pct = parseInt(value);
+                    validatedValue = (pct >= 0 && pct <= 100) ? pct : null;
+                    break;
+                    
+                case EVALUATION_TYPES.RUBRICA:
+                    // Para rúbrica, el valor viene del modal
+                    validatedValue = value;
+                    break;
+            }
+
+            // Actualizar con nuevo formato
+            student.grades[gradeIndex] = {
+                value: validatedValue,
+                updatedAt: new Date().toISOString(),
+                evaluationType: evaluationType
+            };
+
+            // Si es rúbrica y tiene scores, agregar
+            if (evaluationType === EVALUATION_TYPES.RUBRICA && value && typeof value === 'object') {
+                student.grades[gradeIndex].rubricaScores = value.rubricaScores || null;
             }
             
-            console.log(`📝 Nota actualizada: Estudiante ${studentIndex}, Tarea ${gradeIndex}, Valor: ${checked}, Timestamp: ${student.grades[gradeIndex].updatedAt}`);
+            console.log(`📝 Nota actualizada: Estudiante ${studentIndex}, Tarea ${gradeIndex} (${evaluationType}), Valor:`, validatedValue);
             
             renderTable();
             saveAllCourses();

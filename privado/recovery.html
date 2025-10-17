@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperación de Datos - Sistema de Notas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-red-600 mb-6">
+            <i class="fas fa-life-ring"></i> Recuperación de Datos
+        </h1>
+        
+        <div class="space-y-4">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <h2 class="font-bold text-lg mb-2">📊 Estado del localStorage:</h2>
+                <pre id="storageStatus" class="bg-white p-4 rounded text-sm overflow-auto max-h-96"></pre>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <h2 class="font-bold text-lg mb-2">🔍 Datos encontrados:</h2>
+                <div id="foundData"></div>
+            </div>
+
+            <div class="flex gap-4">
+                <button onclick="migrateToFrancisco()" 
+                        class="flex-1 bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold">
+                    💾 Migrar datos a Francisco
+                </button>
+                
+                <button onclick="downloadBackup()" 
+                        class="flex-1 bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold">
+                    📥 Descargar Backup JSON
+                </button>
+            </div>
+
+            <div id="result" class="mt-4"></div>
+        </div>
+    </div>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <script>
+        function analyzeStorage() {
+            const status = document.getElementById('storageStatus');
+            const foundData = document.getElementById('foundData');
+            
+            let report = 'TODAS LAS CLAVES EN LOCALSTORAGE:\n\n';
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                const value = localStorage.getItem(key);
+                const size = new Blob([value]).size;
+                report += `${key}: ${size} bytes\n`;
+            });
+            
+            status.textContent = report;
+            
+            // Buscar cursos en todas las claves posibles
+            let coursesFound = [];
+            
+            // 1. Buscar en allCourses (sin namespace)
+            const allCoursesRaw = localStorage.getItem('allCourses');
+            if (allCoursesRaw) {
+                try {
+                    const courses = JSON.parse(allCoursesRaw);
+                    if (Array.isArray(courses) && courses.length > 0) {
+                        coursesFound.push({
+                            key: 'allCourses',
+                            courses: courses,
+                            count: courses.length
+                        });
+                    }
+                } catch (e) {}
+            }
+            
+            // 2. Buscar en francisco_allCourses
+            const franciscoCoursesRaw = localStorage.getItem('francisco_allCourses');
+            if (franciscoCoursesRaw) {
+                try {
+                    const courses = JSON.parse(franciscoCoursesRaw);
+                    if (Array.isArray(courses) && courses.length > 0) {
+                        coursesFound.push({
+                            key: 'francisco_allCourses',
+                            courses: courses,
+                            count: courses.length
+                        });
+                    }
+                } catch (e) {}
+            }
+            
+            // 3. Buscar en profesor2_allCourses
+            const profesor2CoursesRaw = localStorage.getItem('profesor2_allCourses');
+            if (profesor2CoursesRaw) {
+                try {
+                    const courses = JSON.parse(profesor2CoursesRaw);
+                    if (Array.isArray(courses) && courses.length > 0) {
+                        coursesFound.push({
+                            key: 'profesor2_allCourses',
+                            courses: courses,
+                            count: courses.length
+                        });
+                    }
+                } catch (e) {}
+            }
+            
+            // Mostrar resultados
+            if (coursesFound.length === 0) {
+                foundData.innerHTML = '<p class="text-red-600 font-semibold">❌ No se encontraron cursos en localStorage</p>';
+            } else {
+                let html = '<div class="space-y-4">';
+                coursesFound.forEach(found => {
+                    html += `
+                        <div class="bg-white p-4 rounded border">
+                            <h3 class="font-bold text-lg mb-2">📚 ${found.key}</h3>
+                            <p class="text-sm text-gray-600 mb-2">${found.count} curso(s) encontrado(s)</p>
+                            <div class="space-y-1">
+                    `;
+                    found.courses.forEach((course, idx) => {
+                        html += `
+                            <div class="text-sm">
+                                <strong>${idx + 1}.</strong> ${course.courseName} 
+                                (${course.students?.length || 0} estudiantes, 
+                                ${course.tasks?.length || 0} tareas)
+                            </div>
+                        `;
+                    });
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+                foundData.innerHTML = html;
+            }
+            
+            return coursesFound;
+        }
+        
+        function migrateToFrancisco() {
+            const result = document.getElementById('result');
+            
+            // Buscar cursos en allCourses (sin namespace)
+            const allCoursesRaw = localStorage.getItem('allCourses');
+            
+            if (!allCoursesRaw) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ No se encontraron cursos en 'allCourses'</p>
+                        <p class="text-sm text-red-600 mt-2">Los datos pueden haber sido eliminados permanentemente.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const courses = JSON.parse(allCoursesRaw);
+                
+                if (!Array.isArray(courses) || courses.length === 0) {
+                    result.innerHTML = `
+                        <div class="bg-yellow-100 border-l-4 border-yellow-500 p-4">
+                            <p class="font-semibold text-yellow-700">⚠️ La clave 'allCourses' está vacía</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Migrar a francisco_allCourses
+                localStorage.setItem('francisco_allCourses', allCoursesRaw);
+                
+                // También migrar currentCourseId si existe
+                const currentCourseId = localStorage.getItem('currentCourseId');
+                if (currentCourseId) {
+                    localStorage.setItem('francisco_currentCourseId', currentCourseId);
+                }
+                
+                result.innerHTML = `
+                    <div class="bg-green-100 border-l-4 border-green-500 p-4">
+                        <p class="font-semibold text-green-700">✅ Migración exitosa!</p>
+                        <p class="text-sm text-green-600 mt-2">
+                            ${courses.length} curso(s) migrado(s) a 'francisco_allCourses'
+                        </p>
+                        <p class="text-sm text-green-600 mt-2">
+                            <strong>Siguiente paso:</strong> Abre 
+                            <a href="registro-notas.html?docente=francisco" 
+                               class="underline font-semibold">
+                               registro-notas.html?docente=francisco
+                            </a>
+                        </p>
+                    </div>
+                `;
+                
+                // Reanalizar
+                setTimeout(analyzeStorage, 500);
+                
+            } catch (e) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ Error al procesar datos:</p>
+                        <p class="text-sm text-red-600 mt-2">${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function downloadBackup() {
+            const allData = {};
+            const keys = Object.keys(localStorage);
+            
+            keys.forEach(key => {
+                try {
+                    const value = localStorage.getItem(key);
+                    // Intentar parsear como JSON, si falla guardar como string
+                    try {
+                        allData[key] = JSON.parse(value);
+                    } catch {
+                        allData[key] = value;
+                    }
+                } catch (e) {
+                    console.error('Error con clave:', key, e);
+                }
+            });
+            
+            const dataStr = JSON.stringify(allData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `backup-localStorage-${new Date().toISOString().slice(0,10)}.json`;
+            link.click();
+            
+            const result = document.getElementById('result');
+            result.innerHTML = `
+                <div class="bg-blue-100 border-l-4 border-blue-500 p-4">
+                    <p class="font-semibold text-blue-700">📥 Backup descargado exitosamente</p>
+                </div>
+            `;
+        }
+        
+        // Auto-analizar al cargar
+        window.addEventListener('DOMContentLoaded', analyzeStorage);
+    </script>
+</body>
+</html>

@@ -1174,19 +1174,41 @@
                 color: 'indigo',
                 descripcion: '3° y 4° Medio - Lenguaje y Comunicación'
             },
-            otro: {
+            profesor2: {
                 nombre: 'Otro Docente',
-                namespace: 'otro',
+                namespace: 'profesor2',
                 color: 'purple',
                 descripcion: 'Espacio independiente'
             }
         };
         
+        // Cargar configuración personalizada de Profesor 2 si existe
+        if (docenteParam === 'profesor2') {
+            try {
+                const config = localStorage.getItem('profesor2_config');
+                if (config) {
+                    const data = JSON.parse(config);
+                    if (data.teacherName) {
+                        DOCENTES_CONFIG.profesor2.nombre = data.teacherName;
+                    }
+                    if (data.courses && data.subject) {
+                        DOCENTES_CONFIG.profesor2.descripcion = `${data.courses} - ${data.subject}`;
+                    } else if (data.courses) {
+                        DOCENTES_CONFIG.profesor2.descripcion = data.courses;
+                    } else if (data.subject) {
+                        DOCENTES_CONFIG.profesor2.descripcion = data.subject;
+                    }
+                }
+            } catch (e) {
+                console.log('No hay configuración personalizada para Profesor 2');
+            }
+        }
+        
         // Obtener configuración del docente actual
         const DOCENTE_ACTUAL = DOCENTES_CONFIG[docenteParam] || DOCENTES_CONFIG.francisco;
         
         // Namespace para localStorage y DB
-        const STORAGE_PREFIX = `courses_${DOCENTE_ACTUAL.namespace}_`;
+        const STORAGE_PREFIX = `${DOCENTE_ACTUAL.namespace}_`;
         const DB_USERNAME = `${sessionStorage.getItem('username') || 'fconuva'}_${DOCENTE_ACTUAL.namespace}`;
         
         console.log(`👤 Sistema iniciado para: ${DOCENTE_ACTUAL.nombre}`);

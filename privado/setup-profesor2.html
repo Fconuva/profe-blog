@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Configuración Inicial - Docente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-purple-100 to-indigo-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-2xl w-full bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-purple-100 rounded-full mb-4">
+                <i class="fas fa-user-cog text-4xl text-purple-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                Configuración Inicial
+            </h1>
+            <p class="text-gray-600">
+                Personaliza tu perfil de docente
+            </p>
+        </div>
+
+        <form id="setupForm" class="space-y-6">
+            <!-- Nombre del docente -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-user mr-2 text-purple-600"></i>Nombre Completo del Docente
+                </label>
+                <input type="text" 
+                       id="teacherName" 
+                       required
+                       placeholder="Ej: María González"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition">
+                <p class="text-xs text-gray-500 mt-1">Este nombre aparecerá en el sistema y reportes</p>
+            </div>
+
+            <!-- Asignatura -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-book mr-2 text-purple-600"></i>Asignatura Principal
+                </label>
+                <input type="text" 
+                       id="subject" 
+                       required
+                       placeholder="Ej: Matemática, Historia, Inglés"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition">
+            </div>
+
+            <!-- Cursos que enseña -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-graduation-cap mr-2 text-purple-600"></i>Cursos que Enseña
+                </label>
+                <input type="text" 
+                       id="courses" 
+                       required
+                       placeholder="Ej: 1° y 2° Medio, 7° y 8° Básico"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition">
+                <p class="text-xs text-gray-500 mt-1">Descripción corta de los niveles</p>
+            </div>
+
+            <!-- Establecimiento (opcional) -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-school mr-2 text-purple-600"></i>Establecimiento (Opcional)
+                </label>
+                <input type="text" 
+                       id="establishment" 
+                       placeholder="Ej: Liceo República de Chile"
+                       class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition">
+            </div>
+
+            <!-- Año académico -->
+            <div>
+                <label class="block text-sm font-bold text-gray-700 mb-2">
+                    <i class="fas fa-calendar mr-2 text-purple-600"></i>Año Académico
+                </label>
+                <select id="year" 
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition">
+                    <option value="2025" selected>2025</option>
+                    <option value="2026">2026</option>
+                    <option value="2024">2024</option>
+                </select>
+            </div>
+
+            <div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded">
+                <p class="text-sm text-purple-800">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    <strong>Nota:</strong> Esta configuración se puede cambiar después desde el dashboard.
+                </p>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-3 pt-4">
+                <button type="button" 
+                        onclick="window.location.href='dashboard.html'"
+                        class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Cancelar
+                </button>
+                <button type="submit" 
+                        class="flex-1 px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 font-semibold transition transform hover:scale-105">
+                    <i class="fas fa-check mr-2"></i>Guardar y Continuar
+                </button>
+            </div>
+        </form>
+
+        <div id="result" class="mt-6"></div>
+    </div>
+
+    <script>
+        // Cargar configuración existente si hay
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const config = localStorage.getItem('profesor2_config');
+                if (config) {
+                    const data = JSON.parse(config);
+                    document.getElementById('teacherName').value = data.teacherName || '';
+                    document.getElementById('subject').value = data.subject || '';
+                    document.getElementById('courses').value = data.courses || '';
+                    document.getElementById('establishment').value = data.establishment || '';
+                    document.getElementById('year').value = data.year || '2025';
+                }
+            } catch (e) {
+                console.log('No hay configuración previa');
+            }
+        });
+
+        document.getElementById('setupForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const config = {
+                teacherName: document.getElementById('teacherName').value.trim(),
+                subject: document.getElementById('subject').value.trim(),
+                courses: document.getElementById('courses').value.trim(),
+                establishment: document.getElementById('establishment').value.trim(),
+                year: document.getElementById('year').value,
+                configuredAt: new Date().toISOString()
+            };
+            
+            try {
+                // Guardar configuración
+                localStorage.setItem('profesor2_config', JSON.stringify(config));
+                
+                // Mostrar confirmación
+                document.getElementById('result').innerHTML = `
+                    <div class="bg-green-100 border-l-4 border-green-500 p-4 rounded animate-fade-in">
+                        <p class="font-bold text-green-800 mb-2">
+                            <i class="fas fa-check-circle mr-2"></i>¡Configuración guardada exitosamente!
+                        </p>
+                        <p class="text-sm text-green-700 mb-3">
+                            Perfil de <strong>${config.teacherName}</strong> - ${config.subject}
+                        </p>
+                        <button onclick="window.location.href='registro-notas.html?docente=profesor2'" 
+                                class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition">
+                            <i class="fas fa-rocket mr-2"></i>Ir al Sistema de Registro
+                        </button>
+                    </div>
+                `;
+                
+                // Scroll al resultado
+                document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
+                
+            } catch (e) {
+                document.getElementById('result').innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4 rounded">
+                        <p class="font-bold text-red-800">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Error al guardar
+                        </p>
+                        <p class="text-sm text-red-700">${e.message}</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+
+    <style>
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fade-in 0.3s ease-out;
+        }
+    </style>
+</body>
+</html>

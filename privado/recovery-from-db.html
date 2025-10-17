@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recuperación desde Base de Datos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-indigo-600 mb-6">
+            <i class="fas fa-database"></i> Recuperación desde Base de Datos
+        </h1>
+        
+        <div class="space-y-6">
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <h2 class="font-bold text-lg mb-2">📊 Paso 1: Verificar datos en BD</h2>
+                <p class="text-sm text-gray-700 mb-4">
+                    Primero vamos a revisar qué datos hay guardados en la base de datos con diferentes usernames.
+                </p>
+                <button onclick="checkAllUsernames()" 
+                        class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 font-semibold">
+                    🔍 Buscar datos en BD
+                </button>
+                <div id="dbResults" class="mt-4"></div>
+            </div>
+
+            <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                <h2 class="font-bold text-lg mb-2">💾 Paso 2: Restaurar datos</h2>
+                <p class="text-sm text-gray-700 mb-4">
+                    Una vez encontrados los datos, selecciona qué username quieres recuperar:
+                </p>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Username de origen:</label>
+                        <select id="sourceUsername" class="w-full border rounded-lg px-4 py-2">
+                            <option value="">-- Selecciona después de buscar --</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-semibold mb-2">Destino:</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="destination" value="francisco" checked class="mr-2">
+                                <span>Francisco (francisco_allCourses)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="destination" value="profesor2" class="mr-2">
+                                <span>Profesor 2 (profesor2_allCourses)</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <button onclick="restoreData()" 
+                            class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold mt-4">
+                        ✅ Restaurar datos a localStorage
+                    </button>
+                </div>
+                
+                <div id="restoreResults" class="mt-4"></div>
+            </div>
+
+            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4">
+                <h2 class="font-bold text-lg mb-2">⚠️ Opciones adicionales</h2>
+                <div class="space-y-2">
+                    <button onclick="checkMochaDick()" 
+                            class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
+                        🐋 Revisar datos en mochaDickEvaluations
+                    </button>
+                    <button onclick="checkGradebook()" 
+                            class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
+                        📚 Revisar datos en gradebookDataLocal
+                    </button>
+                    <button onclick="checkDataBackups()" 
+                            class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700">
+                        💾 Revisar dataBackups
+                    </button>
+                </div>
+                <div id="alternativeResults" class="mt-4"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let foundCourses = [];
+        
+        async function checkAllUsernames() {
+            const results = document.getElementById('dbResults');
+            results.innerHTML = '<div class="text-center"><i class="fas fa-spinner fa-spin text-2xl text-blue-600"></i><p class="mt-2">Buscando en la base de datos...</p></div>';
+            
+            const possibleUsernames = [
+                'fconuva',
+                'francisco_fconuva',
+                'francisco_francisco',
+                'profesor2_profesor2',
+                // Intentar sin namespace también
+                'francisco',
+                'profesor2'
+            ];
+            
+            foundCourses = [];
+            let html = '<div class="space-y-4">';
+            
+            for (const username of possibleUsernames) {
+                try {
+                    console.log('Buscando username:', username);
+                    const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                    const data = await response.json();
+                    
+                    if (data.success && data.courses && data.courses.length > 0) {
+                        foundCourses.push({
+                            username: username,
+                            courses: data.courses
+                        });
+                        
+                        html += `
+                            <div class="bg-white border-2 border-green-500 rounded-lg p-4">
+                                <h3 class="font-bold text-lg text-green-700 mb-2">
+                                    ✅ Encontrado: ${username}
+                                </h3>
+                                <p class="text-sm text-gray-700 mb-2">
+                                    <strong>${data.courses.length}</strong> curso(s) encontrado(s)
+                                </p>
+                                <div class="space-y-1 text-sm">
+                        `;
+                        
+                        data.courses.forEach((course, idx) => {
+                            html += `
+                                <div class="bg-gray-50 p-2 rounded">
+                                    <strong>${idx + 1}.</strong> ${course.courseName || 'Sin nombre'} - 
+                                    ${course.students?.length || 0} estudiantes, 
+                                    ${course.tasks?.length || 0} tareas
+                                    ${course.updatedAt ? `(última actualización: ${new Date(course.updatedAt).toLocaleString('es-CL')})` : ''}
+                                </div>
+                            `;
+                        });
+                        
+                        html += `
+                                </div>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.log(`Error buscando ${username}:`, error);
+                }
+            }
+            
+            html += '</div>';
+            
+            if (foundCourses.length === 0) {
+                results.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ No se encontraron cursos en la base de datos</p>
+                        <p class="text-sm text-red-600 mt-2">Probados: ${possibleUsernames.join(', ')}</p>
+                        <p class="text-sm text-red-600 mt-2">Los datos pueden no haberse sincronizado antes de ser eliminados.</p>
+                    </div>
+                `;
+            } else {
+                results.innerHTML = html;
+                
+                // Actualizar selector
+                const select = document.getElementById('sourceUsername');
+                select.innerHTML = '<option value="">-- Selecciona un username --</option>';
+                foundCourses.forEach(found => {
+                    select.innerHTML += `<option value="${found.username}">${found.username} (${found.courses.length} cursos)</option>`;
+                });
+            }
+        }
+        
+        async function restoreData() {
+            const sourceUsername = document.getElementById('sourceUsername').value;
+            const destination = document.querySelector('input[name="destination"]:checked').value;
+            const results = document.getElementById('restoreResults');
+            
+            if (!sourceUsername) {
+                results.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">⚠️ Por favor selecciona un username de origen</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const found = foundCourses.find(f => f.username === sourceUsername);
+            if (!found) {
+                results.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ No se encontraron datos para ese username</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                // Guardar en localStorage con namespace correcto
+                const storageKey = `${destination}_allCourses`;
+                localStorage.setItem(storageKey, JSON.stringify(found.courses));
+                
+                // También guardar el currentCourseId si hay cursos
+                if (found.courses.length > 0) {
+                    localStorage.setItem(`${destination}_currentCourseId`, found.courses[0].id);
+                }
+                
+                results.innerHTML = `
+                    <div class="bg-green-100 border-l-4 border-green-500 p-4">
+                        <p class="font-semibold text-green-700">✅ ¡Datos restaurados exitosamente!</p>
+                        <p class="text-sm text-green-600 mt-2">
+                            ${found.courses.length} curso(s) guardado(s) en: <strong>${storageKey}</strong>
+                        </p>
+                        <a href="registro-notas.html?docente=${destination}" 
+                           class="inline-block mt-4 bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 font-semibold">
+                            ➡️ Abrir Sistema de Registro
+                        </a>
+                    </div>
+                `;
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ Error al restaurar:</p>
+                        <p class="text-sm text-red-600 mt-2">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function checkMochaDick() {
+            const results = document.getElementById('alternativeResults');
+            try {
+                const data = localStorage.getItem('mochaDickEvaluations');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    results.innerHTML = `
+                        <div class="bg-white p-4 rounded border mt-4">
+                            <h3 class="font-bold mb-2">🐋 mochaDickEvaluations</h3>
+                            <pre class="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-96">${JSON.stringify(parsed, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = '<p class="text-gray-600 mt-4">No se encontraron datos en mochaDickEvaluations</p>';
+                }
+            } catch (e) {
+                results.innerHTML = `<p class="text-red-600 mt-4">Error: ${e.message}</p>`;
+            }
+        }
+        
+        function checkGradebook() {
+            const results = document.getElementById('alternativeResults');
+            try {
+                const data = localStorage.getItem('gradebookDataLocal');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    results.innerHTML = `
+                        <div class="bg-white p-4 rounded border mt-4">
+                            <h3 class="font-bold mb-2">📚 gradebookDataLocal</h3>
+                            <pre class="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-96">${JSON.stringify(parsed, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = '<p class="text-gray-600 mt-4">No se encontraron datos en gradebookDataLocal</p>';
+                }
+            } catch (e) {
+                results.innerHTML = `<p class="text-red-600 mt-4">Error: ${e.message}</p>`;
+            }
+        }
+        
+        function checkDataBackups() {
+            const results = document.getElementById('alternativeResults');
+            try {
+                const data = localStorage.getItem('dataBackups');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    results.innerHTML = `
+                        <div class="bg-white p-4 rounded border mt-4">
+                            <h3 class="font-bold mb-2">💾 dataBackups</h3>
+                            <pre class="text-xs bg-gray-50 p-2 rounded overflow-auto max-h-96">${JSON.stringify(parsed, null, 2)}</pre>
+                        </div>
+                    `;
+                } else {
+                    results.innerHTML = '<p class="text-gray-600 mt-4">No se encontraron datos en dataBackups</p>';
+                }
+            } catch (e) {
+                results.innerHTML = `<p class="text-red-600 mt-4">Error: ${e.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

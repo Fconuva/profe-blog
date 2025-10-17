@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar y Empezar de Nuevo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-indigo-100 to-purple-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl p-8">
+            <h1 class="text-4xl font-bold text-indigo-600 mb-6 text-center">
+                <i class="fas fa-broom mr-3"></i>Empezar de Nuevo
+            </h1>
+            
+            <div class="space-y-6">
+                <!-- Información del sistema -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg">
+                    <h2 class="font-bold text-xl mb-3 text-blue-900">
+                        <i class="fas fa-info-circle mr-2"></i>Sistema Multi-Docente Activado
+                    </h2>
+                    <p class="text-gray-700 mb-3">
+                        Ahora cada docente tiene su propio espacio completamente independiente:
+                    </p>
+                    <div class="grid md:grid-cols-2 gap-4 text-sm">
+                        <div class="bg-white p-4 rounded-lg border-2 border-indigo-400">
+                            <h3 class="font-bold text-indigo-700 mb-2">
+                                <i class="fas fa-user mr-2"></i>Francisco
+                            </h3>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>📦 Storage: francisco_allCourses</li>
+                                <li>🔗 URL: ?docente=francisco</li>
+                                <li>📚 Cursos: 3° y 4° Medio</li>
+                            </ul>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-2 border-purple-400">
+                            <h3 class="font-bold text-purple-700 mb-2">
+                                <i class="fas fa-user mr-2"></i>Otro Docente
+                            </h3>
+                            <ul class="space-y-1 text-gray-600">
+                                <li>📦 Storage: profesor2_allCourses</li>
+                                <li>🔗 URL: ?docente=profesor2</li>
+                                <li>📚 Cursos: 1° y 2° Medio</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Limpieza selectiva -->
+                <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-r-lg">
+                    <h2 class="font-bold text-xl mb-4 text-yellow-900">
+                        <i class="fas fa-trash-alt mr-2"></i>Limpiar Datos (Opcional)
+                    </h2>
+                    
+                    <div class="space-y-3">
+                        <p class="text-sm text-gray-700 mb-3">
+                            Si quieres empezar completamente de cero, puedes limpiar los datos:
+                        </p>
+                        
+                        <button onclick="cleanFrancisco()" 
+                                class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold transition">
+                            🧹 Limpiar datos de Francisco
+                        </button>
+                        
+                        <button onclick="cleanProfesor2()" 
+                                class="w-full bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 font-semibold transition">
+                            🧹 Limpiar datos de Profesor 2
+                        </button>
+                        
+                        <button onclick="cleanOldData()" 
+                                class="w-full bg-gray-600 text-white px-6 py-3 rounded-lg hover:bg-gray-700 font-semibold transition">
+                            🗑️ Limpiar datos antiguos (sin namespace)
+                        </button>
+                        
+                        <div id="cleanResult" class="mt-4"></div>
+                    </div>
+                </div>
+
+                <!-- Acciones rápidas -->
+                <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-r-lg">
+                    <h2 class="font-bold text-xl mb-4 text-green-900">
+                        <i class="fas fa-rocket mr-2"></i>Empezar a Trabajar
+                    </h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-4">
+                        <a href="registro-notas.html?docente=francisco" 
+                           class="block bg-indigo-600 text-white text-center px-6 py-4 rounded-lg hover:bg-indigo-700 font-semibold transition transform hover:scale-105">
+                            <i class="fas fa-user-graduate text-2xl mb-2"></i>
+                            <div>Abrir como Francisco</div>
+                            <div class="text-xs opacity-90 mt-1">3° y 4° Medio</div>
+                        </a>
+                        
+                        <a href="registro-notas.html?docente=profesor2" 
+                           class="block bg-purple-600 text-white text-center px-6 py-4 rounded-lg hover:bg-purple-700 font-semibold transition transform hover:scale-105">
+                            <i class="fas fa-user-graduate text-2xl mb-2"></i>
+                            <div>Abrir como Profesor 2</div>
+                            <div class="text-xs opacity-90 mt-1">1° y 2° Medio</div>
+                        </a>
+                    </div>
+                    
+                    <div class="mt-4 text-center">
+                        <a href="dashboard.html" 
+                           class="inline-block text-gray-600 hover:text-gray-800 transition">
+                            <i class="fas fa-home mr-2"></i>Volver al Dashboard
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Estado actual -->
+                <div class="bg-gray-50 p-6 rounded-lg border">
+                    <h3 class="font-bold mb-3">
+                        <i class="fas fa-database mr-2"></i>Estado Actual del localStorage:
+                    </h3>
+                    <div id="storageStatus" class="text-xs space-y-1"></div>
+                    <button onclick="refreshStatus()" 
+                            class="mt-3 text-sm bg-gray-200 px-4 py-2 rounded hover:bg-gray-300 transition">
+                        🔄 Actualizar Estado
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function cleanFrancisco() {
+            const result = document.getElementById('cleanResult');
+            
+            try {
+                localStorage.removeItem('francisco_allCourses');
+                localStorage.removeItem('francisco_currentCourseId');
+                localStorage.removeItem('francisco_totalWipeCompleted');
+                localStorage.removeItem('francisco_needsSync');
+                localStorage.removeItem('francisco_geminiApiKey');
+                
+                result.innerHTML = `
+                    <div class="bg-green-100 border border-green-400 rounded-lg p-4">
+                        <p class="font-semibold text-green-800">
+                            ✅ Datos de Francisco limpiados exitosamente
+                        </p>
+                        <p class="text-sm text-green-700 mt-2">
+                            Ahora puedes empezar de cero con tus cursos.
+                        </p>
+                    </div>
+                `;
+                
+                refreshStatus();
+            } catch (e) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 rounded-lg p-4">
+                        <p class="font-semibold text-red-800">❌ Error: ${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function cleanProfesor2() {
+            const result = document.getElementById('cleanResult');
+            
+            try {
+                localStorage.removeItem('profesor2_allCourses');
+                localStorage.removeItem('profesor2_currentCourseId');
+                localStorage.removeItem('profesor2_totalWipeCompleted');
+                localStorage.removeItem('profesor2_needsSync');
+                localStorage.removeItem('profesor2_geminiApiKey');
+                
+                result.innerHTML = `
+                    <div class="bg-green-100 border border-green-400 rounded-lg p-4">
+                        <p class="font-semibold text-green-800">
+                            ✅ Datos de Profesor 2 limpiados exitosamente
+                        </p>
+                    </div>
+                `;
+                
+                refreshStatus();
+            } catch (e) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 rounded-lg p-4">
+                        <p class="font-semibold text-red-800">❌ Error: ${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function cleanOldData() {
+            const result = document.getElementById('cleanResult');
+            
+            try {
+                // Limpiar claves antiguas sin namespace
+                localStorage.removeItem('allCourses');
+                localStorage.removeItem('currentCourseId');
+                
+                result.innerHTML = `
+                    <div class="bg-green-100 border border-green-400 rounded-lg p-4">
+                        <p class="font-semibold text-green-800">
+                            ✅ Datos antiguos (sin namespace) limpiados
+                        </p>
+                        <p class="text-sm text-green-700 mt-2">
+                            Se eliminaron: allCourses, currentCourseId (sin prefijo)
+                        </p>
+                    </div>
+                `;
+                
+                refreshStatus();
+            } catch (e) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border border-red-400 rounded-lg p-4">
+                        <p class="font-semibold text-red-800">❌ Error: ${e.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function refreshStatus() {
+            const statusDiv = document.getElementById('storageStatus');
+            
+            const keys = Object.keys(localStorage);
+            const relevantKeys = keys.filter(k => 
+                k.includes('allCourses') || 
+                k.includes('currentCourseId') ||
+                k.startsWith('francisco_') ||
+                k.startsWith('profesor2_')
+            );
+            
+            if (relevantKeys.length === 0) {
+                statusDiv.innerHTML = '<p class="text-gray-500">✨ LocalStorage limpio - Listo para empezar</p>';
+            } else {
+                let html = '<div class="space-y-1">';
+                relevantKeys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    const size = new Blob([value]).size;
+                    const sizeKB = (size / 1024).toFixed(2);
+                    
+                    let icon = '📦';
+                    if (key.startsWith('francisco_')) icon = '👤';
+                    if (key.startsWith('profesor2_')) icon = '👥';
+                    
+                    html += `<div class="flex justify-between items-center bg-white p-2 rounded">
+                        <span>${icon} <strong>${key}</strong></span>
+                        <span class="text-gray-500">${sizeKB} KB</span>
+                    </div>`;
+                });
+                html += '</div>';
+                statusDiv.innerHTML = html;
+            }
+        }
+
+        // Auto-refresh al cargar
+        window.addEventListener('DOMContentLoaded', refreshStatus);
+    </script>
+</body>
+</html>

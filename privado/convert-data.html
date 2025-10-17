@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convertir Datos - Gradebook a Sistema Nuevo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-8">
+        <h1 class="text-3xl font-bold text-green-600 mb-6">
+            <i class="fas fa-magic"></i> Conversión Automática: Gradebook → Sistema Nuevo
+        </h1>
+        
+        <div class="space-y-6">
+            <div class="bg-green-50 border-l-4 border-green-500 p-4">
+                <h2 class="font-bold text-lg mb-2">✅ Datos encontrados en gradebookDataLocal</h2>
+                <div id="foundData" class="text-sm"></div>
+            </div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                <h2 class="font-bold text-lg mb-4">🔄 Opciones de conversión:</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block font-semibold mb-2">Destino:</label>
+                        <div class="space-y-2">
+                            <label class="flex items-center">
+                                <input type="radio" name="destination" value="francisco" checked class="mr-2">
+                                <span>Francisco (francisco_allCourses)</span>
+                            </label>
+                            <label class="flex items-center">
+                                <input type="radio" name="destination" value="profesor2" class="mr-2">
+                                <span>Profesor 2 (profesor2_allCourses)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <button onclick="convertAndRestore()" 
+                            class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold text-lg">
+                        🚀 Convertir y Restaurar Datos
+                    </button>
+                </div>
+            </div>
+
+            <div id="conversionResult"></div>
+
+            <div class="bg-gray-50 border rounded-lg p-4">
+                <h3 class="font-bold mb-2">📋 Vista previa de conversión:</h3>
+                <pre id="preview" class="text-xs bg-white p-4 rounded overflow-auto max-h-96 border"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let convertedData = null;
+
+        function analyzeGradebookData() {
+            const foundDataDiv = document.getElementById('foundData');
+            const previewDiv = document.getElementById('preview');
+            
+            try {
+                // Leer gradebookDataLocal
+                const gradebookRaw = localStorage.getItem('gradebookDataLocal');
+                if (!gradebookRaw) {
+                    foundDataDiv.innerHTML = '<p class="text-red-600">❌ No se encontró gradebookDataLocal</p>';
+                    return;
+                }
+                
+                const gradebook = JSON.parse(gradebookRaw);
+                const courses = gradebook.courses || {};
+                const courseKeys = Object.keys(courses);
+                
+                if (courseKeys.length === 0) {
+                    foundDataDiv.innerHTML = '<p class="text-yellow-600">⚠️ No hay cursos en gradebookDataLocal</p>';
+                    return;
+                }
+                
+                let html = `<p class="font-semibold text-green-700 mb-2">📚 ${courseKeys.length} curso(s) encontrado(s):</p><ul class="list-disc list-inside space-y-1">`;
+                
+                courseKeys.forEach(key => {
+                    const course = courses[key];
+                    const studentCount = Object.keys(course.students || {}).length;
+                    const assignmentCount = Object.keys(course.assignments || {}).length;
+                    html += `<li><strong>${course.name}</strong> - ${studentCount} estudiantes, ${assignmentCount} tareas</li>`;
+                });
+                
+                html += '</ul>';
+                foundDataDiv.innerHTML = html;
+                
+                // Mostrar preview
+                previewDiv.textContent = 'Datos listos para conversión...';
+                
+            } catch (e) {
+                foundDataDiv.innerHTML = `<p class="text-red-600">❌ Error: ${e.message}</p>`;
+            }
+        }
+
+        function convertGradebookToNewFormat() {
+            try {
+                const gradebookRaw = localStorage.getItem('gradebookDataLocal');
+                const gradebook = JSON.parse(gradebookRaw);
+                const oldCourses = gradebook.courses || {};
+                
+                const newCourses = [];
+                let courseIndex = 1;
+                
+                Object.keys(oldCourses).forEach(oldCourseId => {
+                    const oldCourse = oldCourses[oldCourseId];
+                    
+                    // Convertir estudiantes
+                    const students = [];
+                    Object.keys(oldCourse.students || {}).forEach(studentId => {
+                        const oldStudent = oldCourse.students[studentId];
+                        students.push({
+                            id: studentId,
+                            name: oldStudent.name,
+                            retired: false,
+                            listNumber: oldStudent.listNumber || students.length + 1
+                        });
+                    });
+                    
+                    // Convertir tareas/assignments a tasks
+                    const tasks = [];
+                    Object.keys(oldCourse.assignments || {}).forEach(assignId => {
+                        const oldAssign = oldCourse.assignments[assignId];
+                        
+                        // Determinar tipo de evaluación
+                        let evaluationType = 'logro'; // default
+                        if (oldAssign.type === 'logrado') {
+                            evaluationType = 'logro';
+                        } else if (oldAssign.type === 'numeric') {
+                            evaluationType = 'numeric';
+                        }
+                        
+                        tasks.push({
+                            id: assignId,
+                            name: oldAssign.description || 'Tarea sin nombre',
+                            date: oldAssign.date || new Date().toISOString().split('T')[0],
+                            weight: 1,
+                            evaluationType: evaluationType,
+                            rubric: evaluationType === 'rubrica' ? [] : undefined
+                        });
+                    });
+                    
+                    // Crear nuevo curso en formato correcto
+                    const newCourse = {
+                        id: oldCourseId,
+                        courseName: oldCourse.name || `Curso ${courseIndex}`,
+                        students: students,
+                        tasks: tasks,
+                        config: {
+                            minGrade: 1.0,
+                            maxGrade: 7.0,
+                            passingGrade: 4.0,
+                            passingPercentage: 60
+                        },
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    };
+                    
+                    // Convertir grades - asignar a cada estudiante
+                    newCourse.students.forEach(student => {
+                        student.grades = [];
+                        
+                        tasks.forEach(task => {
+                            const gradeKey = `${student.id}-${task.id}`;
+                            const gradeValue = oldCourse.grades?.[gradeKey];
+                            
+                            if (gradeValue !== undefined && gradeValue !== null) {
+                                // Para logro: convertir números a niveles
+                                let convertedValue = gradeValue;
+                                if (task.evaluationType === 'logro') {
+                                    if (gradeValue === 7) convertedValue = 4; // Logrado Avanzado
+                                    else if (gradeValue === 1) convertedValue = 1; // No Logrado
+                                    else if (gradeValue >= 5) convertedValue = 3; // Logrado
+                                    else convertedValue = 2; // Parcialmente Logrado
+                                }
+                                
+                                student.grades.push({
+                                    taskId: task.id,
+                                    value: convertedValue,
+                                    timestamp: new Date().toISOString()
+                                });
+                            }
+                        });
+                    });
+                    
+                    newCourses.push(newCourse);
+                    courseIndex++;
+                });
+                
+                return newCourses;
+                
+            } catch (e) {
+                console.error('Error en conversión:', e);
+                throw e;
+            }
+        }
+
+        function convertAndRestore() {
+            const result = document.getElementById('conversionResult');
+            const preview = document.getElementById('preview');
+            const destination = document.querySelector('input[name="destination"]:checked').value;
+            
+            try {
+                result.innerHTML = `
+                    <div class="bg-blue-100 border-l-4 border-blue-500 p-4">
+                        <p class="font-semibold text-blue-700">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>Convirtiendo datos...
+                        </p>
+                    </div>
+                `;
+                
+                // Convertir datos
+                convertedData = convertGradebookToNewFormat();
+                
+                if (!convertedData || convertedData.length === 0) {
+                    result.innerHTML = `
+                        <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                            <p class="font-semibold text-red-700">❌ No se pudieron convertir los datos</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Mostrar preview
+                preview.textContent = JSON.stringify(convertedData, null, 2);
+                
+                // Guardar en localStorage con namespace correcto
+                const storageKey = `${destination}_allCourses`;
+                localStorage.setItem(storageKey, JSON.stringify(convertedData));
+                
+                // Guardar currentCourseId
+                if (convertedData.length > 0) {
+                    localStorage.setItem(`${destination}_currentCourseId`, convertedData[0].id);
+                }
+                
+                // Mostrar resultado exitoso
+                result.innerHTML = `
+                    <div class="bg-green-100 border-l-4 border-green-500 p-4">
+                        <p class="font-semibold text-green-700 text-xl mb-4">
+                            ✅ ¡Conversión y restauración exitosa!
+                        </p>
+                        <div class="space-y-2 text-sm">
+                            <p><strong>Cursos convertidos:</strong> ${convertedData.length}</p>
+                            <p><strong>Guardado en:</strong> ${storageKey}</p>
+                            <p><strong>Total estudiantes:</strong> ${convertedData.reduce((sum, c) => sum + c.students.length, 0)}</p>
+                            <p><strong>Total tareas:</strong> ${convertedData.reduce((sum, c) => sum + c.tasks.length, 0)}</p>
+                        </div>
+                        <div class="mt-6">
+                            <a href="registro-notas.html?docente=${destination}" 
+                               class="inline-block bg-green-600 text-white px-8 py-3 rounded-lg hover:bg-green-700 font-semibold text-lg">
+                                ➡️ Abrir Sistema de Registro
+                            </a>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (e) {
+                result.innerHTML = `
+                    <div class="bg-red-100 border-l-4 border-red-500 p-4">
+                        <p class="font-semibold text-red-700">❌ Error en la conversión:</p>
+                        <p class="text-sm text-red-600 mt-2">${e.message}</p>
+                        <pre class="text-xs bg-white p-2 rounded mt-2 overflow-auto">${e.stack}</pre>
+                    </div>
+                `;
+            }
+        }
+
+        // Auto-analizar al cargar
+        window.addEventListener('DOMContentLoaded', analyzeGradebookData);
+    </script>
+</body>
+</html>

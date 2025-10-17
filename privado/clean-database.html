@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Base de Datos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-red-100 to-orange-100 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-3xl w-full bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-red-100 rounded-full mb-4">
+                <i class="fas fa-database text-4xl text-red-600"></i>
+            </div>
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                Limpiar Base de Datos
+            </h1>
+            <p class="text-gray-600">
+                Eliminar todos los cursos de la base de datos remota
+            </p>
+        </div>
+
+        <div class="space-y-6">
+            <!-- Advertencia -->
+            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-r-lg">
+                <h2 class="font-bold text-xl mb-3 text-red-900 flex items-center">
+                    <i class="fas fa-exclamation-triangle mr-3"></i>
+                    ⚠️ ADVERTENCIA IMPORTANTE
+                </h2>
+                <ul class="space-y-2 text-sm text-red-800">
+                    <li class="flex items-start">
+                        <i class="fas fa-circle text-xs mr-2 mt-1"></i>
+                        <span>Esta acción eliminará <strong>TODOS los cursos</strong> de la base de datos remota</span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-circle text-xs mr-2 mt-1"></i>
+                        <span>Se eliminarán datos de <strong>Francisco</strong> y <strong>Profesor 2</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-circle text-xs mr-2 mt-1"></i>
+                        <span>Esta acción es <strong>IRREVERSIBLE</strong></span>
+                    </li>
+                    <li class="flex items-start">
+                        <i class="fas fa-circle text-xs mr-2 mt-1"></i>
+                        <span>Los datos en localStorage local NO se eliminarán</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Opciones de limpieza -->
+            <div class="bg-gray-50 p-6 rounded-lg border-2 border-gray-300">
+                <h3 class="font-bold text-lg mb-4">Selecciona qué limpiar:</h3>
+                
+                <div class="space-y-3">
+                    <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg hover:bg-white cursor-pointer transition">
+                        <input type="radio" name="cleanOption" value="all" checked class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold">Limpiar TODO</div>
+                            <div class="text-sm text-gray-600">
+                                Elimina todos los cursos de Francisco y Profesor 2 de la BD
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-4 border-2 border-indigo-300 rounded-lg hover:bg-indigo-50 cursor-pointer transition">
+                        <input type="radio" name="cleanOption" value="francisco" class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold text-indigo-700">Solo Francisco</div>
+                            <div class="text-sm text-gray-600">
+                                Elimina únicamente los cursos de Francisco (username: francisco_fconuva)
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-4 border-2 border-purple-300 rounded-lg hover:bg-purple-50 cursor-pointer transition">
+                        <input type="radio" name="cleanOption" value="profesor2" class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold text-purple-700">Solo Profesor 2</div>
+                            <div class="text-sm text-gray-600">
+                                Elimina únicamente los cursos de Profesor 2 (username: profesor2_profesor2)
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-start p-4 border-2 border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition">
+                        <input type="radio" name="cleanOption" value="old" class="mt-1 mr-3">
+                        <div class="flex-1">
+                            <div class="font-semibold">Solo datos antiguos</div>
+                            <div class="text-sm text-gray-600">
+                                Elimina solo cursos con username "fconuva" (sin namespace)
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Confirmación -->
+            <div class="bg-yellow-50 border-2 border-yellow-400 p-4 rounded-lg">
+                <label class="flex items-center cursor-pointer">
+                    <input type="checkbox" id="confirmCheckbox" class="mr-3 w-5 h-5">
+                    <span class="font-semibold">
+                        Entiendo que esta acción es irreversible y estoy seguro de continuar
+                    </span>
+                </label>
+            </div>
+
+            <!-- Botones -->
+            <div class="flex gap-4">
+                <button onclick="window.location.href='dashboard.html'" 
+                        class="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 font-semibold transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Cancelar
+                </button>
+                <button onclick="cleanDatabase()" 
+                        id="cleanButton"
+                        disabled
+                        class="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg font-semibold transition opacity-50 cursor-not-allowed">
+                    <i class="fas fa-trash-alt mr-2"></i>Limpiar Base de Datos
+                </button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Habilitar botón solo si se confirma
+        document.getElementById('confirmCheckbox').addEventListener('change', (e) => {
+            const button = document.getElementById('cleanButton');
+            if (e.target.checked) {
+                button.disabled = false;
+                button.classList.remove('opacity-50', 'cursor-not-allowed');
+                button.classList.add('hover:bg-red-700', 'transform', 'hover:scale-105');
+            } else {
+                button.disabled = true;
+                button.classList.add('opacity-50', 'cursor-not-allowed');
+                button.classList.remove('hover:bg-red-700', 'transform', 'hover:scale-105');
+            }
+        });
+
+        async function cleanDatabase() {
+            const result = document.getElementById('result');
+            const option = document.querySelector('input[name="cleanOption"]:checked').value;
+            
+            let usernames = [];
+            
+            if (option === 'all') {
+                usernames = ['fconuva', 'francisco_fconuva', 'profesor2_profesor2'];
+            } else if (option === 'francisco') {
+                usernames = ['francisco_fconuva'];
+            } else if (option === 'profesor2') {
+                usernames = ['profesor2_profesor2'];
+            } else if (option === 'old') {
+                usernames = ['fconuva'];
+            }
+            
+            result.innerHTML = `
+                <div class="bg-blue-100 border-l-4 border-blue-500 p-4 rounded">
+                    <p class="font-semibold text-blue-800">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Limpiando base de datos...
+                    </p>
+                    <p class="text-sm text-blue-700 mt-2">Usernames a limpiar: ${usernames.join(', ')}</p>
+                </div>
+            `;
+            
+            let successCount = 0;
+            let errorCount = 0;
+            const details = [];
+            
+            for (const username of usernames) {
+                try {
+                    console.log(`Limpiando username: ${username}`);
+                    
+                    // Guardar array vacío en la BD
+                    const response = await fetch('/api/courses/save', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            courses: [],
+                            username: username
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        successCount++;
+                        details.push(`<li class="text-green-700">✅ ${username}: Limpiado exitosamente</li>`);
+                    } else {
+                        errorCount++;
+                        details.push(`<li class="text-yellow-700">⚠️ ${username}: ${data.error || 'Error desconocido'}</li>`);
+                    }
+                    
+                } catch (error) {
+                    errorCount++;
+                    details.push(`<li class="text-red-700">❌ ${username}: ${error.message}</li>`);
+                }
+            }
+            
+            // Mostrar resultado final
+            if (errorCount === 0) {
+                result.innerHTML = `
+                    <div class="bg-green-100 border-l-4 border-green-500 p-6 rounded">
+                        <h3 class="font-bold text-xl text-green-800 mb-3">
+                            <i class="fas fa-check-circle mr-2"></i>¡Base de datos limpiada exitosamente!
+                        </h3>
+                        <ul class="space-y-1 text-sm mb-4">
+                            ${details.join('')}
+                        </ul>
+                        <p class="text-sm text-green-700 mb-4">
+                            <strong>Total limpiado:</strong> ${successCount} username(s)
+                        </p>
+                        <div class="space-y-2">
+                            <button onclick="window.location.href='dashboard.html'" 
+                                    class="w-full bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 font-semibold transition">
+                                <i class="fas fa-home mr-2"></i>Volver al Dashboard
+                            </button>
+                            <button onclick="window.location.href='start-fresh.html'" 
+                                    class="w-full bg-indigo-600 text-white px-6 py-3 rounded-lg hover:bg-indigo-700 font-semibold transition">
+                                <i class="fas fa-rocket mr-2"></i>Empezar de Nuevo
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else {
+                result.innerHTML = `
+                    <div class="bg-yellow-100 border-l-4 border-yellow-500 p-6 rounded">
+                        <h3 class="font-bold text-xl text-yellow-800 mb-3">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>Limpieza completada con advertencias
+                        </h3>
+                        <ul class="space-y-1 text-sm mb-4">
+                            ${details.join('')}
+                        </ul>
+                        <p class="text-sm text-yellow-700">
+                            <strong>Exitosos:</strong> ${successCount} | <strong>Errores:</strong> ${errorCount}
+                        </p>
+                        <button onclick="window.location.href='dashboard.html'" 
+                                class="mt-4 w-full bg-yellow-600 text-white px-6 py-3 rounded-lg hover:bg-yellow-700 font-semibold transition">
+                            <i class="fas fa-home mr-2"></i>Volver al Dashboard
+                        </button>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

@@ -511,6 +511,11 @@
                     </span>
                 </div>
                 <div class="flex items-center space-x-4">
+                    <!-- Indicador de modo colaborativo -->
+                    <div class="text-white text-sm flex items-center bg-green-500 bg-opacity-90 px-3 py-1 rounded-full animate-pulse">
+                        <i class="fas fa-users mr-2"></i>
+                        <span class="hidden sm:inline">Modo Colaborativo</span>
+                    </div>
                     <!-- Indicador de sincronización -->
                     <div id="syncIndicator" class="hidden text-white text-sm flex items-center bg-white bg-opacity-20 px-3 py-1 rounded-full">
                         <i class="fas fa-sync-alt fa-spin mr-2"></i>
@@ -2241,9 +2246,10 @@
             }
         }
         
-        // Auto-refresh: Recargar datos desde la base de datos periódicamente
+        // Auto-refresh: Sincronización inteligente en tiempo real
         let autoRefreshInterval = null;
-        const AUTO_REFRESH_INTERVAL = 3000; // 3 segundos (sincronización en tiempo real)
+        const AUTO_REFRESH_INTERVAL = 2000; // 2 segundos (más rápido y eficiente)
+        let lastSyncTimestamp = null;
         
         function startAutoRefresh() {
             // Limpiar intervalo anterior si existe
@@ -2251,25 +2257,34 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            console.log('🔄 Auto-refresh activado (cada 3 segundos - tiempo real)');
+            console.log('� Sincronización inteligente activada (cada 2 segundos)');
             
             autoRefreshInterval = setInterval(async () => {
                 try {
-                    console.log('🔄 Auto-refresh: Verificando actualizaciones...');
+                    // Paso 1: Subir cambios locales primero (rápido y silencioso)
+                    await syncCoursesToDatabase();
                     
-                    // Mostrar indicador de sincronización
+                    // Paso 2: Verificar si HAY actualizaciones (muy ligero)
+                    const username = getNamespacedUsername();
+                    const checkUrl = `/api/courses/check-updates?username=${encodeURIComponent(username)}${lastSyncTimestamp ? `&lastSync=${lastSyncTimestamp}` : ''}`;
+                    const checkResponse = await fetch(checkUrl);
+                    const checkData = await checkResponse.json();
+                    
+                    // Solo descargar si hay cambios reales
+                    if (!checkData.hasUpdates) {
+                        console.log('✅ Sin cambios remotos');
+                        return;
+                    }
+                    
+                    console.log('� Cambios detectados, descargando...');
+                    
+                    // Mostrar indicador solo cuando HAY cambios
                     const syncIndicator = document.getElementById('syncIndicator');
                     if (syncIndicator) {
                         syncIndicator.classList.remove('hidden');
                     }
                     
-                    // 🔧 CAMBIO CRÍTICO: PRIMERO SUBIR, LUEGO BAJAR
-                    // Paso 1: Sincronizar cambios locales a la BD (SUBIR)
-                    console.log('📤 Auto-refresh: Subiendo cambios locales primero...');
-                    await syncCoursesToDatabase();
-                    
-                    // Paso 2: Verificar si hay actualizaciones de otros dispositivos (BAJAR)
-                    const username = getNamespacedUsername();
+                    // Paso 3: Descargar solo cuando hay cambios
                     const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
                     const data = await response.json();
                     
@@ -2282,11 +2297,14 @@
                         const localHash = JSON.stringify(allCourses || []);
 
                         if (mergedHash !== localHash) {
-                            console.log('🔄 Auto-refresh: se detectaron diferencias y se aplicó merge por timestamps');
+                            console.log('⚡ Aplicando cambios remotos...');
                             // Save merged result
                             allCourses = merged;
                             setStorageItem('allCourses', JSON.stringify(allCourses));
 
+                            // Actualizar timestamp de última sincronización
+                            lastSyncTimestamp = checkData.latestTimestamp || new Date().toISOString();
+                            
                             // MEJORA PARA TRABAJO COLABORATIVO: Actualizar vista SIEMPRE que haya cambios
                             const currentId = currentCourseId;
                             if (currentId && courseData) {
@@ -2297,7 +2315,7 @@
                                     const updatedCourseHash = JSON.stringify(updatedCourse);
                                     
                                     if (currentCourseHash !== updatedCourseHash) {
-                                        console.log('🔄 Cambios detectados en el curso actual, actualizando vista...');
+                                        console.log('✨ Actualizando vista con cambios colaborativos...');
                                         courseData = updatedCourse;
                                         renderTable();
                                         populateStudentSelect();
@@ -2306,22 +2324,22 @@
                                         // Mostrar notificación sutil
                                         const syncIndicator = document.getElementById('syncIndicator');
                                         if (syncIndicator) {
-                                            syncIndicator.innerHTML = '<i class="fas fa-sync-alt animate-spin mr-2"></i>Sincronizado';
+                                            syncIndicator.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Sincronizado';
                                             syncIndicator.classList.remove('bg-yellow-500');
                                             syncIndicator.classList.add('bg-green-500');
                                         }
-                                    } else {
-                                        console.log('✅ No hay cambios en el curso actual');
+                                        
+                                        // Mostrar toast breve
+                                        showNotification('🔄 Cambios de otro usuario aplicados', 'info');
                                     }
                                 }
                             } else {
                                 updateCourseSelector();
                             }
                         } else {
-                            console.log('✅ Auto-refresh: no se detectaron diferencias tras merge');
+                            // Actualizar timestamp aunque no haya cambios
+                            lastSyncTimestamp = checkData.latestTimestamp || lastSyncTimestamp;
                         }
-
-                        console.log('✅ Auto-refresh completado');
                     }
                 } catch (error) {
                     console.error('❌ Error en auto-refresh:', error);

@@ -2873,10 +2873,18 @@
 
             courseData.tasks.push(task);
             
-            // Agregar columna de nota a cada estudiante
+            // Agregar columna de nota a cada estudiante con el tipo de evaluación
+            const timestamp = new Date().toISOString();
             courseData.students.forEach(student => {
-                student.grades.push({ value: null, updatedAt: new Date().toISOString() });
+                student.grades.push({ 
+                    value: null, 
+                    updatedAt: timestamp,
+                    evaluationType: task.evaluationType || 'binary'
+                });
             });
+            
+            console.log(`✅ Tarea "${task.name}" agregada. Total tareas: ${courseData.tasks.length}`);
+            console.log(`📊 Estudiantes actualizados: ${courseData.students.length} estudiantes tienen ahora ${courseData.students[0]?.grades.length || 0} columnas de notas`);
             
             closeAddTaskModal();
             renderTable();
@@ -3837,11 +3845,17 @@
                     <td class="px-4 py-3 text-sm">${student.name}</td>
                 `;
                 
-                // Columnas de tareas
+                // Columnas de tareas - ITERAR SOBRE TASKS (fuente de verdad)
                 const gradesConverted = [];
-                student.grades.forEach((grade, gradeIndex) => {
-                    const task = courseData.tasks[gradeIndex];
-                    if (!task) return;
+                courseData.tasks.forEach((task, gradeIndex) => {
+                    // Obtener la nota correspondiente (puede ser undefined si falta)
+                    const grade = student.grades[gradeIndex] || { value: null, updatedAt: new Date().toISOString(), evaluationType: task.evaluationType };
+                    
+                    // Si falta la nota, agregarla automáticamente (corrección de inconsistencias)
+                    if (!student.grades[gradeIndex]) {
+                        student.grades[gradeIndex] = grade;
+                        console.warn(`⚠️ Nota faltante para estudiante ${student.name} en tarea ${gradeIndex}, agregada automáticamente`);
+                    }
 
                     const cellHtml = renderGradeCell(studentIndex, gradeIndex, grade, task, student.retired);
                     html += `<td class="px-2 py-3 text-center">${cellHtml}</td>`;

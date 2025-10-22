@@ -2762,76 +2762,38 @@
             if (isInvalidId) {
                 console.warn('⚠️ Curso con ID problemático:', courseIdToDelete, '- Solo eliminación local');
             }
-            
-            // PASO 1: Eliminar de allCourses
-            const index = allCourses.findIndex(c => c.id === currentCourseId);
-            if (index !== -1) {
-                allCourses.splice(index, 1);
-                console.log(`✅ Curso eliminado del array (posición ${index})`);
+
+            // PASO 1: PRIMERO eliminar de Firebase (evita que auto-refresh lo restaure)
+            if (!isInvalidId) {
+                try {
+                    const username = getCurrentUsername();
+                    console.log("Eliminando de Firebase:", courseIdToDelete);
+                    const response = await fetch("/.netlify/functions/delete-course-Francisco", {
+                        method: "DELETE",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ courseId: courseIdToDelete, username: username })
+                    });
+                    if (response.ok) console.log("Eliminado de Firebase");
+                } catch (error) {
+                    console.error("Error eliminando de Firebase:", error);
+                }
             }
             
-            // PASO 2: Guardar cambios localmente INMEDIATAMENTE
-            setStorageItem('allCourses', JSON.stringify(allCourses));
-            console.log('ðŸ’¾ Cambios guardados en localStorage');
+            // PASO 2: Eliminar localmente
+            const index = allCourses.findIndex(c => c.id === currentCourseId);
+            if (index !== -1) allCourses.splice(index, 1);
+            setStorageItem("allCourses", JSON.stringify(allCourses));
             
-            // PASO 3: Cambiar a otro curso o limpiar interfaz
             if (allCourses.length > 0) {
                 currentCourseId = allCourses[0].id;
                 loadCourse(currentCourseId);
             } else {
                 currentCourseId = null;
                 courseData = null;
-                document.getElementById('studentsTableBody').innerHTML = '<tr><td colspan="7" class="text-center py-8 text-gray-500">No hay cursos. Crea uno nuevo para comenzar.</td></tr>';
+                document.getElementById("studentsTableBody").innerHTML = "<tr><td colspan=\"7\" class=\"text-center py-8 text-gray-500\">No hay cursos.</td></tr>";
             }
-            
-            // PASO 4: Actualizar selector
             updateCourseSelector();
-            
-            // PASO 5: Si el ID es válido, intentar eliminar de la base de datos
-            if (!isInvalidId) {
-                try {
-                const username = getCurrentUsername(); // Obtener username con namespace
-                console.log('Eliminando de DB para username:', username);
-                console.log('ðŸ—‘ï¸ Intentando eliminar de DB:', courseIdToDelete);
-                
-                const response = await fetch('/.netlify/functions/delete-course-Francisco', {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        courseId: courseIdToDelete,
-                        username: username  // ✅ Enviar username para respetar namespace
-                    })
-                });                    const result = await response.json();
-                    console.log('ðŸ“¡ Respuesta del servidor:', result);
-                    
-                    if (!response.ok) {
-                        console.warn('⚠️ Error en BD (pero curso ya eliminado localmente):', result.error);
-                        showTemporaryMessage('✅ Curso eliminado (no estaba en base de datos)', 'success');
-                    } else {
-                        console.log('✅ Curso eliminado de BD también');
-                        showTemporaryMessage('✅ Curso eliminado completamente', 'success');
-                    }
-                    
-                    // Sincronizar para asegurar consistencia
-                    await syncCoursesToDatabase();
-                    
-                } catch (error) {
-                    console.error('❌ Error de conexión (pero curso ya eliminado localmente):', error);
-                    showTemporaryMessage('✅ Curso eliminado localmente', 'success');
-                }
-            } else {
-                // ID inválido, solo confirmar eliminación local
-                showTemporaryMessage('✅ Curso con ID problemático eliminado', 'success');
-                
-                // Sincronizar para limpiar la BD también
-                try {
-                    await syncCoursesToDatabase();
-                } catch (e) {
-                    console.warn('⚠️ Error sincronizando:', e);
-                }
-            }
+            showTemporaryMessage("Curso eliminado", "success");
         }
 
         // Modal: Agregar varios estudiantes

@@ -4314,6 +4314,12 @@
             
             renderTable();
             saveAllCourses();
+            
+            // Actualizar informe individual si está abierto
+            const select = document.getElementById('studentSelect');
+            if (select && select.value !== '') {
+                generateIndividualReport();
+            }
         }
 
         // Mostrar modal de edición de estudiante
@@ -6122,6 +6128,23 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             });
         }
 
+        // Auto-actualización del informe individual cada 30 segundos
+        let individualReportInterval = null;
+        
+        function startIndividualReportAutoRefresh() {
+            if (individualReportInterval) {
+                clearInterval(individualReportInterval);
+            }
+            
+            individualReportInterval = setInterval(() => {
+                const select = document.getElementById('studentSelect');
+                if (select && select.value !== '') {
+                    console.log('♻️ Auto-actualizando informe individual...');
+                    generateIndividualReport();
+                }
+            }, 30000); // 30 segundos
+        }
+
         // Generar informe individual
         function generateIndividualReport() {
             const select = document.getElementById('studentSelect');
@@ -6129,8 +6152,16 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             
             if (index === '') {
                 document.getElementById('individualReportContent').classList.add('hidden');
+                // Detener auto-refresh si no hay estudiante seleccionado
+                if (individualReportInterval) {
+                    clearInterval(individualReportInterval);
+                    individualReportInterval = null;
+                }
                 return;
             }
+            
+            // Iniciar auto-refresh cuando se selecciona un estudiante
+            startIndividualReportAutoRefresh();
             
             const student = courseData.students[index];
             

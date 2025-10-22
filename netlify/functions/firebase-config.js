@@ -10,11 +10,19 @@ function initializeFirebase() {
 
     try {
         // Configuración desde variables de entorno de Netlify
+        let privateKey = process.env.FIREBASE_PRIVATE_KEY || '';
+        
+        // Manejar diferentes formatos de la clave privada
+        // Si tiene \n literales (como strings), convertirlos a saltos de línea reales
+        if (privateKey.includes('\\n')) {
+            privateKey = privateKey.replace(/\\n/g, '\n');
+        }
+        
         const serviceAccount = {
             type: "service_account",
             project_id: process.env.FIREBASE_PROJECT_ID,
             private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-            private_key: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+            private_key: privateKey,
             client_email: process.env.FIREBASE_CLIENT_EMAIL,
             client_id: process.env.FIREBASE_CLIENT_ID,
             auth_uri: "https://accounts.google.com/o/oauth2/auth",

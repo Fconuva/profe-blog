@@ -608,7 +608,7 @@
             <!-- Botón de Guardar -->
             <div class="bg-white rounded-lg shadow-md p-4 mb-6 no-print">
                 <div class="flex justify-center">
-                    <button onclick="saveAllCourses(); showTemporaryMessage('… Datos guardados correctamente', 'success');" class="btn-action bg-indigo-500 hover:bg-indigo-600 text-lg px-8 py-3">
+                    <button onclick="saveAllCourses(); showTemporaryMessage('✅ Datos guardados correctamente', 'success');" class="btn-action bg-indigo-500 hover:bg-indigo-600 text-lg px-8 py-3">
                         <i class="fas fa-save mr-2"></i>Guardar Cambios
                     </button>
                 </div>
@@ -1219,7 +1219,7 @@
             
             if (config) {
                 const data = JSON.parse(config);
-                console.log('… Configuración encontrada:', data);
+                console.log('✅ Configuración encontrada:', data);
                 
                 // Asegurarse de que existe la entrada en DOCENTES_CONFIG
                 if (!DOCENTES_CONFIG[docenteParam]) {
@@ -1243,7 +1243,7 @@
                     DOCENTES_CONFIG[docenteParam].descripcion = data.subject;
                 }
             } else {
-                console.log(`„¹ï¸ No hay configuración personalizada para: ${docenteParam}`);
+                console.log(`ℹ️ No hay configuración personalizada para: ${docenteParam}`);
             }
         } catch (e) {
             console.log('Error cargando configuración personalizada:', e);
@@ -1508,7 +1508,7 @@
                 console.log(' No hay cursos, creando uno por defecto...');
                 createDefaultCourse();
             } else {
-                console.log(`… ${allCourses.length} curso(s) disponible(s)`);
+                console.log(`✅ ${allCourses.length} curso(s) disponible(s)`);
             }
             
             // PASO 4: Asegurar que hay un curso actual
@@ -1593,7 +1593,7 @@
                     remote.forEach(course => {
                         const isDecimal = typeof course.id === 'number' && course.id % 1 !== 0;
                         if (isDecimal) {
-                            console.log(`Œ ELIMINANDO curso corrupto del remoto "${course.courseName}" ID decimal:`, course.id);
+                            console.log(`❌ ELIMINANDO curso corrupto del remoto "${course.courseName}" ID decimal:`, course.id);
                             needsSync = true;
                             return; // skip
                         }
@@ -1606,7 +1606,7 @@
                     // Merge using updatedAt
                     allCourses = mergeCoursesByTimestamp(localBackup, remoteClean);
 
-                    console.log('… Cursos combinados local+DB:', allCourses.length, 'cursos');
+                    console.log('✅ Cursos combinados local+DB:', allCourses.length, 'cursos');
 
                     // Save merged to localStorage
                     setStorageItem('allCourses', JSON.stringify(allCourses));
@@ -1619,11 +1619,11 @@
 
                     return true;
                 } else {
-                    console.warn('š ï¸ No se pudieron cargar cursos de la DB, usando localStorage');
+                    console.warn('⚠️ No se pudieron cargar cursos de la DB, usando localStorage');
                     return false;
                 }
             } catch (error) {
-                console.error('Œ Error cargando cursos desde DB:', error);
+                console.error('❌ Error cargando cursos desde DB:', error);
                 return false;
             }
         }
@@ -1659,15 +1659,15 @@
                 const data = await response.json();
                 
                 if (data.success) {
-                    console.log('… Sincronización exitosa:', data.message);
+                    console.log('✅ Sincronización exitosa:', data.message);
                     return true;
                 } else {
-                    console.warn('š ï¸ Respuesta sin éxito:', data.error);
+                    console.warn('⚠️ Respuesta sin éxito:', data.error);
                     return false;
                 }
             } catch (error) {
                 // Silencioso: solo log, sin notificaciones molestas
-                console.warn('š ï¸ Sincronización diferida (sin conexión o error):', error.message);
+                console.warn('⚠️ Sincronización diferida (sin conexión o error):', error.message);
                 return false;
             }
         }
@@ -1853,14 +1853,14 @@
                     results.push({
                         test: 'Conexión a Base de Datos',
                         status: 'success',
-                        message: `… Conectado correctamente a Neon Database`,
+                        message: `✅ Conectado correctamente a Neon Database`,
                         details: `Usuario: ${username}`
                     });
                 } else {
                     results.push({
                         test: 'Conexión a Base de Datos',
                         status: 'error',
-                        message: `Œ Error de conexión`,
+                        message: `❌ Error de conexión`,
                         details: data.error || 'Error desconocido'
                     });
                     allPassed = false;
@@ -1869,7 +1869,7 @@
                 results.push({
                     test: 'Conexión a Base de Datos',
                     status: 'error',
-                    message: `Œ No se pudo conectar`,
+                    message: `❌ No se pudo conectar`,
                     details: error.message
                 });
                 allPassed = false;
@@ -1883,14 +1883,14 @@
                     results.push({
                         test: 'LocalStorage',
                         status: 'success',
-                        message: `… ${parsed.length} curso(s) en almacenamiento local`,
+                        message: `✅ ${parsed.length} curso(s) en almacenamiento local`,
                         details: `Espacio usado: ${(JSON.stringify(parsed).length / 1024).toFixed(2)} KB`
                     });
                 } catch (e) {
                     results.push({
                         test: 'LocalStorage',
                         status: 'error',
-                        message: `Œ Error al leer localStorage`,
+                        message: `❌ Error al leer localStorage`,
                         details: e.message
                     });
                     allPassed = false;
@@ -1899,7 +1899,7 @@
                 results.push({
                     test: 'LocalStorage',
                     status: 'warning',
-                    message: `š ï¸ No hay datos en localStorage`,
+                    message: `⚠️ No hay datos en localStorage`,
                     details: 'Esto es normal si es la primera vez que usas la aplicación'
                 });
             }
@@ -1911,14 +1911,14 @@
                     results.push({
                         test: 'Sincronización',
                         status: 'success',
-                        message: `… Sincronización funcionando correctamente`,
+                        message: `✅ Sincronización funcionando correctamente`,
                         details: `${allCourses.length} curso(s) sincronizado(s)`
                     });
                 } else {
                     results.push({
                         test: 'Sincronización',
                         status: 'warning',
-                        message: `š ï¸ Sincronización con advertencias`,
+                        message: `⚠️ Sincronización con advertencias`,
                         details: 'Los datos se guardan localmente, pero puede haber problemas de conexión'
                     });
                 }
@@ -1926,7 +1926,7 @@
                 results.push({
                     test: 'Sincronización',
                     status: 'error',
-                    message: `Œ Error en sincronización`,
+                    message: `❌ Error en sincronización`,
                     details: error.message
                 });
                 allPassed = false;
@@ -1937,7 +1937,7 @@
             results.push({
                 test: 'Auto-Refresh',
                 status: autoRefreshActive ? 'success' : 'warning',
-                message: autoRefreshActive ? `… Auto-refresh activo (cada 30s)` : `š ï¸ Auto-refresh desactivado`,
+                message: autoRefreshActive ? `✅ Auto-refresh activo (cada 30s)` : `⚠️ Auto-refresh desactivado`,
                 details: autoRefreshActive ? 'Los cambios de otros dispositivos se sincronizarán automáticamente' : 'Necesitas recargar manualmente'
             });
             
@@ -1946,7 +1946,7 @@
             results.push({
                 test: 'Variables del Sistema',
                 status: criticalVarsOk ? 'success' : 'error',
-                message: criticalVarsOk ? `… Todas las variables críticas están definidas` : `Œ Faltan variables críticas`,
+                message: criticalVarsOk ? `✅ Todas las variables críticas están definidas` : `❌ Faltan variables críticas`,
                 details: `allCourses: ${allCourses ? allCourses.length : 'undefined'}, courseData: ${courseData ? 'OK' : 'undefined'}`
             });
             
@@ -1958,7 +1958,7 @@
                     <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
                         <p class="text-sm font-bold text-green-800">
                             <i class="fas fa-check-circle mr-2"></i>
-                            … Todos los tests pasaron correctamente
+                            ✅ Todos los tests pasaron correctamente
                         </p>
                     </div>
                 `;
@@ -1967,7 +1967,7 @@
                     <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
                         <p class="text-sm font-bold text-red-800">
                             <i class="fas fa-exclamation-triangle mr-2"></i>
-                            š ï¸ Se detectaron problemas
+                            ⚠️ Se detectaron problemas
                         </p>
                     </div>
                 `;
@@ -2006,13 +2006,13 @@
                 const data = await response.json();
                 
                 if (response.ok && data.success) {
-                    showSyncNotification(`… Conexión exitosa - ${data.courses.length} curso(s) encontrado(s)`, 'success');
+                    showSyncNotification(`✅ Conexión exitosa - ${data.courses.length} curso(s) encontrado(s)`, 'success');
                     console.log(' Datos de la base de datos:', data);
                 } else {
-                    showSyncNotification(`Œ Error: ${data.error || 'Error desconocido'}`, 'error');
+                    showSyncNotification(`❌ Error: ${data.error || 'Error desconocido'}`, 'error');
                 }
             } catch (error) {
-                showSyncNotification(`Œ Error de conexión: ${error.message}`, 'error');
+                showSyncNotification(`❌ Error de conexión: ${error.message}`, 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHTML;
@@ -2021,7 +2021,7 @@
         
         // ðŸ§¹ LIMPIAR CURSOS CON IDS INVÃLIDOS O PROBLEMÃTICOS
         async function cleanInvalidCourses() {
-            if (!confirm('š ï¸ Esta acción eliminará cursos con IDs inválidos (0, decimales extraños, duplicados).\n\n¿Continuar?')) {
+            if (!confirm('⚠️ Esta acción eliminará cursos con IDs inválidos (0, decimales extraños, duplicados).\n\n¿Continuar?')) {
                 return;
             }
             
@@ -2042,7 +2042,7 @@
                 const isDuplicate = seenIds.has(id);
                 
                 if (isInvalid) {
-                    console.log(`Œ Eliminando curso con ID inválido: "${course.courseName}" (ID: ${id})`);
+                    console.log(`❌ Eliminando curso con ID inválido: "${course.courseName}" (ID: ${id})`);
                     cleaned++;
                 } else if (isDecimal) {
                     console.log(`ðŸ”§ Corrigiendo ID decimal: "${course.courseName}" (${id} †’ ${Math.floor(id)})`);
@@ -2051,7 +2051,7 @@
                     validCourses.push(course);
                     fixed++;
                 } else if (isDuplicate) {
-                    console.log(`š ï¸ ID duplicado detectado: "${course.courseName}" (ID: ${id}) - Generando nuevo ID`);
+                    console.log(`⚠️ ID duplicado detectado: "${course.courseName}" (ID: ${id}) - Generando nuevo ID`);
                     course.id = Date.now() + Math.random() * 10000;
                     seenIds.add(course.id);
                     validCourses.push(course);
@@ -2083,14 +2083,14 @@
                     courseData = null;
                 }
                 
-                const message = `… Limpieza completada:\n€¢ ${cleaned} curso(s) eliminado(s)\n€¢ ${fixed} curso(s) corregido(s)\n€¢ ${allCourses.length} curso(s) válido(s) restante(s)`;
+                const message = `✅ Limpieza completada:\n• ${cleaned} curso(s) eliminado(s)\n• ${fixed} curso(s) corregido(s)\n• ${allCourses.length} curso(s) válido(s) restante(s)`;
                 alert(message);
-                console.log('… Limpieza exitosa');
+                console.log('✅ Limpieza exitosa');
                 
-                showSyncNotification('… Base de datos limpia', 'success');
+                showSyncNotification('✅ Base de datos limpia', 'success');
             } catch (error) {
-                console.error('Œ Error sincronizando después de limpieza:', error);
-                alert('š ï¸ Cursos limpiados localmente, pero hubo un error al sincronizar con la base de datos.');
+                console.error('❌ Error sincronizando después de limpieza:', error);
+                alert('⚠️ Cursos limpiados localmente, pero hubo un error al sincronizar con la base de datos.');
             }
         }
         
@@ -2122,14 +2122,14 @@
                         loadCourse(currentCourseId);
                     }
                     
-                    showSyncNotification('… Sincronización completa', 'success');
-                    console.log('… Sincronización bidireccional completada');
+                    showSyncNotification('✅ Sincronización completa', 'success');
+                    console.log('✅ Sincronización bidireccional completada');
                 } else {
-                    showSyncNotification('š ï¸ Sin cambios para sincronizar', 'warning');
+                    showSyncNotification('⚠️ Sin cambios para sincronizar', 'warning');
                 }
             } catch (error) {
-                console.error('Œ Error en sincronización manual:', error);
-                showSyncNotification('Œ Error al sincronizar', 'error');
+                console.error('❌ Error en sincronización manual:', error);
+                showSyncNotification('❌ Error al sincronizar', 'error');
             } finally {
                 icon.classList.remove('fa-spin');
                 btn.disabled = false;
@@ -2213,7 +2213,7 @@
                                 console.log(`   Nota [${idx}][${gradeIdx}]: Remote más reciente (${remoteTime} > ${localTime})`);
                                 localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
                             } else {
-                                console.log(`  … Nota [${idx}][${gradeIdx}]: Local más reciente (${localTime} >= ${remoteTime})`);
+                                console.log(`  ✅ Nota [${idx}][${gradeIdx}]: Local más reciente (${localTime} >= ${remoteTime})`);
                             }
                         });
                     }
@@ -2239,7 +2239,7 @@
             const remoteCourseTime = new Date(remoteCourse.updatedAt || 0).getTime();
             merged.updatedAt = remoteCourseTime > localCourseTime ? remoteCourse.updatedAt : localCourse.updatedAt;
 
-            console.log(`… Merge granular completado para curso ${merged.id}`);
+            console.log(`✅ Merge granular completado para curso ${merged.id}`);
             return merged;
         }
         
@@ -2278,11 +2278,11 @@
                 try {
                     const synced = await syncCoursesToDatabase();
                     if (synced) {
-                        console.log('… Migración completada:', localCourses.length, 'cursos sincronizados');
-                        showSyncNotification('… Cursos migrados a la nube automáticamente', 'success');
+                        console.log('✅ Migración completada:', localCourses.length, 'cursos sincronizados');
+                        showSyncNotification('✅ Cursos migrados a la nube automáticamente', 'success');
                     }
                 } catch (error) {
-                    console.error('Œ Error en migración automática:', error);
+                    console.error('❌ Error en migración automática:', error);
                     // No pasa nada, seguimos trabajando con localStorage
                 }
             } else if (recentWipe) {
@@ -2312,7 +2312,7 @@
                 console.log('ID de curso establecido al primero:', currentCourseId);
             }
             
-            console.log('… Carga completada:', allCourses.length, 'curso(s) disponible(s)');
+            console.log('✅ Carga completada:', allCourses.length, 'curso(s) disponible(s)');
             
             // PASO 7: Migración de estructura de evaluación
             migrateEvaluationStructure();
@@ -2383,7 +2383,7 @@
                     }
                 }
             } catch (e) {
-                console.warn('š ï¸ No se pudo actualizar timestamp del curso:', e.message);
+                console.warn('⚠️ No se pudo actualizar timestamp del curso:', e.message);
             }
 
             // Guardar localmente (inmediato y confiable)
@@ -2393,7 +2393,7 @@
             // Sincronizar con base de datos (asíncrono, silencioso, no bloquea la UI)
             // Si falla, no importa, localStorage ya tiene los datos
             syncCoursesToDatabase().catch(error => {
-                console.warn('š ï¸ Sincronización en segundo plano falló (no afecta el funcionamiento):', error.message);
+                console.warn('⚠️ Sincronización en segundo plano falló (no afecta el funcionamiento):', error.message);
                 // Guardar en cola de sincronización pendiente
                 markForLaterSync();
             });
@@ -2411,7 +2411,7 @@
                 const synced = await syncCoursesToDatabase();
                 if (synced) {
                     removeStorageItem('needsSync');
-                    console.log('… Cambios pendientes sincronizados');
+                    console.log('✅ Cambios pendientes sincronizados');
                 }
             }
         }
@@ -2427,7 +2427,7 @@
                 clearInterval(autoRefreshInterval);
             }
             
-            console.log('ï¿½ Sincronización inteligente activada (cada 2 segundos)');
+            console.log('🔄 Sincronización inteligente activada (cada 2 segundos)');
             
             autoRefreshInterval = setInterval(async () => {
                 try {
@@ -2442,11 +2442,11 @@
                     
                     // Solo descargar si hay cambios reales
                     if (!checkData.hasUpdates) {
-                        console.log('… Sin cambios remotos');
+                        console.log('✅ Sin cambios remotos');
                         return;
                     }
                     
-                    console.log('ï¿½ Cambios detectados, descargando...');
+                    console.log('🔄 Cambios detectados, descargando...');
                     
                     // Mostrar indicador solo cuando HAY cambios
                     const syncIndicator = document.getElementById('syncIndicator');
@@ -2512,7 +2512,7 @@
                         }
                     }
                 } catch (error) {
-                    console.error('Œ Error en auto-refresh:', error);
+                    console.error('❌ Error en auto-refresh:', error);
                     // No mostrar alerta para no molestar al usuario
                 } finally {
                     // Ocultar indicador de sincronización después de 1 segundo
@@ -2577,12 +2577,12 @@
                         }
                     }
                     
-                    showNotification('… Sincronización completada', 'success');
-                    console.log('… Sincronización manual exitosa');
+                    showNotification('✅ Sincronización completada', 'success');
+                    console.log('✅ Sincronización manual exitosa');
                 }
             } catch (error) {
-                console.error('Œ Error en sincronización manual:', error);
-                showNotification('Œ Error al sincronizar', 'error');
+                console.error('❌ Error en sincronización manual:', error);
+                showNotification('❌ Error al sincronizar', 'error');
             } finally {
                 // Restaurar botón
                 btn.disabled = false;
@@ -2646,7 +2646,7 @@
 
         // Cambiar de curso
         function switchCourse() {
-            // š ï¸ CRÃTICO: Guardar curso actual ANTES de cambiar
+            // ⚠️ CRÃTICO: Guardar curso actual ANTES de cambiar
             console.log('ðŸ’¾ Guardando curso actual antes de cambiar...');
             saveAllCourses();
             
@@ -2662,7 +2662,7 @@
                 resetInformesSection();
                 
                 // Mostrar confirmación
-                showTemporaryMessage('… Curso anterior guardado y nuevo curso cargado', 'success');
+                showTemporaryMessage('✅ Curso anterior guardado y nuevo curso cargado', 'success');
             }, 100);
         }
         
@@ -2759,14 +2759,14 @@
                                (typeof courseIdToDelete === 'number' && courseIdToDelete % 1 !== 0); // Decimal
             
             if (isInvalidId) {
-                console.warn('š ï¸ Curso con ID problemático:', courseIdToDelete, '- Solo eliminación local');
+                console.warn('⚠️ Curso con ID problemático:', courseIdToDelete, '- Solo eliminación local');
             }
             
             // PASO 1: Eliminar de allCourses
             const index = allCourses.findIndex(c => c.id === currentCourseId);
             if (index !== -1) {
                 allCourses.splice(index, 1);
-                console.log(`… Curso eliminado del array (posición ${index})`);
+                console.log(`✅ Curso eliminado del array (posición ${index})`);
             }
             
             // PASO 2: Guardar cambios localmente INMEDIATAMENTE
@@ -2800,35 +2800,35 @@
                     },
                     body: JSON.stringify({
                         courseId: courseIdToDelete,
-                        username: username  // … Enviar username para respetar namespace
+                        username: username  // ✅ Enviar username para respetar namespace
                     })
                 });                    const result = await response.json();
                     console.log('ðŸ“¡ Respuesta del servidor:', result);
                     
                     if (!response.ok) {
-                        console.warn('š ï¸ Error en BD (pero curso ya eliminado localmente):', result.error);
-                        showTemporaryMessage('… Curso eliminado (no estaba en base de datos)', 'success');
+                        console.warn('⚠️ Error en BD (pero curso ya eliminado localmente):', result.error);
+                        showTemporaryMessage('✅ Curso eliminado (no estaba en base de datos)', 'success');
                     } else {
-                        console.log('… Curso eliminado de BD también');
-                        showTemporaryMessage('… Curso eliminado completamente', 'success');
+                        console.log('✅ Curso eliminado de BD también');
+                        showTemporaryMessage('✅ Curso eliminado completamente', 'success');
                     }
                     
                     // Sincronizar para asegurar consistencia
                     await syncCoursesToDatabase();
                     
                 } catch (error) {
-                    console.error('Œ Error de conexión (pero curso ya eliminado localmente):', error);
-                    showTemporaryMessage('… Curso eliminado localmente', 'success');
+                    console.error('❌ Error de conexión (pero curso ya eliminado localmente):', error);
+                    showTemporaryMessage('✅ Curso eliminado localmente', 'success');
                 }
             } else {
                 // ID inválido, solo confirmar eliminación local
-                showTemporaryMessage('… Curso con ID problemático eliminado', 'success');
+                showTemporaryMessage('✅ Curso con ID problemático eliminado', 'success');
                 
                 // Sincronizar para limpiar la BD también
                 try {
                     await syncCoursesToDatabase();
                 } catch (e) {
-                    console.warn('š ï¸ Error sincronizando:', e);
+                    console.warn('⚠️ Error sincronizando:', e);
                 }
             }
         }
@@ -3015,7 +3015,7 @@
             if (container.children.length > 1) {
                 button.parentElement.remove();
             } else {
-                alert('Œ Debe haber al menos un criterio en la rúbrica');
+                alert('❌ Debe haber al menos un criterio en la rúbrica');
             }
         }
 
@@ -3051,7 +3051,7 @@
             const currentGrade = student.grades[gradeIndex];
 
             if (!task.rubricaCriteria || task.rubricaCriteria.length === 0) {
-                alert('š ï¸ Esta tarea no tiene criterios de rúbrica definidos');
+                alert('⚠️ Esta tarea no tiene criterios de rúbrica definidos');
                 return;
             }
 
@@ -3222,7 +3222,7 @@
             if (evaluationType === 'rubrica') {
                 const criteria = getRubricaCriteria();
                 if (criteria.length === 0) {
-                    alert('š ï¸ Debes definir al menos un criterio para la rúbrica');
+                    alert('⚠️ Debes definir al menos un criterio para la rúbrica');
                     return;
                 }
                 task.rubricaCriteria = criteria;
@@ -3240,7 +3240,7 @@
                 });
             });
             
-            console.log(`… Tarea "${task.name}" agregada. Total tareas: ${courseData.tasks.length}`);
+            console.log(`✅ Tarea "${task.name}" agregada. Total tareas: ${courseData.tasks.length}`);
             console.log(` Estudiantes actualizados: ${courseData.students.length} estudiantes tienen ahora ${courseData.students[0]?.grades.length || 0} columnas de notas`);
             
             closeAddTaskModal();
@@ -3250,7 +3250,7 @@
             // Mostrar confirmación con OAs
             if (selectedOAs.length > 0) {
                 const oasList = selectedOAs.map(oa => oa.codigo).join(', ');
-                showTemporaryMessage(`… Tarea "${name}" creada con OAs: ${oasList}`);
+                showTemporaryMessage(`✅ Tarea "${name}" creada con OAs: ${oasList}`);
             }
         }
 
@@ -3259,12 +3259,12 @@
             // Verificar permisos
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
             if (userRole !== 'admin') {
-                alert('š ï¸ Solo el administrador puede eliminar tareas');
+                alert('⚠️ Solo el administrador puede eliminar tareas');
                 return;
             }
             
             if (!courseData || !courseData.tasks || taskIndex < 0 || taskIndex >= courseData.tasks.length) {
-                alert('Œ Error: Tarea no encontrada');
+                alert('❌ Error: Tarea no encontrada');
                 return;
             }
             
@@ -3274,7 +3274,7 @@
             // Confirmar eliminación
             const confirmDelete = confirm(
                 `¿Estás seguro de eliminar la tarea "${taskName}"?\n\n` +
-                `š ï¸ Se eliminarán todas las notas de esta tarea para todos los estudiantes.\n` +
+                `⚠️ Se eliminarán todas las notas de esta tarea para todos los estudiantes.\n` +
                 `Esta acción NO se puede deshacer.`
             );
             
@@ -3295,19 +3295,19 @@
             renderTable();
             
             // Mostrar confirmación
-            showTemporaryMessage(`… Tarea "${taskName}" eliminada correctamente`, 'success');
+            showTemporaryMessage(`✅ Tarea "${taskName}" eliminada correctamente`, 'success');
         }
 
         // Editar tarea (solo admin)
         function editTask(taskIndex) {
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
             if (userRole !== 'admin') {
-                alert('š ï¸ Solo el administrador puede editar tareas');
+                alert('⚠️ Solo el administrador puede editar tareas');
                 return;
             }
             
             if (!courseData || !courseData.tasks || taskIndex < 0 || taskIndex >= courseData.tasks.length) {
-                alert('Œ Error: Tarea no encontrada');
+                alert('❌ Error: Tarea no encontrada');
                 return;
             }
             
@@ -3383,7 +3383,7 @@
             const newDate = document.getElementById('editTaskDate').value;
             
             if (!newName) {
-                alert('š ï¸ El nombre de la tarea no puede estar vacío');
+                alert('⚠️ El nombre de la tarea no puede estar vacío');
                 return;
             }
             
@@ -3395,14 +3395,14 @@
             saveAllCourses();
             renderTable();
             
-            showTemporaryMessage(`… Tarea actualizada: "${oldName}" †’ "${newName}"`, 'success');
+            showTemporaryMessage(`✅ Tarea actualizada: "${oldName}" †’ "${newName}"`, 'success');
         }
 
         // Mover tarea hacia arriba (solo admin)
         function moveTaskUp(taskIndex) {
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
             if (userRole !== 'admin') {
-                alert('š ï¸ Solo el administrador puede reordenar tareas');
+                alert('⚠️ Solo el administrador puede reordenar tareas');
                 return;
             }
             
@@ -3424,14 +3424,14 @@
             
             saveAllCourses();
             renderTable();
-            showTemporaryMessage('… Tarea movida hacia la izquierda', 'success');
+            showTemporaryMessage('✅ Tarea movida hacia la izquierda', 'success');
         }
 
         // Mover tarea hacia abajo (solo admin)
         function moveTaskDown(taskIndex) {
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
             if (userRole !== 'admin') {
-                alert('š ï¸ Solo el administrador puede reordenar tareas');
+                alert('⚠️ Solo el administrador puede reordenar tareas');
                 return;
             }
             
@@ -3453,19 +3453,19 @@
             
             saveAllCourses();
             renderTable();
-            showTemporaryMessage('… Tarea movida hacia la derecha', 'success');
+            showTemporaryMessage('✅ Tarea movida hacia la derecha', 'success');
         }
 
         // Eliminar múltiples tareas (solo admin)
         function deleteMultipleTasks() {
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
             if (userRole !== 'admin') {
-                alert('š ï¸ Solo el administrador puede eliminar tareas');
+                alert('⚠️ Solo el administrador puede eliminar tareas');
                 return;
             }
             
             if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
-                alert('š ï¸ No hay tareas para eliminar');
+                alert('⚠️ No hay tareas para eliminar');
                 return;
             }
             
@@ -3553,7 +3553,7 @@
             const checkboxes = document.querySelectorAll('[id^="deleteTask"]:checked');
             
             if (checkboxes.length === 0) {
-                alert('š ï¸ No has seleccionado ninguna tarea');
+                alert('⚠️ No has seleccionado ninguna tarea');
                 return;
             }
             
@@ -3563,7 +3563,7 @@
             const confirmDelete = confirm(
                 `¿Estás seguro de eliminar ${checkboxes.length} tarea(s)?\n\n` +
                 `Tareas: ${taskNames}\n\n` +
-                `š ï¸ Se eliminarán todas las notas de estas tareas para todos los estudiantes.\n` +
+                `⚠️ Se eliminarán todas las notas de estas tareas para todos los estudiantes.\n` +
                 `Esta acción NO se puede deshacer.`
             );
             
@@ -3584,7 +3584,7 @@
             saveAllCourses();
             renderTable();
             
-            showTemporaryMessage(`… ${checkboxes.length} tarea(s) eliminada(s) correctamente`, 'success');
+            showTemporaryMessage(`✅ ${checkboxes.length} tarea(s) eliminada(s) correctamente`, 'success');
         }
 
         // Cerrar modal de agregar tarea
@@ -3599,7 +3599,7 @@
         // Mostrar lista de estudiantes para editar
         function showEditStudentsList() {
             if (!courseData || !courseData.students || courseData.students.length === 0) {
-                alert('š ï¸ No hay estudiantes en el curso');
+                alert('⚠️ No hay estudiantes en el curso');
                 return;
             }
             
@@ -3648,7 +3648,7 @@
         // Mostrar lista de tareas
         function showTasksList() {
             if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
-                alert('š ï¸ No hay tareas en el curso');
+                alert('⚠️ No hay tareas en el curso');
                 return;
             }
             
@@ -3698,7 +3698,7 @@
         // Editar tareas modal
         function showEditTasksModal() {
             if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
-                alert('š ï¸ No hay tareas en el curso');
+                alert('⚠️ No hay tareas en el curso');
                 return;
             }
             
@@ -3752,7 +3752,7 @@
             const newDate = document.getElementById(`taskDate_${taskIndex}`).value;
             
             if (!newName) {
-                alert('š ï¸ El nombre de la tarea no puede estar vacío');
+                alert('⚠️ El nombre de la tarea no puede estar vacío');
                 return;
             }
             
@@ -3761,7 +3761,7 @@
             
             saveAllCourses();
             renderTable();
-            showTemporaryMessage('… Tarea actualizada correctamente', 'success');
+            showTemporaryMessage('✅ Tarea actualizada correctamente', 'success');
         }
 
         // Llenar todas las notas
@@ -3789,7 +3789,7 @@
             renderTable();
             saveAllCourses();
             showTemporaryMessage(
-                value ? '… Todas las notas marcadas' : '… Todas las notas desmarcadas', 
+                value ? '✅ Todas las notas marcadas' : '✅ Todas las notas desmarcadas', 
                 'success'
             );
         }
@@ -3797,7 +3797,7 @@
         // Llenar columna de tarea
         function fillTaskColumn() {
             if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
-                alert('š ï¸ No hay tareas en el curso');
+                alert('⚠️ No hay tareas en el curso');
                 return;
             }
             
@@ -3806,7 +3806,7 @@
             
             const index = parseInt(taskIndex) - 1;
             if (index < 0 || index >= courseData.tasks.length) {
-                alert('Œ Número de tarea inválido');
+                alert('❌ Número de tarea inválido');
                 return;
             }
             
@@ -3824,13 +3824,13 @@
             
             renderTable();
             saveAllCourses();
-            showTemporaryMessage(`… Columna "${courseData.tasks[index].name}" actualizada`, 'success');
+            showTemporaryMessage(`✅ Columna "${courseData.tasks[index].name}" actualizada`, 'success');
         }
 
         // ­ NUEVA: Marcar/Desmarcar UNA tarea específica con 1 click
         function quickMarkTask(value) {
             if (!courseData || !courseData.tasks || courseData.tasks.length === 0) {
-                alert('š ï¸ No hay tareas en el curso');
+                alert('⚠️ No hay tareas en el curso');
                 return;
             }
             
@@ -3845,7 +3845,7 @@
             
             const index = parseInt(taskIndex) - 1;
             if (index < 0 || index >= courseData.tasks.length) {
-                alert('Œ Número de tarea inválido');
+                alert('❌ Número de tarea inválido');
                 return;
             }
             
@@ -3864,7 +3864,7 @@
             saveAllCourses();
             
             const action = value ? 'marcada “' : 'desmarcada —';
-            showTemporaryMessage(`… Tarea "${courseData.tasks[index].name}" ${action} para todos`, 'success');
+            showTemporaryMessage(`✅ Tarea "${courseData.tasks[index].name}" ${action} para todos`, 'success');
         }
 
         // ­ NUEVA: Agregar múltiples tareas de una vez
@@ -3910,9 +3910,9 @@
             if (added > 0) {
                 renderTable();
                 saveAllCourses();
-                showTemporaryMessage(`… ${added} tarea(s) agregada(s) correctamente`, 'success');
+                showTemporaryMessage(`✅ ${added} tarea(s) agregada(s) correctamente`, 'success');
             } else {
-                alert('Œ No se agregó ninguna tarea');
+                alert('❌ No se agregó ninguna tarea');
             }
         }
 
@@ -3943,7 +3943,7 @@
             saveAllCourses();
             updateCourseSelector();
             
-            showTemporaryMessage(`… Curso "${newName}" creado correctamente`, 'success');
+            showTemporaryMessage(`✅ Curso "${newName}" creado correctamente`, 'success');
         }
         // Exportar datos del curso
         function exportCourseData() {
@@ -3958,7 +3958,7 @@
             a.click();
             URL.revokeObjectURL(url);
             
-            showTemporaryMessage('… Datos exportados correctamente', 'success');
+            showTemporaryMessage('✅ Datos exportados correctamente', 'success');
         }
 
         // Exportar a JSON
@@ -3982,9 +3982,9 @@
                     saveAllCourses();
                     updateCourseSelector();
                     
-                    showTemporaryMessage('… Curso importado correctamente', 'success');
+                    showTemporaryMessage('✅ Curso importado correctamente', 'success');
                 } catch (error) {
-                    alert('Œ Error al importar el archivo:\n' + error.message);
+                    alert('❌ Error al importar el archivo:\n' + error.message);
                 }
             };
             reader.readAsText(file);
@@ -4234,7 +4234,7 @@
                     // Si falta la nota, agregarla automáticamente (corrección de inconsistencias)
                     if (!student.grades[gradeIndex]) {
                         student.grades[gradeIndex] = grade;
-                        console.warn(`š ï¸ Nota faltante para estudiante ${student.name} en tarea ${gradeIndex}, agregada automáticamente`);
+                        console.warn(`⚠️ Nota faltante para estudiante ${student.name} en tarea ${gradeIndex}, agregada automáticamente`);
                     }
 
                     const cellHtml = renderGradeCell(studentIndex, gradeIndex, grade, task, student.retired);
@@ -4410,7 +4410,7 @@
                 const lines = text.split('\n');
                 
                 if (lines.length < 1) {
-                    alert('Œ El archivo CSV está vacío');
+                    alert('❌ El archivo CSV está vacío');
                     return;
                 }
                 
@@ -4457,7 +4457,7 @@
                 }
                 
                 if (dataStartLine === -1) {
-                    alert('Œ No se encontraron datos válidos en el CSV.\n\nAsegúrate que el archivo tenga:\n- Número de lista en la primera columna\n- Apellidos y nombres en columnas siguientes');
+                    alert('❌ No se encontraron datos válidos en el CSV.\n\nAsegúrate que el archivo tenga:\n- Número de lista en la primera columna\n- Apellidos y nombres en columnas siguientes');
                     return;
                 }
                 
@@ -4535,18 +4535,18 @@
                 }
                 
                 // Mensaje de confirmación detallado
-                let message = `… Importación exitosa:\n`;
-                message += `\n€¢ ${studentsImported} estudiante(s) importado(s)`;
-                message += `\n€¢ ${courseData.tasks.length} tarea(s) en total`;
+                let message = `✅ Importación exitosa:\n`;
+                message += `\n• ${studentsImported} estudiante(s) importado(s)`;
+                message += `\n• ${courseData.tasks.length} tarea(s) en total`;
                 if (tasksAdded > 0) {
-                    message += `\n€¢ ${tasksAdded} tarea(s) nueva(s) creada(s) automáticamente`;
+                    message += `\n• ${tasksAdded} tarea(s) nueva(s) creada(s) automáticamente`;
                 }
                 
                 alert(message);
                 renderTable();
                 saveAllCourses();
                 
-                console.log('… Importación completada:', {
+                console.log('✅ Importación completada:', {
                     estudiantes: studentsImported,
                     tareas: courseData.tasks.length,
                     tareasCreadas: tasksAdded
@@ -4859,7 +4859,7 @@
                     console.log('  †’ Header...');
                     htmlSections.push(buildReportHeader());
                 } catch (e) {
-                    console.error('Œ Error en Header:', e);
+                    console.error('❌ Error en Header:', e);
                     throw new Error(`Error en Header: ${e.message}`);
                 }
                 
@@ -4867,7 +4867,7 @@
                     console.log('  †’ Executive Summary...');
                     htmlSections.push(buildExecutiveSummary(stats, activeStudents.length, retiredCount));
                 } catch (e) {
-                    console.error('Œ Error en Executive Summary:', e);
+                    console.error('❌ Error en Executive Summary:', e);
                     throw new Error(`Error en Executive Summary: ${e.message}`);
                 }
                 
@@ -4875,7 +4875,7 @@
                     console.log('  †’ Distribution Chart...');
                     htmlSections.push(buildDistributionChart(grades));
                 } catch (e) {
-                    console.error('Œ Error en Distribution Chart:', e);
+                    console.error('❌ Error en Distribution Chart:', e);
                     throw new Error(`Error en Distribution Chart: ${e.message}`);
                 }
                 
@@ -4883,7 +4883,7 @@
                     console.log('  †’ Detailed Stats Table...');
                     htmlSections.push(buildDetailedStatsTable(stats));
                 } catch (e) {
-                    console.error('Œ Error en Detailed Stats Table:', e);
+                    console.error('❌ Error en Detailed Stats Table:', e);
                     throw new Error(`Error en Detailed Stats Table: ${e.message}`);
                 }
                 
@@ -4891,7 +4891,7 @@
                     console.log('  †’ Tasks Analysis Table...');
                     htmlSections.push(buildTasksAnalysisTable(taskAnalysis));
                 } catch (e) {
-                    console.error('Œ Error en Tasks Analysis Table:', e);
+                    console.error('❌ Error en Tasks Analysis Table:', e);
                     throw new Error(`Error en Tasks Analysis Table: ${e.message}`);
                 }
                 
@@ -4899,7 +4899,7 @@
                     console.log('  †’ OAs Analysis Section...');
                     htmlSections.push(buildCourseOAsAnalysisSection(oasAnalysis));
                 } catch (e) {
-                    console.error('Œ Error en OAs Analysis Section:', e);
+                    console.error('❌ Error en OAs Analysis Section:', e);
                     throw new Error(`Error en OAs Analysis Section: ${e.message}`);
                 }
                 
@@ -4907,7 +4907,7 @@
                     console.log('  †’ Students Performance Table...');
                     htmlSections.push(buildStudentsPerformanceTable(activeStudents));
                 } catch (e) {
-                    console.error('Œ Error en Students Performance Table:', e);
+                    console.error('❌ Error en Students Performance Table:', e);
                     throw new Error(`Error en Students Performance Table: ${e.message}`);
                 }
                 
@@ -4915,7 +4915,7 @@
                     console.log('  †’ Recommendations Section...');
                     htmlSections.push(buildRecommendationsSection(recommendations));
                 } catch (e) {
-                    console.error('Œ Error en Recommendations Section:', e);
+                    console.error('❌ Error en Recommendations Section:', e);
                     throw new Error(`Error en Recommendations Section: ${e.message}`);
                 }
                 
@@ -4926,12 +4926,12 @@
                     </div>
                 `;
                 
-                console.log('… Informe generado exitosamente');
+                console.log('✅ Informe generado exitosamente');
                 // Mostrar botón de descarga después de generar
                 downloadBtn.style.display = 'inline-flex';
                 
             } catch (error) {
-                console.error('Œ ERROR GENERANDO INFORME:', error);
+                console.error('❌ ERROR GENERANDO INFORME:', error);
                 console.error('Stack completo:', error.stack);
                 reportDiv.innerHTML = `
                     <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6 text-center">
@@ -4957,7 +4957,7 @@
             const reportContent = document.getElementById('courseReportContent');
             
             if (!reportContent || reportContent.children.length === 0) {
-                alert('š ï¸ No hay informe generado. Por favor, genera el informe primero.');
+                alert('⚠️ No hay informe generado. Por favor, genera el informe primero.');
                 return;
             }
             
@@ -5045,12 +5045,12 @@
                 document.body.removeChild(loadingMsg);
                 
                 // Mostrar mensaje de éxito
-                showNotification('… PDF generado exitosamente', 'success');
+                showNotification('✅ PDF generado exitosamente', 'success');
                 
             } catch (error) {
                 console.error('Error generando PDF:', error);
                 document.body.removeChild(loadingMsg);
-                alert('Œ Error al generar el PDF. Por favor, intenta de nuevo o usa la opción de imprimir (Ctrl+P).');
+                alert('❌ Error al generar el PDF. Por favor, intenta de nuevo o usa la opción de imprimir (Ctrl+P).');
             }
         }
         
@@ -5336,7 +5336,7 @@ INSTRUCCIONES:
 4. Responde SOLO en formato JSON así:
 [
   {"type": "critical", "icon": "ðŸš¨", "title": "Título", "text": "Descripción detallada"},
-  {"type": "warning", "icon": "š ï¸", "title": "Título", "text": "Descripción detallada"}
+  {"type": "warning", "icon": "⚠️", "title": "Título", "text": "Descripción detallada"}
 ]
 
 RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
@@ -5348,14 +5348,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 try {
                     console.log('ðŸ”· Intentando con Gemini API...');
                     aiResponse = await callGeminiAPI(apiKey, prompt);
-                    console.log('… Gemini respondió:', aiResponse);
+                    console.log('✅ Gemini respondió:', aiResponse);
                 } catch (geminiError) {
-                    console.warn('Œ Gemini falló, intentando con HuggingFace...', geminiError);
+                    console.warn('❌ Gemini falló, intentando con HuggingFace...', geminiError);
                     try {
                         aiResponse = await callHuggingFaceAPI(prompt);
-                        console.log('… HuggingFace respondió:', aiResponse);
+                        console.log('✅ HuggingFace respondió:', aiResponse);
                     } catch (hfError) {
-                        console.warn('Œ HuggingFace también falló', hfError);
+                        console.warn('❌ HuggingFace también falló', hfError);
                     }
                 }
                 
@@ -5365,14 +5365,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                     const jsonMatch = aiResponse.match(/\[[\s\S]*\]/);
                     if (jsonMatch) {
                         const aiRecommendations = JSON.parse(jsonMatch[0]);
-                        console.log('… Recomendaciones de IA parseadas:', aiRecommendations);
+                        console.log('✅ Recomendaciones de IA parseadas:', aiRecommendations);
                         return aiRecommendations;
                     }
                 }
                 
-                console.warn('š ï¸ No se pudieron generar recomendaciones con IA, usando reglas básicas...');
+                console.warn('⚠️ No se pudieron generar recomendaciones con IA, usando reglas básicas...');
             } catch (error) {
-                console.error('Œ Error al generar recomendaciones con IA:', error);
+                console.error('❌ Error al generar recomendaciones con IA:', error);
                 console.log(' Usando recomendaciones basadas en reglas...');
             }
             
@@ -5389,14 +5389,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             } else if (stats.avg < 4.5) {
                 recommendations.push({
                     type: 'warning',
-                    icon: 'š ï¸',
+                    icon: '⚠️',
                     title: 'Promedio descendido',
                     text: `El promedio del curso (${stats.avg.toFixed(2)}) está cercano al límite. Implementar estrategias de reforzamiento y evaluación formativa continua.`
                 });
             } else if (stats.avg >= 5.5) {
                 recommendations.push({
                     type: 'success',
-                    icon: '…',
+                    icon: '✅',
                     title: 'Excelente rendimiento general',
                     text: `El promedio del curso (${stats.avg.toFixed(2)}) refleja un muy buen nivel. Continuar con estrategias efectivas y desafiar con actividades de mayor complejidad.`
                 });
@@ -5449,7 +5449,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             if (recommendations.length === 0 || recommendations.filter(r => r.type === 'success').length > 0) {
                 recommendations.push({
                     type: 'info',
-                    icon: 'ðŸŒŸ',
+                    icon: 'ðŸ❌Ÿ',
                     title: 'Mantener buenas prácticas',
                     text: `El curso muestra un rendimiento sólido. Continuar con retroalimentación formativa, evaluación continua y desafíos graduados según capacidades individuales.`
                 });
@@ -6280,7 +6280,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                             <textarea id="studentNotes_${index}" 
                                       class="w-full p-4 border-2 border-blue-200 rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-200 transition-all resize-none overflow-hidden print:border-none print:p-2" 
                                       style="min-height: 250px; height: auto;"
-                                      placeholder="Escriba aquí la retroalimentación personalizada para el estudiante...&#10;&#10;ï¸ Consejos:&#10;€¢ Mencione logros específicos&#10;€¢ Identifique áreas de mejora&#10;€¢ Sugiera estrategias concretas&#10;€¢ Use lenguaje motivador y constructivo"
+                                      placeholder="Escriba aquí la retroalimentación personalizada para el estudiante...&#10;&#10;ï¸ Consejos:&#10;• Mencione logros específicos&#10;• Identifique áreas de mejora&#10;• Sugiera estrategias concretas&#10;• Use lenguaje motivador y constructivo"
                                       oninput="autoResizeTextarea(this)"
                                       onchange="saveStudentNotes(${index}, this.value)">${student.notes || ''}</textarea>
                             ${student.notes ? `
@@ -6359,7 +6359,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             const reportElement = document.getElementById('individualReportContent');
             
             if (!reportElement || reportElement.classList.contains('hidden') || !reportElement.innerHTML.trim()) {
-                alert('š ï¸ No se encontró el informe. Por favor, genera el informe primero seleccionando un estudiante.');
+                alert('⚠️ No se encontró el informe. Por favor, genera el informe primero seleccionando un estudiante.');
                 return;
             }
             
@@ -6459,7 +6459,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 document.body.removeChild(loadingMsg);
                 
                 // Mostrar mensaje de éxito
-                showNotification(`… PDF de ${student.name} generado exitosamente`, 'success');
+                showNotification(`✅ PDF de ${student.name} generado exitosamente`, 'success');
                 
             } catch (error) {
                 console.error('Error generando PDF individual:', error);
@@ -6469,7 +6469,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 const noPrintElements = reportElement.querySelectorAll('.no-print');
                 noPrintElements.forEach(el => el.style.display = '');
                 
-                alert(`Œ Error al generar el PDF de ${student.name}. Puedes intentar con la opción de imprimir (Ctrl+P).`);
+                alert(`❌ Error al generar el PDF de ${student.name}. Puedes intentar con la opción de imprimir (Ctrl+P).`);
             }
         }
         
@@ -6489,12 +6489,12 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             };
             renderTable(); // Recalcular notas con nuevo porcentaje
             saveAllCourses();
-            alert('… Configuración guardada. Las notas se han recalculado.');
+            alert('✅ Configuración guardada. Las notas se han recalculado.');
         }
 
         // Resetear datos
         function resetData() {
-            if (confirm('š ï¸ ¿Está COMPLETAMENTE SEGURO de borrar TODOS los datos del curso actual? Esta acción NO se puede deshacer.')) {
+            if (confirm('⚠️ ¿Está COMPLETAMENTE SEGURO de borrar TODOS los datos del curso actual? Esta acción NO se puede deshacer.')) {
                 if (confirm('Esta es su última oportunidad. ¿Confirma que desea borrar todo?')) {
                     courseData.students = [];
                     courseData.tasks = [];
@@ -6913,10 +6913,10 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             let feedback = '';
             
             if (cumplido) {
-                feedback = `… ${codigo}: Has logrado exitosamente este objetivo de aprendizaje en las siguientes tareas: ${tareas}. `;
+                feedback = `✅ ${codigo}: Has logrado exitosamente este objetivo de aprendizaje en las siguientes tareas: ${tareas}. `;
                 feedback += `Tu desempeño refleja comprensión y dominio de: "${texto.substring(0, 100)}..."`;
             } else {
-                feedback = `š ï¸ ${codigo}: Es necesario reforzar este objetivo de aprendizaje. Tareas pendientes: ${tareas}. `;
+                feedback = `⚠️ ${codigo}: Es necesario reforzar este objetivo de aprendizaje. Tareas pendientes: ${tareas}. `;
                 feedback += `Debes trabajar en: "${texto.substring(0, 100)}..." Te sugiero revisar los contenidos y solicitar apoyo si es necesario.`;
             }
             
@@ -7144,7 +7144,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                                 Sistema Multi-IA con Triple Respaldo
                             </h4>
                             <div class="text-xs text-gray-700 space-y-1">
-                                <p><strong>… Siempre funciona</strong> - 3 métodos de generación:</p>
+                                <p><strong>✅ Siempre funciona</strong> - 3 métodos de generación:</p>
                                 <p>1ï¸ƒ£ <strong>Gemini Pro</strong> (Google - si tienes API Key)</p>
                                 <p>2ï¸ƒ£ <strong>HuggingFace</strong> (Gratis, sin API Key necesaria)</p>
                                 <p>3ï¸ƒ£ <strong>Generador Inteligente</strong> (Siempre disponible)</p>
@@ -7246,7 +7246,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             formatted = formatted.replace(/\((\d+)\)/g, '\n  ($1)');
             
             // Agregar espaciado en puntos principales
-            formatted = formatted.replace(/\n€¢\s/g, '\n  €¢ ');
+            formatted = formatted.replace(/\n•\s/g, '\n  • ');
             
             return formatted.trim();
         }
@@ -7273,7 +7273,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             
             // Feedback visual
             const originalText = text.substring(0, 50) + '...';
-            showTemporaryMessage(`… Retroalimentación insertada y formateada: "${originalText}"`);
+            showTemporaryMessage(`✅ Retroalimentación insertada y formateada: "${originalText}"`);
         }
 
         // Generar retroalimentación completa automática
@@ -7342,7 +7342,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
             const apiKey = document.getElementById('geminiApiKey').value.trim();
             if (apiKey) {
                 setStorageItem('geminiApiKey', apiKey);
-                showTemporaryMessage('… API Key guardada correctamente');
+                showTemporaryMessage('✅ API Key guardada correctamente');
             } else {
                 alert('Por favor ingresa una API Key válida');
             }
@@ -7396,7 +7396,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                 // Insertar la retroalimentación generada
                 if (feedback) {
                     insertFeedback(feedback);
-                    showTemporaryMessage('… Retroalimentación generada exitosamente');
+                    showTemporaryMessage('✅ Retroalimentación generada exitosamente');
                     closeFeedbackBank();
                 }
                 
@@ -7411,7 +7411,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                     focus
                 );
                 insertFeedback(simpleFeedback);
-                showTemporaryMessage('… Retroalimentación generada (modo offline)');
+                showTemporaryMessage('✅ Retroalimentación generada (modo offline)');
                 closeFeedbackBank();
             } finally {
                 // Ocultar indicador de carga
@@ -7443,7 +7443,7 @@ Rango de calificación: ${levelInfo.nota}
 •••••••••••••••••••••••••••••••••••••••••••••••••••\n\n`;
                 
                 if (oasAnalysis.cumplidos.length > 0) {
-                    prompt += `… OBJETIVOS DE APRENDIZAJE LOGRADOS (${oasAnalysis.cumplidos.length}):\n`;
+                    prompt += `✅ OBJETIVOS DE APRENDIZAJE LOGRADOS (${oasAnalysis.cumplidos.length}):\n`;
                     oasAnalysis.cumplidos.forEach((oa, index) => {
                         if (index < 4) { // Máximo 4 para no saturar
                             prompt += `\n[${oa.codigo}] ${oa.unidad}:\n`;
@@ -7458,7 +7458,7 @@ Rango de calificación: ${levelInfo.nota}
                 }
                 
                 if (oasAnalysis.noCumplidos.length > 0) {
-                    prompt += `š ï¸ OBJETIVOS POR CONSOLIDAR (${oasAnalysis.noCumplidos.length}):\n`;
+                    prompt += `⚠️ OBJETIVOS POR CONSOLIDAR (${oasAnalysis.noCumplidos.length}):\n`;
                     oasAnalysis.noCumplidos.forEach((oa, index) => {
                         if (index < 4) {
                             prompt += `\n[${oa.codigo}] ${oa.unidad}:\n`;
@@ -7480,59 +7480,59 @@ Rango de calificación: ${levelInfo.nota}
  ENFOQUE: RETROALIMENTACIÃ“N INTEGRAL
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 Elabora una retroalimentación comprehensiva que:
-€¢ Reconozca logros específicos evidenciados en las tareas completadas
-€¢ Identifique áreas descendidas con precisión diagnóstica
-€¢ Establezca relaciones entre los OAs y las competencias comunicativas desarrolladas
-€¢ Proyecte próximos desafíos de aprendizaje basados en el perfil de egreso
-€¢ Incluya sugerencias pedagógicas concretas y contextualizadas`,
+• Reconozca logros específicos evidenciados en las tareas completadas
+• Identifique áreas descendidas con precisión diagnóstica
+• Establezca relaciones entre los OAs y las competencias comunicativas desarrolladas
+• Proyecte próximos desafíos de aprendizaje basados en el perfil de egreso
+• Incluya sugerencias pedagógicas concretas y contextualizadas`,
 
                 'oas': `
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 ðŸŽ¯ ENFOQUE: ANÃLISIS CURRICULAR POR OBJETIVOS
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 Centra la retroalimentación en los Objetivos de Aprendizaje:
-€¢ Menciona explícitamente cada OA cumplido (usa los códigos: OA1, OA2, etc.)
-€¢ Explica cómo las tareas evidencian el logro de cada OA
-€¢ Detalla las brechas en los OAs no cumplidos
-€¢ Relaciona los OAs con habilidades del siglo XXI (pensamiento crítico, comunicación efectiva)
-€¢ Propone actividades remediales específicas para cada OA descendido`,
+• Menciona explícitamente cada OA cumplido (usa los códigos: OA1, OA2, etc.)
+• Explica cómo las tareas evidencian el logro de cada OA
+• Detalla las brechas en los OAs no cumplidos
+• Relaciona los OAs con habilidades del siglo XXI (pensamiento crítico, comunicación efectiva)
+• Propone actividades remediales específicas para cada OA descendido`,
 
                 'motivacional': `
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 ðŸ’ª ENFOQUE: RECONOCIMIENTO Y MOTIVACIÃ“N
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 Escribe con énfasis en el potencial y logros del estudiante:
-€¢ Inicia reconociendo fortalezas específicas demostradas en las tareas
-€¢ Usa lenguaje que empodere y genere autoconfianza académica
-€¢ Conecta los logros actuales con capacidades futuras
-€¢ Presenta las dificultades como oportunidades de crecimiento
-€¢ Proyecta expectativas positivas pero realistas sobre su trayectoria
-€¢ Termina con un desafío inspirador y alcanzable`,
+• Inicia reconociendo fortalezas específicas demostradas en las tareas
+• Usa lenguaje que empodere y genere autoconfianza académica
+• Conecta los logros actuales con capacidades futuras
+• Presenta las dificultades como oportunidades de crecimiento
+• Proyecta expectativas positivas pero realistas sobre su trayectoria
+• Termina con un desafío inspirador y alcanzable`,
 
                 'estrategias': `
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 ðŸ“– ENFOQUE: ESTRATEGIAS Y ACCIONES CONCRETAS
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 Proporciona un plan de acción específico:
-€¢ Lista estrategias metacognitivas de comprensión lectora (inferencias, síntesis, evaluación)
-€¢ Sugiere técnicas de escritura recursiva (planificación-redacción-revisión)
-€¢ Recomienda organizadores gráficos específicos (mapas conceptuales, esquemas)
-€¢ Propone rutinas de estudio y gestión del tiempo
-€¢ Incluye recursos digitales o bibliográficos de apoyo
-€¢ Establece metas SMART (específicas, medibles, alcanzables, relevantes, temporales)`,
+• Lista estrategias metacognitivas de comprensión lectora (inferencias, síntesis, evaluación)
+• Sugiere técnicas de escritura recursiva (planificación-redacción-revisión)
+• Recomienda organizadores gráficos específicos (mapas conceptuales, esquemas)
+• Propone rutinas de estudio y gestión del tiempo
+• Incluye recursos digitales o bibliográficos de apoyo
+• Establece metas SMART (específicas, medibles, alcanzables, relevantes, temporales)`,
 
                 'formativa': `
 •••••••••••••••••••••••••••••••••••••••••••••••••••
-ðŸŒ± ENFOQUE: EVALUACIÃ“N PARA EL APRENDIZAJE
+ðŸ❌± ENFOQUE: EVALUACIÃ“N PARA EL APRENDIZAJE
 •••••••••••••••••••••••••••••••••••••••••••••••••••
 Retroalimentación procesual y descriptiva:
-€¢ Usa lenguaje descriptivo en lugar de calificativo
-€¢ Enfócate en el proceso más que en el resultado final
-€¢ Identifica patrones de error para orientar la mejora
-€¢ Promueve la autorregulación y reflexión metacognitiva
-€¢ Sugiere estrategias de autoevaluación y coevaluación
-€¢ Establece próximos pasos claros en el continuo de aprendizaje
-€¢ Evita juicios absolutos, enfatiza el progreso incremental`
+• Usa lenguaje descriptivo en lugar de calificativo
+• Enfócate en el proceso más que en el resultado final
+• Identifica patrones de error para orientar la mejora
+• Promueve la autorregulación y reflexión metacognitiva
+• Sugiere estrategias de autoevaluación y coevaluación
+• Establece próximos pasos claros en el continuo de aprendizaje
+• Evita juicios absolutos, enfatiza el progreso incremental`
             };
 
             prompt += enfoquesDetallados[focus] || enfoquesDetallados['general'];
@@ -7718,12 +7718,12 @@ PROHIBIDO:
                     oasAnalysis.cumplidos.forEach((oa, index) => {
                         if (index < 3) { // Máximo 3 OAs para no hacer muy largo
                             const oaDescripcion = oa.texto.substring(0, 120);
-                            feedback.push(`\n€¢ **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Evidencia: ${oa.tareas.slice(0, 2).join(', ')}`);
+                            feedback.push(`\n• **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Evidencia: ${oa.tareas.slice(0, 2).join(', ')}`);
                         }
                     });
                     
                     if (oasAnalysis.cumplidos.length > 3) {
-                        feedback.push(`\n€¢ Y ${oasAnalysis.cumplidos.length - 3} objetivo(s) adicional(es) cumplido(s).`);
+                        feedback.push(`\n• Y ${oasAnalysis.cumplidos.length - 3} objetivo(s) adicional(es) cumplido(s).`);
                     }
                 }
                 
@@ -7734,12 +7734,12 @@ PROHIBIDO:
                     oasAnalysis.noCumplidos.forEach((oa, index) => {
                         if (index < 3) {
                             const oaDescripcion = oa.texto.substring(0, 120);
-                            feedback.push(`\n€¢ **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Tareas descendidas: ${oa.tareas.slice(0, 2).join(', ')}`);
+                            feedback.push(`\n• **${oa.codigo}** (${oa.unidad}): ${oaDescripcion}... | Tareas descendidas: ${oa.tareas.slice(0, 2).join(', ')}`);
                         }
                     });
                     
                     if (oasAnalysis.noCumplidos.length > 3) {
-                        feedback.push(`\n€¢ Y ${oasAnalysis.noCumplidos.length - 3} objetivo(s) adicional(es) por trabajar.`);
+                        feedback.push(`\n• Y ${oasAnalysis.noCumplidos.length - 3} objetivo(s) adicional(es) por trabajar.`);
                     }
                 }
             }

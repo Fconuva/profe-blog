@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruleta Interactiva</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+            background-color: #1a2b3c;
+            color: #e0e0e0;
+        }
+        .wheel-container {
+            position: relative;
+            width: 90vw;
+            height: 90vw;
+            max-width: 500px;
+            max-height: 500px;
+            margin: auto;
+        }
+        canvas {
+            transition: transform 7s cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-top: 40px solid #f87171; /* red-400 */
+            filter: drop-shadow(0 -3px 2px rgba(0,0,0,0.3));
+            z-index: 10;
+        }
+         #spin-btn {
+            background: linear-gradient(45deg, #ec4899, #d946ef);
+            border: none;
+            box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        }
+        .setup-panel {
+            background-color: #2c3e50;
+        }
+        input, select, textarea {
+            background-color: #1a2b3c;
+            border-color: #4a5a6a;
+            color: #e0e0e0;
+        }
+        textarea {
+            min-height: 150px;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: #2c3e50;
+            padding: 2rem;
+            border-radius: 1rem;
+            text-align: center;
+            max-width: 90%;
+            width: 500px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.5);
+        }
+        .switch { position: relative; display: inline-block; width: 60px; height: 34px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: #22c55e; }
+        input:checked + .slider:before { transform: translateX(26px); }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4">
+    <!-- Navigation Bar -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 shadow-sm">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo/Name -->
+                <a href="/" class="text-2xl font-bold text-gray-800 hover:text-blue-600 transition-colors">
+                    Francisco Núñez
+                </a>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Inicio</a>
+                    <a href="/portafolio" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Portafolio</a>
+                    <a href="/blog" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Blog</a>
+                    <a href="/contacto" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contacto</a>
+                    <a href="/galeria" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Galería</a>
+                    <a href="/generador-cv" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Generador CV</a>
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <button id="mobile-menu-button" class="md:hidden text-gray-700 hover:text-blue-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Mobile Navigation Menu -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4 pb-4 border-t border-gray-200">
+                <div class="flex flex-col space-y-4 pt-4">
+                    <a href="/" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Inicio</a>
+                    <a href="/portafolio" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Portafolio</a>
+                    <a href="/blog" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Blog</a>
+                    <a href="/contacto" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Contacto</a>
+                    <a href="/galeria" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Galería</a>
+                    <a href="/generador-cv" class="text-gray-700 hover:text-blue-600 transition-colors font-medium">Generador CV</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Pantalla de Configuración -->
+    <div id="setup-screen" class="w-full max-w-2xl mx-auto">
+        <h1 class="text-4xl font-extrabold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-500">Configuración de la Ruleta</h1>
+        
+        <div class="setup-panel p-6 rounded-lg shadow-lg space-y-6">
+            <!-- Modo de Ruleta -->
+            <div>
+                <label class="block text-lg font-bold mb-2">1. Elige el modo de la ruleta:</label>
+                <select id="mode-selector" class="w-full p-2 rounded border">
+                    <option value="quantity">Por Cantidad (Números)</option>
+                    <option value="groups">Por Grupos (Nombres)</option>
+                    <option value="lirmi">Pegar Lista de Curso</option>
+                </select>
+            </div>
+
+            <!-- Opciones por Modo -->
+            <div id="options-quantity">
+                <label class="block font-bold">Cantidad de Opciones (1-200):</label>
+                <input type="number" id="quantity-input" min="1" max="200" value="45" class="w-full p-2 rounded border">
+            </div>
+            <div id="options-groups" style="display:none;">
+                <label class="block font-bold">Nombres de Grupos (separados por coma):</label>
+                <input type="text" id="groups-input" placeholder="Grupo 1, Grupo 2, Grupo 3" class="w-full p-2 rounded border">
+            </div>
+            <div id="options-lirmi" style="display:none;">
+                <label class="block font-bold">Pega aquí tu lista de curso desde Excel:</label>
+                <p class="text-sm text-gray-400 mb-2">Selecciona las columnas en Excel (N°, RUN, Estudiante), cópialas (Ctrl+C) y pégalas aquí (Ctrl+V).</p>
+                <textarea id="lirmi-paste-area" class="w-full p-2 rounded border" placeholder="Pega la lista aquí..."></textarea>
+            </div>
+
+            <!-- Estudiantes Ausentes -->
+            <div>
+                <label class="block text-lg font-bold mb-2">2. Estudiantes Ausentes (Opcional):</label>
+                <p class="text-sm text-gray-400 mb-2">Escribe los números de lista de los ausentes, separados por comas (ej: 5, 12, 23). Serán excluidos de la ruleta.</p>
+                <input type="text" id="absent-input" placeholder="5, 12, 23" class="w-full p-2 rounded border">
+            </div>
+
+            <!-- Preguntas -->
+            <div>
+                <label class="block text-lg font-bold mb-2">3. Cargar Preguntas (Opcional):</label>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <input type="file" id="questions-file" accept=".csv" class="w-full text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-500 file:text-white hover:file:bg-indigo-600">
+                    <button id="download-template-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg flex-shrink-0">Descargar Plantilla</button>
+                </div>
+            </div>
+            
+            <!-- Opciones Adicionales -->
+            <div>
+                 <label class="block text-lg font-bold mb-2">4. Opciones Adicionales:</label>
+                 <div class="flex items-center justify-start bg-gray-700 p-2 rounded-lg">
+                    <span class="text-md font-medium text-white mr-4">Activar Sonido:</span>
+                    <label class="switch"><input type="checkbox" id="use-sound" checked><span class="slider"></span></label>
+                </div>
+            </div>
+
+            <!-- Botón para Empezar -->
+            <button id="start-game-btn" class="w-full mt-6 text-white font-bold py-4 px-12 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300 ease-out text-2xl" style="background: linear-gradient(45deg, #3b82f6, #8b5cf6);">
+                ¡Crear y Jugar!
+            </button>
+        </div>
+    </div>
+
+    <!-- Pantalla del Juego -->
+    <div id="game-screen" class="hidden w-full text-center">
+        <header class="text-center mb-6">
+            <h1 id="game-title" class="text-4xl md:text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-500">Ruleta Interactiva</h1>
+        </header>
+        <main class="flex flex-col items-center gap-6">
+            <div class="wheel-container">
+                <div class="pointer"></div>
+                <canvas id="roulette-wheel" width="600" height="600"></canvas>
+            </div>
+            <button id="spin-btn" class="text-white font-bold py-4 px-12 rounded-full shadow-lg transform hover:scale-105 transition-transform duration-300 ease-out text-2xl">
+                GIRAR
+            </button>
+            <button id="back-to-setup-btn" class="mt-2 bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-6 rounded-lg">Volver a Configurar</button>
+        </main>
+    </div>
+
+    <!-- Modal para mostrar resultado y pregunta -->
+    <div id="result-modal" class="modal-overlay hidden">
+        <div class="modal-content space-y-4">
+            <div>
+                <p class="text-xl mb-1 text-gray-400">El seleccionado es:</p>
+                <h2 id="winner-name" class="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-pink-400 to-purple-500"></h2>
+            </div>
+            <div id="question-display" class="hidden pt-4 border-t border-gray-500">
+                <p class="text-xl mb-2 text-gray-400">Pregunta:</p>
+                <p id="question-text" class="text-2xl font-semibold"></p>
+            </div>
+            <button id="close-modal-btn" class="mt-4 bg-pink-500 hover:bg-pink-600 text-white font-bold py-2 px-8 rounded-lg">Cerrar</button>
+        </div>
+    </div>
+    
+    <script>
+        // --- Elementos del DOM ---
+        const setupScreen = document.getElementById('setup-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const startGameBtn = document.getElementById('start-game-btn');
+        const backToSetupBtn = document.getElementById('back-to-setup-btn');
+        const modeSelector = document.getElementById('mode-selector');
+        const quantityInput = document.getElementById('quantity-input');
+        const groupsInput = document.getElementById('groups-input');
+        const lirmiPasteArea = document.getElementById('lirmi-paste-area');
+        const absentInput = document.getElementById('absent-input');
+        const questionsFileInput = document.getElementById('questions-file');
+        const downloadTemplateBtn = document.getElementById('download-template-btn');
+        const useSoundCheckbox = document.getElementById('use-sound');
+        const gameTitle = document.getElementById('game-title');
+        
+        const canvas = document.getElementById('roulette-wheel');
+        const spinBtn = document.getElementById('spin-btn');
+        const ctx = canvas.getContext('2d');
+
+        const resultModal = document.getElementById('result-modal');
+        const winnerNameEl = document.getElementById('winner-name');
+        const questionDisplay = document.getElementById('question-display');
+        const questionTextEl = document.getElementById('question-text');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+
+        // --- Estado del Juego ---
+        let segments = [];
+        let questions = [];
+        let currentRotation = 0;
+        let isSpinning = false;
+        const colors = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e', '#14b8a6', '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899', '#f43f5e'];
+
+        // --- Configuración de Sonido ---
+        let spinSound;
+        const winnerSound = new Tone.Synth({ oscillator: { type: 'fatsawtooth' }, envelope: { attack: 0.05, decay: 0.2, sustain: 0.2, release: 0.5 } }).toDestination();
+        const winnerMelody = [['C5', '8n'], ['G5', '4n'], ['E5', '8n']];
+        const speech = new SpeechSynthesisUtterance();
+        speech.lang = 'es-ES';
+        speech.rate = 1;
+
+        function speak(text) {
+            if (!useSoundCheckbox.checked) return;
+            speech.text = text;
+            window.speechSynthesis.speak(speech);
+        }
+
+        function setupSpinSound() {
+            if (spinSound) spinSound.dispose();
+            spinSound = new Tone.NoiseSynth({
+                noise: { type: "brown" },
+                envelope: { attack: 0.1, decay: 0.2, sustain: 0.3, release: 0.5 }
+            }).toDestination();
+            spinSound.volume.value = -25;
+        }
+
+        // --- Lógica de la Ruleta ---
+        function drawWheel() {
+            const size = canvas.width;
+            const center = size / 2;
+            if (segments.length === 0) return;
+            const segmentAngle = (2 * Math.PI) / segments.length;
+            
+            ctx.clearRect(0, 0, size, size);
+
+            segments.forEach((segment, i) => {
+                const startAngle = i * segmentAngle;
+                const endAngle = (i + 1) * segmentAngle;
+
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(center, center);
+                ctx.arc(center, center, center - 10, startAngle, endAngle);
+                ctx.closePath();
+                ctx.fill();
+
+                ctx.save();
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 20px Poppins';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const textAngle = startAngle + segmentAngle / 2;
+                ctx.translate(center + (center * 0.75) * Math.cos(textAngle), center + (center * 0.75) * Math.sin(textAngle));
+                ctx.rotate(textAngle + Math.PI / 2);
+                ctx.fillText(segment.label, 0, 0);
+                ctx.restore();
+            });
+        }
+
+        async function spin() {
+            if (isSpinning) return;
+            if (useSoundCheckbox.checked) {
+                await Tone.start();
+                setupSpinSound();
+                spinSound.triggerAttack();
+            }
+            isSpinning = true;
+            
+            spinBtn.textContent = 'Girando...';
+            spinBtn.disabled = true;
+
+            const spinDegrees = Math.random() * 3000 + 360 * 6;
+            currentRotation += spinDegrees;
+            
+            canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+            setTimeout(() => {
+                if (useSoundCheckbox.checked) spinSound.triggerRelease();
+                
+                const finalRotation = currentRotation % 360;
+                const degreesPerSegment = 360 / segments.length;
+                const winningAngle = (360 - finalRotation - 90 + 360) % 360;
+                const winningSegmentIndex = Math.floor(winningAngle / degreesPerSegment);
+                
+                showWinner(segments[winningSegmentIndex]);
+                isSpinning = false;
+                spinBtn.textContent = 'GIRAR DE NUEVO';
+                spinBtn.disabled = false;
+                
+                if (useSoundCheckbox.checked) {
+                    let now = Tone.now();
+                    winnerMelody.forEach(([note, duration]) => {
+                        winnerSound.triggerAttackRelease(note, duration, now);
+                        now += Tone.Time(duration).toSeconds();
+                    });
+                }
+
+            }, 7000); 
+        }
+        
+        function showWinner(winner) {
+            const winnerText = winner.fullName || winner.label;
+            winnerNameEl.textContent = winnerText;
+            speak(winnerText);
+            
+            if (questions.length > 0) {
+                const qIndex = Math.floor(Math.random() * questions.length);
+                const question = questions[qIndex];
+                questionTextEl.textContent = question.pregunta;
+                questionDisplay.style.display = 'block';
+                questions.splice(qIndex, 1);
+            } else {
+                questionDisplay.style.display = 'none';
+            }
+            
+            resultModal.classList.remove('hidden');
+        }
+
+        // --- Lógica de Configuración ---
+        async function initializeGame() {
+            const qFile = questionsFileInput.files[0];
+            if (qFile) {
+                try {
+                    questions = await parseQuestionsCSV(qFile);
+                } catch (error) {
+                    alert(`Error al leer el archivo de preguntas: ${error.message}`);
+                    return;
+                }
+            } else {
+                questions = [];
+            }
+
+            const mode = modeSelector.value;
+            let rawSegments = [];
+
+            if (mode === 'quantity') {
+                const qty = parseInt(quantityInput.value, 10);
+                if (qty > 0 && qty <= 200) {
+                    for (let i = 1; i <= qty; i++) {
+                        rawSegments.push({ label: `${i}`, listNumber: `${i}` });
+                    }
+                } else {
+                    alert("Por favor, ingresa una cantidad válida (1-200).");
+                    return;
+                }
+            } else if (mode === 'groups') {
+                const groups = groupsInput.value.split(',').map(g => g.trim()).filter(g => g);
+                if (groups.length > 0) {
+                    rawSegments = groups.map((g, i) => ({ label: g, listNumber: `${i + 1}` }));
+                } else {
+                    alert("Por favor, ingresa nombres de grupos.");
+                    return;
+                }
+            } else if (mode === 'lirmi') {
+                const pastedData = lirmiPasteArea.value;
+                if (pastedData.trim()) {
+                    try {
+                        rawSegments = parsePastedData(pastedData);
+                    } catch (error) {
+                        alert(`Error al procesar la lista pegada: ${error.message}`);
+                        return;
+                    }
+                } else {
+                    alert("Por favor, pega la lista de estudiantes en el área de texto.");
+                    return;
+                }
+            }
+            
+            const absentNumbers = absentInput.value.split(',').map(n => n.trim()).filter(n => n);
+            segments = rawSegments.filter(segment => !absentNumbers.includes(segment.listNumber));
+            
+            if (segments.length < 2) {
+                alert("Se necesitan al menos 2 participantes en la ruleta después de filtrar ausentes.");
+                return;
+            }
+
+            setupScreen.classList.add('hidden');
+            gameScreen.classList.remove('hidden');
+            drawWheel();
+        }
+
+        function parsePastedData(pastedText) {
+            const students = [];
+            const lines = pastedText.trim().split('\n');
+            
+            if (lines.length === 0) {
+                throw new Error("No se encontraron datos en el texto pegado.");
+            }
+
+            lines.forEach(line => {
+                const columns = line.split('\t'); // El separador al pegar desde Excel es un tabulador
+                if (columns.length >= 3) {
+                    const listNumber = columns[0].trim();
+                    const fullName = columns[2].trim(); // La tercera columna es el nombre del estudiante
+                    if (listNumber && fullName && !isNaN(parseInt(listNumber, 10))) {
+                        students.push({ label: listNumber, listNumber: listNumber, fullName: fullName });
+                    }
+                }
+            });
+
+            if (students.length === 0) {
+                throw new Error("No se pudo extraer una lista válida. Asegúrate de copiar las columnas N°, RUN y Estudiante desde Excel.");
+            }
+            return students;
+        }
+        
+        function parseQuestionsCSV(file) {
+             return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const text = event.target.result;
+                    const lines = text.split(/\r?\n/).filter(line => line.trim() !== '');
+                    if (lines.length < 2) return reject(new Error("Archivo de preguntas vacío."));
+
+                    const header = lines[0].split(';').map(h => h.trim().replace(/"/g, ''));
+                    const questionIndex = header.findIndex(h => h.toLowerCase().includes('pregunta'));
+                    
+                    if (questionIndex === -1) {
+                        return reject(new Error("El archivo CSV debe tener una columna llamada 'Pregunta'."));
+                    }
+
+                    const data = [];
+                    for (let i = 1; i < lines.length; i++) {
+                        const values = lines[i].split(';');
+                        if (values.length > questionIndex) {
+                            const question = values[questionIndex].trim().replace(/"/g, '');
+                            if (question) {
+                                data.push({ pregunta: question });
+                            }
+                        }
+                    }
+                    resolve(data);
+                };
+                reader.onerror = () => reject(new Error("No se pudo leer el archivo."));
+                reader.readAsText(file, 'UTF-8');
+            });
+        }
+
+        function downloadQuestionTemplate() {
+            const headers = '"N°";"Pregunta"';
+            const rows = [
+                '"1";"Escribe tu primera pregunta aquí..."',
+                '"2";"Escribe tu segunda pregunta aquí..."',
+                '"3";"Escribe tu tercera pregunta aquí..."'
+            ];
+            const csvContent = "\uFEFF" + [headers, ...rows].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'plantilla_preguntas_ruleta.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // --- Event Listeners ---
+        modeSelector.addEventListener('change', (e) => {
+            document.getElementById('options-quantity').style.display = 'none';
+            document.getElementById('options-groups').style.display = 'none';
+            document.getElementById('options-lirmi').style.display = 'none';
+            document.getElementById(`options-${e.target.value}`).style.display = 'block';
+        });
+
+        startGameBtn.addEventListener('click', initializeGame);
+        spinBtn.addEventListener('click', spin);
+        closeModalBtn.addEventListener('click', () => resultModal.classList.add('hidden'));
+        downloadTemplateBtn.addEventListener('click', downloadQuestionTemplate);
+        backToSetupBtn.addEventListener('click', () => {
+            gameScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+        });
+
+    </script>
+
+    <!-- Mobile Menu Toggle Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (!mobileMenuButton.contains(event.target) && !mobileMenu.contains(event.target)) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

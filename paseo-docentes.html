@@ -1,0 +1,1080 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción Paseo Docentes - Profe Francisco Pancho</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+        // ✅ Configuración de Firebase Realtime Database
+        const FIREBASE_URL = 'https://profe-blog-default-rtdb.firebaseio.com';
+
+        window.App = {
+            currentStep: 1,
+            userData: {},
+            selectedSeat: null,
+            reservationId: null
+        };
+
+        window.nextStep = async function() {
+            const step = window.App.currentStep;
+            
+            if (step === 1) {
+                if (!validatePersonalData()) return;
+                
+                // Validar email duplicado antes de continuar
+                const email = document.getElementById('email').value;
+                const isDuplicate = await checkEmailExists(email);
+                
+                if (isDuplicate) {
+                    alert('⚠️ YA ESTÁS REGISTRADO\n\n' +
+                          'Este email ya tiene una reserva.\n\n' +
+                          'Si necesitas cambiar tu reserva, usa la opción "¿Ya te inscribiste?" en la parte superior de la página.');
+                    return;
+                }
+                
+                savePersonalData();
+                showStep(2);
+            } else if (step === 2) {
+                if (!window.App.userData.asistira) {
+                    alert('Por favor selecciona una opción');
+                    return;
+                }
+                if (window.App.userData.asistira === 'no') {
+                    showFinalMessage('no-asiste');
+                    return;
+                }
+                showStep(3);
+            } else if (step === 3) {
+                if (!window.App.userData.transporte) {
+                    alert('Por favor selecciona una opción de transporte');
+                    return;
+                }
+                if (window.App.userData.transporte === 'propio') {
+                    // Deshabilitar botón para evitar clics múltiples
+                    const nextBtn = event.target;
+                    if (nextBtn.disabled) return;
+                    
+                    nextBtn.disabled = true;
+                    nextBtn.innerHTML = '⏳ Guardando...';
+                    
+                    saveReservation()
+                        .then(() => {
+                            showFinalMessage('transporte-propio');
+                        })
+                        .catch(() => {
+                            nextBtn.disabled = false;
+                            nextBtn.innerHTML = 'Siguiente';
+                        });
+                    return;
+                }
+                loadBusSeats();
+                showStep(4);
+            }
+        };
+
+        window.previousStep = function() {
+            const step = window.App.currentStep;
+            if (step > 1) {
+                showStep(step - 1);
+            }
+        };
+
+        function showStep(stepNumber) {
+            document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step${stepNumber}`).classList.remove('hidden');
+            
+            document.querySelectorAll('.step-indicator').forEach((el, index) => {
+                if (index < stepNumber) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+            
+            window.App.currentStep = stepNumber;
+            
+            // Mostrar/Ocultar información importante solo en paso 1
+            const infoPanel = document.getElementById('infoImportante');
+            if (infoPanel) {
+                if (stepNumber === 1) {
+                    infoPanel.classList.remove('hidden');
+                } else {
+                    infoPanel.classList.add('hidden');
+                }
+            }
+            
+            // Iniciar auto-refresh en el paso de selección de asientos
+            if (stepNumber === 4) {
+                startAutoRefresh();
+            } else {
+                stopAutoRefresh();
+            }
+        }
+
+        function validatePersonalData() {
+            const nombre = document.getElementById('nombre').value.trim();
+            const apellido = document.getElementById('apellido').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+
+            if (!nombre || !apellido || !email || !telefono) {
+                alert('Por favor completa todos los campos');
+                return false;
+            }
+
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                alert('Por favor ingresa un email válido');
+                return false;
+            }
+
+            return true;
+        }
+
+        async function checkEmailExists(email) {
+            try {
+                console.log('🔍 Verificando si existe el email:', email);
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas.json`);
+                const data = await response.json();
+                
+                if (!data) return false;
+                
+                // Buscar si el email ya existe
+                for (const reservation of Object.values(data)) {
+                    if (reservation.email === email) {
+                        console.log('⚠️ Email duplicado encontrado');
+                        return true;
+                    }
+                }
+                
+                console.log('✅ Email disponible');
+                return false;
+            } catch (error) {
+                console.error('Error verificando email:', error);
+                return false;
+            }
+        }
+
+        function savePersonalData() {
+            window.App.userData.nombre = document.getElementById('nombre').value.trim();
+            window.App.userData.apellido = document.getElementById('apellido').value.trim();
+            window.App.userData.email = document.getElementById('email').value.trim();
+            window.App.userData.telefono = document.getElementById('telefono').value.trim();
+        }
+
+        window.setAsistencia = function(value) {
+            window.App.userData.asistira = value;
+            document.querySelectorAll('.asistencia-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-white', 'text-gray-700');
+            event.target.classList.add('bg-blue-600', 'text-white');
+        };
+
+        window.setTransporte = function(value) {
+            window.App.userData.transporte = value;
+            document.querySelectorAll('.transporte-btn').forEach(btn => {
+                btn.classList.remove('bg-blue-600', 'text-white');
+                btn.classList.add('bg-white', 'text-gray-700');
+            });
+            event.target.classList.remove('bg-white', 'text-gray-700');
+            event.target.classList.add('bg-blue-600', 'text-white');
+        };
+
+        // Variable para guardar el estado anterior de los asientos
+        let previousOccupiedSeats = null;
+
+        async function loadBusSeats(silent = false) {
+            console.log('🚀 loadBusSeats iniciado, silent:', silent);
+            const seatsContainer = document.getElementById('seatsContainer');
+            console.log('📦 seatsContainer:', seatsContainer);
+            
+            if (!seatsContainer) {
+                console.error('❌ No se encontró el elemento seatsContainer');
+                return;
+            }
+            
+            // Solo mostrar "Cargando..." en la primera carga
+            if (!silent) {
+                seatsContainer.innerHTML = '<p class="text-center text-gray-600 py-8">🔄 Cargando asientos disponibles...</p>';
+            }
+
+            try {
+                console.log('🌐 Fetching desde Firebase...');
+                // Cargar reservas desde Firebase
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas.json`);
+                console.log('📡 Response:', response.status);
+                const data = await response.json();
+                console.log('📊 Data recibida:', data ? Object.keys(data).length + ' registros' : 'null');
+                
+                // Crear un mapa de asientos ocupados con información de la persona
+                const occupiedSeatsMap = {};
+                
+                if (data) {
+                    Object.values(data).forEach(r => {
+                        if (r.asiento && r.transporte === 'bus') {
+                            occupiedSeatsMap[r.asiento] = {
+                                nombre: r.nombre,
+                                apellido: r.apellido
+                            };
+                        }
+                    });
+                }
+                
+                console.log('💺 Asientos ocupados:', Object.keys(occupiedSeatsMap).length);
+                
+                // Guardar el mapa para uso posterior
+                lastOccupiedSeatsMap = occupiedSeatsMap;
+                
+                // Verificar si hubo cambios (o si es la primera carga)
+                const currentSeatsJSON = JSON.stringify(occupiedSeatsMap);
+                if (previousOccupiedSeats === null || previousOccupiedSeats !== currentSeatsJSON || !silent) {
+                    previousOccupiedSeats = currentSeatsJSON;
+                    console.log('🎨 Renderizando asientos...');
+                    renderSeats(occupiedSeatsMap);
+                } else {
+                    console.log('⏭️ Sin cambios, saltando render');
+                }
+                // Si no hubo cambios, no re-renderizamos (evita parpadeo)
+            } catch (error) {
+                console.error("❌ Error cargando asientos:", error);
+                renderSeats({});
+            }
+        }
+
+        function renderSeats(occupiedSeatsMap) {
+            const seatsContainer = document.getElementById('seatsContainer');
+            const totalSeats = 46;
+            const seatsPerRow = 4; // 4 asientos por fila (2 izq + 2 der)
+            const regularRows = 44; // Primeros 44 asientos
+            
+            let html = '<div class="mb-4 p-4 bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg border-2 border-gray-300 shadow-inner max-w-md mx-auto">';
+            
+            // Título del bus
+            html += '<div class="text-center mb-2 pb-2 border-b-2 border-gray-400">';
+            html += '<p class="text-base font-bold text-gray-700">🚌 Bus Escolar</p>';
+            html += '<p class="text-xs text-gray-600">Conductor ➡️</p>';
+            html += '</div>';
+            
+            // Renderizar asientos regulares (1-44)
+            html += '<div class="space-y-1.5">';
+            
+            for (let i = 0; i < regularRows; i += seatsPerRow) {
+                html += '<div class="flex justify-center gap-3 items-start">';
+                
+                // Lado izquierdo: 2 asientos
+                html += '<div class="flex gap-1.5">';
+                const seat1 = i + 1;
+                const seat2 = i + 2;
+                if (seat1 <= regularRows) html += renderSingleSeat(seat1, occupiedSeatsMap);
+                if (seat2 <= regularRows) html += renderSingleSeat(seat2, occupiedSeatsMap);
+                html += '</div>';
+                
+                // Pasillo
+                html += '<div class="w-6 flex items-center justify-center text-gray-400 text-xs font-semibold" style="writing-mode: vertical-lr;">|</div>';
+                
+                // Lado derecho: 2 asientos
+                html += '<div class="flex gap-1.5">';
+                const seat3 = i + 3;
+                const seat4 = i + 4;
+                if (seat3 <= regularRows) html += renderSingleSeat(seat3, occupiedSeatsMap);
+                if (seat4 <= regularRows) html += renderSingleSeat(seat4, occupiedSeatsMap);
+                html += '</div>';
+                
+                html += '</div>';
+            }
+            
+            // Última fila especial con asientos 45 y 46 (fondo del bus)
+            html += '<div class="flex justify-center gap-3 items-start mt-2 pt-2 border-t-2 border-gray-400">';
+            html += '<div class="flex gap-1.5 flex-1 justify-center">';
+            html += renderSingleSeat(45, occupiedSeatsMap);
+            html += renderSingleSeat(46, occupiedSeatsMap);
+            html += '</div>';
+            html += '</div>';
+            
+            html += '</div></div>';
+            
+            // Leyenda mejorada
+            html += '<div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">';
+            html += '<p class="text-center font-semibold text-gray-700 mb-2 text-sm">Leyenda:</p>';
+            html += '<div class="flex justify-center gap-4 text-xs flex-wrap">';
+            html += '<div class="flex items-center gap-1.5"><div class="w-6 h-6 bg-green-100 border-2 border-green-400 rounded-md"></div><span class="font-medium">Disponible</span></div>';
+            html += '<div class="flex items-center gap-1.5"><div class="w-6 h-6 bg-amber-100 border-2 border-amber-500 rounded-md"></div><span class="font-medium">Reservado</span></div>';
+            html += '<div class="flex items-center gap-1.5"><div class="w-6 h-6 bg-red-100 border-2 border-red-400 rounded-md opacity-50"></div><span class="font-medium">Ocupado</span></div>';
+            html += '<div class="flex items-center gap-1.5"><div class="w-6 h-6 bg-blue-600 border-2 border-blue-700 rounded-md"></div><span class="font-medium">Tu selección</span></div>';
+            html += '</div></div>';
+            
+            // Mostrar asiento seleccionado
+            if (window.App.selectedSeat) {
+                html += `<div class="mt-3 p-2.5 bg-green-50 border border-green-300 rounded-lg text-center">
+                    <p class="text-green-800 font-semibold text-sm">✓ Has seleccionado el asiento <span class="text-xl">${window.App.selectedSeat}</span></p>
+                </div>`;
+            }
+            
+            seatsContainer.innerHTML = html;
+        }
+        
+        function renderSingleSeat(seatNumber, occupiedSeatsMap) {
+            const occupantInfo = occupiedSeatsMap[seatNumber];
+            const isOccupied = !!occupantInfo;
+            const isReserved = occupantInfo && occupantInfo.nombre === 'Reservado';
+            const isSelected = window.App.selectedSeat === seatNumber;
+            
+            let html = '<div class="flex flex-col items-center">';
+            
+            let seatClass = 'w-12 h-12 rounded-md border-2 flex items-center justify-center font-bold text-sm cursor-pointer transition-all transform hover:scale-105 relative';
+            
+            if (isReserved) {
+                // Color naranja/amarillo para asientos reservados
+                seatClass += ' bg-amber-100 border-amber-500 text-amber-800 cursor-not-allowed hover:scale-100';
+            } else if (isOccupied) {
+                seatClass += ' bg-red-100 border-red-400 text-red-700 cursor-not-allowed hover:scale-100 opacity-60';
+            } else if (isSelected) {
+                seatClass += ' bg-blue-600 border-blue-700 text-white shadow-lg scale-110';
+            } else {
+                seatClass += ' bg-green-100 border-green-400 text-green-700 hover:bg-green-200 hover:shadow-md';
+            }
+            
+            let tooltipText = '';
+            if (isReserved) {
+                tooltipText = `Asiento ${seatNumber} - Reservado para Docente Senior`;
+            } else if (isOccupied) {
+                tooltipText = `Asiento ${seatNumber} - Ocupado por ${occupantInfo.nombre} ${occupantInfo.apellido}`;
+            } else {
+                tooltipText = `Asiento ${seatNumber} - Disponible`;
+            }
+            
+            html += `<div class="${seatClass}" onclick="selectSeat(${seatNumber}, ${isOccupied})" title="${tooltipText}">`;
+            html += `${seatNumber}`;
+            html += `</div>`;
+            
+            // Mostrar nombre debajo del asiento si está ocupado o reservado
+            if (isReserved) {
+                html += `<div class="mt-0.5 text-[10px] text-center text-amber-700 font-bold max-w-[48px] break-words leading-tight">`;
+                html += `RESERV.`;
+                html += `</div>`;
+            } else if (isOccupied) {
+                html += `<div class="mt-0.5 text-[10px] text-center text-red-700 font-semibold max-w-[48px] break-words leading-tight">`;
+                html += `${occupantInfo.nombre.split(' ')[0]} ${occupantInfo.apellido.charAt(0)}.`;
+                html += `</div>`;
+            } else {
+                html += `<div class="mt-0.5 text-[10px] text-gray-400 invisible">-</div>`;
+            }
+            
+            html += '</div>';
+            
+            return html;
+        }
+
+        // Variable global para almacenar el último mapa de asientos
+        let lastOccupiedSeatsMap = {};
+
+        window.selectSeat = function(seatNumber, isOccupied) {
+            if (isOccupied) {
+                alert('Este asiento ya está ocupado. Por favor elige otro.');
+                return;
+            }
+            
+            // Si se selecciona el mismo asiento, deseleccionarlo
+            if (window.App.selectedSeat === seatNumber) {
+                window.App.selectedSeat = null;
+            } else {
+                window.App.selectedSeat = seatNumber;
+            }
+            
+            // Re-renderizar inmediatamente sin hacer fetch
+            console.log('🔄 Re-renderizando con asiento seleccionado:', seatNumber);
+            renderSeats(lastOccupiedSeatsMap);
+        };
+
+        // Auto-recargar asientos cada 10 segundos cuando estamos en el paso de selección
+        let autoRefreshInterval = null;
+        
+        function startAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+            }
+            autoRefreshInterval = setInterval(() => {
+                if (window.App.currentStep === 4) {
+                    // Usar modo "silent" para actualizar sin parpadeo
+                    loadBusSeats(true);
+                }
+            }, 10000); // Cada 10 segundos
+        }
+        
+        function stopAutoRefresh() {
+            if (autoRefreshInterval) {
+                clearInterval(autoRefreshInterval);
+                autoRefreshInterval = null;
+            }
+        }
+
+        window.confirmReservation = async function() {
+            if (!window.App.selectedSeat) {
+                alert('Por favor selecciona un asiento');
+                return;
+            }
+
+            const confirmBtn = event.target;
+            
+            // Evitar clics múltiples
+            if (confirmBtn.disabled) return;
+            
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML = '⏳ Guardando...';
+
+            try {
+                window.App.userData.asiento = window.App.selectedSeat;
+                await saveReservation();
+                showFinalMessage('reserva-completa');
+            } catch (error) {
+                console.error("Error guardando reserva:", error);
+                alert('Error al guardar la reserva. Por favor intenta de nuevo.');
+                
+                confirmBtn.disabled = false;
+                confirmBtn.innerHTML = 'Confirmar Reserva';
+            }
+        };
+
+        async function saveReservation() {
+            try {
+                // Guardar en Firebase directamente (la validación ya se hizo en paso 1)
+                const reservationData = {
+                    ...window.App.userData,
+                    created_at: new Date().toISOString()
+                };
+                
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas.json`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(reservationData)
+                });
+
+                const data = await response.json();
+                window.App.reservationId = data.name; // Firebase devuelve el ID en .name
+                return { ...reservationData, id: data.name };
+                
+            } catch (error) {
+                console.error('Error saving reservation:', error);
+                throw error;
+            }
+        }
+
+        // Funciones para gestionar reservas existentes
+        window.showCancelModal = function() {
+            document.getElementById('cancelModal').classList.remove('hidden');
+        };
+
+        window.hideCancelModal = function() {
+            document.getElementById('cancelModal').classList.add('hidden');
+            document.getElementById('cancelEmail').value = '';
+            document.getElementById('cancelResult').innerHTML = '';
+        };
+
+        window.checkReservation = async function() {
+            const email = document.getElementById('cancelEmail').value.trim();
+            const resultDiv = document.getElementById('cancelResult');
+            
+            if (!email) {
+                resultDiv.innerHTML = '<p class="text-red-600">Por favor ingresa tu email</p>';
+                return;
+            }
+
+            resultDiv.innerHTML = '<p class="text-gray-600">🔍 Buscando tu reserva...</p>';
+
+            try {
+                // Buscar en Firebase
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas.json`);
+                const allReservations = await response.json();
+                
+                let foundReservation = null;
+                let foundKey = null;
+                
+                if (allReservations) {
+                    for (const [key, reservation] of Object.entries(allReservations)) {
+                        if (reservation.email === email) {
+                            foundReservation = reservation;
+                            foundKey = key;
+                            break;
+                        }
+                    }
+                }
+
+                if (foundReservation) {
+                    const r = foundReservation;
+                    const asientoText = r.asiento ? `Asiento ${r.asiento}` : 'Transporte propio';
+                    const fecha = new Date(r.created_at).toLocaleString('es-ES');
+                    
+                    let buttons = '';
+                    // Si tiene asiento de bus, permitir cambiar
+                    if (r.asiento && r.transporte === 'bus') {
+                        buttons = `
+                            <div class="grid grid-cols-2 gap-2">
+                                <button onclick="changeReservation('${email}', '${foundKey}')" 
+                                        class="bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition text-sm">
+                                    🔄 Cambiar asiento
+                                </button>
+                                <button onclick="confirmDelete('${email}', '${foundKey}')" 
+                                        class="bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-700 transition text-sm">
+                                    🗑️ Cancelar reserva
+                                </button>
+                            </div>
+                        `;
+                    } else {
+                        buttons = `
+                            <button onclick="confirmDelete('${email}', '${foundKey}')" 
+                                    class="w-full bg-red-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-red-700 transition">
+                                🗑️ Cancelar esta reserva
+                            </button>
+                        `;
+                    }
+                    
+                    resultDiv.innerHTML = `
+                        <div class="bg-blue-50 border border-blue-300 rounded-lg p-4 mb-4">
+                            <p class="font-semibold text-blue-900 mb-2">✓ Reserva encontrada:</p>
+                            <p class="text-blue-800"><strong>Nombre:</strong> ${r.nombre} ${r.apellido}</p>
+                            <p class="text-blue-800"><strong>Email:</strong> ${r.email}</p>
+                            <p class="text-blue-800"><strong>Teléfono:</strong> ${r.telefono}</p>
+                            <p class="text-blue-800"><strong>Transporte:</strong> ${asientoText}</p>
+                            <p class="text-blue-700 text-sm mt-2">Registrado: ${fecha}</p>
+                        </div>
+                        ${buttons}
+                    `;
+                } else {
+                    resultDiv.innerHTML = '<p class="text-yellow-600">⚠️ No se encontró ninguna reserva con este email</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error al buscar la reserva. Intenta de nuevo.</p>';
+            }
+        };
+
+        window.changeReservation = async function(email, firebaseKey) {
+            if (confirm('¿Deseas cambiar de asiento? Tu asiento actual se liberará y podrás elegir otro.')) {
+                try {
+                    // Eliminar la reserva actual
+                    await deleteReservation(email, firebaseKey);
+                    
+                    // Cerrar el modal y limpiar el formulario
+                    hideCancelModal();
+                    
+                    // Mensaje al usuario
+                    alert('✅ Tu reserva anterior fue cancelada. Ahora puedes seleccionar un nuevo asiento.');
+                    
+                    // Resetear el formulario pero mantener el email
+                    const emailActual = email;
+                    resetForm();
+                    document.getElementById('email').value = emailActual;
+                    
+                    // Si el usuario vuelve a avanzar, podrá seleccionar nuevo asiento
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('❌ Error al cambiar la reserva. Intenta de nuevo.');
+                }
+            }
+        };
+
+        window.confirmDelete = function(email, firebaseKey) {
+            if (confirm('¿Estás seguro de que deseas cancelar tu reserva? Esta acción no se puede deshacer.')) {
+                deleteReservation(email, firebaseKey);
+            }
+        };
+
+        async function deleteReservation(email, firebaseKey) {
+            const resultDiv = document.getElementById('cancelResult');
+            resultDiv.innerHTML = '<p class="text-gray-600">🔄 Cancelando reserva...</p>';
+
+            try {
+                // Eliminar de Firebase
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas/${firebaseKey}.json`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    resultDiv.innerHTML = `
+                        <div class="bg-green-50 border border-green-300 rounded-lg p-4">
+                            <p class="font-semibold text-green-900 mb-2">✅ Reserva cancelada exitosamente</p>
+                            <p class="text-green-800">Ya puedes cerrar esta ventana y hacer una nueva inscripción si lo deseas.</p>
+                        </div>`;
+                    
+                    // Recargar asientos si estamos en ese paso (sin parpadeo)
+                    if (window.App.currentStep === 4) {
+                        // Resetear el estado previo para forzar actualización
+                        previousOccupiedSeats = null;
+                        setTimeout(() => loadBusSeats(false), 2000);
+                    }
+                } else {
+                    resultDiv.innerHTML = '<p class="text-red-600">❌ Error al cancelar la reserva. Intenta de nuevo.</p>';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = '<p class="text-red-600">❌ Error al cancelar la reserva. Intenta de nuevo.</p>';
+            }
+        }
+
+        function showFinalMessage(type) {
+            document.querySelectorAll('.step').forEach(el => el.classList.add('hidden'));
+            document.getElementById('finalMessage').classList.remove('hidden');
+            
+            const messageDiv = document.getElementById('messageContent');
+            
+            if (type === 'no-asiste') {
+                messageDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">😢</div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Qué lástima!</h2>
+                        <p class="text-gray-600 mb-4">Esperamos verte en próximas actividades.</p>
+                        <p class="text-sm text-gray-500">Si cambias de opinión, puedes volver a inscribirte.</p>
+                    </div>
+                `;
+            } else if (type === 'transporte-propio') {
+                messageDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">🚗</div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Inscripción Confirmada!</h2>
+                        <p class="text-gray-600 mb-4">Has confirmado tu asistencia con transporte propio.</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p class="font-semibold text-blue-900">Datos de tu reserva:</p>
+                            <p class="text-blue-800">${window.App.userData.nombre} ${window.App.userData.apellido}</p>
+                            <p class="text-blue-700 text-sm">${window.App.userData.email}</p>
+                        </div>
+                        <p class="text-sm text-gray-500">Te enviaremos más detalles por email.</p>
+                    </div>
+                `;
+            } else if (type === 'reserva-completa') {
+                messageDiv.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-6xl mb-4">✅</div>
+                        <h2 class="text-2xl font-bold text-gray-800 mb-4">¡Reserva Confirmada!</h2>
+                        <p class="text-gray-600 mb-4">Tu asiento en el bus ha sido reservado.</p>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                            <p class="font-semibold text-blue-900">Datos de tu reserva:</p>
+                            <p class="text-blue-800">${window.App.userData.nombre} ${window.App.userData.apellido}</p>
+                            <p class="text-blue-700 text-sm">${window.App.userData.email}</p>
+                            <p class="text-xl font-bold text-blue-900 mt-2">Asiento: ${window.App.userData.asiento}</p>
+                        </div>
+                        <p class="text-sm text-gray-500">Te enviaremos la confirmación por email.</p>
+                    </div>
+                `;
+            }
+        }
+
+        window.resetForm = function() {
+            window.App = {
+                currentStep: 1,
+                userData: {},
+                selectedSeat: null,
+                reservationId: null
+            };
+            document.getElementById('inscripcionForm').reset();
+            
+            // Mostrar nuevamente el panel de información importante
+            const infoPanel = document.getElementById('infoImportante');
+            if (infoPanel) {
+                infoPanel.classList.remove('hidden');
+            }
+            
+            showStep(1);
+        };
+    </script>
+
+    <style>
+        .step-indicator {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #e5e7eb;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .step-indicator.active {
+            background-color: #2563eb;
+            color: white;
+        }
+        
+        .step-indicator-line {
+            height: 2px;
+            flex: 1;
+            background-color: #e5e7eb;
+            transition: all 0.3s;
+        }
+        
+        .step-indicator.active ~ .step-indicator-line {
+            background-color: #2563eb;
+        }
+        
+        /* Animación de carga para botones */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Animación de pulso para el botón de gestionar reserva */
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 30px rgba(249, 115, 22, 0.2);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(249, 115, 22, 0.6), 0 0 50px rgba(249, 115, 22, 0.4);
+                transform: scale(1.02);
+            }
+        }
+        
+        .gestionar-reserva-btn {
+            animation: pulse-glow 2s ease-in-out infinite;
+        }
+        
+        button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen py-8 px-4 overflow-hidden">
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+        <div class="w-full max-w-2xl rounded-2xl border-4 border-yellow-400 bg-white/95 shadow-2xl">
+            <div class="bg-yellow-400 py-3 text-center text-lg font-semibold uppercase tracking-wide text-gray-900">
+                Atención Docentes
+            </div>
+            <div class="space-y-4 px-6 py-6 text-center text-gray-800">
+                <p class="text-2xl font-extrabold text-red-600">Inscripciones Cerradas</p>
+                <p class="text-lg leading-relaxed">
+                    El formulario del Paseo de Docentes ya no acepta nuevas inscripciones.
+                    Si necesitas realizar consultas sobre tu registro, comunícate con la coordinación.
+                </p>
+                <div class="mx-auto h-2 w-40 bg-gradient-to-r from-yellow-500 via-black to-yellow-500"></div>
+                <p class="text-sm text-gray-600">Gracias por tu interés y participación.</p>
+            </div>
+        </div>
+    </div>
+    <div class="max-w-4xl mx-auto">
+        
+        <!-- 🚧 MENSAJE DE FORMULARIO CERRADO 🚧 -->
+        <div class="bg-red-600 border-8 border-yellow-400 rounded-xl shadow-2xl p-8 mb-8 relative overflow-hidden">
+            <!-- Cintas de advertencia -->
+            <div class="absolute top-0 left-0 right-0 h-12 bg-yellow-400 transform -rotate-3 flex items-center justify-center gap-8">
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <div class="inline-block bg-white rounded-full p-6 mb-4">
+                    <svg class="w-20 h-20 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                    </svg>
+                </div>
+                
+                <h2 class="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
+                    📋 INSCRIPCIONES CERRADAS
+                </h2>
+                
+                <div class="bg-white rounded-lg p-6 mb-4 max-w-2xl mx-auto">
+                    <p class="text-2xl font-bold text-red-600 mb-3">
+                        🔒 El plazo de inscripción ha finalizado
+                    </p>
+                    <p class="text-gray-700 text-lg mb-2">
+                        La fecha límite era el <strong>Lunes 20 de Octubre de 2025</strong>
+                    </p>
+                    <p class="text-gray-600 text-base">
+                        Ya no es posible realizar nuevas inscripciones ni modificar reservas existentes.
+                    </p>
+                </div>
+                
+                <div class="bg-yellow-100 border-4 border-yellow-400 rounded-lg p-4 max-w-2xl mx-auto">
+                    <p class="text-gray-800 font-semibold mb-2">
+                        ✅ Si ya te inscribiste, tu reserva está confirmada
+                    </p>
+                    <p class="text-gray-600 text-sm">
+                        Revisa el grupo de WhatsApp para más información sobre el paseo del <strong>Sábado 08 de Noviembre</strong>
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Cinta inferior -->
+            <div class="absolute bottom-0 left-0 right-0 h-12 bg-yellow-400 transform rotate-3 flex items-center justify-center gap-8">
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+                <span class="text-black font-black text-lg">⚠️ CERRADO</span>
+            </div>
+        </div>
+        
+        <!-- Formulario original (oculto) -->
+        <div style="display: none;">
+        
+        <div class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-2">🏖️ Paseo de Docentes 2024</h1>
+            <p class="text-gray-600 text-lg">Inscripción y Reserva de Asientos</p>
+            <p class="text-blue-600 font-semibold mt-2">📅 Sábado 08 de Noviembre - 10% SNED</p>
+            
+            <!-- Botón de gestión de reserva destacado -->
+            <div class="mt-6 flex justify-center">
+                <button onclick="showCancelModal()" 
+                        class="gestionar-reserva-btn bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-bold py-3 px-6 rounded-lg shadow-lg border-4 border-orange-300 transform hover:scale-105 transition-all">
+                    <span class="flex items-center gap-2">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
+                        </svg>
+                        <span>¿Ya te inscribiste? Gestiona tu reserva aquí</span>
+                    </span>
+                </button>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between max-w-2xl mx-auto">
+                <div class="step-indicator active">1</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator">2</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator">3</div>
+                <div class="step-indicator-line"></div>
+                <div class="step-indicator">4</div>
+            </div>
+            <div class="flex justify-between text-xs text-gray-600 mt-2 max-w-2xl mx-auto">
+                <span>Datos</span>
+                <span>Asistencia</span>
+                <span>Transporte</span>
+                <span>Asiento</span>
+            </div>
+        </div>
+
+        <!-- Información Importante (Solo visible en paso 1) -->
+        <div id="infoImportante" class="bg-gradient-to-r from-yellow-50 to-orange-50 border-2 border-orange-300 rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-orange-800 mb-4 flex items-center gap-2">
+                ⚠️ Información Importante - Lee antes de inscribirte
+            </h2>
+            
+            <div class="space-y-4">
+                <!-- Grupo WhatsApp -->
+                <div class="bg-white rounded-lg p-4 border-l-4 border-green-500">
+                    <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <span class="text-green-600">📱 1.</span> Grupo de WhatsApp Obligatorio
+                    </h3>
+                    <p class="text-gray-700 text-sm mb-3">
+                        Es <strong>OBLIGATORIO</strong> estar en el grupo de difusión de WhatsApp para recibir información sobre horarios, punto de encuentro y novedades del paseo.
+                    </p>
+                    <a href="https://chat.whatsapp.com/CVg4jRdMUcnJwQY0pBpWVg" 
+                       target="_blank"
+                       class="inline-flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition-all transform hover:scale-105 shadow-md">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                        </svg>
+                        <span>Unirse al Grupo de WhatsApp</span>
+                    </a>
+                </div>
+
+                <!-- Instrucciones -->
+                <div class="bg-white rounded-lg p-4 border-l-4 border-blue-500">
+                    <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <span class="text-blue-600">📝 2.</span> Instrucciones de Inscripción
+                    </h3>
+                    <p class="text-gray-700 text-sm">
+                        Aquí te inscribes para el paseo. <strong>Solo los inscritos hasta el día lunes 20 de octubre</strong> podrán asistir. No se aceptarán inscripciones después de esa fecha.
+                    </p>
+                </div>
+
+                <!-- Lugar y Servicios -->
+                <div class="bg-white rounded-lg p-4 border-l-4 border-purple-500">
+                    <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <span class="text-purple-600">🏖️ 3.</span> Lugar y Servicios
+                    </h3>
+                    <p class="text-gray-700 text-sm mb-2">
+                        <strong>Destino:</strong> Donde Gilberto, Iloca
+                    </p>
+                    <p class="text-gray-700 text-sm">
+                        <strong>Incluye:</strong> Aperitivo, Almuerzo, Once e Instalaciones completas
+                    </p>
+                </div>
+
+                <!-- Requisitos -->
+                <div class="bg-white rounded-lg p-4 border-l-4 border-red-500">
+                    <h3 class="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                        <span class="text-red-600">✓ 4.</span> Requisitos Obligatorios
+                    </h3>
+                    <ul class="text-gray-700 text-sm space-y-1 ml-4">
+                        <li class="flex items-start gap-2">
+                            <span class="text-red-600 mt-0.5">•</span>
+                            <span><strong>Ser docente</strong> del establecimiento</span>
+                        </li>
+                        <li class="flex items-start gap-2">
+                            <span class="text-red-600 mt-0.5">•</span>
+                            <span><strong>Llevar al menos 3 meses</strong> en el establecimiento al 08 de noviembre</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="mt-4 p-3 bg-orange-100 border border-orange-300 rounded-lg">
+                <p class="text-center text-orange-800 font-semibold text-sm">
+                    ⏰ Fecha límite de inscripción: <span class="text-lg">Lunes 20 de Octubre 2025</span>
+                </p>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow-xl p-8">
+            <form id="inscripcionForm">
+                <div id="step1" class="step">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">Datos Personales</h2>
+                    
+                    <div class="grid md:grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Nombre</label>
+                            <input type="text" id="nombre" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Apellido</label>
+                            <input type="text" id="apellido" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                            <input type="email" id="email" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-gray-700 font-semibold mb-2">Teléfono</label>
+                            <input type="tel" id="telefono" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" required>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+
+                <div id="step2" class="step hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">¿Confirmas tu asistencia?</h2>
+                    
+                    <div class="flex gap-4 mb-8 justify-center">
+                        <button type="button" onclick="setAsistencia('si')" class="asistencia-btn bg-white text-gray-700 px-8 py-4 rounded-lg font-semibold border-2 border-gray-300 hover:border-blue-500 transition">
+                            ✅ Sí, asistiré
+                        </button>
+                        <button type="button" onclick="setAsistencia('no')" class="asistencia-btn bg-white text-gray-700 px-8 py-4 rounded-lg font-semibold border-2 border-gray-300 hover:border-blue-500 transition">
+                            ❌ No podré asistir
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="previousStep()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition">
+                            Anterior
+                        </button>
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+
+                <div id="step3" class="step hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6">¿Cómo llegarás al paseo?</h2>
+                    
+                    <div class="flex gap-4 mb-8 justify-center">
+                        <button type="button" onclick="setTransporte('bus')" class="transporte-btn bg-white text-gray-700 px-8 py-4 rounded-lg font-semibold border-2 border-gray-300 hover:border-blue-500 transition">
+                            🚌 En el bus escolar
+                        </button>
+                        <button type="button" onclick="setTransporte('propio')" class="transporte-btn bg-white text-gray-700 px-8 py-4 rounded-lg font-semibold border-2 border-gray-300 hover:border-blue-500 transition">
+                            🚗 Transporte propio
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="previousStep()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition">
+                            Anterior
+                        </button>
+                        <button type="button" onclick="nextStep()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+
+                <div id="step4" class="step hidden">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Selecciona tu asiento</h2>
+                    
+                    <div class="mb-6 p-4 bg-gradient-to-r from-blue-50 to-green-50 border-l-4 border-blue-500 rounded-lg">
+                        <p class="text-center text-gray-700 font-medium">
+                            💙 <strong>Mensaje solidario:</strong> Si tiene quién lo lleve o movilización propia, ceda su asiento a quien no tenga esa opción.
+                        </p>
+                    </div>
+                    
+                    <div id="seatsContainer" class="mb-8"></div>
+                    
+                    <div class="flex justify-between">
+                        <button type="button" onclick="previousStep()" class="bg-gray-300 text-gray-700 px-6 py-2 rounded-lg font-semibold hover:bg-gray-400 transition">
+                            Anterior
+                        </button>
+                        <button type="button" onclick="confirmReservation()" class="bg-green-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-green-700 transition">
+                            Confirmar Reserva
+                        </button>
+                    </div>
+                </div>
+
+                <div id="finalMessage" class="hidden">
+                    <div id="messageContent"></div>
+                    <div class="text-center mt-6">
+                        <button type="button" onclick="resetForm()" class="bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition">
+                            Nueva Inscripción
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center mt-8 text-gray-600">
+            <p>¿Necesitas ayuda? Contacta por WhatsApp: <a href="https://wa.me/56988138929" target="_blank" class="text-green-600 hover:underline font-semibold">+569 88138929</a></p>
+        </div>
+    </div>
+
+    <!-- Modal para gestionar reserva -->
+    <div id="cancelModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-lg shadow-2xl max-w-md w-full p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">📋 Gestionar Reserva</h2>
+                <button onclick="hideCancelModal()" class="text-gray-500 hover:text-gray-700 text-2xl font-bold">
+                    ×
+                </button>
+            </div>
+            
+            <p class="text-gray-600 mb-4">
+                Ingresa tu email para ver, cambiar o cancelar tu reserva:
+            </p>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 font-semibold mb-2">Email</label>
+                <input type="email" 
+                       id="cancelEmail" 
+                       placeholder="tu@email.com"
+                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                       onkeypress="if(event.key==='Enter') checkReservation()">
+            </div>
+            
+            <button onclick="checkReservation()" 
+                    class="w-full bg-blue-600 text-white px-4 py-3 rounded-lg font-semibold hover:bg-blue-700 transition mb-4">
+                🔍 Buscar mi reserva
+            </button>
+            
+            <div id="cancelResult" class="mt-4"></div>
+            
+            <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-xs text-gray-500 text-center">
+                    Podés cambiar de asiento o cancelar tu reserva completamente.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

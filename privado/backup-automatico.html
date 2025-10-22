@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Backup Automático</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-6">
+    
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-teal-600 p-6 text-white">
+                <h1 class="text-3xl font-bold flex items-center">
+                    <i class="fas fa-cloud-upload-alt mr-3"></i>
+                    Sistema de Backup Automático
+                </h1>
+                <p class="text-green-100 mt-2">Protección diaria de datos por docente</p>
+            </div>
+
+            <div class="p-6">
+                <!-- ESTADO DEL BACKUP -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4 text-center">
+                        <i class="fas fa-calendar text-3xl text-blue-600 mb-2"></i>
+                        <p class="text-sm text-blue-700 font-semibold">Último Backup</p>
+                        <p id="ultimoBackup" class="text-lg font-bold text-blue-900">Nunca</p>
+                    </div>
+                    <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 text-center">
+                        <i class="fas fa-check-circle text-3xl text-green-600 mb-2"></i>
+                        <p class="text-sm text-green-700 font-semibold">Backups Totales</p>
+                        <p id="totalBackups" class="text-lg font-bold text-green-900">0</p>
+                    </div>
+                    <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 text-center">
+                        <i class="fas fa-clock text-3xl text-purple-600 mb-2"></i>
+                        <p class="text-sm text-purple-700 font-semibold">Próximo Backup</p>
+                        <p id="proximoBackup" class="text-lg font-bold text-purple-900">--:--</p>
+                    </div>
+                </div>
+
+                <!-- CONFIGURACIÓN -->
+                <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-6 mb-6">
+                    <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                        <i class="fas fa-cog mr-2 text-indigo-600"></i>
+                        Configuración del Backup Automático
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-hourglass-half mr-1"></i>
+                                Intervalo de Backup
+                            </label>
+                            <select id="intervaloBackup" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2">
+                                <option value="1">Cada 1 hora (Prueba)</option>
+                                <option value="6">Cada 6 horas</option>
+                                <option value="12">Cada 12 horas</option>
+                                <option value="24" selected>Cada 24 horas (Diario)</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                <i class="fas fa-database mr-1"></i>
+                                Máximo de Backups por Docente
+                            </label>
+                            <select id="maxBackups" class="w-full border-2 border-gray-300 rounded-lg px-3 py-2">
+                                <option value="5">5 backups</option>
+                                <option value="10" selected>10 backups</option>
+                                <option value="20">20 backups</option>
+                                <option value="30">30 backups</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center mb-4">
+                        <input type="checkbox" id="autoBackup" class="mr-2 w-5 h-5">
+                        <label for="autoBackup" class="text-gray-700 font-semibold">
+                            Activar Backup Automático
+                        </label>
+                    </div>
+
+                    <button onclick="guardarConfiguracion()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 px-6 rounded-lg font-semibold">
+                        <i class="fas fa-save mr-2"></i>Guardar Configuración
+                    </button>
+                </div>
+
+                <!-- ACCIONES MANUALES -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <button onclick="ejecutarBackupManual()" class="bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-semibold">
+                        <i class="fas fa-play mr-2"></i>Ejecutar Backup Ahora
+                    </button>
+                    <button onclick="verHistorialBackups()" class="bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold">
+                        <i class="fas fa-history mr-2"></i>Ver Historial
+                    </button>
+                </div>
+
+                <!-- HISTORIAL -->
+                <div id="historialBackups" class="hidden bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-gray-800 mb-3">📜 Historial de Backups</h3>
+                    <div id="listaBackups" class="space-y-2 max-h-96 overflow-y-auto">
+                        <!-- Se llena dinámicamente -->
+                    </div>
+                </div>
+
+                <!-- LOG -->
+                <div class="bg-gray-900 rounded-lg p-4 text-green-400 font-mono text-sm h-64 overflow-y-auto mt-6">
+                    <div id="log" class="space-y-1">
+                        <p class="text-yellow-400">[SISTEMA] Backup automático iniciado...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de docentes
+        const DOCENTES = ['francisco', 'javiera', 'docente3', 'docente4'];
+        const DOCENTES_NOMBRES = {
+            francisco: 'Francisco Javier',
+            javiera: 'Javiera',
+            docente3: 'Valentina',
+            docente4: 'Marcelo'
+        };
+
+        let intervaloBackupActivo = null;
+
+        // Log
+        function log(mensaje, tipo = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colores = {
+                info: 'text-blue-400',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400'
+            };
+            
+            const p = document.createElement('p');
+            p.className = colores[tipo];
+            p.textContent = `[${timestamp}] ${mensaje}`;
+            logDiv.appendChild(p);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Crear backup de un docente
+        function crearBackupDocente(namespace) {
+            const key = `${namespace}_allCourses`;
+            const data = localStorage.getItem(key);
+            
+            if (!data) {
+                return null;
+            }
+            
+            try {
+                const cursos = JSON.parse(data);
+                const backup = {
+                    docente: DOCENTES_NOMBRES[namespace],
+                    namespace: namespace,
+                    fecha: new Date().toISOString(),
+                    cursos: cursos,
+                    totalCursos: cursos.length,
+                    totalEstudiantes: cursos.reduce((sum, c) => sum + (c.students?.length || 0), 0)
+                };
+                
+                // Guardar en historial
+                const historialKey = `backup_historial_${namespace}`;
+                let historial = JSON.parse(localStorage.getItem(historialKey) || '[]');
+                
+                historial.push({
+                    fecha: backup.fecha,
+                    cursos: backup.totalCursos,
+                    estudiantes: backup.totalEstudiantes,
+                    datos: backup
+                });
+                
+                // Limitar historial según configuración
+                const maxBackups = parseInt(document.getElementById('maxBackups')?.value || 10);
+                if (historial.length > maxBackups) {
+                    historial = historial.slice(-maxBackups);
+                }
+                
+                localStorage.setItem(historialKey, JSON.stringify(historial));
+                
+                return backup;
+            } catch (e) {
+                log(`Error creando backup de ${namespace}: ${e.message}`, 'error');
+                return null;
+            }
+        }
+
+        // Ejecutar backup de todos los docentes
+        function ejecutarBackupCompleto() {
+            log('🚀 Iniciando backup completo...', 'warning');
+            
+            let exitosos = 0;
+            let fallidos = 0;
+            
+            DOCENTES.forEach(namespace => {
+                const backup = crearBackupDocente(namespace);
+                if (backup) {
+                    log(`✅ Backup creado: ${backup.docente} (${backup.totalCursos} cursos)`, 'success');
+                    exitosos++;
+                } else {
+                    log(`⚠️ Sin datos para: ${DOCENTES_NOMBRES[namespace]}`, 'warning');
+                    fallidos++;
+                }
+            });
+            
+            // Actualizar última fecha de backup
+            localStorage.setItem('ultimo_backup', new Date().toISOString());
+            const totalBackups = parseInt(localStorage.getItem('total_backups') || 0) + exitosos;
+            localStorage.setItem('total_backups', totalBackups);
+            
+            actualizarEstado();
+            
+            log(`✅ Backup completado: ${exitosos} exitosos, ${fallidos} sin datos`, 'success');
+            
+            return exitosos > 0;
+        }
+
+        // Backup manual
+        function ejecutarBackupManual() {
+            const resultado = ejecutarBackupCompleto();
+            if (resultado) {
+                alert('✅ Backup manual completado exitosamente.\n\nRevisa el log para más detalles.');
+            } else {
+                alert('⚠️ No se encontraron datos para hacer backup.');
+            }
+        }
+
+        // Guardar configuración
+        function guardarConfiguracion() {
+            const intervalo = document.getElementById('intervaloBackup').value;
+            const maxBackups = document.getElementById('maxBackups').value;
+            const autoBackup = document.getElementById('autoBackup').checked;
+            
+            localStorage.setItem('backup_intervalo', intervalo);
+            localStorage.setItem('backup_max', maxBackups);
+            localStorage.setItem('backup_auto', autoBackup);
+            
+            if (autoBackup) {
+                iniciarBackupAutomatico();
+                log(`✅ Backup automático activado (cada ${intervalo}h)`, 'success');
+            } else {
+                detenerBackupAutomatico();
+                log(`⏸️ Backup automático desactivado`, 'warning');
+            }
+            
+            actualizarEstado();
+            alert('✅ Configuración guardada correctamente.');
+        }
+
+        // Iniciar backup automático
+        function iniciarBackupAutomatico() {
+            detenerBackupAutomatico(); // Limpiar cualquier intervalo previo
+            
+            const intervalo = parseInt(localStorage.getItem('backup_intervalo') || 24);
+            const milisegundos = intervalo * 60 * 60 * 1000; // Horas a milisegundos
+            
+            log(`⏰ Backup automático programado cada ${intervalo} hora(s)`, 'info');
+            
+            intervaloBackupActivo = setInterval(() => {
+                log('🕐 Ejecutando backup automático programado...', 'warning');
+                ejecutarBackupCompleto();
+            }, milisegundos);
+        }
+
+        // Detener backup automático
+        function detenerBackupAutomatico() {
+            if (intervaloBackupActivo) {
+                clearInterval(intervaloBackupActivo);
+                intervaloBackupActivo = null;
+            }
+        }
+
+        // Actualizar estado
+        function actualizarEstado() {
+            const ultimoBackup = localStorage.getItem('ultimo_backup');
+            const totalBackups = localStorage.getItem('total_backups') || 0;
+            const intervalo = parseInt(localStorage.getItem('backup_intervalo') || 24);
+            
+            document.getElementById('totalBackups').textContent = totalBackups;
+            
+            if (ultimoBackup) {
+                const fecha = new Date(ultimoBackup);
+                document.getElementById('ultimoBackup').textContent = 
+                    fecha.toLocaleDateString() + ' ' + fecha.toLocaleTimeString();
+                
+                // Calcular próximo backup
+                const proximo = new Date(fecha.getTime() + (intervalo * 60 * 60 * 1000));
+                document.getElementById('proximoBackup').textContent = 
+                    proximo.toLocaleDateString() + ' ' + proximo.toLocaleTimeString();
+            } else {
+                document.getElementById('ultimoBackup').textContent = 'Nunca';
+                document.getElementById('proximoBackup').textContent = 'No programado';
+            }
+        }
+
+        // Ver historial
+        function verHistorialBackups() {
+            const historialDiv = document.getElementById('historialBackups');
+            const listaDiv = document.getElementById('listaBackups');
+            
+            historialDiv.classList.toggle('hidden');
+            
+            if (!historialDiv.classList.contains('hidden')) {
+                let html = '';
+                
+                DOCENTES.forEach(namespace => {
+                    const historialKey = `backup_historial_${namespace}`;
+                    const historial = JSON.parse(localStorage.getItem(historialKey) || '[]');
+                    
+                    html += `<div class="bg-white border-2 border-gray-300 rounded-lg p-4 mb-3">
+                        <h4 class="font-bold text-gray-800 mb-2">${DOCENTES_NOMBRES[namespace]}</h4>`;
+                    
+                    if (historial.length === 0) {
+                        html += `<p class="text-gray-600 text-sm">Sin backups</p>`;
+                    } else {
+                        historial.slice(-5).reverse().forEach((backup, i) => {
+                            const fecha = new Date(backup.fecha);
+                            html += `
+                                <div class="text-sm py-2 border-b border-gray-200">
+                                    <span class="font-semibold">${fecha.toLocaleDateString()} ${fecha.toLocaleTimeString()}</span>
+                                    - ${backup.cursos} cursos, ${backup.estudiantes} estudiantes
+                                    <button onclick="restaurarBackupEspecifico('${namespace}', ${historial.length - 1 - i})" 
+                                            class="text-blue-600 hover:text-blue-700 text-xs ml-2">
+                                        <i class="fas fa-undo"></i> Restaurar
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    html += `</div>`;
+                });
+                
+                listaDiv.innerHTML = html;
+            }
+        }
+
+        // Restaurar backup específico
+        function restaurarBackupEspecifico(namespace, index) {
+            const historialKey = `backup_historial_${namespace}`;
+            const historial = JSON.parse(localStorage.getItem(historialKey) || '[]');
+            
+            if (historial[index]) {
+                const backup = historial[index].datos;
+                
+                if (confirm(`¿Restaurar backup de ${backup.docente}?\n\nFecha: ${new Date(backup.fecha).toLocaleString()}\nCursos: ${backup.totalCursos}`)) {
+                    const key = `${namespace}_allCourses`;
+                    localStorage.setItem(key, JSON.stringify(backup.cursos));
+                    log(`✅ Backup restaurado: ${backup.docente}`, 'success');
+                    alert('✅ Backup restaurado exitosamente.');
+                }
+            }
+        }
+
+        // Cargar configuración guardada
+        function cargarConfiguracion() {
+            const intervalo = localStorage.getItem('backup_intervalo') || '24';
+            const maxBackups = localStorage.getItem('backup_max') || '10';
+            const autoBackup = localStorage.getItem('backup_auto') === 'true';
+            
+            document.getElementById('intervaloBackup').value = intervalo;
+            document.getElementById('maxBackups').value = maxBackups;
+            document.getElementById('autoBackup').checked = autoBackup;
+            
+            if (autoBackup) {
+                iniciarBackupAutomatico();
+            }
+            
+            actualizarEstado();
+            log('Configuración cargada', 'info');
+        }
+
+        // Inicializar
+        cargarConfiguracion();
+        setInterval(actualizarEstado, 60000); // Actualizar cada minuto
+        
+        log('✅ Sistema de backup listo', 'success');
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,889 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Gestor de Planes y Programas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+    
+    <div class="max-w-7xl mx-auto">
+        
+        <!-- HEADER -->
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-6 text-white">
+                <h1 class="text-3xl font-bold flex items-center">
+                    <i class="fas fa-book-open mr-3"></i>
+                    Gestor de Planes y Programas Ministeriales
+                </h1>
+                <p class="text-blue-100 mt-2">Sistema de carga y consulta de currículum nacional - 5° Básico a 2° Medio</p>
+            </div>
+
+            <!-- NAVEGACIÓN RÁPIDA -->
+            <div class="bg-indigo-50 p-4 border-b-2 border-indigo-200">
+                <div class="flex flex-wrap gap-2">
+                    <button onclick="mostrarSeccion('cargar')" class="nav-btn bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-upload mr-2"></i>Cargar Plan
+                    </button>
+                    <button onclick="mostrarSeccion('consultar')" class="nav-btn bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-search mr-2"></i>Consultar
+                    </button>
+                    <button onclick="mostrarSeccion('listar')" class="nav-btn bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-list mr-2"></i>Ver Todos
+                    </button>
+                    <button onclick="exportarTodo()" class="nav-btn bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-download mr-2"></i>Exportar
+                    </button>
+                    <button onclick="importarJSON()" class="nav-btn bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold">
+                        <i class="fas fa-file-import mr-2"></i>Importar JSON
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECCIÓN: CARGAR PLAN -->
+        <div id="seccionCargar" class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-plus-circle mr-2 text-green-600"></i>
+                Cargar Nuevo Plan y Programa
+            </h2>
+
+            <form id="formCargarPlan" class="space-y-4">
+                <!-- NIVEL Y ASIGNATURA -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-graduation-cap mr-1"></i>Nivel
+                        </label>
+                        <select id="inputNivel" required class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500">
+                            <option value="">Seleccionar...</option>
+                            <option value="5° Básico">5° Básico</option>
+                            <option value="6° Básico">6° Básico</option>
+                            <option value="7° Básico">7° Básico</option>
+                            <option value="8° Básico">8° Básico</option>
+                            <option value="1° Medio">1° Medio</option>
+                            <option value="2° Medio">2° Medio</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">
+                            <i class="fas fa-book mr-1"></i>Asignatura
+                        </label>
+                        <select id="inputAsignatura" required class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 focus:border-blue-500">
+                            <option value="">Seleccionar...</option>
+                            <option value="Lenguaje y Comunicación">Lenguaje y Comunicación</option>
+                            <option value="Matemática">Matemática</option>
+                            <option value="Historia, Geografía y Ciencias Sociales">Historia, Geografía y Ciencias Sociales</option>
+                            <option value="Ciencias Naturales">Ciencias Naturales</option>
+                            <option value="Inglés">Inglés</option>
+                            <option value="Artes Visuales">Artes Visuales</option>
+                            <option value="Música">Música</option>
+                            <option value="Educación Física">Educación Física</option>
+                            <option value="Tecnología">Tecnología</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MÉTODO DE CARGA -->
+                <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                    <h3 class="font-bold text-gray-800 mb-3">Método de Carga:</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="metodoCarga" value="pdf" checked class="mr-2">
+                            <span class="font-semibold">📄 Subir PDF Ministerial (Recomendado)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="metodoCarga" value="texto" class="mr-2">
+                            <span class="font-semibold">Pegar Texto</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="metodoCarga" value="estructurado" class="mr-2">
+                            <span class="font-semibold">Ingreso Estructurado (Manual)</span>
+                        </label>
+                        <label class="flex items-center cursor-pointer">
+                            <input type="radio" name="metodoCarga" value="json" class="mr-2">
+                            <span class="font-semibold">JSON</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- ÁREA PDF -->
+                <div id="areaPDF" class="metodo-carga">
+                    <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4 mb-4">
+                        <h3 class="font-bold text-green-800 mb-2">
+                            <i class="fas fa-file-pdf mr-2"></i>Sube el PDF del plan ministerial
+                        </h3>
+                        <p class="text-sm text-green-700 mb-3">
+                            El sistema extraerá automáticamente: OA, Indicadores, Actitudes, Unidades y Propósitos.
+                        </p>
+                        <input type="file" id="inputPDF" accept=".pdf" class="w-full border-2 border-green-400 rounded-lg px-4 py-2 bg-white">
+                        <button type="button" onclick="procesarPDF()" class="mt-3 w-full bg-green-600 hover:bg-green-700 text-white py-2 px-4 rounded-lg font-semibold">
+                            <i class="fas fa-cogs mr-2"></i>Procesar PDF
+                        </button>
+                    </div>
+                    
+                    <div id="vistaPreviaPDF" class="hidden bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                        <h3 class="font-bold text-gray-800 mb-3">📋 Vista Previa del Contenido Extraído:</h3>
+                        <div id="contenidoExtraido" class="space-y-4 max-h-96 overflow-y-auto">
+                            <!-- Se llena automáticamente -->
+                        </div>
+                        <div class="mt-4 flex gap-2">
+                            <button type="button" onclick="confirmarCargaPDF()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold">
+                                <i class="fas fa-check mr-2"></i>Confirmar y Guardar
+                            </button>
+                            <button type="button" onclick="cancelarPDF()" class="bg-gray-500 hover:bg-gray-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-times mr-2"></i>Cancelar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ÁREA DE TEXTO PARA PEGAR -->
+                <div id="areaTexto" class="metodo-carga">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-paste mr-1"></i>Pega aquí el texto del plan ministerial:
+                    </label>
+                    <textarea id="inputTexto" rows="15" placeholder="Ejemplo:
+UNIDAD 1: NARRATIVA
+Objetivos de Aprendizaje:
+- OA 1: Leer habitualmente para aprender y recrearse...
+- OA 2: Reflexionar sobre las diferentes dimensiones...
+
+Contenidos:
+- Tipos de narradores
+- Estructura del relato
+..." class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 font-mono text-sm"></textarea>
+                    <p class="text-xs text-gray-600 mt-2">
+                        💡 Tip: Copia y pega directamente desde el documento ministerial. El sistema procesará automáticamente el texto.
+                    </p>
+                </div>
+
+                <!-- ÁREA JSON -->
+                <div id="areaJSON" class="metodo-carga hidden">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-code mr-1"></i>JSON Estructurado:
+                    </label>
+                    <textarea id="inputJSON" rows="15" placeholder='{
+  "unidades": [
+    {
+      "numero": 1,
+      "nombre": "Unidad 1: Narrativa",
+      "objetivos": ["OA 1: ...", "OA 2: ..."],
+      "contenidos": ["...", "..."],
+      "habilidades": ["...", "..."],
+      "actitudes": ["...", "..."]
+    }
+  ]
+}' class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 font-mono text-sm"></textarea>
+                </div>
+
+                <!-- ÁREA MANUAL -->
+                <div id="areaManual" class="metodo-carga hidden">
+                    <div id="contenedorUnidades" class="space-y-4">
+                        <!-- Se genera dinámicamente -->
+                    </div>
+                    <button type="button" onclick="agregarUnidad()" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg mt-2">
+                        <i class="fas fa-plus mr-2"></i>Agregar Unidad
+                    </button>
+                </div>
+
+                <!-- ÁREA ESTRUCTURADO (COMPLETO) -->
+                <div id="areaEstructurado" class="metodo-carga hidden">
+                    <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4 mb-4">
+                        <h3 class="font-bold text-purple-800 mb-2">Ingreso Estructurado Completo</h3>
+                        <p class="text-sm text-purple-700">Complete todos los campos para cada unidad.</p>
+                    </div>
+                    <div id="contenedorUnidadesEstructurado" class="space-y-6">
+                        <!-- Plantilla de unidad estructurada -->
+                        <div class="unidad-estructurada bg-white border-2 border-purple-300 rounded-lg p-4">
+                            <h4 class="font-bold text-gray-800 mb-3">Unidad 1</h4>
+                            
+                            <div class="space-y-3">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nombre de la Unidad:</label>
+                                    <input type="text" class="w-full border-2 border-gray-300 rounded px-3 py-2" placeholder="Ej: Narrativa y comprensión lectora">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Propósito:</label>
+                                    <textarea rows="3" class="w-full border-2 border-gray-300 rounded px-3 py-2" placeholder="Describe el propósito general de la unidad..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Objetivos de Aprendizaje (OA):</label>
+                                    <textarea rows="4" class="w-full border-2 border-gray-300 rounded px-3 py-2 font-mono text-sm" placeholder="OA 1: Descripción...&#10;OA 2: Descripción..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Indicadores de Evaluación:</label>
+                                    <textarea rows="4" class="w-full border-2 border-gray-300 rounded px-3 py-2 font-mono text-sm" placeholder="- Indicador 1...&#10;- Indicador 2..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1">Actitudes:</label>
+                                    <textarea rows="3" class="w-full border-2 border-gray-300 rounded px-3 py-2 font-mono text-sm" placeholder="- Actitud 1...&#10;- Actitud 2..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" onclick="agregarUnidadEstructurada()" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg mt-3">
+                        <i class="fas fa-plus mr-2"></i>Agregar Otra Unidad
+                    </button>
+                </div>
+
+                <!-- BOTONES DE ACCIÓN -->
+                <div class="flex gap-4">
+                    <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-6 rounded-lg font-bold text-lg">
+                        <i class="fas fa-save mr-2"></i>Guardar Plan
+                    </button>
+                    <button type="button" onclick="limpiarFormulario()" class="bg-gray-500 hover:bg-gray-600 text-white py-3 px-6 rounded-lg font-bold">
+                        <i class="fas fa-eraser mr-2"></i>Limpiar
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SECCIÓN: CONSULTAR -->
+        <div id="seccionConsultar" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-search mr-2 text-blue-600"></i>
+                Consultar Plan
+            </h2>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nivel</label>
+                    <select id="consultaNivel" class="w-full border-2 border-gray-300 rounded-lg px-4 py-2">
+                        <option value="">Todos</option>
+                        <option value="5° Básico">5° Básico</option>
+                        <option value="6° Básico">6° Básico</option>
+                        <option value="7° Básico">7° Básico</option>
+                        <option value="8° Básico">8° Básico</option>
+                        <option value="1° Medio">1° Medio</option>
+                        <option value="2° Medio">2° Medio</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Asignatura</label>
+                    <select id="consultaAsignatura" class="w-full border-2 border-gray-300 rounded-lg px-4 py-2">
+                        <option value="">Todas</option>
+                        <option value="Lenguaje y Comunicación">Lenguaje y Comunicación</option>
+                        <option value="Matemática">Matemática</option>
+                        <option value="Historia, Geografía y Ciencias Sociales">Historia</option>
+                        <option value="Ciencias Naturales">Ciencias Naturales</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="buscarPlanes()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-bold mb-4">
+                <i class="fas fa-search mr-2"></i>Buscar
+            </button>
+
+            <div id="resultadosConsulta" class="space-y-4">
+                <!-- Resultados aquí -->
+            </div>
+        </div>
+
+        <!-- SECCIÓN: LISTAR TODOS -->
+        <div id="seccionListar" class="bg-white rounded-xl shadow-lg p-6 mb-6 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-list mr-2 text-purple-600"></i>
+                Todos los Planes Cargados
+            </h2>
+            <div id="listaTodos" class="space-y-4">
+                <!-- Lista aquí -->
+            </div>
+        </div>
+
+        <!-- LOG -->
+        <div class="bg-gray-900 rounded-xl p-6 text-green-400 font-mono text-sm">
+            <h3 class="text-xl font-bold mb-4 text-white flex items-center">
+                <i class="fas fa-terminal mr-2"></i>Log del Sistema
+            </h3>
+            <div id="log" class="h-48 overflow-y-auto space-y-1">
+                <p class="text-yellow-400">[SISTEMA] Gestor de Planes y Programas iniciado...</p>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Storage key
+        const STORAGE_KEY = 'planes_programas_ministeriales';
+        
+        // Variable temporal para datos extraídos del PDF
+        let datosExtraidosPDF = null;
+
+        // Log
+        function log(mensaje, tipo = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const colores = {
+                info: 'text-blue-400',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400'
+            };
+            
+            const p = document.createElement('p');
+            p.className = colores[tipo];
+            p.textContent = `[${timestamp}] ${mensaje}`;
+            logDiv.appendChild(p);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        // Cambiar método de carga
+        document.querySelectorAll('input[name="metodoCarga"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                document.querySelectorAll('.metodo-carga').forEach(el => el.classList.add('hidden'));
+                
+                if (e.target.value === 'pdf') {
+                    document.getElementById('areaPDF').classList.remove('hidden');
+                } else if (e.target.value === 'texto') {
+                    document.getElementById('areaTexto').classList.remove('hidden');
+                } else if (e.target.value === 'json') {
+                    document.getElementById('areaJSON').classList.remove('hidden');
+                } else if (e.target.value === 'estructurado') {
+                    document.getElementById('areaEstructurado').classList.remove('hidden');
+                } else if (e.target.value === 'manual') {
+                    document.getElementById('areaManual').classList.remove('hidden');
+                }
+            });
+        });
+
+        // ==================== PROCESAMIENTO DE PDF ====================
+        
+        async function procesarPDF() {
+            const fileInput = document.getElementById('inputPDF');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                alert('Por favor selecciona un archivo PDF primero.');
+                return;
+            }
+            
+            log('📄 Procesando PDF...', 'warning');
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                
+                log(`✅ PDF cargado: ${pdf.numPages} páginas`, 'success');
+                
+                // Extraer texto de todas las páginas
+                let textoCompleto = '';
+                for (let i = 1; i <= pdf.numPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    textoCompleto += pageText + '\n';
+                }
+                
+                log('📝 Texto extraído, analizando estructura...', 'info');
+                
+                // Procesar el texto extraído
+                datosExtraidosPDF = procesarTextoPlanMinisterial(textoCompleto);
+                
+                if (!datosExtraidosPDF || !datosExtraidosPDF.unidades || datosExtraidosPDF.unidades.length === 0) {
+                    throw new Error('No se pudieron extraer unidades del PDF. Revisa el formato del documento.');
+                }
+                
+                log(`✅ Encontradas ${datosExtraidosPDF.unidades.length} unidades`, 'success');
+                
+                // Mostrar vista previa
+                mostrarVistaPreviaPDF(datosExtraidosPDF);
+                
+            } catch (error) {
+                log(`❌ Error al procesar PDF: ${error.message}`, 'error');
+                alert(`Error al procesar el PDF:\n\n${error.message}\n\nAsegúrate de que el PDF contiene texto (no es una imagen escaneada).`);
+            }
+        }
+        
+        // Procesar texto del plan ministerial
+        function procesarTextoPlanMinisterial(texto) {
+            const unidades = [];
+            let actitudesGenerales = [];
+            
+            // Extraer actitudes generales (suelen estar al principio)
+            const seccionActitudes = texto.match(/Actitudes?[\s\S]*?(?=Unidad|Objetivos de aprendizaje|$)/i);
+            if (seccionActitudes) {
+                actitudesGenerales = extraerListaItems(seccionActitudes[0]);
+            }
+            
+            // Dividir por unidades
+            const patronUnidad = /Unidad\s+(\d+)[:\s]*([^\n]+)/gi;
+            const matches = [...texto.matchAll(patronUnidad)];
+            
+            matches.forEach((match, index) => {
+                const numeroUnidad = parseInt(match[1]);
+                const nombreUnidad = match[2].trim();
+                
+                // Obtener el texto de esta unidad (hasta la siguiente o el final)
+                const inicioUnidad = match.index;
+                const finUnidad = matches[index + 1] ? matches[index + 1].index : texto.length;
+                const textoUnidad = texto.substring(inicioUnidad, finUnidad);
+                
+                // Extraer propósito
+                const proposito = extraerSeccion(textoUnidad, /Propósito|Resumen de la unidad/i);
+                
+                // Extraer OA
+                const objetivos = extraerObjetivosAprendizaje(textoUnidad);
+                
+                // Extraer indicadores
+                const indicadores = extraerIndicadores(textoUnidad);
+                
+                // Extraer contenidos
+                const contenidos = extraerContenidos(textoUnidad);
+                
+                // Extraer habilidades
+                const habilidades = extraerHabilidades(textoUnidad);
+                
+                const unidad = {
+                    numero: numeroUnidad,
+                    nombre: `Unidad ${numeroUnidad}: ${nombreUnidad}`,
+                    proposito: proposito || 'No especificado',
+                    objetivos: objetivos,
+                    indicadores: indicadores,
+                    contenidos: contenidos,
+                    habilidades: habilidades,
+                    actitudes: actitudesGenerales
+                };
+                
+                unidades.push(unidad);
+            });
+            
+            return { unidades, actitudesGenerales };
+        }
+        
+        // Extraer sección específica
+        function extraerSeccion(texto, patron) {
+            const match = texto.match(new RegExp(`${patron.source}[:\\s]*([\\s\\S]*?)(?=\\n\\n|Objetivos|Indicadores|Habilidades|Contenidos|$)`, 'i'));
+            return match ? match[1].trim() : null;
+        }
+        
+        // Extraer Objetivos de Aprendizaje con números
+        function extraerObjetivosAprendizaje(texto) {
+            const objetivos = [];
+            const patronOA = /OA\s*(\d+)[:\s]*([^\n]+(?:\n(?!OA\s*\d)[^\n]+)*)/gi;
+            const matches = [...texto.matchAll(patronOA)];
+            
+            matches.forEach(match => {
+                objetivos.push({
+                    numero: parseInt(match[1]),
+                    descripcion: match[2].trim().replace(/\s+/g, ' ')
+                });
+            });
+            
+            return objetivos;
+        }
+        
+        // Extraer indicadores
+        function extraerIndicadores(texto) {
+            const seccion = extraerSeccion(texto, /Indicadores de evaluación|Indicadores/i);
+            return seccion ? extraerListaItems(seccion) : [];
+        }
+        
+        // Extraer contenidos
+        function extraerContenidos(texto) {
+            const seccion = extraerSeccion(texto, /Contenidos/i);
+            return seccion ? extraerListaItems(seccion) : [];
+        }
+        
+        // Extraer habilidades
+        function extraerHabilidades(texto) {
+            const seccion = extraerSeccion(texto, /Habilidades/i);
+            return seccion ? extraerListaItems(seccion) : [];
+        }
+        
+        // Extraer items de una lista (viñetas, números, etc.)
+        function extraerListaItems(texto) {
+            const lineas = texto.split('\n')
+                .map(l => l.trim())
+                .filter(l => l.length > 5)
+                .map(l => l.replace(/^[-•*]\s*/, ''))
+                .map(l => l.replace(/^\d+[\.)]\s*/, ''))
+                .filter(l => l.length > 0);
+            
+            return lineas;
+        }
+        
+        // Mostrar vista previa del PDF procesado
+        function mostrarVistaPreviaPDF(datos) {
+            const contenedor = document.getElementById('contenidoExtraido');
+            const vista = document.getElementById('vistaPreviaPDF');
+            
+            let html = '';
+            
+            datos.unidades.forEach(unidad => {
+                html += `
+                    <div class="bg-white border-2 border-blue-300 rounded-lg p-4">
+                        <h4 class="text-lg font-bold text-blue-800 mb-2">${unidad.nombre}</h4>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700">Propósito:</p>
+                            <p class="text-sm text-gray-600">${unidad.proposito}</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700">Objetivos de Aprendizaje (${unidad.objetivos.length}):</p>
+                            <ul class="text-sm text-gray-600 list-disc list-inside">
+                                ${unidad.objetivos.map(oa => `<li><strong>OA ${oa.numero}:</strong> ${oa.descripcion.substring(0, 80)}...</li>`).join('')}
+                            </ul>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700">Indicadores (${unidad.indicadores.length}):</p>
+                            <p class="text-xs text-gray-500">${unidad.indicadores.length} indicadores encontrados</p>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <p class="text-sm font-semibold text-gray-700">Actitudes (${unidad.actitudes.length}):</p>
+                            <p class="text-xs text-gray-500">${unidad.actitudes.length} actitudes encontradas</p>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            contenedor.innerHTML = html;
+            vista.classList.remove('hidden');
+            
+            // Scroll hasta la vista previa
+            vista.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        // Confirmar carga del PDF
+        function confirmarCargaPDF() {
+            if (!datosExtraidosPDF) {
+                alert('No hay datos para guardar');
+                return;
+            }
+            
+            const nivel = document.getElementById('inputNivel').value;
+            const asignatura = document.getElementById('inputAsignatura').value;
+            
+            if (!nivel || !asignatura) {
+                alert('Por favor selecciona Nivel y Asignatura primero.');
+                return;
+            }
+            
+            try {
+                const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                
+                const plan = {
+                    id: Date.now(),
+                    nivel,
+                    asignatura,
+                    fechaCarga: new Date().toISOString(),
+                    fuente: 'PDF Ministerial',
+                    ...datosExtraidosPDF
+                };
+                
+                planes.push(plan);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(planes));
+                
+                log(`✅ Plan guardado: ${nivel} - ${asignatura} (${datosExtraidosPDF.unidades.length} unidades)`, 'success');
+                alert(`✅ Plan guardado exitosamente!\n\n${nivel} - ${asignatura}\n${datosExtraidosPDF.unidades.length} unidades cargadas`);
+                
+                limpiarFormulario();
+                cancelarPDF();
+                
+            } catch (error) {
+                log(`❌ Error al guardar: ${error.message}`, 'error');
+                alert(`Error al guardar:\n${error.message}`);
+            }
+        }
+        
+        // Cancelar carga de PDF
+        function cancelarPDF() {
+            document.getElementById('vistaPreviaPDF').classList.add('hidden');
+            document.getElementById('inputPDF').value = '';
+            datosExtraidosPDF = null;
+        }
+        
+        // ==================== FIN PROCESAMIENTO PDF ====================
+
+        // Procesar texto del plan
+        function procesarTextoPlano(texto) {
+            // Parser simple que detecta unidades, objetivos, contenidos, etc.
+            const lineas = texto.split('\n').filter(l => l.trim());
+            const unidades = [];
+            let unidadActual = null;
+            let seccionActual = null;
+            
+            lineas.forEach(linea => {
+                linea = linea.trim();
+                
+                // Detectar inicio de unidad
+                if (linea.match(/^UNIDAD \d+/i) || linea.match(/^Unidad \d+/i)) {
+                    if (unidadActual) unidades.push(unidadActual);
+                    unidadActual = {
+                        numero: unidades.length + 1,
+                        nombre: linea,
+                        objetivos: [],
+                        contenidos: [],
+                        habilidades: [],
+                        actitudes: [],
+                        indicadores: []
+                    };
+                    seccionActual = null;
+                }
+                // Detectar secciones
+                else if (linea.match(/^Objetivos/i)) {
+                    seccionActual = 'objetivos';
+                } else if (linea.match(/^Contenidos/i)) {
+                    seccionActual = 'contenidos';
+                } else if (linea.match(/^Habilidades/i)) {
+                    seccionActual = 'habilidades';
+                } else if (linea.match(/^Actitudes/i)) {
+                    seccionActual = 'actitudes';
+                } else if (linea.match(/^Indicadores/i)) {
+                    seccionActual = 'indicadores';
+                }
+                // Agregar contenido a la sección actual
+                else if (unidadActual && seccionActual && linea.length > 3) {
+                    unidadActual[seccionActual].push(linea.replace(/^[-•*]\s*/, ''));
+                }
+            });
+            
+            if (unidadActual) unidades.push(unidadActual);
+            
+            return { unidades };
+        }
+
+        // Guardar plan
+        document.getElementById('formCargarPlan').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const nivel = document.getElementById('inputNivel').value;
+            const asignatura = document.getElementById('inputAsignatura').value;
+            const metodo = document.querySelector('input[name="metodoCarga"]:checked').value;
+            
+            let datos = null;
+            
+            try {
+                if (metodo === 'texto') {
+                    const texto = document.getElementById('inputTexto').value;
+                    datos = procesarTextoPlano(texto);
+                } else if (metodo === 'json') {
+                    datos = JSON.parse(document.getElementById('inputJSON').value);
+                }
+                
+                if (!datos || !datos.unidades || datos.unidades.length === 0) {
+                    throw new Error('No se encontraron unidades válidas');
+                }
+                
+                // Guardar en localStorage
+                const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                
+                const plan = {
+                    id: Date.now(),
+                    nivel,
+                    asignatura,
+                    fechaCarga: new Date().toISOString(),
+                    ...datos
+                };
+                
+                planes.push(plan);
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(planes));
+                
+                log(`✅ Plan guardado: ${nivel} - ${asignatura} (${datos.unidades.length} unidades)`, 'success');
+                alert(`✅ Plan guardado exitosamente!\n\n${nivel} - ${asignatura}\n${datos.unidades.length} unidades cargadas`);
+                
+                limpiarFormulario();
+                
+            } catch (error) {
+                log(`❌ Error al guardar: ${error.message}`, 'error');
+                alert(`Error al guardar:\n${error.message}`);
+            }
+        });
+
+        // Buscar planes
+        function buscarPlanes() {
+            const nivel = document.getElementById('consultaNivel').value;
+            const asignatura = document.getElementById('consultaAsignatura').value;
+            
+            const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            let resultados = planes;
+            
+            if (nivel) resultados = resultados.filter(p => p.nivel === nivel);
+            if (asignatura) resultados = resultados.filter(p => p.asignatura === asignatura);
+            
+            mostrarResultados(resultados);
+        }
+
+        // Mostrar resultados
+        function mostrarResultados(planes) {
+            const div = document.getElementById('resultadosConsulta');
+            
+            if (planes.length === 0) {
+                div.innerHTML = '<p class="text-gray-600">No se encontraron planes.</p>';
+                return;
+            }
+            
+            let html = '';
+            planes.forEach(plan => {
+                html += `
+                    <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                        <h3 class="text-lg font-bold text-gray-800">${plan.nivel} - ${plan.asignatura}</h3>
+                        <p class="text-sm text-gray-600">Cargado: ${new Date(plan.fechaCarga).toLocaleDateString()}</p>
+                        <p class="text-sm font-semibold mt-2">${plan.unidades.length} unidades:</p>
+                        <ul class="list-disc list-inside text-sm text-gray-700">
+                            ${plan.unidades.map(u => `<li>${u.nombre}</li>`).join('')}
+                        </ul>
+                        <div class="mt-3 flex gap-2">
+                            <button onclick='verDetalle(${plan.id})' class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-eye mr-1"></i>Ver Detalle
+                            </button>
+                            <button onclick='exportarPlan(${plan.id})' class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i>Exportar
+                            </button>
+                            <button onclick='eliminarPlan(${plan.id})' class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                <i class="fas fa-trash mr-1"></i>Eliminar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            div.innerHTML = html;
+        }
+
+        // Ver detalle
+        function verDetalle(id) {
+            const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const plan = planes.find(p => p.id === id);
+            
+            if (!plan) return;
+            
+            let detalle = `${plan.nivel} - ${plan.asignatura}\n\n`;
+            plan.unidades.forEach(u => {
+                detalle += `${u.nombre}\n`;
+                detalle += `\nObjetivos:\n${u.objetivos.join('\n')}\n`;
+                detalle += `\nContenidos:\n${u.contenidos.join('\n')}\n\n`;
+            });
+            
+            alert(detalle);
+        }
+
+        // Exportar plan
+        function exportarPlan(id) {
+            const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            const plan = planes.find(p => p.id === id);
+            
+            if (!plan) return;
+            
+            const blob = new Blob([JSON.stringify(plan, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plan_${plan.nivel}_${plan.asignatura}_${Date.now()}.json`;
+            a.click();
+            
+            log(`📥 Plan exportado: ${plan.nivel} - ${plan.asignatura}`, 'success');
+        }
+
+        // Exportar todo
+        function exportarTodo() {
+            const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            
+            const blob = new Blob([JSON.stringify(planes, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `todos_planes_programas_${Date.now()}.json`;
+            a.click();
+            
+            log(`📥 Todos los planes exportados (${planes.length})`, 'success');
+        }
+
+        // Importar JSON
+        function importarJSON() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = async (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                try {
+                    const text = await file.text();
+                    const data = JSON.parse(text);
+                    
+                    const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    
+                    if (Array.isArray(data)) {
+                        planes.push(...data);
+                    } else {
+                        planes.push(data);
+                    }
+                    
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(planes));
+                    log(`✅ Importación exitosa`, 'success');
+                    alert('✅ Datos importados exitosamente');
+                    
+                } catch (error) {
+                    log(`❌ Error al importar: ${error.message}`, 'error');
+                    alert(`Error: ${error.message}`);
+                }
+            };
+            
+            input.click();
+        }
+
+        // Eliminar plan
+        function eliminarPlan(id) {
+            if (!confirm('¿Eliminar este plan?')) return;
+            
+            let planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            planes = planes.filter(p => p.id !== id);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(planes));
+            
+            log('🗑️ Plan eliminado', 'warning');
+            buscarPlanes();
+        }
+
+        // Limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('formCargarPlan').reset();
+            document.getElementById('inputTexto').value = '';
+            document.getElementById('inputJSON').value = '';
+        }
+
+        // Mostrar sección
+        function mostrarSeccion(seccion) {
+            document.getElementById('seccionCargar').classList.add('hidden');
+            document.getElementById('seccionConsultar').classList.add('hidden');
+            document.getElementById('seccionListar').classList.add('hidden');
+            
+            if (seccion === 'cargar') {
+                document.getElementById('seccionCargar').classList.remove('hidden');
+            } else if (seccion === 'consultar') {
+                document.getElementById('seccionConsultar').classList.remove('hidden');
+            } else if (seccion === 'listar') {
+                document.getElementById('seccionListar').classList.remove('hidden');
+                listarTodos();
+            }
+        }
+
+        // Listar todos
+        function listarTodos() {
+            const planes = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+            mostrarResultados(planes);
+            document.getElementById('listaTodos').innerHTML = document.getElementById('resultadosConsulta').innerHTML;
+        }
+
+        // Inicializar
+        log('✅ Sistema listo para recibir planes y programas', 'success');
+        log('📋 Formatos aceptados: Texto plano, JSON estructurado', 'info');
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Auto-Importar Planes y Programas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-indigo-100 to-purple-100 min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-2xl p-8">
+            <div class="text-center mb-8">
+                <div class="inline-block p-4 bg-indigo-100 rounded-full mb-4">
+                    <i class="fas fa-book-open text-5xl text-indigo-600"></i>
+                </div>
+                <h1 class="text-4xl font-bold text-gray-800 mb-2">
+                    Planes y Programas Ministeriales
+                </h1>
+                <p class="text-gray-600">Importación automática al sistema</p>
+            </div>
+
+            <div id="status" class="mb-6"></div>
+
+            <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-r-lg mb-6">
+                <h2 class="text-xl font-bold text-blue-900 mb-3">
+                    <i class="fas fa-info-circle mr-2"></i>Planes Disponibles
+                </h2>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between bg-white p-4 rounded-lg">
+                        <div>
+                            <h3 class="font-bold text-gray-800">2° Medio - Lenguaje y Comunicación</h3>
+                            <p class="text-sm text-gray-600">Unidad 4: Poder y ambición</p>
+                            <p class="text-xs text-gray-500 mt-1">15 OA | 87 Indicadores | 2 Actitudes</p>
+                        </div>
+                        <button onclick="importarPlan('2medio_lenguaje_unidad4')" 
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2 rounded-lg font-semibold transition">
+                            <i class="fas fa-download mr-2"></i>Importar
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultado" class="space-y-4"></div>
+
+            <div class="mt-8 grid grid-cols-2 gap-4">
+                <a href="gestor-planes-programas.html" 
+                   class="block text-center bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                    <i class="fas fa-clipboard-list mr-2"></i>Ver Gestor de Planes
+                </a>
+                <a href="dashboard.html" 
+                   class="block text-center bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                    <i class="fas fa-home mr-2"></i>Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos del plan de 2° Medio Lenguaje Unidad 4
+        const PLAN_2MEDIO_LENGUAJE_U4 = {
+            "nivel": "2° Medio",
+            "asignatura": "Lenguaje y Comunicación",
+            "unidad": 4,
+            "nombre": "Poder y ambición",
+            "proposito": "En esta unidad se propone el estudio de textos narrativos que presentan a personajes ambiciosos, cuyo afán de poder los lleva a cometer actos deshonestos o inmorales para alcanzar sus objetivos. El propósito es que los estudiantes analicen cómo se construyen estos personajes en la literatura, considerando sus motivaciones, acciones y consecuencias, y que reflexionen sobre las implicancias éticas y sociales del abuso de poder y la ambición desmedida.",
+            "conocimientos_previos": [
+                "Lectura de textos narrativos literarios",
+                "Análisis de personajes y sus motivaciones",
+                "Recursos narrativos (narrador, tiempo, espacio)",
+                "Vocabulario y comprensión lectora",
+                "Escritura de textos coherentes y cohesionados"
+            ],
+            "palabras_clave": [
+                "poder",
+                "ambición",
+                "personaje",
+                "motivación",
+                "ética",
+                "conflicto moral",
+                "consecuencias",
+                "tragedia",
+                "hubris"
+            ],
+            "habilidades": [
+                "Analizar críticamente textos literarios",
+                "Interpretar motivaciones de personajes",
+                "Reflexionar sobre dilemas éticos",
+                "Escribir textos argumentativos",
+                "Participar en debates y discusiones",
+                "Investigar contextos históricos y culturales"
+            ],
+            "objetivos_aprendizaje": [
+                {
+                    "numero": "OA 3",
+                    "descripcion": "Analizar las narraciones leídas para enriquecer su comprensión, considerando, cuando sea pertinente: El o los conflictos de la historia; Los personajes, su evolución en el relato y su relación con otros personajes; La relación de un fragmento de la obra con el total; El narrador, distinguiéndolo del autor; Personajes tipo (por ejemplo, el pícaro, el avaro, el seductor, la madrastra, etc.), símbolos y tópicos literarios presentes en el texto; Las creencias, prejuicios y estereotipos presentes en el relato, a la luz de la visión de mundo de la época en la que fue escrito y su conexión con el mundo actual; El efecto estético del texto.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Explican el o los conflictos de una narración y cómo se relacionan con el tema central.",
+                        "Describen a los personajes a partir de lo que dicen, hacen y lo que se dice de ellos.",
+                        "Explican las relaciones que establecen los personajes con otros en la narración y cómo estas influyen en su evolución.",
+                        "Explican cómo un fragmento de la obra se relaciona con el total.",
+                        "Distinguen al narrador del autor y explican cuál es la perspectiva narrativa del relato.",
+                        "Identifican personajes tipo, símbolos y tópicos literarios en las narraciones leídas.",
+                        "Explican las creencias, prejuicios y estereotipos presentes en el relato y los relacionan con la visión de mundo de la época.",
+                        "Relacionan las creencias y prejuicios presentes en el relato con el mundo actual.",
+                        "Explican el efecto que produce el texto en el lector.",
+                        "Fundamentan sus interpretaciones con ejemplos del texto."
+                    ]
+                },
+                {
+                    "numero": "OA 8",
+                    "descripcion": "Formular una interpretación de los textos literarios leídos o vistos, que sea coherente con su análisis, considerando: Su experiencia personal y sus conocimientos; Un dilema presentado en el texto y su postura personal acerca del mismo; La relación de la obra con la visión de mundo y el contexto histórico en el que se ambienta y/o en el que fue creada.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Ofrecen una interpretación del texto leído que aborda temas que van más allá de lo literal o de un mero resumen.",
+                        "Explican y ejemplifican por qué el texto leído se inserta en el tema que está en estudio; por ejemplo, 'Edipo Rey' se inserta en el tema del poder y la ambición porque...",
+                        "Relacionan el texto con sus propias experiencias y dan sentido a un fragmento o el total de la obra.",
+                        "Plantean su postura frente a un dilema o situación problemática que se propone en el texto y fundamentan con ejemplos de él.",
+                        "Relacionan la obra leída con la visión de mundo y el contexto histórico en el que se ambienta o en el que fue creada.",
+                        "Explican cómo está presente el tema del poder y la ambición en el texto leído."
+                    ]
+                },
+                {
+                    "numero": "OA 9",
+                    "descripcion": "Analizar y evaluar textos con finalidad argumentativa como columnas de opinión, cartas, discursos y ensayos, considerando: La postura del autor y los argumentos e información que la sostienen; La diferencia entre hecho y opinión; Su postura personal frente a lo leído y argumentos que la sustentan.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Identifican la postura del autor.",
+                        "Identifican los argumentos e información que usa el autor para fundamentar su postura.",
+                        "Evalúan si los argumentos del autor son coherentes y suficientes para defender su postura.",
+                        "Distinguen entre información basada en hechos e información que es una opinión o valoración del autor.",
+                        "Plantean su postura frente al tema abordado en el texto leído.",
+                        "Fundamentan su postura a partir de ejemplos del texto, conocimientos previos y evidencias."
+                    ]
+                },
+                {
+                    "numero": "OA 13",
+                    "descripcion": "Escribir, con el propósito de persuadir, textos de diversos géneros, en particular ensayos sobre los temas o lecturas propuestos para el nivel, caracterizados por: La presentación de una hipótesis o afirmación referida a temas contingentes o literarios; La presencia de evidencias e información pertinente; La mantención de la coherencia temática; Una conclusión coherente con los argumentos presentados; El uso de citas y referencias según un formato previamente acordado.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Escriben textos argumentativos sobre temas o lecturas del nivel.",
+                        "Presentan una hipótesis o afirmación clara al inicio del texto.",
+                        "Desarrollan argumentos que fundamentan la hipótesis presentada.",
+                        "Usan evidencias e información pertinente para apoyar los argumentos.",
+                        "Mantienen la coherencia temática a lo largo del texto.",
+                        "Escriben una conclusión que es coherente con los argumentos presentados.",
+                        "Incluyen citas y referencias según un formato acordado.",
+                        "Editan y revisan sus textos para mejorar la claridad y corrección."
+                    ]
+                },
+                {
+                    "numero": "OA 16",
+                    "descripcion": "Usar consistentemente el estilo directo y el indirecto en textos escritos y orales: Empleando adecuadamente los tiempos verbales en el estilo indirecto; Utilizando de manera coherente los pronombres en el estilo indirecto.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Usan el estilo directo e indirecto de manera apropiada según el propósito comunicativo.",
+                        "Realizan correctamente los cambios de tiempos verbales al pasar del estilo directo al indirecto.",
+                        "Utilizan los pronombres de manera coherente al usar el estilo indirecto.",
+                        "Revisan y corrigen el uso del estilo directo e indirecto en sus textos."
+                    ]
+                },
+                {
+                    "numero": "OA 21",
+                    "descripcion": "Dialogar constructivamente para debatir o explorar ideas: Manteniendo el foco; Demostrando comprensión de lo dicho por el interlocutor; Fundamentando su postura de manera pertinente; Formulando preguntas o comentarios que estimulen o hagan avanzar la discusión o profundicen un aspecto del tema; Negociando acuerdos con los interlocutores; Reformulando sus comentarios para desarrollarlos mejor; Considerando al interlocutor para la toma de turnos.",
+                    "tipo": "específico",
+                    "indicadores": [
+                        "Mantienen el tema de conversación y, aunque hacen digresiones, vuelven a él.",
+                        "Se recuerdan mutuamente, si es que se alejan del tema que se discute, qué problema tienen que resolver o sobre qué deben llegar a un acuerdo.",
+                        "Retoman lo dicho por otros para refutarlo o expandirlo.",
+                        "Fundamentan sus aseveraciones con ejemplos de textos u otra información relevante.",
+                        "Preguntan a otros para profundizar en el tema en discusión o explorar otras ideas relacionadas.",
+                        "Identifican puntos de acuerdo con los compañeros.",
+                        "Llegan a acuerdos con los compañeros sobre algún aspecto discutido.",
+                        "En actividades grupales, reparten de manera equitativa las responsabilidades del trabajo.",
+                        "Reformulan lo dicho cuando se dan cuenta de que el interlocutor no ha comprendido o cuando perciben que los argumentos no se entienden.",
+                        "Esperan una pausa para hacer su intervención.",
+                        "Miran al otro antes de interrumpir, para ver si es posible tomar la palabra en ese momento."
+                    ]
+                },
+                {
+                    "numero": "OA 1",
+                    "descripcion": "Leer habitualmente para aprender y recrearse, y seleccionar textos de acuerdo con sus preferencias y propósitos.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Leen para entretenerse, para encontrar información, etc.",
+                        "Leen periódicos, revistas y artículos en internet en su tiempo libre.",
+                        "Comentan los textos que han leído.",
+                        "Recomiendan los textos que les han gustado.",
+                        "Solicitan recomendaciones de textos a sus pares y al docente.",
+                        "Muestran preferencias por algún género literario, como la ciencia ficción, misterio, etc., y pueden describir lo que les gusta de ellos."
+                    ]
+                },
+                {
+                    "numero": "OA 2",
+                    "descripcion": "Reflexionar sobre las diferentes dimensiones de la experiencia humana, propia y ajena, a partir de la lectura de obras literarias y otros textos que forman parte de nuestras herencias culturales, abordando los temas estipulados para el curso y las obras sugeridas para cada uno.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Explican el tema de la obra leída y por qué se inserta en los temas del curso (por ejemplo, el poder y la ambición).",
+                        "Comentan experiencias de los personajes que son distintas a las propias.",
+                        "Explican lo que están descubriendo del ser humano al leer la obra.",
+                        "Se refieren a las obras leídas en situaciones cotidianas, aludiendo a características de ciertos personajes o situaciones que les recuerdan la vida cotidiana.",
+                        "Comparan obras literarias con otras manifestaciones artísticas con las que se relacionan por temática."
+                    ]
+                },
+                {
+                    "numero": "OA 10",
+                    "descripcion": "Analizar y evaluar textos de los medios de comunicación, como noticias, reportajes, cartas al director, textos publicitarios o de las redes sociales, considerando: Los propósitos explícitos e implícitos del texto; Una distinción entre los hechos y las opiniones expresados; Presencia de estereotipos y prejuicios; La suficiencia de información entregada; El efecto que produce el texto en la audiencia.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Identifican los propósitos explícitos e implícitos en los textos de medios de comunicación.",
+                        "Distinguen entre información basada en hechos y opiniones en los textos.",
+                        "Identifican estereotipos y prejuicios presentes en los textos de medios.",
+                        "Evalúan si la información entregada es suficiente para comprender el tema.",
+                        "Explican el efecto que produce el texto en la audiencia.",
+                        "Comparan cómo se presenta una misma noticia en diferentes medios."
+                    ]
+                },
+                {
+                    "numero": "OA 11",
+                    "descripcion": "Leer y comprender textos no literarios para contextualizar y complementar las lecturas literarias realizadas en clases.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Leen textos no literarios relacionados con las lecturas literarias del curso.",
+                        "Relacionan la información de textos no literarios con las obras literarias leídas.",
+                        "Usan la información de textos no literarios para comprender mejor las obras literarias.",
+                        "Investigan sobre el contexto histórico o cultural de las obras leídas."
+                    ]
+                },
+                {
+                    "numero": "OA 12",
+                    "descripcion": "Aplicar flexiblemente y creativamente las habilidades de escritura adquiridas en clases como medio de expresión personal y cuando se enfrentan a nuevos géneros: Investigando las características del género antes de escribir; Adecuando el texto a los propósitos de escritura y a la situación.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Investigan sobre las características de un género antes de escribir.",
+                        "Escriben textos adecuados al propósito comunicativo.",
+                        "Adecuan el estilo y registro al contexto de escritura.",
+                        "Aplican creativamente estrategias de escritura aprendidas.",
+                        "Revisan y editan sus textos para mejorarlos."
+                    ]
+                },
+                {
+                    "numero": "OA 14",
+                    "descripcion": "Escribir, con el propósito de explicar un tema, textos de diversos géneros (por ejemplo, artículos, informes, reportajes, etc.) caracterizados por: Una presentación clara del tema en que se esbozan los aspectos que se abordarán; La presencia de información de distintas fuentes; La inclusión de hechos, descripciones, ejemplos o explicaciones que desarrollen el tema; Una progresión temática clara, con especial atención al empleo de recursos anafóricos; El uso de imágenes u otros recursos gráficos pertinentes; Un cierre coherente con las características del género; El uso de referencias según un formato previamente acordado.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Presentan claramente el tema al inicio del texto.",
+                        "Incluyen información de distintas fuentes.",
+                        "Desarrollan el tema con hechos, descripciones, ejemplos o explicaciones.",
+                        "Mantienen una progresión temática clara.",
+                        "Usan recursos anafóricos apropiadamente.",
+                        "Incluyen imágenes u otros recursos gráficos cuando es pertinente.",
+                        "Escriben un cierre coherente con el género.",
+                        "Incluyen referencias según un formato acordado."
+                    ]
+                },
+                {
+                    "numero": "OA 15",
+                    "descripcion": "Planificar, escribir, revisar, reescribir y editar sus textos en función del contexto, el destinatario y el propósito: Recopilando información e ideas y organizándolas antes de escribir; Adecuando el registro, específicamente, el vocabulario (uso de términos técnicos, frases hechas, palabras propias de las redes sociales, términos y expresiones propios del lenguaje hablado), el uso de la persona gramatical, y la estructura del texto al género discursivo, contexto y destinatario; Incorporando información pertinente; Asegurando la coherencia y la cohesión del texto; Cuidando la organización a nivel oracional y textual; Usando conectores adecuados para unir las secciones que componen el texto y relacionando las ideas dentro de cada párrafo; Usando un vocabulario variado y preciso; Reconociendo y corrigiendo usos inadecuados, especialmente de pronombres personales y reflejos, conjugaciones verbales, participios irregulares, y concordancia sujeto-verbo, artículo-sustantivo y sustantivo-adjetivo; Corrigiendo la ortografía y mejorando la presentación; Usando eficazmente las herramientas del procesador de textos.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Recopilan y organizan información antes de escribir.",
+                        "Adecuan el registro según contexto y destinatario.",
+                        "Incorporan información pertinente al tema.",
+                        "Aseguran la coherencia y cohesión del texto.",
+                        "Organizan adecuadamente las oraciones y párrafos.",
+                        "Usan conectores apropiados.",
+                        "Emplean vocabulario variado y preciso.",
+                        "Corrigen errores gramaticales y ortográficos.",
+                        "Mejoran la presentación del texto.",
+                        "Usan herramientas digitales para editar textos."
+                    ]
+                },
+                {
+                    "numero": "OA 22",
+                    "descripcion": "Expresarse frente a una audiencia de manera clara y adecuada a la situación para comunicar temas de su interés: Presentando información fidedigna y que denota una investigación previa; Siguiendo una progresión temática clara; Graduando la cantidad de información que se entrega en cada parte de la exposición para asegurarse de que la audiencia comprenda; Usando un vocabulario que denota dominio del tema; Usando conectores adecuados para hilar la presentación; Usando material visual que destaque solo lo más relevante y/o explique conceptos de mayor complejidad.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Presentan información investigada previamente.",
+                        "Siguen una progresión temática clara en su presentación.",
+                        "Gradúan la información para facilitar la comprensión.",
+                        "Usan vocabulario que demuestra dominio del tema.",
+                        "Emplean conectores apropiados.",
+                        "Usan material visual efectivo.",
+                        "Se expresan con claridad y adecuación a la situación."
+                    ]
+                },
+                {
+                    "numero": "OA 23",
+                    "descripcion": "Comprender, comparar y evaluar textos orales y audiovisuales tales como exposiciones, discursos, documentales, noticias, reportajes, etc., considerando: Su postura personal frente a lo escuchado y argumentos que la sustenten; Una distinción entre los hechos y las opiniones expresados; El contexto en el que se enmarcan los textos; El uso de estereotipos, clichés y generalizaciones; Los elementos que influyen para tomar postura frente a lo escuchado; Diferentes puntos de vista expresados en los textos.",
+                    "tipo": "transversal",
+                    "indicadores": [
+                        "Plantean su postura frente a lo escuchado y la fundamentan.",
+                        "Distinguen entre hechos y opiniones en textos orales.",
+                        "Consideran el contexto de los textos orales.",
+                        "Identifican estereotipos y generalizaciones.",
+                        "Reconocen elementos que influyen en su postura.",
+                        "Comparan diferentes puntos de vista en textos orales.",
+                        "Evalúan críticamente textos audiovisuales."
+                    ]
+                }
+            ],
+            "actitudes": [
+                {
+                    "letra": "B",
+                    "descripcion": "Manifestar una disposición a reflexionar sobre sí mismo y sobre las cuestiones sociales y éticas que emanan de las lecturas."
+                },
+                {
+                    "letra": "H",
+                    "descripcion": "Valorar las posibilidades que da el discurso hablado y escrito para participar de manera proactiva, informada y responsable en la vida de la sociedad democrática."
+                }
+            ],
+            "orientaciones_didacticas": "Se sugiere trabajar con obras clásicas y contemporáneas que aborden el tema del poder y la ambición, como 'Macbeth' de Shakespeare, 'Edipo Rey' de Sófocles, o textos contemporáneos que traten sobre corrupción política o ambición empresarial. Es importante que los estudiantes puedan establecer conexiones entre las obras literarias y situaciones actuales de abuso de poder. Se recomienda integrar actividades de debate, escritura de ensayos argumentativos, y análisis crítico de textos de medios de comunicación sobre casos de corrupción o ambición desmedida.",
+            "fecha_creacion": "2025-10-19",
+            "version": "1.0"
+        };
+
+        function mostrarStatus(mensaje, tipo = 'info') {
+            const statusDiv = document.getElementById('status');
+            const colores = {
+                info: 'bg-blue-100 border-blue-500 text-blue-900',
+                success: 'bg-green-100 border-green-500 text-green-900',
+                error: 'bg-red-100 border-red-500 text-red-900',
+                warning: 'bg-yellow-100 border-yellow-500 text-yellow-900'
+            };
+            
+            const iconos = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                error: 'fa-exclamation-triangle',
+                warning: 'fa-exclamation-circle'
+            };
+
+            statusDiv.innerHTML = `
+                <div class="${colores[tipo]} border-l-4 p-4 rounded-r-lg">
+                    <p class="flex items-center">
+                        <i class="fas ${iconos[tipo]} mr-2"></i>
+                        ${mensaje}
+                    </p>
+                </div>
+            `;
+        }
+
+        function importarPlan(planId) {
+            const resultadoDiv = document.getElementById('resultado');
+            
+            if (planId === '2medio_lenguaje_unidad4') {
+                try {
+                    // Obtener planes existentes
+                    let planesExistentes = JSON.parse(localStorage.getItem('planes_programas_ministeriales') || '[]');
+                    
+                    // Verificar si ya existe
+                    const yaExiste = planesExistentes.some(p => 
+                        p.nivel === PLAN_2MEDIO_LENGUAJE_U4.nivel && 
+                        p.asignatura === PLAN_2MEDIO_LENGUAJE_U4.asignatura && 
+                        p.unidad === PLAN_2MEDIO_LENGUAJE_U4.unidad
+                    );
+                    
+                    if (yaExiste) {
+                        mostrarStatus('⚠️ Este plan ya existe. Se actualizará con la nueva versión.', 'warning');
+                        // Eliminar el antiguo
+                        planesExistentes = planesExistentes.filter(p => 
+                            !(p.nivel === PLAN_2MEDIO_LENGUAJE_U4.nivel && 
+                              p.asignatura === PLAN_2MEDIO_LENGUAJE_U4.asignatura && 
+                              p.unidad === PLAN_2MEDIO_LENGUAJE_U4.unidad)
+                        );
+                    }
+                    
+                    // Agregar el nuevo plan
+                    planesExistentes.push(PLAN_2MEDIO_LENGUAJE_U4);
+                    
+                    // Guardar en localStorage
+                    localStorage.setItem('planes_programas_ministeriales', JSON.stringify(planesExistentes));
+                    
+                    mostrarStatus('✅ Plan importado exitosamente', 'success');
+                    
+                    // Mostrar resumen
+                    resultadoDiv.innerHTML = `
+                        <div class="bg-green-50 border-2 border-green-500 rounded-lg p-6">
+                            <h3 class="text-xl font-bold text-green-900 mb-4">
+                                <i class="fas fa-check-circle mr-2"></i>Importación Completada
+                            </h3>
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Nivel</p>
+                                    <p class="font-bold text-gray-800">${PLAN_2MEDIO_LENGUAJE_U4.nivel}</p>
+                                </div>
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Asignatura</p>
+                                    <p class="font-bold text-gray-800">${PLAN_2MEDIO_LENGUAJE_U4.asignatura}</p>
+                                </div>
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Unidad</p>
+                                    <p class="font-bold text-gray-800">Unidad ${PLAN_2MEDIO_LENGUAJE_U4.unidad}: ${PLAN_2MEDIO_LENGUAJE_U4.nombre}</p>
+                                </div>
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Objetivos de Aprendizaje</p>
+                                    <p class="font-bold text-gray-800">${PLAN_2MEDIO_LENGUAJE_U4.objetivos_aprendizaje.length} OA</p>
+                                </div>
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Indicadores</p>
+                                    <p class="font-bold text-gray-800">
+                                        ${PLAN_2MEDIO_LENGUAJE_U4.objetivos_aprendizaje.reduce((sum, oa) => sum + oa.indicadores.length, 0)} indicadores
+                                    </p>
+                                </div>
+                                <div class="bg-white p-4 rounded">
+                                    <p class="text-gray-600 mb-1">Actitudes</p>
+                                    <p class="font-bold text-gray-800">${PLAN_2MEDIO_LENGUAJE_U4.actitudes.length} actitudes</p>
+                                </div>
+                            </div>
+                            <div class="mt-6">
+                                <a href="gestor-planes-programas.html" 
+                                   class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                                    <i class="fas fa-clipboard-list mr-2"></i>Ver en Gestor de Planes
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    
+                } catch (error) {
+                    console.error('Error al importar:', error);
+                    mostrarStatus('❌ Error al importar el plan: ' + error.message, 'error');
+                    resultadoDiv.innerHTML = `
+                        <div class="bg-red-50 border-2 border-red-500 rounded-lg p-6">
+                            <h3 class="text-xl font-bold text-red-900 mb-2">Error en la Importación</h3>
+                            <p class="text-red-800">${error.message}</p>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Auto-verificar al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            const planesExistentes = JSON.parse(localStorage.getItem('planes_programas_ministeriales') || '[]');
+            const existe2Medio = planesExistentes.some(p => 
+                p.nivel === '2° Medio' && 
+                p.asignatura === 'Lenguaje y Comunicación' && 
+                p.unidad === 4
+            );
+            
+            if (existe2Medio) {
+                mostrarStatus('ℹ️ El plan de 2° Medio ya está importado. Puedes actualizarlo si es necesario.', 'info');
+            } else {
+                mostrarStatus('📚 Listo para importar el plan de 2° Medio Lenguaje Unidad 4', 'info');
+            }
+        });
+    </script>
+</body>
+</html>

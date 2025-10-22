@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Evento Aniversario Sindicato N°1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            padding: 1.5rem;
+            color: white;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            max-height: 600px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        tr:hover {
+            background-color: #f9fafb;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            font-weight: 500;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .badge-green {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-red {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-blue {
+            background-color: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-purple {
+            background-color: #e9d5ff;
+            color: #6b21a8;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .search-input {
+            padding: 0.75rem 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            width: 100%;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #667eea;
+        }
+
+        .logo-header {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="card p-6 mb-6">
+            <div class="flex items-center justify-between flex-wrap gap-4">
+                <div class="flex items-center gap-4">
+                    <img src="../LOGO SINDICATO/LOGO SINDICATO.png" alt="Logo Sindicato" class="logo-header">
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">
+                            <i class="fas fa-chart-line text-purple-600"></i>
+                            Panel de Administración
+                        </h1>
+                        <p class="text-gray-600 mt-1">Evento Aniversario - Viernes 14 de Noviembre, 2025</p>
+                    </div>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="refreshData()" class="btn-primary">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Actualizar
+                    </button>
+                    <button onclick="exportToCSV()" class="btn-primary">
+                        <i class="fas fa-download mr-2"></i>
+                        Exportar CSV
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div id="stats-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <!-- Las estadísticas se cargarán dinámicamente -->
+        </div>
+
+        <!-- Filtros y búsqueda -->
+        <div class="card p-6 mb-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-search mr-1"></i> Buscar
+                    </label>
+                    <input type="text" id="search-input" class="search-input" placeholder="Nombre, RUT o correo...">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-building mr-1"></i> Sede
+                    </label>
+                    <select id="filter-sede" class="search-input">
+                        <option value="">Todas las sedes</option>
+                        <option value="Sede Norte">Sede Norte</option>
+                        <option value="Sede Sur">Sede Sur</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-leaf mr-1"></i> Menú
+                    </label>
+                    <select id="filter-menu" class="search-input">
+                        <option value="">Todos</option>
+                        <option value="regular">Regular</option>
+                        <option value="vegetariano">Vegetariano</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                        <i class="fas fa-venus-mars mr-1"></i> Sexo
+                    </label>
+                    <select id="filter-sexo" class="search-input">
+                        <option value="">Todos</option>
+                        <option value="Masculino">Masculino</option>
+                        <option value="Femenino">Femenino</option>
+                        <option value="Otro">Otro</option>
+                    </select>
+                </div>
+            </div>
+            <div class="flex gap-2 flex-wrap">
+                <button onclick="applyFilters()" class="btn-primary">
+                    <i class="fas fa-filter mr-2"></i>
+                    Aplicar Filtros
+                </button>
+                <button onclick="clearFilters()" class="filter-btn">
+                    <i class="fas fa-times mr-2"></i>
+                    Limpiar
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="card p-6 mb-6">
+            <div class="flex gap-4 border-b pb-4">
+                <button onclick="showTab('asistentes')" id="tab-asistentes" class="filter-btn active">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Asistentes (<span id="count-asistentes">0</span>)
+                </button>
+                <button onclick="showTab('no-asistentes')" id="tab-no-asistentes" class="filter-btn">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    No Asistentes (<span id="count-no-asistentes">0</span>)
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabla de Asistentes -->
+        <div id="tab-content-asistentes" class="card p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-users mr-2 text-purple-600"></i>
+                    Lista de Asistentes
+                </h2>
+                <span id="filtered-count" class="text-gray-600"></span>
+            </div>
+            <div id="loading-container" class="text-center py-8">
+                <div class="loading mx-auto mb-4" style="border-top-color: #667eea; border-color: rgba(102, 126, 234, 0.3);"></div>
+                <p class="text-gray-600">Cargando datos...</p>
+            </div>
+            <div id="table-container" class="table-container hidden">
+                <table id="asistentes-table">
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag mr-2"></i>N°</th>
+                            <th><i class="fas fa-user mr-2"></i>Nombre</th>
+                            <th><i class="fas fa-id-card mr-2"></i>RUT</th>
+                            <th><i class="fas fa-envelope mr-2"></i>Correo</th>
+                            <th><i class="fas fa-venus-mars mr-2"></i>Sexo</th>
+                            <th><i class="fas fa-building mr-2"></i>Sede</th>
+                            <th><i class="fas fa-utensils mr-2"></i>Menú</th>
+                            <th><i class="fas fa-calendar mr-2"></i>Registro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="asistentes-tbody">
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="no-results" class="text-center py-8 hidden">
+                <i class="fas fa-search text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-600 text-lg">No se encontraron resultados</p>
+            </div>
+        </div>
+
+        <!-- Tabla de No Asistentes -->
+        <div id="tab-content-no-asistentes" class="card p-6 hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold text-gray-800">
+                    <i class="fas fa-user-times mr-2 text-red-600"></i>
+                    No Asistentes
+                </h2>
+            </div>
+            <div id="table-container-no-asistentes" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th><i class="fas fa-hashtag mr-2"></i>N°</th>
+                            <th><i class="fas fa-user mr-2"></i>Nombre</th>
+                            <th><i class="fas fa-id-card mr-2"></i>RUT</th>
+                            <th><i class="fas fa-envelope mr-2"></i>Correo</th>
+                            <th><i class="fas fa-calendar mr-2"></i>Registro</th>
+                        </tr>
+                    </thead>
+                    <tbody id="no-asistentes-tbody">
+                        <!-- Los datos se cargarán dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de Firebase
+        const FIREBASE_URL = 'https://profe-blog-default-rtdb.firebaseio.com';
+        
+        // Variables globales
+        let allAsistentes = [];
+        let allNoAsistentes = [];
+        let filteredAsistentes = [];
+        let currentTab = 'asistentes';
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            setupEventListeners();
+        });
+
+        // Event listeners
+        function setupEventListeners() {
+            document.getElementById('search-input').addEventListener('input', applyFilters);
+            document.getElementById('filter-sede').addEventListener('change', applyFilters);
+            document.getElementById('filter-menu').addEventListener('change', applyFilters);
+            document.getElementById('filter-sexo').addEventListener('change', applyFilters);
+        }
+
+        // Cargar datos desde Firebase
+        async function loadData() {
+            try {
+                document.getElementById('loading-container').classList.remove('hidden');
+                document.getElementById('table-container').classList.add('hidden');
+
+                // Cargar asistentes
+                const responseAsistentes = await fetch(`${FIREBASE_URL}/sindicato_evento_aniversario/asistentes.json`);
+                const dataAsistentes = await responseAsistentes.json();
+                
+                allAsistentes = dataAsistentes ? Object.entries(dataAsistentes).map(([id, data]) => ({
+                    id,
+                    ...data
+                })) : [];
+
+                // Cargar no asistentes
+                const responseNoAsistentes = await fetch(`${FIREBASE_URL}/sindicato_evento_aniversario/no_asistentes.json`);
+                const dataNoAsistentes = await responseNoAsistentes.json();
+                
+                allNoAsistentes = dataNoAsistentes ? Object.entries(dataNoAsistentes).map(([id, data]) => ({
+                    id,
+                    ...data
+                })) : [];
+
+                // Ordenar por fecha de registro (más recientes primero)
+                allAsistentes.sort((a, b) => b.timestamp - a.timestamp);
+                allNoAsistentes.sort((a, b) => b.timestamp - a.timestamp);
+
+                filteredAsistentes = [...allAsistentes];
+
+                // Actualizar UI
+                updateStats();
+                renderAsistentes();
+                renderNoAsistentes();
+
+                document.getElementById('loading-container').classList.add('hidden');
+                document.getElementById('table-container').classList.remove('hidden');
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                alert('Error al cargar los datos. Por favor, intenta nuevamente.');
+            }
+        }
+
+        // Actualizar estadísticas
+        function updateStats() {
+            const totalAsistentes = allAsistentes.length;
+            const totalNoAsistentes = allNoAsistentes.length;
+            const sedeNorte = allAsistentes.filter(a => a.sede === 'Sede Norte').length;
+            const sedeSur = allAsistentes.filter(a => a.sede === 'Sede Sur').length;
+            const vegetarianos = allAsistentes.filter(a => a.menu_vegetariano).length;
+
+            const statsHTML = `
+                <div class="stat-card">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Total Asistentes</p>
+                            <p class="text-4xl font-bold mt-2">${totalAsistentes}</p>
+                        </div>
+                        <i class="fas fa-users text-5xl text-white/30"></i>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">No Asistentes</p>
+                            <p class="text-4xl font-bold mt-2">${totalNoAsistentes}</p>
+                        </div>
+                        <i class="fas fa-user-times text-5xl text-white/30"></i>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Por Sede</p>
+                            <p class="text-xl font-bold mt-2">Norte: ${sedeNorte} | Sur: ${sedeSur}</p>
+                        </div>
+                        <i class="fas fa-building text-5xl text-white/30"></i>
+                    </div>
+                </div>
+
+                <div class="stat-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">Menú Vegetariano</p>
+                            <p class="text-4xl font-bold mt-2">${vegetarianos}</p>
+                        </div>
+                        <i class="fas fa-leaf text-5xl text-white/30"></i>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('stats-container').innerHTML = statsHTML;
+            document.getElementById('count-asistentes').textContent = totalAsistentes;
+            document.getElementById('count-no-asistentes').textContent = totalNoAsistentes;
+        }
+
+        // Renderizar tabla de asistentes
+        function renderAsistentes() {
+            const tbody = document.getElementById('asistentes-tbody');
+            const noResults = document.getElementById('no-results');
+            const tableContainer = document.getElementById('table-container');
+
+            if (filteredAsistentes.length === 0) {
+                tableContainer.classList.add('hidden');
+                noResults.classList.remove('hidden');
+                return;
+            }
+
+            tableContainer.classList.remove('hidden');
+            noResults.classList.add('hidden');
+
+            tbody.innerHTML = filteredAsistentes.map((asistente, index) => `
+                <tr>
+                    <td class="font-medium text-gray-900">${index + 1}</td>
+                    <td class="font-medium text-gray-900">${asistente.nombre}</td>
+                    <td>${asistente.rut}</td>
+                    <td>${asistente.correo}</td>
+                    <td>
+                        <span class="badge ${asistente.sexo === 'Masculino' ? 'badge-blue' : asistente.sexo === 'Femenino' ? 'badge-purple' : 'badge-green'}">
+                            ${asistente.sexo}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge ${asistente.sede === 'Sede Norte' ? 'badge-blue' : 'badge-purple'}">
+                            <i class="fas fa-building mr-1"></i>
+                            ${asistente.sede}
+                        </span>
+                    </td>
+                    <td>
+                        ${asistente.menu_vegetariano 
+                            ? '<span class="badge badge-green"><i class="fas fa-leaf mr-1"></i>Vegetariano</span>'
+                            : '<span class="badge badge-blue"><i class="fas fa-utensils mr-1"></i>Regular</span>'
+                        }
+                    </td>
+                    <td>${formatDate(asistente.fecha_registro)}</td>
+                </tr>
+            `).join('');
+
+            document.getElementById('filtered-count').textContent = 
+                `Mostrando ${filteredAsistentes.length} de ${allAsistentes.length} registros`;
+        }
+
+        // Renderizar tabla de no asistentes
+        function renderNoAsistentes() {
+            const tbody = document.getElementById('no-asistentes-tbody');
+            
+            if (allNoAsistentes.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="5" class="text-center py-8 text-gray-500">
+                            <i class="fas fa-inbox text-4xl mb-2"></i>
+                            <p>No hay registros de personas que no asistirán</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = allNoAsistentes.map((persona, index) => `
+                <tr>
+                    <td class="font-medium text-gray-900">${index + 1}</td>
+                    <td class="font-medium text-gray-900">${persona.nombre}</td>
+                    <td>${persona.rut}</td>
+                    <td>${persona.correo}</td>
+                    <td>${formatDate(persona.fecha_registro)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Aplicar filtros
+        function applyFilters() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const sedeFilter = document.getElementById('filter-sede').value;
+            const menuFilter = document.getElementById('filter-menu').value;
+            const sexoFilter = document.getElementById('filter-sexo').value;
+
+            filteredAsistentes = allAsistentes.filter(asistente => {
+                const matchSearch = !searchTerm || 
+                    asistente.nombre.toLowerCase().includes(searchTerm) ||
+                    asistente.rut.toLowerCase().includes(searchTerm) ||
+                    asistente.correo.toLowerCase().includes(searchTerm);
+
+                const matchSede = !sedeFilter || asistente.sede === sedeFilter;
+                
+                const matchMenu = !menuFilter || 
+                    (menuFilter === 'vegetariano' && asistente.menu_vegetariano) ||
+                    (menuFilter === 'regular' && !asistente.menu_vegetariano);
+
+                const matchSexo = !sexoFilter || asistente.sexo === sexoFilter;
+
+                return matchSearch && matchSede && matchMenu && matchSexo;
+            });
+
+            renderAsistentes();
+        }
+
+        // Limpiar filtros
+        function clearFilters() {
+            document.getElementById('search-input').value = '';
+            document.getElementById('filter-sede').value = '';
+            document.getElementById('filter-menu').value = '';
+            document.getElementById('filter-sexo').value = '';
+            applyFilters();
+        }
+
+        // Cambiar de tab
+        function showTab(tab) {
+            currentTab = tab;
+            
+            // Actualizar botones
+            document.getElementById('tab-asistentes').classList.toggle('active', tab === 'asistentes');
+            document.getElementById('tab-no-asistentes').classList.toggle('active', tab === 'no-asistentes');
+            
+            // Mostrar/ocultar contenido
+            document.getElementById('tab-content-asistentes').classList.toggle('hidden', tab !== 'asistentes');
+            document.getElementById('tab-content-no-asistentes').classList.toggle('hidden', tab !== 'no-asistentes');
+        }
+
+        // Refrescar datos
+        function refreshData() {
+            loadData();
+        }
+
+        // Exportar a CSV
+        function exportToCSV() {
+            const data = currentTab === 'asistentes' ? filteredAsistentes : allNoAsistentes;
+            
+            if (data.length === 0) {
+                alert('No hay datos para exportar');
+                return;
+            }
+
+            let csv = '';
+            
+            if (currentTab === 'asistentes') {
+                csv = 'N°,Nombre,RUT,Correo,Sexo,Sede,Menú Vegetariano,Fecha Registro\n';
+                data.forEach((item, index) => {
+                    csv += `${index + 1},"${item.nombre}","${item.rut}","${item.correo}","${item.sexo}","${item.sede}","${item.menu_vegetariano ? 'Sí' : 'No'}","${formatDate(item.fecha_registro)}"\n`;
+                });
+            } else {
+                csv = 'N°,Nombre,RUT,Correo,Fecha Registro\n';
+                data.forEach((item, index) => {
+                    csv += `${index + 1},"${item.nombre}","${item.rut}","${item.correo}","${formatDate(item.fecha_registro)}"\n`;
+                });
+            }
+
+            // Crear y descargar archivo
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `evento_sindicato_${currentTab}_${new Date().toISOString().split('T')[0]}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // Formatear fecha
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CL', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+    </script>
+</body>
+</html>

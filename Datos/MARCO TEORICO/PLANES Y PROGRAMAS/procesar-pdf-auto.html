@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesador Automático de PDF Ministerial</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    </script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        #dropZone {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+        }
+        #dropZone:hover {
+            background: #e8ebff;
+            border-color: #5568d3;
+        }
+        #dropZone.dragover {
+            background: #d8dcff;
+            border-color: #3d4fc1;
+            transform: scale(1.02);
+        }
+        .log {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 20px;
+            display: none;
+        }
+        .log.active {
+            display: block;
+        }
+        .log-line {
+            margin: 5px 0;
+            padding: 3px 0;
+        }
+        .log-success { color: #4ec9b0; }
+        .log-warning { color: #ce9178; }
+        .log-error { color: #f44747; }
+        .log-info { color: #569cd6; }
+        .log-header {
+            color: #dcdcaa;
+            font-weight: bold;
+            font-size: 14px;
+            border-bottom: 1px solid #444;
+            padding-bottom: 5px;
+            margin-bottom: 10px;
+        }
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+            display: none;
+        }
+        .buttons.active {
+            display: flex;
+        }
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-download {
+            background: #4caf50;
+            color: white;
+        }
+        .btn-download:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        .btn-import {
+            background: #667eea;
+            color: white;
+        }
+        .btn-import:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+        .stats.active {
+            display: grid;
+        }
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 30px;
+            background: #e0e0e0;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 20px;
+            display: none;
+        }
+        .progress-bar.active {
+            display: block;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Procesador Automático de PDF Ministerial</h1>
+        <p class="subtitle">Arrastra o haz clic para seleccionar "Lenguaje 5.pdf"</p>
+        
+        <div id="dropZone">
+            <p style="font-size: 48px; margin: 0;">📄</p>
+            <p style="font-size: 18px; margin: 20px 0;">Suelta el archivo PDF aquí</p>
+            <p style="color: #999;">o haz clic para seleccionar</p>
+        </div>
+        
+        <input type="file" id="fileInput" accept=".pdf">
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill">0%</div>
+        </div>
+        
+        <div class="log" id="log"></div>
+        
+        <div class="stats" id="stats"></div>
+        
+        <div class="buttons" id="buttons">
+            <button class="btn-download" onclick="descargarJSON()">💾 Descargar JSON</button>
+            <button class="btn-import" onclick="importarAlGestor()">🚀 Importar al Gestor</button>
+        </div>
+    </div>
+
+    <script>
+        let planExtraido = null;
+        
+        // Configurar drag & drop
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type === 'application/pdf') {
+                procesarPDF(file);
+            } else {
+                addLog('Por favor, selecciona un archivo PDF válido', 'error');
+            }
+        });
+        
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                procesarPDF(file);
+            }
+        });
+        
+        function addLog(mensaje, tipo = 'info') {
+            const logDiv = document.getElementById('log');
+            logDiv.classList.add('active');
+            const line = document.createElement('div');
+            line.className = `log-line log-${tipo}`;
+            line.textContent = mensaje;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        function updateProgress(percent, text) {
+            const progressBar = document.getElementById('progressBar');
+            const progressFill = document.getElementById('progressFill');
+            progressBar.classList.add('active');
+            progressFill.style.width = percent + '%';
+            progressFill.textContent = text || (percent + '%');
+        }
+        
+        async function procesarPDF(file) {
+            addLog('============================================================', 'header');
+            addLog('📚 EXTRACTOR DE PLANES Y PROGRAMAS MINISTERIALES', 'header');
+            addLog('============================================================', 'header');
+            addLog(`📄 Archivo: ${file.name}`, 'info');
+            addLog(`📦 Tamaño: ${(file.size / 1024).toFixed(2)} KB`, 'info');
+            addLog('============================================================', 'header');
+            
+            try {
+                updateProgress(10, 'Cargando PDF...');
+                
+                const arrayBuffer = await file.arrayBuffer();
+                const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+                const totalPages = pdf.numPages;
+                
+                addLog(`📖 Total de páginas: ${totalPages}`, 'info');
+                updateProgress(20, 'Extrayendo texto...');
+                
+                let textoCompleto = '';
+                
+                for (let i = 1; i <= totalPages; i++) {
+                    const page = await pdf.getPage(i);
+                    const textContent = await page.getTextContent();
+                    const pageText = textContent.items.map(item => item.str).join(' ');
+                    textoCompleto += pageText + '\n';
+                    
+                    const progress = 20 + (i / totalPages) * 50;
+                    updateProgress(progress, `Página ${i}/${totalPages}`);
+                }
+                
+                addLog(`✅ Texto extraído: ${textoCompleto.length} caracteres`, 'success');
+                updateProgress(70, 'Procesando contenido...');
+                
+                // Procesar el texto
+                const plan = procesarTextoMinisterial(textoCompleto);
+                
+                updateProgress(90, 'Generando JSON...');
+                planExtraido = plan;
+                
+                // Mostrar estadísticas
+                mostrarEstadisticas(plan);
+                
+                updateProgress(100, '✅ Completado');
+                addLog('============================================================', 'header');
+                addLog('✅ EXTRACCIÓN COMPLETADA EXITOSAMENTE', 'success');
+                addLog('============================================================', 'header');
+                addLog(`📊 Unidades: ${plan.totalUnidades}`, 'success');
+                addLog(`📝 OA totales: ${plan.totalOA}`, 'success');
+                addLog(`✓ Indicadores: ${plan.totalIndicadores}`, 'success');
+                addLog(`💡 Actitudes: ${plan.actitudesGenerales.length}`, 'success');
+                addLog('============================================================', 'header');
+                
+                document.getElementById('buttons').classList.add('active');
+                
+            } catch (error) {
+                addLog(`❌ ERROR: ${error.message}`, 'error');
+                console.error(error);
+            }
+        }
+        
+        function procesarTextoMinisterial(texto) {
+            const plan = {
+                id: 'plan_5basico_lenguaje_2025',
+                nivel: '5° Básico',
+                asignatura: 'Lenguaje y Comunicación',
+                fechaCarga: new Date().toISOString().split('T')[0],
+                fuente: 'PDF Ministerial - Procesado Automáticamente',
+                totalUnidades: 0,
+                totalOA: 0,
+                totalIndicadores: 0,
+                actitudesGenerales: [],
+                unidades: []
+            };
+            
+            addLog('🎯 Extrayendo actitudes generales...', 'info');
+            plan.actitudesGenerales = extraerActitudes(texto);
+            addLog(`   ✓ ${plan.actitudesGenerales.length} actitudes encontradas`, 'success');
+            
+            addLog('📖 Extrayendo unidades...', 'info');
+            const unidades = extraerUnidades(texto);
+            addLog(`   ✓ ${unidades.length} unidades encontradas`, 'success');
+            
+            unidades.forEach((unidad, index) => {
+                addLog(`\n📚 Unidad ${unidad.numero}: ${unidad.nombre}`, 'warning');
+                
+                unidad.objetivos = extraerObjetivos(texto, unidad.numero);
+                addLog(`   ✓ ${unidad.objetivos.length} OA`, 'success');
+                
+                unidad.indicadores = extraerIndicadores(texto, unidad.numero);
+                addLog(`   ✓ ${unidad.indicadores.length} indicadores`, 'success');
+                
+                unidad.proposito = extraerProposito(texto, unidad.numero);
+                unidad.contenidos = extraerContenidos(texto, unidad.numero);
+                unidad.habilidades = extraerHabilidades(texto, unidad.numero);
+                unidad.actitudes = plan.actitudesGenerales;
+                
+                plan.unidades.push(unidad);
+                plan.totalOA += unidad.objetivos.length;
+                plan.totalIndicadores += unidad.indicadores.length;
+            });
+            
+            plan.totalUnidades = plan.unidades.length;
+            
+            return plan;
+        }
+        
+        function extraerActitudes(texto) {
+            const actitudes = [];
+            const inicio = texto.search(/Actitudes.*?asignatura/i);
+            if (inicio === -1) return actitudes;
+            
+            const seccion = texto.substring(inicio, inicio + 5000);
+            const regex = /([A-HÑ])\s*[.-]\s*([^A-HÑ]{20,200}?)(?=[A-HÑ]\s*[.-]|$)/g;
+            let match;
+            
+            while ((match = regex.exec(seccion)) !== null) {
+                const letra = match[1];
+                const descripcion = match[2].trim().replace(/\s+/g, ' ');
+                if (descripcion.length > 15 && descripcion.length < 200) {
+                    actitudes.push({
+                        letra: letra,
+                        descripcion: descripcion
+                    });
+                }
+            }
+            
+            return actitudes;
+        }
+        
+        function extraerUnidades(texto) {
+            const unidades = [];
+            const regex = /(?:UNIDAD|Unidad)\s+(\d+)[:\s]*([^\n]{10,100})/gi;
+            let match;
+            
+            while ((match = regex.exec(texto)) !== null) {
+                const numero = parseInt(match[1]);
+                let nombre = match[2].trim();
+                nombre = nombre.replace(/[:\.\-]+\s*$/, '').trim();
+                
+                if (!unidades.find(u => u.numero === numero)) {
+                    unidades.push({
+                        numero: numero,
+                        nombre: nombre,
+                        proposito: '',
+                        objetivos: [],
+                        indicadores: [],
+                        contenidos: [],
+                        habilidades: [],
+                        actitudes: []
+                    });
+                }
+            }
+            
+            return unidades.sort((a, b) => a.numero - b.numero);
+        }
+        
+        function extraerObjetivos(texto, numeroUnidad) {
+            const objetivos = [];
+            const regex = /(?:OA|Objetivo)\s*(\d+)[:\s.]*([^\n]{20,300})/gi;
+            let match;
+            
+            while ((match = regex.exec(texto)) !== null) {
+                const numero = parseInt(match[1]);
+                let descripcion = match[2].trim();
+                descripcion = descripcion.replace(/[:\.\-]+\s*$/, '').trim();
+                
+                if (descripcion.length > 15 && descripcion.length < 300) {
+                    objetivos.push({
+                        numero: numero,
+                        descripcion: descripcion,
+                        unidad: numeroUnidad
+                    });
+                }
+            }
+            
+            return objetivos;
+        }
+        
+        function extraerIndicadores(texto, numeroUnidad) {
+            const indicadores = [];
+            const inicio = texto.search(/Indicadores.*?evaluación/i);
+            if (inicio === -1) return indicadores;
+            
+            const seccion = texto.substring(inicio, inicio + 20000);
+            const regex = /[›»•▸]\s*([^›»•▸\n]{20,250})/g;
+            let match;
+            let count = 0;
+            
+            while ((match = regex.exec(seccion)) !== null && count < 50) {
+                let descripcion = match[1].trim();
+                descripcion = descripcion.replace(/\s+/g, ' ');
+                
+                if (descripcion.length > 15 && descripcion.length < 250) {
+                    indicadores.push(descripcion);
+                    count++;
+                }
+            }
+            
+            return indicadores;
+        }
+        
+        function extraerProposito(texto, numeroUnidad) {
+            const regex = new RegExp(`Unidad\\s+${numeroUnidad}[\\s\\S]{0,200}?Propósito[:\\s]*([^\\n]{50,500})`, 'i');
+            const match = texto.match(regex);
+            
+            if (match) {
+                return match[1].trim().replace(/\s+/g, ' ');
+            }
+            
+            return 'Propósito no especificado';
+        }
+        
+        function extraerContenidos(texto, numeroUnidad) {
+            const contenidos = [];
+            const inicio = texto.search(/Contenidos/i);
+            if (inicio === -1) return contenidos;
+            
+            const seccion = texto.substring(inicio, inicio + 5000);
+            const regex = /[›»•▸]\s*([^›»•▸\n]{15,150})/g;
+            let match;
+            let count = 0;
+            
+            while ((match = regex.exec(seccion)) !== null && count < 20) {
+                const contenido = match[1].trim().replace(/\s+/g, ' ');
+                if (contenido.length > 10) {
+                    contenidos.push(contenido);
+                    count++;
+                }
+            }
+            
+            return contenidos;
+        }
+        
+        function extraerHabilidades(texto, numeroUnidad) {
+            const habilidades = [];
+            const inicio = texto.search(/Habilidades/i);
+            if (inicio === -1) return habilidades;
+            
+            const seccion = texto.substring(inicio, inicio + 3000);
+            const regex = /[›»•▸]\s*([^›»•▸\n]{10,100})/g;
+            let match;
+            let count = 0;
+            
+            while ((match = regex.exec(seccion)) !== null && count < 15) {
+                const habilidad = match[1].trim().replace(/\s+/g, ' ');
+                if (habilidad.length > 5) {
+                    habilidades.push(habilidad);
+                    count++;
+                }
+            }
+            
+            return habilidades;
+        }
+        
+        function mostrarEstadisticas(plan) {
+            const statsDiv = document.getElementById('stats');
+            statsDiv.classList.add('active');
+            statsDiv.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-number">${plan.totalUnidades}</div>
+                    <div class="stat-label">Unidades</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${plan.totalOA}</div>
+                    <div class="stat-label">Objetivos de Aprendizaje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${plan.totalIndicadores}</div>
+                    <div class="stat-label">Indicadores</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">${plan.actitudesGenerales.length}</div>
+                    <div class="stat-label">Actitudes</div>
+                </div>
+            `;
+        }
+        
+        function descargarJSON() {
+            if (!planExtraido) return;
+            
+            const dataStr = JSON.stringify(planExtraido, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `plan_5_Basico_Lenguaje_y_Comunicacion_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('💾 JSON descargado exitosamente', 'success');
+        }
+        
+        function importarAlGestor() {
+            if (!planExtraido) return;
+            
+            try {
+                // Guardar en localStorage
+                let planesExistentes = JSON.parse(localStorage.getItem('planes_programas_ministeriales') || '[]');
+                
+                // Eliminar plan anterior del mismo nivel/asignatura si existe
+                planesExistentes = planesExistentes.filter(p => 
+                    !(p.nivel === planExtraido.nivel && p.asignatura === planExtraido.asignatura)
+                );
+                
+                planesExistentes.push(planExtraido);
+                localStorage.setItem('planes_programas_ministeriales', JSON.stringify(planesExistentes));
+                
+                addLog('🚀 Plan importado al gestor exitosamente', 'success');
+                addLog('✅ Puedes abrir gestor-planes-programas.html para verlo', 'info');
+                
+                // Abrir gestor en nueva pestaña
+                setTimeout(() => {
+                    window.open('../../../privado/gestor-planes-programas.html', '_blank');
+                }, 1000);
+                
+            } catch (error) {
+                addLog(`❌ Error al importar: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>

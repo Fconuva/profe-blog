@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 Panel de Pruebas - Control Maestro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-6">
+    
+    <div class="max-w-6xl mx-auto">
+        <div class="bg-white rounded-xl shadow-2xl overflow-hidden mb-6">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 text-white">
+                <h1 class="text-3xl font-bold flex items-center">
+                    <i class="fas fa-flask mr-3"></i>
+                    Panel de Pruebas - Sistema Control Maestro
+                </h1>
+                <p class="text-blue-100 mt-2">Verificación y auditoría del nuevo sistema de administración</p>
+            </div>
+
+            <div class="p-6">
+                <!-- ESTADO DEL SISTEMA -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-green-50 border-2 border-green-300 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-green-700 font-semibold">Docente Activo</p>
+                                <p id="statusDocenteActivo" class="text-lg font-bold text-green-900">-</p>
+                            </div>
+                            <i class="fas fa-user-check text-3xl text-green-500"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-blue-50 border-2 border-blue-300 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-blue-700 font-semibold">Registros Auditoría</p>
+                                <p id="statusAuditoria" class="text-lg font-bold text-blue-900">0</p>
+                            </div>
+                            <i class="fas fa-file-alt text-3xl text-blue-500"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-purple-50 border-2 border-purple-300 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-purple-700 font-semibold">Configs Guardadas</p>
+                                <p id="statusConfigs" class="text-lg font-bold text-purple-900">0/4</p>
+                            </div>
+                            <i class="fas fa-database text-3xl text-purple-500"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ACCIONES RÁPIDAS -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    
+                    <!-- PRUEBAS AUTOMATIZADAS -->
+                    <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-robot mr-2 text-blue-600"></i>
+                            Pruebas Automatizadas
+                        </h3>
+                        <div class="space-y-2">
+                            <button onclick="ejecutarTodasPruebas()" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-semibold">
+                                <i class="fas fa-play mr-2"></i>Ejecutar Todas las Pruebas
+                            </button>
+                            <button onclick="pruebaSelector()" class="w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-check mr-2"></i>Probar Selector de Docente
+                            </button>
+                            <button onclick="pruebaAuditoria()" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-clipboard-check mr-2"></i>Probar Auditoría
+                            </button>
+                            <button onclick="pruebaPersistencia()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-save mr-2"></i>Probar Persistencia
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- INSPECCIÓN DE DATOS -->
+                    <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fas fa-search mr-2 text-green-600"></i>
+                            Inspección de Datos
+                        </h3>
+                        <div class="space-y-2">
+                            <button onclick="verLocalStorage()" class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-database mr-2"></i>Ver localStorage
+                            </button>
+                            <button onclick="verAuditoriaCompleta()" class="w-full bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-list mr-2"></i>Ver Auditoría Completa
+                            </button>
+                            <button onclick="verConfigsDocentes()" class="w-full bg-pink-500 hover:bg-pink-600 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-users mr-2"></i>Ver Configs Docentes
+                            </button>
+                            <button onclick="exportarReporte()" class="w-full bg-gray-700 hover:bg-gray-800 text-white py-2 px-4 rounded-lg">
+                                <i class="fas fa-file-download mr-2"></i>Exportar Reporte
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- CONSOLA DE RESULTADOS -->
+                <div class="bg-gray-900 rounded-lg p-4 text-green-400 font-mono text-sm h-96 overflow-y-auto">
+                    <div id="console" class="space-y-1">
+                        <p class="text-yellow-400">🔧 Panel de pruebas iniciado...</p>
+                        <p class="text-gray-500">Selecciona una prueba para comenzar.</p>
+                    </div>
+                </div>
+
+                <!-- LIMPIEZA DE DATOS -->
+                <div class="mt-6 bg-red-50 border-2 border-red-300 rounded-lg p-4">
+                    <h3 class="text-lg font-bold text-red-800 mb-3 flex items-center">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Zona de Peligro
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                        <button onclick="limpiarAuditoria()" class="bg-orange-500 hover:bg-orange-600 text-white py-2 px-4 rounded-lg">
+                            <i class="fas fa-eraser mr-2"></i>Limpiar Auditoría
+                        </button>
+                        <button onclick="resetearDocente()" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded-lg">
+                            <i class="fas fa-undo mr-2"></i>Resetear Docente
+                        </button>
+                        <button onclick="limpiarTodo()" class="bg-red-700 hover:bg-red-800 text-white py-2 px-4 rounded-lg">
+                            <i class="fas fa-trash-alt mr-2"></i>Limpiar TODO
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONSOLA DE LOGS
+        const consoleDiv = document.getElementById('console');
+        
+        function log(message, type = 'info') {
+            const colors = {
+                info: 'text-blue-400',
+                success: 'text-green-400',
+                error: 'text-red-400',
+                warning: 'text-yellow-400',
+                data: 'text-purple-400'
+            };
+            
+            const timestamp = new Date().toLocaleTimeString();
+            const p = document.createElement('p');
+            p.className = colors[type] || 'text-gray-400';
+            p.textContent = `[${timestamp}] ${message}`;
+            consoleDiv.appendChild(p);
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+        }
+
+        function logSeparator() {
+            const p = document.createElement('p');
+            p.className = 'text-gray-600';
+            p.textContent = '═'.repeat(80);
+            consoleDiv.appendChild(p);
+        }
+
+        // ACTUALIZAR ESTADO
+        function actualizarEstado() {
+            const docenteActivo = localStorage.getItem('docenteActivo') || 'Ninguno';
+            const auditoria = JSON.parse(localStorage.getItem('auditoria_admin') || '[]');
+            
+            let configsGuardadas = 0;
+            ['francisco', 'javiera', 'docente3', 'docente4'].forEach(id => {
+                if (localStorage.getItem(`${id}_config`)) configsGuardadas++;
+            });
+            
+            document.getElementById('statusDocenteActivo').textContent = docenteActivo;
+            document.getElementById('statusAuditoria').textContent = auditoria.length;
+            document.getElementById('statusConfigs').textContent = `${configsGuardadas}/4`;
+        }
+
+        // PRUEBAS INDIVIDUALES
+        function pruebaSelector() {
+            logSeparator();
+            log('🧪 PRUEBA: Selector de Docente', 'warning');
+            
+            const docenteActivo = localStorage.getItem('docenteActivo');
+            
+            if (docenteActivo) {
+                log(`✅ Docente seleccionado: ${docenteActivo}`, 'success');
+            } else {
+                log('⚠️ No hay docente seleccionado', 'warning');
+            }
+            
+            ['francisco', 'javiera', 'docente3', 'docente4'].forEach(id => {
+                const config = localStorage.getItem(`${id}_config`);
+                if (config) {
+                    const data = JSON.parse(config);
+                    log(`✓ Config ${id}: ${data.teacherName || 'Sin nombre'}`, 'info');
+                } else {
+                    log(`✗ Config ${id}: No configurado`, 'error');
+                }
+            });
+            
+            actualizarEstado();
+        }
+
+        function pruebaAuditoria() {
+            logSeparator();
+            log('🧪 PRUEBA: Sistema de Auditoría', 'warning');
+            
+            const auditoria = JSON.parse(localStorage.getItem('auditoria_admin') || '[]');
+            
+            log(`📊 Total de registros: ${auditoria.length}`, 'info');
+            
+            if (auditoria.length > 0) {
+                const ultimo = auditoria[auditoria.length - 1];
+                log(`🕐 Último registro: ${ultimo.tipo}`, 'data');
+                log(`   Usuario: ${ultimo.usuario}`, 'data');
+                log(`   Timestamp: ${ultimo.timestamp}`, 'data');
+                
+                const tipos = {};
+                auditoria.forEach(r => {
+                    tipos[r.tipo] = (tipos[r.tipo] || 0) + 1;
+                });
+                
+                log('📈 Distribución por tipo:', 'info');
+                Object.entries(tipos).forEach(([tipo, count]) => {
+                    log(`   ${tipo}: ${count}`, 'data');
+                });
+            } else {
+                log('⚠️ No hay registros de auditoría', 'warning');
+            }
+            
+            actualizarEstado();
+        }
+
+        function pruebaPersistencia() {
+            logSeparator();
+            log('🧪 PRUEBA: Persistencia de Datos', 'warning');
+            
+            const testKey = 'test_persistencia';
+            const testValue = Date.now().toString();
+            
+            localStorage.setItem(testKey, testValue);
+            const retrieved = localStorage.getItem(testKey);
+            
+            if (retrieved === testValue) {
+                log('✅ localStorage funciona correctamente', 'success');
+                localStorage.removeItem(testKey);
+            } else {
+                log('❌ ERROR: localStorage no funciona', 'error');
+            }
+            
+            const keys = Object.keys(localStorage);
+            log(`📦 Total de keys en localStorage: ${keys.length}`, 'info');
+            
+            const systemKeys = keys.filter(k => 
+                k.includes('config') || k.includes('docente') || k.includes('auditoria')
+            );
+            log(`🔑 Keys del sistema: ${systemKeys.length}`, 'info');
+            systemKeys.forEach(k => log(`   - ${k}`, 'data'));
+            
+            actualizarEstado();
+        }
+
+        // EJECUTAR TODAS LAS PRUEBAS
+        function ejecutarTodasPruebas() {
+            consoleDiv.innerHTML = '';
+            log('🚀 Ejecutando suite completa de pruebas...', 'warning');
+            
+            setTimeout(() => pruebaSelector(), 100);
+            setTimeout(() => pruebaAuditoria(), 500);
+            setTimeout(() => pruebaPersistencia(), 900);
+            setTimeout(() => {
+                logSeparator();
+                log('✅ Todas las pruebas completadas', 'success');
+            }, 1300);
+        }
+
+        // INSPECCIÓN DE DATOS
+        function verLocalStorage() {
+            logSeparator();
+            log('📦 localStorage COMPLETO', 'warning');
+            
+            const keys = Object.keys(localStorage).sort();
+            
+            if (keys.length === 0) {
+                log('⚠️ localStorage está vacío', 'warning');
+            } else {
+                keys.forEach(key => {
+                    const value = localStorage.getItem(key);
+                    if (value.length > 100) {
+                        log(`${key}: [${value.length} caracteres]`, 'data');
+                    } else {
+                        log(`${key}: ${value}`, 'data');
+                    }
+                });
+            }
+        }
+
+        function verAuditoriaCompleta() {
+            logSeparator();
+            log('📋 AUDITORÍA COMPLETA', 'warning');
+            
+            const auditoria = JSON.parse(localStorage.getItem('auditoria_admin') || '[]');
+            
+            auditoria.forEach((registro, i) => {
+                log(`[${i + 1}] ${registro.tipo} - ${registro.timestamp}`, 'info');
+                log(`    Usuario: ${registro.usuario}`, 'data');
+                if (registro.datos) {
+                    Object.entries(registro.datos).forEach(([k, v]) => {
+                        log(`    ${k}: ${v}`, 'data');
+                    });
+                }
+            });
+        }
+
+        function verConfigsDocentes() {
+            logSeparator();
+            log('👥 CONFIGURACIONES DE DOCENTES', 'warning');
+            
+            ['francisco', 'javiera', 'docente3', 'docente4'].forEach(id => {
+                const configKey = `${id}_config`;
+                const config = localStorage.getItem(configKey);
+                
+                log(`\n📄 ${id.toUpperCase()}:`, 'info');
+                
+                if (config) {
+                    const data = JSON.parse(config);
+                    log(`   Nombre: ${data.teacherName || 'No definido'}`, 'data');
+                    log(`   Asignatura: ${data.subject || 'No definida'}`, 'data');
+                    log(`   Cursos: ${data.courses || 'No definidos'}`, 'data');
+                    log(`   Establecimiento: ${data.establishment || 'No definido'}`, 'data');
+                    log(`   Año: ${data.year || 'No definido'}`, 'data');
+                } else {
+                    log('   ⚠️ No configurado', 'warning');
+                }
+            });
+        }
+
+        function exportarReporte() {
+            const reporte = {
+                fecha: new Date().toISOString(),
+                docenteActivo: localStorage.getItem('docenteActivo'),
+                auditoria: JSON.parse(localStorage.getItem('auditoria_admin') || '[]'),
+                configs: {}
+            };
+            
+            ['francisco', 'javiera', 'docente3', 'docente4'].forEach(id => {
+                const config = localStorage.getItem(`${id}_config`);
+                if (config) {
+                    reporte.configs[id] = JSON.parse(config);
+                }
+            });
+            
+            const blob = new Blob([JSON.stringify(reporte, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `reporte_control_maestro_${Date.now()}.json`;
+            a.click();
+            
+            log('📥 Reporte exportado exitosamente', 'success');
+        }
+
+        // LIMPIEZA
+        function limpiarAuditoria() {
+            if (confirm('¿Eliminar todos los registros de auditoría?')) {
+                localStorage.removeItem('auditoria_admin');
+                log('🗑️ Auditoría limpiada', 'warning');
+                actualizarEstado();
+            }
+        }
+
+        function resetearDocente() {
+            if (confirm('¿Deseleccionar el docente activo?')) {
+                localStorage.removeItem('docenteActivo');
+                log('🔄 Docente resetado', 'warning');
+                actualizarEstado();
+            }
+        }
+
+        function limpiarTodo() {
+            if (confirm('⚠️ PELIGRO: ¿Eliminar TODOS los datos del sistema?\n\nEsto incluye:\n- Docente activo\n- Auditoría\n- Configuraciones\n- Cursos\n- TODO\n\n¿Estás seguro?')) {
+                localStorage.clear();
+                log('💥 TODO limpiado - localStorage vacío', 'error');
+                actualizarEstado();
+            }
+        }
+
+        // INICIALIZAR
+        actualizarEstado();
+        setInterval(actualizarEstado, 5000); // Actualizar cada 5 segundos
+    </script>
+
+</body>
+</html>

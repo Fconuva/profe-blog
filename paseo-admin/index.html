@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Paseo Docentes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .card {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .loading {
+            border-top-color: #667eea;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-6">
+
+    <div class="max-w-7xl mx-auto">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-2xl p-6 mb-6 card">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="bg-gradient-to-r from-indigo-600 to-purple-600 p-4 rounded-xl">
+                        <i class="fas fa-bus text-4xl text-white"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-3xl font-bold text-gray-800">Panel de Administración</h1>
+                        <p class="text-gray-600">Paseo Docentes - Gestión de Reservas</p>
+                    </div>
+                </div>
+                <button onclick="refreshData()" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-semibold transition-all">
+                    <i class="fas fa-sync-alt mr-2"></i>Actualizar
+                </button>
+            </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
+            <div class="bg-white rounded-xl shadow-lg p-6 card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold">Total Inscritos</p>
+                        <p id="totalInscritos" class="text-3xl font-bold text-indigo-600">0</p>
+                    </div>
+                    <div class="bg-indigo-100 p-3 rounded-lg">
+                        <i class="fas fa-users text-2xl text-indigo-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold">Transporte Bus</p>
+                        <p id="transporteBus" class="text-3xl font-bold text-green-600">0</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-lg">
+                        <i class="fas fa-bus text-2xl text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold">Transporte Propio</p>
+                        <p id="transportePropio" class="text-3xl font-bold text-orange-600">0</p>
+                    </div>
+                    <div class="bg-orange-100 p-3 rounded-lg">
+                        <i class="fas fa-car text-2xl text-orange-600"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 card">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm font-semibold">Asientos Ocupados</p>
+                        <p id="asientosOcupados" class="text-3xl font-bold text-purple-600">0 / 46</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-lg">
+                        <i class="fas fa-chair text-2xl text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filtros y Búsqueda -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6 card">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-search mr-2"></i>Buscar
+                    </label>
+                    <input type="text" id="searchInput" placeholder="Nombre, RUT, Email..." 
+                           class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500"
+                           oninput="filterReservations()">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        <i class="fas fa-filter mr-2"></i>Filtrar por Transporte
+                    </label>
+                    <select id="filterTransporte" class="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:border-indigo-500"
+                            onchange="filterReservations()">
+                        <option value="todos">Todos</option>
+                        <option value="bus">Bus</option>
+                        <option value="propio">Transporte propio</option>
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button onclick="exportToExcel()" class="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold transition-all">
+                        <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visualización del Bus -->
+        <div id="busVisualization" class="bg-white rounded-xl shadow-lg p-6 mb-6 card hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                <i class="fas fa-bus text-indigo-600 mr-2"></i>
+                Mapa de Asientos del Bus
+            </h3>
+            <div id="busSeatsMap" class="flex justify-center">
+                <!-- Se llenará dinámicamente -->
+            </div>
+        </div>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="bg-white rounded-xl shadow-lg p-12 text-center card">
+            <div class="loading w-16 h-16 border-4 border-gray-200 rounded-full mx-auto mb-4"></div>
+            <p class="text-gray-600 font-semibold">Cargando datos...</p>
+        </div>
+
+        <!-- Tabla de Reservas -->
+        <div id="reservationsTable" class="bg-white rounded-xl shadow-lg overflow-hidden card hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+                        <tr>
+                            <th class="px-6 py-4 text-left">#</th>
+                            <th class="px-6 py-4 text-left">Nombre Completo</th>
+                            <th class="px-6 py-4 text-left">Email</th>
+                            <th class="px-6 py-4 text-left">Teléfono</th>
+                            <th class="px-6 py-4 text-left">Transporte</th>
+                            <th class="px-6 py-4 text-left">Asiento</th>
+                            <th class="px-6 py-4 text-left">Fecha Inscripción</th>
+                            <th class="px-6 py-4 text-center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody">
+                        <!-- Se llenará dinámicamente -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="bg-white rounded-xl shadow-lg p-12 text-center card hidden">
+            <i class="fas fa-inbox text-6xl text-gray-300 mb-4"></i>
+            <h3 class="text-2xl font-bold text-gray-700 mb-2">No hay reservas</h3>
+            <p class="text-gray-500">Aún no se han registrado inscripciones para el paseo.</p>
+        </div>
+    </div>
+
+    <script>
+        const FIREBASE_URL = 'https://profe-blog-default-rtdb.firebaseio.com';
+        let allReservations = [];
+        let filteredReservations = [];
+
+        // Cargar datos al iniciar
+        document.addEventListener('DOMContentLoaded', loadReservations);
+
+        async function loadReservations() {
+            try {
+                showLoading();
+                
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas.json`);
+                const data = await response.json();
+                
+                if (data) {
+                    // Convertir objeto Firebase a array
+                    allReservations = Object.entries(data).map(([key, value]) => ({
+                        firebaseKey: key,
+                        nombreCompleto: `${value.nombre} ${value.apellido}`,
+                        ...value
+                    }));
+                    
+                    filteredReservations = [...allReservations];
+                    updateStats();
+                    renderTable();
+                    hideLoading();
+                } else {
+                    allReservations = [];
+                    filteredReservations = [];
+                    showEmptyState();
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al cargar las reservas: ' + error.message);
+                showEmptyState();
+            }
+        }
+
+        function updateStats() {
+            const total = allReservations.length;
+            const conBus = allReservations.filter(r => r.transporte === 'bus').length;
+            const conPropio = total - conBus;
+            const asientosOcupados = allReservations.filter(r => r.asiento).length;
+
+            document.getElementById('totalInscritos').textContent = total;
+            document.getElementById('transporteBus').textContent = conBus;
+            document.getElementById('transportePropio').textContent = conPropio;
+            document.getElementById('asientosOcupados').textContent = `${asientosOcupados} / 46`;
+            
+            // Renderizar el mapa del bus
+            renderBusMap();
+        }
+
+        function renderBusMap() {
+            const busSeatsMap = document.getElementById('busSeatsMap');
+            const busVisualization = document.getElementById('busVisualization');
+            
+            // Crear mapa de asientos ocupados
+            const occupiedSeats = {};
+            allReservations.forEach(r => {
+                if (r.asiento && r.transporte === 'bus') {
+                    occupiedSeats[r.asiento] = {
+                        nombre: r.nombre,
+                        apellido: r.apellido
+                    };
+                }
+            });
+            
+            const totalSeats = 46;
+            const seatsPerRow = 4;
+            const regularRows = 44; // Primeros 44 asientos en filas de 4
+            
+            let html = '<div class="p-4 bg-gradient-to-b from-gray-100 to-gray-200 rounded-lg border-2 border-gray-300 shadow-inner max-w-md">';
+            
+            // Título
+            html += '<div class="text-center mb-3 pb-2 border-b-2 border-gray-400">';
+            html += '<p class="text-sm font-bold text-gray-700">🚌 Bus Escolar</p>';
+            html += '<p class="text-xs text-gray-600">Conductor ➡️</p>';
+            html += '</div>';
+            
+            // Asientos regulares (1-44)
+            html += '<div class="space-y-1">';
+            for (let i = 0; i < regularRows; i += seatsPerRow) {
+                html += '<div class="flex justify-center gap-2 items-center">';
+                
+                // Izquierda: 2 asientos
+                html += '<div class="flex gap-1">';
+                for (let j = 1; j <= 2; j++) {
+                    const seatNum = i + j;
+                    if (seatNum <= regularRows) {
+                        html += renderSeat(seatNum, occupiedSeats[seatNum]);
+                    }
+                }
+                html += '</div>';
+                
+                // Pasillo
+                html += '<div class="w-4 flex items-center justify-center text-gray-400 text-xs">|</div>';
+                
+                // Derecha: 2 asientos
+                html += '<div class="flex gap-1">';
+                for (let j = 3; j <= 4; j++) {
+                    const seatNum = i + j;
+                    if (seatNum <= regularRows) {
+                        html += renderSeat(seatNum, occupiedSeats[seatNum]);
+                    }
+                }
+                html += '</div>';
+                
+                html += '</div>';
+            }
+            
+            // Última fila con asientos 45 y 46 (fondo del bus)
+            html += '<div class="flex justify-center gap-2 items-center mt-2 pt-2 border-t-2 border-gray-400">';
+            html += '<div class="flex gap-1 flex-1 justify-center">';
+            html += renderSeat(45, occupiedSeats[45]);
+            html += renderSeat(46, occupiedSeats[46]);
+            html += '</div>';
+            html += '</div>';
+            
+            html += '</div>';
+            
+            // Leyenda
+            html += '<div class="mt-4 pt-3 border-t-2 border-gray-300">';
+            html += '<div class="flex justify-center gap-3 text-xs">';
+            html += '<div class="flex items-center gap-1"><div class="w-5 h-5 bg-green-100 border-2 border-green-400 rounded"></div><span>Disponible</span></div>';
+            html += '<div class="flex items-center gap-1"><div class="w-5 h-5 bg-red-100 border-2 border-red-400 rounded"></div><span>Ocupado</span></div>';
+            html += '</div></div>';
+            
+            html += '</div>';
+            
+            busSeatsMap.innerHTML = html;
+            busVisualization.classList.remove('hidden');
+        }
+
+        function renderSeat(seatNumber, occupant) {
+            const isOccupied = !!occupant;
+            const bgClass = isOccupied ? 'bg-red-100 border-red-400' : 'bg-green-100 border-green-400';
+            const textClass = isOccupied ? 'text-red-700' : 'text-green-700';
+            const title = occupant ? `${occupant.nombre} ${occupant.apellido}` : 'Disponible';
+            
+            return `<div class="w-9 h-9 ${bgClass} border-2 rounded flex items-center justify-center ${textClass} font-bold text-xs cursor-pointer hover:scale-110 transition-transform" title="${title}">
+                ${seatNumber}
+            </div>`;
+        }
+
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            
+            if (filteredReservations.length === 0) {
+                showEmptyState();
+                return;
+            }
+
+            tbody.innerHTML = filteredReservations.map((res, index) => `
+                <tr class="border-b hover:bg-gray-50 transition-colors">
+                    <td class="px-6 py-4 font-semibold text-gray-700">${index + 1}</td>
+                    <td class="px-6 py-4">
+                        <div class="font-semibold text-gray-800">${res.nombreCompleto}</div>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">${res.email}</td>
+                    <td class="px-6 py-4 text-gray-600">${res.telefono || 'N/A'}</td>
+                    <td class="px-6 py-4">
+                        <span class="px-3 py-1 rounded-full text-xs font-semibold ${
+                            res.transporte === 'bus' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-orange-100 text-orange-800'
+                        }">
+                            ${res.transporte === 'bus' ? 'Bus' : 'Propio'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="font-semibold ${res.asiento ? 'text-indigo-600' : 'text-gray-400'}">
+                            ${res.asiento || '-'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 text-gray-600">${formatDate(res.created_at)}</td>
+                    <td class="px-6 py-4 text-center">
+                        <button onclick="deleteReservation('${res.firebaseKey}', '${res.email}')" 
+                                class="text-red-600 hover:text-red-800 transition-colors"
+                                title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+
+            document.getElementById('reservationsTable').classList.remove('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function filterReservations() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const filterTrans = document.getElementById('filterTransporte').value;
+
+            filteredReservations = allReservations.filter(res => {
+                const matchesSearch = 
+                    res.nombreCompleto.toLowerCase().includes(searchTerm) ||
+                    res.email.toLowerCase().includes(searchTerm) ||
+                    (res.telefono && res.telefono.toLowerCase().includes(searchTerm));
+
+                const matchesFilter = 
+                    filterTrans === 'todos' ||
+                    res.transporte === filterTrans;
+
+                return matchesSearch && matchesFilter;
+            });
+
+            renderTable();
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('es-CL', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        async function deleteReservation(firebaseKey, email) {
+            if (!confirm(`¿Estás seguro de eliminar la reserva de ${email}?`)) return;
+
+            try {
+                const response = await fetch(`${FIREBASE_URL}/paseo_docentes/reservas/${firebaseKey}.json`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('Reserva eliminada exitosamente');
+                    loadReservations();
+                } else {
+                    throw new Error('Error al eliminar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar: ' + error.message);
+            }
+        }
+
+        function refreshData() {
+            loadReservations();
+        }
+
+        function exportToExcel() {
+            // Crear CSV
+            const headers = ['#', 'Nombre', 'Email', 'Teléfono', 'Transporte', 'Asiento', 'Fecha'];
+            const rows = filteredReservations.map((res, i) => [
+                i + 1,
+                res.nombreCompleto,
+                res.email,
+                res.telefono || '',
+                res.transporte === 'bus' ? 'Bus' : 'Propio',
+                res.asiento || '',
+                formatDate(res.created_at)
+            ]);
+
+            const csv = [headers, ...rows]
+                .map(row => row.map(cell => `"${cell}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `paseo-docentes-${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        function showLoading() {
+            document.getElementById('loadingState').classList.remove('hidden');
+            document.getElementById('reservationsTable').classList.add('hidden');
+            document.getElementById('emptyState').classList.add('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingState').classList.add('hidden');
+        }
+
+        function showEmptyState() {
+            document.getElementById('loadingState').classList.add('hidden');
+            document.getElementById('reservationsTable').classList.add('hidden');
+            document.getElementById('emptyState').classList.remove('hidden');
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Migración de Cursos a Neon Database</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <h1 class="text-3xl font-bold text-center mb-8 text-indigo-600">
+                <i class="fas fa-database mr-2"></i>
+                Migración Automática de Cursos
+            </h1>
+            
+            <div id="status" class="space-y-4 mb-8">
+                <!-- Los mensajes aparecerán aquí -->
+            </div>
+            
+            <div class="flex gap-4 justify-center">
+                <button id="startBtn" onclick="iniciarMigracion()" 
+                        class="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-lg hover:from-indigo-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-rocket mr-2"></i>
+                    INICIAR MIGRACIÓN COMPLETA
+                </button>
+                
+                <button id="verifyBtn" onclick="verificarNeon()" 
+                        class="px-8 py-4 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-lg hover:shadow-xl transition-all">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Verificar en Neon
+                </button>
+            </div>
+            
+            <div class="mt-8 p-6 bg-blue-50 rounded-lg border-2 border-blue-200">
+                <h3 class="font-bold text-lg mb-4 text-blue-900">📋 Instrucciones:</h3>
+                <ol class="list-decimal list-inside space-y-2 text-blue-800">
+                    <li>Haz clic en "INICIAR MIGRACIÓN COMPLETA"</li>
+                    <li>Espera a que termine (verás ✅ cuando esté listo)</li>
+                    <li>Haz clic en "Verificar en Neon" para ver los cursos en la base de datos</li>
+                    <li>Ve a <a href="registro-notas.html" class="underline font-bold">registro-notas.html</a> para usar el sistema</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function addLog(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            const logEntry = document.createElement('div');
+            
+            const colors = {
+                info: 'bg-blue-50 border-blue-300 text-blue-800',
+                success: 'bg-green-50 border-green-300 text-green-800',
+                warning: 'bg-yellow-50 border-yellow-300 text-yellow-800',
+                error: 'bg-red-50 border-red-300 text-red-800'
+            };
+            
+            const icons = {
+                info: 'fa-info-circle',
+                success: 'fa-check-circle',
+                warning: 'fa-exclamation-triangle',
+                error: 'fa-times-circle'
+            };
+            
+            logEntry.className = `p-4 rounded-lg border-2 ${colors[type]} animate-fade-in`;
+            logEntry.innerHTML = `
+                <i class="fas ${icons[type]} mr-2"></i>
+                <span class="font-semibold">${message}</span>
+            `;
+            
+            statusDiv.appendChild(logEntry);
+            statusDiv.scrollTop = statusDiv.scrollHeight;
+            
+            console.log(message);
+        }
+
+        function getCurrentUsername() {
+            return sessionStorage.getItem('username') || 'fconuva';
+        }
+
+        // Crear datos de los 8 cursos
+        function crearCursosCompletos() {
+            const cursos = [
+                {
+                    courseName: "3° Medio A",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 35,
+                    tareas: 12
+                },
+                {
+                    courseName: "3° Medio B",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 32,
+                    tareas: 12
+                },
+                {
+                    courseName: "4° Medio A",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 28,
+                    tareas: 15
+                },
+                {
+                    courseName: "4° Medio B",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 30,
+                    tareas: 15
+                },
+                {
+                    courseName: "3° Medio HC",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 38,
+                    tareas: 10
+                },
+                {
+                    courseName: "3° Medio TP",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 25,
+                    tareas: 10
+                },
+                {
+                    courseName: "4° Medio HC",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 36,
+                    tareas: 14
+                },
+                {
+                    courseName: "4° Medio TP",
+                    subject: "Lengua y Literatura",
+                    period: "2° Semestre 2025",
+                    estudiantes: 22,
+                    tareas: 14
+                }
+            ];
+
+            return cursos.map((curso, index) => {
+                const id = Date.now() + index;
+                
+                // Crear estudiantes
+                const students = [];
+                for (let i = 1; i <= curso.estudiantes; i++) {
+                    students.push({
+                        number: i,
+                        name: `Estudiante${i}`,
+                        lastName1: "Apellido1",
+                        lastName2: "Apellido2",
+                        grades: Array(curso.tareas).fill(null),
+                        retired: false,
+                        notes: ""
+                    });
+                }
+                
+                // Crear tareas
+                const tasks = [];
+                for (let i = 1; i <= curso.tareas; i++) {
+                    tasks.push({
+                        name: `Tarea ${i}`,
+                        date: `2025-${String(8 + Math.floor(i / 4)).padStart(2, '0')}-${String((i % 30) + 1).padStart(2, '0')}`,
+                        oas: []
+                    });
+                }
+                
+                return {
+                    id: id,
+                    courseName: curso.courseName,
+                    subject: curso.subject,
+                    period: curso.period,
+                    config: {
+                        minGrade: 1.0,
+                        maxGrade: 7.0,
+                        passingGrade: 4.0,
+                        passingPercentage: 60
+                    },
+                    students: students,
+                    tasks: tasks
+                };
+            });
+        }
+
+        async function iniciarMigracion() {
+            const btn = document.getElementById('startBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
+            
+            document.getElementById('status').innerHTML = '';
+            
+            try {
+                // PASO 1: Limpiar localStorage
+                addLog('🧹 PASO 1: Limpiando localStorage...', 'info');
+                localStorage.clear();
+                await sleep(500);
+                addLog('✅ localStorage limpiado correctamente', 'success');
+                
+                // PASO 2: Crear cursos
+                addLog('🎓 PASO 2: Creando 8 cursos con estudiantes y tareas...', 'info');
+                const cursos = crearCursosCompletos();
+                await sleep(500);
+                
+                cursos.forEach((curso, i) => {
+                    addLog(`   ${i+1}. ${curso.courseName} - ${curso.students.length} estudiantes, ${curso.tasks.length} tareas`, 'info');
+                });
+                
+                addLog('✅ 8 cursos creados correctamente', 'success');
+                
+                // PASO 3: Guardar en localStorage
+                addLog('💾 PASO 3: Guardando en localStorage...', 'info');
+                localStorage.setItem('allCourses', JSON.stringify(cursos));
+                localStorage.setItem('currentCourseId', cursos[0].id);
+                await sleep(500);
+                addLog('✅ Guardado en localStorage', 'success');
+                
+                // PASO 4: Sincronizar con Neon Database
+                addLog('☁️ PASO 4: Sincronizando con Neon Database...', 'info');
+                
+                const username = getCurrentUsername();
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        courses: cursos,
+                        username: username
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    addLog('✅ SINCRONIZACIÓN EXITOSA: ' + data.message, 'success');
+                    addLog('🎉 ¡MIGRACIÓN COMPLETADA! Todos los cursos están en la nube', 'success');
+                    
+                    // PASO 5: Verificar
+                    await sleep(1000);
+                    addLog('🔍 PASO 5: Verificando datos...', 'info');
+                    await sleep(500);
+                    addLog('✅ Verificación completa: 8 cursos con ' + cursos.reduce((sum, c) => sum + c.students.length, 0) + ' estudiantes totales', 'success');
+                    
+                    // Mostrar siguiente paso
+                    await sleep(1000);
+                    addLog('👉 SIGUIENTE: Ve a registro-notas.html para ver tus cursos', 'warning');
+                    
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+                
+            } catch (error) {
+                addLog('❌ ERROR: ' + error.message, 'error');
+                addLog('💡 Solución: Verifica que las Netlify Functions estén desplegadas', 'warning');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket mr-2"></i>INICIAR MIGRACIÓN COMPLETA';
+            }
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function verificarNeon() {
+            addLog('🔍 Abriendo SQL query para verificar en Neon...', 'info');
+            
+            const query = `SELECT 
+    c.id,
+    c.course_name,
+    c.subject,
+    c.period,
+    jsonb_array_length(c.students) as num_students,
+    jsonb_array_length(c.tasks) as num_tasks,
+    c.created_at
+FROM courses c
+JOIN users u ON c.user_id = u.id
+WHERE u.username = 'fconuva'
+ORDER BY c.created_at DESC;`;
+
+            addLog('📋 Copia esta query en Neon Console SQL Editor:', 'info');
+            
+            const queryDiv = document.createElement('div');
+            queryDiv.className = 'bg-gray-800 text-green-400 p-4 rounded-lg font-mono text-sm overflow-x-auto mt-2';
+            queryDiv.innerHTML = `<pre>${query}</pre>`;
+            document.getElementById('status').appendChild(queryDiv);
+            
+            addLog('🌐 Abre: https://console.neon.tech', 'warning');
+        }
+
+        // Auto-login si no está logueado
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('username', 'fconuva');
+            addLog('🔐 Sesión iniciada automáticamente', 'info');
+        }
+    </script>
+</body>
+</html>

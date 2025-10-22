@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔧 Reparar Separación</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gradient-to-br from-red-900 to-gray-900 text-white min-h-screen p-8">
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-gray-800 rounded-xl shadow-2xl p-8">
+            <h1 class="text-4xl font-bold text-center mb-6">
+                <i class="fas fa-wrench mr-3 text-yellow-400"></i>
+                Reparación de Separación de Datos
+            </h1>
+
+            <div class="bg-red-900/30 border-2 border-red-500 rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-3 text-red-400">
+                    <i class="fas fa-exclamation-triangle mr-2"></i>Problema Detectado
+                </h2>
+                <p class="text-gray-300 mb-2">Todos los docentes están viendo los cursos de Francisco.</p>
+                <p class="text-gray-400 text-sm">Esto puede ocurrir porque:</p>
+                <ul class="list-disc list-inside text-gray-400 text-sm mt-2 space-y-1">
+                    <li>Javiera, Valentina y Marcelo nunca han creado cursos propios</li>
+                    <li>Los datos de Francisco están siendo compartidos incorrectamente</li>
+                    <li>Hay una migración pendiente desde el sistema antiguo</li>
+                </ul>
+            </div>
+
+            <div class="space-y-4 mb-6">
+                <h2 class="text-2xl font-bold text-green-400">
+                    <i class="fas fa-check-circle mr-2"></i>Verificación Actual
+                </h2>
+                <div id="estado" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+            </div>
+
+            <div class="bg-blue-900/30 border-2 border-blue-500 rounded-lg p-6 mb-6">
+                <h2 class="text-xl font-bold mb-4 text-blue-400">
+                    <i class="fas fa-tools mr-2"></i>Acciones de Reparación
+                </h2>
+                
+                <div class="space-y-3">
+                    <button onclick="limpiarOtrosDocentes()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        <i class="fas fa-broom mr-2"></i>Limpiar Javiera, Valentina y Marcelo
+                        <p class="text-xs mt-1 opacity-90">Elimina todos los datos de estos docentes, dejando solo a Francisco</p>
+                    </button>
+
+                    <button onclick="separarDatos()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        <i class="fas fa-random mr-2"></i>Separar y Aislar Datos
+                        <p class="text-xs mt-1 opacity-90">Verifica que cada docente tenga su propio namespace independiente</p>
+                    </button>
+
+                    <button onclick="window.location.href='diagnostico-namespace.html'" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-lg transition">
+                        <i class="fas fa-microscope mr-2"></i>Abrir Diagnóstico Completo
+                    </button>
+                </div>
+            </div>
+
+            <div id="resultado" class="space-y-4"></div>
+
+            <div class="mt-6 text-center">
+                <a href="dashboard.html" class="inline-block bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-6 rounded-lg transition">
+                    <i class="fas fa-arrow-left mr-2"></i>Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOCENTES = [
+            { id: 'francisco', nombre: 'Francisco Javier Núñez' },
+            { id: 'javiera', nombre: 'Javiera Poblete' },
+            { id: 'docente3', nombre: 'Valentina' },
+            { id: 'docente4', nombre: 'Marcelo' }
+        ];
+
+        function verificarEstado() {
+            const estadoDiv = document.getElementById('estado');
+            let html = '';
+
+            DOCENTES.forEach(docente => {
+                const key = `${docente.id}_allCourses`;
+                const data = localStorage.getItem(key);
+                
+                let cursos = [];
+                if (data) {
+                    try {
+                        cursos = JSON.parse(data);
+                    } catch (e) {
+                        console.error('Error:', e);
+                    }
+                }
+
+                const colorClass = cursos.length > 0 ? 'border-green-500 bg-green-900/20' : 'border-gray-600 bg-gray-800/50';
+                const iconClass = cursos.length > 0 ? 'text-green-400 fa-check-circle' : 'text-gray-500 fa-circle';
+
+                html += `
+                    <div class="border-2 ${colorClass} rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold">${docente.nombre}</h3>
+                                <p class="text-sm text-gray-400">${key}</p>
+                            </div>
+                            <i class="fas ${iconClass} text-2xl"></i>
+                        </div>
+                        <p class="mt-2 text-2xl font-bold ${cursos.length > 0 ? 'text-green-400' : 'text-gray-500'}">
+                            ${cursos.length} cursos
+                        </p>
+                    </div>
+                `;
+            });
+
+            estadoDiv.innerHTML = html;
+        }
+
+        function limpiarOtrosDocentes() {
+            if (!confirm('⚠️ ADVERTENCIA\n\nEsto eliminará TODOS los datos de:\n- Javiera Poblete\n- Valentina\n- Marcelo\n\nFrancisco NO será afectado.\n\n¿Continuar?')) {
+                return;
+            }
+
+            const resultado = document.getElementById('resultado');
+            let log = '<div class="bg-gray-800 rounded-lg p-6"><h3 class="text-xl font-bold mb-4">Proceso de Limpieza</h3>';
+
+            ['javiera', 'docente3', 'docente4'].forEach(id => {
+                const key = `${id}_allCourses`;
+                const configKey = `${id}_config`;
+                const currentKey = `${id}_currentCourseId`;
+                
+                const antes = localStorage.getItem(key);
+                let cursosAntes = 0;
+                if (antes) {
+                    try {
+                        cursosAntes = JSON.parse(antes).length;
+                    } catch (e) {}
+                }
+
+                localStorage.removeItem(key);
+                localStorage.removeItem(configKey);
+                localStorage.removeItem(currentKey);
+
+                log += `<p class="text-yellow-400"><i class="fas fa-trash mr-2"></i>Limpiado: ${key} (${cursosAntes} cursos eliminados)</p>`;
+            });
+
+            log += '<p class="text-green-400 mt-4"><i class="fas fa-check mr-2"></i>Limpieza completada</p>';
+            log += '</div>';
+
+            resultado.innerHTML = log;
+            setTimeout(verificarEstado, 500);
+        }
+
+        function separarDatos() {
+            const resultado = document.getElementById('resultado');
+            let log = '<div class="bg-gray-800 rounded-lg p-6"><h3 class="text-xl font-bold mb-4">Verificación de Separación</h3>';
+
+            const franciscoData = localStorage.getItem('francisco_allCourses');
+            const javieraData = localStorage.getItem('javiera_allCourses');
+            const docente3Data = localStorage.getItem('docente3_allCourses');
+            const docente4Data = localStorage.getItem('docente4_allCourses');
+
+            log += `<div class="space-y-2">`;
+            log += `<p class="${franciscoData ? 'text-green-400' : 'text-red-400'}"><i class="fas ${franciscoData ? 'fa-check' : 'fa-times'} mr-2"></i>Francisco: ${franciscoData ? 'Tiene datos propios ✓' : 'Sin datos'}</p>`;
+            log += `<p class="${javieraData ? 'text-green-400' : 'text-yellow-400'}"><i class="fas ${javieraData ? 'fa-check' : 'fa-exclamation-triangle'} mr-2"></i>Javiera: ${javieraData ? 'Tiene datos propios ✓' : 'Vacío (normal si no ha creado cursos)'}</p>`;
+            log += `<p class="${docente3Data ? 'text-green-400' : 'text-yellow-400'}"><i class="fas ${docente3Data ? 'fa-check' : 'fa-exclamation-triangle'} mr-2"></i>Valentina: ${docente3Data ? 'Tiene datos propios ✓' : 'Vacío (normal si no ha creado cursos)'}</p>`;
+            log += `<p class="${docente4Data ? 'text-green-400' : 'text-yellow-400'}"><i class="fas ${docente4Data ? 'fa-check' : 'fa-exclamation-triangle'} mr-2"></i>Marcelo: ${docente4Data ? 'Tiene datos propios ✓' : 'Vacío (normal si no ha creado cursos)'}</p>`;
+            log += `</div>`;
+
+            // Verificar si hay cruce de datos
+            log += '<hr class="my-4 border-gray-700">';
+            log += '<h4 class="font-bold text-blue-400 mb-2">Análisis de Integridad:</h4>';
+
+            const todosBien = franciscoData !== javieraData && franciscoData !== docente3Data && franciscoData !== docente4Data;
+
+            if (todosBien) {
+                log += '<p class="text-green-400"><i class="fas fa-shield-alt mr-2"></i>✅ No se detectó cruce de datos. Cada docente tiene su propio espacio.</p>';
+            } else {
+                log += '<p class="text-red-400"><i class="fas fa-exclamation-triangle mr-2"></i>❌ PROBLEMA: Se detectó que algunos docentes comparten los mismos datos.</p>';
+            }
+
+            log += '</div>';
+            resultado.innerHTML = log;
+        }
+
+        // Ejecutar verificación al cargar
+        window.addEventListener('DOMContentLoaded', verificarEstado);
+    </script>
+</body>
+</html>

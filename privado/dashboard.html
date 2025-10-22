@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4F46E5">
+    <title>Dashboard Privado</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            background-color: #f0f2f5;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        * {
+            -webkit-tap-highlight-color: rgba(79, 70, 229, 0.2);
+        }
+        
+        button, a {
+            -webkit-tap-highlight-color: rgba(79, 70, 229, 0.3);
+        }
+        
+        .tool-card {
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .tool-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Optimizaciones móvil */
+        @media (max-width: 768px) {
+            main {
+                padding: 1rem !important;
+            }
+            
+            h1 {
+                font-size: 1.5rem !important;
+            }
+            
+            .tool-card {
+                padding: 1rem !important;
+            }
+            
+            button {
+                min-height: 44px;
+                min-width: 44px;
+            }
+            
+            .grid {
+                grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
+            }
+        }
+        
+        @media (min-width: 768px) and (max-width: 1024px) {
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
+        }
+        
+        /* iOS safe area */
+        @supports (-webkit-touch-callout: none) {
+            body {
+                padding-top: env(safe-area-inset-top);
+                padding-bottom: env(safe-area-inset-bottom);
+            }
+        }
+        
+        /* Logo Animado */
+        .animated-logo {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .logo-circle {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 3px solid #6366f1;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 2s linear infinite;
+        }
+        
+        .logo-circle::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border: 3px solid #8b5cf6;
+            border-radius: 50%;
+            border-bottom-color: transparent;
+            animation: spin-reverse 3s linear infinite;
+        }
+        
+        .logo-book {
+            position: relative;
+            z-index: 10;
+            font-size: 24px;
+            color: #4f46e5;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @keyframes spin-reverse {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        /* Título editable */
+        #dashboard-title:focus {
+            outline: 2px solid #6366f1;
+            outline-offset: 2px;
+            border-radius: 4px;
+            padding: 2px 8px;
+        }
+        https://www.profefranciscopancho.com/privado/admin-evento-sindicato
+        #dashboard-title:empty:before {
+            content: 'Dashboard';
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Auth Guard -->
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <nav class="bg-white shadow-md">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3 flex-shrink-0">
+                    <!-- Logo Animado -->
+                    <div class="animated-logo">
+                        <div class="logo-circle"></div>
+                        <div class="logo-book">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                    </div>
+                    <!-- Título Editable -->
+                    <span id="dashboard-title" 
+                          class="text-2xl font-bold text-indigo-600 cursor-pointer hover:text-indigo-700 transition-colors"
+                          contenteditable="true"
+                          title="Click para editar">Dashboard</span>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="admin-db-docentes.html" class="flex items-center text-sm text-purple-600 hover:text-purple-700 font-semibold border-2 border-purple-600 px-3 py-1 rounded-lg hover:bg-purple-50 transition-colors" title="Gestión de Bases de Datos">
+                        <i class="fas fa-database mr-2"></i>
+                        Admin DB
+                    </a>
+
+<!-- REMOVIDO:             <p class="mt-2 text-lg text-gray-600">Sistema de gestión de notas por docente.</p> -->
+</div></div></header>
+
+<!-- REMOVIDO:         <!-- SECCIÓN: DOCENTES --> -->
+<section class="mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-chalkboard-teacher mr-2 text-indigo-600"></i>Docentes
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6 max-w-md mx-auto">
+                
+                <!-- Docente 1: Francisco Javier Núñez Valenzuela -->
+                <div class="tool-card bg-white rounded-xl shadow-lg overflow-hidden border-2 border-indigo-400">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="p-3 rounded-full bg-indigo-100 text-indigo-600">
+                                <i class="fas fa-user-tie fa-lg"></i>
+                            </div>
+                            <div class="ml-4 flex-1">
+                                <h3 id="francisco-name" class="text-lg font-semibold text-gray-800">Francisco Javier Núñez Valenzuela</h3>
+                            </div>
+                        </div>
+                        <p id="francisco-desc" class="text-gray-600 mb-4 text-sm">Registro nota de proceso Docentes.</p>
+                        <div class="space-y-2">
+                            <a href="registro-notas.html?docente=francisco" class="inline-block w-full text-center bg-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-indigo-600 transition-colors">
+                                Abrir Sistema
+                            </a>
+                            <a href="setup-profesor2.html?docente=francisco" class="inline-block w-full text-center border-2 border-indigo-500 text-indigo-600 font-semibold py-2 px-4 rounded-lg hover:bg-indigo-50 transition-colors text-sm">
+                                <i class="fas fa-cog mr-1"></i>Configurar Perfil
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- LÍNEA DIVISORIA -->
+        <hr class="border-t-4 border-gray-300 my-12">
+
+        <!-- SECCIÓN: CONTROL MAESTRO (ADMIN) - VERSIÓN COLAPSABLE -->
+        <section id="adminSection" class="mb-12">
+            <div class="bg-gradient-to-r from-red-600 to-red-700 rounded-xl shadow-2xl overflow-hidden border-4 border-red-500">
+                <!-- HEADER COLAPSABLE -->
+                <button onclick="toggleControlMaestro()" class="w-full p-6 flex items-center justify-between text-white hover:bg-red-800 transition-colors">
+                    <div class="flex items-center">
+                        <i class="fas fa-shield-alt text-3xl mr-4"></i>
+                        <div class="text-left">
+                            <h2 class="text-2xl font-bold">Control Maestro</h2>
+                            <p class="text-red-200 text-sm">Herramientas administrativas para gestión completa del sistema</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-4">
+                        <span class="text-xs font-bold bg-yellow-400 text-red-900 px-3 py-1 rounded-full">ADMIN</span>
+                        <i id="controlMaestroIcon" class="fas fa-chevron-down text-2xl transition-transform"></i>
+                    </div>
+                </button>
+
+                <!-- CONTENIDO COLAPSABLE -->
+                <div id="controlMaestroContent" class="hidden bg-white">
+                    
+                    <!-- SELECTOR DE DOCENTE -->
+                    <div class="p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-b-4 border-blue-300">
+                        <div class="flex items-center mb-4">
+                            <i class="fas fa-user-check text-blue-600 text-2xl mr-3"></i>
+                            <h3 class="text-xl font-bold text-gray-800">Seleccionar Docente de Trabajo</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">⚠️ <strong>Importante:</strong> Selecciona el docente antes de realizar cualquier acción administrativa.</p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <button onclick="seleccionarDocente('francisco')" 
+                                    id="select-francisco"
+                                    class="docente-selector bg-white border-2 border-indigo-400 text-indigo-700 font-semibold py-3 px-4 rounded-lg hover:bg-indigo-50 transition-all">
+                                <i class="fas fa-user-tie mr-2"></i>Francisco
+                            </button>
+                        </div>
+
+                        <div id="docenteSeleccionado" class="mt-4 hidden">
+                            <div class="bg-green-100 border-2 border-green-400 rounded-lg p-4 flex items-center justify-between">
+                                <div class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-600 text-2xl mr-3"></i>
+                                    <div>
+                                        <p class="text-sm text-green-700 font-semibold">Docente Activo:</p>
+                                        <p id="docenteActivoNombre" class="text-lg font-bold text-green-900"></p>
+                                    </div>
+                                </div>
+                                <button onclick="cambiarDocente()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold">
+                                    <i class="fas fa-sync-alt mr-1"></i>Cambiar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PANEL DE HERRAMIENTAS -->
+                    <div class="p-6 bg-gray-50">
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                            
+                            <!-- 1. GESTIÓN DE CURSOS -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-red-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-red-500 to-red-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-database text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Gestión de Cursos</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4 space-y-2">
+                                    <button onclick="accionAdmin('verCursos')" class="admin-action-btn w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                        <i class="fas fa-list mr-2"></i>Ver Cursos Actuales
+                                    </button>
+                                    <button onclick="accionAdmin('importarCursos')" class="admin-action-btn w-full bg-green-500 hover:bg-green-600 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                        <i class="fas fa-file-import mr-2"></i>Importar Cursos CSV
+                                    </button>
+                                    <button onclick="accionAdmin('borrarCursos')" class="admin-action-btn w-full bg-red-600 hover:bg-red-700 text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center">
+                                        <i class="fas fa-trash-alt mr-2"></i>Borrar Todos los Cursos
+                                    </button>
+                                    <p class="text-xs text-red-600 font-semibold mt-2">⚠️ Las acciones de borrado no se pueden deshacer</p>
+                                </div>
+                            </div>
+
+                            <!-- 2. GESTIÓN DE ESTUDIANTES -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-blue-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-blue-500 to-blue-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-users text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Gestión de Estudiantes</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="accionAdmin('agregarEstudiante')" class="admin-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-user-plus mr-1"></i>Agregar 1
+                                        </button>
+                                        <button onclick="accionAdmin('agregarVariosEstudiantes')" class="admin-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-users-cog mr-1"></i>Agregar Varios
+                                        </button>
+                                        <button onclick="accionAdmin('importarEstudiantesCSV')" class="admin-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-file-csv mr-1"></i>Importar CSV
+                                        </button>
+                                        <button onclick="accionAdmin('editarEstudiantes')" class="admin-action-btn bg-blue-500 hover:bg-blue-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-edit mr-1"></i>Editar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 3. GESTIÓN DE TAREAS -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-purple-500 to-purple-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-tasks text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Gestión de Tareas</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="accionAdmin('agregarTarea')" class="admin-action-btn bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-plus mr-1"></i>Agregar 1
+                                        </button>
+                                        <button onclick="accionAdmin('agregarVariasTareas')" class="admin-action-btn bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-list-ul mr-1"></i>Agregar Varias
+                                        </button>
+                                        <button onclick="accionAdmin('editarTareas')" class="admin-action-btn bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-pen mr-1"></i>Editar
+                                        </button>
+                                        <button onclick="accionAdmin('eliminarTareas')" class="admin-action-btn bg-purple-500 hover:bg-purple-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-trash mr-1"></i>Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 4. GESTIÓN DE NOTAS -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-yellow-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-star text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Gestión de Notas</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="accionAdmin('marcarTodo')" class="admin-action-btn bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-check-double mr-1"></i>Marcar Todo
+                                        </button>
+                                        <button onclick="accionAdmin('desmarcarTodo')" class="admin-action-btn bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-times mr-1"></i>Desmarcar Todo
+                                        </button>
+                                        <button onclick="accionAdmin('marcarUnaTarea')" class="admin-action-btn bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-check mr-1"></i>Marcar 1
+                                        </button>
+                                        <button onclick="accionAdmin('desmarcarUnaTarea')" class="admin-action-btn bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-minus-circle mr-1"></i>Desmarcar 1
+                                        </button>
+                                        <button onclick="accionAdmin('llenarColumna')" class="admin-action-btn bg-yellow-500 hover:bg-yellow-600 text-white py-2 px-3 rounded text-sm col-span-2">
+                                            <i class="fas fa-fill-drip mr-1"></i>Llenar Columna
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 5. GESTIÓN DEL CURSO -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-indigo-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-cog text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Gestión del Curso</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="accionAdmin('editarInfo')" class="admin-action-btn bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-edit mr-1"></i>Editar Info
+                                        </button>
+                                        <button onclick="accionAdmin('duplicarCurso')" class="admin-action-btn bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-copy mr-1"></i>Duplicar
+                                        </button>
+                                        <button onclick="accionAdmin('exportarDatos')" class="admin-action-btn bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-3 rounded text-sm col-span-2">
+                                            <i class="fas fa-download mr-1"></i>Exportar Datos
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 6. IMPORTAR/EXPORTAR -->
+                            <div class="bg-white rounded-xl shadow-lg border-2 border-teal-400 overflow-hidden">
+                                <div class="bg-gradient-to-r from-teal-500 to-teal-600 p-4">
+                                    <div class="flex items-center text-white">
+                                        <i class="fas fa-exchange-alt text-2xl mr-3"></i>
+                                        <h3 class="text-lg font-bold">Importar/Exportar</h3>
+                                    </div>
+                                </div>
+                                <div class="p-4">
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <button onclick="accionAdmin('exportarExcel')" class="admin-action-btn bg-teal-500 hover:bg-teal-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-file-excel mr-1"></i>Excel
+                                        </button>
+                                        <button onclick="accionAdmin('exportarJSON')" class="admin-action-btn bg-teal-500 hover:bg-teal-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-file-code mr-1"></i>JSON
+                                        </button>
+                                        <button onclick="accionAdmin('importarJSON')" class="admin-action-btn bg-teal-500 hover:bg-teal-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-file-import mr-1"></i>Importar
+                                        </button>
+                                        <button onclick="accionAdmin('imprimirCurso')" class="admin-action-btn bg-teal-500 hover:bg-teal-600 text-white py-2 px-3 rounded text-sm">
+                                            <i class="fas fa-print mr-1"></i>Imprimir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <!-- ÁREA DE RESULTADOS Y STATUS -->
+                        <div id="cursosListado" class="mt-6 hidden">
+                            <div class="bg-gray-50 border-2 border-gray-300 rounded-lg p-4 max-h-96 overflow-y-auto">
+                                <h4 class="font-bold text-gray-800 mb-3">Cursos en la Base de Datos:</h4>
+                                <div id="cursosContent"></div>
+                            </div>
+                        </div>
+                        
+                        <div id="migracionStatus" class="mt-6 hidden">
+                            <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+                                <p class="text-sm text-green-800 font-semibold">
+                                    <i class="fas fa-check-circle mr-2"></i><span id="statusText">Preparando...</span>
+                                </p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // Sistema de Control de Permisos
+        function initializePermissions() {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            const userFullName = sessionStorage.getItem('userFullName') || 'Usuario';
+            const username = sessionStorage.getItem('username') || '';
+            
+            // Mostrar bienvenida
+            const welcomeEl = document.getElementById('userWelcome');
+            if (welcomeEl) {
+                welcomeEl.innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${userFullName}`;
+            }
+            
+            // Si NO es admin, ocultar sección de administración
+            if (userRole !== 'admin') {
+                const adminSection = document.getElementById('adminSection');
+                if (adminSection) {
+                    adminSection.style.display = 'none';
+                }
+                
+                console.log(`👤 Sesión iniciada como: ${userFullName} (Profesora - Permisos limitados)`);
+            } else {
+                console.log(`🔑 Sesión iniciada como: ${userFullName} (Administrador - Todos los permisos)`);
+            }
+        }
+        
+        // Inicializar permisos al cargar la página
+        document.addEventListener('DOMContentLoaded', initializePermissions);
+        
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('userRole');
+            sessionStorage.removeItem('userFullName');
+            window.location.href = 'index.html';
+        });
+
+        // VER CURSOS ACTUALES EN LA BASE DE DATOS
+        async function verCursosActuales() {
+            const btn = document.getElementById('verCursosBtn');
+            const listadoDiv = document.getElementById('cursosListado');
+            const contentDiv = document.getElementById('cursosContent');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>CARGANDO...';
+            
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (data.success && data.courses) {
+                    const courses = data.courses;
+                    
+                    if (courses.length === 0) {
+                        contentDiv.innerHTML = '<p class="text-gray-600">No hay cursos en la base de datos.</p>';
+                    } else {
+                        let html = '<div class="space-y-2">';
+                        courses.forEach((course, index) => {
+                            html += `
+                                <div class="bg-white border border-gray-200 rounded p-3 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-gray-800">${index + 1}. ${course.courseName || 'Sin nombre'}</p>
+                                        <p class="text-xs text-gray-600">
+                                            ${course.students?.length || 0} estudiantes, 
+                                            ${course.tasks?.length || 0} tareas
+                                        </p>
+                                        <p class="text-xs text-gray-500">ID: ${course.id}</p>
+                                    </div>
+                                    <button onclick="borrarCursoEspecifico(${course.id}, '${course.courseName}')" 
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        contentDiv.innerHTML = html;
+                    }
+                    
+                    listadoDiv.classList.remove('hidden');
+                } else {
+                    contentDiv.innerHTML = '<p class="text-red-600">Error al cargar cursos.</p>';
+                    listadoDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                contentDiv.innerHTML = '<p class="text-red-600">Error de conexión.</p>';
+                listadoDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-list mr-2"></i>VER CURSOS ACTUALES';
+            }
+        }
+
+        // BORRAR UN CURSO ESPECÍFICO
+        async function borrarCursoEspecifico(courseId, courseName) {
+            if (!confirm(`¿Borrar el curso "${courseName}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            console.log('🗑️ Intentando borrar curso:', { courseId, courseName });
+            
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch('/api/courses/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseId: courseId,
+                        username: username
+                    })
+                });
+                
+                const responseData = await response.json();
+                console.log('📤 Respuesta del servidor:', responseData);
+                
+                if (response.ok) {
+                    alert('✅ Curso eliminado exitosamente');
+                    verCursosActuales(); // Recargar lista
+                } else {
+                    console.error('❌ Error del servidor:', responseData);
+                    alert(`❌ Error al eliminar el curso:\n${responseData.error || 'Error desconocido'}\n\nRevisa la consola para más detalles.`);
+                }
+            } catch (error) {
+                console.error('❌ Error de conexión:', error);
+                alert('❌ Error de conexión. Revisa la consola.');
+            }
+        }
+
+        // BORRAR TODO DEFINITIVAMENTE
+        async function borrarTodoDefinitivo() {
+            const confirmar = confirm('⚠️⚠️⚠️ ADVERTENCIA CRÍTICA ⚠️⚠️⚠️\n\nEsto BORRARÁ PERMANENTEMENTE:\n• Todos los cursos del navegador\n• Todos los cursos de la base de datos\n• Todos los estudiantes y tareas\n\n❌ NO SE PUEDE DESHACER ❌\n\n¿Estás ABSOLUTAMENTE seguro?');
+            
+            if (!confirmar) {
+                return;
+            }
+
+            const segundaConfirmacion = confirm('Segunda confirmación:\n\n¿De verdad quieres BORRAR TODO?\n\nEscribe OK mentalmente y presiona Aceptar para continuar.');
+            
+            if (!segundaConfirmacion) {
+                return;
+            }
+
+            const btn = document.getElementById('borrarBtn');
+            const statusDiv = document.getElementById('migracionStatus');
+            const statusText = document.getElementById('statusText');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>BORRANDO...';
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            statusDiv.classList.remove('hidden');
+
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                
+                // Paso 1: Obtener todos los cursos actuales de la BD
+                statusText.textContent = 'Paso 1/4: Obteniendo lista de cursos...';
+                const getResponse = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const getData = await getResponse.json();
+                
+                let cursosABorrar = [];
+                if (getData.success && getData.courses) {
+                    cursosABorrar = getData.courses;
+                    console.log('📋 Cursos a borrar:', cursosABorrar.length);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Paso 2: Borrar cada curso de la base de datos uno por uno
+                statusText.textContent = `Paso 2/4: Eliminando ${cursosABorrar.length} cursos de la base de datos...`;
+                
+                for (let i = 0; i < cursosABorrar.length; i++) {
+                    const curso = cursosABorrar[i];
+                    console.log(`🗑️ Borrando curso ${i + 1}/${cursosABorrar.length}: ${curso.courseName} (ID: ${curso.id})`);
+                    
+                    try {
+                        const deleteResponse = await fetch('/api/courses/delete', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                courseId: curso.id,
+                                username: username
+                            })
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            console.log(`✅ Curso ${curso.courseName} eliminado`);
+                        } else {
+                            const errorData = await deleteResponse.json();
+                            console.warn(`⚠️ No se pudo eliminar ${curso.courseName}:`, errorData);
+                        }
+                    } catch (e) {
+                        console.error(`❌ Error eliminando ${curso.courseName}:`, e);
+                    }
+                    
+                    statusText.textContent = `Paso 2/4: Eliminando ${i + 1}/${cursosABorrar.length} cursos...`;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Paso 3: Borrar localStorage COMPLETAMENTE
+                statusText.textContent = 'Paso 3/4: Limpiando navegador...';
+                localStorage.clear();
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Paso 4: Establecer bandera de "borrado total"
+                statusText.textContent = 'Paso 4/4: Finalizando limpieza...';
+                localStorage.setItem('totalWipeCompleted', Date.now().toString());
+                localStorage.setItem('allCourses', '[]');
+                localStorage.setItem('currentCourseId', '');
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // ÉXITO
+                statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>✅ TODO ELIMINADO. Ahora puedes agregar cursos manualmente.';
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-blue-50', 'border-blue-400');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-blue-900');
+
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>BORRADO COMPLETADO';
+                btn.classList.add('bg-gray-500');
+
+                // Redirigir después de 3 segundos
+                setTimeout(() => {
+                    if (confirm('¿Quieres ir al Sistema de Registro de Notas para agregar cursos manualmente?')) {
+                        window.location.href = 'registro-notas.html';
+                    } else {
+                        location.reload();
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error al borrar:', error);
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error: ' + error.message;
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-red-50', 'border-red-200');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-red-800');
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>REINTENTAR BORRADO';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+    </script>
+
+    <script>
+        // Sistema de Control de Permisos
+        function initializePermissions() {
+            const userRole = sessionStorage.getItem('userRole') || 'teacher';
+            const userFullName = sessionStorage.getItem('userFullName') || 'Usuario';
+            const username = sessionStorage.getItem('username') || '';
+            
+            // Mostrar bienvenida
+            const welcomeEl = document.getElementById('userWelcome');
+            if (welcomeEl) {
+                welcomeEl.innerHTML = `<i class="fas fa-user-circle mr-1"></i> ${userFullName}`;
+            }
+            
+            // Si NO es admin, ocultar sección de administración
+            if (userRole !== 'admin') {
+                const adminSection = document.getElementById('adminSection');
+                if (adminSection) {
+                    adminSection.style.display = 'none';
+                }
+                
+                // Mostrar mensaje informativo en su lugar
+                const container = adminSection ? adminSection.parentElement : null;
+                if (container) {
+                    const infoCard = document.createElement('div');
+                    infoCard.className = 'bg-blue-50 border-2 border-blue-200 rounded-xl p-6 text-center';
+                    infoCard.innerHTML = `
+                        <div class="text-blue-600 mb-3">
+                            <i class="fas fa-info-circle text-4xl"></i>
+                        </div>
+                        <h3 class="text-lg font-bold text-blue-900 mb-2">Cuenta de Profesora</h3>
+                        <p class="text-sm text-blue-700">
+                            Tienes permisos para registrar notas, generar informes y trabajar con cursos existentes.
+                        </p>
+                        <p class="text-xs text-blue-600 mt-2">
+                            <i class="fas fa-lock mr-1"></i>
+                            La gestión avanzada de cursos está reservada para el administrador.
+                        </p>
+                    `;
+                    container.appendChild(infoCard);
+                }
+                
+                console.log(`👤 Sesión iniciada como: ${userFullName} (Profesora - Permisos limitados)`);
+            } else {
+                console.log(`🔑 Sesión iniciada como: ${userFullName} (Administrador - Todos los permisos)`);
+            }
+        }
+        
+        // Inicializar permisos al cargar la página
+        document.addEventListener('DOMContentLoaded', initializePermissions);
+        
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('userRole');
+            sessionStorage.removeItem('userFullName');
+            window.location.href = 'index.html';
+        });
+
+        // VER CURSOS ACTUALES EN LA BASE DE DATOS
+        async function verCursosActuales() {
+            const btn = document.getElementById('verCursosBtn');
+            const listadoDiv = document.getElementById('cursosListado');
+            const contentDiv = document.getElementById('cursosContent');
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>CARGANDO...';
+            
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                
+                if (data.success && data.courses) {
+                    const courses = data.courses;
+                    
+                    if (courses.length === 0) {
+                        contentDiv.innerHTML = '<p class="text-gray-600">No hay cursos en la base de datos.</p>';
+                    } else {
+                        let html = '<div class="space-y-2">';
+                        courses.forEach((course, index) => {
+                            html += `
+                                <div class="bg-white border border-gray-200 rounded p-3 flex justify-between items-center">
+                                    <div>
+                                        <p class="font-semibold text-gray-800">${index + 1}. ${course.courseName || 'Sin nombre'}</p>
+                                        <p class="text-xs text-gray-600">
+                                            ${course.students?.length || 0} estudiantes, 
+                                            ${course.tasks?.length || 0} tareas
+                                        </p>
+                                        <p class="text-xs text-gray-500">ID: ${course.id}</p>
+                                    </div>
+                                    <button onclick="borrarCursoEspecifico(${course.id}, '${course.courseName}')" 
+                                            class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                        html += '</div>';
+                        contentDiv.innerHTML = html;
+                    }
+                    
+                    listadoDiv.classList.remove('hidden');
+                } else {
+                    contentDiv.innerHTML = '<p class="text-red-600">Error al cargar cursos.</p>';
+                    listadoDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                contentDiv.innerHTML = '<p class="text-red-600">Error de conexión.</p>';
+                listadoDiv.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-list mr-2"></i>VER CURSOS ACTUALES';
+            }
+        }
+
+        // BORRAR UN CURSO ESPECÍFICO
+        async function borrarCursoEspecifico(courseId, courseName) {
+            if (!confirm(`¿Borrar el curso "${courseName}"?\n\nEsta acción no se puede deshacer.`)) {
+                return;
+            }
+            
+            console.log('🗑️ Intentando borrar curso:', { courseId, courseName });
+            
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch('/api/courses/delete', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        courseId: courseId,
+                        username: username
+                    })
+                });
+                
+                const responseData = await response.json();
+                console.log('📤 Respuesta del servidor:', responseData);
+                
+                if (response.ok) {
+                    alert('✅ Curso eliminado exitosamente');
+                    verCursosActuales(); // Recargar lista
+                } else {
+                    console.error('❌ Error del servidor:', responseData);
+                    alert(`❌ Error al eliminar el curso:\n${responseData.error || 'Error desconocido'}\n\nRevisa la consola para más detalles.`);
+                }
+            } catch (error) {
+                console.error('❌ Error de conexión:', error);
+                alert('❌ Error de conexión. Revisa la consola.');
+            }
+        }
+
+        // BORRAR TODO DEFINITIVAMENTE
+        async function borrarTodoDefinitivo() {
+            const confirmar = confirm('⚠️⚠️⚠️ ADVERTENCIA CRÍTICA ⚠️⚠️⚠️\n\nEsto BORRARÁ PERMANENTEMENTE:\n• Todos los cursos del navegador\n• Todos los cursos de la base de datos\n• Todos los estudiantes y tareas\n\n❌ NO SE PUEDE DESHACER ❌\n\n¿Estás ABSOLUTAMENTE seguro?');
+            
+            if (!confirmar) {
+                return;
+            }
+
+            const segundaConfirmacion = confirm('Segunda confirmación:\n\n¿De verdad quieres BORRAR TODO?\n\nEscribe OK mentalmente y presiona Aceptar para continuar.');
+            
+            if (!segundaConfirmacion) {
+                return;
+            }
+
+            const btn = document.getElementById('borrarBtn');
+            const statusDiv = document.getElementById('migracionStatus');
+            const statusText = document.getElementById('statusText');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>BORRANDO...';
+            btn.classList.add('opacity-50', 'cursor-not-allowed');
+            statusDiv.classList.remove('hidden');
+
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                
+                // Paso 1: Obtener todos los cursos actuales de la BD
+                statusText.textContent = 'Paso 1/4: Obteniendo lista de cursos...';
+                const getResponse = await fetch(`/api/courses?username=${encodeURIComponent(username)}`);
+                const getData = await getResponse.json();
+                
+                let cursosABorrar = [];
+                if (getData.success && getData.courses) {
+                    cursosABorrar = getData.courses;
+                    console.log('📋 Cursos a borrar:', cursosABorrar.length);
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Paso 2: Borrar cada curso de la base de datos uno por uno
+                statusText.textContent = `Paso 2/4: Eliminando ${cursosABorrar.length} cursos de la base de datos...`;
+                
+                for (let i = 0; i < cursosABorrar.length; i++) {
+                    const curso = cursosABorrar[i];
+                    console.log(`🗑️ Borrando curso ${i + 1}/${cursosABorrar.length}: ${curso.courseName} (ID: ${curso.id})`);
+                    
+                    try {
+                        const deleteResponse = await fetch('/api/courses/delete', {
+                            method: 'DELETE',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                courseId: curso.id,
+                                username: username
+                            })
+                        });
+                        
+                        if (deleteResponse.ok) {
+                            console.log(`✅ Curso ${curso.courseName} eliminado`);
+                        } else {
+                            const errorData = await deleteResponse.json();
+                            console.warn(`⚠️ No se pudo eliminar ${curso.courseName}:`, errorData);
+                        }
+                    } catch (e) {
+                        console.error(`❌ Error eliminando ${curso.courseName}:`, e);
+                    }
+                    
+                    statusText.textContent = `Paso 2/4: Eliminando ${i + 1}/${cursosABorrar.length} cursos...`;
+                }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // Paso 3: Borrar localStorage COMPLETAMENTE
+                statusText.textContent = 'Paso 3/4: Limpiando navegador...';
+                localStorage.clear();
+                await new Promise(resolve => setTimeout(resolve, 300));
+
+                // Paso 4: Establecer bandera de "borrado total"
+                statusText.textContent = 'Paso 4/4: Finalizando limpieza...';
+                localStorage.setItem('totalWipeCompleted', Date.now().toString());
+                localStorage.setItem('allCourses', '[]');
+                localStorage.setItem('currentCourseId', '');
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                // ÉXITO
+                statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>✅ TODO ELIMINADO. Ahora puedes agregar cursos manualmente.';
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-blue-50', 'border-blue-400');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-blue-900');
+
+                btn.innerHTML = '<i class="fas fa-check mr-2"></i>BORRADO COMPLETADO';
+                btn.classList.add('bg-gray-500');
+
+                // Redirigir después de 3 segundos
+                setTimeout(() => {
+                    if (confirm('¿Quieres ir al Sistema de Registro de Notas para agregar cursos manualmente?')) {
+                        window.location.href = 'registro-notas.html';
+                    } else {
+                        location.reload();
+                    }
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error al borrar:', error);
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error: ' + error.message;
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-red-50', 'border-red-200');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-red-800');
+                
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash-alt mr-2"></i>REINTENTAR BORRADO';
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+        }
+
+        // MIGRACIÓN AUTOMÁTICA COMPLETA (DEPRECADA - NO SE USA)
+        async function iniciarMigracionCompleta_OLD() {
+            const btn = document.getElementById('migracionBtn');
+            const statusDiv = document.getElementById('migracionStatus');
+            const statusText = document.getElementById('statusText');
+
+            // Desactivar botón
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>PROCESANDO...';
+            btn.classList.add('opacity-75', 'cursor-not-allowed');
+            statusDiv.classList.remove('hidden');
+
+            try {
+                // Paso 1: Preparar datos
+                statusText.textContent = 'Paso 1/3: Preparando 8 cursos...';
+                
+                // Función auxiliar para crear curso con grades sincronizadas
+                const crearCurso = (nombre, asignatura, numEstudiantes, numTareas) => {
+                    const tareas = generarTareas(numTareas);
+                    const estudiantes = generarEstudiantes(numEstudiantes);
+                    
+                    // Inicializar grades array con la longitud correcta (número de tareas)
+                    estudiantes.forEach(estudiante => {
+                        estudiante.grades = Array(numTareas).fill(null);
+                    });
+                    
+                    return {
+                        courseName: nombre,
+                        subject: asignatura,
+                        period: "2024",
+                        students: estudiantes,
+                        tasks: tareas
+                    };
+                };
+
+                const cursosCompletos = [
+                    crearCurso("3° Medio A", "Lenguaje y Comunicación", 35, 12),
+                    crearCurso("3° Medio B", "Lenguaje y Comunicación", 32, 12),
+                    crearCurso("4° Medio A", "Lenguaje y Comunicación", 28, 15),
+                    crearCurso("4° Medio B", "Lenguaje y Comunicación", 30, 15),
+                    crearCurso("3° Medio HC", "Humanista Científico", 38, 10),
+                    crearCurso("3° Medio TP", "Técnico Profesional", 25, 10),
+                    crearCurso("4° Medio HC", "Humanista Científico", 36, 14),
+                    crearCurso("4° Medio TP", "Técnico Profesional", 22, 14)
+                ];
+
+                // Paso 2: Guardar en localStorage
+                statusText.textContent = 'Paso 2/3: Guardando en navegador...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const baseTimestamp = Date.now();
+                const allCourses = cursosCompletos.map((curso, index) => ({
+                    id: baseTimestamp + index, // ID único basado en timestamp
+                    ...curso,
+                    config: {
+                        subject: curso.subject,
+                        period: curso.period,
+                        gradeType: "Chileno",
+                        maxGrade: 7.0,
+                        minGrade: 1.0,
+                        passingGrade: 4.0,
+                        passingPercentage: 60
+                    }
+                }));
+
+                localStorage.setItem('allCourses', JSON.stringify(allCourses));
+                localStorage.setItem('currentCourseId', '0');
+
+                // Paso 3: Sincronizar con Neon Database
+                statusText.textContent = 'Paso 3/3: Sincronizando con base de datos...';
+                await new Promise(resolve => setTimeout(resolve, 500));
+
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        courses: allCourses
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al sincronizar con la base de datos');
+                }
+
+                // ¡ÉXITO!
+                statusText.innerHTML = '<i class="fas fa-check-circle mr-2"></i>¡Migración completada! 8 cursos creados exitosamente.';
+                
+                // Cambiar color a verde
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-green-100', 'border-green-400');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-green-900');
+
+                // Mostrar botón de ir al sistema
+                setTimeout(() => {
+                    if (confirm('¡Migración exitosa! ¿Deseas ir al Sistema de Registro de Notas para ver los cursos?')) {
+                        window.location.href = 'registro-notas.html';
+                    } else {
+                        // Recargar página
+                        location.reload();
+                    }
+                }, 1500);
+
+            } catch (error) {
+                console.error('Error en migración:', error);
+                statusText.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error: ' + error.message;
+                statusDiv.querySelector('div').classList.remove('bg-green-50', 'border-green-200');
+                statusDiv.querySelector('div').classList.add('bg-red-50', 'border-red-200');
+                statusDiv.querySelector('p').classList.remove('text-green-800');
+                statusDiv.querySelector('p').classList.add('text-red-800');
+                
+                // Reactivar botón
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket mr-2"></i>REINTENTAR MIGRACIÓN';
+                btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            }
+        }
+
+        function generarEstudiantes(cantidad) {
+            const nombres = ['MATÍAS', 'VALENTINA', 'SEBASTIÁN', 'CATALINA', 'DIEGO', 'FERNANDA', 'BENJAMÍN', 'JAVIERA', 
+                           'NICOLÁS', 'SOFÍA', 'LUCAS', 'ISIDORA', 'GABRIEL', 'MARTINA', 'TOMÁS', 'ANTONIA',
+                           'FELIPE', 'EMILIA', 'JOAQUÍN', 'FLORENCIA', 'AGUSTÍN', 'CONSTANZA', 'VICENTE', 'AMANDA',
+                           'CRISTÓBAL', 'JOSEFA', 'IGNACIO', 'MAITE', 'MAXIMILIANO', 'TRINIDAD', 'RODRIGO', 'CAMILA',
+                           'ANDRÉS', 'ISABELLA', 'SANTIAGO', 'DANIELA', 'FRANCISCO', 'CAROLINA', 'PABLO', 'ROSARIO'];
+            
+            const apellidos = ['GONZÁLEZ', 'MUÑOZ', 'ROJAS', 'DÍAZ', 'PÉREZ', 'SOTO', 'CONTRERAS', 'SILVA', 'MARTÍNEZ',
+                             'SEPÚLVEDA', 'MORALES', 'RODRÍGUEZ', 'LÓPEZ', 'FUENTES', 'HERNÁNDEZ', 'TORRES', 'ARAYA',
+                             'FLORES', 'ESPINOZA', 'VALENZUELA', 'CASTILLO', 'REYES', 'VARGAS', 'NÚÑEZ', 'CARRASCO'];
+
+            const estudiantes = [];
+            for (let i = 0; i < cantidad; i++) {
+                const nombre = nombres[i % nombres.length];
+                const apellido1 = apellidos[Math.floor(Math.random() * apellidos.length)];
+                const apellido2 = apellidos[Math.floor(Math.random() * apellidos.length)];
+                
+                estudiantes.push({
+                    id: Date.now() + i,
+                    number: i + 1,
+                    lastName1: apellido1,
+                    lastName2: apellido2,
+                    name: nombre,
+                    grades: [],
+                    notes: '',
+                    retired: false
+                });
+            }
+            return estudiantes;
+        }
+
+        function generarTareas(cantidad) {
+            const tiposTarea = ['Evaluación Escrita', 'Prueba', 'Trabajo Práctico', 'Exposición Oral', 'Análisis Literario', 'Ensayo', 'Comprensión Lectora'];
+            const tareas = [];
+            
+            // Generar fechas realistas del año 2024
+            const mesesBase = [3, 4, 5, 6, 8, 9, 10, 11]; // Marzo a Noviembre (sin vacaciones de verano ni julio)
+            
+            for (let i = 0; i < cantidad; i++) {
+                const tipo = tiposTarea[i % tiposTarea.length];
+                const mes = mesesBase[i % mesesBase.length];
+                const dia = 5 + (i * 3) % 20; // Días entre 5 y 25
+                const fecha = `2024-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
+                
+                tareas.push({
+                    id: Date.now() + i * 1000,
+                    name: `${tipo} ${i + 1}`,
+                    date: fecha,
+                    nivel: null,
+                    unidad: null,
+                    oas: []
+                });
+            }
+            return tareas;
+        }
+
+        // Cargar configuración de Profesor 2 si existe
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const config = localStorage.getItem('profesor2_config');
+                if (config) {
+                    const data = JSON.parse(config);
+                    const nameElement = document.getElementById('profesor2Name');
+                    const infoElement = document.getElementById('profesor2Info');
+                    
+                    if (nameElement && data.teacherName) {
+                        nameElement.textContent = data.teacherName;
+                    }
+                    
+                    if (infoElement && (data.subject || data.courses)) {
+                        let info = '<i class="fas fa-graduation-cap mr-1"></i>';
+                        if (data.courses) info += data.courses;
+                        if (data.subject) info += ` - ${data.subject}`;
+                        infoElement.innerHTML = info;
+                    }
+                }
+            } catch (e) {
+                console.log('No hay configuración de Profesor 2');
+            }
+        });
+
+        // Cargar nombres de docentes desde localStorage
+        function loadDocenteNames() {
+            console.log('🔄 Iniciando carga de nombres de docentes...');
+            
+            // Listar TODAS las keys de localStorage para debugging
+            console.log('📦 Keys en localStorage:', Object.keys(localStorage));
+            
+            const docentes = [
+                { id: 'francisco', nameId: 'francisco-name', descId: 'francisco-desc' }
+            ];
+            
+            docentes.forEach(docente => {
+                try {
+                    const configKey = `${docente.id}_config`;
+                    const configData = localStorage.getItem(configKey);
+                    
+                    console.log(`🔍 Buscando: ${configKey}`);
+                    console.log(`📄 Datos encontrados:`, configData);
+                    
+                    if (configData) {
+                        const data = JSON.parse(configData);
+                        console.log(`✅ Parseado exitoso para ${docente.id}:`, data);
+                        
+                        // Actualizar nombre si existe
+                        if (data.teacherName) {
+                            const nameElement = document.getElementById(docente.nameId);
+                            if (nameElement) {
+                                nameElement.textContent = data.teacherName;
+                                console.log(`✏️ Nombre actualizado: ${docente.id} -> ${data.teacherName}`);
+                            } else {
+                                console.warn(`⚠️ No se encontró elemento con ID: ${docente.nameId}`);
+                            }
+                        }
+                        
+                        // Actualizar descripción si existe
+                        if (data.subject || data.courses) {
+                            const desc = data.courses && data.subject ? 
+                                `${data.courses} - ${data.subject}` : 
+                                (data.courses || data.subject);
+                            
+                            const descElement = document.getElementById(docente.descId);
+                            if (descElement) {
+                                descElement.textContent = desc;
+                                console.log(`✏️ Descripción actualizada: ${docente.id} -> ${desc}`);
+                            } else {
+                                console.warn(`⚠️ No se encontró elemento con ID: ${docente.descId}`);
+                            }
+                        }
+                    } else {
+                        console.log(`ℹ️ No hay configuración guardada para: ${docente.id}`);
+                    }
+                } catch (e) {
+                    console.error(`❌ Error al cargar ${docente.id}:`, e);
+                }
+            });
+            
+            console.log('✅ Carga de nombres completada');
+        }
+        
+        // Ejecutar al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDocenteNames();
+            loadDashboardTitle();
+        });
+        
+        // Sistema de título editable
+        function loadDashboardTitle() {
+            const titleElement = document.getElementById('dashboard-title');
+            const savedTitle = localStorage.getItem('dashboard_title');
+            
+            if (savedTitle) {
+                titleElement.textContent = savedTitle;
+            }
+            
+            // Guardar cuando se edita
+            titleElement.addEventListener('blur', function() {
+                const newTitle = this.textContent.trim();
+                if (newTitle) {
+                    localStorage.setItem('dashboard_title', newTitle);
+                    console.log('✅ Título guardado:', newTitle);
+                } else {
+                    this.textContent = 'Dashboard';
+                    localStorage.removeItem('dashboard_title');
+                }
+            });
+            
+            // Guardar también al presionar Enter
+            titleElement.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    this.blur();
+                }
+            });
+        }
+
+        // ==================== SISTEMA DE CONTROL MAESTRO ====================
+        
+        // Variable global para el docente seleccionado
+        let docenteActivo = localStorage.getItem('docenteActivo') || null;
+
+        // Función para colapsar/expandir Control Maestro
+        function toggleControlMaestro() {
+            const content = document.getElementById('controlMaestroContent');
+            const icon = document.getElementById('controlMaestroIcon');
+            
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                icon.style.transform = 'rotate(180deg)';
+                console.log('📂 Control Maestro expandido');
+            } else {
+                content.classList.add('hidden');
+                icon.style.transform = 'rotate(0deg)';
+                console.log('📁 Control Maestro colapsado');
+            }
+        }
+
+        // Función para seleccionar docente
+        function seleccionarDocente(docenteId) {
+            console.log('🎯 Seleccionando docente:', docenteId);
+            
+            // Guardar en localStorage
+            localStorage.setItem('docenteActivo', docenteId);
+            docenteActivo = docenteId;
+            
+            // Obtener configuración del docente
+            const configKey = `${docenteId}_config`;
+            const configData = localStorage.getItem(configKey);
+            let nombreDocente = docenteId;
+            
+            if (configData) {
+                try {
+                    const data = JSON.parse(configData);
+                    nombreDocente = data.teacherName || docenteId;
+                } catch (e) {
+                    console.error('Error parseando config:', e);
+                }
+            }
+            
+            // Actualizar UI - Quitar selección de todos
+            document.querySelectorAll('.docente-selector').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-400', 'bg-green-50');
+            });
+            
+            // Marcar el seleccionado
+            const btnSeleccionado = document.getElementById(`select-${docenteId}`);
+            if (btnSeleccionado) {
+                btnSeleccionado.classList.add('ring-4', 'ring-green-400', 'bg-green-50');
+            }
+            
+            // Mostrar banner de docente seleccionado
+            const banner = document.getElementById('docenteSeleccionado');
+            const nombreDisplay = document.getElementById('docenteActivoNombre');
+            
+            banner.classList.remove('hidden');
+            nombreDisplay.textContent = nombreDocente;
+            
+            // Habilitar todos los botones de acción
+            document.querySelectorAll('.admin-action-btn').forEach(btn => {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50', 'cursor-not-allowed');
+            });
+            
+            console.log('✅ Docente seleccionado:', nombreDocente);
+            
+            // Log de auditoría
+            registrarAuditoria('SELECCION_DOCENTE', {
+                docenteId: docenteId,
+                nombreDocente: nombreDocente,
+                timestamp: new Date().toISOString()
+            });
+        }
+
+        // Función para cambiar docente
+        function cambiarDocente() {
+            localStorage.removeItem('docenteActivo');
+            docenteActivo = null;
+            
+            // Ocultar banner
+            document.getElementById('docenteSeleccionado').classList.add('hidden');
+            
+            // Quitar selección visual
+            document.querySelectorAll('.docente-selector').forEach(btn => {
+                btn.classList.remove('ring-4', 'ring-green-400', 'bg-green-50');
+            });
+            
+            // Deshabilitar botones de acción
+            document.querySelectorAll('.admin-action-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+            
+            console.log('🔄 Docente deseleccionado - Seleccione uno nuevo');
+        }
+
+        // Función para ejecutar acciones administrativas
+        function accionAdmin(accion) {
+            if (!docenteActivo) {
+                alert('⚠️ Por favor, selecciona un docente primero.');
+                console.warn('❌ Intento de acción sin docente seleccionado');
+                return;
+            }
+            
+            console.log(`🔧 Ejecutando acción: ${accion} para docente: ${docenteActivo}`);
+            
+            // Registrar en auditoría
+            registrarAuditoria('ACCION_ADMIN', {
+                accion: accion,
+                docenteId: docenteActivo,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Enrutamiento de acciones
+            switch(accion) {
+                case 'verCursos':
+                    verCursosActuales();
+                    break;
+                    
+                case 'importarCursos':
+                    window.location.href = `importar-cursos.html?docente=${docenteActivo}`;
+                    break;
+                    
+                case 'borrarCursos':
+                    borrarTodoDefinitivo();
+                    break;
+                    
+                case 'agregarEstudiante':
+                case 'agregarVariosEstudiantes':
+                case 'importarEstudiantesCSV':
+                case 'editarEstudiantes':
+                case 'agregarTarea':
+                case 'agregarVariasTareas':
+                case 'editarTareas':
+                case 'eliminarTareas':
+                case 'marcarTodo':
+                case 'desmarcarTodo':
+                case 'marcarUnaTarea':
+                case 'desmarcarUnaTarea':
+                case 'llenarColumna':
+                case 'editarInfo':
+                case 'duplicarCurso':
+                case 'exportarDatos':
+                case 'exportarExcel':
+                case 'exportarJSON':
+                case 'importarJSON':
+                case 'imprimirCurso':
+                    // Redirigir al sistema de registro con el docente seleccionado
+                    window.location.href = `registro-notas.html?docente=${docenteActivo}&accion=${accion}`;
+                    break;
+                    
+                default:
+                    alert(`Acción "${accion}" aún no implementada para el docente seleccionado.`);
+                    console.log(`ℹ️ Acción pendiente de implementación: ${accion}`);
+            }
+        }
+
+        // Sistema de Auditoría
+        function registrarAuditoria(tipo, datos) {
+            try {
+                let auditoria = JSON.parse(localStorage.getItem('auditoria_admin') || '[]');
+                
+                auditoria.push({
+                    tipo: tipo,
+                    datos: datos,
+                    timestamp: new Date().toISOString(),
+                    usuario: sessionStorage.getItem('username') || 'unknown'
+                });
+                
+                // Mantener solo los últimos 100 registros
+                if (auditoria.length > 100) {
+                    auditoria = auditoria.slice(-100);
+                }
+                
+                localStorage.setItem('auditoria_admin', JSON.stringify(auditoria));
+                console.log('📝 Auditoría registrada:', tipo);
+            } catch (e) {
+                console.error('Error guardando auditoría:', e);
+            }
+        }
+
+        // Ver auditoría (función de debugging)
+        function verAuditoria() {
+            const auditoria = JSON.parse(localStorage.getItem('auditoria_admin') || '[]');
+            console.table(auditoria);
+            return auditoria;
+        }
+
+        // Inicializar Control Maestro al cargar
+        window.addEventListener('DOMContentLoaded', () => {
+            // Deshabilitar botones de acción al inicio
+            document.querySelectorAll('.admin-action-btn').forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            });
+            
+            // Si hay un docente guardado, restaurar selección
+            if (docenteActivo) {
+                console.log('🔄 Restaurando docente activo:', docenteActivo);
+                seleccionarDocente(docenteActivo);
+            } else {
+                console.log('ℹ️ No hay docente seleccionado. Selecciona uno para continuar.');
+            }
+        });
+
+        // ==================== FIN SISTEMA CONTROL MAESTRO ====================
+
+    </script>
+
+</body>
+</html>

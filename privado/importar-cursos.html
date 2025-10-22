@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Importar Cursos desde CSV</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+
+    <!-- Auth Guard -->
+    <script>
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            window.location.href = 'index.html';
+        }
+    </script>
+
+    <!-- Navigation -->
+    <nav class="bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-4">
+                    <a href="dashboard.html" class="text-white hover:text-gray-200">
+                        <i class="fas fa-arrow-left mr-2"></i>Volver
+                    </a>
+                    <span class="text-2xl font-bold text-white">
+                        <i class="fas fa-file-import mr-2"></i>Importar Cursos desde CSV
+                    </span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-4xl mx-auto py-8 px-4">
+        <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">
+                    <i class="fas fa-info-circle text-blue-500 mr-2"></i>Instrucciones
+                </h2>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                    <p class="text-sm text-gray-700">
+                        Esta herramienta importa automáticamente todos los cursos desde archivos CSV.
+                        Los archivos deben tener el formato correcto con columnas: Nº, Apellido1, Apellido2, Nombre, y las tareas.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Selector de Docente Destino -->
+            <div class="mb-6 bg-gradient-to-r from-purple-50 to-indigo-50 border-2 border-purple-200 rounded-lg p-6">
+                <label class="block text-lg font-bold text-gray-800 mb-4">
+                    <i class="fas fa-user-graduate mr-2 text-purple-600"></i>¿A qué docente deseas importar los cursos?
+                </label>
+                <div class="space-y-3">
+                    <label class="flex items-center p-4 border-2 border-indigo-300 rounded-lg hover:bg-indigo-50 cursor-pointer transition bg-white">
+                        <input type="radio" name="targetDocente" value="francisco" checked class="w-5 h-5 text-indigo-600 mr-4">
+                        <div class="flex-1">
+                            <div class="font-bold text-indigo-700 text-lg">Prof. Francisco Conuva</div>
+                            <div class="text-sm text-gray-600">3° y 4° Medio - Lenguaje y Comunicación</div>
+                            <div class="text-xs text-gray-500 mt-1">Storage: francisco_allCourses | BD: francisco_fconuva</div>
+                        </div>
+                        <i class="fas fa-user-graduate text-3xl text-indigo-500"></i>
+                    </label>
+                    
+                    <label class="flex items-center p-4 border-2 border-purple-300 rounded-lg hover:bg-purple-50 cursor-pointer transition bg-white">
+                        <input type="radio" name="targetDocente" value="profesor2" class="w-5 h-5 text-purple-600 mr-4">
+                        <div class="flex-1">
+                            <div class="font-bold text-purple-700 text-lg" id="profesor2DisplayName">Otro Docente</div>
+                            <div class="text-sm text-gray-600" id="profesor2DisplayInfo">Espacio independiente</div>
+                            <div class="text-xs text-gray-500 mt-1">Storage: profesor2_allCourses | BD: profesor2_profesor2</div>
+                        </div>
+                        <i class="fas fa-user-graduate text-3xl text-purple-500"></i>
+                    </label>
+                </div>
+                <p class="text-xs text-gray-600 mt-3">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Los cursos se importarán al espacio del docente seleccionado y NO afectarán al otro docente.
+                </p>
+            </div>
+
+            <div class="mb-8">
+                <label class="block text-lg font-semibold text-gray-700 mb-4">
+                    <i class="fas fa-upload mr-2"></i>Selecciona archivos CSV para importar
+                </label>
+                <input type="file" id="csvFiles" accept=".csv" multiple 
+                       class="block w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-6 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                <p class="mt-2 text-xs text-gray-500">Puedes seleccionar múltiples archivos CSV a la vez</p>
+            </div>
+
+            <button onclick="importAllCourses()" 
+                    class="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold py-4 px-6 rounded-lg shadow-lg transition duration-300 transform hover:scale-105">
+                <i class="fas fa-cloud-upload-alt mr-2"></i>Importar Todos los Cursos
+            </button>
+
+            <div id="progress" class="mt-8 hidden">
+                <div class="bg-gray-200 rounded-full h-4 overflow-hidden">
+                    <div id="progressBar" class="bg-green-500 h-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="progressText" class="text-center mt-2 text-sm text-gray-600"></p>
+            </div>
+
+            <div id="results" class="mt-8"></div>
+
+            <div class="mt-8 text-center">
+                <a href="#" id="linkToSystem" onclick="goToSystem(event)"
+                   class="inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-8 rounded-lg shadow transition duration-300">
+                    <i class="fas fa-arrow-right mr-2"></i>Ir al Sistema de Notas
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Función para ir al sistema del docente seleccionado
+        function goToSystem(e) {
+            e.preventDefault();
+            const namespace = getTargetNamespace();
+            window.location.href = `registro-notas.html?docente=${namespace}`;
+        }
+        let allCourses = [];
+        let currentCourseId = null;
+        let targetNamespace = 'francisco'; // Por defecto Francisco
+
+        // Cargar configuración de Profesor 2 al inicio
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                const config = localStorage.getItem('profesor2_config');
+                if (config) {
+                    const data = JSON.parse(config);
+                    const nameElement = document.getElementById('profesor2DisplayName');
+                    const infoElement = document.getElementById('profesor2DisplayInfo');
+                    
+                    if (nameElement && data.teacherName) {
+                        nameElement.textContent = data.teacherName;
+                    }
+                    
+                    if (infoElement && (data.subject || data.courses)) {
+                        let info = '';
+                        if (data.courses) info += data.courses;
+                        if (data.subject) info += (info ? ' - ' : '') + data.subject;
+                        infoElement.textContent = info;
+                    }
+                }
+            } catch (e) {
+                console.log('No hay configuración de Profesor 2');
+            }
+        });
+
+        // Obtener el namespace del docente seleccionado
+        function getTargetNamespace() {
+            const selectedRadio = document.querySelector('input[name="targetDocente"]:checked');
+            return selectedRadio ? selectedRadio.value : 'francisco';
+        }
+
+        // Helper functions con namespace
+        function getStorageItem(key) {
+            const namespace = getTargetNamespace();
+            const namespacedKey = `${namespace}_${key}`;
+            return localStorage.getItem(namespacedKey);
+        }
+
+        function setStorageItem(key, value) {
+            const namespace = getTargetNamespace();
+            const namespacedKey = `${namespace}_${key}`;
+            localStorage.setItem(namespacedKey, value);
+        }
+
+        // Cargar cursos existentes del docente seleccionado
+        function loadExistingCourses() {
+            const saved = getStorageItem('allCourses');
+            if (saved) {
+                allCourses = JSON.parse(saved);
+            } else {
+                allCourses = [];
+            }
+            
+            const savedCurrentId = getStorageItem('currentCourseId');
+            if (savedCurrentId) {
+                currentCourseId = parseInt(savedCurrentId);
+            }
+        }
+
+        // Guardar todos los cursos con namespace
+        function saveAllCourses() {
+            setStorageItem('allCourses', JSON.stringify(allCourses));
+            if (currentCourseId) {
+                setStorageItem('currentCourseId', currentCourseId);
+            }
+        }
+
+        // Importar todos los cursos
+        async function importAllCourses() {
+            console.log('🔄 Iniciando importación de cursos...');
+            console.log('✅ Función importAllCourses llamada correctamente');
+            
+            const fileInput = document.getElementById('csvFiles');
+            console.log('📁 File input:', fileInput);
+            
+            const files = fileInput.files;
+            console.log('📁 Archivos seleccionados:', files.length);
+            
+            if (files.length === 0) {
+                alert('Por favor selecciona al menos un archivo CSV');
+                return;
+            }
+            
+            const targetNamespace = getTargetNamespace();
+            console.log('🎯 Namespace seleccionado:', targetNamespace);
+            
+            const targetNames = {
+                francisco: 'Prof. Francisco Conuva',
+                profesor2: document.getElementById('profesor2DisplayName')?.textContent || 'Otro Docente'
+            };
+            
+            console.log('🎯 Destino:', targetNames[targetNamespace], `(${targetNamespace})`);
+
+            loadExistingCourses();
+            console.log('📚 Cursos existentes cargados:', allCourses.length);
+
+            const progressDiv = document.getElementById('progress');
+            const progressBar = document.getElementById('progressBar');
+            const progressText = document.getElementById('progressText');
+            const resultsDiv = document.getElementById('results');
+            
+            progressDiv.classList.remove('hidden');
+            resultsDiv.innerHTML = `
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                    <p class="text-sm font-semibold text-blue-800">
+                        <i class="fas fa-arrow-right mr-2"></i>
+                        Importando a: <strong>${targetNames[targetNamespace]}</strong>
+                    </p>
+                    <p class="text-xs text-blue-600 mt-1">
+                        Storage: ${targetNamespace}_allCourses
+                    </p>
+                </div>
+            `;
+
+            let successCount = 0;
+            let errorCount = 0;
+            const results = [];
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                const progress = ((i + 1) / files.length * 100).toFixed(0);
+                
+                progressBar.style.width = progress + '%';
+                progressText.textContent = `Procesando ${i + 1} de ${files.length}: ${file.name}`;
+
+                console.log(`📄 Procesando archivo ${i + 1}/${files.length}: ${file.name}`);
+
+                try {
+                    const courseData = await parseCSV(file);
+                    console.log('✅ Curso parseado:', courseData);
+                    
+                    if (courseData) {
+                        allCourses.push(courseData);
+                        successCount++;
+                        results.push({
+                            file: file.name,
+                            status: 'success',
+                            courseName: courseData.courseName,
+                            students: courseData.students.length,
+                            tasks: courseData.tasks.length
+                        });
+                        console.log(`✅ Curso agregado: ${courseData.courseName} (${courseData.students.length} estudiantes, ${courseData.tasks.length} tareas)`);
+                    } else {
+                        console.warn('⚠️ parseCSV retornó null o undefined');
+                    }
+                } catch (error) {
+                    console.error('❌ Error al procesar archivo:', error);
+                    errorCount++;
+                    results.push({
+                        file: file.name,
+                        status: 'error',
+                        error: error.message
+                    });
+                }
+            }
+            
+            console.log(`📊 Importación completada: ${successCount} exitosos, ${errorCount} errores`);
+
+            // Establecer el primer curso como actual si no hay ninguno
+            if (!currentCourseId && allCourses.length > 0) {
+                currentCourseId = allCourses[0].id;
+            }
+
+            saveAllCourses();
+
+            // SINCRONIZAR AUTOMÁTICAMENTE CON LA BASE DE DATOS
+            progressText.textContent = 'Sincronizando con la base de datos...';
+            try {
+                const username = sessionStorage.getItem('username') || 'fconuva';
+                const response = await fetch('/api/courses/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        courses: allCourses
+                    })
+                });
+
+                if (response.ok) {
+                    progressText.textContent = '✅ Sincronización completada';
+                    console.log('✅ Cursos sincronizados a la nube');
+                } else {
+                    console.warn('⚠️ Error al sincronizar:', await response.text());
+                }
+            } catch (error) {
+                console.warn('⚠️ No se pudo sincronizar con la base de datos:', error);
+            }
+
+            // Mostrar resultados
+            let html = '<div class="space-y-3">';
+            html += `<h3 class="text-xl font-bold mb-4">
+                        <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                        Importación Completada: ${successCount} exitosos, ${errorCount} errores
+                     </h3>`;
+            html += `<div class="bg-gradient-to-r from-green-50 to-blue-50 border-2 border-green-300 rounded-lg p-4 mb-3">
+                        <p class="text-sm font-semibold mb-2">
+                            <i class="fas fa-user-check text-green-600 mr-2"></i>
+                            Importado exitosamente a: <strong class="text-green-700">${targetNames[targetNamespace]}</strong>
+                        </p>
+                        <p class="text-xs text-gray-600 mb-2">
+                            📦 Storage: ${targetNamespace}_allCourses<br>
+                            🗄️ Base de datos: ${targetNamespace === 'francisco' ? 'francisco_fconuva' : 'profesor2_profesor2'}
+                        </p>
+                        <p class="text-sm text-blue-800">
+                            <i class="fas fa-cloud-upload-alt mr-2"></i>
+                            Los cursos se han sincronizado automáticamente con la base de datos.
+                        </p>
+                     </div>`;
+            
+            results.forEach(result => {
+                if (result.status === 'success') {
+                    html += `
+                        <div class="bg-green-50 border-l-4 border-green-500 p-4 rounded">
+                            <div class="flex items-center">
+                                <i class="fas fa-check-circle text-green-500 mr-3"></i>
+                                <div>
+                                    <p class="font-semibold text-green-800">${result.courseName}</p>
+                                    <p class="text-sm text-green-700">${result.students} estudiantes, ${result.tasks} tareas</p>
+                                    <p class="text-xs text-gray-600">${result.file}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    html += `
+                        <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded">
+                            <div class="flex items-center">
+                                <i class="fas fa-times-circle text-red-500 mr-3"></i>
+                                <div>
+                                    <p class="font-semibold text-red-800">Error en: ${result.file}</p>
+                                    <p class="text-sm text-red-700">${result.error}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+            html += '</div>';
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        // Parsear archivo CSV
+        function parseCSV(file) {
+            console.log('📖 Parseando archivo:', file.name);
+            
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                
+                reader.onload = function(e) {
+                    console.log('📄 Archivo leído, procesando...');
+                    
+                    try {
+                        const text = e.target.result;
+                        const lines = text.split('\n');
+                        
+                        console.log('📋 Líneas detectadas:', lines.length);
+                        
+                        if (lines.length < 4) {
+                            const error = new Error('Archivo CSV inválido o vacío (menos de 4 líneas)');
+                            console.error('❌', error);
+                            reject(error);
+                            return;
+                        }
+
+                        // Extraer nombre del curso del nombre del archivo
+                        let courseName = 'Curso Importado';
+                        let courseType = 'HC'; // HC o TP por defecto
+                        
+                        // Buscar en el nombre del archivo patrones como:
+                        // "3°AHC", "4°B HC", "III° A TP", "III° E TP"
+                        const fileNamePatterns = [
+                            /(\d)°([A-Z])\s?(HC|TP)/i,  // 3°AHC, 4°B HC
+                            /(III|IV)°\s+([A-Z])\s+(HC|TP)/i,  // III° A TP
+                            /([34])°([A-Z])(HC|TP)/i,  // Alternativa compacta
+                        ];
+                        
+                        for (const pattern of fileNamePatterns) {
+                            const match = file.name.match(pattern);
+                            if (match) {
+                                let year = match[1];
+                                const section = match[2];
+                                courseType = match[3].toUpperCase();
+                                
+                                // Convertir romano a número si es necesario
+                                if (year === 'III') year = '3';
+                                if (year === 'IV') year = '4';
+                                
+                                const courseTypeFull = courseType === 'HC' ? 'Humanista Científico' : 'Técnico Profesional';
+                                courseName = `${year}° Medio ${section} - ${courseType}`;
+                                break;
+                            }
+                        }
+                        
+                        // Si no se detectó del archivo, intentar de la segunda línea del CSV
+                        if (courseName === 'Curso Importado') {
+                            const courseLine = lines[1];
+                            const courseMatch = courseLine.match(/([IVº]+)\s+AÑO\s+"?([A-Z])"?/i);
+                            if (courseMatch) {
+                                let year = courseMatch[1].replace('º', '').replace('°', '');
+                                if (year === 'III') year = '3';
+                                if (year === 'IV') year = '4';
+                                const section = courseMatch[2];
+                                courseName = `${year}° Medio ${section}`;
+                            }
+                        }
+
+                        // Encontrar las columnas de tareas
+                        // Buscar en líneas 2 y 3 para detectar números de tareas
+                        const header1Line = lines[1]; // Puede contener nombres largos de tareas
+                        const header2Line = lines[2]; // Contiene números 1, 2, 3, 4...
+                        const headers1 = header1Line.split(',');
+                        const headers2 = header2Line.split(',');
+                        
+                        // Identificar columnas de tareas buscando números secuenciales
+                        const taskStartIndex = 4; // Después de Nº, Apellido1, Apellido2, Nombre
+                        const taskHeaders = [];
+                        
+                        for (let i = taskStartIndex; i < headers2.length; i++) {
+                            const header = headers2[i]?.trim();
+                            const taskNumber = parseInt(header);
+                            
+                            // Si es un número, es una tarea
+                            if (!isNaN(taskNumber) && taskNumber > 0) {
+                                // Buscar nombre descriptivo en línea anterior
+                                let taskName = headers1[i]?.trim() || '';
+                                if (!taskName || taskName === '') {
+                                    taskName = `Tarea ${taskNumber}`;
+                                }
+                                
+                                taskHeaders.push({
+                                    index: i,
+                                    number: taskNumber,
+                                    name: taskName
+                                });
+                            } else {
+                                // Si ya no hay más números, terminamos
+                                const headerUpper = header?.toUpperCase() || '';
+                                if (headerUpper.includes('PUNTO') || headerUpper.includes('NOTA') || headerUpper === '') {
+                                    break;
+                                }
+                            }
+                        }
+
+                        const tasks = taskHeaders.map((th, idx) => ({
+                            id: Date.now() + idx * 100,
+                            name: th.name,
+                            date: '',
+                            nivel: null,
+                            unidad: null,
+                            oas: []
+                        }));
+
+                        // Procesar estudiantes (desde línea 4 en adelante)
+                        const students = [];
+                        for (let i = 3; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            
+                            const columns = line.split(',');
+                            if (columns.length < 4) continue;
+                            
+                            const number = parseInt(columns[0]) || students.length + 1;
+                            const lastName1 = columns[1]?.trim().toUpperCase() || '';
+                            const lastName2 = columns[2]?.trim().toUpperCase() || '';
+                            const name = columns[3]?.trim().toUpperCase() || '';
+                            
+                            if (!lastName1 || !name) continue;
+
+                            const grades = [];
+                            taskHeaders.forEach(th => {
+                                const value = columns[th.index]?.trim().toUpperCase();
+                                grades.push(value === 'TRUE' || value === 'VERDADERO' || value === '1');
+                            });
+
+                            students.push({
+                                id: Date.now() + i,
+                                number: number,
+                                lastName1: lastName1,
+                                lastName2: lastName2,
+                                name: name,
+                                grades: grades,
+                                notes: '',
+                                retired: false
+                            });
+                        }
+
+                        if (students.length === 0) {
+                            reject(new Error('No se encontraron estudiantes en el archivo'));
+                            return;
+                        }
+
+                        const subjectName = courseType === 'HC' ? 
+                            'Lenguaje HC (Humanista Científico)' : 
+                            'Lenguaje TP (Técnico Profesional)';
+                        
+                        const courseData = {
+                            id: Date.now() + Math.floor(Math.random() * 10000),
+                            courseName: courseName,
+                            subject: subjectName,
+                            period: '2025',
+                            students: students,
+                            tasks: tasks,
+                            config: {
+                                subject: subjectName,
+                                period: '2025',
+                                gradeType: 'Chileno',
+                                minGrade: 1.0,
+                                maxGrade: 7.0,
+                                passingGrade: 4.0,
+                                passingPercentage: 60
+                            }
+                        };
+
+                        resolve(courseData);
+                    } catch (error) {
+                        reject(new Error('Error al procesar el archivo: ' + error.message));
+                    }
+                };
+
+                reader.onerror = function() {
+                    reject(new Error('Error al leer el archivo'));
+                };
+
+                reader.readAsText(file, 'UTF-8');
+            });
+        }
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Importando Plan 2° Medio...</title>
+</head>
+<body>
+    <h1>Importando Plan Ministerial...</h1>
+    <script>
+        // Cargar el JSON
+        fetch('plan_2Medio_Lenguaje_Unidad4.json')
+            .then(response => response.json())
+            .then(planNuevo => {
+                // Obtener planes existentes
+                let planesExistentes = JSON.parse(localStorage.getItem('planes_programas_ministeriales') || '[]');
+                
+                // Eliminar plan anterior del mismo nivel/asignatura/unidad si existe
+                planesExistentes = planesExistentes.filter(p => 
+                    !(p.nivel === '2° Medio' && p.asignatura === 'Lenguaje y Comunicación' && p.unidades[0].numero === 4)
+                );
+                
+                // Agregar nuevo plan
+                planesExistentes.push(planNuevo);
+                
+                // Guardar
+                localStorage.setItem('planes_programas_ministeriales', JSON.stringify(planesExistentes));
+                
+                // Mostrar resultado
+                document.body.innerHTML = `
+                    <div style="font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto;">
+                        <h1 style="color: #10b981;">✅ Plan Importado Exitosamente</h1>
+                        <div style="background: #f0fdf4; border: 2px solid #10b981; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                            <h2>📊 Estadísticas del Plan Cargado:</h2>
+                            <ul style="font-size: 18px;">
+                                <li><strong>Nivel:</strong> 2° Medio</li>
+                                <li><strong>Asignatura:</strong> Lenguaje y Comunicación</li>
+                                <li><strong>Unidad:</strong> 4 - Poder y ambición (Género dramático)</li>
+                                <li><strong>Objetivos de Aprendizaje:</strong> 15 OA</li>
+                                <li><strong>Indicadores:</strong> 87 indicadores</li>
+                                <li><strong>Actitudes:</strong> 2 actitudes</li>
+                                <li><strong>Habilidades:</strong> 4 habilidades</li>
+                            </ul>
+                        </div>
+                        <div style="margin-top: 30px;">
+                            <a href="../../../privado/gestor-planes-programas.html" style="display: inline-block; background: #10b981; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 18px;">
+                                🚀 Ir al Gestor de Planes
+                            </a>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                document.body.innerHTML = `
+                    <div style="font-family: Arial; padding: 40px; color: red;">
+                        <h1>❌ Error al Importar</h1>
+                        <p>${error.message}</p>
+                    </div>
+                `;
+            });
+    </script>
+</body>
+</html>

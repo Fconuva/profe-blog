@@ -1,0 +1,840 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulario Avanzado para Portafolio Docente 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Slab:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --secondary-color: #7c3aed;
+        }
+        html { scroll-behavior: smooth; }
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; }
+        h1, h2, h3, h4 { font-family: 'Roboto Slab', serif; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        .accordion-content { 
+            overflow: hidden; 
+            transition: max-height 0.4s ease-out; 
+            max-height: 0;
+        }
+        .accordion-button.active .arrow-icon { transform: rotate(180deg); }
+        .btn-premium {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            transition: all 0.3s ease;
+        }
+        .btn-premium:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+        }
+        .section-title {
+            font-size: 2.25rem;
+            position: relative;
+            padding-bottom: 0.75rem;
+        }
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            border-radius: 2px;
+        }
+        label { font-weight: 600; color: #374151; }
+        input[type="text"], input[type="number"], select, textarea {
+            background-color: #f9fafb;
+            border-color: #d1d5db;
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            --tw-ring-color: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px var(--tw-ring-color);
+        }
+        .tooltip { 
+            position: relative; 
+            display: inline-block;
+            cursor: help;
+        }
+        .tooltip .tooltip-icon {
+            font-style: normal;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            background-color: #9ca3af;
+            color: white;
+            border-radius: 50%;
+            font-weight: bold;
+            margin-left: 8px;
+            font-size: 14px;
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden; width: 320px; background-color: #1f2937;
+            color: #fff; text-align: left; border-radius: 6px; padding: 12px;
+            position: absolute; z-index: 10; bottom: 135%; left: 50%;
+            margin-left: -160px; opacity: 0; transition: opacity 0.3s;
+            font-family: 'Inter', sans-serif; font-weight: 400; font-size: 0.875rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .dynamic-section {
+            display: none;
+            background-color: #eef2ff;
+            border-left: 4px solid var(--primary-color);
+            margin-top: 1.5rem;
+        }
+        .progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 9999px;
+            height: 12px;
+        }
+        .progress-bar {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            height: 100%;
+            border-radius: 9999px;
+            transition: width 0.5s ease-in-out;
+        }
+        .info-box {
+            background-color: #e0f2fe;
+            border-left: 5px solid #0ea5e9;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .info-box h4 {
+            color: #0369a1;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        .info-box p {
+            color: #075985;
+        }
+    </style>
+</head>
+<body class="antialiased text-gray-800">
+    
+    <header class="relative w-full min-h-screen flex items-center overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-slate-900 via-indigo-900 to-purple-900"></div>
+        <div class="absolute inset-0 opacity-10" style="background-image: url('https://www.transparenttextures.com/patterns/cubes.png');"></div>
+        <div class="absolute top-20 left-10 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl animate-float"></div>
+        <div class="absolute bottom-20 right-10 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+
+        <div class="container mx-auto px-6 relative z-10 py-20">
+            <div class="max-w-4xl mx-auto text-center text-white">
+                <div class="space-y-8">
+                    <h1 class="text-4xl md:text-6xl font-bold leading-tight">
+                        Formulario de Contexto <span class="block text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Profesional 2025</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl text-gray-300 leading-relaxed max-w-3xl mx-auto">
+                        La base para un Portafolio Docente de Excelencia. Recopila, organiza y reflexiona sobre tu práctica pedagógica de manera estructurada.
+                    </p>
+                    <div class="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+                        <h2 class="font-bold text-xl mb-2">Objetivo de este Formulario</h2>
+                        <p class="text-base">Este formulario es tu asistente personal. Está diseñado para recopilar la información clave de tu práctica, alineado con los manuales 2025. Al completarlo, tendrás una base sólida para construir un portafolio que refleje un desempeño <strong>Competente y Destacado</strong>. Las ampolletas (💡) contienen pistas y ejemplos para guiarte.</p>
+                    </div>
+                    <a href="#formulario" class="inline-block btn-premium text-lg font-semibold px-8 py-4 rounded-lg shadow-lg">
+                        Comenzar a Llenar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main id="formulario" class="py-20 bg-white">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                
+                <!-- Barra de Progreso -->
+                <div class="mb-12">
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="text-lg font-semibold text-gray-700">Progreso del Formulario</h3>
+                        <span id="progress-text" class="font-bold text-indigo-600">0%</span>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div id="progress-bar" class="progress-bar" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- I. Identificación y Contexto General -->
+                <button class="accordion-button w-full flex justify-between items-center text-left p-6 bg-gray-100 rounded-lg text-xl font-bold text-gray-800 hover:bg-gray-200 transition">
+                    I. Identificación y Contexto General
+                    <svg class="arrow-icon w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="bg-white border border-t-0 border-gray-200 rounded-b-lg p-8">
+                        <div class="grid md:grid-cols-2 gap-6 mb-6">
+                            <input type="text" id="nombre_docente" class="form-input w-full p-3 border rounded-lg" placeholder="Nombre Completo del Docente">
+                            <input type="text" id="establecimiento" class="form-input w-full p-3 border rounded-lg" placeholder="Establecimiento Educativo">
+                        </div>
+                        <select id="tipo_evaluacion" class="form-input w-full p-3 border rounded-lg mb-6">
+                            <option value="">Seleccione el manual correspondiente...</option>
+                            <option value="basica_generalista">Ed. Básica Generalista (1° a 4°)</option>
+                            <option value="basica_asignaturas">Ed. Básica Asignaturas (1° a 6°)</option>
+                            <option value="media_hc">7° Básico a 4° Medio (HC)</option>
+                            <option value="media_tp">Ed. Media Técnico Profesional</option>
+                            <option value="parvularia">Ed. Parvularia</option>
+                            <option value="especial_escuela">Ed. Especial - Escuela Especial (NEEP)</option>
+                            <option value="especial_regular">Ed. Especial - Escuela Regular / Lenguaje / EPJA</option>
+                            <option value="adultos">Ed. Personas Jóvenes y Adultas (EPJA)</option>
+                        </select>
+                        <textarea id="caracteristicas_establecimiento" rows="5" class="form-input w-full p-3 border rounded-lg" placeholder="Describe el contexto del establecimiento: rural/urbano, índice de vulnerabilidad, sellos educativos (artístico, deportivo, etc.), recursos disponibles, clima escolar..."></textarea>
+                    </div>
+                </div>
+
+                <!-- II. Caracterización del Curso -->
+                <button class="accordion-button mt-8 w-full flex justify-between items-center text-left p-6 bg-gray-100 rounded-lg text-xl font-bold text-gray-800 hover:bg-gray-200 transition">
+                    II. Caracterización Detallada del Curso
+                    <svg class="arrow-icon w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="bg-white border border-t-0 border-gray-200 rounded-b-lg p-8 space-y-6">
+                        <div class="grid md:grid-cols-3 gap-6">
+                            <input type="text" id="nivel_curso" class="form-input w-full p-3 border rounded-lg" placeholder="Nivel y Curso (Ej: 3° Básico A)">
+                            <input type="text" id="asignatura" class="form-input w-full p-3 border rounded-lg" placeholder="Asignatura Principal">
+                            <input type="number" id="numero_estudiantes" class="form-input w-full p-3 border rounded-lg" placeholder="N° de Estudiantes">
+                        </div>
+                        <div>
+                            <label for="caracteristicas_aprendizaje" class="block mb-2">
+                                Características de Aprendizaje del Grupo
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe estilos y ritmos de aprendizaje, conocimientos previos, habilidades descendidas y destacadas. ¿Es un grupo más visual, kinestésico? ¿Hay estudiantes que requieren más andamiaje?</span></span>
+                            </label>
+                            <textarea id="caracteristicas_aprendizaje" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                        <div>
+                            <label for="caracteristicas_socioculturales" class="block mb-2">
+                                Contexto Sociocultural e Intereses
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Menciona diversidad cultural (nacionalidad, etnia), intereses comunes (videojuegos, música, deportes), dinámicas familiares relevantes, etc. Esto es clave para fundamentar la pertinencia de tus clases.</span></span>
+                            </label>
+                            <textarea id="caracteristicas_socioculturales" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                         <div>
+                            <label for="necesidades_educativas" class="block mb-2">
+                                Necesidades Educativas Especiales (NEE)
+                                 <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Indica cantidad de estudiantes con NEE (transitorias o permanentes) y las principales barreras de aprendizaje que enfrentan, sin dar nombres. Ej: "Tengo 3 estudiantes con diagnóstico TEL y 2 con DEA, lo que implica desafíos en la comprensión de instrucciones complejas".</span></span>
+                            </label>
+                            <textarea id="necesidades_educativas" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIONES DINÁMICAS ESPECÍFICAS POR MANUAL -->
+                <div id="seccion_parvularia" class="dynamic-section p-8 rounded-lg">
+                    <h3 class="text-lg font-bold text-indigo-700 mb-4">Preguntas Específicas: Educación Parvularia</h3>
+                    <div class="space-y-6">
+                         <div>
+                            <label for="parv_juego" class="block mb-2">
+                                Análisis de una Instancia de Juego
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe una instancia de juego o actividad lúdica reciente. Fundamenta una decisión pedagógica que tomaste (organización del espacio, recursos, tu rol) y qué pudiste concluir sobre el aprendizaje y desarrollo de los niños y niñas.</span></span>
+                            </label>
+                            <textarea id="parv_juego" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                        <div>
+                            <label for="parv_familias" class="block mb-2">
+                                Reflexión sobre el Trabajo con Familias
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe una estrategia que usaste para involucrar a las familias en el proceso educativo. ¿Qué progresos y dificultades hubo? ¿Qué podrías hacer para fortalecer ese trabajo conjunto?</span></span>
+                            </label>
+                            <textarea id="parv_familias" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="seccion_especial" class="dynamic-section p-8 rounded-lg">
+                    <h3 class="text-lg font-bold text-indigo-700 mb-4">Preguntas Específicas: Educación Especial</h3>
+                     <div class="space-y-6">
+                        <div>
+                            <label for="esp_adecuaciones" class="block mb-2">
+                                Adecuaciones Curriculares y Enfoque Ecológico Funcional
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe cómo tus planificaciones consideran el enfoque ecológico funcional. ¿Cómo haces que los aprendizajes sean útiles para el desenvolvimiento de los estudiantes en sus contextos? ¿Qué tipo de adecuaciones (de acceso, de objetivos) son las más frecuentes?</span></span>
+                            </label>
+                            <textarea id="esp_adecuaciones" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                        <div>
+                            <label for="esp_coensenanza" class="block mb-2">
+                                Trabajo Colaborativo y Co-enseñanza
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe cómo te coordinas con docentes de aula regular y otros profesionales (fonoaudiólogos, terapeutas) en la planificación, implementación y evaluación de los apoyos para los estudiantes.</span></span>
+                            </label>
+                            <textarea id="esp_coensenanza" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                 <div id="seccion_tp" class="dynamic-section p-8 rounded-lg">
+                    <h3 class="text-lg font-bold text-indigo-700 mb-4">Preguntas Específicas: Media Técnico Profesional</h3>
+                     <div class="space-y-6">
+                        <div>
+                            <label for="tp_modulo" class="block mb-2">
+                                Módulo de la Especialidad
+                            </label>
+                            <input type="text" id="tp_modulo" class="form-input w-full p-3 border rounded-lg" placeholder="Ej: Elaboración de alimentos, Contabilidad, Mecánica automotriz">
+                        </div>
+                        <div>
+                            <label for="tp_contexto_laboral" class="block mb-2">
+                                Vínculo con el Contexto Laboral
+                                 <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">¿Cómo tus actividades prácticas (Módulo 1 y 2) acercan a los estudiantes al mundo del trabajo? ¿Resuelven problemas similares a los del sector? ¿Reflexionan sobre la importancia de los aprendizajes genéricos (trabajo en equipo, comunicación) en su futura especialidad?</span></span>
+                            </label>
+                            <textarea id="tp_contexto_laboral" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- III. Módulo 1: Planificación y Evaluación Formativa -->
+                <button class="accordion-button mt-8 w-full flex justify-between items-center text-left p-6 bg-gray-100 rounded-lg text-xl font-bold text-gray-800 hover:bg-gray-200 transition">
+                    III. Módulo 1: Planificación y Evaluación
+                    <svg class="arrow-icon w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="bg-white border border-t-0 border-gray-200 rounded-b-lg p-8 space-y-8">
+                        <div id="experiencias_aprendizaje">
+                            <h3 class="text-2xl font-bold mb-4 text-center text-gray-700">Tres Experiencias de Aprendizaje</h3>
+                        </div>
+                        <hr>
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4 text-center text-gray-700">Tarea 2: Evaluación Formativa</h3>
+                            <div class="space-y-6 bg-gray-50 p-6 rounded-lg">
+                                <div>
+                                    <label for="eval_estrategia" class="block mb-2">
+                                        Estrategia de Monitoreo del Aprendizaje
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe una actividad específica que usaste para ver el avance de los estudiantes (ej: preguntas al cierre, revisión de cuadernos, ticket de salida, etc.). ¿Qué indicadores de evaluación te permitieron recoger evidencia?</span></span>
+                                    </label>
+                                    <textarea id="eval_estrategia" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                <div>
+                                    <label for="eval_analisis" class="block mb-2">
+                                        Análisis de Resultados y Causas
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">¿Qué concluyes del monitoreo? ¿Qué aprendizajes se lograron mejor y cuáles menos? Atribuye las causas tanto a tus decisiones pedagógicas como a factores del contexto.</span></span>
+                                    </label>
+                                    <textarea id="eval_analisis" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                <div>
+                                    <label for="eval_ajustes" class="block mb-2">
+                                        Ajustes y Acciones Pedagógicas
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">A partir de tu análisis, ¿qué acciones concretas realizaste para apoyar a los estudiantes? ¿Modificaste algo de tu planificación? ¿Hiciste un repaso? ¿Creaste un nuevo material? Sé específico.</span></span>
+                                    </label>
+                                    <textarea id="eval_ajustes" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- IV. Módulo 2: La Clase Grabada -->
+                <button class="accordion-button mt-8 w-full flex justify-between items-center text-left p-6 bg-gray-100 rounded-lg text-xl font-bold text-gray-800 hover:bg-gray-200 transition">
+                    IV. Módulo 2: La Clase Grabada
+                    <svg class="arrow-icon w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                <div class="accordion-content">
+                    <div class="bg-white border border-t-0 border-gray-200 rounded-b-lg p-8 space-y-6">
+                         <div class="info-box">
+                            <h4>Consejo Estratégico para la Clase Grabada</h4>
+                            <p>La clase grabada es para demostrar dominio, no para experimentar. Elije una actividad simple, bien planificada y que manejes a la perfección. Enfócate en cumplir con las rúbricas: un buen ambiente, interacciones efectivas y retroalimentación constante. Las clases innovadoras y proyectos grandes, déjalos para el día a día con tus estudiantes, ¡no para la grabación!</p>
+                        </div>
+                        <div>
+                            <label for="grab_oa" class="block mb-2">Objetivo de Aprendizaje (OA) de la clase grabada</label>
+                            <textarea id="grab_oa" rows="3" class="form-input w-full p-3 border rounded-lg" placeholder="Copia y pega aquí el OA de las Bases Curriculares."></textarea>
+                        </div>
+                         <div>
+                            <label for="grab_descripcion" class="block mb-2">
+                                Descripción general de la clase
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe brevemente la secuencia de la clase grabada. ¿Qué harás al inicio para motivar? ¿Cuál será la actividad central de desarrollo? ¿Cómo cerrarás? Esto ayuda a dar contexto al evaluador.</span></span>
+                            </label>
+                            <textarea id="grab_descripcion" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                        <div>
+                            <label for="grab_interaccion" class="block mb-2">
+                                Interacciones Pedagógicas y Retroalimentación
+                                 <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">¿Cómo fomentarás la participación y colaboración? ¿Qué tipo de preguntas harás para promover el pensamiento crítico o creativo? ¿Cómo retroalimentarás los aciertos y errores para potenciar el aprendizaje?</span></span>
+                            </label>
+                            <textarea id="grab_interaccion" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                         <div>
+                            <label for="grab_genero" class="block mb-2">
+                                ¿Cómo abordarás la equidad de género?
+                                <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Piensa en cómo tus materiales, ejemplos o la forma de agrupar a los estudiantes pueden ayudar a desnaturalizar estereotipos. Ej: "Usaré imágenes de hombres y mujeres en roles no tradicionales", "Fomentaré la participación equitativa en los grupos".</span></span>
+                            </label>
+                            <textarea id="grab_genero" rows="3" class="form-input w-full p-3 border rounded-lg"></textarea>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- V. Módulo 3: Trabajo Colaborativo -->
+                <button class="accordion-button mt-8 w-full flex justify-between items-center text-left p-6 bg-gray-100 rounded-lg text-xl font-bold text-gray-800 hover:bg-gray-200 transition">
+                    V. Módulo 3: Trabajo Colaborativo
+                    <svg class="arrow-icon w-6 h-6 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </button>
+                 <div class="accordion-content">
+                    <div class="bg-white border border-t-0 border-gray-200 rounded-b-lg p-8 space-y-8">
+                        
+                        <div class="info-box">
+                            <h4>Sobre tu Experiencia Colaborativa</h4>
+                            <p>Puedes usar una experiencia desarrollada desde el año 2023 en adelante. Si tienes una idea para este año (2025) y quieres que la preparemos juntos, anota los detalles y la desarrollamos a partir de tu contexto. Si prefieres usar una experiencia pasada, asegúrate de tener claros los detalles del proceso.</p>
+                        </div>
+                        
+                        <div class="info-box" style="border-color: #34d399; background-color: #d1fae5;">
+                            <h4 style="color: #065f46;">¿Qué SÍ es y qué NO es Trabajo Colaborativo?</h4>
+                            <p style="color: #047857;"><strong>SÍ es:</strong> Dialogar y reflexionar sobre un problema pedagógico, analizar evidencias de aprendizaje, tomar decisiones en conjunto, evaluar el impacto de una estrategia y aprender de ello. <br><strong>NO es:</strong> Solo repartirse tareas, coordinar un acto, compartir material sin reflexión conjunta, o una simple reunión informativa.</p>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-bold mb-2 text-gray-700">A. Origen e Implementación</h4>
+                            <div class="space-y-6 bg-gray-50 p-6 rounded-lg">
+                                <div>
+                                    <label for="colab_problema" class="block mb-2">
+                                        Problemática, Interés o Necesidad y su Relevancia
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Describe el problema pedagógico que motivó el trabajo. ¿Por qué era importante abordarlo para el aprendizaje de los estudiantes? Ej: "Bajos resultados en resolución de problemas matemáticos, lo que afecta su autonomía".</span></span>
+                                    </label>
+                                    <textarea id="colab_problema" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                <div>
+                                    <label for="colab_dialogo" class="block mb-2">
+                                        Reflexión Conjunta a través del Diálogo
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Narra el proceso de conversación: ¿Qué ideas surgieron? ¿Hubo desacuerdos? ¿Cómo llegaron a un consenso para decidir qué hacer? Describe el "cómo" llegaron a la solución, no solo la solución final.</span></span>
+                                    </label>
+                                    <textarea id="colab_dialogo" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-bold mb-2 text-gray-700">B. Aprendizajes Profesionales (Reflexión Individual)</h4>
+                            <div class="space-y-6 bg-gray-50 p-6 rounded-lg">
+                                 <div>
+                                    <label for="colab_aprendizaje" class="block mb-2">
+                                        Aprendizajes para tu práctica y repercusión en estudiantes
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">¿Qué aprendiste tú como profesional gracias a esta experiencia? Sé concreto: ¿cambiaste alguna estrategia?, ¿aprendiste a usar una nueva herramienta? Y lo más importante, ¿cómo impactó ese cambio en tus estudiantes?</span></span>
+                                    </label>
+                                    <textarea id="colab_aprendizaje" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div>
+                            <h4 class="text-xl font-bold mb-2 text-gray-700">Sección Voluntaria (Para Desempeño de Excelencia)</h4>
+                             <div class="space-y-6 bg-blue-50 p-6 rounded-lg border-l-4 border-blue-400">
+                                 <div>
+                                    <label for="colab_vol_evidencia" class="block mb-2">
+                                        Reflexión sobre Necesidades Profesionales a partir de Evidencia
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Para un nivel Destacado. ¿Qué evidencia concreta (evaluaciones, trabajos, etc.) analizaron para definir el problema? ¿Cómo ese análisis los llevó a concluir que ustedes como profesionales necesitaban aprender o mejorar algo?</span></span>
+                                    </label>
+                                    <textarea id="colab_vol_evidencia" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                 <div>
+                                    <label for="colab_vol_seguimiento" class="block mb-2">
+                                        Seguimiento de la Implementación
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">¿Cómo fueron monitoreando que el plan de trabajo colaborativo funcionara? ¿Recogieron datos? ¿Qué decisiones tomaron para ajustar el plan sobre la marcha basándose en esa información?</span></span>
+                                    </label>
+                                    <textarea id="colab_vol_seguimiento" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                 <div>
+                                    <label for="colab_vol_creencias" class="block mb-2">
+                                        Reflexión sobre Creencias Pedagógicas (Individual)
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Esta es una reflexión profunda. ¿Esta experiencia reafirmó o cambió alguna de tus creencias sobre cómo se aprende, cómo se enseña o tu rol como docente? Explica cuál era esa creencia y cómo se transformó.</span></span>
+                                    </label>
+                                    <textarea id="colab_vol_creencias" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                                  <div>
+                                    <label for="colab_vol_evaluacion" class="block mb-2">
+                                        Evaluación de la Forma de Trabajo (Individual)
+                                        <span class="tooltip"><i class="tooltip-icon">💡</i><span class="tooltiptext">Analiza el "cómo" trabajaron. ¿Qué aspectos de la organización y la colaboración facilitaron el logro de los objetivos? ¿Cuáles lo obstaculizaron? ¿Qué aprendiste sobre cómo trabajar mejor en equipo para futuras ocasiones?</span></span>
+                                    </label>
+                                    <textarea id="colab_vol_evaluacion" rows="4" class="form-input w-full p-3 border rounded-lg"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                 </div>
+
+                <!-- Botón de Descarga -->
+                <div class="text-center mt-12">
+                    <button onclick="generarPDF()" class="btn-premium text-lg font-semibold px-8 py-4 rounded-lg shadow-lg">
+                        <svg class="w-6 h-6 inline mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Generar y Descargar Informe PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lógica de Acordeón (CORRECCIÓN DEFINITIVA)
+            const accordionButtons = document.querySelectorAll('.accordion-button');
+
+            // Función para recalcular y aplicar la altura al contenido visible
+            function updateActiveAccordionHeight() {
+                const activeButton = document.querySelector('.accordion-button.active');
+                if (activeButton) {
+                    const content = activeButton.nextElementSibling;
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                }
+            }
+
+            accordionButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const content = button.nextElementSibling;
+                    const isCurrentlyActive = button.classList.contains('active');
+
+                    // Cierra todos los acordeones
+                    accordionButtons.forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.nextElementSibling.style.maxHeight = '0px'; 
+                    });
+
+                    // Si no estaba activo, lo abre
+                    if (!isCurrentlyActive) {
+                        button.classList.add('active');
+                        content.style.maxHeight = content.scrollHeight + 'px';
+                    }
+                });
+            });
+            
+            // Abrir el primer acordeón por defecto
+            if(accordionButtons.length > 0) {
+                 setTimeout(() => {
+                    const firstButton = accordionButtons[0];
+                    const firstContent = firstButton.nextElementSibling;
+                    firstButton.classList.add('active');
+                    firstContent.style.maxHeight = firstContent.scrollHeight + 'px';
+                }, 150); 
+            }
+
+            // Lógica de Secciones Dinámicas
+            const tipoEvaluacionSelect = document.getElementById('tipo_evaluacion');
+            
+            tipoEvaluacionSelect.addEventListener('change', function() {
+                const selectedValue = this.value;
+                document.querySelectorAll('.dynamic-section').forEach(section => {
+                    section.style.display = 'none';
+                });
+
+                if (selectedValue === 'parvularia') {
+                    document.getElementById('seccion_parvularia').style.display = 'block';
+                } else if (selectedValue.startsWith('especial')) {
+                    document.getElementById('seccion_especial').style.display = 'block';
+                } else if (selectedValue === 'media_tp') {
+                    document.getElementById('seccion_tp').style.display = 'block';
+                }
+                
+                // Importante: recalcular altura del acordeón activo después de mostrar/ocultar contenido
+                updateActiveAccordionHeight(); 
+                updateProgressBar();
+            });
+
+            // Template para experiencias de aprendizaje
+            const experienciasContainer = document.getElementById('experiencias_aprendizaje');
+            for (let i = 1; i <= 3; i++) {
+                const experienciaHTML = `
+                    <div class="experiencia-item mb-8">
+                        <h4 class="text-lg font-bold mb-3 text-indigo-600">Experiencia de Aprendizaje #${i}</h4>
+                        <div class="space-y-4 bg-gray-50 p-4 rounded-lg">
+                            <textarea id="exp${i}_oa" rows="2" class="form-input w-full p-3 border rounded-lg" placeholder="Objetivo(s) de Aprendizaje de esta experiencia"></textarea>
+                            <textarea id="exp${i}_actividades" rows="4" class="form-input w-full p-3 border rounded-lg" placeholder="Describe la secuencia de actividades (inicio, desarrollo, cierre)..."></textarea>
+                            <textarea id="exp${i}_recursos" rows="2" class="form-input w-full p-3 border rounded-lg" placeholder="Recursos y materiales a utilizar..."></textarea>
+                            <textarea id="exp${i}_evaluacion" rows="2" class="form-input w-full p-3 border rounded-lg" placeholder="Estrategia de evaluación para esta experiencia..."></textarea>
+                        </div>
+                    </div>
+                `;
+                experienciasContainer.innerHTML += experienciaHTML;
+            }
+
+            // Lógica de la Barra de Progreso
+            const allInputs = document.querySelectorAll('.form-input');
+            const progressBar = document.getElementById('progress-bar');
+            const progressText = document.getElementById('progress-text');
+
+            function updateProgressBar() {
+                let filledCount = 0;
+                let totalVisibleInputs = 0;
+
+                allInputs.forEach(input => {
+                    // Solo contar inputs que son visibles
+                    if (input.offsetParent !== null) {
+                         totalVisibleInputs++;
+                        if (input.value.trim() !== '') {
+                            filledCount++;
+                        }
+                    }
+                });
+                
+                const percentage = totalVisibleInputs > 0 ? Math.round((filledCount / totalVisibleInputs) * 100) : 0;
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = percentage + '%';
+            }
+            
+            allInputs.forEach(input => {
+                input.addEventListener('input', updateProgressBar);
+            });
+            
+            // Inicializar la barra de progreso
+            updateProgressBar();
+        });
+
+        // Lógica para Generar PDF
+        function generarPDF() {
+            try {
+                if (typeof window.jspdf === 'undefined' || typeof window.jspdf.jsPDF === 'undefined') {
+                    alert('Error: La librería jsPDF no se ha cargado correctamente.');
+                    return;
+                }
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+
+                let yPosition = 20;
+                const leftMargin = 15;
+                const rightMargin = 15;
+                const contentWidth = 210 - leftMargin - rightMargin;
+                const pageHeight = 297;
+                const bottomMargin = 20;
+
+                // --- Helper Functions for PDF styling ---
+
+                function checkPageBreak(currentY, requiredHeight) {
+                    if (currentY + requiredHeight > pageHeight - bottomMargin) {
+                        doc.addPage();
+                        return 25; // Reset Y for new page
+                    }
+                    return currentY;
+                }
+
+                function addHeaderBox(title) {
+                    yPosition = checkPageBreak(yPosition, 20);
+                    doc.setFont("Roboto Slab", "bold");
+                    doc.setFontSize(14);
+                    doc.setTextColor("#FFFFFF");
+                    doc.setFillColor(30, 58, 138); // Dark Blue
+                    doc.roundedRect(leftMargin, yPosition, contentWidth, 10, 3, 3, 'F');
+                    doc.text(title, leftMargin + 5, yPosition + 7);
+                    yPosition += 15;
+                }
+
+                function addContentRow(label, value) {
+                    if (!value || value.trim() === "" || value.trim() === "Seleccione...") return;
+                    
+                    doc.setFont("Inter", "bold");
+                    doc.setFontSize(10);
+                    doc.setTextColor(55, 65, 81);
+                    
+                    const labelLines = doc.splitTextToSize(label + ":", contentWidth);
+                    const valueLines = doc.splitTextToSize(value, contentWidth);
+                    const requiredHeight = (labelLines.length * 5) + (valueLines.length * 5) + 5;
+                    yPosition = checkPageBreak(yPosition, requiredHeight);
+
+                    doc.text(labelLines, leftMargin, yPosition);
+                    yPosition += (labelLines.length * 5);
+
+                    doc.setFont("Inter", "normal");
+                    doc.setTextColor(75, 85, 99);
+                    doc.text(valueLines, leftMargin + 2, yPosition);
+                    yPosition += (valueLines.length * 5) + 6; // Extra space after value
+                }
+
+                // --- PDF Content Generation ---
+
+                // 1. Indicación Inicial
+                doc.setFont("Inter", "bolditalic");
+                doc.setFontSize(12);
+                doc.setTextColor(239, 68, 68); // Red color for attention
+                doc.text("Enviar a Francisco para que comience a hacer tu portafolio.", 105, yPosition, { align: 'center' });
+                yPosition += 15;
+
+                // 2. Título Principal
+                doc.setFont("Roboto Slab", "bold");
+                doc.setFontSize(20);
+                doc.setTextColor(45, 55, 72);
+                doc.text("Informe de Contexto Profesional 2025", 105, yPosition, { align: 'center' });
+                yPosition += 8;
+                const nombreDocente = document.getElementById("nombre_docente").value || "Docente no especificado";
+                doc.setFontSize(12);
+                doc.setFont("Inter", "normal");
+                doc.setTextColor(107, 114, 128);
+                doc.text(nombreDocente, 105, yPosition, { align: 'center' });
+                yPosition += 15;
+                
+                // --- Recopilar Datos ---
+                const datos = {
+                    // Módulo 1
+                    exp1_oa: document.getElementById("exp1_oa").value,
+                    exp1_actividades: document.getElementById("exp1_actividades").value,
+                    exp1_recursos: document.getElementById("exp1_recursos").value,
+                    exp1_evaluacion: document.getElementById("exp1_evaluacion").value,
+                    exp2_oa: document.getElementById("exp2_oa").value,
+                    exp2_actividades: document.getElementById("exp2_actividades").value,
+                    exp2_recursos: document.getElementById("exp2_recursos").value,
+                    exp2_evaluacion: document.getElementById("exp2_evaluacion").value,
+                    exp3_oa: document.getElementById("exp3_oa").value,
+                    exp3_actividades: document.getElementById("exp3_actividades").value,
+                    exp3_recursos: document.getElementById("exp3_recursos").value,
+                    exp3_evaluacion: document.getElementById("exp3_evaluacion").value,
+                    eval_estrategia: document.getElementById("eval_estrategia").value,
+                    eval_analisis: document.getElementById("eval_analisis").value,
+                    eval_ajustes: document.getElementById("eval_ajustes").value,
+                };
+
+
+                // --- Estructura del PDF ---
+                
+                addHeaderBox("I. Identificación y Contexto General");
+                addContentRow("Establecimiento", document.getElementById("establecimiento").value);
+                addContentRow("Tipo de Manual", document.getElementById("tipo_evaluacion").options[document.getElementById("tipo_evaluacion").selectedIndex].text);
+                addContentRow("Contexto del Establecimiento", document.getElementById("caracteristicas_establecimiento").value);
+
+                addHeaderBox("II. Caracterización Detallada del Curso");
+                addContentRow("Nivel, Curso y Asignatura", `${document.getElementById("nivel_curso").value} - ${document.getElementById("asignatura").value}`);
+                addContentRow("N° Estudiantes", document.getElementById("numero_estudiantes").value);
+                addContentRow("Características de Aprendizaje", document.getElementById("caracteristicas_aprendizaje").value);
+                addContentRow("Contexto Sociocultural e Intereses", document.getElementById("caracteristicas_socioculturales").value);
+                addContentRow("Necesidades Educativas Especiales", document.getElementById("necesidades_educativas").value);
+                
+                const selectedManual = document.getElementById("tipo_evaluacion").value;
+                if (selectedManual === 'parvularia') {
+                     addHeaderBox("Sección Específica: Ed. Parvularia");
+                     addContentRow("Análisis Instancia de Juego", document.getElementById("parv_juego").value);
+                     addContentRow("Trabajo con Familias", document.getElementById("parv_familias").value);
+                } else if (selectedManual.startsWith('especial')) {
+                    addHeaderBox("Sección Específica: Ed. Especial");
+                    addContentRow("Adecuaciones y Enfoque Ecológico Funcional", document.getElementById("esp_adecuaciones").value);
+                    addContentRow("Trabajo Colaborativo y Co-enseñanza", document.getElementById("esp_coensenanza").value);
+                } else if (selectedManual === 'media_tp') {
+                     addHeaderBox("Sección Específica: Media TP");
+                     addContentRow("Módulo de la Especialidad", document.getElementById("tp_modulo").value);
+                     addContentRow("Vínculo con Contexto Laboral", document.getElementById("tp_contexto_laboral").value);
+                }
+
+                addHeaderBox("III. Módulo 1: Planificación y Evaluación");
+                addContentRow("Experiencia de Aprendizaje #1 - OA", datos.exp1_oa);
+                addContentRow("Experiencia #1 - Actividades", datos.exp1_actividades);
+                addContentRow("Experiencia #1 - Recursos", datos.exp1_recursos);
+                addContentRow("Experiencia #1 - Evaluación", datos.exp1_evaluacion);
+                
+                addContentRow("Experiencia de Aprendizaje #2 - OA", datos.exp2_oa);
+                addContentRow("Experiencia #2 - Actividades", datos.exp2_actividades);
+                addContentRow("Experiencia #2 - Recursos", datos.exp2_recursos);
+                addContentRow("Experiencia #2 - Evaluación", datos.exp2_evaluacion);
+                
+                addContentRow("Experiencia de Aprendizaje #3 - OA", datos.exp3_oa);
+                addContentRow("Experiencia #3 - Actividades", datos.exp3_actividades);
+                addContentRow("Experiencia #3 - Recursos", datos.exp3_recursos);
+                addContentRow("Experiencia #3 - Evaluación", datos.exp3_evaluacion);
+
+                addContentRow("Tarea 2: Estrategia de Monitoreo", datos.eval_estrategia);
+                addContentRow("Tarea 2: Análisis de Resultados", datos.eval_analisis);
+                addContentRow("Tarea 2: Ajustes Pedagógicos", datos.eval_ajustes);
+
+                addHeaderBox("IV. Módulo 2: Clase Grabada");
+                addContentRow("Objetivo de Aprendizaje", document.getElementById("grab_oa").value);
+                addContentRow("Descripción General de la Clase", document.getElementById("grab_descripcion").value);
+                addContentRow("Interacciones y Retroalimentación", document.getElementById("grab_interaccion").value);
+                addContentRow("Abordaje de Equidad de Género", document.getElementById("grab_genero").value);
+
+                addHeaderBox("V. Módulo 3: Trabajo Colaborativo");
+                addContentRow("A. Origen: Problemática y Relevancia", document.getElementById("colab_problema").value);
+                addContentRow("A. Implementación: Diálogo y Reflexión Conjunta", document.getElementById("colab_dialogo").value);
+                addContentRow("B. Aprendizajes Profesionales (Individual)", document.getElementById("colab_aprendizaje").value);
+                addContentRow("[Voluntario] A. Reflexión sobre Necesidades Profesionales", document.getElementById("colab_vol_evidencia").value);
+                addContentRow("[Voluntario] A. Seguimiento", document.getElementById("colab_vol_seguimiento").value);
+                addContentRow("[Voluntario] B. Reflexión sobre Creencias (Individual)", document.getElementById("colab_vol_creencias").value);
+                addContentRow("[Voluntario] C. Evaluación Forma de Trabajo (Individual)", document.getElementById("colab_vol_evaluacion").value);
+                
+                // Pie de página
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setFont("Inter", "normal");
+                    doc.setTextColor(156, 163, 175);
+                    doc.text(`Página ${i} de ${pageCount}`, leftMargin, pageHeight - 10);
+                    doc.text("Generado por Asistente de Portafolio Docente 2025", 210 - rightMargin, pageHeight - 10, { align: 'right' });
+                }
+
+                doc.save(`informe_portafolio_${nombreDocente.replace(/ /g, '_')}.pdf`);
+            } catch (error) {
+                console.error('Error al generar el PDF:', error);
+                alert('Ocurrió un error al generar el PDF. Revisa la consola para más detalles.');
+            }
+        }
+        
+        // Hacer la función global
+        window.generarPDF = generarPDF;
+
+    </script>
+</body>
+</html>
+
+<!-- Modal Popup -->
+<div id="welcome-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 relative">
+        <!-- Close button -->
+        <button id="close-welcome-modal" class="absolute top-2 right-2 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+        </button>
+
+        <!-- Modal content -->
+        <div class="p-6">
+            <h2 class="text-2xl font-bold text-center mb-6 text-gray-800">¡Bienvenido, Estimado Profesor!</h2>
+            <p class="text-gray-600 mb-6 text-center">
+                Llene lo mejor que pueda. Entre más complete, mejor quedará su portafolio. Si no sabe o no recuerda algo, déjelo en blanco y yo haré el resto. Si tiene dudas, no dude en contactarme por WhatsApp.
+            </p>
+            <p class="text-gray-600 mb-6 text-center">
+                Recuerde leer los mensajes de ayuda (💡) y las pistas que le darán ideas para completar cada sección.
+            </p>
+
+            <!-- WhatsApp Button -->
+            <a href="https://wa.me/56988138929" target="_blank" rel="noopener" class="block w-full bg-green-600 text-white text-center py-3 px-6 rounded-lg hover:bg-green-700 transition-colors font-semibold mb-4">
+                Contactar por WhatsApp
+            </a>
+            <!-- Start Button -->
+            <button id="start-form" class="block w-full bg-blue-500 text-white text-center py-3 px-6 rounded-lg hover:bg-blue-600 transition-colors font-semibold">
+                Comenzar a Llenar el Formulario
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('welcome-modal');
+    const closeBtn = document.getElementById('close-welcome-modal');
+    const startBtn = document.getElementById('start-form');
+
+    // Show modal on page load
+    modal.classList.remove('hidden');
+
+    // Close modal when X button is clicked
+    closeBtn.addEventListener('click', function() {
+        modal.classList.add('hidden');
+    });
+
+    // Close modal when start button is clicked
+    startBtn.addEventListener('click', function() {
+        modal.classList.add('hidden');
+    });
+
+    // Close modal when clicking outside
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            modal.classList.add('hidden');
+        }
+    });
+});
+</script>

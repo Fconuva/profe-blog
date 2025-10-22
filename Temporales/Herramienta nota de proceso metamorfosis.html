@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Herramienta de Interrogación: La Metamorfosis (Adaptiva V2)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Lora:ital,wght@0;400;0;700;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin-autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Lora', serif; }
+        .modal { display: none; }
+        .modal.active { display: flex; }
+        .fade-in { animation: fadeIn 0.5s ease-in; }
+        .slide-up { animation: slideUp 0.5s ease-out; }
+        .bounce-in { animation: bounceIn 0.6s ease-out; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .glass-effect { backdrop-filter: blur(10px); background: rgba(255, 255, 255, 0.1); }
+        .dark-glass { backdrop-filter: blur(10px); background: rgba(0, 0, 0, 0.3); }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes bounceIn { 0% { transform: scale(0.3); opacity: 0; } 50% { transform: scale(1.05); } 70% { transform: scale(0.9); } 100% { transform: scale(1); opacity: 1; } }
+
+        .student-card { transition: all 0.3s ease; }
+        .student-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+
+        .progress-bar { transition: width 0.5s ease; }
+
+        .theme-toggle { position: fixed; top: 20px; right: 20px; z-index: 1000; }
+        .theme-toggle button { background: rgba(255,255,255,0.9); border: none; border-radius: 50%; width: 50px; height: 50px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s; }
+        .theme-toggle button:hover { transform: scale(1.1); }
+
+        body.dark { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #e2e8f0; }
+        body.dark .glass-effect { background: rgba(0, 0, 0, 0.3); }
+        body.dark .student-card { background: rgba(30, 41, 59, 0.8); border: 1px solid rgba(75, 85, 99, 0.3); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-purple-50 to-indigo-100 min-h-screen">
+
+    <!-- Theme Toggle -->
+    <div class="theme-toggle">
+        <button id="theme-toggle-btn" class="flex items-center justify-center">
+            <i class="fas fa-moon text-gray-800 text-xl"></i>
+        </button>
+    </div>
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8 max-w-7xl">
+
+        <!-- Header Mejorado -->
+        <header id="main-header" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 mb-8 text-center border-l-8 border-purple-600 fade-in">
+            <div class="flex items-center justify-center mb-4">
+                <i class="fas fa-book-open text-4xl text-purple-600 mr-4"></i>
+                <div>
+                    <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+                        Herramienta de Interrogación Adaptativa
+                    </h1>
+                    <p class="text-2xl md:text-3xl text-gray-700 dark:text-gray-300 mt-2 font-medium">
+                        "La Metamorfosis" de Franz Kafka
+                    </p>
+                </div>
+            </div>
+            <div class="flex justify-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
+                <span class="flex items-center"><i class="fas fa-brain mr-2 text-indigo-500"></i>Evaluación Inteligente</span>
+                <span class="flex items-center"><i class="fas fa-save mr-2 text-green-500"></i>Autoguardado</span>
+                <span class="flex items-center"><i class="fas fa-file-pdf mr-2 text-red-500"></i>PDF Profesional</span>
+            </div>
+        </header>
+
+        <!-- Barra de Progreso -->
+        <div id="progress-container" class="hidden mb-8">
+            <div class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-gray-800 dark:text-white">Progreso de Evaluación</h3>
+                    <span id="progress-text" class="text-sm text-gray-600 dark:text-gray-400">0/8 preguntas</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div id="progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full progress-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Login -->
+        <div id="login-screen" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-md mx-auto slide-up">
+            <div class="text-center mb-8">
+                <i class="fas fa-lock text-6xl text-purple-500 mb-4"></i>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Acceso al Sistema</h2>
+                <p class="text-gray-600 dark:text-gray-400">Ingresa tus credenciales para continuar</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="username" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-user mr-2 text-purple-500"></i>Usuario
+                    </label>
+                    <input type="text" id="username" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ingresa tu usuario">
+                </div>
+
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="password" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-key mr-2 text-indigo-500"></i>Contraseña
+                    </label>
+                    <input type="password" id="password" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ingresa tu contraseña">
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="login-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transform hover:scale-105 transition-all duration-200">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Iniciar Sesión
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Inicio Mejorada -->
+        <div id="setup-screen" class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8 max-w-2xl mx-auto slide-up hidden">
+            <div class="text-center mb-8">
+                <i class="fas fa-plus-circle text-6xl text-purple-500 mb-4"></i>
+                <h2 class="text-3xl font-bold mb-4 text-gray-800 dark:text-white">Iniciar Nueva Evaluación</h2>
+                <p class="text-gray-600 dark:text-gray-400">Configure los parámetros para comenzar la evaluación adaptativa</p>
+            </div>
+
+            <div class="space-y-6">
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="student-name" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-user mr-2 text-purple-500"></i>Nombre del Estudiante
+                    </label>
+                    <input type="text" id="student-name" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ej: Javiera Rojas">
+                </div>
+
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label for="student-course" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                        <i class="fas fa-graduation-cap mr-2 text-indigo-500"></i>Curso
+                    </label>
+                    <input type="text" id="student-course" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all duration-200 text-gray-800 dark:text-white" placeholder="Ej: NM4-B">
+                </div>
+
+                <div class="glass-effect dark:dark-glass rounded-xl p-6">
+                    <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                        <i class="fas fa-cogs mr-2 text-purple-500"></i>Tipo de Evaluación (Adaptación)
+                    </label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="regular" class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300" checked>
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">Regular</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neet" class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEET</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neep" class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEEP</span>
+                        </label>
+                        <label class="flex items-center p-3 bg-white dark:bg-gray-700 rounded-lg cursor-pointer hover:bg-purple-50 dark:hover:bg-gray-600 transition-colors">
+                            <input type="radio" name="evaluation-type" value="neet_4d" class="focus:ring-purple-500 h-4 w-4 text-purple-600 border-gray-300">
+                            <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">NEEP 4D</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8">
+                <button id="start-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transform hover:scale-105 transition-all duration-200">
+                    <i class="fas fa-play mr-2"></i>
+                    Comenzar Interrogación
+                </button>
+            </div>
+        </div>
+
+        <!-- Pantalla de Interrogación Mejorada -->
+        <div id="interrogation-screen" class="hidden">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8">
+                <div class="flex justify-between items-start border-b-2 border-gray-200 dark:border-gray-700 pb-6 mb-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user-graduate text-white text-2xl"></i>
+                        </div>
+                        <div>
+                            <h2 class="text-2xl font-bold text-gray-800 dark:text-white">Evaluando a: <span id="eval-student-name" class="text-purple-600"></span></h2>
+                            <p class="text-gray-600 dark:text-gray-400">Curso: <span id="eval-student-course"></span></p>
+                            <p id="eval-type-display" class="text-sm font-medium text-purple-600 dark:text-purple-400 mt-1"></p>
+                        </div>
+                    </div>
+                    <div id="final-score-container" class="text-right bg-gradient-to-r from-green-100 to-blue-100 dark:from-green-900 dark:to-blue-900 rounded-xl p-4">
+                        <!-- El resultado se mostrará aquí -->
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold mb-4 text-gray-800 dark:text-white flex items-center">
+                        <i class="fas fa-question-circle mr-2 text-purple-500"></i>
+                        Preguntas Seleccionadas (Marcar puntaje y descartar una)
+                    </h3>
+                </div>
+
+                <div id="questions-container" class="space-y-6">
+                    <!-- Las preguntas se cargarán aquí dinámicamente -->
+                </div>
+
+                <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                    <button id="finalize-button" class="w-full flex justify-center py-4 px-6 border border-transparent rounded-xl shadow-lg text-sm font-bold text-white bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transform hover:scale-105 transition-all duration-200">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Finalizar y Registrar Evaluación
+                    </button>
+                    <button id="cancel-button" class="w-full flex justify-center py-2 px-4 border-2 border-gray-300 dark:border-gray-600 rounded-xl shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200">
+                        <i class="fas fa-times mr-2"></i>
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pantalla de Resultados Mejorada -->
+        <div id="results-screen" class="mt-12 hidden">
+            <div class="bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-8">
+                <div class="flex flex-col lg:flex-row justify-between items-center mb-8">
+                    <div class="mb-4 lg:mb-0">
+                        <h2 class="text-3xl font-bold text-gray-800 dark:text-white flex items-center mb-2">
+                            <i class="fas fa-chart-line mr-3 text-purple-500"></i>
+                            Registro de Evaluaciones
+                        </h2>
+                        <p class="text-gray-600 dark:text-gray-400">Gestiona y exporta todas las evaluaciones realizadas</p>
+                    </div>
+                    <div class="flex flex-wrap gap-3">
+                        <button id="remove-duplicates" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transform hover:scale-105 transition-all duration-200">
+                            <i class="fas fa-trash-alt mr-2"></i>Eliminar Duplicados
+                        </button>
+                        <button id="export-all-pdf" class="py-3 px-6 border border-transparent rounded-xl shadow-lg text-sm font-medium text-white bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transform hover:scale-105 transition-all duration-200">
+                            <i class="fas fa-file-pdf mr-2"></i>Exportar Todo (PDF)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Estadísticas -->
+                <div id="stats-container" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <!-- Las estadísticas se cargarán aquí -->
+                </div>
+
+                <!-- Filtros y Búsqueda -->
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div class="flex-1">
+                        <input type="text" id="search-input" placeholder="Buscar estudiante..." class="w-full px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white transition-all duration-200">
+                    </div>
+                    <select id="filter-type" class="px-4 py-3 border-2 border-gray-200 dark:border-gray-600 rounded-xl focus:border-purple-500 focus:ring-2 focus:ring-purple-200 dark:bg-gray-700 dark:text-white">
+                        <option value="all">Todos los tipos</option>
+                        <option value="regular">Regular</option>
+                        <option value="neet">NEET</option>
+                        <option value="neep">NEEP</option>
+                        <option value="neet_4d">NEEP 4D</option>
+                    </select>
+                </div>
+
+                <!-- Tabla Mejorada -->
+                <div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-xl shadow-lg">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gradient-to-r from-purple-600 to-indigo-600">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Estudiante</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Curso</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Tipo</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Puntaje</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Nota</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Fecha</th>
+                                <th class="px-6 py-4 text-left text-xs font-bold text-white uppercase tracking-wider">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body" class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                            <!-- Los resultados se agregarán aquí -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Paginación -->
+                <div id="pagination-container" class="flex justify-center mt-8">
+                    <!-- La paginación se agregará aquí -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Modal para Respuesta Ideal -->
+    <div id="answer-modal" class="modal fixed inset-0 bg-gray-800 bg-opacity-75 items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+            <div class="p-6">
+                <div class="flex justify-between items-center border-b pb-3 mb-4">
+                    <h3 class="text-xl font-bold">Respuesta Ideal</h3>
+                    <button id="close-modal" class="text-gray-500 hover:text-gray-800 text-3xl leading-none">&times;</button>
+                </div>
+                <div id="modal-question" class="font-semibold mb-2"></div>
+                <div id="modal-answer" class="text-gray-700 prose"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuración de jsPDF
+        const { jsPDF } = window.jspdf;
+
+        // --- CONFIGURACIÓN DE USUARIOS ---
+        const users = {
+            'fconuva': 'fconuva123',
+            'PIE': '12345678'
+        };
+
+        // --- CONFIGURACIÓN DE BASE DE DATOS ---
+        const API_BASE_URL = '/.netlify/functions';
+        const TOOL_NAME = 'metamorfosis';
+
+        // --- BANCO DE PREGUNTAS LOCAL (FALLBACK) ---
+        const localQuestionBank = [
+            // Nivel Básico
+            { id: 1, level: 'Básico', question: '¿En qué se transforma Gregorio Samsa al despertar una mañana?', answer: 'Se transforma en un monstruoso insecto.' },
+            { id: 2, level: 'Básico', question: '¿Cuál era la profesión de Gregorio antes de su transformación?', answer: 'Era viajante de comercio, vendía telas.' },
+            { id: 3, level: 'Básico', question: '¿Quién es la primera persona que intenta ver a Gregorio en su habitación después de que no sale a trabajar?', answer: 'El procurista (gerente) de su trabajo.' },
+            { id: 4, level: 'Básico', question: 'Nombra a los tres miembros de la familia directa de Gregorio que viven con él.', answer: 'Su padre, su madre y su hermana Grete.' },
+            { id: 5, level: 'Básico', question: '¿Quién se encarga de alimentar a Gregorio al principio de su transformación?', answer: 'Su hermana Grete.' },
+            { id: 6, level: 'Básico', question: '¿Qué tipo de alimentos prefiere Gregorio después de convertirse en insecto?', answer: 'Prefiere alimentos en descomposición o podridos, como verduras viejas y queso rancio.' },
+            { id: 7, level: 'Básico', question: '¿Qué objeto le lanza su padre a Gregorio que se le incrusta en la espalda y le causa una grave herida?', answer: 'Una manzana.' },
+            { id: 8, level: 'Básico', question: 'Para ayudar económicamente, ¿qué trabajo consigue Grete?', answer: 'Consigue un trabajo como dependienta en una tienda.' },
+            { id: 9, level: 'Básico', question: '¿Qué hace la familia con la habitación de Gregorio para ganar más espacio y dinero?', answer: 'Alquilan una de las habitaciones de la casa a tres inquilinos.' },
+            { id: 10, level: 'Básico', question: '¿Qué instrumento musical toca Grete?', answer: 'Toca el violín.' },
+            { id: 11, level: 'Básico', question: '¿Qué ocurre cuando los inquilinos ven a Gregorio por primera vez?', answer: 'Se horrorizan, se niegan a pagar el alquiler y anuncian que se irán de inmediato sin pagar.' },
+            { id: 12, level: 'Básico', question: '¿Quién es la primera persona en proponer que deben deshacerse de Gregorio?', answer: 'Su hermana Grete.' },
+            { id: 13, level: 'Básico', question: '¿Cómo muere Gregorio?', answer: 'Muere solo en su habitación, debilitado por la herida de la manzana, la falta de alimento adecuado y la tristeza. Muere de inanición y agotamiento.' },
+            { id: 14, level: 'Básico', question: '¿Quién se encarga de deshacerse del cadáver de Gregorio?', answer: 'La asistenta (la criada).' },
+            { id: 15, level: 'Básico', question: '¿Qué hace la familia Samsa el día de la muerte de Gregorio?', answer: 'Salen de paseo al campo en tranvía, sintiéndose aliviados y optimistas sobre el futuro.' },
+
+            // Nivel Intermedio
+            { id: 16, level: 'Intermedio', question: 'Analiza la reacción inicial de Gregorio ante su transformación. ¿Por qué se preocupa más por su trabajo que por su nuevo cuerpo?', answer: 'Su principal preocupación es haber perdido el tren y cómo justificará su ausencia ante su jefe. Esto demuestra su profunda alienación y cómo su identidad estaba completamente definida por su rol de proveedor económico, al punto que la responsabilidad laboral eclipsa el horror de su propia metamorfosis.' },
+            { id: 17, level: 'Intermedio', question: 'Describe cómo evoluciona la actitud de Grete hacia Gregorio a lo largo de la obra.', answer: 'Al principio, Grete es la única que muestra compasión y se encarga de cuidarlo. Sin embargo, con el tiempo, el deber se convierte en una carga y su compasión se transforma en resentimiento y repulsión. Al final, es ella quien lidera la idea de que "eso" ya no es su hermano y deben deshacerse de él.' },
+            { id: 18, level: 'Intermedio', question: '¿Qué simboliza la manzana que el padre le arroja a Gregorio?', answer: 'La manzana simboliza el ataque, la violencia y el rechazo definitivo por parte de su padre. Puede interpretarse como una referencia bíblica al fruto prohibido y la "caída", marcando el punto de no retorno en el sufrimiento de Gregorio y sellando su destino.' },
+            { id: 19, level: 'Intermedio', question: '¿Por qué Gregorio se aferra al cuadro de la mujer envuelta en pieles cuando Grete y su madre intentan vaciar su habitación?', answer: 'El cuadro es el último vestigio de su humanidad. Es un objeto que él mismo colocó y que representa la belleza, el arte y un mundo que ha perdido. Aferrarse a él es un intento desesperado por conservar una parte de su antigua identidad humana frente al vaciamiento de su espacio vital.' },
+            { id: 20, level: 'Intermedio', question: 'Analiza el cambio en el padre de Gregorio después de la transformación de su hijo.', answer: 'Antes de la metamorfosis, el padre era un hombre fracasado y dependiente de Gregorio. Después, se ve forzado a volver a trabajar y recupera su autoridad y vitalidad. Se viste con un uniforme de ordenanza, que simboliza su nuevo rol autoritario. Paradójicamente, la desgracia de Gregorio revitaliza al padre.' },
+            { id: 21, level: 'Intermedio', question: '¿Qué rol juegan los tres inquilinos en la historia?', answer: 'Los inquilinos representan a la sociedad exterior, con su obsesión por el orden y la normalidad. Su presencia acelera la crisis final de la familia. Su reacción de horror al ver a Gregorio es lo que finalmente empuja a Grete a sentenciar que deben deshacerse de él. Simbolizan el juicio del mundo exterior.' },
+            { id: 22, level: 'Intermedio', question: '¿Cómo cambia la dinámica de poder dentro de la familia Samsa a lo largo de la novela?', answer: 'Al principio, Gregorio ostenta todo el poder económico como único proveedor. Tras su transformación, pierde todo su poder y se convierte en una carga. El poder se transfiere al padre, quien vuelve a trabajar, y a Grete, que madura y asume responsabilidades. La familia se reestructura completamente en torno a la ausencia funcional de Gregorio.' },
+            { id: 23, level: 'Intermedio', question: '¿Por qué la comunicación entre Gregorio y su familia fracasa constantemente?', answer: 'Fracasa porque, aunque Gregorio entiende perfectamente lo que su familia dice, ellos solo oyen ruidos ininteligibles de animal cuando él intenta hablar. Esta barrera de comunicación es una metáfora central de la alienación y la soledad: la incapacidad de ser comprendido por los demás, incluso por los más cercanos.' },
+            { id: 24, level: 'Intermedio', question: 'Explica el significado del título. ¿Solo Gregorio sufre una metamorfosis?', answer: 'No, toda la familia sufre una metamorfosis. Gregorio sufre una transformación física, pero su familia experimenta una transformación psicológica y social. Grete pasa de ser una niña a una mujer joven y pragmática. El padre pasa de la pasividad a la autoridad. La familia en su conjunto pasa de la dependencia a la autosuficiencia, a costa de la deshumanización de Gregorio.' },
+            { id: 25, level: 'Intermedio', question: '¿Qué representa la puerta de la habitación de Gregorio?', answer: 'La puerta es un símbolo crucial de la conexión y la separación. Al principio, Gregorio lucha por abrirla para unirse al mundo. A medida que avanza la historia, la puerta se mantiene cerrada la mayor parte del tiempo, simbolizando su aislamiento. Cada vez que se abre, se produce un conflicto. La puerta es la frontera física entre su mundo de insecto y el mundo humano.' },
+            { id: 26, level: 'Intermedio', question: '¿Por qué Gregorio se aferra al cuadro de la mujer envuelta en pieles cuando Grete y su madre intentan vaciar su habitación?', answer: 'El cuadro es el último vestigio de su humanidad. Es un objeto que él mismo colocó y que representa la belleza, el arte y un mundo que ha perdido. Aferrarse a él es un intento desesperado por conservar una parte de su antigua identidad humana frente al vaciamiento de su espacio vital.' },
+            { id: 27, level: 'Intermedio', question: 'Analiza la reacción de la madre de Gregorio. ¿Por qué parece tan débil y se desmaya constantemente?', answer: 'La madre representa un amor maternal genuino pero ineficaz. Su debilidad física (asma) y emocional le impide actuar. Quiere ayudar a su hijo, pero el horror de su nueva forma se lo impide, provocándole desmayos. Simboliza un afecto que, sin la fuerza para superar la repulsión, resulta inútil.' },
+            { id: 28, level: 'Intermedio', question: '¿Qué nos dice sobre la familia el hecho de que empiecen a usar la habitación de Gregorio como un almacén de trastos viejos?', answer: 'Este acto simboliza la deshumanización final de Gregorio. Su espacio vital, su último refugio, es invadido y convertido en un basurero. Esto refleja que la familia ya no lo considera un miembro con necesidades o dignidad, sino simplemente un estorbo que ocupa un espacio que podría tener un mejor uso.' },
+            { id: 29, level: 'Intermedio', question: '¿Por qué Grete decide tocar el violín para los inquilinos?', answer: 'Grete toca para mostrar su talento y su nueva madurez, buscando la aprobación y el respeto de los inquilinos, que representan el mundo exterior. Es un acto que la posiciona como el nuevo centro cultural y de esperanza de la familia, en contraste directo con Gregorio, que ahora es la vergüenza oculta.' },
+            { id: 30, level: 'Intermedio', question: '¿Qué simboliza el alivio y la esperanza de la familia al final de la obra?', answer: 'Su alivio y optimismo final es profundamente perturbador. Simboliza que la muerte de Gregorio ha sido una liberación para ellos. Se han deshecho de la carga y ahora pueden planificar un futuro próspero, centrado en casar a Grete. Muestra que su supervivencia y bienestar se construyeron directamente sobre el sacrificio y olvido de Gregorio.' },
+
+            // Nivel Complejo
+            { id: 31, level: 'Complejo', question: 'Discute la novela como una crítica a la alienación del individuo en la sociedad moderna y el mundo laboral.', answer: 'La novela es una potente alegoría de la alienación. Gregorio está tan consumido por su trabajo monótono y deshumanizante que su identidad se reduce a su función económica. Su transformación en insecto puede leerse como la manifestación física de esta deshumanización. Ha perdido su individualidad y se ha convertido en algo "monstruoso" e inútil para el sistema capitalista y para su propia familia, que lo valora solo por su capacidad de producir.' },
+            { id: 32, level: 'Complejo', question: 'Analiza el concepto de lo "absurdo" en la obra. ¿Por qué no se da ninguna explicación a la metamorfosis?', answer: 'La falta de explicación es central para el concepto de lo absurdo. La metamorfosis simplemente "ocurre", sin causa ni lógica, como muchos eventos en la vida. El absurdo reside en el contraste entre este hecho extraordinario y la reacción mundana y pragmática de los personajes. Kafka presenta un universo donde lo ilógico irrumpe en lo cotidiano, y el ser humano debe enfrentarse a ello sin respuestas, reflejando la falta de sentido inherente a la existencia.' },
+            { id: 33, level: 'Complejo', question: '¿Puede considerarse a Gregorio un "parásito" antes de su transformación, a pesar de ser el sostén de la familia?', answer: 'Esta es una interpretación paradójica pero válida. Aunque Gregorio sostiene económicamente a la familia, emocional y psicológicamente podría ser visto como alguien que ha renunciado a su propia vida y deseos para alimentar la pasividad de su familia. Su sacrificio permite que su padre no trabaje y que su hermana no desarrolle su potencial. En cierto modo, su rol de proveedor crea una dinámica parasitaria donde él es el huésped que nutre la inacción de los demás.' },
+            { id: 34, level: 'Complejo', question: 'Reflexiona sobre la culpa como tema central. ¿Se siente Gregorio culpable? ¿Debería sentirse culpable su familia?', answer: 'Gregorio se siente constantemente culpable: por no ir a trabajar, por ser una carga, por asustar a su familia. Su culpa es irracional y es un síntoma de su opresión. Por otro lado, la familia actúa sin sentir una culpa evidente; sus acciones se justifican por la necesidad y la conveniencia. La obra expone una inversión moral: la víctima se siente culpable, mientras que los victimarios actúan con una justificación pragmática, lo que es una profunda crítica a la moral burguesa.' },
+            { id: 35, level: 'Complejo', question: '¿Cómo explora la obra los límites del amor familiar y la compasión?', answer: 'La novela explora brutalmente cómo el amor familiar y la compasión tienen límites. El afecto de la familia Samsa demuestra ser condicional, dependiente de la "normalidad" y la utilidad de Gregorio. Cuando él se convierte en una carga repulsiva y económicamente inútil, el amor se desvanece y es reemplazado por el pragmatismo y el deseo de supervivencia. La obra sugiere que, bajo presión, los lazos familiares pueden ser más frágiles de lo que parecen.' },
+            { id: 36, level: 'Complejo', question: 'Discute el estilo de escritura de Kafka (el "estilo kafkiano"). ¿Cómo contribuye el lenguaje preciso y burocrático a la atmósfera de la novela?', answer: 'El estilo kafkiano se caracteriza por una prosa clara, precisa y casi notarial para describir eventos fantásticos y angustiantes. Este lenguaje desapasionado crea un contraste aterrador con el horror de la situación. Al describir la monstruosa transformación de Gregorio con la misma objetividad que un informe burocrático, Kafka intensifica la sensación de extrañamiento y pesadilla.' },
+            { id: 37, level: 'Complejo', question: '¿Es la transformación de Gregorio una liberación o una condena?', answer: 'Es ambas cosas. Es una condena porque lo aísla, le causa un inmenso sufrimiento físico y emocional, y lo lleva a la muerte. Sin embargo, también es una liberación. Lo libera de su trabajo odiado, de su rol de esclavo económico y de las expectativas familiares. Como insecto, por momentos, explora nuevas sensaciones y formas de moverse que nunca tuvo como humano. Es una liberación trágica que solo se consuma en la muerte.' },
+            { id: 38, level: 'Complejo', question: 'Analiza la obra como una crítica a la institución de la familia burguesa.', answer: 'La familia Samsa es un microcosmos de la familia burguesa, obsesionada con las apariencias, el estatus social y la seguridad económica. La obra la presenta como una institución opresiva y parasitaria. El afecto es transaccional y la lealtad se basa en la conveniencia. Cuando Gregorio deja de cumplir su función productiva, la familia no lo cuida, sino que lo expulsa para asegurar su propia supervivencia y "respetabilidad".' },
+            { id: 39, level: 'Complejo', question: '¿Qué simbolismo se puede encontrar en el hecho de que Gregorio sea un "insecto"?', answer: 'El insecto (identificado como "Ungeziefer", que significa alimaña o parásito) simboliza lo insignificante, lo repulsivo y lo deshumanizado. Es un ser que se arrastra, que vive en la suciedad y que provoca asco. Su forma de insecto es la metáfora perfecta para alguien que se siente aplastado, sin valor y marginado por la sociedad y su propia familia.' },
+            { id: 40, level: 'Complejo', question: 'La historia está narrada desde una perspectiva muy cercana a Gregorio. ¿Cómo afectaría a la historia si estuviera narrada desde el punto de vista de Grete?', answer: 'Si fuera narrada por Grete, la historia probablemente comenzaría como un relato de compasión y sacrificio. Veríamos su esfuerzo y la carga que representa cuidar a su hermano. Sin embargo, gradualmente, la narración se volvería más resentida y justificaría su decisión final como un acto necesario de autopreservación. Perderíamos el acceso a la conciencia torturada de Gregorio y ganaríamos una visión más pragmática y quizás autoindulgente de la tragedia.' },
+            { id: 41, level: 'Complejo', question: '¿Por qué Gregorio no intenta escapar de la habitación?', answer: 'Gregorio no escapa por una mezcla de incapacidad física, miedo al mundo exterior y, lo más importante, un residuo de lealtad y amor por su familia. A pesar de cómo lo tratan, todavía se considera parte de la familia y no quiere abandonarlos ni causarles más problemas. Su encierro es tanto físico como psicológico.' },
+            { id: 42, level: 'Complejo', question: '¿Se puede interpretar la metamorfosis como una enfermedad mental o una profunda depresión?', answer: 'Sí, es una interpretación psicoanalítica muy común. La transformación puede ser una metáfora de una crisis mental severa, como la depresión. El aislamiento en la habitación, la incapacidad para comunicarse, la pérdida de interés en las actividades humanas (como la comida normal) y la sensación de ser una carga monstruosa son todos síntomas clásicos de una depresión profunda. Su muerte final podría leerse como el abandono total ante la enfermedad.' },
+            { id: 43, level: 'Complejo', question: 'Discute la importancia del cuerpo en la obra. ¿Cómo se relaciona el cuerpo con la identidad?', answer: 'El cuerpo es fundamental. La identidad de Gregorio está atada a su cuerpo humano y funcional. Cuando su cuerpo cambia, su identidad se desmorona. La obra explora cómo nuestra percepción de nosotros mismos y la percepción que otros tienen de nosotros está intrínsecamente ligada a nuestra forma física. Al tener un cuerpo "monstruoso", Gregorio es despojado de su identidad humana a los ojos de los demás, sin importar que su mente siga siendo la misma.' },
+            { id: 44, level: 'Complejo', question: 'La asistenta es la única que trata a Gregorio con cierta naturalidad, aunque sea brusca. ¿Qué representa ella?', answer: 'La asistenta representa una perspectiva externa y sin pretensiones. A diferencia de la familia, ella no tiene un vínculo emocional previo con Gregorio, por lo que no experimenta la misma crisis. Lo ve simplemente como lo que es: un bicho grande y extraño. Su pragmatismo y falta de horror (lo llama "escarabajo viejo") contrastan con la angustia de la familia, mostrando otra forma, aunque insensible, de lidiar con lo anormal.' },
+            { id: 45, level: 'Complejo', question: '¿Hay algún elemento de humor negro en la novela? ¿Dónde?', answer: 'Sí, hay un humor negro y sutil. Por ejemplo, la preocupación de Gregorio por perder el tren mientras es un insecto gigante es absurdamente cómica. La escena en que intenta girar la llave con su boca de insecto, o las dificultades que tiene para maniobrar su nuevo cuerpo, tienen un componente de comedia física (slapstick) macabra. Este humor acentúa lo absurdo y trágico de la situación.' },
+            { id: 46, level: 'Complejo', question: 'Analiza el rol del procurista (el gerente). ¿Qué representa en el contexto de la obra?', answer: 'El procurista es la encarnación del sistema laboral opresivo y burocrático. No le interesa el bienestar de Gregorio, solo su rendimiento. Su discurso está lleno de acusaciones y sospechas, reflejando una relación laboral basada en la desconfianza. Es el primer representante del mundo exterior que rechaza al nuevo Gregorio, simbolizando cómo el sistema expulsa a quienes dejan de ser productivos.' },
+            { id: 47, level: 'Complejo', question: '¿Cómo usa Kafka el espacio (la casa, la habitación) para reflejar el estado psicológico de Gregorio?', answer: 'El espacio es un mapa de la psique de Gregorio. La habitación es, al mismo tiempo, una prisión y un refugio. El resto de la casa es el "mundo humano" al que ya no puede acceder. Su mundo se encoge progresivamente: primero está confinado a su cuarto, luego los muebles (sus recuerdos) son retirados, y finalmente el cuarto se convierte en un basurero. La degradación del espacio refleja su propia degradación interna.' },
+            { id: 48, level: 'Complejo', question: 'Si la familia dependía tanto de Gregorio, ¿por qué no buscaron ayuda o una solución en lugar de ocultarlo?', answer: 'Su decisión de ocultarlo se debe a la vergüenza y al miedo al juicio social. Para una familia burguesa, admitir que su hijo se ha convertido en un insecto sería una catástrofe social, una mancha en su respetabilidad. Prefieren lidiar con el problema en privado, aunque eso signifique el fin de Gregorio, antes que exponer su "anormalidad" al mundo. La apariencia es más importante que el bienestar de su hijo.' },
+            { id: 49, level: 'Complejo', question: '¿Es la muerte de Gregorio un sacrificio?', answer: 'Sí, puede ser vista como un sacrificio final. Al escuchar a Grete decir que debe desaparecer, Gregorio parece estar de acuerdo y muere esa misma noche. Su muerte es conveniente para la familia y les permite seguir adelante. Él mismo parece aceptarla como una forma de liberar a su familia de la carga que representa, completando su rol de mártir familiar de una manera trágica y definitiva.' },
+            { id: 50, level: 'Complejo', question: 'Si tuvieras que definir el mensaje central de "La Metamorfosis" en una frase, ¿cuál sería? Justifica tu elección.', answer: 'El mensaje central podría ser: "El valor de una persona en la sociedad moderna a menudo se mide por su utilidad, y una vez que esta desaparece, el amor y la humanidad pueden desvanecerse con ella". Elijo esta frase porque encapsula tanto la crítica al sistema laboral (utilidad) como la fragilidad de los lazos familiares (amor, humanidad), que son los dos pilares sobre los que se construye la tragedia de Gregorio Samsa.' }
+        ];
+
+        const neetQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,34,35,40,41,48,50];
+        const neepQuestionIds = [1,2,3,5,7,8,9,11,15,16,17,18,20,21,23,24,27,29,31,48];
+
+        // --- FUNCIONES DE AUTOGUARDADO ---
+        function startAutoSave() {
+            if (autoSaveInterval) clearInterval(autoSaveInterval);
+            autoSaveInterval = setInterval(() => {
+                saveToLocalStorage();
+                showNotification('Progreso guardado automáticamente', 'success');
+            }, 30000); // Cada 30 segundos
+        }
+
+        function stopAutoSave() {
+            if (autoSaveInterval) {
+                clearInterval(autoSaveInterval);
+                autoSaveInterval = null;
+            }
+        }
+
+        function saveToLocalStorage() {
+            const data = {
+                evaluations: evaluations,
+                lastSaved: new Date().toISOString(),
+                version: '2.0'
+            };
+            localStorage.setItem('metamorfosisEvaluations', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const data = JSON.parse(localStorage.getItem('metamorfosisEvaluations') || '{}');
+            if (data.evaluations) {
+                evaluations = data.evaluations;
+                if (data.lastSaved) {
+                    showNotification(`Datos cargados. Último guardado: ${new Date(data.lastSaved).toLocaleString()}`, 'info');
+                }
+            }
+        }
+
+        // --- FUNCIÓN PARA MOSTRAR NOTIFICACIONES ---
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 z-50 p-4 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-300 ${
+                type === 'success' ? 'bg-green-500' :
+                type === 'error' ? 'bg-red-500' :
+                type === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'
+            } text-white`;
+            notification.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fas ${
+                        type === 'success' ? 'fa-check-circle' :
+                        type === 'error' ? 'fa-exclamation-circle' :
+                        type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'
+                    } mr-2"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            document.body.appendChild(notification);
+
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // --- FUNCIONES DE BASE DE DATOS ---
+        async function loadQuestionsFromDatabase() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get-questions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: TOOL_NAME })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.questions && data.questions.length > 0) {
+                    console.log('Preguntas cargadas desde la base de datos');
+                    return data.questions;
+                } else {
+                    throw new Error('No se pudieron cargar las preguntas desde la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al cargar preguntas desde la base de datos, usando fallback local:', error);
+                return localQuestionBank;
+            }
+        }
+
+        async function saveEvaluationToDatabase(evaluation) {
+            try {
+                const response = await fetch(`${API_BASE_URL}/save-evaluation`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        tool: TOOL_NAME,
+                        evaluation: evaluation
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success) {
+                    console.log('Evaluación guardada en la base de datos');
+                    return true;
+                } else {
+                    throw new Error('Error al guardar en la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al guardar en la base de datos, usando localStorage:', error);
+                return false;
+            }
+        }
+
+        async function loadEvaluationsFromDatabase() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/get-evaluations`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ tool: TOOL_NAME })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                if (data.success && data.evaluations) {
+                    console.log('Evaluaciones cargadas desde la base de datos');
+                    return data.evaluations;
+                } else {
+                    throw new Error('No se pudieron cargar las evaluaciones desde la base de datos');
+                }
+            } catch (error) {
+                console.warn('Error al cargar evaluaciones desde la base de datos, usando localStorage:', error);
+                return null;
+            }
+        }
+
+        // --- ESTADO DE LA APLICACIÓN ---
+        let evaluations = [];
+        let currentEvaluation = {};
+        let questionBank = [];
+
+        // --- ELEMENTOS DEL DOM ---
+        const loginScreen = document.getElementById('login-screen');
+        const setupScreen = document.getElementById('setup-screen');
+        const interrogationScreen = document.getElementById('interrogation-screen');
+        const resultsScreen = document.getElementById('results-screen');
+        const loginButton = document.getElementById('login-button');
+        const startButton = document.getElementById('start-button');
+        const finalizeButton = document.getElementById('finalize-button');
+        const cancelButton = document.getElementById('cancel-button');
+        const questionsContainer = document.getElementById('questions-container');
+        const studentNameInput = document.getElementById('student-name');
+        const studentCourseInput = document.getElementById('student-course');
+        const resultsTableBody = document.getElementById('results-table-body');
+        const exportAllPdfButton = document.getElementById('export-all-pdf');
+        const removeDuplicatesButton = document.getElementById('remove-duplicates');
+        const searchInput = document.getElementById('search-input');
+        const filterTypeSelect = document.getElementById('filter-type');
+        const modal = document.getElementById('answer-modal');
+        const closeModalButton = document.getElementById('close-modal');
+
+        // --- FUNCIONES DE LOGIN ---
+        function handleLogin() {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+
+            if (users[username] && users[username] === password) {
+                currentUser = username;
+                showNotification(`Bienvenido, ${username}!`, 'success');
+                loginScreen.classList.add('hidden');
+                setupScreen.classList.remove('hidden');
+            } else {
+                showNotification('Usuario o contraseña incorrectos', 'error');
+            }
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            loginScreen.classList.remove('hidden');
+            setupScreen.classList.add('hidden');
+            interrogationScreen.classList.add('hidden');
+            resultsScreen.classList.add('hidden');
+            document.getElementById('username').value = '';
+            document.getElementById('password').value = '';
+            showNotification('Sesión cerrada', 'info');
+        }
+
+        // --- INICIALIZACIÓN ---
+        async function initializeApp() {
+            try {
+                // Verificar que jsPDF esté disponible
+                if (typeof jsPDF === 'undefined') {
+                    throw new Error('jsPDF no está cargado correctamente');
+                }
+                console.log('jsPDF version:', jsPDF.version || 'Disponible');
+
+                // Mostrar indicador de carga
+                startButton.disabled = true;
+                startButton.innerHTML = '<div class="loading mr-2"></div> Cargando preguntas...';
+
+                // Cargar preguntas desde la base de datos
+                questionBank = await loadQuestionsFromDatabase();
+
+                // Cargar evaluaciones desde la base de datos
+                const dbEvaluations = await loadEvaluationsFromDatabase();
+                if (dbEvaluations) {
+                    evaluations = dbEvaluations;
+                    renderResultsTable();
+                } else {
+                    // Fallback a localStorage
+                    loadFromLocalStorage();
+                    renderResultsTable();
+                }
+
+                // Restaurar estado normal del botón
+                startButton.disabled = false;
+                startButton.innerHTML = 'Comenzar Interrogación';
+
+                console.log('Aplicación inicializada correctamente');
+            } catch (error) {
+                console.error('Error al inicializar la aplicación:', error);
+                // Usar fallback local
+                questionBank = localQuestionBank;
+                startButton.disabled = false;
+                startButton.innerHTML = 'Comenzar Interrogación';
+            }
+        }
+
+        // --- FUNCIONES DE SELECCIÓN DE PREGUNTAS ---
+        function selectAdaptiveQuestions(evaluationType) {
+            let availableQuestions = [...questionBank];
+            let selected = [];
+
+            // Filtrar preguntas según el tipo de evaluación
+            switch(evaluationType) {
+                case 'neet':
+                    availableQuestions = availableQuestions.filter(q => neetQuestionIds.includes(q.id));
+                    break;
+                case 'neep':
+                    availableQuestions = availableQuestions.filter(q => neepQuestionIds.includes(q.id));
+                    break;
+                default: // regular
+                    // Todas las preguntas disponibles
+                    break;
+            }
+
+            // Seleccionar 8 preguntas aleatorias
+            for (let i = 0; i < 8 && availableQuestions.length > 0; i++) {
+                const randomIndex = Math.floor(Math.random() * availableQuestions.length);
+                selected.push(availableQuestions.splice(randomIndex, 1)[0]);
+            }
+
+            return selected;
+        }
+
+        // --- FUNCIONES DE RENDERIZADO ---
+        function renderQuestions() {
+            questionsContainer.innerHTML = '';
+            currentEvaluation.questions.forEach((q, index) => {
+                const questionId = `q-${q.id}`;
+                const questionBlock = document.createElement('div');
+                questionBlock.className = 'bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-gray-700 dark:to-gray-600 p-6 rounded-xl shadow-lg slide-up';
+                questionBlock.style.animationDelay = `${index * 0.1}s`;
+
+                questionBlock.innerHTML = `
+                    <div class="flex justify-between items-start mb-4">
+                        <h4 class="text-lg font-semibold text-gray-800 dark:text-white flex-1">${index + 1}. ${q.question}</h4>
+                        <button class="show-answer-btn ml-4 px-3 py-1 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors text-sm" data-question-id="${q.id}">
+                            <i class="fas fa-lightbulb mr-1"></i>Ver Respuesta Ideal
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg border-2 border-transparent hover:border-purple-300 transition-all duration-200">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Puntaje Manual (0, 0.5, 1.0)</label>
+                            <input type="number" step="0.5" min="0" max="1" name="question-${q.id}" class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-purple-500 focus:border-purple-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white" placeholder="0.0" data-question-id="${q.id}">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center space-x-2">
+                            <input type="checkbox" id="exclude-${q.id}" class="focus:ring-red-500 h-4 w-4 text-red-600 border-gray-300 rounded">
+                            <label for="exclude-${q.id}" class="text-sm text-red-600 font-medium">Descartar esta pregunta</label>
+                        </div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                            <span class="px-2 py-1 bg-${q.level === 'Básico' ? 'green' : q.level === 'Intermedio' ? 'yellow' : 'red'}-100 text-${q.level === 'Básico' ? 'green' : q.level === 'Intermedio' ? 'yellow' : 'red'}-800 rounded-full text-xs font-medium">
+                                ${q.level}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                questionsContainer.appendChild(questionBlock);
+            });
+
+            // Agregar event listeners para los botones de respuesta ideal
+            document.querySelectorAll('.show-answer-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const questionId = parseInt(e.target.closest('.show-answer-btn').dataset.questionId);
+                    const question = questionBank.find(q => q.id === questionId);
+                    if (question) {
+                        showIdealAnswer(question);
+                    }
+                });
+            });
+        }
+
+        function showIdealAnswer(question) {
+            document.getElementById('modal-question').textContent = question.question;
+            document.getElementById('modal-answer').innerHTML = question.answer;
+            document.getElementById('answer-modal').classList.add('active');
+        }
+
+        // --- FUNCIONES DE CÁLCULO ---
+        function calculateScore() {
+            let totalScore = 0;
+            let excludedCount = 0;
+            let hasInvalidScore = false;
+
+            const questionElements = document.querySelectorAll('[id^="exclude-"]');
+
+            questionElements.forEach(checkbox => {
+                if (checkbox.checked) {
+                    excludedCount++;
+                }
+            });
+
+            if (excludedCount !== 1) {
+                showNotification('Debes descartar exactamente UNA pregunta', 'warning');
+                return null;
+            }
+
+            const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+            scoreInputs.forEach(input => {
+                const questionId = input.name.split('-')[1];
+                const excludeCheckbox = document.getElementById(`exclude-${questionId}`);
+
+                if (!excludeCheckbox.checked) {
+                    const score = parseFloat(input.value) || 0;
+                    // Validar que el puntaje esté en los valores permitidos
+                    if (score !== 0 && score !== 0.5 && score !== 1.0) {
+                        showNotification('Los puntajes deben ser 0, 0.5 o 1.0', 'warning');
+                        hasInvalidScore = true;
+                        return; // Salir del forEach
+                    }
+                    totalScore += score;
+                }
+            });
+
+            // Si se encontró un puntaje inválido, retornar null
+            if (hasInvalidScore) return null;
+
+            return totalScore;
+        }
+
+        function scoreToGrade(score) {
+            if (score >= 6.0) return { grade: 'MB', color: 'text-green-600', bg: 'bg-green-100' };
+            if (score >= 5.0) return { grade: 'B', color: 'text-blue-600', bg: 'bg-blue-100' };
+            if (score >= 4.0) return { grade: 'S', color: 'text-yellow-600', bg: 'bg-yellow-100' };
+            if (score >= 3.0) return { grade: 'I', color: 'text-orange-600', bg: 'bg-orange-100' };
+            return { grade: 'R', color: 'text-red-600', bg: 'bg-red-100' };
+        }
+
+        // --- FUNCIONES DE RESULTADOS ---
+        function renderResultsTable() {
+            const tbody = document.getElementById('results-table-body');
+            tbody.innerHTML = '';
+
+            // Ordenar por fecha (más reciente primero)
+            const sortedEvaluations = [...evaluations].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            sortedEvaluations.forEach((evaluation, index) => {
+                const gradeInfo = scoreToGrade(evaluation.finalScore);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white font-bold text-sm">${evaluation.studentName.charAt(0)}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${evaluation.studentName}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${evaluation.course}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            evaluation.evalType === 'regular' ? 'bg-purple-100 text-purple-800' :
+                            evaluation.evalType === 'neet' ? 'bg-indigo-100 text-indigo-800' :
+                            'bg-blue-100 text-blue-800'
+                        }">
+                            ${evaluation.evalType === 'regular' ? 'Regular' :
+                              evaluation.evalType === 'neet' ? 'NEET' :
+                              evaluation.evalType === 'neep' ? 'NEEP' : 'NEEP 4D'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
+                        ${evaluation.finalScore.toFixed(1)}/7.0
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-sm font-bold rounded-full ${gradeInfo.bg} ${gradeInfo.color}">
+                            ${gradeInfo.grade}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${new Date(evaluation.date).toLocaleDateString('es-ES')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors export-pdf-btn" data-index="${index}" title="Exportar PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors delete-btn" data-index="${index}" title="Eliminar evaluación">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+
+            updateStats();
+        }
+
+        function updateStats() {
+            const statsContainer = document.getElementById('stats-container');
+            if (!statsContainer) return;
+
+            const totalEvaluations = evaluations.length;
+            const averageScore = totalEvaluations > 0 ? evaluations.reduce((sum, e) => sum + e.finalScore, 0) / totalEvaluations : 0;
+            const mbCount = evaluations.filter(e => e.finalScore >= 6.0).length;
+            const passingCount = evaluations.filter(e => e.finalScore >= 4.0).length;
+
+            statsContainer.innerHTML = `
+                <div class="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-purple-100">Total Evaluaciones</p>
+                            <p class="text-2xl font-bold">${totalEvaluations}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-chart-line text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-indigo-100">Promedio General</p>
+                            <p class="text-2xl font-bold">${averageScore.toFixed(1)}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-trophy text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-blue-100">Evaluaciones MB</p>
+                            <p class="text-2xl font-bold">${mbCount}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-green-500 to-green-600 text-white p-6 rounded-xl">
+                    <div class="flex items-center">
+                        <i class="fas fa-check-circle text-3xl mr-4"></i>
+                        <div>
+                            <p class="text-green-100">Aprobados</p>
+                            <p class="text-2xl font-bold">${passingCount}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function deleteEvaluation(index) {
+            if (confirm('¿Estás seguro de que quieres eliminar esta evaluación?')) {
+                evaluations.splice(index, 1);
+                saveToLocalStorage();
+                renderResultsTable();
+                showNotification('Evaluación eliminada', 'success');
+            }
+        }
+
+        // --- FUNCIONES DE EXPORTACIÓN ---
+        function exportCompletePDF() {
+            if (evaluations.length === 0) {
+                showNotification('No hay evaluaciones para exportar. Realiza algunas evaluaciones primero.', 'warning');
+                return;
+            }
+
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.width;
+
+                // Portada
+                doc.setFillColor(102, 126, 234);
+                doc.rect(0, 0, pageWidth, 80, 'F');
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(28);
+                doc.setFont('helvetica', 'bold');
+                doc.text('REPORTE COMPLETO', pageWidth/2, 30, { align: 'center' });
+                doc.text('Evaluaciones La Metamorfosis', pageWidth/2, 50, { align: 'center' });
+
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'normal');
+                doc.text(`Total de evaluaciones: ${evaluations.length}`, pageWidth/2, 70, { align: 'center' });
+
+                // Estadísticas generales
+                doc.addPage();
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('Estadísticas Generales', 20, 30);
+
+                const totalScore = evaluations.reduce((sum, e) => sum + e.finalScore, 0);
+                const averageScore = totalScore / evaluations.length;
+                const mbCount = evaluations.filter(e => e.finalScore >= 6.0).length;
+                const bCount = evaluations.filter(e => e.finalScore >= 5.0 && e.finalScore < 6.0).length;
+                const sCount = evaluations.filter(e => e.finalScore >= 4.0 && e.finalScore < 5.0).length;
+                const iCount = evaluations.filter(e => e.finalScore >= 3.0 && e.finalScore < 4.0).length;
+                const rCount = evaluations.filter(e => e.finalScore < 3.0).length;
+
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'normal');
+                let yPos = 50;
+                doc.text(`Promedio general: ${averageScore.toFixed(2)}/7.0`, 20, yPos);
+                yPos += 10;
+                doc.text(`Evaluaciones MB (6.0+): ${mbCount}`, 20, yPos);
+                yPos += 10;
+                doc.text(`Evaluaciones B (5.0-5.9): ${bCount}`, 20, yPos);
+                yPos += 10;
+                doc.text(`Evaluaciones S (4.0-4.9): ${sCount}`, 20, yPos);
+                yPos += 10;
+                doc.text(`Evaluaciones I (3.0-3.9): ${iCount}`, 20, yPos);
+                yPos += 10;
+                doc.text(`Evaluaciones R (<3.0): ${rCount}`, 20, yPos);
+
+                // Tabla de todas las evaluaciones
+                doc.addPage();
+                const tableData = evaluations.map(e => [
+                    e.studentName,
+                    e.course,
+                    e.evalType === 'regular' ? 'Regular' : e.evalType === 'neet' ? 'NEET' : e.evalType === 'neep' ? 'NEEP' : 'NEEP 4D',
+                    e.finalScore.toFixed(1),
+                    scoreToGrade(e.finalScore).grade,
+                    new Date(e.date).toLocaleDateString('es-ES')
+                ]);
+
+                doc.autoTable({
+                    startY: 30,
+                    head: [['Estudiante', 'Curso', 'Tipo', 'Puntaje', 'Nota', 'Fecha']],
+                    body: tableData,
+                    theme: 'grid',
+                    styles: { fontSize: 8, cellPadding: 3 },
+                    headStyles: { fillColor: [102, 126, 234], textColor: 255 },
+                    columnStyles: {
+                        0: { cellWidth: 40 },
+                        1: { cellWidth: 25 },
+                        2: { cellWidth: 30 },
+                        3: { cellWidth: 20 },
+                        4: { cellWidth: 15 },
+                        5: { cellWidth: 25 }
+                    }
+                });
+
+                // Footer en cada página
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(128, 128, 128);
+                    doc.text(`Página ${i} de ${pageCount}`, pageWidth/2, doc.internal.pageSize.height - 10, { align: 'center' });
+                    doc.text('Generado por Herramienta de Interrogación La Metamorfosis v2.0', pageWidth/2, doc.internal.pageSize.height - 5, { align: 'center' });
+                }
+
+                doc.save(`Reporte_Completo_Metamorfosis_${new Date().toISOString().split('T')[0]}.pdf`);
+                showNotification('Reporte completo exportado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showNotification('Error al generar el PDF. Revisa la consola para más detalles.', 'error');
+            }
+        }
+
+        function exportSinglePDF(index) {
+            const evaluation = evaluations[index];
+            if (!evaluation) {
+                showNotification('Evaluación no encontrada', 'error');
+                return;
+            }
+
+            try {
+                const doc = new jsPDF();
+                const pageWidth = doc.internal.pageSize.width;
+                const pageHeight = doc.internal.pageSize.height;
+
+                // Función auxiliar para agregar encabezado
+                function addHeader(title, subtitle) {
+                    // Gradiente de fondo
+                    doc.setFillColor(102, 126, 234);
+                    doc.rect(0, 0, pageWidth, 50, 'F');
+
+                    doc.setFillColor(118, 75, 162);
+                    doc.rect(0, 50, pageWidth, 25, 'F');
+
+                    // Logo/Ícono (círculo con inicial)
+                    doc.setFillColor(255, 255, 255);
+                    doc.circle(25, 25, 15, 'F');
+                    doc.setTextColor(102, 126, 234);
+                    doc.setFontSize(16);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(evaluation.studentName.charAt(0), 25, 30, { align: 'center' });
+
+                    // Título principal
+                    doc.setTextColor(255, 255, 255);
+                    doc.setFontSize(22);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(title, pageWidth/2, 25, { align: 'center' });
+
+                    // Subtítulo
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(subtitle, pageWidth/2, 65, { align: 'center' });
+
+                    // Fecha de generación
+                    doc.setFontSize(8);
+                    doc.setTextColor(200, 200, 200);
+                    doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')} ${new Date().toLocaleTimeString('es-ES')}`, pageWidth - 20, 15, { align: 'right' });
+                }
+
+                // Página 1: Portada
+                addHeader('EVALUACIÓN LITERARIA', '"La Metamorfosis" de Franz Kafka');
+
+                // Información del estudiante en un recuadro elegante
+                doc.setTextColor(0, 0, 0);
+                let yPos = 100;
+
+                // Recuadro de información
+                doc.setFillColor(248, 250, 252);
+                doc.rect(20, yPos - 10, pageWidth - 40, 80, 'F');
+                doc.setDrawColor(102, 126, 234);
+                doc.setLineWidth(2);
+                doc.rect(20, yPos - 10, pageWidth - 40, 80);
+
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('INFORMACIÓN DEL ESTUDIANTE', pageWidth/2, yPos, { align: 'center' });
+
+                yPos += 20;
+                doc.setFontSize(11);
+                doc.setFont('helvetica', 'normal');
+
+                // Crear tabla de información
+                const studentInfo = [
+                    ['Nombre del Estudiante:', evaluation.studentName],
+                    ['Curso:', evaluation.course],
+                    ['Tipo de Evaluación:', evaluation.evalType === 'regular' ? 'Regular' :
+                                           evaluation.evalType === 'neet' ? 'NEET' :
+                                           evaluation.evalType === 'neep' ? 'NEEP' : 'NEEP 4D'],
+                    ['Fecha de Evaluación:', new Date(evaluation.date).toLocaleDateString('es-ES')],
+                    ['Fecha de Reporte:', new Date().toLocaleDateString('es-ES')]
+                ];
+
+                studentInfo.forEach(([label, value]) => {
+                    doc.setFont('helvetica', 'bold');
+                    doc.text(label, 30, yPos);
+                    doc.setFont('helvetica', 'normal');
+                    doc.text(value, 100, yPos);
+                    yPos += 10;
+                });
+
+                // Resultados destacados
+                yPos += 20;
+                doc.setFillColor(102, 126, 234);
+                doc.rect(20, yPos - 5, pageWidth - 40, 40, 'F');
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(16);
+                doc.setFont('helvetica', 'bold');
+                doc.text('RESULTADO FINAL', pageWidth/2, yPos + 5, { align: 'center' });
+
+                const gradeInfo = scoreToGrade(evaluation.finalScore);
+                doc.setFontSize(24);
+                doc.text(`${evaluation.finalScore.toFixed(1)}/7.0`, pageWidth/2, yPos + 20, { align: 'center' });
+
+                doc.setFontSize(14);
+                doc.text(`Nota: ${gradeInfo.grade}`, pageWidth/2, yPos + 30, { align: 'center' });
+
+                // Nueva página para detalles
+                doc.addPage();
+                addHeader('DETALLE DE EVALUACIÓN', 'Análisis de Preguntas y Respuestas');
+
+                // Estadísticas de rendimiento
+                yPos = 90;
+                doc.setTextColor(0, 0, 0);
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text('ESTADÍSTICAS DE RENDIMIENTO', 20, yPos);
+
+                yPos += 20;
+                doc.setFontSize(10);
+                doc.setFont('helvetica', 'normal');
+
+                const stats = [
+                    ['Preguntas Respondidas:', `${evaluation.questions ? evaluation.questions.length : 0}/8`],
+                    ['Puntuación Promedio por Pregunta:', `${(evaluation.finalScore / 7).toFixed(2)}/1.0`],
+                    ['Nivel de Logro:', gradeInfo.grade === 'MB' ? 'Excelente' :
+                                       gradeInfo.grade === 'B' ? 'Muy Bueno' :
+                                       gradeInfo.grade === 'S' ? 'Satisfactorio' :
+                                       gradeInfo.grade === 'I' ? 'Insuficiente' : 'Deficiente']
+                ];
+
+                stats.forEach(([label, value]) => {
+                    doc.text(`${label} ${value}`, 20, yPos);
+                    yPos += 8;
+                });
+
+                // Tabla de preguntas detallada
+                yPos += 20;
+                if (evaluation.questions && evaluation.questions.length > 0) {
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('DETALLE DE PREGUNTAS', 20, yPos);
+                    yPos += 10;
+
+                    const tableData = evaluation.questions.map((q, idx) => [
+                        (idx + 1).toString(),
+                        q.question.length > 50 ? q.question.substring(0, 50) + '...' : q.question,
+                        q.selectedAnswer || 'No respondida',
+                        q.score ? q.score.toString() : '0'
+                    ]);
+
+                    doc.autoTable({
+                        startY: yPos,
+                        head: [['N°', 'Pregunta', 'Respuesta Seleccionada', 'Puntaje']],
+                        body: tableData,
+                        theme: 'grid',
+                        styles: {
+                            fontSize: 8,
+                            cellPadding: 4,
+                            overflow: 'linebreak',
+                            cellWidth: 'wrap'
+                        },
+                        headStyles: {
+                            fillColor: [102, 126, 234],
+                            textColor: 255,
+                            fontStyle: 'bold'
+                        },
+                        columnStyles: {
+                            0: { cellWidth: 15 },
+                            1: { cellWidth: 70 },
+                            2: { cellWidth: 60 },
+                            3: { cellWidth: 20 }
+                        },
+                        alternateRowStyles: { fillColor: [248, 250, 252] },
+                        margin: { left: 20, right: 20 }
+                    });
+                }
+
+                // Comentarios y recomendaciones
+                const finalY = doc.lastAutoTable ? doc.lastAutoTable.finalY + 20 : yPos + 100;
+
+                if (finalY < pageHeight - 60) {
+                    doc.setFontSize(12);
+                    doc.setFont('helvetica', 'bold');
+                    doc.text('COMENTARIOS Y RECOMENDACIONES', 20, finalY);
+
+                    doc.setFontSize(10);
+                    doc.setFont('helvetica', 'normal');
+                    let commentY = finalY + 15;
+
+                    const comments = [];
+                    if (evaluation.finalScore >= 6.0) {
+                        comments.push('• Excelente comprensión de la obra y sus temas principales.');
+                        comments.push('• Dominio destacado de los elementos literarios analizados.');
+                        comments.push('• Recomendable profundizar en otras obras del autor.');
+                    } else if (evaluation.finalScore >= 4.0) {
+                        comments.push('• Buena comprensión general de la obra.');
+                        comments.push('• Se recomienda revisar conceptos específicos de simbolismo.');
+                        comments.push('• Sugerimos releer pasajes clave de la novela.');
+                    } else {
+                        comments.push('• Es necesario revisar los conceptos básicos de la obra.');
+                        comments.push('• Recomendamos estudiar con mayor detenimiento los personajes.');
+                        comments.push('• Se sugiere consultar material adicional sobre el autor.');
+                    }
+
+                    comments.forEach(comment => {
+                        if (commentY < pageHeight - 30) {
+                            doc.text(comment, 20, commentY);
+                            commentY += 8;
+                        }
+                    });
+                }
+
+                // Footer en todas las páginas
+                const pageCount = doc.internal.getNumberOfPages();
+                for (let i = 1; i <= pageCount; i++) {
+                    doc.setPage(i);
+                    doc.setFontSize(8);
+                    doc.setTextColor(128, 128, 128);
+
+                    // Línea divisoria
+                    doc.setDrawColor(200, 200, 200);
+                    doc.setLineWidth(0.5);
+                    doc.line(20, pageHeight - 25, pageWidth - 20, pageHeight - 25);
+
+                    // Información del footer
+                    doc.text('Herramienta de Interrogación La Metamorfosis v2.0', pageWidth/2, pageHeight - 15, { align: 'center' });
+                    doc.text(`Página ${i} de ${pageCount}`, pageWidth/2, pageHeight - 8, { align: 'center' });
+
+                    // Logo pequeño en esquina
+                    doc.setFillColor(102, 126, 234);
+                    doc.circle(15, pageHeight - 12, 3, 'F');
+                }
+
+                // Guardar el PDF
+                const fileName = `Evaluacion_${evaluation.studentName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date(evaluation.date).toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                showNotification('PDF profesional generado exitosamente', 'success');
+            } catch (error) {
+                console.error('Error al generar PDF:', error);
+                showNotification('Error al generar el PDF. Revisa la consola para más detalles.', 'error');
+            }
+        }
+
+        function removeDuplicates() {
+            const uniqueEvaluations = [];
+            const seen = new Set();
+
+            evaluations.forEach(evaluation => {
+                const key = `${evaluation.studentName}-${evaluation.course}-${evaluation.date}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    uniqueEvaluations.push(evaluation);
+                }
+            });
+
+            const removedCount = evaluations.length - uniqueEvaluations.length;
+            evaluations = uniqueEvaluations;
+            saveToLocalStorage();
+            renderResultsTable();
+
+            if (removedCount > 0) {
+                showNotification(`Se eliminaron ${removedCount} evaluaciones duplicadas`, 'success');
+            } else {
+                showNotification('No se encontraron evaluaciones duplicadas', 'info');
+            }
+        }
+
+        // --- FUNCIONES DE FILTRADO ---
+        function filterResults() {
+            const searchTerm = document.getElementById('search-input').value.toLowerCase();
+            const filterType = document.getElementById('filter-type').value;
+
+            const filteredEvaluations = evaluations.filter(evaluation => {
+                const matchesSearch = evaluation.studentName.toLowerCase().includes(searchTerm) ||
+                                    evaluation.course.toLowerCase().includes(searchTerm);
+                const matchesType = filterType === 'all' || evaluation.evalType === filterType;
+
+                return matchesSearch && matchesType;
+            });
+
+            renderFilteredResults(filteredEvaluations);
+        }
+
+        function renderFilteredResults(filteredEvaluations) {
+            const tbody = document.getElementById('results-table-body');
+            tbody.innerHTML = '';
+
+            filteredEvaluations.forEach((evaluation, originalIndex) => {
+                const gradeInfo = scoreToGrade(evaluation.finalScore);
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-full flex items-center justify-center mr-3">
+                                <span class="text-white font-bold text-sm">${evaluation.studentName.charAt(0)}</span>
+                            </div>
+                            <div>
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">${evaluation.studentName}</div>
+                                <div class="text-sm text-gray-500 dark:text-gray-400">${evaluation.course}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 py-1 text-xs font-medium rounded-full ${
+                            evaluation.evalType === 'regular' ? 'bg-purple-100 text-purple-800' :
+                            evaluation.evalType === 'neet' ? 'bg-indigo-100 text-indigo-800' :
+                            'bg-blue-100 text-blue-800'
+                        }">
+                            ${evaluation.evalType === 'regular' ? 'Regular' :
+                              evaluation.evalType === 'neet' ? 'NEET' :
+                              evaluation.evalType === 'neep' ? 'NEEP' : 'NEEP 4D'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white font-medium">
+                        ${evaluation.finalScore.toFixed(1)}/7.0
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-3 py-1 text-sm font-bold rounded-full ${gradeInfo.bg} ${gradeInfo.color}">
+                            ${gradeInfo.grade}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                        ${new Date(evaluation.date).toLocaleDateString('es-ES')}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <div class="flex space-x-2">
+                            <button class="text-purple-600 hover:text-purple-900 dark:text-purple-400 dark:hover:text-purple-300 transition-colors export-pdf-btn" data-index="${originalIndex}" title="Exportar PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </button>
+                            <button class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 transition-colors delete-btn" data-index="${originalIndex}" title="Eliminar evaluación">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // --- FUNCIONES DE UTILIDAD ---
+        function getRandomQuestions(num, sourceBank) {
+            const shuffled = [...sourceBank].sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, num);
+        }
+
+        function showAnswerModal(questionId) {
+            const questionData = questionBank.find(q => q.id == questionId);
+            if (questionData) {
+                document.getElementById('modal-question').textContent = questionData.question;
+                document.getElementById('modal-answer').innerHTML = questionData.answer;
+                modal.classList.add('active');
+            }
+        }
+
+        function resetInterrogation() {
+            studentNameInput.value = '';
+            studentCourseInput.value = '';
+            currentEvaluation = {};
+            interrogationScreen.classList.add('hidden');
+            setupScreen.classList.remove('hidden');
+            document.getElementById('progress-container').classList.add('hidden');
+            document.getElementById('final-score-container').innerHTML = '';
+        }
+
+        // --- EVENT LISTENERS ---
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+
+            // Login
+            loginButton.addEventListener('click', handleLogin);
+            document.getElementById('username').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+            document.getElementById('password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') handleLogin();
+            });
+
+            // Inicio de evaluación
+            startButton.addEventListener('click', function() {
+                if (!currentUser) {
+                    showNotification('Debes iniciar sesión primero', 'error');
+                    return;
+                }
+
+                const studentName = studentNameInput.value.trim();
+                const studentCourse = studentCourseInput.value.trim();
+                const evalType = document.querySelector('input[name="evaluation-type"]:checked').value;
+
+                if (!studentName || !studentCourse) {
+                    showNotification('Completa todos los campos', 'warning');
+                    return;
+                }
+
+                if (questionBank.length === 0) {
+                    showNotification('Error: No se pudieron cargar las preguntas. Intenta recargar la página.', 'error');
+                    return;
+                }
+
+                let selectedQuestionBank = questionBank;
+                if (evalType === 'neet') {
+                    selectedQuestionBank = questionBank.filter(q => neetQuestionIds.includes(q.id));
+                } else if (evalType === 'neep') {
+                    selectedQuestionBank = questionBank.filter(q => neepQuestionIds.includes(q.id));
+                }
+
+                currentEvaluation = {
+                    id: Date.now(),
+                    studentName,
+                    studentCourse,
+                    evalType,
+                    questions: getRandomQuestions(8, selectedQuestionBank),
+                    scores: {},
+                    excludedQuestion: null
+                };
+
+                document.getElementById('eval-student-name').textContent = studentName;
+                document.getElementById('eval-student-course').textContent = studentCourse;
+
+                let typeText = "Regular";
+                if(evalType === 'neet') typeText = "NEET";
+                if(evalType === 'neep') typeText = "NEEP";
+                document.getElementById('eval-type-display').textContent = `Tipo de Evaluación: ${typeText}`;
+
+                renderQuestions();
+                setupScreen.classList.add('hidden');
+                interrogationScreen.classList.remove('hidden');
+                document.getElementById('progress-container').classList.remove('hidden');
+
+                startAutoSave();
+                showNotification('Evaluación iniciada', 'success');
+            });
+
+            // Finalizar evaluación
+            finalizeButton.addEventListener('click', function() {
+                const score = calculateScore();
+                if (score === null) return;
+
+                const gradeInfo = scoreToGrade(score);
+
+                // Mostrar resultado final
+                document.getElementById('final-score-container').innerHTML = `
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gray-800 dark:text-white mb-2">${score.toFixed(1)}/7.0</div>
+                        <div class="inline-block px-4 py-2 rounded-full text-lg font-bold ${gradeInfo.bg} ${gradeInfo.color}">
+                            Nota: ${gradeInfo.grade}
+                        </div>
+                    </div>
+                `;
+
+                // Guardar evaluación
+                const evaluation = {
+                    studentName: currentEvaluation.studentName,
+                    course: currentEvaluation.studentCourse,
+                    evalType: currentEvaluation.evalType,
+                    finalScore: score,
+                    date: new Date().toISOString(),
+                    questions: currentEvaluation.questions.map(q => {
+                        const scoreInput = document.querySelector(`input[name="question-${q.id}"]`);
+                        const scoreValue = parseFloat(scoreInput?.value) || 0;
+                        return {
+                            question: q.question,
+                            selectedAnswer: `Puntaje asignado: ${scoreValue}`,
+                            score: scoreValue
+                        };
+                    })
+                };
+
+                evaluations.push(evaluation);
+                saveToLocalStorage();
+
+                stopAutoSave();
+                renderResultsTable();
+                showNotification('Evaluación guardada exitosamente', 'success');
+
+                // Resetear después de 2 segundos
+                setTimeout(() => {
+                    resetInterrogation();
+                }, 2000);
+            });
+
+            // Cancelar evaluación
+            cancelButton.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres cancelar la evaluación?')) {
+                    stopAutoSave();
+                    resetInterrogation();
+                    showNotification('Evaluación cancelada', 'info');
+                }
+            });
+
+            // Exportar PDF completo
+            exportAllPdfButton.addEventListener('click', exportCompletePDF);
+
+            // Eliminar duplicados
+            removeDuplicatesButton.addEventListener('click', function() {
+                if (confirm('¿Estás seguro de que quieres eliminar las evaluaciones duplicadas?')) {
+                    removeDuplicates();
+                }
+            });
+
+            // Modal de respuesta ideal
+            closeModalButton.addEventListener('click', function() {
+                modal.classList.remove('active');
+            });
+
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+
+            // Filtros y búsqueda
+            searchInput.addEventListener('input', filterResults);
+            filterTypeSelect.addEventListener('change', filterResults);
+
+            // Event listeners para botones de la tabla
+            document.addEventListener('click', function(e) {
+                if (e.target.closest('.export-pdf-btn')) {
+                    const index = parseInt(e.target.closest('.export-pdf-btn').dataset.index);
+                    exportSinglePDF(index);
+                }
+                if (e.target.closest('.delete-btn')) {
+                    const index = parseInt(e.target.closest('.delete-btn').dataset.index);
+                    deleteEvaluation(index);
+                }
+            });
+
+            // Actualizar barra de progreso
+            setInterval(() => {
+                const scoreInputs = document.querySelectorAll('input[type="number"][name^="question-"]');
+                const answered = Array.from(scoreInputs).filter(input => input.value !== '' && input.value !== null && input.value !== undefined).length;
+                const total = currentEvaluation.questions ? currentEvaluation.questions.length : 8;
+                const progress = total > 0 ? (answered / total) * 100 : 0;
+
+                document.getElementById('progress-bar').style.width = `${progress}%`;
+                document.getElementById('progress-text').textContent = `${answered}/${total} preguntas evaluadas`;
+            }, 1000);
+        });
+
+        // --- FUNCIONES GLOBALES ---
+        window.exportSinglePDF = exportSinglePDF;
+        window.deleteEvaluation = deleteEvaluation;
+
+        // Debug: Verificar que las funciones estén disponibles
+        console.log('Funciones globales definidas:', {
+            exportSinglePDF: typeof window.exportSinglePDF,
+            deleteEvaluation: typeof window.deleteEvaluation
+        });
+    </script>
+</body>
+</html>

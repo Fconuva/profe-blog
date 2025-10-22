@@ -1,6 +1,9 @@
 const { getDatabase } = require('./firebase-config');
 
 exports.handler = async (event) => {
+    const startTime = Date.now();
+    console.log('⏱️ get-courses-Francisco started');
+    
     // CORS headers
     const headers = {
         'Access-Control-Allow-Origin': '*',
@@ -32,27 +35,27 @@ exports.handler = async (event) => {
             };
         }
 
+        console.log(`📥 Fetching courses for ${username}`);
         const db = getDatabase();
         
-        // Buscar o crear usuario
+        // Buscar usuario
         const usersRef = db.ref('users');
         const userSnapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
         
         let userId;
         if (!userSnapshot.exists()) {
+            console.log(`✨ No user found, creating ${username}`);
             // Crear nuevo usuario
             const newUserRef = usersRef.push();
+            userId = newUserRef.key;
             await newUserRef.set({
                 username: username,
-                createdAt: new Date().toISOString()
+                createdAt: Date.now()
             });
-            userId = newUserRef.key;
-            console.log(`✅ New user created: ${username} (${userId})`);
         } else {
-            // Usuario existente
             const userData = userSnapshot.val();
             userId = Object.keys(userData)[0];
-            console.log(`✅ Existing user found: ${username} (${userId})`);
+            console.log(`✓ Found user: ${userId}`);
         }
 
         // Obtener cursos del usuario
@@ -82,7 +85,8 @@ exports.handler = async (event) => {
             });
         }
 
-        console.log(`✅ Retrieved ${courses.length} courses for user ${username}`);
+        const elapsed = Date.now() - startTime;
+        console.log(`✅ Retrieved ${courses.length} courses in ${elapsed}ms`);
 
         return {
             statusCode: 200,
@@ -91,18 +95,22 @@ exports.handler = async (event) => {
                 success: true,
                 courses: courses,
                 userId: userId,
-                username: username
+                username: username,
+                elapsed: elapsed
             })
         };
 
     } catch (error) {
-        console.error('❌ Error in get-courses-Francisco:', error);
+        const elapsed = Date.now() - startTime;
+        console.error(`❌ Error after ${elapsed}ms:`, error.message);
+        console.error('Stack:', error.stack);
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
                 error: 'Failed to fetch courses',
-                details: error.message
+                details: error.message,
+                elapsed: elapsed
             })
         };
     }

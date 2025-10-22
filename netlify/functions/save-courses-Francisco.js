@@ -1,6 +1,9 @@
 const { getDatabase } = require('./firebase-config');
 
 exports.handler = async (event) => {
+    const startTime = Date.now();
+    console.log('⏱️ save-courses-Francisco started');
+    
     const headers = {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Headers': 'Content-Type',
@@ -40,130 +43,92 @@ exports.handler = async (event) => {
             };
         }
 
+        console.log(`📥 Saving ${courses.length} course(s) for ${username}`);
         const db = getDatabase();
         
-        // Buscar o crear usuario
+        // Buscar o crear usuario (OPTIMIZADO: una sola query)
         const usersRef = db.ref('users');
         const userSnapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
         
         let userId;
         if (!userSnapshot.exists()) {
             const newUserRef = usersRef.push();
+            userId = newUserRef.key;
             await newUserRef.set({
                 username: username,
-                createdAt: new Date().toISOString()
+                createdAt: Date.now()
             });
-            userId = newUserRef.key;
-            console.log(`✅ New user created: ${username} (${userId})`);
+            console.log(`✨ Created user: ${userId}`);
         } else {
-            const userData = userSnapshot.val();
-            userId = Object.keys(userData)[0];
+            userId = Object.keys(userSnapshot.val())[0];
+            console.log(`✓ Found user: ${userId}`);
         }
 
-        // Guardar cada curso
+        // Guardar cursos (BATCH)
         const coursesRef = db.ref('courses');
+        const timestamp = Date.now();
         const savedCourses = [];
-        const timestamp = new Date().toISOString();
 
-        for (const course of courses) {
-            if (!course.id) {
-                // Nuevo curso sin ID, generar uno
-                const newCourseRef = coursesRef.push();
-                const courseData = {
-                    id: Date.now() + Math.floor(Math.random() * 1000),
-                    userId: userId,
-                    courseName: course.courseName,
-                    subject: course.subject || '',
-                    period: course.period || new Date().getFullYear().toString(),
-                    students: course.students || [],
-                    tasks: course.tasks || [],
-                    config: course.config || {
-                        minGrade: 1.0,
-                        maxGrade: 7.0,
-                        passingGrade: 4.0,
-                        passingPercentage: 60
-                    },
-                    createdAt: timestamp,
-                    updatedAt: timestamp
-                };
-                await newCourseRef.set(courseData);
-                savedCourses.push({ ...courseData, firebaseKey: newCourseRef.key });
-                console.log(`✅ New course created: ${course.courseName}`);
-            } else {
-                // Curso existente, buscar y actualizar
+        // Usar Promise.all para guardar todos los cursos en paralelo
+        await Promise.all(courses.map(async (course) => {
+            const courseData = {
+                id: course.id || timestamp + Math.floor(Math.random() * 1000),
+                userId: userId,
+                courseName: course.courseName,
+                subject: course.subject || '',
+                period: course.period || '2025',
+                students: course.students || [],
+                tasks: course.tasks || [],
+                config: course.config || { minGrade: 1.0, maxGrade: 7.0, passingGrade: 4.0, passingPercentage: 60 },
+                createdAt: timestamp,
+                updatedAt: timestamp
+            };
+
+            if (course.id) {
+                // Buscar si existe
                 const existingSnapshot = await coursesRef.orderByChild('id').equalTo(course.id).once('value');
-                
                 if (existingSnapshot.exists()) {
-                    // Actualizar curso existente
+                    // Actualizar
                     const courseKey = Object.keys(existingSnapshot.val())[0];
-                    const courseData = {
-                        id: course.id,
-                        userId: userId,
-                        courseName: course.courseName,
-                        subject: course.subject || '',
-                        period: course.period || new Date().getFullYear().toString(),
-                        students: course.students || [],
-                        tasks: course.tasks || [],
-                        config: course.config || {
-                            minGrade: 1.0,
-                            maxGrade: 7.0,
-                            passingGrade: 4.0,
-                            passingPercentage: 60
-                        },
-                        createdAt: existingSnapshot.val()[courseKey].createdAt,
-                        updatedAt: timestamp
-                    };
-                    await coursesRef.child(courseKey).set(courseData);
+                    await coursesRef.child(courseKey).update(courseData);
                     savedCourses.push({ ...courseData, firebaseKey: courseKey });
-                    console.log(`✅ Course updated: ${course.courseName}`);
-                } else {
-                    // Curso con ID pero no existe, crear nuevo
-                    const newCourseRef = coursesRef.push();
-                    const courseData = {
-                        id: course.id,
-                        userId: userId,
-                        courseName: course.courseName,
-                        subject: course.subject || '',
-                        period: course.period || new Date().getFullYear().toString(),
-                        students: course.students || [],
-                        tasks: course.tasks || [],
-                        config: course.config || {
-                            minGrade: 1.0,
-                            maxGrade: 7.0,
-                            passingGrade: 4.0,
-                            passingPercentage: 60
-                        },
-                        createdAt: timestamp,
-                        updatedAt: timestamp
-                    };
-                    await newCourseRef.set(courseData);
-                    savedCourses.push({ ...courseData, firebaseKey: newCourseRef.key });
-                    console.log(`✅ Course created with existing ID: ${course.courseName}`);
+                    console.log(`✓ Updated: ${course.courseName}`);
+                    return;
                 }
             }
-        }
 
-        console.log(`✅ Saved ${savedCourses.length} courses for user ${username}`);
+            // Crear nuevo
+            const newCourseRef = await coursesRef.push();
+            await newCourseRef.set(courseData);
+            savedCourses.push({ ...courseData, firebaseKey: newCourseRef.key });
+            console.log(`✨ Created: ${course.courseName}`);
+        }));
+
+        const elapsed = Date.now() - startTime;
+        console.log(`✅ Saved ${savedCourses.length} courses in ${elapsed}ms`);
 
         return {
             statusCode: 200,
             headers,
             body: JSON.stringify({
                 success: true,
-                message: 'Courses saved successfully',
-                savedCourses: savedCourses.length,
+                message: `Saved ${savedCourses.length} courses`,
+                elapsed: elapsed,
                 courses: savedCourses
             })
         };
 
     } catch (error) {
-        console.error('❌ Error in save-courses-Francisco:', error);
+        const elapsed = Date.now() - startTime;
+        console.error(`❌ Error after ${elapsed}ms:`, error.message);
+        console.error('Stack:', error.stack);
         return {
             statusCode: 500,
             headers,
             body: JSON.stringify({
                 error: 'Failed to save courses',
-                details: error.message
+                details: error.message,
+                elapsed: elapsed
             })
         };
     }

@@ -587,7 +587,16 @@
 
     <!-- Sección de Entretenimiento y Música -->
     <div style="max-width: 1200px; margin: 40px auto; padding: 0 20px;">
-        <div class="card-hover" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 30px; padding: 50px; box-shadow: 0 25px 70px rgba(99, 102, 241, 0.5); border: 3px solid rgba(99, 102, 241, 0.3); position: relative; overflow: hidden;">
+        <div id="musicSection" class="card-hover" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 30px; padding: 50px; box-shadow: 0 25px 70px rgba(99, 102, 241, 0.5); border: 3px solid rgba(99, 102, 241, 0.3); position: relative; overflow: hidden; animation: party-vibrate 0.5s ease-in-out infinite;">
+            
+            <style>
+                @keyframes party-vibrate {
+                    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+                    25% { transform: translate(-2px, 2px) rotate(-0.5deg); }
+                    50% { transform: translate(2px, -2px) rotate(0.5deg); }
+                    75% { transform: translate(-2px, -2px) rotate(-0.5deg); }
+                }
+            </style>
             
             <!-- Efecto de luces de discoteca -->
             <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; opacity: 0.1; pointer-events: none;">
@@ -680,25 +689,42 @@
 
     <!-- Audio Player (Oculto) -->
     <audio id="partyMusic" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a8a0df33b.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        let musicPlaying = false;
+        let musicPlaying = true;
         const audio = document.getElementById('partyMusic');
         const musicButton = document.getElementById('musicToggle');
         const buttonText = document.getElementById('musicButtonText');
         
+        // Iniciar música automáticamente cuando la página carga
+        window.addEventListener('load', function() {
+            audio.volume = 0.5; // Volumen al 50%
+            audio.play().catch(err => {
+                console.log('Autoplay bloqueado, espera interacción del usuario');
+                musicPlaying = false;
+                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Activar Música de Fiesta</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
+                musicButton.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)';
+            });
+            
+            // Si se reproduce exitosamente, actualizar botón
+            audio.addEventListener('play', function() {
+                musicButton.innerHTML = '<i class="fas fa-pause"></i> <span id="musicButtonText">Pausar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
+                musicButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
+                musicPlaying = true;
+            });
+        });
+        
         function toggleMusic() {
             if (musicPlaying) {
                 audio.pause();
-                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Activar Música de Fiesta</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
+                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Reanudar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
                 musicButton.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)';
                 musicPlaying = false;
             } else {
                 audio.play().catch(err => {
                     console.log('Error al reproducir:', err);
-                    alert('Por favor, interactúa con la página primero para activar el audio.');
                 });
                 musicButton.innerHTML = '<i class="fas fa-pause"></i> <span id="musicButtonText">Pausar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
                 musicButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
@@ -834,23 +860,26 @@
             </div>
         </div>
 
-        <!-- Botón de WhatsApp -->
-        <div style="text-align: center; margin-top: 40px; padding: 40px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.1)); backdrop-filter: blur(10px); border-radius: 20px; border: 2px solid rgba(255, 255, 255, 0.3);">
-            <h3 style="font-family: 'Playfair Display', serif; color: white; margin-bottom: 25px; font-size: 1.8rem; text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.3);">
+    </div>
+    
+    <!-- Botón de WhatsApp (Fuera del formulario) -->
+    <div style="max-width: 900px; margin: 40px auto; padding: 0 20px;">
+        <div style="text-align: center; padding: 50px 40px; background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.15)); backdrop-filter: blur(15px); border-radius: 25px; border: 3px solid rgba(255, 255, 255, 0.4); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);">
+            <h3 style="font-family: 'Playfair Display', serif; color: white; margin-bottom: 30px; font-size: 2.2rem; text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.5); font-weight: 800;">
                 ¿Tienes dudas o consultas?
             </h3>
             <a href="https://wa.me/56988138929?text=Hola%2C%20tengo%20una%20consulta%20sobre%20la%20Fiesta%20Aniversario%20del%20Sindicato%20N%C2%B01" 
                target="_blank"
-               style="display: inline-flex; align-items: center; gap: 18px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; padding: 22px 50px; border-radius: 50px; text-decoration: none; font-weight: 700; font-size: 1.3rem; box-shadow: 0 15px 40px rgba(37, 211, 102, 0.5); transition: all 0.4s ease; border: 3px solid rgba(255, 255, 255, 0.3);"
-               onmouseover="this.style.transform='translateY(-8px) scale(1.05)'; this.style.boxShadow='0 25px 60px rgba(37, 211, 102, 0.7)'"
-               onmouseout="this.style.transform=''; this.style.boxShadow='0 15px 40px rgba(37, 211, 102, 0.5)'">
-                <i class="fab fa-whatsapp" style="font-size: 2.5rem; animation: pulse 2s infinite;"></i>
+               style="display: inline-flex; align-items: center; gap: 20px; background: linear-gradient(135deg, #25D366 0%, #128C7E 100%); color: white; padding: 25px 55px; border-radius: 50px; text-decoration: none; font-weight: 800; font-size: 1.4rem; box-shadow: 0 20px 50px rgba(37, 211, 102, 0.6); transition: all 0.4s ease; border: 4px solid rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 1px;"
+               onmouseover="this.style.transform='translateY(-10px) scale(1.08)'; this.style.boxShadow='0 30px 70px rgba(37, 211, 102, 0.8)'"
+               onmouseout="this.style.transform=''; this.style.boxShadow='0 20px 50px rgba(37, 211, 102, 0.6)'">
+                <i class="fab fa-whatsapp" style="font-size: 3rem; animation: pulse 2s infinite;"></i>
                 Contactar por WhatsApp
             </a>
             <style>
                 @keyframes pulse {
                     0%, 100% { transform: scale(1); }
-                    50% { transform: scale(1.1); }
+                    50% { transform: scale(1.15); }
                 }
             </style>
         </div>

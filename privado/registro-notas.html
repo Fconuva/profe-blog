@@ -2252,9 +2252,27 @@
             // Empezar con una copia del curso local
             const merged = JSON.parse(JSON.stringify(localCourse));
 
-            // Merge tareas (preferir remote si difieren)
-            if (remoteCourse.tasks && remoteCourse.tasks.length > 0) {
-                merged.tasks = JSON.parse(JSON.stringify(remoteCourse.tasks));
+            // Merge tareas: comparar cantidad y usar la versión con más tareas
+            if (remoteCourse.tasks && Array.isArray(remoteCourse.tasks)) {
+                const localTaskCount = localCourse.tasks ? localCourse.tasks.length : 0;
+                const remoteTaskCount = remoteCourse.tasks.length;
+                
+                if (remoteTaskCount > localTaskCount) {
+                    console.log(`   📝 Usando tareas remote (${remoteTaskCount} > ${localTaskCount})`);
+                    merged.tasks = JSON.parse(JSON.stringify(remoteCourse.tasks));
+                    
+                    // Ajustar grades de estudiantes
+                    merged.students.forEach(student => {
+                        if (student.grades && student.grades.length < remoteTaskCount) {
+                            const diff = remoteTaskCount - student.grades.length;
+                            for (let i = 0; i < diff; i++) {
+                                student.grades.push(false);
+                            }
+                        }
+                    });
+                } else {
+                    console.log(`  ✅ Manteniendo tareas local (${localTaskCount} >= ${remoteTaskCount})`);
+                }
             }
 
             // Merge estudiantes: por cada estudiante, merge sus notas una por una
@@ -2269,26 +2287,36 @@
                     }
 
                     // Merge nota por nota
+                    // Primero asegurar que local tenga al menos el mismo tamaño que remote
                     if (remoteStudent.grades && Array.isArray(remoteStudent.grades)) {
+                        // Asegurar que localStudent.grades existe y tiene el tamaño correcto
+                        if (!localStudent.grades || !Array.isArray(localStudent.grades)) {
+                            localStudent.grades = [];
+                        }
+                        
+                        // Expandir localStudent.grades si remote tiene más
+                        while (localStudent.grades.length < remoteStudent.grades.length) {
+                            localStudent.grades.push(false);
+                        }
+                        
+                        // Merge cada nota comparando timestamps
                         remoteStudent.grades.forEach((remoteGrade, gradeIdx) => {
-                            if (!localStudent.grades[gradeIdx]) {
-                                // No existe local, tomar remote
-                                localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
-                                return;
-                            }
-
                             const localGrade = localStudent.grades[gradeIdx];
                             const localTime = getGradeTimestamp(localGrade) || 0;
                             const remoteTime = getGradeTimestamp(remoteGrade) || 0;
 
                             // Comparar timestamps y tomar el más reciente
                             if (remoteTime > localTime) {
-                                console.log(`   Nota [${idx}][${gradeIdx}]: Remote más reciente (${remoteTime} > ${localTime})`);
+                                console.log(`   📥 Nota [${idx}][${gradeIdx}]: Remote más reciente (${new Date(remoteTime).toISOString()} > ${new Date(localTime).toISOString()})`);
                                 localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
                             } else {
-                                console.log(`  ✅ Nota [${idx}][${gradeIdx}]: Local más reciente (${localTime} >= ${remoteTime})`);
+                                console.log(`  ✅ Nota [${idx}][${gradeIdx}]: Local más reciente (${new Date(localTime).toISOString()} >= ${new Date(remoteTime).toISOString()})`);
                             }
                         });
+                        
+                        // IMPORTANTE: Si local tiene MÁS notas que remote (porque agregaste tareas localmente),
+                        // mantener esas notas adicionales
+                        // (ya están en localStudent.grades, no las tocamos)
                     }
 
                     // Merge otras propiedades del estudiante (nombre, número, retirado, etc.)

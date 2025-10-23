@@ -413,10 +413,24 @@
 
         // Cargar inscripciones
         function loadInscripciones() {
+            console.log('Intentando cargar inscripciones...');
             database.ref('evento_sindicato_inscripciones').on('value', (snapshot) => {
+                console.log('Snapshot recibido:', snapshot.val());
                 inscripciones = snapshot.val() || {};
+                console.log('Inscripciones cargadas:', Object.keys(inscripciones).length);
                 updateStats();
                 renderTable();
+            }, (error) => {
+                console.error('Error al cargar inscripciones:', error);
+                const tbody = document.getElementById('inscritosBody');
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #f44336;">
+                            <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Error al cargar inscripciones: ${error.message}</p>
+                        </td>
+                    </tr>
+                `;
             });
         }
 

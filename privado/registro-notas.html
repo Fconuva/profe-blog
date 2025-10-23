@@ -3582,56 +3582,206 @@
                 return;
             }
 
-            let csv = 'Nombre Completo,';
+            // Crear HTML para mejor presentación
+            let html = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estado de Tareas - ${courseData.name}</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 2em; margin-bottom: 10px; }
+        .header p { font-size: 1.1em; opacity: 0.9; }
+        .info-box {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+        }
+        .info-box strong { color: #667eea; }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th {
+            background: #667eea;
+            color: white;
+            padding: 15px 10px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.9em;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        th.nombre { min-width: 200px; }
+        th.tarea { min-width: 120px; text-align: center; }
+        th.resumen { background: #764ba2; text-align: center; }
+        td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #e9ecef;
+        }
+        tr:hover { background: #f8f9fa; }
+        td.nombre {
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            left: 0;
+            background: white;
+            z-index: 5;
+        }
+        tr:hover td.nombre { background: #f8f9fa; }
+        td.tarea { text-align: center; font-size: 1.1em; }
+        .completada { color: #10b981; font-weight: bold; }
+        .pendiente { color: #ef4444; font-weight: bold; }
+        .aprobada { color: #3b82f6; font-weight: bold; }
+        .reprobada { color: #f59e0b; font-weight: bold; }
+        td.resumen {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9em;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .container { box-shadow: none; }
+            .no-print { display: none; }
+        }
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.5em; }
+            table { font-size: 0.85em; }
+            th, td { padding: 8px 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Estado de Tareas</h1>
+            <p>${courseData.name}</p>
+            <p style="font-size: 0.9em; margin-top: 10px;">Generado el ${new Date().toLocaleDateString('es-CL', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            })}</p>
+        </div>
+
+        <div class="info-box">
+            <p><strong>Total de estudiantes:</strong> ${courseData.students.length}</p>
+            <p><strong>Total de tareas:</strong> ${courseData.tasks.length}</p>
+            <p><strong>Instrucciones:</strong> Revisa tu estado y ponte al día con las tareas pendientes ❌</p>
+        </div>
+
+        <div style="overflow-x: auto; padding: 0 20px 20px 20px;">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="nombre">Estudiante</th>`;
             
             // Encabezados de tareas
             courseData.tasks.forEach(task => {
-                csv += `"${task.name}",`;
+                html += `<th class="tarea">${task.name}<br><span style="font-size: 0.8em; font-weight: normal;">${task.date || ''}</span></th>`;
             });
-            csv += 'Tareas Completadas,Tareas Pendientes\n';
+            
+            html += `
+                        <th class="resumen">✅ Completadas</th>
+                        <th class="resumen">❌ Pendientes</th>
+                    </tr>
+                </thead>
+                <tbody>`;
             
             // Datos de estudiantes
             courseData.students.forEach(student => {
                 const fullName = `${student.lastName1} ${student.lastName2}, ${student.name}`;
-                csv += `"${fullName}",`;
+                html += `<tr><td class="nombre">${fullName}</td>`;
                 
                 let completedCount = 0;
                 
                 courseData.tasks.forEach((task, index) => {
                     const grade = student.grades[index];
-                    let status = '';
+                    let statusHtml = '';
                     
                     if (!grade || grade.value === null || grade.value === undefined) {
-                        status = '❌ PENDIENTE';
+                        statusHtml = '<span class="pendiente">❌</span>';
                     } else {
                         const evalType = task.evaluationType || 'binary';
                         
                         if (evalType === 'binary') {
-                            status = grade.value === true ? '✅ COMPLETADA' : '❌ PENDIENTE';
-                            if (grade.value === true) completedCount++;
+                            if (grade.value === true) {
+                                statusHtml = '<span class="completada">✅</span>';
+                                completedCount++;
+                            } else {
+                                statusHtml = '<span class="pendiente">❌</span>';
+                            }
                         } else if (evalType === 'numeric') {
                             const nota = parseFloat(grade.value);
                             if (nota >= 4.0) {
-                                status = `✅ Aprobada (${nota})`;
+                                statusHtml = `<span class="aprobada">✅ ${nota.toFixed(1)}</span>`;
                                 completedCount++;
                             } else {
-                                status = `⚠️ Reprobada (${nota})`;
+                                statusHtml = `<span class="reprobada">⚠️ ${nota.toFixed(1)}</span>`;
                             }
                         } else {
-                            status = '✅ COMPLETADA';
+                            statusHtml = '<span class="completada">✅</span>';
                             completedCount++;
                         }
                     }
                     
-                    csv += `"${status}",`;
+                    html += `<td class="tarea">${statusHtml}</td>`;
                 });
                 
                 const pendingCount = courseData.tasks.length - completedCount;
-                csv += `${completedCount},${pendingCount}\n`;
+                html += `
+                    <td class="resumen" style="color: #10b981;">${completedCount}</td>
+                    <td class="resumen" style="color: #ef4444;">${pendingCount}</td>
+                </tr>`;
             });
             
-            // Descargar archivo
-            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            html += `
+                </tbody>
+            </table>
+        </div>
+
+        <div class="footer no-print">
+            <p>💡 <strong>Tip:</strong> Puedes imprimir esta página (Ctrl+P) o guardarla como PDF</p>
+            <p style="margin-top: 5px;">Generado por Sistema de Registro de Notas</p>
+        </div>
+    </div>
+</body>
+</html>`;
+
+            // Descargar archivo HTML
+            const blob = new Blob([html], { type: 'text/html;charset=utf-8;' });
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             
@@ -3639,13 +3789,13 @@
             const date = new Date().toISOString().split('T')[0];
             
             link.setAttribute('href', url);
-            link.setAttribute('download', `Estado_Tareas_${courseName}_${date}.csv`);
+            link.setAttribute('download', `Estado_Tareas_${courseName}_${date}.html`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
             document.body.removeChild(link);
             
-            showTemporaryMessage('✅ Estado de tareas descargado correctamente', 'success');
+            showTemporaryMessage('✅ Estado de tareas descargado correctamente - Abre el archivo HTML en tu navegador', 'success');
         }
 
         // Eliminar múltiples tareas (solo admin)

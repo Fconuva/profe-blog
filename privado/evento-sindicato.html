@@ -674,59 +674,129 @@
     </div>
 
     <!-- Audio Player (Oculto) -->
-    <audio id="partyMusic" loop>
-        <source src="https://cdn.pixabay.com/download/audio/2022/03/10/audio_4a8a0df33b.mp3" type="audio/mpeg">
+    <audio id="partyMusic" loop preload="auto">
+        <source src="https://assets.mixkit.co/music/preview/mixkit-tech-house-vibes-130.mp3" type="audio/mpeg">
+        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
     </audio>
 
     <script>
-        let musicPlaying = true;
-        const audio = document.getElementById('partyMusic');
-        const musicButton = document.getElementById('musicToggle');
-        const buttonText = document.getElementById('musicButtonText');
-        
-        // Iniciar música automáticamente cuando la página carga
-        window.addEventListener('load', function() {
-            audio.volume = 0.5; // Volumen al 50%
-            audio.play().catch(err => {
-                console.log('Autoplay bloqueado, espera interacción del usuario');
-                musicPlaying = false;
-                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Activar Música de Fiesta</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
-                musicButton.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)';
+        let musicPlaying = false;
+        let audio = null;
+        let musicButton = null;
+        let userInteracted = false;
+
+        // Esperar a que el DOM esté completamente cargado
+        document.addEventListener('DOMContentLoaded', function() {
+            audio = document.getElementById('partyMusic');
+            musicButton = document.getElementById('musicToggle');
+            
+            if (!audio || !musicButton) {
+                console.error('Audio o botón no encontrado');
+                return;
+            }
+
+            // Configurar volumen
+            audio.volume = 0.4;
+            
+            // Detectar cualquier interacción del usuario para iniciar música
+            const startMusic = function() {
+                if (!userInteracted && audio) {
+                    userInteracted = true;
+                    audio.play().then(() => {
+                        console.log('Música iniciada automáticamente');
+                        updateButtonState(true);
+                    }).catch(err => {
+                        console.log('Autoplay bloqueado:', err);
+                        updateButtonState(false);
+                    });
+                    
+                    // Remover listeners después del primer uso
+                    document.removeEventListener('click', startMusic);
+                    document.removeEventListener('touchstart', startMusic);
+                    document.removeEventListener('keydown', startMusic);
+                }
+            };
+            
+            // Agregar múltiples eventos para capturar la primera interacción
+            document.addEventListener('click', startMusic);
+            document.addEventListener('touchstart', startMusic);
+            document.addEventListener('keydown', startMusic);
+            
+            // Intentar reproducir inmediatamente (puede fallar por políticas de autoplay)
+            setTimeout(() => {
+                if (!userInteracted) {
+                    audio.play().then(() => {
+                        console.log('Autoplay exitoso');
+                        userInteracted = true;
+                        updateButtonState(true);
+                    }).catch(err => {
+                        console.log('Autoplay bloqueado, esperando interacción');
+                        updateButtonState(false);
+                    });
+                }
+            }, 500);
+
+            // Event listeners del audio
+            audio.addEventListener('play', function() {
+                musicPlaying = true;
             });
             
-            // Si se reproduce exitosamente, actualizar botón
-            audio.addEventListener('play', function() {
-                musicButton.innerHTML = '<i class="fas fa-pause"></i> <span id="musicButtonText">Pausar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
-                musicButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
-                musicPlaying = true;
+            audio.addEventListener('pause', function() {
+                musicPlaying = false;
+            });
+
+            audio.addEventListener('error', function(e) {
+                console.error('Error al cargar audio:', e);
+                alert('No se pudo cargar la música. Por favor, recarga la página.');
             });
         });
         
-        function toggleMusic() {
-            if (musicPlaying) {
-                audio.pause();
-                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Reanudar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
-                musicButton.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)';
-                musicPlaying = false;
-            } else {
-                audio.play().catch(err => {
-                    console.log('Error al reproducir:', err);
-                });
-                musicButton.innerHTML = '<i class="fas fa-pause"></i> <span id="musicButtonText">Pausar Música</span> <div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
+        function updateButtonState(playing) {
+            if (!musicButton) return;
+            
+            const equalizerHTML = '<div style="display: inline-block; margin-left: 15px; vertical-align: middle;"><span class="equalizer-bar" style="animation-delay: 0s;"></span><span class="equalizer-bar" style="animation-delay: 0.2s;"></span><span class="equalizer-bar" style="animation-delay: 0.4s;"></span><span class="equalizer-bar" style="animation-delay: 0.1s;"></span><span class="equalizer-bar" style="animation-delay: 0.3s;"></span></div>';
+            
+            if (playing) {
+                musicButton.innerHTML = '<i class="fas fa-pause"></i> <span id="musicButtonText">Pausar Música</span> ' + equalizerHTML;
                 musicButton.style.background = 'linear-gradient(135deg, #dc2626 0%, #b91c1c 100%)';
                 musicPlaying = true;
+            } else {
+                musicButton.innerHTML = '<i class="fas fa-play"></i> <span id="musicButtonText">Activar Música de Fiesta</span> ' + equalizerHTML;
+                musicButton.style.background = 'linear-gradient(135deg, var(--primary) 0%, var(--secondary) 50%, var(--accent) 100%)';
+                musicPlaying = false;
             }
         }
         
-        // Hover effect para el botón
-        musicButton.addEventListener('mouseover', function() {
-            this.style.transform = 'translateY(-8px) scale(1.05)';
-            this.style.boxShadow = '0 25px 60px rgba(99, 102, 241, 0.7)';
-        });
+        function toggleMusic() {
+            if (!audio) return;
+            
+            if (musicPlaying) {
+                audio.pause();
+                updateButtonState(false);
+            } else {
+                audio.play().then(() => {
+                    updateButtonState(true);
+                }).catch(err => {
+                    console.error('Error al reproducir:', err);
+                    alert('Error al reproducir música. Por favor, intenta nuevamente.');
+                });
+            }
+        }
         
-        musicButton.addEventListener('mouseout', function() {
-            this.style.transform = '';
-            this.style.boxShadow = '0 15px 40px rgba(99, 102, 241, 0.5)';
+        // Hover effect para el botón (con verificación de existencia)
+        document.addEventListener('DOMContentLoaded', function() {
+            const btn = document.getElementById('musicToggle');
+            if (btn) {
+                btn.addEventListener('mouseover', function() {
+                    this.style.transform = 'translateY(-8px) scale(1.05)';
+                    this.style.boxShadow = '0 25px 60px rgba(99, 102, 241, 0.7)';
+                });
+                
+                btn.addEventListener('mouseout', function() {
+                    this.style.transform = '';
+                    this.style.boxShadow = '0 15px 40px rgba(99, 102, 241, 0.5)';
+                });
+            }
         });
     </script>
 

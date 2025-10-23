@@ -852,9 +852,12 @@
                     </h3>
                     <p class="text-sm text-gray-600 mb-4">Importa o exporta datos del curso en diferentes formatos.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                         <button onclick="exportToExcel()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                        </button>
+                        <button onclick="downloadTaskStatus()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg" title="Descargar estado de tareas para compartir con estudiantes">
+                            <i class="fas fa-tasks mr-2"></i>Estado Tareas
                         </button>
                         <button onclick="exportToJSON()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-file-code mr-2"></i>Exportar JSON
@@ -3539,6 +3542,112 @@
             showTemporaryMessage('✅ Tarea movida hacia la derecha', 'success');
         }
 
+        // Funciones para menú desplegable de tareas
+        function toggleTaskMenu(index, event) {
+            event.stopPropagation();
+            const menu = document.getElementById(`taskMenu${index}`);
+            if (!menu) return;
+            
+            // Cerrar otros menús abiertos
+            document.querySelectorAll('[id^="taskMenu"]').forEach(m => {
+                if (m.id !== `taskMenu${index}`) {
+                    m.classList.add('hidden');
+                }
+            });
+            
+            // Toggle este menú
+            menu.classList.toggle('hidden');
+        }
+
+        function closeTaskMenu(index) {
+            const menu = document.getElementById(`taskMenu${index}`);
+            if (menu) {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Cerrar menús al hacer click fuera
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('[id^="taskMenu"]') && !event.target.closest('button[onclick^="toggleTaskMenu"]')) {
+                document.querySelectorAll('[id^="taskMenu"]').forEach(menu => {
+                    menu.classList.add('hidden');
+                });
+            }
+        });
+
+        // Descargar estado de tareas para compartir con estudiantes
+        function downloadTaskStatus() {
+            if (!courseData || !courseData.students || !courseData.tasks) {
+                alert('⚠️ No hay datos para exportar');
+                return;
+            }
+
+            let csv = 'Nombre Completo,';
+            
+            // Encabezados de tareas
+            courseData.tasks.forEach(task => {
+                csv += `"${task.name}",`;
+            });
+            csv += 'Tareas Completadas,Tareas Pendientes\n';
+            
+            // Datos de estudiantes
+            courseData.students.forEach(student => {
+                const fullName = `${student.lastName1} ${student.lastName2}, ${student.name}`;
+                csv += `"${fullName}",`;
+                
+                let completedCount = 0;
+                
+                courseData.tasks.forEach((task, index) => {
+                    const grade = student.grades[index];
+                    let status = '';
+                    
+                    if (!grade || grade.value === null || grade.value === undefined) {
+                        status = '❌ PENDIENTE';
+                    } else {
+                        const evalType = task.evaluationType || 'binary';
+                        
+                        if (evalType === 'binary') {
+                            status = grade.value === true ? '✅ COMPLETADA' : '❌ PENDIENTE';
+                            if (grade.value === true) completedCount++;
+                        } else if (evalType === 'numeric') {
+                            const nota = parseFloat(grade.value);
+                            if (nota >= 4.0) {
+                                status = `✅ Aprobada (${nota})`;
+                                completedCount++;
+                            } else {
+                                status = `⚠️ Reprobada (${nota})`;
+                            }
+                        } else {
+                            status = '✅ COMPLETADA';
+                            completedCount++;
+                        }
+                    }
+                    
+                    csv += `"${status}",`;
+                });
+                
+                const pendingCount = courseData.tasks.length - completedCount;
+                csv += `${completedCount},${pendingCount}\n`;
+            });
+            
+            // Descargar archivo
+            const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            const courseName = courseData.name.replace(/[^a-z0-9]/gi, '_');
+            const date = new Date().toISOString().split('T')[0];
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `Estado_Tareas_${courseName}_${date}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            showTemporaryMessage('✅ Estado de tareas descargado correctamente', 'success');
+        }
+
         // Eliminar múltiples tareas (solo admin)
         function deleteMultipleTasks() {
             const userRole = sessionStorage.getItem('userRole') || 'teacher';
@@ -4235,37 +4344,37 @@
                     `;
                 }
                 
-                // Botones de gestión solo para admin
+                // Botones de gestión solo para admin (menú desplegable)
                 const userRole = sessionStorage.getItem('userRole') || 'teacher';
                 const adminButtons = userRole === 'admin' ? `
-                    <div class="flex items-center justify-center gap-1 mt-1">
-                        ${index > 0 ? `
-                            <button onclick="moveTaskUp(${index})" 
-                                    class="text-blue-400 hover:text-blue-200 text-xs transition-colors"
-                                    title="Mover arriba">
-                                <i class="fas fa-chevron-left"></i>
-                            </button>
-                        ` : '<span class="w-4"></span>'}
-                        
-                        <button onclick="editTask(${index})" 
-                                class="text-yellow-400 hover:text-yellow-200 text-xs transition-colors"
-                                title="Editar tarea">
-                            <i class="fas fa-edit"></i>
+                    <div class="relative mt-1">
+                        <button onclick="toggleTaskMenu(${index}, event)" 
+                                class="text-blue-400 hover:text-blue-200 text-sm transition-colors"
+                                title="Opciones">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        
-                        <button onclick="deleteTask(${index})" 
-                                class="text-red-400 hover:text-red-200 text-xs transition-colors"
-                                title="Eliminar tarea">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                        
-                        ${index < courseData.tasks.length - 1 ? `
-                            <button onclick="moveTaskDown(${index})" 
-                                    class="text-blue-400 hover:text-blue-200 text-xs transition-colors"
-                                    title="Mover abajo">
-                                <i class="fas fa-chevron-right"></i>
+                        <div id="taskMenu${index}" class="hidden absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50 min-w-[160px]">
+                            ${index > 0 ? `
+                                <button onclick="moveTaskUp(${index}); closeTaskMenu(${index})" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2">
+                                    <i class="fas fa-chevron-left w-4"></i> Mover izquierda
+                                </button>
+                            ` : ''}
+                            <button onclick="editTask(${index}); closeTaskMenu(${index})" 
+                                    class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-yellow-50 flex items-center gap-2">
+                                <i class="fas fa-edit w-4"></i> Editar
                             </button>
-                        ` : '<span class="w-4"></span>'}
+                            <button onclick="deleteTask(${index}); closeTaskMenu(${index})" 
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
+                                <i class="fas fa-trash w-4"></i> Eliminar
+                            </button>
+                            ${index < courseData.tasks.length - 1 ? `
+                                <button onclick="moveTaskDown(${index}); closeTaskMenu(${index})" 
+                                        class="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 flex items-center gap-2">
+                                    <i class="fas fa-chevron-right w-4"></i> Mover derecha
+                                </button>
+                            ` : ''}
+                        </div>
                     </div>
                 ` : '';
                 

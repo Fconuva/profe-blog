@@ -1431,7 +1431,15 @@
                 case EVALUATION_TYPES.PERCENTAGE:
                     const pct = parseFloat(value);
                     if (pct >= 0 && pct <= 100) {
-                        return 1.0 + (pct / 100) * 6.0;
+                        // Usar la misma fórmula que calculateGrade con porcentaje de exigencia
+                        const passingPercentage = courseData.config?.passingPercentage || 60;
+                        if (pct >= passingPercentage) {
+                            const factor = (pct - passingPercentage) / (100 - passingPercentage);
+                            return 4.0 + (factor * 3.0);
+                        } else {
+                            const factor = pct / passingPercentage;
+                            return 1.0 + (factor * 2.9);
+                        }
                     }
                     return null;
 
@@ -1440,7 +1448,15 @@
                     const totalScore = gradeValue.rubricaScores.reduce((a, b) => a + b, 0);
                     const maxScore = task.rubricaCriteria.reduce((a, c) => a + c.maxScore, 0);
                     const percentage = (totalScore / maxScore) * 100;
-                    return 1.0 + (percentage / 100) * 6.0;
+                    // Usar la misma fórmula con porcentaje de exigencia
+                    const passingPct = courseData.config?.passingPercentage || 60;
+                    if (percentage >= passingPct) {
+                        const factor = (percentage - passingPct) / (100 - passingPct);
+                        return 4.0 + (factor * 3.0);
+                    } else {
+                        const factor = percentage / passingPct;
+                        return 1.0 + (factor * 2.9);
+                    }
 
                 default:
                     return null;

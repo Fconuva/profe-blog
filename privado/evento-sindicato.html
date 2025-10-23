@@ -1124,8 +1124,20 @@
                     fecha_registro: new Date().toLocaleDateString('es-CL')
                 };
 
+                // Verificar si el RUT ya está registrado
+                const inscripcionesRef = database.ref('evento_sindicato_inscripciones');
+                const snapshot = await inscripcionesRef.orderByChild('rut').equalTo(formData.rut).once('value');
+                
+                if (snapshot.exists()) {
+                    // RUT ya registrado
+                    showAlert('⚠️ Este RUT ya se encuentra inscrito en el evento. No se permiten inscripciones duplicadas.', 'error');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar Inscripción';
+                    return;
+                }
+
                 // Guardar en Firebase
-                const newRegistrationRef = database.ref('evento_sindicato_inscripciones').push();
+                const newRegistrationRef = inscripcionesRef.push();
                 await newRegistrationRef.set(formData);
 
                 // Mostrar modal de confirmación

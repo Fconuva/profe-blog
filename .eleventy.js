@@ -16,6 +16,7 @@ module.exports = function(eleventyConfig) {
   // Copia solo recursos estáticos (evitar copiar archivos HTML que Eleventy procesa)
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addPassthroughCopy("main.js");
+  eleventyConfig.addPassthroughCopy("main-premium.js");
   eleventyConfig.addPassthroughCopy("imagenes");
   eleventyConfig.addPassthroughCopy("LOGO SINDICATO");
   // Ensure the standalone form folder is copied to output

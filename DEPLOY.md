@@ -1,20 +1,12 @@
-Deploy a Netlify
-================
+Deploy a Vercel
+===============
 
 Pasos rápidos:
 
-1. Crear un sitio en Netlify y conectar el repo (opcional) o usar deploy vía Netlify CLI.
-2. En Netlify, Settings → Build & deploy → Environment → Add variables:
-   - CONTENTFUL_SPACE_ID = (tu space id)
-   - CONTENTFUL_ACCESS_TOKEN = (Content Delivery API token)
-   - CONTENTFUL_PREVIEW_TOKEN = (opcional, preview token)
-
-3. En GitHub, ve a Settings → Secrets → Actions y añade:
-   - NETLIFY_AUTH_TOKEN = (Netlify personal access token)
-   - NETLIFY_SITE_ID = (Site ID que Netlify te entrega)
-
-4. Push a la rama `main`. El workflow correrá y deployará a Netlify automáticamente.
+1. Crea un proyecto en [Vercel](https://vercel.com) y conéctalo a este repositorio (importar desde GitHub → seleccionar `profe-blog`).
+2. En la configuración del proyecto, define las variables de entorno necesarias (por ejemplo credenciales de Firebase y tokens de servicios externos). Las builds usan Node 18 y ejecutan `npm run build`, publicando la carpeta `_site`.
+3. Cada push a la rama `main` dispara automáticamente un deploy en Vercel. Puedes lanzar un preview manual desde la interfaz si necesitas validar una rama distinta.
 
 Notas:
-- El build command es `npm run build` y el directorio publicado es `_site`.
-- Si prefieres no usar Actions, en Netlify puedes conectar el repo y Netlify correrá builds automáticamente.
+- Para ajustes manuales usa `vercel --prod` con la CLI si requieres un deploy inmediato desde tu máquina.
+- Revisa el dashboard de Vercel para logs de build y estado de las funciones Edge/Serverless.

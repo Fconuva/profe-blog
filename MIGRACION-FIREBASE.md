@@ -321,13 +321,13 @@ Si necesitas volver a Neon:
 ## 🎯 Próximos Pasos
 
 1. [ ] Obtener credenciales de Firebase Service Account
-2. [ ] Configurar variables de entorno en Netlify
+2. [ ] Configurar variables de entorno en Vercel
 3. [ ] Ejecutar script de migración
 4. [ ] Verificar datos en Firebase Console
 5. [ ] Renombrar funciones (quitar sufijo -firebase)
-6. [ ] Deploy a producción
+6. [ ] Deploy a producción (Vercel)
 7. [ ] Verificar funcionamiento en producción
 8. [ ] Eliminar variables de entorno de Neon
-9. [ ] Actualizar CONFIGURACION-NEON-NETLIFY.md → CONFIGURACION-FIREBASE-NETLIFY.md
+9. [ ] Actualizar documentación → CONFIGURACION-FIREBASE-VERCEL.md
 
 **Estado actual:** ✅ LISTO PARA MIGRACIÓN

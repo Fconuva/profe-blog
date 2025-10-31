@@ -43,7 +43,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("success");
   eleventyConfig.addPassthroughCopy("blog");
   eleventyConfig.addPassthroughCopy("Manuales");
-  eleventyConfig.addPassthroughCopy("evaluaciones");
   // Copiar carpetas de la sección privada y herramientas temporales
   eleventyConfig.addPassthroughCopy("privado");
   eleventyConfig.addPassthroughCopy("Temporales");
@@ -65,6 +64,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("privado/**");
   eleventyConfig.ignores.add("Temporales/**");
   eleventyConfig.ignores.add("netlify/**");
+  eleventyConfig.ignores.add("**/63.SC-L(20).pdf");
   // Solo ignorar index.html en carpetas que no queremos procesar
   // PERMITIR que se procesen los index.html de las herramientas
   // eleventyConfig.ignores.add("**/index.html");

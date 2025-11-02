@@ -244,8 +244,124 @@ Según las características de los géneros narrativos estudiados, ¿qué tipo d
         { opcion: 'D', texto: 'Cuento, porque presenta una estructura narrativa breve con inicio, desarrollo y desenlace en tiempo histórico.' }
       ],
       respuesta_correcta: 'B',
-      explicacion: 'Este texto es un mito porque cumple las características distintivas del género según el currículum nacional: (1) **Tiempo primordial**: ocurre en los orígenes ("cuando el mundo era joven"), no en tiempo histórico; (2) **Personajes divinos**: dioses (Zeus) y titanes (Prometeo) como protagonistas; (3) **Explicación cosmogónica**: explica el origen de un elemento fundamental de la civilización (el fuego); (4) **Función cultural**: transmite valores fundacionales (sacrificio, rebeldía). No es leyenda (que ancla lo sobrenatural en geografía real reconocible, como Chiloé o La Araucanía), ni fábula (que usa animales con moraleja explícita), ni cuento (narración breve de tiempo histórico con personajes humanos). El mito pertenece al pensamiento religioso y filosófico de una cultura.',
+      explicacion: 'Este texto es un mito porque cumple las características distintivas del género según el currículum nacional: (1) <strong>Tiempo primordial</strong>: ocurre en los orígenes ("cuando el mundo era joven"), no en tiempo histórico; (2) <strong>Personajes divinos</strong>: dioses (Zeus) y titanes (Prometeo) como protagonistas; (3) <strong>Explicación cosmogónica</strong>: explica el origen de un elemento fundamental de la civilización (el fuego); (4) <strong>Función cultural</strong>: transmite valores fundacionales (sacrificio, rebeldía). No es leyenda (que ancla lo sobrenatural en geografía real reconocible, como Chiloé o La Araucanía), ni fábula (que usa animales con moraleja explícita), ni cuento (narración breve de tiempo histórico con personajes humanos). El mito pertenece al pensamiento religioso y filosófico de una cultura.',
       temas_relacionados: ['Géneros narrativos', 'Contexto histórico-literario']
+    }
+  ];
+
+// Preset: casos complejos para 'Textos no literarios' (argumentación, multimodalidad, periodismo)
+casosPreset['textos no literarios'] = [
+    {
+      id: 'CNOLIT-01',
+      enunciado: `Una profesora de 8° básico trabaja la identificación de recursos argumentativos. Presenta este fragmento de una columna de opinión publicada en La Tercera:
+
+"Según datos del MINEDUC, el 45% de los estudiantes de 8° básico no alcanza el nivel adecuado en comprensión lectora. Esta cifra no es casualidad: Chile invierte menos del 1% del PIB en educación pública, mientras países con mejores resultados como Finlandia invierten sobre el 7%. Como dijo la experta en educación Amanda Céspedes: 'Sin inversión real en formación docente y materiales pedagógicos, seguiremos reproduciendo desigualdad'. ¿Acaso no es obvio que necesitamos aumentar urgentemente el presupuesto educativo?"
+
+¿Qué tipo de recurso argumentativo se utiliza al mencionar la opinión de Amanda Céspedes?`,
+      alternativas: [
+        { opcion: 'A', texto: 'Estadística, porque presenta datos numéricos para respaldar la tesis del autor.' },
+        { opcion: 'B', texto: 'Cita de autoridad, porque recurre a la opinión de una experta reconocida en el tema.' },
+        { opcion: 'C', texto: 'Pregunta retórica, porque cuestiona al lector sin esperar respuesta literal.' },
+        { opcion: 'D', texto: 'Ejemplificación, porque ilustra el problema con un caso concreto de la realidad.' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'La cita de autoridad es un recurso argumentativo que fortalece la tesis del emisor apelando a la credibilidad de un experto reconocido en la materia. En este caso, Amanda Céspedes (neuropsiquiatra infantil y experta en educación) respalda con su prestigio profesional la postura del columnista sobre la necesidad de inversión educativa. Este recurso apela al <em>ethos</em> (autoridad), distinto de la estadística (datos MINEDUC) que apela al <em>logos</em> (razón), y de la pregunta retórica final que apela al <em>pathos</em> (emoción). Las Bases Curriculares de 7° y 8° enfatizan la identificación de estos recursos para desarrollar lectura crítica de textos argumentativos.',
+      temas_relacionados: ['Recursos argumentativos', 'Textos no literarios', 'Hecho vs opinión']
+    },
+    {
+      id: 'CNOLIT-02',
+      enunciado: `Un docente de 7° básico enseña a distinguir entre hecho y opinión en textos periodísticos. Lee este fragmento de una noticia publicada en El Mercurio:
+
+"El pasado martes 15 de octubre, el Congreso aprobó la reforma tributaria con 85 votos a favor y 62 en contra. La iniciativa aumenta en un 2% el impuesto a las rentas superiores a $10 millones mensuales. Los expertos consideran que esta medida es insuficiente para reducir la desigualdad económica en el país. La votación se realizó después de tres meses de debate parlamentario."
+
+¿Cuál de las siguientes afirmaciones corresponde a un hecho verificable y cuál a una opinión?`,
+      alternativas: [
+        { opcion: 'A', texto: 'Hecho: "El Congreso aprobó la reforma con 85 votos a favor". Opinión: "La medida es insuficiente para reducir la desigualdad".' },
+        { opcion: 'B', texto: 'Hecho: "Los expertos consideran que la medida es insuficiente". Opinión: "La votación se realizó después de tres meses".' },
+        { opcion: 'C', texto: 'Ambas son hechos porque provienen de una noticia publicada en un medio serio y confiable.' },
+        { opcion: 'D', texto: 'Ambas son opiniones porque el periodista eligió qué información incluir en la noticia.' }
+      ],
+      respuesta_correcta: 'A',
+      explicacion: 'Un <strong>hecho</strong> es una afirmación objetiva, verificable mediante evidencia concreta (documentos, registros, observación directa). "El Congreso aprobó con 85 votos a favor" puede corroborarse en actas parlamentarias oficiales. Una <strong>opinión</strong> es un juicio de valor, interpretación subjetiva que puede variar según perspectivas. "La medida es insuficiente" es una valoración que depende de criterios ideológicos o económicos particulares de quienes opinan. Aunque el texto dice "los expertos consideran", sigue siendo opinión porque expresa un juicio evaluativo, no un dato constatable. Esta distinción es clave para desarrollar lectura crítica de medios según el currículum nacional.',
+      temas_relacionados: ['Hecho vs opinión', 'Textos informativos', 'Géneros informativos']
+    },
+    {
+      id: 'CNOLIT-03',
+      enunciado: `Una profesora de 8° básico trabaja la interpretación de textos multimodales. Muestra este afiche publicado por el MINSAL durante la campaña de vacunación 2024:
+
+[IMAGEN: Fondo celeste con jeringa dibujada. Texto principal en rojo: "VACÚNATE YA". Texto secundario: "Protégete del COVID-19, la influenza y otras enfermedades. La vacunación es gratuita en todos los consultorios. Fecha límite: 30 de noviembre". Logo MINSAL abajo. Fotografía de familia sonriente en esquina inferior derecha.]
+
+¿Qué función cumple la combinación del lenguaje verbal y visual en este afiche?`,
+      alternativas: [
+        { opcion: 'A', texto: 'Función informativa: el texto entrega datos (gratuidad, fecha) y la imagen refuerza el mensaje mediante símbolos reconocibles.' },
+        { opcion: 'B', texto: 'Función narrativa: cuenta la historia de una familia que se vacunó y logró protegerse de enfermedades.' },
+        { opcion: 'C', texto: 'Función expresiva: el autor manifiesta sus emociones personales sobre la importancia de vacunarse.' },
+        { opcion: 'D', texto: 'Función metalingüística: explica cómo funciona el lenguaje visual de los afiches de salud pública.' }
+      ],
+      respuesta_correcta: 'A',
+      explicacion: 'En textos multimodales, el lenguaje verbal (escrito) y el lenguaje visual (imágenes, colores, tipografía) se complementan para cumplir funciones comunicativas específicas. En este afiche de campaña de salud pública, la <strong>función informativa</strong> predomina: el texto verbal entrega información concreta (gratuidad, plazo, lugares de vacunación), mientras el lenguaje visual refuerza mediante códigos reconocibles: jeringa (símbolo de vacuna), rojo en "VACÚNATE YA" (urgencia, llamado a la acción), familia sonriente (beneficio colectivo, bienestar). No es narrativa (no relata acontecimientos en secuencia temporal), ni expresiva (no comunica emociones del emisor sino datos objetivos), ni metalingüística (no explica el lenguaje mismo). Las Bases Curriculares enfatizan la lectura crítica de textos multimodales para comprender estrategias persuasivas.',
+      temas_relacionados: ['Textos multimodales', 'Interpretación de textos multimodales', 'Propósito comunicativo']
+    },
+    {
+      id: 'CNOLIT-04',
+      enunciado: `Un docente de 7° básico enseña la situación de enunciación en textos no literarios. Presenta este fragmento de un manual de instrucciones:
+
+"Antes de encender el equipo, asegúrese de que el cable esté correctamente conectado. Presione el botón de inicio durante 3 segundos. Si aparece una luz roja intermitente, desconecte inmediatamente y contacte al servicio técnico. Mantenga el dispositivo alejado del agua y en un lugar ventilado."
+
+¿Qué elementos de la situación de enunciación se pueden identificar en este texto?`,
+      alternativas: [
+        { opcion: 'A', texto: 'Emisor: fabricante anónimo. Receptor: usuario individual. Propósito: entretener mediante anécdotas técnicas. Canal: oral presencial.' },
+        { opcion: 'B', texto: 'Emisor: empresa fabricante. Receptor: usuario del producto. Propósito: instruir para uso seguro. Canal: escrito (manual impreso o digital).' },
+        { opcion: 'C', texto: 'Emisor: técnico especializado. Receptor: otros técnicos. Propósito: persuadir de comprar el producto. Canal: conversación informal.' },
+        { opcion: 'D', texto: 'Emisor: usuario experto. Receptor: fabricante. Propósito: reclamar por fallas del producto. Canal: carta formal.' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'La <strong>situación de enunciación</strong> comprende los elementos del circuito comunicativo: <em>(1) Emisor</em>: empresa fabricante (identidad institucional implícita en el género textual); <em>(2) Receptor</em>: usuario/comprador del producto (uso de "usted", instrucciones para operación); <em>(3) Propósito</em>: instruir para uso correcto y seguro (verbos imperativos: "asegúrese", "presione", "mantenga"); <em>(4) Canal</em>: escrito (manual físico o PDF digital); <em>(5) Contexto</em>: situación de instalación/uso del dispositivo; <em>(6) Código</em>: español formal con tecnicismos ("luz intermitente", "servicio técnico"). El tono imperativo ("desconecte", "contacte") es característico de textos instructivos según tipología textual del currículum. No busca entretener ni persuadir de compra, sino garantizar operación segura mediante pasos secuenciados.',
+      temas_relacionados: ['Situación de enunciación', 'Adecuación a la situación comunicativa', 'Propósito comunicativo']
+    },
+    {
+      id: 'CNOLIT-05',
+      enunciado: `Una profesora de 8° básico analiza las funciones de géneros periodísticos. Presenta estos dos titulares publicados el mismo día:
+
+<strong>Titular 1 (La Tercera):</strong> "Ministerio de Salud reporta 1.245 nuevos casos de COVID-19 en las últimas 24 horas"
+
+<strong>Titular 2 (El Mostrador, columna de opinión):</strong> "El fracaso de la estrategia sanitaria: por qué el Gobierno debe cambiar su enfoque ante la pandemia"
+
+¿Qué diferencia fundamental existe entre ambos textos en cuanto a su función periodística?`,
+      alternativas: [
+        { opcion: 'A', texto: 'Ambos cumplen función informativa porque entregan datos sobre la pandemia al público.' },
+        { opcion: 'B', texto: 'El titular 1 es informativo (reporta hechos objetivos), el titular 2 es de opinión (emite juicio valorativo sobre la gestión).' },
+        { opcion: 'C', texto: 'El titular 1 es interpretativo porque analiza causas, el titular 2 es informativo porque describe la estrategia.' },
+        { opcion: 'D', texto: 'Ambos son de opinión porque ambos medios tienen línea editorial y eligen qué publicar.' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'Los géneros periodísticos se clasifican según su función comunicativa principal: <br><br><strong>1) Informativos</strong> (noticia, reportaje): presentan hechos verificables con objetividad, separando información de opinión. El titular 1 reporta un dato oficial (1.245 casos) sin valoración. <br><br><strong>2) De opinión</strong> (columna, editorial, carta al director): expresan juicios valorativos, interpretaciones o posturas sobre hechos. El titular 2 califica la estrategia como "fracaso" (juicio de valor) y propone cambios (posicionamiento político). <br><br><strong>3) Interpretativos</strong> (crónica, entrevista, reportaje en profundidad): combinan información con análisis de contexto y causas. <br><br>Esta distinción es fundamental para desarrollar lectura crítica de medios según las Bases Curriculares de 7° y 8°: el lector debe identificar cuándo un texto informa (objetividad) y cuándo opina (subjetividad), para no confundir hechos con valoraciones ideológicas.',
+      temas_relacionados: ['Funciones periodísticas', 'Géneros informativos', 'Hecho vs opinión']
+    },
+    {
+      id: 'CNOLIT-06',
+      enunciado: `Un docente de 7° básico enseña a analizar gráficos en textos informativos. Muestra este gráfico publicado en La Tercera junto a un reportaje sobre educación:
+
+[GRÁFICO DE BARRAS: Título "Promedio de lectura de libros al año por estudiante (2020-2024)"
+- 2020: 2,1 libros
+- 2021: 1,8 libros
+- 2022: 1,5 libros
+- 2023: 1,3 libros
+- 2024: 1,1 libros
+Fuente: Agencia de Calidad de la Educación]
+
+El texto del reportaje afirma: "La pandemia destruyó los hábitos de lectura en escolares chilenos".
+
+¿Qué relación existe entre el gráfico y el texto verbal?`,
+      alternativas: [
+        { opcion: 'A', texto: 'El gráfico contradice el texto, porque muestra que la lectura aumentó durante la pandemia.' },
+        { opcion: 'B', texto: 'El gráfico complementa el texto, proporcionando evidencia cuantitativa de la tendencia a la baja en lectura.' },
+        { opcion: 'C', texto: 'El gráfico no se relaciona con el texto porque presenta datos de años diferentes a los mencionados.' },
+        { opcion: 'D', texto: 'El gráfico demuestra que el texto miente, pues los números no confirman la palabra "destruyó".' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'En textos informativos multimodales, el lenguaje visual (gráficos, tablas, infografías) y el lenguaje verbal se relacionan de tres formas principales: <br><br><strong>1) Complementariedad</strong>: el gráfico entrega evidencia cuantitativa que respalda la afirmación verbal. Aquí, la tendencia descendente (de 2,1 a 1,1 libros en 5 años) confirma la tesis del titular sobre deterioro de hábitos lectores. <br><br><strong>2) Contradicción</strong>: cuando los datos visuales desmienten lo afirmado verbalmente (no es el caso). <br><br><strong>3) Ampliación</strong>: cuando el gráfico aporta información adicional no mencionada en el texto. <br><br>El estudiante debe observar que: (a) el gráfico muestra caída sostenida cada año, (b) la pandemia (2020-2021) marca inicio de descenso, (c) la tendencia continúa post-pandemia. Aunque "destruyó" pueda ser valoración hiperbólica del periodista, los datos objetivos del gráfico (fuente oficial: Agencia de Calidad) respaldan la existencia de un problema real. Esta lectura integrada de códigos es clave en comprensión de textos discontinuos según el currículum nacional.',
+      temas_relacionados: ['Interpretación de textos multimodales', 'Textos informativos', 'Hecho vs opinión']
     }
   ];
 
@@ -254,8 +370,12 @@ console.log('📊 Datos exportados:');
 console.log(`- casosPorTema keys: ${Object.keys(casosPorTema).length}`);
 console.log(`- casosPorSubtema keys: ${Object.keys(casosPorSubtema).join(', ')}`);
 console.log(`- casosPreset['textos literarios']: ${casosPreset['textos literarios']?.length || 0} casos`);
+console.log(`- casosPreset['textos no literarios']: ${casosPreset['textos no literarios']?.length || 0} casos`);
 if (casosPreset['textos literarios'] && casosPreset['textos literarios'][0]) {
-  console.log(`- Primer caso preset: ${casosPreset['textos literarios'][0].enunciado.substring(0, 50)}...`);
+  console.log(`- Primer caso preset literarios: ${casosPreset['textos literarios'][0].enunciado.substring(0, 50)}...`);
+}
+if (casosPreset['textos no literarios'] && casosPreset['textos no literarios'][0]) {
+  console.log(`- Primer caso preset no literarios: ${casosPreset['textos no literarios'][0].enunciado.substring(0, 50)}...`);
 }
 
 module.exports = { plan, casosPorTema, casosPorSubtema, casosPreset };

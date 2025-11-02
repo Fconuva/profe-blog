@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Evaluaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 1.5rem 0;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .admin-nav {
+            background: white;
+            border-bottom: 1px solid #e5e7eb;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-link {
+            color: var(--dark);
+            text-decoration: none;
+            padding: 1rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e5e7eb;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .permission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .permission-item:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .permission-item input[type="checkbox"] {
+            width: 1.2rem;
+            height: 1.2rem;
+            accent-color: var(--primary);
+        }
+
+        .status-badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-active {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .device-limit {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+            padding: 0.5rem;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+
+        .log-entry {
+            padding: 0.75rem;
+            border-left: 4px solid var(--info);
+            background: rgba(59, 130, 246, 0.05);
+            margin: 0.5rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .log-time {
+            color: var(--info);
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .log-details {
+            color: var(--dark);
+            margin-top: 0.25rem;
+        }
+
+        @media (max-width: 768px) {
+            .admin-nav {
+                overflow-x: auto;
+            }
+
+            .permission-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="admin-header">
+        <div class="container mx-auto px-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <i class="fas fa-cog text-3xl"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold">Panel de Administración</h1>
+                        <p class="text-indigo-100">Sistema de Evaluaciones</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <span id="adminUser" class="text-indigo-100">Admin</span>
+                    <button onclick="logout()" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition-all">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="admin-nav">
+        <div class="container mx-auto px-6">
+            <div class="flex">
+                <a href="#users" class="nav-link active" onclick="showSection('users')">
+                    <i class="fas fa-users mr-2"></i>Usuarios
+                </a>
+                <a href="#permissions" class="nav-link" onclick="showSection('permissions')">
+                    <i class="fas fa-key mr-2"></i>Permisos
+                </a>
+                <a href="#devices" class="nav-link" onclick="showSection('devices')">
+                    <i class="fas fa-mobile-alt mr-2"></i>Dispositivos
+                </a>
+                <a href="#logs" class="nav-link" onclick="showSection('logs')">
+                    <i class="fas fa-history mr-2"></i>Registros
+                </a>
+                <a href="#settings" class="nav-link" onclick="showSection('settings')">
+                    <i class="fas fa-cogs mr-2"></i>Configuración
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Users Section -->
+        <section id="users-section" class="section active">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-3xl font-bold text-gray-800">
+                    <i class="fas fa-users mr-3 text-indigo-600"></i>Gestión de Usuarios
+                </h2>
+                <button onclick="showCreateUserModal()" class="btn-primary">
+                    <i class="fas fa-plus mr-2"></i>Crear Usuario
+                </button>
+            </div>
+
+            <!-- Users Table -->
+            <div class="card p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gray-200">
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Usuario</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Estado</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Permisos</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Último Acceso</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Dispositivos</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Users will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Permissions Section -->
+        <section id="permissions-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-key mr-3 text-indigo-600"></i>Gestión de Permisos
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Permisos Disponibles</h3>
+                    <div class="space-y-3">
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-basica" checked>
+                            <label for="perm-basica" class="flex-1">
+                                <strong>Educación Básica</strong>
+                                <br><small class="text-gray-500">Acceso a evaluaciones de educación básica</small>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-especial">
+                            <label for="perm-especial" class="flex-1">
+                                <strong>Educación Especial</strong>
+                                <br><small class="text-gray-500">Acceso a evaluaciones PIE</small>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-media">
+                            <label for="perm-media" class="flex-1">
+                                <strong>Educación Media</strong>
+                                <br><small class="text-gray-500">Acceso a evaluaciones de secundaria</small>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-parvularia">
+                            <label for="perm-parvularia" class="flex-1">
+                                <strong>Educación Parvularia</strong>
+                                <br><small class="text-gray-500">Acceso a evaluaciones de prekínder y kínder</small>
+                            </label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="perm-lengua-indigena">
+                            <label for="perm-lengua-indigena" class="flex-1">
+                                <strong>Lengua Indígena</strong>
+                                <br><small class="text-gray-500">Acceso a evaluaciones de lenguas originarias</small>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Aplicar Permisos</h3>
+                    <div class="space-y-4">
+                        <select id="userSelect" class="form-input">
+                            <option value="">Seleccionar usuario...</option>
+                        </select>
+                        <button onclick="applyPermissions()" class="btn-primary w-full">
+                            <i class="fas fa-save mr-2"></i>Aplicar Permisos
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Devices Section -->
+        <section id="devices-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-mobile-alt mr-3 text-indigo-600"></i>Control de Dispositivos
+            </h2>
+
+            <div class="card p-6">
+                <div class="mb-4">
+                    <select id="deviceUserSelect" class="form-input max-w-xs">
+                        <option value="">Seleccionar usuario...</option>
+                    </select>
+                </div>
+                <div id="devicesList">
+                    <!-- Devices will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Logs Section -->
+        <section id="logs-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-history mr-3 text-indigo-600"></i>Registro de Accesos
+            </h2>
+
+            <div class="card p-6">
+                <div class="mb-4 flex gap-4">
+                    <select id="logUserSelect" class="form-input max-w-xs">
+                        <option value="">Todos los usuarios</option>
+                    </select>
+                    <input type="date" id="logDate" class="form-input max-w-xs">
+                    <button onclick="filterLogs()" class="btn-primary">
+                        <i class="fas fa-filter mr-2"></i>Filtrar
+                    </button>
+                </div>
+                <div id="logsContainer">
+                    <!-- Logs will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Settings Section -->
+        <section id="settings-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-cogs mr-3 text-indigo-600"></i>Configuración del Sistema
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Límites del Sistema</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Máximo dispositivos por usuario</label>
+                            <input type="number" id="maxDevices" value="3" min="1" max="10" class="form-input">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Tiempo de sesión (horas)</label>
+                            <input type="number" id="sessionTime" value="24" min="1" max="168" class="form-input">
+                        </div>
+                        <button onclick="saveSettings()" class="btn-primary">
+                            <i class="fas fa-save mr-2"></i>Guardar Configuración
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">Estadísticas del Sistema</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Total Usuarios:</span>
+                            <span id="totalUsers" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Usuarios Activos:</span>
+                            <span id="activeUsers" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Accesos Hoy:</span>
+                            <span id="todayLogins" class="font-semibold">0</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Dispositivos Registrados:</span>
+                            <span id="totalDevices" class="font-semibold">0</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Create User Modal -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold">Crear Nuevo Usuario</h3>
+                <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+
+            <form id="createUserForm">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Nombre de Usuario</label>
+                    <input type="text" id="newUsername" class="form-input" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Contraseña</label>
+                    <input type="password" id="newPassword" class="form-input" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-2">Confirmar Contraseña</label>
+                    <input type="password" id="confirmPassword" class="form-input" required>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium mb-2">Permisos Iniciales</label>
+                    <div class="permission-grid">
+                        <div class="permission-item">
+                            <input type="checkbox" id="newPermBasica" checked>
+                            <label for="newPermBasica">Educación Básica</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="newPermEspecial">
+                            <label for="newPermEspecial">Educación Especial</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="newPermMedia">
+                            <label for="newPermMedia">Educación Media</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="newPermParvularia">
+                            <label for="newPermParvularia">Educación Parvularia</label>
+                        </div>
+                        <div class="permission-item">
+                            <input type="checkbox" id="newPermIndigena">
+                            <label for="newPermIndigena">Lengua Indígena</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="btn-primary flex-1">
+                        <i class="fas fa-user-plus mr-2"></i>Crear Usuario
+                    </button>
+                    <button type="button" onclick="closeModal()" class="bg-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-400 transition-all">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi-g5cvCwK8YN_T08T0OaJ2oF9bfOZ3Dg",
+            authDomain: "profesorfrancisco-2fcb4.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profesorfrancisco-2fcb4",
+            storageBucket: "profesorfrancisco-2fcb4.firebasestorage.app",
+            messagingSenderId: "635599969062",
+            appId: "1:635599969062:web:2e56c5e2c8ecc5ef6fed70"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        // Global variables
+        let currentUser = null;
+        let usersData = {};
+        let systemSettings = {
+            maxDevices: 3,
+            sessionTime: 24
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+            loadSystemSettings();
+        });
+
+        // Authentication check
+        function checkAuth() {
+            auth.onAuthStateChanged((user) => {
+                if (user && user.email === 'admin@profesorfrancisco.com') {
+                    currentUser = user;
+                    document.getElementById('adminUser').textContent = user.email;
+                    loadUsers();
+                    loadStats();
+                } else {
+                    window.location.href = '/evaluaciones/';
+                }
+            });
+        }
+
+        // Logout
+        function logout() {
+            auth.signOut().then(() => {
+                window.location.href = '/evaluaciones/';
+            });
+        }
+
+        // Navigation
+        function showSection(sectionName) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+
+            // Remove active class from nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+
+            // Add active class to clicked nav link
+            event.target.classList.add('active');
+
+            // Load section data
+            switch(sectionName) {
+                case 'users':
+                    loadUsers();
+                    break;
+                case 'devices':
+                    loadDevices();
+                    break;
+                case 'logs':
+                    loadLogs();
+                    break;
+            }
+        }
+
+        // Load system settings
+        function loadSystemSettings() {
+            database.ref('admin/settings').once('value').then((snapshot) => {
+                if (snapshot.exists()) {
+                    systemSettings = snapshot.val();
+                    document.getElementById('maxDevices').value = systemSettings.maxDevices || 3;
+                    document.getElementById('sessionTime').value = systemSettings.sessionTime || 24;
+                }
+            });
+        }
+
+        // Save system settings
+        function saveSettings() {
+            const maxDevices = parseInt(document.getElementById('maxDevices').value);
+            const sessionTime = parseInt(document.getElementById('sessionTime').value);
+
+            systemSettings.maxDevices = maxDevices;
+            systemSettings.sessionTime = sessionTime;
+
+            database.ref('admin/settings').set(systemSettings).then(() => {
+                alert('Configuración guardada correctamente');
+            });
+        }
+
+        // Load users
+        function loadUsers() {
+            database.ref('users').once('value').then((snapshot) => {
+                usersData = snapshot.val() || {};
+                renderUsersTable();
+                updateUserSelects();
+            });
+        }
+
+        // Render users table
+        function renderUsersTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            Object.keys(usersData).forEach(userId => {
+                const user = usersData[userId];
+                const permissions = user.permissions || {};
+                const devices = user.devices || {};
+                const deviceCount = Object.keys(devices).length;
+
+                const row = document.createElement('tr');
+                row.className = 'border-b border-gray-100 hover:bg-gray-50';
+
+                row.innerHTML = `
+                    <td class="py-4 px-4">
+                        <div class="font-semibold">${user.username}</div>
+                        <div class="text-sm text-gray-500">ID: ${userId.slice(0, 8)}...</div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <span class="status-badge ${user.active ? 'status-active' : 'status-inactive'}">
+                            ${user.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="text-sm">
+                            ${Object.keys(permissions).filter(p => permissions[p]).join(', ') || 'Sin permisos'}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="text-sm text-gray-600">
+                            ${user.lastLogin ? new Date(user.lastLogin).toLocaleString('es-CL') : 'Nunca'}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="text-sm">
+                            ${deviceCount}/${systemSettings.maxDevices}
+                            ${deviceCount >= systemSettings.maxDevices ? '<div class="device-limit">Límite alcanzado</div>' : ''}
+                        </div>
+                    </td>
+                    <td class="py-4 px-4">
+                        <div class="flex gap-2">
+                            <button onclick="editUser('${userId}')" class="text-blue-600 hover:text-blue-800">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="toggleUserStatus('${userId}')" class="${user.active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}">
+                                <i class="fas fa-${user.active ? 'ban' : 'check'}"></i>
+                            </button>
+                            <button onclick="deleteUser('${userId}')" class="text-red-600 hover:text-red-800">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(row);
+            });
+        }
+
+        // Update user selects in various sections
+        function updateUserSelects() {
+            const selects = ['userSelect', 'deviceUserSelect', 'logUserSelect'];
+
+            selects.forEach(selectId => {
+                const select = document.getElementById(selectId);
+                select.innerHTML = '<option value="">Seleccionar usuario...</option>';
+
+                Object.keys(usersData).forEach(userId => {
+                    const user = usersData[userId];
+                    const option = document.createElement('option');
+                    option.value = userId;
+                    option.textContent = user.username;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Show create user modal
+        function showCreateUserModal() {
+            document.getElementById('createUserModal').classList.add('show');
+        }
+
+        // Close modal
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.classList.remove('show');
+            });
+        }
+
+        // Create user form submission
+        document.getElementById('createUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('newUsername').value;
+            const password = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+
+            // Check if username already exists
+            const existingUser = Object.values(usersData).find(u => u.username === username);
+            if (existingUser) {
+                alert('El nombre de usuario ya existe');
+                return;
+            }
+
+            // Get permissions
+            const permissions = {
+                basica: document.getElementById('newPermBasica').checked,
+                especial: document.getElementById('newPermEspecial').checked,
+                media: document.getElementById('newPermMedia').checked,
+                parvularia: document.getElementById('newPermParvularia').checked,
+                indigena: document.getElementById('newPermIndigena').checked
+            };
+
+            // Create user data
+            const userData = {
+                username: username,
+                password: btoa(password), // Simple base64 encoding (in production, use proper hashing)
+                permissions: permissions,
+                active: true,
+                created: new Date().toISOString(),
+                devices: {},
+                loginHistory: []
+            };
+
+            // Save to database
+            const newUserRef = database.ref('users').push();
+            newUserRef.set(userData).then(() => {
+                alert('Usuario creado correctamente');
+                closeModal();
+                document.getElementById('createUserForm').reset();
+                loadUsers();
+                loadStats();
+            });
+        });
+
+        // Toggle user status
+        function toggleUserStatus(userId) {
+            const user = usersData[userId];
+            user.active = !user.active;
+
+            database.ref(`users/${userId}`).update({ active: user.active }).then(() => {
+                loadUsers();
+            });
+        }
+
+        // Delete user
+        function deleteUser(userId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+                database.ref(`users/${userId}`).remove().then(() => {
+                    // Also remove from login logs
+                    database.ref('logs').orderByChild('userId').equalTo(userId).once('value').then((snapshot) => {
+                        snapshot.forEach((child) => {
+                            child.ref.remove();
+                        });
+                    });
+
+                    loadUsers();
+                    loadStats();
+                });
+            }
+        }
+
+        // Apply permissions
+        function applyPermissions() {
+            const userId = document.getElementById('userSelect').value;
+            if (!userId) {
+                alert('Selecciona un usuario');
+                return;
+            }
+
+            const permissions = {
+                basica: document.getElementById('perm-basica').checked,
+                especial: document.getElementById('perm-especial').checked,
+                media: document.getElementById('perm-media').checked,
+                parvularia: document.getElementById('perm-parvularia').checked,
+                indigena: document.getElementById('perm-lengua-indigena').checked
+            };
+
+            database.ref(`users/${userId}/permissions`).set(permissions).then(() => {
+                alert('Permisos aplicados correctamente');
+                loadUsers();
+            });
+        }
+
+        // Load devices for selected user
+        function loadDevices() {
+            const userId = document.getElementById('deviceUserSelect').value;
+            const devicesContainer = document.getElementById('devicesList');
+
+            if (!userId) {
+                devicesContainer.innerHTML = '<p class="text-gray-500">Selecciona un usuario para ver sus dispositivos</p>';
+                return;
+            }
+
+            database.ref(`users/${userId}/devices`).once('value').then((snapshot) => {
+                const devices = snapshot.val() || {};
+
+                if (Object.keys(devices).length === 0) {
+                    devicesContainer.innerHTML = '<p class="text-gray-500">No hay dispositivos registrados</p>';
+                    return;
+                }
+
+                let html = '<div class="space-y-3">';
+                Object.keys(devices).forEach(deviceId => {
+                    const device = devices[deviceId];
+                    html += `
+                        <div class="flex justify-between items-center p-4 border border-gray-200 rounded-lg">
+                            <div>
+                                <div class="font-semibold">${device.deviceName || 'Dispositivo desconocido'}</div>
+                                <div class="text-sm text-gray-500">
+                                    ${device.userAgent ? device.userAgent.substring(0, 50) + '...' : 'Sin información'}
+                                </div>
+                                <div class="text-sm text-gray-500">
+                                    Último acceso: ${new Date(device.lastAccess).toLocaleString('es-CL')}
+                                </div>
+                            </div>
+                            <button onclick="removeDevice('${userId}', '${deviceId}')" class="btn-danger">
+                                <i class="fas fa-trash mr-1"></i>Remover
+                            </button>
+                        </div>
+                    `;
+                });
+                html += '</div>';
+
+                devicesContainer.innerHTML = html;
+            });
+        }
+
+        // Remove device
+        function removeDevice(userId, deviceId) {
+            database.ref(`users/${userId}/devices/${deviceId}`).remove().then(() => {
+                loadDevices();
+                loadUsers();
+            });
+        }
+
+        // Load logs
+        function loadLogs() {
+            const userId = document.getElementById('logUserSelect').value;
+            const date = document.getElementById('logDate').value;
+            const logsContainer = document.getElementById('logsContainer');
+
+            let query = database.ref('logs').orderByChild('timestamp').limitToLast(100);
+
+            query.once('value').then((snapshot) => {
+                const logs = [];
+                snapshot.forEach((child) => {
+                    const log = child.val();
+                    log.id = child.key;
+
+                    // Filter by user if selected
+                    if (userId && log.userId !== userId) return;
+
+                    // Filter by date if selected
+                    if (date && !log.timestamp.startsWith(date)) return;
+
+                    logs.push(log);
+                });
+
+                logs.reverse(); // Most recent first
+
+                if (logs.length === 0) {
+                    logsContainer.innerHTML = '<p class="text-gray-500">No hay registros para mostrar</p>';
+                    return;
+                }
+
+                let html = '';
+                logs.forEach(log => {
+                    const user = usersData[log.userId];
+                    const username = user ? user.username : 'Usuario desconocido';
+
+                    html += `
+                        <div class="log-entry">
+                            <div class="log-time">
+                                ${new Date(log.timestamp).toLocaleString('es-CL')}
+                            </div>
+                            <div class="log-details">
+                                <strong>${username}</strong> - ${log.action}
+                                ${log.deviceName ? `desde ${log.deviceName}` : ''}
+                                ${log.ip ? `(IP: ${log.ip})` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                logsContainer.innerHTML = html;
+            });
+        }
+
+        // Filter logs
+        function filterLogs() {
+            loadLogs();
+        }
+
+        // Load statistics
+        function loadStats() {
+            const totalUsers = Object.keys(usersData).length;
+            const activeUsers = Object.values(usersData).filter(u => u.active).length;
+
+            document.getElementById('totalUsers').textContent = totalUsers;
+            document.getElementById('activeUsers').textContent = activeUsers;
+
+            // Load today's logins
+            const today = new Date().toISOString().split('T')[0];
+            database.ref('logs').orderByChild('timestamp').startAt(today).once('value').then((snapshot) => {
+                let todayLogins = 0;
+                const devices = new Set();
+
+                snapshot.forEach((child) => {
+                    const log = child.val();
+                    if (log.action === 'login') {
+                        todayLogins++;
+                        if (log.deviceId) devices.add(log.deviceId);
+                    }
+                });
+
+                document.getElementById('todayLogins').textContent = todayLogins;
+                document.getElementById('totalDevices').textContent = devices.size;
+            });
+        }
+
+        // Update device list when user selection changes
+        document.getElementById('deviceUserSelect').addEventListener('change', loadDevices);
+
+        // Edit user (placeholder - could expand this)
+        function editUser(userId) {
+            alert('Función de edición próximamente disponible');
+        }
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\fconu\OneDrive\Escritorio\PAGINA WEB\profefranciscopancho-blog\evaluaciones\admin\index.html

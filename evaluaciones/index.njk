@@ -6,6 +6,49 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
 
 <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
   <div class="container mx-auto px-4 py-8">
+    <!-- User Authentication Section -->
+    <div id="auth-section" class="max-w-md mx-auto mb-8">
+      <!-- Login Form (shown when not logged in) -->
+      <div id="login-form" class="bg-white rounded-xl shadow-lg p-6 hidden">
+        <h3 class="text-xl font-bold text-gray-800 mb-4 text-center">Iniciar Sesión</h3>
+        <form id="user-login-form">
+          <div class="mb-4">
+            <input type="text" id="login-username" placeholder="Usuario" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+          </div>
+          <div class="mb-4">
+            <input type="password" id="login-password" placeholder="Contraseña" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+          </div>
+          <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-4 rounded-lg transition-colors">
+            Iniciar Sesión
+          </button>
+        </form>
+        <div class="text-center mt-4">
+          <a href="/evaluaciones/admin/login.html" class="text-indigo-600 hover:text-indigo-800 text-sm">Acceso Administrador</a>
+        </div>
+      </div>
+
+      <!-- User Info (shown when logged in) -->
+      <div id="user-info" class="bg-white rounded-xl shadow-lg p-6 hidden">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-lg font-bold text-gray-800">Bienvenido</h3>
+            <p id="user-name" class="text-gray-600"></p>
+          </div>
+          <button onclick="logout()" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm">
+            Cerrar Sesión
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Link -->
+    <div class="text-right mb-4">
+      <a href="/evaluaciones/admin/login.html" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-800 text-sm">
+        <i class="fas fa-cog"></i>
+        <span>Administración</span>
+      </a>
+    </div>
+
     <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
@@ -17,7 +60,7 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
     </div>
 
     <!-- 1. Educación Básica -->
-    <div class="max-w-4xl mx-auto mb-8">
+    <div id="educacion-basica-section" class="max-w-4xl mx-auto mb-8">
       <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">1. Educación Básica</h2>
       
       <!-- Lenguaje y Comunicación (única asignatura disponible) -->
@@ -71,7 +114,7 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
     </div>
 
     <!-- 2. Educación Especial -->
-    <div class="max-w-4xl mx-auto mb-8">
+    <div id="educacion-especial-section" class="max-w-4xl mx-auto mb-8">
       <h2 class="text-3xl font-bold text-gray-800 mb-6 text-center">2. Educación Especial</h2>
       
       <div class="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -101,3 +144,162 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
     </div>
   </div>
 </div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyDi-g5cvCwK8YN_T08T0OaJ2oF9bfOZ3Dg",
+    authDomain: "profesorfrancisco-2fcb4.firebaseapp.com",
+    databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+    projectId: "profesorfrancisco-2fcb4",
+    storageBucket: "profesorfrancisco-2fcb4.firebasestorage.app",
+    messagingSenderId: "635599969062",
+    appId: "1:635599969062:web:2e56c5e2c8ecc5ef6fed70"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const database = firebase.database();
+
+// Global variables
+let currentUser = null;
+
+// Check authentication on page load
+document.addEventListener('DOMContentLoaded', function() {
+    checkAuthentication();
+    setupLoginForm();
+});
+
+// Check if user is logged in
+function checkAuthentication() {
+    const session = localStorage.getItem('evaluaciones_session');
+    const loginForm = document.getElementById('login-form');
+    const userInfo = document.getElementById('user-info');
+
+    if (session) {
+        try {
+            const sessionData = JSON.parse(session);
+            // Check if session is still valid (24 hours)
+            const loginTime = new Date(sessionData.loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+            if (hoursDiff < 24) {
+                currentUser = sessionData;
+                showUserInterface(sessionData);
+                filterContentByPermissions(sessionData.permissions);
+                return;
+            } else {
+                localStorage.removeItem('evaluaciones_session');
+            }
+        } catch (error) {
+            localStorage.removeItem('evaluaciones_session');
+        }
+    }
+
+    // Show login form if not authenticated
+    loginForm.classList.remove('hidden');
+    userInfo.classList.add('hidden');
+    filterContentByPermissions(null); // Hide all restricted content
+}
+
+// Setup login form
+function setupLoginForm() {
+    const loginForm = document.getElementById('user-login-form');
+
+    loginForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('login-username').value.trim();
+        const password = document.getElementById('login-password').value;
+
+        try {
+            // Find user by username
+            const usersRef = database.ref('users');
+            const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+
+            if (!snapshot.exists()) {
+                throw new Error('Usuario no encontrado');
+            }
+
+            const userId = Object.keys(snapshot.val())[0];
+            const userData = snapshot.val()[userId];
+
+            // Check if user is active
+            if (!userData.active) {
+                throw new Error('Cuenta deshabilitada');
+            }
+
+            // Verify password
+            if (atob(userData.password) !== password) {
+                throw new Error('Contraseña incorrecta');
+            }
+
+            // Create session
+            const sessionData = {
+                userId: userId,
+                username: userData.username,
+                permissions: userData.permissions,
+                loginTime: new Date().toISOString()
+            };
+
+            localStorage.setItem('evaluaciones_session', JSON.stringify(sessionData));
+            currentUser = sessionData;
+
+            showUserInterface(sessionData);
+            filterContentByPermissions(sessionData.permissions);
+
+        } catch (error) {
+            alert(error.message || 'Error al iniciar sesión');
+        }
+    });
+}
+
+// Show user interface
+function showUserInterface(userData) {
+    const loginForm = document.getElementById('login-form');
+    const userInfo = document.getElementById('user-info');
+    const userName = document.getElementById('user-name');
+
+    loginForm.classList.add('hidden');
+    userInfo.classList.remove('hidden');
+    userName.textContent = userData.username;
+}
+
+// Filter content based on permissions
+function filterContentByPermissions(permissions) {
+    const contentSections = [
+        { id: 'educacion-basica-section', permission: 'basica' },
+        { id: 'educacion-especial-section', permission: 'especial' },
+        { id: 'educacion-media-section', permission: 'media' },
+        { id: 'educacion-parvularia-section', permission: 'parvularia' },
+        { id: 'lengua-indigena-section', permission: 'indigena' }
+    ];
+
+    contentSections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element) {
+            if (!permissions || !permissions[section.permission]) {
+                // Hide section if no permissions or specific permission not granted
+                element.style.display = 'none';
+            } else {
+                // Show section if permission granted
+                element.style.display = 'block';
+            }
+        }
+    });
+}
+
+// Logout
+function logout() {
+    localStorage.removeItem('evaluaciones_session');
+    currentUser = null;
+    location.reload();
+}
+</script>

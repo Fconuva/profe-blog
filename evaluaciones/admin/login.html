@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Administrador - Evaluaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-section i {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+            transform: translateX(-5px);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-section">
+            <i class="fas fa-cog"></i>
+            <h1 class="text-2xl font-bold text-gray-800">Acceso Administrador</h1>
+            <p class="text-gray-600 mt-2">Sistema de Evaluaciones</p>
+        </div>
+
+        <div id="alert" class="alert alert-error">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <form id="loginForm">
+            <input type="email" id="email" class="form-input" placeholder="Correo electrónico" required>
+            <input type="password" id="password" class="form-input" placeholder="Contraseña" required>
+
+            <button type="submit" id="loginBtn" class="btn-login">
+                <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+            </button>
+        </form>
+
+        <a href="/evaluaciones/" class="back-link">
+            <i class="fas fa-arrow-left mr-2"></i>Volver a Evaluaciones
+        </a>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi-g5cvCwK8YN_T08T0OaJ2oF9bfOZ3Dg",
+            authDomain: "profesorfrancisco-2fcb4.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profesorfrancisco-2fcb4",
+            storageBucket: "profesorfrancisco-2fcb4.firebasestorage.app",
+            messagingSenderId: "635599969062",
+            appId: "1:635599969062:web:2e56c5e2c8ecc5ef6fed70"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            auth.onAuthStateChanged((user) => {
+                if (user && user.email === 'admin@profesorfrancisco.com') {
+                    window.location.href = '/evaluaciones/admin/';
+                }
+            });
+        });
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const alert = document.getElementById('alert');
+            const alertMessage = document.getElementById('alertMessage');
+
+            // Only allow admin email
+            if (email !== 'admin@profesorfrancisco.com') {
+                alert.style.display = 'block';
+                alertMessage.textContent = 'Acceso no autorizado. Solo administradores pueden acceder.';
+                return;
+            }
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+
+                // Log the login
+                const deviceInfo = getDeviceInfo();
+                const logData = {
+                    userId: 'admin',
+                    action: 'admin_login',
+                    timestamp: new Date().toISOString(),
+                    deviceName: deviceInfo.deviceName,
+                    userAgent: navigator.userAgent,
+                    ip: await getIP(),
+                    deviceId: generateDeviceId()
+                };
+
+                database.ref('logs').push(logData);
+
+                // Redirect to admin panel
+                window.location.href = '/evaluaciones/admin/';
+
+            } catch (error) {
+                console.error('Login error:', error);
+                alert.style.display = 'block';
+
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        alertMessage.textContent = 'Usuario no encontrado.';
+                        break;
+                    case 'auth/wrong-password':
+                        alertMessage.textContent = 'Contraseña incorrecta.';
+                        break;
+                    case 'auth/invalid-email':
+                        alertMessage.textContent = 'Correo electrónico inválido.';
+                        break;
+                    case 'auth/user-disabled':
+                        alertMessage.textContent = 'Cuenta deshabilitada.';
+                        break;
+                    default:
+                        alertMessage.textContent = 'Error al iniciar sesión. Intente nuevamente.';
+                }
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
+            }
+        });
+
+        // Get device information
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let deviceName = 'Dispositivo desconocido';
+
+            if (ua.includes('Mobile')) {
+                deviceName = 'Dispositivo móvil';
+            } else if (ua.includes('Tablet')) {
+                deviceName = 'Tablet';
+            } else {
+                deviceName = 'Computador';
+            }
+
+            // Try to get more specific info
+            if (ua.includes('Chrome')) {
+                deviceName += ' - Chrome';
+            } else if (ua.includes('Firefox')) {
+                deviceName += ' - Firefox';
+            } else if (ua.includes('Safari')) {
+                deviceName += ' - Safari';
+            } else if (ua.includes('Edge')) {
+                deviceName += ' - Edge';
+            }
+
+            return {
+                deviceName: deviceName,
+                userAgent: ua
+            };
+        }
+
+        // Generate device ID
+        function generateDeviceId() {
+            return btoa(navigator.userAgent + Date.now()).substring(0, 16);
+        }
+
+        // Get IP address (approximate)
+        async function getIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'unknown';
+            }
+        }
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\fconu\OneDrive\Escritorio\PAGINA WEB\profefranciscopancho-blog\evaluaciones\admin\login.html

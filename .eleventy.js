@@ -64,6 +64,10 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("privado/**");
   eleventyConfig.ignores.add("Temporales/**");
   eleventyConfig.ignores.add("netlify/**");
+  // Ocultar formatos crudos en Evaluaciones (archivos de trabajo internos)
+  eleventyConfig.ignores.add("evaluaciones/**/*.pdf");
+  eleventyConfig.ignores.add("evaluaciones/**/*.txt");
+  eleventyConfig.ignores.add("evaluaciones/**/*.json");
   eleventyConfig.ignores.add("**/63.SC-L(20).pdf");
   // Solo ignorar index.html en carpetas que no queremos procesar
   // PERMITIR que se procesen los index.html de las herramientas

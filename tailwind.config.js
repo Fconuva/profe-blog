@@ -3,8 +3,11 @@
 module.exports = {
   darkMode: 'class',
   content: [
-    './**/*.{html,njk,md,js}',
-    '!./_site/**'
+    './_includes/**/*.{html,njk}',
+    './evaluaciones/**/*.{html,njk,md}',
+    './blog/**/*.{html,njk,md}',
+    './*.{html,njk}',
+    './css/**/*.css'
   ],
   theme: {
     extend: {

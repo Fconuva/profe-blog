@@ -13,6 +13,16 @@ function loadPlan() {
 }
 
 module.exports = async function handler(req, res) {
+  // CORS headers for client-side requests
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   // Health check (GET): never error; reveal if API key is configured
   if (req.method === 'GET') {
     const hasGemini = Boolean(process.env.GEMINI_API_KEY);
@@ -22,6 +32,12 @@ module.exports = async function handler(req, res) {
     const planProv = (plan?.exam?.ia_feedback?.provider || '').toLowerCase();
     let provider = planProv || (hasGemini ? 'google-gemini' : (hasOpenAI ? 'openai' : 'none'));
     res.status(200).json({ ok: true, hasGemini, hasOpenAI, provider });
+    return;
+  }
+
+  // Only POST allowed for feedback generation
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Método no permitido', code: 'METHOD_NOT_ALLOWED' });
     return;
   }
 
@@ -37,6 +53,12 @@ module.exports = async function handler(req, res) {
     res.status(500).json({ error: 'No hay proveedor de IA configurado. Define GEMINI_API_KEY o OPENAI_API_KEY en Vercel.', code: 'MISSING_PROVIDER' });
     return;
   }
+
+  // Global timeout for entire request
+  const TIMEOUT_MS = 25000; // 25 seconds (Vercel limit is 30s)
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('TIMEOUT: La generación excedió 25 segundos')), TIMEOUT_MS);
+  });
 
   try {
     const { pregunta, respuestaDocente, tema } = req.body || {};
@@ -58,52 +80,104 @@ module.exports = async function handler(req, res) {
       '3) Sugerencia de profundización (cita breve del temario si procede)'
     ].join('\n');
 
+    let generationPromise;
+
     if (provider.includes('gemini')) {
       if (!hasGemini) {
         res.status(500).json({ error: 'Falta GEMINI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
         return;
       }
-      const modelName = iaCfg.model || 'gemini-1.5-flash';
-      const { GoogleGenerativeAI } = await import('@google/generative-ai');
-      const fetchMod = await import('cross-fetch');
-      const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { fetch: fetchMod.default });
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(composedPrompt);
-      const text = result?.response?.text?.() || 'No se pudo generar retroalimentación.';
-      res.status(200).json({ feedback: text, provider: 'google-gemini' });
-      return;
-    }
-
-    if (provider.includes('openai')) {
+      generationPromise = (async () => {
+        const modelName = iaCfg.model || 'gemini-1.5-flash';
+        const { GoogleGenerativeAI } = await import('@google/generative-ai');
+        const fetchMod = await import('cross-fetch');
+        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { fetch: fetchMod.default });
+        const model = genAI.getGenerativeModel({ 
+          model: modelName,
+          generationConfig: {
+            maxOutputTokens: 1024,
+            temperature: 0.3
+          }
+        });
+        const result = await model.generateContent(composedPrompt);
+        return result?.response?.text?.() || 'No se pudo generar retroalimentación.';
+      })();
+    } else if (provider.includes('openai')) {
       if (!hasOpenAI) {
-        res.status(500).json({ error: 'Falta OPENAI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
-        return;
+        // Fallback to Gemini if available
+        if (hasGemini) {
+          console.warn('OpenAI no disponible, usando Gemini como fallback');
+          provider = 'google-gemini';
+          generationPromise = (async () => {
+            const { GoogleGenerativeAI } = await import('@google/generative-ai');
+            const fetchMod = await import('cross-fetch');
+            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { fetch: fetchMod.default });
+            const model = genAI.getGenerativeModel({ 
+              model: 'gemini-1.5-flash',
+              generationConfig: {
+                maxOutputTokens: 1024,
+                temperature: 0.3
+              }
+            });
+            const result = await model.generateContent(composedPrompt);
+            return result?.response?.text?.() || 'No se pudo generar retroalimentación.';
+          })();
+        } else {
+          res.status(500).json({ error: 'Falta OPENAI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
+          return;
+        }
+      } else {
+        generationPromise = (async () => {
+          const { OpenAI } = await import('openai');
+          const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 20000 });
+          const modelName = iaCfg.model || 'gpt-4o-mini';
+          const chat = await client.chat.completions.create({
+            model: modelName,
+            messages: [
+              { role: 'system', content: basePrompt },
+              { role: 'user', content: composedPrompt }
+            ],
+            temperature: 0.3,
+            max_tokens: 1024
+          });
+          return chat?.choices?.[0]?.message?.content || 'No se pudo generar retroalimentación.';
+        })();
       }
-      const { OpenAI } = await import('openai');
-      const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-      const modelName = iaCfg.model || 'gpt-4o-mini';
-      const chat = await client.chat.completions.create({
-        model: modelName,
-        messages: [
-          { role: 'system', content: basePrompt },
-          { role: 'user', content: composedPrompt }
-        ],
-        temperature: 0.3
-      });
-      const text = chat?.choices?.[0]?.message?.content || 'No se pudo generar retroalimentación.';
-      res.status(200).json({ feedback: text, provider: 'openai' });
+    } else {
+      res.status(500).json({ error: 'Proveedor de IA no soportado', code: 'UNSUPPORTED_PROVIDER' });
       return;
     }
 
-    res.status(500).json({ error: 'Proveedor de IA no soportado', code: 'UNSUPPORTED_PROVIDER' });
+    // Race between generation and timeout
+    const text = await Promise.race([generationPromise, timeoutPromise]);
+    res.status(200).json({ feedback: text, provider });
+
   } catch (err) {
+    // Check if it's a timeout error
+    if (err?.message?.includes('TIMEOUT')) {
+      console.error('Timeout en generación IA:', {
+        message: err.message,
+        provider,
+        timestamp: new Date().toISOString()
+      });
+      res.status(504).json({ 
+        error: 'La generación tardó demasiado. Intenta de nuevo.', 
+        code: 'TIMEOUT',
+        provider
+      });
+      return;
+    }
+
+    // Log full error for debugging
     console.error('IA Feedback Error:', {
       message: err?.message,
       stack: err?.stack,
       provider,
       hasGemini,
-      hasOpenAI
+      hasOpenAI,
+      timestamp: new Date().toISOString()
     });
+
     res.status(500).json({ 
       error: 'Error al generar retroalimentación', 
       code: 'GENERATION_ERROR', 

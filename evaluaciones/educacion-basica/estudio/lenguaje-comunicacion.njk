@@ -168,9 +168,9 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                 </div>
                 {% endif %}
 
-                {# Casos de estudio vinculados a este subtema #}
+                {# Casos de estudio vinculados a este subtema - Priorizar preset para garantizar contenido #}
                 {% set subkey = sub.titulo | lower %}
-                {% set casos = (casosPorSubtema and casosPorSubtema[subkey]) or (casosPorTema and casosPorTema[subkey]) or (casosPreset and casosPreset[subkey]) or [] %}
+                {% set casos = (casosPreset and casosPreset[subkey]) or (casosPorSubtema and casosPorSubtema[subkey]) or (casosPorTema and casosPorTema[subkey]) or [] %}
                 <div id="casos-{{ sub.titulo | slug }}" class="mt-10">
                   <div class="flex items-center gap-3 mb-6">
                     <span class="text-3xl">🧪</span>
@@ -179,7 +179,8 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                   </div>
                   {% if casos | length > 0 %}
                     <div class="grid md:grid-cols-2 gap-5">
-                      {% for c in casos | slice(0,6) %}
+                      {% for c in casos %}
+                      {% if loop.index0 < 6 %}
                         <div class="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300">
                           <div class="flex items-start gap-3 mb-3">
                             <span class="text-xl flex-shrink-0">💡</span>
@@ -223,6 +224,7 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                             </div>
                           </details>
                         </div>
+                      {% endif %}
                       {% endfor %}
                     </div>
                     {% if casos.length > 6 %}
@@ -232,7 +234,8 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                         Ver más casos ({{ casos.length - 6 }} adicionales)
                       </summary>
                       <div class="mt-5 grid md:grid-cols-2 gap-5">
-                        {% for c in casos | slice(6) %}
+                        {% for c in casos %}
+                        {% if loop.index0 >= 6 %}
                           <div class="bg-white border-2 border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-lg hover:border-indigo-300 transition-all duration-300">
                             <div class="flex items-start gap-3 mb-3">
                               <span class="text-xl flex-shrink-0">💡</span>
@@ -256,6 +259,9 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                                 </div>
                                 <p class="text-sm text-gray-700 leading-relaxed">{{ c.explicacion }}</p>
                               </div>
+                            </details>
+                          </div>
+                        {% endif %}
                             </details>
                           </div>
                         {% endfor %}

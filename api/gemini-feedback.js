@@ -97,7 +97,23 @@ module.exports = async function handler(req, res) {
 
     res.status(500).json({ error: 'Proveedor de IA no soportado', code: 'UNSUPPORTED_PROVIDER' });
   } catch (err) {
-    console.error('Gemini error:', err);
-    res.status(500).json({ error: 'Error al generar retroalimentación', code: 'GENERATION_ERROR', details: String(err?.message || err) });
+    console.error('IA Feedback Error:', {
+      message: err?.message,
+      stack: err?.stack,
+      provider,
+      hasGemini,
+      hasOpenAI
+    });
+    res.status(500).json({ 
+      error: 'Error al generar retroalimentación', 
+      code: 'GENERATION_ERROR', 
+      details: err?.message || String(err),
+      provider,
+      debug: {
+        hasGemini,
+        hasOpenAI,
+        requestedProvider: provider
+      }
+    });
   }
 }

@@ -11,6 +11,7 @@ module.exports = () => {
   } catch {}
   const casosPorTema = {};
   const casosPorSubtema = {};
+  const casosPreset = {};
 
   try {
     const preguntas = plan?.exam?.preguntas || [];
@@ -86,5 +87,113 @@ module.exports = () => {
     }
   } catch {}
 
-  return { plan, casosPorTema, casosPorSubtema };
+  // Preset: garantizar casos para 'Textos literarios' si no hay mapeo
+  casosPreset['textos literarios'] = [
+    {
+      id: 'CLIT-01',
+      enunciado: 'En un cuento el narrador conoce los pensamientos de todos los personajes. ¿Qué tipo de narrador es?',
+      alternativas: [
+        { opcion: 'A', texto: 'Protagonista' },
+        { opcion: 'B', texto: 'Testigo' },
+        { opcion: 'C', texto: 'Omnisciente' },
+        { opcion: 'D', texto: 'Equisciente' }
+      ],
+      respuesta_correcta: 'C',
+      explicacion: 'El narrador omnisciente accede a la interioridad de todos los personajes.',
+      temas_relacionados: ['Tipos de narrador']
+    },
+    {
+      id: 'CLIT-02',
+      enunciado: 'Una novela alterna capítulos del pasado para explicar el conflicto. ¿Qué recurso temporal predomina?',
+      alternativas: [
+        { opcion: 'A', texto: 'In medias res' },
+        { opcion: 'B', texto: 'Anacronía retrospectiva (flashback)' },
+        { opcion: 'C', texto: 'Prolepsis' },
+        { opcion: 'D', texto: 'Elipsis' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'El flashback introduce acontecimientos previos que iluminan el conflicto principal.',
+      temas_relacionados: ['Estrategias narrativas']
+    },
+    {
+      id: 'CLIT-03',
+      enunciado: '¿Qué rasgo identifica a la fábula como género narrativo?',
+      alternativas: [
+        { opcion: 'A', texto: 'Describir la métrica del poema' },
+        { opcion: 'B', texto: 'Animales antropomorfos y moraleja' },
+        { opcion: 'C', texto: 'Monólogo interior constante' },
+        { opcion: 'D', texto: 'Relato en cartas de amor' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'La fábula usa animales con rasgos humanos para transmitir una enseñanza explícita.',
+      temas_relacionados: ['Géneros narrativos']
+    },
+    {
+      id: 'CLIT-04',
+      enunciado: "En el verso 'El río susurra historias', ¿qué figura aparece?",
+      alternativas: [
+        { opcion: 'A', texto: 'Metáfora' },
+        { opcion: 'B', texto: 'Hipérbole' },
+        { opcion: 'C', texto: 'Personificación' },
+        { opcion: 'D', texto: 'Oxímoron' }
+      ],
+      respuesta_correcta: 'C',
+      explicacion: 'Se atribuye al río una acción humana (susurrar).',
+      temas_relacionados: ['Figuras literarias']
+    },
+    {
+      id: 'CLIT-05',
+      enunciado: 'Poema de 14 versos con dos cuartetos y dos tercetos, rima consonante. Corresponde a:',
+      alternativas: [
+        { opcion: 'A', texto: 'Haikú' },
+        { opcion: 'B', texto: 'Oda' },
+        { opcion: 'C', texto: 'Soneto' },
+        { opcion: 'D', texto: 'Lira' }
+      ],
+      respuesta_correcta: 'C',
+      explicacion: 'Estructura clásica del soneto (4-4-3-3) con rima consonante.',
+      temas_relacionados: ['Métrica']
+    },
+    {
+      id: 'CLIT-06',
+      enunciado: 'Una obra teatral exagera rasgos para provocar humor y crítica social. ¿Qué subgénero es?',
+      alternativas: [
+        { opcion: 'A', texto: 'Tragedia' },
+        { opcion: 'B', texto: 'Farsa' },
+        { opcion: 'C', texto: 'Drama' },
+        { opcion: 'D', texto: 'Auto sacramental' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'La farsa exagera equívocos y rasgos para producir comicidad y sátira.',
+      temas_relacionados: ['Subgéneros dramáticos']
+    },
+    {
+      id: 'CLIT-07',
+      enunciado: 'En escena, un personaje habla al público sin que lo oigan otros personajes. Ese recurso se llama:',
+      alternativas: [
+        { opcion: 'A', texto: 'Monólogo' },
+        { opcion: 'B', texto: 'Aparte' },
+        { opcion: 'C', texto: 'Soliloquio' },
+        { opcion: 'D', texto: 'Acotación' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'El aparte rompe la cuarta pared para comunicar algo directamente al público.',
+      temas_relacionados: ['Elementos del género dramático']
+    },
+    {
+      id: 'CLIT-08',
+      enunciado: "La metáfora 'palabras cuchillos' produce principalmente el efecto de:",
+      alternativas: [
+        { opcion: 'A', texto: 'Suavizar el tono' },
+        { opcion: 'B', texto: 'Sugerir agresividad y daño' },
+        { opcion: 'C', texto: 'Crear humor' },
+        { opcion: 'D', texto: 'Neutralizar la emoción' }
+      ],
+      respuesta_correcta: 'B',
+      explicacion: 'La comparación implícita enfatiza dureza y daño emocional.',
+      temas_relacionados: ['Interpretación de figuras']
+    }
+  ];
+
+  return { plan, casosPorTema, casosPorSubtema, casosPreset };
 };

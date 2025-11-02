@@ -66,12 +66,12 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
 
                 {# Casos de estudio vinculados a este subtema #}
                 {% set subkey = sub.titulo | lower %}
-                {% set casos = casosPorTema[subkey] or [] %}
+                {% set casos = (casosPorSubtema and casosPorSubtema[subkey]) or (casosPorTema and casosPorTema[subkey]) or [] %}
                 <div id="casos-{{ sub.titulo | slug }}" class="mt-6">
                   <h4 class="text-lg font-semibold text-gray-800 mb-2">🧪 Casos de estudio</h4>
                   {% if casos and casos.length %}
                     <div class="grid md:grid-cols-2 gap-4">
-                      {% for c in casos | slice(0,4) %}
+                      {% for c in casos | slice(0,6) %}
                         <div class="border rounded-lg p-4 bg-gray-50">
                           <p class="font-medium text-gray-800">{{ c.enunciado }}</p>
                           <ul class="mt-2 text-sm text-gray-700 list-disc list-inside">
@@ -79,6 +79,13 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                               <li>{{ alt.opcion }}) {{ alt.texto }}</li>
                             {% endfor %}
                           </ul>
+                          {% if c.temas_relacionados and c.temas_relacionados.length %}
+                          <div class="mt-2 flex flex-wrap gap-2">
+                            {% for t in c.temas_relacionados %}
+                              <span class="inline-block text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded">{{ t }}</span>
+                            {% endfor %}
+                          </div>
+                          {% endif %}
                           <details class="mt-2">
                             <summary class="text-indigo-700 cursor-pointer">Ver solución</summary>
                             <div class="mt-2 bg-white border rounded p-3">
@@ -101,6 +108,30 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                         </div>
                       {% endfor %}
                     </div>
+                    {% if casos.length > 6 %}
+                    <details class="mt-3">
+                      <summary class="text-indigo-700 cursor-pointer">Ver más casos ({{ casos.length - 6 }})</summary>
+                      <div class="mt-3 grid md:grid-cols-2 gap-4">
+                        {% for c in casos | slice(6) %}
+                          <div class="border rounded-lg p-4 bg-gray-50">
+                            <p class="font-medium text-gray-800">{{ c.enunciado }}</p>
+                            <ul class="mt-2 text-sm text-gray-700 list-disc list-inside">
+                              {% for alt in c.alternativas %}
+                                <li>{{ alt.opcion }}) {{ alt.texto }}</li>
+                              {% endfor %}
+                            </ul>
+                            <details class="mt-2">
+                              <summary class="text-indigo-700 cursor-pointer">Ver solución</summary>
+                              <div class="mt-2 bg-white border rounded p-3">
+                                <p><strong>Respuesta correcta:</strong> {{ c.respuesta_correcta }}</p>
+                                <p class="mt-1">{{ c.explicacion }}</p>
+                              </div>
+                            </details>
+                          </div>
+                        {% endfor %}
+                      </div>
+                    </details>
+                    {% endif %}
                   {% else %}
                     <p class="text-sm text-gray-600">Aún no hay casos vinculados a este subtema.</p>
                   {% endif %}

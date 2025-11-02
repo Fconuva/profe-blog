@@ -13,6 +13,9 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
         <p class="text-gray-600 text-lg mt-2">Lenguaje y Comunicación — basado en el temario y el plan de estudio</p>
         <div class="mt-4">
           <a href="/evaluaciones/educacion-basica/estudio/" class="text-indigo-700 hover:text-indigo-900 font-medium">← Todas las guías</a>
+          <button type="button" id="btn-print" class="ml-4 inline-flex items-center bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-3 rounded-md">
+            Imprimir / Exportar PDF
+          </button>
         </div>
       </div>
 
@@ -24,11 +27,38 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
           {% if bloque.subsections and bloque.subsections.length %}
             <div class="mt-4 space-y-8">
               {% for sub in bloque.subsections %}
-              <div>
+              <div id="{{ sub.titulo | slug }}">
                 <h3 class="text-xl font-semibold text-gray-800 mb-3">{{ sub.titulo }}</h3>
+                {# Mini ToC específico para Textos literarios #}
+                {% if sub.titulo | lower == 'textos literarios' %}
+                  <div class="flex flex-wrap gap-2 mb-3 text-sm">
+                    <a href="#lit-narrativa" class="px-2 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">Narrativa</a>
+                    <a href="#lit-poesia" class="px-2 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">Poesía</a>
+                    <a href="#lit-drama" class="px-2 py-1 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">Drama</a>
+                    <a href="#casos-{{ sub.titulo | slug }}" class="px-2 py-1 rounded bg-gray-50 text-gray-700 border">Casos de estudio ↓</a>
+                  </div>
+                {% endif %}
                 {% if sub.objetivos and sub.objetivos.length %}
                 <div class="space-y-6">
+                  {% set litNarr = false %}
+                  {% set litPoes = false %}
+                  {% set litDrama = false %}
                   {% for obj in sub.objetivos %}
+                    {% set txt = (obj.enunciado or '') | lower %}
+                    {% if sub.titulo | lower == 'textos literarios' %}
+                      {% if not litNarr and ( 'narrativ' in txt or 'narrador' in txt or 'mundo narrado' in txt or 'géneros narrativos' in txt ) %}
+                        <h4 id="lit-narrativa" class="text-base font-semibold text-gray-700 mt-2">Narrativa</h4>
+                        {% set litNarr = true %}
+                      {% endif %}
+                      {% if not litPoes and ( 'poétic' in txt or 'poema' in txt or 'figuras literarias' in txt or 'métrica' in txt or 'rima' in txt ) %}
+                        <h4 id="lit-poesia" class="text-base font-semibold text-gray-700 mt-2">Poesía</h4>
+                        {% set litPoes = true %}
+                      {% endif %}
+                      {% if not litDrama and ( 'dramát' in txt or 'tragedia' in txt or 'comedia' in txt or 'farsa' in txt or 'género dramático' in txt or 'soliloquio' in txt or 'monólogo' in txt ) %}
+                        <h4 id="lit-drama" class="text-base font-semibold text-gray-700 mt-2">Drama</h4>
+                        {% set litDrama = true %}
+                      {% endif %}
+                    {% endif %}
                     <div class="border rounded-lg p-4">
                       <p class="font-semibold text-gray-800">🎯 Objetivo: <span class="font-normal">{{ obj.enunciado }}</span></p>
                       {% if obj.explicacion %}
@@ -207,4 +237,36 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
       }
     }
   });
+</script>
+<style>
+  /* Estilos de impresión básicos para exportar PDF desde el navegador */
+  @media print {
+    header, footer, nav, #mobile-menu, .btn-premium { display: none !important; }
+    main { padding: 0 !important; }
+    a[href]:after { content: "" !important; }
+    .shadow, .shadow-sm, .shadow-md, .shadow-lg { box-shadow: none !important; }
+    .border { border-color: #ddd !important; }
+    .container, .mx-auto, .max-w-5xl { width: 100% !important; max-width: 100% !important; }
+    .rounded, .rounded-lg, .rounded-2xl { border-radius: 0 !important; }
+    .bg-gray-50, .bg-white { background: #fff !important; }
+  }
+</style>
+<script>
+  // Salud del endpoint IA: deshabilitar botones si no hay API Key
+  document.addEventListener('DOMContentLoaded', async () => {
+    try {
+      const resp = await fetch('/api/gemini-feedback?health=1');
+      const data = await resp.json();
+      if (!data?.hasKey) {
+        document.querySelectorAll('.ia-explain-obj, .ia-explain-caso').forEach(btn => {
+          btn.disabled = true;
+          btn.classList.add('opacity-60', 'cursor-not-allowed');
+          btn.title = 'IA deshabilitada temporalmente (falta configuración del servidor)';
+        });
+      }
+    } catch {}
+  });
+
+  // Imprimir / Exportar PDF
+  document.getElementById('btn-print')?.addEventListener('click', () => window.print());
 </script>

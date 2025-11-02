@@ -13,21 +13,23 @@ function loadPlan() {
 }
 
 module.exports = async function handler(req, res) {
-  if (req.method !== 'POST') {
-    res.status(405).json({ error: 'Method Not Allowed' });
+  // Health check (GET): never error; reveal if API key is configured
+  if (req.method === 'GET') {
+    const hasKey = Boolean(process.env.GEMINI_API_KEY);
+    res.status(200).json({ ok: true, hasKey });
     return;
   }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    res.status(500).json({ error: 'Falta GEMINI_API_KEY en variables de entorno' });
+    res.status(500).json({ error: 'Falta GEMINI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
     return;
   }
 
   try {
     const { pregunta, respuestaDocente, tema } = req.body || {};
     if (!pregunta || !respuestaDocente) {
-      res.status(400).json({ error: 'Faltan campos requeridos: pregunta y respuestaDocente' });
+      res.status(400).json({ error: 'Faltan campos requeridos: pregunta y respuestaDocente', code: 'BAD_REQUEST' });
       return;
     }
 
@@ -59,6 +61,6 @@ module.exports = async function handler(req, res) {
     res.status(200).json({ feedback: text });
   } catch (err) {
     console.error('Gemini error:', err);
-    res.status(500).json({ error: 'Error al generar retroalimentación', details: String(err?.message || err) });
+    res.status(500).json({ error: 'Error al generar retroalimentación', code: 'GENERATION_ERROR', details: String(err?.message || err) });
   }
 }

@@ -30,6 +30,12 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
                 {% endfor %}
               </div>
               <div id="feedback-{{ loop.index }}" class="mt-4 hidden"></div>
+              <div class="mt-3" id="justify-actions-{{ loop.index }}">
+                <button type="button" data-q="{{ loop.index }}" class="ia-btn bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded-md">
+                  Ver justificación con IA
+                </button>
+              </div>
+              <div id="ia-feedback-{{ loop.index }}" class="mt-3 hidden"></div>
               <div class="mt-3 hidden" id="ia-actions-{{ loop.index }}">
                 <button type="button" data-q="{{ loop.index }}" class="ia-btn bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-4 rounded-md">
                   Obtener retroalimentación con IA
@@ -69,7 +75,7 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
       const preguntaIndex = index + 1;
       const feedbackEl = document.getElementById(`feedback-${preguntaIndex}`);
       const iaActionsEl = document.getElementById(`ia-actions-${preguntaIndex}`);
-      const selectedOption = document.querySelector(`input[name="pregunta-${preguntaIndex}"]:checked`);
+  const selectedOption = document.querySelector(`input[name="pregunta-${preguntaIndex}"]:checked`);
       
       feedbackEl.classList.remove('hidden');
       
@@ -83,8 +89,8 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
               <p>${pregunta.explicacion}</p>
             </div>
           `;
-          // Ocultar acción IA si es correcta
-          iaActionsEl?.classList.add('hidden');
+          // IA disponible igual para justificar por qué es correcta
+          iaActionsEl?.classList.remove('hidden');
         } else {
           feedbackEl.innerHTML = `
             <div class="bg-red-100 border-l-4 border-red-500 text-red-800 p-4 rounded-md">
@@ -103,8 +109,8 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
             <p>La respuesta correcta es la <strong>${pregunta.respuesta_correcta}</strong>.</p>
           </div>
         `;
-        // Sugerir IA incluso si no respondió
-        iaActionsEl?.classList.remove('hidden');
+  // Sugerir IA incluso si no respondió
+  iaActionsEl?.classList.remove('hidden');
       }
     });
 
@@ -116,7 +122,7 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
     resultadoFinalEl.scrollIntoView({ behavior: 'smooth' });
   });
 
-  // Delegación de eventos para botones IA
+  // Delegación de eventos para botones IA (en preguntas con error o acierto)
   document.addEventListener('click', async (ev) => {
     const btn = ev.target.closest('.ia-btn');
     if (!btn) return;
@@ -159,4 +165,8 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
       `;
     }
   });
+
+  // Bloque opcional: recomendaciones de casos tras resultados
+  // (Se podrían mostrar 3 preguntas variadas)
+  // Este bloque puede ampliarse luego con selección por tema.
 </script>

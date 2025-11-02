@@ -34,6 +34,15 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                       {% if obj.explicacion %}
                         <p class="text-gray-700 mt-2">{{ obj.explicacion }}</p>
                       {% endif %}
+                      <div class="mt-3 flex gap-2 flex-wrap">
+                        <button type="button" class="ia-explain-obj bg-green-600 hover:bg-green-700 text-white text-sm font-semibold py-2 px-3 rounded-md" data-objetivo="{{ obj.enunciado | escape }}" data-tema="{{ sub.titulo | escape }}">
+                          🤖 IA: Explicar con ejemplos
+                        </button>
+                        <a href="#casos-{{ sub.titulo | slug }}" class="text-indigo-700 hover:text-indigo-900 text-sm font-medium">
+                          Ver casos de estudio ↓
+                        </a>
+                      </div>
+                      <div class="mt-3 hidden" id="ia-obj-box-{{ loop.index }}"></div>
                       {% if obj.ejemplo %}
                       <details class="mt-3 group">
                         <summary class="cursor-pointer select-none text-indigo-700 font-medium">Ver ejemplo</summary>
@@ -54,6 +63,48 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                   {% endfor %}
                 </div>
                 {% endif %}
+
+                {# Casos de estudio vinculados a este subtema #}
+                {% set subkey = sub.titulo | lower %}
+                {% set casos = casosPorTema[subkey] or [] %}
+                <div id="casos-{{ sub.titulo | slug }}" class="mt-6">
+                  <h4 class="text-lg font-semibold text-gray-800 mb-2">🧪 Casos de estudio</h4>
+                  {% if casos and casos.length %}
+                    <div class="grid md:grid-cols-2 gap-4">
+                      {% for c in casos | slice(0,4) %}
+                        <div class="border rounded-lg p-4 bg-gray-50">
+                          <p class="font-medium text-gray-800">{{ c.enunciado }}</p>
+                          <ul class="mt-2 text-sm text-gray-700 list-disc list-inside">
+                            {% for alt in c.alternativas %}
+                              <li>{{ alt.opcion }}) {{ alt.texto }}</li>
+                            {% endfor %}
+                          </ul>
+                          <details class="mt-2">
+                            <summary class="text-indigo-700 cursor-pointer">Ver solución</summary>
+                            <div class="mt-2 bg-white border rounded p-3">
+                              <p><strong>Respuesta correcta:</strong> {{ c.respuesta_correcta }}</p>
+                              <p class="mt-1">{{ c.explicacion }}</p>
+                              {% set correcta = '' %}
+                              {% for alt in c.alternativas %}
+                                {% if alt.opcion == c.respuesta_correcta %}
+                                  {% set correcta = alt.texto %}
+                                {% endif %}
+                              {% endfor %}
+                              <div class="mt-3">
+                                <button type="button" class="ia-explain-caso bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-2 px-3 rounded" data-pregunta="{{ c.enunciado | escape }}" data-respuesta="{{ c.respuesta_correcta }}: {{ correcta | escape }}" data-tema="{{ sub.titulo | escape }}">
+                                  🤖 IA: Justificar respuesta
+                                </button>
+                              </div>
+                              <div class="mt-2 hidden ia-caso-box"></div>
+                            </div>
+                          </details>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <p class="text-sm text-gray-600">Aún no hay casos vinculados a este subtema.</p>
+                  {% endif %}
+                </div>
               </div>
               {% endfor %}
             </div>
@@ -76,3 +127,53 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
 
   </div>
 </div>
+
+<script>
+  // IA: Explicar objetivo
+  document.addEventListener('click', async (ev) => {
+    const btnObj = ev.target.closest('.ia-explain-obj');
+    if (btnObj) {
+      const objetivo = btnObj.getAttribute('data-objetivo') || '';
+      const tema = btnObj.getAttribute('data-tema') || '';
+      const box = btnObj.parentElement.nextElementSibling; // ia-obj-box-*
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded">Generando explicación con IA...</div>`;
+      try {
+        const resp = await fetch('/api/gemini-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pregunta: `Explica el objetivo: ${objetivo}`, respuestaDocente: 'Explica con ejemplos, errores comunes y estrategias didácticas.', tema })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Error');
+        box.innerHTML = `<div class="bg-white border p-3 rounded shadow-sm"><div class="prose prose-sm max-w-none">${(data.feedback || '').replace(/\n/g, '<br>')}</div></div>`;
+      } catch (e) {
+        box.innerHTML = `<div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-3 rounded">No se pudo generar la explicación. ${e.message || ''}</div>`;
+      }
+    }
+
+    const btnCaso = ev.target.closest('.ia-explain-caso');
+    if (btnCaso) {
+      const pregunta = btnCaso.getAttribute('data-pregunta') || '';
+      const respuestaDocente = btnCaso.getAttribute('data-respuesta') || '';
+      const tema = btnCaso.getAttribute('data-tema') || '';
+      const box = btnCaso.parentElement.nextElementSibling; // .ia-caso-box
+      if (!box) return;
+      box.classList.remove('hidden');
+      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded">Justificando con IA...</div>`;
+      try {
+        const resp = await fetch('/api/gemini-feedback', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ pregunta, respuestaDocente, tema })
+        });
+        const data = await resp.json();
+        if (!resp.ok) throw new Error(data.error || 'Error');
+        box.innerHTML = `<div class="bg-white border p-3 rounded shadow-sm"><div class="prose prose-sm max-w-none">${(data.feedback || '').replace(/\n/g, '<br>')}</div></div>`;
+      } catch (e) {
+        box.innerHTML = `<div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-3 rounded">No se pudo justificar con IA. ${e.message || ''}</div>`;
+      }
+    }
+  });
+</script>

@@ -81,7 +81,7 @@ Entrega retroalimentación en 3 apartados:
     // Use Groq API (fastest inference, free tier)
     const generationPromise = (async () => {
       const response = await fetch(
-        'https://api.groq.com/v1/chat/completions',
+        'https://api.groq.com/openai/v1/chat/completions',
         {
           method: 'POST',
           headers: {

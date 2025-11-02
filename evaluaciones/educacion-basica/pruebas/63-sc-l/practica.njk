@@ -137,19 +137,27 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
       </div>
     `;
 
-    // NO enviar retroalimentación por marcar alternativa - solo explicar el objetivo
+    // Construir pregunta completa con alternativas y respuesta correcta
     const tema = (pregunta.temas_relacionados && pregunta.temas_relacionados[0]) || '';
-    const objetivoRelacionado = pregunta.enunciado; // El enunciado ES el objetivo que se evalúa
+    const respuestaCorrecta = pregunta.respuesta_correcta;
+    const alternativas = pregunta.alternativas.map(alt => `${alt.opcion}) ${alt.texto}`).join('\n');
+    
+    const preguntaCompleta = `${pregunta.enunciado}
+
+ALTERNATIVAS:
+${alternativas}
+
+RESPUESTA CORRECTA: ${respuestaCorrecta}`;
 
     try {
       const resp = await fetch('/api/gemini-feedback', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          pregunta: objetivoRelacionado, 
+          pregunta: preguntaCompleta, 
           respuestaDocente: '', 
           tema,
-          tipo: 'explicar'
+          tipo: 'explicar_con_respuesta'
         })
       });
       const data = await resp.json();
@@ -165,8 +173,8 @@ description: "Responde las preguntas de la prueba 63-sc-l y prepárate para tu e
         .replace(/> (.+)/g, '<blockquote class="border-l-4 border-blue-300 pl-4 py-2 my-4 italic text-gray-700 bg-blue-50">$1</blockquote>');
       
       iaBox.innerHTML = `
-        <div class="bg-white border border-blue-200 p-5 rounded-lg shadow-sm">
-          <h4 class="font-bold text-blue-800 mb-4 text-lg border-b border-blue-200 pb-2">💡 Explicación Pedagógica</h4>
+        <div class="bg-white border border-green-200 p-5 rounded-lg shadow-sm">
+          <h4 class="font-bold text-green-800 mb-4 text-lg border-b border-green-200 pb-2">✅ Respuesta Correcta: ${respuestaCorrecta}</h4>
           <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed space-y-3"><p class="mt-0">${html}</p></div>
         </div>
       `;

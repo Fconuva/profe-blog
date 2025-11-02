@@ -70,7 +70,19 @@ module.exports = async function handler(req, res) {
     
     // Detectar si es solicitud de explicación o retroalimentación de respuesta
     let userPrompt;
-    if (tipo === 'explicar' || !respuestaDocente || respuestaDocente.trim() === '') {
+    if (tipo === 'explicar_con_respuesta') {
+      // Solicitud de EXPLICACIÓN con respuesta correcta incluida
+      userPrompt = `${pregunta}
+
+Tema: ${temaStr}
+
+Explica pedagógicamente:
+1) ¿Por qué la respuesta correcta es la correcta? (fundamento curricular)
+2) ¿Por qué las otras alternativas son incorrectas? (análisis breve de cada distractor)
+3) Concepto clave que debe dominar el docente
+
+Usa formato claro con ## para secciones.`;
+    } else if (tipo === 'explicar' || !respuestaDocente || respuestaDocente.trim() === '') {
       // Solicitud de EXPLICACIÓN del objetivo
       userPrompt = `Objetivo curricular que el profesor necesita comprender:
 "${pregunta}"

@@ -55,28 +55,45 @@ module.exports = async function handler(req, res) {
   });
 
   try {
-    const { pregunta, respuestaDocente, tema } = req.body || {};
-    if (!pregunta || !respuestaDocente) {
-      res.status(400).json({ error: 'Faltan campos requeridos: pregunta y respuestaDocente', code: 'BAD_REQUEST' });
+    const { pregunta, respuestaDocente, tema, tipo } = req.body || {};
+    if (!pregunta) {
+      res.status(400).json({ error: 'Falta campo requerido: pregunta', code: 'BAD_REQUEST' });
       return;
     }
 
     const plan = loadPlan();
     const iaCfg = plan?.exam?.ia_feedback || {};
-    const basePrompt = iaCfg.prompt || 'Actúa como tutor pedagógico para profesores de Lenguaje en Chile.';
+    const basePrompt = iaCfg.prompt || 'Eres un tutor pedagógico especializado en Lenguaje y Comunicación para docentes chilenos.';
     const temaStr = Array.isArray(tema) ? tema.join(', ') : (tema || 'N/A');
     
-    const systemPrompt = `${basePrompt} Responde en español de Chile, de forma clara y pedagógica.`;
-    const userPrompt = `Pregunta evaluada: ${pregunta}
-
-Respuesta del docente: ${respuestaDocente}
+    const systemPrompt = basePrompt;
+    
+    // Detectar si es solicitud de explicación o retroalimentación de respuesta
+    let userPrompt;
+    if (tipo === 'explicar' || !respuestaDocente || respuestaDocente.trim() === '') {
+      // Solicitud de EXPLICACIÓN del objetivo
+      userPrompt = `Objetivo curricular que el profesor necesita comprender:
+"${pregunta}"
 
 Tema vinculado: ${temaStr}
 
-Entrega retroalimentación en 3 apartados:
-1) Refuerzo de aciertos
-2) Corrección y explicación
+Explica este objetivo pedagógicamente con:
+1) Explicación conceptual clara
+2) Ejemplo contextualizado con texto literario
+3) Estrategias didácticas aplicables en aula`;
+    } else {
+      // RETROALIMENTACIÓN de respuesta del docente
+      userPrompt = `Objetivo evaluado: ${pregunta}
+
+Respuesta del docente: ${respuestaDocente}
+
+Tema: ${temaStr}
+
+Analiza la respuesta del docente y entrega:
+1) Refuerzo de lo correcto
+2) Corrección de errores conceptuales (si los hay)
 3) Sugerencia de profundización`;
+    }
 
     // Use Groq API (fastest inference, free tier)
     const generationPromise = (async () => {

@@ -322,16 +322,28 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
       const box = btnObj.parentElement.nextElementSibling; // ia-obj-box-*
       if (!box) return;
       box.classList.remove('hidden');
-      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded">Generando explicación con IA...</div>`;
+      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded animate-pulse">⚡ Generando explicación pedagógica...</div>`;
       try {
         const resp = await fetch('/api/gemini-feedback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pregunta: `Explica el objetivo: ${objetivo}`, respuestaDocente: 'Explica con ejemplos, errores comunes y estrategias didácticas.', tema })
+          body: JSON.stringify({ 
+            pregunta: objetivo, 
+            respuestaDocente: '', 
+            tema,
+            tipo: 'explicar'
+          })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Error');
-        box.innerHTML = `<div class="bg-white border p-3 rounded shadow-sm"><div class="prose prose-sm max-w-none">${(data.feedback || '').replace(/\n/g, '<br>')}</div></div>`;
+        // Renderizar markdown simple: ## → <h3>, **texto** → <strong>, - lista → <li>
+        let html = (data.feedback || '')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/## (.+)/g, '<h3 class="text-lg font-bold text-blue-700 mt-4 mb-2">$1</h3>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+          .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+          .replace(/> (.+)/g, '<blockquote class="border-l-4 border-gray-300 pl-3 italic text-gray-700">$1</blockquote>');
+        box.innerHTML = `<div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm"><div class="prose prose-sm max-w-none text-gray-800 leading-relaxed"><p>${html}</p></div></div>`;
       } catch (e) {
         box.innerHTML = `<div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-3 rounded">No se pudo generar la explicación. ${e.message || ''}</div>`;
       }
@@ -345,16 +357,28 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
       const box = btnCaso.parentElement.nextElementSibling; // .ia-caso-box
       if (!box) return;
       box.classList.remove('hidden');
-      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded">Justificando con IA...</div>`;
+      box.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-3 rounded animate-pulse">⚡ Generando caso práctico contextualizado...</div>`;
       try {
         const resp = await fetch('/api/gemini-feedback', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ pregunta, respuestaDocente, tema })
+          body: JSON.stringify({ 
+            pregunta, 
+            respuestaDocente, 
+            tema,
+            tipo: 'caso'
+          })
         });
         const data = await resp.json();
         if (!resp.ok) throw new Error(data.error || 'Error');
-        box.innerHTML = `<div class="bg-white border p-3 rounded shadow-sm"><div class="prose prose-sm max-w-none">${(data.feedback || '').replace(/\n/g, '<br>')}</div></div>`;
+        // Renderizar markdown simple
+        let html = (data.feedback || '')
+          .replace(/\n\n/g, '</p><p>')
+          .replace(/## (.+)/g, '<h3 class="text-lg font-bold text-purple-700 mt-4 mb-2">$1</h3>')
+          .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900">$1</strong>')
+          .replace(/^- (.+)$/gm, '<li class="ml-4">$1</li>')
+          .replace(/> (.+)/g, '<blockquote class="border-l-4 border-gray-300 pl-3 italic text-gray-700">$1</blockquote>');
+        box.innerHTML = `<div class="bg-white border border-gray-200 p-4 rounded-lg shadow-sm"><div class="prose prose-sm max-w-none text-gray-800 leading-relaxed"><p>${html}</p></div></div>`;
       } catch (e) {
         box.innerHTML = `<div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-3 rounded">No se pudo justificar con IA. ${e.message || ''}</div>`;
       }

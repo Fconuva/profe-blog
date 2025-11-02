@@ -71,13 +71,459 @@ title: Práctica - Educación Especial PIE
     </div>
 
     <script>
-        let plan = null;
+        // Embedded plan data instead of fetching from external file
+        let plan = {
+  "metadata": {
+    "codigo_prueba": "ED-ESP-PIE",
+    "nombre": "Prueba de Conocimientos Específicos - Educación Diferencial",
+    "descripcion": "Preguntas tipo ECEP organizadas por especialidad",
+    "ultima_revision": "2025-11-02",
+    "version": 1
+  },
+  "ia_feedback": {
+    "provider": "groq",
+    "model": "llama-3.1-8b-instant",
+    "prompt": "Eres un tutor pedagógico especializado en Educación Especial y el PIE (Programa de Integración Escolar) de Chile.\n\nCuando un profesor solicita explicación de una pregunta:\n\n1) EXPLICACIÓN DE LA RESPUESTA CORRECTA (3-4 líneas):\n- Explica por qué la alternativa correcta es correcta según el marco legal/teórico chileno\n- Usa referencias al Decreto 170, Decreto 83, o modelos de intervención basados en evidencia\n- Incluye fundamento pedagógico directo\n\n2) ANÁLISIS DE DISTRACTORES (2 líneas por distractor):\n- Explica por qué cada alternativa incorrecta NO es la respuesta\n- Identifica el error conceptual o la confusión común\n\n3) CONCEPTO CLAVE (2-3 líneas):\n- Resume el concepto fundamental que el docente debe dominar\n- Conecta con la práctica profesional en aula de recursos o co-enseñanza\n\nFORMATO:\nUsa markdown limpio:\n- ## para títulos de sección\n- **negrita** solo para términos técnicos clave (NEE, PAI, PACI, ZDP, etc.)\n- Listas con guiones (-) no asteriscos\n- Ejemplos en bloques con > (quote)\n\nSÉ ESPECÍFICO con:\n- Normativa chilena (Decreto 170, Decreto 83, Ley 20.422, Ley TEA 21.545)\n- Instrumentos de evaluación chilenos (EVALÚA, TEVI, TECAL, TEPROSIF)\n- Estrategias basadas en evidencia (ABA, TEACCH, Modelo Denver, PEI-Feuerstein)\n- Contexto del PIE y trabajo colaborativo"
+  },
+  "preguntas": {
+    "tronco_comun": [
+      {
+        "id": "TC-01",
+        "especialidad": "tronco_comun",
+        "enunciado": "Según el Decreto 170, ¿cuál es el propósito principal del Formulario Único de Evaluación Integral (FUDEI)?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Registrar la detección inicial de una posible NEE y solicitar evaluación" },
+          { "opcion": "B", "texto": "Sintetizar los resultados de la evaluación diagnóstica y fundamentar la presencia de una NEE" },
+          { "opcion": "C", "texto": "Planificar los apoyos pedagógicos específicos para el estudiante" },
+          { "opcion": "D", "texto": "Actualizar anualmente la información del estudiante en el PIE" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El FUDEI (Formulario Único de Evaluación Integral) sintetiza los resultados de la evaluación diagnóstica realizada por el equipo multidisciplinario y fundamenta la presencia de una NEE. La detección inicial se registra en el FUD, la planificación en el PAI/PACI, y la actualización anual en el FUR.",
+        "temas_relacionados": ["Decreto 170", "Proceso PIE", "Evaluación Diagnóstica"]
+      },
+      {
+        "id": "TC-02",
+        "especialidad": "tronco_comun",
+        "enunciado": "En el modelo RTI (Respuesta a la Intervención), un estudiante que recibe apoyo en un grupo pequeño 3 veces por semana para cerrar una brecha en lectura se encuentra en:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Tier 1 - Apoyo Universal" },
+          { "opcion": "B", "texto": "Tier 2 - Apoyo Focalizado" },
+          { "opcion": "C", "texto": "Tier 3 - Apoyo Intensivo" },
+          { "opcion": "D", "texto": "Nivel de Derivación a Educación Especial" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El Tier 2 del modelo RTI corresponde a apoyo focalizado para aproximadamente 15-20% de estudiantes que presentan brechas incipientes. Se caracteriza por intervención en grupos pequeños (5-8 estudiantes) con frecuencia de 3-5 veces por semana y monitoreo quincenal del progreso.",
+        "temas_relacionados": ["Modelo RTI", "Niveles de apoyo", "Prevención"]
+      },
+      {
+        "id": "TC-03",
+        "especialidad": "tronco_comun",
+        "enunciado": "Según el Decreto 83, una adecuación curricular que modifica la complejidad de un objetivo de aprendizaje se clasifica como:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Adecuación de acceso" },
+          { "opcion": "B", "texto": "Adecuación curricular significativa" },
+          { "opcion": "C", "texto": "Diversificación de la enseñanza" },
+          { "opcion": "D", "texto": "Ajuste razonable" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Las adecuaciones curriculares significativas modifican los objetivos de aprendizaje (qué se enseña), ya sea reduciendo su complejidad, priorizando OA fundamentales o ajustando contenidos. Requieren PACI y evaluación diagnóstica integral. Las de acceso modifican el cómo (forma de acceder o demostrar), no el qué.",
+        "temas_relacionados": ["Decreto 83", "Adecuaciones Curriculares", "PACI"]
+      },
+      {
+        "id": "TC-04",
+        "especialidad": "tronco_comun",
+        "enunciado": "Una profesora diferencial observa que un estudiante con DI realiza correctamente una tarea con material concreto en el aula de recursos, pero no puede replicarla en su sala de clases regular. ¿Qué principio de intervención NO se está aplicando adecuadamente?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Funcionalidad" },
+          { "opcion": "B", "texto": "Generalización" },
+          { "opcion": "C", "texto": "Modelado" },
+          { "opcion": "D", "texto": "Refuerzo positivo" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El principio de generalización implica que una habilidad aprendida debe poder transferirse a otros contextos, personas y materiales. Si el estudiante solo puede realizar la tarea en el aula de recursos con la educadora diferencial, falta trabajar la práctica en múltiples entornos naturales para consolidar el aprendizaje.",
+        "temas_relacionados": ["Principios de intervención", "DI", "Transferencia de aprendizajes"]
+      },
+      {
+        "id": "TC-05",
+        "especialidad": "tronco_comun",
+        "enunciado": "¿Cuál de las siguientes barreras para el aprendizaje tiene su origen en el ENTORNO, según el enfoque de educación inclusiva?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Un estudiante con hipoacusia severa no puede seguir las instrucciones orales" },
+          { "opcion": "B", "texto": "Las instrucciones se entregan solo de forma oral, sin apoyo visual" },
+          { "opcion": "C", "texto": "Un estudiante con DEA presenta dificultades en la decodificación lectora" },
+          { "opcion": "D", "texto": "Un estudiante con TEA tiene dificultad para comprender el lenguaje figurado" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Las barreras del entorno son aquellas que se encuentran en la organización, metodología o actitud, no en el estudiante. Entregar instrucciones solo de forma oral es una barrera metodológica que excluye a estudiantes con dificultades auditivas o atencionales. Las opciones A, C y D describen características del estudiante, no barreras del entorno.",
+        "temas_relacionados": ["Barreras", "Modelo social", "Inclusión"]
+      }
+    ],
+    "dea": [
+      {
+        "id": "DEA-01",
+        "especialidad": "dea",
+        "enunciado": "Un estudiante de 3° básico con DEA en lectura lee 45 PCPM (Palabras Correctas Por Minuto) cuando la norma esperada es 85 PCPM. ¿Qué componente de la lectura debe priorizarse en la intervención?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Comprensión lectora inferencial" },
+          { "opcion": "B", "texto": "Fluidez lectora" },
+          { "opcion": "C", "texto": "Vocabulario académico" },
+          { "opcion": "D", "texto": "Conciencia fonológica" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "La fluidez lectora (medida en PCPM) es un indicador clave del automatismo en la decodificación. Un estudiante con lectura lenta (45 PCPM vs 85 esperado) destina recursos cognitivos a decodificar letra por letra, sobrecargando la memoria de trabajo y afectando la comprensión. La intervención debe usar lectura repetida y monitoreada para aumentar velocidad y precisión.",
+        "temas_relacionados": ["DEA Lectura", "Fluidez", "Intervención basada en evidencia"]
+      },
+      {
+        "id": "DEA-02",
+        "especialidad": "dea",
+        "enunciado": "En la Batería EVALÚA, un estudiante de 4° básico obtiene desempeño 'Promedio' en Razonamiento y 'Deficiente' en Ortografía. ¿Qué criterio diagnóstico de DEA se está evidenciando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Bajo rendimiento generalizado" },
+          { "opcion": "B", "texto": "Discrepancia entre capacidad intelectual y rendimiento en área específica" },
+          { "opcion": "C", "texto": "Déficit en la conducta adaptativa" },
+          { "opcion": "D", "texto": "Ausencia de respuesta a la intervención" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El criterio de discrepancia es clave para diagnosticar DEA: capacidad intelectual promedio o superior, pero rendimiento significativamente bajo en un área específica (lectura, escritura o matemática). Este perfil diferencia DEA de DI (donde hay bajo rendimiento generalizado incluyendo lo cognitivo).",
+        "temas_relacionados": ["Criterio discrepancia", "EVALÚA", "Diagnóstico DEA"]
+      },
+      {
+        "id": "DEA-03",
+        "especialidad": "dea",
+        "enunciado": "Una educadora diferencial trabaja con un estudiante con DEA en matemáticas usando bloques multibase para enseñar la suma con reagrupación. ¿Qué enfoque está aplicando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Método analítico-sintético" },
+          { "opcion": "B", "texto": "Enseñanza por descubrimiento" },
+          { "opcion": "C", "texto": "Concreto-Pictórico-Simbólico (CPA/COPISI)" },
+          { "opcion": "D", "texto": "Análisis de tarea" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "El enfoque Concreto-Pictórico-Simbólico (CPA o COPISI) es una secuencia didáctica basada en evidencia para enseñar matemáticas a estudiantes con DEA. Parte de manipulación de objetos concretos, progresa a representación visual/pictórica y culmina en el uso de símbolos abstractos. Facilita la comprensión conceptual antes de la automatización.",
+        "temas_relacionados": ["DEA Matemática", "CPA", "Estrategias de intervención"]
+      },
+      {
+        "id": "DEA-04",
+        "especialidad": "dea",
+        "enunciado": "Un estudiante con DEA en escritura escribe 'baca' en lugar de 'vaca' y 'jigante' en lugar de 'gigante'. Estos errores se clasifican como:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Errores de reglas ortográficas arbitrarias" },
+          { "opcion": "B", "texto": "Errores de separación de palabras" },
+          { "opcion": "C", "texto": "Errores de ortografía natural (fonema-grafema)" },
+          { "opcion": "D", "texto": "Errores de concordancia gramatical" }
+        ],
+        "respuesta_correcta": "A",
+        "explicacion": "Los errores con b/v y g/j son errores de reglas ortográficas arbitrarias (no fonéticas), ya que ambos grafemas representan el mismo sonido. Los errores de ortografía natural serían confundir fonemas diferentes (ej. 'pato' por 'gato'). Estos errores requieren estrategia de reglas explícitas y memoria visual.",
+        "temas_relacionados": ["DEA Escritura", "Ortografía", "Tipos de errores"]
+      },
+      {
+        "id": "DEA-05",
+        "especialidad": "dea",
+        "enunciado": "¿Cuál de las siguientes estrategias es más efectiva para mejorar la comprensión lectora en estudiantes con DEA, según la evidencia?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Lectura silenciosa sostenida (SSR) sin monitoreo" },
+          { "opcion": "B", "texto": "Completar guías de comprensión al final de cada texto" },
+          { "opcion": "C", "texto": "Enseñanza explícita de estrategias metacognitivas (antes-durante-después)" },
+          { "opcion": "D", "texto": "Aumentar el volumen de textos leídos sin apoyo" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "La enseñanza explícita de estrategias metacognitivas en los tres momentos de la lectura (antes: activar conocimientos previos; durante: monitorear comprensión, visualizar, hacer preguntas; después: resumir, organizar) es la intervención con mayor evidencia de efectividad para estudiantes con DEA. Requiere modelado explícito y práctica guiada.",
+        "temas_relacionados": ["Comprensión lectora", "Estrategias metacognitivas", "Evidencia"]
+      }
+    ],
+    "tel": [
+      {
+        "id": "TEL-01",
+        "especialidad": "tel",
+        "enunciado": "Un estudiante de 5 años dice 'pota' en lugar de 'pelota' y 'tato' en lugar de 'zapato'. ¿Qué nivel del lenguaje está afectado?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Semántico" },
+          { "opcion": "B", "texto": "Pragmático" },
+          { "opcion": "C", "texto": "Fonológico" },
+          { "opcion": "D", "texto": "Morfosintáctico" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "Las omisiones y sustituciones de fonemas ('pota' por 'pelota', 'tato' por 'zapato') son errores en el nivel fonológico, que afecta la producción de sonidos del habla y la estructura silábica. El proceso de simplificación evidente es la reducción de sílabas y sustitución de fonemas complejos.",
+        "temas_relacionados": ["TEL", "Nivel fonológico", "Procesos de simplificación"]
+      },
+      {
+        "id": "TEL-02",
+        "especialidad": "tel",
+        "enunciado": "En la intervención con un estudiante con TEL expresivo, la educadora reformula su enunciado 'perro come' diciendo 'Sí, el perro come su comida en el plato'. ¿Qué estrategia está aplicando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Corrección explícita" },
+          { "opcion": "B", "texto": "Expansión del enunciado" },
+          { "opcion": "C", "texto": "Conciencia fonológica" },
+          { "opcion": "D", "texto": "Análisis de tarea" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "La expansión es una estrategia naturalista donde el adulto repite lo que el niño dice, añadiendo elementos gramaticales (artículos, verbos conjugados) o semánticos (información adicional). Es indirecta (no corrige explícita mente) y proporciona un modelo correcto en contexto significativo.",
+        "temas_relacionados": ["TEL", "Estrategias de intervención", "Expansión"]
+      },
+      {
+        "id": "TEL-03",
+        "especialidad": "tel",
+        "enunciado": "Según el Decreto 170, ¿qué profesional está habilitado para diagnosticar un Trastorno Específico del Lenguaje (TEL)?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Psicólogo educacional" },
+          { "opcion": "B", "texto": "Fonoaudiólogo" },
+          { "opcion": "C", "texto": "Educador diferencial" },
+          { "opcion": "D", "texto": "Profesor de educación básica" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El Decreto 170 establece que el diagnóstico de TEL debe ser realizado por un fonoaudiólogo, quien debe evaluar los componentes del lenguaje (fonológico, morfosintáctico, semántico, pragmático) utilizando instrumentos estandarizados como TECAL, TEPROSIF o STSG.",
+        "temas_relacionados": ["Decreto 170", "Diagnóstico TEL", "Profesionales competentes"]
+      },
+      {
+        "id": "TEL-04",
+        "especialidad": "tel",
+        "enunciado": "Un estudiante con TEL mixto tiene dificultades tanto en expresión como en comprensión. ¿Qué implicancia tiene esto para el pronóstico y la intervención?",
+        "alternativas": [
+          { "opcion": "A", "texto": "El pronóstico es favorable; solo requiere apoyo en expresión" },
+          { "opcion": "B", "texto": "Requiere intervención intensiva y prolongada; el pronóstico es más reservado" },
+          { "opcion": "C", "texto": "Debe derivarse a educación especial con jornada completa" },
+          { "opcion": "D", "texto": "No puede acceder al PIE por tener compromiso comprensivo" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El TEL mixto (comprensivo y expresivo) tiene un pronóstico más reservado que el TEL solo expresivo, porque la comprensión es la base para desarrollar el lenguaje expresivo. Requiere intervención más intensiva (frecuencia y duración), apoyo familiar sistemático y seguimiento prolongado. Sin embargo, SÍ accede al PIE.",
+        "temas_relacionados": ["TEL mixto", "Pronóstico", "Intensidad de apoyo"]
+      },
+      {
+        "id": "TEL-05",
+        "especialidad": "tel",
+        "enunciado": "¿Cuál de los siguientes instrumentos evalúa específicamente la comprensión auditiva del lenguaje en estudiantes chilenos?",
+        "alternativas": [
+          { "opcion": "A", "texto": "EVALÚA" },
+          { "opcion": "B", "texto": "TECAL (Test de Comprensión Auditiva del Lenguaje)" },
+          { "opcion": "C", "texto": "Escala Vineland" },
+          { "opcion": "D", "texto": "Test de Matrices Progresivas de Raven" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El TECAL (Test de Comprensión Auditiva del Lenguaje) es un instrumento estandarizado para población chilena que evalúa específicamente la comprensión de vocabulario y sintaxis, sin requerir respuesta verbal del estudiante (señala imágenes). Es fundamental en la evaluación de TEL.",
+        "temas_relacionados": ["Evaluación TEL", "TECAL", "Instrumentos estandarizados"]
+      }
+    ],
+    "tea": [
+      {
+        "id": "TEA-01",
+        "especialidad": "tea",
+        "enunciado": "Un estudiante con TEA presenta gran dificultad para cambiar de actividad cuando se le interrumpe una rutina establecida. ¿A qué dimensión nuclear del TEA corresponde esta característica?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Deficiencias en comunicación e interacción social" },
+          { "opcion": "B", "texto": "Patrones restrictivos y repetitivos de comportamiento" },
+          { "opcion": "C", "texto": "Hipersensibilidad sensorial" },
+          { "opcion": "D", "texto": "Déficit en teoría de la mente" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "La inflexibilidad ante cambios y la adherencia a rutinas son parte de la dimensión de 'patrones restrictivos y repetitivos de comportamiento, intereses o actividades', una de las dos dimensiones nucleares del TEA según DSM-5. La otra dimensión es la de comunicación e interacción social.",
+        "temas_relacionados": ["TEA", "DSM-5", "Dimensiones nucleares"]
+      },
+      {
+        "id": "TEA-02",
+        "especialidad": "tea",
+        "enunciado": "Para anticipar un cambio de actividad a un estudiante con TEA nivel 2, la educadora muestra una secuencia visual: 'PRIMERO matemáticas → DESPUÉS recreo'. ¿Qué principio de apoyo está aplicando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Refuerzo positivo diferencial" },
+          { "opcion": "B", "texto": "Estructura y predictibilidad con apoyo visual" },
+          { "opcion": "C", "texto": "Enseñanza naturalista" },
+          { "opcion": "D", "texto": "Integración sensorial" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "La estructura y predictibilidad mediante apoyos visuales es un principio fundamental en TEA. Las secuencias visuales ('primero-después', horarios pictográficos, cronómetros visuales) reducen la ansiedad ante lo impredecible y ayudan a la autorregulación. Los apoyos visuales son procesados mejor que las instrucciones verbales en TEA.",
+        "temas_relacionados": ["TEA", "Apoyos visuales", "Anticipación"]
+      },
+      {
+        "id": "TEA-03",
+        "especialidad": "tea",
+        "enunciado": "Un estudiante con TEA se fascina intensamente por los trenes. La profesora diseña problemas matemáticos sobre trenes para motivar su participación. ¿Qué estrategia está implementando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Extinción de intereses restrictivos" },
+          { "opcion": "B", "texto": "Usar intereses restringidos como puente curricular y motivador" },
+          { "opcion": "C", "texto": "Refuerzo negativo" },
+          { "opcion": "D", "texto": "Análisis funcional de conducta" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Los intereses restringidos e intensos en TEA pueden usarse como motivadores poderosos y puentes para acceder al currículo. En lugar de intentar eliminarlos, se aprovechan estratégicamente para enseñar contenidos académicos, desarrollar habilidades sociales (compartir el interés) o como refuerzo tras completar tareas.",
+        "temas_relacionados": ["TEA", "Intereses restringidos", "Motivación"]
+      },
+      {
+        "id": "TEA-04",
+        "especialidad": "tea",
+        "enunciado": "El modelo TEACCH para estudiantes con TEA se caracteriza principalmente por:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Terapia intensiva uno a uno basada en ensayos discretos" },
+          { "opcion": "B", "texto": "Estructuración del entorno físico y uso de sistemas visuales de trabajo" },
+          { "opcion": "C", "texto": "Integración sensorial en sala Snoezelen" },
+          { "opcion": "D", "texto": "Comunicación facilitada con apoyo físico" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "TEACCH (Treatment and Education of Autistic and Communication Handicapped Children) se basa en la estructuración del entorno físico (espacios organizados con límites claros), sistemas de trabajo visual (cajas con tareas secuenciadas, horarios individuales) y rutinas predecibles. Es diferente del enfoque ABA (ensayos discretos).",
+        "temas_relacionados": ["TEACCH", "TEA", "Modelos de intervención"]
+      },
+      {
+        "id": "TEA-05",
+        "especialidad": "tea",
+        "enunciado": "Según la Ley 21.545 (Ley TEA en Chile), ¿cuál de los siguientes es un derecho garantizado para personas con TEA?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Atención en escuelas especiales exclusivamente" },
+          { "opcion": "B", "texto": "Terapia ABA gratuita financiada por el Estado" },
+          { "opcion": "C", "texto": "Acceso a educación inclusiva y ajustes razonables en establecimientos regulares" },
+          { "opcion": "D", "texto": "Eximición de evaluaciones estandarizadas SIMCE" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "La Ley 21.545 (2023) garantiza el derecho a educación inclusiva en establecimientos regulares con ajustes razonables, atención temprana, y prohibición de discriminación. No obliga a escuelas especiales ni garantiza terapias específicas gratuitas. Sí pueden acceder a PIE con apoyos en aula regular.",
+        "temas_relacionados": ["Ley TEA", "Derechos", "Inclusión"]
+      }
+    ],
+    "di": [
+      {
+        "id": "DI-01",
+        "especialidad": "di",
+        "enunciado": "Según el modelo actual de la AAIDD (2021), el diagnóstico de Discapacidad Intelectual se basa en:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Solo el coeficiente intelectual (CI) inferior a 70" },
+          { "opcion": "B", "texto": "CI inferior a 70 Y limitaciones en conducta adaptativa, con inicio antes de los 22 años" },
+          { "opcion": "C", "texto": "Dificultades de aprendizaje significativas en todas las asignaturas" },
+          { "opcion": "D", "texto": "Resultados deficientes en la Batería EVALÚA" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "El diagnóstico de DI requiere TRES criterios: 1) Funcionamiento intelectual significativamente bajo (CI ≈70 o inferior), 2) Limitaciones en conducta adaptativa (conceptual, social o práctica), y 3) Inicio en el período de desarrollo (antes de 22 años). No basta con el CI; la conducta adaptativa es esencial.",
+        "temas_relacionados": ["DI", "AAIDD", "Criterios diagnósticos"]
+      },
+      {
+        "id": "DI-02",
+        "especialidad": "di",
+        "enunciado": "Un estudiante con DI es independiente en la mayoría de los contextos, pero requiere apoyo puntual en momentos de transición (ej. cambio de ciclo escolar). ¿Qué intensidad de apoyo necesita según el modelo de la AAIDD?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Intermitente" },
+          { "opcion": "B", "texto": "Limitado" },
+          { "opcion": "C", "texto": "Extenso" },
+          { "opcion": "D", "texto": "Generalizado" }
+        ],
+        "respuesta_correcta": "A",
+        "explicacion": "El apoyo intermitente es episódico, cuando se necesita, y no es constante. El estudiante es independiente en la mayoría de contextos pero requiere ayuda en situaciones específicas (transiciones, crisis). Es el nivel más bajo de intensidad de apoyo.",
+        "temas_relacionados": ["DI", "Intensidad de apoyo", "AAIDD"]
+      },
+      {
+        "id": "DI-03",
+        "especialidad": "di",
+        "enunciado": "Una educadora diferencial enseña a un estudiante con DI a lavarse las manos descomponiendo la tarea en 8 pasos secuenciales con apoyo visual. ¿Qué estrategia está usando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Moldeamiento" },
+          { "opcion": "B", "texto": "Encadenamiento hacia atrás" },
+          { "opcion": "C", "texto": "Análisis de tarea" },
+          { "opcion": "D", "texto": "Economía de fichas" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "El análisis de tarea (task analysis) consiste en descomponer una habilidad compleja en pasos pequeños y secuenciales que se enseñan de forma estructurada. Es fundamental para enseñar habilidades de autonomía (AVD) a estudiantes con DI. Puede combinarse con encadenamiento (enseñar la secuencia completa).",
+        "temas_relacionados": ["DI", "Análisis de tarea", "Autonomía"]
+      },
+      {
+        "id": "DI-04",
+        "especialidad": "di",
+        "enunciado": "¿Cuál de las siguientes habilidades corresponde al dominio de conducta adaptativa CONCEPTUAL?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Hacer amistades y resolver conflictos con pares" },
+          { "opcion": "B", "texto": "Vestirse y comer de forma independiente" },
+          { "opcion": "C", "texto": "Comprender el concepto de dinero y saber dar vuelto" },
+          { "opcion": "D", "texto": "Usar transporte público de forma segura" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "El dominio conceptual incluye habilidades cognitivas y académicas funcionales: lenguaje, lectoescritura, conceptos de dinero, tiempo, números. El dominio social incluye relaciones interpersonales (A). El dominio práctico incluye AVD como vestimenta, alimentación y movilidad (B y D).",
+        "temas_relacionados": ["Conducta adaptativa", "DI", "Dominios"]
+      },
+      {
+        "id": "DI-05",
+        "especialidad": "di",
+        "enunciado": "En la intervención con estudiantes con DI, ¿por qué es crítico el principio de FUNCIONALIDAD?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Porque permite trabajar con material concreto" },
+          { "opcion": "B", "texto": "Porque asegura que se enseñen habilidades útiles para la vida real del estudiante" },
+          { "opcion": "C", "texto": "Porque facilita la inclusión en aula regular" },
+          { "opcion": "D", "texto": "Porque reduce el tiempo de intervención requerido" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "La funcionalidad implica priorizar habilidades que aumentan la autonomía, participación y calidad de vida del estudiante en sus entornos reales (hogar, escuela, comunidad). No se trata de enseñar contenidos académicos abstractos, sino aprendizajes aplicables inmediatamente a su vida cotidiana (ej. usar dinero, leer señaléticas, preparar alimentos simples).",
+        "temas_relacionados": ["DI", "Funcionalidad", "Principios de intervención"]
+      }
+    ],
+    "dm": [
+      {
+        "id": "DM-01",
+        "especialidad": "dm",
+        "enunciado": "¿Qué caracteriza a la Discapacidad Múltiple (DM) según la definición actual?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Presencia de tres o más discapacidades diagnosticadas" },
+          { "opcion": "B", "texto": "Combinación de dos o más discapacidades cuya interacción genera necesidades complejas de apoyo" },
+          { "opcion": "C", "texto": "Discapacidad intelectual severa con compromiso motor" },
+          { "opcion": "D", "texto": "Estudiante que no puede participar en el currículo regular" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Lo clave en DM no es el número de discapacidades, sino la INTERACCIÓN entre ellas que multiplica el impacto y genera necesidades de apoyo tan complejas que no pueden ser atendidas con programas específicos diseñados para una sola discapacidad. Por ejemplo, DI + déficit visual genera necesidades distintas a cada una por separado.",
+        "temas_relacionados": ["DM", "Definición", "Complejidad"]
+      },
+      {
+        "id": "DM-02",
+        "especialidad": "dm",
+        "enunciado": "En el trabajo con estudiantes con DM, ¿qué implica el enfoque TRANSDISCIPLINARIO?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Cada profesional trabaja su área de forma independiente" },
+          { "opcion": "B", "texto": "Los profesionales se coordinan pero mantienen roles separados" },
+          { "opcion": "C", "texto": "Múltiples profesionales comparten roles y responsabilidades; uno implementa estrategias de todos" },
+          { "opcion": "D", "texto": "Solo el educador diferencial trabaja con el estudiante" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "El enfoque transdisciplinario implica que los profesionales trascienden sus límites disciplinares y comparten conocimientos y estrategias. Un mismo adulto (ej. técnico en educación especial) puede implementar actividades que integran objetivos de kinesiología, fonoaudiología y educación en la rutina diaria, bajo supervisión del equipo.",
+        "temas_relacionados": ["DM", "Enfoque transdisciplinario", "Trabajo en equipo"]
+      },
+      {
+        "id": "DM-03",
+        "especialidad": "dm",
+        "enunciado": "Para un estudiante con DM (DI + déficit visual), la educadora usa objetos reales como símbolos de anticipación: muestra una toalla antes del baño, la mochila antes de salir. ¿Qué estrategia está implementando?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Comunicación aumentativa con pictogramas" },
+          { "opcion": "B", "texto": "Rutinas con objetos clave (object cues)" },
+          { "opcion": "C", "texto": "Sistema PECS" },
+          { "opcion": "D", "texto": "Historias sociales" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Los objetos clave (object cues) son objetos concretos que representan actividades y se usan para anticipar rutinas cuando el estudiante tiene doble déficit sensorial o dificultades cognitivas severas. Es un sistema de comunicación táctil que precede a los símbolos visuales (fotos, pictogramas).",
+        "temas_relacionados": ["DM", "Object cues", "Comunicación"]
+      },
+      {
+        "id": "DM-04",
+        "especialidad": "dm",
+        "enunciado": "En la planificación para un estudiante con DM, ¿por qué se recomienda establecer objetivos a muy corto plazo (mensuales o bimensuales)?",
+        "alternativas": [
+          { "opcion": "A", "texto": "Porque el PIE exige informes mensuales" },
+          { "opcion": "B", "texto": "Porque el progreso es más lento y requiere ajustes frecuentes" },
+          { "opcion": "C", "texto": "Porque los objetivos anuales son muy difíciles de redactar" },
+          { "opcion": "D", "texto": "Porque la familia necesita retroalimentación constante" }
+        ],
+        "respuesta_correcta": "B",
+        "explicacion": "Los estudiantes con DM tienen ritmos de aprendizaje muy lentos y requieren monitoreo constante para ajustar apoyos. Objetivos semestrales son demasiado extensos; pueden pasar meses sin progreso visible. Los objetivos mensuales o bimensuales permiten celebrar pequeños logros, ajustar estrategias y mantener la motivación del equipo y la familia.",
+        "temas_relacionados": ["DM", "Planificación", "PAI"]
+      },
+      {
+        "id": "DM-05",
+        "especialidad": "dm",
+        "enunciado": "La sordoceguera es una forma de discapacidad múltiple que afecta:",
+        "alternativas": [
+          { "opcion": "A", "texto": "Audición y cognición" },
+          { "opcion": "B", "texto": "Visión y motricidad" },
+          { "opcion": "C", "texto": "Visión y audición (doble déficit sensorial)" },
+          { "opcion": "D", "texto": "Lenguaje y conducta" }
+        ],
+        "respuesta_correcta": "C",
+        "explicacion": "La sordoceguera es el doble déficit sensorial (visual y auditivo), que tiene un impacto único porque ambos sentidos son vías principales de acceso a la información y comunicación. Requiere sistemas táctiles de comunicación (ej. lenguaje de señas táctil, sistema Braille) y mediador especializado.",
+        "temas_relacionados": ["Sordoceguera", "DM", "Déficit sensorial"]
+      }
+    ]
+  }
+        };
         let currentSpecialty = null;
 
         async function loadPlan() {
-            if (plan) return plan;
-            const response = await fetch('/evaluaciones/educacion-especial/pruebas/plan.json');
-            plan = await response.json();
+            // Plan is now embedded directly in the script
             return plan;
         }
 

@@ -254,11 +254,19 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
     try {
       const resp = await fetch('/api/gemini-feedback?health=1');
       const data = await resp.json();
-      if (!data?.hasKey) {
-        document.querySelectorAll('.ia-explain-obj, .ia-explain-caso').forEach(btn => {
+      const hasAnyKey = Boolean(data?.hasGemini || data?.hasOpenAI);
+      const buttons = document.querySelectorAll('.ia-explain-obj, .ia-explain-caso');
+      if (!hasAnyKey) {
+        buttons.forEach(btn => {
           btn.disabled = true;
           btn.classList.add('opacity-60', 'cursor-not-allowed');
           btn.title = 'IA deshabilitada temporalmente (falta configuración del servidor)';
+        });
+      } else {
+        buttons.forEach(btn => {
+          btn.disabled = false;
+          btn.classList.remove('opacity-60', 'cursor-not-allowed');
+          btn.removeAttribute('title');
         });
       }
     } catch {}

@@ -79,6 +79,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/66-sc-m/**");
   eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/71-sc-cs/**");
   eleventyConfig.ignores.add("**/63.SC-L(20).pdf");
+  // Ocultar toda la sección Temarios
+  eleventyConfig.ignores.add("evaluaciones/educacion-basica/temarios/**");
   // Solo ignorar index.html en carpetas que no queremos procesar
   // PERMITIR que se procesen los index.html de las herramientas
   // eleventyConfig.ignores.add("**/index.html");

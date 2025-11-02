@@ -1,19 +1,19 @@
 const fs = require('fs');
 const path = require('path');
 
-module.exports = () => {
-  // Load plan.json robustly using absolute path to avoid require/loader issues
-  let plan = { study: [], exam: { preguntas: [] } };
-  try {
-    const planPath = path.join(__dirname, '..', 'pruebas', '63-sc-l', 'plan.json');
-    const raw = fs.readFileSync(planPath, 'utf-8');
-    plan = JSON.parse(raw);
-  } catch {}
-  const casosPorTema = {};
-  const casosPorSubtema = {};
-  const casosPreset = {};
+// Load plan.json robustly using absolute path to avoid require/loader issues
+let plan = { study: [], exam: { preguntas: [] } };
+try {
+  const planPath = path.join(__dirname, '..', 'pruebas', '63-sc-l', 'plan.json');
+  const raw = fs.readFileSync(planPath, 'utf-8');
+  plan = JSON.parse(raw);
+} catch {}
 
-  try {
+const casosPorTema = {};
+const casosPorSubtema = {};
+const casosPreset = {};
+
+try {
     const preguntas = plan?.exam?.preguntas || [];
 
     // 1) Index by every tema_relacionado (exact key)
@@ -87,8 +87,8 @@ module.exports = () => {
     }
   } catch {}
 
-  // Preset: garantizar casos para 'Textos literarios' si no hay mapeo
-  casosPreset['textos literarios'] = [
+// Preset: garantizar casos para 'Textos literarios' si no hay mapeo
+casosPreset['textos literarios'] = [
     {
       id: 'CLIT-01',
       enunciado: 'En un cuento el narrador conoce los pensamientos de todos los personajes. ¿Qué tipo de narrador es?',
@@ -195,5 +195,4 @@ module.exports = () => {
     }
   ];
 
-  return { plan, casosPorTema, casosPorSubtema, casosPreset };
-};
+module.exports = { plan, casosPorTema, casosPorSubtema, casosPreset };

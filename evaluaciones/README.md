@@ -23,5 +23,5 @@ Cada carpeta incluirá:
 1. Integrar temarios oficiales (formato JSON/Markdown).
 2. Diseñar esquema de preguntas y respuestas (incluyendo metadatos).
 3. Definir flujo de autenticación y panel de administración.
-4. Configurar API de IA (OpenAI/Gemini) para retroalimentación o generación de preguntas.
+4. Configurar API de IA (Groq) para retroalimentación o generación de preguntas.
 5. Construir interfaz de usuario para rendir pruebas y revisar resultados.

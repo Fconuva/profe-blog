@@ -1,0 +1,248 @@
+---
+layout: layout.njk
+title: Práctica - Educación Especial PIE
+---
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold text-gray-900 mb-2">Práctica Interactiva</h1>
+            <p class="text-xl text-gray-600">Educación Especial - Programa de Integración Escolar (PIE)</p>
+            <div class="mt-4 flex gap-4">
+                <a href="/evaluaciones/educacion-especial/" class="text-blue-600 hover:underline">← Volver al inicio</a>
+            </div>
+        </header>
+
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Selecciona tu Especialidad</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button onclick="loadQuestions('tronco_comun')" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">Tronco Común</div>
+                    <div class="text-sm opacity-90">Fundamentos y normativa</div>
+                </button>
+                <button onclick="loadQuestions('dea')" class="bg-gradient-to-r from-purple-500 to-purple-600 text-white px-6 py-4 rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">DEA</div>
+                    <div class="text-sm opacity-90">Dificultades Específicas</div>
+                </button>
+                <button onclick="loadQuestions('tel')" class="bg-gradient-to-r from-green-500 to-green-600 text-white px-6 py-4 rounded-lg hover:from-green-600 hover:to-green-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">TEL/TDL</div>
+                    <div class="text-sm opacity-90">Trastorno del Lenguaje</div>
+                </button>
+                <button onclick="loadQuestions('tea')" class="bg-gradient-to-r from-orange-500 to-orange-600 text-white px-6 py-4 rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">TEA</div>
+                    <div class="text-sm opacity-90">Espectro Autista</div>
+                </button>
+                <button onclick="loadQuestions('di')" class="bg-gradient-to-r from-indigo-500 to-indigo-600 text-white px-6 py-4 rounded-lg hover:from-indigo-600 hover:to-indigo-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">DI</div>
+                    <div class="text-sm opacity-90">Discapacidad Intelectual</div>
+                </button>
+                <button onclick="loadQuestions('dm')" class="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-4 rounded-lg hover:from-pink-600 hover:to-pink-700 transition-all transform hover:scale-105 shadow-md">
+                    <div class="text-lg font-bold">DM</div>
+                    <div class="text-sm opacity-90">Discapacidad Múltiple</div>
+                </button>
+            </div>
+        </div>
+
+        <div id="quiz-container" class="hidden">
+            <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 id="specialty-title" class="text-2xl font-bold text-gray-800"></h2>
+                    <div class="text-sm text-gray-600">
+                        <span id="current-q">0</span> / <span id="total-q">0</span>
+                    </div>
+                </div>
+                <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+                    <p class="text-blue-800 text-sm">
+                        💡 <strong>Consejo:</strong> Lee cuidadosamente cada pregunta y usa el botón de IA si necesitas explicación pedagógica de la respuesta correcta.
+                    </p>
+                </div>
+            </div>
+
+            <div id="questions-list"></div>
+        </div>
+    </div>
+
+    <script>
+        let plan = null;
+        let currentSpecialty = null;
+
+        async function loadPlan() {
+            if (plan) return plan;
+            const response = await fetch('/evaluaciones/educacion-especial/pruebas/plan.json');
+            plan = await response.json();
+            return plan;
+        }
+
+        async function loadQuestions(specialty) {
+            currentSpecialty = specialty;
+            const data = await loadPlan();
+            const questions = data.preguntas[specialty] || [];
+            
+            if (questions.length === 0) {
+                alert('No hay preguntas disponibles para esta especialidad aún.');
+                return;
+            }
+
+            document.getElementById('quiz-container').classList.remove('hidden');
+            document.getElementById('specialty-title').textContent = getSpecialtyName(specialty);
+            document.getElementById('total-q').textContent = questions.length;
+            document.getElementById('current-q').textContent = questions.length;
+
+            const container = document.getElementById('questions-list');
+            container.innerHTML = questions.map((q, index) => renderQuestion(q, index + 1)).join('');
+
+            // Scroll to questions
+            document.getElementById('quiz-container').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function getSpecialtyName(specialty) {
+            const names = {
+                'tronco_comun': 'Tronco Común - Fundamentos PIE',
+                'dea': 'Dificultades Específicas del Aprendizaje (DEA)',
+                'tel': 'Trastorno Específico del Lenguaje (TEL/TDL)',
+                'tea': 'Trastorno del Espectro Autista (TEA)',
+                'di': 'Discapacidad Intelectual (DI)',
+                'dm': 'Discapacidad Múltiple (DM)'
+            };
+            return names[specialty] || specialty;
+        }
+
+        function renderQuestion(q, index) {
+            return `
+                <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                    <div class="flex items-start gap-3 mb-4">
+                        <span class="bg-blue-500 text-white font-bold rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0">${index}</span>
+                        <div class="flex-1">
+                            <p class="text-lg font-semibold text-gray-800">${q.enunciado}</p>
+                            ${q.temas_relacionados ? `<p class="text-sm text-gray-500 mt-2">📚 Temas: ${q.temas_relacionados.join(', ')}</p>` : ''}
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-2 mb-4">
+                        ${q.alternativas.map(alt => `
+                            <label class="flex items-start gap-3 p-3 border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                                <input type="radio" name="pregunta-${q.id}" value="${alt.opcion}" class="mt-1 flex-shrink-0" onchange="handleAnswer('${q.id}', '${alt.opcion}', '${q.respuesta_correcta}')">
+                                <span class="text-gray-700"><strong>${alt.opcion})</strong> ${alt.texto}</span>
+                            </label>
+                        `).join('')}
+                    </div>
+
+                    <div id="feedback-${q.id}" class="hidden mb-4"></div>
+                    
+                    <button onclick="consultarIA('${q.id}')" class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white px-4 py-2 rounded-lg hover:from-purple-600 hover:to-indigo-700 transition-all disabled:opacity-50" disabled id="ia-btn-${q.id}">
+                        🤖 Consultar IA - Ver Explicación
+                    </button>
+                    <div id="ia-feedback-${q.id}" class="mt-4"></div>
+                </div>
+            `;
+        }
+
+        function handleAnswer(questionId, selected, correct) {
+            const feedbackDiv = document.getElementById(`feedback-${questionId}`);
+            const iaBtn = document.getElementById(`ia-btn-${questionId}`);
+            
+            iaBtn.disabled = false;
+
+            if (selected === correct) {
+                feedbackDiv.className = 'bg-green-50 border-l-4 border-green-500 p-4 mb-4';
+                feedbackDiv.innerHTML = `
+                    <p class="text-green-800 font-semibold">✅ ¡Correcto!</p>
+                    <p class="text-green-700 text-sm mt-1">Puedes consultar la IA para profundizar en la explicación pedagógica.</p>
+                `;
+            } else {
+                feedbackDiv.className = 'bg-red-50 border-l-4 border-red-500 p-4 mb-4';
+                feedbackDiv.innerHTML = `
+                    <p class="text-red-800 font-semibold">❌ Incorrecto</p>
+                    <p class="text-red-700 text-sm mt-1">La respuesta correcta es <strong>${correct}</strong>. Consulta la IA para entender por qué.</p>
+                `;
+            }
+            feedbackDiv.classList.remove('hidden');
+        }
+
+        async function consultarIA(questionId) {
+            const iaBox = document.getElementById(`ia-feedback-${questionId}`);
+            const iaBtn = document.getElementById(`ia-btn-${questionId}`);
+            
+            const data = await loadPlan();
+            const pregunta = Object.values(data.preguntas).flat().find(q => q.id === questionId);
+            
+            if (!pregunta) {
+                console.error('Pregunta no encontrada:', questionId);
+                return;
+            }
+
+            iaBtn.disabled = true;
+            iaBtn.textContent = '⏳ Consultando IA...';
+            
+            iaBox.innerHTML = `
+                <div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-md">
+                    Generando explicación pedagógica...
+                </div>
+            `;
+
+            try {
+                const tema = (pregunta.temas_relacionados && pregunta.temas_relacionados[0]) || '';
+                const respuestaCorrecta = pregunta.respuesta_correcta;
+                const alternativas = pregunta.alternativas.map(alt => `${alt.opcion}) ${alt.texto}`).join('\\n');
+                
+                const preguntaCompleta = `${pregunta.enunciado}
+
+ALTERNATIVAS:
+${alternativas}
+
+RESPUESTA CORRECTA: ${respuestaCorrecta}`;
+
+                const resp = await fetch('/api/gemini-feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        pregunta: preguntaCompleta, 
+                        respuestaDocente: '', 
+                        tema,
+                        tipo: 'explicar_con_respuesta'
+                    })
+                });
+                
+                const responseData = await resp.json();
+                if (!resp.ok) throw new Error(responseData.error || 'Error');
+                
+                const text = responseData.feedback || 'No se recibió retroalimentación.';
+                
+                // Renderizar markdown con espaciado correcto
+                let html = text
+                    .replace(/\\n\\n/g, '</p><p class="mt-3">')
+                    .replace(/## (.+)/g, '<h3 class="text-lg font-bold text-blue-700 mt-5 mb-3">$1</h3>')
+                    .replace(/\\*\\*(.+?)\\*\\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
+                    .replace(/^- (.+)$/gm, '<li class="ml-6 mb-2">$1</li>')
+                    .replace(/> (.+)/g, '<blockquote class="border-l-4 border-blue-300 pl-4 py-2 my-4 italic text-gray-700 bg-blue-50">$1</blockquote>');
+                
+                iaBox.innerHTML = `
+                    <div class="bg-white border border-green-200 p-5 rounded-lg shadow-sm">
+                        <h4 class="font-bold text-green-800 mb-4 text-lg border-b border-green-200 pb-2">✅ Respuesta Correcta: ${respuestaCorrecta}</h4>
+                        <div class="prose prose-sm max-w-none text-gray-800 leading-relaxed space-y-3"><p class="mt-0">${html}</p></div>
+                    </div>
+                `;
+                
+                iaBtn.disabled = false;
+                iaBtn.textContent = '🤖 Consultar IA - Ver Explicación';
+            } catch (e) {
+                iaBox.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-4 rounded-md">
+                        No se pudo obtener retroalimentación. ${e.message || ''}
+                    </div>
+                `;
+                iaBtn.disabled = false;
+                iaBtn.textContent = '🤖 Consultar IA - Ver Explicación';
+            }
+        }
+    </script>
+</body>
+</html>

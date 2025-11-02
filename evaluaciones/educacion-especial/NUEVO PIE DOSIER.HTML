@@ -31,6 +31,12 @@
   .hidden { display: none; }
   .content-section { border-top: 5px solid var(--accent-color); margin-top: 3rem; padding-top: 2rem; }
   .callout { padding: 1rem; background-color: #162132; border-left: 4px solid var(--accent-color); border-radius: 8px; margin-top: 1.5rem; }
+  .ia-btn { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 0.6rem 1.2rem; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: inline-flex; align-items: center; gap: 0.5rem; margin-top: 1rem; }
+  .ia-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4); }
+  .ia-btn:disabled { opacity: 0.6; cursor: not-started; }
+  .ia-feedback-box { margin-top: 1rem; display: none; }
+  .ia-feedback-box.show { display: block; animation: fadeIn 0.3s; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
   @media (max-width:980px){.layout{grid-template-columns:1fr}.content{padding:2rem 1.5rem 3.5rem}aside{position:static;max-height:none;flex-direction:row;flex-wrap:wrap; justify-content: center;}}
 </style>
 </head>
@@ -135,7 +141,11 @@
             <h2>Especialidad: Dificultades Específicas del Aprendizaje (DEA)</h2>
             <p class="lead">Foco en los procesos neurobiológicos de la lectura, escritura y matemáticas, y las estrategias de intervención basadas en la evidencia.</p>
             <h3>Definición y Manifestaciones</h3>
-            <div class="panel"><strong>Definición:</strong> Dificultades específicas de base neurobiológica en procesos de lectura, escritura y/o matemática, que persisten pese a una instrucción adecuada. La clave es la <strong>discrepancia</strong> entre una capacidad intelectual promedio y un rendimiento bajo en áreas específicas.</div>
+            <div class="panel">
+                <strong>Definición:</strong> Dificultades específicas de base neurobiológica en procesos de lectura, escritura y/o matemática, que persisten pese a una instrucción adecuada. La clave es la <strong>discrepancia</strong> entre una capacidad intelectual promedio y un rendimiento bajo en áreas específicas.
+                <button class="ia-btn" data-concepto="criterio-discrepancia-dea" data-texto="Explica el criterio de discrepancia para diagnosticar DEA según Decreto 170 y cómo se evidencia en la Batería EVALÚA" data-tema="DEA">🤖 Consultar IA</button>
+                <div id="ia-feedback-criterio-discrepancia-dea" class="ia-feedback-box"></div>
+            </div>
             <div class="panel"><strong>Manifestaciones Clave (🔎):</strong>
               <table>
                 <thead><tr><th>Dominio</th><th>Indicadores Típicos</th></tr></thead>
@@ -676,6 +686,73 @@ document.addEventListener('DOMContentLoaded', function() {
         window.addEventListener('scroll', onScroll, { passive: true });
         onScroll();
     }
+
+    // Funcionalidad de botones IA
+    document.addEventListener('click', async function(e) {
+        if (e.target.closest('.ia-btn')) {
+            const btn = e.target.closest('.ia-btn');
+            const conceptoId = btn.dataset.concepto;
+            const feedbackBox = document.getElementById(`ia-feedback-${conceptoId}`);
+            
+            if (!feedbackBox) {
+                console.error('No se encontró el contenedor de feedback');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '⏳ Consultando IA...';
+            feedbackBox.classList.remove('show');
+            feedbackBox.innerHTML = '<div class="bg-blue-50 border-l-4 border-blue-400 text-blue-800 p-4 rounded-md">Generando explicación pedagógica...</div>';
+            feedbackBox.classList.add('show');
+
+            try {
+                const concepto = btn.dataset.texto || btn.dataset.concepto;
+                const tema = btn.dataset.tema || 'Educación Especial';
+                
+                const resp = await fetch('/api/gemini-feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        pregunta: concepto, 
+                        respuestaDocente: '', 
+                        tema: tema,
+                        tipo: 'explicar'
+                    })
+                });
+
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data.error || 'Error');
+                
+                const text = data.feedback || 'No se recibió retroalimentación.';
+                
+                // Renderizar markdown con espaciado mejorado
+                let html = text
+                    .replace(/\n\n/g, '</p><p class="mt-4">')
+                    .replace(/## (.+)/g, '<h3 class="text-lg font-bold text-purple-700 mt-6 mb-3 border-b border-purple-100 pb-2">$1</h3>')
+                    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-semibold">$1</strong>')
+                    .replace(/^- (.+)$/gm, '<li class="ml-6 mb-2 list-disc">$1</li>')
+                    .replace(/> (.+)/g, '<blockquote class="border-l-4 border-purple-300 pl-4 py-3 my-4 italic text-gray-300 bg-purple-900 rounded-r">$1</blockquote>');
+                
+                feedbackBox.innerHTML = `
+                    <div class="bg-gradient-to-br from-purple-900 to-indigo-900 border border-purple-500 p-5 rounded-lg shadow-lg">
+                        <h4 class="font-bold text-purple-200 mb-4 text-lg border-b border-purple-500 pb-2">💡 Explicación Pedagógica con IA</h4>
+                        <div class="prose prose-sm max-w-none text-gray-200 leading-relaxed space-y-2"><p class="mt-0">${html}</p></div>
+                    </div>
+                `;
+                
+                btn.disabled = false;
+                btn.innerHTML = '🤖 Consultar IA';
+            } catch (e) {
+                feedbackBox.innerHTML = `
+                    <div class="bg-red-50 border-l-4 border-red-400 text-red-800 p-4 rounded-md">
+                        No se pudo obtener retroalimentación. ${e.message || ''}
+                    </div>
+                `;
+                btn.disabled = false;
+                btn.innerHTML = '🤖 Consultar IA';
+            }
+        }
+    });
 });
 </script>
 </body>

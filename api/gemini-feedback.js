@@ -41,16 +41,13 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // Resolve provider and keys
-  const plan = loadPlan();
-  const iaCfg = plan?.exam?.ia_feedback || {};
-  const requestedProvider = (iaCfg.provider || '').toLowerCase();
-  const hasGemini = Boolean(process.env.GEMINI_API_KEY);
+  // Force OpenAI only - Gemini causes 500 errors in production
   const hasOpenAI = Boolean(process.env.OPENAI_API_KEY);
-  let provider = requestedProvider;
-  if (!provider) provider = hasGemini ? 'google-gemini' : (hasOpenAI ? 'openai' : '');
-  if (!provider) {
-    res.status(500).json({ error: 'No hay proveedor de IA configurado. Define GEMINI_API_KEY o OPENAI_API_KEY en Vercel.', code: 'MISSING_PROVIDER' });
+  if (!hasOpenAI) {
+    res.status(500).json({ 
+      error: 'Falta OPENAI_API_KEY en variables de entorno de Vercel', 
+      code: 'MISSING_API_KEY' 
+    });
     return;
   }
 
@@ -67,6 +64,8 @@ module.exports = async function handler(req, res) {
       return;
     }
 
+    const plan = loadPlan();
+    const iaCfg = plan?.exam?.ia_feedback || {};
     const basePrompt = iaCfg.prompt || 'Actúa como tutor pedagógico para profesores de Lenguaje.';
     const temaStr = Array.isArray(tema) ? tema.join(', ') : (tema || 'N/A');
     const composedPrompt = [
@@ -80,77 +79,29 @@ module.exports = async function handler(req, res) {
       '3) Sugerencia de profundización (cita breve del temario si procede)'
     ].join('\n');
 
-    let generationPromise;
-
-    if (provider.includes('gemini')) {
-      if (!hasGemini) {
-        res.status(500).json({ error: 'Falta GEMINI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
-        return;
-      }
-      generationPromise = (async () => {
-        const modelName = iaCfg.model || 'gemini-1.5-flash';
-        const { GoogleGenerativeAI } = await import('@google/generative-ai');
-        const fetchMod = await import('cross-fetch');
-        const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { fetch: fetchMod.default });
-        const model = genAI.getGenerativeModel({ 
-          model: modelName,
-          generationConfig: {
-            maxOutputTokens: 1024,
-            temperature: 0.3
-          }
-        });
-        const result = await model.generateContent(composedPrompt);
-        return result?.response?.text?.() || 'No se pudo generar retroalimentación.';
-      })();
-    } else if (provider.includes('openai')) {
-      if (!hasOpenAI) {
-        // Fallback to Gemini if available
-        if (hasGemini) {
-          console.warn('OpenAI no disponible, usando Gemini como fallback');
-          provider = 'google-gemini';
-          generationPromise = (async () => {
-            const { GoogleGenerativeAI } = await import('@google/generative-ai');
-            const fetchMod = await import('cross-fetch');
-            const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { fetch: fetchMod.default });
-            const model = genAI.getGenerativeModel({ 
-              model: 'gemini-1.5-flash',
-              generationConfig: {
-                maxOutputTokens: 1024,
-                temperature: 0.3
-              }
-            });
-            const result = await model.generateContent(composedPrompt);
-            return result?.response?.text?.() || 'No se pudo generar retroalimentación.';
-          })();
-        } else {
-          res.status(500).json({ error: 'Falta OPENAI_API_KEY en variables de entorno', code: 'MISSING_API_KEY' });
-          return;
-        }
-      } else {
-        generationPromise = (async () => {
-          const { OpenAI } = await import('openai');
-          const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY, timeout: 20000 });
-          const modelName = iaCfg.model || 'gpt-4o-mini';
-          const chat = await client.chat.completions.create({
-            model: modelName,
-            messages: [
-              { role: 'system', content: basePrompt },
-              { role: 'user', content: composedPrompt }
-            ],
-            temperature: 0.3,
-            max_tokens: 1024
-          });
-          return chat?.choices?.[0]?.message?.content || 'No se pudo generar retroalimentación.';
-        })();
-      }
-    } else {
-      res.status(500).json({ error: 'Proveedor de IA no soportado', code: 'UNSUPPORTED_PROVIDER' });
-      return;
-    }
+    // Use OpenAI exclusively
+    const generationPromise = (async () => {
+      const { OpenAI } = await import('openai');
+      const client = new OpenAI({ 
+        apiKey: process.env.OPENAI_API_KEY, 
+        timeout: 20000 
+      });
+      const modelName = iaCfg.model || 'gpt-4o-mini';
+      const chat = await client.chat.completions.create({
+        model: modelName,
+        messages: [
+          { role: 'system', content: basePrompt },
+          { role: 'user', content: composedPrompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 1024
+      });
+      return chat?.choices?.[0]?.message?.content || 'No se pudo generar retroalimentación.';
+    })();
 
     // Race between generation and timeout
     const text = await Promise.race([generationPromise, timeoutPromise]);
-    res.status(200).json({ feedback: text, provider });
+    res.status(200).json({ feedback: text, provider: 'openai' });
 
   } catch (err) {
     // Check if it's a timeout error

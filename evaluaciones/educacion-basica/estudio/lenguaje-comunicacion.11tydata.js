@@ -7,7 +7,10 @@ try {
   const planPath = path.join(__dirname, '..', 'pruebas', '63-sc-l', 'plan.json');
   const raw = fs.readFileSync(planPath, 'utf-8');
   plan = JSON.parse(raw);
-} catch {}
+  console.log(`✅ Plan loaded: ${plan?.exam?.preguntas?.length || 0} preguntas`);
+} catch (e) {
+  console.error('❌ Error loading plan.json:', e.message);
+}
 
 const casosPorTema = {};
 const casosPorSubtema = {};
@@ -15,6 +18,7 @@ const casosPreset = {};
 
 try {
     const preguntas = plan?.exam?.preguntas || [];
+    console.log(`Processing ${preguntas.length} preguntas...`);
 
     // 1) Index by every tema_relacionado (exact key)
     for (const q of preguntas) {
@@ -194,5 +198,14 @@ casosPreset['textos literarios'] = [
       temas_relacionados: ['Interpretación de figuras']
     }
   ];
+
+// Debug logging
+console.log('📊 Datos exportados:');
+console.log(`- casosPorTema keys: ${Object.keys(casosPorTema).length}`);
+console.log(`- casosPorSubtema keys: ${Object.keys(casosPorSubtema).join(', ')}`);
+console.log(`- casosPreset['textos literarios']: ${casosPreset['textos literarios']?.length || 0} casos`);
+if (casosPreset['textos literarios'] && casosPreset['textos literarios'][0]) {
+  console.log(`- Primer caso preset: ${casosPreset['textos literarios'][0].enunciado.substring(0, 50)}...`);
+}
 
 module.exports = { plan, casosPorTema, casosPorSubtema, casosPreset };

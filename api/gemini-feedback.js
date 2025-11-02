@@ -25,8 +25,8 @@ module.exports = async function handler(req, res) {
 
   // Health check (GET)
   if (req.method === 'GET') {
-    const hasHF = Boolean(process.env.HUGGINGFACE_API_KEY);
-    res.status(200).json({ ok: true, hasHuggingFace: hasHF, provider: 'huggingface' });
+    const hasGroq = Boolean(process.env.GROQ_API_KEY);
+    res.status(200).json({ ok: true, hasGroq, provider: 'groq' });
     return;
   }
 
@@ -36,14 +36,22 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // Use Hugging Face Inference API (free, no credit card required)
-  const HF_API_KEY = process.env.HUGGINGFACE_API_KEY || 'hf_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'; // Public token works for testing
-  const HF_MODEL = 'microsoft/Phi-3-mini-4k-instruct'; // Fast, free, good for Spanish
+  // Use Groq API (ultra-fast, free tier generous, simple setup)
+  // Get free API key at: https://console.groq.com/keys
+  const GROQ_API_KEY = process.env.GROQ_API_KEY;
+  
+  if (!GROQ_API_KEY) {
+    res.status(500).json({ 
+      error: 'Falta GROQ_API_KEY en variables de entorno. Obtén una gratis en https://console.groq.com/keys', 
+      code: 'MISSING_API_KEY' 
+    });
+    return;
+  }
 
   // Global timeout for entire request
-  const TIMEOUT_MS = 25000; // 25 seconds (Vercel limit is 30s)
+  const TIMEOUT_MS = 20000; // 20 seconds (Groq is very fast)
   const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('TIMEOUT: La generación excedió 25 segundos')), TIMEOUT_MS);
+    setTimeout(() => reject(new Error('TIMEOUT: La generación excedió 20 segundos')), TIMEOUT_MS);
   });
 
   try {
@@ -55,68 +63,58 @@ module.exports = async function handler(req, res) {
 
     const plan = loadPlan();
     const iaCfg = plan?.exam?.ia_feedback || {};
-    const basePrompt = iaCfg.prompt || 'Actúa como tutor pedagógico para profesores de Lenguaje.';
+    const basePrompt = iaCfg.prompt || 'Actúa como tutor pedagógico para profesores de Lenguaje en Chile.';
     const temaStr = Array.isArray(tema) ? tema.join(', ') : (tema || 'N/A');
-    const composedPrompt = `${basePrompt}
+    
+    const systemPrompt = `${basePrompt} Responde en español de Chile, de forma clara y pedagógica.`;
+    const userPrompt = `Pregunta evaluada: ${pregunta}
 
-Pregunta evaluada: ${pregunta}
 Respuesta del docente: ${respuestaDocente}
+
 Tema vinculado: ${temaStr}
 
-Entrega la retroalimentación en 3 apartados claros:
+Entrega retroalimentación en 3 apartados:
 1) Refuerzo de aciertos
 2) Corrección y explicación
 3) Sugerencia de profundización`;
 
-    // Use Hugging Face Inference API
+    // Use Groq API (fastest inference, free tier)
     const generationPromise = (async () => {
       const response = await fetch(
-        `https://api-inference.huggingface.co/models/${HF_MODEL}`,
+        'https://api.groq.com/openai/v1/chat/completions',
         {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${HF_API_KEY}`,
+            'Authorization': `Bearer ${GROQ_API_KEY}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            inputs: composedPrompt,
-            parameters: {
-              max_new_tokens: 512,
-              temperature: 0.3,
-              top_p: 0.9,
-              return_full_text: false
-            }
+            model: 'llama-3.1-8b-instant', // Fast, good quality, free
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            temperature: 0.3,
+            max_tokens: 800,
+            top_p: 0.9
           })
         }
       );
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('HF API Error:', response.status, errorText);
-        throw new Error(`Hugging Face API error: ${response.status}`);
+        console.error('Groq API Error:', response.status, errorText);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      
-      // Handle different response formats
-      let text = '';
-      if (Array.isArray(data) && data[0]?.generated_text) {
-        text = data[0].generated_text;
-      } else if (data?.generated_text) {
-        text = data.generated_text;
-      } else if (typeof data === 'string') {
-        text = data;
-      } else {
-        console.error('Unexpected HF response format:', data);
-        text = 'Retroalimentación generada. Por favor, revisa tu respuesta considerando el tema evaluado.';
-      }
-
-      return text || 'No se pudo generar retroalimentación.';
+      const text = data?.choices?.[0]?.message?.content || 'No se pudo generar retroalimentación.';
+      return text.trim();
     })();
 
     // Race between generation and timeout
     const text = await Promise.race([generationPromise, timeoutPromise]);
-    res.status(200).json({ feedback: text, provider: 'huggingface' });
+    res.status(200).json({ feedback: text, provider: 'groq' });
 
   } catch (err) {
     // Check if it's a timeout error

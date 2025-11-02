@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Evaluaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #ec4899;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --dark: #1e293b;
+            --light: #f8fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            padding: 3rem;
+            max-width: 400px;
+            width: 100%;
+            border: 1px solid #e5e7eb;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .logo-section i {
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            margin-bottom: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .btn-login {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .alert {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .alert-error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 2rem;
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .back-link:hover {
+            color: var(--primary-dark);
+            transform: translateX(-5px);
+        }
+
+        .register-link {
+            display: inline-block;
+            margin-top: 1rem;
+            color: var(--secondary);
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .register-link:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-section">
+            <i class="fas fa-graduation-cap"></i>
+            <h1 class="text-2xl font-bold text-gray-800">Iniciar Sesión</h1>
+            <p class="text-gray-600 mt-2">Sistema de Evaluaciones</p>
+        </div>
+
+        <div id="alert" class="alert alert-error">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            <span id="alertMessage"></span>
+        </div>
+
+        <form id="loginForm">
+            <input type="text" id="username" class="form-input" placeholder="Nombre de usuario" required>
+            <input type="password" id="password" class="form-input" placeholder="Contraseña" required>
+
+            <button type="submit" id="loginBtn" class="btn-login">
+                <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
+            </button>
+        </form>
+
+        <div class="text-center">
+            <a href="/evaluaciones/" class="back-link">
+                <i class="fas fa-arrow-left mr-2"></i>Volver al inicio
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDi-g5cvCwK8YN_T08T0OaJ2oF9bfOZ3Dg",
+            authDomain: "profesorfrancisco-2fcb4.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profesorfrancisco-2fcb4",
+            storageBucket: "profesorfrancisco-2fcb4.firebasestorage.app",
+            messagingSenderId: "635599969062",
+            appId: "1:635599969062:web:2e56c5e2c8ecc5ef6fed70"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const alert = document.getElementById('alert');
+            const alertMessage = document.getElementById('alertMessage');
+
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
+
+            try {
+                // Find user by username
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+
+                if (!snapshot.exists()) {
+                    throw new Error('Usuario no encontrado');
+                }
+
+                const userId = Object.keys(snapshot.val())[0];
+                const userData = snapshot.val()[userId];
+
+                // Check if user is active
+                if (!userData.active) {
+                    throw new Error('Cuenta deshabilitada');
+                }
+
+                // Verify password (simple base64 check - in production use proper hashing)
+                if (atob(userData.password) !== password) {
+                    throw new Error('Contraseña incorrecta');
+                }
+
+                // Check device limit
+                const deviceId = generateDeviceId();
+                const devices = userData.devices || {};
+                const deviceCount = Object.keys(devices).length;
+
+                // Get system settings
+                const settingsSnapshot = await database.ref('admin/settings').once('value');
+                const maxDevices = settingsSnapshot.exists() ? settingsSnapshot.val().maxDevices || 3 : 3;
+
+                if (deviceCount >= maxDevices && !devices[deviceId]) {
+                    throw new Error(`Límite de dispositivos alcanzado (${maxDevices}). Contacte al administrador.`);
+                }
+
+                // Update device info and last login
+                const deviceInfo = getDeviceInfo();
+                devices[deviceId] = {
+                    deviceName: deviceInfo.deviceName,
+                    userAgent: navigator.userAgent,
+                    lastAccess: new Date().toISOString(),
+                    ip: await getIP()
+                };
+
+                await database.ref(`users/${userId}`).update({
+                    devices: devices,
+                    lastLogin: new Date().toISOString()
+                });
+
+                // Log the login
+                const logData = {
+                    userId: userId,
+                    action: 'login',
+                    timestamp: new Date().toISOString(),
+                    deviceName: deviceInfo.deviceName,
+                    userAgent: navigator.userAgent,
+                    ip: await getIP(),
+                    deviceId: deviceId
+                };
+
+                await database.ref('logs').push(logData);
+
+                // Store user session (simple localStorage - in production use secure tokens)
+                const sessionData = {
+                    userId: userId,
+                    username: userData.username,
+                    permissions: userData.permissions,
+                    loginTime: new Date().toISOString()
+                };
+
+                localStorage.setItem('evaluaciones_session', JSON.stringify(sessionData));
+
+                // Redirect based on permissions
+                redirectBasedOnPermissions(userData.permissions);
+
+            } catch (error) {
+                console.error('Login error:', error);
+                alert.style.display = 'block';
+                alertMessage.textContent = error.message || 'Error al iniciar sesión. Intente nuevamente.';
+            } finally {
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
+            }
+        });
+
+        // Redirect based on user permissions
+        function redirectBasedOnPermissions(permissions) {
+            // Check if user has any permissions
+            const hasPermissions = Object.values(permissions || {}).some(p => p);
+
+            if (!hasPermissions) {
+                alert('No tienes permisos para acceder a ningún contenido. Contacta al administrador.');
+                return;
+            }
+
+            // Redirect to first available content
+            if (permissions.basica) {
+                window.location.href = '/evaluaciones/educacion-basica/';
+            } else if (permissions.especial) {
+                window.location.href = '/evaluaciones/educacion-especial/';
+            } else if (permissions.media) {
+                window.location.href = '/evaluaciones/educacion-media/';
+            } else if (permissions.parvularia) {
+                window.location.href = '/evaluaciones/educacion-parvularia/';
+            } else if (permissions.indigena) {
+                window.location.href = '/evaluaciones/lengua-indigena/';
+            } else {
+                window.location.href = '/evaluaciones/';
+            }
+        }
+
+        // Get device information
+        function getDeviceInfo() {
+            const ua = navigator.userAgent;
+            let deviceName = 'Dispositivo desconocido';
+
+            if (ua.includes('Mobile')) {
+                deviceName = 'Dispositivo móvil';
+            } else if (ua.includes('Tablet')) {
+                deviceName = 'Tablet';
+            } else {
+                deviceName = 'Computador';
+            }
+
+            // Try to get more specific info
+            if (ua.includes('Chrome')) {
+                deviceName += ' - Chrome';
+            } else if (ua.includes('Firefox')) {
+                deviceName += ' - Firefox';
+            } else if (ua.includes('Safari')) {
+                deviceName += ' - Safari';
+            } else if (ua.includes('Edge')) {
+                deviceName += ' - Edge';
+            }
+
+            return {
+                deviceName: deviceName,
+                userAgent: ua
+            };
+        }
+
+        // Generate device ID
+        function generateDeviceId() {
+            return btoa(navigator.userAgent + screen.width + screen.height).substring(0, 16);
+        }
+
+        // Get IP address (approximate)
+        async function getIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                return 'unknown';
+            }
+        }
+
+        // Check if already logged in
+        document.addEventListener('DOMContentLoaded', function() {
+            const session = localStorage.getItem('evaluaciones_session');
+            if (session) {
+                try {
+                    const sessionData = JSON.parse(session);
+                    // Check if session is still valid (24 hours)
+                    const loginTime = new Date(sessionData.loginTime);
+                    const now = new Date();
+                    const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+                    if (hoursDiff < 24) {
+                        redirectBasedOnPermissions(sessionData.permissions);
+                        return;
+                    } else {
+                        localStorage.removeItem('evaluaciones_session');
+                    }
+                } catch (error) {
+                    localStorage.removeItem('evaluaciones_session');
+                }
+            }
+        });
+    </script>
+</body>
+</html></content>
+<parameter name="filePath">c:\Users\fconu\OneDrive\Escritorio\PAGINA WEB\profefranciscopancho-blog\evaluaciones\login.html

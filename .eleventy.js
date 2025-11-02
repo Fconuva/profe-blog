@@ -72,7 +72,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("evaluaciones/educacion-media/**");
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");
   eleventyConfig.ignores.add("evaluaciones/educacion-parvularia/**");
-  eleventyConfig.ignores.add("evaluaciones/educacion-especial/**");
   eleventyConfig.ignores.add("evaluaciones/educacion-jovenes-adultos/**");
   eleventyConfig.ignores.add("evaluaciones/lengua-indigena/**");
   // Dentro de Educación Básica, ocultar asignaturas no activas (solo 63-sc-l Lenguaje)

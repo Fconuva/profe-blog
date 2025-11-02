@@ -1,8 +1,8 @@
-# 🔧 Solución Deploy Vercel + IA
+# 🔧 Solución Deploy Vercel + IA (Groq)
 
 ## Problema actual
 1. Los cambios no se reflejan en producción (caché o deploy fallido)
-2. La IA devuelve 500 (las variables no se detectan correctamente)
+2. La IA devuelve 500 (la variable GROQ_API_KEY no está configurada)
 3. Tailwind CDN warning (falta compilar tw.css)
 
 ---
@@ -13,13 +13,18 @@
 
 **Ve a:** Vercel Dashboard → Tu proyecto → Settings → Environment Variables
 
-**Deben llamarse EXACTAMENTE así:**
-- `GEMINI_API_KEY` (NO "GEMINI" ni "gemini_api_key")
-- `OPENAI_API_KEY` (NO "OPENAI" ni "openai_api_key")
+**Debe llamarse EXACTAMENTE así:**
+- `GROQ_API_KEY` (NO "GROQ" ni "groq_api_key")
 
-**Si los nombres son diferentes:**
-1. Borra las variables actuales
-2. Crea nuevas con los nombres exactos de arriba
+**Cómo obtener tu API key:**
+1. Ve a: https://console.groq.com/keys
+2. Crea tu cuenta gratis (sin tarjeta)
+3. Genera una nueva API key
+4. Cópiala (formato: `gsk_xxxxxxxxxxxxxx`)
+
+**Configurar en Vercel:**
+1. Agrega la variable con el nombre exacto: `GROQ_API_KEY`
+2. Pega tu key como valor
 3. Scope: **All Environments** (Production, Preview, Development)
 
 ---
@@ -61,14 +66,13 @@ https://www.profefranciscopancho.com/api/gemini-feedback?health=1
 ```json
 {
   "ok": true,
-  "hasGemini": true,
-  "hasOpenAI": true,
-  "provider": "google-gemini"
+  "hasGroq": true,
+  "provider": "groq"
 }
 ```
 
-**Si dice `"hasGemini": false` o `"hasOpenAI": false`:**
-→ Las variables no están configuradas correctamente en Vercel (volver al paso 1)
+**Si dice `"hasGroq": false`:**
+→ La variable `GROQ_API_KEY` no está configurada correctamente en Vercel (volver al paso 1)
 
 ---
 
@@ -89,18 +93,19 @@ https://www.profefranciscopancho.com/api/gemini-feedback?health=1
 3. Tab "Build Logs" → buscar errores
 4. Tab "Function Logs" → ver si `/api/gemini-feedback` tiene errores
 
-**Error común:** `"GEMINI_API_KEY is not defined"`
+**Error común:** `"Falta GROQ_API_KEY en variables de entorno"`
 → Significa que la variable NO está en Vercel o está mal escrita
 
 ---
 
 ## 📋 Checklist rápido
 
-- [ ] Variables con nombres EXACTOS: `GEMINI_API_KEY` y/o `OPENAI_API_KEY`
+- [ ] Variable con nombre EXACTO: `GROQ_API_KEY`
 - [ ] Scope: All Environments marcado
+- [ ] API key obtenida desde https://console.groq.com/keys
 - [ ] Redeploy forzado desde Vercel
 - [ ] Caché del navegador limpiado
-- [ ] Health check responde con hasGemini o hasOpenAI = true
+- [ ] Health check responde con `hasGroq: true`
 - [ ] Botones de IA funcionan sin error 500
 - [ ] Página /evaluaciones muestra nuevo diseño (2 ventanas)
 

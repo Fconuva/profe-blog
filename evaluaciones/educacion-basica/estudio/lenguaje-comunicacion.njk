@@ -251,19 +251,32 @@ description: "Dominios, objetivos y ejemplos para preparar la evaluación de Len
                             </div>
                             <details class="mt-4 group">
                               <summary class="text-indigo-600 hover:text-indigo-700 cursor-pointer font-semibold text-sm flex items-center gap-2">
-                                <span class="transition-transform group-open:rotate-90">▶</span> Ver solución
+                                <span class="transition-transform group-open:rotate-90">▶</span> Ver solución y explicación
                               </summary>
                               <div class="mt-3 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-lg p-4">
                                 <div class="bg-white rounded-md p-3 border-l-4 border-emerald-500 mb-3">
                                   <p class="text-sm font-bold text-emerald-700">✓ Respuesta correcta: {{ c.respuesta_correcta }}</p>
+                                  {% set correcta = c.alternativas | selectattr('opcion', 'equalto', c.respuesta_correcta) | first %}
+                                  {% if correcta %}
+                                    <p class="text-sm text-gray-700 mt-1">{{ correcta.texto }}</p>
+                                  {% endif %}
                                 </div>
-                                <p class="text-sm text-gray-700 leading-relaxed">{{ c.explicacion }}</p>
+                                <p class="text-sm text-gray-700 leading-relaxed mb-3">{{ c.explicacion }}</p>
+                                {% if c.temas_relacionados and c.temas_relacionados.length > 0 %}
+                                  <div class="flex flex-wrap gap-1 mt-2">
+                                    {% for t in c.temas_relacionados %}
+                                      <span class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">{{ t }}</span>
+                                    {% endfor %}
+                                  </div>
+                                {% endif %}
+                                <button type="button" class="mt-3 ia-explain-caso bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs font-semibold py-2 px-4 rounded-lg shadow-sm transition-all duration-200 flex items-center gap-2" data-pregunta="{{ c.enunciado | escape }}" data-respuesta="{{ c.respuesta_correcta }}: {{ correcta.texto | escape }}" data-tema="{{ c.temas_relacionados | join(', ') }}">
+                                  <span>🤖</span> IA: Justificar respuesta
+                                </button>
+                                <div class="mt-3 hidden ia-caso-box"></div>
                               </div>
                             </details>
                           </div>
                         {% endif %}
-                            </details>
-                          </div>
                         {% endfor %}
                       </div>
                     </details>

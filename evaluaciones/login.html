@@ -177,10 +177,16 @@
         };
 
         // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
+        let database;
+        try {
+            if (!firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+            database = firebase.database();
+            console.log('Firebase initialized successfully');
+        } catch (error) {
+            console.error('Firebase initialization error:', error);
         }
-        const database = firebase.database();
 
         // Login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -192,10 +198,18 @@
             const alert = document.getElementById('alert');
             const alertMessage = document.getElementById('alertMessage');
 
+            // Hide previous alerts
+            alert.style.display = 'none';
+
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
 
             try {
+                // Check if database is initialized
+                if (!database) {
+                    throw new Error('Error de conexión. Por favor recarga la página.');
+                }
+
                 // Find user by username
                 const usersRef = database.ref('users');
                 const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
@@ -273,7 +287,27 @@
             } catch (error) {
                 console.error('Login error:', error);
                 alert.style.display = 'block';
-                alertMessage.textContent = error.message || 'Error al iniciar sesión. Intente nuevamente.';
+                
+                // Friendly error messages
+                let errorMsg = 'Error al iniciar sesión. Intente nuevamente.';
+                if (error.message.includes('Usuario no encontrado')) {
+                    errorMsg = 'Usuario no encontrado. Verifica tu nombre de usuario.';
+                } else if (error.message.includes('Contraseña incorrecta')) {
+                    errorMsg = 'Contraseña incorrecta. Intenta nuevamente.';
+                } else if (error.message.includes('Cuenta deshabilitada')) {
+                    errorMsg = 'Tu cuenta está deshabilitada. Contacta al administrador.';
+                } else if (error.message.includes('Límite de dispositivos')) {
+                    errorMsg = error.message;
+                } else if (error.message.includes('conexión')) {
+                    errorMsg = error.message;
+                }
+                
+                alertMessage.textContent = errorMsg;
+                
+                // Auto-hide alert after 5 seconds
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 5000);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
@@ -376,5 +410,4 @@
         });
     </script>
 </body>
-</html></content>
-<parameter name="filePath">c:\Users\fconu\OneDrive\Escritorio\PAGINA WEB\profefranciscopancho-blog\evaluaciones\login.html
+</html>

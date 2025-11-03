@@ -145,29 +145,7 @@
         </form>
     </div>
 
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
     <script>
-        // Firebase Configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
-            authDomain: "profe-blog.firebaseapp.com",
-            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
-            projectId: "profe-blog",
-            storageBucket: "profe-blog.firebasestorage.app",
-            messagingSenderId: "305920739217",
-            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
-        };
-
-        // Initialize Firebase
-        if (!firebase.apps.length) {
-            firebase.initializeApp(firebaseConfig);
-        }
-        const auth = firebase.auth();
-        const database = firebase.database();
 
         // Setup form interactions
         document.addEventListener('DOMContentLoaded', function() {
@@ -188,10 +166,10 @@
         }
 
         // Login form submission
-        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
             e.preventDefault();
 
-            const email = document.getElementById('email').value;
+            const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const loginBtn = document.getElementById('loginBtn');
             const alert = document.getElementById('alert');
@@ -201,7 +179,6 @@
             if (email !== 'fconuva@gmail.com') {
                 alert.style.display = 'block';
                 alertMessage.textContent = 'Acceso no autorizado. Solo administradores pueden acceder.';
-                // Auto-hide after 5 seconds
                 setTimeout(() => {
                     alert.style.display = 'none';
                 }, 5000);
@@ -211,95 +188,35 @@
             loginBtn.disabled = true;
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
 
-            try {
-                // Simple authentication (temporary solution)
-                const ADMIN_PASSWORD = 'AdminEval2025!';
+            // Simple authentication
+            const ADMIN_PASSWORD = 'AdminEval2025!';
 
+            setTimeout(() => {
                 if (password === ADMIN_PASSWORD) {
                     // Success - store login state
                     localStorage.setItem('admin_logged_in', 'true');
                     localStorage.setItem('admin_email', email);
                     localStorage.setItem('admin_login_time', new Date().toISOString());
 
-                    // Log the login (optional, using local storage for now)
-                    console.log('Admin login successful:', {
-                        email: email,
-                        timestamp: new Date().toISOString(),
-                        userAgent: navigator.userAgent
-                    });
+                    console.log('Admin login successful');
 
                     // Redirect to admin panel
                     window.location.href = '/evaluaciones/admin/';
 
                 } else {
-                    throw new Error('Contraseña incorrecta');
-                }
-
-            } catch (error) {
-                console.error('Login error:', error);
-                alert.style.display = 'block';
-
-                if (error.message === 'Contraseña incorrecta') {
+                    alert.style.display = 'block';
                     alertMessage.textContent = 'Contraseña incorrecta.';
-                } else {
-                    alertMessage.textContent = 'Error al iniciar sesión. Verifique sus credenciales.';
-                }
+                    
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 5000);
 
-                // Auto-hide after 5 seconds
-                setTimeout(() => {
-                    alert.style.display = 'none';
-                }, 5000);
-            } finally {
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
-            }
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';
+                }
+            }, 500);
         });
 
-        // Get device information
-        function getDeviceInfo() {
-            const ua = navigator.userAgent;
-            let deviceName = 'Dispositivo desconocido';
-
-            if (ua.includes('Mobile')) {
-                deviceName = 'Dispositivo móvil';
-            } else if (ua.includes('Tablet')) {
-                deviceName = 'Tablet';
-            } else {
-                deviceName = 'Computador';
-            }
-
-            // Try to get more specific info
-            if (ua.includes('Chrome')) {
-                deviceName += ' - Chrome';
-            } else if (ua.includes('Firefox')) {
-                deviceName += ' - Firefox';
-            } else if (ua.includes('Safari')) {
-                deviceName += ' - Safari';
-            } else if (ua.includes('Edge')) {
-                deviceName += ' - Edge';
-            }
-
-            return {
-                deviceName: deviceName,
-                userAgent: ua
-            };
-        }
-
-        // Generate device ID
-        function generateDeviceId() {
-            return btoa(navigator.userAgent + Date.now()).substring(0, 16);
-        }
-
-        // Get IP address (approximate)
-        async function getIP() {
-            try {
-                const response = await fetch('https://api.ipify.org?format=json');
-                const data = await response.json();
-                return data.ip;
-            } catch (error) {
-                return 'unknown';
-            }
-        }
     </script>
 </body>
 </html></content>

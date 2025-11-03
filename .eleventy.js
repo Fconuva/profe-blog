@@ -74,8 +74,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("evaluaciones/educacion-parvularia/**");
   eleventyConfig.ignores.add("evaluaciones/educacion-jovenes-adultos/**");
   eleventyConfig.ignores.add("evaluaciones/lengua-indigena/**");
-  // Dentro de Educación Básica, ocultar asignaturas no activas (solo 63-sc-l Lenguaje)
-  eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/66-sc-m/**");
+  // Dentro de Educación Básica, permitir 63-sc-l (Lenguaje) y 66-sc-m (Matemática)
+  // eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/66-sc-m/**"); // REMOVIDO - Matemática ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/71-sc-cs/**");
   eleventyConfig.ignores.add("**/63.SC-L(20).pdf");
   // Ocultar toda la sección Temarios

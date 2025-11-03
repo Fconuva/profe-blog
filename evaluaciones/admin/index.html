@@ -569,23 +569,24 @@
 
         // Authentication check
         function checkAuth() {
-            auth.onAuthStateChanged((user) => {
-                if (user && user.email === 'fconuva@gmail.com') {
-                    currentUser = user;
-                    document.getElementById('adminUser').textContent = user.email;
-                    loadUsers();
-                    loadStats();
-                } else {
-                    window.location.href = '/evaluaciones/';
-                }
-            });
+            const isLoggedIn = localStorage.getItem('admin_logged_in');
+            const adminEmail = localStorage.getItem('admin_email');
+
+            if (isLoggedIn === 'true' && adminEmail === 'fconuva@gmail.com') {
+                document.getElementById('adminUser').textContent = adminEmail;
+                loadUsers();
+                loadStats();
+            } else {
+                window.location.href = '/evaluaciones/admin/login.html';
+            }
         }
 
         // Logout
         function logout() {
-            auth.signOut().then(() => {
-                window.location.href = '/evaluaciones/';
-            });
+            localStorage.removeItem('admin_logged_in');
+            localStorage.removeItem('admin_email');
+            localStorage.removeItem('admin_login_time');
+            window.location.href = '/evaluaciones/admin/login.html';
         }
 
         // Navigation

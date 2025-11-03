@@ -190,11 +190,10 @@
         // Setup form interactions
         document.addEventListener('DOMContentLoaded', function() {
             // Check if already logged in
-            auth.onAuthStateChanged((user) => {
-                if (user && user.email === 'fconuva@gmail.com') {
-                    window.location.href = '/evaluaciones/admin/';
-                }
-            });
+            const isLoggedIn = localStorage.getItem('admin_logged_in');
+            if (isLoggedIn === 'true') {
+                window.location.href = '/evaluaciones/admin/';
+            }
 
             // Hide alert when user starts typing
             document.getElementById('email').addEventListener('input', hideAlert);
@@ -231,50 +230,37 @@
             loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
 
             try {
-                await auth.signInWithEmailAndPassword(email, password);
+                // Simple authentication (temporary solution)
+                const ADMIN_PASSWORD = 'AdminEval2025!';
 
-                // Log the login
-                const deviceInfo = getDeviceInfo();
-                const logData = {
-                    userId: 'admin',
-                    action: 'admin_login',
-                    timestamp: new Date().toISOString(),
-                    deviceName: deviceInfo.deviceName,
-                    userAgent: navigator.userAgent,
-                    ip: await getIP(),
-                    deviceId: generateDeviceId()
-                };
+                if (password === ADMIN_PASSWORD) {
+                    // Success - store login state
+                    localStorage.setItem('admin_logged_in', 'true');
+                    localStorage.setItem('admin_email', email);
+                    localStorage.setItem('admin_login_time', new Date().toISOString());
 
-                database.ref('logs').push(logData);
+                    // Log the login (optional, using local storage for now)
+                    console.log('Admin login successful:', {
+                        email: email,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
+                    });
 
-                // Redirect to admin panel
-                window.location.href = '/evaluaciones/admin/';
+                    // Redirect to admin panel
+                    window.location.href = '/evaluaciones/admin/';
+
+                } else {
+                    throw new Error('Contraseña incorrecta');
+                }
 
             } catch (error) {
-                console.error('Login error:', error.code); // Solo mostrar código de error, no detalles sensibles
+                console.error('Login error:', error);
                 alert.style.display = 'block';
 
-                switch (error.code) {
-                    case 'auth/user-not-found':
-                        alertMessage.textContent = 'Usuario no encontrado.';
-                        break;
-                    case 'auth/wrong-password':
-                        alertMessage.textContent = 'Contraseña incorrecta.';
-                        break;
-                    case 'auth/invalid-email':
-                        alertMessage.textContent = 'Correo electrónico inválido.';
-                        break;
-                    case 'auth/user-disabled':
-                        alertMessage.textContent = 'Cuenta deshabilitada.';
-                        break;
-                    case 'auth/too-many-requests':
-                        alertMessage.textContent = 'Demasiados intentos. Intente más tarde.';
-                        break;
-                    case 'auth/network-request-failed':
-                        alertMessage.textContent = 'Error de conexión. Verifique su internet.';
-                        break;
-                    default:
-                        alertMessage.textContent = 'Error al iniciar sesión. Verifique sus credenciales.';
+                if (error.message === 'Contraseña incorrecta') {
+                    alertMessage.textContent = 'Contraseña incorrecta.';
+                } else {
+                    alertMessage.textContent = 'Error al iniciar sesión. Verifique sus credenciales.';
                 }
 
                 // Auto-hide after 5 seconds

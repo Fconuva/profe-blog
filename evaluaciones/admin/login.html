@@ -125,7 +125,7 @@
             <p class="text-gray-600 mt-2">Sistema de Evaluaciones</p>
         </div>
 
-        <div id="alert" class="alert alert-error">
+        <div id="alert" class="alert alert-error" style="display: none;">
             <i class="fas fa-exclamation-circle mr-2"></i>
             <span id="alertMessage"></span>
         </div>
@@ -168,14 +168,24 @@
         const auth = firebase.auth();
         const database = firebase.database();
 
-        // Check if already logged in
+        // Setup form interactions
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if already logged in
             auth.onAuthStateChanged((user) => {
                 if (user && user.email === 'fconuva@gmail.com') {
                     window.location.href = '/evaluaciones/admin/';
                 }
             });
+
+            // Hide alert when user starts typing
+            document.getElementById('email').addEventListener('input', hideAlert);
+            document.getElementById('password').addEventListener('input', hideAlert);
         });
+
+        function hideAlert() {
+            const alert = document.getElementById('alert');
+            alert.style.display = 'none';
+        }
 
         // Login form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -191,6 +201,10 @@
             if (email !== 'fconuva@gmail.com') {
                 alert.style.display = 'block';
                 alertMessage.textContent = 'Acceso no autorizado. Solo administradores pueden acceder.';
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 5000);
                 return;
             }
 
@@ -218,7 +232,7 @@
                 window.location.href = '/evaluaciones/admin/';
 
             } catch (error) {
-                console.error('Login error:', error);
+                console.error('Login error:', error.code); // Solo mostrar código de error, no detalles sensibles
                 alert.style.display = 'block';
 
                 switch (error.code) {
@@ -234,9 +248,20 @@
                     case 'auth/user-disabled':
                         alertMessage.textContent = 'Cuenta deshabilitada.';
                         break;
+                    case 'auth/too-many-requests':
+                        alertMessage.textContent = 'Demasiados intentos. Intente más tarde.';
+                        break;
+                    case 'auth/network-request-failed':
+                        alertMessage.textContent = 'Error de conexión. Verifique su internet.';
+                        break;
                     default:
-                        alertMessage.textContent = 'Error al iniciar sesión. Intente nuevamente.';
+                        alertMessage.textContent = 'Error al iniciar sesión. Verifique sus credenciales.';
                 }
+
+                // Auto-hide after 5 seconds
+                setTimeout(() => {
+                    alert.style.display = 'none';
+                }, 5000);
             } finally {
                 loginBtn.disabled = false;
                 loginBtn.innerHTML = '<i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión';

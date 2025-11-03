@@ -1,8 +1,9 @@
 # 📊 RESUMEN DE MEJORAS - GUÍA DE ESTUDIO MATEMÁTICA
 
-**Fecha:** 3 de Noviembre, 2025  
-**Archivos Modificados:** `matematica.njk`, `generador-graficos-matematica.md`  
-**Estado del Build:** ✅ Exitoso (84 archivos en 0.72s)
+**Fecha:** 3 de Noviembre, 2025 (Actualizado)  
+**Archivos Modificados:** `matematica.njk` (4,344 líneas), `generador-graficos-matematica.md`  
+**Estado del Build:** ✅ Exitoso (85 archivos en 0.77s)  
+**Progreso Total:** 85% completado | 11 secciones con estructura 4 pasos | 7 casos interactivos
 
 ---
 
@@ -68,7 +69,7 @@
 
 ---
 
-### **DOMINIO 3: GEOMETRÍA (Completado 60%)**
+### **DOMINIO 3: GEOMETRÍA (Completado 100%)** ✅
 
 #### 3.1 Figuras Planas y Cuerpos Geométricos ✅
 - ✅ Definición 2D vs 3D
@@ -80,34 +81,43 @@
 - ✅ Material manipulativo CPA (palitos, geoplanos, tangram)
 - ✅ 3 errores comunes con soluciones
 
-#### 3.2 Perímetros, Áreas y Volúmenes ⚠️
-- ⚠️ Contenido básico existente (necesita expansión)
-- ⚠️ Falta estructura de 4 pasos completa
-- ⚠️ Falta caso interactivo
+#### 3.2 Perímetros, Áreas y Volúmenes ✅
+- ✅ Definición completa (perímetro 1D, área 2D, volumen 3D)
+- ✅ Caja de fórmulas con 2 tablas (figuras planas + cuerpos 3D)
+- ✅ 2 ejemplos: cancha fútbol (P=300m, A=5400m²) y piscina circular (V=75.360L)
+- ✅ Explicación IA con progresión curricular 1°-6°, errores comunes, actividades CPA
+- ✅ **Caso Interactivo 4:** Problema optimización alfombra (8×6m a $5.000/m²)
 
-#### 3.3 Transformaciones Isométricas ⚠️
-- ⚠️ Contenido básico existente
-- ⚠️ Falta estructura de 4 pasos
-- ⚠️ Falta gráficos SVG (traslación, rotación, reflexión)
+#### 3.3 Transformaciones Isométricas ✅
+- ✅ Definición isométrica (mantiene forma/tamaño)
+- ✅ 3 tipos completos: traslación (vector), rotación (centro+ángulo), reflexión (eje)
+- ✅ Propiedades y elementos de cada transformación
+- ✅ 3 ejemplos: traslación punto, rotación 90° antihorario, reflexión eje Y
+- ✅ Explicación IA con material manipulativo, aplicaciones (arte, naturaleza, tecnología)
+- ✅ **Caso Interactivo 5:** Identificar transformación (reflexión eje X)
 
 ---
 
-### **DOMINIO 4: DATOS Y AZAR (Pendiente 80%)**
+### **DOMINIO 4: DATOS Y AZAR (Completado 100%)** ✅
 
-#### 4.1 Tablas y Gráficos ⚠️
-- ⚠️ Solo tiene 1 ejemplo básico
-- ❌ Falta estructura de 4 pasos
-- ❌ Falta gráficos SVG (barras, circular, líneas)
+#### 4.1 Estadística: Datos, Tablas y Gráficos ✅
+- ✅ Definición estadística (recopilar, organizar, analizar, presentar)
+- ✅ Vocabulario: población, muestra, variable, frecuencia
+- ✅ 4 tipos de gráficos completos: barras, líneas, circular, tallo-hojas
+- ✅ Tabla de criterios para elegir gráfico correcto
+- ✅ 3 ejemplos: deportes favoritos (tabla frecuencia), temperatura mensual (tendencia), edades (tallo-hojas)
+- ✅ Explicación IA con progresión curricular 1°-6°, metodología investigación 4 fases, errores comunes
+- ✅ **Caso Interactivo 6:** Interpretar gráfico barras (ventas helados, doble martes→miércoles)
 
-#### 4.2 Medidas de Tendencia Central ⚠️
-- ⚠️ Solo tiene 1 ejemplo básico
-- ❌ Falta estructura de 4 pasos
-- ❌ Falta caso interactivo
-
-#### 4.3 Probabilidad ❌
-- ❌ No existe contenido
-- ❌ Falta diagrama de árbol
-- ❌ Falta casos de estudio
+#### 4.2 Probabilidad: Azar y Predicción ✅
+- ✅ Definición probabilidad (0 a 1, imposible→seguro)
+- ✅ Vocabulario: experimento aleatorio, espacio muestral, evento, casos favorables
+- ✅ Fórmula P(evento) = casos favorables / casos totales
+- ✅ Escala visual de probabilidad con gradiente
+- ✅ 3 ejemplos: bolitas colores (30%), baraja española (10%), ruleta (comparación 37.5% vs 25%)
+- ✅ Explicación IA con progresión curricular, metodología CPA adaptada, 3 conceptos erróneos (falacia jugador, confusión teórica/experimental)
+- ✅ Actividad gamificada: "Diseña tu Juego Justo"
+- ✅ **Caso Interactivo 7:** Calcular P(NO rojo) con lápices (7/12 = 58%)
 
 ---
 
@@ -162,26 +172,34 @@
 
 ### Contenido Completado:
 - **Total de secciones:** 13
-- **Completadas al 100%:** 6 (46%)
-- **Parcialmente completadas:** 6 (46%)
-- **Sin contenido:** 1 (8%)
+- **Completadas al 100%:** 11 (85%)
+- **Parcialmente completadas:** 2 (15%)
+- **Sin contenido:** 0 (0%)
 
 ### Estructura de 4 Pasos:
-- **Secciones con 4 pasos completos:** 6
-  - 1.1 Números Primos
-  - 1.2 Proporcionalidad
-  - 1.3 Potencias
-  - 2.1 Secuencias
-  - 2.2 Ecuaciones
-  - 2.3 Funciones
-  - 3.1 Figuras Geométricas
+- **Secciones con 4 pasos completos:** 11
+  - 1.1 Números Primos ✅
+  - 1.2 Proporcionalidad ✅
+  - 1.3 Potencias ✅
+  - 2.1 Secuencias ✅
+  - 2.2 Ecuaciones ✅
+  - 2.3 Funciones ✅
+  - 3.1 Figuras Geométricas ✅
+  - 3.2 Perímetros, Áreas y Volúmenes ✅ (NUEVO)
+  - 3.3 Transformaciones Isométricas ✅ (NUEVO)
+  - 4.1 Estadística ✅ (NUEVO)
+  - 4.2 Probabilidad ✅ (NUEVO)
 
 ### Casos Interactivos:
-- **Total creados:** 3
-  1. Caso Números Racionales (1.1)
-  2. Caso Potencias (1.3)
-  3. Caso Secuencias (2.1)
-- **Pendientes:** 10-12 más recomendados
+- **Total creados:** 7
+  1. Caso Números Racionales (1.1) ✅
+  2. Caso Potencias (1.3) ✅
+  3. Caso Secuencias (2.1) ✅
+  4. Caso Medidas - Alfombra (3.2) ✅ (NUEVO)
+  5. Caso Transformaciones (3.3) ✅ (NUEVO)
+  6. Caso Estadística - Gráfico Barras (4.1) ✅ (NUEVO)
+  7. Caso Probabilidad - Lápices (4.2) ✅ (NUEVO)
+- **Pendientes:** 3-5 adicionales para Dominio 5
 
 ### Gráficos SVG:
 - **Implementados:** 4
@@ -228,30 +246,39 @@
 
 ## 🚀 PRÓXIMOS PASOS RECOMENDADOS
 
-### Prioridad Alta (Esta Semana):
-1. **Completar Geometría 3.2 y 3.3** con estructura de 4 pasos
-2. **Generar 3-4 gráficos con Grok** (usar prompts del archivo)
-3. **Agregar 2 casos interactivos** más (Geometría y Datos)
+### ✅ Completado en Esta Sesión:
+- ✅ Geometría 3.2 y 3.3 con estructura completa de 4 pasos
+- ✅ Dominio 4 completo: Estadística (4.1) y Probabilidad (4.2)
+- ✅ 4 casos interactivos nuevos (casos 4, 5, 6, 7)
+- ✅ Deploy exitoso a producción
 
-### Prioridad Media (Próxima Semana):
-4. **Completar Dominio 4: Datos y Azar** (3 secciones)
-5. **Expandir Dominio 5: Enseñanza** con ejemplos concretos
-6. **Generar 4-6 gráficos adicionales** (estadísticos, CPA)
+### Prioridad Alta (Próxima Sesión):
+1. **Expandir Dominio 5: Enseñanza-Aprendizaje** con ejemplos concretos
+   - 5.1 Errores Comunes: análisis profundo con remediation
+   - 5.2 Metodologías Activas: planificaciones de clase
+   - 5.3 Evaluación Formativa: rúbricas específicas
+2. **Agregar 3-5 casos interactivos** adicionales para Dominio 5
+3. **Generar 3-4 gráficos SVG** con Grok (funciones, transformaciones, estadísticos)
 
-### Prioridad Baja (Semana 3):
-7. **Agregar 5-8 casos interactivos** restantes
-8. **Revisar y optimizar rendimiento**
-9. **Crear versión imprimible PDF**
+### Prioridad Media (Semana 2):
+4. **Generar gráficos SVG restantes** (6 pendientes del archivo prompts)
+5. **Optimizar interactividad:** animaciones smooth, feedback mejorado
+6. **Testing exhaustivo:** verificar todos los casos en mobile
+
+### Prioridad Baja (Opcional):
+7. **Crear versión imprimible PDF** de toda la guía
+8. **Agregar videos explicativos** cortos (2-3 min por sección)
+9. **Implementar modo oscuro** para la guía
 
 ---
 
 ## 📝 NOTAS TÉCNICAS
 
 ### Performance:
-- **Build time:** 0.72 segundos
-- **Total files:** 84 archivos
-- **Size:** ~2.744 líneas en matematica.njk
-- **Status:** ✅ Sin errores
+- **Build time:** 0.77 segundos
+- **Total files:** 85 archivos
+- **Size:** 4,344 líneas en matematica.njk (+1,600 líneas esta sesión)
+- **Status:** ✅ Sin errores, deploy exitoso
 
 ### Compatibilidad:
 - ✅ Responsive design (mobile-first)

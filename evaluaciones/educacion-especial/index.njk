@@ -139,6 +139,51 @@ title: Educación Especial - PIE
             </div>
         </div>
 
+        <!-- Chat con Grok -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="text-center mb-6">
+                <h3 class="text-3xl font-bold text-gray-800 mb-2">🤖 Consultar a Grok</h3>
+                <p class="text-gray-600">Pregunta sobre cualquier tema de Educación Especial. Respuestas basadas en evidencia científica y normativa chilena.</p>
+            </div>
+
+            <!-- Chat Container -->
+            <div id="grok-chat" class="border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto bg-gray-50 mb-4">
+                <div class="text-center text-gray-500 py-8">
+                    <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                    </svg>
+                    <p>Hola! Soy Grok, tu asistente especializado en Educación Especial.</p>
+                    <p class="text-sm mt-2">Pregúntame sobre normativa, estrategias de intervención, diagnóstico, o cualquier tema relacionado con el PIE.</p>
+                </div>
+            </div>
+
+            <!-- Input Form -->
+            <form id="grok-form" class="flex gap-3">
+                <input
+                    type="text"
+                    id="grok-input"
+                    placeholder="Ej: ¿Cómo implementar RTI en educación básica?"
+                    class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    maxlength="500"
+                >
+                <button
+                    type="submit"
+                    id="grok-submit"
+                    class="bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Enviar
+                </button>
+            </form>
+
+            <div class="mt-4 text-sm text-gray-500 text-center">
+                💡 <strong>Consejo:</strong> Sé específico en tus preguntas para obtener respuestas más precisas.
+                Ejemplos: "Diferencias entre Decreto 170 y Decreto 83", "Estrategias para TEA nivel 2", "Cómo elaborar un PAI para DI".
+            </div>
+        </div>
+
         <!-- Volver al inicio -->
         <div class="text-center mt-12">
             <a href="/" class="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors">
@@ -149,5 +194,113 @@ title: Educación Especial - PIE
             </a>
         </div>
     </div>
+
+    <script>
+        // Chat con Grok
+        const grokForm = document.getElementById('grok-form');
+        const grokInput = document.getElementById('grok-input');
+        const grokSubmit = document.getElementById('grok-submit');
+        const grokChat = document.getElementById('grok-chat');
+
+        grokForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const pregunta = grokInput.value.trim();
+            if (!pregunta) return;
+
+            // Deshabilitar input y botón
+            grokInput.disabled = true;
+            grokSubmit.disabled = true;
+            grokSubmit.innerHTML = '<div class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div> Procesando...';
+
+            // Agregar mensaje del usuario
+            addMessage('user', pregunta);
+            grokInput.value = '';
+
+            try {
+                const response = await fetch('/api/groq-feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        pregunta: pregunta,
+                        respuestaDocente: '',
+                        tema: 'Educación Especial - PIE',
+                        tipo: 'consulta_general'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error en la consulta');
+                }
+
+                // Agregar respuesta de Grok
+                addMessage('grok', data.feedback || 'Lo siento, no pude procesar tu consulta.');
+
+            } catch (error) {
+                addMessage('grok', `❌ Error: ${error.message || 'No se pudo conectar con Grok'}`);
+            } finally {
+                // Rehabilitar input y botón
+                grokInput.disabled = false;
+                grokSubmit.disabled = false;
+                grokSubmit.innerHTML = `
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                    </svg>
+                    Enviar
+                `;
+
+                // Scroll al final del chat
+                grokChat.scrollTop = grokChat.scrollHeight;
+            }
+        });
+
+        function addMessage(sender, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'} mb-4`;
+
+            const messageContent = document.createElement('div');
+            messageContent.className = `max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                sender === 'user'
+                    ? 'bg-blue-500 text-white rounded-br-none'
+                    : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'
+            }`;
+
+            // Procesar markdown básico
+            let processedContent = content
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/^### (.+)$/gm, '<h4 class="font-bold text-lg mb-2">$1</h4>')
+                .replace(/^## (.+)$/gm, '<h3 class="font-bold text-md mb-2">$1</h3>')
+                .replace(/^- (.+)$/gm, '<li class="ml-4">• $1</li>')
+                .replace(/\n\n/g, '</p><p class="mb-2">')
+                .replace(/\n/g, '<br>');
+
+            if (processedContent.includes('<li')) {
+                processedContent = '<ul class="space-y-1">' + processedContent + '</ul>';
+            } else {
+                processedContent = '<p class="mb-0">' + processedContent + '</p>';
+            }
+
+            messageContent.innerHTML = processedContent;
+            messageDiv.appendChild(messageContent);
+            grokChat.appendChild(messageDiv);
+
+            // Scroll al final
+            grokChat.scrollTop = grokChat.scrollHeight;
+        }
+
+        // Limpiar chat inicial si hay contenido
+        grokChat.innerHTML = `
+            <div class="text-center text-gray-500 py-8">
+                <svg class="w-12 h-12 mx-auto mb-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <p class="font-medium">¡Hola! Soy Grok 🤖</p>
+                <p class="text-sm mt-2">Especialista en Educación Especial y PIE chileno.</p>
+                <p class="text-sm mt-1">Pregúntame sobre normativa, estrategias, diagnóstico, evaluación...</p>
+            </div>
+        `;
+    </script>
 </body>
 </html>

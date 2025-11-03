@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba Login Admin</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .result { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Login de Administrador</h1>
+    <button onclick="testLogin()">Probar Login</button>
+    <div id="result"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = '<div class="result info">Probando login...</div>';
+
+            try {
+                // Test login with admin credentials
+                const userCredential = await auth.signInWithEmailAndPassword('fconuva@gmail.com', 'AdminEval2025!');
+
+                resultDiv.innerHTML = `
+                    <div class="result success">
+                        <h3>✅ Login exitoso!</h3>
+                        <p><strong>UID:</strong> ${userCredential.user.uid}</p>
+                        <p><strong>Email:</strong> ${userCredential.user.email}</p>
+                        <p><strong>Email verificado:</strong> ${userCredential.user.emailVerified}</p>
+                        <p><strong>Último login:</strong> ${userCredential.user.metadata.lastSignInTime}</p>
+                    </div>
+                `;
+
+                // Sign out immediately
+                await auth.signOut();
+
+            } catch (error) {
+                console.error('Login error:', error);
+
+                let errorMessage = '';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMessage = 'Usuario no encontrado. La cuenta no existe.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessage = 'Contraseña incorrecta.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMessage = 'Correo electrónico inválido.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessage = 'Cuenta deshabilitada.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessage = 'Demasiados intentos. Intente más tarde.';
+                        break;
+                    case 'auth/network-request-failed':
+                        errorMessage = 'Error de conexión. Verifique su internet.';
+                        break;
+                    default:
+                        errorMessage = `Error desconocido: ${error.code} - ${error.message}`;
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="result error">
+                        <h3>❌ Error en login</h3>
+                        <p><strong>Código:</strong> ${error.code}</p>
+                        <p><strong>Mensaje:</strong> ${errorMessage}</p>
+                        <p><strong>Detalles:</strong> ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

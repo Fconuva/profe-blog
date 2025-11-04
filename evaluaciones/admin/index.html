@@ -365,9 +365,13 @@
                 <div class="card p-6">
                     <h3 class="text-xl font-semibold mb-4">Aplicar Permisos</h3>
                     <div class="space-y-4">
-                        <select id="userSelect" class="form-input">
+                        <select id="userSelect" class="form-input" onchange="loadUserPermissions()">
                             <option value="">Seleccionar usuario...</option>
                         </select>
+                        <div id="currentPermissions" class="text-sm text-gray-600 p-3 bg-gray-50 rounded hidden">
+                            <strong>Permisos actuales:</strong>
+                            <div id="permissionsDisplay"></div>
+                        </div>
                         <button onclick="applyPermissions()" class="btn-primary w-full">
                             <i class="fas fa-save mr-2"></i>Aplicar Permisos
                         </button>
@@ -483,12 +487,12 @@
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-2">Contraseña</label>
-                    <input type="password" id="newPassword" class="form-input" required>
+                    <input type="password" id="newPassword" class="form-input" autocomplete="new-password" required>
                 </div>
 
                 <div class="mb-4">
                     <label class="block text-sm font-medium mb-2">Confirmar Contraseña</label>
-                    <input type="password" id="confirmPassword" class="form-input" required>
+                    <input type="password" id="confirmPassword" class="form-input" autocomplete="new-password" required>
                 </div>
 
                 <div class="mb-6">
@@ -826,11 +830,49 @@
             }
         }
 
+        // Load user permissions when selected
+        function loadUserPermissions() {
+            const userId = document.getElementById('userSelect').value;
+            const currentPermsDiv = document.getElementById('currentPermissions');
+            const permsDisplay = document.getElementById('permissionsDisplay');
+
+            if (!userId) {
+                currentPermsDiv.classList.add('hidden');
+                return;
+            }
+
+            database.ref(`users/${userId}/permissions`).once('value').then((snapshot) => {
+                const permissions = snapshot.val() || {};
+                
+                // Update checkboxes with current permissions
+                document.getElementById('perm-basica').checked = permissions.basica || false;
+                document.getElementById('perm-especial').checked = permissions.especial || false;
+                document.getElementById('perm-media').checked = permissions.media || false;
+                document.getElementById('perm-parvularia').checked = permissions.parvularia || false;
+                document.getElementById('perm-lengua-indigena').checked = permissions.indigena || false;
+
+                // Display current permissions
+                let html = '<ul class="mt-2 space-y-1">';
+                if (permissions.basica) html += '<li>✓ Educación Básica</li>';
+                if (permissions.especial) html += '<li>✓ Educación Especial</li>';
+                if (permissions.media) html += '<li>✓ Educación Media</li>';
+                if (permissions.parvularia) html += '<li>✓ Educación Parvularia</li>';
+                if (permissions.indigena) html += '<li>✓ Lengua Indígena</li>';
+                html += '</ul>';
+
+                permsDisplay.innerHTML = html;
+                currentPermsDiv.classList.remove('hidden');
+            }).catch((error) => {
+                console.error('Error loading permissions:', error);
+                alert('Error al cargar permisos: ' + error.message);
+            });
+        }
+
         // Apply permissions
         function applyPermissions() {
             const userId = document.getElementById('userSelect').value;
             if (!userId) {
-                alert('Selecciona un usuario');
+                alert('⚠️ Selecciona un usuario primero');
                 return;
             }
 
@@ -843,8 +885,12 @@
             };
 
             database.ref(`users/${userId}/permissions`).set(permissions).then(() => {
-                alert('Permisos aplicados correctamente');
+                alert('✅ Permisos aplicados correctamente');
                 loadUsers();
+                loadUserPermissions(); // Reload to show updated permissions
+            }).catch((error) => {
+                console.error('Error saving permissions:', error);
+                alert('❌ Error al guardar permisos: ' + error.message);
             });
         }
 

@@ -55,6 +55,95 @@
         </div>
     </footer>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <!-- Auth Protection Script -->
+    <script>
+    // Firebase Configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+        authDomain: "profe-blog.firebaseapp.com",
+        databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+        projectId: "profe-blog",
+        storageBucket: "profe-blog.firebasestorage.app",
+        messagingSenderId: "305920739217",
+        appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+
+    // Initialize Firebase
+    if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
+    }
+
+    // CRITICAL: Check authentication before allowing access
+    (function() {
+        const currentPath = window.location.pathname;
+        const isLoginPage = currentPath === '/evaluaciones/' || currentPath === '/evaluaciones/index.html';
+        const isAdminLogin = currentPath.includes('/evaluaciones/admin/login');
+        
+        // Don't block login pages
+        if (isLoginPage || isAdminLogin) {
+            return;
+        }
+
+        // Check session
+        const session = localStorage.getItem('evaluaciones_session');
+        
+        if (!session) {
+            // No session - redirect to login
+            alert('⚠️ Debes iniciar sesión para acceder a este contenido');
+            window.location.href = '/evaluaciones/';
+            return;
+        }
+
+        try {
+            const sessionData = JSON.parse(session);
+            const loginTime = new Date(sessionData.loginTime);
+            const now = new Date();
+            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+            // Session expired (24 hours)
+            if (hoursDiff >= 24) {
+                localStorage.removeItem('evaluaciones_session');
+                alert('⏱️ Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
+                window.location.href = '/evaluaciones/';
+                return;
+            }
+
+            // Valid session - check permissions for specific sections
+            const permissions = sessionData.permissions || {};
+            
+            if (currentPath.includes('/educacion-basica/') && !permissions.basica) {
+                alert('🚫 No tienes permisos para acceder a Educación Básica');
+                window.location.href = '/evaluaciones/';
+                return;
+            }
+            
+            if (currentPath.includes('/educacion-especial/') && !permissions.especial) {
+                alert('🚫 No tienes permisos para acceder a Educación Especial');
+                window.location.href = '/evaluaciones/';
+                return;
+            }
+
+            if (currentPath.includes('/educacion-media/') && !permissions.media) {
+                alert('🚫 No tienes permisos para acceder a Educación Media');
+                window.location.href = '/evaluaciones/';
+                return;
+            }
+
+            // Valid session and permissions - continue
+            console.log('✓ Authenticated:', sessionData.username);
+
+        } catch (error) {
+            localStorage.removeItem('evaluaciones_session');
+            alert('❌ Error de autenticación. Por favor inicia sesión nuevamente.');
+            window.location.href = '/evaluaciones/';
+        }
+    })();
+    </script>
+
     <!-- Scripts -->
     <script src="/main-premium.js"></script>
     

@@ -123,11 +123,11 @@ Responde de manera completa y útil.
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                model: 'mixtral-8x7b-32768',
+                model: 'llama-3.1-8b-instant',
                 messages: [
                     {
                         role: 'system',
-                        content: 'Eres Grok, asistente especializado en Educación Especial chilena. Responde siempre en español, de manera profesional y fundamentada.'
+                        content: 'Eres un asistente especializado en Educación Especial chilena. Responde siempre en español, de manera profesional y fundamentada.'
                     },
                     {
                         role: 'user',

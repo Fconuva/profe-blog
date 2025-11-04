@@ -1,36 +1,32 @@
-exports.handler = async (event) => {
+module.exports = async (req, res) => {
     const startTime = Date.now();
     console.log('⏱️ groq-feedback started');
-
-    // CORS headers
-    const headers = {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Content-Type': 'application/json'
+    
+    // Convertir formato Vercel a formato Netlify
+    const event = {
+        httpMethod: req.method,
+        headers: req.headers,
+        body: JSON.stringify(req.body)
     };
 
+    // Configurar CORS
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+
     if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
+        return res.status(200).end();
     }
 
     if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
+        return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         const { pregunta, respuestaDocente, tema, tipo } = JSON.parse(event.body);
 
         if (!pregunta) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ error: 'La pregunta es requerida' })
-            };
+            return res.status(400).json({ error: 'La pregunta es requerida' });
         }
 
         console.log(`📥 Procesando consulta Groq: ${tipo} - ${tema}`);
@@ -183,30 +179,22 @@ Responde de manera completa y útil.
         const elapsed = Date.now() - startTime;
         console.log(`✅ Groq response generated in ${elapsed}ms`);
 
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                success: true,
-                feedback: feedback.trim(),
-                tipo: tipo,
-                tema: tema,
-                elapsed: elapsed
-            })
-        };
+        return res.status(200).json({
+            success: true,
+            feedback: feedback.trim(),
+            tipo: tipo,
+            tema: tema,
+            elapsed: elapsed
+        });
 
     } catch (error) {
         const elapsed = Date.now() - startTime;
         console.error(`❌ Error after ${elapsed}ms:`, error.message);
         console.error('Stack:', error.stack);
 
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({
-                error: error.message || 'Error interno del servidor',
-                elapsed: elapsed
-            })
-        };
+        return res.status(500).json({
+            error: error.message || 'Error interno del servidor',
+            elapsed: elapsed
+        });
     }
 };

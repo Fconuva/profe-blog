@@ -17,7 +17,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
           Práctica Interactiva
         </h1>
         <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
-          50 preguntas oficiales con retroalimentación pedagógica inteligente
+          50 preguntas + 10 casos de estudio con retroalimentación pedagógica inteligente
         </p>
         <div class="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
           <div class="flex items-center gap-2">
@@ -31,7 +31,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
               <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"/>
               <path fill-rule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clip-rule="evenodd"/>
             </svg>
-            <span>50 preguntas</span>
+            <span>70 preguntas</span>
           </div>
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-purple-500" fill="currentColor" viewBox="0 0 20 20">
@@ -59,7 +59,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
           <div class="ml-4">
             <h3 class="text-lg font-bold text-blue-900 mb-2">📖 Instrucciones</h3>
             <ul class="text-sm text-blue-800 space-y-2">
-              <li>✓ Responde las 50 preguntas de selección múltiple</li>
+              <li>✓ Responde las 50 preguntas regulares + 10 casos de estudio (70 total)</li>
               <li>✓ Revisa tus respuestas para recibir corrección inmediata</li>
               <li>✓ Usa el botón <strong>"Consultar IA"</strong> para obtener explicaciones detalladas</li>
               <li>✓ La IA explica por qué una alternativa es correcta y las demás son incorrectas</li>
@@ -73,7 +73,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
       <div class="bg-white rounded-xl shadow-md p-6 mb-8">
         <div class="flex justify-between items-center mb-3">
           <span class="text-sm font-semibold text-gray-700">Progreso</span>
-          <span class="text-sm font-bold text-purple-600" id="progress-text">0/50 respondidas</span>
+          <span class="text-sm font-bold text-purple-600" id="progress-text">0/70 respondidas</span>
         </div>
         <div class="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
           <div id="progress-bar" class="bg-gradient-to-r from-purple-500 to-indigo-600 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
@@ -83,6 +83,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
       <!-- Contenedor del Quiz -->
       <div id="quiz-container" class="space-y-6">
         <form id="quiz-form">
+          <!-- PREGUNTAS REGULARES (1-50) -->
           {% for pregunta in plan.exam.preguntas %}
             <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-purple-400" id="pregunta-{{ loop.index }}">
               
@@ -146,6 +147,136 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
             </div>
           {% endfor %}
           
+          <!-- CASOS DE ESTUDIO (51+) -->
+          {% if plan.casos_estudio %}
+            <div class="mt-12 mb-8 bg-gradient-to-r from-amber-100 to-yellow-100 border-2 border-amber-400 rounded-2xl p-8">
+              <div class="text-center">
+                <h2 class="text-3xl font-bold text-amber-900 mb-3">📚 Casos de Estudio</h2>
+                <p class="text-amber-800 text-lg">
+                  Situaciones pedagógicas reales para evaluar tu comprensión contextualizada
+                </p>
+              </div>
+            </div>
+
+            {% for caso in plan.casos_estudio %}
+              {% set casoNum = loop.index + 50 %}
+              
+              <!-- Contexto del caso -->
+              <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border-l-4 border-amber-500 rounded-xl p-8 shadow-lg mb-6">
+                <div class="flex items-center gap-3 mb-4">
+                  <span class="bg-amber-500 text-white font-bold px-4 py-2 rounded-full text-sm">
+                    CASO {{ loop.index }}
+                  </span>
+                  <h3 class="text-xl font-bold text-amber-900">{{ caso.titulo }}</h3>
+                </div>
+                <div class="bg-white rounded-lg p-6 text-gray-800 leading-relaxed border border-amber-200">
+                  {{ caso.contexto | safe }}
+                </div>
+              </div>
+
+              <!-- Pregunta 1 del caso -->
+              <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-amber-400 mb-6" id="pregunta-{{ casoNum }}">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white font-bold rounded-full flex items-center justify-center text-lg shadow-md">
+                      {{ casoNum }}
+                    </span>
+                    <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      Caso de Estudio
+                    </span>
+                  </div>
+                </div>
+
+                <p class="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">
+                  {{ caso.pregunta_01.enunciado | safe }}
+                </p>
+
+                <div class="space-y-3 mb-6">
+                  {% for alt in caso.pregunta_01.alternativas %}
+                    <label class="flex items-start p-4 border-2 border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all duration-200 group">
+                      <input 
+                        type="radio" 
+                        name="pregunta-{{ casoNum }}" 
+                        value="{{ alt.opcion }}" 
+                        class="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-gray-300 cursor-pointer"
+                        data-question="{{ casoNum }}"
+                      >
+                      <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
+                        <strong class="text-amber-600">{{ alt.opcion }})</strong> {{ alt.texto }}
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+
+                <div id="feedback-{{ casoNum }}" class="hidden"></div>
+                <div id="ia-actions-{{ casoNum }}" class="mt-4 hidden">
+                  <button 
+                    type="button" 
+                    data-q="{{ casoNum }}" 
+                    class="ia-btn inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                    </svg>
+                    Consultar IA - Ver Explicación Completa
+                  </button>
+                </div>
+                <div id="ia-feedback-{{ casoNum }}" class="mt-4 hidden"></div>
+              </div>
+
+              <!-- Pregunta 2 del caso -->
+              {% set casoNum2 = casoNum + 1 %}
+              <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-amber-400 mb-8" id="pregunta-{{ casoNum2 }}">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white font-bold rounded-full flex items-center justify-center text-lg shadow-md">
+                      {{ casoNum2 }}
+                    </span>
+                    <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      Caso de Estudio
+                    </span>
+                  </div>
+                </div>
+
+                <p class="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">
+                  {{ caso.pregunta_02.enunciado | safe }}
+                </p>
+
+                <div class="space-y-3 mb-6">
+                  {% for alt in caso.pregunta_02.alternativas %}
+                    <label class="flex items-start p-4 border-2 border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all duration-200 group">
+                      <input 
+                        type="radio" 
+                        name="pregunta-{{ casoNum2 }}" 
+                        value="{{ alt.opcion }}" 
+                        class="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-gray-300 cursor-pointer"
+                        data-question="{{ casoNum2 }}"
+                      >
+                      <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
+                        <strong class="text-amber-600">{{ alt.opcion }})</strong> {{ alt.texto }}
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+
+                <div id="feedback-{{ casoNum2 }}" class="hidden"></div>
+                <div id="ia-actions-{{ casoNum2 }}" class="mt-4 hidden">
+                  <button 
+                    type="button" 
+                    data-q="{{ casoNum2 }}" 
+                    class="ia-btn inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+                    </svg>
+                    Consultar IA - Ver Explicación Completa
+                  </button>
+                </div>
+                <div id="ia-feedback-{{ casoNum2 }}" class="mt-4 hidden"></div>
+              </div>
+            {% endfor %}
+          {% endif %}
+          
           <!-- Botón revisar -->
           <div class="mt-10 text-center">
             <button 
@@ -170,7 +301,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
               Has respondido correctamente
             </p>
             <p class="text-5xl font-bold text-green-600 mb-6">
-              <span id="puntaje"></span>/50
+              <span id="puntaje"></span>/70
             </p>
             <div class="bg-white rounded-lg p-4 inline-block">
               <p class="text-lg text-gray-600">
@@ -195,7 +326,9 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
   const quizForm = document.getElementById('quiz-form');
   const progressBar = document.getElementById('progress-bar');
   const progressText = document.getElementById('progress-text');
-  const totalPreguntas = plan.exam.preguntas.length;
+  const totalPreguntasRegulares = plan.exam.preguntas.length;
+  const totalCasos = plan.casos_estudio ? plan.casos_estudio.length * 2 : 0;
+  const totalPreguntas = totalPreguntasRegulares + totalCasos;
 
   // Actualizar progreso en tiempo real
   document.querySelectorAll('input[type="radio"]').forEach(radio => {
@@ -217,19 +350,20 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
     
     let puntaje = 0;
 
-    plan.exam.preguntas.forEach((pregunta, index) => {
-      const preguntaIndex = index + 1;
+    // Función helper para procesar feedback
+    function procesarRespuesta(preguntaIndex, respuestaCorrecta, explicacion) {
       const feedbackEl = document.getElementById(`feedback-${preguntaIndex}`);
       const iaActionsEl = document.getElementById(`ia-actions-${preguntaIndex}`);
       const selectedOption = document.querySelector(`input[name="pregunta-${preguntaIndex}"]:checked`);
+      
+      if (!feedbackEl || !iaActionsEl) return 0;
       
       feedbackEl.classList.remove('hidden');
       iaActionsEl.classList.remove('hidden');
       
       if (selectedOption) {
-        const esCorrecta = selectedOption.value === pregunta.respuesta_correcta;
+        const esCorrecta = selectedOption.value === respuestaCorrecta;
         if (esCorrecta) {
-          puntaje++;
           feedbackEl.innerHTML = `
             <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
               <div class="flex items-start">
@@ -238,11 +372,12 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
                 </svg>
                 <div>
                   <p class="font-bold text-green-900 text-lg mb-2">¡Correcto! ✅</p>
-                  <p class="text-green-800 leading-relaxed">${pregunta.explicacion}</p>
+                  <p class="text-green-800 leading-relaxed">${explicacion}</p>
                 </div>
               </div>
             </div>
           `;
+          return 1;
         } else {
           feedbackEl.innerHTML = `
             <div class="bg-gradient-to-r from-red-100 to-pink-100 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
@@ -256,13 +391,14 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
                     Tu respuesta: <strong class="bg-red-200 px-2 py-1 rounded">${selectedOption.value}</strong>
                   </p>
                   <p class="text-red-800 mb-3">
-                    Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${pregunta.respuesta_correcta}</strong>
+                    Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>
                   </p>
-                  <p class="text-red-900 leading-relaxed font-medium">${pregunta.explicacion}</p>
+                  <p class="text-red-900 leading-relaxed font-medium">${explicacion}</p>
                 </div>
               </div>
             </div>
           `;
+          return 0;
         }
       } else {
         feedbackEl.innerHTML = `
@@ -274,14 +410,42 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
               <div>
                 <p class="font-bold text-yellow-900 text-lg mb-2">No respondida ⚠️</p>
                 <p class="text-yellow-800">
-                  Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${pregunta.respuesta_correcta}</strong>
+                  Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>
                 </p>
               </div>
             </div>
           </div>
         `;
+        return 0;
       }
+    }
+
+    // Procesar preguntas regulares (1-50)
+    plan.exam.preguntas.forEach((pregunta, index) => {
+      const preguntaIndex = index + 1;
+      puntaje += procesarRespuesta(preguntaIndex, pregunta.respuesta_correcta, pregunta.explicacion);
     });
+
+    // Procesar casos de estudio (51+)
+    if (plan.casos_estudio) {
+      plan.casos_estudio.forEach((caso, casoIndex) => {
+        const baseNum = 51 + (casoIndex * 2);
+        
+        // Pregunta 1 del caso
+        puntaje += procesarRespuesta(
+          baseNum, 
+          caso.pregunta_01.respuesta_correcta, 
+          caso.pregunta_01.explicacion
+        );
+        
+        // Pregunta 2 del caso
+        puntaje += procesarRespuesta(
+          baseNum + 1, 
+          caso.pregunta_02.respuesta_correcta, 
+          caso.pregunta_02.explicacion
+        );
+      });
+    }
 
     // Mostrar resultado final
     const resultadoFinalEl = document.getElementById('resultado-final');

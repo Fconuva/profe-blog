@@ -116,6 +116,8 @@ Responde de manera completa y útil.
         }
 
         // Llamar a Groq API
+        console.log('🔑 Using Groq API key:', groqApiKey ? `${groqApiKey.substring(0, 10)}...` : 'MISSING');
+        
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -140,16 +142,41 @@ Responde de manera completa y útil.
             })
         });
 
+        console.log('📡 Groq response status:', response.status, response.statusText);
+        
         if (!response.ok) {
-            const errorData = await response.text();
-            console.error('❌ Groq API error:', response.status, errorData);
-            throw new Error(`Error en API de Groq: ${response.status}`);
+            const errorText = await response.text();
+            console.error('❌ Groq API error response:', errorText);
+            
+            // Intentar parsear como JSON si es posible
+            let errorMessage = `Error ${response.status}: ${response.statusText}`;
+            try {
+                const errorJson = JSON.parse(errorText);
+                errorMessage = errorJson.error?.message || errorMessage;
+            } catch (e) {
+                // No es JSON, usar texto plano (truncado)
+                errorMessage = `${errorMessage} - ${errorText.substring(0, 200)}`;
+            }
+            
+            throw new Error(errorMessage);
         }
 
-        const groqData = await response.json();
+        const responseText = await response.text();
+        console.log('📄 Groq response (first 200 chars):', responseText.substring(0, 200));
+        
+        let groqData;
+        try {
+            groqData = JSON.parse(responseText);
+        } catch (e) {
+            console.error('❌ Failed to parse Groq response as JSON:', e.message);
+            console.error('Response was:', responseText.substring(0, 500));
+            throw new Error('La API devolvió una respuesta inválida (no JSON)');
+        }
+        
         const feedback = groqData.choices?.[0]?.message?.content;
 
         if (!feedback) {
+            console.error('❌ No feedback in response:', JSON.stringify(groqData));
             throw new Error('No se recibió respuesta de Groq');
         }
 

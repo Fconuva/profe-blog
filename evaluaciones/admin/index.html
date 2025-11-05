@@ -272,6 +272,9 @@
                 <a href="#logs" class="nav-link" onclick="showSection('logs')">
                     <i class="fas fa-history mr-2"></i>Registros
                 </a>
+                <a href="#privado" class="nav-link" onclick="showSection('privado')">
+                    <i class="fas fa-lock mr-2"></i>Área Privada
+                </a>
                 <a href="#settings" class="nav-link" onclick="showSection('settings')">
                     <i class="fas fa-cogs mr-2"></i>Configuración
                 </a>
@@ -487,6 +490,111 @@
                             <span>Dispositivos Registrados:</span>
                             <span id="totalDevices" class="font-semibold">0</span>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Privado Section -->
+        <section id="privado-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-lock mr-3 text-indigo-600"></i>Gestión Área Privada
+            </h2>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <!-- Accesos Recientes -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-clock mr-2 text-blue-600"></i>Accesos Recientes a /privado/
+                    </h3>
+                    <div id="privadoAccessList" class="space-y-2">
+                        <p class="text-gray-500 text-sm">Cargando accesos...</p>
+                    </div>
+                </div>
+
+                <!-- Usuarios con Acceso -->
+                <div class="card p-6">
+                    <h3 class="text-xl font-semibold mb-4">
+                        <i class="fas fa-user-check mr-2 text-green-600"></i>Usuarios con Acceso
+                    </h3>
+                    <div id="privadoUsersList" class="space-y-2">
+                        <p class="text-gray-500 text-sm">Cargando usuarios...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Gestión Rápida -->
+            <div class="card p-6">
+                <h3 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-tools mr-2 text-purple-600"></i>Gestión Rápida de Accesos
+                </h3>
+                <div class="space-y-4">
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4">
+                        <p class="text-sm text-blue-800 mb-2">
+                            <strong>💡 Tip:</strong> Desde aquí puedes activar/desactivar el acceso a /privado/ para cualquier usuario.
+                        </p>
+                        <p class="text-xs text-blue-600">
+                            Los cambios se aplican inmediatamente y se guardan en Firebase.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Seleccionar Usuario</label>
+                        <select id="quickAccessUser" class="form-input mb-3" onchange="loadUserPrivadoAccess()">
+                            <option value="">-- Selecciona un usuario --</option>
+                        </select>
+                    </div>
+
+                    <div id="quickAccessControls" class="hidden space-y-3">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div>
+                                <p class="font-medium text-gray-800">Acceso a Área Privada</p>
+                                <p class="text-sm text-gray-500">Permitir acceso a /privado/dashboard</p>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="togglePrivadoAccess" class="sr-only peer" onchange="togglePrivadoAccess()">
+                                <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                            </label>
+                        </div>
+
+                        <div class="text-xs text-gray-500">
+                            <strong>Usuario actual:</strong> <span id="currentPrivadoUser"></span><br>
+                            <strong>UID:</strong> <span id="currentPrivadoUID" class="font-mono text-xs"></span>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button onclick="refreshPrivadoData()" class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-all">
+                            <i class="fas fa-sync-alt mr-2"></i>Actualizar Datos
+                        </button>
+                        <button onclick="window.open('/privado/dashboard-Francisco.html', '_blank')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-all">
+                            <i class="fas fa-external-link-alt mr-2"></i>Abrir Dashboard Privado
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas -->
+            <div class="card p-6 mt-6">
+                <h3 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-chart-bar mr-2 text-orange-600"></i>Estadísticas de Uso
+                </h3>
+                <div class="grid md:grid-cols-4 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-blue-600 mb-1">Total Accesos</p>
+                        <p id="privadoTotalAccess" class="text-2xl font-bold text-blue-800">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-green-600 mb-1">Usuarios Activos</p>
+                        <p id="privadoActiveUsers" class="text-2xl font-bold text-green-800">0</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg">
+                        <p class="text-sm text-purple-600 mb-1">Accesos Hoy</p>
+                        <p id="privadoTodayAccess" class="text-2xl font-bold text-purple-800">0</p>
+                    </div>
+                    <div class="bg-orange-50 p-4 rounded-lg">
+                        <p class="text-sm text-orange-600 mb-1">Accesos Esta Semana</p>
+                        <p id="privadoWeekAccess" class="text-2xl font-bold text-orange-800">0</p>
                     </div>
                 </div>
             </div>
@@ -1277,6 +1385,246 @@
         function editUser(userId) {
             alert('Función de edición próximamente disponible');
         }
+
+        // ========================================
+        // FUNCIONES PARA GESTIÓN DE ÁREA PRIVADA
+        // ========================================
+
+        // Cargar datos de área privada cuando se muestra la sección
+        function loadPrivadoSection() {
+            loadPrivadoAccessList();
+            loadPrivadoUsersList();
+            loadPrivadoStats();
+            populateQuickAccessUsers();
+        }
+
+        // Cargar lista de accesos recientes a /privado/
+        function loadPrivadoAccessList() {
+            const accessList = document.getElementById('privadoAccessList');
+            accessList.innerHTML = '<p class="text-gray-500 text-sm">Cargando...</p>';
+
+            database.ref('admin/login_history').once('value').then((snapshot) => {
+                const accesses = [];
+                snapshot.forEach((userSnap) => {
+                    userSnap.forEach((accessSnap) => {
+                        const data = accessSnap.val();
+                        accesses.push({
+                            user: userSnap.key,
+                            ...data,
+                            timestamp: data.timestamp || new Date().toISOString()
+                        });
+                    });
+                });
+
+                // Ordenar por timestamp descendente
+                accesses.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+                
+                // Mostrar últimos 10
+                const recentAccesses = accesses.slice(0, 10);
+                
+                if (recentAccesses.length === 0) {
+                    accessList.innerHTML = '<p class="text-gray-500 text-sm">No hay accesos registrados.</p>';
+                    return;
+                }
+
+                let html = '';
+                recentAccesses.forEach(access => {
+                    const date = new Date(access.timestamp);
+                    const timeAgo = getTimeAgo(date);
+                    html += `
+                        <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium text-gray-800">${access.email || access.user}</p>
+                                    <p class="text-xs text-gray-500">${date.toLocaleString('es-CL')}</p>
+                                </div>
+                                <span class="text-xs text-blue-600 font-medium">${timeAgo}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                accessList.innerHTML = html;
+            }).catch(error => {
+                console.error('Error loading access list:', error);
+                accessList.innerHTML = '<p class="text-red-500 text-sm">Error al cargar accesos</p>';
+            });
+        }
+
+        // Cargar lista de usuarios con acceso
+        function loadPrivadoUsersList() {
+            const usersList = document.getElementById('privadoUsersList');
+            usersList.innerHTML = '<p class="text-gray-500 text-sm">Cargando...</p>';
+
+            database.ref('users').once('value').then((snapshot) => {
+                const users = [];
+                snapshot.forEach((userSnap) => {
+                    const userData = userSnap.val();
+                    if (userData.permissions && userData.permissions.privado) {
+                        users.push({
+                            uid: userSnap.key,
+                            ...userData
+                        });
+                    }
+                });
+
+                if (users.length === 0) {
+                    usersList.innerHTML = '<p class="text-gray-500 text-sm">Ningún usuario tiene acceso actualmente.</p>';
+                    return;
+                }
+
+                let html = '';
+                users.forEach(user => {
+                    html += `
+                        <div class="flex items-center justify-between p-3 bg-green-50 rounded-lg border border-green-200">
+                            <div>
+                                <p class="font-medium text-gray-800">${user.email || user.username}</p>
+                                <p class="text-xs text-gray-500">UID: ${user.uid.substring(0, 12)}...</p>
+                            </div>
+                            <i class="fas fa-check-circle text-green-600"></i>
+                        </div>
+                    `;
+                });
+
+                usersList.innerHTML = html;
+            }).catch(error => {
+                console.error('Error loading users list:', error);
+                usersList.innerHTML = '<p class="text-red-500 text-sm">Error al cargar usuarios</p>';
+            });
+        }
+
+        // Cargar estadísticas
+        function loadPrivadoStats() {
+            database.ref('admin/login_history').once('value').then((snapshot) => {
+                let totalAccess = 0;
+                let todayAccess = 0;
+                let weekAccess = 0;
+                const uniqueUsers = new Set();
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                
+                const weekAgo = new Date();
+                weekAgo.setDate(weekAgo.getDate() - 7);
+
+                snapshot.forEach((userSnap) => {
+                    userSnap.forEach((accessSnap) => {
+                        const data = accessSnap.val();
+                        totalAccess++;
+                        uniqueUsers.add(userSnap.key);
+
+                        const accessDate = new Date(data.timestamp);
+                        if (accessDate >= today) todayAccess++;
+                        if (accessDate >= weekAgo) weekAccess++;
+                    });
+                });
+
+                document.getElementById('privadoTotalAccess').textContent = totalAccess;
+                document.getElementById('privadoActiveUsers').textContent = uniqueUsers.size;
+                document.getElementById('privadoTodayAccess').textContent = todayAccess;
+                document.getElementById('privadoWeekAccess').textContent = weekAccess;
+            });
+        }
+
+        // Poblar selector de usuarios para gestión rápida
+        function populateQuickAccessUsers() {
+            const select = document.getElementById('quickAccessUser');
+            select.innerHTML = '<option value="">-- Selecciona un usuario --</option>';
+
+            database.ref('users').once('value').then((snapshot) => {
+                snapshot.forEach((userSnap) => {
+                    const userData = userSnap.val();
+                    const option = document.createElement('option');
+                    option.value = userSnap.key;
+                    option.textContent = userData.email || userData.username || userSnap.key;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        // Cargar estado de acceso de un usuario
+        function loadUserPrivadoAccess() {
+            const userId = document.getElementById('quickAccessUser').value;
+            const controls = document.getElementById('quickAccessControls');
+
+            if (!userId) {
+                controls.classList.add('hidden');
+                return;
+            }
+
+            database.ref(`users/${userId}`).once('value').then((snapshot) => {
+                const userData = snapshot.val();
+                if (!userData) return;
+
+                // Mostrar controles
+                controls.classList.remove('hidden');
+
+                // Actualizar información
+                document.getElementById('currentPrivadoUser').textContent = userData.email || userData.username;
+                document.getElementById('currentPrivadoUID').textContent = userId;
+
+                // Actualizar toggle
+                const hasAccess = userData.permissions && userData.permissions.privado;
+                document.getElementById('togglePrivadoAccess').checked = hasAccess;
+            });
+        }
+
+        // Toggle acceso a privado
+        async function togglePrivadoAccess() {
+            const userId = document.getElementById('quickAccessUser').value;
+            const hasAccess = document.getElementById('togglePrivadoAccess').checked;
+
+            if (!userId) {
+                alert('⚠️ Selecciona un usuario primero');
+                return;
+            }
+
+            try {
+                await database.ref(`users/${userId}/permissions/privado`).set(hasAccess);
+                
+                const status = hasAccess ? 'habilitado' : 'deshabilitado';
+                alert(`✅ Acceso a /privado/ ${status} correctamente`);
+                
+                // Recargar listas
+                loadPrivadoUsersList();
+                loadPrivadoStats();
+            } catch (error) {
+                console.error('Error toggling access:', error);
+                alert('❌ Error al cambiar permisos: ' + error.message);
+                // Revertir toggle
+                document.getElementById('togglePrivadoAccess').checked = !hasAccess;
+            }
+        }
+
+        // Refrescar datos
+        function refreshPrivadoData() {
+            loadPrivadoSection();
+            alert('✅ Datos actualizados');
+        }
+
+        // Utilidad: calcular tiempo transcurrido
+        function getTimeAgo(date) {
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 1) return 'Ahora';
+            if (diffMins < 60) return `Hace ${diffMins}m`;
+            if (diffHours < 24) return `Hace ${diffHours}h`;
+            return `Hace ${diffDays}d`;
+        }
+
+        // Actualizar función showSection para cargar datos de privado
+        const originalShowSection = showSection;
+        showSection = function(sectionName) {
+            originalShowSection.call(this, sectionName);
+            if (sectionName === 'privado') {
+                loadPrivadoSection();
+            }
+        };
+
     </script>
 </body>
 </html></content>

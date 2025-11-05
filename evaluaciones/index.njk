@@ -64,8 +64,24 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
 
       <div id="login-button" class="inline-block">
         <button onclick="showLoginModal()" class="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-xl text-lg">
-          <i class="fas fa-play-circle mr-2"></i>Comenzar Ahora
+          <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión para Acceder
         </button>
+      </div>
+
+      <!-- User Info (shown when logged in) -->
+      <div id="user-info" class="hidden">
+        <div class="inline-flex items-center space-x-3 bg-white/80 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg">
+          <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
+            <i class="fas fa-user text-white"></i>
+          </div>
+          <div class="text-left">
+            <p class="text-sm text-gray-600">Bienvenido</p>
+            <p class="font-bold text-gray-800" id="user-name"></p>
+          </div>
+          <button onclick="logout()" class="ml-4 text-red-600 hover:text-red-800 transition-colors">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
       </div>
     </div>
 
@@ -889,7 +905,7 @@ function checkAuthentication() {
             if (hoursDiff < 24) {
                 currentUser = sessionData;
                 showUserInterface(sessionData);
-                filterContentByPermissions(sessionData.permissions);
+                enableContentAccess(sessionData.permissions);
                 return;
             } else {
                 localStorage.removeItem('evaluaciones_session');
@@ -903,7 +919,9 @@ function checkAuthentication() {
     if (loginButton) {
         loginButton.style.display = 'block';
     }
-    filterContentByPermissions(null); // Hide all restricted content
+    
+    // Show all content but disable links (require login to access)
+    showAllContentButLockLinks();
 }
 
 // Setup login form
@@ -998,8 +1016,58 @@ function showUserInterface(userData) {
     if (userName) userName.textContent = userData.username;
 }
 
-// Filter content based on permissions
-function filterContentByPermissions(permissions) {
+// Show all content but lock links (require login)
+function showAllContentButLockLinks() {
+    const contentSections = [
+        { id: 'educacion-basica-section', permission: 'basica' },
+        { id: 'matematica-section', permission: 'basica' },
+        { id: 'religion-section', permission: 'basica' },
+        { id: 'basica-generalista-section', permission: 'basica' },
+        { id: 'educacion-especial-section', permission: 'especial' },
+        { id: 'educacion-parvularia-section', permission: 'parvularia' },
+        { id: 'educacion-media-historia-section', permission: 'media' },
+        { id: 'educacion-media-ciencias-section', permission: 'media' },
+        { id: 'educacion-media-literatura-section', permission: 'media' },
+        { id: 'educacion-media-tecnico-section', permission: 'tecnico_profesional' },
+        { id: 'lengua-indigena-section', permission: 'indigena' }
+    ];
+
+    // Show all sections
+    contentSections.forEach(section => {
+        const element = document.getElementById(section.id);
+        if (element) {
+            element.style.display = 'block';
+            
+            // Lock all links in this section
+            const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+            links.forEach(link => {
+                link.style.opacity = '0.6';
+                link.style.cursor = 'not-allowed';
+                link.style.pointerEvents = 'none';
+                
+                // Add overlay to show login required
+                const parent = link.parentElement;
+                if (!parent.querySelector('.login-overlay')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'login-overlay absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl';
+                    overlay.innerHTML = '<span class="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold text-indigo-600"><i class="fas fa-lock mr-2"></i>Inicia sesión para acceder</span>';
+                    overlay.style.position = 'absolute';
+                    overlay.style.top = '0';
+                    overlay.style.left = '0';
+                    overlay.style.right = '0';
+                    overlay.style.bottom = '0';
+                    overlay.style.zIndex = '10';
+                    
+                    parent.style.position = 'relative';
+                    parent.appendChild(overlay);
+                }
+            });
+        }
+    });
+}
+
+// Enable content access for logged-in users
+function enableContentAccess(permissions) {
     const contentSections = [
         { id: 'educacion-basica-section', permission: 'basica' },
         { id: 'matematica-section', permission: 'basica' },
@@ -1017,16 +1085,23 @@ function filterContentByPermissions(permissions) {
     contentSections.forEach(section => {
         const element = document.getElementById(section.id);
         if (element) {
-            // Show all content if user is logged in
-            if (permissions) {
-                // If user has permissions, check specific permission
-                if (permissions[section.permission]) {
-                    element.style.display = 'block';
-                } else {
-                    element.style.display = 'none';
-                }
+            // Check if user has permission for this section
+            if (permissions && permissions[section.permission]) {
+                // Show section and enable links
+                element.style.display = 'block';
+                
+                const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+                links.forEach(link => {
+                    link.style.opacity = '1';
+                    link.style.cursor = 'pointer';
+                    link.style.pointerEvents = 'auto';
+                });
+                
+                // Remove login overlays
+                const overlays = element.querySelectorAll('.login-overlay');
+                overlays.forEach(overlay => overlay.remove());
             } else {
-                // If not logged in, hide all sections
+                // Hide sections user doesn't have permission for
                 element.style.display = 'none';
             }
         }

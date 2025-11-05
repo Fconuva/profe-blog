@@ -116,6 +116,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
                       value="{{ alternativa.opcion }}" 
                       class="mt-1 h-5 w-5 text-purple-600 focus:ring-purple-500 border-gray-300 cursor-pointer"
                       data-question="{{ loop.parent.loop.index }}"
+                      required
                     >
                     <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
                       <strong class="text-purple-600">{{ alternativa.opcion }})</strong> {{ alternativa.texto }}
@@ -348,21 +349,24 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
   quizForm.addEventListener('submit', function(event) {
     event.preventDefault();
     
+    // Obtener todas las respuestas del formulario
+    const formData = new FormData(quizForm);
+    
     let puntaje = 0;
 
     // Función helper para procesar feedback
     function procesarRespuesta(preguntaIndex, respuestaCorrecta, explicacion) {
       const feedbackEl = document.getElementById(`feedback-${preguntaIndex}`);
       const iaActionsEl = document.getElementById(`ia-actions-${preguntaIndex}`);
-      const selectedOption = document.querySelector(`input[name="pregunta-${preguntaIndex}"]:checked`);
+      const respuestaUsuario = formData.get(`pregunta-${preguntaIndex}`);
       
       if (!feedbackEl || !iaActionsEl) return 0;
       
       feedbackEl.classList.remove('hidden');
       iaActionsEl.classList.remove('hidden');
       
-      if (selectedOption) {
-        const esCorrecta = selectedOption.value === respuestaCorrecta;
+      if (respuestaUsuario) {
+        const esCorrecta = respuestaUsuario === respuestaCorrecta;
         if (esCorrecta) {
           feedbackEl.innerHTML = `
             <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
@@ -388,7 +392,7 @@ description: "Responde las 50 preguntas de la prueba 63-sc-l y prepárate con re
                 <div>
                   <p class="font-bold text-red-900 text-lg mb-2">Incorrecto ❌</p>
                   <p class="text-red-800 mb-2">
-                    Tu respuesta: <strong class="bg-red-200 px-2 py-1 rounded">${selectedOption.value}</strong>
+                    Tu respuesta: <strong class="bg-red-200 px-2 py-1 rounded">${respuestaUsuario}</strong>
                   </p>
                   <p class="text-red-800 mb-3">
                     Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>

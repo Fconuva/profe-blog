@@ -903,13 +903,19 @@
                 await database.ref(`users/${firebaseUser.uid}`).set(userData);
                 console.log('User metadata saved to database');
 
-                // Step 3: Also save to admin/login_history for tracking
-                await database.ref(`admin/login_history/${username}`).push({
-                    action: 'user_created',
-                    timestamp: new Date().toISOString(),
-                    createdBy: 'admin',
-                    email: email
-                });
+                // Step 3: Try to save to admin/login_history for tracking (optional)
+                try {
+                    await database.ref(`admin/login_history/${username}`).push({
+                        action: 'user_created',
+                        timestamp: new Date().toISOString(),
+                        createdBy: auth.currentUser ? auth.currentUser.email : 'admin',
+                        email: email
+                    });
+                    console.log('Login history saved');
+                } catch (historyError) {
+                    console.warn('Could not save login history (non-critical):', historyError.message);
+                    // Continue anyway - this is just for tracking
+                }
 
                 // Success!
                 alert('✅ Usuario creado correctamente en Firebase Authentication\n\n' +

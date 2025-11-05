@@ -980,14 +980,23 @@ function setupLoginForm() {
             const userCredential = await auth.signInWithEmailAndPassword(email, password);
             const user = userCredential.user;
 
+            console.log('✅ Firebase Auth successful!');
+            console.log('  UID from Auth:', user.uid);
+            console.log('  Email:', user.email);
+
             // Now get user data from database with authenticated access
             const userDataSnapshot = await database.ref(`users/${user.uid}`).once('value');
             
+            console.log('📊 Database query for UID:', user.uid);
+            console.log('  Data exists?', userDataSnapshot.exists());
+            
             if (!userDataSnapshot.exists()) {
-                throw new Error('Datos de usuario no encontrados');
+                console.error('❌ No data found in database for UID:', user.uid);
+                throw new Error('Datos de usuario no encontrados en Database. UID: ' + user.uid);
             }
 
             const userData = userDataSnapshot.val();
+            console.log('✅ User data loaded:', userData);
 
             // Check if user is active
             if (userData.active === false) {

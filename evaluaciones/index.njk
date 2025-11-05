@@ -902,18 +902,24 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
 </div>
 
 <script>
-// Firebase is already loaded and initialized by layout-evaluaciones.njk
-const auth = firebase.auth();
-const database = firebase.database();
-
-// Global variables
-let currentUser = null;
-
-// Check authentication on page load
+// Wait for Firebase to be loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Verify Firebase is available
+    if (typeof firebase === 'undefined') {
+        console.error('Firebase not loaded!');
+        return;
+    }
+
+    // Initialize Firebase services
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // Global variables
+    let currentUser = null;
+
+    // Start authentication check
     checkAuthentication();
     setupLoginForm();
-});
 
 // Check if user is logged in
 function checkAuthentication() {
@@ -1151,18 +1157,25 @@ function enableContentAccess(permissions) {
     });
 }
 
-// Logout
-async function logout() {
-    try {
-        await auth.signOut();
-        localStorage.removeItem('evaluaciones_session');
-        currentUser = null;
-        location.reload();
-    } catch (error) {
-        console.error('Logout error:', error);
-        // Force reload anyway
-        localStorage.removeItem('evaluaciones_session');
-        location.reload();
+    // Logout
+    async function logout() {
+        try {
+            await auth.signOut();
+            localStorage.removeItem('evaluaciones_session');
+            currentUser = null;
+            location.reload();
+        } catch (error) {
+            console.error('Logout error:', error);
+            // Force reload anyway
+            localStorage.removeItem('evaluaciones_session');
+            location.reload();
+        }
     }
-}
+
+    // Make logout available globally
+    window.logout = logout;
+    window.showLoginModal = showLoginModal;
+    window.closeLoginModal = closeLoginModal;
+
+}); // End DOMContentLoaded
 </script>

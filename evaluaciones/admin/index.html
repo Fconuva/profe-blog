@@ -624,26 +624,41 @@
             loadSystemSettings();
         });
 
-        // Authentication check
+        // Authentication check with Firebase
         function checkAuth() {
-            const isLoggedIn = localStorage.getItem('admin_logged_in');
-            const adminEmail = localStorage.getItem('admin_email');
-
-            if (isLoggedIn === 'true' && adminEmail === 'fconuva@gmail.com') {
-                document.getElementById('adminUser').textContent = adminEmail;
-                loadUsers();
-                loadStats();
-            } else {
-                window.location.href = '/evaluaciones/admin/login.html';
-            }
+            auth.onAuthStateChanged(function(user) {
+                if (user) {
+                    console.log('Usuario autenticado:', user.email);
+                    document.getElementById('adminUser').textContent = user.email;
+                    
+                    // Keep localStorage for compatibility
+                    localStorage.setItem('admin_logged_in', 'true');
+                    localStorage.setItem('admin_email', user.email);
+                    
+                    loadUsers();
+                    loadStats();
+                } else {
+                    console.log('Usuario no autenticado, redirigiendo...');
+                    window.location.href = '/evaluaciones/admin/login.html';
+                }
+            });
         }
 
-        // Logout
-        function logout() {
-            localStorage.removeItem('admin_logged_in');
-            localStorage.removeItem('admin_email');
-            localStorage.removeItem('admin_login_time');
-            window.location.href = '/evaluaciones/admin/login.html';
+        // Logout with Firebase
+        async function logout() {
+            try {
+                await auth.signOut();
+                console.log('Logout exitoso');
+                
+                localStorage.removeItem('admin_logged_in');
+                localStorage.removeItem('admin_email');
+                localStorage.removeItem('admin_login_time');
+                
+                window.location.href = '/evaluaciones/admin/login.html';
+            } catch (error) {
+                console.error('Error al cerrar sesión:', error);
+                alert('Error al cerrar sesión. Intenta nuevamente.');
+            }
         }
 
         // Navigation

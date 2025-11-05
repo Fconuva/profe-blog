@@ -1,0 +1,426 @@
+// Generador de la guía completa de Lenguaje y Comunicación
+const fs = require('fs');
+const path = require('path');
+
+const outputPath = path.join(__dirname, 'evaluaciones', 'educacion-basica', 'estudio', 'lenguaje-comunicacion.njk');
+
+const content = `---
+layout: layout-evaluaciones.njk
+title: "Guía de Estudio: Lenguaje y Comunicación"
+description: "Guía completa de estudio para Lenguaje y Comunicación en Educación Básica con teoría, ejemplos y casos prácticos interactivos"
+---
+
+<style>
+  /* Estilos personalizados para la guía de lenguaje */
+  .formula-box {
+    background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    color: white;
+    box-shadow: 0 10px 25px rgba(147, 51, 234, 0.3);
+    margin: 1rem 0;
+  }
+  
+  .definition-box {
+    background: linear-gradient(135deg, #c026d3 0%, #7e22ce 100%);
+    border-left: 5px solid #a21caf;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 15px rgba(192, 38, 211, 0.2);
+  }
+  
+  .example-box {
+    background: linear-gradient(to right, #e0e7ff, #c7d2fe);
+    border-left: 5px solid #6366f1;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.2);
+  }
+  
+  .case-study-box {
+    background: white;
+    border: 3px solid #8b5cf6;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 2rem 0;
+    box-shadow: 0 8px 20px rgba(139, 92, 246, 0.2);
+  }
+  
+  .question-option {
+    background: #f5f5f5;
+    border: 2px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 0.5rem 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  
+  .question-option:hover {
+    background: #e8e8e8;
+    border-color: #999;
+    transform: translateX(5px);
+  }
+  
+  .question-option.correct {
+    background: #e9d5ff;
+    border-color: #9333ea;
+    animation: correctPulse 0.5s ease;
+  }
+  
+  .question-option.incorrect {
+    background: #fecaca;
+    border-color: #ef4444;
+    animation: incorrectShake 0.5s ease;
+  }
+  
+  @keyframes correctPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+  }
+  
+  @keyframes incorrectShake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
+  }
+  
+  .feedback-box {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    display: none;
+  }
+  
+  .feedback-box.show {
+    display: block;
+    animation: fadeIn 0.5s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .feedback-correct {
+    background: #f3e8ff;
+    border-left: 4px solid #9333ea;
+    color: #6b21a8;
+  }
+  
+  .feedback-incorrect {
+    background: #fee2e2;
+    border-left: 4px solid #ef4444;
+    color: #991b1b;
+  }
+  
+  .graph-container {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    margin: 1.5rem 0;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .step-indicator {
+    display: inline-block;
+    background: #9333ea;
+    color: white;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    text-align: center;
+    line-height: 32px;
+    font-weight: bold;
+    margin-right: 0.5rem;
+  }
+  
+  .table-modern {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  
+  .table-modern thead {
+    background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+    color: white;
+  }
+  
+  .table-modern th {
+    padding: 1rem;
+    font-weight: 600;
+    text-align: left;
+  }
+  
+  .table-modern td {
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .table-modern tbody tr:hover {
+    background: #faf5ff;
+  }
+  
+  .ai-explain-btn {
+    background: linear-gradient(135deg, #9333ea 0%, #6b21a8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 0.75rem 1.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(147, 51, 234, 0.3);
+  }
+  
+  .ai-explain-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(147, 51, 234, 0.4);
+  }
+  
+  .ai-explanation {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    display: none;
+    border-left: 4px solid #9333ea;
+  }
+  
+  .ai-explanation.show {
+    display: block;
+    animation: slideDown 0.5s ease;
+  }
+  
+  @keyframes slideDown {
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 500px; }
+  }
+
+  .texto-literario {
+    background: #faf5ff;
+    border-left: 4px solid #9333ea;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    border-radius: 8px;
+    font-style: italic;
+    box-shadow: 0 2px 10px rgba(147, 51, 234, 0.1);
+  }
+
+  .autor-referencia {
+    text-align: right;
+    font-weight: 600;
+    color: #7e22ce;
+    margin-top: 0.5rem;
+  }
+  
+  @media print {
+    .no-print { display: none !important; }
+  }
+</style>
+
+<div class="min-h-screen bg-gradient-to-br from-purple-50 to-indigo-100">
+  <div class="container mx-auto px-4 py-10">
+    <div class="max-w-7xl mx-auto">
+
+      <!-- Header -->
+      <div class="text-center mb-10">
+        <h1 class="text-4xl md:text-5xl font-bold text-gray-800">📚 Guía de Estudio Interactiva</h1>
+        <p class="text-gray-600 text-lg mt-2">Lenguaje y Comunicación — Educación Básica 7° y 8°</p>
+        <p class="text-sm text-gray-500 mt-1">Aprende con definiciones, ejemplos literarios, ejercicios y casos interactivos</p>
+
+        <div class="mt-6 no-print">
+          <a href="/evaluaciones/educacion-basica/estudio/" class="text-indigo-700 hover:text-indigo-900 font-medium">← Todas las guías</a>
+          <button type="button" id="btn-print" class="ml-4 inline-flex items-center bg-gray-800 hover:bg-gray-700 text-white font-medium py-2 px-3 rounded-md">
+            📄 Imprimir / Exportar PDF
+          </button>
+        </div>
+      </div>
+
+      <!-- Navegación rápida -->
+      <div class="mt-6 flex gap-4 justify-center flex-wrap no-print">
+        <a href="/evaluaciones/educacion-basica/" class="text-purple-600 hover:text-purple-800 font-medium">
+          ← Volver a Educación Básica
+        </a>
+        <a href="/evaluaciones/educacion-basica/temarios/" class="text-green-600 hover:text-green-800 font-medium">
+          📖 Ver Temarios
+        </a>
+        <a href="/evaluaciones/educacion-basica/pruebas/63-sc-l/practica/" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium">
+          📝 Ir a Prueba (50 preguntas)
+        </a>
+      </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="max-w-6xl mx-auto mt-8">
+
+      <!-- Introducción -->
+      <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+        <h2 class="text-3xl font-bold text-gray-800 mb-6">🎯 Introducción</h2>
+        
+        <div class="definition-box">
+          <h3 class="text-xl font-bold text-white mb-3">📚 ¿Qué es el Lenguaje y la Comunicación?</h3>
+          <p class="text-white text-lg leading-relaxed">
+            El Lenguaje y Comunicación es la asignatura que desarrolla las <strong>competencias comunicativas</strong>, 
+            el <strong>pensamiento crítico</strong> y la <strong>apreciación estética</strong> a través de la lectura, 
+            escritura y expresión oral. Implica comprender textos literarios y no literarios, analizar estructuras lingüísticas 
+            y producir mensajes coherentes en diversos contextos.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 border-l-4 border-purple-500 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-purple-800 mb-4">📊 Distribución de Contenidos</h3>
+            <div class="space-y-3">
+              <div class="flex items-center">
+                <div class="w-16 h-16 bg-purple-500 text-white rounded-full flex items-center justify-center font-bold text-lg mr-3">30%</div>
+                <div>
+                  <p class="font-semibold text-gray-800">Comprensión Lectora</p>
+                  <p class="text-sm text-gray-600">Estrategias y niveles de lectura</p>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <div class="w-16 h-16 bg-indigo-500 text-white rounded-full flex items-center justify-center font-bold text-lg mr-3">25%</div>
+                <div>
+                  <p class="font-semibold text-gray-800">Géneros Literarios</p>
+                  <p class="text-sm text-gray-600">Narrativa, lírica y dramática</p>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <div class="w-16 h-16 bg-violet-500 text-white rounded-full flex items-center justify-center font-bold text-lg mr-3">20%</div>
+                <div>
+                  <p class="font-semibold text-gray-800">Gramática y Ortografía</p>
+                  <p class="text-sm text-gray-600">Morfología, sintaxis y normas</p>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <div class="w-16 h-16 bg-pink-500 text-white rounded-full flex items-center justify-center font-bold text-lg mr-3">15%</div>
+                <div>
+                  <p class="font-semibold text-gray-800">Vocabulario</p>
+                  <p class="text-sm text-gray-600">Contextual y formación léxica</p>
+                </div>
+              </div>
+              <div class="flex items-center">
+                <div class="w-16 h-16 bg-fuchsia-500 text-white rounded-full flex items-center justify-center font-bold text-lg mr-3">10%</div>
+                <div>
+                  <p class="font-semibold text-gray-800">Textos No Literarios</p>
+                  <p class="text-sm text-gray-600">Noticias, cartas, instructivos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 border-l-4 border-indigo-500 p-6 rounded-lg shadow-md">
+            <h3 class="text-xl font-bold text-indigo-800 mb-4">🎓 Objetivos de Aprendizaje</h3>
+            <ul class="space-y-3 text-gray-700">
+              <li class="flex items-start">
+                <span class="text-indigo-500 font-bold text-xl mr-2">✓</span>
+                <span><strong>Comprender</strong> textos literarios y no literarios de diversos géneros y épocas</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-indigo-500 font-bold text-xl mr-2">✓</span>
+                <span><strong>Analizar</strong> recursos lingüísticos, figuras literarias y estructuras textuales</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-indigo-500 font-bold text-xl mr-2">✓</span>
+                <span><strong>Producir</strong> textos coherentes y cohesivos en diversos registros y formatos</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-indigo-500 font-bold text-xl mr-2">✓</span>
+                <span><strong>Desarrollar</strong> pensamiento crítico a través del análisis y reflexión textual</span>
+              </li>
+              <li class="flex items-start">
+                <span class="text-indigo-500 font-bold text-xl mr-2">✓</span>
+                <span><strong>Aplicar</strong> normas gramaticales y ortográficas en contextos comunicativos</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-6 bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
+          <h4 class="font-bold text-yellow-800 mb-2">💡 Metodología de esta Guía</h4>
+          <p class="text-gray-700 mb-3">Cada concepto se presenta en <strong>4 pasos didácticos</strong>:</p>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div class="text-center">
+              <div class="step-indicator">1</div>
+              <p class="font-semibold text-sm mt-2">Definición</p>
+              <p class="text-xs text-gray-600">¿Qué es?</p>
+            </div>
+            <div class="text-center">
+              <div class="step-indicator">2</div>
+              <p class="font-semibold text-sm mt-2">Características</p>
+              <p class="text-xs text-gray-600">¿Cómo identificarlo?</p>
+            </div>
+            <div class="text-center">
+              <div class="step-indicator">3</div>
+              <p class="font-semibold text-sm mt-2">Ejemplo</p>
+              <p class="text-xs text-gray-600">Texto analizado</p>
+            </div>
+            <div class="text-center">
+              <div class="step-indicator">4</div>
+              <p class="font-semibold text-sm mt-2">IA Detallada</p>
+              <p class="text-xs text-gray-600">Explicación profunda</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ESTE ARCHIVO ES DEMASIADO GRANDE PARA UN SOLO MENSAJE -->
+      <!-- Continúa en el siguiente paso del script -->
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // JavaScript para interactividad
+  function toggleAIExplanation(id) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.classList.toggle('show');
+    }
+  }
+
+  function checkAnswer(caseId, selectedOption, correctOption) {
+    const options = document.querySelectorAll(\`#case-\${caseId} .question-option\`);
+    const feedbackBox = document.getElementById(\`feedback-\${caseId}\`);
+    
+    options.forEach(opt => {
+      opt.classList.remove('correct', 'incorrect');
+      opt.style.pointerEvents = 'none';
+    });
+    
+    const selected = document.querySelector(\`#case-\${caseId} .question-option[data-option="\${selectedOption}"]\`);
+    const correct = document.querySelector(\`#case-\${caseId} .question-option[data-option="\${correctOption}"]\`);
+    
+    if (selectedOption === correctOption) {
+      selected.classList.add('correct');
+      feedbackBox.className = 'feedback-box feedback-correct show';
+    } else {
+      selected.classList.add('incorrect');
+      correct.classList.add('correct');
+      feedbackBox.className = 'feedback-box feedback-incorrect show';
+    }
+  }
+
+  // Botón de imprimir
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnPrint = document.getElementById('btn-print');
+    if (btnPrint) {
+      btnPrint.addEventListener('click', function() {
+        window.print();
+      });
+    }
+  });
+</script>
+`;
+
+// Escribir archivo
+fs.writeFileSync(outputPath, content, 'utf8');
+console.log('✓ Archivo base creado exitosamente');
+console.log(\`Tamaño: \${content.split('\\n').length} líneas\`);

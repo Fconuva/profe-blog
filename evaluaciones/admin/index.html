@@ -812,7 +812,9 @@
 
         // Update email preview when typing username
         document.getElementById('newUsername').addEventListener('input', function(e) {
-            const username = e.target.value.trim();
+            let username = e.target.value.trim();
+            // Clean @profe.cl from input
+            username = username.replace(/@profe\.cl$/i, '');
             const preview = document.getElementById('emailPreview');
             if (username) {
                 preview.textContent = `${username}@profe.cl`;
@@ -832,9 +834,17 @@
         document.getElementById('createUserForm').addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const username = document.getElementById('newUsername').value.trim();
+            let username = document.getElementById('newUsername').value.trim();
             const password = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
+
+            // Clean username: remove @profe.cl if user accidentally typed it
+            username = username.replace(/@profe\.cl$/i, '');
+            
+            if (!username) {
+                alert('❌ El nombre de usuario no puede estar vacío');
+                return;
+            }
 
             // Validation
             if (password !== confirmPassword) {

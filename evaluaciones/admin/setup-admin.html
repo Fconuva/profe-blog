@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Administrador - Primera Vez</title>
+    <link rel="stylesheet" href="/css/tw.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .setup-card {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 3rem;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            margin-bottom: 0.5rem;
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            color: #64748b;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            color: #334155;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn-create {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-create:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-create:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .message {
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            display: none;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            color: #059669;
+        }
+
+        .message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #dc2626;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 2px solid rgba(245, 158, 11, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .warning-box h3 {
+            color: #d97706;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        .warning-box p {
+            color: #92400e;
+            font-size: 0.9rem;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="setup-card">
+        <h1>🔐 Setup Inicial</h1>
+        <p class="subtitle">Crea tu cuenta de administrador maestra</p>
+
+        <div class="warning-box">
+            <h3>⚠️ Solo para primera configuración</h3>
+            <p>Esta página se usará solo una vez para crear tu cuenta. Después elimínala del servidor por seguridad.</p>
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <form id="setupForm">
+            <div class="form-group">
+                <label for="name">Nombre completo</label>
+                <input type="text" id="name" value="Francisco Conuva" required>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" value="fconuva@profe.cl" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Contraseña</label>
+                <input type="password" id="password" value="xixo97879375" required>
+            </div>
+
+            <button type="submit" id="createBtn" class="btn-create">
+                ✨ Crear Cuenta Maestra
+            </button>
+        </form>
+
+        <div id="successSection" style="display: none; text-align: center; padding: 2rem 0;">
+            <div style="font-size: 4rem; margin-bottom: 1rem;">✅</div>
+            <h2 style="color: #059669; margin-bottom: 1rem;">¡Cuenta creada!</h2>
+            <p style="color: #64748b; margin-bottom: 2rem;">Ya puedes iniciar sesión en el admin</p>
+            <a href="/evaluaciones/admin/login.html" 
+               style="display: inline-block; background: #059669; color: white; padding: 1rem 2rem; border-radius: 12px; text-decoration: none; font-weight: 600;">
+                Ir al Login →
+            </a>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "668495343033",
+            appId: "1:668495343033:web:e76e7ebfb0faf2ad0ce2d6"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const database = firebase.database();
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = 'message ' + type;
+            message.style.display = 'block';
+            
+            if (type === 'error') {
+                setTimeout(() => {
+                    message.style.display = 'none';
+                }, 8000);
+            }
+        }
+
+        document.getElementById('setupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const createBtn = document.getElementById('createBtn');
+
+            if (!name || !email || !password) {
+                showMessage('❌ Completa todos los campos', 'error');
+                return;
+            }
+
+            createBtn.disabled = true;
+            createBtn.innerHTML = '⏳ Creando cuenta...';
+            showMessage('🔄 Creando usuario en Firebase...', 'success');
+
+            try {
+                // Create user in Firebase Auth
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                console.log('✅ Usuario creado en Auth:', user.uid);
+
+                // Update profile with display name
+                await user.updateProfile({
+                    displayName: name
+                });
+
+                console.log('✅ Perfil actualizado');
+
+                // Create user profile in Realtime Database
+                const userProfile = {
+                    uid: user.uid,
+                    email: email,
+                    name: name,
+                    role: 'admin',
+                    permissions: {
+                        basica: true,
+                        especial: true,
+                        media: false,
+                        parvularia: false,
+                        indigena: false
+                    },
+                    createdAt: new Date().toISOString(),
+                    createdBy: 'setup-script'
+                };
+
+                await database.ref('users/' + user.uid).set(userProfile);
+                
+                console.log('✅ Perfil guardado en Database');
+
+                // Success!
+                document.getElementById('setupForm').style.display = 'none';
+                document.getElementById('successSection').style.display = 'block';
+                showMessage('✅ Cuenta creada exitosamente', 'success');
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+
+                let errorMessage = 'Error al crear cuenta. Intenta nuevamente.';
+
+                if (error.code === 'auth/email-already-in-use') {
+                    errorMessage = '✅ Este email ya existe en Firebase. Puedes usarlo para hacer login.';
+                    
+                    // Show success since user already exists
+                    setTimeout(() => {
+                        window.location.href = '/evaluaciones/admin/login.html';
+                    }, 2000);
+                    
+                } else if (error.code === 'auth/weak-password') {
+                    errorMessage = '❌ La contraseña debe tener al menos 6 caracteres.';
+                } else if (error.code === 'auth/invalid-email') {
+                    errorMessage = '❌ Formato de email inválido.';
+                } else if (error.code === 'auth/operation-not-allowed') {
+                    errorMessage = '❌ Email/Password no está habilitado en Firebase Console.';
+                } else if (error.code === 'auth/network-request-failed') {
+                    errorMessage = '🌐 Error de conexión. Verifica tu internet.';
+                }
+
+                showMessage(errorMessage, 'error');
+                
+                createBtn.disabled = false;
+                createBtn.innerHTML = '✨ Crear Cuenta Maestra';
+            }
+        });
+    </script>
+</body>
+</html>

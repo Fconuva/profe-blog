@@ -858,26 +858,9 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
   </div>
 </div>
 
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-
 <script>
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
-    authDomain: "profe-blog.firebaseapp.com",
-    databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
-    projectId: "profe-blog",
-    storageBucket: "profe-blog.firebasestorage.app",
-    messagingSenderId: "305920739217",
-    appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
-};
-
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+// Firebase is already loaded and initialized by layout-evaluaciones.njk
+const auth = firebase.auth();
 const database = firebase.database();
 
 // Global variables
@@ -941,31 +924,33 @@ function setupLoginForm() {
         submitBtn.disabled = true;
 
         try {
-            // Find user by username
-            const usersRef = database.ref('users');
-            const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+            // Convert username to email format
+            const email = username.includes('@') ? username : `${username}@profe.cl`;
+            
+            // Authenticate with Firebase Auth first
+            const userCredential = await auth.signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
 
-            if (!snapshot.exists()) {
-                throw new Error('Usuario no encontrado');
+            // Now get user data from database with authenticated access
+            const userDataSnapshot = await database.ref(`users/${user.uid}`).once('value');
+            
+            if (!userDataSnapshot.exists()) {
+                throw new Error('Datos de usuario no encontrados');
             }
 
-            const userId = Object.keys(snapshot.val())[0];
-            const userData = snapshot.val()[userId];
+            const userData = userDataSnapshot.val();
 
             // Check if user is active
-            if (!userData.active) {
+            if (userData.active === false) {
+                await auth.signOut();
                 throw new Error('Cuenta deshabilitada');
-            }
-
-            // Verify password
-            if (atob(userData.password) !== password) {
-                throw new Error('Contraseña incorrecta');
             }
 
             // Create session
             const sessionData = {
-                userId: userId,
+                userId: user.uid,
                 username: userData.username,
+                email: userData.email,
                 permissions: userData.permissions,
                 loginTime: new Date().toISOString()
             };
@@ -976,10 +961,25 @@ function setupLoginForm() {
             // Close modal and show user interface
             closeLoginModal();
             showUserInterface(sessionData);
-            filterContentByPermissions(sessionData.permissions);
+            enableContentAccess(sessionData.permissions);
 
         } catch (error) {
-            alert(error.message || 'Error al iniciar sesión');
+            console.error('Login error:', error);
+            let errorMessage = 'Error al iniciar sesión';
+            
+            if (error.code === 'auth/user-not-found') {
+                errorMessage = 'Usuario no encontrado';
+            } else if (error.code === 'auth/wrong-password') {
+                errorMessage = 'Contraseña incorrecta';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'Formato de email inválido';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'Demasiados intentos. Intenta más tarde';
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            alert(errorMessage);
         } finally {
             submitBtn.innerHTML = originalText;
             submitBtn.disabled = false;
@@ -1109,9 +1109,17 @@ function enableContentAccess(permissions) {
 }
 
 // Logout
-function logout() {
-    localStorage.removeItem('evaluaciones_session');
-    currentUser = null;
-    location.reload();
+async function logout() {
+    try {
+        await auth.signOut();
+        localStorage.removeItem('evaluaciones_session');
+        currentUser = null;
+        location.reload();
+    } catch (error) {
+        console.error('Logout error:', error);
+        // Force reload anyway
+        localStorage.removeItem('evaluaciones_session');
+        location.reload();
+    }
 }
 </script>

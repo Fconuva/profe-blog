@@ -973,48 +973,58 @@ function setupLoginForm() {
         submitBtn.disabled = true;
 
         try {
-            // Convert username to email format
-            const email = username.includes('@') ? username : `${username}@profe.cl`;
+            console.log('🔐 Attempting login for username:', username);
             
-            // Authenticate with Firebase Auth first
-            const userCredential = await auth.signInWithEmailAndPassword(email, password);
-            const user = userCredential.user;
-
-            console.log('✅ Firebase Auth successful!');
-            console.log('  UID from Auth:', user.uid);
-            console.log('  Email:', user.email);
-
-            // Now get user data from database with authenticated access
-            const userDataSnapshot = await database.ref(`users/${user.uid}`).once('value');
-            
-            console.log('📊 Database query for UID:', user.uid);
-            console.log('  Data exists?', userDataSnapshot.exists());
-            
-            if (!userDataSnapshot.exists()) {
-                console.error('❌ No data found in database for UID:', user.uid);
-                throw new Error('Datos de usuario no encontrados en Database. UID: ' + user.uid);
+            // Authenticate using anonymous auth to get read access
+            let authUser = auth.currentUser;
+            if (!authUser) {
+                const anonCredential = await auth.signInAnonymously();
+                authUser = anonCredential.user;
+                console.log('✅ Anonymous auth successful, UID:', authUser.uid);
             }
 
-            const userData = userDataSnapshot.val();
+            // Find user by username in database
+            const usersRef = database.ref('users');
+            const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+            
+            console.log('📊 Database query for username:', username);
+            console.log('  User exists?', snapshot.exists());
+            
+            if (!snapshot.exists()) {
+                throw new Error('Usuario no encontrado');
+            }
+
+            const userId = Object.keys(snapshot.val())[0];
+            const userData = snapshot.val()[userId];
+            
             console.log('✅ User data loaded:', userData);
 
             // Check if user is active
             if (userData.active === false) {
-                await auth.signOut();
                 throw new Error('Cuenta deshabilitada');
             }
 
+            // Verify password (stored in Base64)
+            const storedPassword = atob(userData.password);
+            if (storedPassword !== password) {
+                throw new Error('Contraseña incorrecta');
+            }
+
+            console.log('✅ Password verified!');
+
             // Create session
             const sessionData = {
-                userId: user.uid,
+                userId: userId,
                 username: userData.username,
-                email: userData.email,
                 permissions: userData.permissions,
+                role: userData.role,
                 loginTime: new Date().toISOString()
             };
 
             localStorage.setItem('evaluaciones_session', JSON.stringify(sessionData));
             currentUser = sessionData;
+
+            console.log('✅ Session created:', sessionData);
 
             // Close modal and show user interface
             closeLoginModal();
@@ -1022,18 +1032,10 @@ function setupLoginForm() {
             enableContentAccess(sessionData.permissions);
 
         } catch (error) {
-            console.error('Login error:', error);
+            console.error('❌ Login error:', error);
             let errorMessage = 'Error al iniciar sesión';
             
-            if (error.code === 'auth/user-not-found') {
-                errorMessage = 'Usuario no encontrado';
-            } else if (error.code === 'auth/wrong-password') {
-                errorMessage = 'Contraseña incorrecta';
-            } else if (error.code === 'auth/invalid-email') {
-                errorMessage = 'Formato de email inválido';
-            } else if (error.code === 'auth/too-many-requests') {
-                errorMessage = 'Demasiados intentos. Intenta más tarde';
-            } else if (error.message) {
+            if (error.message) {
                 errorMessage = error.message;
             }
             
@@ -1175,18 +1177,10 @@ function enableContentAccess(permissions) {
 }
 
     // Logout
-    async function logout() {
-        try {
-            await auth.signOut();
-            localStorage.removeItem('evaluaciones_session');
-            currentUser = null;
-            location.reload();
-        } catch (error) {
-            console.error('Logout error:', error);
-            // Force reload anyway
-            localStorage.removeItem('evaluaciones_session');
-            location.reload();
-        }
+    function logout() {
+        localStorage.removeItem('evaluaciones_session');
+        currentUser = null;
+        location.reload();
     }
 
     // Make logout available globally

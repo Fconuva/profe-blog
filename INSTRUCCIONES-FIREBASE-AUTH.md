@@ -7,10 +7,12 @@ Las contraseñas YA NO están en el código. Ahora se usa Firebase Authenticatio
 
 | Usuario | Email | Rol | Nombre Completo |
 |---------|-------|-----|-----------------|
-| fconuva | fconuva@profe.cl | admin | Francisco (Administrador) |
+| fconuva | **fconuva@gmail.com** | admin | Francisco (Administrador) ⭐ |
 | alicia | alicia@profe.cl | teacher | Alicia (Profesora) |
 | joselin | joselin@profe.cl | teacher | Joselin (Profesora) |
 | pia | pia@profe.cl | teacher | Pia (Profesora) |
+
+**⭐ Cuenta Maestra:** `fconuva@gmail.com` - Funciona en todas las rutas (`/privado/`, `/evaluaciones/admin/`)
 
 ## 🔧 Pasos para crear usuarios en Firebase Console
 
@@ -42,19 +44,26 @@ Repite para los 4 usuarios.
 
 **Importante:** Usa las mismas contraseñas que tenías antes:
 
-- **fconuva@profe.cl**: `xixo97879375`
+- **fconuva@gmail.com**: `xixo97879375` ⭐ (Cuenta Maestra - ya creada en Firebase)
 - **alicia@profe.cl**: `buenapalsorbo`
 - **joselin@profe.cl**: `soymañosa`
 - **pia@profe.cl**: `metaimo`
 
 ## ✅ Verificar que funciona
 
+### Opción 1: Login en /privado/
 1. Ve a: https://www.profefranciscopancho.com/privado/
 2. Intenta hacer login con:
-   - Usuario: `fconuva` (o `fconuva@profe.cl`)
+   - Usuario: `fconuva@gmail.com`
    - Contraseña: `xixo97879375`
 
-Si funciona, verás el dashboard.
+### Opción 2: Login en /evaluaciones/admin/
+1. Ve a: https://www.profefranciscopancho.com/evaluaciones/admin/login.html
+2. Intenta hacer login con:
+   - Email: `fconuva@gmail.com`
+   - Contraseña: `xixo97879375`
+
+Si funciona en ambos, la cuenta maestra está correcta.
 
 ## 🔐 Seguridad mejorada
 

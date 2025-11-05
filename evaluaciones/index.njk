@@ -1117,6 +1117,8 @@ function showAllContentButLockLinks() {
 
 // Enable content access for logged-in users
 function enableContentAccess(permissions) {
+    console.log('🔓 enableContentAccess called with permissions:', permissions);
+    
     const contentSections = [
         { id: 'educacion-basica-section', permission: 'basica' },
         { id: 'matematica-section', permission: 'basica' },
@@ -1135,7 +1137,10 @@ function enableContentAccess(permissions) {
         const element = document.getElementById(section.id);
         if (element) {
             // Check if user has permission for this section
-            if (permissions && permissions[section.permission]) {
+            const hasPermission = permissions && permissions[section.permission];
+            console.log(`  Section ${section.id}: permission=${section.permission}, hasPermission=${hasPermission}`);
+            
+            if (hasPermission) {
                 // Show section and enable links
                 element.style.display = 'block';
                 
@@ -1149,9 +1154,12 @@ function enableContentAccess(permissions) {
                 // Remove login overlays
                 const overlays = element.querySelectorAll('.login-overlay');
                 overlays.forEach(overlay => overlay.remove());
+                
+                console.log(`  ✅ ${section.id} - SHOWN`);
             } else {
                 // Hide sections user doesn't have permission for
                 element.style.display = 'none';
+                console.log(`  ❌ ${section.id} - HIDDEN`);
             }
         }
     });

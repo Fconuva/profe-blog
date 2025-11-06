@@ -68,10 +68,10 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("evaluaciones/**/*.pdf");
   eleventyConfig.ignores.add("evaluaciones/**/*.txt");
   eleventyConfig.ignores.add("evaluaciones/**/*.json");
-  // Ocultar secciones no implementadas (solo dejamos Educación Básica)
-  eleventyConfig.ignores.add("evaluaciones/educacion-media/**");
+  // Ocultar secciones no implementadas
+  // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");
-  eleventyConfig.ignores.add("evaluaciones/educacion-parvularia/**");
+  // eleventyConfig.ignores.add("evaluaciones/educacion-parvularia/**"); // REMOVIDO - Parvularia ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-jovenes-adultos/**");
   eleventyConfig.ignores.add("evaluaciones/lengua-indigena/**");
   // Dentro de Educación Básica, permitir 63-sc-l (Lenguaje) y 66-sc-m (Matemática)

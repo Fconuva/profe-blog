@@ -227,7 +227,15 @@
                 }
 
                 // Verify password (simple base64 check - in production use proper hashing)
-                if (atob(userData.password) !== password) {
+                let storedPassword;
+                try {
+                    storedPassword = atob(userData.password);
+                } catch (decodeError) {
+                    console.error('❌ Password decode error:', decodeError);
+                    throw new Error('Cuenta corrupta. Contacta al administrador para restablecer tu contraseña.');
+                }
+                
+                if (storedPassword !== password) {
                     throw new Error('Contraseña incorrecta');
                 }
 
@@ -314,28 +322,46 @@
             }
         });
 
-        // Redirect based on user permissions
+        // Redirect based on user permissions (granular test-level)
         function redirectBasedOnPermissions(permissions) {
-            // Check if user has any permissions
-            const hasPermissions = Object.values(permissions || {}).some(p => p);
+            // Check if user has any test permissions
+            const testCodes = ['63-sc-l', '66-sc-m', '71-sc-cs', 'bg-pc', '67-cm-m', 'pie'];
+            const hasTestPermission = testCodes.some(code => permissions[code]);
 
-            if (!hasPermissions) {
+            if (!hasTestPermission && !permissions.privado) {
                 alert('No tienes permisos para acceder a ningún contenido. Contacta al administrador.');
                 return;
             }
 
-            // Redirect to first available content
-            if (permissions.basica) {
-                window.location.href = '/evaluaciones/educacion-basica/';
-            } else if (permissions.especial) {
-                window.location.href = '/evaluaciones/educacion-especial/';
-            } else if (permissions.media) {
-                window.location.href = '/evaluaciones/educacion-media/';
+            // Redirect to first available test or appropriate section
+            // Priority: Básica tests → Media tests → Especial → Privado
+            
+            if (permissions['63-sc-l']) {
+                // Lenguaje Básica
+                window.location.href = '/evaluaciones/educacion-basica/pruebas/63-sc-l/';
+            } else if (permissions['66-sc-m']) {
+                // Matemática Básica
+                window.location.href = '/evaluaciones/educacion-basica/pruebas/66-sc-m/';
+            } else if (permissions['71-sc-cs']) {
+                // Religión Católica
+                window.location.href = '/evaluaciones/educacion-basica/pruebas/71-sc-cs/';
+            } else if (permissions['bg-pc']) {
+                // Básica Generalista
+                window.location.href = '/evaluaciones/educacion-basica/pruebas/bg-pc/';
+            } else if (permissions['67-cm-m']) {
+                // Matemática Media
+                window.location.href = '/evaluaciones/educacion-media/pruebas/67-cm-m/';
+            } else if (permissions['pie']) {
+                // Educación Especial PIE
+                window.location.href = '/evaluaciones/educacion-especial/pruebas/';
             } else if (permissions.parvularia) {
                 window.location.href = '/evaluaciones/educacion-parvularia/';
             } else if (permissions.indigena) {
                 window.location.href = '/evaluaciones/lengua-indigena/';
+            } else if (permissions.privado) {
+                window.location.href = '/privado/';
             } else {
+                // Fallback: generic evaluaciones page
                 window.location.href = '/evaluaciones/';
             }
         }

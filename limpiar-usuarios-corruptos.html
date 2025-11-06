@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limpiar Usuarios Corruptos - Firebase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        h1 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #c92a2a 100%);
+        }
+        button.danger:hover {
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+        .result {
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 15px;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border-left: 4px solid #28a745;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left: 4px solid #dc3545;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left: 4px solid #17a2b8;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left: 4px solid #ffc107;
+        }
+        .user-list {
+            margin-top: 15px;
+        }
+        .user-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .user-card.corrupt {
+            border-color: #ff6b6b;
+            background: #fff5f5;
+        }
+        .user-info {
+            flex: 1;
+        }
+        .user-info strong {
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        .user-info .details {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        .user-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .user-actions button {
+            padding: 8px 16px;
+            font-size: 0.9em;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge.corrupt {
+            background: #ff6b6b;
+            color: white;
+        }
+        .badge.valid {
+            background: #51cf66;
+            color: white;
+        }
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Limpieza de Usuarios Firebase</h1>
+        <p class="subtitle">Identifica y elimina usuarios con contraseñas corruptas (no-Base64)</p>
+
+        <div class="section">
+            <h2>
+                <span>📊</span> Paso 1: Escanear Usuarios
+            </h2>
+            <p style="margin-bottom: 15px; color: #666;">
+                Analiza todos los usuarios en Firebase y detecta contraseñas con formato inválido.
+            </p>
+            <button onclick="scanUsers()" id="scanBtn">
+                <span>🔍</span> Escanear Usuarios
+            </button>
+            <div id="scanResult"></div>
+            <div id="userList" class="user-list"></div>
+        </div>
+
+        <div class="section">
+            <h2>
+                <span>🗑️</span> Paso 2: Eliminar Usuarios Corruptos
+            </h2>
+            <p style="margin-bottom: 15px; color: #666;">
+                Elimina todos los usuarios que tengan contraseñas con formato inválido.
+            </p>
+            <button onclick="deleteCorruptUsers()" id="deleteBtn" class="danger" disabled>
+                <span>⚠️</span> Eliminar Usuarios Corruptos
+            </button>
+            <div id="deleteResult"></div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const database = firebase.database();
+
+        let corruptUsers = [];
+        let allUsers = {};
+
+        function isValidBase64(str) {
+            if (!str || typeof str !== 'string') return false;
+            try {
+                const decoded = atob(str);
+                return btoa(decoded) === str;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        async function scanUsers() {
+            const scanBtn = document.getElementById('scanBtn');
+            const scanResult = document.getElementById('scanResult');
+            const userList = document.getElementById('userList');
+            const deleteBtn = document.getElementById('deleteBtn');
+
+            scanBtn.disabled = true;
+            scanBtn.innerHTML = '<span class="spinner"></span> Escaneando...';
+            scanResult.innerHTML = '<div class="result info">Cargando usuarios desde Firebase...</div>';
+            userList.innerHTML = '';
+            corruptUsers = [];
+
+            try {
+                const snapshot = await database.ref('users').once('value');
+                
+                if (!snapshot.exists()) {
+                    scanResult.innerHTML = '<div class="result warning">⚠️ No se encontraron usuarios en la base de datos.</div>';
+                    scanBtn.disabled = false;
+                    scanBtn.innerHTML = '<span>🔍</span> Escanear Usuarios';
+                    return;
+                }
+
+                allUsers = snapshot.val();
+                const userIds = Object.keys(allUsers);
+                let validCount = 0;
+                let corruptCount = 0;
+
+                let html = '';
+
+                userIds.forEach(userId => {
+                    const user = allUsers[userId];
+                    const isValid = isValidBase64(user.password);
+
+                    if (!isValid) {
+                        corruptUsers.push({ userId, ...user });
+                        corruptCount++;
+                    } else {
+                        validCount++;
+                    }
+
+                    html += `
+                        <div class="user-card ${!isValid ? 'corrupt' : ''}">
+                            <div class="user-info">
+                                <strong>${user.username || 'Sin username'}</strong>
+                                <span class="badge ${isValid ? 'valid' : 'corrupt'}">${isValid ? '✅ Válido' : '❌ Corrupto'}</span>
+                                <div class="details">
+                                    <div>📧 ${user.email || 'Sin email'}</div>
+                                    <div>🔑 Password: <code>${user.password ? user.password.substring(0, 20) + '...' : 'Sin password'}</code></div>
+                                    <div>🆔 UID: <code>${userId}</code></div>
+                                    <div>👤 Role: ${user.role || 'N/A'} | Estado: ${user.active ? '✅ Activo' : '❌ Inactivo'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                userList.innerHTML = html;
+
+                const summaryHtml = `
+                    <div class="result ${corruptCount > 0 ? 'warning' : 'success'}">
+                        <h3 style="margin-bottom: 10px;">📊 Resumen del Escaneo</h3>
+                        <p><strong>Total de usuarios:</strong> ${userIds.length}</p>
+                        <p><strong>✅ Usuarios válidos:</strong> ${validCount}</p>
+                        <p><strong>❌ Usuarios corruptos:</strong> ${corruptCount}</p>
+                        ${corruptCount > 0 ? `
+                            <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
+                            <p><strong>Usuarios con contraseñas corruptas:</strong></p>
+                            <ul style="margin-left: 20px; margin-top: 10px;">
+                                ${corruptUsers.map(u => `<li><strong>${u.username}</strong> (${u.email || 'Sin email'})</li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `;
+
+                scanResult.innerHTML = summaryHtml;
+
+                if (corruptCount > 0) {
+                    deleteBtn.disabled = false;
+                }
+
+            } catch (error) {
+                console.error('Error scanning users:', error);
+                scanResult.innerHTML = `<div class="result error">❌ Error al escanear: ${error.message}</div>`;
+            } finally {
+                scanBtn.disabled = false;
+                scanBtn.innerHTML = '<span>🔍</span> Escanear Usuarios';
+            }
+        }
+
+        async function deleteCorruptUsers() {
+            if (corruptUsers.length === 0) {
+                alert('⚠️ No hay usuarios corruptos para eliminar. Ejecuta primero el escaneo.');
+                return;
+            }
+
+            const confirmMsg = `⚠️ ADVERTENCIA: Vas a eliminar ${corruptUsers.length} usuario(s) corrupto(s):\n\n` +
+                              corruptUsers.map(u => `  • ${u.username} (${u.email || 'Sin email'})`).join('\n') +
+                              '\n\nEsta acción NO se puede deshacer.\n\n¿Estás seguro?';
+
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+
+            const deleteBtn = document.getElementById('deleteBtn');
+            const deleteResult = document.getElementById('deleteResult');
+
+            deleteBtn.disabled = true;
+            deleteBtn.innerHTML = '<span class="spinner"></span> Eliminando...';
+            deleteResult.innerHTML = '<div class="result info">Eliminando usuarios corruptos...</div>';
+
+            let deleted = 0;
+            let errors = 0;
+            const results = [];
+
+            for (const user of corruptUsers) {
+                try {
+                    await database.ref(`users/${user.userId}`).remove();
+                    deleted++;
+                    results.push(`✅ Eliminado: ${user.username} (${user.userId})`);
+                    console.log(`✅ Deleted: ${user.username}`);
+                } catch (error) {
+                    errors++;
+                    results.push(`❌ Error al eliminar ${user.username}: ${error.message}`);
+                    console.error(`Error deleting ${user.username}:`, error);
+                }
+            }
+
+            const resultHtml = `
+                <div class="result ${errors === 0 ? 'success' : 'warning'}">
+                    <h3 style="margin-bottom: 10px;">📊 Resultados de la Eliminación</h3>
+                    <p><strong>✅ Eliminados correctamente:</strong> ${deleted}</p>
+                    <p><strong>❌ Errores:</strong> ${errors}</p>
+                    <hr style="margin: 15px 0; border: none; border-top: 1px solid rgba(0,0,0,0.1);">
+                    <div style="font-size: 0.9em; max-height: 200px; overflow-y: auto;">
+                        ${results.map(r => `<div>${r}</div>`).join('')}
+                    </div>
+                    ${errors === 0 ? '<p style="margin-top: 15px; font-weight: 600;">🎉 ¡Limpieza completada exitosamente!</p>' : ''}
+                </div>
+            `;
+
+            deleteResult.innerHTML = resultHtml;
+
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '<span>⚠️</span> Eliminar Usuarios Corruptos';
+
+            // Rescan después de eliminar
+            if (deleted > 0) {
+                setTimeout(() => {
+                    scanUsers();
+                }, 2000);
+            }
+        }
+    </script>
+</body>
+</html>

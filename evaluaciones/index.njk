@@ -1176,7 +1176,14 @@ function setupLoginForm() {
             }
 
             // Verify password (stored in Base64)
-            const storedPassword = atob(userData.password);
+            let storedPassword;
+            try {
+                storedPassword = atob(userData.password);
+            } catch (decodeError) {
+                console.error('❌ Password decode error:', decodeError);
+                throw new Error('Cuenta corrupta. Contacta al administrador para restablecer tu contraseña.');
+            }
+            
             if (storedPassword !== password) {
                 throw new Error('Contraseña incorrecta');
             }

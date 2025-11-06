@@ -1079,19 +1079,16 @@
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Creando usuario...';
 
-                // Step 1: Create user in Firebase Authentication
-                console.log('Creating user in Firebase Auth:', email);
-                
-                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
-                const firebaseUser = userCredential.user;
-                console.log('Firebase Auth user created:', firebaseUser.uid);
+                // Generar un ID único para el usuario (sin Firebase Auth)
+                const userId = database.ref().child('users').push().key;
+                console.log('Generando usuario con ID:', userId);
 
-                // Step 2: Save user metadata to Realtime Database
+                // Crear usuario directamente en Realtime Database
                 const userData = {
                     username: username,
                     email: email,
                     password: btoa(password), // Codificar en Base64
-                    firebaseUid: firebaseUser.uid,
+                    userId: userId, // Usar ID generado
                     permissions: permissions,
                     active: true,
                     created: new Date().toISOString(),
@@ -1101,8 +1098,8 @@
                     deviceLimitExceeded: false
                 };
 
-                await database.ref(`users/${firebaseUser.uid}`).set(userData);
-                console.log('User metadata saved to database');
+                await database.ref(`users/${userId}`).set(userData);
+                console.log('Usuario guardado en base de datos');
 
                 // Step 3: Try to save to admin/login_history for tracking (optional)
                 try {
@@ -1136,27 +1133,7 @@
 
             } catch (error) {
                 console.error('Error creating user:', error);
-                
-                let errorMessage = '❌ Error al crear usuario: ';
-                
-                switch(error.code) {
-                    case 'auth/email-already-in-use':
-                        errorMessage += 'El email ya está registrado en Firebase Authentication';
-                        break;
-                    case 'auth/invalid-email':
-                        errorMessage += 'El email no es válido';
-                        break;
-                    case 'auth/weak-password':
-                        errorMessage += 'La contraseña es muy débil (mínimo 6 caracteres)';
-                        break;
-                    case 'auth/operation-not-allowed':
-                        errorMessage += 'La creación de usuarios no está habilitada. Verifica la configuración de Firebase.';
-                        break;
-                    default:
-                        errorMessage += error.message;
-                }
-                
-                alert(errorMessage);
+                alert('❌ Error al crear usuario: ' + error.message);
                 
                 // Restore button
                 const submitBtn = e.target.querySelector('button[type="submit"]');

@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arreglar Todos los Usuarios</title>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .user-form {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .user-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Arreglar Usuarios Existentes</h1>
+        
+        <div class="warning">
+            <strong>⚠️ Instrucciones</strong>
+            <p>Ingresa el UID y la contraseña para cada usuario que necesites arreglar.</p>
+            <p><strong>Nota:</strong> El UID lo encuentras en Firebase Console → Realtime Database → users → [el ID alfanumérico]</p>
+        </div>
+
+        <!-- Usuario Admin -->
+        <div class="user-form">
+            <div class="user-title">👤 Usuario: fconuva (Admin)</div>
+            <div class="form-group">
+                <label>UID:</label>
+                <input type="text" id="uid-fconuva" value="WRGRvv9IcabwHK8DSXSNhcjLr5Z2">
+            </div>
+            <div class="form-group">
+                <label>Contraseña actual:</label>
+                <input type="password" id="password-fconuva" placeholder="Ingresa: xixo97879375">
+            </div>
+            <button onclick="fixUser('fconuva')">🔧 Arreglar fconuva</button>
+            <div id="status-fconuva" class="status" style="display:none;"></div>
+        </div>
+
+        <!-- Usuario Test -->
+        <div class="user-form">
+            <div class="user-title">👤 Usuario: pedror</div>
+            <div class="form-group">
+                <label>UID:</label>
+                <input type="text" id="uid-pedror" placeholder="Busca el UID en Firebase">
+                <small style="color: #666;">Firebase Console → Realtime Database → users → busca "pedror"</small>
+            </div>
+            <div class="form-group">
+                <label>Contraseña actual:</label>
+                <input type="password" id="password-pedror" placeholder="Ingresa: 12345678">
+            </div>
+            <button onclick="fixUser('pedror')">🔧 Arreglar pedror</button>
+            <div id="status-pedror" class="status" style="display:none;"></div>
+        </div>
+
+        <!-- Arreglar Todos -->
+        <button onclick="fixAll()" style="background: #2196F3; margin-top: 20px;">
+            🔧 Arreglar Todos (fconuva + pedror)
+        </button>
+        <div id="status-all" class="status" style="display:none; margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        // Configuración Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBX7VupSXEQWreW_7HnJpwieDuzM4LjpOI",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "900115920862",
+            appId: "1:900115920862:web:2ece0daa9c64ea0f9e8b27"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        function showStatus(username, message, isSuccess) {
+            const statusDiv = document.getElementById(`status-${username}`);
+            statusDiv.textContent = message;
+            statusDiv.className = 'status ' + (isSuccess ? 'success' : 'error');
+            statusDiv.style.display = 'block';
+        }
+
+        async function fixUser(username) {
+            const uid = document.getElementById(`uid-${username}`).value.trim();
+            const password = document.getElementById(`password-${username}`).value;
+            const button = event.target;
+
+            if (!uid) {
+                showStatus(username, '❌ Por favor ingresa el UID', false);
+                return;
+            }
+
+            if (!password) {
+                showStatus(username, '❌ Por favor ingresa la contraseña', false);
+                return;
+            }
+
+            button.disabled = true;
+            button.textContent = '⏳ Procesando...';
+
+            try {
+                console.log(`🔧 Arreglando password para ${username}...`);
+
+                // Verificar que el usuario existe
+                const userRef = database.ref(`users/${uid}`);
+                const snapshot = await userRef.once('value');
+                
+                if (!snapshot.exists()) {
+                    throw new Error('Usuario no encontrado en Firebase');
+                }
+
+                const userData = snapshot.val();
+                console.log(`📝 Usuario encontrado: ${userData.username}`);
+
+                // Codificar correctamente la contraseña en Base64
+                const encodedPassword = btoa(password);
+                
+                // Actualizar solo el campo password
+                await userRef.update({
+                    password: encodedPassword
+                });
+
+                console.log(`✅ Password actualizado para ${username}`);
+                showStatus(username, `✅ Password arreglado correctamente para ${username}`, true);
+
+            } catch (error) {
+                console.error(`❌ Error con ${username}:`, error);
+                showStatus(username, '❌ Error: ' + error.message, false);
+            } finally {
+                button.disabled = false;
+                button.textContent = `🔧 Arreglar ${username}`;
+            }
+        }
+
+        async function fixAll() {
+            const button = event.target;
+            const statusDiv = document.getElementById('status-all');
+            
+            button.disabled = true;
+            button.textContent = '⏳ Arreglando todos...';
+            statusDiv.style.display = 'none';
+
+            const results = [];
+
+            // Arreglar fconuva
+            try {
+                const uid = document.getElementById('uid-fconuva').value.trim();
+                const password = document.getElementById('password-fconuva').value;
+                
+                if (uid && password) {
+                    const userRef = database.ref(`users/${uid}`);
+                    const snapshot = await userRef.once('value');
+                    
+                    if (snapshot.exists()) {
+                        await userRef.update({
+                            password: btoa(password)
+                        });
+                        results.push('✅ fconuva arreglado');
+                        showStatus('fconuva', '✅ Password arreglado', true);
+                    } else {
+                        results.push('⚠️ fconuva no encontrado');
+                    }
+                } else {
+                    results.push('⚠️ fconuva: falta UID o contraseña');
+                }
+            } catch (error) {
+                results.push('❌ fconuva: ' + error.message);
+            }
+
+            // Arreglar pedror
+            try {
+                const uid = document.getElementById('uid-pedror').value.trim();
+                const password = document.getElementById('password-pedror').value;
+                
+                if (uid && password) {
+                    const userRef = database.ref(`users/${uid}`);
+                    const snapshot = await userRef.once('value');
+                    
+                    if (snapshot.exists()) {
+                        await userRef.update({
+                            password: btoa(password)
+                        });
+                        results.push('✅ pedror arreglado');
+                        showStatus('pedror', '✅ Password arreglado', true);
+                    } else {
+                        results.push('⚠️ pedror no encontrado');
+                    }
+                } else {
+                    results.push('⚠️ pedror: falta UID o contraseña');
+                }
+            } catch (error) {
+                results.push('❌ pedror: ' + error.message);
+            }
+
+            // Mostrar resumen
+            const allSuccess = results.every(r => r.startsWith('✅'));
+            statusDiv.textContent = results.join('\n');
+            statusDiv.className = 'status ' + (allSuccess ? 'success' : 'error');
+            statusDiv.style.display = 'block';
+
+            button.disabled = false;
+            button.textContent = '🔧 Arreglar Todos (fconuva + pedror)';
+        }
+
+        console.log('🔧 Herramienta de arreglo lista');
+    </script>
+</body>
+</html>

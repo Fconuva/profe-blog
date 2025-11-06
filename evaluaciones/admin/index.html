@@ -931,13 +931,16 @@
                     </td>
                     <td class="py-4 px-4">
                         <div class="flex gap-2">
-                            <button onclick="editUser('${userId}')" class="text-blue-600 hover:text-blue-800">
+                            <button onclick="fixPassword('${userId}')" class="text-purple-600 hover:text-purple-800" title="Arreglar Password">
+                                <i class="fas fa-key"></i>
+                            </button>
+                            <button onclick="editUser('${userId}')" class="text-blue-600 hover:text-blue-800" title="Editar">
                                 <i class="fas fa-edit"></i>
                             </button>
-                            <button onclick="toggleUserStatus('${userId}')" class="${user.active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}">
+                            <button onclick="toggleUserStatus('${userId}')" class="${user.active ? 'text-orange-600 hover:text-orange-800' : 'text-green-600 hover:text-green-800'}" title="${user.active ? 'Desactivar' : 'Activar'}">
                                 <i class="fas fa-${user.active ? 'ban' : 'check'}"></i>
                             </button>
-                            <button onclick="deleteUser('${userId}')" class="text-red-600 hover:text-red-800">
+                            <button onclick="deleteUser('${userId}')" class="text-red-600 hover:text-red-800" title="Eliminar">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -1150,6 +1153,52 @@
             database.ref(`users/${userId}`).update({ active: user.active }).then(() => {
                 loadUsers();
             });
+        }
+
+        // Fix corrupted password
+        async function fixPassword(userId) {
+            const user = usersData[userId];
+            
+            const newPassword = prompt(
+                `🔧 Arreglar Password\n\n` +
+                `Usuario: ${user.username}\n` +
+                `Email: ${user.email || 'N/A'}\n\n` +
+                `Ingresa la nueva contraseña para este usuario:`
+            );
+            
+            if (!newPassword) {
+                return; // Cancelado
+            }
+            
+            if (newPassword.length < 6) {
+                alert('❌ La contraseña debe tener al menos 6 caracteres');
+                return;
+            }
+            
+            try {
+                console.log('🔧 Arreglando password para:', user.username);
+                
+                // Codificar en Base64
+                const encodedPassword = btoa(newPassword);
+                
+                // Actualizar en Firebase
+                await database.ref(`users/${userId}`).update({
+                    password: encodedPassword
+                });
+                
+                console.log('✅ Password actualizado');
+                
+                alert(
+                    `✅ Password arreglado correctamente\n\n` +
+                    `Usuario: ${user.username}\n` +
+                    `Nueva contraseña: ${newPassword}\n\n` +
+                    `El usuario ya puede iniciar sesión.`
+                );
+                
+            } catch (error) {
+                console.error('❌ Error arreglando password:', error);
+                alert('❌ Error al arreglar password: ' + error.message);
+            }
         }
 
         // Delete user

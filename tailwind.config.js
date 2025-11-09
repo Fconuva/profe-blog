@@ -1,7 +1,7 @@
 /**** Tailwind CSS config for production build (replaces CDN runtime) ****/
 /** @type {import('tailwindcss').Config} */
 module.exports = {
-  darkMode: 'class',
+  darkMode: false,
   content: [
     './_includes/**/*.{html,njk}',
     './evaluaciones/**/*.{html,njk,md}',

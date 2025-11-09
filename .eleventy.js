@@ -15,6 +15,7 @@ try {
 module.exports = function(eleventyConfig) {
   // Copia solo recursos estáticos (evitar copiar archivos HTML que Eleventy procesa)
   eleventyConfig.addPassthroughCopy("css");
+  eleventyConfig.addPassthroughCopy("js");
   eleventyConfig.addPassthroughCopy("main.js");
   eleventyConfig.addPassthroughCopy("main-premium.js");
   eleventyConfig.addPassthroughCopy("imagenes");

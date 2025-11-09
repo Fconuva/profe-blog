@@ -135,19 +135,16 @@ class PremiumSite {
   setupScrollAnimations() {
     const observerOptions = {
       threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
+      rootMargin: '0px 0px 0px 0px'
     };
 
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry, index) => {
+      entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          // Animación escalonada
-          setTimeout(() => {
-            // Hacer visible el elemento (para .reveal y .scroll-reveal)
-            entry.target.classList.add('visible');
-            entry.target.classList.add('revealed');
-            entry.target.classList.add('animate-fade-in-up');
-          }, index * 100);
+          // Hacer visible el elemento inmediatamente (para .reveal y .scroll-reveal)
+          entry.target.classList.add('visible');
+          entry.target.classList.add('revealed');
+          entry.target.classList.add('animate-fade-in-up');
         }
       });
     }, observerOptions);
@@ -157,6 +154,15 @@ class PremiumSite {
 
     // Observar cards para animación especial
     document.querySelectorAll('.card-premium').forEach(el => observer.observe(el));
+
+    // Fallback: hacer visibles todos los elementos scroll-reveal después de 2 segundos
+    // para evitar problemas con el IntersectionObserver
+    setTimeout(() => {
+      document.querySelectorAll('.scroll-reveal:not(.revealed)').forEach(el => {
+        el.classList.add('visible');
+        el.classList.add('revealed');
+      });
+    }, 2000);
   }
 
   setupHoverAnimations() {

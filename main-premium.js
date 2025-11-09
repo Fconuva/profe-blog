@@ -4,7 +4,6 @@
  * ===========================================
  *
  * Características:
- * ✅ Modo oscuro inteligente
  * ✅ Animaciones avanzadas
  * ✅ Sistema de temas
  * ✅ Interacciones premium
@@ -18,107 +17,11 @@ class PremiumSite {
   }
 
   init() {
-    this.setupThemeSystem();
     this.setupAnimations();
     this.setupInteractions();
     this.setupScrollEffects();
     this.setupPerformanceOptimizations();
     this.setupAccessibility();
-  }
-
-  // ===========================================
-  // SISTEMA DE TEMAS OSCUROS
-  // ===========================================
-
-  setupThemeSystem() {
-    // NO aplicar tema oscuro en páginas de dossier-lenguaje-media
-    const currentPath = window.location.pathname;
-    const isDossierLenguaje = currentPath.includes('/dossier-lenguaje-media/');
-    
-    if (isDossierLenguaje) {
-      // Forzar tema claro para dossiers de lenguaje
-      this.setTheme('light');
-      return;
-    }
-
-    // Detectar preferencia del sistema
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
-    const savedTheme = localStorage.getItem('theme');
-
-    // Aplicar tema guardado o detectar automáticamente
-    if (savedTheme) {
-      this.setTheme(savedTheme);
-    } else if (prefersDark.matches) {
-      this.setTheme('dark');
-    }
-
-    // Crear toggle del tema
-    this.createThemeToggle();
-
-    // Escuchar cambios en la preferencia del sistema
-    prefersDark.addEventListener('change', (e) => {
-      if (!localStorage.getItem('theme')) {
-        this.setTheme(e.matches ? 'dark' : 'light');
-      }
-    });
-  }
-
-  createThemeToggle() {
-    const toggle = document.createElement('button');
-    toggle.className = 'theme-toggle focus-visible';
-    toggle.setAttribute('aria-label', 'Cambiar tema oscuro/claro');
-    toggle.innerHTML = `
-      <svg class="sun-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="12" r="5"/>
-        <line x1="12" y1="1" x2="12" y2="3"/>
-        <line x1="12" y1="21" x2="12" y2="23"/>
-        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
-        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-        <line x1="1" y1="12" x2="3" y2="12"/>
-        <line x1="21" y1="12" x2="23" y2="12"/>
-        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
-        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-      </svg>
-      <svg class="moon-icon hidden" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    `;
-
-    toggle.addEventListener('click', () => this.toggleTheme());
-    document.body.appendChild(toggle);
-  }
-
-  setTheme(theme) {
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('theme', theme);
-
-    // Actualizar iconos del toggle
-    const sunIcon = document.querySelector('.sun-icon');
-    const moonIcon = document.querySelector('.moon-icon');
-
-    if (theme === 'dark') {
-      sunIcon?.classList.add('hidden');
-      moonIcon?.classList.remove('hidden');
-    } else {
-      moonIcon?.classList.add('hidden');
-      sunIcon?.classList.remove('hidden');
-    }
-
-    // Animación de transición
-    this.animateThemeTransition();
-  }
-
-  toggleTheme() {
-    const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-    const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-    this.setTheme(newTheme);
-  }
-
-  animateThemeTransition() {
-    document.body.style.transition = 'background-color 0.3s ease, color 0.3s ease';
-    setTimeout(() => {
-      document.body.style.transition = '';
-    }, 300);
   }
 
   // ===========================================
@@ -474,19 +377,7 @@ class PremiumSite {
   }
 
   setupScreenReaderSupport() {
-    // Anunciar cambios de tema
-    const themeAnnouncer = document.createElement('div');
-    themeAnnouncer.setAttribute('aria-live', 'polite');
-    themeAnnouncer.setAttribute('aria-atomic', 'true');
-    themeAnnouncer.className = 'sr-only';
-    document.body.appendChild(themeAnnouncer);
-
-    // Anunciar cambios cuando se cambia el tema
-    this.originalSetTheme = this.setTheme;
-    this.setTheme = (theme) => {
-      this.originalSetTheme(theme);
-      themeAnnouncer.textContent = `Tema ${theme === 'dark' ? 'oscuro' : 'claro'} activado`;
-    };
+    // Soporte básico para lectores de pantalla
   }
 
   setupFocusManagement() {

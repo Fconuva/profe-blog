@@ -31,6 +31,16 @@ class PremiumSite {
   // ===========================================
 
   setupThemeSystem() {
+    // NO aplicar tema oscuro en páginas de dossier-lenguaje-media
+    const currentPath = window.location.pathname;
+    const isDossierLenguaje = currentPath.includes('/dossier-lenguaje-media/');
+    
+    if (isDossierLenguaje) {
+      // Forzar tema claro para dossiers de lenguaje
+      this.setTheme('light');
+      return;
+    }
+
     // Detectar preferencia del sistema
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)');
     const savedTheme = localStorage.getItem('theme');

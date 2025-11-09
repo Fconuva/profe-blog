@@ -143,14 +143,17 @@ class PremiumSite {
         if (entry.isIntersecting) {
           // Animación escalonada
           setTimeout(() => {
+            // Hacer visible el elemento (para .reveal y .scroll-reveal)
+            entry.target.classList.add('visible');
+            entry.target.classList.add('revealed');
             entry.target.classList.add('animate-fade-in-up');
           }, index * 100);
         }
       });
     }, observerOptions);
 
-    // Observar elementos con clase 'reveal'
-    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+    // Observar elementos con clase 'reveal' y 'scroll-reveal'
+    document.querySelectorAll('.reveal, .scroll-reveal').forEach(el => observer.observe(el));
 
     // Observar cards para animación especial
     document.querySelectorAll('.card-premium').forEach(el => observer.observe(el));

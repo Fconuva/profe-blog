@@ -31,9 +31,25 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }, { threshold: 0.12 });
 
-        document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+        document.querySelectorAll('.reveal').forEach((el) => {
+            observer.observe(el);
+        });
     } else {
         // If user prefers reduced motion, reveal immediately
         document.querySelectorAll('.reveal').forEach(el => el.classList.add('visible'));
+    }
+
+    // API Key Demo
+    const apiKeyButton = document.getElementById('showApiKey');
+    if (apiKeyButton) {
+        apiKeyButton.addEventListener('click', () => {
+            const apiKey = apiKeyButton.dataset.apiKey;
+            const resultElement = document.getElementById('apiKeyResult');
+            if (apiKey && apiKey !== 'undefined' && apiKey !== '') {
+                resultElement.innerHTML = `<div class="alert alert-success"><strong>GROK_API_KEY:</strong> ${apiKey}</div>`;
+            } else {
+                resultElement.innerHTML = `<div class="alert alert-danger"><strong>GROK_API_KEY no encontrada.</strong> Asegúrate de que la variable de entorno GROK_API_KEY esté configurada en tu archivo <code>.env</code> y que Eleventy se haya reiniciado.</div>`;
+            }
+        });
     }
 });

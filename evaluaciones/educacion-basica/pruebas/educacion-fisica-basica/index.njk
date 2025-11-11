@@ -846,7 +846,7 @@ function mostrarPregunta(index) {
     const checked = respuestas[index] === i ? 'checked' : '';
     html += `
       <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-red-400 hover:bg-red-50 ${checked ? 'border-red-500 bg-red-100' : 'border-gray-200'}">
-        <input type="radio" name="pregunta-${index}" value="${i}" ${checked} onchange="guardarRespuesta(${index}, ${i})" class="mt-1 mr-3">
+        <input type="radio" name="pregunta-${index}" value="${i}" ${checked} onchange="guardarRespuesta(${index}, ${i}); mostrarRetroalimentacion(${index})" class="mt-1 mr-3">
         <span class="flex-1"><strong>${letra})</strong> ${alt}</span>
       </label>
     `;
@@ -854,10 +854,32 @@ function mostrarPregunta(index) {
   
   html += `
       </div>
+      
+      <!-- Retroalimentación desplegable -->
+      <div id="retroalimentacion-${index}" class="hidden mt-6">
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-l-4 border-green-500 rounded-lg p-5 shadow-md">
+          <div class="flex items-start">
+            <div class="flex-shrink-0">
+              <i class="bi bi-lightbulb-fill text-green-600 text-2xl"></i>
+            </div>
+            <div class="ml-4 flex-1">
+              <h5 class="text-lg font-bold text-green-800 mb-3">
+                <i class="bi bi-check-circle-fill mr-2"></i>Respuesta Correcta: ${String.fromCharCode(65 + pregunta.correcta)}
+              </h5>
+              <div class="text-gray-800 leading-relaxed" style="white-space: pre-line;">${pregunta.explicacion}</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   `;
   
   document.getElementById('pregunta-contenido').innerHTML = html;
+  
+  // Si ya hay respuesta guardada, mostrar retroalimentación automáticamente
+  if (respuestas[index] !== null) {
+    setTimeout(() => mostrarRetroalimentacion(index), 100);
+  }
   
   // Actualizar botones
   document.getElementById('btn-anterior').disabled = index === 0;
@@ -865,6 +887,15 @@ function mostrarPregunta(index) {
   document.getElementById('btn-finalizar').classList.toggle('hidden', index !== 49);
   
   actualizarProgreso();
+}
+
+function mostrarRetroalimentacion(index) {
+  const retroElement = document.getElementById(`retroalimentacion-${index}`);
+  if (retroElement && respuestas[index] !== null) {
+    retroElement.classList.remove('hidden');
+    // Scroll suave hasta la retroalimentación
+    retroElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 }
 
 function guardarRespuesta(index, respuesta) {

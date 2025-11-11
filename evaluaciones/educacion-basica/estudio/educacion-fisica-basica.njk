@@ -3304,6 +3304,91 @@ permalink: /evaluaciones/educacion-basica/estudio/educacion-fisica-basica/
 
       </div>
 
+      <!-- Asistente IA con Grok -->
+      <div class="card border-0 shadow-lg mb-5" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+        <div class="card-body p-5">
+          <div class="text-center mb-4">
+            <div class="d-inline-block bg-white rounded-circle p-3 shadow-lg mb-3">
+              <i class="bi bi-robot text-purple-600" style="font-size: 3rem; color: #667eea;"></i>
+            </div>
+            <h3 class="text-white fw-bold mb-2"><i class="bi bi-lightbulb-fill text-warning"></i> Asistente IA - Consulta el Temario</h3>
+            <p class="text-white opacity-90 mb-0">Pregunta sobre cualquier tema del dossier y obtén respuestas personalizadas con IA Grok</p>
+          </div>
+
+          <div class="row g-3">
+            <div class="col-12">
+              <div class="input-group input-group-lg shadow">
+                <span class="input-group-text bg-white border-0">
+                  <i class="bi bi-question-circle-fill text-purple-600" style="color: #667eea;"></i>
+                </span>
+                <input 
+                  type="text" 
+                  id="preguntaGrokInput" 
+                  class="form-control border-0" 
+                  placeholder="Ej: ¿Cómo aplico el principio FITT en 4° básico? ¿Qué es el Estilo E de Mosston?"
+                  onkeypress="if(event.key==='Enter') consultarGrok()"
+                >
+                <button 
+                  class="btn btn-warning fw-bold px-4 border-0" 
+                  onclick="consultarGrok()"
+                  id="btnConsultarGrok"
+                >
+                  <i class="bi bi-send-fill"></i> Consultar
+                </button>
+              </div>
+            </div>
+            <div class="col-12">
+              <div id="respuestaGrokContainer" class="d-none">
+                <div class="card border-0 shadow-sm">
+                  <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0 fw-bold text-purple-600" style="color: #667eea;">
+                      <i class="bi bi-chat-dots-fill"></i> Respuesta del Asistente
+                    </h6>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="limpiarConsulta()">
+                      <i class="bi bi-x-lg"></i>
+                    </button>
+                  </div>
+                  <div class="card-body bg-light">
+                    <div id="respuestaGrokTexto" class="text-dark" style="line-height: 1.8; white-space: pre-wrap;"></div>
+                  </div>
+                </div>
+              </div>
+              <div id="loadingGrok" class="d-none text-center py-4">
+                <div class="spinner-border text-white" role="status">
+                  <span class="visually-hidden">Consultando...</span>
+                </div>
+                <p class="text-white mt-2 mb-0">Consultando a Grok AI...</p>
+              </div>
+              <div id="errorGrok" class="d-none">
+                <div class="alert alert-danger mb-0" role="alert">
+                  <i class="bi bi-exclamation-triangle-fill"></i> <span id="errorGrokTexto"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div class="d-flex flex-wrap gap-2 justify-content-center">
+              <button class="btn btn-sm btn-outline-light" onclick="setPreguntaRapida('¿Qué ejercicios de fuerza son apropiados para 3° básico?')">
+                <i class="bi bi-lightning-fill"></i> Fuerza 3° Básico
+              </button>
+              <button class="btn btn-sm btn-outline-light" onclick="setPreguntaRapida('¿Cómo enseñar la Cueca paso a paso en 5° básico?')">
+                <i class="bi bi-music-note"></i> Cueca 5° Básico
+              </button>
+              <button class="btn btn-sm btn-outline-light" onclick="setPreguntaRapida('¿Qué es una rúbrica analítica y cómo crearla?')">
+                <i class="bi bi-table"></i> Rúbrica Analítica
+              </button>
+              <button class="btn btn-sm btn-outline-light" onclick="setPreguntaRapida('¿Cómo aplicar DUA en educación física?')">
+                <i class="bi bi-universal-access"></i> DUA en EF
+              </button>
+              <button class="btn btn-sm btn-outline-light" onclick="setPreguntaRapida('¿Diferencias entre evaluación formativa y sumativa?')">
+                <i class="bi bi-clipboard-check"></i> Tipos Evaluación
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Footer / Cierre -->
       <div class="bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl shadow-2xl p-8 text-white text-center">
         <h3 class="text-2xl font-bold mb-3"> ¡Has completado el Dossier de Educación Física ECEP 2025!</h3>
@@ -3331,3 +3416,96 @@ permalink: /evaluaciones/educacion-basica/estudio/educacion-fisica-basica/
     </div>
   </div>
 </div>
+
+<script>
+// Asistente IA con Grok - Consultas sobre el temario
+const SYSTEM_PROMPT = `Eres un asistente pedagógico experto en Educación Física y Salud para Educación Básica en Chile (ECEP 2025). 
+
+CONTEXTO DEL DOSSIER:
+- Dominio 1: Aptitud Física y Salud (desarrollo motor, cualidades físicas, sistemas energéticos, FITT, test físicos)
+- Dominio 2: Manifestaciones de la Motricidad (juegos, deportes, danzas chilenas, expresión corporal, principios tácticos)
+- Dominio 3: Enseñanza-Aprendizaje (Espectro Mosston, evaluación formativa/sumativa, DUA, planificaciones, rúbricas)
+
+El dossier incluye:
+• Tabla de FC por edad (220-edad, zonas 50%-85%)
+• 16 ejercicios específicos detallados por grupo muscular
+• Secuencias coreográficas: Cueca (32 compases), Sau-sau, Trote Nortino
+• Clasificación deportes (invasión, red/muro, bate/campo, individuales, combate, estéticos)
+• Planificaciones: Voltereta (Estilo C Recíproca), Salto Vertical (Estilo E Inclusión)
+• 3 Rúbricas analíticas: Voltereta, Habilidades Socioemocionales, Test Cooper
+• 5 Casos de estudio pedagógicos integrados
+
+INSTRUCCIONES:
+- Responde de forma clara, pedagógica y práctica
+- Usa ejemplos concretos del currículo chileno cuando sea pertinente
+- Si la pregunta es sobre contenido del dossier, referencia las secciones específicas
+- Si preguntan por edades/cursos, contextualiza según desarrollo motor (1°-2°: esquema corporal, 3°-4°: habilidades básicas, 5°-6°: habilidades específicas)
+- Máximo 250 palabras, estructura con bullets si es necesario`;
+
+async function consultarGrok() {
+  const inputElement = document.getElementById('preguntaGrokInput');
+  const pregunta = inputElement.value.trim();
+  
+  if (!pregunta) {
+    mostrarError('Por favor escribe una pregunta');
+    return;
+  }
+
+  // Limpiar estados previos
+  document.getElementById('respuestaGrokContainer').classList.add('d-none');
+  document.getElementById('errorGrok').classList.add('d-none');
+  document.getElementById('loadingGrok').classList.remove('d-none');
+  document.getElementById('btnConsultarGrok').disabled = true;
+
+  try {
+    const response = await fetch('/api/groq-chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        systemPrompt: SYSTEM_PROMPT,
+        pregunta: pregunta
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Error al consultar la IA');
+    }
+
+    // Mostrar respuesta
+    document.getElementById('respuestaGrokTexto').textContent = data.respuesta;
+    document.getElementById('respuestaGrokContainer').classList.remove('d-none');
+    document.getElementById('loadingGrok').classList.add('d-none');
+
+  } catch (error) {
+    console.error('Error consultando Grok:', error);
+    mostrarError(error.message || 'Error al conectar con el asistente IA. Verifica tu conexión.');
+  } finally {
+    document.getElementById('btnConsultarGrok').disabled = false;
+  }
+}
+
+function setPreguntaRapida(pregunta) {
+  document.getElementById('preguntaGrokInput').value = pregunta;
+  consultarGrok();
+}
+
+function limpiarConsulta() {
+  document.getElementById('preguntaGrokInput').value = '';
+  document.getElementById('respuestaGrokContainer').classList.add('d-none');
+  document.getElementById('errorGrok').classList.add('d-none');
+}
+
+function mostrarError(mensaje) {
+  document.getElementById('errorGrokTexto').textContent = mensaje;
+  document.getElementById('errorGrok').classList.remove('d-none');
+  document.getElementById('loadingGrok').classList.add('d-none');
+  setTimeout(() => {
+    document.getElementById('errorGrok').classList.add('d-none');
+  }, 5000);
+}
+</script>
+

@@ -30,7 +30,8 @@ description: "Evaluación completa con 50 preguntas para preparar la ECEP 2025 e
     <ul class="mb-0">
       <li>Este test tiene <strong>50 preguntas</strong> de opción múltiple</li>
       <li>Cada pregunta tiene <strong>4 alternativas</strong> (solo una correcta)</li>
-      <li>Al finalizar obtendrás <strong>retroalimentación pedagógica</strong> detallada</li>
+      <li>Recibirás <strong>retroalimentación inmediata</strong> después de cada respuesta</li>
+      <li>Al finalizar obtendrás un <strong>resumen completo</strong> de tu desempeño</li>
       <li>Puedes consultar el <strong>Dossier de Historia</strong> en cualquier momento</li>
     </ul>
   </div>
@@ -789,37 +790,142 @@ function renderQuestion() {
   const container = document.getElementById('quiz-container');
   const pregunta = quizData.preguntas[currentQuestion];
   
-  let html = `
-    <div class="mb-3">
-      <span class="badge bg-secondary">${pregunta.dominio}</span>
-    </div>
-    <h4 class="mb-4">Pregunta ${currentQuestion + 1} de ${quizData.preguntas.length}</h4>
-    <p class="lead mb-4">${pregunta.enunciado}</p>
-    <div class="alternativas-container">
-  `;
-  
-  pregunta.alternativas.forEach((alt, index) => {
-    const isSelected = userAnswers[currentQuestion] === index;
-    html += `
-      <div class="form-check alternativa-item ${isSelected ? 'selected' : ''}" onclick="selectAnswer(${index})">
-        <input class="form-check-input" type="radio" name="respuesta" id="alt${index}" 
-               ${isSelected ? 'checked' : ''}>
-        <label class="form-check-label w-100" for="alt${index}">
-          ${String.fromCharCode(65 + index)}. ${alt}
-        </label>
+  // Si ya respondió, mostrar feedback
+  if (userAnswers[currentQuestion] !== null) {
+    const index = userAnswers[currentQuestion];
+    const isCorrect = index === pregunta.correcta;
+    
+    let html = `
+      <div class="mb-3">
+        <span class="badge bg-secondary">${pregunta.dominio}</span>
       </div>
+      <h4 class="mb-4">Pregunta ${currentQuestion + 1} de ${quizData.preguntas.length}</h4>
+      <p class="lead mb-4">${pregunta.enunciado}</p>
+      <div class="alternativas-container">
     `;
-  });
-  
-  html += `</div>`;
-  container.innerHTML = html;
+    
+    pregunta.alternativas.forEach((alt, i) => {
+      const esCorrecta = i === pregunta.correcta;
+      const esSeleccionada = i === index;
+      let claseAlternativa = 'alternativa-item-feedback';
+      let icono = '';
+      
+      if (esCorrecta) {
+        claseAlternativa += ' bg-success-subtle border-success border-3';
+        icono = '<i class="bi bi-check-circle-fill text-success"></i> ';
+      } else if (esSeleccionada && !esCorrecta) {
+        claseAlternativa += ' bg-danger-subtle border-danger border-3';
+        icono = '<i class="bi bi-x-circle-fill text-danger"></i> ';
+      } else {
+        claseAlternativa += ' border-secondary';
+      }
+      
+      html += `
+        <div class="${claseAlternativa} p-3 mb-2 rounded">
+          ${icono}<strong>${String.fromCharCode(65 + i)}.</strong> ${alt}
+        </div>
+      `;
+    });
+    
+    html += `
+        </div>
+        
+        <div class="alert ${isCorrect ? 'alert-success' : 'alert-danger'} mt-4">
+          <h6 class="mb-2">
+            ${isCorrect ? '<i class="bi bi-check-circle-fill"></i> ¡Correcto!' : '<i class="bi bi-x-circle-fill"></i> Incorrecto'}
+          </h6>
+          <p class="mb-0"><strong>Explicación:</strong> ${pregunta.explicacion}</p>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+  } else {
+    // Mostrar pregunta sin responder
+    let html = `
+      <div class="mb-3">
+        <span class="badge bg-secondary">${pregunta.dominio}</span>
+      </div>
+      <h4 class="mb-4">Pregunta ${currentQuestion + 1} de ${quizData.preguntas.length}</h4>
+      <p class="lead mb-4">${pregunta.enunciado}</p>
+      <div class="alternativas-container">
+    `;
+    
+    pregunta.alternativas.forEach((alt, index) => {
+      html += `
+        <div class="form-check alternativa-item" onclick="selectAnswer(${index})">
+          <input class="form-check-input" type="radio" name="respuesta" id="alt${index}">
+          <label class="form-check-label w-100" for="alt${index}">
+            ${String.fromCharCode(65 + index)}. ${alt}
+          </label>
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+    container.innerHTML = html;
+  }
   
   updateNavigation();
 }
 
 function selectAnswer(index) {
+  // Si ya respondió esta pregunta, no permitir cambiar
+  if (userAnswers[currentQuestion] !== null) {
+    return;
+  }
+  
   userAnswers[currentQuestion] = index;
-  renderQuestion();
+  const isCorrect = index === quizData.preguntas[currentQuestion].correcta;
+  
+  // Mostrar feedback inmediato
+  const container = document.getElementById('quiz-container');
+  const pregunta = quizData.preguntas[currentQuestion];
+  
+  let feedbackHTML = `
+    <div class="mb-4">
+      <h5 class="mb-3">${pregunta.dominio}</h5>
+      <p class="lead">${pregunta.enunciado}</p>
+      
+      <div class="alternativas-container">
+  `;
+  
+  pregunta.alternativas.forEach((alt, i) => {
+    const esCorrecta = i === pregunta.correcta;
+    const esSeleccionada = i === index;
+    let claseAlternativa = 'alternativa-item';
+    let icono = '';
+    
+    if (esCorrecta) {
+      claseAlternativa += ' bg-success-subtle border-success';
+      icono = '<i class="bi bi-check-circle-fill text-success"></i> ';
+    } else if (esSeleccionada && !esCorrecta) {
+      claseAlternativa += ' bg-danger-subtle border-danger';
+      icono = '<i class="bi bi-x-circle-fill text-danger"></i> ';
+    }
+    
+    feedbackHTML += `
+      <div class="${claseAlternativa} p-3 mb-2 rounded border-3">
+        ${icono}<strong>${String.fromCharCode(65 + i)}.</strong> ${alt}
+      </div>
+    `;
+  });
+  
+  feedbackHTML += `
+      </div>
+      
+      <div class="alert ${isCorrect ? 'alert-success' : 'alert-danger'} mt-4">
+        <h6 class="mb-2">
+          ${isCorrect ? '<i class="bi bi-check-circle-fill"></i> ¡Correcto!' : '<i class="bi bi-x-circle-fill"></i> Incorrecto'}
+        </h6>
+        <p class="mb-0"><strong>Explicación:</strong> ${pregunta.explicacion}</p>
+      </div>
+    </div>
+  `;
+  
+  container.innerHTML = feedbackHTML;
+  
+  // Habilitar botón siguiente
+  updateNavigation();
 }
 
 function updateNavigation() {
@@ -1044,9 +1150,26 @@ renderQuestion();
   font-weight: 500;
 }
 
+.alternativa-item-feedback {
+  padding: 15px;
+  margin-bottom: 10px;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.bg-success-subtle {
+  background-color: #d1e7dd !important;
+}
+
+.bg-danger-subtle {
+  background-color: #f8d7da !important;
+}
+
 .progress {
   height: 25px;
 }
+
 
 #quiz-container {
   min-height: 400px;

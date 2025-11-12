@@ -1,14 +1,11 @@
 // Firebase Admin SDK Configuration
 const admin = require('firebase-admin');
 
-let firebaseApp;
-
 function initializeFirebase() {
-    const startTime = Date.now();
-
-    if (firebaseApp) {
-        console.log('✅ Using cached Firebase instance');
-        return firebaseApp;
+    // Si ya hay una app inicializada, usarla
+    if (admin.apps.length > 0) {
+        console.log('✅ Using existing Firebase instance');
+        return admin.apps[0];
     }
 
     try {
@@ -27,13 +24,13 @@ function initializeFirebase() {
 
         // Manejar diferentes formatos de la clave privada
         // Si tiene \n literales (como strings), convertirlos a saltos de línea reales
-        if (privateKey.includes('\\n')) {
+        if (privateKey && privateKey.includes('\\n')) {
             console.log('🔄 Converting \\n literals to line breaks');
             privateKey = privateKey.replace(/\\n/g, '\n');
         }
 
         // Validar formato de clave
-        if (!privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
+        if (!privateKey || !privateKey.includes('-----BEGIN PRIVATE KEY-----')) {
             throw new Error('Invalid FIREBASE_PRIVATE_KEY format');
         }
 
@@ -50,14 +47,13 @@ function initializeFirebase() {
             client_x509_cert_url: process.env.FIREBASE_CLIENT_CERT_URL
         };
 
-        firebaseApp = admin.initializeApp({
+        const app = admin.initializeApp({
             credential: admin.credential.cert(serviceAccount),
             databaseURL: process.env.FIREBASE_DATABASE_URL || "https://profe-blog-default-rtdb.firebaseio.com"
         });
 
-        const elapsed = Date.now() - startTime;
-        console.log(`✅ Firebase initialized in ${elapsed}ms`);
-        return firebaseApp;
+        console.log('✅ Firebase initialized successfully');
+        return app;
     } catch (error) {
         console.error('❌ Firebase init error:', error.message);
         console.error('Stack:', error.stack);
@@ -66,9 +62,7 @@ function initializeFirebase() {
 }
 
 function getDatabase() {
-    if (!firebaseApp) {
-        initializeFirebase();
-    }
+    initializeFirebase();
     return admin.database();
 }
 

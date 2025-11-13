@@ -360,15 +360,79 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
   </div>
 </div>
 
+
+
+
 <script>
-// Wait for Firebase to be loaded
-          <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2">
-            <div class="bg-gradient-to-r from-pink-500 to-rose-600 p-8 text-white">
-              <div class="flex items-center space-x-4">
-                <div class="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
-                  <i class="fas fa-book-open text-3xl"></i>
-                </div>
-                <div>
+// ========== GLOBAL STATE AND FUNCTIONS ==========
+// Version: 2025-11-13-fix-final
+let currentUser = null;
+
+// Global functions (accessible from inline onclick handlers)
+function showLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function closeLoginModal() {
+    const modal = document.getElementById('login-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+        const form = document.getElementById('user-login-form');
+        if (form) form.reset();
+    }
+}
+
+function logout() {
+    localStorage.removeItem('evaluaciones_session');
+    location.reload();
+}
+
+// ========== FIREBASE AUTH & DATABASE ==========
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Firebase services
+    const auth = firebase.auth();
+    const database = firebase.database();
+
+    // Start authentication check
+    checkAuthentication();
+    setupLoginForm();
+
+    // Check if user is logged in
+    function checkAuthentication() {
+        const session = localStorage.getItem('evaluaciones_session');
+        const loginButton = document.getElementById('login-button');
+
+        if (session) {
+            try {
+                const sessionData = JSON.parse(session);
+                const loginTime = new Date(sessionData.loginTime);
+                const now = new Date();
+                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+
+                if (hoursDiff < 24) {
+                    currentUser = sessionData;
+                    showUserInterface(sessionData);
+                    enableContentAccess(sessionData.permissions);
+                    return;
+                } else {
+                    localStorage.removeItem('evaluaciones_session');
+                }
+            } catch (error) {
+                localStorage.removeItem('evaluaciones_session');
+            }
+        }
+
+        if (loginButton) loginButton.style.display = 'block';
+        showAllContentButLockLinks();
+    }
+
+    // Setup login form
+    function setupLoginForm() {
                   <h3 class="text-2xl font-bold">📖 Estudio de Contenidos</h3>
                   <p class="text-pink-100 mt-1">Guía completa NT1 y NT2</p>
                 </div>
@@ -1852,100 +1916,59 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!loginForm) return;
 
         loginForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
+            e.preventDefault();
 
-        const username = document.getElementById('login-username').value.trim();
-        const password = document.getElementById('login-password').value;
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
 
-        // Show loading state
-        const submitBtn = loginForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
-        submitBtn.disabled = true;
+            const submitBtn = loginForm.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Verificando...';
+            submitBtn.disabled = true;
 
-        try {
-            console.log('🔐 Attempting login for username:', username);
-            
-            // Authenticate using anonymous auth to get read access
-            let authUser = auth.currentUser;
-            if (!authUser) {
-                const anonCredential = await auth.signInAnonymously();
-                authUser = anonCredential.user;
-                console.log('✅ Anonymous auth successful, UID:', authUser.uid);
-            }
-
-            // Find user by username in database
-            const usersRef = database.ref('users');
-            const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
-            
-            console.log('📊 Database query for username:', username);
-            console.log('  User exists?', snapshot.exists());
-            
-            if (!snapshot.exists()) {
-                throw new Error('Usuario no encontrado');
-            }
-
-            const userId = Object.keys(snapshot.val())[0];
-            const userData = snapshot.val()[userId];
-            
-            console.log('✅ User data loaded:', userData);
-
-            // Check if user is active
-            if (userData.active === false) {
-                throw new Error('Cuenta deshabilitada');
-            }
-
-            // Verify password (stored in Base64)
-            let storedPassword;
             try {
-                storedPassword = atob(userData.password);
-            } catch (decodeError) {
-                console.error('❌ Password decode error:', decodeError);
-                throw new Error('Cuenta corrupta. Contacta al administrador para restablecer tu contraseña.');
+                let authUser = auth.currentUser;
+                if (!authUser) {
+                    const anonCredential = await auth.signInAnonymously();
+                    authUser = anonCredential.user;
+                }
+
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+                
+                if (!snapshot.exists()) throw new Error('Usuario no encontrado');
+
+                const userId = Object.keys(snapshot.val())[0];
+                const userData = snapshot.val()[userId];
+
+                if (userData.active === false) throw new Error('Cuenta deshabilitada');
+
+                let storedPassword = atob(userData.password);
+                if (storedPassword !== password) throw new Error('Contraseña incorrecta');
+
+                const sessionData = {
+                    userId,
+                    username: userData.username,
+                    permissions: userData.permissions,
+                    role: userData.role,
+                    loginTime: new Date().toISOString()
+                };
+
+                localStorage.setItem('evaluaciones_session', JSON.stringify(sessionData));
+                currentUser = sessionData;
+
+                closeLoginModal();
+                showUserInterface(sessionData);
+                enableContentAccess(sessionData.permissions);
+            } catch (error) {
+                alert(error.message || 'Error al iniciar sesión');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
-            
-            if (storedPassword !== password) {
-                throw new Error('Contraseña incorrecta');
-            }
-
-            console.log('✅ Password verified!');
-
-            // Create session
-            const sessionData = {
-                userId: userId,
-                username: userData.username,
-                permissions: userData.permissions,
-                role: userData.role,
-                loginTime: new Date().toISOString()
-            };
-
-            localStorage.setItem('evaluaciones_session', JSON.stringify(sessionData));
-            currentUser = sessionData;
-
-            console.log('✅ Session created:', sessionData);
-
-            // Close modal and show user interface
-            closeLoginModal();
-            showUserInterface(sessionData);
-            enableContentAccess(sessionData.permissions);
-
-        } catch (error) {
-            console.error('❌ Login error:', error);
-            let errorMessage = 'Error al iniciar sesión';
-            
-            if (error.message) {
-                errorMessage = error.message;
-            }
-            
-            alert(errorMessage);
-        } finally {
-            submitBtn.innerHTML = originalText;
-            submitBtn.disabled = false;
-        }
-    });
+        });
     }
 
-    // Show user interface
     function showUserInterface(userData) {
         const loginButton = document.getElementById('login-button');
         const userInfo = document.getElementById('user-info');
@@ -1956,7 +1979,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (userName) userName.textContent = userData.username;
     }
 
-    // Show all content but lock links (require login)
     function showAllContentButLockLinks() {
         const contentSections = [
             { id: 'educacion-parvularia-section', permission: 'parvularia' },
@@ -1966,37 +1988,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
         contentSections.forEach(section => {
             const element = document.getElementById(section.id);
-            if (element) {
-                element.style.display = 'block';
-                
-                const links = element.querySelectorAll('a[href^="/evaluaciones"]');
-                links.forEach(link => {
-                    link.style.opacity = '0.6';
-                    link.style.cursor = 'not-allowed';
-                    link.style.pointerEvents = 'none';
-                    
-                    const parent = link.parentElement;
-                    if (!parent.querySelector('.login-overlay')) {
-                        const overlay = document.createElement('div');
-                        overlay.className = 'login-overlay absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl';
-                        overlay.innerHTML = '<span class="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold text-indigo-600"><i class="fas fa-lock mr-2"></i>Inicia sesión para acceder</span>';
-                        overlay.style.position = 'absolute';
-                        overlay.style.top = '0';
-                        overlay.style.left = '0';
-                        overlay.style.right = '0';
-                        overlay.style.bottom = '0';
-                        overlay.style.zIndex = '10';
-                        
-                        parent.style.position = 'relative';
-                        parent.appendChild(overlay);
-                    }
-                });
-            }
-        });
-    }
+            if (!element) return;
 
-    // Enable content access for logged-in users
-    function enableContentAccess(permissions) {
+            element.style.display = 'block';
+            const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+            links.forEach(link => {
+                link.style.opacity = '0.6';
+                link.style.cursor = 'not-allowed';
+                link.style.pointerEvents = 'none';
+                
+                const parent = link.parentElement;
+                if (!parent.querySelector('.login-overlay')) {
+                    const overlay = document.createElement('div');
+                    overlay.className = 'login-overlay absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl';
                     overlay.innerHTML = '<span class="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold text-indigo-600"><i class="fas fa-lock mr-2"></i>Inicia sesión para acceder</span>';
                     overlay.style.position = 'absolute';
                     overlay.style.top = '0';
@@ -2004,16 +2008,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     overlay.style.right = '0';
                     overlay.style.bottom = '0';
                     overlay.style.zIndex = '10';
-                    
                     parent.style.position = 'relative';
                     parent.appendChild(overlay);
                 }
             });
-        }
-    });
-}
+        });
+    }
 
-    // Enable content access for logged-in users
     function enableContentAccess(permissions) {
         const contentSections = [
             { id: 'educacion-parvularia-section', permission: 'parvularia' },
@@ -2023,24 +2024,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
         contentSections.forEach(section => {
             const element = document.getElementById(section.id);
-            if (element) {
-                const hasPermission = permissions && permissions[section.permission];
-                
-                if (hasPermission) {
-                    element.style.display = 'block';
-                    
-                    const links = element.querySelectorAll('a[href^="/evaluaciones"]');
-                    links.forEach(link => {
-                        link.style.opacity = '1';
-                        link.style.cursor = 'pointer';
-                        link.style.pointerEvents = 'auto';
-                    });
-                    
-                    const overlays = element.querySelectorAll('.login-overlay');
-                    overlays.forEach(overlay => overlay.remove());
-                } else {
-                    element.style.display = 'none';
-                }
+            if (!element) return;
+
+            const hasPermission = permissions && permissions[section.permission];
+            
+            if (hasPermission) {
+                element.style.display = 'block';
+                const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+                links.forEach(link => {
+                    link.style.opacity = '1';
+                    link.style.cursor = 'pointer';
+                    link.style.pointerEvents = 'auto';
+                });
+                const overlays = element.querySelectorAll('.login-overlay');
+                overlays.forEach(overlay => overlay.remove());
+            } else {
+                element.style.display = 'none';
             }
         });
     }

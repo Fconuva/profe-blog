@@ -56,9 +56,28 @@ module.exports = async (req, res) => {
     };
 
     const result = await preference.create({ body: preferenceData });
-    return res.status(200).json({ preference: result });
+    
+    console.log('Preference created successfully:', {
+      id: result.id,
+      init_point: result.init_point,
+      amount: chosen.price
+    });
+    
+    return res.status(200).json({ 
+      preference: result,
+      debug: {
+        amount: chosen.price,
+        currency: 'CLP',
+        email: email
+      }
+    });
   } catch (err) {
     console.error('create_preference error', err);
+    console.error('Error details:', {
+      message: err.message,
+      cause: err.cause,
+      status: err.status
+    });
     return res.status(500).json({ error: 'internal_error', details: err.message, stack: err.stack });
   }
 };

@@ -1,10 +1,7 @@
 // Vercel / Netlify serverless style (Node.js)
 // Requires environment variable: MERCADOPAGO_ACCESS_TOKEN, BASE_URL
 
-const mercadopago = require('mercadopago');
-
-// Configure using env var
-mercadopago.configure({ access_token: process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN });
+const { MercadoPagoConfig, Preference } = require('mercadopago');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -15,16 +12,24 @@ module.exports = async (req, res) => {
 
     // Define plans/prices (CLP example)
     const plans = {
-      'basic': { title: 'Acceso Básico - ECEP', price: 25000 },
+      'basic': { title: 'Acceso Completo ECEP 2025', price: 25000 },
       'pro': { title: 'Acceso Pro - ECEP', price: 40000 }
     };
 
     const chosen = plans[plan] || plans['basic'];
 
-    const host = process.env.BASE_URL || (`https://${req.headers.host}`);
+    const host = process.env.BASE_URL || `https://${req.headers.host}`;
     const notification_url = `${host}/api/mercadopago/webhook`;
 
-    const preference = {
+    // Initialize client with new SDK
+    const client = new MercadoPagoConfig({ 
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      options: { timeout: 5000 }
+    });
+    
+    const preference = new Preference(client);
+
+    const preferenceData = {
       items: [
         {
           title: chosen.title,
@@ -43,13 +48,17 @@ module.exports = async (req, res) => {
         pending: `${host}/comprar/pending/`
       },
       auto_return: 'approved',
-      notification_url
+      notification_url,
+      metadata: {
+        user_email: email,
+        user_name: name
+      }
     };
 
-    const mpRes = await mercadopago.preferences.create(preference);
-    return res.status(200).json({ preference: mpRes.body });
+    const result = await preference.create({ body: preferenceData });
+    return res.status(200).json({ preference: result });
   } catch (err) {
     console.error('create_preference error', err);
-    return res.status(500).json({ error: 'internal_error', details: err.message });
+    return res.status(500).json({ error: 'internal_error', details: err.message, stack: err.stack });
   }
 };

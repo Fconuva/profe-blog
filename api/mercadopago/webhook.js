@@ -1,11 +1,9 @@
 // Mercado Pago webhook handler
 // Expects MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_WEBHOOK_SECRET and FIREBASE_SERVICE_ACCOUNT (base64 JSON) in env
 
-const mercadopago = require('mercadopago');
+const { MercadoPagoConfig, Payment } = require('mercadopago');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
-
-mercadopago.configure({ access_token: process.env.MERCADOPAGO_ACCESS_TOKEN || process.env.MP_ACCESS_TOKEN });
 
 // Initialize Firebase Admin if not already
 function initFirebase() {
@@ -58,9 +56,16 @@ module.exports = async (req, res) => {
       return res.status(400).send('no id');
     }
 
+    // Initialize Mercado Pago client
+    const client = new MercadoPagoConfig({ 
+      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
+      options: { timeout: 5000 }
+    });
+    
+    const paymentClient = new Payment(client);
+
     // For payment notifications, fetch payment details
-    const mpPayment = await mercadopago.payment.findById(id);
-    const payment = mpPayment && mpPayment.body ? mpPayment.body : mpPayment;
+    const payment = await paymentClient.get({ id: id });
     console.log('MP payment fetched', payment.id, payment.status);
 
     if (payment.status === 'approved') {

@@ -50,6 +50,12 @@ module.exports = function(eleventyConfig) {
   // Copiar carpeta de funciones de Netlify
   eleventyConfig.addPassthroughCopy("netlify");
 
+  // Copiar archivos HTML estáticos de evaluaciones (sin procesar por Eleventy)
+  eleventyConfig.addPassthroughCopy("evaluaciones/index.html");
+  eleventyConfig.addPassthroughCopy("evaluaciones/login.html");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/63-sc-l/index.html");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/66-sc-m/index.html");
+
   // Evitar procesar archivos HTML raíz que duplican carpetas con index.html
   const duplicates = [
     'contacto.html', 'portafolio.html', 'rosco.html', 'ruleta.html', 'simulador.html',

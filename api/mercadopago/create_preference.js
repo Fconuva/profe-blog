@@ -42,7 +42,7 @@ module.exports = async (req, res) => {
         email: email
       },
       back_urls: {
-        success: `${host}/comprar/success/`,
+        success: `${host}/comprar/success/?payment_id={{payment_id}}&status={{status}}&email=${encodeURIComponent(email)}`,
         failure: `${host}/comprar/failure/`,
         pending: `${host}/comprar/pending/`
       },

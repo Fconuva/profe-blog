@@ -74,7 +74,7 @@ module.exports = async (req, res) => {
     });
 
     if (payment.status === 'approved') {
-      // Create user in Firebase Realtime DB
+      // Store approved payment info for later account creation by user
       const adminSdk = initFirebase();
       const db = adminSdk.database();
 
@@ -95,44 +95,24 @@ module.exports = async (req, res) => {
         return res.status(200).send('no_email');
       }
 
-      // Derive username
-      const username = payerEmail.split('@')[0] + Math.floor(Math.random()*9000+1000);
-      // Generate password
-      const passwordPlain = Math.random().toString(36).slice(2,12);
-      const passwordBase64 = Buffer.from(passwordPlain).toString('base64');
-
-      const usersRef = db.ref('users');
-      const newUserRef = usersRef.push();
-      const userData = {
-        username: username,
+      // Store payment verification (user will create account manually)
+      const paymentsRef = db.ref('verified_payments/' + String(payment.id));
+      await paymentsRef.set({
+        paymentId: String(payment.id),
         email: payerEmail,
         name: payerName,
-        password: passwordBase64,
-        role: 'cliente',
-        permissions: { basica: true, media: true, parvularia: true },
-        active: true,
-        createdAt: new Date().toISOString(),
-        sourcePaymentId: String(payment.id),
-        plan: 'Acceso Completo ECEP 2025'
-      };
-
-      await newUserRef.set(userData);
-
-      console.log('Created user:', {
-        key: newUserRef.key,
-        username: userData.username,
-        email: payerEmail
+        status: 'approved',
+        amount: payment.transaction_amount,
+        currency: payment.currency_id,
+        verifiedAt: new Date().toISOString(),
+        plan: 'Acceso Completo ECEP 2025',
+        accountCreated: false  // Will be set to true when user creates account
       });
 
-      // Store credentials for admin retrieval
-      const credsRef = db.ref('payment_created_accounts/' + newUserRef.key);
-      await credsRef.set({ 
-        username: userData.username, 
-        password: passwordPlain, 
-        email: payerEmail, 
-        name: payerName,
-        createdAt: userData.createdAt,
-        paymentId: String(payment.id)
+      console.log('Payment verified and stored:', {
+        paymentId: payment.id,
+        email: payerEmail,
+        status: 'approved'
       });
 
       return res.status(200).send('ok');

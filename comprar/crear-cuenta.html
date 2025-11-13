@@ -153,8 +153,8 @@
 
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-2">Correo Electrónico</label>
-                <input type="email" id="email" class="form-input" placeholder="tu@ejemplo.com" required readonly>
-                <p class="text-xs text-gray-500 mt-1">Email utilizado en el pago (no se puede cambiar)</p>
+                <input type="email" id="email" class="form-input" placeholder="tu@ejemplo.com" required>
+                <p class="text-xs text-gray-500 mt-1">Tu correo electrónico de contacto</p>
             </div>
 
             <div>
@@ -234,8 +234,8 @@ const database = firebase.database();
 
 // Get payment info from URL params
 const urlParams = new URLSearchParams(window.location.search);
-const paymentId = urlParams.get('payment_id');
-const paymentStatus = urlParams.get('status');
+const paymentId = urlParams.get('payment_id') || 'MANUAL_CREATION_' + Date.now();
+const paymentStatus = urlParams.get('status') || 'approved';
 const payerEmail = urlParams.get('email') || '';
 
 // Pre-fill email if available
@@ -243,10 +243,7 @@ if (payerEmail) {
     document.getElementById('email').value = payerEmail;
 }
 
-// Redirect if no payment info
-if (!paymentId || paymentStatus !== 'approved') {
-    window.location.href = '/comprar/';
-}
+// Note: Removed redirect validation to allow manual account creation
 
 // Toggle password visibility
 document.getElementById('togglePassword').addEventListener('click', function() {

@@ -84,6 +84,8 @@ module.exports = function(eleventyConfig) {
   // Dentro de Educación Básica, permitir 63-sc-l (Lenguaje) y 66-sc-m (Matemática)
   // eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/66-sc-m/**"); // REMOVIDO - Matemática ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/71-sc-cs/**");
+  // Ignorar index.njk que tienen index.html estático (evitar conflictos)
+  eleventyConfig.ignores.add("evaluaciones/educacion-basica/pruebas/66-sc-m/index.njk");
   eleventyConfig.ignores.add("**/63.SC-L(20).pdf");
   // Ocultar toda la sección Temarios
   eleventyConfig.ignores.add("evaluaciones/educacion-basica/temarios/**");

@@ -1,8 +1,17 @@
 ---
-layout: layout-evaluaciones.njk
 title: Comprar Acceso ECEP
 permalink: /comprar/
 ---
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/css/tw.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-50">
 
 <div class="min-h-screen py-12 bg-gradient-to-br from-gray-50 to-white">
   <div class="container mx-auto px-4">
@@ -35,12 +44,16 @@ permalink: /comprar/
         </div>
 
         <div class="flex justify-between items-center">
-          <button id="payBtn" type="submit" class="bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold px-6 py-3 rounded-xl hover:shadow-lg transition">Pagar con Mercado Pago</button>
-          <a href="/evaluaciones/" class="text-sm text-gray-600">Volver</a>
+          <button id="payBtn" type="submit" class="bg-gradient-to-r from-pink-600 to-red-600 text-white font-semibold px-6 py-3 rounded-xl hover:shadow-lg transition">
+            <i class="fas fa-credit-card mr-2"></i>Pagar con Mercado Pago
+          </button>
+          <a href="/evaluaciones/" class="text-sm text-gray-600 hover:text-gray-900">
+            <i class="fas fa-arrow-left mr-1"></i>Volver
+          </a>
         </div>
       </form>
 
-      <div id="msg" class="mt-4 text-sm text-gray-700"></div>
+      <div id="msg" class="mt-4 text-sm"></div>
     </div>
   </div>
 </div>
@@ -52,7 +65,14 @@ document.getElementById('compraForm').addEventListener('submit', async (e) => {
   const email = document.getElementById('email').value.trim();
   const plan = document.getElementById('plan').value;
   const msg = document.getElementById('msg');
+  const submitBtn = document.getElementById('payBtn');
+  
   msg.textContent = '';
+  msg.className = 'mt-4 text-sm';
+  
+  // Loading state
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Procesando...';
 
   try {
     const res = await fetch('/api/mercadopago/create_preference', {
@@ -60,21 +80,43 @@ document.getElementById('compraForm').addEventListener('submit', async (e) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, plan })
     });
+    
+    if (!res.ok) {
+      throw new Error('Error del servidor: ' + res.status);
+    }
+    
     const data = await res.json();
+    
     if (data.error) {
+      msg.className = 'mt-4 text-sm text-red-600';
       msg.textContent = 'Error: ' + (data.details || data.error);
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Pagar con Mercado Pago';
       return;
     }
+    
     const initPoint = data.preference && data.preference.init_point;
     if (!initPoint) {
-      msg.textContent = 'No se pudo obtener init_point';
+      msg.className = 'mt-4 text-sm text-red-600';
+      msg.textContent = 'No se pudo obtener el link de pago';
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Pagar con Mercado Pago';
       return;
     }
-    // Redirect to Mercado Pago Checkout
+    
+    // Success - redirect
+    msg.className = 'mt-4 text-sm text-green-600';
+    msg.textContent = 'Redirigiendo a Mercado Pago...';
     window.location.href = initPoint;
   } catch (err) {
-    console.error(err);
-    msg.textContent = 'Error inesperado. Intenta nuevamente.';
+    console.error('Error:', err);
+    msg.className = 'mt-4 text-sm text-red-600';
+    msg.textContent = 'Error inesperado. Por favor intenta nuevamente.';
+    submitBtn.disabled = false;
+    submitBtn.innerHTML = '<i class="fas fa-credit-card mr-2"></i>Pagar con Mercado Pago';
   }
 });
 </script>
+
+</body>
+</html>

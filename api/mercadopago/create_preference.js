@@ -35,17 +35,11 @@ module.exports = async (req, res) => {
           title: chosen.title,
           quantity: 1,
           currency_id: 'CLP',
-          unit_price: Number(chosen.price),
-          description: 'Material Completo ECEP 2025 - Educación Parvularia'
+          unit_price: Number(chosen.price)
         }
       ],
       payer: {
-        name: name || '',
         email: email
-      },
-      payment_methods: {
-        excluded_payment_types: [],
-        installments: 1
       },
       back_urls: {
         success: `${host}/comprar/success/`,
@@ -54,10 +48,10 @@ module.exports = async (req, res) => {
       },
       auto_return: 'approved',
       notification_url,
-      statement_descriptor: 'ECEP 2025',
+      external_reference: email,
       metadata: {
         user_email: email,
-        user_name: name
+        user_name: name || ''
       }
     };
 

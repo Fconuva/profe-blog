@@ -1779,8 +1779,11 @@ description: Temarios, guías de estudio y pruebas de práctica para Educación 
 </div>
 
 <script>
-// ========== GLOBAL FUNCTIONS (available immediately) ==========
-// Version: 2025-11-13-fix-v2
+// ========== GLOBAL STATE AND FUNCTIONS ==========
+// Version: 2025-11-13-fix-v3
+let currentUser = null;
+
+// Global functions (accessible from inline onclick handlers)
 function showLoginModal() {
     const modal = document.getElementById('login-modal');
     if (modal) {
@@ -1794,8 +1797,6 @@ function closeLoginModal() {
     if (modal) {
         modal.classList.add('hidden');
         document.body.style.overflow = 'auto';
-        
-        // Clear form
         const form = document.getElementById('user-login-form');
         if (form) form.reset();
     }
@@ -1805,69 +1806,52 @@ function logout() {
     localStorage.removeItem('evaluaciones_session');
     location.reload();
 }
-</script>
 
-<script>
 // ========== FIREBASE AUTH & DATABASE ==========
-// Wait for Firebase to be loaded
 document.addEventListener('DOMContentLoaded', function() {
-    // Verify Firebase is available
-    if (typeof firebase === 'undefined') {
-        console.error('Firebase not loaded!');
-        return;
-    }
-
     // Initialize Firebase services
     const auth = firebase.auth();
     const database = firebase.database();
-
-    // Global variables
-    let currentUser = null;
 
     // Start authentication check
     checkAuthentication();
     setupLoginForm();
 
-// Check if user is logged in
-function checkAuthentication() {
-    const session = localStorage.getItem('evaluaciones_session');
-    const loginButton = document.getElementById('login-button');
+    // Check if user is logged in
+    function checkAuthentication() {
+        const session = localStorage.getItem('evaluaciones_session');
+        const loginButton = document.getElementById('login-button');
 
-    if (session) {
-        try {
-            const sessionData = JSON.parse(session);
-            // Check if session is still valid (24 hours)
-            const loginTime = new Date(sessionData.loginTime);
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
+        if (session) {
+            try {
+                const sessionData = JSON.parse(session);
+                const loginTime = new Date(sessionData.loginTime);
+                const now = new Date();
+                const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
 
-            if (hoursDiff < 24) {
-                currentUser = sessionData;
-                showUserInterface(sessionData);
-                enableContentAccess(sessionData.permissions);
-                return;
-            } else {
+                if (hoursDiff < 24) {
+                    currentUser = sessionData;
+                    showUserInterface(sessionData);
+                    enableContentAccess(sessionData.permissions);
+                    return;
+                } else {
+                    localStorage.removeItem('evaluaciones_session');
+                }
+            } catch (error) {
                 localStorage.removeItem('evaluaciones_session');
             }
-        } catch (error) {
-            localStorage.removeItem('evaluaciones_session');
         }
+
+        if (loginButton) loginButton.style.display = 'block';
+        showAllContentButLockLinks();
     }
 
-    // Show login button if not authenticated
-    if (loginButton) {
-        loginButton.style.display = 'block';
-    }
-    
-    // Show all content but disable links (require login to access)
-    showAllContentButLockLinks();
-}
+    // Setup login form
+    function setupLoginForm() {
+        const loginForm = document.getElementById('user-login-form');
+        if (!loginForm) return;
 
-// Setup login form
-function setupLoginForm() {
-    const loginForm = document.getElementById('user-login-form');
-
-    loginForm.addEventListener('submit', async function(e) {
+        loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
 
         const username = document.getElementById('login-username').value.trim();
@@ -1959,45 +1943,60 @@ function setupLoginForm() {
             submitBtn.disabled = false;
         }
     });
-}
+    }
 
-// Show user interface
-function showUserInterface(userData) {
-    const loginButton = document.getElementById('login-button');
-    const userInfo = document.getElementById('user-info');
-    const userName = document.getElementById('user-name');
+    // Show user interface
+    function showUserInterface(userData) {
+        const loginButton = document.getElementById('login-button');
+        const userInfo = document.getElementById('user-info');
+        const userName = document.getElementById('user-name');
 
-    if (loginButton) loginButton.style.display = 'none';
-    if (userInfo) userInfo.classList.remove('hidden');
-    if (userName) userName.textContent = userData.username;
-}
+        if (loginButton) loginButton.style.display = 'none';
+        if (userInfo) userInfo.classList.remove('hidden');
+        if (userName) userName.textContent = userData.username;
+    }
 
-// Show all content but lock links (require login)
-function showAllContentButLockLinks() {
-    const contentSections = [
-        { id: 'educacion-parvularia-section', permission: 'parvularia' },
-        { id: 'educacion-basica-section', permission: 'basica' },
-        { id: 'educacion-media-section', permission: 'media' }
-    ];
+    // Show all content but lock links (require login)
+    function showAllContentButLockLinks() {
+        const contentSections = [
+            { id: 'educacion-parvularia-section', permission: 'parvularia' },
+            { id: 'educacion-basica-section', permission: 'basica' },
+            { id: 'educacion-media-section', permission: 'media' }
+        ];
 
-    // Show all sections
-    contentSections.forEach(section => {
-        const element = document.getElementById(section.id);
-        if (element) {
-            element.style.display = 'block';
-            
-            // Lock all links in this section
-            const links = element.querySelectorAll('a[href^="/evaluaciones"]');
-            links.forEach(link => {
-                link.style.opacity = '0.6';
-                link.style.cursor = 'not-allowed';
-                link.style.pointerEvents = 'none';
+        contentSections.forEach(section => {
+            const element = document.getElementById(section.id);
+            if (element) {
+                element.style.display = 'block';
                 
-                // Add overlay to show login required
-                const parent = link.parentElement;
-                if (!parent.querySelector('.login-overlay')) {
-                    const overlay = document.createElement('div');
-                    overlay.className = 'login-overlay absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl';
+                const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+                links.forEach(link => {
+                    link.style.opacity = '0.6';
+                    link.style.cursor = 'not-allowed';
+                    link.style.pointerEvents = 'none';
+                    
+                    const parent = link.parentElement;
+                    if (!parent.querySelector('.login-overlay')) {
+                        const overlay = document.createElement('div');
+                        overlay.className = 'login-overlay absolute inset-0 bg-black/10 backdrop-blur-[1px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity rounded-xl';
+                        overlay.innerHTML = '<span class="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold text-indigo-600"><i class="fas fa-lock mr-2"></i>Inicia sesión para acceder</span>';
+                        overlay.style.position = 'absolute';
+                        overlay.style.top = '0';
+                        overlay.style.left = '0';
+                        overlay.style.right = '0';
+                        overlay.style.bottom = '0';
+                        overlay.style.zIndex = '10';
+                        
+                        parent.style.position = 'relative';
+                        parent.appendChild(overlay);
+                    }
+                });
+            }
+        });
+    }
+
+    // Enable content access for logged-in users
+    function enableContentAccess(permissions) {
                     overlay.innerHTML = '<span class="bg-white px-4 py-2 rounded-lg shadow-lg text-sm font-semibold text-indigo-600"><i class="fas fa-lock mr-2"></i>Inicia sesión para acceder</span>';
                     overlay.style.position = 'absolute';
                     overlay.style.top = '0';
@@ -2014,47 +2013,37 @@ function showAllContentButLockLinks() {
     });
 }
 
-// Enable content access for logged-in users
-function enableContentAccess(permissions) {
-    console.log('🔓 enableContentAccess called with permissions:', permissions);
-    
-    const contentSections = [
-        { id: 'educacion-parvularia-section', permission: 'parvularia' },
-        { id: 'educacion-basica-section', permission: 'basica' },
-        { id: 'educacion-media-section', permission: 'media' }
-    ];
+    // Enable content access for logged-in users
+    function enableContentAccess(permissions) {
+        const contentSections = [
+            { id: 'educacion-parvularia-section', permission: 'parvularia' },
+            { id: 'educacion-basica-section', permission: 'basica' },
+            { id: 'educacion-media-section', permission: 'media' }
+        ];
 
-    contentSections.forEach(section => {
-        const element = document.getElementById(section.id);
-        if (element) {
-            // Check if user has permission for this section
-            const hasPermission = permissions && permissions[section.permission];
-            console.log(`  Section ${section.id}: permission=${section.permission}, hasPermission=${hasPermission}`);
-            
-            if (hasPermission) {
-                // Show section and enable links
-                element.style.display = 'block';
+        contentSections.forEach(section => {
+            const element = document.getElementById(section.id);
+            if (element) {
+                const hasPermission = permissions && permissions[section.permission];
                 
-                const links = element.querySelectorAll('a[href^="/evaluaciones"]');
-                links.forEach(link => {
-                    link.style.opacity = '1';
-                    link.style.cursor = 'pointer';
-                    link.style.pointerEvents = 'auto';
-                });
-                
-                // Remove login overlays
-                const overlays = element.querySelectorAll('.login-overlay');
-                overlays.forEach(overlay => overlay.remove());
-                
-                console.log(`  ✅ ${section.id} - SHOWN`);
-            } else {
-                // Hide sections user doesn't have permission for
-                element.style.display = 'none';
-                console.log(`  ❌ ${section.id} - HIDDEN`);
+                if (hasPermission) {
+                    element.style.display = 'block';
+                    
+                    const links = element.querySelectorAll('a[href^="/evaluaciones"]');
+                    links.forEach(link => {
+                        link.style.opacity = '1';
+                        link.style.cursor = 'pointer';
+                        link.style.pointerEvents = 'auto';
+                    });
+                    
+                    const overlays = element.querySelectorAll('.login-overlay');
+                    overlays.forEach(overlay => overlay.remove());
+                } else {
+                    element.style.display = 'none';
+                }
             }
-        }
-    });
-}
+        });
+    }
 
 }); // End DOMContentLoaded
 </script>

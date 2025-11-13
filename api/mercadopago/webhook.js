@@ -66,21 +66,39 @@ module.exports = async (req, res) => {
 
     // For payment notifications, fetch payment details
     const payment = await paymentClient.get({ id: id });
-    console.log('MP payment fetched', payment.id, payment.status);
+    console.log('MP payment fetched:', {
+      id: payment.id,
+      status: payment.status,
+      payer: payment.payer,
+      metadata: payment.metadata
+    });
 
     if (payment.status === 'approved') {
       // Create user in Firebase Realtime DB
       const adminSdk = initFirebase();
       const db = adminSdk.database();
 
-      // Get payer email from payment
-      const payerEmail = (payment.payer && payment.payer.email) || (payment.transaction_details && payment.transaction_details.external_resource_url) || null;
-      const payerName = (payment.payer && (payment.payer.first_name || payment.payer.last_name)) || '';
+      // Get email from metadata first, then payer
+      const payerEmail = 
+        (payment.metadata && payment.metadata.user_email) ||
+        (payment.payer && payment.payer.email) ||
+        (payment.additional_info && payment.additional_info.payer && payment.additional_info.payer.email) ||
+        null;
+      
+      const payerName = 
+        (payment.metadata && payment.metadata.user_name) ||
+        (payment.payer && payment.payer.first_name) ||
+        '';
+
+      if (!payerEmail) {
+        console.error('No payer email found in payment');
+        return res.status(200).send('no_email');
+      }
 
       // Derive username
-      const username = payerEmail ? payerEmail.split('@')[0] + Math.floor(Math.random()*900+100) : 'user' + Date.now();
+      const username = payerEmail.split('@')[0] + Math.floor(Math.random()*9000+1000);
       // Generate password
-      const passwordPlain = Math.random().toString(36).slice(2,10);
+      const passwordPlain = Math.random().toString(36).slice(2,12);
       const passwordBase64 = Buffer.from(passwordPlain).toString('base64');
 
       const usersRef = db.ref('users');
@@ -88,27 +106,40 @@ module.exports = async (req, res) => {
       const userData = {
         username: username,
         email: payerEmail,
+        name: payerName,
         password: passwordBase64,
         role: 'cliente',
         permissions: { basica: true, media: true, parvularia: true },
         active: true,
         createdAt: new Date().toISOString(),
-        sourcePaymentId: payment.id,
-        plan: payment.order && payment.order.items && payment.order.items[0] && payment.order.items[0].title ? payment.order.items[0].title : 'plan'
+        sourcePaymentId: String(payment.id),
+        plan: 'Acceso Completo ECEP 2025'
       };
 
       await newUserRef.set(userData);
 
-      console.log('Created user', newUserRef.key, userData.username);
+      console.log('Created user:', {
+        key: newUserRef.key,
+        username: userData.username,
+        email: payerEmail
+      });
 
-      // Optionally: store credential in a dedicated node for admin retrieval
+      // Store credentials for admin retrieval
       const credsRef = db.ref('payment_created_accounts/' + newUserRef.key);
-      await credsRef.set({ username: userData.username, password: passwordPlain, email: payerEmail, createdAt: userData.createdAt });
+      await credsRef.set({ 
+        username: userData.username, 
+        password: passwordPlain, 
+        email: payerEmail, 
+        name: payerName,
+        createdAt: userData.createdAt,
+        paymentId: String(payment.id)
+      });
 
       return res.status(200).send('ok');
     }
 
     // not approved yet
+    console.log('Payment not approved, status:', payment.status);
     return res.status(200).send('ignored');
   } catch (err) {
     console.error('webhook error', err);

@@ -68,7 +68,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("blog/index.html");
   eleventyConfig.ignores.add("blog/post/index.html");
   // Ignorar archivos en carpetas que se copian tal cual
-  eleventyConfig.ignores.add("privado/**");
+  // eleventyConfig.ignores.add("privado/**"); // DESHABILITADO - necesitamos servir dashboard.html
   eleventyConfig.ignores.add("Temporales/**");
   eleventyConfig.ignores.add("netlify/**");
   // Ocultar formatos crudos en Evaluaciones (archivos de trabajo internos)

@@ -1,6 +1,9 @@
 # 🔒 Instrucciones para Actualizar Firebase Rules
 
-## URGENTE: Debes aplicar estas reglas en Firebase Console
+## ⚠️ URGENTE: Debes aplicar estas reglas AHORA en Firebase Console
+
+**Fecha última actualización:** 14 de noviembre 2025
+**Motivo:** Solucionar error PERMISSION_DENIED en /admin/login_history
 
 ### 1. Ve a Firebase Console
 - URL: https://console.firebase.google.com/

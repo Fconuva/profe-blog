@@ -71,13 +71,16 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("privado/**");
   eleventyConfig.ignores.add("Temporales/**");
   eleventyConfig.ignores.add("netlify/**");
-  // Ocultar formatos crudos en Evaluaciones (archivos de trabajo internos)
-  eleventyConfig.ignores.add("evaluaciones/**/*.pdf");
-  eleventyConfig.ignores.add("evaluaciones/**/*.txt");
-  // Copiar archivos JSON de configuración de pruebas (plan.json, etc.)
+  
+  // Copiar recursos necesarios de evaluaciones
   eleventyConfig.addPassthroughCopy("evaluaciones/**/*.json");
-  // Ignorar solo JSONs de temarios (archivos de trabajo internos)
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/*.pdf");
+  
+  // Ignorar archivos de trabajo internos (temarios, bases)
   eleventyConfig.ignores.add("evaluaciones/**/temarios/*.json");
+  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.pdf");
+  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.txt");
+  eleventyConfig.ignores.add("evaluaciones/bases/**");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

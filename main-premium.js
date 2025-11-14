@@ -17,12 +17,14 @@ class PremiumSite {
   }
 
   init() {
+    console.log('[PREMIUM] Initializing PremiumSite...');
     this.setupAnimations();
     this.setupInteractions();
     this.setupScrollEffects();
     this.setupPerformanceOptimizations();
     this.setupAccessibility();
     this.setupStarRatings();
+    console.log('[PREMIUM] Initialization complete');
   }
 
   // ===========================================
@@ -246,6 +248,7 @@ class PremiumSite {
   setupParallaxEffects() {
     let ticking = false;
     const parallaxElements = document.querySelectorAll('.parallax-slow, .parallax-medium, .parallax-fast');
+    console.log('[PARALLAX] Found elements:', parallaxElements.length);
 
     const updateParallax = () => {
       const scrolled = window.pageYOffset;
@@ -285,7 +288,11 @@ class PremiumSite {
 
   createFloatingParticles() {
     const heroSection = document.querySelector('.hero-modern');
-    if (!heroSection) return;
+    console.log('[PARTICLES] Hero section found:', heroSection);
+    if (!heroSection) {
+      console.warn('[PARTICLES] No hero-modern section found!');
+      return;
+    }
 
     const particleContainer = document.createElement('div');
     particleContainer.className = 'absolute inset-0 overflow-hidden pointer-events-none';
@@ -302,10 +309,12 @@ class PremiumSite {
     }
 
     heroSection.insertBefore(particleContainer, heroSection.firstChild);
+    console.log('[PARTICLES] Added 15 particles to hero');
   }
 
   setupStarRatings() {
     const testimonials = document.querySelectorAll('.testimonial-card');
+    console.log('[STARS] Found testimonials:', testimonials.length);
     
     testimonials.forEach(card => {
       const starsContainer = document.createElement('div');

@@ -20,6 +20,10 @@ module.exports = async (req, res) => {
 
     const host = process.env.BASE_URL || `https://${req.headers.host}`;
     const notification_url = `${host}/api/mercadopago/webhook`;
+    
+    // Generate unique reference to allow multiple payments from same email
+    const timestamp = Date.now();
+    const uniqueRef = `${email}_${timestamp}`;
 
     // Initialize client with new SDK
     const client = new MercadoPagoConfig({ 
@@ -48,10 +52,12 @@ module.exports = async (req, res) => {
       },
       auto_return: 'approved',
       notification_url,
-      external_reference: email,
+      external_reference: uniqueRef,  // Unique reference allows multiple payments
+      statement_descriptor: 'ECEP 2025',  // What appears on credit card statement
       metadata: {
         user_email: email,
-        user_name: name || ''
+        user_name: name || '',
+        payment_timestamp: timestamp
       }
     };
 

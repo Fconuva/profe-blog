@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pagos Recibidos - MercadoPago</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body class="bg-gray-100 min-h-screen py-8">
+    <div class="container mx-auto px-4">
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">
+                        <i class="fas fa-dollar-sign text-green-600 mr-3"></i>Pagos Recibidos
+                    </h1>
+                    <p class="text-gray-600 mt-2">Registro de pagos de MercadoPago</p>
+                </div>
+                <button onclick="refreshPayments()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                    <i class="fas fa-sync-alt mr-2"></i>Actualizar
+                </button>
+            </div>
+
+            <!-- Estadísticas rápidas -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <p class="text-sm text-green-600 font-medium">Total Pagos</p>
+                    <p id="totalPayments" class="text-2xl font-bold text-green-800">0</p>
+                </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <p class="text-sm text-blue-600 font-medium">Total Recaudado</p>
+                    <p id="totalAmount" class="text-2xl font-bold text-blue-800">$0</p>
+                </div>
+                <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p class="text-sm text-purple-600 font-medium">Cuentas Creadas</p>
+                    <p id="accountsCreated" class="text-2xl font-bold text-purple-800">0</p>
+                </div>
+                <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                    <p class="text-sm text-orange-600 font-medium">Pendientes</p>
+                    <p id="accountsPending" class="text-2xl font-bold text-orange-800">0</p>
+                </div>
+            </div>
+
+            <div id="loading" class="text-center py-8">
+                <i class="fas fa-spinner fa-spin text-4xl text-gray-400"></i>
+                <p class="text-gray-600 mt-4">Cargando pagos...</p>
+            </div>
+
+            <div id="paymentsContainer" class="hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gray-50 border-b-2 border-gray-200">
+                            <tr>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">ID Pago</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Nombre</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Monto</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Fecha</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Estado Cuenta</th>
+                                <th class="text-left py-3 px-4 font-semibold text-gray-700">Plan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTable" class="divide-y divide-gray-200">
+                            <!-- Payments will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="noPayments" class="hidden text-center py-12">
+                <i class="fas fa-receipt text-6xl text-gray-300 mb-4"></i>
+                <p class="text-gray-500 text-lg">No hay pagos registrados</p>
+            </div>
+        </div>
+
+        <!-- Detalle de pago seleccionado -->
+        <div id="paymentDetail" class="bg-white rounded-xl shadow-lg p-6 hidden">
+            <h3 class="text-xl font-bold text-gray-800 mb-4">
+                <i class="fas fa-info-circle text-blue-600 mr-2"></i>Detalle del Pago
+            </h3>
+            <div id="paymentDetailContent" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Load payments on page load
+        document.addEventListener('DOMContentLoaded', loadPayments);
+
+        function loadPayments() {
+            const loading = document.getElementById('loading');
+            const paymentsContainer = document.getElementById('paymentsContainer');
+            const noPayments = document.getElementById('noPayments');
+            const paymentsTable = document.getElementById('paymentsTable');
+
+            loading.classList.remove('hidden');
+            paymentsContainer.classList.add('hidden');
+            noPayments.classList.add('hidden');
+
+            database.ref('verified_payments').once('value').then((snapshot) => {
+                loading.classList.add('hidden');
+                
+                const payments = [];
+                snapshot.forEach((childSnapshot) => {
+                    const payment = childSnapshot.val();
+                    payment.id = childSnapshot.key;
+                    payments.push(payment);
+                });
+
+                if (payments.length === 0) {
+                    noPayments.classList.remove('hidden');
+                    updateStats(0, 0, 0, 0);
+                    return;
+                }
+
+                // Sort by date (most recent first)
+                payments.sort((a, b) => new Date(b.verifiedAt) - new Date(a.verifiedAt));
+
+                // Calculate stats
+                const totalPayments = payments.length;
+                const totalAmount = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+                const accountsCreated = payments.filter(p => p.accountCreated).length;
+                const accountsPending = totalPayments - accountsCreated;
+
+                updateStats(totalPayments, totalAmount, accountsCreated, accountsPending);
+
+                // Render payments table
+                paymentsTable.innerHTML = '';
+                payments.forEach(payment => {
+                    const row = document.createElement('tr');
+                    row.className = 'hover:bg-gray-50 cursor-pointer transition';
+                    row.onclick = () => showPaymentDetail(payment);
+
+                    const accountStatus = payment.accountCreated 
+                        ? '<span class="px-2 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded">✓ Creada</span>'
+                        : '<span class="px-2 py-1 bg-orange-100 text-orange-800 text-xs font-semibold rounded">⏳ Pendiente</span>';
+
+                    const date = new Date(payment.verifiedAt);
+                    const formattedDate = date.toLocaleString('es-CL', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+
+                    row.innerHTML = `
+                        <td class="py-3 px-4 font-mono text-sm text-gray-600">${payment.paymentId}</td>
+                        <td class="py-3 px-4">${payment.email || 'N/A'}</td>
+                        <td class="py-3 px-4">${payment.name || 'N/A'}</td>
+                        <td class="py-3 px-4 font-semibold text-green-600">
+                            ${formatCurrency(payment.amount, payment.currency)}
+                        </td>
+                        <td class="py-3 px-4 text-sm text-gray-600">${formattedDate}</td>
+                        <td class="py-3 px-4">${accountStatus}</td>
+                        <td class="py-3 px-4 text-sm">${payment.plan || 'N/A'}</td>
+                    `;
+
+                    paymentsTable.appendChild(row);
+                });
+
+                paymentsContainer.classList.remove('hidden');
+            }).catch(error => {
+                console.error('Error loading payments:', error);
+                loading.classList.add('hidden');
+                alert('Error al cargar pagos: ' + error.message);
+            });
+        }
+
+        function updateStats(total, amount, created, pending) {
+            document.getElementById('totalPayments').textContent = total;
+            document.getElementById('totalAmount').textContent = formatCurrency(amount, 'CLP');
+            document.getElementById('accountsCreated').textContent = created;
+            document.getElementById('accountsPending').textContent = pending;
+        }
+
+        function formatCurrency(amount, currency) {
+            if (!amount) return '$0';
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: currency || 'CLP'
+            }).format(amount);
+        }
+
+        function showPaymentDetail(payment) {
+            const detailDiv = document.getElementById('paymentDetail');
+            const contentDiv = document.getElementById('paymentDetailContent');
+
+            const date = new Date(payment.verifiedAt);
+            const formattedDate = date.toLocaleString('es-CL', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+
+            contentDiv.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="border-l-4 border-blue-500 pl-4">
+                        <p class="text-sm text-gray-600">ID de Pago</p>
+                        <p class="font-mono font-semibold text-gray-800">${payment.paymentId}</p>
+                    </div>
+                    <div class="border-l-4 border-green-500 pl-4">
+                        <p class="text-sm text-gray-600">Monto</p>
+                        <p class="font-semibold text-gray-800">${formatCurrency(payment.amount, payment.currency)}</p>
+                    </div>
+                    <div class="border-l-4 border-purple-500 pl-4">
+                        <p class="text-sm text-gray-600">Email</p>
+                        <p class="font-semibold text-gray-800">${payment.email || 'N/A'}</p>
+                    </div>
+                    <div class="border-l-4 border-orange-500 pl-4">
+                        <p class="text-sm text-gray-600">Nombre</p>
+                        <p class="font-semibold text-gray-800">${payment.name || 'N/A'}</p>
+                    </div>
+                    <div class="border-l-4 border-pink-500 pl-4">
+                        <p class="text-sm text-gray-600">Estado</p>
+                        <p class="font-semibold text-gray-800">${payment.status}</p>
+                    </div>
+                    <div class="border-l-4 border-indigo-500 pl-4">
+                        <p class="text-sm text-gray-600">Cuenta Creada</p>
+                        <p class="font-semibold text-gray-800">${payment.accountCreated ? 'Sí ✓' : 'No (Pendiente)'}</p>
+                    </div>
+                    <div class="border-l-4 border-teal-500 pl-4 md:col-span-2">
+                        <p class="text-sm text-gray-600">Fecha de Verificación</p>
+                        <p class="font-semibold text-gray-800">${formattedDate}</p>
+                    </div>
+                    <div class="border-l-4 border-yellow-500 pl-4 md:col-span-2">
+                        <p class="text-sm text-gray-600">Plan Contratado</p>
+                        <p class="font-semibold text-gray-800">${payment.plan || 'Acceso Completo ECEP 2025'}</p>
+                    </div>
+                </div>
+            `;
+
+            detailDiv.classList.remove('hidden');
+            detailDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        function refreshPayments() {
+            loadPayments();
+            document.getElementById('paymentDetail').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

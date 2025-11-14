@@ -74,7 +74,10 @@ module.exports = function(eleventyConfig) {
   // Ocultar formatos crudos en Evaluaciones (archivos de trabajo internos)
   eleventyConfig.ignores.add("evaluaciones/**/*.pdf");
   eleventyConfig.ignores.add("evaluaciones/**/*.txt");
-  eleventyConfig.ignores.add("evaluaciones/**/*.json");
+  // Copiar archivos JSON de configuración de pruebas (plan.json, etc.)
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/*.json");
+  // Ignorar solo JSONs de temarios (archivos de trabajo internos)
+  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.json");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

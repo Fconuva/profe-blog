@@ -17,7 +17,7 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
           Práctica Interactiva
         </h1>
         <p class="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
-          50 preguntas + 10 casos de estudio con retroalimentación pedagógica inteligente
+          50 preguntas + 10 casos de estudio con retroalimentación pedagógica inmediata
         </p>
         <div class="flex flex-wrap justify-center gap-4 text-sm text-gray-600">
           <div class="flex items-center gap-2">
@@ -35,9 +35,9 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
           </div>
           <div class="flex items-center gap-2">
             <svg class="w-5 h-5 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z" clip-rule="evenodd"/>
             </svg>
-            <span>Retroalimentación IA</span>
+            <span>Retroalimentación inmediata</span>
           </div>
         </div>
         <a href="/evaluaciones/educacion-basica/estudio/matematica/" class="mt-6 inline-flex items-center text-orange-600 hover:text-orange-800 font-medium transition-colors">
@@ -59,11 +59,11 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
           <div class="ml-4">
             <h3 class="text-lg font-bold text-blue-900 mb-2">📖 Instrucciones</h3>
             <ul class="text-sm text-orange-800 space-y-2">
-              <li>✓ Responde las 50 preguntas regulares + 10 casos de estudio (60 total)</li>
-              <li>✓ Revisa tus respuestas para recibir corrección inmediata</li>
-              <li>✓ Lee las explicaciones detalladas de cada pregunta</li>
-              <li>✓ Identifica patrones en tus errores para mejorar</li>
-              <li>✓ Puedes consultar la IA en cualquier pregunta, incluso si acertaste</li>
+              <li>✓ Responde las 50 preguntas regulares + 20 preguntas de casos (70 total)</li>
+              <li>✓ Recibe retroalimentación inmediata al seleccionar cada respuesta</li>
+              <li>✓ Lee las explicaciones detalladas que aparecen automáticamente</li>
+              <li>✓ Identifica patrones en tus errores para mejorar tu preparación</li>
+              <li>✓ Consulta el dossier de estudio para profundizar conceptos</li>
             </ul>
           </div>
         </div>
@@ -116,6 +116,8 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
                       value="{{ alternativa.opcion }}" 
                       class="mt-1 h-5 w-5 text-orange-600 focus:ring-orange-500 border-gray-300 cursor-pointer"
                       data-question="{{ loop.parent.loop.index }}"
+                      data-correct="{{ pregunta.respuesta_correcta }}"
+                      data-explanation="{{ pregunta.explicacion | safe }}"
                     >
                     <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
                       <strong class="text-orange-600">{{ alternativa.opcion }})</strong> {{ alternativa.texto }}
@@ -126,23 +128,6 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
 
               <!-- Feedback zona -->
               <div id="feedback-{{ loop.index }}" class="hidden"></div>
-
-              <!-- Botón IA deshabilitado temporalmente
-              <div id="ia-actions-{{ loop.index }}" class="mt-4 hidden">
-                <button 
-                  type="button" 
-                  data-q="{{ loop.index }}" 
-                  class="ia-btn inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                  <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-                  </svg>
-                  Consultar IA - Ver Explicación Completa
-                </button>
-              </div>
-
-              <div id="ia-feedback-{{ loop.index }}" class="mt-4 hidden"></div>
-              -->
 
             </div>
           {% endfor %}
@@ -160,7 +145,7 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
             </div>
 
             {% for caso in plan.casos_estudio %}
-              {% set casoNum = loop.index + 50 %}
+              {% set casoBase = (loop.index - 1) * 2 + 50 %}
               
               <!-- Contexto del caso -->
               <div class="bg-gradient-to-br from-amber-50 to-yellow-50 border-l-4 border-amber-500 rounded-xl p-8 shadow-lg mb-6">
@@ -168,39 +153,41 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
                   <span class="bg-amber-500 text-white font-bold px-4 py-2 rounded-full text-sm">
                     CASO {{ loop.index }}
                   </span>
-                  <h3 class="text-xl font-bold text-amber-900">Situación Pedagógica</h3>
+                  <h3 class="text-xl font-bold text-amber-900">{{ caso.titulo }}</h3>
                 </div>
                 <div class="bg-white rounded-lg p-6 text-gray-800 leading-relaxed border border-amber-200">
                   {{ caso.contexto | safe }}
                 </div>
               </div>
 
-              <!-- Pregunta única del caso -->
-              <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-amber-400 mb-8" id="pregunta-{{ casoNum }}">
+              <!-- Pregunta 1 del caso -->
+              <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-amber-400 mb-8" id="pregunta-{{ casoBase + 1 }}">
                 <div class="flex items-start justify-between mb-4">
                   <div class="flex items-center gap-3">
                     <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white font-bold rounded-full flex items-center justify-center text-lg shadow-md">
-                      {{ casoNum }}
+                      {{ casoBase + 1 }}
                     </span>
                     <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
-                      Caso de Estudio
+                      Caso {{ loop.index }} - Parte 1
                     </span>
                   </div>
                 </div>
 
                 <p class="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">
-                  {{ caso.enunciado | safe }}
+                  {{ caso.pregunta_01.enunciado | safe }}
                 </p>
 
                 <div class="space-y-3 mb-6">
-                  {% for alt in caso.alternativas %}
+                  {% for alt in caso.pregunta_01.alternativas %}
                     <label class="flex items-start p-4 border-2 border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all duration-200 group">
                       <input 
                         type="radio" 
-                        name="pregunta-{{ casoNum }}" 
+                        name="pregunta-{{ casoBase + 1 }}" 
                         value="{{ alt.opcion }}" 
                         class="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-gray-300 cursor-pointer"
-                        data-question="{{ casoNum }}"
+                        data-question="{{ casoBase + 1 }}"
+                        data-correct="{{ caso.pregunta_01.respuesta_correcta }}"
+                        data-explanation="{{ caso.pregunta_01.explicacion | safe }}"
                       >
                       <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
                         <strong class="text-amber-600">{{ alt.opcion }})</strong> {{ alt.texto }}
@@ -209,20 +196,46 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
                   {% endfor %}
                 </div>
 
-                <div id="feedback-{{ casoNum }}" class="hidden"></div>
-                <div id="ia-actions-{{ casoNum }}" class="mt-4 hidden">
-                  <button 
-                    type="button" 
-                    data-q="{{ casoNum }}" 
-                    class="ia-btn inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm font-semibold py-3 px-5 rounded-lg shadow-md hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                  >
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                      <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-                    </svg>
-                    Consultar IA - Ver Explicación Completa
-                  </button>
+                <div id="feedback-{{ casoBase + 1 }}" class="hidden"></div>
+              </div>
+
+              <!-- Pregunta 2 del caso -->
+              <div class="bg-white rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 p-6 md:p-8 border-l-4 border-amber-400 mb-8" id="pregunta-{{ casoBase + 2 }}">
+                <div class="flex items-start justify-between mb-4">
+                  <div class="flex items-center gap-3">
+                    <span class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-amber-500 to-yellow-600 text-white font-bold rounded-full flex items-center justify-center text-lg shadow-md">
+                      {{ casoBase + 2 }}
+                    </span>
+                    <span class="inline-block bg-amber-100 text-amber-800 text-xs font-semibold px-3 py-1 rounded-full">
+                      Caso {{ loop.index }} - Parte 2
+                    </span>
+                  </div>
                 </div>
-                <div id="ia-feedback-{{ casoNum }}" class="mt-4 hidden"></div>
+
+                <p class="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">
+                  {{ caso.pregunta_02.enunciado | safe }}
+                </p>
+
+                <div class="space-y-3 mb-6">
+                  {% for alt in caso.pregunta_02.alternativas %}
+                    <label class="flex items-start p-4 border-2 border-gray-200 rounded-xl hover:border-amber-400 hover:bg-amber-50 cursor-pointer transition-all duration-200 group">
+                      <input 
+                        type="radio" 
+                        name="pregunta-{{ casoBase + 2 }}" 
+                        value="{{ alt.opcion }}" 
+                        class="mt-1 h-5 w-5 text-amber-600 focus:ring-amber-500 border-gray-300 cursor-pointer"
+                        data-question="{{ casoBase + 2 }}"
+                        data-correct="{{ caso.pregunta_02.respuesta_correcta }}"
+                        data-explanation="{{ caso.pregunta_02.explicacion | safe }}"
+                      >
+                      <span class="ml-4 text-gray-800 group-hover:text-gray-900 font-medium">
+                        <strong class="text-amber-600">{{ alt.opcion }})</strong> {{ alt.texto }}
+                      </span>
+                    </label>
+                  {% endfor %}
+                </div>
+
+                <div id="feedback-{{ casoBase + 2 }}" class="hidden"></div>
               </div>
             {% endfor %}
           {% endif %}
@@ -260,7 +273,7 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
             </div>
             <div class="mt-8 pt-6 border-t border-green-300">
               <p class="text-sm text-gray-600 mb-4">
-                💡 Usa los botones <strong>"Consultar IA"</strong> para profundizar en las preguntas que fallaste
+                💡 Revisa las explicaciones detalladas de cada pregunta para mejorar tu preparación
               </p>
             </div>
           </div>
@@ -280,9 +293,64 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
   const totalCasos = plan.casos_estudio ? plan.casos_estudio.length * 2 : 0;
   const totalPreguntas = totalPreguntasRegulares + totalCasos;
 
-  // Actualizar progreso en tiempo real
+  // Función para mostrar feedback inmediato
+  function mostrarFeedbackInmediato(radio) {
+    const questionNum = radio.getAttribute('data-question');
+    const respuestaCorrecta = radio.getAttribute('data-correct');
+    const explicacion = radio.getAttribute('data-explanation');
+    const respuestaUsuario = radio.value;
+    const feedbackEl = document.getElementById(`feedback-${questionNum}`);
+    
+    if (!feedbackEl) return;
+    
+    feedbackEl.classList.remove('hidden');
+    
+    const esCorrecta = respuestaUsuario === respuestaCorrecta;
+    
+    if (esCorrecta) {
+      feedbackEl.innerHTML = `
+        <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
+          <div class="flex items-start">
+            <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+              <p class="font-bold text-green-900 text-lg mb-2">¡Correcto! ✅</p>
+              <p class="text-green-800 leading-relaxed">${explicacion}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      feedbackEl.innerHTML = `
+        <div class="bg-gradient-to-r from-red-100 to-pink-100 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
+          <div class="flex items-start">
+            <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+            </svg>
+            <div>
+              <p class="font-bold text-red-900 text-lg mb-2">Incorrecto ❌</p>
+              <p class="text-red-800 mb-2">
+                Tu respuesta: <strong class="bg-red-200 px-2 py-1 rounded">${respuestaUsuario}</strong>
+              </p>
+              <p class="text-red-800 mb-3">
+                Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>
+              </p>
+              <p class="text-red-900 leading-relaxed font-medium">${explicacion}</p>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+    
+    // Scroll suave al feedback
+    feedbackEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // Actualizar progreso y mostrar feedback inmediato
   document.querySelectorAll('input[type="radio"]').forEach(radio => {
-    radio.addEventListener('change', () => {
+    radio.addEventListener('change', (e) => {
+      // Actualizar barra de progreso
       const respondidas = new Set();
       document.querySelectorAll('input[type="radio"]:checked').forEach(r => {
         respondidas.add(r.getAttribute('data-question'));
@@ -291,105 +359,44 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
       const percentage = Math.round((count / totalPreguntas) * 100);
       progressBar.style.width = `${percentage}%`;
       progressText.textContent = `${count}/${totalPreguntas} respondidas`;
+      
+      // Mostrar feedback inmediato
+      mostrarFeedbackInmediato(e.target);
     });
   });
 
-  // Revisión del formulario
+  // Revisión del formulario (solo para calcular puntaje final)
   quizForm.addEventListener('submit', function(event) {
     event.preventDefault();
     
-    // Obtener todas las respuestas del formulario
     const formData = new FormData(quizForm);
-    
     let puntaje = 0;
 
-    // Función helper para procesar feedback
-    function procesarRespuesta(preguntaIndex, respuestaCorrecta, explicacion) {
-      const feedbackEl = document.getElementById(`feedback-${preguntaIndex}`);
-      const iaActionsEl = document.getElementById(`ia-actions-${preguntaIndex}`);
-      const respuestaUsuario = formData.get(`pregunta-${preguntaIndex}`);
-      
-      if (!feedbackEl || !iaActionsEl) return 0;
-      
-      feedbackEl.classList.remove('hidden');
-      iaActionsEl.classList.remove('hidden');
-      
-      if (respuestaUsuario) {
-        const esCorrecta = respuestaUsuario === respuestaCorrecta;
-        if (esCorrecta) {
-          feedbackEl.innerHTML = `
-            <div class="bg-gradient-to-r from-green-100 to-emerald-100 border-l-4 border-green-500 p-5 rounded-lg shadow-sm">
-              <div class="flex items-start">
-                <svg class="w-6 h-6 text-green-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                  <p class="font-bold text-green-900 text-lg mb-2">¡Correcto! ✅</p>
-                  <p class="text-green-800 leading-relaxed">${explicacion}</p>
-                </div>
-              </div>
-            </div>
-          `;
-          return 1;
-        } else {
-          feedbackEl.innerHTML = `
-            <div class="bg-gradient-to-r from-red-100 to-pink-100 border-l-4 border-red-500 p-5 rounded-lg shadow-sm">
-              <div class="flex items-start">
-                <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-                </svg>
-                <div>
-                  <p class="font-bold text-red-900 text-lg mb-2">Incorrecto ❌</p>
-                  <p class="text-red-800 mb-2">
-                    Tu respuesta: <strong class="bg-red-200 px-2 py-1 rounded">${respuestaUsuario}</strong>
-                  </p>
-                  <p class="text-red-800 mb-3">
-                    Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>
-                  </p>
-                  <p class="text-red-900 leading-relaxed font-medium">${explicacion}</p>
-                </div>
-              </div>
-            </div>
-          `;
-          return 0;
-        }
-      } else {
-        feedbackEl.innerHTML = `
-          <div class="bg-gradient-to-r from-yellow-100 to-amber-100 border-l-4 border-yellow-500 p-5 rounded-lg shadow-sm">
-            <div class="flex items-start">
-              <svg class="w-6 h-6 text-yellow-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
-              </svg>
-              <div>
-                <p class="font-bold text-yellow-900 text-lg mb-2">No respondida ⚠️</p>
-                <p class="text-yellow-800">
-                  Respuesta correcta: <strong class="bg-green-200 px-2 py-1 rounded">${respuestaCorrecta}</strong>
-                </p>
-              </div>
-            </div>
-          </div>
-        `;
-        return 0;
-      }
-    }
-
-    // Procesar preguntas regulares (1-50)
+    // Contar preguntas regulares correctas
     plan.exam.preguntas.forEach((pregunta, index) => {
       const preguntaIndex = index + 1;
-      puntaje += procesarRespuesta(preguntaIndex, pregunta.respuesta_correcta, pregunta.explicacion);
+      const respuestaUsuario = formData.get(`pregunta-${preguntaIndex}`);
+      if (respuestaUsuario === pregunta.respuesta_correcta) {
+        puntaje++;
+      }
     });
 
-    // Procesar casos de estudio (51+)
+    // Contar casos de estudio correctos
     if (plan.casos_estudio) {
       plan.casos_estudio.forEach((caso, casoIndex) => {
-        const baseNum = 51 + casoIndex;
+        const baseNum = (casoIndex * 2) + 51;
         
-        // Pregunta del caso (cada caso tiene 1 pregunta en matemática)
-        puntaje += procesarRespuesta(
-          baseNum, 
-          caso.respuesta_correcta, 
-          caso.explicacion
-        );
+        // Pregunta 1 del caso
+        const respuesta1 = formData.get(`pregunta-${baseNum}`);
+        if (respuesta1 === caso.pregunta_01.respuesta_correcta) {
+          puntaje++;
+        }
+        
+        // Pregunta 2 del caso
+        const respuesta2 = formData.get(`pregunta-${baseNum + 1}`);
+        if (respuesta2 === caso.pregunta_02.respuesta_correcta) {
+          puntaje++;
+        }
       });
     }
 
@@ -402,121 +409,5 @@ description: "Responde las 50 preguntas de la prueba 66-sc-m y prepárate con re
     
     // Scroll suave al resultado
     resultadoFinalEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
-
-  // Delegación de eventos para botones IA
-  document.addEventListener('click', async (ev) => {
-    const btn = ev.target.closest('.ia-btn');
-    if (!btn) return;
-    
-    // Prevenir múltiples clics
-    if (btn.disabled) return;
-    btn.disabled = true;
-    
-    const qIndex = Number(btn.getAttribute('data-q'));
-    const pregunta = plan.exam.preguntas[qIndex - 1];
-    const selected = document.querySelector(`input[name="pregunta-${qIndex}"]:checked`);
-    const iaBox = document.getElementById(`ia-feedback-${qIndex}`);
-    
-    iaBox.classList.remove('hidden');
-    iaBox.innerHTML = `
-      <div class="bg-gradient-to-r from-blue-100 to-indigo-100 border-l-4 border-blue-500 p-6 rounded-lg shadow-md animate-pulse">
-        <div class="flex items-center">
-          <svg class="animate-spin h-6 w-6 text-blue-600 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-          </svg>
-          <p class="text-blue-900 font-semibold">🤖 Generando explicación pedagógica con IA...</p>
-        </div>
-      </div>
-    `;
-
-    // Construir contexto completo de la pregunta
-    const tema = (pregunta.temas_relacionados && pregunta.temas_relacionados[0]) || 'Matemática';
-    const respuestaCorrecta = pregunta.respuesta_correcta;
-    const alternativas = pregunta.alternativas.map(alt => `${alt.opcion}) ${alt.texto}`).join('\n');
-    
-    const preguntaCompleta = `PREGUNTA ${qIndex}: ${pregunta.enunciado}
-
-ALTERNATIVAS:
-${alternativas}
-
-RESPUESTA CORRECTA: ${respuestaCorrecta}
-
-EXPLICACIÓN OFICIAL: ${pregunta.explicacion}`;
-
-    try {
-      const resp = await fetch('/api/groq-feedback', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          pregunta: preguntaCompleta, 
-          respuestaDocente: selected ? selected.value : 'No respondida', 
-          tema,
-          tipo: 'explicacion_completa_matematica',
-          metadata: {
-            codigo_prueba: plan.metadata.codigo_prueba,
-            nombre_prueba: plan.metadata.nombre
-          }
-        })
-      });
-      
-      const data = await resp.json();
-      
-      if (!resp.ok) throw new Error(data.error || 'Error al conectar con la IA');
-      
-      const text = data.feedback || 'No se recibió retroalimentación.';
-      
-      // Renderizar markdown mejorado
-      let html = text
-        .replace(/\n\n/g, '</p><p class="mt-4">')
-        .replace(/### (.+)/g, '<h4 class="text-lg font-bold text-indigo-800 mt-6 mb-3 border-b border-indigo-200 pb-2">$1</h4>')
-        .replace(/## (.+)/g, '<h3 class="text-xl font-bold text-indigo-900 mt-7 mb-4 border-b-2 border-indigo-300 pb-2">$1</h3>')
-        .replace(/\*\*(.+?)\*\*/g, '<strong class="text-gray-900 font-bold">$1</strong>')
-        .replace(/\*(.+?)\*/g, '<em class="text-gray-800">$1</em>')
-        .replace(/^- (.+)$/gm, '<li class="ml-6 mb-2 text-gray-800">$1</li>')
-        .replace(/^(\d+)\. (.+)$/gm, '<li class="ml-6 mb-2 text-gray-800"><strong class="text-indigo-600">$1.</strong> $2</li>')
-        .replace(/> (.+)/g, '<blockquote class="border-l-4 border-indigo-400 pl-4 py-3 my-4 italic text-gray-700 bg-indigo-50 rounded">$1</blockquote>')
-        .replace(/`(.+?)`/g, '<code class="bg-gray-200 text-gray-900 px-2 py-1 rounded text-sm font-mono">$1</code>');
-      
-      iaBox.innerHTML = `
-        <div class="bg-gradient-to-br from-white to-indigo-50 border-2 border-indigo-300 rounded-xl shadow-lg overflow-hidden">
-          <div class="bg-gradient-to-r from-indigo-600 to-blue-600 px-6 py-4">
-            <div class="flex items-center justify-between">
-              <h4 class="font-bold text-white text-lg flex items-center gap-2">
-                <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"/>
-                </svg>
-                Explicación IA Pedagógica
-              </h4>
-              <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">
-                ✓ Correcta: ${respuestaCorrecta}
-              </span>
-            </div>
-          </div>
-          <div class="px-6 py-6">
-            <div class="prose prose-indigo max-w-none text-gray-800 leading-relaxed">
-              <p class="mt-0">${html}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    } catch (e) {
-      iaBox.innerHTML = `
-        <div class="bg-gradient-to-r from-red-100 to-pink-100 border-l-4 border-red-500 p-5 rounded-lg shadow-md">
-          <div class="flex items-start">
-            <svg class="w-6 h-6 text-red-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
-            </svg>
-            <div>
-              <p class="font-bold text-red-900 text-lg mb-2">Error al consultar IA</p>
-              <p class="text-red-800 text-sm">${e.message || 'No se pudo conectar con el servicio de IA. Intenta nuevamente.'}</p>
-            </div>
-          </div>
-        </div>
-      `;
-    } finally {
-      btn.disabled = false;
-    }
   });
 </script>

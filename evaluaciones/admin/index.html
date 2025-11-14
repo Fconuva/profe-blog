@@ -275,6 +275,9 @@
                 <a href="#privado" class="nav-link" onclick="showSection('privado')">
                     <i class="fas fa-lock mr-2"></i>Área Privada
                 </a>
+                <a href="#pagos" class="nav-link" onclick="showSection('pagos')">
+                    <i class="fas fa-dollar-sign mr-2"></i>Pagos
+                </a>
                 <a href="#settings" class="nav-link" onclick="showSection('settings')">
                     <i class="fas fa-cogs mr-2"></i>Configuración
                 </a>
@@ -638,6 +641,102 @@
                         <p id="privadoWeekAccess" class="text-2xl font-bold text-orange-800">0</p>
                     </div>
                 </div>
+            </div>
+        </section>
+
+        <!-- Pagos Section -->
+        <section id="pagos-section" class="section hidden">
+            <h2 class="text-3xl font-bold text-gray-800 mb-6">
+                <i class="fas fa-dollar-sign mr-3 text-indigo-600"></i>Pagos MercadoPago
+            </h2>
+
+            <!-- Estadísticas de Pagos -->
+            <div class="grid md:grid-cols-4 gap-6 mb-6">
+                <div class="card p-6 bg-gradient-to-br from-blue-50 to-blue-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-blue-600 mb-1">Total Pagos</p>
+                            <p id="totalPayments" class="text-3xl font-bold text-blue-800">0</p>
+                        </div>
+                        <i class="fas fa-shopping-cart text-4xl text-blue-300"></i>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-gradient-to-br from-green-50 to-green-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-green-600 mb-1">Total Recaudado</p>
+                            <p id="totalAmount" class="text-3xl font-bold text-green-800">$0</p>
+                        </div>
+                        <i class="fas fa-dollar-sign text-4xl text-green-300"></i>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-gradient-to-br from-purple-50 to-purple-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-purple-600 mb-1">Cuentas Creadas</p>
+                            <p id="accountsCreated" class="text-3xl font-bold text-purple-800">0</p>
+                        </div>
+                        <i class="fas fa-user-check text-4xl text-purple-300"></i>
+                    </div>
+                </div>
+
+                <div class="card p-6 bg-gradient-to-br from-orange-50 to-orange-100">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-orange-600 mb-1">Cuentas Pendientes</p>
+                            <p id="accountsPending" class="text-3xl font-bold text-orange-800">0</p>
+                        </div>
+                        <i class="fas fa-clock text-4xl text-orange-300"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Pagos -->
+            <div class="card p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-semibold">
+                        <i class="fas fa-list mr-2 text-indigo-600"></i>Listado de Pagos
+                    </h3>
+                    <button onclick="refreshPayments()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all">
+                        <i class="fas fa-sync-alt mr-2"></i>Actualizar
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="min-w-full">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Payment ID</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fecha</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Estado Cuenta</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentsTableBody" class="divide-y divide-gray-200">
+                            <tr>
+                                <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                                    <i class="fas fa-spinner fa-spin mr-2"></i>Cargando pagos...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Detalle de Pago (Modal interno) -->
+            <div id="paymentDetailSection" class="card p-6 mt-6 hidden">
+                <h3 class="text-xl font-semibold mb-4">
+                    <i class="fas fa-info-circle mr-2 text-blue-600"></i>Detalle del Pago
+                </h3>
+                <div id="paymentDetailContent" class="space-y-3"></div>
+                <button onclick="hidePaymentDetail()" class="mt-4 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600">
+                    <i class="fas fa-times mr-2"></i>Cerrar
+                </button>
             </div>
         </section>
     </main>
@@ -1756,16 +1855,176 @@
             return `Hace ${diffDays}d`;
         }
 
-        // Actualizar función showSection para cargar datos de privado
+        // Actualizar función showSection para cargar datos de privado y pagos
         const originalShowSection = showSection;
         showSection = function(sectionName) {
             originalShowSection.call(this, sectionName);
             if (sectionName === 'privado') {
                 loadPrivadoSection();
+            } else if (sectionName === 'pagos') {
+                loadPayments();
             }
         };
 
+        // ============ FUNCIONES DE PAGOS ============
+        
+        let paymentsData = [];
+
+        async function loadPayments() {
+            try {
+                const snapshot = await database.ref('verified_payments').once('value');
+                const payments = snapshot.val();
+                
+                if (!payments) {
+                    paymentsData = [];
+                    updatePaymentStats();
+                    renderPaymentsTable();
+                    return;
+                }
+
+                // Convertir a array y ordenar por fecha (más reciente primero)
+                paymentsData = Object.values(payments).sort((a, b) => {
+                    return new Date(b.verifiedAt) - new Date(a.verifiedAt);
+                });
+
+                updatePaymentStats();
+                renderPaymentsTable();
+            } catch (error) {
+                console.error('Error cargando pagos:', error);
+                showNotification('Error al cargar pagos', 'error');
+            }
+        }
+
+        function updatePaymentStats() {
+            const totalPayments = paymentsData.length;
+            const totalAmount = paymentsData.reduce((sum, p) => sum + (p.amount || 0), 0);
+            const accountsCreated = paymentsData.filter(p => p.accountCreated === true).length;
+            const accountsPending = paymentsData.filter(p => p.accountCreated === false).length;
+
+            document.getElementById('totalPayments').textContent = totalPayments;
+            document.getElementById('totalAmount').textContent = formatCurrency(totalAmount);
+            document.getElementById('accountsCreated').textContent = accountsCreated;
+            document.getElementById('accountsPending').textContent = accountsPending;
+        }
+
+        function renderPaymentsTable() {
+            const tbody = document.getElementById('paymentsTableBody');
+            
+            if (paymentsData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="px-6 py-4 text-center text-gray-500">
+                            <i class="fas fa-inbox mr-2"></i>No hay pagos registrados
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = paymentsData.map(payment => {
+                const accountStatus = payment.accountCreated 
+                    ? '<span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs"><i class="fas fa-check mr-1"></i>Creada</span>'
+                    : '<span class="px-2 py-1 bg-orange-100 text-orange-800 rounded text-xs"><i class="fas fa-clock mr-1"></i>Pendiente</span>';
+                
+                const date = new Date(payment.verifiedAt);
+                const formattedDate = date.toLocaleDateString('es-CL', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
+                return `
+                    <tr class="hover:bg-gray-50 cursor-pointer" onclick="showPaymentDetail('${payment.paymentId}')">
+                        <td class="px-6 py-4 text-sm font-mono text-blue-600">${payment.paymentId}</td>
+                        <td class="px-6 py-4 text-sm">${payment.email || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm">${payment.name || 'N/A'}</td>
+                        <td class="px-6 py-4 text-sm font-semibold">${formatCurrency(payment.amount)}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${formattedDate}</td>
+                        <td class="px-6 py-4 text-sm">${accountStatus}</td>
+                        <td class="px-6 py-4 text-sm text-gray-600">${payment.plan || 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('es-CL', {
+                style: 'currency',
+                currency: 'CLP',
+                minimumFractionDigits: 0
+            }).format(amount || 0);
+        }
+
+        function showPaymentDetail(paymentId) {
+            const payment = paymentsData.find(p => p.paymentId === paymentId);
+            if (!payment) return;
+
+            const detailSection = document.getElementById('paymentDetailSection');
+            const detailContent = document.getElementById('paymentDetailContent');
+
+            detailContent.innerHTML = `
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Payment ID:</span>
+                            <span class="font-mono text-sm text-blue-600">${payment.paymentId}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Email:</span>
+                            <span class="text-sm">${payment.email || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Nombre:</span>
+                            <span class="text-sm">${payment.name || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Monto:</span>
+                            <span class="text-lg font-bold text-green-600">${formatCurrency(payment.amount)}</span>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Estado:</span>
+                            <span class="text-sm">${payment.status || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Moneda:</span>
+                            <span class="text-sm">${payment.currency || 'CLP'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Fecha Verificación:</span>
+                            <span class="text-sm">${new Date(payment.verifiedAt).toLocaleString('es-CL')}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Plan:</span>
+                            <span class="text-sm">${payment.plan || 'N/A'}</span>
+                        </div>
+                        <div class="flex justify-between border-b pb-2">
+                            <span class="font-semibold text-gray-600">Cuenta Creada:</span>
+                            <span class="text-sm ${payment.accountCreated ? 'text-green-600' : 'text-orange-600'}">
+                                ${payment.accountCreated ? '✅ Sí' : '⏳ Pendiente'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            detailSection.classList.remove('hidden');
+        }
+
+        function hidePaymentDetail() {
+            document.getElementById('paymentDetailSection').classList.add('hidden');
+        }
+
+        function refreshPayments() {
+            loadPayments();
+            showNotification('Pagos actualizados', 'success');
+        }
+
     </script>
+
 </body>
 </html></content>
 <parameter name="filePath">c:\Users\fconu\OneDrive\Escritorio\PAGINA WEB\profefranciscopancho-blog\evaluaciones\admin\index.html

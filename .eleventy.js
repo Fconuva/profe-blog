@@ -71,16 +71,20 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("privado/**");
   eleventyConfig.ignores.add("Temporales/**");
   eleventyConfig.ignores.add("netlify/**");
+  // Ocultar formatos crudos en Evaluaciones (archivos de trabajo internos)
+  eleventyConfig.ignores.add("evaluaciones/**/*.pdf");
+  eleventyConfig.ignores.add("evaluaciones/**/*.txt");
+  // eleventyConfig.ignores.add("evaluaciones/**/*.json"); // DESHABILITADO - necesitamos copiar plan.json
   
-  // Copiar recursos necesarios de evaluaciones
-  eleventyConfig.addPassthroughCopy("evaluaciones/**/*.json");
-  eleventyConfig.addPassthroughCopy("evaluaciones/**/*.pdf");
-  
-  // Ignorar archivos de trabajo internos (temarios, bases)
-  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.json");
-  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.pdf");
-  eleventyConfig.ignores.add("evaluaciones/**/temarios/*.txt");
-  eleventyConfig.ignores.add("evaluaciones/bases/**");
+  // Copiar archivos plan.json necesarios para las pruebas interactivas
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/63-sc-l/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/66-sc-m/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/71-sc-cs/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/basica-generalista/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/educacion-fisica-media/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/67-cm-m/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-parvularia/pruebas/parv-nt/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-especial/pruebas/plan.json");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

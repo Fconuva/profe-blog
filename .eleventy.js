@@ -14,6 +14,7 @@ try {
 
 module.exports = function(eleventyConfig) {
   // Copia solo recursos estáticos (evitar copiar archivos HTML que Eleventy procesa)
+  // Force cache bust for Phase 2 deployment (Nov 14, 2025)
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addPassthroughCopy("js");
   eleventyConfig.addPassthroughCopy("main.js");

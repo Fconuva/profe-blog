@@ -22,6 +22,7 @@ class PremiumSite {
     this.setupScrollEffects();
     this.setupPerformanceOptimizations();
     this.setupAccessibility();
+    this.setupStarRatings();
   }
 
   // ===========================================
@@ -244,13 +245,28 @@ class PremiumSite {
 
   setupParallaxEffects() {
     let ticking = false;
+    const parallaxElements = document.querySelectorAll('.parallax-slow, .parallax-medium, .parallax-fast');
 
     const updateParallax = () => {
       const scrolled = window.pageYOffset;
-      const rate = scrolled * -0.5;
 
-      document.querySelectorAll('.parallax-element').forEach(element => {
-        element.style.transform = `translateY(${rate}px)`;
+      parallaxElements.forEach(element => {
+        const rect = element.getBoundingClientRect();
+        const elementTop = rect.top + scrolled;
+        const elementVisible = scrolled + window.innerHeight > elementTop && scrolled < elementTop + rect.height;
+
+        if (elementVisible) {
+          let rate = 0;
+          if (element.classList.contains('parallax-slow')) {
+            rate = (scrolled - elementTop) * 0.15;
+          } else if (element.classList.contains('parallax-medium')) {
+            rate = (scrolled - elementTop) * 0.25;
+          } else if (element.classList.contains('parallax-fast')) {
+            rate = (scrolled - elementTop) * 0.35;
+          }
+          
+          element.style.transform = `translateY(${rate}px)`;
+        }
       });
 
       ticking = false;
@@ -262,6 +278,66 @@ class PremiumSite {
         ticking = true;
       }
     });
+
+    // Crear partículas flotantes
+    this.createFloatingParticles();
+  }
+
+  createFloatingParticles() {
+    const heroSection = document.querySelector('.hero-modern');
+    if (!heroSection) return;
+
+    const particleContainer = document.createElement('div');
+    particleContainer.className = 'absolute inset-0 overflow-hidden pointer-events-none';
+    particleContainer.style.zIndex = '1';
+
+    // Crear 15 partículas con posiciones aleatorias
+    for (let i = 0; i < 15; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'floating-particle';
+      particle.style.left = `${Math.random() * 100}%`;
+      particle.style.top = `${Math.random() * 100}%`;
+      particle.style.animationDelay = `${Math.random() * 5}s`;
+      particleContainer.appendChild(particle);
+    }
+
+    heroSection.insertBefore(particleContainer, heroSection.firstChild);
+  }
+
+  setupStarRatings() {
+    const testimonials = document.querySelectorAll('.testimonial-card');
+    
+    testimonials.forEach(card => {
+      const starsContainer = document.createElement('div');
+      starsContainer.className = 'star-rating flex justify-center mb-4';
+      
+      for (let i = 0; i < 5; i++) {
+        const star = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        star.setAttribute('class', 'star-icon');
+        star.setAttribute('fill', 'currentColor');
+        star.setAttribute('viewBox', '0 0 20 20');
+        star.innerHTML = '<path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>';
+        starsContainer.appendChild(star);
+      }
+      
+      const firstParagraph = card.querySelector('blockquote');
+      if (firstParagraph) {
+        firstParagraph.parentNode.insertBefore(starsContainer, firstParagraph);
+      }
+    });
+
+    // Animar estrellas cuando entran en viewport
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.animated) {
+          const stars = entry.target.querySelectorAll('.star-icon');
+          stars.forEach(star => star.classList.add('filled'));
+          entry.target.dataset.animated = 'true';
+        }
+      });
+    }, { threshold: 0.5 });
+
+    testimonials.forEach(card => observer.observe(card));
   }
 
   setupGestureSupport() {

@@ -68,6 +68,11 @@
       ".read": true,
       ".write": true,
       ".indexOn": ["userId", "deviceId", "lastAccess"]
+    },
+    "verified_payments": {
+      ".read": true,
+      ".write": true,
+      ".indexOn": ["email", "paymentId", "verifiedAt", "accountCreated"]
     }
   }
 }

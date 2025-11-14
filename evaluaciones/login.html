@@ -157,6 +157,10 @@
             <a href="/evaluaciones/" class="back-link">
                 <i class="fas fa-arrow-left mr-2"></i>Volver al inicio
             </a>
+            <br>
+            <a href="#" onclick="event.preventDefault(); localStorage.removeItem('evaluaciones_session'); alert('Sesión limpiada. Intenta iniciar sesión nuevamente.'); location.reload();" class="register-link text-sm">
+                <i class="fas fa-broom mr-1"></i>¿Problemas? Limpiar sesión
+            </a>
         </div>
     </div>
 
@@ -421,6 +425,14 @@
             if (session) {
                 try {
                     const sessionData = JSON.parse(session);
+                    
+                    // Validate session has required fields
+                    if (!sessionData.userId || !sessionData.username || !sessionData.loginTime) {
+                        console.warn('Sesión inválida, eliminando...');
+                        localStorage.removeItem('evaluaciones_session');
+                        return;
+                    }
+                    
                     // Check if session is still valid (24 hours)
                     const loginTime = new Date(sessionData.loginTime);
                     const now = new Date();
@@ -428,12 +440,15 @@
 
                     if (hoursDiff < 24) {
                         // Already logged in, redirect to evaluaciones
+                        console.log('Sesión válida detectada, redirigiendo...');
                         window.location.href = '/evaluaciones/';
                         return;
                     } else {
+                        console.log('Sesión expirada, eliminando...');
                         localStorage.removeItem('evaluaciones_session');
                     }
                 } catch (error) {
+                    console.error('Error al parsear sesión:', error);
                     localStorage.removeItem('evaluaciones_session');
                 }
             }

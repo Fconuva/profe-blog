@@ -255,7 +255,7 @@
     </div>
 
     <script>
-        // Check login status
+        // Check login status and apply permissions
         function checkLogin() {
             const session = localStorage.getItem('evaluaciones_session');
             if (session) {
@@ -271,11 +271,45 @@
                         if (ctaSection) {
                             ctaSection.style.display = 'none';
                         }
+                        
+                        // Content is accessible - no need to lock
+                        return;
                     }
                 } catch (e) {
                     localStorage.removeItem('evaluaciones_session');
                 }
             }
+            
+            // No login - lock all content
+            lockAllContent();
+        }
+
+        function lockAllContent() {
+            // Find all section cards
+            const sections = document.querySelectorAll('.grid.md\\:grid-cols-3.gap-8.mb-16 > div');
+            
+            sections.forEach(section => {
+                // Make section semi-transparent
+                section.style.opacity = '0.7';
+                section.style.position = 'relative';
+                
+                // Disable all links
+                const links = section.querySelectorAll('a');
+                links.forEach(link => {
+                    link.style.pointerEvents = 'none';
+                    link.style.cursor = 'not-allowed';
+                });
+                
+                // Add overlay
+                const overlay = document.createElement('div');
+                overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.05);border-radius:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;';
+                overlay.innerHTML = '<div style="background:white;padding:1rem 2rem;border-radius:0.5rem;box-shadow:0 4px 6px rgba(0,0,0,0.1);"><i class="fas fa-lock text-indigo-600 mr-2"></i><span class="font-semibold text-gray-800">Inicia sesión para acceder</span></div>';
+                overlay.onclick = function() {
+                    window.location.href = '/evaluaciones/login.html';
+                };
+                
+                section.appendChild(overlay);
+            });
         }
 
         function logout() {

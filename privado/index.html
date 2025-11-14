@@ -82,7 +82,7 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-user text-gray-400"></i>
                     </span>
-                    <input id="username" name="username" type="text" required
+                    <input id="username" name="username" type="text" required autocomplete="username"
                         class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         placeholder="Usuario">
                 </div>
@@ -94,7 +94,7 @@
                     <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                         <i class="fas fa-lock text-gray-400"></i>
                     </span>
-                    <input id="password" name="password" type="password" required
+                    <input id="password" name="password" type="password" required autocomplete="current-password"
                         class="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                         placeholder="Contraseña">
                     <button type="button" id="toggle-password" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500">
@@ -240,8 +240,14 @@
                                '3. Agregar dominios autorizados en Settings\n' +
                                '4. Verificar que la API Key no tenga restricciones que bloqueen el dominio\n\n' +
                                'Contacta al administrador.', 'error');
-                } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    showMessage('❌ Usuario o contraseña incorrectos.', 'error');
+                } else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-login-credentials' || error.code === 'auth/invalid-credential') {
+                    showMessage('❌ Usuario o contraseña incorrectos.\n\n' +
+                               '💡 Si eres administrador y es la primera vez:\n' +
+                               '1. Ve a Firebase Console → Authentication → Users\n' +
+                               '2. Click "Add User"\n' +
+                               '3. Email: ' + (username.includes('@') ? username : username + '@profe.cl') + '\n' +
+                               '4. Contraseña: [tu contraseña]\n' +
+                               '5. Intenta nuevamente', 'error');
                 } else if (error.code === 'auth/too-many-requests') {
                     showMessage('🚫 Demasiados intentos fallidos. Intenta más tarde.', 'error');
                 } else if (error.code === 'auth/network-request-failed') {

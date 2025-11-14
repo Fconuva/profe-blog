@@ -421,6 +421,16 @@
 
         // Check if already logged in
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user explicitly wants to login (force parameter)
+            const urlParams = new URLSearchParams(window.location.search);
+            const forceLogin = urlParams.get('force') === 'true';
+            
+            if (forceLogin) {
+                console.log('Login forzado, limpiando sesión anterior...');
+                localStorage.removeItem('evaluaciones_session');
+                return;
+            }
+            
             const session = localStorage.getItem('evaluaciones_session');
             if (session) {
                 try {
@@ -439,9 +449,16 @@
                     const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
 
                     if (hoursDiff < 24) {
-                        // Already logged in, redirect to evaluaciones
-                        console.log('Sesión válida detectada, redirigiendo...');
-                        window.location.href = '/evaluaciones/';
+                        // Already logged in, redirect to evaluaciones after 1 second (allow user to see page)
+                        console.log('Sesión válida detectada, redirigiendo en 1 segundo...');
+                        const redirectMsg = document.createElement('div');
+                        redirectMsg.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10b981;color:white;padding:1rem 2rem;border-radius:8px;box-shadow:0 4px 6px rgba(0,0,0,0.1);z-index:9999;';
+                        redirectMsg.innerHTML = '<i class="fas fa-check-circle mr-2"></i>Ya tienes sesión activa. Redirigiendo... <a href="?force=true" style="color:white;text-decoration:underline;margin-left:10px;">Cancelar</a>';
+                        document.body.appendChild(redirectMsg);
+                        
+                        setTimeout(() => {
+                            window.location.href = '/evaluaciones/';
+                        }, 1000);
                         return;
                     } else {
                         console.log('Sesión expirada, eliminando...');

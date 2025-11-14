@@ -157,6 +157,73 @@ class PremiumSite {
     this.setupMagneticButtons();
     this.setupParallaxEffects();
     this.setupGestureSupport();
+    this.setup3DTilt();
+    this.setupCounterAnimation();
+  }
+
+  setup3DTilt() {
+    const tiltCards = document.querySelectorAll('.card-3d-tilt');
+    
+    tiltCards.forEach(card => {
+      card.addEventListener('mousemove', (e) => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const centerX = rect.width / 2;
+        const centerY = rect.height / 2;
+        
+        const rotateX = (y - centerY) / 10;
+        const rotateY = (centerX - x) / 10;
+        
+        card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.05)`;
+        
+        // Actualizar sombra dinámica
+        const shadowX = (x - centerX) / 5;
+        const shadowY = (y - centerY) / 5;
+        card.style.boxShadow = `${shadowX}px ${shadowY}px 30px rgba(0, 0, 0, 0.2)`;
+      });
+      
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+        card.style.boxShadow = '';
+      });
+    });
+  }
+
+  setupCounterAnimation() {
+    const counters = document.querySelectorAll('[data-counter]');
+    
+    const animateCounter = (element) => {
+      const target = parseInt(element.getAttribute('data-counter'));
+      const duration = 2000; // 2 segundos
+      const increment = target / (duration / 16); // 60 FPS
+      let current = 0;
+      
+      const updateCounter = () => {
+        current += increment;
+        if (current < target) {
+          element.textContent = Math.floor(current) + (element.getAttribute('data-suffix') || '');
+          requestAnimationFrame(updateCounter);
+        } else {
+          element.textContent = target + (element.getAttribute('data-suffix') || '');
+        }
+      };
+      
+      updateCounter();
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.animated) {
+          entry.target.dataset.animated = 'true';
+          animateCounter(entry.target);
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+    
+    counters.forEach(counter => observer.observe(counter));
   }
 
   setupMagneticButtons() {

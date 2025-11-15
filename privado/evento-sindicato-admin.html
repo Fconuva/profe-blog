@@ -271,9 +271,14 @@
                 <i class="fas fa-list"></i> Lista de Inscritos
             </h2>
 
-            <button class="btn-export" onclick="exportToCSV()">
-                <i class="fas fa-download"></i> Exportar a CSV
-            </button>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                <button class="btn-export" onclick="exportToExcel()">
+                    <i class="fas fa-file-excel"></i> Exportar a Excel
+                </button>
+                <button class="btn-export" onclick="exportToCSV()">
+                    <i class="fas fa-file-csv"></i> Exportar a CSV
+                </button>
+            </div>
 
             <div class="search-bar">
                 <input type="text" id="searchInput" placeholder="🔍 Buscar por nombre, RUT o email...">
@@ -386,6 +391,9 @@
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    
+    <!-- SheetJS para exportar Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
 
     <script>
         // Configuración de Firebase
@@ -562,6 +570,51 @@
         }
 
         // Exportar a CSV
+        function exportToExcel() {
+            const data = Object.values(inscripciones);
+            if (data.length === 0) {
+                alert('No hay inscripciones para exportar');
+                return;
+            }
+
+            // Preparar datos para Excel con encabezados en español
+            const excelData = data.map((item, index) => ({
+                'N°': index + 1,
+                'Nombre Completo': item.nombre,
+                'RUT': item.rut,
+                'Correo Electrónico': item.email,
+                'Teléfono': item.telefono,
+                'Sede': item.sede,
+                'Sexo': item.sexo,
+                'Menú Vegetariano': item.menuVegetariano === 'Si' || item.menuVegetariano === 'Sí' ? 'SÍ' : 'NO',
+                'Fecha de Registro': item.fecha_registro || 'N/A'
+            }));
+
+            // Crear el libro de Excel
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            // Configurar ancho de columnas
+            ws['!cols'] = [
+                { wch: 5 },   // N°
+                { wch: 30 },  // Nombre
+                { wch: 15 },  // RUT
+                { wch: 30 },  // Email
+                { wch: 15 },  // Teléfono
+                { wch: 15 },  // Sede
+                { wch: 12 },  // Sexo
+                { wch: 18 },  // Menú
+                { wch: 20 }   // Fecha
+            ];
+
+            // Agregar la hoja al libro
+            XLSX.utils.book_append_sheet(wb, ws, 'Inscritos Evento');
+
+            // Descargar el archivo
+            const fecha = new Date().toISOString().split('T')[0];
+            XLSX.writeFile(wb, `Inscritos_Sindicato_N1_${fecha}.xlsx`);
+        }
+
         function exportToCSV() {
             const data = Object.values(inscripciones);
             if (data.length === 0) {
@@ -569,25 +622,27 @@
                 return;
             }
 
-            const headers = ['Nombre', 'RUT', 'Email', 'Teléfono', 'Sede', 'Sexo', 'Menú Vegetariano', 'Fecha Registro'];
-            const csv = [
-                headers.join(','),
-                ...data.map(item => [
-                    `"${item.nombre}"`,
-                    `"${item.rut}"`,
-                    `"${item.email}"`,
-                    `"${item.telefono}"`,
-                    `"${item.sede}"`,
-                    `"${item.sexo}"`,
-                    `"${item.menuVegetariano}"`,
-                    `"${item.fecha_registro || 'N/A'}"`
-                ].join(','))
-            ].join('\n');
+            // CSV mejorado con BOM para UTF-8 y columnas ordenadas
+            const headers = ['N°', 'Nombre Completo', 'RUT', 'Correo Electrónico', 'Teléfono', 'Sede', 'Sexo', 'Menú Vegetariano', 'Fecha Registro'];
+            const rows = data.map((item, index) => [
+                index + 1,
+                `"${item.nombre}"`,
+                `"${item.rut}"`,
+                `"${item.email}"`,
+                `"${item.telefono}"`,
+                `"${item.sede}"`,
+                `"${item.sexo}"`,
+                `"${item.menuVegetariano === 'Si' || item.menuVegetariano === 'Sí' ? 'SÍ' : 'NO'}"`,
+                `"${item.fecha_registro || 'N/A'}"`
+            ].join(','));
+
+            const csv = '\uFEFF' + [headers.join(','), ...rows].join('\n');
 
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
-            link.download = `inscripciones_sindicato_${new Date().toISOString().split('T')[0]}.csv`;
+            const fecha = new Date().toISOString().split('T')[0];
+            link.download = `Inscritos_Sindicato_N1_${fecha}.csv`;
             link.click();
         }
 

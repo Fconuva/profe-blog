@@ -88,6 +88,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-especial/pruebas/plan.json");
   // Copiar archivos de audio MP3 para prueba de inglés media
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/ingles-media/audios");
+  // Copiar archivos de audio MP3 para dossier de inglés media
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/estudio/audios-dossier");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

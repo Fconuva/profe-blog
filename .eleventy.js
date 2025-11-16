@@ -20,6 +20,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("main.js");
   eleventyConfig.addPassthroughCopy("main-premium.js");
   eleventyConfig.addPassthroughCopy("imagenes");
+  // Copiar recursos visuales de educación física básica
+  eleventyConfig.addPassthroughCopy("imagenes/educacion-fisica");
   eleventyConfig.addPassthroughCopy("LOGO SINDICATO");
   // Ensure the standalone form folder is copied to output
   eleventyConfig.addPassthroughCopy("formulario-contexto");

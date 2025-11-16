@@ -146,11 +146,11 @@ def generar_con_gtts_separado(filename, speakers):
         processed_file = f"processed_{i}.mp3"
         
         if speaker["gender"] == "female":
-            # Aumentar pitch para voz femenina (+2 semitonos)
-            pitch_shift = "asetrate=48000*1.12,aresample=48000"
+            # Aumentar pitch para voz femenina (+4% ≈ 0.7 semitonos, más natural)
+            pitch_shift = "asetrate=48000*1.04,aresample=48000"
         elif speaker["gender"] == "male":
-            # Disminuir pitch para voz masculina (-2 semitonos)
-            pitch_shift = "asetrate=48000*0.89,aresample=48000"
+            # Disminuir pitch para voz masculina (-5% ≈ 0.8 semitonos, más natural)
+            pitch_shift = "asetrate=48000*0.95,aresample=48000"
         else:
             pitch_shift = None
         

@@ -86,6 +86,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/67-cm-m/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-parvularia/pruebas/parv-nt/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-especial/pruebas/plan.json");
+  // Copiar archivos de audio MP3 para prueba de inglés media
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/ingles-media/audios");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

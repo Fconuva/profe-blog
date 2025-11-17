@@ -8,6 +8,7 @@ module.exports = async function() {
 
   if (!space || (!deliveryToken && !previewToken)) {
     // No hay credenciales, devolver vacío para no romper la build
+    console.log('[Contentful] No credentials found, skipping Contentful data fetch');
     return [];
   }
 
@@ -22,15 +23,23 @@ module.exports = async function() {
       host
     });
 
-    const entries = await client.getEntries();
+    // Add timeout to prevent hanging builds
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Contentful fetch timeout after 10s')), 10000)
+    );
+
+    const entriesPromise = client.getEntries();
+    const entries = await Promise.race([entriesPromise, timeoutPromise]);
+    
     // Mapear a un formato simple para templates
+    console.log(`[Contentful] Successfully fetched ${entries.items.length} entries`);
     return entries.items.map(item => ({
       ...item.fields,
       sys: item.sys
     }));
   } catch (err) {
     // Si falla, loguear y devolver vacío para no interrumpir el build
-    console.error('Error fetching Contentful entries:', err.message || err);
+    console.error('[Contentful] Error fetching entries:', err.message || err);
     return [];
   }
 };

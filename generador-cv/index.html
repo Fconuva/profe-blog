@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generador de CV Profesional - Francisco Núñez</title>
+    <!-- Tailwind CDN solo para desarrollo/demo - En producción se debe compilar -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -736,6 +737,12 @@
             const cvSectionContainer = document.getElementById(`cv-${type}-container`);
             const inputs = inputIds.map(id => document.getElementById(id));
 
+            // Verificar que todos los elementos existan
+            if (!addBtn || !listContainer || !cvListContainer || inputs.some(input => !input)) {
+                console.warn(`Elementos no encontrados para ${type}`);
+                return;
+            }
+
             const addItem = () => {
                 const values = inputs.map(input => input.value.trim());
                 if (values.some(val => val !== '')) {
@@ -874,31 +881,46 @@
             const cancelBtn = document.getElementById('cancel-camera-btn');
             const cvPhoto = document.getElementById('cv-photo');
 
-            let stream;
+            if (!cameraBtn || !cameraView || !video || !canvas || !captureBtn || !cancelBtn || !cvPhoto) {
+                console.warn('Elementos de cámara no encontrados');
+                return;
+            }
+
+            let stream = null;
 
             cameraBtn.addEventListener('click', async () => {
-                cameraView.classList.remove('hidden');
                 try {
+                    cameraView.classList.remove('hidden');
                     stream = await navigator.mediaDevices.getUserMedia({
-                        video: { width: 640, height: 480 }
+                        video: { facingMode: 'user', width: 640, height: 480 }
                     });
                     video.srcObject = stream;
+                    video.play();
                 } catch (err) {
-                    alert('Error al acceder a la cámara: ' + err.message);
+                    console.error('Error al acceder a la cámara:', err);
+                    alert('No se pudo acceder a la cámara. Verifica los permisos del navegador.\nError: ' + err.message);
+                    cameraView.classList.add('hidden');
                 }
             });
 
             captureBtn.addEventListener('click', () => {
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                canvas.getContext('2d').drawImage(video, 0, 0);
-                cvPhoto.src = canvas.toDataURL('image/jpeg', 0.8);
-                this.stopCamera(stream);
-                cameraView.classList.add('hidden');
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(video, 0, 0);
+                    cvPhoto.src = canvas.toDataURL('image/jpeg', 0.8);
+                    this.stopCamera(stream);
+                    stream = null;
+                    cameraView.classList.add('hidden');
+                } else {
+                    alert('La cámara aún no está lista. Espera un momento.');
+                }
             });
 
             cancelBtn.addEventListener('click', () => {
                 this.stopCamera(stream);
+                stream = null;
                 cameraView.classList.add('hidden');
             });
         }
@@ -957,50 +979,77 @@
         async generatePDF() {
             const btn = document.getElementById('generate-pdf-btn');
             const originalHTML = btn.innerHTML;
-            btn.innerHTML = '<div class="loading-spinner mr-2"></div> Generando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> Generando...';
             btn.disabled = true;
 
             try {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({
-                    orientation: 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
+                // Verificar que jsPDF esté disponible
+                if (!window.jspdf) {
+                    throw new Error('jsPDF no está cargado');
+                }
+                if (!window.html2canvas) {
+                    throw new Error('html2canvas no está cargado');
+                }
 
+                const { jsPDF } = window.jspdf;
                 const cvElement = document.getElementById('cv-preview');
 
-                // Configure html2canvas options for better quality
+                if (!cvElement) {
+                    throw new Error('Elemento CV no encontrado');
+                }
+
+                // Capturar el CV como imagen
                 const canvas = await html2canvas(cvElement, {
                     scale: 2,
                     useCORS: true,
-                    allowTaint: true,
+                    logging: false,
                     backgroundColor: '#ffffff',
-                    width: 210 * 3.78, // A4 width in pixels at 300 DPI
-                    height: 297 * 3.78  // A4 height in pixels at 300 DPI
+                    windowWidth: cvElement.scrollWidth,
+                    windowHeight: cvElement.scrollHeight
                 });
 
-                const imgData = canvas.toDataURL('image/jpeg', 0.95);
-                const imgWidth = 210;
+                // Crear PDF
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4',
+                    compress: true
+                });
+
+                const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                const imgWidth = 210; // A4 width in mm
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-                // Center the content vertically if it's shorter than A4
-                let yPosition = 0;
-                if (imgHeight < 297) {
-                    yPosition = (297 - imgHeight) / 2;
+                // Si el contenido es más alto que A4, agregar páginas
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+                heightLeft -= 297;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight, undefined, 'FAST');
+                    heightLeft -= 297;
                 }
 
-                pdf.addImage(imgData, 'JPEG', 0, yPosition, imgWidth, imgHeight);
-
-                // Generate filename with current date
+                // Generar nombre de archivo
                 const date = new Date().toISOString().split('T')[0];
-                const fileName = `CV_${document.getElementById('full-name').value || 'SinNombre'}_${date}.pdf`;
+                const fullName = document.getElementById('full-name').value.trim() || 'SinNombre';
+                const fileName = `CV_${fullName.replace(/\s+/g, '_')}_${date}.pdf`;
 
+                // Descargar PDF
                 pdf.save(fileName);
 
+                // Mostrar mensaje de éxito
+                setTimeout(() => {
+                    alert('✓ PDF descargado correctamente: ' + fileName);
+                }, 500);
+
             } catch (error) {
-                console.error('Error generating PDF:', error);
-                alert('Error al generar el PDF. Por favor, intenta nuevamente.');
+                console.error('Error generando PDF:', error);
+                alert('❌ Error al generar el PDF: ' + error.message + '\n\nVerifica que todos los campos estén completos.');
             } finally {
                 btn.innerHTML = originalHTML;
                 btn.disabled = false;

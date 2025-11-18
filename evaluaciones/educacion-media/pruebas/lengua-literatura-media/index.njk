@@ -274,7 +274,7 @@ function mostrarPregunta() {
   if (pregunta.imagen) {
     html += `
       <figure class="mb-6 bg-gray-50 rounded-lg p-4 border-2 border-gray-200">
-        <img src="${pregunta.imagen}" alt="Estímulo visual de la pregunta" class="max-w-full h-auto mx-auto rounded shadow-lg" style="max-height: 400px;" onerror="this.closest('figure') && (this.closest('figure').style.display='none')">
+        <img src="${pregunta.imagen}" alt="Estímulo visual de la pregunta" class="max-w-full h-auto mx-auto rounded shadow-lg" style="max-height: 400px;" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjNmNGY2Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxNCIgZmlsbD0iIzk5YTNhZiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPkltYWdlbiBubyBkaXNwb25pYmxlPC90ZXh0Pjwvc3ZnPg=='; this.alt='Imagen no disponible - ${pregunta.pieImagen || 'Estímulo visual'}';">
         ${pregunta.pieImagen ? `<figcaption class="text-sm text-gray-600 text-center mt-3 italic">${pregunta.pieImagen}</figcaption>` : ''}
       </figure>
     `;
@@ -470,6 +470,51 @@ function reiniciarPrueba() {
 document.addEventListener('DOMContentLoaded', function() {
   console.log('Prueba de Lengua y Literatura cargada');
   console.log('Total de preguntas:', preguntas.length);
+  
+  // Verificar si hay sesión válida
+  const session = localStorage.getItem('evaluaciones_session');
+  if (!session) {
+    // Mostrar advertencia pero permitir acceso para desarrollo
+    const warningDiv = document.createElement('div');
+    warningDiv.className = 'bg-yellow-100 border-l-4 border-yellow-500 p-4 mb-6';
+    warningDiv.innerHTML = `
+      <div class="flex items-center">
+        <i class="bi bi-exclamation-triangle text-yellow-700 mr-3"></i>
+        <div>
+          <p class="text-yellow-800 font-semibold">Modo Desarrollo</p>
+          <p class="text-yellow-700 text-sm">Accediendo sin sesión válida. Para acceso completo, inicia sesión en /evaluaciones/</p>
+        </div>
+      </div>
+    `;
+    document.querySelector('.min-h-screen > .container').prepend(warningDiv);
+    return;
+  }
+  
+  // Verificar permisos para Educación Media
+  try {
+    const sessionData = JSON.parse(session);
+    const permissions = sessionData.permissions || {};
+    if (!permissions.media) {
+      document.querySelector('.min-h-screen').innerHTML = `
+        <div class="container mx-auto px-4 max-w-4xl py-12">
+          <div class="bg-white rounded-2xl shadow-2xl p-8 text-center">
+            <i class="bi bi-exclamation-triangle text-6xl text-yellow-500 mb-4"></i>
+            <h1 class="text-3xl font-bold text-gray-800 mb-4">Permisos Insuficientes</h1>
+            <p class="text-gray-600 mb-6">No tienes permisos para acceder a evaluaciones de Educación Media.</p>
+            <a href="/evaluaciones/" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+              <i class="bi bi-arrow-left mr-2"></i> Volver
+            </a>
+          </div>
+        </div>
+      `;
+      return;
+    }
+  } catch (error) {
+    console.error('Error verificando sesión:', error);
+    localStorage.removeItem('evaluaciones_session');
+    window.location.href = '/evaluaciones/';
+    return;
+  }
 });
 </script>
 

@@ -7,7 +7,186 @@ permalink: /evaluaciones/educacion-media/pruebas/lengua-literatura-media/
 
 <div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 py-12">
   <div class="container mx-auto px-4 max-w-4xl">
-    <script>
+    
+    <!-- Header -->
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-3">
+        <i class="bi bi-book-half text-purple-600"></i>
+        Prueba ECEP 2025: Lengua y Literatura
+      </h1>
+      <p class="text-lg text-gray-600">Educación Media · 50 preguntas · 3 Dominios</p>
+      
+      <div class="flex justify-center gap-3 mt-4 flex-wrap">
+        <a href="/evaluaciones/educacion-media/estudio/dossier-lenguaje-media/" class="inline-flex items-center px-4 py-2 bg-white border border-purple-300 rounded-lg hover:bg-purple-50 transition">
+          <i class="bi bi-journal-text mr-2"></i> Dossier de Estudio
+        </a>
+        <a href="/evaluaciones/" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          <i class="bi bi-arrow-left mr-2"></i> Volver
+        </a>
+      </div>
+    </div>
+
+    <!-- Pantalla Inicial -->
+    <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+      <div class="mb-6">
+        <h2 class="text-2xl font-bold text-gray-800 mb-4">
+          <i class="bi bi-info-circle text-blue-500"></i> Instrucciones
+        </h2>
+        <ul class="space-y-2 text-gray-700">
+          <li class="flex items-start">
+            <i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i>
+            <span><strong>50 preguntas</strong> de selección múltiple alineadas al temario ECEP 2025</span>
+          </li>
+          <li class="flex items-start">
+            <i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i>
+            <span><strong>Retroalimentación inmediata</strong> tras cada respuesta con explicación pedagógica</span>
+          </li>
+          <li class="flex items-start">
+            <i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i>
+            <span><strong>Estímulos visuales</strong> integrados en preguntas clave (infografías, textos, gráficos)</span>
+          </li>
+          <li class="flex items-start">
+            <i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i>
+            <span><strong>Informe final</strong> con puntaje global y desempeño por dominio</span>
+          </li>
+          <li class="flex items-start">
+            <i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i>
+            <span>Puedes <strong>navegar</strong> libremente entre preguntas y modificar respuestas</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="bg-purple-50 border-l-4 border-purple-500 p-4 mb-6">
+        <h3 class="font-bold text-purple-800 mb-2">Dominios evaluados:</h3>
+        <div class="grid md:grid-cols-3 gap-3 text-sm">
+          <div class="bg-white p-3 rounded">
+            <strong class="text-purple-700">Dominio 1: Lectura</strong>
+            <p class="text-gray-600 text-xs mt-1">18 preguntas (literarios + no literarios)</p>
+          </div>
+          <div class="bg-white p-3 rounded">
+            <strong class="text-purple-700">Dominio 2: Escritura</strong>
+            <p class="text-gray-600 text-xs mt-1">22 preguntas (coherencia + adecuación)</p>
+          </div>
+          <div class="bg-white p-3 rounded">
+            <strong class="text-purple-700">Dominio 3: Enseñanza</strong>
+            <p class="text-gray-600 text-xs mt-1">10 preguntas (didáctica + evaluación)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center">
+        <button onclick="comenzarPrueba()" class="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl text-lg hover:from-purple-700 hover:to-pink-700 transition transform hover:scale-105 shadow-lg">
+          <i class="bi bi-play-circle mr-2"></i> Comenzar Prueba
+        </button>
+      </div>
+    </div>
+
+    <!-- Contenedor de Prueba (oculto inicialmente) -->
+    <div id="prueba-container" class="hidden">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 mb-6">
+        <!-- Progreso -->
+        <div class="mb-6">
+          <div class="flex justify-between text-sm text-gray-600 mb-2">
+            <span>Pregunta <span id="pregunta-actual">1</span> de 50</span>
+            <span><span id="respondidas">0</span>/50 respondidas</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-2">
+            <div id="barra-progreso" class="bg-gradient-to-r from-purple-500 to-pink-500 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+          </div>
+        </div>
+
+        <!-- Dominio actual -->
+        <div class="mb-4">
+          <span class="inline-block px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm font-semibold" id="dominio-actual"></span>
+        </div>
+
+        <!-- Contenido de pregunta -->
+        <div id="pregunta-contenido"></div>
+
+        <!-- Botones navegación -->
+        <div class="flex justify-between mt-6">
+          <button id="btn-anterior" onclick="anteriorPregunta()" class="px-6 py-3 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition disabled:opacity-50 disabled:cursor-not-allowed">
+            <i class="bi bi-arrow-left"></i> Anterior
+          </button>
+          <button id="btn-siguiente" onclick="siguientePregunta()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            Siguiente <i class="bi bi-arrow-right"></i>
+          </button>
+          <button id="btn-finalizar" onclick="finalizarPrueba()" class="hidden px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition">
+            <i class="bi bi-check-circle"></i> Finalizar
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor de Resultados (oculto inicialmente) -->
+    <div id="resultados-container" class="hidden">
+      <div class="bg-white rounded-2xl shadow-2xl p-8">
+        <div class="text-center mb-6">
+          <h2 class="text-3xl font-bold text-gray-800 mb-2">
+            <i class="bi bi-award text-yellow-500"></i> Resultados de la Prueba
+          </h2>
+          <p class="text-gray-600">Has completado la evaluación ECEP 2025 de Lengua y Literatura</p>
+        </div>
+
+        <!-- Puntaje global -->
+        <div class="bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl p-6 mb-6">
+          <div class="text-center">
+            <div class="text-6xl font-bold text-purple-700 mb-2">
+              <span id="puntaje-total">0</span><span class="text-3xl text-gray-500">/50</span>
+            </div>
+            <div class="text-2xl font-semibold text-gray-700 mb-2">
+              <span id="porcentaje-total">0</span>% de respuestas correctas
+            </div>
+            <div class="inline-block px-4 py-2 bg-white rounded-lg shadow">
+              <span class="font-bold text-lg" id="nivel-texto">Nivel</span>
+            </div>
+            <p class="text-gray-600 mt-2" id="nivel-descripcion"></p>
+          </div>
+        </div>
+
+        <!-- Desglose por dominios -->
+        <div class="grid md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+            <h3 class="font-bold text-blue-800 mb-2">Dominio 1: Lectura</h3>
+            <div class="text-3xl font-bold text-blue-600">
+              <span id="dom1-correctas">0</span><span class="text-lg text-gray-500">/18</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Literarios + No Literarios</p>
+          </div>
+          <div class="bg-green-50 border-2 border-green-200 rounded-lg p-4">
+            <h3 class="font-bold text-green-800 mb-2">Dominio 2: Escritura</h3>
+            <div class="text-3xl font-bold text-green-600">
+              <span id="dom2-correctas">0</span><span class="text-lg text-gray-500">/22</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Coherencia + Adecuación</p>
+          </div>
+          <div class="bg-orange-50 border-2 border-orange-200 rounded-lg p-4">
+            <h3 class="font-bold text-orange-800 mb-2">Dominio 3: Enseñanza</h3>
+            <div class="text-3xl font-bold text-orange-600">
+              <span id="dom3-correctas">0</span><span class="text-lg text-gray-500">/10</span>
+            </div>
+            <p class="text-sm text-gray-600 mt-1">Didáctica + Evaluación</p>
+          </div>
+        </div>
+
+        <!-- Acciones finales -->
+        <div class="flex justify-center gap-4">
+          <button onclick="reiniciarPrueba()" class="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition">
+            <i class="bi bi-arrow-clockwise"></i> Repetir Prueba
+          </button>
+          <a href="/evaluaciones/educacion-media/estudio/dossier-lenguaje-media/" class="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+            <i class="bi bi-book mr-2"></i> Revisar Dossier
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
     // Banco de 50 preguntas ECEP Lengua y Literatura Media (REDISEÑADO)
     // Distribución: Lectura (18: 10 literarios + 8 no literarios) Escritura (22: 12 coherencia/cohesión + 10 adecuación) Enseñanza-Aprendizaje (10)
     // Se incorporan ≥12 estímulos visuales y explicaciones con recomendación de refuerzo.

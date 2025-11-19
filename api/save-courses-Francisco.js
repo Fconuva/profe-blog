@@ -9,14 +9,41 @@ export default async function handler(req, res) {
   if (!admin.apps.length) {
     try {
       console.log('🔧 Inicializando Firebase Admin...');
-      
-      if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-        throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 no está configurada');
+
+      // Soporta varias formas de configurar la credencial:
+      // 1) FIREBASE_SERVICE_ACCOUNT_BASE64 (base64 con JSON)
+      // 2) FIREBASE_SERVICE_ACCOUNT (raw JSON)
+      // 3) FIREBASE_SERVICE_ACCOUNT_BASE64 puede contener \n como texto — reemplazar por saltos reales
+      let raw = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || process.env.FIREBASE_SERVICE_ACCOUNT;
+      if (!raw) {
+        throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 o FIREBASE_SERVICE_ACCOUNT no están configuradas');
       }
-      
-      const serviceAccount = JSON.parse(
-        Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8')
-      );
+
+      // Detectar si raw parece JSON sin base64 (comienza con '{')
+      let serviceAccountJson;
+      if (raw.trim().startsWith('{')) {
+        serviceAccountJson = raw;
+        console.log('ℹ️ Usando credencial Firebase desde RAW JSON en env');
+      } else {
+        // Intentar decodificar base64
+        const decoded = Buffer.from(raw, 'base64').toString('utf-8');
+        serviceAccountJson = decoded;
+        console.log('ℹ️ Usando credencial Firebase desde BASE64 en env');
+      }
+
+      // Si la private_key contiene la secuencia de dos caracteres "\\n" reemplazarla por saltos reales
+      try {
+        const parsed = JSON.parse(serviceAccountJson);
+        if (parsed && parsed.private_key && parsed.private_key.includes('\\n')) {
+          console.log('⚠️ private_key contiene "\\n"; aplicando sanitización (\\\n → salto de línea)');
+          parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+        }
+        // Convertir a objeto final
+        var serviceAccount = parsed;
+      } catch (err) {
+        console.error('❌ Error parseando JSON de credencial Firebase:', err.message);
+        throw err;
+      }
       
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),

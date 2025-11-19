@@ -4345,11 +4345,40 @@
 
             switch (evaluationType) {
                 case EVALUATION_TYPES.BINARY:
-                    const isChecked = gradeValue === true || gradeValue === 1;
+                    // Sistema de 3 estados: null (blanco/no vino), false (X/no hizo), true (✓/hizo)
+                    let displayIcon = '';
+                    let nextValue = '';
+                    let bgColor = '';
+                    let textColor = '';
+                    
+                    if (gradeValue === true) {
+                        // Estado 1: ✓ (Hizo la tarea)
+                        displayIcon = '✓';
+                        nextValue = 'false'; // Siguiente estado: X
+                        bgColor = 'bg-green-100 hover:bg-green-200';
+                        textColor = 'text-green-700';
+                    } else if (gradeValue === false) {
+                        // Estado 2: ✗ (Estuvo pero no la hizo)
+                        displayIcon = '✗';
+                        nextValue = 'null'; // Siguiente estado: vacío
+                        bgColor = 'bg-red-100 hover:bg-red-200';
+                        textColor = 'text-red-700';
+                    } else {
+                        // Estado 3: Vacío (No vino a clases)
+                        displayIcon = '-';
+                        nextValue = 'true'; // Siguiente estado: ✓
+                        bgColor = 'bg-gray-50 hover:bg-gray-100';
+                        textColor = 'text-gray-400';
+                    }
+                    
                     return `
-                        <input type="checkbox" ${isChecked ? 'checked' : ''} 
-                               onchange="updateGrade(${studentIndex}, ${gradeIndex}, this.checked)"
-                               class="w-4 h-4 text-indigo-600 rounded" ${disabled}>
+                        <button 
+                            onclick="cycleBinaryGrade(${studentIndex}, ${gradeIndex}, '${nextValue}')"
+                            class="w-full h-8 ${bgColor} ${textColor} rounded border border-gray-300 font-bold text-lg transition-all"
+                            title="${gradeValue === true ? 'Hizo la tarea' : gradeValue === false ? 'No hizo la tarea' : 'No vino a clases'}"
+                            ${disabled}>
+                            ${displayIcon}
+                        </button>
                     `;
 
                 case EVALUATION_TYPES.LOGRO:
@@ -4633,6 +4662,22 @@
             }
         }
 
+        // Ciclar entre 3 estados para evaluaciones binarias
+        function cycleBinaryGrade(studentIndex, gradeIndex, nextValueString) {
+            let nextValue;
+            
+            // Convertir string a valor apropiado
+            if (nextValueString === 'true') {
+                nextValue = true;
+            } else if (nextValueString === 'false') {
+                nextValue = false;
+            } else {
+                nextValue = null;
+            }
+            
+            updateGrade(studentIndex, gradeIndex, nextValue);
+        }
+
         // Actualizar nota (sin mensaje de confirmación)
         function updateGrade(studentIndex, gradeIndex, value) {
             const student = courseData.students[studentIndex];
@@ -4650,7 +4695,16 @@
             
             switch (evaluationType) {
                 case EVALUATION_TYPES.BINARY:
-                    validatedValue = Boolean(value);
+                    // Permitir 3 estados: true (hizo), false (no hizo), null (no vino)
+                    if (value === null || value === undefined) {
+                        validatedValue = null;
+                    } else if (value === true || value === 'true') {
+                        validatedValue = true;
+                    } else if (value === false || value === 'false') {
+                        validatedValue = false;
+                    } else {
+                        validatedValue = Boolean(value);
+                    }
                     break;
                     
                 case EVALUATION_TYPES.LOGRO:

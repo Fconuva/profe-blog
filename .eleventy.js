@@ -92,6 +92,12 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/ingles-media/audios");
   // Copiar archivos de audio MP3 para dossier de inglés media
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/estudio/audios-dossier");
+  // Copiar carpetas de imágenes de las pruebas
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.png");
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.jpg");
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.jpeg");
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.gif");
+  eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.svg");
   // Ocultar secciones no implementadas
   // eleventyConfig.ignores.add("evaluaciones/educacion-media/**"); // REMOVIDO - Media ahora activa
   eleventyConfig.ignores.add("evaluaciones/educacion-media-tecnico-profesional/**");

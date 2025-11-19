@@ -1,5 +1,5 @@
 // API para guardar cursos de Francisco en Firebase
-const admin = require('firebase-admin');
+import admin from 'firebase-admin';
 
 // Inicializar Firebase Admin si no está inicializado
 if (!admin.apps.length) {
@@ -17,7 +17,7 @@ if (!admin.apps.length) {
   }
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   console.log('🔵 API save-courses-Francisco invocada');
   
   // Configurar CORS
@@ -69,4 +69,4 @@ module.exports = async function handler(req, res) {
       message: error.message
     });
   }
-};
+}

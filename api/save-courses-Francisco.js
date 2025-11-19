@@ -1,4 +1,5 @@
 // API para guardar cursos de Francisco en Firebase
+// Actualizado: Nov 19, 2025 - Variables de entorno configuradas
 import admin from 'firebase-admin';
 
 export default async function handler(req, res) {

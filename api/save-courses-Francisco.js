@@ -1,5 +1,5 @@
 // API para guardar cursos de Francisco en Firebase
-import admin from 'firebase-admin';
+const admin = require('firebase-admin');
 
 // Inicializar Firebase Admin si no está inicializado
 if (!admin.apps.length) {
@@ -10,14 +10,14 @@ if (!admin.apps.length) {
     
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
-      databaseURL: process.env.FIREBASE_DATABASE_URL
+      databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
     });
   } catch (error) {
     console.error('Error inicializando Firebase:', error);
   }
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -67,4 +67,4 @@ export default async function handler(req, res) {
       message: error.message
     });
   }
-}
+};

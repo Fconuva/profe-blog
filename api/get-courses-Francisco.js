@@ -1,24 +1,36 @@
 // API para obtener cursos de Francisco desde Firebase
 import admin from 'firebase-admin';
 
-// Inicializar Firebase Admin si no está inicializado
-if (!admin.apps.length) {
-  try {
-    const serviceAccount = JSON.parse(
-      Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8')
-    );
-    
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-      databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
-    });
-  } catch (error) {
-    console.error('Error inicializando Firebase:', error);
-  }
-}
-
 export default async function handler(req, res) {
   console.log('🔵 API get-courses-Francisco invocada');
+  
+  // Inicializar Firebase Admin si no está inicializado
+  if (!admin.apps.length) {
+    try {
+      console.log('🔧 Inicializando Firebase Admin...');
+      
+      if (!process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
+        throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 no está configurada');
+      }
+      
+      const serviceAccount = JSON.parse(
+        Buffer.from(process.env.FIREBASE_SERVICE_ACCOUNT_BASE64, 'base64').toString('utf-8')
+      );
+      
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+        databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
+      });
+      
+      console.log('✅ Firebase Admin inicializado');
+    } catch (error) {
+      console.error('❌ Error inicializando Firebase:', error.message);
+      return res.status(500).json({
+        error: 'Error de configuración de Firebase',
+        message: error.message
+      });
+    }
+  }
   
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');

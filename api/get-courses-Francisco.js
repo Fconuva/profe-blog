@@ -18,6 +18,8 @@ if (!admin.apps.length) {
 }
 
 module.exports = async function handler(req, res) {
+  console.log('🔵 API get-courses-Francisco invocada');
+  
   // Configurar CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');

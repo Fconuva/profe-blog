@@ -28,8 +28,14 @@ export default async function handler(req, res) {
       try {
         const parsed = JSON.parse(serviceAccountJson);
         if (parsed && parsed.private_key && parsed.private_key.includes('\\n')) {
+          // Sanitize escaped newlines
           console.log('⚠️ private_key contiene "\\n"; aplicando sanitización (\\\n → salto de línea)');
           parsed.private_key = parsed.private_key.replace(/\\n/g, '\n');
+        }
+        // Quick health checks for private_key format (no secrets)
+        if (!parsed.private_key || !parsed.private_key.includes('BEGIN PRIVATE KEY')) {
+          console.error('❌ private_key no parece tener BEGIN PRIVATE KEY');
+          throw new Error('private_key malformed (no BEGIN header)');
         }
         var serviceAccount = parsed;
       } catch (err) {

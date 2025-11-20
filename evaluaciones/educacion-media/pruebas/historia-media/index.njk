@@ -40,7 +40,7 @@ description: "Ensayo de Historia con preguntas basadas en fuentes, mapas y gráf
   </div>
   
   <!-- Botones de navegación -->
-  <div class="d-flex justify-content-between align-items-center mb-5">
+  <div class="d-flex justify-content-between align-items-center mb-4">
     <button id="prev-btn" class="btn btn-outline-secondary px-4" disabled>
       <i class="bi bi-arrow-left"></i> Anterior
     </button>
@@ -48,6 +48,16 @@ description: "Ensayo de Historia con preguntas basadas en fuentes, mapas y gráf
     <button id="next-btn" class="btn btn-primary px-4">
       Siguiente <i class="bi bi-arrow-right"></i>
     </button>
+  </div>
+
+  <!-- Navegación rápida -->
+  <div class="card mb-5 border-0 bg-light">
+    <div class="card-body">
+      <h6 class="text-muted small mb-3 text-center">Navegación Rápida</h6>
+      <div id="question-nav" class="d-flex flex-wrap gap-2 justify-content-center">
+        <!-- Botones generados por JS -->
+      </div>
+    </div>
   </div>
 
   <!-- Botón finalizar -->
@@ -761,12 +771,38 @@ function renderQuestion() {
   }
   
   updateNavigation();
+  renderNavigation();
 }
 
 function selectAnswer(index) {
   if (userAnswers[currentQuestion] !== null) return;
   userAnswers[currentQuestion] = index;
   renderQuestion();
+}
+
+function goToQuestion(index) {
+  currentQuestion = index;
+  renderQuestion();
+}
+
+function renderNavigation() {
+  const navContainer = document.getElementById('question-nav');
+  let html = '';
+  
+  quizData.preguntas.forEach((_, index) => {
+    let btnClass = 'btn btn-sm ';
+    if (index === currentQuestion) {
+      btnClass += 'btn-primary fw-bold border-2 border-dark'; // Actual
+    } else if (userAnswers[index] !== null) {
+      btnClass += 'btn-success text-white'; // Respondida
+    } else {
+      btnClass += 'btn-outline-secondary bg-white'; // Sin responder
+    }
+    
+    html += `<button onclick="goToQuestion(${index})" class="${btnClass}" style="width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;">${index + 1}</button>`;
+  });
+  
+  navContainer.innerHTML = html;
 }
 
 function updateNavigation() {
@@ -856,7 +892,8 @@ function showResults() {
   document.getElementById('results-container').innerHTML = html;
   document.getElementById('results-container').style.display = 'block';
   document.getElementById('quiz-container').style.display = 'none';
-  document.querySelector('.d-flex.justify-content-between').style.display = 'none';
+  document.querySelector('.d-flex.justify-content-between').style.display = 'none'; // Hide prev/next
+  document.querySelector('.card.mb-5.border-0.bg-light').style.display = 'none'; // Hide nav grid
   document.getElementById('finish-container').style.display = 'none';
   window.scrollTo(0,0);
 }

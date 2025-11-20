@@ -27,7 +27,7 @@ def generate_climograma():
     humidity = [85, 87, 88, 90, 92, 95, 94, 92, 89, 87, 86, 85]
     wind = [18, 16, 20, 22, 25, 28, 30, 27, 24, 20, 19, 17]
 
-    fig = plt.figure(figsize=(16, 10))
+    fig = plt.figure(figsize=(20, 14))
     
     # Main climogram
     ax1 = plt.subplot(2, 2, 1)
@@ -115,7 +115,7 @@ def generate_supply_demand():
     supply = 2 * x + 1
     demand = -2 * x + 21
 
-    plt.figure(figsize=(14, 10))
+    plt.figure(figsize=(18, 13))
     plt.plot(x, supply, label='Oferta', color='#1976d2', linewidth=5, marker='o', markersize=8, markevery=10)
     plt.plot(x, demand, label='Demanda', color='#d32f2f', linewidth=5, marker='s', markersize=8, markevery=10)
     

@@ -86,12 +86,15 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-basica/pruebas/basica-generalista/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/educacion-fisica-media/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/67-cm-m/plan.json");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/biologia-ecep-2025/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-parvularia/pruebas/parv-nt/plan.json");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-especial/pruebas/plan.json");
   // Copiar archivos de audio MP3 para prueba de inglés media
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/ingles-media/audios");
   // Copiar archivos de audio MP3 para dossier de inglés media
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/estudio/audios-dossier");
+  // Copiar imágenes de PAES Biología 2023 para prueba ECEP Biología 2025
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/paes-biologia-2023-imagenes");
   // Copiar carpetas de imágenes de las pruebas
   eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.png");
   eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.jpg");

@@ -110,9 +110,19 @@ let estadisticas = {
 };
 
 // Cargar plan.json
-fetch('/evaluaciones/educacion-media/pruebas/biologia-ecep-2025/plan.json')
-  .then(response => response.json())
+const planJsonPath = '/evaluaciones/educacion-media/pruebas/biologia-ecep-2025/plan.json';
+console.log('[QUIZ] Cargando plan desde:', planJsonPath);
+
+fetch(planJsonPath)
+  .then(response => {
+    console.log('[QUIZ] Response status:', response.status);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    return response.json();
+  })
   .then(data => {
+    console.log('[QUIZ] Plan cargado exitosamente. Preguntas:', data.questions?.length);
     planData = data;
     inicializarEstadisticas();
     renderizarNavegador();
@@ -120,11 +130,27 @@ fetch('/evaluaciones/educacion-media/pruebas/biologia-ecep-2025/plan.json')
     configurarEventListeners();
   })
   .catch(error => {
-    console.error('Error cargando plan.json:', error);
-    document.getElementById('preguntas-container').innerHTML = '<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">Error al cargar las preguntas. Por favor, recarga la página.</div>';
+    console.error('[QUIZ] Error cargando plan.json:', error);
+    const container = document.getElementById('preguntas-container');
+    if (container) {
+      container.innerHTML = `
+        <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
+          <h3 class="font-bold mb-2">⚠️ Error al cargar la evaluación</h3>
+          <p class="text-sm mb-2">No se pudo cargar el archivo de preguntas.</p>
+          <p class="text-xs text-red-600">Error: ${error.message}</p>
+          <button onclick="location.reload()" class="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded text-sm">
+            🔄 Reintentar
+          </button>
+        </div>
+      `;
+    }
   });
 
 function inicializarEstadisticas() {
+  if (!planData || !planData.domains) {
+    console.error('[QUIZ] Error: planData o domains no está definido');
+    return;
+  }
   planData.domains.forEach(domain => {
     estadisticas.porDominio[domain.id] = {
       nombre: domain.name,
@@ -132,10 +158,20 @@ function inicializarEstadisticas() {
       total: domain.questions
     };
   });
+  console.log('[QUIZ] Estadísticas inicializadas:', estadisticas);
 }
 
 function renderizarNavegador() {
   const navegador = document.getElementById('navegador-preguntas');
+  if (!navegador) {
+    console.error('[QUIZ] Error: elemento navegador-preguntas no encontrado');
+    return;
+  }
+  if (!planData || !planData.questions) {
+    console.error('[QUIZ] Error: planData.questions no está definido');
+    return;
+  }
+  
   let html = '';
 
   planData.questions.forEach((pregunta, index) => {
@@ -150,6 +186,7 @@ function renderizarNavegador() {
   });
 
   navegador.innerHTML = html;
+  console.log('[QUIZ] Navegador renderizado con', planData.questions.length, 'botones');
 }
 
 function scrollToPregunta(numero) {
@@ -173,7 +210,15 @@ function getDifficultyLabel(difficulty) {
 }
 
 function getDomainColor(domainId) {
+  if (!planData || !planData.domains) {
+    console.warn('[QUIZ] planData.domains no disponible');
+    return { bg: 'bg-blue-100', text: 'text-blue-800' };
+  }
   const domain = planData.domains.find(d => d.id === domainId);
+  if (!domain) {
+    console.warn('[QUIZ] Dominio no encontrado:', domainId);
+    return { bg: 'bg-blue-100', text: 'text-blue-800' };
+  }
   const colors = {
     'purple': { bg: 'bg-purple-100', text: 'text-purple-800' },
     'blue': { bg: 'bg-blue-100', text: 'text-blue-800' },
@@ -186,10 +231,24 @@ function getDomainColor(domainId) {
 
 function renderizarPreguntas() {
   const container = document.getElementById('preguntas-container');
+  if (!container) {
+    console.error('[QUIZ] Error: elemento preguntas-container no encontrado');
+    return;
+  }
+  if (!planData || !planData.questions || !planData.domains) {
+    console.error('[QUIZ] Error: planData incompleto');
+    container.innerHTML = '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">Datos de preguntas no disponibles</div>';
+    return;
+  }
+  
   let html = '';
 
   planData.questions.forEach((pregunta, index) => {
     const dominio = planData.domains.find(d => d.id === pregunta.domain);
+    if (!dominio) {
+      console.warn('[QUIZ] Dominio no encontrado para pregunta', pregunta.id);
+      return;
+    }
     const numeroPregunta = index + 1;
     const colorDominio = getDomainColor(pregunta.domain);
 
@@ -234,13 +293,33 @@ function renderizarPreguntas() {
   });
 
   container.innerHTML = html;
+  console.log('[QUIZ] Renderizadas', planData.questions.length, 'preguntas');
 }
 
 function verificarRespuesta(preguntaId, opcionId, numeroPregunta) {
+  if (!planData || !planData.questions) {
+    console.error('[QUIZ] planData no disponible');
+    return;
+  }
+  
   const pregunta = planData.questions.find(p => p.id === preguntaId);
+  if (!pregunta) {
+    console.error('[QUIZ] Pregunta no encontrada:', preguntaId);
+    return;
+  }
+  
   const opcion = pregunta.options.find(o => o.id === opcionId);
+  if (!opcion) {
+    console.error('[QUIZ] Opción no encontrada:', opcionId);
+    return;
+  }
   
   const feedbackDiv = document.getElementById(`feedback-${preguntaId}`);
+  if (!feedbackDiv) {
+    console.error('[QUIZ] Feedback div no encontrado para pregunta:', preguntaId);
+    return;
+  }
+  
   feedbackDiv.classList.remove('hidden');
   
   if (opcion.isCorrect) {
@@ -263,8 +342,10 @@ function verificarRespuesta(preguntaId, opcionId, numeroPregunta) {
 
     // Actualizar color navegador
     const navBtn = document.getElementById(`nav-btn-${numeroPregunta}`);
-    navBtn.classList.remove('bg-gray-200', 'bg-red-200', 'text-gray-700', 'text-red-700');
-    navBtn.classList.add('bg-green-200', 'text-green-800');
+    if (navBtn) {
+      navBtn.classList.remove('bg-gray-200', 'bg-red-200', 'text-gray-700', 'text-red-700');
+      navBtn.classList.add('bg-green-200', 'text-green-800');
+    }
   } else {
     feedbackDiv.innerHTML = `
       <div class="bg-red-50 border-2 border-red-300 rounded-lg p-6">
@@ -279,23 +360,35 @@ function verificarRespuesta(preguntaId, opcionId, numeroPregunta) {
 
     // Actualizar color navegador
     const navBtn = document.getElementById(`nav-btn-${numeroPregunta}`);
-    navBtn.classList.remove('bg-gray-200', 'bg-green-200', 'text-gray-700', 'text-green-800');
-    navBtn.classList.add('bg-red-200', 'text-red-700');
+    if (navBtn) {
+      navBtn.classList.remove('bg-gray-200', 'bg-green-200', 'text-gray-700', 'text-green-800');
+      navBtn.classList.add('bg-red-200', 'text-red-700');
+    }
   }
 
   actualizarEstadisticas();
 }
 
 function actualizarEstadisticas() {
+  if (!planData || !planData.totalQuestions) {
+    console.error('[QUIZ] planData.totalQuestions no disponible');
+    return;
+  }
+  
   const total = planData.totalQuestions;
   const respondidas = Object.keys(respuestas).length;
   
-  document.getElementById('respuestas-completadas').textContent = respondidas;
-  document.getElementById('respuestas-correctas').textContent = estadisticas.correctas;
-  document.getElementById('respuestas-incorrectas').textContent = estadisticas.incorrectas;
+  const elemCompletadas = document.getElementById('respuestas-completadas');
+  const elemCorrectas = document.getElementById('respuestas-correctas');
+  const elemIncorrectas = document.getElementById('respuestas-incorrectas');
+  const elemProgreso = document.getElementById('barra-progreso');
+  
+  if (elemCompletadas) elemCompletadas.textContent = respondidas;
+  if (elemCorrectas) elemCorrectas.textContent = estadisticas.correctas;
+  if (elemIncorrectas) elemIncorrectas.textContent = estadisticas.incorrectas;
   
   const progreso = (respondidas / total) * 100;
-  document.getElementById('barra-progreso').style.width = `${progreso}%`;
+  if (elemProgreso) elemProgreso.style.width = `${progreso}%`;
 
   if (respondidas === total) {
     mostrarResultadosFinales();
@@ -303,15 +396,26 @@ function actualizarEstadisticas() {
 }
 
 function mostrarResultadosFinales() {
+  if (!planData || !planData.totalQuestions) {
+    console.error('[QUIZ] planData no disponible para resultados finales');
+    return;
+  }
+  
   const total = planData.totalQuestions;
   const porcentajeCorrectas = ((estadisticas.correctas / total) * 100).toFixed(1);
   const porcentajeIncorrectas = ((estadisticas.incorrectas / total) * 100).toFixed(1);
   
-  document.getElementById('final-correctas').textContent = estadisticas.correctas;
-  document.getElementById('final-incorrectas').textContent = estadisticas.incorrectas;
-  document.getElementById('porcentaje-correctas').textContent = porcentajeCorrectas;
-  document.getElementById('porcentaje-incorrectas').textContent = porcentajeIncorrectas;
-  document.getElementById('nota-final').textContent = porcentajeCorrectas;
+  const elemFinalCorrectas = document.getElementById('final-correctas');
+  const elemFinalIncorrectas = document.getElementById('final-incorrectas');
+  const elemPorcentajeCorrectas = document.getElementById('porcentaje-correctas');
+  const elemPorcentajeIncorrectas = document.getElementById('porcentaje-incorrectas');
+  const elemNotaFinal = document.getElementById('nota-final');
+  
+  if (elemFinalCorrectas) elemFinalCorrectas.textContent = estadisticas.correctas;
+  if (elemFinalIncorrectas) elemFinalIncorrectas.textContent = estadisticas.incorrectas;
+  if (elemPorcentajeCorrectas) elemPorcentajeCorrectas.textContent = porcentajeCorrectas;
+  if (elemPorcentajeIncorrectas) elemPorcentajeIncorrectas.textContent = porcentajeIncorrectas;
+  if (elemNotaFinal) elemNotaFinal.textContent = porcentajeCorrectas;
 
   // Resultados por dominio
   let htmlDominios = '';
@@ -332,12 +436,23 @@ function mostrarResultadosFinales() {
     `;
   });
 
-  document.getElementById('resultados-por-dominio').innerHTML = htmlDominios;
-  document.getElementById('resultados-finales').classList.remove('hidden');
-  document.getElementById('resultados-finales').scrollIntoView({ behavior: 'smooth' });
+  const elemResultadosDominio = document.getElementById('resultados-por-dominio');
+  if (elemResultadosDominio) {
+    elemResultadosDominio.innerHTML = htmlDominios;
+  }
+  
+  const elemResultadosFinales = document.getElementById('resultados-finales');
+  if (elemResultadosFinales) {
+    elemResultadosFinales.classList.remove('hidden');
+    elemResultadosFinales.scrollIntoView({ behavior: 'smooth' });
+  }
+  
+  console.log('[QUIZ] Resultados finales mostrados');
 }
 
 function configurarEventListeners() {
-  // Ya configurado en el HTML inline
+  console.log('[QUIZ] Event listeners configurados');
 }
+
+console.log('[QUIZ] Script cargado completamente');
 </script>

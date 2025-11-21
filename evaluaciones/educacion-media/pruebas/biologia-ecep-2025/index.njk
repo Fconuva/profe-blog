@@ -44,17 +44,33 @@ permalink: /evaluaciones/educacion-media/pruebas/biologia-ecep-2025/
         </div>
       </div>
 
-      <!-- Navegador de preguntas -->
+      <!-- Navegador de preguntas horizontal -->
       <div class="mt-8 bg-white rounded-xl shadow-md p-6">
-        <h3 class="text-lg font-bold text-gray-800 mb-4">Navegación Rápida</h3>
-        <div id="navegador-preguntas" class="grid grid-cols-10 md:grid-cols-13 gap-2"></div>
+        <h3 class="text-lg font-bold text-gray-800 mb-4 text-center">Navegación de Preguntas</h3>
+        <div class="flex items-center justify-center gap-4">
+          <button id="nav-prev" onclick="cambiarPregunta(-1)" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            ← Anterior
+          </button>
+          <div class="flex items-center gap-2 overflow-x-auto max-w-4xl px-4" id="navegador-preguntas-scroll">
+            <div id="navegador-preguntas" class="flex gap-2"></div>
+          </div>
+          <button id="nav-next" onclick="cambiarPregunta(1)" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-semibold shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            Siguiente →
+          </button>
+        </div>
       </div>
     </div>
     
-    <form id="evaluacionForm" class="space-y-6">
-      <!-- Las preguntas se cargarán dinámicamente aquí -->
-      <div id="preguntas-container"></div>
-    </form>
+    <!-- Contenedor de pregunta única -->
+    <div class="max-w-4xl mx-auto mt-8">
+      <div id="pregunta-actual" class="bg-white rounded-xl shadow-2xl p-8 min-h-[600px]">
+        <div class="flex items-center justify-center h-64">
+          <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-purple-600"></div>
+        </div>
+      </div>
+    </div>
+    
+    <form id="evaluacionForm" class="hidden"></form>
 
     <!-- Resultados finales -->
     <div id="resultados-finales" class="hidden mt-12 bg-white rounded-xl shadow-2xl p-8">
@@ -108,6 +124,7 @@ let estadisticas = {
   incorrectas: 0,
   porDominio: {}
 };
+let preguntaActualIndex = 0;
 
 // Cargar plan.json
 const planJsonPath = '/evaluaciones/educacion-media/pruebas/biologia-ecep-2025/plan.json';
@@ -126,12 +143,12 @@ fetch(planJsonPath)
     planData = data;
     inicializarEstadisticas();
     renderizarNavegador();
-    renderizarPreguntas();
-    configurarEventListeners();
+    mostrarPregunta(0);
+    actualizarBotonesNavegacion();
   })
   .catch(error => {
     console.error('[QUIZ] Error cargando plan.json:', error);
-    const container = document.getElementById('preguntas-container');
+    const container = document.getElementById('pregunta-actual');
     if (container) {
       container.innerHTML = `
         <div class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
@@ -177,9 +194,9 @@ function renderizarNavegador() {
   planData.questions.forEach((pregunta, index) => {
     const num = index + 1;
     html += `
-      <button type="button" onclick="scrollToPregunta(${num})" 
+      <button type="button" onclick="irAPregunta(${index})" 
               id="nav-btn-${num}"
-              class="nav-pregunta w-10 h-10 rounded-lg font-semibold text-sm transition-all hover:scale-110 bg-gray-200 text-gray-700 hover:bg-purple-100">
+              class="nav-pregunta flex-shrink-0 w-12 h-12 rounded-lg font-semibold text-sm transition-all hover:scale-110 bg-gray-200 text-gray-700 hover:bg-purple-100">
         ${num}
       </button>
     `;
@@ -189,15 +206,131 @@ function renderizarNavegador() {
   console.log('[QUIZ] Navegador renderizado con', planData.questions.length, 'botones');
 }
 
-function scrollToPregunta(numero) {
-  const elemento = document.querySelector(`[data-pregunta="${numero}"]`);
-  if (elemento) {
-    elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    elemento.classList.add('ring-4', 'ring-purple-300');
-    setTimeout(() => {
-      elemento.classList.remove('ring-4', 'ring-purple-300');
-    }, 2000);
+function cambiarPregunta(direccion) {
+  const nuevoIndex = preguntaActualIndex + direccion;
+  if (nuevoIndex >= 0 && nuevoIndex < planData.questions.length) {
+    preguntaActualIndex = nuevoIndex;
+    mostrarPregunta(preguntaActualIndex);
+    actualizarBotonesNavegacion();
+    scrollToNavButton(preguntaActualIndex);
   }
+}
+
+function irAPregunta(index) {
+  preguntaActualIndex = index;
+  mostrarPregunta(preguntaActualIndex);
+  actualizarBotonesNavegacion();
+  scrollToNavButton(index);
+  // Scroll suave al contenedor de la pregunta
+  document.getElementById('pregunta-actual').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function scrollToNavButton(index) {
+  const navBtn = document.getElementById(`nav-btn-${index + 1}`);
+  if (navBtn) {
+    navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
+}
+
+function actualizarBotonesNavegacion() {
+  const prevBtn = document.getElementById('nav-prev');
+  const nextBtn = document.getElementById('nav-next');
+  
+  if (prevBtn) prevBtn.disabled = preguntaActualIndex === 0;
+  if (nextBtn) nextBtn.disabled = preguntaActualIndex === planData.questions.length - 1;
+  
+  // Highlight botón actual
+  planData.questions.forEach((_, index) => {
+    const btn = document.getElementById(`nav-btn-${index + 1}`);
+    if (btn) {
+      if (index === preguntaActualIndex) {
+        btn.classList.add('ring-4', 'ring-purple-400', 'scale-110');
+      } else {
+        btn.classList.remove('ring-4', 'ring-purple-400', 'scale-110');
+      }
+    }
+  });
+}
+
+function mostrarPregunta(index) {
+  const container = document.getElementById('pregunta-actual');
+  if (!container) {
+    console.error('[QUIZ] Error: elemento pregunta-actual no encontrado');
+    return;
+  }
+  if (!planData || !planData.questions || !planData.domains) {
+    console.error('[QUIZ] Error: planData incompleto');
+    container.innerHTML = '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">Datos de preguntas no disponibles</div>';
+    return;
+  }
+  
+  const pregunta = planData.questions[index];
+  const dominio = planData.domains.find(d => d.id === pregunta.domain);
+  if (!dominio) {
+    console.warn('[QUIZ] Dominio no encontrado para pregunta', pregunta.id);
+    return;
+  }
+  
+  const numeroPregunta = index + 1;
+  const colorDominio = getDomainColor(pregunta.domain);
+  const yaRespondida = respuestas[pregunta.id];
+
+  let html = `
+    <div class="mb-6 flex justify-between items-start flex-wrap gap-3">
+      <div class="flex flex-wrap gap-3">
+        <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-bold">Pregunta ${numeroPregunta} de ${planData.questions.length}</span>
+        <span class="${colorDominio.bg} ${colorDominio.text} px-4 py-2 rounded-full text-sm">${dominio.name}</span>
+        ${pregunta.difficulty ? `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">${getDifficultyLabel(pregunta.difficulty)}</span>` : ''}
+      </div>
+    </div>
+
+    <div class="prose max-w-none mb-6">
+      ${pregunta.stem}
+    </div>
+
+    ${pregunta.image ? `
+      <div class="my-6 text-center">
+        <img src="${pregunta.image}" alt="Imagen pregunta ${numeroPregunta}" class="max-w-full h-auto mx-auto shadow-lg rounded-lg" />
+      </div>
+    ` : ''}
+
+    <div class="space-y-3">
+      ${pregunta.options.map(opcion => {
+        const isSelected = yaRespondida && yaRespondida.opcion === opcion.id;
+        const borderClass = isSelected ? (opcion.isCorrect ? 'border-green-400 bg-green-50' : 'border-red-400 bg-red-50') : 'border-gray-200';
+        return `
+          <label class="flex items-start p-4 border-2 ${borderClass} rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all ${yaRespondida ? 'pointer-events-none' : ''}">
+            <input type="radio" name="pregunta-${pregunta.id}" value="${opcion.id}" 
+                   class="mt-1 w-5 h-5 text-purple-600" 
+                   ${isSelected ? 'checked' : ''}
+                   onchange="verificarRespuesta(${pregunta.id}, '${opcion.id}', ${numeroPregunta})"/>
+            <span class="ml-3 flex-1">
+              <span class="font-bold text-purple-700">${opcion.id.toUpperCase()})</span> ${opcion.text}
+            </span>
+          </label>
+        `;
+      }).join('')}
+    </div>
+
+    <div id="feedback-${pregunta.id}" class="${yaRespondida ? '' : 'hidden'} mt-6">
+      ${yaRespondida ? getStoredFeedback(pregunta.id) : ''}
+    </div>
+  `;
+
+  container.innerHTML = html;
+  console.log('[QUIZ] Mostrada pregunta', numeroPregunta);
+}
+
+function getStoredFeedback(preguntaId) {
+  const pregunta = planData.questions.find(p => p.id === preguntaId);
+  const respuesta = respuestas[preguntaId];
+  if (!respuesta || !pregunta) return '';
+  
+  const opcion = pregunta.options.find(o => o.id === respuesta.opcion);
+  if (!opcion) return '';
+  
+  const bgClass = opcion.isCorrect ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300';
+  return `<div class="${bgClass} border-2 rounded-lg p-6">${opcion.feedback}</div>`;
 }
 
 function getDifficultyLabel(difficulty) {
@@ -227,73 +360,6 @@ function getDomainColor(domainId) {
     'red': { bg: 'bg-red-100', text: 'text-red-800' }
   };
   return colors[domain.color] || colors.blue;
-}
-
-function renderizarPreguntas() {
-  const container = document.getElementById('preguntas-container');
-  if (!container) {
-    console.error('[QUIZ] Error: elemento preguntas-container no encontrado');
-    return;
-  }
-  if (!planData || !planData.questions || !planData.domains) {
-    console.error('[QUIZ] Error: planData incompleto');
-    container.innerHTML = '<div class="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">Datos de preguntas no disponibles</div>';
-    return;
-  }
-  
-  let html = '';
-
-  planData.questions.forEach((pregunta, index) => {
-    const dominio = planData.domains.find(d => d.id === pregunta.domain);
-    if (!dominio) {
-      console.warn('[QUIZ] Dominio no encontrado para pregunta', pregunta.id);
-      return;
-    }
-    const numeroPregunta = index + 1;
-    const colorDominio = getDomainColor(pregunta.domain);
-
-    html += `
-      <div class="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow p-8" 
-           data-pregunta="${numeroPregunta}"
-           data-id="bio-${pregunta.id}">
-        <div class="mb-6 flex justify-between items-start flex-wrap gap-3">
-          <div class="flex flex-wrap gap-3">
-            <span class="bg-purple-100 text-purple-800 px-4 py-2 rounded-full text-sm font-bold">Pregunta ${numeroPregunta}</span>
-            <span class="${colorDominio.bg} ${colorDominio.text} px-4 py-2 rounded-full text-sm">${dominio.name}</span>
-            ${pregunta.difficulty ? `<span class="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs">${getDifficultyLabel(pregunta.difficulty)}</span>` : ''}
-          </div>
-        </div>
-
-        <div class="prose max-w-none mb-6">
-          ${pregunta.stem}
-        </div>
-
-        ${pregunta.image ? `
-          <div class="my-6 text-center">
-            <img src="${pregunta.image}" alt="Imagen pregunta ${numeroPregunta}" class="max-w-full h-auto mx-auto shadow-lg rounded-lg" />
-          </div>
-        ` : ''}
-
-        <div class="space-y-3">
-          ${pregunta.options.map(opcion => `
-            <label class="flex items-start p-4 border-2 border-gray-200 rounded-lg hover:border-purple-300 hover:bg-purple-50 cursor-pointer transition-all">
-              <input type="radio" name="pregunta-${pregunta.id}" value="${opcion.id}" 
-                     class="mt-1 w-5 h-5 text-purple-600" 
-                     onchange="verificarRespuesta(${pregunta.id}, '${opcion.id}', ${numeroPregunta})"/>
-              <span class="ml-3 flex-1">
-                <span class="font-bold text-purple-700">${opcion.id.toUpperCase()})</span> ${opcion.text}
-              </span>
-            </label>
-          `).join('')}
-        </div>
-
-        <div id="feedback-${pregunta.id}" class="hidden mt-6"></div>
-      </div>
-    `;
-  });
-
-  container.innerHTML = html;
-  console.log('[QUIZ] Renderizadas', planData.questions.length, 'preguntas');
 }
 
 function verificarRespuesta(preguntaId, opcionId, numeroPregunta) {

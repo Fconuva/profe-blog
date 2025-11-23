@@ -1,0 +1,63 @@
+# -*- coding: utf-8 -*-
+"""
+Script para agregar contextos pedagógicos extensos a las preguntas 41-50
+Incluye: nombres de educadoras, situaciones reales, OAs BCEP 2018
+"""
+
+import json
+
+# Contextos pedagógicos mejorados para preguntas 41-50
+contextos_mejorados = {
+    "parv-41": {
+        "contexto": "La educadora Javiera trabaja en un jardín infantil de Quillota con un grupo de NT2. Durante un proyecto sobre 'mi barrio', los niños visitan la panadería local, el almacén, la feria. Javiera quiere que comprendan roles y trabajos comunitarios. Reflexiona sobre el Objetivo de Aprendizaje 3 del núcleo Comprensión del Entorno Sociocultural de las BCEP 2018: 'Reconocer las principales festividades de su comunidad, del país y del mundo, mediante la participación en distintas celebraciones'. También considera el OA 7: 'Comprender que los trabajos que realizan las personas de su familia y de su comunidad, aportan al bienestar colectivo'. Javiera sabe que entender interdependencia social es clave para ciudadanía: nadie es completamente autosuficiente, todos dependemos de otros. La panadería depende del molinero, el almacén del transportista, todos necesitamos agricultores. Quiere que los niños valoren todas las profesiones, entiendan que no hay trabajos 'mejores' o 'peores', todos son necesarios para la vida en comunidad.",
+        "numero": 41
+    },
+    "parv-42": {
+        "contexto": "El educador Diego trabaja en un jardín infantil de Limache con un grupo de NT1. Durante el mes patrio (septiembre), el jardín planifica actividades tradicionales: bailar cueca, comer empanadas, decorar con banderas. Diego se pregunta si estas actividades realmente desarrollan identidad cultural o son solo folclor superficial. Reflexiona sobre el Objetivo de Aprendizaje 1 del núcleo Comprensión del Entorno Sociocultural de las BCEP 2018: 'Comprender los roles que desarrollan miembros de su familia y de su comunidad, y su aporte para el bienestar común'. También considera el OA 4: 'Comunicar sus experiencias de situaciones cotidianas, en forma oral y gráfica, utilizando sus propias palabras, combinando diversos recursos expresivos'. Diego ha investigado sobre educación intercultural: la identidad no se construye con estereotipos (todos los chilenos bailan cueca), sino reconociendo diversidad dentro del país. Chile es multicultural: pueblos originarios, migrantes, diferentes regiones con tradiciones propias. Necesita un enfoque más complejo y respetuoso.",
+        "numero": 42
+    },
+    "parv-43": {
+        "contexto": "La educadora Camila trabaja en un jardín infantil de Villa Alemana con un grupo de NT2. Implementa asambleas donde los niños votan decisiones colectivas: qué cuento leer, qué juego jugar en el patio, cómo decorar la sala. Algunos padres critican: 'los niños no deben decidir, los adultos saben mejor'. Camila reflexiona sobre el Objetivo de Aprendizaje 5 del núcleo Comprensión del Entorno Sociocultural de las BCEP 2018: 'Aplicar estrategias pacíficas frente a la resolución de conflictos cotidianos con otros niños y niñas'. También considera el OA 6: 'Planificar proyectos y juegos, en función de sus ideas e intereses, proponiendo actividades, organizando los recursos, incorporando los ajustes necesarios e iniciándose en la apreciación de sus resultados'. Camila sabe que la democracia se aprende practicándola desde pequeños. Votar enseña: tu opinión cuenta, debemos considerar opiniones de otros, a veces pierdes pero respetas la decisión mayoritaria, negociación es posible. Son habilidades ciudadanas fundamentales.",
+        "numero": 43
+    },
+    "parv-44": {
+        "contexto": "El educador Sebastián trabaja en un jardín infantil de San Antonio con un grupo de NT1. Durante actividades artísticas, ofrece témperas, pinceles, papel grande. Algunos niños pintan representaciones reconocibles (una casa, un sol), otros hacen trazos abstractos, manchas de color. Sebastián duda si debe enseñar 'cómo dibujar correctamente' o permitir expresión libre. Reflexiona sobre el Objetivo de Aprendizaje 1 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Apreciar producciones artísticas de diversos contextos (en forma directa o a través de medios tecnológicos), describiendo y comparando algunas características visuales, musicales o escénicas (desplazamiento, ritmo, carácter expresivo, colorido, formas, diseño, entre otros)'. También considera el OA 5: 'Representar a través del dibujo, sus ideas, intereses y experiencias, incorporando detalles a las figuras humanas y a objetos de su entorno, ubicándolos en parámetros básicos de organización espacial (arriba/abajo, dentro/fuera)'. Sebastián ha leído teorías sobre desarrollo del dibujo infantil: garabateo, formas básicas, esquemas. Necesita equilibrar libertad expresiva con progresión evolutiva.",
+        "numero": 44
+    },
+    "parv-45": {
+        "contexto": "La educadora Francisca trabaja en un jardín infantil de Cartagena con un grupo de NT2. Implementa proyectos artísticos donde los niños experimentan con diferentes materiales: arcilla, cartón, telas, elementos naturales. Algunos padres preguntan '¿por qué no enseña a dibujar bien?, mi hijo siempre pinta todo del mismo color'. Francisca reflexiona sobre el Objetivo de Aprendizaje 2 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Comunicar sus impresiones, emociones e ideas respecto de diversas obras de arte, producciones propias y de sus pares (artesanías, piezas musicales, obras plásticas y escénicas, entre otras)'. También considera el OA 6: 'Experimentar diversas combinaciones de expresión plástica, corporal y musical, comunicando las razones del proceso realizado'. Francisca sabe que el arte infantil no busca 'realismo', sino expresión personal, exploración sensorial, creatividad, toma de decisiones estéticas. El valor está en el proceso, no solo en el producto final.",
+        "numero": 45
+    },
+    "parv-46": {
+        "contexto": "El educador Cristóbal trabaja en un jardín infantil de El Quisco con un grupo de NT1. Quiere incorporar música en el currículum. Tiene varias opciones: poner canciones infantiles para que escuchen, enseñar canciones tradicionales, o facilitar exploración sonora con instrumentos. Cristóbal reflexiona sobre el Objetivo de Aprendizaje 3 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Interpretar canciones y juegos musicales, utilizando de manera integrada diversos recursos tales como, la voz, el cuerpo, instrumentos musicales y objetos'. También considera el OA 4: 'Expresar corporalmente sensaciones, emociones e ideas a partir de la improvisación de escenas dramáticas, juegos teatrales, mímica, danza, bailes, entre otros'. Cristóbal sabe que la educación musical no es solo cantar canciones, sino desarrollar conciencia auditiva, sentido rítmico, expresión a través del sonido. Necesita un enfoque más exploratorio y creativo que la simple repetición de canciones.",
+        "numero": 46
+    },
+    "parv-47": {
+        "contexto": "La educadora Antonia trabaja en un jardín infantil de Algarrobo con un grupo de NT2. Observa que durante el juego dramático, los niños siempre recrean los mismos roles: mamá-papá-bebé, doctor-paciente, vendedor-comprador. Antonia se pregunta si debe intervenir para ampliar el repertorio o dejar que jueguen libremente. Reflexiona sobre el Objetivo de Aprendizaje 4 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Expresar corporalmente sensaciones, emociones e ideas a partir de la improvisación de escenas dramáticas, juegos teatrales, mímica, danza, bailes, entre otros'. También considera el OA 7: 'Representar a través de la plástica y la música, sus experiencias, ideas, emociones, eventos del entorno, utilizando diversos recursos y soportes'. Antonia sabe que el juego simbólico es crucial para desarrollo: permite explorar roles sociales, processar experiencias, desarrollar empatía al 'ponerse en los zapatos' de otros. Puede enriquecer sin dirigir autoritariamente.",
+        "numero": 47
+    },
+    "parv-48": {
+        "contexto": "El educador Gonzalo trabaja en un jardín infantil de Quilpué con un grupo de NT1. Implementa actividades de movimiento y danza. Algunos niños se mueven con fluidez y creatividad, otros parecen inhibidos, miran a los demás sin participar. Gonzalo reflexiona sobre el Objetivo de Aprendizaje 4 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Expresar corporalmente sensaciones, emociones e ideas a partir de la improvisación de escenas dramáticas, juegos teatrales, mímica, danza, bailes, entre otros'. También considera el OA 3 del núcleo Corporalidad y Movimiento: 'Tomar conciencia de su cuerpo, de algunas de sus características internas (tales como: ritmo cardíaco, de respiración), de su esquema y progresivamente de su tono corporal y lateralidad, por medio de juegos'. Gonzalo sabe que la expresión corporal requiere confianza, ambiente seguro, ausencia de juicio. Algunos niños vienen de familias donde el movimiento expresivo no es valorado o donde hay vergüenza corporal. Necesita crear un espacio donde todos se sientan cómodos expresándose con su cuerpo.",
+        "numero": 48
+    },
+    "parv-49": {
+        "contexto": "La educadora Valentina trabaja en un jardín infantil de Valparaíso con un grupo de NT2. Quiere que los niños aprecien arte, pero duda qué obras mostrar. Algunos colegas recomiendan solo arte 'infantil' (dibujos animados, ilustraciones coloridas), otros sugieren exponer a arte 'clásico' (pinturas famosas, esculturas). Valentina reflexiona sobre el Objetivo de Aprendizaje 1 del núcleo Lenguajes Artísticos de las BCEP 2018: 'Apreciar producciones artísticas de diversos contextos (en forma directa o a través de medios tecnológicos), describiendo y comparando algunas características visuales, musicales o escénicas (desplazamiento, ritmo, carácter expresivo, colorido, formas, diseño, entre otros)'. También considera el OA 2: 'Comunicar sus impresiones, emociones e ideas respecto de diversas obras de arte, producciones propias y de sus pares (artesanías, piezas musicales, obras plásticas y escénicas, entre otras)'. Valentina ha investigado sobre educación estética: los niños pueden apreciar arte complejo si se presenta adecuadamente. No necesitan simplificaciones, necesitan oportunidades de observar, conversar, interpretar.",
+        "numero": 49
+    },
+    "parv-50": {
+        "contexto": "El educador Matías trabaja en un jardín infantil de Viña del Mar con un grupo de NT1 y NT2 integrados. Observa diferencias significativas en habilidades: algunos NT2 leen palabras simples, algunos NT1 apenas reconocen su nombre. Matías se pregunta cómo planificar experiencias que desafíen a todos sin frustrar ni aburrir a nadie. Reflexiona sobre el Objetivo de Aprendizaje 1 del núcleo Identidad y Autonomía de las BCEP 2018: 'Comunicar a los demás, emociones y sentimientos tales como: amor, miedo, alegría, ira, que le provocan diversas narraciones o situaciones observadas en forma directa o a través de TICs'. También considera principios de pedagogía diferenciada: misma meta, múltiples caminos; actividades abiertas que permiten diferentes niveles de complejidad; andamiaje diferenciado según necesidades. Matías sabe que la diversidad es riqueza, no problema. Los grupos heterogéneos permiten aprendizaje entre pares, colaboración, y enseñan que todos tenemos ritmos diferentes. Necesita estrategias para aprovechar pedagógicamente esta diversidad.",
+        "numero": 50
+    }
+}
+
+# Guardar en JSON
+with open('contextos_mejorados_41_50.json', 'w', encoding='utf-8') as f:
+    json.dump(contextos_mejorados, f, ensure_ascii=False, indent=2)
+
+print(f"✓ Creados {len(contextos_mejorados)} contextos pedagógicos mejorados")
+print("✓ Guardado en: contextos_mejorados_41_50.json")
+
+# Mostrar estadísticas
+for key, data in contextos_mejorados.items():
+    palabras = len(data['contexto'].split())
+    print(f"  - {key}: {palabras} palabras")

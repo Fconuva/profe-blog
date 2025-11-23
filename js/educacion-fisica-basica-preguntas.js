@@ -2,76 +2,76 @@
   '\''use strict'\'';
 
   const preguntas = [
-    // DOMINIO 1: APTITUD FÍSICA (15 preguntas - más fáciles, con imágenes)
+    // DOMINIO 1: APTITUD Fï¿½SICA (15 preguntas - mï¿½s fï¿½ciles, con imï¿½genes)
     {
       id: 1,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ¿Qué tipo de contracción muscular se produce en los abdominales?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ï¿½Quï¿½ tipo de contracciï¿½n muscular se produce en los abdominales?",
       alternativas: [
-        "Contracción concéntrica (músculos se acortan)",
-        "Contracción isométrica (tensión constante sin cambio de longitud)",
-        "Contracción excéntrica (músculos se alargan bajo tensión)",
-        "Contracción pliométrica (ciclo estiramiento-acortamiento)"
+        "Contracciï¿½n concï¿½ntrica (mï¿½sculos se acortan)",
+        "Contracciï¿½n isomï¿½trica (tensiï¿½n constante sin cambio de longitud)",
+        "Contracciï¿½n excï¿½ntrica (mï¿½sculos se alargan bajo tensiï¿½n)",
+        "Contracciï¿½n pliomï¿½trica (ciclo estiramiento-acortamiento)"
       ],
       correcta: 1,
-      explicacion: "En la plancha isométrica, los abdominales generan tensión para mantener la posición sin cambiar su longitud. Es una contracción estática ideal para desarrollar fuerza resistencia en niños."
+      explicacion: "En la plancha isomï¿½trica, los abdominales generan tensiï¿½n para mantener la posiciï¿½n sin cambiar su longitud. Es una contracciï¿½n estï¿½tica ideal para desarrollar fuerza resistencia en niï¿½os."
     },
     {
       id: 2,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de '\''Sit and Reach'\'' mostrado en la imagen?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "ï¿½Quï¿½ componente de la aptitud fï¿½sica se evalï¿½a con el test de '\''Sit and Reach'\'' mostrado en la imagen?",
       alternativas: [
         "Fuerza explosiva de miembros inferiores",
-        "Velocidad de reacción ante estímulos",
+        "Velocidad de reacciï¿½n ante estï¿½mulos",
         "Flexibilidad de isquiotibiales y zona lumbar",
-        "Resistencia cardiovascular aeróbica"
+        "Resistencia cardiovascular aerï¿½bica"
       ],
       correcta: 2,
-      explicacion: "El Sit and Reach mide la flexibilidad de la cadena posterior (isquiotibiales, glúteos, zona lumbar). Es un test simple y seguro para escolares de básica."
+      explicacion: "El Sit and Reach mide la flexibilidad de la cadena posterior (isquiotibiales, glï¿½teos, zona lumbar). Es un test simple y seguro para escolares de bï¿½sica."
     },
     {
       id: 3,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un estudiante saltando la cuerda, ¿qué cualidad física se desarrolla principalmente?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "En la imagen de un estudiante saltando la cuerda, ï¿½quï¿½ cualidad fï¿½sica se desarrolla principalmente?",
       alternativas: [
         "Flexibilidad pasiva de miembros superiores",
-        "Resistencia aeróbica y coordinación rítmica",
-        "Fuerza máxima con cargas externas pesadas",
-        "Equilibrio estático sin movimiento"
+        "Resistencia aerï¿½bica y coordinaciï¿½n rï¿½tmica",
+        "Fuerza mï¿½xima con cargas externas pesadas",
+        "Equilibrio estï¿½tico sin movimiento"
       ],
       correcta: 1,
-      explicacion: "Saltar la cuerda combina resistencia cardiovascular (trabajo aeróbico continuo) con coordinación óculo-manual y rítmica. Es actividad lúdica apropiada para básica."
+      explicacion: "Saltar la cuerda combina resistencia cardiovascular (trabajo aerï¿½bico continuo) con coordinaciï¿½n ï¿½culo-manual y rï¿½tmica. Es actividad lï¿½dica apropiada para bï¿½sica."
     },
     {
       id: 4,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Según la imagen de un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Segï¿½n la imagen de un diagrama anatï¿½mico, ï¿½quï¿½ mï¿½sculo es responsable de la extensiï¿½n del brazo en el lanzamiento?",
       alternativas: [
-        "Bíceps braquial (flexor del codo)",
-        "Tríceps braquial (extensor del codo)",
+        "Bï¿½ceps braquial (flexor del codo)",
+        "Trï¿½ceps braquial (extensor del codo)",
         "Deltoides (abductor del hombro)",
         "Pectoral mayor (aductor del hombro)"
       ],
       correcta: 1,
-      explicacion: "El tríceps es el extensor principal del codo. En lanzamientos, se contrae concéntricamente para acelerar el implemento. Es fundamental en deportes de invasión."
+      explicacion: "El trï¿½ceps es el extensor principal del codo. En lanzamientos, se contrae concï¿½ntricamente para acelerar el implemento. Es fundamental en deportes de invasiï¿½n."
     },
     {
       id: 5,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ï¿½Quï¿½ tipo de actividad es mï¿½s recomendable inicialmente?",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
-        "Actividades de bajo impacto moderado como caminata o natación",
-        "Levantamiento de pesas máximo (>90% 1RM)",
-        "Ejercicios isométricos estáticos prolongados"
+        "Actividades de bajo impacto moderado como caminata o nataciï¿½n",
+        "Levantamiento de pesas mï¿½ximo (>90% 1RM)",
+        "Ejercicios isomï¿½tricos estï¿½ticos prolongados"
       ],
       correcta: 1,
       explicacion: "En obesidad infantil, bajo impacto protege articulaciones. Intensidad moderada es sostenible y mejora adherencia. Progresar gradualmente hacia mayor intensidad."
     },
     {
       id: 6,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué zona de frecuencia cardíaca corresponde a trabajo aeróbico moderado en niños (60-70% FC máx)?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "ï¿½Quï¿½ zona de frecuencia cardï¿½aca corresponde a trabajo aerï¿½bico moderado en niï¿½os (60-70% FC mï¿½x)?",
       alternativas: [
         "180-200 lat/min (zona alta 80-90%)",
         "120-140 lat/min (zona baja 50-60%)",
@@ -79,51 +79,51 @@
         "100-120 lat/min (zona muy baja <50%)"
       ],
       correcta: 2,
-      explicacion: "Para un niño con FC máx 200 lat/min, 60-70% = 120-140 lat/min. Esta zona desarrolla resistencia aeróbica sin fatiga excesiva ni riesgo cardiovascular."
+      explicacion: "Para un niï¿½o con FC mï¿½x 200 lat/min, 60-70% = 120-140 lat/min. Esta zona desarrolla resistencia aerï¿½bica sin fatiga excesiva ni riesgo cardiovascular."
     },
     {
       id: 7,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "En la imagen de un diagrama de sistemas energï¿½ticos, ï¿½cuï¿½l predomina en un sprint de 50 metros?",
       alternativas: [
-        "Sistema aeróbico oxidativo (duración >2 min)",
-        "Sistema anaeróbico láctico (duración 30-90 seg)",
-        "Sistema ATP-PC (duración 10-15 seg)",
-        "Sistema mixto aeróbico-anaeróbico"
+        "Sistema aerï¿½bico oxidativo (duraciï¿½n >2 min)",
+        "Sistema anaerï¿½bico lï¿½ctico (duraciï¿½n 30-90 seg)",
+        "Sistema ATP-PC (duraciï¿½n 10-15 seg)",
+        "Sistema mixto aerï¿½bico-anaerï¿½bico"
       ],
       correcta: 2,
-      explicacion: "En esfuerzos cortos (10-15 seg), predomina ATP-PC (fosfocreatina) que provee energía inmediata sin oxígeno ni lactato. Ideal para actividades explosivas en básica."
+      explicacion: "En esfuerzos cortos (10-15 seg), predomina ATP-PC (fosfocreatina) que provee energï¿½a inmediata sin oxï¿½geno ni lactato. Ideal para actividades explosivas en bï¿½sica."
     },
     {
       id: 8,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué hormona es clave para el desarrollo muscular en la adolescencia?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "ï¿½Quï¿½ hormona es clave para el desarrollo muscular en la adolescencia?",
       alternativas: [
         "Insulina (reguladora de glucosa)",
-        "Testosterona (anabólica para crecimiento)",
-        "Melatonina (reguladora del sueño)",
+        "Testosterona (anabï¿½lica para crecimiento)",
+        "Melatonina (reguladora del sueï¿½o)",
         "Tiroxina (metabolismo basal)"
       ],
       correcta: 1,
-      explicacion: "Testosterona es hormona anabólica que promueve hipertrofia muscular. En prepúberes (básica), niveles bajos; priorizar fuerza neural y resistencia."
+      explicacion: "Testosterona es hormona anabï¿½lica que promueve hipertrofia muscular. En prepï¿½beres (bï¿½sica), niveles bajos; priorizar fuerza neural y resistencia."
     },
     {
       id: 9,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ¿Qué capacidad se desarrolla?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ï¿½Quï¿½ capacidad se desarrolla?",
       alternativas: [
         "Velocidad lineal de desplazamiento",
-        "Equilibrio estático y propiocepción",
-        "Fuerza máxima isométrica",
-        "Resistencia anaeróbica láctica"
+        "Equilibrio estï¿½tico y propiocepciï¿½n",
+        "Fuerza mï¿½xima isomï¿½trica",
+        "Resistencia anaerï¿½bica lï¿½ctica"
       ],
       correcta: 1,
-      explicacion: "Equilibrio unipodal desarrolla propiocepción (sensación de posición corporal) y estabilidad estática. Importante para prevención de lesiones y coordinación."
+      explicacion: "Equilibrio unipodal desarrolla propiocepciï¿½n (sensaciï¿½n de posiciï¿½n corporal) y estabilidad estï¿½tica. Importante para prevenciï¿½n de lesiones y coordinaciï¿½n."
     },
     {
       id: 10,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Según la OMS, ¿cuántos minutos diarios de actividad física vigorosa necesitan niños de 5-17 años?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Segï¿½n la OMS, ï¿½cuï¿½ntos minutos diarios de actividad fï¿½sica vigorosa necesitan niï¿½os de 5-17 aï¿½os?",
       alternativas: [
         "30 minutos diarios moderados",
         "45 minutos diarios vigorosos",
@@ -131,51 +131,51 @@
         "90 minutos diarios mixtos"
       ],
       correcta: 2,
-      explicacion: "OMS recomienda mínimo 60 minutos diarios de AFMV (moderada-vigorosa) para niños. Incluye recreos activos, educación física y juego libre."
+      explicacion: "OMS recomienda mï¿½nimo 60 minutos diarios de AFMV (moderada-vigorosa) para niï¿½os. Incluye recreos activos, educaciï¿½n fï¿½sica y juego libre."
     },
     {
       id: 11,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un circuito de ejercicios, ¿qué principio FITT se refiere a '\''3 veces por semana'\''?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "En la imagen de un circuito de ejercicios, ï¿½quï¿½ principio FITT se refiere a '\''3 veces por semana'\''?",
       alternativas: [
         "Intensity (intensidad del esfuerzo)",
-        "Time (duración por sesión)",
+        "Time (duraciï¿½n por sesiï¿½n)",
         "Frequency (frecuencia semanal)",
         "Type (tipo de actividad)"
       ],
       correcta: 2,
-      explicacion: "Frequency = veces por semana. Para niños, 3-4 sesiones semanales permiten recuperación y adherencia sin sobreentrenamiento."
+      explicacion: "Frequency = veces por semana. Para niï¿½os, 3-4 sesiones semanales permiten recuperaciï¿½n y adherencia sin sobreentrenamiento."
     },
     {
       id: 12,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué tipo de fuerza es más apropiado trabajar en educación básica?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "ï¿½Quï¿½ tipo de fuerza es mï¿½s apropiado trabajar en educaciï¿½n bï¿½sica?",
       alternativas: [
-        "Fuerza máxima con cargas pesadas",
+        "Fuerza mï¿½xima con cargas pesadas",
         "Fuerza resistencia con peso corporal",
-        "Fuerza explosiva olímpica",
-        "Fuerza isométrica prolongada"
+        "Fuerza explosiva olï¿½mpica",
+        "Fuerza isomï¿½trica prolongada"
       ],
       correcta: 1,
-      explicacion: "Fuerza resistencia (repeticiones moderadas, baja carga) usando peso corporal. Evita riesgos óseos-articulares en desarrollo."
+      explicacion: "Fuerza resistencia (repeticiones moderadas, baja carga) usando peso corporal. Evita riesgos ï¿½seos-articulares en desarrollo."
     },
     {
       id: 13,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante lesionado. ¿Cuál es el protocolo RICE correcto?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "Observa la imagen de un estudiante lesionado. ï¿½Cuï¿½l es el protocolo RICE correcto?",
       alternativas: [
         "Calor + Masaje + Movimiento continuo",
-        "Reposo + Hielo + Compresión + Elevación",
-        "Ejercicio intenso + Calor + Fricción",
+        "Reposo + Hielo + Compresiï¿½n + Elevaciï¿½n",
+        "Ejercicio intenso + Calor + Fricciï¿½n",
         "Ignorar y continuar actividad"
       ],
       correcta: 1,
-      explicacion: "RICE: Reposo (detener), Hielo (reducir inflamación), Compresión (contener edema), Elevación (mejorar retorno venoso). Derivar a profesional."
+      explicacion: "RICE: Reposo (detener), Hielo (reducir inflamaciï¿½n), Compresiï¿½n (contener edema), Elevaciï¿½n (mejorar retorno venoso). Derivar a profesional."
     },
     {
       id: 14,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un diagrama motor, ¿cuál es la secuencia correcta de adquisición de habilidades?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "En la imagen de un diagrama motor, ï¿½cuï¿½l es la secuencia correcta de adquisiciï¿½n de habilidades?",
       alternativas: [
         "Especializadas  Fundamentales  Rudimentarias",
         "Rudimentarias  Fundamentales  Especializadas",
@@ -183,12 +183,12 @@
         "Reflejas  Especializadas  Fundamentales"
       ],
       correcta: 1,
-      explicacion: "Secuencia natural: Reflejas (0-1 año)  Rudimentarias (1-2: gateo)  Fundamentales (2-7: correr, saltar)  Especializadas (7-12+: técnicas específicas)."
+      explicacion: "Secuencia natural: Reflejas (0-1 aï¿½o)  Rudimentarias (1-2: gateo)  Fundamentales (2-7: correr, saltar)  Especializadas (7-12+: tï¿½cnicas especï¿½ficas)."
     },
     {
       id: 15,
-      dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué test mide resistencia aeróbica corriendo máxima distancia en 12 minutos?",
+      dominio: "Dominio 1: Aptitud Fï¿½sica",
+      enunciado: "ï¿½Quï¿½ test mide resistencia aerï¿½bica corriendo mï¿½xima distancia en 12 minutos?",
       alternativas: [
         "Test de Cooper",
         "Test de Sit and Reach",
@@ -196,250 +196,250 @@
         "Test de 30 metros"
       ],
       correcta: 0,
-      explicacion: "Test de Cooper: distancia recorrida en 12 minutos estima VO2máx. Protocolo estandarizado para escolares."
+      explicacion: "Test de Cooper: distancia recorrida en 12 minutos estima VO2mï¿½x. Protocolo estandarizado para escolares."
     },
 
-    // DOMINIO 2: MANIFESTACIONES DE LA MOTRICIDAD (15 preguntas - con imágenes y nuevos temas)
+    // DOMINIO 2: MANIFESTACIONES DE LA MOTRICIDAD (15 preguntas - con imï¿½genes y nuevos temas)
     {
       id: 16,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de una secuencia de juego de básquetbol. ¿Qué principio ofensivo se aplica al desmarcarse?",
+      enunciado: "Observa la imagen de una secuencia de juego de bï¿½squetbol. ï¿½Quï¿½ principio ofensivo se aplica al desmarcarse?",
       alternativas: [
-        "Proteger la portería propia",
+        "Proteger la porterï¿½a propia",
         "Crear espacios para recibir pase",
         "Interceptar pases del rival",
-        "Presionar al portador del balón"
+        "Presionar al portador del balï¿½n"
       ],
       correcta: 1,
-      explicacion: "Desmarcarse crea espacios libres para recibir pases, facilitando progresión hacia canasta. Principio básico de ataque en deportes de invasión."
+      explicacion: "Desmarcarse crea espacios libres para recibir pases, facilitando progresiï¿½n hacia canasta. Principio bï¿½sico de ataque en deportes de invasiï¿½n."
     },
     {
       id: 17,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué danza folclórica se representa en la imagen con movimientos circulares y pañuelo?",
+      enunciado: "ï¿½Quï¿½ danza folclï¿½rica se representa en la imagen con movimientos circulares y paï¿½uelo?",
       alternativas: [
         "Cueca chilena",
-        "Trote altiplánico",
+        "Trote altiplï¿½nico",
         "Sau-sau de Rapa Nui",
         "Choike Purrun mapuche"
       ],
       correcta: 0,
-      explicacion: "La Cueca usa pañuelo blanco en movimientos circulares que simbolizan galanteo. Es danza nacional chilena, transmitida culturalmente."
+      explicacion: "La Cueca usa paï¿½uelo blanco en movimientos circulares que simbolizan galanteo. Es danza nacional chilena, transmitida culturalmente."
     },
     {
       id: 18,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de un estudiante en silla de ruedas jugando básquetbol, ¿qué adaptación promueve inclusión?",
+      enunciado: "En la imagen de un estudiante en silla de ruedas jugando bï¿½squetbol, ï¿½quï¿½ adaptaciï¿½n promueve inclusiï¿½n?",
       alternativas: [
         "Excluir al estudiante del juego",
         "Crear equipo separado solo para discapacitados",
         "Todos juegan sentados para igualar condiciones",
-        "Asignar roles pasivos sin participación activa"
+        "Asignar roles pasivos sin participaciï¿½n activa"
       ],
       correcta: 2,
-      explicacion: "Diseño Universal para el Aprendizaje: igualar condiciones (todos sentados) permite participación plena, fomenta empatía y habilidades compartidas."
+      explicacion: "Diseï¿½o Universal para el Aprendizaje: igualar condiciones (todos sentados) permite participaciï¿½n plena, fomenta empatï¿½a y habilidades compartidas."
     },
     {
       id: 19,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué deporte se clasifica como '\''individual'\'' según la imagen de natación?",
+      enunciado: "ï¿½Quï¿½ deporte se clasifica como '\''individual'\'' segï¿½n la imagen de nataciï¿½n?",
       alternativas: [
-        "Fútbol (colectivo de invasión)",
-        "Natación (individual contra reloj)",
-        "Voleibol (colectivo de cooperación)",
-        "Básquetbol (colectivo de invasión)"
+        "Fï¿½tbol (colectivo de invasiï¿½n)",
+        "Nataciï¿½n (individual contra reloj)",
+        "Voleibol (colectivo de cooperaciï¿½n)",
+        "Bï¿½squetbol (colectivo de invasiï¿½n)"
       ],
       correcta: 1,
-      explicacion: "Deportes individuales: rendimiento personal determina resultado (natación, atletismo). Colectivos requieren coordinación grupal."
+      explicacion: "Deportes individuales: rendimiento personal determina resultado (nataciï¿½n, atletismo). Colectivos requieren coordinaciï¿½n grupal."
     },
     {
       id: 20,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de expresión corporal. ¿Qué elemento se refiere al pulso y ritmo?",
+      enunciado: "En la imagen de expresiï¿½n corporal. ï¿½Quï¿½ elemento se refiere al pulso y ritmo?",
       alternativas: [
         "Espacio (niveles y trayectorias)",
         "Tiempo (pulso, ritmo, velocidad)",
-        "Intensidad (energía y fuerza)",
+        "Intensidad (energï¿½a y fuerza)",
         "Forma (silueta corporal)"
       ],
       correcta: 1,
-      explicacion: "Elemento tiempo: pulso (latido constante), ritmo (patrón de acentos), tempo (velocidad). Base de la danza y movimiento expresivo."
+      explicacion: "Elemento tiempo: pulso (latido constante), ritmo (patrï¿½n de acentos), tempo (velocidad). Base de la danza y movimiento expresivo."
     },
     {
       id: 21,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué habilidad se desarrolla en la imagen de lanzamiento de balón medicinal?",
+      enunciado: "ï¿½Quï¿½ habilidad se desarrolla en la imagen de lanzamiento de balï¿½n medicinal?",
       alternativas: [
-        "Resistencia aeróbica prolongada",
-        "Coordinación óculo-manual y potencia",
-        "Equilibrio unipodal estático",
+        "Resistencia aerï¿½bica prolongada",
+        "Coordinaciï¿½n ï¿½culo-manual y potencia",
+        "Equilibrio unipodal estï¿½tico",
         "Flexibilidad pasiva"
       ],
       correcta: 1,
-      explicacion: "Lanzamiento medicinal requiere coordinación ojo-mano y potencia explosiva de tren superior. Ejercicio pliométrico apropiado para básica."
+      explicacion: "Lanzamiento medicinal requiere coordinaciï¿½n ojo-mano y potencia explosiva de tren superior. Ejercicio pliomï¿½trico apropiado para bï¿½sica."
     },
     {
       id: 22,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de un juego cooperativo, ¿cuál es el objetivo principal?",
+      enunciado: "En la imagen de un juego cooperativo, ï¿½cuï¿½l es el objetivo principal?",
       alternativas: [
         "Competir para ganar individualmente",
         "Desarrollar habilidades socioemocionales",
-        "Enseñar técnicas de alto rendimiento",
-        "Trabajar solo fuerza física"
+        "Enseï¿½ar tï¿½cnicas de alto rendimiento",
+        "Trabajar solo fuerza fï¿½sica"
       ],
       correcta: 1,
-      explicacion: "Juegos cooperativos priorizan proceso: comunicación, empatía, resolución de conflictos, trabajo en equipo sobre resultado competitivo."
+      explicacion: "Juegos cooperativos priorizan proceso: comunicaciï¿½n, empatï¿½a, resoluciï¿½n de conflictos, trabajo en equipo sobre resultado competitivo."
     },
     {
       id: 23,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué implemento tradicional se usa en la danza mostrada en la imagen?",
+      enunciado: "ï¿½Quï¿½ implemento tradicional se usa en la danza mostrada en la imagen?",
       alternativas: [
         "Bombo nortino",
-        "Pañuelo blanco",
+        "Paï¿½uelo blanco",
         "Chascas mapuche",
         "Riu ceremonial"
       ],
       correcta: 1,
-      explicacion: "Pañuelo blanco en Cueca simboliza galanteo entre hombre y mujer. Elemento identitario de la danza folclórica chilena."
+      explicacion: "Paï¿½uelo blanco en Cueca simboliza galanteo entre hombre y mujer. Elemento identitario de la danza folclï¿½rica chilena."
     },
     {
       id: 24,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de gimnasia artística. ¿Qué deporte es este?",
+      enunciado: "Observa la imagen de gimnasia artï¿½stica. ï¿½Quï¿½ deporte es este?",
       alternativas: [
-        "Deporte de invasión (fútbol)",
-        "Deporte estético (gimnasia)",
-        "Deporte de cooperación (voleibol)",
-        "Deporte de oposición (tenis)"
+        "Deporte de invasiï¿½n (fï¿½tbol)",
+        "Deporte estï¿½tico (gimnasia)",
+        "Deporte de cooperaciï¿½n (voleibol)",
+        "Deporte de oposiciï¿½n (tenis)"
       ],
       correcta: 1,
-      explicacion: "Gimnasia artística es deporte estético: rutinas acrobáticas evaluadas por forma, dificultad y ejecución. Individual o colectiva."
+      explicacion: "Gimnasia artï¿½stica es deporte estï¿½tico: rutinas acrobï¿½ticas evaluadas por forma, dificultad y ejecuciï¿½n. Individual o colectiva."
     },
     {
       id: 25,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué principio defensivo se muestra en la imagen de fútbol?",
+      enunciado: "ï¿½Quï¿½ principio defensivo se muestra en la imagen de fï¿½tbol?",
       alternativas: [
         "Finalizar jugada con tiro",
-        "Marcar al rival y recuperar balón",
+        "Marcar al rival y recuperar balï¿½n",
         "Crear espacios ofensivos",
-        "Conservar posesión"
+        "Conservar posesiï¿½n"
       ],
       correcta: 1,
-      explicacion: "Principio defensivo: marcar cerca al portador, presionar para forzar errores, recuperar posesión. Transición defensa-ataque."
+      explicacion: "Principio defensivo: marcar cerca al portador, presionar para forzar errores, recuperar posesiï¿½n. Transiciï¿½n defensa-ataque."
     },
     {
       id: 26,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de danza contemporánea, ¿qué la diferencia de danzas folclóricas?",
+      enunciado: "En la imagen de danza contemporï¿½nea, ï¿½quï¿½ la diferencia de danzas folclï¿½ricas?",
       alternativas: [
-        "Movimientos lentos vs rápidos",
-        "Transmisión cultural tradicional vs creación moderna",
-        "Solo música clásica vs electrónica",
+        "Movimientos lentos vs rï¿½pidos",
+        "Transmisiï¿½n cultural tradicional vs creaciï¿½n moderna",
+        "Solo mï¿½sica clï¿½sica vs electrï¿½nica",
         "Grupos grandes vs individuales"
       ],
       correcta: 1,
-      explicacion: "Folclóricas: patrimonio cultural transmitido generación tras generación. Contemporáneas: expresión artística moderna, sin códigos tradicionales fijos."
+      explicacion: "Folclï¿½ricas: patrimonio cultural transmitido generaciï¿½n tras generaciï¿½n. Contemporï¿½neas: expresiï¿½n artï¿½stica moderna, sin cï¿½digos tradicionales fijos."
     },
     {
       id: 27,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué se entiende por '\''espacio personal'\'' en la imagen de expresión corporal?",
+      enunciado: "ï¿½Quï¿½ se entiende por '\''espacio personal'\'' en la imagen de expresiï¿½n corporal?",
       alternativas: [
-        "Espacio público visible",
+        "Espacio pï¿½blico visible",
         "Alcance de brazos sin desplazamiento",
         "Espacio privado invisible",
         "Solo en salas cerradas"
       ],
       correcta: 1,
-      explicacion: "Espacio personal = kinesfera (radio de acción sin mover pies). Espacio general = área total de movimiento. Conceptos de Rudolf Laban."
+      explicacion: "Espacio personal = kinesfera (radio de acciï¿½n sin mover pies). Espacio general = ï¿½rea total de movimiento. Conceptos de Rudolf Laban."
     },
     {
       id: 28,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de tecnología en educación física. ¿Cómo se usa una app para registrar actividad?",
+      enunciado: "Observa la imagen de tecnologï¿½a en educaciï¿½n fï¿½sica. ï¿½Cï¿½mo se usa una app para registrar actividad?",
       alternativas: [
         "Para competir online contra otros",
-        "Monitorear pasos y frecuencia cardíaca",
+        "Monitorear pasos y frecuencia cardï¿½aca",
         "Solo para ver videos instructivos",
         "Reemplazar completamente al profesor"
       ],
       correcta: 1,
-      explicacion: "Tecnología en EF: apps para seguimiento cuantitativo (pasos, FC, calorías). Complementa enseñanza, fomenta autonomía y conciencia corporal."
+      explicacion: "Tecnologï¿½a en EF: apps para seguimiento cuantitativo (pasos, FC, calorï¿½as). Complementa enseï¿½anza, fomenta autonomï¿½a y conciencia corporal."
     },
     {
       id: 29,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué juego se clasifica como '\''masivo'\'' en la imagen de 30 estudiantes?",
+      enunciado: "ï¿½Quï¿½ juego se clasifica como '\''masivo'\'' en la imagen de 30 estudiantes?",
       alternativas: [
         "Juego individual",
         "Juego en parejas",
         "Juego masivo o de gran grupo",
-        "Juego en pequeños grupos"
+        "Juego en pequeï¿½os grupos"
       ],
       correcta: 2,
-      explicacion: "Juegos masivos: todo el curso participa simultáneamente (quemados, cadenas de pilla-pilla, bailes colectivos). Favorecen inclusión y participación."
+      explicacion: "Juegos masivos: todo el curso participa simultï¿½neamente (quemados, cadenas de pilla-pilla, bailes colectivos). Favorecen inclusiï¿½n y participaciï¿½n."
     },
     {
       id: 30,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de educación inclusiva, ¿qué adaptación se usa para diversidad funcional?",
+      enunciado: "En la imagen de educaciï¿½n inclusiva, ï¿½quï¿½ adaptaciï¿½n se usa para diversidad funcional?",
       alternativas: [
         "Separar por capacidad",
-        "Modificar reglas para participación plena",
+        "Modificar reglas para participaciï¿½n plena",
         "Excluir actividades",
         "Roles pasivos"
       ],
       correcta: 1,
-      explicacion: "Inclusión: adaptar reglas, implementos, espacios. Diseño Universal asegura acceso equitativo para todos los estudiantes."
+      explicacion: "Inclusiï¿½n: adaptar reglas, implementos, espacios. Diseï¿½o Universal asegura acceso equitativo para todos los estudiantes."
     },
 
-    // DOMINIO 3: PROCESOS DE ENSEÑANZA-APRENDIZAJE (10 preguntas - pedagógicas, con nuevos temas)
+    // DOMINIO 3: PROCESOS DE ENSEï¿½ANZA-APRENDIZAJE (10 preguntas - pedagï¿½gicas, con nuevos temas)
     {
       id: 31,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué estilo de Mosston permite que estudiantes elijan dificultad según capacidad?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ estilo de Mosston permite que estudiantes elijan dificultad segï¿½n capacidad?",
       alternativas: [
         "Estilo A - Mando Directo",
-        "Estilo E - Inclusión",
-        "Estilo H - Resolución de Problemas",
-        "Estilo C - Recíproca"
+        "Estilo E - Inclusiï¿½n",
+        "Estilo H - Resoluciï¿½n de Problemas",
+        "Estilo C - Recï¿½proca"
       ],
       correcta: 1,
-      explicacion: "Estilo E (Inclusión): misma tarea con niveles ajustables. Estudiante elige dificultad apropiada, fomenta autoconocimiento sin exclusión."
+      explicacion: "Estilo E (Inclusiï¿½n): misma tarea con niveles ajustables. Estudiante elige dificultad apropiada, fomenta autoconocimiento sin exclusiï¿½n."
     },
     {
       id: 32,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué evaluación se realiza al inicio para conocer conocimientos previos?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ evaluaciï¿½n se realiza al inicio para conocer conocimientos previos?",
       alternativas: [
-        "Diagnóstica",
+        "Diagnï¿½stica",
         "Sumativa",
-        "Autoevaluación",
-        "Coevaluación"
+        "Autoevaluaciï¿½n",
+        "Coevaluaciï¿½n"
       ],
       correcta: 0,
-      explicacion: "Evaluación diagnóstica: identifica nivel de partida, conocimientos previos. Permite ajustar planificación sin calificar."
+      explicacion: "Evaluaciï¿½n diagnï¿½stica: identifica nivel de partida, conocimientos previos. Permite ajustar planificaciï¿½n sin calificar."
     },
     {
       id: 33,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué instrumento describe niveles de desempeño con criterios específicos?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ instrumento describe niveles de desempeï¿½o con criterios especï¿½ficos?",
       alternativas: [
         "Prueba cerrada",
-        "Rúbrica analítica",
+        "Rï¿½brica analï¿½tica",
         "Lista binaria",
-        "Escala numérica simple"
+        "Escala numï¿½rica simple"
       ],
       correcta: 1,
-      explicacion: "Rúbrica: criterios + descriptores de niveles (excelente, bueno, suficiente). Objetiva y formativa para retroalimentación."
+      explicacion: "Rï¿½brica: criterios + descriptores de niveles (excelente, bueno, suficiente). Objetiva y formativa para retroalimentaciï¿½n."
     },
     {
       id: 34,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "En la imagen de estudiantes usando tablets, ¿cómo se integra tecnología en EF?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "En la imagen de estudiantes usando tablets, ï¿½cï¿½mo se integra tecnologï¿½a en EF?",
       alternativas: [
         "Reemplazar clases presenciales",
         "Complementar con videos y seguimiento digital",
@@ -447,98 +447,98 @@
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnología complementa: videos demostrativos, apps de seguimiento, realidad aumentada. Enriquecen enseñanza sin reemplazar interacción docente."
+      explicacion: "Tecnologï¿½a complementa: videos demostrativos, apps de seguimiento, realidad aumentada. Enriquecen enseï¿½anza sin reemplazar interacciï¿½n docente."
     },
     {
       id: 35,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué principio DUA ofrece información en múltiples formatos?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ principio DUA ofrece informaciï¿½n en mï¿½ltiples formatos?",
       alternativas: [
-        "Múltiples formas de acción",
-        "Múltiples formas de representación",
-        "Múltiples formas de implicación",
-        "Múltiples formas de evaluación"
+        "Mï¿½ltiples formas de acciï¿½n",
+        "Mï¿½ltiples formas de representaciï¿½n",
+        "Mï¿½ltiples formas de implicaciï¿½n",
+        "Mï¿½ltiples formas de evaluaciï¿½n"
       ],
       correcta: 1,
-      explicacion: "DUA Principio I: representar contenido en diversos formatos (visual, auditivo, kinestésico) para acceso universal."
+      explicacion: "DUA Principio I: representar contenido en diversos formatos (visual, auditivo, kinestï¿½sico) para acceso universal."
     },
     {
       id: 36,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué evaluación ocurre durante el proceso con retroalimentación?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ evaluaciï¿½n ocurre durante el proceso con retroalimentaciï¿½n?",
       alternativas: [
-        "Diagnóstica",
+        "Diagnï¿½stica",
         "Formativa",
         "Sumativa",
-        "Heteroevaluación"
+        "Heteroevaluaciï¿½n"
       ],
       correcta: 1,
-      explicacion: "Evaluación formativa: continua, feedback descriptivo para mejorar. No califica; propósito pedagógico."
+      explicacion: "Evaluaciï¿½n formativa: continua, feedback descriptivo para mejorar. No califica; propï¿½sito pedagï¿½gico."
     },
     {
       id: 37,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "En la imagen de salud mental, ¿cómo promueve EF bienestar emocional?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "En la imagen de salud mental, ï¿½cï¿½mo promueve EF bienestar emocional?",
       alternativas: [
-        "Solo trabajo físico intenso",
-        "Actividades que reducen estrés y mejoran autoestima",
+        "Solo trabajo fï¿½sico intenso",
+        "Actividades que reducen estrï¿½s y mejoran autoestima",
         "Competencia agresiva",
         "Aislamiento individual"
       ],
       correcta: 1,
-      explicacion: "EF promueve salud mental: reduce ansiedad, mejora autoestima, fomenta socialización, enseña resiliencia emocional."
+      explicacion: "EF promueve salud mental: reduce ansiedad, mejora autoestima, fomenta socializaciï¿½n, enseï¿½a resiliencia emocional."
     },
     {
       id: 38,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué estilo usa parejas con roles alternados de ejecutor y observador?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ estilo usa parejas con roles alternados de ejecutor y observador?",
       alternativas: [
         "Estilo A - Directo",
-        "Estilo B - Asignación",
-        "Estilo C - Recíproca",
-        "Estilo E - Inclusión"
+        "Estilo B - Asignaciï¿½n",
+        "Estilo C - Recï¿½proca",
+        "Estilo E - Inclusiï¿½n"
       ],
       correcta: 2,
-      explicacion: "Estilo C (Recíproca): trabajo en parejas con checklist. Ejecutor realiza, observador evalúa con criterios. Desarrolla metacognición."
+      explicacion: "Estilo C (Recï¿½proca): trabajo en parejas con checklist. Ejecutor realiza, observador evalï¿½a con criterios. Desarrolla metacogniciï¿½n."
     },
     {
       id: 39,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué estrategia evalúa el estudiante su propio desempeño?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "ï¿½Quï¿½ estrategia evalï¿½a el estudiante su propio desempeï¿½o?",
       alternativas: [
-        "Heteroevaluación",
-        "Autoevaluación",
-        "Coevaluación",
-        "Evaluación externa"
+        "Heteroevaluaciï¿½n",
+        "Autoevaluaciï¿½n",
+        "Coevaluaciï¿½n",
+        "Evaluaciï¿½n externa"
       ],
       correcta: 1,
-      explicacion: "Autoevaluación: estudiante reflexiona usando criterios. Desarrolla autonomía crítica y metacognición."
+      explicacion: "Autoevaluaciï¿½n: estudiante reflexiona usando criterios. Desarrolla autonomï¿½a crï¿½tica y metacogniciï¿½n."
     },
     {
       id: 40,
-      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "Observa la imagen de inclusión. ¿Qué se favorece?",
+      dominio: "Dominio 3: Procesos de Enseï¿½anza-Aprendizaje",
+      enunciado: "Observa la imagen de inclusiï¿½n. ï¿½Quï¿½ se favorece?",
       alternativas: [
-        "Segregación",
-        "Participación equitativa para todos",
-        "Exclusión",
-        "Observación pasiva"
+        "Segregaciï¿½n",
+        "Participaciï¿½n equitativa para todos",
+        "Exclusiï¿½n",
+        "Observaciï¿½n pasiva"
       ],
       correcta: 1,
-      explicacion: "Inclusión: adaptar actividades para diversidad funcional. Diseño Universal asegura acceso y participación plena."
+      explicacion: "Inclusiï¿½n: adaptar actividades para diversidad funcional. Diseï¿½o Universal asegura acceso y participaciï¿½n plena."
     },
 
     // CASOS INTEGRADOS (10 preguntas - con temas nuevos)
     {
       id: 41,
       dominio: "Casos Integrados",
-      contexto: "CASO: Circuito de acondicionamiento con imágenes de estaciones. Estudiante con fatiga.",
-      enunciado: "¿Qué acción prioritaria tomar?",
+      contexto: "CASO: Circuito de acondicionamiento con imï¿½genes de estaciones. Estudiante con fatiga.",
+      enunciado: "ï¿½Quï¿½ acciï¿½n prioritaria tomar?",
       alternativas: [
-        "Forzar continuación",
+        "Forzar continuaciï¿½n",
         "Detener, hidratar, reducir intensidad",
         "Aplicar calor",
-        "Ignorar síntomas"
+        "Ignorar sï¿½ntomas"
       ],
       correcta: 1,
       explicacion: "Fatiga en obesidad: detener, hidratar, reducir carga. Monitorear signos vitales, derivar si persiste."
@@ -547,127 +547,127 @@
       id: 42,
       dominio: "Casos Integrados",
       contexto: "CASO: Juego cooperativo con conflicto. Imagen muestra estudiantes discutiendo.",
-      enunciado: "¿Qué intervención pedagógica usar?",
+      enunciado: "ï¿½Quï¿½ intervenciï¿½n pedagï¿½gica usar?",
       alternativas: [
         "Ignorar conflicto",
-        "Pausar, validar emociones, facilitar diálogo",
+        "Pausar, validar emociones, facilitar diï¿½logo",
         "Castigar ambos",
-        "Decisión unilateral"
+        "Decisiï¿½n unilateral"
       ],
       correcta: 1,
-      explicacion: "Mediación: validar emociones, facilitar diálogo consensuado. Enseña resolución pacífica y empatía."
+      explicacion: "Mediaciï¿½n: validar emociones, facilitar diï¿½logo consensuado. Enseï¿½a resoluciï¿½n pacï¿½fica y empatï¿½a."
     },
     {
       id: 43,
       dominio: "Casos Integrados",
       contexto: "CASO: Uso de app para seguimiento en EF. Imagen de estudiantes con dispositivos.",
-      enunciado: "¿Qué beneficio principal aporta?",
+      enunciado: "ï¿½Quï¿½ beneficio principal aporta?",
       alternativas: [
         "Reemplaza profesor",
-        "Fomenta autonomía y conciencia corporal",
+        "Fomenta autonomï¿½a y conciencia corporal",
         "Solo entretenimiento",
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnología: seguimiento cuantitativo (pasos, FC, calorías), promueve autonomía y motivación intrínseca."
+      explicacion: "Tecnologï¿½a: seguimiento cuantitativo (pasos, FC, calorï¿½as), promueve autonomï¿½a y motivaciï¿½n intrï¿½nseca."
     },
     {
       id: 44,
       dominio: "Casos Integrados",
-      contexto: "CASO: Actividad inclusiva con silla de ruedas. Imagen muestra adaptación.",
-      enunciado: "¿Qué principio se aplica?",
+      contexto: "CASO: Actividad inclusiva con silla de ruedas. Imagen muestra adaptaciï¿½n.",
+      enunciado: "ï¿½Quï¿½ principio se aplica?",
       alternativas: [
         "Separar estudiantes",
-        "Diseño Universal para igualar condiciones",
-        "Excluir participación",
+        "Diseï¿½o Universal para igualar condiciones",
+        "Excluir participaciï¿½n",
         "Roles pasivos"
       ],
       correcta: 1,
-      explicacion: "DUA: adaptar para inclusión plena. Todos participan en condiciones equitativas, fomenta empatía."
+      explicacion: "DUA: adaptar para inclusiï¿½n plena. Todos participan en condiciones equitativas, fomenta empatï¿½a."
     },
     {
       id: 45,
       dominio: "Casos Integrados",
-      contexto: "CASO: Evaluación formativa en circuito. Imagen de checklist.",
-      enunciado: "¿Qué instrumento usar?",
+      contexto: "CASO: Evaluaciï¿½n formativa en circuito. Imagen de checklist.",
+      enunciado: "ï¿½Quï¿½ instrumento usar?",
       alternativas: [
         "Examen escrito",
         "Lista de cotejo observacional",
-        "Nota final única",
-        "Sin evaluación"
+        "Nota final ï¿½nica",
+        "Sin evaluaciï¿½n"
       ],
       correcta: 1,
-      explicacion: "Lista de cotejo: indicadores observables para retroalimentación inmediata durante actividad."
+      explicacion: "Lista de cotejo: indicadores observables para retroalimentaciï¿½n inmediata durante actividad."
     },
     {
       id: 46,
       dominio: "Casos Integrados",
       contexto: "CASO: Salud mental en EF. Imagen de actividad relajante.",
-      enunciado: "¿Qué se promueve?",
+      enunciado: "ï¿½Quï¿½ se promueve?",
       alternativas: [
-        "Solo físico",
-        "Bienestar emocional y reducción de estrés",
+        "Solo fï¿½sico",
+        "Bienestar emocional y reducciï¿½n de estrï¿½s",
         "Agresividad",
         "Aislamiento"
       ],
       correcta: 1,
-      explicacion: "EF integra salud mental: actividades que reducen ansiedad, mejoran autoestima, enseñan manejo emocional."
+      explicacion: "EF integra salud mental: actividades que reducen ansiedad, mejoran autoestima, enseï¿½an manejo emocional."
     },
     {
       id: 47,
       dominio: "Casos Integrados",
-      contexto: "CASO: Progresión didáctica. Imagen de secuencia de juegos.",
-      enunciado: "¿Cuál es la secuencia correcta?",
+      contexto: "CASO: Progresiï¿½n didï¿½ctica. Imagen de secuencia de juegos.",
+      enunciado: "ï¿½Cuï¿½l es la secuencia correcta?",
       alternativas: [
         "Deportivo  Pre-deportivo",
         "Libre  Reglado  Pre-deportivo  Deportivo",
-        "Todos simultáneos",
+        "Todos simultï¿½neos",
         "Pre-deportivo  Libre"
       ],
       correcta: 1,
-      explicacion: "Progresión: Libre (exploración)  Reglado (reglas simples)  Pre-deportivo (fundamentos)  Deportivo (completo)."
+      explicacion: "Progresiï¿½n: Libre (exploraciï¿½n)  Reglado (reglas simples)  Pre-deportivo (fundamentos)  Deportivo (completo)."
     },
     {
       id: 48,
       dominio: "Casos Integrados",
-      contexto: "CASO: Conflicto en juego. Imagen de mediación docente.",
-      enunciado: "¿Qué se enseña?",
+      contexto: "CASO: Conflicto en juego. Imagen de mediaciï¿½n docente.",
+      enunciado: "ï¿½Quï¿½ se enseï¿½a?",
       alternativas: [
         "Competencia agresiva",
-        "Resolución pacífica y empatía",
+        "Resoluciï¿½n pacï¿½fica y empatï¿½a",
         "Ignorar problemas",
         "Castigo inmediato"
       ],
       correcta: 1,
-      explicacion: "Mediación enseña diálogo, validación emocional, soluciones consensuadas. Desarrolla habilidades socioemocionales."
+      explicacion: "Mediaciï¿½n enseï¿½a diï¿½logo, validaciï¿½n emocional, soluciones consensuadas. Desarrolla habilidades socioemocionales."
     },
     {
       id: 49,
       dominio: "Casos Integrados",
-      contexto: "CASO: Tecnología en planificación. Imagen de software.",
-      enunciado: "¿Cómo se usa?",
+      contexto: "CASO: Tecnologï¿½a en planificaciï¿½n. Imagen de software.",
+      enunciado: "ï¿½Cï¿½mo se usa?",
       alternativas: [
-        "Reemplazar enseñanza",
+        "Reemplazar enseï¿½anza",
         "Complementar con recursos digitales",
         "Solo videos",
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnología complementa: planificación digital, videos demostrativos, seguimiento online. Enriquecen sin sustituir interacción."
+      explicacion: "Tecnologï¿½a complementa: planificaciï¿½n digital, videos demostrativos, seguimiento online. Enriquecen sin sustituir interacciï¿½n."
     },
     {
       id: 50,
       dominio: "Casos Integrados",
-      contexto: "CASO: Inclusión con diversidad. Imagen de adaptación.",
-      enunciado: "¿Qué se favorece?",
+      contexto: "CASO: Inclusiï¿½n con diversidad. Imagen de adaptaciï¿½n.",
+      enunciado: "ï¿½Quï¿½ se promueve?",
       alternativas: [
-        "Segregación",
-        "Participación equitativa para todos",
-        "Exclusión",
-        "Observación pasiva"
+        "Segregaciï¿½n",
+        "Participaciï¿½n equitativa para todos",
+        "Exclusiï¿½n",
+        "Observaciï¿½n pasiva"
       ],
       correcta: 1,
-      explicacion: "Inclusión: adaptar actividades para diversidad funcional. Diseño Universal asegura acceso y participación plena."
+      explicacion: "Inclusiï¿½n: adaptar actividades para diversidad funcional. Diseï¿½o Universal asegura acceso y participaciï¿½n plena."
     }
   ];
 

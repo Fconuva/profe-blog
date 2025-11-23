@@ -6,7 +6,7 @@
   // Estado del navegador
   const navState = {
     currentQuestion: 1,
-    totalQuestions: 58,
+    totalQuestions: 50,
     answeredQuestions: new Set(),
     correctAnswers: new Set()
   };

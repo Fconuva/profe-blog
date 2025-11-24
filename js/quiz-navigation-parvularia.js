@@ -64,7 +64,7 @@
         
         <div class="mt-4">
           <p class="text-white text-xs text-center mb-2">Ir a pregunta:</p>
-          <div id="question-dots" class="grid grid-cols-10 gap-2"></div>
+          <div id="question-dots" class="flex flex-wrap gap-2 justify-center"></div>
         </div>
       </div>
     `;
@@ -84,7 +84,7 @@
     
     for (let i = 1; i <= navState.totalQuestions; i++) {
       const dot = document.createElement('button');
-      dot.className = 'question-dot w-10 h-10 rounded-full bg-white bg-opacity-30 text-white font-bold hover:bg-opacity-50 transition text-sm';
+      dot.className = 'question-dot w-8 h-8 rounded-full bg-white bg-opacity-30 text-white font-bold hover:bg-opacity-50 transition text-xs';
       dot.textContent = i;
       dot.dataset.question = i;
       dot.addEventListener('click', () => goToQuestion(i));

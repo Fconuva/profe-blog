@@ -36,34 +36,34 @@
     if (!container) return;
     
     const navigatorHTML = `
-      <div class="quiz-navigator sticky top-4 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl shadow-2xl p-6 mb-8 z-50">
-        <div class="text-center mb-4">
-          <h3 class="text-2xl font-bold text-white">
+      <div class="quiz-navigator bg-white border-2 border-gray-300 rounded-xl shadow-lg p-4 mb-6 z-50">
+        <div class="text-center mb-3">
+          <h3 class="text-xl font-bold text-gray-800">
             Pregunta <span id="current-q">1</span> de ${navState.totalQuestions}
           </h3>
         </div>
         
-        <div class="flex gap-4 justify-center mb-4">
-          <button id="btn-prev" class="bg-white text-purple-600 px-6 py-2 rounded-lg font-bold hover:bg-purple-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+        <div class="flex gap-3 justify-center mb-3">
+          <button id="btn-prev" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm">
             ← Anterior
           </button>
-          <button id="btn-next" class="bg-white text-purple-600 px-6 py-2 rounded-lg font-bold hover:bg-purple-100 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          <button id="btn-next" class="bg-gray-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-gray-700 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm">
             Siguiente →
           </button>
         </div>
         
-        <div class="bg-white bg-opacity-20 rounded-lg p-4">
-          <div class="flex justify-between text-white text-sm mb-2">
+        <div class="bg-gray-100 rounded-lg p-3">
+          <div class="flex justify-between text-gray-700 text-sm mb-2">
             <span id="answered-count">0/${navState.totalQuestions} respondidas</span>
             <span id="correct-count">0 correctas</span>
           </div>
-          <div class="bg-white bg-opacity-30 rounded-full h-3 overflow-hidden">
-            <div id="progress-bar" class="bg-green-400 h-full transition-all duration-500" style="width: 0%"></div>
+          <div class="bg-white rounded-full h-3 overflow-hidden">
+            <div id="progress-bar" class="bg-green-500 h-full transition-all duration-500" style="width: 0%"></div>
           </div>
         </div>
         
-        <div class="mt-4">
-          <p class="text-white text-xs text-center mb-2">Ir a pregunta:</p>
+        <div class="mt-3">
+          <p class="text-gray-700 text-xs text-center mb-2">Ir a pregunta:</p>
           <div id="question-dots" class="flex flex-wrap gap-2 justify-center"></div>
         </div>
       </div>
@@ -84,7 +84,7 @@
     
     for (let i = 1; i <= navState.totalQuestions; i++) {
       const dot = document.createElement('button');
-      dot.className = 'question-dot w-8 h-8 rounded-full bg-white bg-opacity-30 text-white font-bold hover:bg-opacity-50 transition text-xs';
+      dot.className = 'question-dot w-6 h-6 rounded-full bg-gray-300 text-gray-700 font-bold hover:bg-gray-400 transition text-xs';
       dot.textContent = i;
       dot.dataset.question = i;
       dot.addEventListener('click', () => goToQuestion(i));
@@ -196,11 +196,11 @@
       const questionNum = index + 1;
       
       // Remover todas las clases de estado
-      dot.classList.remove('bg-green-500', 'bg-yellow-500', 'ring-4', 'ring-white', 'bg-opacity-30');
+      dot.classList.remove('bg-green-500', 'bg-yellow-500', 'ring-4', 'ring-gray-400', 'bg-gray-300');
       
       // Pregunta actual
       if (questionNum === navState.currentQuestion) {
-        dot.classList.add('bg-yellow-500', 'ring-4', 'ring-white', 'scale-110');
+        dot.classList.add('bg-yellow-500', 'ring-4', 'ring-gray-400');
       }
       // Pregunta respondida
       else if (navState.answeredQuestions.has(questionNum)) {
@@ -208,7 +208,7 @@
       }
       // No respondida
       else {
-        dot.classList.add('bg-white', 'bg-opacity-30');
+        dot.classList.add('bg-gray-300');
       }
     });
     

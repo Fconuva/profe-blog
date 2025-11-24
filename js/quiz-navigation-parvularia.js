@@ -110,11 +110,20 @@
   function hideAllQuestionsExceptFirst() {
     const questions = document.querySelectorAll('.pregunta-container');
     questions.forEach((q, index) => {
-      if (index === 0) {
-        q.style.display = 'block';
-      } else {
-        q.style.display = 'none';
-      }
+      const questionNumber = index + 1;
+      const isVisible = (questionNumber === 1);
+      
+      q.style.display = isVisible ? 'block' : 'none';
+      
+      // Gestionar required attributes para evitar warnings de validación
+      const radioButtons = q.querySelectorAll('input[type="radio"]');
+      radioButtons.forEach(radio => {
+        if (isVisible) {
+          radio.setAttribute('required', 'required');
+        } else {
+          radio.removeAttribute('required');
+        }
+      });
     });
   }
   
@@ -132,10 +141,23 @@
     
     console.log(`[QUIZ NAV] Navegando a pregunta ${questionNum}`);
     
-    // Ocultar pregunta actual
+    // Ocultar pregunta actual y gestionar required attributes
     const questions = document.querySelectorAll('.pregunta-container');
     questions.forEach((q, index) => {
-      q.style.display = (index + 1 === questionNum) ? 'block' : 'none';
+      const questionNumber = index + 1;
+      const isVisible = (questionNumber === questionNum);
+      
+      q.style.display = isVisible ? 'block' : 'none';
+      
+      // Gestionar required attributes para evitar warnings de validación
+      const radioButtons = q.querySelectorAll('input[type="radio"]');
+      radioButtons.forEach(radio => {
+        if (isVisible) {
+          radio.setAttribute('required', 'required');
+        } else {
+          radio.removeAttribute('required');
+        }
+      });
     });
     
     // Actualizar estado

@@ -32,7 +32,7 @@
   
   // Crear el HTML del navegador
   function createNavigator() {
-    const container = document.querySelector('.max-w-7xl.mx-auto');
+    const container = document.querySelector('.max-w-5xl.mx-auto');
     if (!container) return;
     
     const navigatorHTML = `

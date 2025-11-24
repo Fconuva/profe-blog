@@ -6,8 +6,7 @@
     {
       id: 1,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ¿Qué tipo de contracción muscular se produce en los abdominales?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p001_img01.png",
+      enunciado: "¿Qué tipo de contracción muscular se produce en los abdominales durante una plancha abdominal?",
       alternativas: [
         "Contracción concéntrica (músculos se acortan)",
         "Contracción isométrica (tensión constante sin cambio de longitud)",
@@ -20,8 +19,7 @@
     {
       id: 2,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach' mostrado en la imagen?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p002_img01.png",
+      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach'?",
       alternativas: [
         "Fuerza explosiva de miembros inferiores",
         "Velocidad de reacción ante estímulos",
@@ -34,8 +32,7 @@
     {
       id: 3,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un estudiante saltando la cuerda, ¿qué cualidad física se desarrolla principalmente?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p003_img01.png",
+      enunciado: "¿Qué cualidad física se desarrolla principalmente al saltar la cuerda?",
       alternativas: [
         "Flexibilidad pasiva de miembros superiores",
         "Resistencia aeróbica y coordinación rítmica",
@@ -48,8 +45,7 @@
     {
       id: 4,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Según la imagen de un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p004_img01.png",
+      enunciado: "Según un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
       alternativas: [
         "Bíceps braquial (flexor del codo)",
         "Tríceps braquial (extensor del codo)",
@@ -62,8 +58,7 @@
     {
       id: 5,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p005_img01.png",
+      enunciado: "¿Qué tipo de actividad es más recomendable inicialmente para un estudiante con obesidad?",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
         "Actividades de bajo impacto moderado como caminata o natación",
@@ -89,8 +84,7 @@
     {
       id: 7,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p006_img01.png",
+      enunciado: "¿Cuál sistema energético predomina en un sprint de 50 metros?",
       alternativas: [
         "Sistema aeróbico oxidativo (duración >2 min)",
         "Sistema anaeróbico láctico (duración 30-90 seg)",
@@ -116,8 +110,7 @@
     {
       id: 9,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ¿Qué capacidad se desarrolla?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p007_img01.png",
+      enunciado: "¿Qué capacidad se desarrolla al realizar equilibrio sobre un pie?",
       alternativas: [
         "Velocidad lineal de desplazamiento",
         "Equilibrio estático y propiocepción",
@@ -210,8 +203,7 @@
     {
       id: 16,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de una secuencia de juego de básquetbol. ¿Qué principio ofensivo se aplica al desmarcarse?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p008_img01.png",
+      enunciado: "¿Qué principio ofensivo se aplica al desmarcarse en básquetbol?",
       alternativas: [
         "Proteger la portería propia",
         "Crear espacios para recibir pase",
@@ -237,8 +229,7 @@
     {
       id: 18,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de un estudiante en silla de ruedas jugando básquetbol, ¿qué adaptación promueve inclusión?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p009_img01.png",
+      enunciado: "¿Qué adaptación promueve inclusión en básquetbol para estudiantes en silla de ruedas?",
       alternativas: [
         "Excluir al estudiante del juego",
         "Crear equipo separado solo para discapacitados",
@@ -277,8 +268,7 @@
     {
       id: 21,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué habilidad se desarrolla en la imagen de lanzamiento de balón medicinal?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p010_img01.png",
+      enunciado: "¿Qué habilidad se desarrolla con el lanzamiento de balón medicinal?",
       alternativas: [
         "Resistencia aeróbica prolongada",
         "Coordinación óculo-manual y potencia",
@@ -449,7 +439,7 @@
     {
       id: 34,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "En la imagen de estudiantes usando tablets, ¿cómo se integra tecnología en EF?",
+      enunciado: "¿Cómo se integra la tecnología en educación física?",
       alternativas: [
         "Reemplazar clases presenciales",
         "Complementar con videos y seguimiento digital",
@@ -488,7 +478,7 @@
     {
       id: 37,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "En la imagen de salud mental, ¿cómo promueve EF bienestar emocional?",
+      enunciado: "¿Cómo promueve la educación física el bienestar emocional?",
       alternativas: [
         "Solo trabajo físico intenso",
         "Actividades que reducen estrés y mejoran autoestima",
@@ -527,8 +517,7 @@
     {
       id: 40,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "Observa la imagen de inclusión. ¿Qué se favorece?",
-      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p011_img01.png",
+      enunciado: "¿Qué se favorece con la inclusión en educación física?",
       alternativas: [
         "Segregación",
         "Participación equitativa para todos",

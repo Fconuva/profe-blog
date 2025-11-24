@@ -52,6 +52,7 @@
     let html = `
       <div class="mb-6">
         ${pregunta.contexto ? `<div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 mb-4 text-sm text-yellow-900 whitespace-pre-line">${pregunta.contexto}</div>` : ''}
+        ${pregunta.imagen ? `<div class="mb-4 flex justify-center"><img src="${pregunta.imagen}" alt="Imagen de la pregunta" class="max-w-full h-auto rounded-lg shadow-md"></div>` : ''}
         <p class="text-lg text-gray-800 leading-relaxed mb-4">${pregunta.enunciado}</p>
         <div class="space-y-3">
     `;

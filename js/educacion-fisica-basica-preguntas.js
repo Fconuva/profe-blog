@@ -1,77 +1,77 @@
 (function(root) {
-  '\''use strict'\'';
+  'use strict';
 
   const preguntas = [
-    // DOMINIO 1: APTITUD F�SICA (15 preguntas - m�s f�ciles, con im�genes)
+    // DOMINIO 1: APTITUD FÍSICA (15 preguntas - más fáciles, con imágenes)
     {
       id: 1,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. �Qu� tipo de contracci�n muscular se produce en los abdominales?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ¿Qué tipo de contracción muscular se produce en los abdominales?",
       alternativas: [
-        "Contracci�n conc�ntrica (m�sculos se acortan)",
-        "Contracci�n isom�trica (tensi�n constante sin cambio de longitud)",
-        "Contracci�n exc�ntrica (m�sculos se alargan bajo tensi�n)",
-        "Contracci�n pliom�trica (ciclo estiramiento-acortamiento)"
+        "Contracción concéntrica (músculos se acortan)",
+        "Contracción isométrica (tensión constante sin cambio de longitud)",
+        "Contracción excéntrica (músculos se alargan bajo tensión)",
+        "Contracción pliométrica (ciclo estiramiento-acortamiento)"
       ],
       correcta: 1,
-      explicacion: "En la plancha isom�trica, los abdominales generan tensi�n para mantener la posici�n sin cambiar su longitud. Es una contracci�n est�tica ideal para desarrollar fuerza resistencia en ni�os."
+      explicacion: "En la plancha isométrica, los abdominales generan tensión para mantener la posición sin cambiar su longitud. Es una contracción estática ideal para desarrollar fuerza resistencia en niños."
     },
     {
       id: 2,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "�Qu� componente de la aptitud f�sica se eval�a con el test de '\''Sit and Reach'\'' mostrado en la imagen?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach' mostrado en la imagen?",
       alternativas: [
         "Fuerza explosiva de miembros inferiores",
-        "Velocidad de reacci�n ante est�mulos",
+        "Velocidad de reacción ante estímulos",
         "Flexibilidad de isquiotibiales y zona lumbar",
-        "Resistencia cardiovascular aer�bica"
+        "Resistencia cardiovascular aeróbica"
       ],
       correcta: 2,
-      explicacion: "El Sit and Reach mide la flexibilidad de la cadena posterior (isquiotibiales, gl�teos, zona lumbar). Es un test simple y seguro para escolares de b�sica."
+      explicacion: "El Sit and Reach mide la flexibilidad de la cadena posterior (isquiotibiales, glúteos, zona lumbar). Es un test simple y seguro para escolares de básica."
     },
     {
       id: 3,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "En la imagen de un estudiante saltando la cuerda, �qu� cualidad f�sica se desarrolla principalmente?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "En la imagen de un estudiante saltando la cuerda, ¿qué cualidad física se desarrolla principalmente?",
       alternativas: [
         "Flexibilidad pasiva de miembros superiores",
-        "Resistencia aer�bica y coordinaci�n r�tmica",
-        "Fuerza m�xima con cargas externas pesadas",
-        "Equilibrio est�tico sin movimiento"
+        "Resistencia aeróbica y coordinación rítmica",
+        "Fuerza máxima con cargas externas pesadas",
+        "Equilibrio estático sin movimiento"
       ],
       correcta: 1,
-      explicacion: "Saltar la cuerda combina resistencia cardiovascular (trabajo aer�bico continuo) con coordinaci�n �culo-manual y r�tmica. Es actividad l�dica apropiada para b�sica."
+      explicacion: "Saltar la cuerda combina resistencia cardiovascular (trabajo aeróbico continuo) con coordinación óculo-manual y rítmica. Es actividad lúdica apropiada para básica."
     },
     {
       id: 4,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Seg�n la imagen de un diagrama anat�mico, �qu� m�sculo es responsable de la extensi�n del brazo en el lanzamiento?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Según la imagen de un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
       alternativas: [
-        "B�ceps braquial (flexor del codo)",
-        "Tr�ceps braquial (extensor del codo)",
+        "Bíceps braquial (flexor del codo)",
+        "Tríceps braquial (extensor del codo)",
         "Deltoides (abductor del hombro)",
         "Pectoral mayor (aductor del hombro)"
       ],
       correcta: 1,
-      explicacion: "El tr�ceps es el extensor principal del codo. En lanzamientos, se contrae conc�ntricamente para acelerar el implemento. Es fundamental en deportes de invasi�n."
+      explicacion: "El tríceps es el extensor principal del codo. En lanzamientos, se contrae concéntricamente para acelerar el implemento. Es fundamental en deportes de invasión."
     },
     {
       id: 5,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. �Qu� tipo de actividad es m�s recomendable inicialmente?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
-        "Actividades de bajo impacto moderado como caminata o nataci�n",
-        "Levantamiento de pesas m�ximo (>90% 1RM)",
-        "Ejercicios isom�tricos est�ticos prolongados"
+        "Actividades de bajo impacto moderado como caminata o natación",
+        "Levantamiento de pesas máximo (>90% 1RM)",
+        "Ejercicios isométricos estáticos prolongados"
       ],
       correcta: 1,
       explicacion: "En obesidad infantil, bajo impacto protege articulaciones. Intensidad moderada es sostenible y mejora adherencia. Progresar gradualmente hacia mayor intensidad."
     },
     {
       id: 6,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "�Qu� zona de frecuencia card�aca corresponde a trabajo aer�bico moderado en ni�os (60-70% FC m�x)?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "¿Qué zona de frecuencia cardíaca corresponde a trabajo aeróbico moderado en niños (60-70% FC máx)?",
       alternativas: [
         "180-200 lat/min (zona alta 80-90%)",
         "120-140 lat/min (zona baja 50-60%)",
@@ -79,51 +79,51 @@
         "100-120 lat/min (zona muy baja <50%)"
       ],
       correcta: 2,
-      explicacion: "Para un ni�o con FC m�x 200 lat/min, 60-70% = 120-140 lat/min. Esta zona desarrolla resistencia aer�bica sin fatiga excesiva ni riesgo cardiovascular."
+      explicacion: "Para un niño con FC máx 200 lat/min, 60-70% = 120-140 lat/min. Esta zona desarrolla resistencia aeróbica sin fatiga excesiva ni riesgo cardiovascular."
     },
     {
       id: 7,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "En la imagen de un diagrama de sistemas energ�ticos, �cu�l predomina en un sprint de 50 metros?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
       alternativas: [
-        "Sistema aer�bico oxidativo (duraci�n >2 min)",
-        "Sistema anaer�bico l�ctico (duraci�n 30-90 seg)",
-        "Sistema ATP-PC (duraci�n 10-15 seg)",
-        "Sistema mixto aer�bico-anaer�bico"
+        "Sistema aeróbico oxidativo (duración >2 min)",
+        "Sistema anaeróbico láctico (duración 30-90 seg)",
+        "Sistema ATP-PC (duración 10-15 seg)",
+        "Sistema mixto aeróbico-anaeróbico"
       ],
       correcta: 2,
-      explicacion: "En esfuerzos cortos (10-15 seg), predomina ATP-PC (fosfocreatina) que provee energ�a inmediata sin ox�geno ni lactato. Ideal para actividades explosivas en b�sica."
+      explicacion: "En esfuerzos cortos (10-15 seg), predomina ATP-PC (fosfocreatina) que provee energía inmediata sin oxígeno ni lactato. Ideal para actividades explosivas en básica."
     },
     {
       id: 8,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "�Qu� hormona es clave para el desarrollo muscular en la adolescencia?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "¿Qué hormona es clave para el desarrollo muscular en la adolescencia?",
       alternativas: [
         "Insulina (reguladora de glucosa)",
-        "Testosterona (anab�lica para crecimiento)",
-        "Melatonina (reguladora del sue�o)",
+        "Testosterona (anabólica para crecimiento)",
+        "Melatonina (reguladora del sueño)",
         "Tiroxina (metabolismo basal)"
       ],
       correcta: 1,
-      explicacion: "Testosterona es hormona anab�lica que promueve hipertrofia muscular. En prep�beres (b�sica), niveles bajos; priorizar fuerza neural y resistencia."
+      explicacion: "Testosterona es hormona anabólica que promueve hipertrofia muscular. En prepúberes (básica), niveles bajos; priorizar fuerza neural y resistencia."
     },
     {
       id: 9,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. �Qu� capacidad se desarrolla?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ¿Qué capacidad se desarrolla?",
       alternativas: [
         "Velocidad lineal de desplazamiento",
-        "Equilibrio est�tico y propiocepci�n",
-        "Fuerza m�xima isom�trica",
-        "Resistencia anaer�bica l�ctica"
+        "Equilibrio estático y propiocepción",
+        "Fuerza máxima isométrica",
+        "Resistencia anaeróbica láctica"
       ],
       correcta: 1,
-      explicacion: "Equilibrio unipodal desarrolla propiocepci�n (sensaci�n de posici�n corporal) y estabilidad est�tica. Importante para prevenci�n de lesiones y coordinaci�n."
+      explicacion: "Equilibrio unipodal desarrolla propiocepción (sensación de posición corporal) y estabilidad estática. Importante para prevención de lesiones y coordinación."
     },
     {
       id: 10,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Seg�n la OMS, �cu�ntos minutos diarios de actividad f�sica vigorosa necesitan ni�os de 5-17 a�os?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Según la OMS, ¿cuántos minutos diarios de actividad física vigorosa necesitan niños de 5-17 años?",
       alternativas: [
         "30 minutos diarios moderados",
         "45 minutos diarios vigorosos",
@@ -131,64 +131,64 @@
         "90 minutos diarios mixtos"
       ],
       correcta: 2,
-      explicacion: "OMS recomienda m�nimo 60 minutos diarios de AFMV (moderada-vigorosa) para ni�os. Incluye recreos activos, educaci�n f�sica y juego libre."
+      explicacion: "OMS recomienda mínimo 60 minutos diarios de AFMV (moderada-vigorosa) para niños. Incluye recreos activos, educación física y juego libre."
     },
     {
       id: 11,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "En la imagen de un circuito de ejercicios, �qu� principio FITT se refiere a '\''3 veces por semana'\''?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "En la imagen de un circuito de ejercicios, ¿qué principio FITT se refiere a '3 veces por semana'?",
       alternativas: [
         "Intensity (intensidad del esfuerzo)",
-        "Time (duraci�n por sesi�n)",
+        "Time (duración por sesión)",
         "Frequency (frecuencia semanal)",
         "Type (tipo de actividad)"
       ],
       correcta: 2,
-      explicacion: "Frequency = veces por semana. Para ni�os, 3-4 sesiones semanales permiten recuperaci�n y adherencia sin sobreentrenamiento."
+      explicacion: "Frequency = veces por semana. Para niños, 3-4 sesiones semanales permiten recuperación y adherencia sin sobreentrenamiento."
     },
     {
       id: 12,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "�Qu� tipo de fuerza es m�s apropiado trabajar en educaci�n b�sica?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "¿Qué tipo de fuerza es más apropiado trabajar en educación básica?",
       alternativas: [
-        "Fuerza m�xima con cargas pesadas",
+        "Fuerza máxima con cargas pesadas",
         "Fuerza resistencia con peso corporal",
-        "Fuerza explosiva ol�mpica",
-        "Fuerza isom�trica prolongada"
+        "Fuerza explosiva olímpica",
+        "Fuerza isométrica prolongada"
       ],
       correcta: 1,
-      explicacion: "Fuerza resistencia (repeticiones moderadas, baja carga) usando peso corporal. Evita riesgos �seos-articulares en desarrollo."
+      explicacion: "Fuerza resistencia (repeticiones moderadas, baja carga) usando peso corporal. Evita riesgos óseos-articulares en desarrollo."
     },
     {
       id: 13,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "Observa la imagen de un estudiante lesionado. �Cu�l es el protocolo RICE correcto?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "Observa la imagen de un estudiante lesionado. ¿Cuál es el protocolo RICE correcto?",
       alternativas: [
         "Calor + Masaje + Movimiento continuo",
-        "Reposo + Hielo + Compresi�n + Elevaci�n",
-        "Ejercicio intenso + Calor + Fricci�n",
+        "Reposo + Hielo + Compresión + Elevación",
+        "Ejercicio intenso + Calor + Fricción",
         "Ignorar y continuar actividad"
       ],
       correcta: 1,
-      explicacion: "RICE: Reposo (detener), Hielo (reducir inflamaci�n), Compresi�n (contener edema), Elevaci�n (mejorar retorno venoso). Derivar a profesional."
+      explicacion: "RICE: Reposo (detener), Hielo (reducir inflamación), Compresión (contener edema), Elevación (mejorar retorno venoso). Derivar a profesional."
     },
     {
       id: 14,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "En la imagen de un diagrama motor, �cu�l es la secuencia correcta de adquisici�n de habilidades?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "En la imagen de un diagrama motor, ¿cuál es la secuencia correcta de adquisición de habilidades?",
       alternativas: [
-        "Especializadas  Fundamentales  Rudimentarias",
-        "Rudimentarias  Fundamentales  Especializadas",
-        "Fundamentales  Rudimentarias  Especializadas",
-        "Reflejas  Especializadas  Fundamentales"
+        "Especializadas → Fundamentales → Rudimentarias",
+        "Rudimentarias → Fundamentales → Especializadas",
+        "Fundamentales → Rudimentarias → Especializadas",
+        "Reflejas → Especializadas → Fundamentales"
       ],
       correcta: 1,
-      explicacion: "Secuencia natural: Reflejas (0-1 a�o)  Rudimentarias (1-2: gateo)  Fundamentales (2-7: correr, saltar)  Especializadas (7-12+: t�cnicas espec�ficas)."
+      explicacion: "Secuencia natural: Reflejas (0-1 año) → Rudimentarias (1-2: gateo) → Fundamentales (2-7: correr, saltar) → Especializadas (7-12+: técnicas específicas)."
     },
     {
       id: 15,
-      dominio: "Dominio 1: Aptitud F�sica",
-      enunciado: "�Qu� test mide resistencia aer�bica corriendo m�xima distancia en 12 minutos?",
+      dominio: "Dominio 1: Aptitud Física",
+      enunciado: "¿Qué test mide resistencia aeróbica corriendo máxima distancia en 12 minutos?",
       alternativas: [
         "Test de Cooper",
         "Test de Sit and Reach",
@@ -196,250 +196,250 @@
         "Test de 30 metros"
       ],
       correcta: 0,
-      explicacion: "Test de Cooper: distancia recorrida en 12 minutos estima VO2m�x. Protocolo estandarizado para escolares."
+      explicacion: "Test de Cooper: distancia recorrida en 12 minutos estima VO2máx. Protocolo estandarizado para escolares."
     },
 
-    // DOMINIO 2: MANIFESTACIONES DE LA MOTRICIDAD (15 preguntas - con im�genes y nuevos temas)
+    // DOMINIO 2: MANIFESTACIONES DE LA MOTRICIDAD (15 preguntas - con imágenes y nuevos temas)
     {
       id: 16,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de una secuencia de juego de b�squetbol. �Qu� principio ofensivo se aplica al desmarcarse?",
+      enunciado: "Observa la imagen de una secuencia de juego de básquetbol. ¿Qué principio ofensivo se aplica al desmarcarse?",
       alternativas: [
-        "Proteger la porter�a propia",
+        "Proteger la portería propia",
         "Crear espacios para recibir pase",
         "Interceptar pases del rival",
-        "Presionar al portador del bal�n"
+        "Presionar al portador del balón"
       ],
       correcta: 1,
-      explicacion: "Desmarcarse crea espacios libres para recibir pases, facilitando progresi�n hacia canasta. Principio b�sico de ataque en deportes de invasi�n."
+      explicacion: "Desmarcarse crea espacios libres para recibir pases, facilitando progresión hacia canasta. Principio básico de ataque en deportes de invasión."
     },
     {
       id: 17,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� danza folcl�rica se representa en la imagen con movimientos circulares y pa�uelo?",
+      enunciado: "¿Qué danza folclórica se representa en la imagen con movimientos circulares y pañuelo?",
       alternativas: [
         "Cueca chilena",
-        "Trote altipl�nico",
+        "Trote altiplánico",
         "Sau-sau de Rapa Nui",
         "Choike Purrun mapuche"
       ],
       correcta: 0,
-      explicacion: "La Cueca usa pa�uelo blanco en movimientos circulares que simbolizan galanteo. Es danza nacional chilena, transmitida culturalmente."
+      explicacion: "La Cueca usa pañuelo blanco en movimientos circulares que simbolizan galanteo. Es danza nacional chilena, transmitida culturalmente."
     },
     {
       id: 18,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de un estudiante en silla de ruedas jugando b�squetbol, �qu� adaptaci�n promueve inclusi�n?",
+      enunciado: "En la imagen de un estudiante en silla de ruedas jugando básquetbol, ¿qué adaptación promueve inclusión?",
       alternativas: [
         "Excluir al estudiante del juego",
         "Crear equipo separado solo para discapacitados",
         "Todos juegan sentados para igualar condiciones",
-        "Asignar roles pasivos sin participaci�n activa"
+        "Asignar roles pasivos sin participación activa"
       ],
       correcta: 2,
-      explicacion: "Dise�o Universal para el Aprendizaje: igualar condiciones (todos sentados) permite participaci�n plena, fomenta empat�a y habilidades compartidas."
+      explicacion: "Diseño Universal para el Aprendizaje: igualar condiciones (todos sentados) permite participación plena, fomenta empatía y habilidades compartidas."
     },
     {
       id: 19,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� deporte se clasifica como '\''individual'\'' seg�n la imagen de nataci�n?",
+      enunciado: "¿Qué deporte se clasifica como 'individual' según la imagen de natación?",
       alternativas: [
-        "F�tbol (colectivo de invasi�n)",
-        "Nataci�n (individual contra reloj)",
-        "Voleibol (colectivo de cooperaci�n)",
-        "B�squetbol (colectivo de invasi�n)"
+        "Fútbol (colectivo de invasión)",
+        "Natación (individual contra reloj)",
+        "Voleibol (colectivo de cooperación)",
+        "Básquetbol (colectivo de invasión)"
       ],
       correcta: 1,
-      explicacion: "Deportes individuales: rendimiento personal determina resultado (nataci�n, atletismo). Colectivos requieren coordinaci�n grupal."
+      explicacion: "Deportes individuales: rendimiento personal determina resultado (natación, atletismo). Colectivos requieren coordinación grupal."
     },
     {
       id: 20,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de expresi�n corporal. �Qu� elemento se refiere al pulso y ritmo?",
+      enunciado: "En la imagen de expresión corporal. ¿Qué elemento se refiere al pulso y ritmo?",
       alternativas: [
         "Espacio (niveles y trayectorias)",
         "Tiempo (pulso, ritmo, velocidad)",
-        "Intensidad (energ�a y fuerza)",
+        "Intensidad (energía y fuerza)",
         "Forma (silueta corporal)"
       ],
       correcta: 1,
-      explicacion: "Elemento tiempo: pulso (latido constante), ritmo (patr�n de acentos), tempo (velocidad). Base de la danza y movimiento expresivo."
+      explicacion: "Elemento tiempo: pulso (latido constante), ritmo (patrón de acentos), tempo (velocidad). Base de la danza y movimiento expresivo."
     },
     {
       id: 21,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� habilidad se desarrolla en la imagen de lanzamiento de bal�n medicinal?",
+      enunciado: "¿Qué habilidad se desarrolla en la imagen de lanzamiento de balón medicinal?",
       alternativas: [
-        "Resistencia aer�bica prolongada",
-        "Coordinaci�n �culo-manual y potencia",
-        "Equilibrio unipodal est�tico",
+        "Resistencia aeróbica prolongada",
+        "Coordinación óculo-manual y potencia",
+        "Equilibrio unipodal estático",
         "Flexibilidad pasiva"
       ],
       correcta: 1,
-      explicacion: "Lanzamiento medicinal requiere coordinaci�n ojo-mano y potencia explosiva de tren superior. Ejercicio pliom�trico apropiado para b�sica."
+      explicacion: "Lanzamiento medicinal requiere coordinación ojo-mano y potencia explosiva de tren superior. Ejercicio pliométrico apropiado para básica."
     },
     {
       id: 22,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de un juego cooperativo, �cu�l es el objetivo principal?",
+      enunciado: "En la imagen de un juego cooperativo, ¿cuál es el objetivo principal?",
       alternativas: [
         "Competir para ganar individualmente",
         "Desarrollar habilidades socioemocionales",
-        "Ense�ar t�cnicas de alto rendimiento",
-        "Trabajar solo fuerza f�sica"
+        "Enseñar técnicas de alto rendimiento",
+        "Trabajar solo fuerza física"
       ],
       correcta: 1,
-      explicacion: "Juegos cooperativos priorizan proceso: comunicaci�n, empat�a, resoluci�n de conflictos, trabajo en equipo sobre resultado competitivo."
+      explicacion: "Juegos cooperativos priorizan proceso: comunicación, empatía, resolución de conflictos, trabajo en equipo sobre resultado competitivo."
     },
     {
       id: 23,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� implemento tradicional se usa en la danza mostrada en la imagen?",
+      enunciado: "¿Qué implemento tradicional se usa en la danza mostrada en la imagen?",
       alternativas: [
         "Bombo nortino",
-        "Pa�uelo blanco",
+        "Pañuelo blanco",
         "Chascas mapuche",
         "Riu ceremonial"
       ],
       correcta: 1,
-      explicacion: "Pa�uelo blanco en Cueca simboliza galanteo entre hombre y mujer. Elemento identitario de la danza folcl�rica chilena."
+      explicacion: "Pañuelo blanco en Cueca simboliza galanteo entre hombre y mujer. Elemento identitario de la danza folclórica chilena."
     },
     {
       id: 24,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de gimnasia art�stica. �Qu� deporte es este?",
+      enunciado: "Observa la imagen de gimnasia artística. ¿Qué deporte es este?",
       alternativas: [
-        "Deporte de invasi�n (f�tbol)",
-        "Deporte est�tico (gimnasia)",
-        "Deporte de cooperaci�n (voleibol)",
-        "Deporte de oposici�n (tenis)"
+        "Deporte de invasión (fútbol)",
+        "Deporte estático (gimnasia)",
+        "Deporte de cooperación (voleibol)",
+        "Deporte de oposición (tenis)"
       ],
       correcta: 1,
-      explicacion: "Gimnasia art�stica es deporte est�tico: rutinas acrob�ticas evaluadas por forma, dificultad y ejecuci�n. Individual o colectiva."
+      explicacion: "Gimnasia artística es deporte estático: rutinas acrobáticas evaluadas por forma, dificultad y ejecución. Individual o colectiva."
     },
     {
       id: 25,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� principio defensivo se muestra en la imagen de f�tbol?",
+      enunciado: "¿Qué principio defensivo se muestra en la imagen de fútbol?",
       alternativas: [
         "Finalizar jugada con tiro",
-        "Marcar al rival y recuperar bal�n",
+        "Marcar al rival y recuperar balón",
         "Crear espacios ofensivos",
-        "Conservar posesi�n"
+        "Conservar posesión"
       ],
       correcta: 1,
-      explicacion: "Principio defensivo: marcar cerca al portador, presionar para forzar errores, recuperar posesi�n. Transici�n defensa-ataque."
+      explicacion: "Principio defensivo: marcar cerca al portador, presionar para forzar errores, recuperar posesión. Transición defensa-ataque."
     },
     {
       id: 26,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de danza contempor�nea, �qu� la diferencia de danzas folcl�ricas?",
+      enunciado: "En la imagen de danza contemporánea, ¿qué la diferencia de danzas folclóricas?",
       alternativas: [
-        "Movimientos lentos vs r�pidos",
-        "Transmisi�n cultural tradicional vs creaci�n moderna",
-        "Solo m�sica cl�sica vs electr�nica",
+        "Movimientos lentos vs rápidos",
+        "Transmisión cultural tradicional vs creación moderna",
+        "Solo música clásica vs electrónica",
         "Grupos grandes vs individuales"
       ],
       correcta: 1,
-      explicacion: "Folcl�ricas: patrimonio cultural transmitido generaci�n tras generaci�n. Contempor�neas: expresi�n art�stica moderna, sin c�digos tradicionales fijos."
+      explicacion: "Folclóricas: patrimonio cultural transmitido generación tras generación. Contemporáneas: expresión artística moderna, sin códigos tradicionales fijos."
     },
     {
       id: 27,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� se entiende por '\''espacio personal'\'' en la imagen de expresi�n corporal?",
+      enunciado: "¿Qué se entiende por 'espacio personal' en la imagen de expresión corporal?",
       alternativas: [
-        "Espacio p�blico visible",
+        "Espacio público visible",
         "Alcance de brazos sin desplazamiento",
         "Espacio privado invisible",
         "Solo en salas cerradas"
       ],
       correcta: 1,
-      explicacion: "Espacio personal = kinesfera (radio de acci�n sin mover pies). Espacio general = �rea total de movimiento. Conceptos de Rudolf Laban."
+      explicacion: "Espacio personal = kinesfera (radio de acción sin mover pies). Espacio general = área total de movimiento. Conceptos de Rudolf Laban."
     },
     {
       id: 28,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "Observa la imagen de tecnolog�a en educaci�n f�sica. �C�mo se usa una app para registrar actividad?",
+      enunciado: "Observa la imagen de tecnología en educación física. ¿Cómo se usa una app para registrar actividad?",
       alternativas: [
         "Para competir online contra otros",
-        "Monitorear pasos y frecuencia card�aca",
+        "Monitorear pasos y frecuencia cardíaca",
         "Solo para ver videos instructivos",
         "Reemplazar completamente al profesor"
       ],
       correcta: 1,
-      explicacion: "Tecnolog�a en EF: apps para seguimiento cuantitativo (pasos, FC, calor�as). Complementa ense�anza, fomenta autonom�a y conciencia corporal."
+      explicacion: "Tecnología en EF: apps para seguimiento cuantitativo (pasos, FC, calorías). Complementa enseñanza, fomenta autonomía y conciencia corporal."
     },
     {
       id: 29,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "�Qu� juego se clasifica como '\''masivo'\'' en la imagen de 30 estudiantes?",
+      enunciado: "¿Qué juego se clasifica como 'masivo' en la imagen de 30 estudiantes?",
       alternativas: [
         "Juego individual",
         "Juego en parejas",
         "Juego masivo o de gran grupo",
-        "Juego en peque�os grupos"
+        "Juego en pequeños grupos"
       ],
       correcta: 2,
-      explicacion: "Juegos masivos: todo el curso participa simult�neamente (quemados, cadenas de pilla-pilla, bailes colectivos). Favorecen inclusi�n y participaci�n."
+      explicacion: "Juegos masivos: todo el curso participa simultáneamente (quemados, cadenas de pilla-pilla, bailes colectivos). Favorecen inclusión y participación."
     },
     {
       id: 30,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "En la imagen de educaci�n inclusiva, �qu� adaptaci�n se usa para diversidad funcional?",
+      enunciado: "En la imagen de educación inclusiva, ¿qué adaptación se usa para diversidad funcional?",
       alternativas: [
         "Separar por capacidad",
-        "Modificar reglas para participaci�n plena",
+        "Modificar reglas para participación plena",
         "Excluir actividades",
         "Roles pasivos"
       ],
       correcta: 1,
-      explicacion: "Inclusi�n: adaptar reglas, implementos, espacios. Dise�o Universal asegura acceso equitativo para todos los estudiantes."
+      explicacion: "Inclusión: adaptar reglas, implementos, espacios. Diseño Universal asegura acceso equitativo para todos los estudiantes."
     },
 
-    // DOMINIO 3: PROCESOS DE ENSE�ANZA-APRENDIZAJE (10 preguntas - pedag�gicas, con nuevos temas)
+    // DOMINIO 3: PROCESOS DE ENSEÑANZA-APRENDIZAJE (10 preguntas - pedagógicas, con nuevos temas)
     {
       id: 31,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� estilo de Mosston permite que estudiantes elijan dificultad seg�n capacidad?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué estilo de Mosston permite que estudiantes elijan dificultad según capacidad?",
       alternativas: [
         "Estilo A - Mando Directo",
-        "Estilo E - Inclusi�n",
-        "Estilo H - Resoluci�n de Problemas",
-        "Estilo C - Rec�proca"
+        "Estilo E - Inclusión",
+        "Estilo H - Resolución de Problemas",
+        "Estilo C - Recíproca"
       ],
       correcta: 1,
-      explicacion: "Estilo E (Inclusi�n): misma tarea con niveles ajustables. Estudiante elige dificultad apropiada, fomenta autoconocimiento sin exclusi�n."
+      explicacion: "Estilo E (Inclusión): misma tarea con niveles ajustables. Estudiante elige dificultad apropiada, fomenta autoconocimiento sin exclusión."
     },
     {
       id: 32,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� evaluaci�n se realiza al inicio para conocer conocimientos previos?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué evaluación se realiza al inicio para conocer conocimientos previos?",
       alternativas: [
-        "Diagn�stica",
+        "Diagnóstica",
         "Sumativa",
-        "Autoevaluaci�n",
-        "Coevaluaci�n"
+        "Autoevaluación",
+        "Coevaluación"
       ],
       correcta: 0,
-      explicacion: "Evaluaci�n diagn�stica: identifica nivel de partida, conocimientos previos. Permite ajustar planificaci�n sin calificar."
+      explicacion: "Evaluación diagnóstica: identifica nivel de partida, conocimientos previos. Permite ajustar planificación sin calificar."
     },
     {
       id: 33,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� instrumento describe niveles de desempe�o con criterios espec�ficos?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué instrumento describe niveles de desempeño con criterios específicos?",
       alternativas: [
         "Prueba cerrada",
-        "R�brica anal�tica",
+        "Rúbrica analítica",
         "Lista binaria",
-        "Escala num�rica simple"
+        "Escala numérica simple"
       ],
       correcta: 1,
-      explicacion: "R�brica: criterios + descriptores de niveles (excelente, bueno, suficiente). Objetiva y formativa para retroalimentaci�n."
+      explicacion: "Rúbrica: criterios + descriptores de niveles (excelente, bueno, suficiente). Objetiva y formativa para retroalimentación."
     },
     {
       id: 34,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "En la imagen de estudiantes usando tablets, �c�mo se integra tecnolog�a en EF?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "En la imagen de estudiantes usando tablets, ¿cómo se integra tecnología en EF?",
       alternativas: [
         "Reemplazar clases presenciales",
         "Complementar con videos y seguimiento digital",
@@ -447,98 +447,98 @@
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnolog�a complementa: videos demostrativos, apps de seguimiento, realidad aumentada. Enriquecen ense�anza sin reemplazar interacci�n docente."
+      explicacion: "Tecnología complementa: videos demostrativos, apps de seguimiento, realidad aumentada. Enriquecen enseñanza sin reemplazar interacción docente."
     },
     {
       id: 35,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� principio DUA ofrece informaci�n en m�ltiples formatos?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué principio DUA ofrece información en múltiples formatos?",
       alternativas: [
-        "M�ltiples formas de acci�n",
-        "M�ltiples formas de representaci�n",
-        "M�ltiples formas de implicaci�n",
-        "M�ltiples formas de evaluaci�n"
+        "Múltiples formas de acción",
+        "Múltiples formas de representación",
+        "Múltiples formas de implicación",
+        "Múltiples formas de evaluación"
       ],
       correcta: 1,
-      explicacion: "DUA Principio I: representar contenido en diversos formatos (visual, auditivo, kinest�sico) para acceso universal."
+      explicacion: "DUA Principio I: representar contenido en diversos formatos (visual, auditivo, kinestésico) para acceso universal."
     },
     {
       id: 36,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� evaluaci�n ocurre durante el proceso con retroalimentaci�n?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué evaluación ocurre durante el proceso con retroalimentación?",
       alternativas: [
-        "Diagn�stica",
+        "Diagnóstica",
         "Formativa",
         "Sumativa",
-        "Heteroevaluaci�n"
+        "Heteroevaluación"
       ],
       correcta: 1,
-      explicacion: "Evaluaci�n formativa: continua, feedback descriptivo para mejorar. No califica; prop�sito pedag�gico."
+      explicacion: "Evaluación formativa: continua, feedback descriptivo para mejorar. No califica; propósito pedagógico."
     },
     {
       id: 37,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "En la imagen de salud mental, �c�mo promueve EF bienestar emocional?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "En la imagen de salud mental, ¿cómo promueve EF bienestar emocional?",
       alternativas: [
-        "Solo trabajo f�sico intenso",
-        "Actividades que reducen estr�s y mejoran autoestima",
+        "Solo trabajo físico intenso",
+        "Actividades que reducen estrés y mejoran autoestima",
         "Competencia agresiva",
         "Aislamiento individual"
       ],
       correcta: 1,
-      explicacion: "EF promueve salud mental: reduce ansiedad, mejora autoestima, fomenta socializaci�n, ense�a resiliencia emocional."
+      explicacion: "EF promueve salud mental: reduce ansiedad, mejora autoestima, fomenta socialización, enseña resiliencia emocional."
     },
     {
       id: 38,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� estilo usa parejas con roles alternados de ejecutor y observador?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué estilo usa parejas con roles alternados de ejecutor y observador?",
       alternativas: [
         "Estilo A - Directo",
-        "Estilo B - Asignaci�n",
-        "Estilo C - Rec�proca",
-        "Estilo E - Inclusi�n"
+        "Estilo B - Asignación",
+        "Estilo C - Recíproca",
+        "Estilo E - Inclusión"
       ],
       correcta: 2,
-      explicacion: "Estilo C (Rec�proca): trabajo en parejas con checklist. Ejecutor realiza, observador eval�a con criterios. Desarrolla metacognici�n."
+      explicacion: "Estilo C (Recíproca): trabajo en parejas con checklist. Ejecutor realiza, observador evalúa con criterios. Desarrolla metacognición."
     },
     {
       id: 39,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "�Qu� estrategia eval�a el estudiante su propio desempe�o?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "¿Qué estrategia evalúa el estudiante su propio desempeño?",
       alternativas: [
-        "Heteroevaluaci�n",
-        "Autoevaluaci�n",
-        "Coevaluaci�n",
-        "Evaluaci�n externa"
+        "Heteroevaluación",
+        "Autoevaluación",
+        "Coevaluación",
+        "Evaluación externa"
       ],
       correcta: 1,
-      explicacion: "Autoevaluaci�n: estudiante reflexiona usando criterios. Desarrolla autonom�a cr�tica y metacognici�n."
+      explicacion: "Autoevaluación: estudiante reflexiona usando criterios. Desarrolla autonomía crítica y metacognición."
     },
     {
       id: 40,
-      dominio: "Dominio 3: Procesos de Ense�anza-Aprendizaje",
-      enunciado: "Observa la imagen de inclusi�n. �Qu� se favorece?",
+      dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
+      enunciado: "Observa la imagen de inclusión. ¿Qué se favorece?",
       alternativas: [
-        "Segregaci�n",
-        "Participaci�n equitativa para todos",
-        "Exclusi�n",
-        "Observaci�n pasiva"
+        "Segregación",
+        "Participación equitativa para todos",
+        "Exclusión",
+        "Observación pasiva"
       ],
       correcta: 1,
-      explicacion: "Inclusi�n: adaptar actividades para diversidad funcional. Dise�o Universal asegura acceso y participaci�n plena."
+      explicacion: "Inclusión: adaptar actividades para diversidad funcional. Diseño Universal asegura acceso y participación plena."
     },
 
     // CASOS INTEGRADOS (10 preguntas - con temas nuevos)
     {
       id: 41,
       dominio: "Casos Integrados",
-      contexto: "CASO: Circuito de acondicionamiento con im�genes de estaciones. Estudiante con fatiga.",
-      enunciado: "�Qu� acci�n prioritaria tomar?",
+      contexto: "CASO: Circuito de acondicionamiento con imágenes de estaciones. Estudiante con fatiga.",
+      enunciado: "¿Qué acción prioritaria tomar?",
       alternativas: [
-        "Forzar continuaci�n",
+        "Forzar continuación",
         "Detener, hidratar, reducir intensidad",
         "Aplicar calor",
-        "Ignorar s�ntomas"
+        "Ignorar síntomas"
       ],
       correcta: 1,
       explicacion: "Fatiga en obesidad: detener, hidratar, reducir carga. Monitorear signos vitales, derivar si persiste."
@@ -547,135 +547,135 @@
       id: 42,
       dominio: "Casos Integrados",
       contexto: "CASO: Juego cooperativo con conflicto. Imagen muestra estudiantes discutiendo.",
-      enunciado: "�Qu� intervenci�n pedag�gica usar?",
+      enunciado: "¿Qué intervención pedagógica usar?",
       alternativas: [
         "Ignorar conflicto",
-        "Pausar, validar emociones, facilitar di�logo",
+        "Pausar, validar emociones, facilitar diálogo",
         "Castigar ambos",
-        "Decisi�n unilateral"
+        "Decisión unilateral"
       ],
       correcta: 1,
-      explicacion: "Mediaci�n: validar emociones, facilitar di�logo consensuado. Ense�a resoluci�n pac�fica y empat�a."
+      explicacion: "Mediación: validar emociones, facilitar diálogo consensuado. Enseña resolución pacífica y empatía."
     },
     {
       id: 43,
       dominio: "Casos Integrados",
       contexto: "CASO: Uso de app para seguimiento en EF. Imagen de estudiantes con dispositivos.",
-      enunciado: "�Qu� beneficio principal aporta?",
+      enunciado: "¿Qué beneficio principal aporta?",
       alternativas: [
         "Reemplaza profesor",
-        "Fomenta autonom�a y conciencia corporal",
+        "Fomenta autonomía y conciencia corporal",
         "Solo entretenimiento",
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnolog�a: seguimiento cuantitativo (pasos, FC, calor�as), promueve autonom�a y motivaci�n intr�nseca."
+      explicacion: "Tecnología: seguimiento cuantitativo (pasos, FC, calorías), promueve autonomía y motivación intrínseca."
     },
     {
       id: 44,
       dominio: "Casos Integrados",
-      contexto: "CASO: Actividad inclusiva con silla de ruedas. Imagen muestra adaptaci�n.",
-      enunciado: "�Qu� principio se aplica?",
+      contexto: "CASO: Actividad inclusiva con silla de ruedas. Imagen muestra adaptación.",
+      enunciado: "¿Qué principio se aplica?",
       alternativas: [
         "Separar estudiantes",
-        "Dise�o Universal para igualar condiciones",
-        "Excluir participaci�n",
+        "Diseño Universal para igualar condiciones",
+        "Excluir participación",
         "Roles pasivos"
       ],
       correcta: 1,
-      explicacion: "DUA: adaptar para inclusi�n plena. Todos participan en condiciones equitativas, fomenta empat�a."
+      explicacion: "DUA: adaptar para inclusión plena. Todos participan en condiciones equitativas, fomenta empatía."
     },
     {
       id: 45,
       dominio: "Casos Integrados",
-      contexto: "CASO: Evaluaci�n formativa en circuito. Imagen de checklist.",
-      enunciado: "�Qu� instrumento usar?",
+      contexto: "CASO: Evaluación formativa en circuito. Imagen de checklist.",
+      enunciado: "¿Qué instrumento usar?",
       alternativas: [
         "Examen escrito",
         "Lista de cotejo observacional",
-        "Nota final �nica",
-        "Sin evaluaci�n"
+        "Nota final única",
+        "Sin evaluación"
       ],
       correcta: 1,
-      explicacion: "Lista de cotejo: indicadores observables para retroalimentaci�n inmediata durante actividad."
+      explicacion: "Lista de cotejo: indicadores observables para retroalimentación inmediata durante actividad."
     },
     {
       id: 46,
       dominio: "Casos Integrados",
       contexto: "CASO: Salud mental en EF. Imagen de actividad relajante.",
-      enunciado: "�Qu� se promueve?",
+      enunciado: "¿Qué se promueve?",
       alternativas: [
-        "Solo f�sico",
-        "Bienestar emocional y reducci�n de estr�s",
+        "Solo físico",
+        "Bienestar emocional y reducción de estrés",
         "Agresividad",
         "Aislamiento"
       ],
       correcta: 1,
-      explicacion: "EF integra salud mental: actividades que reducen ansiedad, mejoran autoestima, ense�an manejo emocional."
+      explicacion: "EF integra salud mental: actividades que reducen ansiedad, mejoran autoestima, enseñan manejo emocional."
     },
     {
       id: 47,
       dominio: "Casos Integrados",
-      contexto: "CASO: Progresi�n did�ctica. Imagen de secuencia de juegos.",
-      enunciado: "�Cu�l es la secuencia correcta?",
+      contexto: "CASO: Progresión didáctica. Imagen de secuencia de juegos.",
+      enunciado: "¿Cuál es la secuencia correcta?",
       alternativas: [
-        "Deportivo  Pre-deportivo",
-        "Libre  Reglado  Pre-deportivo  Deportivo",
-        "Todos simult�neos",
-        "Pre-deportivo  Libre"
+        "Deportivo → Pre-deportivo",
+        "Libre → Reglado → Pre-deportivo → Deportivo",
+        "Todos simultáneos",
+        "Pre-deportivo → Libre"
       ],
       correcta: 1,
-      explicacion: "Progresi�n: Libre (exploraci�n)  Reglado (reglas simples)  Pre-deportivo (fundamentos)  Deportivo (completo)."
+      explicacion: "Progresión: Libre (exploración) → Reglado (reglas simples) → Pre-deportivo (fundamentos) → Deportivo (completo)."
     },
     {
       id: 48,
       dominio: "Casos Integrados",
-      contexto: "CASO: Conflicto en juego. Imagen de mediaci�n docente.",
-      enunciado: "�Qu� se ense�a?",
+      contexto: "CASO: Conflicto en juego. Imagen de mediación docente.",
+      enunciado: "¿Qué se enseña?",
       alternativas: [
         "Competencia agresiva",
-        "Resoluci�n pac�fica y empat�a",
+        "Resolución pacífica y empatía",
         "Ignorar problemas",
         "Castigo inmediato"
       ],
       correcta: 1,
-      explicacion: "Mediaci�n ense�a di�logo, validaci�n emocional, soluciones consensuadas. Desarrolla habilidades socioemocionales."
+      explicacion: "Mediación enseña diálogo, validación emocional, soluciones consensuadas. Desarrolla habilidades socioemocionales."
     },
     {
       id: 49,
       dominio: "Casos Integrados",
-      contexto: "CASO: Tecnolog�a en planificaci�n. Imagen de software.",
-      enunciado: "�C�mo se usa?",
+      contexto: "CASO: Tecnología en planificación. Imagen de software.",
+      enunciado: "¿Cómo se usa?",
       alternativas: [
-        "Reemplazar ense�anza",
+        "Reemplazar enseñanza",
         "Complementar con recursos digitales",
         "Solo videos",
         "Competencia virtual"
       ],
       correcta: 1,
-      explicacion: "Tecnolog�a complementa: planificaci�n digital, videos demostrativos, seguimiento online. Enriquecen sin sustituir interacci�n."
+      explicacion: "Tecnología complementa: planificación digital, videos demostrativos, seguimiento online. Enriquecen sin sustituir interacción."
     },
     {
       id: 50,
       dominio: "Casos Integrados",
-      contexto: "CASO: Inclusi�n con diversidad. Imagen de adaptaci�n.",
-      enunciado: "�Qu� se promueve?",
+      contexto: "CASO: Inclusión con diversidad. Imagen de adaptación.",
+      enunciado: "¿Qué se promueve?",
       alternativas: [
-        "Segregaci�n",
-        "Participaci�n equitativa para todos",
-        "Exclusi�n",
-        "Observaci�n pasiva"
+        "Segregación",
+        "Participación equitativa para todos",
+        "Exclusión",
+        "Observación pasiva"
       ],
       correcta: 1,
-      explicacion: "Inclusi�n: adaptar actividades para diversidad funcional. Dise�o Universal asegura acceso y participaci�n plena."
+      explicacion: "Inclusión: adaptar actividades para diversidad funcional. Diseño Universal asegura acceso y participación plena."
     }
   ];
 
-  if (typeof module !== '\''undefined'\'' && module.exports) {
+  if (typeof module !== 'undefined' && module.exports) {
     module.exports = preguntas;
   }
 
   if (root) {
     root.efBasicaPreguntas = preguntas;
   }
-})(typeof globalThis !== '\''undefined'\'' ? globalThis : (typeof window !== '\''undefined'\'' ? window : this));
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));

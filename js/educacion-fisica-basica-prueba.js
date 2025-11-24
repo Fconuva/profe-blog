@@ -53,7 +53,7 @@
       <div class="mb-6">
         ${pregunta.contexto ? `<div class="bg-yellow-50 border-l-4 border-yellow-400 rounded-lg p-4 mb-4 text-sm text-yellow-900 whitespace-pre-line">${pregunta.contexto}</div>` : ''}
         ${pregunta.imagen ? `<div class="mb-4 flex justify-center"><img src="${pregunta.imagen}" alt="Imagen de la pregunta" class="max-w-full h-auto rounded-lg shadow-md"></div>` : ''}
-        <p class="text-lg text-gray-800 leading-relaxed mb-4">${pregunta.enunciado}</p>
+        <p class="text-lg leading-relaxed mb-4" style="color: #1f2937;">${pregunta.enunciado}</p>
         <div class="space-y-3">
     `;
 
@@ -63,7 +63,7 @@
       html += `
         <label class="flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all hover:border-red-400 hover:bg-red-50 ${checked ? 'border-red-500 bg-red-100' : 'border-gray-200'}">
           <input type="radio" name="pregunta-${index}" value="${i}" ${checked} onchange="guardarRespuesta(${index}, ${i}); mostrarRetroalimentacion(${index})" class="mt-1 mr-3">
-          <span class="flex-1"><strong>${letra})</strong> ${alt}</span>
+          <span class="flex-1" style="color: #374151;"><strong>${letra})</strong> ${alt}</span>
         </label>
       `;
     });
@@ -131,6 +131,8 @@
     if (barraProgreso) {
       barraProgreso.style.width = totalPreguntas ? `${(respondidas / totalPreguntas) * 100}%` : '0%';
     }
+
+    updateQuestionJumper();
   }
 
   function comenzarPrueba() {
@@ -148,6 +150,7 @@
       contenedor.classList.remove('hidden');
     }
 
+    createQuestionJumper();
     renderPregunta(0);
   }
 
@@ -257,11 +260,53 @@
     mostrarSeccionResultados(true);
   }
 
-  function reiniciarPrueba() {
-    respuestas = new Array(totalPreguntas).fill(null);
-    preguntaActual = 0;
-    mostrarSeccionResultados(false);
-    renderPregunta(0);
+  function createQuestionJumper() {
+    // Check if already exists
+    if (document.getElementById('question-jumper')) return;
+
+    const container = document.querySelector('.min-h-screen');
+    if (!container) return;
+
+    const jumperHTML = `
+      <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+        <p class="text-sm font-semibold text-gray-700 mb-3 text-center">Ir a pregunta:</p>
+        <div id="question-jumper" class="flex flex-wrap gap-0.5 justify-center max-w-4xl mx-auto"></div>
+      </div>
+    `;
+
+    const pruebaContainer = document.getElementById('prueba-container');
+    if (pruebaContainer) {
+      pruebaContainer.insertAdjacentHTML('afterend', jumperHTML);
+      updateQuestionJumper();
+    }
+  }
+
+  function updateQuestionJumper() {
+    const jumper = document.getElementById('question-jumper');
+    if (!jumper) return;
+
+    jumper.innerHTML = '';
+
+    for (let i = 0; i < totalPreguntas; i++) {
+      const btn = document.createElement('button');
+      btn.className = 'w-8 h-8 rounded-full text-xs font-bold border-2 transition-all hover:scale-110';
+      btn.textContent = i + 1;
+
+      if (respuestas[i] !== null) {
+        if (respuestas[i] === preguntas[i].correcta) {
+          btn.classList.add('bg-green-500', 'border-green-500', 'text-white');
+        } else {
+          btn.classList.add('bg-red-500', 'border-red-500', 'text-white');
+        }
+      } else if (i === preguntaActual) {
+        btn.classList.add('bg-blue-500', 'border-blue-500', 'text-white');
+      } else {
+        btn.classList.add('bg-white', 'border-gray-300', 'text-black', 'hover:bg-gray-100');
+      }
+
+      btn.addEventListener('click', () => renderPregunta(i));
+      jumper.appendChild(btn);
+    }
   }
 
   // Exponer funciones para los controladores inline existentes.

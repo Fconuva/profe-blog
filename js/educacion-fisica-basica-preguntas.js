@@ -63,6 +63,7 @@
       id: 5,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
+      imagen: "/imagenes/educacion-fisica/locomocion.svg",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
         "Actividades de bajo impacto moderado como caminata o natación",
@@ -89,6 +90,7 @@
       id: 7,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
+      imagen: "/imagenes/educacion-fisica/hero-dossier.svg",
       alternativas: [
         "Sistema aeróbico oxidativo (duración >2 min)",
         "Sistema anaeróbico láctico (duración 30-90 seg)",
@@ -410,10 +412,10 @@
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
       enunciado: "¿Qué estilo de Mosston permite que estudiantes elijan dificultad según capacidad?",
       alternativas: [
-        "Estilo A - Mando Directo",
-        "Estilo E - Inclusión",
-        "Estilo H - Resolución de Problemas",
-        "Estilo C - Recíproca"
+        "Estilo A - Mando Directo (tarea única para todos)",
+        "Estilo E - Inclusión (niveles diferenciados)",
+        "Estilo H - Resolución de Problemas (investigación libre)",
+        "Estilo C - Recíproca (parejas con roles fijos)"
       ],
       correcta: 1,
       explicacion: "Estilo E (Inclusión): misma tarea con niveles ajustables. Estudiante elige dificultad apropiada, fomenta autoconocimiento sin exclusión."

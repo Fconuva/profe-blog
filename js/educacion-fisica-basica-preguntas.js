@@ -6,7 +6,8 @@
     {
       id: 1,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué tipo de contracción muscular se produce en los abdominales durante una plancha abdominal?",
+      enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ¿Qué tipo de contracción muscular se produce en los abdominales?",
+      imagen: "/imagenes/educacion-fisica-basica/image-000.png",
       alternativas: [
         "Contracción concéntrica (músculos se acortan)",
         "Contracción isométrica (tensión constante sin cambio de longitud)",
@@ -19,7 +20,8 @@
     {
       id: 2,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach'?",
+      enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach' mostrado en la imagen?",
+      imagen: "/imagenes/educacion-fisica-basica/image-002.png",
       alternativas: [
         "Fuerza explosiva de miembros inferiores",
         "Velocidad de reacción ante estímulos",
@@ -32,7 +34,8 @@
     {
       id: 3,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué cualidad física se desarrolla principalmente al saltar la cuerda?",
+      enunciado: "En la imagen de un estudiante saltando la cuerda, ¿qué cualidad física se desarrolla principalmente?",
+      imagen: "/imagenes/educacion-fisica-basica/image-004.png",
       alternativas: [
         "Flexibilidad pasiva de miembros superiores",
         "Resistencia aeróbica y coordinación rítmica",
@@ -45,7 +48,8 @@
     {
       id: 4,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "Según un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
+      enunciado: "Según la imagen de un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
+      imagen: "/imagenes/educacion-fisica-basica/image-006.png",
       alternativas: [
         "Bíceps braquial (flexor del codo)",
         "Tríceps braquial (extensor del codo)",
@@ -58,7 +62,8 @@
     {
       id: 5,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué tipo de actividad es más recomendable inicialmente para un estudiante con obesidad?",
+      enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
+      imagen: "/imagenes/educacion-fisica-basica/image-008.png",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
         "Actividades de bajo impacto moderado como caminata o natación",
@@ -84,7 +89,8 @@
     {
       id: 7,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Cuál sistema energético predomina en un sprint de 50 metros?",
+      enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
+      imagen: "/imagenes/educacion-fisica-basica/image-010.png",
       alternativas: [
         "Sistema aeróbico oxidativo (duración >2 min)",
         "Sistema anaeróbico láctico (duración 30-90 seg)",
@@ -110,7 +116,8 @@
     {
       id: 9,
       dominio: "Dominio 1: Aptitud Física",
-      enunciado: "¿Qué capacidad se desarrolla al realizar equilibrio sobre un pie?",
+      enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ¿Qué capacidad se desarrolla?",
+      imagen: "/imagenes/educacion-fisica-basica/image-012.png",
       alternativas: [
         "Velocidad lineal de desplazamiento",
         "Equilibrio estático y propiocepción",
@@ -163,6 +170,7 @@
       id: 13,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Observa la imagen de un estudiante lesionado. ¿Cuál es el protocolo RICE correcto?",
+      imagen: "/imagenes/educacion-fisica-basica/image-014.png",
       alternativas: [
         "Calor + Masaje + Movimiento continuo",
         "Reposo + Hielo + Compresión + Elevación",
@@ -176,6 +184,7 @@
       id: 14,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "En la imagen de un diagrama motor, ¿cuál es la secuencia correcta de adquisición de habilidades?",
+      imagen: "/imagenes/educacion-fisica-basica/image-016.png",
       alternativas: [
         "Especializadas → Fundamentales → Rudimentarias",
         "Rudimentarias → Fundamentales → Especializadas",
@@ -203,7 +212,8 @@
     {
       id: 16,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué principio ofensivo se aplica al desmarcarse en básquetbol?",
+      enunciado: "Observa la imagen de una secuencia de juego de básquetbol. ¿Qué principio ofensivo se aplica al desmarcarse?",
+      imagen: "/imagenes/educacion-fisica-basica/image-018.png",
       alternativas: [
         "Proteger la portería propia",
         "Crear espacios para recibir pase",
@@ -229,7 +239,8 @@
     {
       id: 18,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué adaptación promueve inclusión en básquetbol para estudiantes en silla de ruedas?",
+      enunciado: "En la imagen de un estudiante en silla de ruedas jugando básquetbol, ¿qué adaptación promueve inclusión?",
+      imagen: "/imagenes/educacion-fisica-basica/image-020.png",
       alternativas: [
         "Excluir al estudiante del juego",
         "Crear equipo separado solo para discapacitados",
@@ -268,7 +279,8 @@
     {
       id: 21,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
-      enunciado: "¿Qué habilidad se desarrolla con el lanzamiento de balón medicinal?",
+      enunciado: "¿Qué habilidad se desarrolla en la imagen de lanzamiento de balón medicinal?",
+      imagen: "/imagenes/educacion-fisica-basica/image-022.png",
       alternativas: [
         "Resistencia aeróbica prolongada",
         "Coordinación óculo-manual y potencia",
@@ -308,14 +320,15 @@
       id: 24,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
       enunciado: "Observa la imagen de gimnasia artística. ¿Qué deporte es este?",
+      imagen: "/imagenes/educacion-fisica-basica/image-024.png",
       alternativas: [
         "Deporte de invasión (fútbol)",
-        "Deporte estático (gimnasia)",
+        "Deporte estético (gimnasia)",
         "Deporte de cooperación (voleibol)",
         "Deporte de oposición (tenis)"
       ],
       correcta: 1,
-      explicacion: "Gimnasia artística es deporte estático: rutinas acrobáticas evaluadas por forma, dificultad y ejecución. Individual o colectiva."
+      explicacion: "Gimnasia artística es deporte estético: rutinas acrobáticas evaluadas por forma, dificultad y ejecución. Individual o colectiva."
     },
     {
       id: 25,
@@ -360,6 +373,7 @@
       id: 28,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
       enunciado: "Observa la imagen de tecnología en educación física. ¿Cómo se usa una app para registrar actividad?",
+      imagen: "/imagenes/educacion-fisica-basica/image-026.png",
       alternativas: [
         "Para competir online contra otros",
         "Monitorear pasos y frecuencia cardíaca",
@@ -439,7 +453,8 @@
     {
       id: 34,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Cómo se integra la tecnología en educación física?",
+      enunciado: "En la imagen de estudiantes usando tablets, ¿cómo se integra tecnología en EF?",
+      imagen: "/imagenes/educacion-fisica-basica/image-028.png",
       alternativas: [
         "Reemplazar clases presenciales",
         "Complementar con videos y seguimiento digital",
@@ -478,7 +493,8 @@
     {
       id: 37,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Cómo promueve la educación física el bienestar emocional?",
+      enunciado: "En la imagen de salud mental, ¿cómo promueve EF bienestar emocional?",
+      imagen: "/imagenes/educacion-fisica-basica/image-030.png",
       alternativas: [
         "Solo trabajo físico intenso",
         "Actividades que reducen estrés y mejoran autoestima",
@@ -517,7 +533,8 @@
     {
       id: 40,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
-      enunciado: "¿Qué se favorece con la inclusión en educación física?",
+      enunciado: "Observa la imagen de inclusión. ¿Qué se favorece?",
+      imagen: "/imagenes/educacion-fisica-basica/image-032.png",
       alternativas: [
         "Segregación",
         "Participación equitativa para todos",

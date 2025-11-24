@@ -7,7 +7,7 @@
       id: 1,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Observa la imagen de un estudiante realizando una plancha abdominal. ¿Qué tipo de contracción muscular se produce en los abdominales?",
-      imagen: "/imagenes/educacion-fisica/estabilidad.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p001_img01.png",
       alternativas: [
         "Contracción concéntrica (músculos se acortan)",
         "Contracción isométrica (tensión constante sin cambio de longitud)",
@@ -21,7 +21,7 @@
       id: 2,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "¿Qué componente de la aptitud física se evalúa con el test de 'Sit and Reach' mostrado en la imagen?",
-      imagen: "/imagenes/educacion-fisica/estacion-4-flexibilidad.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p002_img01.png",
       alternativas: [
         "Fuerza explosiva de miembros inferiores",
         "Velocidad de reacción ante estímulos",
@@ -35,7 +35,7 @@
       id: 3,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "En la imagen de un estudiante saltando la cuerda, ¿qué cualidad física se desarrolla principalmente?",
-      imagen: "/imagenes/educacion-fisica/coordinacion.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p003_img01.png",
       alternativas: [
         "Flexibilidad pasiva de miembros superiores",
         "Resistencia aeróbica y coordinación rítmica",
@@ -49,7 +49,7 @@
       id: 4,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Según la imagen de un diagrama anatómico, ¿qué músculo es responsable de la extensión del brazo en el lanzamiento?",
-      imagen: "/imagenes/educacion-fisica/manipulacion.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p004_img01.png",
       alternativas: [
         "Bíceps braquial (flexor del codo)",
         "Tríceps braquial (extensor del codo)",
@@ -63,7 +63,7 @@
       id: 5,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Observa la imagen de un estudiante con obesidad realizando caminata. ¿Qué tipo de actividad es más recomendable inicialmente?",
-      imagen: "/imagenes/educacion-fisica/locomocion.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p005_img01.png",
       alternativas: [
         "Ejercicios de alto impacto como saltos",
         "Actividades de bajo impacto moderado como caminata o natación",
@@ -90,7 +90,7 @@
       id: 7,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "En la imagen de un diagrama de sistemas energéticos, ¿cuál predomina en un sprint de 50 metros?",
-      imagen: "/imagenes/educacion-fisica/hero-dossier.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p006_img01.png",
       alternativas: [
         "Sistema aeróbico oxidativo (duración >2 min)",
         "Sistema anaeróbico láctico (duración 30-90 seg)",
@@ -117,7 +117,7 @@
       id: 9,
       dominio: "Dominio 1: Aptitud Física",
       enunciado: "Observa la imagen de un estudiante en equilibrio sobre un pie. ¿Qué capacidad se desarrolla?",
-      imagen: "/imagenes/educacion-fisica/estabilidad.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p007_img01.png",
       alternativas: [
         "Velocidad lineal de desplazamiento",
         "Equilibrio estático y propiocepción",
@@ -211,7 +211,7 @@
       id: 16,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
       enunciado: "Observa la imagen de una secuencia de juego de básquetbol. ¿Qué principio ofensivo se aplica al desmarcarse?",
-      imagen: "/imagenes/educacion-fisica/manipulacion.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p008_img01.png",
       alternativas: [
         "Proteger la portería propia",
         "Crear espacios para recibir pase",
@@ -238,7 +238,7 @@
       id: 18,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
       enunciado: "En la imagen de un estudiante en silla de ruedas jugando básquetbol, ¿qué adaptación promueve inclusión?",
-      imagen: "/imagenes/educacion-fisica/inclusion-diversidad.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p009_img01.png",
       alternativas: [
         "Excluir al estudiante del juego",
         "Crear equipo separado solo para discapacitados",
@@ -278,7 +278,7 @@
       id: 21,
       dominio: "Dominio 2: Manifestaciones de la Motricidad",
       enunciado: "¿Qué habilidad se desarrolla en la imagen de lanzamiento de balón medicinal?",
-      imagen: "/imagenes/educacion-fisica/manipulacion.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p010_img01.png",
       alternativas: [
         "Resistencia aeróbica prolongada",
         "Coordinación óculo-manual y potencia",
@@ -528,7 +528,7 @@
       id: 40,
       dominio: "Dominio 3: Procesos de Enseñanza-Aprendizaje",
       enunciado: "Observa la imagen de inclusión. ¿Qué se favorece?",
-      imagen: "/imagenes/educacion-fisica/inclusion-diversidad.svg",
+      imagen: "/evaluaciones/educacion-parvularia/pruebas/parv-nt/imagenes/ep2023_p011_img01.png",
       alternativas: [
         "Segregación",
         "Participación equitativa para todos",

@@ -26,7 +26,8 @@ const resumenDias = document.getElementById('resumenDias');
 // Datos de bloqueo
 const BLOCKED_RANGES = [
     { start: 1, end: 19, reason: "Clases y Capacitación" },
-    { start: 22, end: 22, reason: "Foto Oficial" }
+    { start: 22, end: 22, reason: "Foto Oficial" },
+    { start: 31, end: 31, reason: "Cierre de año" }
 ];
 
 // Inicialización

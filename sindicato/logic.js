@@ -52,8 +52,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!firebase.apps.length) {
             firebase.initializeApp(firebaseConfig);
         }
-        db = firebase.firestore();
-        console.log("Firebase inicializado.");
+        db = firebase.database();
+        console.log("Firebase (RTDB) inicializado.");
         
         setupRealtimeListener();
     } catch (e) {
@@ -138,10 +138,10 @@ function handleDateSelection(e) {
 function setupRealtimeListener() {
     if (!db) return;
 
-    db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
+    db.ref(COLLECTION_NAME).on('value', (snapshot) => {
         allInscriptions = [];
-        snapshot.forEach((doc) => {
-            allInscriptions.push({ id: doc.id, ...doc.data() });
+        snapshot.forEach((childSnapshot) => {
+            allInscriptions.push({ id: childSnapshot.key, ...childSnapshot.val() });
         });
         
         updateDashboard();
@@ -212,12 +212,12 @@ async function handleFormSubmit(e) {
     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Guardando...';
 
     try {
-        await db.collection(COLLECTION_NAME).add({
+        await db.ref(COLLECTION_NAME).push({
             nombre,
             sede,
             cumpleanos,
             fechaSeleccionada,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            timestamp: firebase.database.ServerValue.TIMESTAMP
         });
 
         alert("¡Inscripción realizada con éxito!");

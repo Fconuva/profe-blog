@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inscripción Beneficio Cumpleaños - Sindicato N°1</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+    <!-- jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        /* Animación Moneda 360 */
+        .coin-container {
+            perspective: 1000px;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+
+        .coin {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 1s;
+            transform-style: preserve-3d;
+            animation: spin 6s infinite linear;
+        }
+
+        .coin-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .coin-face img {
+            width: 90%;
+            height: 90%;
+            object-fit: contain;
+        }
+
+        .coin-back {
+            transform: rotateY(180deg);
+        }
+
+        @keyframes spin {
+            0% { transform: rotateY(0deg); }
+            100% { transform: rotateY(360deg); }
+        }
+
+        /* Estilos adicionales */
+        .date-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f3f4f6;
+        }
+        
+        .date-card.selected {
+            border: 2px solid #2563eb;
+            background-color: #eff6ff;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen font-sans">
+
+    <!-- Navbar simple -->
+    <nav class="bg-blue-900 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-users text-yellow-400 text-2xl"></i>
+                <h1 class="text-xl font-bold">Sindicato N°1 Trabajadores Salesianos</h1>
+            </div>
+            <a href="/" class="text-sm hover:text-yellow-300 transition"><i class="fas fa-home mr-1"></i> Volver al inicio</a>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8 max-w-4xl">
+        
+        <!-- Header con Logo Giratorio -->
+        <div class="text-center mb-10">
+            <div class="coin-container mb-4">
+                <div class="coin">
+                    <div class="coin-face">
+                        <!-- Asegúrate de subir la imagen como logo-sindicato.png en la carpeta assets/img o similar -->
+                        <img src="/assets/img/logo-sindicato.png" alt="Logo Sindicato" onerror="this.src='https://via.placeholder.com/150?text=Sindicato'">
+                    </div>
+                    <div class="coin-face coin-back">
+                        <img src="/assets/img/logo-sindicato.png" alt="Logo Sindicato" onerror="this.src='https://via.placeholder.com/150?text=Sindicato'">
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-3xl font-bold text-gray-800 mb-2">Inscripción Día Libre por Cumpleaños</h2>
+            <p class="text-gray-600">Beneficio Sindical - Diciembre 2025</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            
+            <!-- Columna Izquierda: Formulario -->
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-xl font-semibold mb-4 text-blue-800 border-b pb-2">
+                    <i class="fas fa-pen-to-square mr-2"></i>Datos del Socio
+                </h3>
+
+                <form id="inscriptionForm" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo</label>
+                        <input type="text" id="nombre" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Sede</label>
+                            <select id="sede" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2">
+                                <option value="">Seleccionar...</option>
+                                <option value="Norte">Sede Norte</option>
+                                <option value="Sur">Sede Sur</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Fecha Cumpleaños</label>
+                            <input type="date" id="cumpleanos" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Selecciona tu día libre (Diciembre 2025)</label>
+                        <p class="text-xs text-gray-500 mb-2">Solo días habilitados (sin capacitación ni clases)</p>
+                        <select id="diaSeleccionado" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 border p-2 bg-blue-50">
+                            <option value="">-- Selecciona una fecha --</option>
+                            <!-- Se llenará con JS -->
+                        </select>
+                    </div>
+
+                    <!-- Info del día seleccionado -->
+                    <div id="diaInfo" class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-sm">
+                        <p class="font-bold text-yellow-800 mb-1"><i class="fas fa-calendar-day mr-1"></i> Actividad del día:</p>
+                        <p id="actividadDia" class="text-gray-700 italic mb-2">...</p>
+                        <div class="flex items-center justify-between text-xs text-gray-500 border-t border-yellow-200 pt-2">
+                            <span><i class="fas fa-users mr-1"></i> Inscritos ese día:</span>
+                            <span id="contadorInscritos" class="font-bold text-blue-600 text-lg">0</span>
+                        </div>
+                        <div id="listaInscritosPreview" class="mt-2 text-xs text-gray-500 truncate">
+                            <!-- Nombres breves -->
+                        </div>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-check-circle mr-2"></i>Confirmar Inscripción
+                    </button>
+                </form>
+            </div>
+
+            <!-- Columna Derecha: Estado y Descargas -->
+            <div class="space-y-6">
+                
+                <!-- Resumen de Disponibilidad -->
+                <div class="bg-white rounded-xl shadow-md p-6">
+                    <h3 class="text-xl font-semibold mb-4 text-green-800 border-b pb-2">
+                        <i class="fas fa-chart-pie mr-2"></i>Estado de Inscripciones
+                    </h3>
+                    <div class="space-y-3 max-h-60 overflow-y-auto pr-2" id="resumenDias">
+                        <p class="text-center text-gray-500 py-4">Cargando disponibilidad...</p>
+                    </div>
+                </div>
+
+                <!-- Zona de Descarga (Admin/General) -->
+                <div class="bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl shadow-md p-6 text-white">
+                    <h3 class="text-lg font-semibold mb-3">
+                        <i class="fas fa-file-pdf mr-2 text-red-400"></i>Reportes
+                    </h3>
+                    <p class="text-sm text-gray-300 mb-4">Descarga la lista de inscritos separada por sede.</p>
+                    <button onclick="generarPDF()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition flex items-center justify-center gap-2">
+                        <i class="fas fa-download"></i> Descargar PDF Sedes
+                    </button>
+                </div>
+
+                <!-- Leyenda -->
+                <div class="bg-blue-50 rounded-lg p-4 text-xs text-blue-800">
+                    <p class="font-bold mb-1">Información Importante:</p>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li>Días bloqueados: 1-19 (Clases/Capacitación) y 22 (Foto Oficial).</li>
+                        <li>El beneficio aplica para un día libre en Diciembre.</li>
+                        <li>Sujeto a confirmación por jefatura.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-200 text-center py-6 mt-12 text-gray-600 text-sm">
+        <p>&copy; 2025 Sindicato N°1 Trabajadores Salesianos. Todos los derechos reservados.</p>
+    </footer>
+
+    <!-- Lógica de la aplicación -->
+    <script src="logic.js"></script>
+</body>
+</html>

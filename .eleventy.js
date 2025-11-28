@@ -47,6 +47,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("success");
   eleventyConfig.addPassthroughCopy("blog");
   eleventyConfig.addPassthroughCopy("Manuales");
+  eleventyConfig.addPassthroughCopy("sindicato");
   // Copiar carpetas de la sección privada y herramientas temporales
   eleventyConfig.addPassthroughCopy("privado");
   eleventyConfig.addPassthroughCopy("Temporales");

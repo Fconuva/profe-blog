@@ -9,12 +9,10 @@ const firebaseConfig = {
     appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
 };
 
-// Inicializar Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
+// Variables globales
+let db;
 const COLLECTION_NAME = "inscripciones_cumpleanos_2025";
+let allInscriptions = [];
 
 // Referencias DOM
 const form = document.getElementById('inscriptionForm');
@@ -31,17 +29,40 @@ const BLOCKED_RANGES = [
     { start: 22, end: 22, reason: "Foto Oficial" }
 ];
 
-// Estado global de inscripciones
-let allInscriptions = [];
-
 // Inicialización
 document.addEventListener('DOMContentLoaded', () => {
-    generateDecemberDates();
-    setupRealtimeListener();
+    console.log("Iniciando aplicación Sindicato...");
+    
+    // 1. Generar fechas (independiente de Firebase)
+    try {
+        generateDecemberDates();
+        console.log("Fechas generadas correctamente.");
+    } catch (e) {
+        console.error("Error generando fechas:", e);
+        alert("Error al cargar el calendario. Por favor recarga la página.");
+    }
+
+    // 2. Inicializar Firebase
+    try {
+        if (typeof firebase === 'undefined') {
+            throw new Error("Firebase SDK no cargó correctamente.");
+        }
+        
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        db = firebase.firestore();
+        console.log("Firebase inicializado.");
+        
+        setupRealtimeListener();
+    } catch (e) {
+        console.error("Error inicializando Firebase:", e);
+        resumenDias.innerHTML = '<p class="text-red-500 text-center py-4">Error de conexión. Verifica tu internet o recarga.</p>';
+    }
     
     // Event Listeners
-    selectDia.addEventListener('change', handleDateSelection);
-    form.addEventListener('submit', handleFormSubmit);
+    if (selectDia) selectDia.addEventListener('change', handleDateSelection);
+    if (form) form.addEventListener('submit', handleFormSubmit);
 });
 
 function isDateBlocked(day) {
@@ -58,6 +79,11 @@ function generateDecemberDates() {
     const month = 11; // Diciembre es 11 en JS (0-indexed)
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     
+    if (!selectDia) {
+        console.error("Elemento selectDia no encontrado en el DOM");
+        return;
+    }
+
     // Limpiar opciones
     selectDia.innerHTML = '<option value="">-- Selecciona una fecha --</option>';
 
@@ -109,6 +135,8 @@ function handleDateSelection(e) {
 }
 
 function setupRealtimeListener() {
+    if (!db) return;
+
     db.collection(COLLECTION_NAME).onSnapshot((snapshot) => {
         allInscriptions = [];
         snapshot.forEach((doc) => {
@@ -121,10 +149,14 @@ function setupRealtimeListener() {
         if (selectDia.value) {
             selectDia.dispatchEvent(new Event('change'));
         }
+    }, (error) => {
+        console.error("Error escuchando cambios:", error);
+        resumenDias.innerHTML = '<p class="text-red-500 text-center">Error cargando datos.</p>';
     });
 }
 
 function updateDashboard() {
+    if (!resumenDias) return;
     resumenDias.innerHTML = '';
     
     // Agrupar por fecha
@@ -158,6 +190,11 @@ function updateDashboard() {
 async function handleFormSubmit(e) {
     e.preventDefault();
     
+    if (!db) {
+        alert("Error de conexión con la base de datos.");
+        return;
+    }
+
     const nombre = document.getElementById('nombre').value;
     const sede = document.getElementById('sede').value;
     const cumpleanos = document.getElementById('cumpleanos').value;
@@ -208,7 +245,7 @@ function generarPDF() {
     doc.setFontSize(18);
     doc.text("Reporte de Inscripciones - Beneficio Cumpleaños", 14, 20);
     doc.setFontSize(12);
-    doc.text("Sindicato N°1 Trabajadores Salesianos - Diciembre 2025", 14, 28);
+    doc.text("Sindicato de trabajadores N° 1 Establecimiento Salesianos Talca - Diciembre 2025", 14, 28);
 
     // Preparar datos para la tabla
     // Ordenar por Sede y luego por Fecha

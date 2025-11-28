@@ -22,7 +22,6 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("imagenes");
   // Copiar recursos visuales de educación física básica
   eleventyConfig.addPassthroughCopy("imagenes/educacion-fisica");
-  eleventyConfig.addPassthroughCopy("LOGO SINDICATO");
   // Ensure the standalone form folder is copied to output
   eleventyConfig.addPassthroughCopy("formulario-contexto");
   // Allow Netlify _redirects file to be copied to output

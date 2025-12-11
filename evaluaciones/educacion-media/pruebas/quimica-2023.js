@@ -746,6 +746,10 @@ function loadQuestion() {
     const q = quizData[currentQuestion];
     const container = document.getElementById('question-container');
     
+    // Determinar si mostrar texto o solo imagen
+    const hasImage = !!q.image;
+    const showTextAndOptions = !hasImage; // Si hay imagen, no mostrar texto ni opciones escritas
+    
     let html = `
         <div class="bg-white rounded-xl shadow-lg p-8 mb-6">
             <div class="flex justify-between items-center mb-4">
@@ -753,22 +757,32 @@ function loadQuestion() {
                 <span class="text-gray-500 text-sm">${currentQuestion + 1} de ${quizData.length}</span>
             </div>
             
-            <p class="text-lg text-gray-800 mb-6 font-medium">${q.text}</p>
+            ${showTextAndOptions ? `<p class="text-lg text-gray-800 mb-6 font-medium">${q.text}</p>` : ''}
             
-            ${q.image ? `<div class="mb-6 flex justify-center"><img src="${q.image}" class="max-w-full h-auto rounded-lg shadow-sm border border-gray-200" alt="Imagen Pregunta ${q.id}"></div>` : ''}
+            ${hasImage ? `<div class="mb-6 flex justify-center"><img src="${q.image}" class="max-w-full h-auto rounded-lg shadow-sm border border-gray-200" alt="Imagen Pregunta ${q.id}"></div>` : ''}
             
-            <div class="space-y-3">
+            <div class="${hasImage ? 'flex flex-wrap justify-center gap-4' : 'space-y-3'}">
     `;
     
     q.options.forEach(opt => {
-        html += `
-            <button onclick="checkAnswer('${opt.id}')" class="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group option-btn" data-id="${opt.id}">
-                <div class="flex items-start">
-                    <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-600 font-bold rounded-full group-hover:bg-blue-500 group-hover:text-white transition-colors mr-3">${opt.id}</span>
-                    <span class="text-gray-700 group-hover:text-blue-900">${opt.text}</span>
-                </div>
-            </button>
-        `;
+        if (hasImage) {
+            // Solo botones grandes A/B/C/D cuando hay imagen
+            html += `
+                <button onclick="checkAnswer('${opt.id}')" class="w-16 h-16 rounded-full border-2 border-gray-300 hover:border-blue-500 hover:bg-blue-50 transition-all option-btn flex items-center justify-center text-2xl font-bold text-gray-600 hover:text-blue-600" data-id="${opt.id}">
+                    ${opt.id}
+                </button>
+            `;
+        } else {
+            // Opciones completas cuando no hay imagen
+            html += `
+                <button onclick="checkAnswer('${opt.id}')" class="w-full text-left p-4 rounded-lg border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all group option-btn" data-id="${opt.id}">
+                    <div class="flex items-start">
+                        <span class="flex-shrink-0 w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-600 font-bold rounded-full group-hover:bg-blue-500 group-hover:text-white transition-colors mr-3">${opt.id}</span>
+                        <span class="text-gray-700 group-hover:text-blue-900">${opt.text}</span>
+                    </div>
+                </button>
+            `;
+        }
     });
     
     html += `
@@ -847,9 +861,9 @@ function updateNav() {
     const navContainer = document.getElementById('question-nav');
     let html = '';
     quizData.forEach((q, index) => {
-        const activeClass = index === currentQuestion ? 'bg-blue-600 text-white scale-110 shadow-md' : 'bg-white text-gray-600 hover:bg-gray-100';
+        const activeClass = index === currentQuestion ? 'bg-blue-600 text-white shadow-lg ring-2 ring-blue-300' : 'bg-white text-gray-700 hover:bg-blue-100 hover:text-blue-600';
         html += `
-            <button onclick="jumpToQuestion(${index})" class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all border border-gray-200 ${activeClass}">
+            <button onclick="jumpToQuestion(${index})" class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold transition-all border border-gray-300 flex-shrink-0 ${activeClass}">
                 ${q.id}
             </button>
         `;
@@ -861,6 +875,12 @@ function updateNav() {
     
     document.getElementById('prev-btn').classList.toggle('opacity-50', currentQuestion === 0);
     document.getElementById('next-btn').classList.toggle('opacity-50', currentQuestion === quizData.length - 1);
+    
+    // Scroll al botón activo
+    const activeBtn = navContainer.children[currentQuestion];
+    if (activeBtn) {
+        activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }
 }
 
 document.addEventListener('DOMContentLoaded', loadQuestion);

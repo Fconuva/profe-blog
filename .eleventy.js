@@ -95,6 +95,9 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/estudio/audios-dossier");
   // Copiar imágenes de PAES Biología 2023 para prueba ECEP Biología 2025
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/paes-biologia-2023-imagenes");
+  // Copiar imágenes y JS de Química 2023
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/quimica-2023-imagenes");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/quimica-2023.js");
   // Copiar carpetas de imágenes de las pruebas
   eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.png");
   eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.jpg");

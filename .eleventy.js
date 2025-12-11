@@ -100,6 +100,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/quimica-2023.js");
   // Copiar imágenes y JS de Física 2023
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/fisica-2023-imagenes");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/fisica-2023-imagenes-v2");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/fisica-2023.js");
   // Copiar carpetas de imágenes de las pruebas
   eleventyConfig.addPassthroughCopy("evaluaciones/**/imagenes/**/*.png");

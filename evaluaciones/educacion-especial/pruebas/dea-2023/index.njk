@@ -1,0 +1,940 @@
+---
+layout: layout-evaluaciones.njk
+title: "Prueba DEA 2023 - Dificultades Específicas del Aprendizaje"
+description: "Ensayo basado en la prueba oficial ECEP 2023 de Educación Especial - Dificultades Específicas del Aprendizaje (DEA)"
+---
+
+<div class="container-fluid py-4" style="max-width: 1000px;">
+  
+  <!-- Header -->
+  <div class="text-center mb-5">
+    <h1 class="display-5 fw-bold mb-3">
+      <i class="bi bi-mortarboard text-primary"></i>
+      Prueba DEA 2023
+    </h1>
+    <p class="lead text-muted">Dificultades Específicas del Aprendizaje · Educación Especial ECEP</p>
+    
+    <div class="d-flex justify-content-center gap-3 mb-3 flex-wrap">
+      <a href="/evaluaciones/educacion-especial/estudio/dossier-dea/" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-book"></i> Ver Dossier de Estudio
+      </a>
+      <a href="/evaluaciones/educacion-especial/" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i> Volver
+      </a>
+    </div>
+  </div>
+
+  <!-- Instrucciones -->
+  <div class="alert alert-info border shadow-sm mb-4">
+    <h5><i class="bi bi-info-circle-fill"></i> Instrucciones</h5>
+    <ul class="mb-0 small">
+      <li>Esta prueba contiene <strong>47 preguntas</strong> basadas en el examen oficial ECEP 2023.</li>
+      <li>Lee atentamente cada pregunta antes de responder.</li>
+      <li>Al seleccionar una alternativa, recibirás <strong>retroalimentación inmediata</strong> con explicación detallada.</li>
+      <li>Usa el navegador para moverte entre preguntas.</li>
+    </ul>
+  </div>
+
+  <!-- Contenedor del Quiz -->
+  <div id="quiz-container" class="bg-white rounded shadow-sm p-4 mb-4"></div>
+  
+  <!-- Botones de navegación -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <button id="prev-btn" class="btn btn-outline-secondary px-4" disabled>
+      <i class="bi bi-arrow-left"></i> Anterior
+    </button>
+    <div id="question-counter" class="fw-bold text-muted"></div>
+    <button id="next-btn" class="btn btn-primary px-4">
+      Siguiente <i class="bi bi-arrow-right"></i>
+    </button>
+  </div>
+
+  <!-- Navegación rápida -->
+  <div class="card mb-5 border-0 bg-light">
+    <div class="card-body">
+      <h6 class="text-muted small mb-3 text-center">Navegación Rápida</h6>
+      <div id="question-nav" class="d-flex flex-wrap gap-2 justify-content-center"></div>
+    </div>
+  </div>
+
+  <!-- Botón finalizar -->
+  <div id="finish-container" class="text-center mb-5" style="display: none;">
+    <button id="finish-btn" class="btn btn-success btn-lg px-5 shadow">
+      <i class="bi bi-check-circle"></i> Finalizar Prueba
+    </button>
+  </div>
+
+  <!-- Resultados -->
+  <div id="results-container" style="display: none;" class="bg-light rounded p-4 mb-5"></div>
+
+</div>
+
+<script>
+// ============================================
+// BASE DE DATOS - PRUEBA DEA 2023 (47 preguntas)
+// ============================================
+const quizData = {
+  preguntas: [
+    // PREGUNTA 1
+    {
+      id: 1,
+      dominio: "Marco Normativo - Enfoque Biopsicosocial",
+      enunciado: "Desde un enfoque biopsicosocial, ¿cómo se entiende la discapacidad?",
+      alternativas: [
+        "Un atributo de la persona causado exclusivamente por una enfermedad.",
+        "Un fenómeno complejo que resulta de la interacción entre las características del organismo y la sociedad.",
+        "Una condición médica que requiere únicamente tratamiento farmacológico.",
+        "Una limitación permanente e inmodificable de la persona."
+      ],
+      correcta: 1,
+      explicacion: "El enfoque biopsicosocial, promovido por la CIF (OMS), entiende la discapacidad como resultado de la INTERACCIÓN entre factores biológicos, psicológicos y sociales. No es solo un problema médico individual, sino que el contexto social (barreras/facilitadores) juega un rol fundamental en cómo se manifiesta la discapacidad."
+    },
+    // PREGUNTA 2
+    {
+      id: 2,
+      dominio: "Marco Normativo - PACI",
+      enunciado: "El Plan de Adecuaciones Curriculares Individualizadas (PACI) es un documento que:",
+      alternativas: [
+        "Reemplaza completamente el currículum nacional para estudiantes con NEE.",
+        "Planifica y organiza las adecuaciones curriculares según las necesidades del estudiante.",
+        "Solo puede ser elaborado por el médico tratante del estudiante.",
+        "Se aplica exclusivamente a estudiantes con discapacidad intelectual severa."
+      ],
+      correcta: 1,
+      explicacion: "El PACI es un instrumento de planificación que permite organizar las adecuaciones curriculares de un estudiante con NEE. Lo elabora el equipo pedagógico (docente, educador diferencial, profesionales de apoyo) considerando las necesidades específicas del estudiante para acceder al currículum, NO lo reemplaza sino que lo adapta."
+    },
+    // PREGUNTA 3
+    {
+      id: 3,
+      dominio: "Marco Normativo - Informe Warnock",
+      enunciado: "El Informe Warnock (1978) fue fundamental porque:",
+      alternativas: [
+        "Estableció la clasificación médica de las discapacidades.",
+        "Introdujo el concepto de Necesidades Educativas Especiales (NEE) superando las categorías de déficit.",
+        "Promovió la segregación educativa como mejor opción para estudiantes con discapacidad.",
+        "Eliminó la educación especial como modalidad."
+      ],
+      correcta: 1,
+      explicacion: "El Informe Warnock fue revolucionario porque cambió el paradigma: pasó de centrarse en el 'déficit' del niño a enfocarse en las NECESIDADES EDUCATIVAS que requiere para aprender. Esto abrió paso a la integración/inclusión educativa, reconociendo que cualquier estudiante puede tener NEE en algún momento de su escolaridad."
+    },
+    // PREGUNTA 4
+    {
+      id: 4,
+      dominio: "Marco Normativo - Decreto 170/2009",
+      enunciado: "El Decreto 170/2009 regula:",
+      alternativas: [
+        "La formación inicial docente en educación especial.",
+        "Los requisitos, instrumentos y pruebas diagnósticas para identificar NEE y acceder a subvención de educación especial.",
+        "El currículum específico para escuelas especiales.",
+        "Los sueldos de los profesionales de educación especial."
+      ],
+      correcta: 1,
+      explicacion: "El Decreto 170/2009 es la normativa que establece los CRITERIOS DIAGNÓSTICOS para determinar qué estudiantes presentan NEE transitorias o permanentes, qué profesionales deben evaluarlos, qué instrumentos usar, y cómo acceder a la subvención de educación especial (PIE). Es fundamental para la gestión de los Programas de Integración Escolar."
+    },
+    // PREGUNTA 5
+    {
+      id: 5,
+      dominio: "Marco Normativo - Decreto 83/2015",
+      enunciado: "El Decreto 83/2015 aprueba criterios y orientaciones de adecuación curricular para:",
+      alternativas: [
+        "Educación Media exclusivamente.",
+        "Educación Parvularia y Educación Básica.",
+        "Solo estudiantes con discapacidad sensorial.",
+        "Formación técnico-profesional."
+      ],
+      correcta: 1,
+      explicacion: "El Decreto 83/2015 establece los criterios para realizar adecuaciones curriculares en Educación Parvularia y Básica. Define tipos de adecuaciones (acceso y objetivos), principios orientadores (flexibilización, participación) y el PACI. Es la base legal para diversificar la enseñanza y responder a la diversidad."
+    },
+    // PREGUNTA 6
+    {
+      id: 6,
+      dominio: "Marco Normativo - NEE Transitorias",
+      enunciado: "Las Necesidades Educativas Especiales de carácter TRANSITORIO incluyen:",
+      alternativas: [
+        "Discapacidad intelectual, autismo, discapacidad visual.",
+        "DEA, Trastorno de Déficit Atencional, Funcionamiento Intelectual Limítrofe, Trastornos del Lenguaje.",
+        "Solo dificultades de conducta.",
+        "Discapacidades múltiples y sordoceguera."
+      ],
+      correcta: 1,
+      explicacion: "Según el Decreto 170, las NEE TRANSITORIAS (NEET) son aquellas que requieren apoyo en un período de la escolaridad y pueden superarse: DEA (lectura, escritura, matemáticas), TDA/H, FIL (CI 70-79), y Trastornos Específicos del Lenguaje. Las permanentes (autismo, DI, discapacidades sensoriales) requieren apoyo durante toda la trayectoria."
+    },
+    // PREGUNTA 7
+    {
+      id: 7,
+      dominio: "Marco Normativo - Evaluación Diagnóstica",
+      enunciado: "Para diagnosticar DEA según el Decreto 170, se requiere evaluación de:",
+      alternativas: [
+        "Solo el profesor jefe.",
+        "Profesionales del ámbito psicoeducativo (psicólogo y/o psicopedagogo) y de salud según corresponda.",
+        "Exclusivamente el neurólogo.",
+        "Solo la familia del estudiante."
+      ],
+      correcta: 1,
+      explicacion: "El diagnóstico de DEA requiere una evaluación INTEGRAL que incluye: profesionales psicoeducativos (psicólogo, psicopedagogo) que aplican pruebas de rendimiento y capacidad, y según el caso, profesionales de salud para descartar déficits sensoriales u otras condiciones. Es un proceso multidisciplinario, no unipersonal."
+    },
+    // PREGUNTA 8
+    {
+      id: 8,
+      dominio: "DUA - Principios",
+      enunciado: "El Diseño Universal para el Aprendizaje (DUA) propone tres principios fundamentales:",
+      alternativas: [
+        "Diagnóstico, tratamiento y seguimiento.",
+        "Múltiples formas de representación, acción/expresión y compromiso.",
+        "Adaptación, compensación y rehabilitación.",
+        "Evaluación inicial, formativa y sumativa."
+      ],
+      correcta: 1,
+      explicacion: "El DUA se basa en tres principios de las neurociencias: 1) Múltiples formas de REPRESENTACIÓN (el QUÉ del aprendizaje - redes de reconocimiento), 2) Múltiples formas de ACCIÓN Y EXPRESIÓN (el CÓMO - redes estratégicas), 3) Múltiples formas de COMPROMISO (el PORQUÉ - redes afectivas). Busca eliminar barreras desde el diseño."
+    },
+    // PREGUNTA 9
+    {
+      id: 9,
+      dominio: "DUA - Representación",
+      enunciado: "Ofrecer información en formato visual, auditivo y táctil corresponde al principio DUA de:",
+      alternativas: [
+        "Múltiples formas de compromiso.",
+        "Múltiples formas de representación.",
+        "Múltiples formas de acción y expresión.",
+        "Adaptación curricular significativa."
+      ],
+      correcta: 1,
+      explicacion: "Proporcionar múltiples formas de REPRESENTACIÓN significa ofrecer la información y contenido en diversos formatos (visual, auditivo, kinestésico) para que todos los estudiantes puedan percibirla y comprenderla según sus fortalezas. Esto responde al 'QUÉ' del aprendizaje y las redes de reconocimiento del cerebro."
+    },
+    // PREGUNTA 10
+    {
+      id: 10,
+      dominio: "DUA - Expresión",
+      enunciado: "Permitir que un estudiante demuestre su aprendizaje mediante una presentación oral en vez de una prueba escrita es un ejemplo de:",
+      alternativas: [
+        "Múltiples formas de representación.",
+        "Múltiples formas de acción y expresión.",
+        "Eliminar el objetivo de aprendizaje.",
+        "Evaluación diferenciada punitiva."
+      ],
+      correcta: 1,
+      explicacion: "Permitir DIVERSAS FORMAS DE EXPRESAR el aprendizaje (oral, escrita, gráfica, dramatizada) es el principio de Múltiples Formas de Acción y Expresión. El objetivo de aprendizaje se mantiene, pero se flexibiliza el CÓMO el estudiante demuestra que lo logró, respetando sus fortalezas y preferencias."
+    },
+    // PREGUNTA 11
+    {
+      id: 11,
+      dominio: "DEA - Definición",
+      enunciado: "Las Dificultades Específicas del Aprendizaje (DEA) se caracterizan por:",
+      alternativas: [
+        "Un rendimiento bajo en todas las áreas académicas debido a discapacidad intelectual.",
+        "Dificultades significativas en lectura, escritura y/o matemáticas, con inteligencia normal y sin otra condición que las explique.",
+        "Problemas de conducta que impiden el aprendizaje.",
+        "Déficit sensorial auditivo o visual no corregido."
+      ],
+      correcta: 1,
+      explicacion: "Las DEA son dificultades ESPECÍFICAS (no generales) en lectura, escritura y/o matemáticas, en personas con inteligencia NORMAL (CI ≥ 80), que no se explican por discapacidad intelectual, déficit sensorial, falta de oportunidades educativas o factores emocionales. Existe una discrepancia entre capacidad y rendimiento."
+    },
+    // PREGUNTA 12
+    {
+      id: 12,
+      dominio: "DEA - Criterio de Discrepancia",
+      enunciado: "El criterio de discrepancia en DEA se refiere a:",
+      alternativas: [
+        "La diferencia entre la edad cronológica y la edad mental.",
+        "La brecha significativa entre la capacidad intelectual del estudiante y su rendimiento académico en áreas específicas.",
+        "La discrepancia entre lo que dice el estudiante y lo que hace.",
+        "La diferencia entre el rendimiento del estudiante y el promedio del curso."
+      ],
+      correcta: 1,
+      explicacion: "El criterio de DISCREPANCIA es fundamental en DEA: existe una brecha significativa entre la CAPACIDAD INTELECTUAL (evaluada con pruebas de CI) y el RENDIMIENTO ACADÉMICO real en lectura, escritura o matemáticas. El estudiante rinde muy por debajo de lo esperado según su potencial cognitivo."
+    },
+    // PREGUNTA 13
+    {
+      id: 13,
+      dominio: "Adecuaciones Curriculares - Tipos",
+      enunciado: "Las adecuaciones curriculares de ACCESO se refieren a:",
+      alternativas: [
+        "Modificar los objetivos de aprendizaje del currículum.",
+        "Proveer recursos, materiales, organización del espacio y tiempo para que el estudiante acceda al currículum.",
+        "Eliminar contenidos del programa de estudios.",
+        "Cambiar la escuela del estudiante."
+      ],
+      correcta: 1,
+      explicacion: "Las adecuaciones de ACCESO no modifican los objetivos de aprendizaje, sino que proporcionan las condiciones para que el estudiante ACCEDA al currículum: recursos (tecnología asistiva, materiales adaptados), organización del espacio (ubicación preferencial), tiempo (extensión de plazos), apoyos humanos. El currículum permanece igual."
+    },
+    // PREGUNTA 14
+    {
+      id: 14,
+      dominio: "Adecuaciones Curriculares - Objetivos",
+      enunciado: "Las adecuaciones curriculares a los OBJETIVOS de aprendizaje pueden consistir en:",
+      alternativas: [
+        "Solo eliminar objetivos, nunca modificarlos.",
+        "Graduación del nivel de complejidad, priorización, temporalización, enriquecimiento o eliminación.",
+        "Cambiar completamente la asignatura por otra.",
+        "Solo aplicarlas en educación especial, nunca en escuela regular."
+      ],
+      correcta: 1,
+      explicacion: "Las adecuaciones a los OBJETIVOS modifican el currículum y pueden ser: GRADUACIÓN (ajustar complejidad), PRIORIZACIÓN (enfocarse en objetivos esenciales), TEMPORALIZACIÓN (más tiempo para lograrlos), ENRIQUECIMIENTO (ampliar para alta capacidad), ELIMINACIÓN (como última opción, eliminando objetivos que el estudiante no puede alcanzar)."
+    },
+    // PREGUNTA 15
+    {
+      id: 15,
+      dominio: "Adecuaciones Curriculares - Criterios",
+      enunciado: "Al realizar adecuaciones curriculares, se debe considerar como principio fundamental:",
+      alternativas: [
+        "Aplicar las mismas adecuaciones a todos los estudiantes con NEE.",
+        "Partir de las fortalezas del estudiante y mantener altas expectativas.",
+        "Reducir siempre los objetivos al mínimo posible.",
+        "Evitar la participación de la familia en las decisiones."
+      ],
+      correcta: 1,
+      explicacion: "Las adecuaciones deben ser INDIVIDUALIZADAS, partir de las FORTALEZAS del estudiante (no solo de sus dificultades), mantener ALTAS EXPECTATIVAS (presunción de competencia), ser lo menos restrictivas posible, e involucrar a la familia. El objetivo es maximizar el acceso y participación, no limitar las oportunidades."
+    },
+    // PREGUNTA 16
+    {
+      id: 16,
+      dominio: "Procesos Cognitivos - Memoria de Trabajo",
+      enunciado: "La memoria de trabajo es importante en el aprendizaje porque:",
+      alternativas: [
+        "Almacena información permanentemente.",
+        "Permite mantener y manipular información temporalmente mientras se realizan tareas cognitivas.",
+        "Solo se usa para recordar eventos del pasado.",
+        "No tiene relación con la lectura ni las matemáticas."
+      ],
+      correcta: 1,
+      explicacion: "La memoria de TRABAJO es crucial porque permite MANTENER Y MANIPULAR información temporalmente mientras realizamos tareas cognitivas: al leer, mantenemos las primeras palabras mientras decodificamos las siguientes; en matemáticas, retenemos números mientras calculamos. Déficits en memoria de trabajo son comunes en DEA."
+    },
+    // PREGUNTA 17
+    {
+      id: 17,
+      dominio: "Procesos Cognitivos - Funciones Ejecutivas",
+      enunciado: "Las funciones ejecutivas incluyen habilidades como:",
+      alternativas: [
+        "Solo la memoria a largo plazo.",
+        "Planificación, organización, inhibición, flexibilidad cognitiva y monitoreo.",
+        "Exclusivamente habilidades motoras gruesas.",
+        "Solo la percepción visual."
+      ],
+      correcta: 1,
+      explicacion: "Las FUNCIONES EJECUTIVAS son procesos cognitivos de control: PLANIFICACIÓN (organizar pasos), INHIBICIÓN (controlar impulsos), FLEXIBILIDAD (cambiar de estrategia), MEMORIA DE TRABAJO, MONITOREO (supervisar el desempeño). Son fundamentales para el aprendizaje y frecuentemente afectadas en estudiantes con DEA y TDA/H."
+    },
+    // PREGUNTA 18
+    {
+      id: 18,
+      dominio: "Procesos Cognitivos - Conciencia Fonológica",
+      enunciado: "La conciencia fonológica es la capacidad de:",
+      alternativas: [
+        "Comprender el significado de las palabras.",
+        "Reconocer y manipular los sonidos del lenguaje oral (fonemas, sílabas, rimas).",
+        "Leer de forma fluida y rápida.",
+        "Escribir con buena ortografía."
+      ],
+      correcta: 1,
+      explicacion: "La CONCIENCIA FONOLÓGICA es una habilidad metalingüística que permite reconocer y manipular los SONIDOS del lenguaje: identificar rimas, segmentar palabras en sílabas, aislar fonemas, etc. Es un PREDICTOR CLAVE del éxito en lectura inicial y suele estar deficitaria en estudiantes con dislexia."
+    },
+    // PREGUNTA 19
+    {
+      id: 19,
+      dominio: "Evaluación - Propósitos",
+      enunciado: "La evaluación psicopedagógica en DEA tiene como propósito principal:",
+      alternativas: [
+        "Etiquetar al estudiante con un diagnóstico.",
+        "Identificar fortalezas, dificultades y necesidades de apoyo para planificar la intervención.",
+        "Determinar si el estudiante debe ser excluido de la escuela regular.",
+        "Comparar al estudiante con sus compañeros para establecer un ranking."
+      ],
+      correcta: 1,
+      explicacion: "La evaluación psicopedagógica no busca solo un 'diagnóstico-etiqueta', sino comprender INTEGRALMENTE al estudiante: sus fortalezas, dificultades específicas, estilos de aprendizaje, contexto familiar/escolar, para PLANIFICAR APOYOS efectivos. El propósito es la INTERVENCIÓN, no la clasificación."
+    },
+    // PREGUNTA 20
+    {
+      id: 20,
+      dominio: "Evaluación - Instrumentos",
+      enunciado: "Para evaluar las habilidades lectoras de un estudiante con sospecha de DEA, es apropiado usar:",
+      alternativas: [
+        "Solo una entrevista con los padres.",
+        "Pruebas estandarizadas de lectura, observación de lectura oral, análisis de errores y evaluación de comprensión.",
+        "Exclusivamente pruebas de inteligencia.",
+        "Solo la opinión del profesor de aula."
+      ],
+      correcta: 1,
+      explicacion: "La evaluación de lectura debe ser MULTIDIMENSIONAL: pruebas estandarizadas (para comparar con normas), observación de lectura oral (fluidez, exactitud, prosodia), ANÁLISIS DE ERRORES (identificar patrones), evaluación de comprensión (literal, inferencial). Se triangula información de múltiples fuentes y métodos."
+    },
+    // PREGUNTA 21
+    {
+      id: 21,
+      dominio: "Evaluación - Proceso",
+      enunciado: "El proceso de evaluación integral para estudiantes con NEE debe incluir:",
+      alternativas: [
+        "Solo evaluación médica.",
+        "Evaluación del estudiante, su contexto familiar, escolar y comunitario.",
+        "Únicamente pruebas psicométricas estandarizadas.",
+        "Solo la observación en el aula."
+      ],
+      correcta: 1,
+      explicacion: "La evaluación integral es ECOLÓGICA: considera al estudiante (habilidades, dificultades), su contexto FAMILIAR (recursos, dinámica), ESCOLAR (metodologías, clima, apoyos) y COMUNITARIO (acceso a servicios). Desde el enfoque biopsicosocial, el contexto puede ser barrera o facilitador del aprendizaje."
+    },
+    // PREGUNTA 22
+    {
+      id: 22,
+      dominio: "Lenguaje - Niveles",
+      enunciado: "El nivel fonológico del lenguaje se refiere a:",
+      alternativas: [
+        "El significado de las palabras y oraciones.",
+        "Los sonidos del habla y las reglas para combinarlos.",
+        "Las reglas gramaticales y estructura de las oraciones.",
+        "El uso social del lenguaje en contexto."
+      ],
+      correcta: 1,
+      explicacion: "El nivel FONOLÓGICO se refiere a los SONIDOS (fonemas) del lenguaje y las reglas para combinarlos. Otros niveles son: SEMÁNTICO (significado), MORFOSINTÁCTICO (gramática, estructura oracional), PRAGMÁTICO (uso social en contexto). Las dificultades fonológicas son centrales en la dislexia."
+    },
+    // PREGUNTA 23
+    {
+      id: 23,
+      dominio: "Matemáticas - Discalculia",
+      enunciado: "La discalculia es una DEA que afecta específicamente:",
+      alternativas: [
+        "La lectura y decodificación.",
+        "El aprendizaje del cálculo, sentido numérico y razonamiento matemático.",
+        "Solo la escritura a mano.",
+        "La comprensión del lenguaje oral."
+      ],
+      correcta: 1,
+      explicacion: "La DISCALCULIA es la DEA específica en matemáticas: afecta el sentido numérico (comprensión intuitiva de cantidades), la recuperación de hechos aritméticos (tablas), los procedimientos de cálculo, y el razonamiento matemático. No se explica por baja inteligencia ni falta de instrucción."
+    },
+    // PREGUNTA 24
+    {
+      id: 24,
+      dominio: "Matemáticas - Sentido Numérico",
+      enunciado: "El 'sentido numérico' incluye habilidades como:",
+      alternativas: [
+        "Solo memorizar las tablas de multiplicar.",
+        "Comprender magnitudes, estimar, comparar cantidades y entender relaciones numéricas.",
+        "Únicamente resolver ecuaciones algebraicas.",
+        "Solo contar de forma mecánica."
+      ],
+      correcta: 1,
+      explicacion: "El SENTIDO NUMÉRICO es la comprensión intuitiva de los números: incluye comparar magnitudes (¿cuál es mayor?), estimar ('aproximadamente cuántos hay'), comprender relaciones (doble, mitad, parte-todo), usar números de forma flexible. Es una base fundamental que suele estar afectada en discalculia."
+    },
+    // PREGUNTA 25
+    {
+      id: 25,
+      dominio: "Matemáticas - Intervención",
+      enunciado: "Una estrategia efectiva para enseñar matemáticas a estudiantes con discalculia es:",
+      alternativas: [
+        "Enfocarse exclusivamente en la memorización repetitiva.",
+        "Usar material concreto, representaciones visuales y conectar con situaciones de la vida cotidiana.",
+        "Avanzar rápidamente sin detenerse en las dificultades.",
+        "Evitar el uso de calculadora bajo cualquier circunstancia."
+      ],
+      correcta: 1,
+      explicacion: "La instrucción efectiva en matemáticas para estudiantes con discalculia sigue la secuencia CONCRETO-PICTÓRICO-SIMBÓLICO (CPA): primero manipular objetos reales, luego representaciones visuales/dibujos, finalmente símbolos abstractos. También es clave conectar con la vida cotidiana (contextualizar) y permitir tecnología de apoyo."
+    },
+    // PREGUNTA 26
+    {
+      id: 26,
+      dominio: "Lectura - Dislexia",
+      enunciado: "La dislexia es una DEA que se caracteriza principalmente por:",
+      alternativas: [
+        "Problemas de comportamiento en el aula.",
+        "Dificultades en la precisión y/o fluidez en el reconocimiento de palabras y déficits en decodificación.",
+        "Discapacidad intelectual leve.",
+        "Solo problemas de comprensión lectora, sin dificultad en decodificación."
+      ],
+      correcta: 1,
+      explicacion: "La DISLEXIA se caracteriza por dificultades en el RECONOCIMIENTO DE PALABRAS (precisión, fluidez) y la DECODIFICACIÓN (conversión grafema-fonema), típicamente asociadas a un déficit fonológico. Puede afectar secundariamente la comprensión y la ortografía. NO es un problema de inteligencia ni de visión."
+    },
+    // PREGUNTA 27
+    {
+      id: 27,
+      dominio: "Lectura - Método Sintético",
+      enunciado: "El método fonético-sintético de enseñanza de la lectura:",
+      alternativas: [
+        "Parte de textos completos hacia las letras.",
+        "Parte de las unidades mínimas (fonemas/letras) y avanza hacia sílabas, palabras y oraciones.",
+        "No enseña la relación entre letras y sonidos.",
+        "Se enfoca exclusivamente en la comprensión global."
+      ],
+      correcta: 1,
+      explicacion: "El método FONÉTICO-SINTÉTICO (o fónico) enseña sistemáticamente la relación grafema-fonema: parte de las unidades mínimas (letras/sonidos), los combina en sílabas, luego palabras, luego oraciones (síntesis). Es especialmente efectivo para estudiantes con dislexia porque trabaja explícitamente el código."
+    },
+    // PREGUNTA 28
+    {
+      id: 28,
+      dominio: "Lectura - Método Analítico",
+      enunciado: "Los métodos analíticos o globales de lectura se caracterizan por:",
+      alternativas: [
+        "Enseñar primero las letras aisladas y luego formar palabras.",
+        "Partir de unidades con significado (palabras, frases) y luego analizar sus componentes.",
+        "Enfocarse exclusivamente en la repetición mecánica.",
+        "No considerar nunca el contexto ni las imágenes."
+      ],
+      correcta: 1,
+      explicacion: "Los métodos ANALÍTICOS o globales parten de unidades con SIGNIFICADO (palabras, oraciones, textos) y luego 'analizan' sus componentes (sílabas, letras). Priorizan la comprensión y el contexto. Para estudiantes con dislexia, se recomienda complementar con instrucción fonética explícita."
+    },
+    // PREGUNTA 29
+    {
+      id: 29,
+      dominio: "Lectura - Fluidez",
+      enunciado: "La fluidez lectora incluye los componentes de:",
+      alternativas: [
+        "Solo velocidad de lectura.",
+        "Precisión, velocidad y prosodia (expresión) en la lectura oral.",
+        "Únicamente la comprensión del texto.",
+        "Solo el reconocimiento de letras."
+      ],
+      correcta: 1,
+      explicacion: "La FLUIDEZ LECTORA tiene tres componentes: PRECISIÓN (leer las palabras correctamente), VELOCIDAD/AUTOMATICIDAD (leer con ritmo adecuado), y PROSODIA (entonación, expresión, pausas apropiadas). La fluidez es un puente entre la decodificación y la comprensión."
+    },
+    // PREGUNTA 30
+    {
+      id: 30,
+      dominio: "Lectura - Comprensión",
+      enunciado: "Las estrategias de comprensión lectora incluyen:",
+      alternativas: [
+        "Solo leer rápido sin hacer pausas.",
+        "Activar conocimientos previos, hacer predicciones, inferir, resumir y monitorear la comprensión.",
+        "Memorizar el texto palabra por palabra.",
+        "Evitar hacer preguntas sobre el texto."
+      ],
+      correcta: 1,
+      explicacion: "La COMPRENSIÓN LECTORA requiere estrategias activas: ANTES (activar conocimientos previos, predecir), DURANTE (hacer inferencias, monitorear si entiendo, releer), DESPUÉS (resumir, evaluar). Enseñar estas estrategias EXPLÍCITAMENTE beneficia especialmente a estudiantes con dificultades lectoras."
+    },
+    // PREGUNTA 31
+    {
+      id: 31,
+      dominio: "Escritura - Disgrafía",
+      enunciado: "La disgrafía se refiere a:",
+      alternativas: [
+        "Dificultades en la comprensión del lenguaje oral.",
+        "Dificultades en la escritura que afectan la legibilidad, organización espacial y/o los aspectos motores de la escritura.",
+        "Solo problemas de ortografía.",
+        "Dificultades exclusivamente en matemáticas."
+      ],
+      correcta: 1,
+      explicacion: "La DISGRAFÍA es una DEA que afecta la ESCRITURA: puede manifestarse en la legibilidad (letra ilegible), organización espacial (márgenes, tamaño irregular), aspectos motores (prensión del lápiz, presión excesiva) y velocidad. Puede ser de origen motor (disgrafía motriz) o lingüístico (disortografía)."
+    },
+    // PREGUNTA 32
+    {
+      id: 32,
+      dominio: "Matemáticas - Hechos Aritméticos",
+      enunciado: "La dificultad para recuperar hechos aritméticos básicos (ej: 7+5, 6x8) de memoria es característica de:",
+      alternativas: [
+        "Dislexia.",
+        "Discalculia.",
+        "Trastorno del espectro autista.",
+        "Solo déficit atencional."
+      ],
+      correcta: 1,
+      explicacion: "Una característica central de la DISCALCULIA es la dificultad para automatizar y recuperar HECHOS ARITMÉTICOS de la memoria (sumas, restas, tablas de multiplicar). Esto enlentece los cálculos y sobrecarga la memoria de trabajo, afectando la resolución de problemas más complejos."
+    },
+    // PREGUNTA 33
+    {
+      id: 33,
+      dominio: "Matemáticas - Resolución de Problemas",
+      enunciado: "Al enseñar resolución de problemas matemáticos a estudiantes con DEA, es importante:",
+      alternativas: [
+        "Presentar solo problemas sin contexto.",
+        "Enseñar explícitamente estrategias de comprensión del problema, representación y verificación.",
+        "Evitar el uso de dibujos o esquemas.",
+        "No permitir que los estudiantes expliquen su razonamiento."
+      ],
+      correcta: 1,
+      explicacion: "La resolución de problemas requiere ENSEÑANZA EXPLÍCITA de estrategias: COMPRENDER el problema (¿qué me preguntan?), REPRESENTARLO (dibujo, esquema), PLANIFICAR (¿qué operaciones?), EJECUTAR, y VERIFICAR (¿tiene sentido?). Modelar el pensamiento en voz alta es muy efectivo."
+    },
+    // PREGUNTA 34
+    {
+      id: 34,
+      dominio: "Matemáticas - Errores",
+      enunciado: "El análisis de errores en matemáticas permite:",
+      alternativas: [
+        "Solo calificar con nota más baja.",
+        "Identificar los patrones de dificultad y las estrategias incorrectas para orientar la intervención.",
+        "Demostrar que el estudiante no se esfuerza.",
+        "Evitar dar retroalimentación."
+      ],
+      correcta: 1,
+      explicacion: "El ANÁLISIS DE ERRORES es una herramienta diagnóstica valiosa: permite identificar PATRONES (¿confunde siempre la dirección en la resta?), determinar si el error es conceptual, procedimental o de atención, y así orientar la intervención hacia las dificultades específicas, no genéricas."
+    },
+    // PREGUNTA 35
+    {
+      id: 35,
+      dominio: "Matemáticas - Material Concreto",
+      enunciado: "El uso de material concreto manipulativo en matemáticas es importante porque:",
+      alternativas: [
+        "Solo sirve para entretener a los estudiantes.",
+        "Permite construir la comprensión conceptual antes de pasar a lo abstracto.",
+        "Debe usarse exclusivamente en educación parvularia.",
+        "Reemplaza completamente la necesidad de práctica con símbolos."
+      ],
+      correcta: 1,
+      explicacion: "El material CONCRETO (regletas, bloques, ábacos) permite que los estudiantes MANIPULEN y experimenten físicamente los conceptos matemáticos, construyendo comprensión profunda antes de pasar a lo pictórico y simbólico. Es especialmente importante para estudiantes con discalculia, pero beneficia a todos."
+    },
+    // PREGUNTA 36
+    {
+      id: 36,
+      dominio: "Intervención - Principios",
+      enunciado: "La intervención psicopedagógica en DEA debe ser:",
+      alternativas: [
+        "Genérica e igual para todos los estudiantes con la misma etiqueta diagnóstica.",
+        "Individualizada, sistemática, explícita, intensiva y basada en evidencia.",
+        "Esporádica y sin planificación.",
+        "Centrada solo en las debilidades, ignorando las fortalezas."
+      ],
+      correcta: 1,
+      explicacion: "La intervención efectiva en DEA es: INDIVIDUALIZADA (según necesidades específicas), SISTEMÁTICA (secuenciada lógicamente), EXPLÍCITA (instrucción directa, no implícita), INTENSIVA (frecuente, con práctica suficiente), y BASADA EN EVIDENCIA (métodos con respaldo científico). También debe partir de las FORTALEZAS."
+    },
+    // PREGUNTA 37
+    {
+      id: 37,
+      dominio: "Intervención - Respuesta a la Intervención",
+      enunciado: "El modelo de Respuesta a la Intervención (RTI) propone:",
+      alternativas: [
+        "Esperar al fracaso escolar para intervenir.",
+        "Un sistema de apoyos escalonados donde la intensidad aumenta según la respuesta del estudiante.",
+        "Intervenir solo con diagnóstico médico.",
+        "Eliminar la educación especial."
+      ],
+      correcta: 1,
+      explicacion: "El modelo RTI propone prevención e intervención TEMPRANA con 3 niveles: Nivel 1 (instrucción de calidad para todos), Nivel 2 (intervención grupal para quienes no responden), Nivel 3 (intervención intensiva individualizada). Si no hay respuesta adecuada, puede indicar DEA. Se evita 'esperar al fracaso'."
+    },
+    // PREGUNTA 38
+    {
+      id: 38,
+      dominio: "Intervención - Trabajo Colaborativo",
+      enunciado: "El trabajo colaborativo entre el docente de aula y el educador diferencial:",
+      alternativas: [
+        "No es necesario, cada uno trabaja independientemente.",
+        "Es fundamental para planificar, implementar y evaluar apoyos coherentes y coordinados.",
+        "Solo ocurre cuando hay problemas graves.",
+        "Significa que el educador diferencial reemplaza completamente al docente de aula."
+      ],
+      correcta: 1,
+      explicacion: "La CO-ENSEÑANZA y el trabajo colaborativo entre docente regular y educador diferencial es esencial en el PIE: permite planificar juntos, coordinar adecuaciones, implementar apoyos en aula, y evaluar en equipo. No es trabajo paralelo ni sustitución, sino COMPLEMENTACIÓN."
+    },
+    // PREGUNTA 39
+    {
+      id: 39,
+      dominio: "Estrategias - Modelamiento",
+      enunciado: "El modelamiento como estrategia de enseñanza consiste en:",
+      alternativas: [
+        "Dejar que el estudiante descubra solo la estrategia.",
+        "El docente demuestra explícitamente el proceso, verbalizando su pensamiento mientras ejecuta la tarea.",
+        "Dar solo instrucciones escritas sin demostración.",
+        "Evitar mostrar ejemplos al estudiante."
+      ],
+      correcta: 1,
+      explicacion: "El MODELAMIENTO es una estrategia de instrucción explícita donde el docente DEMUESTRA la habilidad/estrategia mientras VERBALIZA su pensamiento en voz alta ('pienso en voz alta'). Luego hay práctica guiada (con apoyo) y práctica independiente. Es muy efectivo para estudiantes con DEA."
+    },
+    // PREGUNTA 40
+    {
+      id: 40,
+      dominio: "Estrategias - Andamiaje",
+      enunciado: "El andamiaje pedagógico se refiere a:",
+      alternativas: [
+        "Hacer el trabajo por el estudiante.",
+        "Proporcionar apoyos temporales que se retiran gradualmente a medida que el estudiante gana autonomía.",
+        "Mantener siempre el mismo nivel de ayuda.",
+        "No ofrecer ningún tipo de ayuda."
+      ],
+      correcta: 1,
+      explicacion: "El ANDAMIAJE (scaffolding) son apoyos TEMPORALES y ajustados que el docente proporciona para que el estudiante logre lo que no podría hacer solo (zona de desarrollo próximo). Los apoyos se RETIRAN gradualmente ('desvanecimiento') a medida que el estudiante gana competencia y autonomía."
+    },
+    // PREGUNTA 41
+    {
+      id: 41,
+      dominio: "Estrategias - Práctica",
+      enunciado: "Para consolidar habilidades en estudiantes con DEA, la práctica debe ser:",
+      alternativas: [
+        "Esporádica y solo cuando el estudiante lo pida.",
+        "Frecuente, distribuida en el tiempo, con variedad de ejemplos y retroalimentación inmediata.",
+        "Concentrada en un solo día intensivo.",
+        "Sin ningún tipo de corrección para no frustrar."
+      ],
+      correcta: 1,
+      explicacion: "La práctica efectiva es FRECUENTE (repetida), DISTRIBUIDA (espaciada en el tiempo, no masiva), con VARIEDAD de ejemplos (transferencia), y con RETROALIMENTACIÓN inmediata y específica. Esto favorece la automatización y la memoria a largo plazo, especialmente importante en DEA."
+    },
+    // PREGUNTA 42
+    {
+      id: 42,
+      dominio: "Estrategias - Metacognición",
+      enunciado: "Enseñar estrategias metacognitivas a estudiantes con DEA es importante porque:",
+      alternativas: [
+        "Solo sirve para estudiantes de alto rendimiento.",
+        "Les permite monitorear su propio aprendizaje, identificar dificultades y usar estrategias de forma autónoma.",
+        "Reemplaza la necesidad de instrucción directa.",
+        "No tiene relación con el aprendizaje académico."
+      ],
+      correcta: 1,
+      explicacion: "La METACOGNICIÓN ('pensar sobre el pensar') permite a los estudiantes MONITOREAR su comprensión ('¿entendí?'), identificar cuándo tienen dificultades, y seleccionar estrategias apropiadas. Enseñar estrategias metacognitivas promueve la AUTORREGULACIÓN y la autonomía, crucial para estudiantes con DEA."
+    },
+    // PREGUNTA 43
+    {
+      id: 43,
+      dominio: "Estrategias - Organizadores Gráficos",
+      enunciado: "Los organizadores gráficos (mapas conceptuales, esquemas) benefician a estudiantes con DEA porque:",
+      alternativas: [
+        "Son solo decorativos.",
+        "Permiten visualizar relaciones entre conceptos, organizar información y reducir la carga cognitiva.",
+        "Reemplazan la necesidad de leer textos.",
+        "Solo sirven para estudiantes con discapacidad visual."
+      ],
+      correcta: 1,
+      explicacion: "Los ORGANIZADORES GRÁFICOS (mapas, esquemas, diagramas) son herramientas poderosas: ayudan a VISUALIZAR relaciones abstractas, ORGANIZAR información, REDUCIR la carga de la memoria de trabajo, y sirven de andamiaje para la comprensión y producción de textos. Benefician especialmente a estudiantes con DEA."
+    },
+    // PREGUNTA 44
+    {
+      id: 44,
+      dominio: "Estrategias - Tecnología",
+      enunciado: "El uso de tecnología asistiva para estudiantes con DEA puede incluir:",
+      alternativas: [
+        "Solo videojuegos de entretenimiento.",
+        "Software de texto a voz, correctores ortográficos, calculadoras, aplicaciones de organización.",
+        "Prohibir cualquier dispositivo electrónico.",
+        "Tecnología solo para estudiantes con discapacidad física."
+      ],
+      correcta: 1,
+      explicacion: "La TECNOLOGÍA ASISTIVA para DEA incluye: texto a voz (apoya lectura), voz a texto (apoya escritura), correctores ortográficos y gramaticales, calculadoras, aplicaciones de organización/planificación, audiolibros. Son HERRAMIENTAS DE ACCESO que permiten compensar dificultades y demostrar aprendizaje."
+    },
+    // PREGUNTA 45
+    {
+      id: 45,
+      dominio: "Convivencia - Clima de Aula",
+      enunciado: "Un clima de aula positivo para la inclusión de estudiantes con DEA se caracteriza por:",
+      alternativas: [
+        "Competencia constante entre estudiantes.",
+        "Aceptación de la diversidad, expectativas altas para todos, y apoyo entre pares.",
+        "Destacar públicamente las dificultades de los estudiantes con DEA.",
+        "Separar a los estudiantes con DEA del grupo."
+      ],
+      correcta: 1,
+      explicacion: "Un clima inclusivo se construye con: ACEPTACIÓN de la diversidad como valor, ALTAS EXPECTATIVAS para todos (presunción de competencia), APOYO ENTRE PARES (tutoría, aprendizaje cooperativo), normalización de las diferencias, y nunca exponer o estigmatizar. El error es oportunidad de aprendizaje."
+    },
+    // PREGUNTA 46
+    {
+      id: 46,
+      dominio: "Familia - Participación",
+      enunciado: "La participación de la familia en la educación de un estudiante con DEA:",
+      alternativas: [
+        "No es relevante, es responsabilidad exclusiva de la escuela.",
+        "Es fundamental para reforzar aprendizajes, mantener comunicación fluida y apoyar emocionalmente.",
+        "Debe limitarse a firmar documentos.",
+        "Solo es necesaria en casos de conducta."
+      ],
+      correcta: 1,
+      explicacion: "La FAMILIA es un aliado fundamental: refuerza aprendizajes en casa, aporta información valiosa sobre el estudiante, participa en la toma de decisiones (PACI), y brinda apoyo EMOCIONAL (autoestima, motivación). La comunicación fluida escuela-familia es clave para el éxito de la intervención."
+    },
+    // PREGUNTA 47
+    {
+      id: 47,
+      dominio: "Familia - Apoyo Emocional",
+      enunciado: "El apoyo emocional es importante para estudiantes con DEA porque:",
+      alternativas: [
+        "Las DEA no afectan la autoestima.",
+        "Las dificultades académicas persistentes pueden generar frustración, baja autoestima y evitación de tareas.",
+        "Solo importa el rendimiento académico, no lo emocional.",
+        "Los estudiantes con DEA no experimentan emociones."
+      ],
+      correcta: 1,
+      explicacion: "Los estudiantes con DEA frecuentemente experimentan FRUSTRACIÓN (esfuerzo sin resultados), BAJA AUTOESTIMA (comparación con pares), ANSIEDAD ante tareas académicas, y pueden desarrollar conductas de evitación. El apoyo emocional, el reconocimiento del esfuerzo y celebrar los logros son esenciales para su bienestar y motivación."
+    }
+  ]
+};
+
+// ============================================
+// LÓGICA DEL QUIZ
+// ============================================
+let currentQuestion = 0;
+let userAnswers = new Array(quizData.preguntas.length).fill(null);
+
+function renderQuestion() {
+  const container = document.getElementById('quiz-container');
+  const pregunta = quizData.preguntas[currentQuestion];
+  
+  if (userAnswers[currentQuestion] !== null) {
+    // Ya respondida - mostrar retroalimentación
+    const index = userAnswers[currentQuestion];
+    const isCorrect = index === pregunta.correcta;
+    
+    let html = `
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-primary rounded-pill">${pregunta.dominio}</span>
+        <span class="text-muted small">Pregunta ${currentQuestion + 1} de ${quizData.preguntas.length}</span>
+      </div>
+      <h5 class="mb-4 fw-bold">${pregunta.enunciado}</h5>
+      <div class="alternativas-container">
+    `;
+    
+    pregunta.alternativas.forEach((alt, i) => {
+      const esCorrecta = i === pregunta.correcta;
+      const esSeleccionada = i === index;
+      let clase = 'p-3 mb-2 rounded border position-relative ';
+      
+      if (esCorrecta) {
+        clase += 'bg-success-subtle border-success text-success-emphasis fw-bold';
+      } else if (esSeleccionada) {
+        clase += 'bg-danger-subtle border-danger text-danger-emphasis';
+      } else {
+        clase += 'bg-light border-light text-muted opacity-75';
+      }
+      
+      html += `
+        <div class="${clase}">
+          <div class="d-flex">
+            <div class="me-2 fw-bold">${String.fromCharCode(65 + i)}.</div>
+            <div>${alt}</div>
+          </div>
+          ${esCorrecta ? '<i class="bi bi-check-circle-fill position-absolute top-50 end-0 translate-middle-y me-3 fs-5"></i>' : ''}
+          ${esSeleccionada && !esCorrecta ? '<i class="bi bi-x-circle-fill position-absolute top-50 end-0 translate-middle-y me-3 fs-5"></i>' : ''}
+        </div>
+      `;
+    });
+    
+    html += `
+      </div>
+      <div class="alert ${isCorrect ? 'alert-success' : 'alert-danger'} mt-4 shadow-sm border-0">
+        <h6 class="alert-heading fw-bold">
+          ${isCorrect ? '<i class="bi bi-check-circle-fill"></i> ¡Correcto!' : '<i class="bi bi-x-circle-fill"></i> Incorrecto'}
+        </h6>
+        <hr>
+        <p class="mb-0">${pregunta.explicacion}</p>
+      </div>
+    `;
+    
+    container.innerHTML = html;
+  } else {
+    // Sin responder
+    let html = `
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="badge bg-primary rounded-pill">${pregunta.dominio}</span>
+        <span class="text-muted small">Pregunta ${currentQuestion + 1} de ${quizData.preguntas.length}</span>
+      </div>
+      <h5 class="mb-4 fw-bold">${pregunta.enunciado}</h5>
+      <div class="alternativas-container">
+    `;
+    
+    pregunta.alternativas.forEach((alt, index) => {
+      html += `
+        <div class="alternativa-item p-3 mb-2 rounded border shadow-sm d-flex align-items-center" onclick="selectAnswer(${index})">
+          <div class="badge bg-light text-dark border me-3 rounded-circle p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">${String.fromCharCode(65 + index)}</div>
+          <div class="flex-grow-1">${alt}</div>
+        </div>
+      `;
+    });
+    
+    html += `</div>`;
+    container.innerHTML = html;
+  }
+  
+  updateNavigation();
+  renderNavigation();
+}
+
+function selectAnswer(index) {
+  if (userAnswers[currentQuestion] !== null) return;
+  userAnswers[currentQuestion] = index;
+  renderQuestion();
+}
+
+function goToQuestion(index) {
+  currentQuestion = index;
+  renderQuestion();
+}
+
+function renderNavigation() {
+  const navContainer = document.getElementById('question-nav');
+  let html = '';
+  
+  quizData.preguntas.forEach((_, index) => {
+    let btnClass = 'btn btn-sm ';
+    if (index === currentQuestion) {
+      btnClass += 'btn-primary fw-bold border-2 border-dark';
+    } else if (userAnswers[index] !== null) {
+      const isCorrect = userAnswers[index] === quizData.preguntas[index].correcta;
+      btnClass += isCorrect ? 'btn-success text-white' : 'btn-danger text-white';
+    } else {
+      btnClass += 'btn-outline-secondary bg-white';
+    }
+    
+    html += `<button onclick="goToQuestion(${index})" class="${btnClass}" style="width: 35px; height: 35px; padding: 0; display: flex; align-items: center; justify-content: center;">${index + 1}</button>`;
+  });
+  
+  navContainer.innerHTML = html;
+}
+
+function updateNavigation() {
+  const prevBtn = document.getElementById('prev-btn');
+  const nextBtn = document.getElementById('next-btn');
+  const counter = document.getElementById('question-counter');
+  const finishContainer = document.getElementById('finish-container');
+  
+  prevBtn.disabled = currentQuestion === 0;
+  counter.textContent = `${currentQuestion + 1} / ${quizData.preguntas.length}`;
+  
+  if (currentQuestion === quizData.preguntas.length - 1) {
+    nextBtn.style.display = 'none';
+    finishContainer.style.display = 'block';
+  } else {
+    nextBtn.style.display = 'block';
+    finishContainer.style.display = 'none';
+  }
+}
+
+document.getElementById('prev-btn').addEventListener('click', () => {
+  if (currentQuestion > 0) {
+    currentQuestion--;
+    renderQuestion();
+  }
+});
+
+document.getElementById('next-btn').addEventListener('click', () => {
+  if (currentQuestion < quizData.preguntas.length - 1) {
+    currentQuestion++;
+    renderQuestion();
+  }
+});
+
+document.getElementById('finish-btn').addEventListener('click', showResults);
+
+function showResults() {
+  let correctas = 0;
+  quizData.preguntas.forEach((p, i) => {
+    if (userAnswers[i] === p.correcta) correctas++;
+  });
+  
+  const porcentaje = Math.round((correctas / quizData.preguntas.length) * 100);
+  
+  let html = `
+    <div class="text-center mb-5">
+      <h2 class="display-4 fw-bold ${porcentaje >= 60 ? 'text-success' : 'text-danger'}">${porcentaje}%</h2>
+      <p class="lead">Obtuviste ${correctas} de ${quizData.preguntas.length} respuestas correctas</p>
+      <div class="progress" style="height: 10px;">
+        <div class="progress-bar ${porcentaje >= 60 ? 'bg-success' : 'bg-danger'}" style="width: ${porcentaje}%"></div>
+      </div>
+    </div>
+    <div class="text-center mt-4">
+      <button onclick="location.reload()" class="btn btn-primary btn-lg">
+        <i class="bi bi-arrow-clockwise"></i> Intentar Nuevamente
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('results-container').innerHTML = html;
+  document.getElementById('results-container').style.display = 'block';
+  document.getElementById('quiz-container').style.display = 'none';
+  document.querySelector('.d-flex.justify-content-between').style.display = 'none';
+  document.querySelector('.card.mb-5.border-0.bg-light').style.display = 'none';
+  document.getElementById('finish-container').style.display = 'none';
+  window.scrollTo(0,0);
+}
+
+// Iniciar
+renderQuestion();
+</script>
+
+<style>
+.alternativa-item {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.alternativa-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+  border-color: #0d6efd !important;
+}
+</style>

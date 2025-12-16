@@ -98,6 +98,10 @@ module.exports = function(eleventyConfig) {
   // Copiar imágenes y JS de Química 2023
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/quimica-2023-imagenes");
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/quimica-2023.js");
+
+  // Copiar recursos para Lengua y Literatura Media (Oficial 2023)
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/lengua-literatura-media/imagenes/em-l-23-1-1");
+  eleventyConfig.addPassthroughCopy("evaluaciones/educacion-media/pruebas/lengua-literatura-media/em-l-23-1-1-extraccion/preguntas_sin_alternativas.json");
   // Copiar imágenes de DEA 2023
   eleventyConfig.addPassthroughCopy("evaluaciones/educacion-especial/pruebas/imagenes_dea_2023");
   // Copiar imágenes y JS de Física 2023

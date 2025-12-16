@@ -1,0 +1,99 @@
+---
+layout: layout-evaluaciones.njk
+title: "Prueba Oficial 2023: Lengua y Literatura - Educación Media"
+description: "Versión oficial 2023 (EM-L 23 1 1) con estímulos visuales completos."
+permalink: /evaluaciones/educacion-media/pruebas/lengua-literatura-media/oficial-2023/
+---
+
+<div class="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-rose-50 py-12">
+  <div class="container mx-auto px-4 max-w-5xl">
+    <div class="text-center mb-8">
+      <h1 class="text-4xl font-bold text-gray-800 mb-3">
+        <i class="bi bi-journal-richtext text-purple-600"></i>
+        Prueba Oficial 2023 · Lengua y Literatura (EM)
+      </h1>
+      <p class="text-lg text-gray-600">Basada en EM-L 23 1 1 · 44 ítems · Estímulos visuales de página completa</p>
+      <div class="flex justify-center gap-3 mt-4 flex-wrap">
+        <a href="/evaluaciones/educacion-media/pruebas/lengua-literatura-media/" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition">
+          <i class="bi bi-arrow-left mr-2"></i> Volver a Prueba 2025
+        </a>
+        <a href="/evaluaciones/educacion-media/estudio/dossier-lenguaje-media/" class="inline-flex items-center px-4 py-2 bg-white border border-purple-300 rounded-lg hover:bg-purple-50 transition">
+          <i class="bi bi-book-half mr-2"></i> Dossier de Estudio
+        </a>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-2xl p-8 mb-8">
+      <h2 class="text-2xl font-bold text-gray-800 mb-4"><i class="bi bi-info-circle text-blue-500"></i> ¿Qué incluye?</h2>
+      <ul class="space-y-2 text-gray-700">
+        <li class="flex items-start"><i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i><span>Estímulos visuales completos (imágenes por página) provenientes del PDF oficial.</span></li>
+        <li class="flex items-start"><i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i><span>Enunciado resumido sin alternativas para evitar redundancia cuando la imagen ya contiene el texto completo.</span></li>
+        <li class="flex items-start"><i class="bi bi-check-circle-fill text-green-500 mr-2 mt-1"></i><span>Campo de contexto vacío cuando el estímulo contiene todo; ideal para construir tu propia versión interactiva.</span></li>
+      </ul>
+    </div>
+
+    <div id="contenedor-preguntas" class="space-y-6"></div>
+  </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+
+<script>
+  const JSON_URL = "/evaluaciones/educacion-media/pruebas/lengua-literatura-media/em-l-23-1-1-extraccion/preguntas_sin_alternativas.json";
+  const IMAGE_BASE = "/evaluaciones/educacion-media/pruebas/lengua-literatura-media/imagenes/em-l-23-1-1/";
+
+  async function cargarPreguntas() {
+    const cont = document.getElementById('contenedor-preguntas');
+    cont.innerHTML = `<div class="text-center text-gray-600">Cargando preguntas...</div>`;
+    try {
+      const resp = await fetch(JSON_URL);
+      if (!resp.ok) throw new Error('No se pudo cargar el JSON');
+      const data = await resp.json();
+      renderPreguntas(data);
+    } catch (err) {
+      cont.innerHTML = `<div class="text-center text-red-600">Error al cargar preguntas: ${err.message}</div>`;
+    }
+  }
+
+  function renderPreguntas(lista) {
+    const cont = document.getElementById('contenedor-preguntas');
+    if (!Array.isArray(lista) || !lista.length) {
+      cont.innerHTML = `<div class="text-center text-gray-600">No se encontraron preguntas.</div>`;
+      return;
+    }
+
+    const cards = lista.map(q => {
+      const imgs = (q.imagenes || []).map(path => {
+        const filename = path.split('/').pop();
+        const src = IMAGE_BASE + filename;
+        return `<img src="${src}" alt="Pregunta ${q.numero}" class="w-full rounded-lg border" loading="lazy">`;
+      }).join('\n');
+
+      const paginas = (q.paginas || []).join(', ');
+      const pres = q.presentacion_recomendada || 'imagen+y_enunciado';
+      const nota = q.nota_redundancia || '';
+      const enun = (q.enunciado || '').replace(/\n/g, '<br>');
+      const contexto = (q.contexto || '').replace(/\n/g, '<br>');
+
+      return `
+        <div class="bg-white rounded-2xl shadow-lg p-6">
+          <div class="flex items-center justify-between mb-3">
+            <div class="text-sm text-gray-600">Pregunta ${q.numero}${paginas ? ` · páginas: ${paginas}` : ''}</div>
+            <span class="px-3 py-1 text-xs rounded-full bg-purple-100 text-purple-700">${pres}</span>
+          </div>
+          <div class="space-y-3">
+            ${imgs}
+            <div>
+              <p class="text-gray-800 font-semibold">${enun || 'Enunciado no disponible'}</p>
+              ${contexto ? `<p class="text-gray-600 text-sm mt-2">${contexto}</p>` : ''}
+              ${nota ? `<p class="text-amber-700 text-xs mt-2">${nota}</p>` : ''}
+            </div>
+          </div>
+        </div>`;
+    }).join('\n');
+
+    cont.innerHTML = cards;
+  }
+
+  cargarPreguntas();
+</script>

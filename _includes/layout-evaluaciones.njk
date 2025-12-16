@@ -109,77 +109,7 @@
 
     // Wait for page to be ready before checking authentication
     window.addEventListener('DOMContentLoaded', function() {
-        const currentPath = window.location.pathname;
-        const isLoginPage = currentPath === '/evaluaciones/' || currentPath === '/evaluaciones/index.html';
-        const isAdminLogin = currentPath.includes('/evaluaciones/admin/login');
-        const isDossierPage = currentPath.includes('/dossier-lenguaje-media/') || 
-                              currentPath.includes('/dossier-matematica-media/');
-        
-        // Don't block login pages or public dossier pages
-        if (isLoginPage || isAdminLogin || isDossierPage) {
-            console.log('✓ Public page - no authentication check');
-            return;
-        }
-
-        // Check session
-        const session = localStorage.getItem('evaluaciones_session');
-        
-        if (!session) {
-            // No session - redirect to login
-            console.warn('⚠️ No session found');
-            alert('⚠️ Debes iniciar sesión para acceder a este contenido');
-            window.location.href = '/evaluaciones/';
-            return;
-        }
-
-        try {
-            const sessionData = JSON.parse(session);
-            const loginTime = new Date(sessionData.loginTime);
-            const now = new Date();
-            const hoursDiff = (now - loginTime) / (1000 * 60 * 60);
-
-            // Session expired (24 hours)
-            if (hoursDiff >= 24) {
-                console.warn('⏱️ Session expired');
-                localStorage.removeItem('evaluaciones_session');
-                alert('⏱️ Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                window.location.href = '/evaluaciones/';
-                return;
-            }
-
-            // Valid session - check permissions for specific sections
-            const permissions = sessionData.permissions || {};
-            
-            if (currentPath.includes('/educacion-basica/') && !permissions.basica) {
-                console.warn('🚫 No permission for Educación Básica');
-                alert('🚫 No tienes permisos para acceder a Educación Básica');
-                window.location.href = '/evaluaciones/';
-                return;
-            }
-            
-            if (currentPath.includes('/educacion-especial/') && !permissions.especial) {
-                console.warn('🚫 No permission for Educación Especial');
-                alert('🚫 No tienes permisos para acceder a Educación Especial');
-                window.location.href = '/evaluaciones/';
-                return;
-            }
-
-            if (currentPath.includes('/educacion-media/') && !permissions.media) {
-                console.warn('🚫 No permission for Educación Media');
-                alert('🚫 No tienes permisos para acceder a Educación Media');
-                window.location.href = '/evaluaciones/';
-                return;
-            }
-
-            // Valid session and permissions - continue
-            console.log('✓ Authenticated:', sessionData.username, 'Permissions:', permissions);
-
-        } catch (error) {
-            console.error('❌ Authentication error:', error);
-            localStorage.removeItem('evaluaciones_session');
-            alert('❌ Error de autenticación. Por favor inicia sesión nuevamente.');
-            window.location.href = '/evaluaciones/';
-        }
+        console.log('🔓 Public Access Enabled - No authentication required');
     });
     </script>
 

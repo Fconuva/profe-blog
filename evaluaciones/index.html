@@ -69,32 +69,6 @@
                     </a>
                     <p class="text-sm text-gray-500 mt-2">Respuesta rápida y personalizada</p>
                 </div>
-
-                <!-- User Status -->
-                <div id="user-status" class="mb-8">
-                    <!-- Logged out state -->
-                    <div id="logged-out" class="space-y-4">
-                        <a href="/evaluaciones/login.html?force=true" class="inline-block bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold py-4 px-8 rounded-2xl transition-all transform hover:scale-105 shadow-xl text-lg">
-                            <i class="fas fa-sign-in-alt mr-2"></i>Iniciar Sesión
-                        </a>
-                    </div>
-
-                    <!-- Logged in state -->
-                    <div id="logged-in" class="hidden">
-                        <div class="inline-flex items-center space-x-3 bg-white/90 backdrop-blur-sm px-6 py-3 rounded-2xl shadow-lg border border-gray-200">
-                            <div class="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center">
-                                <i class="fas fa-user text-white"></i>
-                            </div>
-                            <div class="text-left">
-                                <p class="text-xs text-gray-500 font-medium">Bienvenido</p>
-                                <p class="font-bold text-gray-800" id="user-display-name"></p>
-                            </div>
-                            <button onclick="logout()" class="ml-4 text-red-600 hover:text-red-800 transition-colors p-2 hover:bg-red-50 rounded-lg">
-                                <i class="fas fa-sign-out-alt"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
 
             <!-- Consulta ClaveÚnica Banner -->
@@ -136,41 +110,6 @@
                                 <p class="text-xs text-blue-100 text-center mt-2">
                                     Validador oficial Agencia de la Calidad
                                 </p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CTA Section -->
-            <div class="max-w-2xl mx-auto mb-16">
-                <div class="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-3xl shadow-2xl overflow-hidden transform hover:scale-105 transition-all duration-300">
-                    <div class="p-8 text-white text-center">
-                        <h2 class="text-3xl font-bold mb-4">¿Interesado en Acceder?</h2>
-                        <p class="text-xl mb-2">Acceso completo al material ECEP 2025</p>
-                        
-                        <div class="my-8">
-                            <p class="text-sm mb-2 opacity-90">Solo</p>
-                            <p class="text-6xl font-extrabold tracking-tight">$25.000</p>
-                            <p class="text-sm mt-2 opacity-90">Pago único • Acceso ilimitado</p>
-                        </div>
-
-                        <a href="/comprar/" class="inline-block bg-white text-indigo-600 hover:bg-gray-50 font-bold py-4 px-8 rounded-2xl transition-all shadow-lg text-lg transform hover:scale-105">
-                            <i class="fas fa-shopping-cart mr-2"></i>Comprar Acceso
-                        </a>
-
-                        <div class="mt-6 flex items-center justify-center space-x-6 text-sm">
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Pago seguro</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-bolt"></i>
-                                <span>Acceso inmediato</span>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <i class="fas fa-headset"></i>
-                                <span>Soporte incluido</span>
                             </div>
                         </div>
                     </div>
@@ -339,72 +278,8 @@
     </div>
 
     <script>
-        // Check login status and apply permissions
-        function checkLogin() {
-            const session = localStorage.getItem('evaluaciones_session');
-            if (session) {
-                try {
-                    const data = JSON.parse(session);
-                    if (data.username && data.displayName) {
-                        document.getElementById('logged-out').classList.add('hidden');
-                        document.getElementById('logged-in').classList.remove('hidden');
-                        document.getElementById('user-display-name').textContent = data.displayName;
-                        
-                        // Hide CTA section for authenticated users
-                        const ctaSection = document.querySelector('.max-w-2xl.mx-auto.mb-16');
-                        if (ctaSection) {
-                            ctaSection.style.display = 'none';
-                        }
-                        
-                        // Content is accessible - no need to lock
-                        return;
-                    }
-                } catch (e) {
-                    localStorage.removeItem('evaluaciones_session');
-                }
-            }
-            
-            // No login - lock all content
-            lockAllContent();
-        }
-
-        function lockAllContent() {
-            // Find only educational section cards (Parvularia, Básica, Media, Especial)
-            const sections = document.querySelectorAll('.grid.md\\:grid-cols-2.lg\\:grid-cols-4.gap-8.mb-16 > div');
-            
-            sections.forEach(section => {
-                // Make section semi-transparent
-                section.style.opacity = '0.7';
-                section.style.position = 'relative';
-                
-                // Disable all links
-                const links = section.querySelectorAll('a');
-                links.forEach(link => {
-                    link.style.pointerEvents = 'none';
-                    link.style.cursor = 'not-allowed';
-                });
-                
-                // Add overlay
-                const overlay = document.createElement('div');
-                overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.05);border-radius:1rem;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;';
-                overlay.innerHTML = '<div style="background:white;padding:1rem 2rem;border-radius:0.5rem;box-shadow:0 4px 6px rgba(0,0,0,0.1);"><i class="fas fa-lock text-indigo-600 mr-2"></i><span class="font-semibold text-gray-800">Inicia sesión para acceder</span></div>';
-                overlay.onclick = function() {
-                    window.location.href = '/evaluaciones/login.html';
-                };
-                
-                section.appendChild(overlay);
-            });
-        }
-
-        function logout() {
-            if (confirm('¿Seguro que deseas cerrar sesión?')) {
-                localStorage.removeItem('evaluaciones_session');
-                window.location.reload();
-            }
-        }
-
-        // Run on page load
-        checkLogin();
+        // Login logic removed - Public Access
+        console.log('🔓 Public Access Enabled');
     </script>
 
 </body>

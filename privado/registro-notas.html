@@ -7182,12 +7182,26 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
         // --- OBJETIVOS DE APRENDIZAJE ---
         let oasData = null;
 
-        // Cargar OAs del currículum
+        // Mapeo de docente a archivo de OAs
+        const OAS_ARCHIVOS_POR_DOCENTE = {
+            'francisco': 'objetivos-aprendizaje-lenguaje-NUEVO.json',
+            'cristofer': 'objetivos-aprendizaje-ingles.json',
+            'nicolas': 'objetivos-aprendizaje-ciencias.json',
+            'reinaldo': 'objetivos-aprendizaje-matematica.json',
+            // Por defecto usar lenguaje para otros docentes
+            'default': 'objetivos-aprendizaje-lenguaje-NUEVO.json'
+        };
+
+        // Cargar OAs del currículum según el docente
         async function loadOAsData() {
             if (oasData) return oasData;
             
             try {
-                const response = await fetch('objetivos-aprendizaje-lenguaje-NUEVO.json');
+                // Seleccionar archivo de OAs según el docente actual
+                const archivoOAs = OAS_ARCHIVOS_POR_DOCENTE[docenteParam] || OAS_ARCHIVOS_POR_DOCENTE['default'];
+                console.log(`📚 Cargando OAs para ${docenteParam}: ${archivoOAs}`);
+                
+                const response = await fetch(archivoOAs);
                 oasData = await response.json();
                 return oasData;
             } catch (error) {

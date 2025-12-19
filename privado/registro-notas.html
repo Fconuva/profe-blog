@@ -2922,43 +2922,152 @@
 
         // Modal: Agregar varios estudiantes
         function showBulkStudentModal() {
-            const input = prompt('Pega la lista de estudiantes (formato: N°\tApellido1\tApellido2\tNombre, una fila por línea):');
-            if (!input) return;
+            // Crear modal HTML
+            const modalHtml = `
+                <div id="bulkStudentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                    <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+                        <div class="bg-gradient-to-r from-emerald-500 to-emerald-600 p-4">
+                            <h3 class="text-xl font-bold text-white flex items-center">
+                                <i class="fas fa-users mr-3"></i>Agregar Varios Estudiantes
+                            </h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Instrucciones:</label>
+                                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-800">
+                                    <p class="mb-2"><strong>Formato aceptado:</strong> Pega la lista de estudiantes (uno por línea)</p>
+                                    <p class="mb-1">✅ <code class="bg-blue-100 px-1 rounded">APELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2...</code></p>
+                                    <p class="text-xs text-blue-600 mt-2">Ejemplo: ADASME RIFFO EMILIO ANTONIO</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Lista de Estudiantes:</label>
+                                <textarea id="bulkStudentInput" rows="12" 
+                                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 transition-all font-mono text-sm"
+                                    placeholder="ADASME RIFFO EMILIO ANTONIO
+AHUMADA ROJAS BENJAMÍN IGNACIO
+ALISTE ESPINOZA VALENTÍN ALFONSO
+..."></textarea>
+                            </div>
+                            <div id="bulkPreview" class="mb-4 hidden">
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Vista previa:</label>
+                                <div id="bulkPreviewContent" class="bg-gray-50 border rounded-lg p-3 max-h-40 overflow-y-auto text-sm"></div>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <button onclick="previewBulkStudents()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-all">
+                                    <i class="fas fa-eye mr-2"></i>Vista Previa
+                                </button>
+                                <div class="flex gap-3">
+                                    <button onclick="closeBulkStudentModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all">
+                                        Cancelar
+                                    </button>
+                                    <button onclick="processBulkStudents()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium transition-all">
+                                        <i class="fas fa-user-plus mr-2"></i>Agregar Todos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function closeBulkStudentModal() {
+            const modal = document.getElementById('bulkStudentModal');
+            if (modal) modal.remove();
+        }
+
+        function parseBulkStudentLine(line) {
+            // Limpiar la línea
+            line = line.trim().toUpperCase();
+            if (!line) return null;
+            
+            // Dividir por espacios
+            const parts = line.split(/\s+/);
+            
+            if (parts.length < 3) return null; // Mínimo: APELLIDO1 APELLIDO2 NOMBRE
+            
+            // Formato: APELLIDO1 APELLIDO2 NOMBRE1 [NOMBRE2...]
+            const lastName1 = parts[0];
+            const lastName2 = parts[1];
+            const name = parts.slice(2).join(' '); // El resto son nombres
+            
+            return {
+                lastName1: lastName1,
+                lastName2: lastName2,
+                name: name
+            };
+        }
+
+        function previewBulkStudents() {
+            const input = document.getElementById('bulkStudentInput').value;
+            const lines = input.trim().split('\n');
+            const previewDiv = document.getElementById('bulkPreview');
+            const contentDiv = document.getElementById('bulkPreviewContent');
+            
+            let html = '<table class="w-full text-xs"><thead><tr class="bg-gray-200"><th class="p-1 text-left">#</th><th class="p-1 text-left">Apellido Paterno</th><th class="p-1 text-left">Apellido Materno</th><th class="p-1 text-left">Nombres</th></tr></thead><tbody>';
+            let count = 0;
+            
+            lines.forEach((line, index) => {
+                const student = parseBulkStudentLine(line);
+                if (student) {
+                    count++;
+                    html += `<tr class="border-b"><td class="p-1">${count}</td><td class="p-1">${student.lastName1}</td><td class="p-1">${student.lastName2}</td><td class="p-1">${student.name}</td></tr>`;
+                }
+            });
+            
+            html += '</tbody></table>';
+            html += `<p class="mt-2 text-emerald-600 font-semibold"><i class="fas fa-check-circle mr-1"></i>${count} estudiantes detectados</p>`;
+            
+            contentDiv.innerHTML = html;
+            previewDiv.classList.remove('hidden');
+        }
+
+        function processBulkStudents() {
+            const input = document.getElementById('bulkStudentInput').value;
+            if (!input.trim()) {
+                alert('Por favor, pega la lista de estudiantes');
+                return;
+            }
             
             const lines = input.trim().split('\n');
             let added = 0;
+            let errors = [];
             
-            lines.forEach(line => {
-                const parts = line.split('\t');
-                if (parts.length >= 4) {
-                    const number = parseInt(parts[0]) || (courseData.students.length + 1);
-                    const lastName1 = parts[1].trim().toUpperCase();
-                    const lastName2 = parts[2].trim().toUpperCase();
-                    const name = parts[3].trim().toUpperCase();
-                    
-                    if (lastName1 && lastName2 && name) {
-                        const student = {
-                            id: Date.now() + added,
-                            number: number,
-                            lastName1: lastName1,
-                            lastName2: lastName2,
-                            name: name,
-                            grades: Array(courseData.tasks.length).fill(null).map(() => ({ value: null, updatedAt: new Date().toISOString() })),
-                            notes: '',
-                            retired: false
-                        };
-                        courseData.students.push(student);
-                        added++;
-                    }
+            lines.forEach((line, index) => {
+                const student = parseBulkStudentLine(line);
+                if (student) {
+                    const newStudent = {
+                        id: Date.now() + added,
+                        number: courseData.students.length + added + 1,
+                        lastName1: student.lastName1,
+                        lastName2: student.lastName2,
+                        name: student.name,
+                        grades: Array(courseData.tasks.length).fill(null).map(() => ({ value: null, updatedAt: new Date().toISOString() })),
+                        notes: '',
+                        retired: false
+                    };
+                    courseData.students.push(newStudent);
+                    added++;
+                } else if (line.trim()) {
+                    errors.push(`Línea ${index + 1}: "${line.substring(0, 30)}..."`);   
                 }
             });
             
             if (added > 0) {
                 renderTable();
                 saveAllCourses();
-                alert(`${added} estudiantes agregados exitosamente`);
+                closeBulkStudentModal();
+                
+                let message = `✅ ${added} estudiantes agregados exitosamente`;
+                if (errors.length > 0) {
+                    message += `\n\n⚠️ ${errors.length} líneas no pudieron procesarse`;
+                }
+                alert(message);
+                showTemporaryMessage(`${added} estudiantes agregados`, 'success');
             } else {
-                alert('No se pudo agregar ningún estudiante. Verifica el formato.');
+                alert('No se pudo agregar ningún estudiante. Verifica el formato:\nAPELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2');
             }
         }
 

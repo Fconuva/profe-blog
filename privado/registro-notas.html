@@ -1084,6 +1084,14 @@
                         <input type="checkbox" id="editStudentRetired" class="w-4 h-4 text-indigo-600 rounded mr-2">
                         <label class="text-sm text-gray-700">Estudiante Retirado (no cuenta en estadísticas)</label>
                     </div>
+                    <div class="flex items-center mt-2">
+                        <input type="checkbox" id="editStudentPIE" class="w-4 h-4 text-purple-600 rounded mr-2">
+                        <label class="text-sm text-gray-700"><i class="fas fa-heart text-purple-500 mr-1"></i>Proyecto de Integración Escolar (PIE)</label>
+                    </div>
+                    <div class="mt-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2"><i class="fas fa-sticky-note mr-1 text-yellow-500"></i>Observaciones del Estudiante</label>
+                        <textarea id="editStudentNotes" rows="3" placeholder="Notas, observaciones, necesidades especiales..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"></textarea>
+                    </div>
                 </div>
                 <div class="flex gap-3 mt-6">
                     <button onclick="saveStudentEdit()" class="flex-1 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium">
@@ -2344,11 +2352,10 @@
 
                             // Comparar timestamps y tomar el más reciente
                             if (remoteTime > localTime) {
-                                console.log(`   📥 Nota [${idx}][${gradeIdx}]: Remote más reciente (${new Date(remoteTime).toISOString()} > ${new Date(localTime).toISOString()})`);
+                                console.log(`   📥 Nota [${idx}][${gradeIdx}]: Remote más reciente`);
                                 localStudent.grades[gradeIdx] = JSON.parse(JSON.stringify(remoteGrade));
-                            } else {
-                                console.log(`  ✅ Nota [${idx}][${gradeIdx}]: Local más reciente (${new Date(localTime).toISOString()} >= ${new Date(remoteTime).toISOString()})`);
                             }
+                            // Nota: No logueamos cuando local es más reciente para reducir ruido en consola
                         });
                         
                         // IMPORTANTE: Si local tiene MÁS notas que remote (porque agregaste tareas localmente),
@@ -2366,6 +2373,7 @@
                         localStudent.lastName2 = remoteStudent.lastName2;
                         localStudent.name = remoteStudent.name;
                         localStudent.retired = remoteStudent.retired;
+                        localStudent.isPIE = remoteStudent.isPIE;
                         localStudent.notes = remoteStudent.notes;
                         localStudent.updatedAt = remoteStudent.updatedAt;
                     }
@@ -4083,8 +4091,9 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                         <div>
                             <span class="font-medium">${student.number}. ${student.name} ${student.lastName1} ${student.lastName2}</span>
                             ${retiredBadge}
+                            ${student.isPIE ? '<span class="text-xs bg-purple-500 text-white px-2 py-1 rounded ml-2">PIE</span>' : ''}
                         </div>
-                        <button onclick="editStudent(${index})" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
+                        <button onclick="showEditStudentModal(${index}); this.closest('.modal').remove();" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm">
                             <i class="fas fa-edit mr-1"></i>Editar
                         </button>
                     </div>
@@ -4716,8 +4725,19 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                 }
                 
                 let totalPoints = 0;
+                
+                // Etiquetas especiales
+                const pieBadge = student.isPIE ? '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded" title="Proyecto de Integración Escolar">PIE</span>' : '';
+                const notesIcon = student.notes ? `<button onclick="showStudentNotes(${studentIndex})" class="text-yellow-500 hover:text-yellow-600" title="Ver observaciones"><i class="fas fa-sticky-note"></i></button>` : `<button onclick="showStudentNotes(${studentIndex})" class="text-gray-300 hover:text-yellow-500" title="Agregar observación"><i class="far fa-sticky-note"></i></button>`;
+                
                 let html = `
-                    <td class="px-2 py-3 text-sm">${student.number}</td>
+                    <td class="px-2 py-3 text-sm">
+                        <div class="flex items-center gap-1">
+                            ${notesIcon}
+                            <span>${student.number}</span>
+                            ${pieBadge}
+                        </div>
+                    </td>
                     <td class="px-2 py-3 text-sm font-medium truncate">${student.lastName1}</td>
                     <td class="px-2 py-3 text-sm truncate">${student.lastName2}</td>
                     <td class="px-3 py-3 text-sm truncate">${student.name}</td>
@@ -4888,6 +4908,8 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
             document.getElementById('editStudentLastName2').value = student.lastName2;
             document.getElementById('editStudentName').value = student.name;
             document.getElementById('editStudentRetired').checked = student.retired || false;
+            document.getElementById('editStudentPIE').checked = student.isPIE || false;
+            document.getElementById('editStudentNotes').value = student.notes || '';
             document.getElementById('editStudentModal').style.display = 'block';
         }
 
@@ -4901,6 +4923,8 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
             student.lastName2 = document.getElementById('editStudentLastName2').value.toUpperCase();
             student.name = document.getElementById('editStudentName').value.toUpperCase();
             student.retired = document.getElementById('editStudentRetired').checked;
+            student.isPIE = document.getElementById('editStudentPIE').checked;
+            student.notes = document.getElementById('editStudentNotes').value;
             
             closeEditStudentModal();
             renderTable();
@@ -4910,6 +4934,54 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
         // Cerrar modal de edición
         function closeEditStudentModal() {
             document.getElementById('editStudentModal').style.display = 'none';
+        }
+
+        // Mostrar notas/observaciones del estudiante
+        function showStudentNotes(studentIndex) {
+            const student = courseData.students[studentIndex];
+            const pieBadge = student.isPIE ? '<span class="inline-flex items-center px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded"><i class="fas fa-heart mr-1"></i>PIE</span>' : '';
+            
+            const modal = document.createElement('div');
+            modal.className = 'modal';
+            modal.style.display = 'block';
+            modal.id = 'studentNotesModal';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 500px;">
+                    <div class="bg-yellow-500 text-white px-6 py-4 rounded-t-lg">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <i class="fas fa-sticky-note mr-2"></i>
+                            Observaciones - ${student.name} ${student.lastName1}
+                            ${pieBadge}
+                        </h3>
+                    </div>
+                    <div class="p-6">
+                        <textarea id="studentNotesTextarea" 
+                                  rows="6" 
+                                  placeholder="Escribe observaciones, necesidades especiales, anotaciones importantes..."
+                                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-400 focus:border-yellow-400"
+                        >${student.notes || ''}</textarea>
+                        <div class="flex gap-3 mt-4">
+                            <button onclick="saveStudentNotesQuick(${studentIndex})" class="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded-lg font-medium">
+                                <i class="fas fa-save mr-2"></i>Guardar
+                            </button>
+                            <button onclick="document.getElementById('studentNotesModal').remove()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg font-medium">
+                                <i class="fas fa-times mr-2"></i>Cerrar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            document.getElementById('studentNotesTextarea').focus();
+        }
+
+        // Guardar notas rápidamente desde el modal
+        function saveStudentNotesQuick(studentIndex) {
+            const notes = document.getElementById('studentNotesTextarea').value;
+            courseData.students[studentIndex].notes = notes;
+            document.getElementById('studentNotesModal').remove();
+            renderTable();
+            saveAllCourses();
         }
 
         // Eliminar estudiante

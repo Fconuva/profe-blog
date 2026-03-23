@@ -527,6 +527,7 @@
             var comprobante = (document.getElementById('pay-comprobante').value || '').trim();
             var errorEl = document.getElementById('pay-error');
             if (!comprobante) {
+                errorEl.textContent = 'Debes ingresar el número de operación.';
                 errorEl.classList.remove('hidden');
                 document.getElementById('pay-comprobante').focus();
                 return;
@@ -534,11 +535,40 @@
             errorEl.classList.add('hidden');
             var btn = this;
             btn.disabled = true;
-            btn.textContent = 'Confirmando...';
-            db.ref('portafolios/' + currentUser.uid).update({
-                paymentStatus: 'pendiente_verificacion',
-                paymentConfirmedAt: new Date().toISOString(),
-                comprobantePago: comprobante
+            btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Verificando con MercadoPago...';
+
+            fetch('/api/mercadopago/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    paymentId: comprobante,
+                    uid: currentUser.uid,
+                    plan: portData.plan
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.verified) {
+                    // Auto-approved! Firebase listener will refresh the dashboard
+                    btn.innerHTML = '✅ ¡Pago verificado!';
+                    btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+                    btn.classList.add('bg-green-500');
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Confirmar pago';
+                    errorEl.textContent = data.reason || 'No se pudo verificar el pago.';
+                    errorEl.classList.remove('hidden');
+                }
+            })
+            .catch(function() {
+                // Fallback: guardar como pendiente_verificacion para revisión manual
+                db.ref('portafolios/' + currentUser.uid).update({
+                    paymentStatus: 'pendiente_verificacion',
+                    paymentConfirmedAt: new Date().toISOString(),
+                    comprobantePago: comprobante
+                });
+                btn.innerHTML = '⏳ Guardado para revisión manual';
+                btn.disabled = true;
             });
         });
 

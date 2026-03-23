@@ -55,16 +55,21 @@
                     <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 transition-colors" data-tab="dashboard">📊 Dashboard</button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="clientes">👥 Clientes</button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pagos">💰 Pagos Pendientes <span id="pagos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white">0</span></button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="preinscritos">📋 Pre-Inscritos <span id="preinscritos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-amber-500 text-white">0</span></button>
                 </nav>
             </div>
         </div>
 
         <!-- ===== TAB: DASHBOARD ===== -->
         <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
+            <div class="grid grid-cols-2 md:grid-cols-6 gap-4 mb-4">
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-xs text-gray-500 mb-1">Total Clientes</p>
                     <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
+                </div>
+                <div class="bg-white rounded-xl border border-amber-300 p-4">
+                    <p class="text-xs text-amber-600 mb-1">📋 Pre-Inscritos</p>
+                    <p class="text-2xl font-heading font-bold text-amber-600" id="stat-preinscrito">0</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-xs text-gray-500 mb-1">Pagos Aprobados</p>
@@ -130,6 +135,7 @@
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="unpaid">Sin Pago</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="inprogress">En Progreso</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="preinscrito">Pre-Inscritos</button>
                         </div>
                         <input type="text" id="search-input" placeholder="Buscar nombre, email, RUT..."
                                class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
@@ -165,6 +171,36 @@
                 </div>
                 <div id="payments-list" class="divide-y divide-gray-100"></div>
                 <div id="no-payments" class="hidden px-6 py-12 text-center text-gray-500">No hay pagos pendientes.</div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: PRE-INSCRITOS ===== -->
+        <div id="tab-preinscritos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h2 class="font-heading font-bold text-gray-900">Pre-Inscritos</h2>
+                        <p class="text-sm text-gray-500 mt-1">Personas interesadas que se registraron antes de la apertura oficial del proceso.</p>
+                    </div>
+                    <button id="btn-email-masivo" class="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors flex items-center gap-2">
+                        📧 Enviar Correo Masivo
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-left">
+                            <tr>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">RUT</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Fecha Registro</th>
+                            </tr>
+                        </thead>
+                        <tbody id="preinscritos-tbody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="no-preinscritos" class="hidden px-6 py-12 text-center text-gray-500">No hay pre-inscritos aún.</div>
             </div>
         </div>
     </main>
@@ -448,6 +484,7 @@
             renderDashboard();
             renderClients();
             renderPayments();
+            renderPreinscritos();
         }
 
         // ===== HELPERS =====
@@ -502,7 +539,7 @@
         // ===== RENDER DASHBOARD =====
         function renderDashboard() {
             var uids = getClientUids();
-            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0;
+            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0;
             var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
@@ -512,6 +549,7 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 total++;
+                if (c.status === 'pre-inscrito' && !p.plan) preInscrito++;
                 var price = getPlanPrice(p.plan);
                 if (p.plan) {
                     totalRevenue += price;
@@ -538,6 +576,7 @@
             });
 
             document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-preinscrito').textContent = preInscrito;
             document.getElementById('stat-paid').textContent = paid;
             document.getElementById('stat-progress').textContent = inProg;
             document.getElementById('stat-completed').textContent = completed;
@@ -558,6 +597,15 @@
                 badge.classList.remove('hidden');
             } else {
                 badge.classList.add('hidden');
+            }
+
+            // Pre-inscritos badge
+            var preBadge = document.getElementById('preinscritos-badge');
+            if (preInscrito > 0) {
+                preBadge.textContent = preInscrito;
+                preBadge.classList.remove('hidden');
+            } else {
+                preBadge.classList.add('hidden');
             }
 
             // Alert: pending payments
@@ -695,6 +743,77 @@
                 btn.addEventListener('click', function() { openModal(this.getAttribute('data-uid')); });
             });
         }
+
+        // ===== RENDER PRE-INSCRITOS TAB =====
+        function renderPreinscritos() {
+            var tbody = document.getElementById('preinscritos-tbody');
+            tbody.innerHTML = '';
+
+            var uids = getClientUids().filter(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                return c.status === 'pre-inscrito' && !p.plan;
+            });
+
+            uids.sort(function(a, b) {
+                return ((allClients[b] || {}).createdAt || '').localeCompare((allClients[a] || {}).createdAt || '');
+            });
+
+            if (uids.length === 0) {
+                document.getElementById('no-preinscritos').classList.remove('hidden');
+            } else {
+                document.getElementById('no-preinscritos').classList.add('hidden');
+            }
+
+            uids.forEach(function(uid) {
+                var c = allClients[uid];
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors';
+                tr.innerHTML =
+                    '<td class="px-4 py-3 font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</td>' +
+                    '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.email || '—') + '</td>' +
+                    '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
+                    '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.rut || '—') + '</td>' +
+                    '<td class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>';
+                tbody.appendChild(tr);
+            });
+        }
+
+        // ===== MASS EMAIL =====
+        document.getElementById('btn-email-masivo').addEventListener('click', function() {
+            var uids = getClientUids().filter(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                return c.status === 'pre-inscrito' && !p.plan && c.email;
+            });
+
+            if (uids.length === 0) {
+                alert('No hay pre-inscritos para enviar correo.');
+                return;
+            }
+
+            var emails = uids.map(function(uid) { return allClients[uid].email; });
+            var subject = encodeURIComponent('¡El proceso de Portafolio Docente 2026 ya está abierto!');
+            var body = encodeURIComponent(
+                'Estimado/a docente,\n\n' +
+                'Te informamos que el proceso de Evaluación Docente 2026 ya se encuentra abierto.\n\n' +
+                'Ingresa a tu cuenta en www.profefranciscopancho.com para seleccionar tu plan y comenzar con tu portafolio.\n\n' +
+                'Saludos cordiales,\n' +
+                'Prof. Francisco Javier Núñez Valenzuela'
+            );
+
+            // Use BCC to protect privacy
+            var mailtoLink = 'mailto:portafolio.admin@profefranciscopancho.com?bcc=' + emails.join(',') + '&subject=' + subject + '&body=' + body;
+
+            // Copy emails to clipboard as backup
+            var emailList = emails.join('; ');
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(emailList);
+            }
+
+            alert('Se abrirá tu cliente de correo con ' + emails.length + ' destinatarios en BCC.\n\nLos correos también se copiaron al portapapeles:\n' + emailList);
+            window.open(mailtoLink, '_blank');
+        });
 
         // ===== MODAL =====
         var modal = document.getElementById('edit-modal');

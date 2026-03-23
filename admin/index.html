@@ -61,7 +61,7 @@
 
         <!-- ===== TAB: DASHBOARD ===== -->
         <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-4">
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-xs text-gray-500 mb-1">Total Clientes</p>
                     <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
@@ -81,6 +81,24 @@
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-xs text-gray-500 mb-1">Por Revisar Pago</p>
                     <p class="text-2xl font-heading font-bold text-amber-600" id="stat-pending-pay">0</p>
+                </div>
+            </div>
+            <!-- Revenue stats -->
+            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">💰 Total Contratado</p>
+                    <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total-revenue">$0</p>
+                    <p class="text-xs text-gray-400" id="stat-total-revenue-count">0 planes</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">✅ Recaudado (pagados)</p>
+                    <p class="text-2xl font-heading font-bold text-green-600" id="stat-paid-revenue">$0</p>
+                    <p class="text-xs text-gray-400" id="stat-paid-revenue-count">0 pagos</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">⏳ Pendiente de Cobro</p>
+                    <p class="text-2xl font-heading font-bold text-amber-600" id="stat-pending-revenue">$0</p>
+                    <p class="text-xs text-gray-400" id="stat-pending-revenue-count">0 por cobrar</p>
                 </div>
             </div>
 
@@ -124,6 +142,7 @@
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Teléfono</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Monto</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
@@ -193,6 +212,7 @@
                             <option value="pendiente_verificacion">Por Verificar (Manual)</option>
                             <option value="approved">Aprobado</option>
                         </select>
+                        <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
                     </div>
                     <div id="edit-comprobante-info" class="hidden mt-2 text-xs text-gray-500 bg-amber-50 p-2 rounded-lg"></div>
                 </div>
@@ -356,6 +376,10 @@
         var currentFilter = 'all';
 
         var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión' };
+        var planPrices = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+
+        function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
+        function getPlanPrice(plan) { return planPrices[plan] || 0; }
 
         // ===== AUTH =====
         document.getElementById('logout-btn').addEventListener('click', function() {
@@ -479,6 +503,8 @@
         function renderDashboard() {
             var uids = getClientUids();
             var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0;
+            var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
+            var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
             var recentList = [];
 
@@ -486,7 +512,19 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 total++;
-                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') paid++;
+                var price = getPlanPrice(p.plan);
+                if (p.plan) {
+                    totalRevenue += price;
+                    totalWithPlan++;
+                }
+                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
+                    paid++;
+                    paidRevenue += price;
+                    paidCount++;
+                } else if (p.plan) {
+                    pendingRevenue += price;
+                    pendingRevenueCount++;
+                }
                 if (p.paymentStatus === 'pendiente_verificacion') {
                     pendingPay++;
                     pendingPayList.push({ uid: uid, client: c, port: p });
@@ -504,6 +542,14 @@
             document.getElementById('stat-progress').textContent = inProg;
             document.getElementById('stat-completed').textContent = completed;
             document.getElementById('stat-pending-pay').textContent = pendingPay;
+
+            // Revenue stats
+            document.getElementById('stat-total-revenue').textContent = formatCLP(totalRevenue);
+            document.getElementById('stat-total-revenue-count').textContent = totalWithPlan + ' planes';
+            document.getElementById('stat-paid-revenue').textContent = formatCLP(paidRevenue);
+            document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos';
+            document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
+            document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
 
             // Pagos badge
             var badge = document.getElementById('pagos-badge');
@@ -579,12 +625,14 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 var progress = calcProgress(p);
+                var price = getPlanPrice(p.plan);
                 var tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 transition-colors';
                 tr.innerHTML =
                     '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
                     '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
                     '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
+                    '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
                     '<td class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
                     '<td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
                     '<td class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
@@ -626,7 +674,7 @@
                     '<div class="flex-1">' +
                         '<p class="font-medium text-gray-900">' + escapeHtml(c.nombre) + '</p>' +
                         '<p class="text-sm text-gray-500">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.telefono || '') + '</p>' +
-                        '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
+                        '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · <strong>' + formatCLP(getPlanPrice(p.plan)) + '</strong> · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
                     '</div>' +
                     '<div class="flex gap-2">' +
                         '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 pay-approve" data-uid="' + uid + '">✅ Aprobar</button>' +
@@ -701,6 +749,8 @@
             }
 
             document.getElementById('edit-payment').value = p.paymentStatus || 'pendiente';
+            var price = getPlanPrice(p.plan);
+            document.getElementById('edit-monto').textContent = price ? (planNames[p.plan] || p.plan) + ' · ' + formatCLP(price) : '—';
 
             // Modules
             var m1 = p.modulo1 || {};

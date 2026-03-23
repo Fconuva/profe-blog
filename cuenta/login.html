@@ -106,10 +106,24 @@
 
             auth.signInWithEmailAndPassword(email, password)
                 .then(function(userCredential) {
-                    return db.ref('users/' + userCredential.user.uid + '/role').once('value');
+                    var uid = userCredential.user.uid;
+                    return db.ref('users/' + uid).once('value').then(function(snap) {
+                        if (!snap.exists()) {
+                            // Restore missing users entry (e.g. after DB cleanup)
+                            return db.ref('users/' + uid).set({
+                                email: email,
+                                nombre: email.split('@')[0],
+                                role: 'cliente',
+                                createdAt: new Date().toISOString()
+                            }).then(function() {
+                                return { role: 'cliente' };
+                            });
+                        }
+                        return snap.val();
+                    });
                 })
-                .then(function(snap) {
-                    if (snap.val() === 'admin') {
+                .then(function(userData) {
+                    if (userData.role === 'admin') {
                         window.location.href = '/admin/index.html';
                     } else {
                         window.location.href = '/dashboard/index.html';

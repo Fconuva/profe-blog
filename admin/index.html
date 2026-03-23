@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración — Portafolios Docentes 2026</title>
+    <title>Panel Admin — Portafolios Docentes 2026</title>
     <link rel="icon" href="/imagenes/logo-profe-francisco-nuevo.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -46,64 +46,116 @@
     </div>
 
     <!-- Admin Content -->
-    <main id="admin-content" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main id="admin-content" class="hidden">
 
-        <!-- Stats -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <p class="text-sm text-gray-500">Total Clientes</p>
-                <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <p class="text-sm text-gray-500">Pagos Aprobados</p>
-                <p class="text-2xl font-heading font-bold text-green-600" id="stat-paid">0</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <p class="text-sm text-gray-500">En Progreso</p>
-                <p class="text-2xl font-heading font-bold text-blue-600" id="stat-progress">0</p>
-            </div>
-            <div class="bg-white rounded-xl border border-gray-200 p-4">
-                <p class="text-sm text-gray-500">Completados</p>
-                <p class="text-2xl font-heading font-bold text-primary-600" id="stat-completed">0</p>
+        <!-- Tabs -->
+        <div class="bg-white border-b border-gray-200">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav class="flex gap-1 -mb-px">
+                    <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 transition-colors" data-tab="dashboard">📊 Dashboard</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="clientes">👥 Clientes</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pagos">💰 Pagos Pendientes <span id="pagos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white">0</span></button>
+                </nav>
             </div>
         </div>
 
-        <!-- Client List -->
-        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
-                <input type="text" id="search-input" placeholder="Buscar por nombre o email..."
-                       class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
+        <!-- ===== TAB: DASHBOARD ===== -->
+        <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Total Clientes</p>
+                    <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Pagos Aprobados</p>
+                    <p class="text-2xl font-heading font-bold text-green-600" id="stat-paid">0</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">En Progreso</p>
+                    <p class="text-2xl font-heading font-bold text-blue-600" id="stat-progress">0</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Completados</p>
+                    <p class="text-2xl font-heading font-bold text-primary-600" id="stat-completed">0</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-xs text-gray-500 mb-1">Por Revisar Pago</p>
+                    <p class="text-2xl font-heading font-bold text-amber-600" id="stat-pending-pay">0</p>
+                </div>
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50 text-left">
-                        <tr>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Asignatura</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
-                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody id="clients-tbody" class="divide-y divide-gray-100">
-                    </tbody>
-                </table>
+            <!-- Recent Activity -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h3 class="font-heading font-bold text-gray-900 mb-4">🔔 Pagos por Revisar</h3>
+                    <div id="alert-payments" class="space-y-3">
+                        <p class="text-sm text-gray-400">No hay pagos pendientes de revisión.</p>
+                    </div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h3 class="font-heading font-bold text-gray-900 mb-4">🆕 Últimos Registros</h3>
+                    <div id="alert-recent" class="space-y-3">
+                        <p class="text-sm text-gray-400">No hay registros recientes.</p>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div id="no-clients" class="hidden px-6 py-12 text-center text-gray-500">
-                No hay clientes registrados aún.
+        <!-- ===== TAB: CLIENTES ===== -->
+        <div id="tab-clientes" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1">
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-900 text-white" data-filter="all">Todos</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="unpaid">Sin Pago</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="inprogress">En Progreso</button>
+                        </div>
+                        <input type="text" id="search-input" placeholder="Buscar nombre, email, RUT..."
+                               class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-left">
+                            <tr>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Teléfono</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="clients-tbody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="no-clients" class="hidden px-6 py-12 text-center text-gray-500">No hay clientes que coincidan.</div>
+            </div>
+        </div>
+
+        <!-- ===== TAB: PAGOS PENDIENTES ===== -->
+        <div id="tab-pagos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="font-heading font-bold text-gray-900">Pagos Pendientes de Aprobación</h2>
+                    <p class="text-sm text-gray-500 mt-1">Clientes que informaron un pago y requieren verificación manual.</p>
+                </div>
+                <div id="payments-list" class="divide-y divide-gray-100"></div>
+                <div id="no-payments" class="hidden px-6 py-12 text-center text-gray-500">No hay pagos pendientes.</div>
             </div>
         </div>
     </main>
 
-    <!-- Edit Modal -->
+    <!-- ===== EDIT MODAL ===== -->
     <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
-                <h3 class="font-heading font-bold text-gray-900" id="modal-title">Editar Cliente</h3>
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl z-10">
+                <h3 class="font-heading font-bold text-gray-900" id="modal-title">Detalle del Cliente</h3>
                 <button id="modal-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
@@ -112,59 +164,71 @@
             <form id="edit-form" class="p-6 space-y-6">
                 <input type="hidden" id="edit-uid">
 
-                <!-- Client Info (read-only) -->
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Email</label>
-                        <p class="text-sm text-gray-900" id="edit-email">—</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">RUT</label>
-                        <p class="text-sm text-gray-900" id="edit-rut">—</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Teléfono</label>
-                        <p class="text-sm text-gray-900" id="edit-telefono">—</p>
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Nivel</label>
-                        <p class="text-sm text-gray-900" id="edit-nivel">—</p>
+                <!-- Section 1: Client Info -->
+                <div class="bg-gray-50 rounded-xl p-4">
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente</h4>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                        <div><span class="text-gray-500 text-xs">Email</span><p class="font-medium text-gray-900" id="edit-email">—</p></div>
+                        <div><span class="text-gray-500 text-xs">RUT</span><p class="font-medium text-gray-900" id="edit-rut">—</p></div>
+                        <div><span class="text-gray-500 text-xs">Teléfono</span><p class="font-medium text-gray-900" id="edit-telefono">—</p></div>
+                        <div><span class="text-gray-500 text-xs">Registro</span><p class="font-medium text-gray-900" id="edit-fecha-registro">—</p></div>
                     </div>
                 </div>
 
-                <!-- Datos Portafolio (personalización) -->
+                <!-- Section 2: Quick Actions -->
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" id="btn-approve-pay" class="px-3 py-2 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">✅ Aprobar Pago</button>
+                    <button type="button" id="btn-whatsapp" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#25D366">📲 WhatsApp</button>
+                    <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
+                    <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Restablecer Contraseña</button>
+                </div>
+                <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
+
+                <!-- Section 3: Payment -->
+                <div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Estado de Pago</h4>
+                    <div class="flex items-center gap-3">
+                        <select id="edit-payment" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                            <option value="pendiente">Pendiente</option>
+                            <option value="pendiente_verificacion">Por Verificar (Manual)</option>
+                            <option value="approved">Aprobado</option>
+                        </select>
+                    </div>
+                    <div id="edit-comprobante-info" class="hidden mt-2 text-xs text-gray-500 bg-amber-50 p-2 rounded-lg"></div>
+                </div>
+
+                <!-- Section 4: Datos Portafolio (read-only) -->
                 <div id="edit-datos-section" class="hidden">
-                    <hr>
-                    <div class="bg-indigo-50 rounded-xl p-4 mt-4">
-                        <h4 class="font-heading font-semibold text-sm text-indigo-800 mb-3">Datos del Portafolio</h4>
-                        <div class="grid grid-cols-2 gap-3 text-sm">
-                            <div><span class="text-gray-500">Asignatura:</span> <span id="edit-dp-asignatura" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">Colegio:</span> <span id="edit-dp-colegio" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">Tipo:</span> <span id="edit-dp-tipo" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">Curso:</span> <span id="edit-dp-curso" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">N° Alumnos:</span> <span id="edit-dp-alumnos" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">PIE/NEE:</span> <span id="edit-dp-pie" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">Tipo NEE:</span> <span id="edit-dp-nee" class="font-medium text-gray-900">—</span></div>
-                            <div><span class="text-gray-500">IVE:</span> <span id="edit-dp-ive" class="font-medium text-gray-900">—</span></div>
-                            <div class="col-span-2"><span class="text-gray-500">Sellos:</span> <span id="edit-dp-sellos" class="font-medium text-gray-900">—</span></div>
-                            <div class="col-span-2"><span class="text-gray-500">Descripción:</span><p id="edit-dp-desc" class="font-medium text-gray-900 mt-1 text-xs bg-white p-2 rounded-lg">—</p></div>
-                            <div class="col-span-2"><span class="text-gray-500">Lista de alumnos:</span><pre id="edit-dp-lista" class="font-medium text-gray-900 mt-1 text-xs bg-white p-2 rounded-lg whitespace-pre-wrap max-h-40 overflow-y-auto">—</pre></div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Datos del Portafolio (completados por el cliente)</h4>
+                    <div class="bg-indigo-50 rounded-xl p-4">
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                            <div><span class="text-gray-500 text-xs">Asignatura</span><p class="font-medium text-gray-900" id="edit-dp-asignatura">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Nivel</span><p class="font-medium text-gray-900" id="edit-dp-nivel">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Colegio</span><p class="font-medium text-gray-900" id="edit-dp-colegio">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Tipo</span><p class="font-medium text-gray-900" id="edit-dp-tipo">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Comuna</span><p class="font-medium text-gray-900" id="edit-dp-comuna">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Región</span><p class="font-medium text-gray-900" id="edit-dp-region">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Curso</span><p class="font-medium text-gray-900" id="edit-dp-curso">—</p></div>
+                            <div><span class="text-gray-500 text-xs">N° Alumnos</span><p class="font-medium text-gray-900" id="edit-dp-alumnos">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Alumnos PIE</span><p class="font-medium text-gray-900" id="edit-dp-pie">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Tipos NEE</span><p class="font-medium text-gray-900" id="edit-dp-nee">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Co-docente PIE</span><p class="font-medium text-gray-900" id="edit-dp-codocente">—</p></div>
+                            <div><span class="text-gray-500 text-xs">IVE</span><p class="font-medium text-gray-900" id="edit-dp-ive">—</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
+                            <div><span class="text-gray-500 text-xs">OA / Aprendizaje Esperado</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-oa">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Unidad / Eje</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-unidad">—</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 gap-3 mt-3 text-sm">
+                            <div><span class="text-gray-500 text-xs">Sellos / PEI</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-sellos">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Características del curso</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-desc">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Conocimientos previos</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-previos">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Lista de alumnos</span><pre class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 whitespace-pre-wrap max-h-32 overflow-y-auto" id="edit-dp-lista">—</pre></div>
                         </div>
                     </div>
                 </div>
 
-                <hr>
-
-                <!-- Payment Status -->
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado de Pago</label>
-                    <select id="edit-payment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white">
-                        <option value="pendiente">Pendiente</option>
-                        <option value="pendiente_verificacion">Por Verificar</option>
-                        <option value="approved">Aprobado</option>
-                    </select>
-                </div>
-
+                <!-- Section 5: Module Editors -->
                 <!-- Module 1 -->
                 <div class="bg-blue-50 rounded-xl p-4">
                     <h4 class="font-heading font-semibold text-sm text-blue-800 mb-3">Módulo 1 — Planificación</h4>
@@ -180,19 +244,17 @@
                             </select>
                         </div>
                         <div class="flex items-end gap-4">
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m1-planificacion" class="rounded border-gray-300">
-                                Planificación
-                            </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m1-material" class="rounded border-gray-300">
-                                Material
-                            </label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m1-planificacion" class="rounded border-gray-300"> Planificación</label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m1-material" class="rounded border-gray-300"> Material</label>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M1</label>
-                        <textarea id="edit-m1-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Enlace archivo entregable (Google Drive, etc.)</label>
+                        <input type="url" id="edit-m1-archivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://drive.google.com/...">
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M1 (visible para el cliente)</label>
+                        <textarea id="edit-m1-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas sobre el avance..."></textarea>
                     </div>
                 </div>
 
@@ -211,23 +273,18 @@
                             </select>
                         </div>
                         <div class="flex items-end gap-4 flex-wrap">
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m2-libreto" class="rounded border-gray-300">
-                                Libreto
-                            </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m2-presentacion" class="rounded border-gray-300">
-                                PPT
-                            </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m2-guia" class="rounded border-gray-300">
-                                Guía
-                            </label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m2-libreto" class="rounded border-gray-300"> Libreto</label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m2-presentacion" class="rounded border-gray-300"> PPT</label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m2-guia" class="rounded border-gray-300"> Guía</label>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M2</label>
-                        <textarea id="edit-m2-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Enlace archivo entregable</label>
+                        <input type="url" id="edit-m2-archivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://drive.google.com/...">
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M2 (visible para el cliente)</label>
+                        <textarea id="edit-m2-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas sobre el avance..."></textarea>
                     </div>
                 </div>
 
@@ -246,33 +303,37 @@
                             </select>
                         </div>
                         <div class="flex items-end gap-4">
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m3-obligatorio" class="rounded border-gray-300">
-                                Obligatorio
-                            </label>
-                            <label class="flex items-center gap-2 text-sm">
-                                <input type="checkbox" id="edit-m3-voluntario" class="rounded border-gray-300">
-                                Voluntario
-                            </label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m3-obligatorio" class="rounded border-gray-300"> Obligatorio</label>
+                            <label class="flex items-center gap-2 text-sm"><input type="checkbox" id="edit-m3-voluntario" class="rounded border-gray-300"> Voluntario</label>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M3</label>
-                        <textarea id="edit-m3-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Enlace archivo entregable</label>
+                        <input type="url" id="edit-m3-archivo" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://drive.google.com/...">
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M3 (visible para el cliente)</label>
+                        <textarea id="edit-m3-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas sobre el avance..."></textarea>
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-2">
+                <!-- Section 6: Admin Notes (private) -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Notas Internas (solo admin, no visibles para el cliente)</label>
+                    <textarea id="edit-admin-notas" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Anotaciones privadas sobre este cliente..."></textarea>
+                </div>
+
+                <!-- Save -->
+                <div class="flex gap-3 pt-2 sticky bottom-0 bg-white py-4 border-t border-gray-200 -mx-6 px-6">
                     <button type="submit" class="flex-1 py-2.5 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
-                        Guardar Cambios
+                        💾 Guardar Cambios
                     </button>
                     <button type="button" id="modal-cancel" class="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors">
                         Cancelar
                     </button>
                 </div>
-
                 <div id="save-success" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-xl text-sm text-center">
-                    Cambios guardados correctamente.
+                    ✅ Cambios guardados correctamente.
                 </div>
             </form>
         </div>
@@ -292,158 +353,84 @@
 
         var allClients = {};
         var allPortafolios = {};
+        var currentFilter = 'all';
 
-        var planNames = {
-            completo: 'Completo',
-            modulo1: 'M1',
-            modulo2: 'M2',
-            modulo3: 'M3'
-        };
+        var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión' };
 
-        // Logout
+        // ===== AUTH =====
         document.getElementById('logout-btn').addEventListener('click', function() {
-            auth.signOut().then(function() {
-                window.location.href = '/cuenta/login.html';
-            });
+            auth.signOut().then(function() { window.location.href = '/cuenta/login.html'; });
         });
 
-        // Auth check
         auth.onAuthStateChanged(function(user) {
-            if (!user) {
-                window.location.href = '/cuenta/login.html';
-                return;
-            }
-
-            // Check admin role
+            if (!user) { window.location.href = '/cuenta/login.html'; return; }
             db.ref('users/' + user.uid + '/role').once('value').then(function(snap) {
                 if (snap.val() !== 'admin') {
                     document.getElementById('loading').classList.add('hidden');
                     document.getElementById('access-denied').classList.remove('hidden');
                     return;
                 }
-
                 document.getElementById('loading').classList.add('hidden');
                 document.getElementById('admin-content').classList.remove('hidden');
-                loadClients();
+                loadData();
             });
         });
 
-        function loadClients() {
-            // Listen for users
+        // ===== TABS =====
+        document.querySelectorAll('.tab-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var tab = this.getAttribute('data-tab');
+                document.querySelectorAll('.tab-btn').forEach(function(b) {
+                    b.classList.remove('active');
+                    b.classList.add('border-transparent', 'text-gray-500');
+                    b.classList.remove('border-primary-600', 'text-primary-600');
+                });
+                this.classList.add('active', 'border-primary-600', 'text-primary-600');
+                this.classList.remove('border-transparent', 'text-gray-500');
+                document.querySelectorAll('.tab-content').forEach(function(c) { c.classList.add('hidden'); });
+                document.getElementById('tab-' + tab).classList.remove('hidden');
+            });
+        });
+        // Set initial active tab styling
+        document.querySelector('.tab-btn.active').classList.add('border-primary-600', 'text-primary-600');
+
+        // ===== FILTERS =====
+        document.querySelectorAll('.filter-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                currentFilter = this.getAttribute('data-filter');
+                document.querySelectorAll('.filter-btn').forEach(function(b) {
+                    b.classList.remove('bg-gray-900', 'text-white');
+                    b.classList.add('bg-gray-100', 'text-gray-600');
+                });
+                this.classList.remove('bg-gray-100', 'text-gray-600');
+                this.classList.add('bg-gray-900', 'text-white');
+                renderClients();
+            });
+        });
+
+        // ===== LOAD DATA =====
+        function loadData() {
             db.ref('users').on('value', function(snap) {
                 allClients = snap.val() || {};
-                renderClients();
+                renderAll();
             });
-
-            // Listen for portfolios
             db.ref('portafolios').on('value', function(snap) {
                 allPortafolios = snap.val() || {};
-                renderClients();
+                renderAll();
             });
         }
 
-        function renderClients() {
-            var tbody = document.getElementById('clients-tbody');
-            var search = (document.getElementById('search-input').value || '').toLowerCase();
-            tbody.innerHTML = '';
-
-            var uids = Object.keys(allClients).filter(function(uid) {
-                var c = allClients[uid];
-                if (c.role === 'admin') return false;
-                if (!search) return true;
-                return (c.nombre || '').toLowerCase().includes(search) ||
-                       (c.email || '').toLowerCase().includes(search) ||
-                       (c.rut || '').toLowerCase().includes(search);
-            });
-
-            // Stats
-            var totalClients = 0;
-            var paidClients = 0;
-            var inProgress = 0;
-            var completed = 0;
-
-            uids.forEach(function(uid) {
-                var c = allClients[uid];
-                var p = allPortafolios[uid] || {};
-                totalClients++;
-
-                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') paidClients++;
-
-                var hasInProgress = ['modulo1', 'modulo2', 'modulo3'].some(function(m) {
-                    return p[m] && p[m].estado === 'en-progreso';
-                });
-                if (hasInProgress) inProgress++;
-
-                var allDone = ['modulo1', 'modulo2', 'modulo3'].every(function(m) {
-                    return !p[m] || p[m].estado === 'completado' || p[m].estado === 'no-contratado';
-                });
-                var hasContracted = ['modulo1', 'modulo2', 'modulo3'].some(function(m) {
-                    return p[m] && p[m].contratado;
-                });
-                if (allDone && hasContracted) completed++;
-
-                var progress = calcProgress(p);
-
-                var tr = document.createElement('tr');
-                tr.className = 'hover:bg-gray-50 transition-colors';
-                tr.innerHTML =
-                    '<td class="px-6 py-4">' +
-                        '<div class="font-medium text-gray-900">' + escapeHtml(c.nombre || '—') + '</div>' +
-                        '<div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div>' +
-                    '</td>' +
-                    '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.asignatura || '—') + '</td>' +
-                    '<td class="px-6 py-4"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
-                    '<td class="px-6 py-4">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
-                    '<td class="px-6 py-4">' +
-                        '<div class="flex items-center gap-2">' +
-                            '<div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div>' +
-                            '<span class="text-xs text-gray-600">' + progress + '%</span>' +
-                        '</div>' +
-                    '</td>' +
-                    '<td class="px-6 py-4"><button class="text-primary-600 hover:text-primary-700 text-sm font-medium edit-btn" data-uid="' + uid + '">Editar</button></td>';
-                tbody.appendChild(tr);
-            });
-
-            document.getElementById('stat-total').textContent = totalClients;
-            document.getElementById('stat-paid').textContent = paidClients;
-            document.getElementById('stat-progress').textContent = inProgress;
-            document.getElementById('stat-completed').textContent = completed;
-
-            if (uids.length === 0) {
-                document.getElementById('no-clients').classList.remove('hidden');
-            } else {
-                document.getElementById('no-clients').classList.add('hidden');
-            }
-
-            // Attach edit handlers
-            document.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    openEditModal(this.getAttribute('data-uid'));
-                });
-            });
+        function renderAll() {
+            renderDashboard();
+            renderClients();
+            renderPayments();
         }
 
-        function paymentBadge(status, confirmedAt, comprobante) {
-            if (status === 'approved' || status === 'aprobado') {
-                var compStr = '';
-                if (comprobante) {
-                    compStr = '<div class="text-xs text-green-600 mt-0.5 font-mono">MP #' + escapeHtml(comprobante) + '</div>';
-                }
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado ✓</span>' + compStr;
-            }
-            if (status === 'pendiente_verificacion') {
-                var dateStr = '';
-                if (confirmedAt) {
-                    var d = new Date(confirmedAt);
-                    dateStr = '<div class="text-xs text-blue-600 mt-0.5">' + d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'}) + '</div>';
-                }
-                var compStr = '';
-                if (comprobante) {
-                    compStr = '<div class="text-xs text-gray-700 mt-0.5 font-mono">Op: ' + escapeHtml(comprobante) + '</div>';
-                }
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Revisión Manual</span>' + dateStr + compStr;
-            }
-            return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Pendiente</span>';
+        // ===== HELPERS =====
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str || ''));
+            return div.innerHTML;
         }
 
         function calcProgress(data) {
@@ -458,28 +445,233 @@
             return total === 0 ? 0 : Math.round((done / total) * 100);
         }
 
-        function escapeHtml(str) {
-            var div = document.createElement('div');
-            div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
+        function paymentBadge(status, confirmedAt, comprobante) {
+            if (status === 'approved' || status === 'aprobado') {
+                var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado ✓</span>';
+                if (comprobante) s += '<div class="text-xs text-green-600 mt-0.5 font-mono">MP #' + escapeHtml(comprobante) + '</div>';
+                return s;
+            }
+            if (status === 'pendiente_verificacion') {
+                var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Por Verificar</span>';
+                if (confirmedAt) {
+                    var d = new Date(confirmedAt);
+                    s += '<div class="text-xs text-amber-600 mt-0.5">' + d.toLocaleDateString('es-CL') + '</div>';
+                }
+                if (comprobante) s += '<div class="text-xs text-gray-600 font-mono">Op: ' + escapeHtml(comprobante) + '</div>';
+                return s;
+            }
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Pendiente</span>';
         }
 
-        // Search
+        function formatDate(iso) {
+            if (!iso) return '—';
+            var d = new Date(iso);
+            return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
+        }
+
+        function getClientUids() {
+            return Object.keys(allClients).filter(function(uid) {
+                return allClients[uid].role !== 'admin';
+            });
+        }
+
+        // ===== RENDER DASHBOARD =====
+        function renderDashboard() {
+            var uids = getClientUids();
+            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0;
+            var pendingPayList = [];
+            var recentList = [];
+
+            uids.forEach(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                total++;
+                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') paid++;
+                if (p.paymentStatus === 'pendiente_verificacion') {
+                    pendingPay++;
+                    pendingPayList.push({ uid: uid, client: c, port: p });
+                }
+                var hasInProg = ['modulo1', 'modulo2', 'modulo3'].some(function(m) { return p[m] && p[m].estado === 'en-progreso'; });
+                if (hasInProg) inProg++;
+                var allDone = ['modulo1', 'modulo2', 'modulo3'].every(function(m) { return !p[m] || p[m].estado === 'completado' || p[m].estado === 'no-contratado'; });
+                var hasCont = ['modulo1', 'modulo2', 'modulo3'].some(function(m) { return p[m] && p[m].contratado; });
+                if (allDone && hasCont) completed++;
+                recentList.push({ uid: uid, client: c, date: c.createdAt || '' });
+            });
+
+            document.getElementById('stat-total').textContent = total;
+            document.getElementById('stat-paid').textContent = paid;
+            document.getElementById('stat-progress').textContent = inProg;
+            document.getElementById('stat-completed').textContent = completed;
+            document.getElementById('stat-pending-pay').textContent = pendingPay;
+
+            // Pagos badge
+            var badge = document.getElementById('pagos-badge');
+            if (pendingPay > 0) {
+                badge.textContent = pendingPay;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            // Alert: pending payments
+            var alertPay = document.getElementById('alert-payments');
+            if (pendingPayList.length === 0) {
+                alertPay.innerHTML = '<p class="text-sm text-gray-400">No hay pagos pendientes de revisión. 🎉</p>';
+            } else {
+                alertPay.innerHTML = pendingPayList.slice(0,5).map(function(item) {
+                    return '<div class="flex items-center justify-between bg-amber-50 rounded-lg p-3">' +
+                        '<div><p class="text-sm font-medium text-gray-900">' + escapeHtml(item.client.nombre) + '</p>' +
+                        '<p class="text-xs text-gray-500">' + escapeHtml(item.client.email) + ' · ' + (planNames[item.port.plan] || item.port.plan || '—') + '</p></div>' +
+                        '<button class="px-3 py-1 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 quick-approve" data-uid="' + item.uid + '">Aprobar</button>' +
+                    '</div>';
+                }).join('');
+            }
+
+            // Alert: recent registrations
+            recentList.sort(function(a, b) { return (b.date || '').localeCompare(a.date || ''); });
+            var alertRecent = document.getElementById('alert-recent');
+            if (recentList.length === 0) {
+                alertRecent.innerHTML = '<p class="text-sm text-gray-400">No hay registros aún.</p>';
+            } else {
+                alertRecent.innerHTML = recentList.slice(0,5).map(function(item) {
+                    return '<div class="flex items-center justify-between bg-gray-50 rounded-lg p-3">' +
+                        '<div><p class="text-sm font-medium text-gray-900">' + escapeHtml(item.client.nombre) + '</p>' +
+                        '<p class="text-xs text-gray-500">' + escapeHtml(item.client.email) + '</p></div>' +
+                        '<span class="text-xs text-gray-400">' + formatDate(item.date) + '</span>' +
+                    '</div>';
+                }).join('');
+            }
+
+            // Attach quick approve handlers
+            document.querySelectorAll('.quick-approve').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var uid = this.getAttribute('data-uid');
+                    if (confirm('¿Aprobar pago de ' + (allClients[uid] ? allClients[uid].nombre : uid) + '?')) {
+                        db.ref('portafolios/' + uid + '/paymentStatus').set('approved');
+                    }
+                });
+            });
+        }
+
+        // ===== RENDER CLIENTS TABLE =====
+        function renderClients() {
+            var tbody = document.getElementById('clients-tbody');
+            var search = (document.getElementById('search-input').value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            var uids = getClientUids().filter(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                // Search
+                if (search) {
+                    var haystack = ((c.nombre || '') + ' ' + (c.email || '') + ' ' + (c.rut || '') + ' ' + (c.telefono || '')).toLowerCase();
+                    if (!haystack.includes(search)) return false;
+                }
+                // Filter
+                if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
+                if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado';
+                if (currentFilter === 'inprogress') return ['modulo1','modulo2','modulo3'].some(function(m) { return p[m] && (p[m].estado === 'en-progreso' || p[m].estado === 'en-revision'); });
+                return true;
+            });
+
+            uids.forEach(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                var progress = calcProgress(p);
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors';
+                tr.innerHTML =
+                    '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
+                    '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
+                    '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
+                    '<td class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
+                    '<td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
+                    '<td class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
+                    '<td class="px-4 py-3"><button class="text-primary-600 hover:text-primary-700 text-sm font-medium edit-btn" data-uid="' + uid + '">Ver / Editar</button></td>';
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('no-clients')[uids.length === 0 ? 'classList' : 'classList'].remove('hidden');
+            if (uids.length > 0) document.getElementById('no-clients').classList.add('hidden');
+            else document.getElementById('no-clients').classList.remove('hidden');
+
+            // Attach edit handlers
+            document.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() { openModal(this.getAttribute('data-uid')); });
+            });
+        }
+
         document.getElementById('search-input').addEventListener('input', renderClients);
 
-        // Modal
-        var modal = document.getElementById('edit-modal');
+        // ===== RENDER PAYMENTS TAB =====
+        function renderPayments() {
+            var list = document.getElementById('payments-list');
+            var uids = getClientUids().filter(function(uid) {
+                var p = allPortafolios[uid] || {};
+                return p.paymentStatus === 'pendiente_verificacion';
+            });
 
-        function openEditModal(uid) {
+            if (uids.length === 0) {
+                list.innerHTML = '';
+                document.getElementById('no-payments').classList.remove('hidden');
+                return;
+            }
+            document.getElementById('no-payments').classList.add('hidden');
+
+            list.innerHTML = uids.map(function(uid) {
+                var c = allClients[uid] || {};
+                var p = allPortafolios[uid] || {};
+                return '<div class="px-6 py-4 flex items-center justify-between">' +
+                    '<div class="flex-1">' +
+                        '<p class="font-medium text-gray-900">' + escapeHtml(c.nombre) + '</p>' +
+                        '<p class="text-sm text-gray-500">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.telefono || '') + '</p>' +
+                        '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
+                    '</div>' +
+                    '<div class="flex gap-2">' +
+                        '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 pay-approve" data-uid="' + uid + '">✅ Aprobar</button>' +
+                        '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 edit-btn" data-uid="' + uid + '">Ver Detalle</button>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+
+            list.querySelectorAll('.pay-approve').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var uid = this.getAttribute('data-uid');
+                    if (confirm('¿Aprobar pago?')) {
+                        db.ref('portafolios/' + uid + '/paymentStatus').set('approved');
+                    }
+                });
+            });
+            list.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() { openModal(this.getAttribute('data-uid')); });
+            });
+        }
+
+        // ===== MODAL =====
+        var modal = document.getElementById('edit-modal');
+        var currentEditUid = null;
+
+        function openModal(uid) {
+            currentEditUid = uid;
             var c = allClients[uid] || {};
             var p = allPortafolios[uid] || {};
 
             document.getElementById('edit-uid').value = uid;
-            document.getElementById('modal-title').textContent = 'Editar — ' + (c.nombre || 'Cliente');
+            document.getElementById('modal-title').textContent = (c.nombre || 'Cliente');
             document.getElementById('edit-email').textContent = c.email || '—';
             document.getElementById('edit-rut').textContent = c.rut || '—';
             document.getElementById('edit-telefono').textContent = c.telefono || '—';
-            document.getElementById('edit-nivel').textContent = c.nivel || '—';
+            document.getElementById('edit-fecha-registro').textContent = formatDate(c.createdAt);
+
+            // Comprobante info
+            var compInfo = document.getElementById('edit-comprobante-info');
+            if (p.comprobantePago) {
+                compInfo.innerHTML = '<strong>Comprobante:</strong> ' + escapeHtml(p.comprobantePago) + (p.paymentConfirmedAt ? ' · ' + formatDate(p.paymentConfirmedAt) : '');
+                compInfo.classList.remove('hidden');
+            } else {
+                compInfo.classList.add('hidden');
+            }
 
             // Datos Portafolio
             var dp = p.datosPortafolio;
@@ -487,15 +679,22 @@
             if (dp) {
                 dpSection.classList.remove('hidden');
                 document.getElementById('edit-dp-asignatura').textContent = dp.asignatura || '—';
+                document.getElementById('edit-dp-nivel').textContent = dp.nivel || '—';
                 document.getElementById('edit-dp-colegio').textContent = dp.colegio || '—';
                 document.getElementById('edit-dp-tipo').textContent = dp.tipoColegio || '—';
+                document.getElementById('edit-dp-comuna').textContent = dp.comuna || '—';
+                document.getElementById('edit-dp-region').textContent = dp.region || '—';
                 document.getElementById('edit-dp-curso').textContent = dp.curso || '—';
                 document.getElementById('edit-dp-alumnos').textContent = dp.numAlumnos || '—';
-                document.getElementById('edit-dp-pie').textContent = dp.numPIE || '0';
+                document.getElementById('edit-dp-pie').textContent = (dp.numPIE || '0') + (dp.codocentePIE ? ' · Co-docente: ' + dp.codocentePIE : '');
                 document.getElementById('edit-dp-nee').textContent = dp.tipoNEE || '—';
+                document.getElementById('edit-dp-codocente').textContent = dp.codocentePIE || 'No';
                 document.getElementById('edit-dp-ive').textContent = dp.ive ? dp.ive + '%' : '—';
+                document.getElementById('edit-dp-oa').textContent = dp.objetivoAprendizaje || '—';
+                document.getElementById('edit-dp-unidad').textContent = (dp.unidad || '—') + (dp.ejeCurricular ? ' · Eje: ' + dp.ejeCurricular : '');
                 document.getElementById('edit-dp-sellos').textContent = dp.sellos || '—';
                 document.getElementById('edit-dp-desc').textContent = dp.descripcion || '—';
+                document.getElementById('edit-dp-previos').textContent = dp.conocimientosPrevios || '—';
                 document.getElementById('edit-dp-lista').textContent = dp.listaAlumnos || '—';
             } else {
                 dpSection.classList.add('hidden');
@@ -503,46 +702,129 @@
 
             document.getElementById('edit-payment').value = p.paymentStatus || 'pendiente';
 
-            // M1
+            // Modules
             var m1 = p.modulo1 || {};
             document.getElementById('edit-m1-estado').value = m1.estado || 'pendiente';
             document.getElementById('edit-m1-planificacion').checked = !!m1.planificacion;
             document.getElementById('edit-m1-material').checked = !!m1.material;
+            document.getElementById('edit-m1-archivo').value = m1.archivoUrl || '';
             document.getElementById('edit-m1-notas').value = m1.notas || '';
 
-            // M2
             var m2 = p.modulo2 || {};
             document.getElementById('edit-m2-estado').value = m2.estado || 'pendiente';
             document.getElementById('edit-m2-libreto').checked = !!m2.libreto;
             document.getElementById('edit-m2-presentacion').checked = !!m2.presentacion;
             document.getElementById('edit-m2-guia').checked = !!m2.guia;
+            document.getElementById('edit-m2-archivo').value = m2.archivoUrl || '';
             document.getElementById('edit-m2-notas').value = m2.notas || '';
 
-            // M3
             var m3 = p.modulo3 || {};
             document.getElementById('edit-m3-estado').value = m3.estado || 'pendiente';
             document.getElementById('edit-m3-obligatorio').checked = !!m3.obligatorio;
             document.getElementById('edit-m3-voluntario').checked = !!m3.voluntario;
+            document.getElementById('edit-m3-archivo').value = m3.archivoUrl || '';
             document.getElementById('edit-m3-notas').value = m3.notas || '';
 
+            document.getElementById('edit-admin-notas').value = p.adminNotas || '';
+
             document.getElementById('save-success').classList.add('hidden');
+            document.getElementById('action-msg').classList.add('hidden');
             modal.classList.remove('hidden');
         }
 
         function closeModal() {
             modal.classList.add('hidden');
+            currentEditUid = null;
         }
 
         document.getElementById('modal-close').addEventListener('click', closeModal);
         document.getElementById('modal-cancel').addEventListener('click', closeModal);
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) closeModal();
+        modal.addEventListener('click', function(e) { if (e.target === modal) closeModal(); });
+
+        // ===== QUICK ACTIONS =====
+        function showActionMsg(text, type) {
+            var el = document.getElementById('action-msg');
+            el.textContent = text;
+            el.className = 'px-4 py-2 rounded-xl text-sm ' + (type === 'success' ? 'bg-green-50 border border-green-200 text-green-700' : 'bg-red-50 border border-red-200 text-red-700');
+            el.classList.remove('hidden');
+            setTimeout(function() { el.classList.add('hidden'); }, 4000);
+        }
+
+        // Approve payment
+        document.getElementById('btn-approve-pay').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            db.ref('portafolios/' + currentEditUid + '/paymentStatus').set('approved').then(function() {
+                document.getElementById('edit-payment').value = 'approved';
+                showActionMsg('✅ Pago aprobado correctamente.', 'success');
+            });
         });
 
-        // Save
+        // WhatsApp
+        document.getElementById('btn-whatsapp').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var p = allPortafolios[currentEditUid] || {};
+            var phone = (c.telefono || '').replace(/[^0-9]/g, '');
+            if (phone.startsWith('9') && phone.length === 9) phone = '56' + phone;
+            if (!phone.startsWith('56')) phone = '56' + phone;
+
+            var progress = calcProgress(p);
+            var modStatus = function(m, name) {
+                if (!m || m.estado === 'no-contratado') return '';
+                var icons = { pendiente: '⏳', 'en-progreso': '🔄', 'en-revision': '📋', completado: '✅' };
+                return name + ': ' + (icons[m.estado] || '⏳') + ' ' + (m.estado || 'pendiente');
+            };
+            var lines = [
+                'Hola ' + (c.nombre || '') + ', actualización de tu portafolio docente 2026:',
+                '',
+                modStatus(p.modulo1, 'Módulo 1 (Planificación)'),
+                modStatus(p.modulo2, 'Módulo 2 (Clase Grabada)'),
+                modStatus(p.modulo3, 'Módulo 3 (Reflexión)'),
+                '',
+                'Progreso general: ' + progress + '%',
+                '',
+                'Revisa tu panel: https://www.profefranciscopancho.com/dashboard/',
+                '',
+                'Prof. Francisco Núñez'
+            ].filter(Boolean);
+
+            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+        });
+
+        // Email
+        document.getElementById('btn-email').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var p = allPortafolios[currentEditUid] || {};
+            var progress = calcProgress(p);
+            var subject = 'Actualización Portafolio Docente 2026 - ' + (c.nombre || '');
+            var body = 'Estimado/a ' + (c.nombre || '') + ',\n\n' +
+                'Le informo sobre el avance de su portafolio docente 2026.\n\n' +
+                'Progreso general: ' + progress + '%\n\n' +
+                'Puede revisar el detalle en su panel: https://www.profefranciscopancho.com/dashboard/\n\n' +
+                'Ante cualquier duda, no dude en contactarme.\n\n' +
+                'Saludos cordiales,\nProf. Francisco Núñez Valenzuela';
+            window.open('mailto:' + (c.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_self');
+        });
+
+        // Reset Password
+        document.getElementById('btn-reset-pass').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            if (!c.email) { showActionMsg('No hay email registrado.', 'error'); return; }
+            if (!confirm('¿Enviar email de restablecimiento de contraseña a ' + c.email + '?')) return;
+            auth.sendPasswordResetEmail(c.email).then(function() {
+                showActionMsg('📧 Email de restablecimiento enviado a ' + c.email, 'success');
+            }).catch(function(err) {
+                showActionMsg('Error: ' + err.message, 'error');
+            });
+        });
+
+        // ===== SAVE CHANGES =====
         document.getElementById('edit-form').addEventListener('submit', function(e) {
             e.preventDefault();
             var uid = document.getElementById('edit-uid').value;
+            if (!uid) return;
 
             var updates = {};
             updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
@@ -552,6 +834,7 @@
             updates['portafolios/' + uid + '/modulo1/contratado'] = document.getElementById('edit-m1-estado').value !== 'no-contratado';
             updates['portafolios/' + uid + '/modulo1/planificacion'] = document.getElementById('edit-m1-planificacion').checked;
             updates['portafolios/' + uid + '/modulo1/material'] = document.getElementById('edit-m1-material').checked;
+            updates['portafolios/' + uid + '/modulo1/archivoUrl'] = document.getElementById('edit-m1-archivo').value.trim() || null;
             updates['portafolios/' + uid + '/modulo1/notas'] = document.getElementById('edit-m1-notas').value;
 
             // M2
@@ -560,6 +843,7 @@
             updates['portafolios/' + uid + '/modulo2/libreto'] = document.getElementById('edit-m2-libreto').checked;
             updates['portafolios/' + uid + '/modulo2/presentacion'] = document.getElementById('edit-m2-presentacion').checked;
             updates['portafolios/' + uid + '/modulo2/guia'] = document.getElementById('edit-m2-guia').checked;
+            updates['portafolios/' + uid + '/modulo2/archivoUrl'] = document.getElementById('edit-m2-archivo').value.trim() || null;
             updates['portafolios/' + uid + '/modulo2/notas'] = document.getElementById('edit-m2-notas').value;
 
             // M3
@@ -567,17 +851,18 @@
             updates['portafolios/' + uid + '/modulo3/contratado'] = document.getElementById('edit-m3-estado').value !== 'no-contratado';
             updates['portafolios/' + uid + '/modulo3/obligatorio'] = document.getElementById('edit-m3-obligatorio').checked;
             updates['portafolios/' + uid + '/modulo3/voluntario'] = document.getElementById('edit-m3-voluntario').checked;
+            updates['portafolios/' + uid + '/modulo3/archivoUrl'] = document.getElementById('edit-m3-archivo').value.trim() || null;
             updates['portafolios/' + uid + '/modulo3/notas'] = document.getElementById('edit-m3-notas').value;
 
+            updates['portafolios/' + uid + '/adminNotas'] = document.getElementById('edit-admin-notas').value;
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 
             db.ref().update(updates).then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
-                setTimeout(function() {
-                    document.getElementById('save-success').classList.add('hidden');
-                }, 3000);
+                setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
             });
         });
+
     })();
     </script>
 </body>

@@ -41,10 +41,14 @@
                 <a href="/#precios" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Precios</a>
                 <a href="/#proceso" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Cómo Funciona</a>
                 <a href="/#faq" class="text-sm font-medium text-gray-600 hover:text-primary-600 transition-colors">Preguntas</a>
-                <a href="/cuenta/login.html" class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">Ingresar</a>
-                <a href="/cuenta/crear-cuenta.html" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 transition-all shadow-sm hover:shadow-md">
+                <!-- Auth: logged-out -->
+                <a href="/cuenta/login.html" id="nav-login" class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">Ingresar</a>
+                <a href="/cuenta/crear-cuenta.html" id="nav-register" class="inline-flex items-center px-4 py-2 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 transition-all shadow-sm hover:shadow-md">
                     Crear Cuenta
                 </a>
+                <!-- Auth: logged-in (hidden by default) -->
+                <a href="/dashboard/index.html" id="nav-dashboard" class="hidden text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">Mi Portafolio</a>
+                <button id="nav-logout" class="hidden text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">Cerrar Sesión</button>
             </div>
 
             <!-- Mobile menu button -->
@@ -63,8 +67,12 @@
                 <a href="/#proceso" class="block py-2 px-3 text-gray-700 rounded-lg hover:bg-gray-50">Cómo Funciona</a>
                 <a href="/#faq" class="block py-2 px-3 text-gray-700 rounded-lg hover:bg-gray-50">Preguntas</a>
                 <hr class="my-2">
-                <a href="/cuenta/login.html" class="block py-2 px-3 text-primary-600 font-medium rounded-lg hover:bg-gray-50">Ingresar</a>
-                <a href="/cuenta/crear-cuenta.html" class="block py-2 px-3 bg-primary-600 text-white text-center font-semibold rounded-lg hover:bg-primary-700">Crear Cuenta</a>
+                <!-- Auth: logged-out -->
+                <a href="/cuenta/login.html" id="mobile-login" class="block py-2 px-3 text-primary-600 font-medium rounded-lg hover:bg-gray-50">Ingresar</a>
+                <a href="/cuenta/crear-cuenta.html" id="mobile-register" class="block py-2 px-3 bg-primary-600 text-white text-center font-semibold rounded-lg hover:bg-primary-700">Crear Cuenta</a>
+                <!-- Auth: logged-in (hidden by default) -->
+                <a href="/dashboard/index.html" id="mobile-dashboard" class="hidden block py-2 px-3 text-primary-600 font-medium rounded-lg hover:bg-gray-50">Mi Portafolio</a>
+                <button id="mobile-logout" class="hidden w-full text-left py-2 px-3 text-red-600 font-medium rounded-lg hover:bg-red-50">Cerrar Sesión</button>
             </div>
         </div>
     </header>
@@ -157,6 +165,41 @@
             });
         }
     });
+    </script>
+
+    <!-- Firebase Auth (session state for nav) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+    <script>
+    (function() {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        var auth = firebase.auth();
+
+        auth.onAuthStateChanged(function(user) {
+            var loggedIn = !!user;
+            // Desktop nav
+            var el = function(id) { return document.getElementById(id); };
+            if (el('nav-login')) el('nav-login').classList.toggle('hidden', loggedIn);
+            if (el('nav-register')) el('nav-register').classList.toggle('hidden', loggedIn);
+            if (el('nav-dashboard')) el('nav-dashboard').classList.toggle('hidden', !loggedIn);
+            if (el('nav-logout')) el('nav-logout').classList.toggle('hidden', !loggedIn);
+            // Mobile nav
+            if (el('mobile-login')) el('mobile-login').classList.toggle('hidden', loggedIn);
+            if (el('mobile-register')) el('mobile-register').classList.toggle('hidden', loggedIn);
+            if (el('mobile-dashboard')) el('mobile-dashboard').classList.toggle('hidden', !loggedIn);
+            if (el('mobile-logout')) el('mobile-logout').classList.toggle('hidden', !loggedIn);
+        });
+
+        // Logout buttons
+        function doLogout() {
+            auth.signOut().then(function() { window.location.reload(); });
+        }
+        var navLogout = document.getElementById('nav-logout');
+        var mobileLogout = document.getElementById('mobile-logout');
+        if (navLogout) navLogout.addEventListener('click', doLogout);
+        if (mobileLogout) mobileLogout.addEventListener('click', doLogout);
+    })();
     </script>
 
     <!-- Schema.org -->

@@ -115,11 +115,26 @@
                 <p class="text-2xl font-heading font-bold text-primary-600" id="pay-plan-price">—</p>
             </div>
             <hr class="mb-4">
-            <button id="pay-btn" class="w-full py-3 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
-                Pagar con MercadoPago
-            </button>
-            <p id="pay-error" class="hidden text-red-600 text-sm mt-3 text-center"></p>
+            <!-- Estado: antes de pagar -->
+            <div id="pay-before">
+                <a id="pay-link" href="#" target="_blank" rel="noopener" class="w-full py-3 px-4 bg-[#009ee3] text-white font-semibold rounded-xl hover:bg-[#007eb5] transition-all shadow-sm flex items-center justify-center gap-2 no-underline">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                    Pagar con MercadoPago
+                </a>
+                <p class="text-xs text-gray-400 text-center mt-2">Se abrirá MercadoPago en una nueva pestaña</p>
+            </div>
+            <!-- Estado: esperando confirmación -->
+            <div id="pay-after" class="hidden">
+                <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4">
+                    <p class="text-amber-800 text-sm font-medium">¿Ya realizaste el pago en MercadoPago?</p>
+                    <p class="text-amber-700 text-xs mt-1">Haz clic en el botón para confirmar. El profesor Francisco verificará tu pago.</p>
+                </div>
+                <button id="pay-confirm-btn" class="w-full py-3 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-all shadow-sm flex items-center justify-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Ya pagué, confirmar
+                </button>
+                <button id="pay-reopen" class="w-full mt-2 py-2 text-sm text-[#009ee3] hover:underline">Abrir MercadoPago de nuevo</button>
+            </div>
         </div>
         <button onclick="changePlan()" class="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors">← Cambiar de plan</button>
     </main>
@@ -426,6 +441,15 @@
             if (!paid) {
                 document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
                 document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
+                if (portData.paymentStatus === 'pendiente_verificacion') {
+                    document.getElementById('pay-before').classList.add('hidden');
+                    document.getElementById('pay-after').classList.add('hidden');
+                    var afterEl = document.getElementById('pay-after');
+                    afterEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center"><p class="text-green-800 font-medium">✅ Pago informado</p><p class="text-green-700 text-sm mt-1">El profesor Francisco verificará tu pago pronto. Recibirás acceso una vez confirmado.</p></div>';
+                    afterEl.classList.remove('hidden');
+                } else {
+                    setupPaymentStep();
+                }
                 document.getElementById('step-payment').classList.remove('hidden');
                 return;
             }
@@ -459,42 +483,46 @@
             db.ref('portafolios/' + currentUser.uid).set(data);
         };
 
-        // ---- STEP 2: Payment ----
+        // ---- STEP 2: Payment (links directos MercadoPago) ----
+        var mpLinks = {
+            completo: 'https://mpago.la/1n5qk6A',
+            modulo1:  'https://mpago.la/2nZd9pw',
+            modulo2:  'https://mpago.la/17CypHN',
+            modulo3:  'https://mpago.la/16uMADX'
+        };
+
         window.changePlan = function() {
             if (!currentUser) return;
             db.ref('portafolios/' + currentUser.uid).remove();
         };
 
-        document.getElementById('pay-btn').addEventListener('click', function() {
+        // Set the MP link when step-payment is shown
+        function setupPaymentStep() {
+            var link = mpLinks[portData.plan] || '';
+            document.getElementById('pay-link').href = link;
+            document.getElementById('pay-before').classList.remove('hidden');
+            document.getElementById('pay-after').classList.add('hidden');
+
+            document.getElementById('pay-link').addEventListener('click', function() {
+                // After clicking, show confirmation UI
+                setTimeout(function() {
+                    document.getElementById('pay-before').classList.add('hidden');
+                    document.getElementById('pay-after').classList.remove('hidden');
+                }, 500);
+            });
+
+            document.getElementById('pay-reopen').addEventListener('click', function() {
+                window.open(link, '_blank');
+            });
+        }
+
+        document.getElementById('pay-confirm-btn').addEventListener('click', function() {
             var btn = this;
             btn.disabled = true;
-            btn.textContent = 'Redirigiendo a MercadoPago...';
-            document.getElementById('pay-error').classList.add('hidden');
-
-            fetch('/api/mercadopago/create_preference', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name: userData ? userData.nombre : '',
-                    email: userData ? userData.email : '',
-                    plan: portData.plan,
-                    uid: currentUser.uid
-                })
-            })
-            .then(function(r) { if (!r.ok) throw new Error('Error al crear preferencia'); return r.json(); })
-            .then(function(data) {
-                if (data.preference && data.preference.init_point) {
-                    window.location.href = data.preference.init_point;
-                } else {
-                    throw new Error('No se recibió enlace de pago');
-                }
-            })
-            .catch(function(err) {
-                btn.disabled = false;
-                btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg> Pagar con MercadoPago';
-                var errEl = document.getElementById('pay-error');
-                errEl.textContent = err.message;
-                errEl.classList.remove('hidden');
+            btn.textContent = 'Confirmando...';
+            db.ref('portafolios/' + currentUser.uid).update({
+                paymentStatus: 'pendiente_verificacion',
+                paymentConfirmedAt: new Date().toISOString()
             });
         });
 

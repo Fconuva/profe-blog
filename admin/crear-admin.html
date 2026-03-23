@@ -67,31 +67,52 @@
             btn.textContent = 'Creando...';
             msg.style.display = 'none';
 
+            function setAdmin(uid) {
+                return db.ref('users/' + uid).update({
+                    nombre: nombre,
+                    email: email,
+                    role: 'admin',
+                    updatedAt: new Date().toISOString()
+                });
+            }
+
             auth.createUserWithEmailAndPassword(email, password)
                 .then(function(cred) {
-                    return db.ref('users/' + cred.user.uid).set({
-                        nombre: nombre,
-                        email: email,
-                        role: 'admin',
-                        createdAt: new Date().toISOString()
-                    });
+                    return setAdmin(cred.user.uid);
                 })
                 .then(function() {
                     msg.className = 'msg success';
-                    msg.textContent = '✅ Admin creado. Ahora puedes ir a /admin/index.html e ingresar con estas credenciales.';
+                    msg.textContent = '✅ Admin creado. Ahora ve a /admin/index.html';
                     msg.style.display = 'block';
                     btn.textContent = '¡Listo!';
                 })
                 .catch(function(err) {
-                    btn.disabled = false;
-                    btn.textContent = 'Crear Cuenta Admin';
-                    msg.className = 'msg error';
                     if (err.code === 'auth/email-already-in-use') {
-                        msg.textContent = 'Este correo ya está registrado. Si ya tienes cuenta, actualiza el role manualmente en Firebase.';
+                        // Cuenta ya existe: hacer login y asignar rol admin
+                        auth.signInWithEmailAndPassword(email, password)
+                            .then(function(cred) {
+                                return setAdmin(cred.user.uid);
+                            })
+                            .then(function() {
+                                msg.className = 'msg success';
+                                msg.textContent = '✅ Cuenta existente actualizada a Admin. Ve a /admin/index.html';
+                                msg.style.display = 'block';
+                                btn.textContent = '¡Listo!';
+                            })
+                            .catch(function(err2) {
+                                btn.disabled = false;
+                                btn.textContent = 'Crear Cuenta Admin';
+                                msg.className = 'msg error';
+                                msg.textContent = 'Cuenta existe pero la contraseña es incorrecta. Usa la contraseña con la que te registraste.';
+                                msg.style.display = 'block';
+                            });
                     } else {
+                        btn.disabled = false;
+                        btn.textContent = 'Crear Cuenta Admin';
+                        msg.className = 'msg error';
                         msg.textContent = err.message;
+                        msg.style.display = 'block';
                     }
-                    msg.style.display = 'block';
                 });
         });
     })();

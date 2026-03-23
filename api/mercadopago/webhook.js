@@ -90,24 +90,33 @@ module.exports = async (req, res) => {
         (payment.payer && payment.payer.first_name) ||
         '';
 
+      const payerUid = (payment.metadata && payment.metadata.user_uid) || null;
+      const payerPlan = (payment.metadata && payment.metadata.plan) || 'completo';
+
       if (!payerEmail) {
         console.error('No payer email found in payment');
         return res.status(200).send('no_email');
       }
 
-      // Store payment verification (user will create account manually)
+      // Store payment verification
       const paymentsRef = db.ref('verified_payments/' + String(payment.id));
       await paymentsRef.set({
         paymentId: String(payment.id),
         email: payerEmail,
         name: payerName,
+        uid: payerUid,
         status: 'approved',
         amount: payment.transaction_amount,
         currency: payment.currency_id,
         verifiedAt: new Date().toISOString(),
-        plan: 'Acceso Completo ECEP 2025',
-        accountCreated: false  // Will be set to true when user creates account
+        plan: payerPlan
       });
+
+      // Update user's portfolio payment status if uid available
+      if (payerUid) {
+        await db.ref('portafolios/' + payerUid + '/paymentStatus').set('approved');
+        await db.ref('portafolios/' + payerUid + '/paidAt').set(new Date().toISOString());
+      }
 
       console.log('Payment verified and stored:', {
         paymentId: payment.id,

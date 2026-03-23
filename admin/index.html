@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración — Portafolios Docentes 2026</title>
+    <link rel="icon" href="/imagenes/logo-profe-francisco-nuevo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tw.css">
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="bg-gray-50 font-body antialiased min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-gray-900 text-white sticky top-0 z-50">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="/imagenes/logo-profe-francisco-nuevo.svg" alt="Logo" class="h-8 w-auto">
+                <span class="text-sm font-bold font-heading">ADMIN — Portafolios 2026</span>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/" class="text-xs text-gray-400 hover:text-white transition-colors">Ver Sitio</a>
+                <button id="logout-btn" class="text-xs font-medium text-red-400 hover:text-red-300 transition-colors">Salir</button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Loading -->
+    <div id="loading" class="flex items-center justify-center py-32">
+        <div class="text-center">
+            <div class="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto mb-4"></div>
+            <p class="text-gray-500">Verificando permisos...</p>
+        </div>
+    </div>
+
+    <!-- Access Denied -->
+    <div id="access-denied" class="hidden flex items-center justify-center py-32">
+        <div class="text-center">
+            <svg class="w-16 h-16 text-red-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <h2 class="text-xl font-heading font-bold text-gray-900 mb-2">Acceso Denegado</h2>
+            <p class="text-gray-600 mb-4">No tienes permisos de administrador.</p>
+            <a href="/cuenta/login.html" class="text-primary-600 hover:text-primary-700 font-medium">Volver al login</a>
+        </div>
+    </div>
+
+    <!-- Admin Content -->
+    <main id="admin-content" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        <!-- Stats -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <p class="text-sm text-gray-500">Total Clientes</p>
+                <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <p class="text-sm text-gray-500">Pagos Aprobados</p>
+                <p class="text-2xl font-heading font-bold text-green-600" id="stat-paid">0</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <p class="text-sm text-gray-500">En Progreso</p>
+                <p class="text-2xl font-heading font-bold text-blue-600" id="stat-progress">0</p>
+            </div>
+            <div class="bg-white rounded-xl border border-gray-200 p-4">
+                <p class="text-sm text-gray-500">Completados</p>
+                <p class="text-2xl font-heading font-bold text-primary-600" id="stat-completed">0</p>
+            </div>
+        </div>
+
+        <!-- Client List -->
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
+                <input type="text" id="search-input" placeholder="Buscar por nombre o email..."
+                       class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50 text-left">
+                        <tr>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Asignatura</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
+                            <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="clients-tbody" class="divide-y divide-gray-100">
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="no-clients" class="hidden px-6 py-12 text-center text-gray-500">
+                No hay clientes registrados aún.
+            </div>
+        </div>
+    </main>
+
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
+                <h3 class="font-heading font-bold text-gray-900" id="modal-title">Editar Cliente</h3>
+                <button id="modal-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <form id="edit-form" class="p-6 space-y-6">
+                <input type="hidden" id="edit-uid">
+
+                <!-- Client Info (read-only) -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Email</label>
+                        <p class="text-sm text-gray-900" id="edit-email">—</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">RUT</label>
+                        <p class="text-sm text-gray-900" id="edit-rut">—</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Teléfono</label>
+                        <p class="text-sm text-gray-900" id="edit-telefono">—</p>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Nivel</label>
+                        <p class="text-sm text-gray-900" id="edit-nivel">—</p>
+                    </div>
+                </div>
+
+                <hr>
+
+                <!-- Payment Status -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Estado de Pago</label>
+                    <select id="edit-payment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 outline-none bg-white">
+                        <option value="pendiente">Pendiente</option>
+                        <option value="approved">Aprobado</option>
+                    </select>
+                </div>
+
+                <!-- Module 1 -->
+                <div class="bg-blue-50 rounded-xl p-4">
+                    <h4 class="font-heading font-semibold text-sm text-blue-800 mb-3">Módulo 1 — Planificación</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+                            <select id="edit-m1-estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                                <option value="no-contratado">No contratado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="en-progreso">En progreso</option>
+                                <option value="en-revision">En revisión</option>
+                                <option value="completado">Completado</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end gap-4">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m1-planificacion" class="rounded border-gray-300">
+                                Planificación
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m1-material" class="rounded border-gray-300">
+                                Material
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M1</label>
+                        <textarea id="edit-m1-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Module 2 -->
+                <div class="bg-purple-50 rounded-xl p-4">
+                    <h4 class="font-heading font-semibold text-sm text-purple-800 mb-3">Módulo 2 — Clase Grabada</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+                            <select id="edit-m2-estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                                <option value="no-contratado">No contratado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="en-progreso">En progreso</option>
+                                <option value="en-revision">En revisión</option>
+                                <option value="completado">Completado</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end gap-4 flex-wrap">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m2-libreto" class="rounded border-gray-300">
+                                Libreto
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m2-presentacion" class="rounded border-gray-300">
+                                PPT
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m2-guia" class="rounded border-gray-300">
+                                Guía
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M2</label>
+                        <textarea id="edit-m2-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Module 3 -->
+                <div class="bg-emerald-50 rounded-xl p-4">
+                    <h4 class="font-heading font-semibold text-sm text-emerald-800 mb-3">Módulo 3 — Reflexión</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-gray-600 mb-1">Estado</label>
+                            <select id="edit-m3-estado" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                                <option value="no-contratado">No contratado</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="en-progreso">En progreso</option>
+                                <option value="en-revision">En revisión</option>
+                                <option value="completado">Completado</option>
+                            </select>
+                        </div>
+                        <div class="flex items-end gap-4">
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m3-obligatorio" class="rounded border-gray-300">
+                                Obligatorio
+                            </label>
+                            <label class="flex items-center gap-2 text-sm">
+                                <input type="checkbox" id="edit-m3-voluntario" class="rounded border-gray-300">
+                                Voluntario
+                            </label>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="block text-xs font-medium text-gray-600 mb-1">Notas M3</label>
+                        <textarea id="edit-m3-notas" rows="2" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Notas para el cliente..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex gap-3 pt-2">
+                    <button type="submit" class="flex-1 py-2.5 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
+                        Guardar Cambios
+                    </button>
+                    <button type="button" id="modal-cancel" class="px-4 py-2.5 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors">
+                        Cancelar
+                    </button>
+                </div>
+
+                <div id="save-success" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-2 rounded-xl text-sm text-center">
+                    Cambios guardados correctamente.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="/js/firebase-config.js"></script>
+
+    <script>
+    (function() {
+        firebase.initializeApp(FIREBASE_CONFIG);
+        var auth = firebase.auth();
+        var db = firebase.database();
+
+        var allClients = {};
+        var allPortafolios = {};
+
+        var planNames = {
+            completo: 'Completo',
+            modulo1: 'M1',
+            modulo2: 'M2',
+            modulo3: 'M3'
+        };
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            auth.signOut().then(function() {
+                window.location.href = '/cuenta/login.html';
+            });
+        });
+
+        // Auth check
+        auth.onAuthStateChanged(function(user) {
+            if (!user) {
+                window.location.href = '/cuenta/login.html';
+                return;
+            }
+
+            // Check admin role
+            db.ref('users/' + user.uid + '/role').once('value').then(function(snap) {
+                if (snap.val() !== 'admin') {
+                    document.getElementById('loading').classList.add('hidden');
+                    document.getElementById('access-denied').classList.remove('hidden');
+                    return;
+                }
+
+                document.getElementById('loading').classList.add('hidden');
+                document.getElementById('admin-content').classList.remove('hidden');
+                loadClients();
+            });
+        });
+
+        function loadClients() {
+            // Listen for users
+            db.ref('users').on('value', function(snap) {
+                allClients = snap.val() || {};
+                renderClients();
+            });
+
+            // Listen for portfolios
+            db.ref('portafolios').on('value', function(snap) {
+                allPortafolios = snap.val() || {};
+                renderClients();
+            });
+        }
+
+        function renderClients() {
+            var tbody = document.getElementById('clients-tbody');
+            var search = (document.getElementById('search-input').value || '').toLowerCase();
+            tbody.innerHTML = '';
+
+            var uids = Object.keys(allClients).filter(function(uid) {
+                var c = allClients[uid];
+                if (c.role === 'admin') return false;
+                if (!search) return true;
+                return (c.nombre || '').toLowerCase().includes(search) ||
+                       (c.email || '').toLowerCase().includes(search) ||
+                       (c.rut || '').toLowerCase().includes(search);
+            });
+
+            // Stats
+            var totalClients = 0;
+            var paidClients = 0;
+            var inProgress = 0;
+            var completed = 0;
+
+            uids.forEach(function(uid) {
+                var c = allClients[uid];
+                var p = allPortafolios[uid] || {};
+                totalClients++;
+
+                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') paidClients++;
+
+                var hasInProgress = ['modulo1', 'modulo2', 'modulo3'].some(function(m) {
+                    return p[m] && p[m].estado === 'en-progreso';
+                });
+                if (hasInProgress) inProgress++;
+
+                var allDone = ['modulo1', 'modulo2', 'modulo3'].every(function(m) {
+                    return !p[m] || p[m].estado === 'completado' || p[m].estado === 'no-contratado';
+                });
+                var hasContracted = ['modulo1', 'modulo2', 'modulo3'].some(function(m) {
+                    return p[m] && p[m].contratado;
+                });
+                if (allDone && hasContracted) completed++;
+
+                var progress = calcProgress(p);
+
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition-colors';
+                tr.innerHTML =
+                    '<td class="px-6 py-4">' +
+                        '<div class="font-medium text-gray-900">' + escapeHtml(c.nombre || '—') + '</div>' +
+                        '<div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div>' +
+                    '</td>' +
+                    '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.asignatura || '—') + '</td>' +
+                    '<td class="px-6 py-4"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
+                    '<td class="px-6 py-4">' + paymentBadge(p.paymentStatus) + '</td>' +
+                    '<td class="px-6 py-4">' +
+                        '<div class="flex items-center gap-2">' +
+                            '<div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div>' +
+                            '<span class="text-xs text-gray-600">' + progress + '%</span>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="px-6 py-4"><button class="text-primary-600 hover:text-primary-700 text-sm font-medium edit-btn" data-uid="' + uid + '">Editar</button></td>';
+                tbody.appendChild(tr);
+            });
+
+            document.getElementById('stat-total').textContent = totalClients;
+            document.getElementById('stat-paid').textContent = paidClients;
+            document.getElementById('stat-progress').textContent = inProgress;
+            document.getElementById('stat-completed').textContent = completed;
+
+            if (uids.length === 0) {
+                document.getElementById('no-clients').classList.remove('hidden');
+            } else {
+                document.getElementById('no-clients').classList.add('hidden');
+            }
+
+            // Attach edit handlers
+            document.querySelectorAll('.edit-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openEditModal(this.getAttribute('data-uid'));
+                });
+            });
+        }
+
+        function paymentBadge(status) {
+            if (status === 'approved' || status === 'aprobado') {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado</span>';
+            }
+            return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Pendiente</span>';
+        }
+
+        function calcProgress(data) {
+            var total = 0, done = 0;
+            function count(mod, fields) {
+                if (!mod || mod.estado === 'no-contratado') return;
+                fields.forEach(function(f) { total++; if (mod[f]) done++; });
+            }
+            count(data.modulo1, ['planificacion', 'material']);
+            count(data.modulo2, ['libreto', 'presentacion', 'guia']);
+            count(data.modulo3, ['obligatorio', 'voluntario']);
+            return total === 0 ? 0 : Math.round((done / total) * 100);
+        }
+
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        // Search
+        document.getElementById('search-input').addEventListener('input', renderClients);
+
+        // Modal
+        var modal = document.getElementById('edit-modal');
+
+        function openEditModal(uid) {
+            var c = allClients[uid] || {};
+            var p = allPortafolios[uid] || {};
+
+            document.getElementById('edit-uid').value = uid;
+            document.getElementById('modal-title').textContent = 'Editar — ' + (c.nombre || 'Cliente');
+            document.getElementById('edit-email').textContent = c.email || '—';
+            document.getElementById('edit-rut').textContent = c.rut || '—';
+            document.getElementById('edit-telefono').textContent = c.telefono || '—';
+            document.getElementById('edit-nivel').textContent = c.nivel || '—';
+
+            document.getElementById('edit-payment').value = p.paymentStatus || 'pendiente';
+
+            // M1
+            var m1 = p.modulo1 || {};
+            document.getElementById('edit-m1-estado').value = m1.estado || 'pendiente';
+            document.getElementById('edit-m1-planificacion').checked = !!m1.planificacion;
+            document.getElementById('edit-m1-material').checked = !!m1.material;
+            document.getElementById('edit-m1-notas').value = m1.notas || '';
+
+            // M2
+            var m2 = p.modulo2 || {};
+            document.getElementById('edit-m2-estado').value = m2.estado || 'pendiente';
+            document.getElementById('edit-m2-libreto').checked = !!m2.libreto;
+            document.getElementById('edit-m2-presentacion').checked = !!m2.presentacion;
+            document.getElementById('edit-m2-guia').checked = !!m2.guia;
+            document.getElementById('edit-m2-notas').value = m2.notas || '';
+
+            // M3
+            var m3 = p.modulo3 || {};
+            document.getElementById('edit-m3-estado').value = m3.estado || 'pendiente';
+            document.getElementById('edit-m3-obligatorio').checked = !!m3.obligatorio;
+            document.getElementById('edit-m3-voluntario').checked = !!m3.voluntario;
+            document.getElementById('edit-m3-notas').value = m3.notas || '';
+
+            document.getElementById('save-success').classList.add('hidden');
+            modal.classList.remove('hidden');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+        }
+
+        document.getElementById('modal-close').addEventListener('click', closeModal);
+        document.getElementById('modal-cancel').addEventListener('click', closeModal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeModal();
+        });
+
+        // Save
+        document.getElementById('edit-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var uid = document.getElementById('edit-uid').value;
+
+            var updates = {};
+            updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
+
+            // M1
+            updates['portafolios/' + uid + '/modulo1/estado'] = document.getElementById('edit-m1-estado').value;
+            updates['portafolios/' + uid + '/modulo1/contratado'] = document.getElementById('edit-m1-estado').value !== 'no-contratado';
+            updates['portafolios/' + uid + '/modulo1/planificacion'] = document.getElementById('edit-m1-planificacion').checked;
+            updates['portafolios/' + uid + '/modulo1/material'] = document.getElementById('edit-m1-material').checked;
+            updates['portafolios/' + uid + '/modulo1/notas'] = document.getElementById('edit-m1-notas').value;
+
+            // M2
+            updates['portafolios/' + uid + '/modulo2/estado'] = document.getElementById('edit-m2-estado').value;
+            updates['portafolios/' + uid + '/modulo2/contratado'] = document.getElementById('edit-m2-estado').value !== 'no-contratado';
+            updates['portafolios/' + uid + '/modulo2/libreto'] = document.getElementById('edit-m2-libreto').checked;
+            updates['portafolios/' + uid + '/modulo2/presentacion'] = document.getElementById('edit-m2-presentacion').checked;
+            updates['portafolios/' + uid + '/modulo2/guia'] = document.getElementById('edit-m2-guia').checked;
+            updates['portafolios/' + uid + '/modulo2/notas'] = document.getElementById('edit-m2-notas').value;
+
+            // M3
+            updates['portafolios/' + uid + '/modulo3/estado'] = document.getElementById('edit-m3-estado').value;
+            updates['portafolios/' + uid + '/modulo3/contratado'] = document.getElementById('edit-m3-estado').value !== 'no-contratado';
+            updates['portafolios/' + uid + '/modulo3/obligatorio'] = document.getElementById('edit-m3-obligatorio').checked;
+            updates['portafolios/' + uid + '/modulo3/voluntario'] = document.getElementById('edit-m3-voluntario').checked;
+            updates['portafolios/' + uid + '/modulo3/notas'] = document.getElementById('edit-m3-notas').value;
+
+            updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
+
+            db.ref().update(updates).then(function() {
+                document.getElementById('save-success').classList.remove('hidden');
+                setTimeout(function() {
+                    document.getElementById('save-success').classList.add('hidden');
+                }, 3000);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -7,13 +7,15 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { name, email, plan } = req.body;
+    const { name, email, plan, uid } = req.body;
     if (!email || !plan) return res.status(400).json({ error: 'Missing email or plan' });
 
-    // Define plans/prices (CLP example)
+    // Portafolio Docente 2026 plans
     const plans = {
-      'basic': { title: 'Acceso Completo ECEP 2025', price: 25000 },
-      'pro': { title: 'Acceso Pro - ECEP', price: 40000 }
+      'completo':  { title: 'Portafolio Completo (3 Módulos)', price: 199990 },
+      'modulo1':   { title: 'Módulo 1 — Planificación', price: 79990 },
+      'modulo2':   { title: 'Módulo 2 — Clase Grabada', price: 99990 },
+      'modulo3':   { title: 'Módulo 3 — Reflexión', price: 79990 }
     };
 
     const chosen = plans[plan] || plans['basic'];
@@ -23,7 +25,7 @@ module.exports = async (req, res) => {
     
     // Generate unique reference to allow multiple payments from same email
     const timestamp = Date.now();
-    const uniqueRef = `${email}_${timestamp}`;
+    const uniqueRef = uid ? `${uid}_${timestamp}` : `${email}_${timestamp}`;
 
     // Initialize client with new SDK
     const client = new MercadoPagoConfig({ 
@@ -46,18 +48,23 @@ module.exports = async (req, res) => {
         email: email
       },
       back_urls: {
-        success: `${host}/comprar/success/?email=${encodeURIComponent(email)}`,
-        failure: `${host}/comprar/failure/`,
-        pending: `${host}/comprar/pending/`
+        success: `${host}/dashboard/index.html?payment=success`,
+        failure: `${host}/cuenta/crear-cuenta.html?payment=failure`,
+        pending: `${host}/dashboard/index.html?payment=pending`
       },
       auto_return: 'approved',
       notification_url,
-      external_reference: uniqueRef,  // Unique reference allows multiple payments
-      statement_descriptor: 'ECEP 2025',  // What appears on credit card statement
+      external_reference: uniqueRef,
+      statement_descriptor: 'Portafolio 2026',
       metadata: {
         user_email: email,
         user_name: name || '',
+        user_uid: uid || '',
+        plan: plan,
         payment_timestamp: timestamp
+      },
+      payment_methods: {
+        installments: 6
       }
     };
 

@@ -49,7 +49,7 @@ module.exports = async (req, res) => {
       },
       back_urls: {
         success: `${host}/dashboard/index.html?payment=success`,
-        failure: `${host}/cuenta/crear-cuenta.html?payment=failure`,
+        failure: `${host}/dashboard/index.html?payment=failure`,
         pending: `${host}/dashboard/index.html?payment=pending`
       },
       auto_return: 'approved',

@@ -759,7 +759,7 @@
                     </h3>
                     <p class="text-sm text-gray-600 mb-4">Administra los estudiantes del curso: agregar, importar, editar o eliminar.</p>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                         <button onclick="addStudent()" class="bg-green-600 hover:bg-green-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-user-plus mr-2"></i>Agregar Estudiante
                         </button>
@@ -771,6 +771,9 @@
                         </button>
                         <button onclick="showEditStudentsList()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg">
                             <i class="fas fa-edit mr-2"></i>Editar Estudiantes
+                        </button>
+                        <button onclick="renumberStudentsManual()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-3 rounded-lg font-medium transition-all hover:shadow-lg" title="Corregir numeracion de lista">
+                            <i class="fas fa-list-ol mr-2"></i>Renumerar Lista
                         </button>
                     </div>
                     <input type="file" id="importCSV" accept=".csv" style="display: none;" onchange="importFromCSV(event)">
@@ -3137,14 +3140,14 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                                 <div id="bulkPreviewContent" class="bg-gray-50 border rounded-lg p-3 max-h-40 overflow-y-auto text-sm"></div>
                             </div>
                             <div class="flex justify-between items-center">
-                                <button onclick="previewBulkStudents()" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-all">
+                                <button onclick="previewBulkStudents()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all">
                                     <i class="fas fa-eye mr-2"></i>Vista Previa
                                 </button>
                                 <div class="flex gap-3">
-                                    <button onclick="closeBulkStudentModal()" class="bg-gray-400 hover:bg-gray-500 text-white px-6 py-2 rounded-lg font-medium transition-all">
+                                    <button onclick="closeBulkStudentModal()" class="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg font-medium transition-all">
                                         Cancelar
                                     </button>
-                                    <button onclick="processBulkStudents()" class="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2 rounded-lg font-medium transition-all">
+                                    <button onclick="processBulkStudents()" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg font-medium transition-all">
                                         <i class="fas fa-user-plus mr-2"></i>Agregar Todos
                                     </button>
                                 </div>
@@ -3162,14 +3165,25 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
         }
 
         function parseBulkStudentLine(line) {
-            // Limpiar la línea
+            // Limpiar la linea de espacios extra, tabs y caracteres especiales
             line = line.trim().toUpperCase();
+            if (!line) return null;
+            
+            // Ignorar lineas que son solo numeros (como numeros de lista)
+            if (/^\d+$/.test(line)) return null;
+            
+            // Reemplazar tabs y multiples espacios por un solo espacio
+            line = line.replace(/\t+/g, ' ').replace(/\s+/g, ' ').trim();
+            
+            // Si la linea empieza con un numero seguido de espacio, quitarlo (numero de lista)
+            line = line.replace(/^\d+\s+/, '');
+            
             if (!line) return null;
             
             // Dividir por espacios
             const parts = line.split(/\s+/);
             
-            if (parts.length < 3) return null; // Mínimo: APELLIDO1 APELLIDO2 NOMBRE
+            if (parts.length < 3) return null; // Minimo: APELLIDO1 APELLIDO2 NOMBRE
             
             // Formato: APELLIDO1 APELLIDO2 NOMBRE1 [NOMBRE2...]
             const lastName1 = parts[0];
@@ -3185,7 +3199,11 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
 
         function previewBulkStudents() {
             const input = document.getElementById('bulkStudentInput').value;
-            const lines = input.trim().split('\n');
+            // Filtrar lineas vacias y lineas que son solo numeros
+            const lines = input.trim().split('\n').filter(line => {
+                const trimmed = line.trim();
+                return trimmed && !/^\d+$/.test(trimmed);
+            });
             const previewDiv = document.getElementById('bulkPreview');
             const contentDiv = document.getElementById('bulkPreviewContent');
             
@@ -3214,7 +3232,13 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                 return;
             }
             
-            const lines = input.trim().split('\n');
+            // Filtrar lineas vacias y lineas que son solo numeros ANTES de procesar
+            const lines = input.trim().split('\n').filter(line => {
+                const trimmed = line.trim();
+                // Ignorar lineas vacias y lineas que son solo numeros
+                return trimmed && !/^\d+$/.test(trimmed);
+            });
+            
             let added = 0;
             let errors = [];
             
@@ -3234,7 +3258,7 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                     courseData.students.push(newStudent);
                     added++;
                 } else if (line.trim()) {
-                    errors.push(`Línea ${index + 1}: "${line.substring(0, 30)}..."`);   
+                    errors.push(`Linea ${index + 1}: "${line.substring(0, 30)}..."`);   
                 }
             });
             
@@ -3245,12 +3269,12 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                 
                 let message = `✅ ${added} estudiantes agregados exitosamente`;
                 if (errors.length > 0) {
-                    message += `\n\n⚠️ ${errors.length} líneas no pudieron procesarse`;
+                    message += `\n\n⚠️ ${errors.length} lineas no pudieron procesarse`;
                 }
                 alert(message);
                 showTemporaryMessage(`${added} estudiantes agregados`, 'success');
             } else {
-                alert('No se pudo agregar ningún estudiante. Verifica el formato:\nAPELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2');
+                alert('No se pudo agregar ningun estudiante. Verifica el formato:\nAPELLIDO1 APELLIDO2 NOMBRE1 NOMBRE2');
             }
         }
 
@@ -4884,8 +4908,8 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                 let totalPoints = 0;
                 
                 // Etiquetas especiales
-                const pieBadge = student.isPIE ? '<span class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium bg-purple-100 text-purple-700 rounded" title="Proyecto de Integración Escolar">PIE</span>' : '';
-                const notesIcon = student.notes ? `<button onclick="showStudentNotes(${studentIndex})" class="text-yellow-500 hover:text-yellow-600" title="Ver observaciones"><i class="fas fa-sticky-note"></i></button>` : `<button onclick="showStudentNotes(${studentIndex})" class="text-gray-300 hover:text-yellow-500" title="Agregar observación"><i class="far fa-sticky-note"></i></button>`;
+                const pieBadge = student.isPIE ? '<span class="inline-flex items-center px-2 py-1 text-xs font-bold bg-purple-600 text-white rounded-full ml-1" title="Programa de Integración Escolar"><i class="fas fa-heart mr-1"></i>PIE</span>' : '';
+                const notesIcon = student.notes ? `<button onclick="showStudentNotes(${studentIndex})" class="text-amber-500 hover:text-amber-600" title="Ver observaciones"><i class="fas fa-sticky-note"></i></button>` : `<button onclick="showStudentNotes(${studentIndex})" class="text-gray-300 hover:text-amber-500" title="Agregar observación"><i class="far fa-sticky-note"></i></button>`;
                 
                 let html = `
                     <td class="px-2 py-3 text-sm">
@@ -5145,8 +5169,33 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
         function deleteStudent(index) {
             if (confirm('¿Está seguro de eliminar este estudiante?')) {
                 courseData.students.splice(index, 1);
+                // Renumerar automaticamente despues de eliminar
+                renumberStudents();
                 renderTable();
                 saveAllCourses();
+            }
+        }
+
+        // Renumerar estudiantes consecutivamente (1, 2, 3...)
+        function renumberStudents() {
+            if (!courseData || !courseData.students) return;
+            courseData.students.forEach((student, index) => {
+                student.number = index + 1;
+            });
+        }
+
+        // Renumerar estudiantes manualmente (boton)
+        function renumberStudentsManual() {
+            if (!courseData || !courseData.students || courseData.students.length === 0) {
+                alert('No hay estudiantes para renumerar');
+                return;
+            }
+            
+            if (confirm(`¿Renumerar los ${courseData.students.length} estudiantes consecutivamente (1, 2, 3...)?`)) {
+                renumberStudents();
+                renderTable();
+                saveAllCourses();
+                alert(`✅ ${courseData.students.length} estudiantes renumerados correctamente`);
             }
         }
 
@@ -5769,41 +5818,48 @@ ALISTE ESPINOZA VALENTÍN ALFONSO
                     }
                 });
                 
-                // Obtener dimensiones
-                const imgWidth = 210; // A4 width in mm
+                // Crear PDF en LANDSCAPE (horizontal)
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('l', 'mm', 'a4'); // 'l' = landscape, 297mm x 210mm
+                
+                // Dimensiones A4 landscape
+                const pageWidth = 297;
+                const pageHeight = 210;
+                const margin = 10;
+                const contentWidth = pageWidth - (margin * 2);
+                
+                // Calcular altura proporcional
+                const imgWidth = contentWidth;
                 const imgHeight = (canvas.height * imgWidth) / canvas.width;
                 
-                // Crear PDF
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a4');
+                // Agregar imagen al PDF con margenes profesionales
+                const imgData = canvas.toDataURL('image/png', 1.0);
                 
-                // Agregar imagen al PDF
-                const imgData = canvas.toDataURL('image/png');
-                
-                // Si el contenido es más alto que una página, dividir en múltiples páginas
+                // Si el contenido es mas alto que una pagina, dividir en multiples paginas
+                const usableHeight = pageHeight - 20; // Margenes superior e inferior
                 let heightLeft = imgHeight;
-                let position = 0;
+                let position = margin;
                 
-                // Primera página
-                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                heightLeft -= 297; // altura de A4
+                // Primera pagina
+                pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                heightLeft -= usableHeight;
                 
-                // Páginas adicionales si es necesario
+                // Paginas adicionales si es necesario (formato landscape)
                 while (heightLeft > 0) {
-                    position = heightLeft - imgHeight;
-                    pdf.addPage();
-                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-                    heightLeft -= 297;
+                    position = margin - (imgHeight - heightLeft);
+                    pdf.addPage('a4', 'l'); // Nueva pagina landscape
+                    pdf.addImage(imgData, 'PNG', margin, position, imgWidth, imgHeight);
+                    heightLeft -= usableHeight;
                 }
                 
-                // Descargar el PDF
+                // Descargar el PDF profesional
                 pdf.save(fileName);
                 
                 // Remover mensaje de carga
                 document.body.removeChild(loadingMsg);
                 
                 // Mostrar mensaje de éxito
-                showNotification('✅ PDF generado exitosamente', 'success');
+                showNotification('✅ PDF profesional generado (formato horizontal A4)', 'success');
                 
             } catch (error) {
                 console.error('Error generando PDF:', error);
@@ -6266,14 +6322,14 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                         </div>
                         <div class="bg-${gradeColor}-50 p-4 rounded text-center">
                             <i class="fas fa-calculator text-2xl text-${gradeColor}-600 mb-2"></i>
-                            <p class="text-3xl font-bold text-${gradeColor}-800">${stats.avg.toFixed(2)}</p>
+                            <p class="text-3xl font-bold text-${gradeColor}-800">${stats.avg.toFixed(1)}</p>
                             <p class="text-sm text-${gradeColor}-600">Promedio Curso</p>
-                            <p class="text-xs text-gray-600 mt-1">Mediana: ${stats.median.toFixed(2)}</p>
+                            <p class="text-xs text-gray-600 mt-1">Mediana: ${stats.median.toFixed(1)}</p>
                         </div>
                         <div class="bg-${approvalColor}-50 p-4 rounded text-center">
                             <i class="fas fa-check-circle text-2xl text-${approvalColor}-600 mb-2"></i>
-                            <p class="text-3xl font-bold text-${approvalColor}-800">${stats.passingRate.toFixed(1)}%</p>
-                            <p class="text-sm text-${approvalColor}-600">Aprobación</p>
+                            <p class="text-3xl font-bold text-${approvalColor}-800">${stats.passingRate.toFixed(0)}%</p>
+                            <p class="text-sm text-${approvalColor}-600">Aprobacion</p>
                             <p class="text-xs text-gray-600 mt-1">${stats.passing}/${stats.total} aprobados</p>
                         </div>
                         <div class="bg-purple-50 p-4 rounded text-center">
@@ -6433,37 +6489,37 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                                 </tr>
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Mediana</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-800">${stats.median.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-600">Calificación central del curso</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-800">${stats.median.toFixed(1)}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">Calificacion central del curso</td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Mínima</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-red-600">${stats.min.toFixed(2)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Minima</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-red-600">${stats.min.toFixed(1)}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">Estudiante con menor rendimiento</td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Máxima</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-green-600">${stats.max.toFixed(2)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Nota Maxima</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-green-600">${stats.max.toFixed(1)}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">Estudiante con mayor rendimiento</td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
-                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Desviación Estándar</td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Desviacion Estandar</td>
                                     <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-purple-600">${stats.stdDev.toFixed(2)}</td>
-                                    <td class="px-6 py-4 text-sm text-gray-600">${stats.stdDev > 1.5 ? 'Alta variabilidad entre estudiantes' : stats.stdDev > 1.0 ? 'Variabilidad moderada' : 'Grupo homogéneo'}</td>
+                                    <td class="px-6 py-4 text-sm text-gray-600">${stats.stdDev > 1.5 ? 'Alta variabilidad entre estudiantes' : stats.stdDev > 1.0 ? 'Variabilidad moderada' : 'Grupo homogeneo'}</td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Cuartil 1 (Q1)</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q1.toFixed(2)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q1.toFixed(1)}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">25% de estudiantes bajo este valor</td>
                                 </tr>
                                 <tr class="hover:bg-gray-50">
                                     <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-900">Cuartil 3 (Q3)</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q3.toFixed(2)}</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-lg font-bold text-gray-700">${stats.q3.toFixed(1)}</td>
                                     <td class="px-6 py-4 text-sm text-gray-600">75% de estudiantes bajo este valor</td>
                                 </tr>
                                 <tr class="bg-blue-50 hover:bg-blue-100">
-                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-blue-900">Tasa de Aprobación</td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center text-xl font-bold ${stats.passingRate >= 70 ? 'text-green-600' : stats.passingRate >= 50 ? 'text-orange-600' : 'text-red-600'}">${stats.passingRate.toFixed(1)}%</td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-blue-900">Tasa de Aprobacion</td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center text-xl font-bold ${stats.passingRate >= 70 ? 'text-green-600' : stats.passingRate >= 50 ? 'text-orange-600' : 'text-red-600'}">${stats.passingRate.toFixed(0)}%</td>
                                     <td class="px-6 py-4 text-sm font-semibold text-blue-900">${stats.passing} de ${stats.total} estudiantes aprobados</td>
                                 </tr>
                             </tbody>
@@ -6730,7 +6786,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                     
                     <p class="text-xs text-gray-500 mt-4">
                         <i class="fas fa-info-circle text-blue-500"></i> 
-                        <strong>Interpretación:</strong> Consolidado (‰¥80%), En desarrollo (60-79%), En riesgo (40-59%), Crítico (<40%)
+                        <strong>Interpretacion:</strong> Consolidado (80% o mas), En desarrollo (60-79%), En riesgo (40-59%), Critico (menos de 40%)
                     </p>
                 </div>
             `;
@@ -6811,7 +6867,7 @@ RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
                                             </td>
                                             <td class="px-4 py-3 text-center font-bold bg-green-50">
                                                 <span class="text-lg font-bold text-${gradeColor}-700">
-                                                    ${grade.toFixed(2)}
+                                                    ${grade.toFixed(1)}
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-center bg-purple-50">
@@ -8607,4 +8663,5 @@ PROHIBIDO:
     </div> <!-- Cierre de #app-container para iOS fix -->
 </body>
 </html>
+
 

@@ -393,7 +393,7 @@
                     '</td>' +
                     '<td class="px-6 py-4 text-gray-600">' + escapeHtml(c.asignatura || '—') + '</td>' +
                     '<td class="px-6 py-4"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
-                    '<td class="px-6 py-4">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt) + '</td>' +
+                    '<td class="px-6 py-4">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
                     '<td class="px-6 py-4">' +
                         '<div class="flex items-center gap-2">' +
                             '<div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div>' +
@@ -423,7 +423,7 @@
             });
         }
 
-        function paymentBadge(status, confirmedAt) {
+        function paymentBadge(status, confirmedAt, comprobante) {
             if (status === 'approved' || status === 'aprobado') {
                 return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado</span>';
             }
@@ -433,7 +433,11 @@
                     var d = new Date(confirmedAt);
                     dateStr = '<div class="text-xs text-blue-600 mt-0.5">' + d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'}) + '</div>';
                 }
-                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Por Verificar</span>' + dateStr;
+                var compStr = '';
+                if (comprobante) {
+                    compStr = '<div class="text-xs text-gray-700 mt-0.5 font-mono">Op: ' + escapeHtml(comprobante) + '</div>';
+                }
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700">Por Verificar</span>' + dateStr + compStr;
             }
             return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Pendiente</span>';
         }

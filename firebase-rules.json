@@ -1,75 +1,41 @@
 {
   "rules": {
-    "sindicato_evento_aniversario": {
-      ".read": true,
-      ".write": true
-    },
-    "analytics": {
-      ".read": true,
-      ".write": true
-    },
-    "evento_sindicato_inscripciones": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["rut", "email", "sede"]
-    },
-    "asistentes": {
-      ".read": true,
-      ".write": true
-    },
-    "paseo_docentes": {
-      ".read": true,
-      ".write": true
-    },
+
     "users": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["username"]
-    },
-    "courses": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["userId", "courseName", "period"]
-    },
-    "reservations": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["event_date", "attendee_rut"]
-    },
-    "logs": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["timestamp", "userId", "action"]
-    },
-    "admin": {
-      ".read": true,
-      ".write": true,
-      "settings": {
-        ".read": true,
-        ".write": true
-      },
-      "sessions": {
-        ".read": true,
-        ".write": true,
-        ".indexOn": ["userId", "deviceId", "timestamp"]
-      },
-      "login_history": {
-        ".read": "auth != null",
-        "$username": {
-          ".write": "auth != null",
-          ".indexOn": ["timestamp", "userAgent", "email"]
-        }
+      ".read": "auth != null",
+      ".indexOn": ["username", "email"],
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
       }
     },
-    "devices": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["userId", "deviceId", "lastAccess"]
+
+    "portafolios": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
     },
+
     "verified_payments": {
-      ".read": true,
-      ".write": true,
-      ".indexOn": ["email", "paymentId", "verifiedAt", "accountCreated"]
-    }
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": false,
+      ".indexOn": ["email", "paymentId", "uid"]
+    },
+
+    "courses": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userId", "courseName", "period"]
+    },
+
+    "logs": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "userId", "action"]
+    },
+
+    ".read": false,
+    ".write": false
   }
 }

@@ -239,6 +239,8 @@
                     <button type="button" id="btn-whatsapp" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#25D366">📲 WhatsApp</button>
                     <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
                     <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Restablecer Contraseña</button>
+                    <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
+                    <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
 
@@ -1068,6 +1070,32 @@
             window.open('mailto:' + (c.email || '') + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body), '_self');
         });
 
+        // Set Pre-Inscrito
+        document.getElementById('btn-set-preinscrito').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            if (c.status === 'pre-inscrito' && c.inscripcionNum) {
+                showActionMsg('Ya está marcado como pre-inscrito: ' + c.inscripcionNum, 'success');
+                return;
+            }
+            if (!confirm('¿Marcar a ' + (c.nombre || 'este cliente') + ' como pre-inscrito y asignarle número de inscripción?')) return;
+            db.ref('counters/inscripcion').transaction(function(current) {
+                return (current || 0) + 1;
+            }).then(function(result) {
+                var num = result.snapshot.val();
+                var inscripcionNum = 'PRE-2026-' + String(num).padStart(4, '0');
+                var updates = {};
+                updates['users/' + currentEditUid + '/status'] = 'pre-inscrito';
+                updates['users/' + currentEditUid + '/inscripcionNum'] = inscripcionNum;
+                return db.ref().update(updates).then(function() {
+                    document.getElementById('edit-inscripcion-num').textContent = inscripcionNum;
+                    showActionMsg('✅ Marcado como pre-inscrito: ' + inscripcionNum, 'success');
+                });
+            }).catch(function(err) {
+                showActionMsg('Error: ' + err.message, 'error');
+            });
+        });
+
         // Reset Password
         document.getElementById('btn-reset-pass').addEventListener('click', function() {
             if (!currentEditUid) return;
@@ -1078,6 +1106,36 @@
                 showActionMsg('📧 Email de restablecimiento enviado a ' + c.email, 'success');
             }).catch(function(err) {
                 showActionMsg('Error: ' + err.message, 'error');
+            });
+        });
+
+        // Delete user
+        document.getElementById('btn-delete-user').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var nombre = c.nombre || c.email || currentEditUid;
+            if (!confirm('¿ELIMINAR definitivamente a "' + nombre + '"?\n\nSe borrarán su cuenta de autenticación, datos de usuario y portafolio.\n\nEsta acción NO se puede deshacer.')) return;
+            if (!confirm('¿Estás SEGURO? Escribe mentalmente el nombre del usuario para confirmar.')) return;
+            var btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Eliminando...';
+            fetch('/api/admin/delete-user', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ uid: currentEditUid, callerUid: auth.currentUser.uid })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '🗑️ Eliminar Usuario';
+                if (data.success) {
+                    showActionMsg('✅ Usuario eliminado correctamente.', 'success');
+                    setTimeout(closeModal, 1500);
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo eliminar'), 'error');
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '🗑️ Eliminar Usuario';
+                showActionMsg('Error de red: ' + err.message, 'error');
             });
         });
 

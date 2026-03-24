@@ -164,14 +164,22 @@
               })
                 .then(function(userCredential) {
                     var uid = userCredential.user.uid;
-                    return db.ref('users/' + uid).set({
-                        nombre: nombre,
-                        rut: rut,
-                        email: email,
-                        telefono: telefono,
-                        role: 'cliente',
-                        status: 'pre-inscrito',
-                        createdAt: new Date().toISOString()
+                    // Generate inscription number via atomic counter
+                    return db.ref('counters/inscripcion').transaction(function(current) {
+                        return (current || 0) + 1;
+                    }).then(function(result) {
+                        var num = result.snapshot.val();
+                        var inscripcionNum = 'PRE-2026-' + String(num).padStart(4, '0');
+                        return db.ref('users/' + uid).set({
+                            nombre: nombre,
+                            rut: rut,
+                            email: email,
+                            telefono: telefono,
+                            role: 'cliente',
+                            status: 'pre-inscrito',
+                            inscripcionNum: inscripcionNum,
+                            createdAt: new Date().toISOString()
+                        });
                     });
                 })
                 .then(function() {

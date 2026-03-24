@@ -150,16 +150,35 @@
         // Password reset
         document.getElementById('reset-btn').addEventListener('click', function() {
             var email = document.getElementById('email').value.trim();
+            var errorMsg = document.getElementById('error-msg');
+            var successMsg = document.getElementById('reset-success');
+            errorMsg.classList.add('hidden');
+            successMsg.classList.add('hidden');
             if (!email) {
-                var errorMsg = document.getElementById('error-msg');
                 errorMsg.classList.remove('hidden');
                 errorMsg.textContent = 'Ingresa tu correo electrónico primero.';
                 return;
             }
+            var btn = this;
+            btn.disabled = true;
+            btn.textContent = 'Enviando...';
             auth.sendPasswordResetEmail(email).then(function() {
-                document.getElementById('reset-success').classList.remove('hidden');
-            }).catch(function() {
-                document.getElementById('reset-success').classList.remove('hidden');
+                successMsg.classList.remove('hidden');
+                btn.textContent = '¿Olvidaste tu contraseña?';
+                btn.disabled = false;
+            }).catch(function(err) {
+                btn.textContent = '¿Olvidaste tu contraseña?';
+                btn.disabled = false;
+                errorMsg.classList.remove('hidden');
+                if (err.code === 'auth/user-not-found') {
+                    errorMsg.textContent = 'No existe una cuenta con ese correo.';
+                } else if (err.code === 'auth/invalid-email') {
+                    errorMsg.textContent = 'El correo electrónico no es válido.';
+                } else if (err.code === 'auth/too-many-requests') {
+                    errorMsg.textContent = 'Demasiados intentos. Espera unos minutos e intenta de nuevo.';
+                } else {
+                    errorMsg.textContent = 'Error al enviar correo: ' + (err.message || 'Intenta nuevamente.');
+                }
             });
         });
     })();

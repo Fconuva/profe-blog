@@ -116,13 +116,16 @@
                                 <option value="Ed. Media T.P.">Ed. Media Técnico Profesional</option>
                                 <option value="Ed. Especial / Diferencial">Ed. Especial / Diferencial</option>
                                 <option value="Ed. Personas Jóvenes y Adultas">Ed. Personas Jóvenes y Adultas</option>
+                                <option value="Otro">Otro (especificar)</option>
                             </select>
+                            <input type="text" id="pdp-nivel-otro" class="hidden w-full mt-2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none" placeholder="Escribe tu nivel educativo">
                         </div>
                         <div>
                             <label for="pdp-asignatura" class="block text-sm font-medium text-gray-700 mb-1">Asignatura</label>
                             <select id="pdp-asignatura" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white">
                                 <option value="">Primero selecciona el nivel</option>
                             </select>
+                            <input type="text" id="pdp-asignatura-otro" class="hidden w-full mt-2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none" placeholder="Escribe tu asignatura">
                         </div>
                     </div>
                     <div class="grid sm:grid-cols-2 gap-5">
@@ -138,7 +141,9 @@
                                 <option>SLEP (Servicio Local)</option>
                                 <option>Particular Subvencionado</option>
                                 <option>Particular Pagado</option>
+                                <option value="Otro">Otro (especificar)</option>
                             </select>
+                            <input type="text" id="pdp-tipo-colegio-otro" class="hidden w-full mt-2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none" placeholder="Escribe el tipo de establecimiento">
                         </div>
                     </div>
                     <div class="grid sm:grid-cols-2 gap-5">
@@ -227,6 +232,7 @@
                     <button type="submit" id="pre-datos-submit" class="w-full py-3 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm disabled:opacity-50">
                         Guardar y Continuar →
                     </button>
+                    <p id="pre-datos-autosave" class="text-center text-xs text-gray-400 mt-2 hidden"></p>
                 </form>
             </div>
         </div>
@@ -315,7 +321,9 @@
                                 <option value="camara-tripode">Cámara + trípode</option>
                                 <option value="colegio">El colegio proporciona equipo</option>
                                 <option value="no-se">Aún no lo sé</option>
+                                <option value="otro">Otro (especificar)</option>
                             </select>
+                            <input type="text" id="m2-grabacion-otro" class="hidden w-full mt-2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" placeholder="Especifica tu equipo de grabación">
                         </div>
                     </div>
                     <div>
@@ -337,7 +345,12 @@
                                 <input type="radio" name="m2-tipo" value="expositiva" class="text-purple-600">
                                 <span class="text-sm">Expositiva</span>
                             </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="m2-tipo" value="otro" class="text-purple-600">
+                                <span class="text-sm">Otro</span>
+                            </label>
                         </div>
+                        <input type="text" id="m2-tipo-otro" class="hidden w-full mt-2 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none" placeholder="Describe el tipo de clase">
                     </div>
                     <div>
                         <label for="m2-comentario" class="block text-sm font-medium text-gray-700 mb-1">¿Algo más sobre la clase grabada? (opcional)</label>
@@ -394,6 +407,7 @@
             <button type="button" id="pre-modulos-submit" class="w-full py-3 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm disabled:opacity-50 text-lg">
                 Guardar Preferencias y Finalizar ✓
             </button>
+            <p id="pre-modulos-autosave" class="text-center text-xs text-gray-400 mt-2 hidden"></p>
         </div>
 
         <!-- Sub-step: Done -->
@@ -862,6 +876,7 @@
     var currentUser = null;
     var userData = null;
     var portData = null;
+    var _suppressRender = false;
 
     (function() {
         firebase.initializeApp(FIREBASE_CONFIG);
@@ -906,6 +921,7 @@
             // Listen to portfolio data
             db.ref('portafolios/' + user.uid).on('value', function(snap) {
                 portData = snap.val();
+                if (_suppressRender) return; // Don't re-render during auto-save
                 // If returning from MercadoPago success, update payment
                 if (_paymentReturn === 'success' && portData && portData.paymentStatus !== 'approved') {
                     db.ref('portafolios/' + user.uid + '/paymentStatus').set('approved');
@@ -971,15 +987,16 @@
                 document.getElementById('pre-numero').textContent = userData.inscripcionNum || '—';
 
                 // Determine which sub-step to show
-                if (portData && portData.cuestionarioModulos) {
+                if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
                     // Already completed everything
                     showPreSubStep('listo');
                     fillResumen();
-                } else if (portData && portData.datosPortafolio) {
-                    // Has datos, needs to fill module questionnaire
+                } else if (portData && portData.datosPortafolio && portData.datosPortafolio.completadoEn) {
+                    // Has datos completed, needs to fill module questionnaire
                     showPreSubStep('modulos');
+                    prefillPreModulos();
                 } else {
-                    // Needs to fill datos first
+                    // Needs to fill datos first (may have draft data)
                     showPreSubStep('datos');
                     prefillPreDatos();
                 }
@@ -1018,29 +1035,150 @@
             showProgress();
         }
 
-        // Pre-fill datos form if already saved
+        // Pre-fill datos form if already saved (complete or draft)
         function prefillPreDatos() {
             if (!portData || !portData.datosPortafolio) return;
             var d = portData.datosPortafolio;
+            // Check if nivel is a custom "Otro" value
+            var nivelEl = document.getElementById('pdp-nivel');
+            if (d.nivel) {
+                var nivelFound = false;
+                for (var i = 0; i < nivelEl.options.length; i++) {
+                    if (nivelEl.options[i].value === d.nivel) { nivelFound = true; break; }
+                }
+                if (nivelFound) {
+                    nivelEl.value = d.nivel;
+                } else {
+                    nivelEl.value = 'Otro';
+                    var otroInput = document.getElementById('pdp-nivel-otro');
+                    otroInput.classList.remove('hidden');
+                    otroInput.value = d.nivel;
+                }
+            }
             var fields = {
-                'pdp-nivel': d.nivel, 'pdp-colegio': d.colegio, 'pdp-tipo-colegio': d.tipoColegio,
-                'pdp-comuna': d.comuna, 'pdp-region': d.region, 'pdp-curso': d.curso,
-                'pdp-num-alumnos': d.numAlumnos, 'pdp-num-pie': d.numPIE, 'pdp-tipo-nee': d.tipoNEE,
+                'pdp-colegio': d.colegio, 'pdp-comuna': d.comuna,
+                'pdp-curso': d.curso, 'pdp-num-alumnos': d.numAlumnos,
+                'pdp-num-pie': d.numPIE, 'pdp-tipo-nee': d.tipoNEE,
                 'pdp-ive': d.ive, 'pdp-sellos': d.sellos, 'pdp-conocimientos': d.conocimientosPrevios,
                 'pdp-fortalezas': d.fortalezas, 'pdp-dificultades': d.dificultades,
                 'pdp-intereses': d.intereses, 'pdp-recursos': d.recursos
             };
             Object.keys(fields).forEach(function(id) {
                 var el = document.getElementById(id);
-                if (el && fields[id]) el.value = fields[id];
+                if (el && fields[id] !== undefined && fields[id] !== null && fields[id] !== '') el.value = fields[id];
             });
+            // Tipo colegio (may be "Otro")
+            if (d.tipoColegio) {
+                var tipoEl = document.getElementById('pdp-tipo-colegio');
+                var tipoFound = false;
+                for (var j = 0; j < tipoEl.options.length; j++) {
+                    if (tipoEl.options[j].value === d.tipoColegio) { tipoFound = true; break; }
+                }
+                if (tipoFound) {
+                    tipoEl.value = d.tipoColegio;
+                } else {
+                    tipoEl.value = 'Otro';
+                    var otroTipo = document.getElementById('pdp-tipo-colegio-otro');
+                    otroTipo.classList.remove('hidden');
+                    otroTipo.value = d.tipoColegio;
+                }
+            }
+            // Region
+            if (d.region) document.getElementById('pdp-region').value = d.region;
+            // Co-docente
+            if (d.codocentePIE) {
+                document.getElementById('pdp-tiene-codocente').value = 'si';
+                document.getElementById('pre-codocente-nombre-wrap').classList.remove('hidden');
+                document.getElementById('pdp-codocente-pie').value = d.codocentePIE;
+            }
             // Trigger asignatura dropdown
             if (d.nivel) {
                 var evt = new Event('change');
                 document.getElementById('pdp-nivel').dispatchEvent(evt);
                 setTimeout(function() {
-                    if (d.asignatura) document.getElementById('pdp-asignatura').value = d.asignatura;
+                    if (d.asignatura) {
+                        var asigEl = document.getElementById('pdp-asignatura');
+                        var asigFound = false;
+                        for (var k = 0; k < asigEl.options.length; k++) {
+                            if (asigEl.options[k].value === d.asignatura) { asigFound = true; break; }
+                        }
+                        if (asigFound) {
+                            asigEl.value = d.asignatura;
+                        } else {
+                            asigEl.value = 'Otra';
+                            var otroAsig = document.getElementById('pdp-asignatura-otro');
+                            otroAsig.classList.remove('hidden');
+                            otroAsig.value = d.asignatura;
+                        }
+                    }
                 }, 50);
+            }
+        }
+
+        // Pre-fill module questionnaire if already saved (draft)
+        function prefillPreModulos() {
+            if (!portData || !portData.cuestionarioModulos) return;
+            var c = portData.cuestionarioModulos;
+            // M1
+            if (c.modulo1) {
+                if (c.modulo1.oa) document.getElementById('m1-oa').value = c.modulo1.oa;
+                if (c.modulo1.unidad) document.getElementById('m1-unidad').value = c.modulo1.unidad;
+                if (c.modulo1.horasPedagogicas) document.getElementById('m1-horas').value = c.modulo1.horasPedagogicas;
+                if (c.modulo1.tipoClase) {
+                    var r1 = document.querySelector('input[name="m1-tipo-clase"][value="' + c.modulo1.tipoClase + '"]');
+                    if (r1) r1.checked = true;
+                }
+                if (c.modulo1.usaPPT) {
+                    var r2 = document.querySelector('input[name="m1-usa-ppt"][value="' + c.modulo1.usaPPT + '"]');
+                    if (r2) r2.checked = true;
+                }
+                if (c.modulo1.comentario) document.getElementById('m1-comentario').value = c.modulo1.comentario;
+            }
+            // M2
+            if (c.modulo2) {
+                if (c.modulo2.duracionBloque) document.getElementById('m2-duracion').value = c.modulo2.duracionBloque;
+                if (c.modulo2.equipoGrabacion) {
+                    var grabEl = document.getElementById('m2-grabacion');
+                    var grabFound = false;
+                    for (var i = 0; i < grabEl.options.length; i++) {
+                        if (grabEl.options[i].value === c.modulo2.equipoGrabacion) { grabFound = true; break; }
+                    }
+                    if (grabFound) {
+                        grabEl.value = c.modulo2.equipoGrabacion;
+                    } else if (c.modulo2.equipoGrabacion) {
+                        grabEl.value = 'otro';
+                        var otroGrab = document.getElementById('m2-grabacion-otro');
+                        otroGrab.classList.remove('hidden');
+                        otroGrab.value = c.modulo2.equipoGrabacion;
+                    }
+                }
+                if (c.modulo2.restricciones) document.getElementById('m2-restricciones').value = c.modulo2.restricciones;
+                if (c.modulo2.tipoClase) {
+                    var r3 = document.querySelector('input[name="m2-tipo"][value="' + c.modulo2.tipoClase + '"]');
+                    if (r3) {
+                        r3.checked = true;
+                    } else if (c.modulo2.tipoClase) {
+                        var r3o = document.querySelector('input[name="m2-tipo"][value="otro"]');
+                        if (r3o) r3o.checked = true;
+                        var otroTipoM2 = document.getElementById('m2-tipo-otro');
+                        otroTipoM2.classList.remove('hidden');
+                        otroTipoM2.value = c.modulo2.tipoClase;
+                    }
+                }
+                if (c.modulo2.comentario) document.getElementById('m2-comentario').value = c.modulo2.comentario;
+            }
+            // M3
+            if (c.modulo3) {
+                if (c.modulo3.tieneExperiencia) {
+                    var r4 = document.querySelector('input[name="m3-tiene-experiencia"][value="' + c.modulo3.tieneExperiencia + '"]');
+                    if (r4) {
+                        r4.checked = true;
+                        r4.dispatchEvent(new Event('change'));
+                    }
+                }
+                if (c.modulo3.descripcionExperiencia) document.getElementById('m3-descripcion').value = c.modulo3.descripcionExperiencia;
+                if (c.modulo3.colaborador) document.getElementById('m3-colaborador').value = c.modulo3.colaborador;
+                if (c.modulo3.comentario) document.getElementById('m3-comentario').value = c.modulo3.comentario;
             }
         }
 
@@ -1301,37 +1439,65 @@
 
         // ---- PRE-INSCRIPTION: Asignatura dropdown ----
         var preAsignaturasPorNivel = {
-            'Educación Parvularia': ['Educación Parvularia'],
+            'Educación Parvularia': ['Educación Parvularia','Otra'],
             'Ed. Básica (1° a 6°)': ['Educ. General Básica (Generalista)','Lenguaje y Comunicación','Matemática','Historia, Geografía y Cs. Sociales','Ciencias Naturales','Inglés','Educación Física y Salud','Artes Visuales','Música','Tecnología','Religión','Orientación','Otra'],
             'Ed. Básica (7° y 8°)': ['Lengua y Literatura','Matemática','Historia, Geografía y Cs. Sociales','Ciencias Naturales','Inglés','Educación Física y Salud','Artes Visuales','Música','Tecnología','Religión','Orientación','Otra'],
             'Ed. Media (I a IV Medio)': ['Lengua y Literatura','Matemática','Historia, Geografía y Cs. Sociales','Biología','Física','Química','Inglés','Educación Física y Salud','Artes Visuales','Artes Musicales','Filosofía','Tecnología','Religión','Orientación','Otra'],
             'Ed. Media T.P.': ['Especialidad T.P.','Lenguaje y Comunicación','Matemática','Historia, Geografía y Cs. Sociales','Inglés','Otra'],
-            'Ed. Especial / Diferencial': ['Educación Diferencial / Especial'],
-            'Ed. Personas Jóvenes y Adultas': ['Lenguaje y Comunicación','Matemática','Historia, Geografía y Cs. Sociales','Ciencias Naturales','Inglés','Otra']
+            'Ed. Especial / Diferencial': ['Educación Diferencial / Especial','Otra'],
+            'Ed. Personas Jóvenes y Adultas': ['Lenguaje y Comunicación','Matemática','Historia, Geografía y Cs. Sociales','Ciencias Naturales','Inglés','Otra'],
+            'Otro': ['Otra']
         };
         document.getElementById('pdp-nivel').addEventListener('change', function() {
             var sel = document.getElementById('pdp-asignatura');
             var opts = preAsignaturasPorNivel[this.value] || [];
             sel.innerHTML = '<option value="">Selecciona asignatura</option>';
             opts.forEach(function(a) { var o = document.createElement('option'); o.value = a; o.textContent = a; sel.appendChild(o); });
+            // Show/hide "Otro" text input for nivel
+            document.getElementById('pdp-nivel-otro').classList.toggle('hidden', this.value !== 'Otro');
+            // Reset asignatura "Otro" input
+            document.getElementById('pdp-asignatura-otro').classList.add('hidden');
+        });
+
+        // "Otro" handler for asignatura
+        document.getElementById('pdp-asignatura').addEventListener('change', function() {
+            document.getElementById('pdp-asignatura-otro').classList.toggle('hidden', this.value !== 'Otra');
+        });
+
+        // "Otro" handler for tipo colegio
+        document.getElementById('pdp-tipo-colegio').addEventListener('change', function() {
+            document.getElementById('pdp-tipo-colegio-otro').classList.toggle('hidden', this.value !== 'Otro');
+        });
+
+        // "Otro" handler for M2 equipo grabacion
+        document.getElementById('m2-grabacion').addEventListener('change', function() {
+            document.getElementById('m2-grabacion-otro').classList.toggle('hidden', this.value !== 'otro');
+        });
+
+        // "Otro" handler for M2 tipo clase
+        document.querySelectorAll('input[name="m2-tipo"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                document.getElementById('m2-tipo-otro').classList.toggle('hidden', this.value !== 'otro');
+            });
         });
         // Pre-inscription co-docente toggle
         document.getElementById('pdp-tiene-codocente').addEventListener('change', function() {
             document.getElementById('pre-codocente-nombre-wrap').classList.toggle('hidden', this.value !== 'si');
         });
 
-        // ---- PRE-INSCRIPTION: Datos form submit ----
-        document.getElementById('pre-datos-form').addEventListener('submit', function(e) {
-            e.preventDefault();
-            var btn = document.getElementById('pre-datos-submit');
-            btn.disabled = true;
-            btn.textContent = 'Guardando...';
-
-            var datos = {
-                nivel: document.getElementById('pdp-nivel').value,
-                asignatura: document.getElementById('pdp-asignatura').value,
+        // ---- AUTO-SAVE: collect form data helpers ----
+        function collectDatosFields() {
+            var nivelVal = document.getElementById('pdp-nivel').value;
+            if (nivelVal === 'Otro') nivelVal = document.getElementById('pdp-nivel-otro').value.trim() || 'Otro';
+            var asigVal = document.getElementById('pdp-asignatura').value;
+            if (asigVal === 'Otra') asigVal = document.getElementById('pdp-asignatura-otro').value.trim() || 'Otra';
+            var tipoColegioVal = document.getElementById('pdp-tipo-colegio').value;
+            if (tipoColegioVal === 'Otro') tipoColegioVal = document.getElementById('pdp-tipo-colegio-otro').value.trim() || 'Otro';
+            return {
+                nivel: nivelVal,
+                asignatura: asigVal,
                 colegio: document.getElementById('pdp-colegio').value.trim(),
-                tipoColegio: document.getElementById('pdp-tipo-colegio').value,
+                tipoColegio: tipoColegioVal,
                 comuna: document.getElementById('pdp-comuna').value.trim(),
                 region: document.getElementById('pdp-region').value,
                 curso: document.getElementById('pdp-curso').value.trim(),
@@ -1345,9 +1511,118 @@
                 fortalezas: document.getElementById('pdp-fortalezas').value.trim(),
                 dificultades: document.getElementById('pdp-dificultades').value.trim(),
                 intereses: document.getElementById('pdp-intereses').value.trim(),
-                recursos: document.getElementById('pdp-recursos').value.trim(),
-                completadoEn: new Date().toISOString()
+                recursos: document.getElementById('pdp-recursos').value.trim()
             };
+        }
+
+        function collectModulosFields() {
+            var grabVal = document.getElementById('m2-grabacion').value;
+            if (grabVal === 'otro') grabVal = document.getElementById('m2-grabacion-otro').value.trim() || 'otro';
+            var tipoClaseM2 = (document.querySelector('input[name="m2-tipo"]:checked') || {}).value || '';
+            if (tipoClaseM2 === 'otro') tipoClaseM2 = document.getElementById('m2-tipo-otro').value.trim() || 'otro';
+            return {
+                modulo1: {
+                    oa: document.getElementById('m1-oa').value.trim(),
+                    unidad: document.getElementById('m1-unidad').value.trim(),
+                    horasPedagogicas: parseInt(document.getElementById('m1-horas').value) || 0,
+                    tipoClase: (document.querySelector('input[name="m1-tipo-clase"]:checked') || {}).value || '',
+                    usaPPT: (document.querySelector('input[name="m1-usa-ppt"]:checked') || {}).value || '',
+                    comentario: document.getElementById('m1-comentario').value.trim()
+                },
+                modulo2: {
+                    duracionBloque: parseInt(document.getElementById('m2-duracion').value) || 0,
+                    equipoGrabacion: grabVal,
+                    restricciones: document.getElementById('m2-restricciones').value.trim(),
+                    tipoClase: tipoClaseM2,
+                    comentario: document.getElementById('m2-comentario').value.trim()
+                },
+                modulo3: {
+                    tieneExperiencia: (document.querySelector('input[name="m3-tiene-experiencia"]:checked') || {}).value || '',
+                    descripcionExperiencia: document.getElementById('m3-descripcion').value.trim(),
+                    colaborador: document.getElementById('m3-colaborador').value.trim(),
+                    comentario: document.getElementById('m3-comentario').value.trim()
+                }
+            };
+        }
+
+        // Debounced auto-save
+        var _datosTimer = null;
+        var _modulosTimer = null;
+
+        function autoSaveDatos() {
+            var indicator = document.getElementById('pre-datos-autosave');
+            indicator.textContent = '💾 Guardando borrador...';
+            indicator.classList.remove('hidden');
+            _suppressRender = true;
+            var datos = collectDatosFields();
+            db.ref('portafolios/' + currentUser.uid + '/datosPortafolio').set(datos).then(function() {
+                // Also ensure plan structure exists for drafts
+                return db.ref('portafolios/' + currentUser.uid + '/plan').once('value').then(function(snap) {
+                    if (!snap.val()) {
+                        return db.ref('portafolios/' + currentUser.uid).update({
+                            plan: 'pre-inscripcion',
+                            paymentStatus: 'pre-inscrito',
+                            createdAt: new Date().toISOString()
+                        });
+                    }
+                });
+            }).then(function() {
+                indicator.textContent = '✅ Borrador guardado';
+                setTimeout(function() { _suppressRender = false; }, 500);
+                setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            }).catch(function() {
+                indicator.textContent = '⚠️ Error al guardar borrador';
+                _suppressRender = false;
+                setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            });
+        }
+
+        function autoSaveModulos() {
+            var indicator = document.getElementById('pre-modulos-autosave');
+            indicator.textContent = '💾 Guardando borrador...';
+            indicator.classList.remove('hidden');
+            _suppressRender = true;
+            var cuestionario = collectModulosFields();
+            db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {
+                indicator.textContent = '✅ Borrador guardado';
+                setTimeout(function() { _suppressRender = false; }, 500);
+                setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            }).catch(function() {
+                indicator.textContent = '⚠️ Error al guardar borrador';
+                _suppressRender = false;
+                setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            });
+        }
+
+        // Attach auto-save listeners to datos form
+        document.getElementById('pre-datos-form').addEventListener('input', function() {
+            clearTimeout(_datosTimer);
+            _datosTimer = setTimeout(autoSaveDatos, 3000);
+        });
+        document.getElementById('pre-datos-form').addEventListener('change', function() {
+            clearTimeout(_datosTimer);
+            _datosTimer = setTimeout(autoSaveDatos, 1500);
+        });
+        // Attach auto-save listeners to modulos section
+        document.getElementById('pre-step-modulos').addEventListener('input', function() {
+            clearTimeout(_modulosTimer);
+            _modulosTimer = setTimeout(autoSaveModulos, 3000);
+        });
+        document.getElementById('pre-step-modulos').addEventListener('change', function() {
+            clearTimeout(_modulosTimer);
+            _modulosTimer = setTimeout(autoSaveModulos, 1500);
+        });
+
+        // ---- PRE-INSCRIPTION: Datos form submit ----
+        document.getElementById('pre-datos-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            clearTimeout(_datosTimer); // Cancel any pending auto-save
+            var btn = document.getElementById('pre-datos-submit');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+
+            var datos = collectDatosFields();
+            datos.completadoEn = new Date().toISOString();
 
             // Save datos + create basic portfolio structure
             var updates = {};
@@ -1382,34 +1657,13 @@
 
         // ---- PRE-INSCRIPTION: Module questionnaire submit ----
         document.getElementById('pre-modulos-submit').addEventListener('click', function() {
+            clearTimeout(_modulosTimer); // Cancel any pending auto-save
             var btn = this;
             btn.disabled = true;
             btn.textContent = 'Guardando...';
 
-            var cuestionario = {
-                modulo1: {
-                    oa: document.getElementById('m1-oa').value.trim(),
-                    unidad: document.getElementById('m1-unidad').value.trim(),
-                    horasPedagogicas: parseInt(document.getElementById('m1-horas').value) || 0,
-                    tipoClase: document.querySelector('input[name="m1-tipo-clase"]:checked').value,
-                    usaPPT: document.querySelector('input[name="m1-usa-ppt"]:checked').value,
-                    comentario: document.getElementById('m1-comentario').value.trim()
-                },
-                modulo2: {
-                    duracionBloque: parseInt(document.getElementById('m2-duracion').value) || 0,
-                    equipoGrabacion: document.getElementById('m2-grabacion').value,
-                    restricciones: document.getElementById('m2-restricciones').value.trim(),
-                    tipoClase: document.querySelector('input[name="m2-tipo"]:checked').value,
-                    comentario: document.getElementById('m2-comentario').value.trim()
-                },
-                modulo3: {
-                    tieneExperiencia: document.querySelector('input[name="m3-tiene-experiencia"]:checked').value,
-                    descripcionExperiencia: document.getElementById('m3-descripcion').value.trim(),
-                    colaborador: document.getElementById('m3-colaborador').value.trim(),
-                    comentario: document.getElementById('m3-comentario').value.trim()
-                },
-                completadoEn: new Date().toISOString()
-            };
+            var cuestionario = collectModulosFields();
+            cuestionario.completadoEn = new Date().toISOString();
 
             db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {
                 btn.disabled = false;

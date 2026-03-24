@@ -202,12 +202,16 @@
               })
                 .then(function(userCredential) {
                     var uid = userCredential.user.uid;
-                    // Generate inscription number via atomic counter
+                    // Generate inscription number via atomic counter (with fallback)
                     return db.ref('counters/inscripcion').transaction(function(current) {
                         return (current || 0) + 1;
                     }).then(function(result) {
                         var num = result.snapshot.val();
-                        var inscripcionNum = 'PRE-2026-' + String(num).padStart(4, '0');
+                        return 'PRE-2026-' + String(num).padStart(4, '0');
+                    }).catch(function() {
+                        // Fallback: timestamp-based number if counter fails
+                        return 'PRE-2026-T' + Date.now().toString(36).toUpperCase();
+                    }).then(function(inscripcionNum) {
                         return db.ref('users/' + uid).set({
                             nombre: nombre,
                             rut: rut,

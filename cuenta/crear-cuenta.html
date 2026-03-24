@@ -140,10 +140,11 @@
         firebase.initializeApp(FIREBASE_CONFIG);
         var auth = firebase.auth();
         var db = firebase.database();
+        var isRegistering = false;
 
-        // If already logged in, go to dashboard
+        // If already logged in, go to dashboard (but NOT during registration)
         auth.onAuthStateChanged(function(user) {
-            if (user) window.location.href = '/dashboard/index.html';
+            if (user && !isRegistering) window.location.href = '/dashboard/index.html';
         });
 
         // RUT formatting
@@ -195,6 +196,7 @@
             errorMsg.classList.add('hidden');
             submitBtn.disabled = true;
             submitBtn.textContent = 'Registrando...';
+            isRegistering = true;
 
             auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
               .then(function() {
@@ -228,6 +230,7 @@
                     window.location.href = '/dashboard/index.html';
                 })
                 .catch(function(error) {
+                    isRegistering = false;
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Pre-Inscribirme Gratis';
                     errorMsg.classList.remove('hidden');

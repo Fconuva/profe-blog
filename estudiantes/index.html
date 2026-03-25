@@ -82,8 +82,8 @@
     <div class="login-card">
         <div class="logo-area">
             <div class="logo-strip">
-                <img src="assets/insignia_talca.png" alt="Insignia Salesianos Talca" class="logo-main">
-                <img src="assets/sdb-logo-big.png" alt="Logo Salesianos Don Bosco" class="logo-sdb">
+                <img src="/estudiantes/assets/insignia_talca.png" alt="Insignia Salesianos Talca" class="logo-main">
+                <img src="/estudiantes/assets/sdb-logo-big.png" alt="Logo Salesianos Don Bosco" class="logo-sdb">
             </div>
             <h1>Plataforma Estudiantes</h1>
             <p>PAES · Competencia Lectora 2026</p>
@@ -102,7 +102,7 @@
             <div class="form-group">
                 <label for="passInput">Contraseña</label>
                 <div class="pass-wrapper">
-                    <input type="password" id="passInput" placeholder="Ingresa tu contraseña" required>
+                    <input type="password" id="passInput" name="student_password" autocomplete="new-password" placeholder="Ingresa tu contraseña" required>
                     <button type="button" class="show-pass-toggle" id="togglePass" title="Mostrar contraseña">👁️</button>
                 </div>
                 <div class="input-hint">Si olvidaste tu clave, solicita restablecimiento a tu profesor</div>
@@ -202,6 +202,19 @@
 
         // ============ AUTO-FORMAT RUT ============
         const rutInput = document.getElementById('rutInput');
+        const passInput = document.getElementById('passInput');
+
+        // Browsers may autofill previously saved passwords from the same domain.
+        // Clear it explicitly so students never see an admin password suggestion in the field.
+        function clearUnexpectedAutofill() {
+            if (!passInput) return;
+            if (passInput.value && passInput.value.trim() === 'Admin2026!Profe') {
+                passInput.value = '';
+            }
+        }
+
+        clearUnexpectedAutofill();
+        window.addEventListener('pageshow', clearUnexpectedAutofill);
         rutInput.addEventListener('input', function() {
             const pos = this.selectionStart;
             const before = this.value.length;
@@ -234,7 +247,7 @@
             hideError();
 
             const rut = rutInput.value.trim();
-            const pass = document.getElementById('passInput').value;
+            const pass = passInput.value;
             const btn = document.getElementById('btnLogin');
 
             if (!rut || !pass) { showError('Completa todos los campos.'); return; }
@@ -285,9 +298,9 @@
 
                 // Check if profile is complete
                 if (!data.perfil_completo) {
-                    window.location.href = 'perfil.html';
+                    window.location.href = '/estudiantes/perfil.html';
                 } else {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = '/estudiantes/dashboard.html';
                 }
 
             } catch (err) {
@@ -315,8 +328,8 @@
                     const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
                     const data = snap.val();
                     if (data) {
-                        if (!data.perfil_completo) window.location.href = 'perfil.html';
-                        else window.location.href = 'dashboard.html';
+                        if (!data.perfil_completo) window.location.href = '/estudiantes/perfil.html';
+                        else window.location.href = '/estudiantes/dashboard.html';
                     }
                 } catch(e) { /* ignore, show login */ }
             }

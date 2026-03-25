@@ -106,13 +106,46 @@
             .level-row{grid-template-columns:repeat(2,1fr)}
         }
     </style>
+        /* LOGIN SCREEN */
+        .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b)}
+        .login-box{background:#fff;border-radius:16px;padding:36px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+        .login-box h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:4px;text-align:center}
+        .login-box p{font-size:13px;color:#64748b;margin-bottom:20px;text-align:center}
+        .login-box .form-group{margin-bottom:14px}
+        .login-box .form-group label{display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px}
+        .login-box .form-group input{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit}
+        .login-box .form-group input:focus{outline:none;border-color:#3b82f6}
+        .login-box .login-btn{width:100%;padding:12px;background:#1e40af;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+        .login-box .login-btn:hover{background:#1e3a8a}
+        .login-box .login-error{color:#dc2626;font-size:12px;font-weight:600;margin-top:10px;text-align:center;display:none}
+    </style>
 </head>
 <body>
 
+<!-- LOGIN SCREEN (se muestra si no hay sesión) -->
+<div class="login-screen" id="loginScreen">
+    <div class="login-box">
+        <h2>🔐 Administración</h2>
+        <p>Plataforma Estudiantes — Profe Francisco</p>
+        <div class="form-group">
+            <label>Correo</label>
+            <input type="email" id="adminEmail" placeholder="correo@ejemplo.com">
+        </div>
+        <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="adminPass" placeholder="••••••••" onkeydown="if(event.key==='Enter')adminLogin()">
+        </div>
+        <button class="login-btn" onclick="adminLogin()">Ingresar</button>
+        <div class="login-error" id="loginError"></div>
+    </div>
+</div>
+
+<!-- PANEL ADMIN (oculto hasta autenticarse) -->
+<div id="adminPanel" style="display:none">
 <div class="header">
     <h1>📋 Panel de Administración</h1>
     <span class="admin-name" id="adminName"></span>
-    <button onclick="auth.signOut().then(()=>location.href='/estudiantes/index.html')" title="Cerrar sesión">Salir</button>
+    <button onclick="auth.signOut().then(()=>location.reload())" title="Cerrar sesión">Salir</button>
 </div>
 <div class="mobile-nav" id="mobileNav" style="display:none"></div>
 
@@ -290,6 +323,8 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
+</div><!-- /adminPanel -->
+
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -311,15 +346,34 @@ let allResponses={};
 let currentAdminUid=null;
 
 /* ============ AUTH ============ */
+function adminLogin(){
+    const email=document.getElementById('adminEmail').value.trim();
+    const pass=document.getElementById('adminPass').value;
+    const errEl=document.getElementById('loginError');
+    errEl.style.display='none';
+    if(!email||!pass){errEl.textContent='Completa ambos campos';errEl.style.display='block';return}
+    auth.signInWithEmailAndPassword(email,pass).catch(e=>{
+        errEl.textContent=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':e.code==='auth/user-not-found'?'Usuario no encontrado':'Error: '+e.message;
+        errEl.style.display='block';
+    });
+}
+
 auth.onAuthStateChanged(async user=>{
-    if(!user){window.location.href='/estudiantes/index.html';return}
+    if(!user){
+        document.getElementById('loginScreen').style.display='flex';
+        document.getElementById('adminPanel').style.display='none';
+        return;
+    }
     // Check admin role
     const snap=await db.ref(BASE+'/admins/'+user.uid).once('value');
     if(!snap.val()){
         toast('No tienes permisos de administrador','err');
-        setTimeout(()=>{auth.signOut();location.href='/estudiantes/index.html'},2000);
+        setTimeout(()=>{auth.signOut()},2000);
         return;
     }
+    // Mostrar panel, ocultar login
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
     currentAdminUid=user.uid;
     document.getElementById('adminName').textContent=user.email||'Admin';
     initMobileNav();

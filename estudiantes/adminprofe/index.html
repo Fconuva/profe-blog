@@ -158,6 +158,7 @@
         <a href="#" data-section="sessions" onclick="showSection('sessions',this)"><span class="icon">📚</span>Sesiones</a>
         <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
         <a href="#" data-section="reports" onclick="showSection('reports',this)"><span class="icon">📋</span>Reportes</a>
+        <a href="#" data-section="ranking" onclick="showSection('ranking',this)"><span class="icon">🏆</span>Ranking</a>
     </nav>
 
     <div class="content">
@@ -203,6 +204,7 @@
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addStudent')">+ Agregar Estudiante</button>
                 <button class="btn btn-secondary" onclick="openModal('bulkAdd')">📋 Carga Masiva</button>
+                <button class="btn btn-success" onclick="preload2BHC()">📋 Precargar 2°B HC (42 est.)</button>
             </div>
             <div class="search-bar">
                 <input type="text" id="studentSearch" placeholder="Buscar por nombre o RUT..." oninput="renderStudents()">
@@ -224,6 +226,7 @@
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
                 <button class="btn btn-success" onclick="preloadSession1()">🚀 Precargar Sesión 1</button>
+                <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
             </div>
             <div class="panel-table">
                 <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Acciones</th></tr></thead>
@@ -269,6 +272,27 @@
                 </div>
             </div>
             <div id="reportOutput" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none"></div>
+        </div>
+
+        <!-- ================== RANKING ================== -->
+        <div class="section" id="sec-ranking">
+            <h2>🏆 Ranking</h2>
+            <div class="search-bar">
+                <select id="rankingSesSelect" onchange="loadAdminRanking()">
+                    <option value="">Selecciona sesión...</option>
+                    <option value="__all__">📊 Histórico (Todas las sesiones)</option>
+                </select>
+                <select id="rankingCourseFilter" onchange="loadAdminRanking()">
+                    <option value="">Todos los cursos</option>
+                    <option value="2A-HC">2°A HC</option>
+                    <option value="2B-HC">2°B HC</option>
+                </select>
+            </div>
+            <div class="stat-row" id="rankingStats"></div>
+            <div class="panel-table">
+                <table><thead><tr><th style="width:40px">#</th><th>Estudiante</th><th>Curso</th><th>Puntaje</th><th>Logro</th><th>Nivel</th></tr></thead>
+                <tbody id="rankingBody"></tbody></table>
+            </div>
         </div>
     </div>
 </div>
@@ -463,7 +487,8 @@ function initMobileNav(){
         {id:'students',icon:'👥',label:'Estudiantes'},
         {id:'sessions',icon:'📚',label:'Sesiones'},
         {id:'results',icon:'📈',label:'Resultados'},
-        {id:'reports',icon:'📋',label:'Reportes'}
+        {id:'reports',icon:'📋',label:'Reportes'},
+        {id:'ranking',icon:'🏆',label:'Ranking'}
     ];
     nav.innerHTML=links.map(l=>`<a href="#" data-section="${l.id}" class="${l.id==='overview'?'active':''}" onclick="showSection('${l.id}',this)">${l.icon} ${l.label}</a>`).join('');
     if(window.innerWidth<=768) nav.style.display='flex';
@@ -914,6 +939,158 @@ async function preloadSession1(){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+async function preloadSession2(){
+    if(!confirm('¿Precargar Sesión 2 con los 7 textos y 36 preguntas del SIMCE 2025 Forma P?'))return;
+
+    const sesData={
+        titulo:'Sesión 2: SIMCE 2025 — Comprensión de Lectura (Forma P)',
+        descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',
+        orden:2,activa:true,resultados_visibles:false,video_youtube:null,
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'Literario',subtipo:'Poema',titulo:'Canción de los que buscan olvidar — Gabriela Mistral',
+                 parrafos:[
+                    {num:1,texto:'Al costado de la barca<br>mi corazón he apegado,<br>al costado de la barca,<br>de espumas ribeteado.<br>Lávalo, mar, con sal eterna;<br>lávalo, mar, lávalo mar,<br>que la tierra es para la lucha<br>y tú eres para consolar.'},
+                    {num:2,texto:'En la <strong>proa</strong> poderosa<br>mi corazón he clavado.<br>Mírate barca que llevas<br>el vértice ensangrentado.'},
+                    {num:3,texto:'Lávalo, mar, con sal tremenda,<br>lávalo mar, lávalo mar.<br>O me lo rompes en la proa<br>que no lo quiero más llevar.'},
+                    {num:4,texto:'Sobre la nave toda puse<br>mi vida como derramada.<br><strong>Múdala</strong>, mar, en los cien días<br>que ella será tu <strong>desposada</strong>.'},
+                    {num:5,texto:'Múdala, mar, con tus cien vientos.<br>Lávala mar, lávala mar,<br>que otros te piden oro y perlas,<br>¡y yo te pido olvidar!'}
+                 ],fuente:'Gabriela Mistral. La lluvia lenta. Letras de Gabriela Mistral. Ed. Ana García. Santiago: Ediciones SM.'},
+
+                {id:'texto-2',tipo:'Literario',subtipo:'Cuento + Reseña',titulo:'Medias — Tim O\'Brien / Los relatos de O\'Brien — Saray García',
+                 parrafos:[
+                    {num:1,texto:'Henry Dobbins era un buen hombre y un soldado soberbio, pero la sutileza no era su fuerte. Las ironías resbalaban sobre él. En muchos sentidos, era como los propios Estados Unidos: grande y fuerte, lleno de buenas intenciones, con un michelín de grasa temblequeando en la cintura, lento al caminar, pero siempre avanzando, siempre a punto cuando lo necesitabas, firme partidario de las virtudes de la sencillez, la franqueza y el trabajo duro. Al igual que su país, Dobbins también tenía tendencia al sentimentalismo.'},
+                    {num:2,texto:'Incluso ahora, veinte años después, puedo verle colocándose las medias de su novia alrededor del cuello antes de partir para una emboscada.'},
+                    {num:3,texto:'Era su único rasgo excéntrico. Las medias, decía, tenían las propiedades de un amuleto. Le gustaba hundir la nariz en el nailon y aspirar el aroma del cuerpo de su novia; le gustaban los recuerdos que ello le inspiraba; a veces dormía con las medias contra la cara, como duerme un niño con una manta mágica, seguro y tranquilo. Pero sobre todo las medias eran como un talismán. Le mantenían a salvo. Le daban acceso a un mundo espiritual donde las cosas eran suaves e íntimas, un sitio adonde algún día llevaría a vivir a su novia. Como muchos de nosotros en Vietnam, Dobbins sentía el tirón de la superstición, y creía con firmeza y absolutamente en el poder protector de las medias. Eran como una armadura, pensaba. Cada vez que nos poníamos el equipo para una emboscada nocturna, mientras nos colocábamos los cascos y los chalecos antibalas, Henry Dobbins ejecutaba el ritual de acomodarse las medias de nailon alrededor del cuello; hacía un nudo con esmero y dejaba caer ambas perneras por encima del hombro izquierdo. Le gastábamos bromas, desde luego, pero llegamos a apreciar el misterio de todo aquello. Dobbins era invulnerable. No había sufrido ni una herida, ni un rasguño. En agosto tropezó con una mina, que no estalló. Y una semana después quedó al descubierto durante un feroz y breve tiroteo cruzado, sin ningún sitio donde cubrirse, pero se limitó a deslizar las medias sobre su nariz y a respirar hondo y dejar que la magia funcionara.'},
+                    {num:4,texto:'Nos convirtió en un pelotón de creyentes. No discutes los hechos.'},
+                    {num:5,texto:'Pero, hacia fines de octubre, su novia le dejó. Fue un golpe duro. Dobbins se quedó quieto un rato, con los ojos bajos, clavados en la carta, pero al fin sacó las medias y se las ató alrededor del cuello como una bufanda.'},
+                    {num:6,texto:'–No hay que hacerse mala sangre –dijo–. Yo la sigo amando. La magia no desaparece.'},
+                    {num:7,texto:'Fue un alivio para todos nosotros.'},
+                    {num:8,texto:'<strong>Los relatos de O\'Brien — Saray García</strong><br><br>La Guerra de Vietnam sigue en nuestras conciencias. Sigue horrorizando y fascinando al imaginario colectivo con la ayuda de la infinidad de películas, documentales, libros, etc., que se han escrito (y se seguirán escribiendo) sobre ella y sus protagonistas más directos.'},
+                    {num:9,texto:'<strong>Tim O\'Brien</strong> fue uno de los hombres que luchó en ella y fue también quien, en el año 1997, publicó el que se dice que es uno de los mejores libros sobre la trágica contienda: <em>Las cosas que llevaban los hombres que lucharon</em>. Se trata de una colección de relatos que, aunque no sigan una estructura lineal, forman un libro compacto, único, que se aferrará a los más profundos sentimientos del lector.'},
+                    {num:10,texto:'Porque, en la guerra, la vida y la muerte están separadas por apenas una línea finísima que pende, muy a menudo, de los objetos que el soldado acarree con él (provisiones, armas, etc.), que serán los que, quizá, consigan que esa tenue raya no se borre.'},
+                    {num:11,texto:'Sin embargo, un buen soldado tampoco se deshace nunca de otro cargamento igual de pesado: sus recuerdos, su memoria, sus fantasmas personales y algunos objetos sin importancia que se vuelven auténticos amuletos y que hacen que, gracias a ellos, no se olvide que existe una vida más allá de la guerra.'},
+                    {num:12,texto:'A este respecto, O\'Brien nos trae un extraordinario libro que habla de grandes temas que han preocupado a la humanidad y que cobran dimensiones inmensas en el campo de batalla: la muerte, la cobardía, la amistad, el valor, la vergüenza, la tristeza, la soledad, la importancia del compañerismo y un largo etcétera.'},
+                    {num:13,texto:'Todos estos temas y preocupaciones nacen y nos son transmitidos desde la mirada de un soldado que se ve abocado a combatir en una guerra que no logra comprender del todo.'}
+                 ],fuente:'O\'Brien, Tim. Las cosas que llevaban los hombres que lucharon. Barcelona: Anagrama. / Página web Sobre Relatos, 4 de agosto de 2011.'},
+
+                {id:'texto-3',tipo:'No literario',subtipo:'Columna de Opinión',titulo:'Lenguaje genérico masculino: Cuando lo que sale de la boca sí afecta la cancha — Priscila González Yáñez',
+                 parrafos:[
+                    {num:1,texto:'El astrónomo y académico José Maza señaló recientemente que le producía cierta "violencia" el lenguaje inclusivo, a lo que añadió que la inclusión no está en la boca, sino que en la cancha. Aunque concuerdo con el profesor Maza en muchos de sus planteamientos, en este caso discrepo profundamente.'},
+                    {num:2,texto:'A primera vista puede sonar lógico que la inclusión esté en la cancha, en los actos reales, y no en lo simbólico como es el lenguaje. Sin embargo, la evidencia científica y la realidad muestran que lo que se denomina masculino genérico, es decir, utilizar términos masculinos de forma neutra para referirse a ambos sexos, no se lee en la realidad de manera genérica y neutra. En la mayoría de los casos se lee únicamente como masculino.'},
+                    {num:3,texto:'La escritora británica Caroline Criado Pérez, en su libro <em>La Mujer Invisible</em>, presenta amplia evidencia al respecto, citando numerosas investigaciones y estudios. Por ejemplo, en el ámbito laboral, frente a la interrogante de "¿Cómo el lenguaje no inclusivo o genérico masculino nos afecta a las mujeres?" se obtuvieron interesantes resultados. Primero, las mujeres somos menos proclives a postular y a desenvolvernos bien en las entrevistas de trabajo si en el anuncio del empleo se utiliza el masculino genérico.'},
+                    {num:4,texto:'De hecho, una investigación realizada por Erin Oldford, profesora e investigadora en Memorial University, sugiere que modificar el lenguaje de las ofertas de trabajo puede ayudar a mejorar la diversidad de género de los solicitantes de empleo, particularmente en campos dominados por hombres.'},
+                    {num:5,texto:'Segundo, cuando se emplea el masculino genérico para profesiones, es más probable que creamos que en dicha profesión predominan los hombres. Es decir, si mencionamos palabras como "político", "ingeniero", "profesor" o "abogado", lo primero en lo que pensamos es en hombres ejerciendo esos roles, aunque trabajen mujeres en dichas áreas.'},
+                    {num:6,texto:'Tercero, y ligado a lo anterior, cuando se emplea el masculino genérico en las profesiones, es más probable que se proponga a candidatos masculinos para empleos y cargos políticos. Es decir, ese pensamiento en figuras masculinas se traspasa a la realidad y es más probable proponer y priorizar a varones para dichas posiciones.'},
+                    {num:7,texto:'En síntesis, y utilizando la misma analogía del profesor Maza, el lenguaje no inclusivo sí afecta la cancha. Cuando hablamos en genérico masculino, las mujeres nos sentimos menos convocadas, e incluso nos marginamos de procesos y ámbitos tan importantes como el laboral. El lenguaje inclusivo está lejos de ser violento, es una forma de actuar y cambiar la realidad, y no es sólo simbolismo.'}
+                 ],fuente:'Priscila González Yáñez. "Lenguaje genérico masculino: cuando lo que sale de la boca sí afecta la cancha". El Mostrador. 03 julio 2023.'},
+
+                {id:'texto-4',tipo:'Literario',subtipo:'Obra Dramática',titulo:'Calima (Acto I) — Poli Calle Soriano',
+                 parrafos:[
+                    {num:1,texto:'<strong>PERSONAJES:</strong> PONCE (propietario de la taberna, padre de Luisa, ~55 años), CHISPA (consuegro de Ponce, padre de Carlos y Lucas, ~60 años), MONDA (compañero de partida del Chispa), PINCHA (compañero de partida, edad similar a Ponce), CASTO (amigo de infancia de Ponce), LUISA (hija de Ponce, casada con Lucas, ~30 años), LUCAS (hijo menor del Chispa, casado con Luisa). Década de los 60, en cualquier pequeño pueblo castellano castigado duramente por la guerra civil.'},
+                    {num:2,texto:'<em>El decorado representa una taberna de pueblo. De una radio situada en algún lugar de los estantes repletos no solo de botellas, sino también de otros utensilios, llegan nítidas, aunque lejanas, canciones de posguerra. Un pesado ventilador de techo, de aspas enormes, gira tan lento que parece agonizar. PONCE, propietario del bar, lucha tras la barra por colocar en una bandeja algo pequeña una botella de vino y cuatro pequeños vasos. Hay tres hombres sentados en una mesa de juego con un dominó. De la calle, a través de una cortina de plástico de vivos colores, entra fuego. Calor, mucho calor.</em>'},
+                    {num:3,texto:'<strong>PONCE.—</strong> A ver, un momento, hacerme sitio para la bandeja.<br><strong>CHISPA.—</strong> Hay que joderse consuegro, bandeja y todo, ni que fuéramos generales. La manía no hay quién te la quite.<br><strong>PONCE.—</strong> El local es mío y sirvo el vino como quiero. Aunque no os lo creáis el local es un sitio decente y las cosas se han de hacer bien.<br><strong>MONDA.—</strong> Algunas nada más, que bien podrías arreglar el mueve aires ese que tienes. Hace una calor que quema.<br><strong>PONCE.—</strong> No hay perras (dinero).'},
+                    {num:4,texto:'<strong>PINCHA.—</strong> Lo que pasa es lo que pasa, que tira la sangre y los reales que salen de aquí faltan de allá... que, ¿cómo va esa chica?<br><strong>PONCE.—</strong> <em>(Se le enciende la cara.)</em> ¿Y qué habría yo de decir? Más reguapa que un sol... y esperando, esperando que ese muchacho que lleva dentro quiera salir.<br><strong>PINCHA.—</strong> Muchacho o muchacha, ¿no?<br><strong>PONCE.—</strong> ¡Qué muchacha ni qué narices! Un niño coño, un niño es. Que se lo dibujó en la mano la del Lagarto, ¿o no es cierto Chispa?<br><strong>CHISPA.—</strong> Un niño dice que vio.'},
+                    {num:5,texto:'<strong>PONCE.—</strong> Estaría bueno que después de lo que está penando mi pobre chica nos saliese ahora una muchacha.<br><strong>MONDA.—</strong> ¿Y qué más da? Es el primero.<br><strong>CHISPA.—</strong> Pues por eso mismo, hombre debe de ser. Ya vendrán otras que alumbren hembras para mi nieto, que no se ha de quedar un Chispa sin hembra. Las mujeres están bien para las cosas de la casa, cada cual en su sitio, como Dios manda. Más tarde, cuando vengan otros chicos, será tiempo de encargar alguna chica. Que alguien ha de hacerse cargo de nosotros cuando ya no nos valgamos por nosotros mismos.<br><strong>PONCE.—</strong> Las chicas vienen bien para la casa, pero un hombre es un hombre.'},
+                    {num:6,texto:'<strong>CHISPA.—</strong> Ahora que lo pienso, Ponce, parece mentira que siendo tú tan feo te haya salido una hija tan guapa.<br><strong>PONCE.—</strong> Tenía a quien parecerse, Chispa.<br><strong>PINCHA.—</strong> A su madre que en gloria esté.<br><strong>MONDA.—</strong> Todavía me acuerdo de cuando tu chica saltaba la tapia del huerto para coger higos. Como pasa el tiempo, coño, que parece que fuesen años los días que se van.<br><strong>PINCHA.—</strong> Buena moza para sus cosas. Debes estar contento, Ponce.<br><strong>PONCE.—</strong> Claro que lo estoy. Solo me apena la madre que no va a poder verlo.'},
+                    {num:7,texto:'<strong>MONDA.—</strong> La pobre Asunción, que en paz descanse, se habría de poner contenta, ¿cómo no? Un hijo es un hijo.<br><strong>CHISPA.—</strong> Eso es cierto, Monda. Con la vida incluso se ha de pagar, si fuese necesario, la vida de un hijo, ¿verdad consuegro?<br><strong>PONCE.—</strong> Verdad es.<br><strong>CHISPA.—</strong> Dices bien. Pero no será necesario, que la chica tiene ese aire... el mismo aire que la madre que en gloria esté.'},
+                    {num:8,texto:'<strong>MONDA.—</strong> Tenía la Asunción a medio pueblo a sus pies remoloneando como moscones.<br><strong>CHISPA.—</strong> Lo que es la vida, es curioso, de apartar moscones se fue a quedar con la mosquita muerta del Ponce.<br><strong>PONCE.—</strong> Supo dónde escoger, Chispa, de lo que le ofrecían se quedó con lo mejor.<br><strong>CHISPA.—</strong> ¿Y eso quién lo dice?<br><strong>PONCE.—</strong> Ella me lo decía siempre al acostarnos. Y después me regalaba un último beso antes de dormir. Para que te acuerdes de mí en tus sueños, me susurraba.<br><strong>CHISPA.—</strong> ¡Qué romántico!<br><strong>PONCE.—</strong> Como debe ser, Chispa, como debe ser.'}
+                 ],fuente:'Poli Calle Soriano. Calima. Alicante: Biblioteca Virtual Miguel de Cervantes, 2006.'},
+
+                {id:'texto-5',tipo:'No literario',subtipo:'Noticia',titulo:'Nuevo estudio sobre el estado nutricional de la población vegana en Chile — CNN Chile',
+                 parrafos:[
+                    {num:1,texto:'La ONG Animal Libre realizó el primer estudio observacional del estado sanguíneo en personas veganas de Chile, con el fin de evaluar el estado nutricional de esta población. El estudio arrojó que una dieta basada en plantas —planificada y suplementada— no presenta carencias nutricionales e incluso puede tener beneficios para la salud.'},
+                    {num:2,texto:'El estudio analizó la salud nutricional de 65 personas que llevan una dieta vegana en el país, específicamente hombres y mujeres de entre 19 a 59 años. Tras diversas pruebas, los expertos lograron derribar el mito sobre la falta de nutrientes al llevar este tipo de alimentación. "Lo relevante es que ninguna persona tiene desnutrición según el indicador Índice de Masa Corporal (IMC)", detalla el documento, que determinó que un 83,1% de las personas veganas tienen un IMC normal, y solo un 16,9% tiene sobrepeso.'},
+                    {num:3,texto:'Según datos de la Academia de Nutrición y Dietética, en su postura de 2016, las dietas veganas bien planificadas son saludables, nutricionalmente adecuadas y proporcionan beneficios para la salud en la prevención y tratamiento de ciertas enfermedades, ya que pueden reducir el riesgo de padecer enfermedades crónicas no transmisibles, ya que suelen contener menores cantidades de grasa saturada y colesterol, entre otras cosas.'},
+                    {num:4,texto:'Adicionalmente, probar una alimentación vegana puede tener efectos inmediatos en la salud. Según datos de la encuesta 2023 de Veganuary —ONG que promueve el veganismo en el mundo— casi la mitad de quienes probaron el veganismo por un mes (47%) declaró haber mejorado su salud general. Específicamente, el 49% declaró haber mejorado su estado de ánimo, el 46% sus niveles de energía, el 38% el aspecto de su piel y el 35% un cambio deseado en su peso corporal.'},
+                    {num:5,texto:'Finalmente, dentro de los resultados, también destaca que un 88% de los casos tiene un buen estado inmunológico. Además, más del 95% de las personas veganas tienen niveles normales de calcio sérico y más del 80% de fósforo sérico, lo que se traduce en una óptima salud ósea. Sobre las proteínas —un elemento clave en las dietas veganas sobre el que se puede pensar que existen carencias— casi la totalidad de las personas estudiadas, un 97%, tienen niveles de proteínas totales en rangos óptimos.'},
+                    {num:6,texto:'Mauricio Serrano, director de Veganuary Latinoamérica, señaló que este estudio "entrega información valiosa, y no solo nos ayuda a derribar mitos sobre lo que se suele decir de las dietas veganas respecto de la falta de nutrientes, también viene a corroborar lo que experimentaron las personas que probaron el veganismo durante un mes, sobre su propia salud. Es posible llevar una alimentación basada en plantas sin carencias nutricionales y, además, ayudar a nuestra propia salud con ello".'}
+                 ],fuente:'CNN Chile. 24 jul. 2023. (Adaptación).'},
+
+                {id:'texto-6',tipo:'Literario',subtipo:'Cuento',titulo:'Invitación al biógrafo — Hernán Rivera Letelier',
+                 parrafos:[
+                    {num:1,texto:'Era domingo, en verano, era la hora de "la vespertina" en la salitrera. La hora mágica en que los últimos rescoldos del sol volvían de oro las calaminas del campamento, mientras el disco de moda chicharreaba neurálgico desde los viejos parlantes del biógrafo. La hora en que a sus puertas comenzaba a juntarse, alegre, toda la gente de la pampa; ellas perfumaditas, ellos embrillantinados hasta el esplendor.'},
+                    {num:2,texto:'Era la hora de la vespertina y yo venía llegando de mataperear mis once años por las calicheras abandonadas. Despeinado y a pata pelada, se me ocurrió detenerme a ver qué película exhibían.'},
+                    {num:3,texto:'Era una de Jorge Negrete con la María Félix.'},
+                    {num:4,texto:'En las afueras del biógrafo, junto al carrito de los embelecos, la Daisy conversaba con otras niñas de su edad. Con su vestido de organza rosada, sus cintas en el pelo y sus doce años a toda vela, la Daisy —hija de los dueños de la tienda más grande de la Oficina— era para mí la niña más hermosa del mundo.'},
+                    {num:5,texto:'Al verme, se me acercó sonriendo y me invitó a ver la película. "Yo te hago la entrada", me dijo. Quedé mudo. Luego, con una vocecita prometedora, oí que me decía que fuera a ponerme zapatos y volviera rápidamente antes de que empezara la función.'},
+                    {num:6,texto:'Al ir a dar la media vuelta, la Daisy me tomó cariñosamente de un brazo y me hizo una pregunta que rebasó mi cuerpo de una sensación extraña, nueva: "¿Te gustan los chicles de menta o de fruta?". "De menta", balbucé.'},
+                    {num:7,texto:'Hasta la esquina caminé lo más normal que pude. Pero apenas doblé y me perdí de vista emprendí una frenética carrera. No me lo podía creer, ella, la Daisy, la niña que más me gustaba —y que más les gustaba a todos—, además de hacerme la entrada, iba a comprar los chicles a mi gusto.'},
+                    {num:8,texto:'Al llegar a casa comencé a desesperarme. No encontraba mis zapatos por ninguna parte. Y es que solo me los ponía los días de semana para ir a la escuela. Luego de unos minutos que fueron eternos, los ubiqué dentro de un cajón de té arrumbado en un rincón de la cocina. Sin perder tiempo en calcetines, y para correr más rápido, me las envolví de vuelta con ellos bajo el brazo. Antes de salir le grité a mi hermana mayor —que me llamaba a gritos a tomar onces— que ya volvía.'},
+                    {num:9,texto:'Soñando que en la penumbra del biógrafo le tomaba la mano a la Daisy, corría por el medio de la calle a todo lo que daban mis talones. A lo mejor, mientras Jorge Negrete le cantaba a la María Félix, hasta le podía robar un beso. Cómo se pondrían de verdes mis amigos. Y es que de un tiempo a esa parte, varios de los niños que veíamos la función sentados en el pasillo habían pasado a instalarse en las lunetas junto a alguna muchacha. Esos niños eran la envidia y la admiración de los que seguíamos amontonados en el piso de tablas baldeadas con petróleo y ahora me iba a tocar a mí; pasaría del pasillo a la luneta. ¡Y nada menos que junto a quién!'},
+                    {num:10,texto:'Fuera del biógrafo había alcanzado a divisar al hijo del sargento de Carabineros, otro de los niños que andaba detrás de la Daisy. Pero qué importaba. Ella me había preferido a mí. No por nada cada vez que iba a comprar a su tienda me miraba de una manera especial. A veces hasta me sonreía. Un día me había dado una pastilla de más.'},
+                    {num:11,texto:'Llegué hasta la esquina del biógrafo resollando. Llegué justo a tiempo para escuchar los últimos acordes de la marcha que indicaba el comienzo de la función, y justo también para ver, entre la gente que ingresaba apresurada, un copón de organza rosa entrando junto al hijo del sargento.'},
+                    {num:12,texto:'—¡Daisy! —alcancé a gritar con el corazón en la boca. Pero ella no me oyó o no quiso volver la cabeza.'},
+                    {num:13,texto:'Con una sensación de dolor en el pecho —una sensación también nueva—, me senté en la vereda con los zapatos en la mano.'}
+                 ],fuente:'Hernán Rivera Letelier. "Invitación al biógrafo". Cuentos de Jacqueline Mouesca. Chile: Lom Ediciones. pp. 39-41, 2003.'},
+
+                {id:'texto-7',tipo:'No literario',subtipo:'Reportaje',titulo:'Quino: el gran inconformista del humor — La Tercera',
+                 parrafos:[
+                    {num:1,texto:'El creador de Mafalda, la historieta gráfica más universal del idioma español, murió el 30 de septiembre de 2020, en su ciudad natal Mendoza (Argentina). A través de su mezcla única de ironía, crítica y humanismo, el argentino fue influencia obligatoria en Hispanoamérica.'},
+                    {num:2,texto:'Para conocer a Quino, hay que entender a Mafalda, su creación más importante. Mafalda es una chica de pelo negro que odia la sopa y está en contradicción con los adultos. Pero a Mafalda también le desagradan otras cosas en la vida: las injusticias sociales, las guerras en un rincón alejado del planeta o la codicia de Manolito, el hijo del panadero español del barrio. Evidentemente era bastante más adelantada a la media del vecindario y del mundo; una hija de los convulsionados años 60 y un personaje que, aunque dejó de publicarse en 1973, se hizo inmortal ante el asombro de su propio autor, Quino.'},
+                    {num:3,texto:'"Lo de la vigencia de Mafalda no lo entiendo", comentaba en el año 2014 al recibir el Premio Príncipe de Asturias en Comunicación y Humanidades. "El mundo está cambiando mucho y la gente sigue leyendo cosas que uno dibujó hace tanto tiempo, que pareciera que no cambió nada", explicaba Joaquín Salvador Lavado Tejón, el nombre real de Quino.'},
+                    {num:4,texto:'Traducida a 30 idiomas, la historieta de Quino vivió en rigor 9 años, hasta que dejó de publicarse el 25 de junio de 1973. Sin embargo, su alcance fue global, trascendiendo las fronteras hispanoamericanas y alcanzando popularidad en países como Francia, Grecia o Italia, en donde el filósofo Umberto Eco se transformó en uno de sus grandes admiradores. La llamó "una heroína de nuestro tiempo".'},
+                    {num:5,texto:'Aquejado desde hace años por dolencias circulatorias y un severo glaucoma, Quino apenas había entrado a los 88 años y, un día antes de su muerte, se habían cumplido los 56 años de vida de Mafalda, nacida en la revista Primera Plana, el 29 de septiembre de 1964.'},
+                    {num:6,texto:'<strong>Pensamiento crítico en dibujos</strong><br><br>En su luminosa casa de Mendoza, y rodeado de sus cercanos, Quino había celebrado su último cumpleaños en julio. En la celebración hubo pasta, torta de dulce de leche y vino. Con movilidad limitada y visión reducida, el ilustrador fue celebrado en redes sociales por sus editores y sus miles de lectores.'},
+                    {num:7,texto:'Hijo de padres españoles, creció en un ambiente que siempre cuestionó la autoridad y las injusticias. Reacio a las entrevistas, Quino era un hombre discreto y de pocas palabras. Sus ideas las vertía en el universo gráfico que concibió, animado de inteligencia, humor y de un sentido antibélico y contra la desigualdad.'},
+                    {num:8,texto:'"Era más bien corto de genio, la locuacidad no era lo suyo", comenta el humorista gráfico chileno Alberto Montt, quien estuvo en varias oportunidades con él. "Pero, por otro lado: ¿Qué le ibas a preguntar? Todo lo que tenía que decir sobre algo, lo hacía a través de sus personajes: la religión, la guerra, las desigualdades".'},
+                    {num:9,texto:'Para Montt, Quino fue además el gran formador de muchos sin siquiera proponérselo: "Varios latinoamericanos tuvieron por primera vez acceso al pensamiento crítico al leer las historias de Mafalda. En una época en que la mayoría de los niños y jóvenes sólo se formaban a través de lo que sus padres les transmitían, él fue la ventana donde pudieron ver algo distinto".'},
+                    {num:10,texto:'<strong>En sus propias palabras</strong><br><br>Una de las últimas entrevistas que ofreció fue para el documental <em>Buscando a Quino</em>, filmado en 2018 por Boy Olmi. El filme de 25 minutos ofrece un retrato personal del dibujante que perdió a sus padres en la niñez y creció junto a un tío también llamado Joaquín, diseñador y artista gráfico del que heredaría el interés por el dibujo. Para diferenciarlo del tío, al sobrino lo llamaron Quino.'},
+                    {num:11,texto:'"La Guerra Civil española me marcó muchísimo", dice el ilustrador en el documental. Quino cuenta que "esta cosa del bien y el mal me ha impresionado desde chico", reflexionando sobre temas como la violencia y la injusticia.'},
+                    {num:12,texto:'"¿Qué le diría al Quino joven?", le pregunta Boy Olmi. "Le diría: ¿viste que no era para tanto? Y bueno, sí, es jodido, pero no era para tanto", responde.'},
+                    {num:13,texto:'En realidad, ese tono algo desprendido para valorar las cosas estaba en el ADN de Quino. Cuando alguna vez le preguntaron por el éxito de Mafalda, lo resumió muy bien: "Yo no esperaba nada y empecé a publicar este personaje sin pensar muy bien cómo era. Me pareció que una niña que le hiciera a sus padres preguntas sin respuestas, por qué hay guerra, por qué hay gente pobre, era un buen camino para interesar a la gente".'}
+                 ],fuente:'Andrés Gómez y Rodrigo González. "Quino: el gran inconformista del humor". La Tercera. 30 sep. 2020.'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'¿Qué quiere decir la hablante cuando afirma que el corazón "O me lo rompes en la proa / que no lo quiero más llevar"?',opciones:[{letra:'A',texto:'Que está confiada en su destino.'},{letra:'B',texto:'Que está cansada del sufrimiento.'},{letra:'C',texto:'Que está buscando un nuevo amor.'},{letra:'D',texto:'Que está agotada de esperar por un amor.'}],correcta:'B'},
+                {id:2,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'¿Cuál es el estado de ánimo de la hablante en el poema?',opciones:[{letra:'A',texto:'Arrepentimiento.'},{letra:'B',texto:'Desconsuelo.'},{letra:'C',texto:'Confusión.'},{letra:'D',texto:'Temor.'}],correcta:'B'},
+                {id:3,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'¿De qué trata el poema?',opciones:[{letra:'A',texto:'Del recuerdo de un viaje marino.'},{letra:'B',texto:'De la admiración por el poder del mar.'},{letra:'C',texto:'Del deseo de superar el dolor del desamor.'},{letra:'D',texto:'De la lucha por mantener una relación amorosa.'}],correcta:'C'},
+                {id:4,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'¿Cuál de los siguientes elementos tiene sentido purificador en el poema?',opciones:[{letra:'A',texto:'La sal.'},{letra:'B',texto:'El oro.'},{letra:'C',texto:'La tierra.'},{letra:'D',texto:'El corazón.'}],correcta:'A'},
+                {id:5,textoRef:'texto-1',habilidad:'REFLEXIONAR',enunciado:'¿Qué función tiene la repetición del verso "lávalo, mar, lávalo mar" en el poema?',opciones:[{letra:'A',texto:'Intensifica la súplica de la hablante.'},{letra:'B',texto:'Reafirma la terquedad de la hablante.'},{letra:'C',texto:'Demuestra la pasividad de la hablante.'},{letra:'D',texto:'Aumenta la inseguridad de la hablante.'}],correcta:'A'},
+                {id:6,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿Quién es Henry Dobbins en la historia leída?',opciones:[{letra:'A',texto:'Un hombre que fabrica amuletos protectores.'},{letra:'B',texto:'Un hombre excéntrico que realiza emboscadas.'},{letra:'C',texto:'Un soldado que murió cuando tropezó en una mina.'},{letra:'D',texto:'Un soldado estadounidense en la Guerra de Vietnam.'}],correcta:'D'},
+                {id:7,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿Por qué Dobbins llevaba las medias de nailon de su novia en el cuello?',opciones:[{letra:'A',texto:'Porque le gustaba su suavidad.'},{letra:'B',texto:'Porque le servían para desactivar minas.'},{letra:'C',texto:'Porque las usaba como un amuleto para estar a salvo en la guerra.'},{letra:'D',texto:'Porque le había prometido a su novia que las llevaría consigo siempre.'}],correcta:'C'},
+                {id:8,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'¿Qué representan las medias de nailon para el pelotón?',opciones:[{letra:'A',texto:'La posibilidad de mantenerse vivos.'},{letra:'B',texto:'La esperanza en que sus novias los seguirán amando.'},{letra:'C',texto:'La posibilidad de contar con momentos de alegría y risas en la guerra.'},{letra:'D',texto:'La certeza de que alguien los esperará en casa cuando termine la guerra.'}],correcta:'A'},
+                {id:9,textoRef:'texto-2',habilidad:'REFLEXIONAR',enunciado:'Que el narrador sea uno de los soldados del pelotón, ¿qué efecto produce sobre los hechos relatados?',opciones:[{letra:'A',texto:'Les otorga un carácter de ensueño.'},{letra:'B',texto:'Les da mayor credibilidad y cercanía.'},{letra:'C',texto:'Los muestra desde una perspectiva objetiva.'},{letra:'D',texto:'Los presenta como distantes en el tiempo y el espacio.'}],correcta:'B'},
+                {id:11,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'Según el profesor Maza, ¿dónde está la verdadera inclusión?',opciones:[{letra:'A',texto:'En el lenguaje.'},{letra:'B',texto:'En las acciones.'},{letra:'C',texto:'En el pensamiento.'},{letra:'D',texto:'En las apreciaciones.'}],correcta:'B'},
+                {id:12,textoRef:'texto-3',habilidad:'INTERPRETAR',enunciado:'¿Cuál es la tesis que plantea la autora?',opciones:[{letra:'A',texto:'El uso del lenguaje inclusivo violenta directamente a las mujeres.'},{letra:'B',texto:'La inclusión real de las mujeres se valora más con acciones que con palabras.'},{letra:'C',texto:'El origen de la exclusión de las mujeres radica en el uso del masculino genérico.'},{letra:'D',texto:'La utilización del masculino genérico afecta en los hechos la inclusión de las mujeres.'}],correcta:'D'},
+                {id:13,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'¿A qué ámbito se remite la autora al momento de respaldar su postura?',opciones:[{letra:'A',texto:'Laboral.'},{letra:'B',texto:'Científico.'},{letra:'C',texto:'Deportivo.'},{letra:'D',texto:'Académico.'}],correcta:'A'},
+                {id:14,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'¿Con qué fin la autora menciona el libro La Mujer Invisible de Caroline Criado Pérez?',opciones:[{letra:'A',texto:'Para contrastar su postura con la de una escritora reconocida.'},{letra:'B',texto:'Para respaldar su postura con investigaciones de una autora reconocida.'},{letra:'C',texto:'Para reforzar su postura a partir de la experiencia personal de una escritora.'},{letra:'D',texto:'Para aclarar que son muchas mujeres las que están de acuerdo con su postura.'}],correcta:'B'},
+                {id:15,textoRef:'texto-3',habilidad:'INTERPRETAR',enunciado:'¿Por qué el uso del masculino genérico para referirse a las profesiones sí afecta a las mujeres?',opciones:[{letra:'A',texto:'Porque es más probable que los hombres ejerzan de mejor manera esas profesiones.'},{letra:'B',texto:'Porque es más probable que las mujeres desistan al poco tiempo de asumir en esas profesiones.'},{letra:'C',texto:'Porque es más probable que las mujeres crean que esas profesiones son propias de los hombres.'},{letra:'D',texto:'Porque es más probable que los hombres propongan candidatos masculinos para esas profesiones.'}],correcta:'C'},
+                {id:16,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'¿Para qué la autora utiliza al final la frase "El lenguaje no inclusivo sí afecta la cancha"?',opciones:[{letra:'A',texto:'Para burlarse de la analogía que utilizó José Maza.'},{letra:'B',texto:'Para aclarar la analogía establecida por José Maza.'},{letra:'C',texto:'Para explicar el origen de la analogía utilizada por José Maza.'},{letra:'D',texto:'Para manifestar su desacuerdo con José Maza usando la misma analogía.'}],correcta:'D'},
+                {id:17,textoRef:'texto-3',habilidad:'INTERPRETAR',enunciado:'¿Cómo concibe la autora el uso del lenguaje inclusivo?',opciones:[{letra:'A',texto:'Como algo confuso.'},{letra:'B',texto:'Como algo violento.'},{letra:'C',texto:'Como algo necesario.'},{letra:'D',texto:'Como algo perfectible.'}],correcta:'C'},
+                {id:18,textoRef:'texto-4',habilidad:'LOCALIZAR',enunciado:'¿Quién es el dueño de la taberna?',opciones:[{letra:'A',texto:'Chispa.'},{letra:'B',texto:'Monda.'},{letra:'C',texto:'Pincha.'},{letra:'D',texto:'Ponce.'}],correcta:'D'},
+                {id:19,textoRef:'texto-4',habilidad:'INTERPRETAR',enunciado:'En el fragmento donde Pincha pregunta "¿cómo va esa chica?" y Ponce responde "(Se le enciende la cara.)", ¿qué evidencia la información subrayada?',opciones:[{letra:'A',texto:'El miedo de Ponce por el futuro de su nieto.'},{letra:'B',texto:'El pudor de Ponce al hablar de su hija embarazada.'},{letra:'C',texto:'La molestia de Ponce por el sexo de su futuro nieto.'},{letra:'D',texto:'La emoción que le provoca a Ponce su hija embarazada.'}],correcta:'D'},
+                {id:20,textoRef:'texto-4',habilidad:'INTERPRETAR',enunciado:'¿Qué le preocupa a Ponce respecto del embarazo de su hija?',opciones:[{letra:'A',texto:'Que el bebé esté sano.'},{letra:'B',texto:'Que el bebé sea varón.'},{letra:'C',texto:'Que el bebé sea hermoso.'},{letra:'D',texto:'Que el bebé nazca pronto.'}],correcta:'B'},
+                {id:21,textoRef:'texto-4',habilidad:'INTERPRETAR',enunciado:'A partir del fragmento leído, ¿cómo es la relación entre los personajes?',opciones:[{letra:'A',texto:'Cínica.'},{letra:'B',texto:'Formal.'},{letra:'C',texto:'Afectuosa.'},{letra:'D',texto:'Competitiva.'}],correcta:'C'},
+                {id:22,textoRef:'texto-4',habilidad:'REFLEXIONAR',enunciado:'¿Qué visión sobre las mujeres se evidencia en el fragmento leído?',opciones:[{letra:'A',texto:'Una visión que las considera como iguales a los hombres.'},{letra:'B',texto:'Una visión que las considera como sostén de los hombres.'},{letra:'C',texto:'Una visión que las considera como útiles para los hombres.'},{letra:'D',texto:'Una visión que las considera como salvación para los hombres.'}],correcta:'C'},
+                {id:23,textoRef:'texto-4',habilidad:'INTERPRETAR',enunciado:'Según el fragmento leído, ¿a qué rol se remite la mujer?',opciones:[{letra:'A',texto:'Al laboral.'},{letra:'B',texto:'Al amoroso.'},{letra:'C',texto:'Al protector.'},{letra:'D',texto:'Al doméstico.'}],correcta:'D'},
+                {id:25,textoRef:'texto-5',habilidad:'LOCALIZAR',enunciado:'Según la encuesta 2023 de Veganuary, ¿qué porcentaje de personas declaró haber mejorado su estado de ánimo?',opciones:[{letra:'A',texto:'Un 35%'},{letra:'B',texto:'Un 38%'},{letra:'C',texto:'Un 46%'},{letra:'D',texto:'Un 49%'}],correcta:'D'},
+                {id:26,textoRef:'texto-5',habilidad:'INTERPRETAR',enunciado:'Según el texto, ¿qué problema se asocia comúnmente a la dieta vegana?',opciones:[{letra:'A',texto:'La alteración del Índice de Masa Corporal.'},{letra:'B',texto:'El desarrollo de enfermedades crónicas.'},{letra:'C',texto:'La deficiencia nutricional.'},{letra:'D',texto:'El aumento de peso.'}],correcta:'C'},
+                {id:27,textoRef:'texto-5',habilidad:'INTERPRETAR',enunciado:'¿Qué conclusión arrojó el estudio presentado en el texto?',opciones:[{letra:'A',texto:'Se necesita más evidencia sobre los efectos de las dietas veganas.'},{letra:'B',texto:'Es posible mantener una dieta sin proteína animal durante un mes.'},{letra:'C',texto:'Se necesita la participación de personas no veganas en los estudios.'},{letra:'D',texto:'Es posible tener una alimentación sana sin consumir productos de origen animal.'}],correcta:'D'},
+                {id:28,textoRef:'texto-5',habilidad:'REFLEXIONAR',enunciado:'¿En qué tipo de evidencia se basa principalmente el estudio sobre la dieta vegana?',opciones:[{letra:'A',texto:'En datos objetivos.'},{letra:'B',texto:'En creencias colectivas.'},{letra:'C',texto:'En opiniones autorizadas.'},{letra:'D',texto:'En experiencias personales.'}],correcta:'A'},
+                {id:29,textoRef:'texto-6',habilidad:'LOCALIZAR',enunciado:'Luego de jugar en las calicheras, ¿por qué el niño se detuvo en el biógrafo?',opciones:[{letra:'A',texto:'Porque había acordado ver a Daisy.'},{letra:'B',texto:'Porque se iba a juntar con los otros niños.'},{letra:'C',texto:'Porque quería saber qué película exhibían.'},{letra:'D',texto:'Porque quería comprar un chicle de menta.'}],correcta:'C'},
+                {id:30,textoRef:'texto-6',habilidad:'LOCALIZAR',enunciado:'¿Qué le impactó al niño cuando regresó otra vez al biógrafo?',opciones:[{letra:'A',texto:'El comienzo de la película.'},{letra:'B',texto:'Un corto de Carlitos Chaplin.'},{letra:'C',texto:'Daisy entrando acompañada de un niño.'},{letra:'D',texto:'Sus amigos esperándolo en la puerta del cine.'}],correcta:'C'},
+                {id:31,textoRef:'texto-6',habilidad:'INTERPRETAR',enunciado:'Además del gusto que sentía por Daisy, ¿qué otra razón hizo al niño aceptar la invitación al biógrafo?',opciones:[{letra:'A',texto:'Su falta de dinero para comprar la entrada.'},{letra:'B',texto:'Su deseo de ver una película de Carlitos Chaplin.'},{letra:'C',texto:'Su desinterés por tomar once en su casa con su hermana.'},{letra:'D',texto:'Su aspiración de despertar la admiración de los otros niños.'}],correcta:'D'},
+                {id:32,textoRef:'texto-6',habilidad:'REFLEXIONAR',enunciado:'¿Qué temática social se aborda en el relato?',opciones:[{letra:'A',texto:'Las diferencias de clase.'},{letra:'B',texto:'La vida cotidiana familiar.'},{letra:'C',texto:'El funcionamiento del campamento.'},{letra:'D',texto:'Los oficios desarrollados en las salitreras.'}],correcta:'A'},
+                {id:33,textoRef:'texto-7',habilidad:'LOCALIZAR',enunciado:'¿En qué año dejó de publicarse Mafalda?',opciones:[{letra:'A',texto:'En 1964.'},{letra:'B',texto:'En 1973.'},{letra:'C',texto:'En 2014.'},{letra:'D',texto:'En 2018.'}],correcta:'B'},
+                {id:34,textoRef:'texto-7',habilidad:'LOCALIZAR',enunciado:'¿Cuál era la nacionalidad de Quino?',opciones:[{letra:'A',texto:'Chilena.'},{letra:'B',texto:'Italiana.'},{letra:'C',texto:'Española.'},{letra:'D',texto:'Argentina.'}],correcta:'D'},
+                {id:35,textoRef:'texto-7',habilidad:'INTERPRETAR',enunciado:'¿Qué le asombra a Quino respecto de su historieta?',opciones:[{letra:'A',texto:'Que haya sido leída por niños.'},{letra:'B',texto:'Que haya obtenido un premio.'},{letra:'C',texto:'Que haya dejado de publicarse.'},{letra:'D',texto:'Que haya mantenido su vigencia.'}],correcta:'D'},
+                {id:36,textoRef:'texto-7',habilidad:'INTERPRETAR',enunciado:'¿De qué trata la sección "En sus propias palabras"?',opciones:[{letra:'A',texto:'De la familia de Quino y su cercanía con ellos.'},{letra:'B',texto:'De la historia de Quino y su visión del mundo.'},{letra:'C',texto:'De la importancia humorística de Quino y su legado.'},{letra:'D',texto:'De la forma en que dibuja Quino y su fuente de inspiración.'}],correcta:'B'},
+                {id:37,textoRef:'texto-7',habilidad:'INTERPRETAR',enunciado:'Según Alberto Montt, ¿qué importancia tuvo Quino para los lectores de su tiempo?',opciones:[{letra:'A',texto:'Permitió que los lectores ampliaran su mirada sobre la vida.'},{letra:'B',texto:'Permitió que los lectores conocieran las tradiciones de sus padres.'},{letra:'C',texto:'Permitió que los lectores tuvieran acceso al humor de otras culturas.'},{letra:'D',texto:'Permitió que los lectores conectaran a través de distintas redes sociales.'}],correcta:'A'},
+                {id:38,textoRef:'texto-7',habilidad:'REFLEXIONAR',enunciado:'¿Para qué se incluye la opinión del filósofo Umberto Eco en el reportaje?',opciones:[{letra:'A',texto:'Para destacar la relevancia mundial de Mafalda.'},{letra:'B',texto:'Para cuestionar el fin de la publicación de Mafalda.'},{letra:'C',texto:'Para resaltar la necesidad de traducir la historieta de Mafalda.'},{letra:'D',texto:'Para ejemplificar el tipo de público al que está orientada Mafalda.'}],correcta:'A'}
+            ]
+        }
+    };
+
+    try{
+        await db.ref(BASE+'/sesiones/sesion-2').set(sesData);
+        sessions['sesion-2']=sesData;
+        renderSessions();populateResultsDropdown();populateRankingDropdown();
+        toast('Sesión 2 precargada: 7 textos SIMCE 2025 y 36 preguntas','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 async function resetSessionResults(sesId){
     const ses=sessions[sesId];
     if(!confirm('¿Eliminar TODOS los resultados y respuestas de "'+ses.titulo+'"?\nLos estudiantes deberán completar la sesión nuevamente.'))return;
@@ -1243,6 +1420,163 @@ function exportCSV(type){
     a.href=url;a.download='reporte_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();URL.revokeObjectURL(url);
     toast('CSV descargado','ok');
+}
+
+/* ============ RANKING (ADMIN) ============ */
+function populateRankingDropdown(){
+    const sel=document.getElementById('rankingSesSelect');
+    const cur=sel.value;
+    let opts='<option value="">Selecciona sesión...</option><option value="__all__">📊 Histórico (Todas)</option>';
+    Object.entries(sessions).forEach(([id,s])=>{
+        opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
+    });
+    sel.innerHTML=opts;
+}
+
+async function loadAdminRanking(){
+    populateRankingDropdown();
+    const sesId=document.getElementById('rankingSesSelect').value;
+    const courseF=document.getElementById('rankingCourseFilter').value;
+    const tbody=document.getElementById('rankingBody');
+    const statsDiv=document.getElementById('rankingStats');
+
+    if(!sesId){
+        tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
+        statsDiv.innerHTML='';
+        return;
+    }
+
+    let items=[];
+    if(sesId==='__all__'){
+        // Historic: average across all sessions
+        const studentTotals={};
+        for(const[sId,uidMap]of Object.entries(allResults)){
+            for(const[uid,r]of Object.entries(uidMap)){
+                if(!studentTotals[uid]) studentTotals[uid]={sum:0,count:0,bestPct:0,bestPuntaje:0,bestTotal:0};
+                studentTotals[uid].sum+=(r.porcentaje||0);
+                studentTotals[uid].count++;
+                if((r.porcentaje||0)>studentTotals[uid].bestPct){
+                    studentTotals[uid].bestPct=r.porcentaje||0;
+                    studentTotals[uid].bestPuntaje=r.puntaje||0;
+                    studentTotals[uid].bestTotal=r.total||0;
+                }
+            }
+        }
+        for(const[uid,t]of Object.entries(studentTotals)){
+            const est=students[uid];
+            if(!est) continue;
+            if(courseF && est.curso!==courseF) continue;
+            const avg=Math.round(t.sum/t.count);
+            items.push({uid,nombre:est.nombre,curso:est.curso,porcentaje:avg,puntaje:t.bestPuntaje,total:t.bestTotal,sesiones:t.count});
+        }
+    }else{
+        const results=allResults[sesId]||{};
+        for(const[uid,r]of Object.entries(results)){
+            const est=students[uid];
+            if(!est) continue;
+            if(courseF && est.curso!==courseF) continue;
+            items.push({uid,nombre:est.nombre,curso:est.curso,porcentaje:r.porcentaje||0,puntaje:r.puntaje||0,total:r.total||0});
+        }
+    }
+
+    items.sort((a,b)=>b.porcentaje-a.porcentaje||(a.nombre||'').localeCompare(b.nombre||''));
+
+    // Stats
+    if(items.length>0){
+        const avg=Math.round(items.reduce((s,i)=>s+i.porcentaje,0)/items.length);
+        const top=items[0].porcentaje;
+        const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
+        items.forEach(i=>levels[getLevel(i.porcentaje)]++);
+        statsDiv.innerHTML=`
+            <div class="stat-card"><div class="label">Participantes</div><div class="value">${items.length}</div></div>
+            <div class="stat-card"><div class="label">Promedio</div><div class="value">${avg}%</div></div>
+            <div class="stat-card"><div class="label">Mejor Puntaje</div><div class="value">${top}%</div></div>
+            <div class="stat-card"><div class="label">Destacados</div><div class="value">${levels.Destacado}</div><div class="sub">Adec: ${levels.Adecuado} | Elem: ${levels.Elemental} | Insuf: ${levels.Insuficiente}</div></div>
+        `;
+    }else{statsDiv.innerHTML='';}
+
+    tbody.innerHTML=items.map((r,i)=>{
+        const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+        const cursoLabel=r.curso==='2A-HC'?'2°A':'2°B';
+        const scoreText=sesId==='__all__'?`Prom: ${r.porcentaje}% (${r.sesiones} ses.)`:`${r.puntaje}/${r.total}`;
+        return `<tr${i<3?' style="background:#fffbeb"':''}>
+            <td style="text-align:center;font-weight:800;font-size:15px">${medal||i+1}</td>
+            <td><strong>${r.nombre}</strong></td>
+            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${cursoLabel}</span></td>
+            <td style="font-size:12px">${scoreText}</td>
+            <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
+            <td>${getLevelBadge(r.porcentaje)}</td>
+        </tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay datos de ranking</td></tr>';
+}
+
+/* ============ PRELOAD 2B-HC ============ */
+async function preload2BHC(){
+    if(!confirm('¿Precargar los 42 estudiantes del 2°B HC?\nSe crearán cuentas con email institucional y contraseña por defecto.'))return;
+    const lista=[
+        ['ALARCON SILVA MARTIN IGNACIO','23520636-6'],
+        ['ALBORNOZ PINTO RENATO ANDRÉS','23356003-0'],
+        ['ARÉVALO SALGADO LUKAS CRISTÓBAL','23513095-5'],
+        ['ÁVALOS OYARZO JOAQUÍN ALEJANDRO','23308635-5'],
+        ['BOLVARÁN CASTRO JOAQUÍN ANDRÉS','23511410-0'],
+        ['BRAVO GAJARDO VICENTE RAFAEL','23545454-8'],
+        ['BRAVO GARRIDO MATIAS ALEJANDRO','23314594-7'],
+        ['BRAVO VELIZ MAXIMILIANO ENRIQUE','23428403-7'],
+        ['BRAVO ALARCÓN RICARDO MAXIMILIANO','23356426-5'],
+        ['CANALES ASTORGA BASTIÁN ALEJANDRO','23561880-K'],
+        ['CERPA ROJAS TOMÁS SEBASTIÁN','23309551-6'],
+        ['CORDERO GUERRERO ALAN ALEXANDER','23490309-8'],
+        ['CORNEJO VALENZUELA VICENTE ANTONIO','23406673-0'],
+        ['DE LA FUENTE QUEVEDO EDUARDO ANTONIO','23359060-6'],
+        ['DORADOR FUENTES IGNACIO ANTONIO','23580511-1'],
+        ['DURÁN RAMÍREZ LUIS OCTAVIO','23408723-1'],
+        ['GARRIDO SALAS BENJAMIN ALEJANDRO','23457725-5'],
+        ['GÓMEZ GAETE FELIPE ALONSO','23542982-9'],
+        ['GONZÁLEZ GONZÁLEZ MATÍAS ALEJANDRO','23406124-0'],
+        ['GONZALEZ GONZÁLEZ MIGUEL ANGEL ALEXANDER','23571702-6'],
+        ['GUTIÉRREZ MARTICORENA CRISTÓBAL ALEJANDRO','23355930-K'],
+        ['GUTIERREZ ORTEGA JOHAQUIN ANIBAL','23431441-6'],
+        ['HENRÍQUEZ SAAVEDRA EMILIO JOSÉ','23431512-9'],
+        ['HERNÁNDEZ SALAZAR BENJAMÍN VICENTE','23427296-9'],
+        ['JARA CASTILLO ALAN AGUSTÍN','23316056-3'],
+        ['LETELIER GOMEZ DAMIAN ANTHONY','23344049-3'],
+        ['LÓPEZ GARCÍA BENJAMÍN IGNACIO','23508519-4'],
+        ['MÉNDEZ VENEGAS MATÍAS BENJAMÍN ALEXIS','23442797-0'],
+        ['MENDOZA PÉREZ MATÍAS ALEXIS','23450353-7'],
+        ['MUÑOZ CASTRO EYDAN JESUS','23581678-4'],
+        ['MUÑOZ CAYUAN EMILIO DOMINGO','23515389-0'],
+        ['MUÑOZ MORA VICENTE ANTONIO','23475292-8'],
+        ['NORAMBUENA GAMBOA MATÍAS VICENTE','23669570-0'],
+        ['OPAZO ROJAS THOMAS IGNACIO','23161561-K'],
+        ['PÉREZ MÁRQUEZ MÁXIMO CRISTIAN','23595368-4'],
+        ['RICHTER LETELIER CLEMENTE GABRIEL','23302061-2'],
+        ['RIVERA MORALES JAVIER IGNACIO','23658491-7'],
+        ['ROMERO DUARTE ANDRES XAVIER','26671345-2'],
+        ['SALAMANCA GONZÁLEZ DARÍO ALONSO','23487491-8'],
+        ['SEPULVEDA SEPULVEDA CARLOS IGNACIO','23364433-1'],
+        ['STULL ARAVENA CARLOS SEBASTIAN','23332126-5'],
+        ['VALDÉS CANCINO ANDRÉS FRANCISCO','23468793-K']
+    ];
+    let created=0,errors=[];
+    for(const[name,rut]of lista){
+        const email=rutToEmail(rut);
+        const pass=defaultPassword(rut);
+        try{
+            const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+            await secondaryAuth.signOut();
+            await db.ref(BASE+'/estudiantes/'+cred.user.uid).set({
+                nombre:name,rut:cleanRut(rut),curso:'2B-HC',
+                perfil_completo:false,password_changed:false,
+                createdAt:Date.now(),createdBy:currentAdminUid
+            });
+            created++;
+        }catch(e){errors.push(name+' — '+e.message);}
+    }
+    await loadAllData();
+    let msg=created+' estudiantes de 2°B HC creados.';
+    if(errors.length) msg+=' '+errors.length+' errores.';
+    toast(msg,errors.length?'err':'ok');
+    if(errors.length) console.warn('Errores 2B-HC:',errors);
 }
 
 /* ============ MESSAGING ============ */

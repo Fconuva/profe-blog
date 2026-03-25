@@ -441,7 +441,10 @@ function renderStudents(){
 // RUT utilities
 function cleanRut(r){return(r||'').replace(/[.\s]/g,'').toUpperCase()}
 function rutToEmail(r){return cleanRut(r).replace(/-/g,'')+'@est.profefranciscopancho.com'}
-function defaultPassword(r){return cleanRut(r).replace(/[^0-9]/g,'').substring(0,4)+'est!'}
+function defaultPassword(r){
+    const digits=cleanRut(r).replace(/[^0-9]/g,'');
+    return digits.substring(0,6).padEnd(6,'0');
+}
 
 async function createStudent(){
     const name=document.getElementById('newStudentName').value.trim();
@@ -466,7 +469,7 @@ async function createStudent(){
         closeModal('addStudent');
         document.getElementById('newStudentName').value='';
         document.getElementById('newStudentRut').value='';
-        toast('Estudiante creado exitosamente (contraseña: '+pass+')','ok');
+        toast('Estudiante creado exitosamente','ok');
     }catch(e){
         console.error(e);
         toast('Error: '+e.message,'err');
@@ -533,7 +536,7 @@ async function saveStudentEdit(){
 
 async function resetPassword(uid){
     const s=students[uid];if(!s)return;
-    if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto basada en su RUT.'))return;
+    if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto (6 primeros números del RUT).'))return;
     // Note: client SDK cannot reset another user's password directly.
     // We mark it for reset; the student's next login will use default.
     // For full implementation, use API endpoint with Admin SDK.
@@ -543,11 +546,11 @@ async function resetPassword(uid){
         const email=rutToEmail(s.rut);
         await secondaryAuth.signInWithEmailAndPassword(email,newPass);
         await secondaryAuth.signOut();
-        toast('La contraseña ya es la por defecto: '+newPass,'ok');
+        toast('La contraseña ya está en su valor por defecto','ok');
     }catch(e){
         // If default fails, need to mark for admin reset via API
         await db.ref(BASE+'/estudiantes/'+uid).update({password_reset_pending:true});
-        toast('Se marcó para restablecer. Contraseña por defecto: '+newPass,'ok');
+        toast('Se marcó para restablecer contraseña','ok');
     }
 }
 

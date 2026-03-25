@@ -19,10 +19,14 @@
         }
         @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
         .logo-area { text-align:center; margin-bottom:28px; }
-        .logo-area .school-badge {
-            width:64px; height:64px; background:linear-gradient(135deg,#1e40af,#7c3aed);
-            border-radius:16px; display:inline-flex; align-items:center; justify-content:center;
-            font-size:28px; color:#fff; margin-bottom:12px;
+        .logo-strip {
+            display:flex; align-items:center; justify-content:center; gap:14px; margin-bottom:14px;
+        }
+        .logo-strip .logo-main {
+            width:58px; height:58px; object-fit:contain;
+        }
+        .logo-strip .logo-sdb {
+            width:46px; height:46px; object-fit:contain;
         }
         .logo-area h1 { font-size:20px; font-weight:800; color:#0f172a; }
         .logo-area p { font-size:13px; color:#64748b; margin-top:4px; }
@@ -77,7 +81,10 @@
 <body>
     <div class="login-card">
         <div class="logo-area">
-            <div class="school-badge">📚</div>
+            <div class="logo-strip">
+                <img src="assets/insignia_talca.png" alt="Insignia Salesianos Talca" class="logo-main">
+                <img src="assets/sdb-logo-big.png" alt="Logo Salesianos Don Bosco" class="logo-sdb">
+            </div>
             <h1>Plataforma Estudiantes</h1>
             <p>PAES · Competencia Lectora 2026</p>
             <div class="school-name">Centro Educativo Salesianos Talca</div>
@@ -98,7 +105,7 @@
                     <input type="password" id="passInput" placeholder="Ingresa tu contraseña" required>
                     <button type="button" class="show-pass-toggle" id="togglePass" title="Mostrar contraseña">👁️</button>
                 </div>
-                <div class="input-hint">Primera vez: usa los 4 primeros dígitos de tu RUT</div>
+                <div class="input-hint">Si olvidaste tu clave, solicita restablecimiento a tu profesor</div>
             </div>
 
             <button type="submit" class="btn-login" id="btnLogin">Iniciar Sesión</button>
@@ -171,6 +178,28 @@
             return clean + '@est.profefranciscopancho.com';
         }
 
+        function getPasswordCandidates(rawPass, rut) {
+            const pass = (rawPass || '').trim();
+            const digits = cleanRut(rut).replace(/[^0-9]/g, '');
+            const candidates = [pass];
+
+            // Compatibility bridge: allow students to type 4 digits while legacy accounts
+            // still use the original generated password format.
+            if (/^\d{4}$/.test(pass)) {
+                candidates.push(pass + 'est!');
+            }
+
+            if (/^\d{6}$/.test(pass)) {
+                candidates.push(pass + 'est!');
+            }
+
+            if (digits.length >= 6) {
+                candidates.push(digits.slice(0, 6));
+            }
+
+            return [...new Set(candidates.filter(Boolean))];
+        }
+
         // ============ AUTO-FORMAT RUT ============
         const rutInput = document.getElementById('rutInput');
         rutInput.addEventListener('input', function() {
@@ -216,7 +245,27 @@
 
             try {
                 const email = rutToEmail(rut);
-                const cred = await auth.signInWithEmailAndPassword(email, pass);
+                const candidates = getPasswordCandidates(pass, rut);
+                let cred = null;
+                let lastAuthError = null;
+
+                for (const candidate of candidates) {
+                    try {
+                        cred = await auth.signInWithEmailAndPassword(email, candidate);
+                        break;
+                    } catch (signErr) {
+                        const isAuthMismatch = signErr.code === 'auth/user-not-found' || signErr.code === 'auth/invalid-credential' || signErr.code === 'auth/wrong-password';
+                        if (!isAuthMismatch) {
+                            throw signErr;
+                        }
+                        lastAuthError = signErr;
+                    }
+                }
+
+                if (!cred) {
+                    throw lastAuthError || new Error('auth/invalid-credential');
+                }
+
                 const uid = cred.user.uid;
 
                 // Check student data
@@ -244,9 +293,9 @@
             } catch (err) {
                 console.error('Login error:', err);
                 if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
-                    showError('RUT o contraseña incorrectos. Si es tu primera vez, la contraseña son los 4 primeros dígitos de tu RUT.');
+                    showError('RUT o contraseña incorrectos. Verifica tus datos o solicita restablecimiento al profesor.');
                 } else if (err.code === 'auth/wrong-password') {
-                    showError('Contraseña incorrecta. Si es tu primera vez, usa los 4 primeros dígitos de tu RUT.');
+                    showError('Contraseña incorrecta. Solicita restablecimiento al profesor si no la recuerdas.');
                 } else if (err.code === 'auth/too-many-requests') {
                     showError('Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
                 } else if (err.code === 'auth/network-request-failed') {

@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Completar Perfil — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',system-ui,sans-serif;
+            background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 50%,#7c3aed 100%);
+            min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+        }
+        .card {
+            background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+            width:100%; max-width:500px; padding:36px; animation:slideUp .5s ease;
+        }
+        @keyframes slideUp { from{opacity:0;transform:translateY(30px)} to{opacity:1;transform:translateY(0)} }
+        .welcome-icon { text-align:center; font-size:48px; margin-bottom:8px; }
+        h1 { text-align:center; font-size:22px; font-weight:800; color:#0f172a; margin-bottom:4px; }
+        .subtitle { text-align:center; font-size:13px; color:#64748b; margin-bottom:24px; line-height:1.5; }
+        .step-indicator { display:flex; gap:8px; justify-content:center; margin-bottom:24px; }
+        .step { width:40px; height:4px; border-radius:2px; background:#e2e8f0; transition:background .3s; }
+        .step.active { background:#1e40af; }
+        .step.done { background:#16a34a; }
+        .form-group { margin-bottom:16px; }
+        .form-group label { display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px; }
+        .form-group input, .form-group select {
+            width:100%; padding:13px 16px; border:2px solid #e2e8f0; border-radius:10px;
+            font-size:15px; font-family:inherit; background:#f8fafc; transition:border-color .2s;
+        }
+        .form-group input:focus, .form-group select:focus { outline:none; border-color:#1e40af; background:#fff; }
+        .form-group .hint { font-size:11px; color:#94a3b8; margin-top:4px; }
+        .readonly-field {
+            background:#f1f5f9 !important; color:#64748b; cursor:not-allowed;
+        }
+        .section-title { font-size:15px; font-weight:700; color:#1e40af; margin:20px 0 12px; padding-bottom:6px; border-bottom:2px solid #dbeafe; }
+        .btn-primary {
+            width:100%; padding:15px; background:linear-gradient(135deg,#1e40af,#3b82f6);
+            color:#fff; border:none; border-radius:10px; font-size:16px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s;
+        }
+        .btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,64,175,.35); }
+        .btn-primary:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+        .btn-secondary {
+            width:100%; padding:13px; background:#f1f5f9; color:#334155; border:2px solid #e2e8f0;
+            border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;
+            margin-top:10px; transition:background .2s;
+        }
+        .btn-secondary:hover { background:#e2e8f0; }
+        .error-msg { background:#fef2f2; border:1px solid #fecaca; color:#dc2626; border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+        .error-msg.show { display:block; }
+        .success-msg { background:#f0fdf4; border:1px solid #86efac; color:#166534; border-radius:8px; padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; }
+        .success-msg.show { display:block; }
+        .pass-requirements { font-size:11px; color:#64748b; margin-top:6px; line-height:1.6; }
+        .pass-requirements .req { display:flex; align-items:center; gap:4px; }
+        .pass-requirements .req.valid { color:#16a34a; }
+        .pass-requirements .req.invalid { color:#94a3b8; }
+        .loading-spinner { display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.3); border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle; margin-right:8px; }
+        @keyframes spin { to{transform:rotate(360deg)} }
+        .hidden { display:none !important; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="welcome-icon">👋</div>
+        <h1 id="welcomeTitle">¡Bienvenido/a!</h1>
+        <p class="subtitle">Es tu primera vez en la plataforma. Completa tus datos y crea una nueva contraseña.</p>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1dot"></div>
+            <div class="step" id="step2dot"></div>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+        <div class="success-msg" id="successMsg"></div>
+
+        <!-- STEP 1: Complete Profile Data -->
+        <div id="step1">
+            <div class="section-title">📋 Verifica tus datos</div>
+
+            <div class="form-group">
+                <label>Nombre completo</label>
+                <input type="text" id="nombreField" class="readonly-field" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>RUT</label>
+                <input type="text" id="rutField" class="readonly-field" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Curso</label>
+                <input type="text" id="cursoField" class="readonly-field" readonly>
+            </div>
+
+            <div class="section-title">📧 Datos adicionales</div>
+
+            <div class="form-group">
+                <label for="emailInst">Correo institucional *</label>
+                <input type="email" id="emailInst" placeholder="tu.nombre@salesianostalca.cl" required>
+                <div class="hint">Usa tu correo del colegio (@salesianostalca.cl)</div>
+            </div>
+
+            <div class="form-group">
+                <label for="telefono">Teléfono de contacto (opcional)</label>
+                <input type="tel" id="telefono" placeholder="+56 9 1234 5678" maxlength="15">
+                <div class="hint">Número de celular propio o de un apoderado</div>
+            </div>
+
+            <div class="form-group">
+                <label for="apoderado">Nombre del apoderado/a (opcional)</label>
+                <input type="text" id="apoderado" placeholder="Nombre completo del apoderado">
+            </div>
+
+            <button type="button" class="btn-primary" id="btnStep1">Continuar →</button>
+        </div>
+
+        <!-- STEP 2: Change Password -->
+        <div id="step2" class="hidden">
+            <div class="section-title">🔐 Crea tu nueva contraseña</div>
+            <p style="font-size:12px; color:#64748b; margin-bottom:16px;">
+                Tu contraseña temporal ya no será válida. Crea una que solo tú conozcas.
+            </p>
+
+            <div class="form-group">
+                <label for="newPass">Nueva contraseña</label>
+                <input type="password" id="newPass" placeholder="Mínimo 6 caracteres" minlength="6">
+            </div>
+
+            <div class="pass-requirements" id="passReqs">
+                <div class="req" data-req="length">⬜ Mínimo 6 caracteres</div>
+                <div class="req" data-req="number">⬜ Al menos 1 número</div>
+            </div>
+
+            <div class="form-group" style="margin-top:12px;">
+                <label for="confirmPass">Confirmar contraseña</label>
+                <input type="password" id="confirmPass" placeholder="Repite tu nueva contraseña">
+            </div>
+
+            <button type="button" class="btn-primary" id="btnStep2">Guardar y Entrar</button>
+            <button type="button" class="btn-secondary" id="btnBack">← Volver</button>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        let studentData = null;
+        let currentUid = null;
+
+        function showError(msg) { const e = document.getElementById('errorMsg'); e.textContent = msg; e.classList.add('show'); document.getElementById('successMsg').classList.remove('show'); }
+        function showSuccess(msg) { const e = document.getElementById('successMsg'); e.textContent = msg; e.classList.add('show'); document.getElementById('errorMsg').classList.remove('show'); }
+        function hideMessages() { document.getElementById('errorMsg').classList.remove('show'); document.getElementById('successMsg').classList.remove('show'); }
+
+        // Check Auth
+        auth.onAuthStateChanged(async function(user) {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUid = user.uid;
+            try {
+                const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
+                studentData = snap.val();
+                if (!studentData) { await auth.signOut(); window.location.href = 'index.html'; return; }
+                if (studentData.perfil_completo) { window.location.href = 'dashboard.html'; return; }
+                document.getElementById('welcomeTitle').textContent = '¡Bienvenido/a, ' + (studentData.nombre || 'Estudiante') + '!';
+                document.getElementById('nombreField').value = studentData.nombre || '';
+                document.getElementById('rutField').value = studentData.rut || '';
+                document.getElementById('cursoField').value = studentData.curso === '2A-HC' ? '2°A Medio H.C.' : '2°B Medio H.C.';
+                if (studentData.email_institucional) document.getElementById('emailInst').value = studentData.email_institucional;
+            } catch(e) { showError('Error al cargar datos. Recarga la página.'); }
+        });
+
+        // Step 1 → Step 2
+        document.getElementById('btnStep1').addEventListener('click', function() {
+            hideMessages();
+            const email = document.getElementById('emailInst').value.trim();
+            if (!email) { showError('El correo institucional es obligatorio.'); return; }
+            if (!email.includes('@')) { showError('Ingresa un correo electrónico válido.'); return; }
+            document.getElementById('step1').classList.add('hidden');
+            document.getElementById('step2').classList.remove('hidden');
+            document.getElementById('step1dot').classList.remove('active'); document.getElementById('step1dot').classList.add('done');
+            document.getElementById('step2dot').classList.add('active');
+        });
+
+        // Back
+        document.getElementById('btnBack').addEventListener('click', function() {
+            hideMessages();
+            document.getElementById('step2').classList.add('hidden');
+            document.getElementById('step1').classList.remove('hidden');
+            document.getElementById('step1dot').classList.add('active'); document.getElementById('step1dot').classList.remove('done');
+            document.getElementById('step2dot').classList.remove('active');
+        });
+
+        // Password validation
+        const newPassInput = document.getElementById('newPass');
+        newPassInput.addEventListener('input', function() {
+            const v = this.value;
+            const reqs = document.querySelectorAll('.req');
+            reqs[0].className = 'req ' + (v.length >= 6 ? 'valid' : 'invalid');
+            reqs[0].textContent = (v.length >= 6 ? '✅' : '⬜') + ' Mínimo 6 caracteres';
+            reqs[1].className = 'req ' + (/\d/.test(v) ? 'valid' : 'invalid');
+            reqs[1].textContent = (/\d/.test(v) ? '✅' : '⬜') + ' Al menos 1 número';
+        });
+
+        // Step 2: Save
+        document.getElementById('btnStep2').addEventListener('click', async function() {
+            hideMessages();
+            const newPass = document.getElementById('newPass').value;
+            const confirmPass = document.getElementById('confirmPass').value;
+            const email = document.getElementById('emailInst').value.trim();
+            const telefono = document.getElementById('telefono').value.trim();
+            const apoderado = document.getElementById('apoderado').value.trim();
+
+            if (newPass.length < 6) { showError('La contraseña debe tener al menos 6 caracteres.'); return; }
+            if (!/\d/.test(newPass)) { showError('La contraseña debe contener al menos 1 número.'); return; }
+            if (newPass !== confirmPass) { showError('Las contraseñas no coinciden. Revisa e intenta de nuevo.'); return; }
+
+            const btn = this;
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>Guardando...';
+
+            try {
+                // Update password
+                await auth.currentUser.updatePassword(newPass);
+
+                // Save profile data
+                const updates = {
+                    email_institucional: email,
+                    perfil_completo: true,
+                    password_changed: true,
+                    perfil_completado_at: Date.now()
+                };
+                if (telefono) updates.telefono = telefono;
+                if (apoderado) updates.nombre_apoderado = apoderado;
+
+                await db.ref('plataforma_estudiantes/estudiantes/' + currentUid).update(updates);
+
+                showSuccess('¡Perfil completado! Redirigiendo...');
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+
+            } catch(err) {
+                console.error('Profile error:', err);
+                if (err.code === 'auth/requires-recent-login') {
+                    showError('Sesión expirada. Debes volver a iniciar sesión.');
+                    setTimeout(() => { auth.signOut(); window.location.href = 'index.html'; }, 2000);
+                } else {
+                    showError('Error al guardar. Intenta de nuevo.');
+                }
+                btn.disabled = false;
+                btn.textContent = 'Guardar y Entrar';
+            }
+        });
+    </script>
+</body>
+</html>

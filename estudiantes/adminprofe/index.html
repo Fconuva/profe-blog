@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administración — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;min-height:100vh;display:flex;flex-direction:column}
+        /* HEADER */
+        .header{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200}
+        .header h1{font-size:15px;font-weight:700;flex:1}
+        .header .admin-name{font-size:12px;color:#94a3b8}
+        .header button{background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
+        .header button:hover{background:#475569}
+        /* LAYOUT */
+        .layout{display:flex;flex:1;min-height:0}
+        /* SIDEBAR */
+        .sidebar{width:200px;background:#1e293b;padding:12px 0;flex-shrink:0}
+        .sidebar a{display:flex;align-items:center;gap:8px;padding:10px 16px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:500;transition:all .15s}
+        .sidebar a:hover{color:#fff;background:#334155}
+        .sidebar a.active{color:#fff;background:#1e40af}
+        .sidebar a span.icon{font-size:16px;width:20px;text-align:center}
+        /* MAIN */
+        .content{flex:1;padding:24px;overflow-y:auto}
+        .section{display:none}
+        .section.active{display:block}
+        .section h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:16px}
+        /* CARDS */
+        .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:24px}
+        .stat-card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+        .stat-card .label{font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+        .stat-card .value{font-size:28px;font-weight:800;color:#0f172a;margin-top:4px}
+        .stat-card .sub{font-size:11px;color:#94a3b8;margin-top:2px}
+        /* TABLE */
+        .panel-table{width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+        .panel-table table{width:100%;border-collapse:collapse}
+        .panel-table th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8f0}
+        .panel-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f1f5f9}
+        .panel-table tr:hover td{background:#f8fafc}
+        /* BTNS */
+        .btn{padding:8px 16px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;transition:all .15s}
+        .btn-primary{background:#1e40af;color:#fff}.btn-primary:hover{background:#1e3a8a}
+        .btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#15803d}
+        .btn-danger{background:#dc2626;color:#fff}.btn-danger:hover{background:#b91c1c}
+        .btn-warn{background:#f59e0b;color:#fff}.btn-warn:hover{background:#d97706}
+        .btn-secondary{background:#e2e8f0;color:#334155}.btn-secondary:hover{background:#cbd5e1}
+        .btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
+        .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+        /* FORMS */
+        .form-group{margin-bottom:14px}
+        .form-group label{display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px}
+        .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit;transition:border .2s}
+        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#3b82f6}
+        .form-group textarea{min-height:80px;resize:vertical}
+        /* MODAL */
+        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+        .modal-overlay.show{display:flex}
+        .modal{background:#fff;border-radius:16px;padding:28px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+        .modal h3{font-size:18px;font-weight:800;color:#0f172a;margin-bottom:16px}
+        .modal .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+        /* BADGES */
+        .badge{display:inline-block;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:700}
+        .badge-blue{background:#dbeafe;color:#1e40af}
+        .badge-purple{background:#ede9fe;color:#7c3aed}
+        .badge-green{background:#dcfce7;color:#16a34a}
+        .badge-red{background:#fee2e2;color:#dc2626}
+        .badge-amber{background:#fef3c7;color:#d97706}
+        .badge-gray{background:#f1f5f9;color:#64748b}
+        /* TOGGLE */
+        .toggle{position:relative;width:42px;height:24px;display:inline-block;cursor:pointer}
+        .toggle input{display:none}
+        .toggle .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:12px;transition:.2s}
+        .toggle .slider:before{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s}
+        .toggle input:checked+.slider{background:#16a34a}
+        .toggle input:checked+.slider:before{transform:translateX(18px)}
+        /* SEARCH */
+        .search-bar{display:flex;gap:8px;margin-bottom:16px}
+        .search-bar input{flex:1;padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit}
+        .search-bar input:focus{outline:none;border-color:#3b82f6}
+        .search-bar select{padding:10px 14px;border:2px solid #e2e8f0;border-radius:8px;font-size:14px;font-family:inherit}
+        /* TOAST */
+        .toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:10px;color:#fff;font-size:13px;font-weight:600;z-index:600;transform:translateY(80px);opacity:0;transition:all .3s}
+        .toast.show{transform:translateY(0);opacity:1}
+        .toast-ok{background:#16a34a}.toast-err{background:#dc2626}
+        /* TABS inside section */
+        .section-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid #e2e8f0;padding-bottom:0}
+        .section-tab{padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:none;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit}
+        .section-tab.active{color:#1e40af;border-bottom-color:#1e40af}
+        /* ACHIEVEMENT LEVELS */
+        .level-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+        .level-card{padding:16px;border-radius:10px;text-align:center}
+        .level-card .lv-label{font-size:11px;font-weight:700;text-transform:uppercase}
+        .level-card .lv-val{font-size:24px;font-weight:800;margin-top:4px}
+        .lv-insuf{background:#fee2e2;color:#dc2626}
+        .lv-elem{background:#fef3c7;color:#d97706}
+        .lv-adeq{background:#dcfce7;color:#16a34a}
+        .lv-dest{background:#dbeafe;color:#1e40af}
+        @media(max-width:768px){
+            .sidebar{display:none}
+            .header{flex-wrap:wrap}
+            .mobile-nav{display:flex;overflow-x:auto;background:#1e293b;padding:4px 8px;gap:4px}
+            .mobile-nav a{white-space:nowrap;color:#94a3b8;text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600}
+            .mobile-nav a.active{color:#fff;background:#1e40af}
+            .level-row{grid-template-columns:repeat(2,1fr)}
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>📋 Panel de Administración</h1>
+    <span class="admin-name" id="adminName"></span>
+    <button onclick="auth.signOut().then(()=>location.href='../index.html')" title="Cerrar sesión">Salir</button>
+</div>
+<div class="mobile-nav" id="mobileNav" style="display:none"></div>
+
+<div class="layout">
+    <nav class="sidebar" id="sidebarNav">
+        <a href="#" class="active" data-section="overview" onclick="showSection('overview',this)"><span class="icon">📊</span>Panel Principal</a>
+        <a href="#" data-section="students" onclick="showSection('students',this)"><span class="icon">👥</span>Estudiantes</a>
+        <a href="#" data-section="sessions" onclick="showSection('sessions',this)"><span class="icon">📚</span>Sesiones</a>
+        <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
+        <a href="#" data-section="reports" onclick="showSection('reports',this)"><span class="icon">📋</span>Reportes</a>
+    </nav>
+
+    <div class="content">
+        <!-- ================== OVERVIEW ================== -->
+        <div class="section active" id="sec-overview">
+            <h2>Panel Principal</h2>
+            <div class="stat-row" id="overviewStats"></div>
+            <div class="panel-table">
+                <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">Actividad Reciente</h3>
+                <table><thead><tr><th>Estudiante</th><th>Sesión</th><th>Logro</th><th>Fecha</th></tr></thead>
+                <tbody id="recentActivity"></tbody></table>
+            </div>
+        </div>
+
+        <!-- ================== STUDENTS ================== -->
+        <div class="section" id="sec-students">
+            <h2>Gestión de Estudiantes</h2>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="openModal('addStudent')">+ Agregar Estudiante</button>
+                <button class="btn btn-secondary" onclick="openModal('bulkAdd')">📋 Carga Masiva</button>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="studentSearch" placeholder="Buscar por nombre o RUT..." oninput="renderStudents()">
+                <select id="studentCourseFilter" onchange="renderStudents()">
+                    <option value="">Todos los cursos</option>
+                    <option value="2A-HC">2°A HC</option>
+                    <option value="2B-HC">2°B HC</option>
+                </select>
+            </div>
+            <div class="panel-table">
+                <table><thead><tr><th>Nombre</th><th>RUT</th><th>Curso</th><th>Email Inst.</th><th>Perfil</th><th>Acciones</th></tr></thead>
+                <tbody id="studentsBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- ================== SESSIONS ================== -->
+        <div class="section" id="sec-sessions">
+            <h2>Gestión de Sesiones</h2>
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
+                <button class="btn btn-success" onclick="preloadSession1()">🚀 Precargar Sesión 1</button>
+            </div>
+            <div class="panel-table">
+                <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Acciones</th></tr></thead>
+                <tbody id="sessionsBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- ================== RESULTS ================== -->
+        <div class="section" id="sec-results">
+            <h2>Resultados</h2>
+            <div class="search-bar">
+                <select id="resultSession" onchange="loadResults()">
+                    <option value="">Selecciona sesión...</option>
+                </select>
+                <select id="resultCourse" onchange="loadResults()">
+                    <option value="">Todos</option>
+                    <option value="2A-HC">2°A HC</option>
+                    <option value="2B-HC">2°B HC</option>
+                </select>
+            </div>
+            <div class="level-row" id="levelCards"></div>
+            <div class="panel-table">
+                <table><thead><tr><th>Nombre</th><th>Curso</th><th>Puntaje</th><th>Logro</th><th>Nivel</th><th>Tiempo</th><th>Acciones</th></tr></thead>
+                <tbody id="resultsBody"></tbody></table>
+            </div>
+        </div>
+
+        <!-- ================== REPORTS ================== -->
+        <div class="section" id="sec-reports">
+            <h2>Reportes</h2>
+            <div class="stat-row" style="margin-bottom:24px">
+                <div class="stat-card" style="cursor:pointer" onclick="generateReport('session')">
+                    <div class="label">📄 Reporte por Sesión</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:8px">Resultados detallados de una sesión con niveles de logro</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer" onclick="generateReport('course')">
+                    <div class="label">📊 Reporte por Curso</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:8px">Comparación entre 2°A y 2°B con promedios y distribución</div>
+                </div>
+                <div class="stat-card" style="cursor:pointer" onclick="generateReport('student')">
+                    <div class="label">👤 Reporte Individual</div>
+                    <div style="font-size:12px;color:#64748b;margin-top:8px">Progreso individual de cada estudiante a lo largo de todas las sesiones</div>
+                </div>
+            </div>
+            <div id="reportOutput" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ================== MODALS ================== -->
+<!-- Add Student -->
+<div class="modal-overlay" id="modal-addStudent">
+    <div class="modal">
+        <h3>Agregar Estudiante</h3>
+        <div class="form-group"><label>Nombre Completo</label><input id="newStudentName" placeholder="Ej: Juan Pérez López"></div>
+        <div class="form-group"><label>RUT (sin puntos, con guión)</label><input id="newStudentRut" placeholder="Ej: 12345678-9" maxlength="12"></div>
+        <div class="form-group">
+            <label>Curso</label>
+            <select id="newStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option></select>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('addStudent')">Cancelar</button>
+            <button class="btn btn-primary" onclick="createStudent()">Crear Estudiante</button>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Add -->
+<div class="modal-overlay" id="modal-bulkAdd">
+    <div class="modal">
+        <h3>Carga Masiva de Estudiantes</h3>
+        <p style="font-size:12px;color:#64748b;margin-bottom:12px">Pega la lista en formato: <strong>Nombre Completo ; RUT ; Curso</strong> (uno por línea)</p>
+        <div class="form-group">
+            <textarea id="bulkData" rows="10" placeholder="Juan Pérez López ; 12345678-9 ; 2A-HC
+María González ; 98765432-1 ; 2B-HC"></textarea>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('bulkAdd')">Cancelar</button>
+            <button class="btn btn-primary" onclick="bulkCreateStudents()">Crear Estudiantes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Student -->
+<div class="modal-overlay" id="modal-editStudent">
+    <div class="modal">
+        <h3>Editar Estudiante</h3>
+        <input type="hidden" id="editStudentUid">
+        <div class="form-group"><label>Nombre Completo</label><input id="editStudentName"></div>
+        <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option></select></div>
+        <div class="form-group"><label>Email Institucional</label><input id="editStudentEmail"></div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('editStudent')">Cancelar</button>
+            <button class="btn btn-primary" onclick="saveStudentEdit()">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Add Session -->
+<div class="modal-overlay" id="modal-addSession">
+    <div class="modal" style="max-width:600px">
+        <h3>Nueva Sesión</h3>
+        <div class="form-group"><label>Título</label><input id="newSesTitle" placeholder="Ej: Sesión 2: Interpretar y Relacionar"></div>
+        <div class="form-group"><label>Descripción</label><textarea id="newSesDesc" rows="2" placeholder="Descripción breve..."></textarea></div>
+        <div class="form-group"><label>Orden (número)</label><input id="newSesOrden" type="number" min="1" value="1"></div>
+        <div class="form-group"><label>Video YouTube (URL, opcional)</label><input id="newSesVideo" placeholder="https://youtube.com/watch?v=..."></div>
+        <p style="font-size:11px;color:#94a3b8;margin-bottom:8px">Los textos y preguntas pueden agregarse editando la sesión después de crearla.</p>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="closeModal('addSession')">Cancelar</button>
+            <button class="btn btn-primary" onclick="createSession()">Crear Sesión</button>
+        </div>
+    </div>
+</div>
+
+<!-- Student Detail -->
+<div class="modal-overlay" id="modal-studentDetail">
+    <div class="modal" style="max-width:600px">
+        <h3 id="detailStudentName"></h3>
+        <div id="detailStudentContent"></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('studentDetail')">Cerrar</button></div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG={apiKey:"AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",authDomain:"profe-blog.firebaseapp.com",databaseURL:"https://profe-blog-default-rtdb.firebaseio.com",projectId:"profe-blog",storageBucket:"profe-blog.firebasestorage.app",messagingSenderId:"305920739217",appId:"1:305920739217:web:2e08c7469d2988d8b3bc30"};
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth=firebase.auth();
+const db=firebase.database();
+const BASE='plataforma_estudiantes';
+
+// Secondary app for creating student accounts without signing out admin
+const secondaryApp=firebase.initializeApp(FIREBASE_CONFIG,"secondary");
+const secondaryAuth=secondaryApp.auth();
+
+let students={};
+let sessions={};
+let allResults={};
+let allResponses={};
+let currentAdminUid=null;
+
+/* ============ AUTH ============ */
+auth.onAuthStateChanged(async user=>{
+    if(!user){window.location.href='../index.html';return}
+    // Check admin role
+    const snap=await db.ref(BASE+'/admins/'+user.uid).once('value');
+    if(!snap.val()){
+        toast('No tienes permisos de administrador','err');
+        setTimeout(()=>{auth.signOut();location.href='../index.html'},2000);
+        return;
+    }
+    currentAdminUid=user.uid;
+    document.getElementById('adminName').textContent=user.email||'Admin';
+    initMobileNav();
+    await loadAllData();
+});
+
+async function loadAllData(){
+    const [estS,sesS,resS,respS]=await Promise.all([
+        db.ref(BASE+'/estudiantes').once('value'),
+        db.ref(BASE+'/sesiones').once('value'),
+        db.ref(BASE+'/resultados').once('value'),
+        db.ref(BASE+'/respuestas').once('value')
+    ]);
+    students=estS.val()||{};
+    sessions=sesS.val()||{};
+    allResults=resS.val()||{};
+    allResponses=respS.val()||{};
+    renderOverview();
+    renderStudents();
+    renderSessions();
+    populateResultsDropdown();
+}
+
+/* ============ NAVIGATION ============ */
+function showSection(id,el){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.getElementById('sec-'+id).classList.add('active');
+    document.querySelectorAll('.sidebar a, .mobile-nav a').forEach(a=>a.classList.remove('active'));
+    if(el)el.classList.add('active');
+    // Also highlight in mobile nav
+    document.querySelectorAll('.mobile-nav a').forEach(a=>{
+        if(a.dataset.section===id) a.classList.add('active');
+    });
+}
+
+function initMobileNav(){
+    const nav=document.getElementById('mobileNav');
+    const links=[
+        {id:'overview',icon:'📊',label:'Panel'},
+        {id:'students',icon:'👥',label:'Estudiantes'},
+        {id:'sessions',icon:'📚',label:'Sesiones'},
+        {id:'results',icon:'📈',label:'Resultados'},
+        {id:'reports',icon:'📋',label:'Reportes'}
+    ];
+    nav.innerHTML=links.map(l=>`<a href="#" data-section="${l.id}" class="${l.id==='overview'?'active':''}" onclick="showSection('${l.id}',this)">${l.icon} ${l.label}</a>`).join('');
+    if(window.innerWidth<=768) nav.style.display='flex';
+}
+
+/* ============ OVERVIEW ============ */
+function renderOverview(){
+    const totalStudents=Object.keys(students).length;
+    const totalSessions=Object.keys(sessions).length;
+    const a=Object.values(students).filter(s=>s.curso==='2A-HC').length;
+    const b=Object.values(students).filter(s=>s.curso==='2B-HC').length;
+    const perfilComplete=Object.values(students).filter(s=>s.perfil_completo).length;
+
+    let totalSubmissions=0;
+    for(const sesId of Object.keys(allResults)){
+        totalSubmissions+=Object.keys(allResults[sesId]).length;
+    }
+
+    document.getElementById('overviewStats').innerHTML=`
+        <div class="stat-card"><div class="label">Total Estudiantes</div><div class="value">${totalStudents}</div><div class="sub">2°A: ${a} | 2°B: ${b}</div></div>
+        <div class="stat-card"><div class="label">Sesiones Creadas</div><div class="value">${totalSessions}</div><div class="sub">${Object.values(sessions).filter(s=>s.activa!==false).length} activas</div></div>
+        <div class="stat-card"><div class="label">Evaluaciones Enviadas</div><div class="value">${totalSubmissions}</div></div>
+        <div class="stat-card"><div class="label">Perfiles Completos</div><div class="value">${perfilComplete}/${totalStudents}</div><div class="sub">${totalStudents?Math.round(perfilComplete/totalStudents*100):0}%</div></div>
+    `;
+
+    // Recent activity
+    const activity=[];
+    for(const[sesId,uidMap]of Object.entries(allResults)){
+        for(const[uid,res]of Object.entries(uidMap)){
+            activity.push({
+                nombre:students[uid]?.nombre||'Desconocido',
+                sesion:sessions[sesId]?.titulo||sesId,
+                porcentaje:res.porcentaje||0,
+                ts:res.timestamp||0
+            });
+        }
+    }
+    activity.sort((x,y)=>y.ts-x.ts);
+
+    const tbody=document.getElementById('recentActivity');
+    tbody.innerHTML=activity.slice(0,10).map(a=>{
+        const lvl=a.porcentaje>=80?'badge-blue':a.porcentaje>=60?'badge-green':a.porcentaje>=40?'badge-amber':'badge-red';
+        const date=a.ts?new Date(a.ts).toLocaleDateString('es-CL'):'—';
+        return `<tr><td>${a.nombre}</td><td style="font-size:12px">${a.sesion}</td><td><span class="badge ${lvl}">${a.porcentaje}%</span></td><td style="font-size:12px;color:#64748b">${date}</td></tr>`;
+    }).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Sin actividad aún</td></tr>';
+}
+
+/* ============ STUDENTS ============ */
+function renderStudents(){
+    const search=(document.getElementById('studentSearch').value||'').toLowerCase();
+    const courseF=document.getElementById('studentCourseFilter').value;
+    const tbody=document.getElementById('studentsBody');
+
+    let items=Object.entries(students).map(([uid,s])=>({uid,...s}));
+    if(search) items=items.filter(s=>(s.nombre||'').toLowerCase().includes(search)||(s.rut||'').includes(search));
+    if(courseF) items=items.filter(s=>s.curso===courseF);
+    items.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+
+    tbody.innerHTML=items.map(s=>{
+        const perfilBadge=s.perfil_completo?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">Pendiente</span>';
+        return `<tr>
+            <td><strong>${s.nombre||'—'}</strong></td>
+            <td style="font-size:12px">${s.rut||'—'}</td>
+            <td><span class="badge ${s.curso==='2A-HC'?'badge-blue':'badge-purple'}">${s.curso==='2A-HC'?'2°A':'2°B'}</span></td>
+            <td style="font-size:12px">${s.email_institucional||'—'}</td>
+            <td>${perfilBadge}</td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="editStudent('${s.uid}')">✏️</button>
+                <button class="btn btn-sm btn-warn" onclick="resetPassword('${s.uid}')">🔑</button>
+                <button class="btn btn-sm btn-primary" onclick="viewStudentDetail('${s.uid}')">👁</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.uid}')">🗑</button>
+            </td></tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
+}
+
+// RUT utilities
+function cleanRut(r){return(r||'').replace(/[.\s]/g,'').toUpperCase()}
+function rutToEmail(r){return cleanRut(r).replace(/-/g,'')+'@est.profefranciscopancho.com'}
+function defaultPassword(r){return cleanRut(r).replace(/[^0-9]/g,'').substring(0,4)+'est!'}
+
+async function createStudent(){
+    const name=document.getElementById('newStudentName').value.trim();
+    const rut=cleanRut(document.getElementById('newStudentRut').value);
+    const curso=document.getElementById('newStudentCurso').value;
+    if(!name||!rut||!curso){toast('Completa todos los campos','err');return}
+
+    const email=rutToEmail(rut);
+    const pass=defaultPassword(rut);
+
+    try{
+        const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+        await secondaryAuth.signOut();
+        const uid=cred.user.uid;
+        await db.ref(BASE+'/estudiantes/'+uid).set({
+            nombre:name,rut:rut,curso:curso,
+            perfil_completo:false,password_changed:false,
+            createdAt:Date.now(),createdBy:currentAdminUid
+        });
+        students[uid]={nombre:name,rut:rut,curso:curso,perfil_completo:false};
+        renderStudents();renderOverview();
+        closeModal('addStudent');
+        document.getElementById('newStudentName').value='';
+        document.getElementById('newStudentRut').value='';
+        toast('Estudiante creado exitosamente (contraseña: '+pass+')','ok');
+    }catch(e){
+        console.error(e);
+        toast('Error: '+e.message,'err');
+    }
+}
+
+async function bulkCreateStudents(){
+    const raw=document.getElementById('bulkData').value.trim();
+    if(!raw){toast('Pega la lista de estudiantes','err');return}
+    const lines=raw.split('\n').filter(l=>l.trim());
+    let created=0,errors=[];
+
+    for(const line of lines){
+        const parts=line.split(';').map(s=>s.trim());
+        if(parts.length<3){errors.push(line+' — formato inválido');continue}
+        const[name,rut,curso]=parts;
+        const email=rutToEmail(rut);
+        const pass=defaultPassword(rut);
+        try{
+            const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+            await secondaryAuth.signOut();
+            await db.ref(BASE+'/estudiantes/'+cred.user.uid).set({
+                nombre:name,rut:cleanRut(rut),curso:curso,
+                perfil_completo:false,password_changed:false,
+                createdAt:Date.now(),createdBy:currentAdminUid
+            });
+            created++;
+        }catch(e){errors.push(name+' — '+e.message)}
+    }
+
+    await loadAllData();
+    closeModal('bulkAdd');
+    document.getElementById('bulkData').value='';
+    let msg=created+' estudiantes creados.';
+    if(errors.length) msg+=' '+errors.length+' errores.';
+    toast(msg,errors.length?'err':'ok');
+    if(errors.length) console.warn('Errores carga masiva:',errors);
+}
+
+function editStudent(uid){
+    const s=students[uid];if(!s)return;
+    document.getElementById('editStudentUid').value=uid;
+    document.getElementById('editStudentName').value=s.nombre||'';
+    document.getElementById('editStudentCurso').value=s.curso||'2A-HC';
+    document.getElementById('editStudentEmail').value=s.email_institucional||'';
+    openModal('editStudent');
+}
+
+async function saveStudentEdit(){
+    const uid=document.getElementById('editStudentUid').value;
+    const updates={
+        nombre:document.getElementById('editStudentName').value.trim(),
+        curso:document.getElementById('editStudentCurso').value,
+        email_institucional:document.getElementById('editStudentEmail').value.trim()
+    };
+    try{
+        await db.ref(BASE+'/estudiantes/'+uid).update(updates);
+        Object.assign(students[uid],updates);
+        renderStudents();
+        closeModal('editStudent');
+        toast('Estudiante actualizado','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function resetPassword(uid){
+    const s=students[uid];if(!s)return;
+    if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto basada en su RUT.'))return;
+    // Note: client SDK cannot reset another user's password directly.
+    // We mark it for reset; the student's next login will use default.
+    // For full implementation, use API endpoint with Admin SDK.
+    const newPass=defaultPassword(s.rut);
+    try{
+        // Try via secondary app sign-in and update
+        const email=rutToEmail(s.rut);
+        await secondaryAuth.signInWithEmailAndPassword(email,newPass);
+        await secondaryAuth.signOut();
+        toast('La contraseña ya es la por defecto: '+newPass,'ok');
+    }catch(e){
+        // If default fails, need to mark for admin reset via API
+        await db.ref(BASE+'/estudiantes/'+uid).update({password_reset_pending:true});
+        toast('Se marcó para restablecer. Contraseña por defecto: '+newPass,'ok');
+    }
+}
+
+function deleteStudent(uid){
+    const s=students[uid];if(!s)return;
+    if(!confirm('¿ELIMINAR a '+s.nombre+'?\nEsto eliminará sus datos de la plataforma (la cuenta de auth se mantiene).'))return;
+    db.ref(BASE+'/estudiantes/'+uid).remove();
+    delete students[uid];
+    renderStudents();renderOverview();
+    toast('Estudiante eliminado de la plataforma','ok');
+}
+
+function viewStudentDetail(uid){
+    const s=students[uid];if(!s)return;
+    document.getElementById('detailStudentName').textContent=s.nombre;
+
+    let html=`<p style="font-size:13px;color:#64748b;margin-bottom:16px">RUT: ${s.rut} | Curso: ${s.curso} | Email: ${s.email_institucional||'—'}</p>`;
+    html+='<h4 style="font-size:14px;font-weight:700;margin-bottom:8px">Resultados por Sesión</h4>';
+
+    const sesIds=Object.keys(sessions);
+    if(sesIds.length===0){html+='<p style="font-size:13px;color:#94a3b8">No hay sesiones creadas</p>';}
+    else{
+        html+='<table style="width:100%;border-collapse:collapse;font-size:13px">';
+        html+='<tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Puntaje</th><th>Nivel</th></tr>';
+        for(const sesId of sesIds){
+            const ses=sessions[sesId];
+            const r=allResults[sesId]?.[uid];
+            const score=r?r.porcentaje+'%':'—';
+            const level=r?getLevel(r.porcentaje):'—';
+            html+=`<tr><td style="padding:6px 10px">${ses.titulo||sesId}</td><td style="text-align:center">${score}</td><td style="text-align:center">${level}</td></tr>`;
+        }
+        html+='</table>';
+    }
+    document.getElementById('detailStudentContent').innerHTML=html;
+    openModal('studentDetail');
+}
+
+/* ============ SESSIONS ============ */
+function renderSessions(){
+    const tbody=document.getElementById('sessionsBody');
+    let items=Object.entries(sessions).map(([id,s])=>({id,...s}));
+    items.sort((a,b)=>(a.orden||0)-(b.orden||0));
+
+    tbody.innerHTML=items.map(s=>{
+        const numTexts=(s.contenido?.textos||[]).length;
+        const numQ=(s.contenido?.preguntas||[]).length;
+        return `<tr>
+            <td><strong>${s.orden||'—'}</strong></td>
+            <td>${s.titulo||'Sin título'}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
+            <td style="text-align:center">${numTexts}</td>
+            <td style="text-align:center">${numQ}</td>
+            <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>
+            <td><label class="toggle"><input type="checkbox" ${s.resultados_visibles?'checked':''} onchange="toggleSesField('${s.id}','resultados_visibles',this.checked)"><span class="slider"></span></label></td>
+            <td>
+                <button class="btn btn-sm btn-warn" onclick="resetSessionResults('${s.id}')">🔄 Reset</button>
+                <button class="btn btn-sm btn-danger" onclick="deleteSession('${s.id}')">🗑</button>
+            </td></tr>`;
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones</td></tr>';
+}
+
+async function toggleSesField(sesId,field,val){
+    try{
+        await db.ref(BASE+'/sesiones/'+sesId+'/'+field).set(val);
+        sessions[sesId][field]=val;
+        toast(field+' actualizado','ok');
+    }catch(e){toast('Error','err')}
+}
+
+async function createSession(){
+    const title=document.getElementById('newSesTitle').value.trim();
+    const desc=document.getElementById('newSesDesc').value.trim();
+    const orden=parseInt(document.getElementById('newSesOrden').value)||1;
+    const video=document.getElementById('newSesVideo').value.trim();
+    if(!title){toast('Ingresa un título','err');return}
+
+    const id='sesion-'+orden;
+    try{
+        await db.ref(BASE+'/sesiones/'+id).set({
+            titulo:title,descripcion:desc,orden:orden,
+            activa:true,resultados_visibles:false,
+            video_youtube:video||null,
+            contenido:{textos:[],preguntas:[]},
+            createdAt:Date.now()
+        });
+        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,contenido:{textos:[],preguntas:[]}};
+        renderSessions();populateResultsDropdown();
+        closeModal('addSession');
+        toast('Sesión creada','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function preloadSession1(){
+    if(!confirm('¿Precargar Sesión 1 con los 5 textos y 15 preguntas de la Guía de Trabajo 2 SIMCE?'))return;
+
+    const sesData={
+        titulo:'Sesión 1: Localizar Información (Nivel 1)',
+        descripcion:'Practica la habilidad de localizar información explícita en distintos tipos de textos. Usa las técnicas de mapeo de párrafos, subrayado selectivo e identificación de distractores.',
+        orden:1,activa:true,resultados_visibles:false,video_youtube:null,
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'No literario',subtipo:'Artículo de Divulgación',titulo:'¿Por qué los adolescentes necesitan dormir más que los adultos?',
+                 parrafos:[
+                    {num:1,texto:'Diversos estudios científicos han demostrado que los adolescentes necesitan entre ocho y diez horas de sueño cada noche para funcionar de manera óptima. Sin embargo, debido a cambios biológicos naturales, su reloj interno se retrasa durante la pubertad. Esto significa que, naturalmente, tienden a quedarse dormidos más tarde y necesitan despertar más tarde. Este fenómeno, respaldado por la neurociencia, se conoce como "retraso de fase del sueño".'},
+                    {num:2,texto:'Uno de los cambios más significativos es la alteración en la liberación de melatonina, la hormona que regula el ciclo de sueño. En los adolescentes, esta hormona comienza a liberarse hasta dos horas más tarde que en los adultos, lo que dificulta que se duerman temprano aunque lo intenten. Esta diferencia biológica no es un signo de pereza, sino una característica del desarrollo cerebral.'},
+                    {num:3,texto:'La falta de sueño en jóvenes tiene consecuencias directas en su rendimiento escolar: disminuye la capacidad de concentración, afecta la memoria a corto plazo y reduce la capacidad de tomar decisiones adecuadas. Un estudio de la Universidad de Minnesota reveló que los estudiantes que dormían menos de siete horas tenían calificaciones significativamente más bajas.'},
+                    {num:4,texto:'Frente a esta evidencia, estados como California en Estados Unidos han implementado leyes que prohíben que las clases de secundaria comiencen antes de las 8:30 de la mañana, buscando respetar el ritmo biológico de los jóvenes. En Chile, aunque no existe legislación al respecto, algunos colegios han comenzado a flexibilizar sus horarios de entrada, especialmente después de la pandemia.'}
+                 ],fuente:'Adaptación de artículos de divulgación científica sobre cronobiología adolescente.'},
+                {id:'texto-2',tipo:'Literario',subtipo:'Microcuento',titulo:'El viejo Eugenio',
+                 parrafos:[
+                    {num:1,texto:'Eugenio tenía setenta y tres años cuando decidió que ya no podía seguir sentado esperando que la vida pasara. Una mañana de agosto, con el frío todavía pegado a los huesos, sacó un pequeño mesón de madera y lo instaló en la esquina de la plaza, justo frente a la iglesia. Sobre la mesa puso un mantel a cuadros y tres frascos de mermelada casera: damasco, mora y ciruela.'},
+                    {num:2,texto:'"Mermelada de la abuela Elisa", decía el cartelito escrito a mano, aunque la abuela Elisa era su esposa, que había muerto hacía cinco años. Nadie lo sabía, pero cada vez que Eugenio preparaba una tanda de mermelada, seguía la receta exacta que ella había dejado anotada en un cuaderno con tapas de hule.'},
+                    {num:3,texto:'Lo que ganaba no era mucho —apenas unas monedas al día—, pero le alcanzaba para comprar los materiales del colegio de su nieta Carmen, que vivía con él desde que su hija se fue al norte a buscar trabajo. Carmen tenía doce años y soñaba con ser veterinaria.'},
+                    {num:4,texto:'Un día, la dueña de la panadería de enfrente, que siempre lo había mirado con desconfianza, cruzó la calle y probó la mermelada de damasco. Se quedó en silencio un momento. Después, sin decir nada sobre el sabor, le propuso que vendiera dentro del local: "Así no se moja con la lluvia, don Eugenio. Yo me quedo con el veinte por ciento". Eugenio aceptó sin regatear. Esa noche, Carmen tuvo zapatos nuevos.'}
+                 ],fuente:'Texto original creado para fines pedagógicos.'},
+                {id:'texto-3',tipo:'No literario',subtipo:'Artículo Informativo',titulo:'El reciclaje en Chile: ¿dónde estamos realmente?',
+                 parrafos:[
+                    {num:1,texto:'Chile recicla apenas el 12,5% de los residuos domiciliarios que genera, una cifra muy por debajo del promedio de los países de la OCDE, que alcanza el 34%. Esto significa que la gran mayoría de la basura que producimos termina en rellenos sanitarios o, peor aún, en vertederos ilegales que contaminan el suelo y las aguas subterráneas.'},
+                    {num:2,texto:'La situación, sin embargo, ha comenzado a cambiar con la implementación de la Ley REP (Responsabilidad Extendida del Productor), que obliga a las empresas a hacerse cargo del reciclaje de los envases y embalajes que ponen en el mercado. Esta ley, promulgada en 2016 pero con metas que entraron en vigencia gradualmente, busca que para 2030 al menos el 60% de los envases domiciliarios sean reciclados.'},
+                    {num:3,texto:'A nivel local, algunas comunas han mostrado avances notables. El programa "Recicla Peña" en Peñalolén, por ejemplo, logró aumentar la tasa de reciclaje del 8% al 27% en solo dos años, gracias a la instalación de puntos limpios accesibles y campañas educativas puerta a puerta. Otras comunas como Vitacura y Providencia superan el 20% gracias a sistemas de recolección diferenciada.'},
+                    {num:4,texto:'Sin embargo, los expertos advierten que el reciclaje por sí solo no resolverá el problema. "Reciclar es importante, pero reducir el consumo es urgente", señala la bióloga ambiental Marcela Rivas. El principal desafío sigue siendo cultural: mientras no cambiemos nuestros hábitos de consumo, cualquier política de reciclaje será insuficiente.'}
+                 ],fuente:'Datos del Ministerio del Medio Ambiente y reportes de la OCDE.'},
+                {id:'texto-4',tipo:'No literario',subtipo:'Artículo Informativo',titulo:'Las redes sociales y la salud mental adolescente',
+                 parrafos:[
+                    {num:1,texto:'Un informe publicado por la Organización Mundial de la Salud en 2023 reveló que los adolescentes que pasan más de tres horas diarias en redes sociales tienen el doble de probabilidades de experimentar síntomas de ansiedad y depresión. El estudio, que analizó datos de 45 países, destaca que el problema no es el uso de la tecnología en sí, sino el tipo de interacción que predomina en estas plataformas.'},
+                    {num:2,texto:'Entre los factores de riesgo identificados se encuentran la comparación social constante, el ciberacoso y la interrupción de los patrones de sueño. Los algoritmos de las redes sociales están diseñados para maximizar el tiempo de uso, lo que genera ciclos de uso compulsivo especialmente dañinos durante la adolescencia, cuando el cerebro aún está desarrollando sus mecanismos de autorregulación.'},
+                    {num:3,texto:'En Chile, según datos de la encuesta CASEN 2022, el 78% de los adolescentes entre 13 y 17 años usa redes sociales diariamente, con un promedio de 3,2 horas al día. Las plataformas más utilizadas son TikTok, Instagram y YouTube. Un 23% de los encuestados reportó haber experimentado alguna forma de ciberacoso en el último año.'},
+                    {num:4,texto:'Frente a esta realidad, países como Francia han prohibido el uso de celulares en escuelas, mientras que Australia aprobó en 2024 una ley que impide el acceso a redes sociales a menores de 16 años. En Chile, el debate apenas comienza, aunque algunos establecimientos educacionales han implementado políticas de "desconexión" durante la jornada escolar, con resultados positivos en convivencia y rendimiento académico.'}
+                 ],fuente:'Basado en informes de la OMS, UNICEF y datos de la encuesta CASEN 2022.'},
+                {id:'texto-5',tipo:'Literario',subtipo:'Microcuento',titulo:'La bibliotecaria del cerro',
+                 parrafos:[
+                    {num:1,texto:'Todos en el cerro la conocían como "la señora de los libros". Rosa Martínez tenía sesenta años y una mochila que pesaba casi tanto como ella. Cada sábado, desde hacía ocho años, subía las escaleras de concreto agrietado que conectaban las calles del cerro Barón, en Valparaíso, cargando entre treinta y cuarenta libros que prestaba a quien quisiera leer.'},
+                    {num:2,texto:'La idea había nacido cuando su nieto menor le preguntó qué era una biblioteca. "Nunca he entrado a una", le dijo el niño con naturalidad. Rosa sintió algo quebrarse dentro de ella. Al día siguiente, juntó todos los libros de su casa, pidió donaciones a los vecinos del plan, y armó un sistema de préstamo anotando todo en un cuaderno con tapas rosadas.'},
+                    {num:3,texto:'En los ocho años de funcionamiento, la biblioteca ambulante de Rosa ha prestado más de cuatro mil libros. Varios de sus "lectores" —como ella los llama— han llegado a la universidad, algo que en sus familias nadie había logrado antes. "Yo no les enseño a leer", aclara Rosa. "Les doy algo que leer. Eso es diferente".'},
+                    {num:4,texto:'El año pasado, la municipalidad le ofreció un local para instalar una biblioteca fija. Rosa aceptó con una condición: que ella pudiera seguir subiendo los sábados con su mochila. "Los libros tienen que ir donde están las personas", dijo. "Si esperamos que la gente baje, muchos nunca van a leer su primer libro".'}
+                 ],fuente:'Inspirado en experiencias reales de mediadores de lectura en Valparaíso.'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'Según el texto, ¿cuántas horas de sueño necesitan los adolescentes cada noche para funcionar de manera óptima?',opciones:[{letra:'A',texto:'Un mínimo de seis horas, similar a los adultos.'},{letra:'B',texto:'Las mismas horas que cualquier persona adulta.'},{letra:'C',texto:'Entre ocho y diez horas cada noche.'},{letra:'D',texto:'Más de doce horas debido a su crecimiento.'}],correcta:'C'},
+                {id:2,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'¿Qué cambio biológico provoca que los adolescentes tiendan a dormirse más tarde?',opciones:[{letra:'A',texto:'La melatonina se libera hasta dos horas más tarde que en adultos.'},{letra:'B',texto:'Su cerebro produce más adrenalina durante la noche.'},{letra:'C',texto:'La hormona del crecimiento se activa en la tarde.'},{letra:'D',texto:'La temperatura corporal aumenta antes de dormir.'}],correcta:'A'},
+                {id:3,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'¿Qué medida implementó California frente a la evidencia sobre el sueño adolescente?',opciones:[{letra:'A',texto:'Redujo la cantidad de horas de clase diarias.'},{letra:'B',texto:'Eliminó las tareas para la casa.'},{letra:'C',texto:'Creó un programa de siesta obligatoria en las escuelas.'},{letra:'D',texto:'Prohibió que las clases de secundaria comiencen antes de las 8:30.'}],correcta:'D'},
+                {id:4,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿En qué lugar instaló Eugenio su puesto de mermeladas?',opciones:[{letra:'A',texto:'En la puerta de la panadería del barrio.'},{letra:'B',texto:'En la esquina de la plaza, frente a la iglesia.'},{letra:'C',texto:'En la entrada del colegio de su nieta.'},{letra:'D',texto:'En el mercado municipal de su comuna.'}],correcta:'B'},
+                {id:5,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿Para qué usaba Eugenio el dinero que ganaba vendiendo mermelada?',opciones:[{letra:'A',texto:'Para comprar los materiales del colegio de su nieta Carmen.'},{letra:'B',texto:'Para pagar el arriendo de su casa.'},{letra:'C',texto:'Para comprar ingredientes y hacer más mermelada.'},{letra:'D',texto:'Para juntar plata e irse al norte con su hija.'}],correcta:'A'},
+                {id:6,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿Qué solución le propuso la dueña de la panadería a Eugenio?',opciones:[{letra:'A',texto:'Que dejara de vender en la plaza porque molestaba a los clientes.'},{letra:'B',texto:'Que le enseñara a hacer mermelada a cambio de un sueldo.'},{letra:'C',texto:'Que vendiera dentro del local a cambio del veinte por ciento.'},{letra:'D',texto:'Que le compraba toda la mermelada al por mayor cada semana.'}],correcta:'C'},
+                {id:7,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'¿Qué porcentaje de residuos domiciliarios recicla Chile actualmente?',opciones:[{letra:'A',texto:'34%, igual al promedio de la OCDE.'},{letra:'B',texto:'27%, tras las mejoras del programa Recicla Peña.'},{letra:'C',texto:'60%, la meta de la Ley REP para 2030.'},{letra:'D',texto:'12,5%, muy por debajo del promedio OCDE.'}],correcta:'D'},
+                {id:8,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'¿Qué obliga la Ley REP a las empresas?',opciones:[{letra:'A',texto:'A donar el 10% de sus ganancias a causas ambientales.'},{letra:'B',texto:'A hacerse cargo del reciclaje de los envases que ponen en el mercado.'},{letra:'C',texto:'A utilizar solo envases biodegradables en sus productos.'},{letra:'D',texto:'A eliminar todo tipo de plástico de sus embalajes.'}],correcta:'B'},
+                {id:9,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'¿Qué resultado obtuvo el programa "Recicla Peña" en Peñalolén?',opciones:[{letra:'A',texto:'Aumentó la tasa de reciclaje del 8% al 27% en dos años.'},{letra:'B',texto:'Eliminó completamente los vertederos ilegales de la comuna.'},{letra:'C',texto:'Logró que el 60% de los vecinos separara su basura.'},{letra:'D',texto:'Redujo la producción de basura domiciliaria a la mitad.'}],correcta:'A'},
+                {id:10,textoRef:'texto-4',habilidad:'LOCALIZAR',enunciado:'Según el informe de la OMS, ¿qué ocurre con los adolescentes que pasan más de tres horas diarias en redes sociales?',opciones:[{letra:'A',texto:'Tienen el doble de probabilidades de experimentar ansiedad y depresión.'},{letra:'B',texto:'Desarrollan mejores habilidades de comunicación digital.'},{letra:'C',texto:'Muestran un 50% más de rendimiento escolar que quienes no las usan.'},{letra:'D',texto:'Tienden a ser más sociables en sus interacciones presenciales.'}],correcta:'A'},
+                {id:11,textoRef:'texto-4',habilidad:'LOCALIZAR',enunciado:'¿Cuántas horas diarias usan los adolescentes chilenos las redes sociales, según datos de la CASEN 2022?',opciones:[{letra:'A',texto:'Menos de una hora al día en promedio.'},{letra:'B',texto:'Un promedio de 3,2 horas al día.'},{letra:'C',texto:'Exactamente cinco horas diarias.'},{letra:'D',texto:'Entre una y dos horas, solo los fines de semana.'}],correcta:'B'},
+                {id:12,textoRef:'texto-4',habilidad:'LOCALIZAR',enunciado:'¿Qué medida tomó Francia frente al uso de tecnología en escuelas?',opciones:[{letra:'A',texto:'Prohibió el uso de celulares en escuelas.'},{letra:'B',texto:'Instaló bloqueadores de señal en todos los establecimientos.'},{letra:'C',texto:'Ofreció celulares educativos sin acceso a redes sociales.'},{letra:'D',texto:'Limitó el acceso a internet solo a horas de recreo.'}],correcta:'A'},
+                {id:13,textoRef:'texto-5',habilidad:'LOCALIZAR',enunciado:'¿Cuántos libros ha prestado la biblioteca ambulante de Rosa en ocho años?',opciones:[{letra:'A',texto:'Cerca de mil libros, todos donados por vecinos.'},{letra:'B',texto:'Más de cuatro mil libros.'},{letra:'C',texto:'Exactamente quinientos libros por año.'},{letra:'D',texto:'No se menciona un número específico en el texto.'}],correcta:'B'},
+                {id:14,textoRef:'texto-5',habilidad:'LOCALIZAR',enunciado:'¿Qué motivó a Rosa a crear su biblioteca ambulante?',opciones:[{letra:'A',texto:'Un programa municipal de fomento lector en los cerros.'},{letra:'B',texto:'La necesidad de ganar dinero prestando libros.'},{letra:'C',texto:'Que su nieto le dijo que nunca había entrado a una biblioteca.'},{letra:'D',texto:'Una campaña de una editorial que regalaba libros usados.'}],correcta:'C'},
+                {id:15,textoRef:'texto-5',habilidad:'LOCALIZAR',enunciado:'¿Qué condición puso Rosa cuando la municipalidad le ofreció un local?',opciones:[{letra:'A',texto:'Que ella pudiera seguir subiendo los sábados con su mochila.'},{letra:'B',texto:'Que la municipalidad pagara un ayudante para la biblioteca.'},{letra:'C',texto:'Que le permitieran vender los libros en vez de prestarlos.'},{letra:'D',texto:'Que el local estuviera ubicado en la cima del cerro.'}],correcta:'A'}
+            ]
+        }
+    };
+
+    try{
+        await db.ref(BASE+'/sesiones/sesion-1').set(sesData);
+        sessions['sesion-1']=sesData;
+        renderSessions();
+        toast('Sesión 1 precargada con 5 textos y 15 preguntas','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function resetSessionResults(sesId){
+    const ses=sessions[sesId];
+    if(!confirm('¿Eliminar TODOS los resultados y respuestas de "'+ses.titulo+'"?\nLos estudiantes deberán completar la sesión nuevamente.'))return;
+    try{
+        await Promise.all([
+            db.ref(BASE+'/resultados/'+sesId).remove(),
+            db.ref(BASE+'/respuestas/'+sesId).remove(),
+            db.ref(BASE+'/ranking/'+sesId).remove()
+        ]);
+        delete allResults[sesId];
+        delete allResponses[sesId];
+        renderOverview();
+        toast('Resultados de la sesión reseteados','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function deleteSession(sesId){
+    if(!confirm('¿ELIMINAR la sesión "'+sessions[sesId]?.titulo+'" y todos sus datos asociados?'))return;
+    try{
+        await Promise.all([
+            db.ref(BASE+'/sesiones/'+sesId).remove(),
+            db.ref(BASE+'/resultados/'+sesId).remove(),
+            db.ref(BASE+'/respuestas/'+sesId).remove(),
+            db.ref(BASE+'/ranking/'+sesId).remove()
+        ]);
+        delete sessions[sesId];
+        renderSessions();renderOverview();
+        toast('Sesión eliminada','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+/* ============ RESULTS ============ */
+function populateResultsDropdown(){
+    const sel=document.getElementById('resultSession');
+    // Clear except first option
+    while(sel.options.length>1) sel.remove(1);
+    Object.entries(sessions).forEach(([id,s])=>{
+        const opt=document.createElement('option');
+        opt.value=id;opt.textContent=s.titulo||id;
+        sel.appendChild(opt);
+    });
+}
+
+function getLevel(pct){
+    if(pct>=80) return 'Destacado';
+    if(pct>=60) return 'Adecuado';
+    if(pct>=40) return 'Elemental';
+    return 'Insuficiente';
+}
+function getLevelBadge(pct){
+    const lv=getLevel(pct);
+    const cls=pct>=80?'badge-blue':pct>=60?'badge-green':pct>=40?'badge-amber':'badge-red';
+    return `<span class="badge ${cls}">${lv}</span>`;
+}
+
+function loadResults(){
+    const sesId=document.getElementById('resultSession').value;
+    const courseF=document.getElementById('resultCourse').value;
+    if(!sesId){
+        document.getElementById('levelCards').innerHTML='';
+        document.getElementById('resultsBody').innerHTML='<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
+        return;
+    }
+
+    const results=allResults[sesId]||{};
+    let items=[];
+    for(const[uid,r]of Object.entries(results)){
+        const est=students[uid];
+        if(!est) continue;
+        if(courseF && est.curso!==courseF) continue;
+        items.push({uid,nombre:est.nombre,curso:est.curso,puntaje:r.puntaje||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0});
+    }
+    items.sort((a,b)=>b.porcentaje-a.porcentaje);
+
+    // Level distribution
+    const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
+    items.forEach(i=>levels[getLevel(i.porcentaje)]++);
+    document.getElementById('levelCards').innerHTML=`
+        <div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
+        <div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">${levels.Elemental}</div></div>
+        <div class="level-card lv-adeq"><div class="lv-label">Adecuado (60-79%)</div><div class="lv-val">${levels.Adecuado}</div></div>
+        <div class="level-card lv-dest"><div class="lv-label">Destacado (≥80%)</div><div class="lv-val">${levels.Destacado}</div></div>
+    `;
+
+    const tbody=document.getElementById('resultsBody');
+    tbody.innerHTML=items.map((r,i)=>{
+        const cursoLabel=r.curso==='2A-HC'?'2°A':'2°B';
+        const mins=r.tiempo?Math.round(r.tiempo/60000):0;
+        return `<tr>
+            <td><strong>${r.nombre}</strong></td>
+            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${cursoLabel}</span></td>
+            <td>${r.puntaje}/${r.total}</td>
+            <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
+            <td>${getLevelBadge(r.porcentaje)}</td>
+            <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
+            <td><button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">Ver detalle</button></td>
+        </tr>`;
+    }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';
+}
+
+/* ============ REPORTS ============ */
+function generateReport(type){
+    const output=document.getElementById('reportOutput');
+    output.style.display='block';
+
+    if(type==='session'){
+        generateSessionReport(output);
+    }else if(type==='course'){
+        generateCourseReport(output);
+    }else if(type==='student'){
+        generateStudentReport(output);
+    }
+}
+
+function generateSessionReport(output){
+    let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión</h3>';
+    for(const[sesId,ses]of Object.entries(sessions)){
+        const results=allResults[sesId]||{};
+        const entries=Object.entries(results);
+        if(entries.length===0) continue;
+
+        let totalPct=0;
+        const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
+        entries.forEach(([uid,r])=>{
+            totalPct+=r.porcentaje||0;
+            levels[getLevel(r.porcentaje||0)]++;
+        });
+        const avg=Math.round(totalPct/entries.length);
+
+        html+=`<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:10px">
+            <h4>${ses.titulo||sesId}</h4>
+            <p style="font-size:13px;color:#64748b;margin:4px 0">${entries.length} evaluados | Promedio: <strong>${avg}%</strong></p>
+            <p style="font-size:12px">Destacado: ${levels.Destacado} | Adecuado: ${levels.Adecuado} | Elemental: ${levels.Elemental} | Insuficiente: ${levels.Insuficiente}</p>
+        </div>`;
+    }
+    html+=`<button class="btn btn-primary" onclick="exportCSV('session')" style="margin-top:12px">📥 Exportar CSV</button>`;
+    output.innerHTML=html;
+}
+
+function generateCourseReport(output){
+    const courses={'2A-HC':{name:'2°A HC',scores:[]},'2B-HC':{name:'2°B HC',scores:[]}};
+    for(const[sesId,uidMap]of Object.entries(allResults)){
+        for(const[uid,r]of Object.entries(uidMap)){
+            const est=students[uid];
+            if(est && courses[est.curso]) courses[est.curso].scores.push(r.porcentaje||0);
+        }
+    }
+
+    let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">';
+    for(const[curso,data]of Object.entries(courses)){
+        const avg=data.scores.length?Math.round(data.scores.reduce((a,b)=>a+b,0)/data.scores.length):0;
+        const max=data.scores.length?Math.max(...data.scores):0;
+        const min=data.scores.length?Math.min(...data.scores):0;
+        html+=`<div style="padding:20px;background:#f8fafc;border-radius:10px">
+            <h4>${data.name}</h4>
+            <p style="font-size:13px;margin:4px 0">Evaluaciones: ${data.scores.length}</p>
+            <p style="font-size:13px">Promedio: <strong>${avg}%</strong></p>
+            <p style="font-size:12px;color:#64748b">Máx: ${max}% | Mín: ${min}%</p>
+        </div>`;
+    }
+    html+='</div>';
+    html+=`<button class="btn btn-primary" onclick="exportCSV('course')" style="margin-top:16px">📥 Exportar CSV</button>`;
+    output.innerHTML=html;
+}
+
+function generateStudentReport(output){
+    let html='<h3 style="margin-bottom:16px">👤 Reporte Individual</h3>';
+    html+='<div class="search-bar" style="margin-bottom:12px"><select id="reportStudentSel" onchange="showStudentReport()" style="width:100%"><option value="">Selecciona estudiante...</option>';
+    for(const[uid,est]of Object.entries(students)){
+        html+=`<option value="${uid}">${est.nombre} (${est.curso})</option>`;
+    }
+    html+='</select></div><div id="studentReportContent"></div>';
+    output.innerHTML=html;
+}
+
+function showStudentReport(){
+    const uid=document.getElementById('reportStudentSel').value;
+    const container=document.getElementById('studentReportContent');
+    if(!uid){container.innerHTML='';return}
+    const est=students[uid];
+
+    let html=`<div style="padding:16px;background:#f8fafc;border-radius:10px;margin-bottom:12px">
+        <h4>${est.nombre}</h4><p style="font-size:12px;color:#64748b">RUT: ${est.rut} | Curso: ${est.curso}</p></div>`;
+    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Sesión</th><th>Puntaje</th><th>%</th><th>Nivel</th></tr>';
+
+    let totalPct=0,count=0;
+    for(const[sesId,ses]of Object.entries(sessions)){
+        const r=allResults[sesId]?.[uid];
+        if(r){
+            totalPct+=r.porcentaje;count++;
+            html+=`<tr><td style="padding:8px">${ses.titulo}</td><td style="text-align:center">${r.puntaje}/${r.total}</td><td style="text-align:center">${r.porcentaje}%</td><td style="text-align:center">${getLevelBadge(r.porcentaje)}</td></tr>`;
+        }else{
+            html+=`<tr><td style="padding:8px">${ses.titulo}</td><td colspan="3" style="text-align:center;color:#94a3b8">Sin completar</td></tr>`;
+        }
+    }
+    html+='</table>';
+    if(count>0) html+=`<p style="margin-top:12px;font-weight:700">Promedio general: ${Math.round(totalPct/count)}% — ${getLevel(Math.round(totalPct/count))}</p>`;
+    container.innerHTML=html;
+}
+
+function exportCSV(type){
+    let csv='';
+    if(type==='session'){
+        csv='Sesión,Estudiante,Curso,Puntaje,Total,Porcentaje,Nivel\n';
+        for(const[sesId,uidMap]of Object.entries(allResults)){
+            for(const[uid,r]of Object.entries(uidMap)){
+                const est=students[uid];
+                csv+=`"${sessions[sesId]?.titulo||sesId}","${est?.nombre||''}","${est?.curso||''}",${r.puntaje||0},${r.total||0},${r.porcentaje||0},"${getLevel(r.porcentaje||0)}"\n`;
+            }
+        }
+    }else if(type==='course'){
+        csv='Estudiante,RUT,Curso,Sesiones Completadas,Promedio\n';
+        for(const[uid,est]of Object.entries(students)){
+            let t=0,c=0;
+            for(const sesId of Object.keys(allResults)){
+                if(allResults[sesId][uid]){t+=allResults[sesId][uid].porcentaje||0;c++}
+            }
+            csv+=`"${est.nombre}","${est.rut}","${est.curso}",${c},${c?Math.round(t/c):0}\n`;
+        }
+    }
+
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='reporte_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();URL.revokeObjectURL(url);
+    toast('CSV descargado','ok');
+}
+
+/* ============ MODALS & TOAST ============ */
+function openModal(id){document.getElementById('modal-'+id).classList.add('show')}
+function closeModal(id){document.getElementById('modal-'+id).classList.remove('show')}
+
+// Close modal on overlay click
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+    m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('show')});
+});
+
+function toast(msg,type){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.className='toast '+(type==='ok'?'toast-ok':'toast-err')+' show';
+    setTimeout(()=>t.classList.remove('show'),3000);
+}
+</script>
+</body>
+</html>

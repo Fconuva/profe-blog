@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión — Plataforma Estudiantes</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        html, body { height:100%; }
+        body {
+            font-family:'Inter',system-ui,sans-serif; background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 50%,#7c3aed 100%);
+            display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
+        }
+        .login-card {
+            background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.3);
+            width:100%; max-width:420px; padding:40px 36px; animation:slideUp .5s ease;
+        }
+        @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:translateY(0); } }
+        .logo-area { text-align:center; margin-bottom:28px; }
+        .logo-area .school-badge {
+            width:64px; height:64px; background:linear-gradient(135deg,#1e40af,#7c3aed);
+            border-radius:16px; display:inline-flex; align-items:center; justify-content:center;
+            font-size:28px; color:#fff; margin-bottom:12px;
+        }
+        .logo-area h1 { font-size:20px; font-weight:800; color:#0f172a; }
+        .logo-area p { font-size:13px; color:#64748b; margin-top:4px; }
+        .logo-area .school-name { font-size:11px; color:#94a3b8; margin-top:2px; }
+        .form-group { margin-bottom:18px; }
+        .form-group label { display:block; font-size:13px; font-weight:600; color:#334155; margin-bottom:6px; }
+        .form-group input {
+            width:100%; padding:14px 16px; border:2px solid #e2e8f0; border-radius:10px;
+            font-size:16px; font-family:inherit; transition:border-color .2s, box-shadow .2s;
+            background:#f8fafc;
+        }
+        .form-group input:focus { outline:none; border-color:#1e40af; box-shadow:0 0 0 4px rgba(30,64,175,.12); background:#fff; }
+        .form-group input::placeholder { color:#94a3b8; }
+        .form-group .input-hint { font-size:11px; color:#94a3b8; margin-top:4px; }
+        .btn-login {
+            width:100%; padding:16px; background:linear-gradient(135deg,#1e40af,#3b82f6);
+            color:#fff; border:none; border-radius:10px; font-size:16px; font-weight:700;
+            cursor:pointer; transition:transform .15s, box-shadow .15s; font-family:inherit;
+            letter-spacing:.3px;
+        }
+        .btn-login:hover { transform:translateY(-1px); box-shadow:0 6px 20px rgba(30,64,175,.35); }
+        .btn-login:active { transform:translateY(0); }
+        .btn-login:disabled { opacity:.6; cursor:not-allowed; transform:none; }
+        .error-msg {
+            background:#fef2f2; border:1px solid #fecaca; color:#dc2626; border-radius:8px;
+            padding:10px 14px; font-size:13px; margin-bottom:16px; display:none; line-height:1.4;
+        }
+        .error-msg.show { display:block; animation:shake .4s ease; }
+        @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+        .footer-info {
+            text-align:center; margin-top:20px; padding-top:16px; border-top:1px solid #e2e8f0;
+        }
+        .footer-info p { font-size:11px; color:#94a3b8; line-height:1.5; }
+        .footer-info a { color:#1e40af; text-decoration:none; font-weight:600; }
+        .loading-spinner {
+            display:inline-block; width:18px; height:18px; border:3px solid rgba(255,255,255,.3);
+            border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:middle;
+            margin-right:8px;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .show-pass-toggle {
+            position:absolute; right:14px; top:50%; transform:translateY(-50%);
+            background:none; border:none; cursor:pointer; font-size:18px; color:#94a3b8; padding:4px;
+        }
+        .pass-wrapper { position:relative; }
+        @media (max-width:480px) {
+            .login-card { padding:28px 24px; }
+            .logo-area h1 { font-size:18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <div class="logo-area">
+            <div class="school-badge">📚</div>
+            <h1>Plataforma Estudiantes</h1>
+            <p>PAES · Competencia Lectora 2026</p>
+            <div class="school-name">Centro Educativo Salesianos Talca</div>
+        </div>
+
+        <div class="error-msg" id="errorMsg"></div>
+
+        <form id="loginForm" autocomplete="off">
+            <div class="form-group">
+                <label for="rutInput">RUT del Estudiante</label>
+                <input type="text" id="rutInput" placeholder="Ej: 21.456.789-0" maxlength="12" inputmode="numeric" required>
+                <div class="input-hint">Ingresa tu RUT con puntos y guión</div>
+            </div>
+
+            <div class="form-group">
+                <label for="passInput">Contraseña</label>
+                <div class="pass-wrapper">
+                    <input type="password" id="passInput" placeholder="Ingresa tu contraseña" required>
+                    <button type="button" class="show-pass-toggle" id="togglePass" title="Mostrar contraseña">👁️</button>
+                </div>
+                <div class="input-hint">Primera vez: usa los 4 primeros dígitos de tu RUT</div>
+            </div>
+
+            <button type="submit" class="btn-login" id="btnLogin">Iniciar Sesión</button>
+        </form>
+
+        <div class="footer-info">
+            <p>Prof. Francisco Javier Núñez Valenzuela<br>
+            <a href="https://www.profefranciscopancho.com" target="_blank">www.profefranciscopancho.com</a></p>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <script>
+        // Firebase Config
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const db = firebase.database();
+
+        // ============ RUT UTILITIES ============
+        function cleanRut(rut) {
+            return rut.replace(/[^0-9kK]/g, '').toUpperCase();
+        }
+
+        function formatRut(rut) {
+            const clean = cleanRut(rut);
+            if (clean.length < 2) return clean;
+            const body = clean.slice(0, -1);
+            const dv = clean.slice(-1);
+            let formatted = '';
+            for (let i = body.length - 1, j = 0; i >= 0; i--, j++) {
+                if (j > 0 && j % 3 === 0) formatted = '.' + formatted;
+                formatted = body[i] + formatted;
+            }
+            return formatted + '-' + dv;
+        }
+
+        function validateRut(rut) {
+            const clean = cleanRut(rut);
+            if (clean.length < 8 || clean.length > 9) return false;
+            const body = clean.slice(0, -1);
+            const dv = clean.slice(-1);
+            let sum = 0, multiplier = 2;
+            for (let i = body.length - 1; i >= 0; i--) {
+                sum += parseInt(body[i]) * multiplier;
+                multiplier = multiplier === 7 ? 2 : multiplier + 1;
+            }
+            const remainder = 11 - (sum % 11);
+            let expectedDv;
+            if (remainder === 11) expectedDv = '0';
+            else if (remainder === 10) expectedDv = 'K';
+            else expectedDv = remainder.toString();
+            return dv === expectedDv;
+        }
+
+        function rutToEmail(rut) {
+            const clean = cleanRut(rut).toLowerCase();
+            return clean + '@est.profefranciscopancho.com';
+        }
+
+        // ============ AUTO-FORMAT RUT ============
+        const rutInput = document.getElementById('rutInput');
+        rutInput.addEventListener('input', function() {
+            const pos = this.selectionStart;
+            const before = this.value.length;
+            this.value = formatRut(this.value);
+            const after = this.value.length;
+            const newPos = pos + (after - before);
+            this.setSelectionRange(newPos, newPos);
+        });
+
+        // ============ TOGGLE PASSWORD ============
+        document.getElementById('togglePass').addEventListener('click', function() {
+            const inp = document.getElementById('passInput');
+            if (inp.type === 'password') { inp.type = 'text'; this.textContent = '🙈'; }
+            else { inp.type = 'password'; this.textContent = '👁️'; }
+        });
+
+        // ============ ERROR HANDLING ============
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            el.textContent = msg;
+            el.classList.add('show');
+        }
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        // ============ LOGIN ============
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            hideError();
+
+            const rut = rutInput.value.trim();
+            const pass = document.getElementById('passInput').value;
+            const btn = document.getElementById('btnLogin');
+
+            if (!rut || !pass) { showError('Completa todos los campos.'); return; }
+            if (!validateRut(rut)) { showError('El RUT ingresado no es válido. Revisa los números.'); return; }
+
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading-spinner"></span>Ingresando...';
+
+            try {
+                const email = rutToEmail(rut);
+                const cred = await auth.signInWithEmailAndPassword(email, pass);
+                const uid = cred.user.uid;
+
+                // Check student data
+                const snap = await db.ref('plataforma_estudiantes/estudiantes/' + uid).once('value');
+                const data = snap.val();
+
+                if (!data) {
+                    showError('Tu cuenta no está registrada en la plataforma. Contacta a tu profesor.');
+                    await auth.signOut();
+                    btn.disabled = false;
+                    btn.textContent = 'Iniciar Sesión';
+                    return;
+                }
+
+                // Update last login
+                await db.ref('plataforma_estudiantes/estudiantes/' + uid + '/lastLogin').set(Date.now());
+
+                // Check if profile is complete
+                if (!data.perfil_completo) {
+                    window.location.href = 'perfil.html';
+                } else {
+                    window.location.href = 'dashboard.html';
+                }
+
+            } catch (err) {
+                console.error('Login error:', err);
+                if (err.code === 'auth/user-not-found' || err.code === 'auth/invalid-credential') {
+                    showError('RUT o contraseña incorrectos. Si es tu primera vez, la contraseña son los 4 primeros dígitos de tu RUT.');
+                } else if (err.code === 'auth/wrong-password') {
+                    showError('Contraseña incorrecta. Si es tu primera vez, usa los 4 primeros dígitos de tu RUT.');
+                } else if (err.code === 'auth/too-many-requests') {
+                    showError('Demasiados intentos fallidos. Espera unos minutos e intenta de nuevo.');
+                } else if (err.code === 'auth/network-request-failed') {
+                    showError('Sin conexión a internet. Verifica tu red WiFi.');
+                } else {
+                    showError('Error al iniciar sesión. Intenta de nuevo o contacta a tu profesor.');
+                }
+                btn.disabled = false;
+                btn.textContent = 'Iniciar Sesión';
+            }
+        });
+
+        // ============ CHECK IF ALREADY LOGGED IN ============
+        auth.onAuthStateChanged(async function(user) {
+            if (user) {
+                try {
+                    const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
+                    const data = snap.val();
+                    if (data) {
+                        if (!data.perfil_completo) window.location.href = 'perfil.html';
+                        else window.location.href = 'dashboard.html';
+                    }
+                } catch(e) { /* ignore, show login */ }
+            }
+        });
+    </script>
+</body>
+</html>

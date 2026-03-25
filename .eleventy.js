@@ -10,6 +10,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("cuenta");
   eleventyConfig.addPassthroughCopy("dashboard");
   eleventyConfig.addPassthroughCopy("admin");
+  eleventyConfig.addPassthroughCopy("estudiantes");
 
   // Ignore old/irrelevant files
   eleventyConfig.ignores.add("_site");

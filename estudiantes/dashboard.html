@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:#f1f5f9; min-height:100vh; }
+        /* HEADER */
+        .header {
+            background:linear-gradient(135deg,#1e3a5f,#1e40af); color:#fff;
+            padding:16px 24px; display:flex; align-items:center; justify-content:space-between;
+            box-shadow:0 2px 12px rgba(0,0,0,.15); position:sticky; top:0; z-index:100;
+        }
+        .header-left { display:flex; align-items:center; gap:12px; }
+        .header-left .avatar {
+            width:42px; height:42px; background:rgba(255,255,255,.2); border-radius:12px;
+            display:flex; align-items:center; justify-content:center; font-size:20px;
+        }
+        .header-left h1 { font-size:16px; font-weight:700; }
+        .header-left .curso-badge {
+            background:rgba(255,255,255,.2); padding:3px 10px; border-radius:6px;
+            font-size:11px; font-weight:600; letter-spacing:.5px;
+        }
+        .btn-logout {
+            background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.3); color:#fff;
+            padding:8px 16px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;
+            font-family:inherit; transition:background .2s;
+        }
+        .btn-logout:hover { background:rgba(255,255,255,.25); }
+        /* MAIN */
+        .main { max-width:900px; margin:0 auto; padding:24px 20px; }
+        /* STATS */
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
+        .stat-card {
+            background:#fff; border-radius:12px; padding:18px 20px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+            border-left:4px solid #1e40af;
+        }
+        .stat-card .stat-label { font-size:11px; color:#64748b; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+        .stat-card .stat-value { font-size:28px; font-weight:800; color:#0f172a; margin-top:4px; }
+        .stat-card .stat-sub { font-size:11px; color:#94a3b8; margin-top:2px; }
+        .stat-card.purple { border-left-color:#7c3aed; }
+        .stat-card.green { border-left-color:#16a34a; }
+        .stat-card.amber { border-left-color:#f59e0b; }
+        /* SECTION */
+        .section-title { font-size:18px; font-weight:800; color:#0f172a; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
+        /* SESSION CARDS */
+        .session-list { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+        .session-card {
+            background:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+            display:flex; align-items:center; gap:16px; transition:transform .15s, box-shadow .15s;
+            cursor:pointer; border:2px solid transparent;
+        }
+        .session-card:hover { transform:translateY(-2px); box-shadow:0 4px 16px rgba(0,0,0,.1); border-color:#dbeafe; }
+        .session-card.locked { opacity:.55; cursor:not-allowed; }
+        .session-card.locked:hover { transform:none; box-shadow:0 1px 4px rgba(0,0,0,.06); border-color:transparent; }
+        .session-card.completed { border-color:#86efac; }
+        .session-num {
+            width:48px; height:48px; border-radius:12px; display:flex; align-items:center; justify-content:center;
+            font-size:20px; font-weight:800; color:#fff; flex-shrink:0;
+            background:linear-gradient(135deg,#1e40af,#3b82f6);
+        }
+        .session-card.completed .session-num { background:linear-gradient(135deg,#16a34a,#4ade80); }
+        .session-card.locked .session-num { background:#94a3b8; }
+        .session-info { flex:1; }
+        .session-info h3 { font-size:15px; font-weight:700; color:#0f172a; margin-bottom:3px; }
+        .session-info p { font-size:12px; color:#64748b; line-height:1.4; }
+        .session-status { text-align:right; flex-shrink:0; }
+        .session-status .badge {
+            display:inline-block; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700;
+        }
+        .badge-pending { background:#fef3c7; color:#92400e; }
+        .badge-progress { background:#dbeafe; color:#1e40af; }
+        .badge-done { background:#dcfce7; color:#166534; }
+        .badge-locked { background:#f1f5f9; color:#94a3b8; }
+        .badge-results { background:#f0fdf4; border:1px solid #86efac; color:#166534; margin-top:4px; font-size:10px; }
+        /* RANKING PREVIEW */
+        .ranking-preview {
+            background:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 1px 4px rgba(0,0,0,.06);
+            margin-bottom:24px;
+        }
+        .ranking-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+        .ranking-header h3 { font-size:15px; font-weight:700; color:#0f172a; }
+        .ranking-header a { font-size:12px; color:#1e40af; text-decoration:none; font-weight:600; }
+        .ranking-bars { display:flex; gap:12px; align-items:flex-end; height:120px; }
+        .rank-bar { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; }
+        .rank-bar .bar {
+            width:100%; border-radius:8px 8px 0 0; transition:height .5s ease; min-height:20px;
+        }
+        .rank-bar .bar.a { background:linear-gradient(to top,#1e40af,#60a5fa); }
+        .rank-bar .bar.b { background:linear-gradient(to top,#7c3aed,#a78bfa); }
+        .rank-bar .label { font-size:13px; font-weight:700; color:#334155; margin-top:6px; }
+        .rank-bar .score { font-size:11px; color:#64748b; }
+        /* CONNECTIVITY */
+        .connectivity {
+            position:fixed; bottom:16px; right:16px; padding:8px 14px; border-radius:8px;
+            font-size:12px; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,.15);
+            transition:opacity .3s; z-index:200;
+        }
+        .connectivity.online { background:#dcfce7; color:#166534; }
+        .connectivity.offline { background:#fef2f2; color:#dc2626; }
+        @media (max-width:640px) {
+            .header { padding:12px 16px; flex-wrap:wrap; gap:8px; }
+            .stats-grid { grid-template-columns:1fr 1fr; }
+            .session-card { flex-wrap:wrap; padding:16px; }
+            .session-status { width:100%; text-align:left; margin-top:4px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-left">
+            <div class="avatar">📚</div>
+            <div>
+                <h1 id="studentName">Cargando...</h1>
+                <span class="curso-badge" id="studentCurso"></span>
+            </div>
+        </div>
+        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+    </div>
+
+    <div class="main">
+        <!-- Stats -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Sesiones completadas</div>
+                <div class="stat-value" id="statCompleted">-</div>
+                <div class="stat-sub" id="statTotal">de 0 disponibles</div>
+            </div>
+            <div class="stat-card purple">
+                <div class="stat-label">Promedio general</div>
+                <div class="stat-value" id="statAvg">-</div>
+                <div class="stat-sub">de logro</div>
+            </div>
+            <div class="stat-card green">
+                <div class="stat-label">Posición ranking</div>
+                <div class="stat-value" id="statRank">-</div>
+                <div class="stat-sub" id="statRankCurso">en tu curso</div>
+            </div>
+            <div class="stat-card amber">
+                <div class="stat-label">Racha de días</div>
+                <div class="stat-value" id="statStreak">0</div>
+                <div class="stat-sub">días consecutivos</div>
+            </div>
+        </div>
+
+        <!-- Sessions -->
+        <div class="section-title">📖 Mis Sesiones</div>
+        <div class="session-list" id="sessionList">
+            <div style="text-align:center; padding:40px; color:#94a3b8;">Cargando sesiones...</div>
+        </div>
+
+        <!-- Ranking Preview -->
+        <div class="section-title">🏆 Ranking entre Cursos</div>
+        <div class="ranking-preview">
+            <div class="ranking-header">
+                <h3>Puntaje promedio por curso</h3>
+                <a href="ranking.html">Ver ranking completo →</a>
+            </div>
+            <div class="ranking-bars" id="rankingBars">
+                <div class="rank-bar">
+                    <div class="bar a" id="barA" style="height:20px;"></div>
+                    <div class="label">2°A HC</div>
+                    <div class="score" id="scoreA">-</div>
+                </div>
+                <div class="rank-bar">
+                    <div class="bar b" id="barB" style="height:20px;"></div>
+                    <div class="label">2°B HC</div>
+                    <div class="score" id="scoreB">-</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="connectivity online" id="connectivity">🟢 Conectado</div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+
+        // Connectivity
+        window.addEventListener('online', () => { document.getElementById('connectivity').className = 'connectivity online'; document.getElementById('connectivity').textContent = '🟢 Conectado'; });
+        window.addEventListener('offline', () => { document.getElementById('connectivity').className = 'connectivity offline'; document.getElementById('connectivity').textContent = '🔴 Sin conexión'; });
+
+        // Logout
+        document.getElementById('btnLogout').addEventListener('click', () => { auth.signOut().then(() => window.location.href = 'index.html'); });
+
+        // Auth check
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+
+            try {
+                const studentSnap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
+                const student = studentSnap.val();
+                if (!student) { auth.signOut(); window.location.href = 'index.html'; return; }
+                if (!student.perfil_completo) { window.location.href = 'perfil.html'; return; }
+
+                document.getElementById('studentName').textContent = student.nombre;
+                document.getElementById('studentCurso').textContent = student.curso === '2A-HC' ? '2°A HC' : '2°B HC';
+
+                loadSessions(user.uid, student.curso);
+                loadRankingPreview();
+                loadStats(user.uid, student.curso);
+
+            } catch(e) { console.error(e); }
+        });
+
+        async function loadSessions(uid, curso) {
+            const container = document.getElementById('sessionList');
+            try {
+                const sesSnap = await db.ref(BASE + '/sesiones').orderByChild('orden').once('value');
+                const respSnap = await db.ref(BASE + '/respuestas').once('value');
+                const resSnap = await db.ref(BASE + '/resultados').once('value');
+                const respuestas = respSnap.val() || {};
+                const resultados = resSnap.val() || {};
+
+                if (!sesSnap.exists()) {
+                    container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
+                    return;
+                }
+
+                let html = '';
+                const sesiones = [];
+                sesSnap.forEach(s => { sesiones.push({ id: s.key, ...s.val() }); });
+                sesiones.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+                sesiones.forEach((ses, idx) => {
+                    const isActive = ses.activa !== false;
+                    const myResp = respuestas[ses.id] && respuestas[ses.id][uid];
+                    const myResult = resultados[ses.id] && resultados[ses.id][uid];
+                    const isCompleted = myResp && myResp.completada;
+                    const hasResults = ses.resultados_visibles && myResult;
+
+                    let statusBadge = '';
+                    let cardClass = 'session-card';
+                    let onclick = '';
+
+                    if (!isActive) {
+                        cardClass += ' locked';
+                        statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>';
+                    } else if (isCompleted) {
+                        cardClass += ' completed';
+                        statusBadge = '<span class="badge badge-done">✅ Completada</span>';
+                        if (hasResults) statusBadge += '<br><span class="badge badge-results">📊 ' + myResult.porcentaje + '% logro</span>';
+                        onclick = `onclick="window.location.href='sesion.html?id=${ses.id}'"`;
+                    } else if (myResp) {
+                        statusBadge = '<span class="badge badge-progress">📝 En progreso</span>';
+                        onclick = `onclick="window.location.href='sesion.html?id=${ses.id}'"`;
+                    } else {
+                        statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>';
+                        onclick = `onclick="window.location.href='sesion.html?id=${ses.id}'"`;
+                    }
+
+                    const videoIcon = ses.video_youtube ? ' 🎬' : '';
+
+                    html += `
+                    <div class="${cardClass}" ${onclick}>
+                        <div class="session-num">${idx + 1}</div>
+                        <div class="session-info">
+                            <h3>${ses.titulo || 'Sesión ' + (idx + 1)}${videoIcon}</h3>
+                            <p>${ses.descripcion || ''}</p>
+                        </div>
+                        <div class="session-status">${statusBadge}</div>
+                    </div>`;
+                });
+
+                container.innerHTML = html;
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar sesiones.</div>';
+            }
+        }
+
+        async function loadRankingPreview() {
+            try {
+                const resSnap = await db.ref(BASE + '/resultados').once('value');
+                const estSnap = await db.ref(BASE + '/estudiantes').once('value');
+                const resultados = resSnap.val() || {};
+                const estudiantes = estSnap.val() || {};
+
+                const courseScores = { '2A-HC': [], '2B-HC': [] };
+                // Aggregate scores per student
+                for (const [uid, est] of Object.entries(estudiantes)) {
+                    if (!courseScores[est.curso]) continue;
+                    let totalPct = 0, count = 0;
+                    for (const sesId of Object.keys(resultados)) {
+                        if (resultados[sesId][uid]) {
+                            totalPct += resultados[sesId][uid].porcentaje || 0;
+                            count++;
+                        }
+                    }
+                    if (count > 0) courseScores[est.curso].push(totalPct / count);
+                }
+
+                const avgA = courseScores['2A-HC'].length ? Math.round(courseScores['2A-HC'].reduce((a,b) => a+b, 0) / courseScores['2A-HC'].length) : 0;
+                const avgB = courseScores['2B-HC'].length ? Math.round(courseScores['2B-HC'].reduce((a,b) => a+b, 0) / courseScores['2B-HC'].length) : 0;
+                const maxAvg = Math.max(avgA, avgB, 1);
+
+                document.getElementById('barA').style.height = Math.max(20, (avgA / maxAvg) * 100) + 'px';
+                document.getElementById('barB').style.height = Math.max(20, (avgB / maxAvg) * 100) + 'px';
+                document.getElementById('scoreA').textContent = avgA + '% promedio';
+                document.getElementById('scoreB').textContent = avgB + '% promedio';
+            } catch(e) { console.error(e); }
+        }
+
+        async function loadStats(uid, curso) {
+            try {
+                const sesSnap = await db.ref(BASE + '/sesiones').once('value');
+                const resSnap = await db.ref(BASE + '/resultados').once('value');
+                const resultados = resSnap.val() || {};
+
+                let totalSesiones = 0, completadas = 0, totalPct = 0;
+                if (sesSnap.exists()) {
+                    sesSnap.forEach(s => {
+                        if (s.val().activa !== false) totalSesiones++;
+                        if (resultados[s.key] && resultados[s.key][uid]) {
+                            completadas++;
+                            totalPct += resultados[s.key][uid].porcentaje || 0;
+                        }
+                    });
+                }
+
+                document.getElementById('statCompleted').textContent = completadas;
+                document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' disponibles';
+                document.getElementById('statAvg').textContent = completadas > 0 ? Math.round(totalPct / completadas) + '%' : '-';
+
+                // Ranking position
+                const estSnap = await db.ref(BASE + '/estudiantes').once('value');
+                const estudiantes = estSnap.val() || {};
+                const scores = [];
+                for (const [euid, est] of Object.entries(estudiantes)) {
+                    if (est.curso !== curso) continue;
+                    let pct = 0, cnt = 0;
+                    for (const sesId of Object.keys(resultados)) {
+                        if (resultados[sesId][euid]) { pct += resultados[sesId][euid].porcentaje || 0; cnt++; }
+                    }
+                    scores.push({ uid: euid, avg: cnt > 0 ? pct / cnt : 0 });
+                }
+                scores.sort((a, b) => b.avg - a.avg);
+                const pos = scores.findIndex(s => s.uid === uid);
+                document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';
+                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (curso === '2A-HC' ? '2°A' : '2°B');
+
+            } catch(e) { console.error(e); }
+        }
+    </script>
+</body>
+</html>

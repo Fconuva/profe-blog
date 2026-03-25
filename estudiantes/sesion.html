@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sesión — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:#f1f5f9; min-height:100vh; padding-bottom:80px; }
+
+        /* HEADER */
+        .header {
+            background:linear-gradient(135deg,#1e3a5f,#1e40af); color:#fff;
+            padding:14px 20px; display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.15);
+        }
+        .header-left { display:flex; align-items:center; gap:10px; }
+        .header-left a { color:#fff; text-decoration:none; font-size:20px; padding:4px; }
+        .header-left h1 { font-size:15px; font-weight:700; }
+        .header-right { display:flex; align-items:center; gap:12px; }
+        .save-indicator {
+            font-size:11px; padding:4px 10px; border-radius:6px; font-weight:600;
+            transition:all .3s;
+        }
+        .save-indicator.saved { background:rgba(34,197,94,.2); color:#86efac; }
+        .save-indicator.saving { background:rgba(251,191,36,.2); color:#fcd34d; }
+        .save-indicator.error { background:rgba(239,68,68,.2); color:#fca5a5; }
+        .timer { font-size:12px; font-weight:600; color:rgba(255,255,255,.8); }
+
+        /* HIGHLIGHTER TOOLBAR */
+        .highlighter-bar {
+            background:#fff; border-bottom:1px solid #e2e8f0;
+            padding:10px 20px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;
+            position:sticky; top:52px; z-index:99; box-shadow:0 1px 4px rgba(0,0,0,.06);
+        }
+        .hl-label { font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-right:4px; }
+        .hl-btn {
+            width:36px; height:36px; border-radius:8px; border:2px solid transparent;
+            cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center;
+            transition:transform .15s, border-color .15s; position:relative;
+        }
+        .hl-btn:hover { transform:scale(1.1); }
+        .hl-btn.active { border-color:#0f172a; transform:scale(1.15); box-shadow:0 2px 8px rgba(0,0,0,.2); }
+        .hl-btn[data-color="yellow"] { background:#fef08a; }
+        .hl-btn[data-color="green"] { background:#86efac; }
+        .hl-btn[data-color="pink"] { background:#fda4af; }
+        .hl-btn[data-color="blue"] { background:#93c5fd; }
+        .hl-btn.eraser { background:#f1f5f9; border:1px solid #d4d4d8; }
+        .hl-legend { font-size:10px; color:#94a3b8; margin-left:auto; }
+        .hl-sep { width:1px; height:24px; background:#e2e8f0; margin:0 4px; }
+        .hl-tip {
+            font-size:10px; background:#eff6ff; color:#1e40af; padding:4px 10px; border-radius:6px;
+            font-weight:600; display:none;
+        }
+        .hl-tip.show { display:inline-block; }
+
+        /* MAIN CONTENT */
+        .main { max-width:820px; margin:0 auto; padding:20px 16px; }
+
+        /* VIDEO SECTION */
+        .video-section {
+            background:#000; border-radius:12px; overflow:hidden; margin-bottom:20px;
+            aspect-ratio:16/9; display:none;
+        }
+        .video-section iframe { width:100%; height:100%; border:none; }
+        .video-section.show { display:block; }
+
+        /* TEXT SECTION */
+        .section-title {
+            font-size:16px; font-weight:800; color:#1e40af; margin:20px 0 10px;
+            padding-bottom:6px; border-bottom:2px solid #1e40af;
+        }
+        .section-title.lit { color:#7c3aed; border-color:#7c3aed; }
+        .section-title.info { color:#0f766e; border-color:#0f766e; }
+
+        .text-box {
+            background:#fff; border-radius:12px; padding:20px 24px; margin-bottom:16px;
+            box-shadow:0 1px 4px rgba(0,0,0,.06); border-left:4px solid #1e40af;
+        }
+        .text-box.lit { border-left-color:#7c3aed; }
+        .text-title { font-size:17px; font-weight:800; color:#0f172a; text-align:center; margin-bottom:16px; line-height:1.3; }
+
+        .p-row { display:flex; gap:12px; margin-bottom:12px; align-items:stretch; }
+        .p-text {
+            flex:1; font-size:15px; line-height:1.7; font-family:'Merriweather',serif;
+            color:#1a1a2e; text-align:justify; user-select:text; cursor:text;
+        }
+        .p-num { font-size:12px; font-weight:bold; color:#94a3b8; float:left; margin-left:-20px; margin-top:4px; font-family:'Inter',sans-serif; }
+        .p-note-box {
+            width:140px; min-width:140px; flex-shrink:0;
+        }
+        .p-note-input {
+            width:100%; min-height:60px; border:2px dashed #d4d4d8; border-radius:8px;
+            padding:8px; font-size:12px; font-family:'Inter',sans-serif; color:#334155;
+            resize:vertical; background:#fafbfc; transition:border-color .2s;
+        }
+        .p-note-input:focus { border-color:#1e40af; border-style:solid; outline:none; background:#fff; }
+        .p-note-input::placeholder { color:#94a3b8; font-style:italic; font-size:11px; }
+        .text-source { text-align:right; font-size:11px; color:#94a3b8; margin-top:8px; }
+
+        /* QUESTIONS */
+        .question-block {
+            background:#fff; border-radius:12px; padding:20px; margin-bottom:14px;
+            box-shadow:0 1px 4px rgba(0,0,0,.06); border:2px solid transparent;
+            transition:border-color .3s;
+        }
+        .question-block.answered { border-color:#dbeafe; }
+        .question-block.correct { border-color:#86efac; background:#f0fdf4; }
+        .question-block.incorrect { border-color:#fca5a5; background:#fef2f2; }
+        .q-header { font-weight:700; color:#0f172a; font-size:15px; margin-bottom:12px; line-height:1.5; }
+        .skill-tag {
+            display:inline-block; font-size:10px; font-weight:800; padding:3px 8px;
+            border-radius:5px; background:#dbeafe; color:#1e40af; margin-right:6px;
+        }
+        .option-list { list-style:none; padding:0; }
+        .option-item {
+            display:flex; align-items:flex-start; gap:10px; padding:12px 14px;
+            border:2px solid #e2e8f0; border-radius:10px; margin-bottom:8px;
+            cursor:pointer; transition:all .15s; font-size:14px; line-height:1.5;
+        }
+        .option-item:hover { background:#f8fafc; border-color:#cbd5e1; }
+        .option-item.selected { background:#eff6ff; border-color:#3b82f6; }
+        .option-item.selected-correct { background:#f0fdf4; border-color:#16a34a; }
+        .option-item.selected-incorrect { background:#fef2f2; border-color:#dc2626; }
+        .option-item.is-correct { background:#f0fdf4; border-color:#16a34a; }
+        .option-letter {
+            width:28px; height:28px; border-radius:8px; background:#f1f5f9;
+            display:flex; align-items:center; justify-content:center;
+            font-weight:800; color:#64748b; font-size:13px; flex-shrink:0;
+        }
+        .option-item.selected .option-letter { background:#1e40af; color:#fff; }
+        .option-item.disabled { pointer-events:none; opacity:.8; }
+
+        /* FEEDBACK (shown after results revealed) */
+        .q-feedback { margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; line-height:1.5; display:none; }
+        .q-feedback.show { display:block; }
+        .q-feedback.correct { background:#f0fdf4; color:#166534; border:1px solid #86efac; }
+        .q-feedback.incorrect { background:#fef2f2; color:#991b1b; border:1px solid #fca5a5; }
+
+        /* SUBMIT AREA */
+        .submit-area {
+            background:#fff; border-radius:12px; padding:24px; text-align:center;
+            box-shadow:0 1px 4px rgba(0,0,0,.06); margin-top:24px;
+        }
+        .progress-bar-container { background:#e2e8f0; border-radius:8px; height:10px; margin-bottom:14px; overflow:hidden; }
+        .progress-bar-fill { height:100%; background:linear-gradient(90deg,#1e40af,#3b82f6); border-radius:8px; transition:width .3s; }
+        .progress-text { font-size:13px; color:#64748b; margin-bottom:16px; }
+        .btn-submit {
+            padding:16px 40px; background:linear-gradient(135deg,#16a34a,#4ade80);
+            color:#fff; border:none; border-radius:12px; font-size:16px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s;
+        }
+        .btn-submit:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(22,163,74,.35); }
+        .btn-submit:disabled { opacity:.5; cursor:not-allowed; transform:none; background:#94a3b8; }
+
+        /* HIGHLIGHTS */
+        mark[data-hl="yellow"] { background:#fef08a; border-radius:2px; padding:0 1px; }
+        mark[data-hl="green"] { background:#86efac; border-radius:2px; padding:0 1px; }
+        mark[data-hl="pink"] { background:#fda4af; border-radius:2px; padding:0 1px; }
+        mark[data-hl="blue"] { background:#93c5fd; border-radius:2px; padding:0 1px; }
+
+        /* TECHNIQUES PANEL */
+        .techniques-panel {
+            background:#f5f3ff; border:2px solid #c4b5fd; border-radius:12px;
+            padding:16px 20px; margin-bottom:20px;
+        }
+        .techniques-toggle {
+            display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+        }
+        .techniques-toggle h3 { font-size:14px; font-weight:700; color:#5b21b6; }
+        .techniques-toggle .arrow { font-size:16px; transition:transform .3s; }
+        .techniques-toggle .arrow.open { transform:rotate(180deg); }
+        .techniques-content { margin-top:12px; font-size:13px; color:#4c1d95; line-height:1.6; display:none; }
+        .techniques-content.open { display:block; }
+        .tech-card { background:#fff; border-radius:8px; padding:12px; margin-bottom:8px; border-left:4px solid; }
+        .tech-card.t1 { border-left-color:#3b82f6; }
+        .tech-card.t2 { border-left-color:#10b981; }
+        .tech-card.t3 { border-left-color:#f59e0b; }
+        .tech-card h4 { font-size:13px; font-weight:700; margin-bottom:4px; }
+        .tech-card p { font-size:12px; color:#334155; }
+
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:80px; left:50%; transform:translateX(-50%);
+            background:#0f172a; color:#fff; padding:10px 20px; border-radius:10px;
+            font-size:13px; font-weight:600; box-shadow:0 4px 16px rgba(0,0,0,.3);
+            opacity:0; transition:opacity .3s; z-index:300; pointer-events:none;
+        }
+        .toast.show { opacity:1; }
+
+        @media (max-width:768px) {
+            .p-row { flex-direction:column; }
+            .p-note-box { width:100%; min-width:100%; }
+            .highlighter-bar { padding:8px 12px; }
+            .hl-legend { display:none; }
+            .main { padding:12px 10px; }
+            .text-box { padding:16px; }
+            .p-text { font-size:14px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="header-left">
+            <a href="dashboard.html" title="Volver">←</a>
+            <h1 id="sessionTitle">Cargando...</h1>
+        </div>
+        <div class="header-right">
+            <span class="timer" id="timer">⏱ 00:00</span>
+            <span class="save-indicator saved" id="saveIndicator">💾 Guardado</span>
+        </div>
+    </div>
+
+    <!-- HIGHLIGHTER BAR -->
+    <div class="highlighter-bar">
+        <span class="hl-label">✏️ Destacador:</span>
+        <button class="hl-btn" data-color="yellow" title="Idea principal / Mapeo">📌</button>
+        <button class="hl-btn" data-color="green" title="Evidencia / Subrayado">✅</button>
+        <button class="hl-btn" data-color="pink" title="Distractor / Trampa">⚠️</button>
+        <button class="hl-btn" data-color="blue" title="Vocabulario clave">📘</button>
+        <div class="hl-sep"></div>
+        <button class="hl-btn eraser" data-color="erase" title="Borrar destacado">🧹</button>
+        <span class="hl-tip" id="hlTip">Selecciona texto y haz clic en un color</span>
+        <span class="hl-legend">
+            🟡 Idea principal &nbsp; 🟢 Evidencia &nbsp; 🔴 Distractor &nbsp; 🔵 Vocabulario
+        </span>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main" id="mainContent">
+        <div style="text-align:center; padding:60px; color:#94a3b8;">Cargando sesión...</div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+    <script>
+    // ==================== CONFIG ====================
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+        authDomain: "profe-blog.firebaseapp.com",
+        databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+        projectId: "profe-blog",
+        storageBucket: "profe-blog.firebasestorage.app",
+        messagingSenderId: "305920739217",
+        appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const BASE = 'plataforma_estudiantes';
+
+    // ==================== SESSION 1 CONTENT (EMBEDDED) ====================
+    const SESSIONS_EMBEDDED = {
+        'sesion-1': {
+            id: 'sesion-1',
+            titulo: 'Sesión 1: Localizar Información — Nivel 1',
+            descripcion: 'Practica la habilidad de localizar información explícita en textos, usando técnicas de mapeo, subrayado selectivo e identificación de distractores.',
+            video_youtube: null,
+            tecnicas: true,
+            textos: [
+                {
+                    id: 'texto-1', tipo: 'no-literario', subtipo: 'Artículo de Divulgación',
+                    titulo: '¿Por qué los adolescentes necesitan dormir más que los adultos?',
+                    parrafos: [
+                        { num:1, texto:'Diversos estudios científicos realizados durante la última década han confirmado que los adolescentes de entre catorce y dieciocho años necesitan dormir entre ocho y diez horas diarias para funcionar correctamente. Sin embargo, la mayoría de los jóvenes en edad escolar apenas alcanza las seis o siete horas de sueño por noche, lo que genera un déficit crónico que afecta directamente su rendimiento académico y su estado de ánimo.' },
+                        { num:2, texto:'La razón principal de este desajuste es biológica. Durante la pubertad, el cerebro experimenta un cambio en la producción de melatonina, la hormona que regula el ciclo de sueño. En los adolescentes, esta sustancia comienza a liberarse aproximadamente dos horas más tarde que en los adultos, lo que provoca que naturalmente sientan sueño cerca de las once o doce de la noche, y no a las nueve como un niño pequeño.' },
+                        { num:3, texto:'El problema se agrava cuando las clases comienzan temprano en la mañana. La doctora María Ignacia Rojas, neuróloga del Hospital Clínico de Santiago, explica que "despertar a un adolescente a las seis de la mañana equivale, en términos de su reloj biológico, a despertar a un adulto a las cuatro de la madrugada". Esto significa que muchos estudiantes llegan a sus primeras clases en un estado de somnolencia que les impide concentrarse adecuadamente.' },
+                        { num:4, texto:'Algunos países han comenzado a tomar medidas. En Estados Unidos, el estado de California aprobó en 2019 una ley que obliga a las escuelas secundarias a iniciar las clases no antes de las ocho y media de la mañana. Los resultados preliminares mostraron una mejora notable en las calificaciones y una reducción del ausentismo escolar. En Chile, aunque no existe una legislación similar, diversos especialistas han recomendado al Ministerio de Educación flexibilizar los horarios de entrada para los liceos.' }
+                    ],
+                    fuente: 'Adaptación de artículos de divulgación científica sobre sueño adolescente (2024). Para fines educativos.'
+                },
+                {
+                    id: 'texto-2', tipo: 'literario', subtipo: 'Texto Narrativo',
+                    titulo: 'El viejo Eugenio',
+                    parrafos: [
+                        { num:1, texto:'El viejo Eugenio empujaba la carretilla de madera cargada con naranjas por la calle principal del pueblo, como hacía cada sábado desde hacía cuarenta años. Era un hombre de manos enormes y espalda encorvada, con un sombrero que alguna vez fue blanco y que ahora tenía el color indefinido de las cosas muy usadas. A las siete de la mañana ya estaba en la esquina de la plaza, frente a la iglesia, instalando su improvisado puesto.' },
+                        { num:2, texto:'Ese sábado, sin embargo, algo era diferente. Junto a la fuente de agua, un grupo de trabajadores municipales había clavado un letrero grande que decía: "Prohibida la venta ambulante en la plaza. Ordenanza Municipal N° 147". Eugenio leyó el cartel tres veces, moviendo los labios en silencio, como si las palabras pudieran cambiar de significado si las repetía suficientes veces.' },
+                        { num:3, texto:'—¿Y ahora qué hago? —murmuró para sí mismo, mirándose las manos callosas. Las naranjas eran de su propio huerto, un terreno pequeño heredado de su padre que cultivaba con la ayuda de su nieta Amparo, una estudiante de quince años que soñaba con estudiar agronomía en la universidad. Con la venta de esas naranjas pagaba los materiales escolares de la muchacha.' },
+                        { num:4, texto:'Doña Carmen, la dueña de la panadería de la esquina, se acercó con un café humeante y se lo ofreció sin decir palabra. Luego, mirándolo con firmeza, le dijo: "Pon tus naranjas dentro de mi local, Eugenio. A mi clientela le gustan las cosas frescas. Nos repartimos las ganancias". El anciano sostuvo la taza con ambas manos temblorosas y, por primera vez en la mañana, sonrió levemente.' }
+                    ],
+                    fuente: 'Fragmento narrativo original para fines educativos (2026).'
+                },
+                {
+                    id: 'texto-3', tipo: 'no-literario', subtipo: 'Infografía Textual',
+                    titulo: 'Reciclaje en Chile: ¿Cuánto avanzamos?',
+                    parrafos: [
+                        { num:1, texto:'Chile genera aproximadamente 19 millones de toneladas de residuos sólidos al año. De esa cantidad, solo un 12,5% se recicla de manera efectiva, según datos del Ministerio del Medio Ambiente publicados en diciembre de 2024. Esta cifra ubica al país por debajo del promedio de los países de la OCDE, que reciclan cerca del 34% de sus desechos.' },
+                        { num:2, texto:'La Ley REP (Responsabilidad Extendida del Productor), vigente desde 2016, obliga a las empresas que fabrican o importan ciertos productos a hacerse cargo de los residuos que estos generan al final de su vida útil. Los productos prioritarios incluyen neumáticos, envases y embalajes, aceites lubricantes, aparatos eléctricos y electrónicos, pilas y baterías. Sin embargo, su implementación ha sido gradual y todavía no alcanza a cubrir todos los sectores.' },
+                        { num:3, texto:'A nivel doméstico, el principal obstáculo para reciclar es la falta de puntos de recolección accesibles. Una encuesta de la Asociación Nacional de Recicladores, realizada en agosto de 2024, reveló que el 67% de las personas que no reciclan afirman que lo harían si existiera un punto limpio a menos de diez cuadras de su hogar. Actualmente, solo las comunas con mayores recursos cuentan con infraestructura suficiente.' },
+                        { num:4, texto:'El caso de la comuna de Peñalolén ha sido destacado como modelo. Desde 2022, su programa "Recicla Peña" instaló 45 puntos verdes distribuidos en todos los barrios, ofreciendo además retiro a domicilio gratuito los días martes y jueves. En dos años, la tasa de reciclaje comunal pasó del 8% al 27%, y el municipio espera llegar al 35% en 2026.' }
+                    ],
+                    fuente: 'Adaptación basada en datos del Ministerio del Medio Ambiente y medios de prensa (2024). Para fines educativos.'
+                },
+                {
+                    id: 'texto-4', tipo: 'no-literario', subtipo: 'Artículo Informativo',
+                    titulo: 'Las redes sociales y la salud mental de los adolescentes',
+                    parrafos: [
+                        { num:1, texto:'Un estudio publicado en marzo de 2025 por la Universidad de Chile reveló que el 78% de los adolescentes chilenos de entre 13 y 17 años pasa más de cuatro horas diarias en redes sociales. La investigación, que encuestó a 12.500 estudiantes de las regiones Metropolitana, del Biobío y del Maule, encontró que los jóvenes que superan las cinco horas de uso diario presentan el doble de probabilidades de reportar síntomas de ansiedad que aquellos que las utilizan menos de dos horas.' },
+                        { num:2, texto:'La psicóloga infantojuvenil Constanza Pérez, del Servicio de Salud del Maule, explica que "el problema no son las redes sociales en sí mismas, sino el tipo de uso que se hace de ellas". Según la especialista, el consumo pasivo —es decir, solo observar publicaciones de otros sin interactuar— es el que más se asocia con sentimientos de insuficiencia y comparación social. En cambio, el uso activo, como comunicarse con amigos o crear contenido, puede tener efectos positivos.' },
+                        { num:3, texto:'A nivel escolar, los efectos son visibles en el aula. Profesores de la ciudad de Talca consultados para la investigación señalaron que la principal consecuencia que observan es la dificultad de concentración: el 63% de los docentes indicó que los estudiantes revisan sus teléfonos al menos tres veces durante una clase de 45 minutos, incluso cuando tienen prohibido usarlos.' },
+                        { num:4, texto:'Frente a esta situación, el Ministerio de Educación lanzó en agosto de 2025 el programa "Desconéctate para Conectar", que promueve espacios libres de pantallas durante los recreos y actividades al aire libre supervisadas. Las primeras evaluaciones, realizadas en 30 establecimientos piloto, mostraron que los estudiantes participantes redujeron su uso diario de redes en un promedio de 47 minutos y reportaron sentirse "más tranquilos" durante la jornada escolar.' }
+                    ],
+                    fuente: 'Adaptación de estudios sobre uso de redes sociales y salud mental adolescente (2025). Para fines educativos.'
+                },
+                {
+                    id: 'texto-5', tipo: 'literario', subtipo: 'Texto Narrativo',
+                    titulo: 'La bibliotecaria del cerro',
+                    parrafos: [
+                        { num:1, texto:'Todos los miércoles a las cuatro de la tarde, Rosa Márquez subía los doscientos trece escalones del cerro La Cruz cargando una maleta azul con ruedas que pesaba exactamente veintitrés kilos. Dentro llevaba cuarenta libros que elegía con cuidado cada semana en la Biblioteca Municipal de Talca, donde trabajaba como encargada de la sección infantil desde hacía doce años.' },
+                        { num:2, texto:'En la cima del cerro, bajo un sauce que daba sombra generosa, Rosa desplegaba una lona de colores y organizaba su biblioteca ambulante. Los niños del barrio ya sabían que debían traer devuelto el libro de la semana anterior para poder llevarse uno nuevo. "Ese es el único requisito", les decía siempre con la misma sonrisa. "Leer y devolver, devolver y leer".' },
+                        { num:3, texto:'Aquel miércoles de octubre, sin embargo, llegó con la maleta a medio llenar. El municipio había recortado el presupuesto de la biblioteca y ya no podían prestar libros fuera del edificio. Rosa había puesto de su propio bolsillo los quince libros que traía, comprándolos a precio de oferta en la feria del libro usado de calle 2 Sur.' },
+                        { num:4, texto:'Mientras repartía los libros entre los ocho niños que la esperaban, el más pequeño, un chico llamado Tomás que aún no cumplía los siete años, le entregó un sobre arrugado. Adentro había un dibujo: Rosa subiendo el cerro con su maleta azul, y arriba, escrito con lápiz rojo en letras grandes y desparejas, las palabras "GRCIAS SEÑORA ROSA". La bibliotecaria dobló el dibujo con cuidado, lo guardó en su bolsillo y siguió prestando libros como si nada, aunque sus ojos brillaban más que de costumbre.' }
+                    ],
+                    fuente: 'Fragmento narrativo original para fines educativos (2026).'
+                }
+            ],
+            preguntas: [
+                { id:'q1', textoRef:'texto-1', habilidad:'LOCALIZAR', enunciado:'Según el texto, ¿cuántas horas de sueño necesitan los adolescentes para funcionar correctamente?', opciones:[
+                    { letra:'A', texto:'Un mínimo de seis horas de descanso continuo por cada jornada escolar completa.' },
+                    { letra:'B', texto:'Las mismas horas que un adulto promedio necesita habitualmente durante la semana.' },
+                    { letra:'C', texto:'Entre ocho y diez horas diarias según diversos estudios científicos recientes.' },
+                    { letra:'D', texto:'Más de doce horas cuando están en período de exámenes y evaluaciones finales.' }
+                ], correcta:'C' },
+                { id:'q2', textoRef:'texto-1', habilidad:'LOCALIZAR', enunciado:'¿Qué cambio biológico explica que los adolescentes se duerman más tarde?', opciones:[
+                    { letra:'A', texto:'La liberación tardía de melatonina, la hormona que regula el ciclo de sueño y vigilia.' },
+                    { letra:'B', texto:'La disminución general de energía que sufren todos los jóvenes durante la jornada escolar.' },
+                    { letra:'C', texto:'El uso excesivo de pantallas electrónicas que estimulan el cerebro durante la noche.' },
+                    { letra:'D', texto:'La falta de ejercicio físico y actividad deportiva durante las horas de clase en los liceos.' }
+                ], correcta:'A' },
+                { id:'q3', textoRef:'texto-1', habilidad:'LOCALIZAR', enunciado:'¿Qué medida concreta tomó el estado de California respecto al horario escolar?', opciones:[
+                    { letra:'A', texto:'Redujo las horas de clases semanales para que los estudiantes tuvieran más tiempo de descanso.' },
+                    { letra:'B', texto:'Prohibió el uso de celulares en horario nocturno para todos los menores de edad del estado.' },
+                    { letra:'C', texto:'Instaló laboratorios especializados del sueño en todas las escuelas secundarias públicas.' },
+                    { letra:'D', texto:'Aprobó una ley que impide a las escuelas iniciar clases antes de las ocho y media de la mañana.' }
+                ], correcta:'D' },
+                { id:'q4', textoRef:'texto-2', habilidad:'LOCALIZAR', enunciado:'¿Dónde instalaba su puesto de venta el viejo Eugenio cada sábado?', opciones:[
+                    { letra:'A', texto:'Dentro de la panadería de doña Carmen, en la calle principal del pueblo.' },
+                    { letra:'B', texto:'En la esquina de la plaza principal del pueblo, justo frente a la iglesia.' },
+                    { letra:'C', texto:'Al costado de la fuente de agua donde los trabajadores clavaron el letrero.' },
+                    { letra:'D', texto:'En un terreno pequeño heredado de su padre que cultivaba con ayuda de su nieta.' }
+                ], correcta:'B' },
+                { id:'q5', textoRef:'texto-2', habilidad:'LOCALIZAR', enunciado:'¿Para qué utilizaba Eugenio el dinero que obtenía con la venta de naranjas?', opciones:[
+                    { letra:'A', texto:'Para costear los materiales escolares de su nieta Amparo, que estudiaba en el liceo.' },
+                    { letra:'B', texto:'Para comprar insumos agrícolas que mejoraran la calidad de sus cosechas de naranjas.' },
+                    { letra:'C', texto:'Para financiar los gastos médicos derivados de su edad avanzada y comprar sus remedios.' },
+                    { letra:'D', texto:'Para pagar el arriendo del terreno pequeño donde cultivaba sus naranjas cada temporada.' }
+                ], correcta:'A' },
+                { id:'q6', textoRef:'texto-2', habilidad:'LOCALIZAR', enunciado:'¿Qué solución le propone doña Carmen a Eugenio frente al problema del letrero?', opciones:[
+                    { letra:'A', texto:'Le sugiere reclamar ante la municipalidad para que anulen la nueva ordenanza vigente.' },
+                    { letra:'B', texto:'Le recomienda trasladar su puesto a otra plaza del pueblo donde no exista prohibición.' },
+                    { letra:'C', texto:'Le propone vender las naranjas dentro de su local de panadería y dividir las ganancias.' },
+                    { letra:'D', texto:'Le ofrece comprarle todas las naranjas de la carretilla al precio que Eugenio considere justo.' }
+                ], correcta:'C' },
+                { id:'q7', textoRef:'texto-3', habilidad:'LOCALIZAR', enunciado:'¿Qué porcentaje de sus residuos recicla Chile según el texto?', opciones:[
+                    { letra:'A', texto:'Cerca del 34%, cifra equivalente al promedio de los países desarrollados de la OCDE.' },
+                    { letra:'B', texto:'Aproximadamente un 67% del total anual gracias a las nuevas políticas medioambientales.' },
+                    { letra:'C', texto:'Un total de 19 millones de toneladas anuales de residuos sólidos son procesados y reciclados.' },
+                    { letra:'D', texto:'Solo un 12,5% del total de residuos generados se recicla de manera efectiva en el país.' }
+                ], correcta:'D' },
+                { id:'q8', textoRef:'texto-3', habilidad:'LOCALIZAR', enunciado:'¿Qué obliga a hacer la Ley REP a las empresas?', opciones:[
+                    { letra:'A', texto:'Instalar puntos limpios en todas las comunas donde comercializan sus productos.' },
+                    { letra:'B', texto:'Hacerse cargo de los residuos que generan sus productos al final de su vida útil.' },
+                    { letra:'C', texto:'Donar un porcentaje de sus ganancias anuales al Ministerio del Medio Ambiente.' },
+                    { letra:'D', texto:'Reciclar el 34% de todos los desechos que producen durante cada año calendario.' }
+                ], correcta:'B' },
+                { id:'q9', textoRef:'texto-3', habilidad:'LOCALIZAR', enunciado:'¿Qué resultado obtuvo el programa "Recicla Peña" en dos años?', opciones:[
+                    { letra:'A', texto:'La tasa de reciclaje comunal pasó del 8% al 27% en dos años gracias a los puntos verdes.' },
+                    { letra:'B', texto:'Se instalaron 45 puntos verdes y se eliminaron completamente los vertederos ilegales del sector.' },
+                    { letra:'C', texto:'Logró que el 67% de los vecinos de la comuna comenzaran a reciclar regularmente en sus hogares.' },
+                    { letra:'D', texto:'El municipio alcanzó la meta nacional del 35% de reciclaje antes del plazo que se había propuesto.' }
+                ], correcta:'A' },
+                { id:'q10', textoRef:'texto-4', habilidad:'LOCALIZAR', enunciado:'Según el estudio de la Universidad de Chile, ¿qué porcentaje de adolescentes pasa más de cuatro horas diarias en redes sociales?', opciones:[
+                    { letra:'A', texto:'El 78% de los adolescentes de entre 13 y 17 años según la encuesta realizada.' },
+                    { letra:'B', texto:'El 63% de los estudiantes encuestados en las tres regiones del estudio.' },
+                    { letra:'C', texto:'Aproximadamente la mitad de los jóvenes chilenos en edad escolar del país.' },
+                    { letra:'D', texto:'Más del 90% de los adolescentes que poseen teléfono celular con acceso a internet.' }
+                ], correcta:'A' },
+                { id:'q11', textoRef:'texto-4', habilidad:'LOCALIZAR', enunciado:'Según la psicóloga Constanza Pérez, ¿qué tipo de uso de redes sociales se asocia más con sentimientos negativos?', opciones:[
+                    { letra:'A', texto:'El uso activo de crear contenido propio como videos o publicaciones personales.' },
+                    { letra:'B', texto:'El consumo pasivo, es decir, solo observar publicaciones sin interactuar con otros.' },
+                    { letra:'C', texto:'La comunicación directa con amigos a través de mensajes de texto privados.' },
+                    { letra:'D', texto:'El uso de redes sociales para buscar información académica y tareas escolares.' }
+                ], correcta:'B' },
+                { id:'q12', textoRef:'texto-4', habilidad:'LOCALIZAR', enunciado:'¿Qué resultado obtuvieron los establecimientos piloto del programa "Desconéctate para Conectar"?', opciones:[
+                    { letra:'A', texto:'Los estudiantes redujeron su uso diario de redes en un promedio de 47 minutos.' },
+                    { letra:'B', texto:'Se eliminó completamente el uso de celulares dentro de los establecimientos educativos.' },
+                    { letra:'C', texto:'Las calificaciones de los estudiantes subieron un 47% en las evaluaciones del semestre.' },
+                    { letra:'D', texto:'El 63% de los profesores dejó de reportar problemas de concentración en el aula.' }
+                ], correcta:'A' },
+                { id:'q13', textoRef:'texto-5', habilidad:'LOCALIZAR', enunciado:'¿Cuántos escalones subía Rosa Márquez cada miércoles para llegar a la cima del cerro?', opciones:[
+                    { letra:'A', texto:'Ciento trece escalones empinados que conectaban la avenida principal con la cima del cerro.' },
+                    { letra:'B', texto:'Doscientos trece escalones cargando una maleta azul con ruedas de veintitrés kilos.' },
+                    { letra:'C', texto:'Trescientos escalones que recorría junto a los niños del barrio cada tarde de miércoles.' },
+                    { letra:'D', texto:'Un número indeterminado de escalones que variaba según la ruta que eligiera ese día.' }
+                ], correcta:'B' },
+                { id:'q14', textoRef:'texto-5', habilidad:'LOCALIZAR', enunciado:'¿Por qué Rosa llegó con la maleta a medio llenar aquel miércoles de octubre?', opciones:[
+                    { letra:'A', texto:'Porque los niños del cerro no habían devuelto los libros de la semana anterior como era el requisito.' },
+                    { letra:'B', texto:'Porque la biblioteca había cerrado definitivamente sus puertas por falta de presupuesto.' },
+                    { letra:'C', texto:'Porque el municipio recortó el presupuesto y ya no podían prestar libros fuera del edificio.' },
+                    { letra:'D', texto:'Porque había llovido intensamente y muchos libros se dañaron durante el camino al cerro.' }
+                ], correcta:'C' },
+                { id:'q15', textoRef:'texto-5', habilidad:'LOCALIZAR', enunciado:'¿Qué le entregó el niño Tomás a Rosa dentro del sobre arrugado?', opciones:[
+                    { letra:'A', texto:'Un dibujo de Rosa subiendo el cerro con su maleta azul y un mensaje de agradecimiento.' },
+                    { letra:'B', texto:'Una carta escrita por todos los niños del barrio pidiendo que no dejara de llevar libros.' },
+                    { letra:'C', texto:'Un billete arrugado que había juntado vendiendo dulces para ayudar a comprar libros.' },
+                    { letra:'D', texto:'Un libro que él mismo había escrito con ilustraciones hechas con lápices de colores.' }
+                ], correcta:'A' }
+            ]
+        }
+    };
+
+    // ==================== STATE ====================
+    let currentUser = null;
+    let studentData = null;
+    let sessionId = null;
+    let sessionData = null;
+    let answers = {};
+    let notes = {};
+    let highlightsData = {};
+    let startTime = Date.now();
+    let timerInterval = null;
+    let autoSaveInterval = null;
+    let isSubmitted = false;
+    let resultsVisible = false;
+    let activeHighlightColor = null;
+    let isDirty = false;
+
+    // ==================== INIT ====================
+    const urlParams = new URLSearchParams(window.location.search);
+    sessionId = urlParams.get('id') || 'sesion-1';
+
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'index.html'; return; }
+        currentUser = user;
+
+        try {
+            const snap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
+            studentData = snap.val();
+            if (!studentData) { auth.signOut(); window.location.href = 'index.html'; return; }
+            if (!studentData.perfil_completo) { window.location.href = 'perfil.html'; return; }
+
+            await loadSession();
+        } catch(e) { console.error(e); }
+    });
+
+    async function loadSession() {
+        // Try Firebase first, fallback to embedded
+        try {
+            const sesSnap = await db.ref(BASE + '/sesiones/' + sessionId).once('value');
+            if (sesSnap.exists()) {
+                sessionData = sesSnap.val();
+                sessionData.id = sessionId;
+            }
+        } catch(e) { /* fallback */ }
+
+        if (!sessionData && SESSIONS_EMBEDDED[sessionId]) {
+            sessionData = SESSIONS_EMBEDDED[sessionId];
+        }
+
+        if (!sessionData) {
+            document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#dc2626;">Sesión no encontrada.</div>';
+            return;
+        }
+
+        document.getElementById('sessionTitle').textContent = sessionData.titulo;
+        document.title = sessionData.titulo + ' — Plataforma Estudiantes';
+
+        // Load saved progress
+        await loadProgress();
+
+        // Render content
+        renderSession();
+
+        // Start timer
+        startTimer();
+
+        // Start auto-save
+        autoSaveInterval = setInterval(autoSave, 30000);
+
+        // Warn before leaving
+        window.addEventListener('beforeunload', (e) => {
+            if (isDirty && !isSubmitted) { e.preventDefault(); e.returnValue = ''; }
+        });
+    }
+
+    async function loadProgress() {
+        try {
+            const snap = await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).once('value');
+            if (snap.exists()) {
+                const saved = snap.val();
+                answers = saved.answers || {};
+                notes = saved.notes || {};
+                highlightsData = saved.highlights || {};
+                isSubmitted = saved.completada || false;
+                if (saved.started_at) startTime = saved.started_at;
+            }
+
+            // Check if results are visible
+            const sesRef = await db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value');
+            resultsVisible = sesRef.val() === true;
+
+            // If submitted, check results
+            if (isSubmitted && resultsVisible) {
+                const resSnap = await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).once('value');
+                if (resSnap.exists()) {
+                    // Results will be shown
+                }
+            }
+        } catch(e) { console.error('Error loading progress:', e); }
+    }
+
+    // ==================== RENDER ====================
+    function renderSession() {
+        const main = document.getElementById('mainContent');
+        let html = '';
+
+        // Video
+        if (sessionData.video_youtube) {
+            const videoId = extractYoutubeId(sessionData.video_youtube);
+            if (videoId) {
+                html += `<div class="video-section show">
+                    <iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}" allowfullscreen loading="lazy"
+                    sandbox="allow-scripts allow-same-origin allow-presentation"></iframe>
+                </div>`;
+            }
+        }
+
+        // Techniques panel
+        if (sessionData.tecnicas) {
+            html += `<div class="techniques-panel">
+                <div class="techniques-toggle" onclick="toggleTechniques()">
+                    <h3>🧰 Tus 3 herramientas para Localizar</h3>
+                    <span class="arrow" id="techArrow">▼</span>
+                </div>
+                <div class="techniques-content" id="techContent">
+                    <div class="tech-card t1">
+                        <h4>📌 Técnica 1: Mapeo de Párrafos</h4>
+                        <p>Escribe 1 a 3 palabras clave al margen de cada párrafo. Así creas un "mapa" y sabes dónde buscar cada dato.</p>
+                    </div>
+                    <div class="tech-card t2">
+                        <h4>✅ Técnica 2: Subrayado Selectivo</h4>
+                        <p>Subraya SOLO la frase exacta que responde la pregunta, no todo el párrafo. Usa el destacador verde.</p>
+                    </div>
+                    <div class="tech-card t3">
+                        <h4>⚠️ Técnica 3: Identificación de Distractores</h4>
+                        <p>Detecta las trampas: Literal falso (copia palabras pero responde otra cosa), Invento plausible (suena lógico pero no está en el texto), Exageración (agranda un dato real).</p>
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // Texts and questions
+        sessionData.textos.forEach((texto, tIdx) => {
+            const isLit = texto.tipo === 'literario';
+            const sectionClass = isLit ? 'lit' : '';
+            const typeLabel = isLit ? 'Texto Literario' : 'Texto No Literario';
+
+            html += `<div class="section-title ${sectionClass}">Texto ${tIdx + 1} — ${typeLabel} (${texto.subtipo})</div>`;
+            html += `<div class="text-box ${isLit ? 'lit' : ''}" id="textbox-${texto.id}">`;
+            if (texto.titulo) html += `<div class="text-title">${texto.titulo}</div>`;
+
+            texto.parrafos.forEach(p => {
+                const noteKey = texto.id + '-p' + p.num;
+                const savedNote = notes[noteKey] || '';
+                html += `<div class="p-row">
+                    <div class="p-text" id="ptext-${texto.id}-${p.num}" data-texto="${texto.id}" data-parrafo="${p.num}">
+                        <span class="p-num">${p.num}</span>${p.texto}
+                    </div>
+                    <div class="p-note-box">
+                        <textarea class="p-note-input" placeholder="✏️ Concepto clave..."
+                            data-note-key="${noteKey}" oninput="onNoteChange(this)">${savedNote}</textarea>
+                    </div>
+                </div>`;
+            });
+
+            if (texto.fuente) html += `<div class="text-source">${texto.fuente}</div>`;
+            html += '</div>';
+
+            // Questions for this text
+            const textQuestions = sessionData.preguntas.filter(q => q.textoRef === texto.id);
+            textQuestions.forEach(q => {
+                const selectedAnswer = answers[q.id] || null;
+                const blockClass = selectedAnswer ? 'answered' : '';
+
+                html += `<div class="question-block ${blockClass}" id="qblock-${q.id}">`;
+                html += `<div class="q-header"><span class="skill-tag">${q.habilidad}</span> ${q.enunciado}</div>`;
+                html += '<ul class="option-list">';
+
+                q.opciones.forEach(opt => {
+                    const isSelected = selectedAnswer === opt.letra;
+                    let optClass = isSelected ? 'selected' : '';
+                    if (isSubmitted) optClass += ' disabled';
+
+                    html += `<li class="option-item ${optClass}" data-question="${q.id}" data-letter="${opt.letra}" onclick="selectAnswer('${q.id}','${opt.letra}')">
+                        <span class="option-letter">${opt.letra}</span>
+                        <span>${opt.texto}</span>
+                    </li>`;
+                });
+
+                html += '</ul>';
+                html += `<div class="q-feedback" id="feedback-${q.id}"></div>`;
+                html += '</div>';
+            });
+        });
+
+        // Submit area
+        const totalQ = sessionData.preguntas.length;
+        const answeredQ = Object.keys(answers).length;
+        const pct = Math.round((answeredQ / totalQ) * 100);
+
+        html += `<div class="submit-area" id="submitArea">
+            <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBar" style="width:${pct}%"></div></div>
+            <div class="progress-text" id="progressText">${answeredQ} de ${totalQ} preguntas respondidas</div>`;
+
+        if (isSubmitted) {
+            html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
+            if (!resultsVisible) {
+                html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
+            }
+        } else {
+            html += `<button class="btn-submit" id="btnSubmit" onclick="submitSession()" ${answeredQ < totalQ ? 'disabled' : ''}>
+                Enviar Respuestas (${answeredQ}/${totalQ})
+            </button>`;
+        }
+
+        html += '</div>';
+
+        main.innerHTML = html;
+
+        // Restore highlights
+        restoreHighlights();
+
+        // Show results if visible
+        if (isSubmitted && resultsVisible) {
+            showResults();
+        }
+    }
+
+    // ==================== SELECTION & HIGHLIGHTING ====================
+    // Highlighter buttons
+    document.querySelectorAll('.hl-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const color = this.dataset.color;
+            if (color === 'erase') {
+                activeHighlightColor = 'erase';
+                document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('hlTip').textContent = 'Selecciona texto destacado para borrarlo';
+                document.getElementById('hlTip').classList.add('show');
+            } else if (activeHighlightColor === color) {
+                activeHighlightColor = null;
+                this.classList.remove('active');
+                document.getElementById('hlTip').classList.remove('show');
+            } else {
+                activeHighlightColor = color;
+                document.querySelectorAll('.hl-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                document.getElementById('hlTip').textContent = 'Selecciona texto en los párrafos para destacar';
+                document.getElementById('hlTip').classList.add('show');
+            }
+        });
+    });
+
+    document.addEventListener('mouseup', handleTextSelection);
+    document.addEventListener('touchend', handleTextSelection);
+
+    function handleTextSelection() {
+        if (!activeHighlightColor) return;
+        const selection = window.getSelection();
+        if (!selection || selection.isCollapsed) return;
+
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        const pTextEl = container.nodeType === 3 ? container.parentElement.closest('.p-text') : container.closest('.p-text');
+        if (!pTextEl) return;
+
+        const textoId = pTextEl.dataset.texto;
+        const parrafoNum = pTextEl.dataset.parrafo;
+
+        if (activeHighlightColor === 'erase') {
+            // Find and remove highlight marks within selection
+            const marks = pTextEl.querySelectorAll('mark[data-hl]');
+            marks.forEach(mark => {
+                if (selection.containsNode(mark, true)) {
+                    const text = document.createTextNode(mark.textContent);
+                    mark.parentNode.replaceChild(text, mark);
+                }
+            });
+            pTextEl.normalize();
+        } else {
+            // Apply highlight
+            try {
+                const mark = document.createElement('mark');
+                mark.setAttribute('data-hl', activeHighlightColor);
+                range.surroundContents(mark);
+            } catch(e) {
+                // If selection crosses element boundaries, extract and wrap
+                const fragment = range.extractContents();
+                const mark = document.createElement('mark');
+                mark.setAttribute('data-hl', activeHighlightColor);
+                mark.appendChild(fragment);
+                range.insertNode(mark);
+            }
+        }
+
+        selection.removeAllRanges();
+        saveHighlightsState(textoId, parrafoNum, pTextEl);
+        isDirty = true;
+    }
+
+    function saveHighlightsState(textoId, parrafoNum, el) {
+        const key = textoId + '-p' + parrafoNum;
+        highlightsData[key] = el.innerHTML;
+    }
+
+    function restoreHighlights() {
+        for (const [key, html] of Object.entries(highlightsData)) {
+            const parts = key.split('-p');
+            const textoId = parts[0];
+            const parrafoNum = parts[1];
+            const el = document.getElementById('ptext-' + textoId + '-' + parrafoNum);
+            if (el && html) el.innerHTML = html;
+        }
+    }
+
+    // ==================== ANSWERS ====================
+    function selectAnswer(questionId, letter) {
+        if (isSubmitted) return;
+        answers[questionId] = letter;
+        isDirty = true;
+
+        // Update UI
+        const block = document.getElementById('qblock-' + questionId);
+        block.classList.add('answered');
+        block.querySelectorAll('.option-item').forEach(opt => {
+            opt.classList.remove('selected');
+            if (opt.dataset.letter === letter) opt.classList.add('selected');
+        });
+
+        // Update progress
+        updateProgress();
+    }
+
+    function updateProgress() {
+        const total = sessionData.preguntas.length;
+        const answered = Object.keys(answers).length;
+        const pct = Math.round((answered / total) * 100);
+        const bar = document.getElementById('progressBar');
+        const text = document.getElementById('progressText');
+        const btn = document.getElementById('btnSubmit');
+
+        if (bar) bar.style.width = pct + '%';
+        if (text) text.textContent = answered + ' de ' + total + ' preguntas respondidas';
+        if (btn) {
+            btn.disabled = answered < total;
+            btn.textContent = 'Enviar Respuestas (' + answered + '/' + total + ')';
+        }
+    }
+
+    // ==================== NOTES ====================
+    function onNoteChange(el) {
+        const key = el.dataset.noteKey;
+        notes[key] = el.value;
+        isDirty = true;
+    }
+
+    // ==================== TECHNIQUES TOGGLE ====================
+    function toggleTechniques() {
+        const content = document.getElementById('techContent');
+        const arrow = document.getElementById('techArrow');
+        content.classList.toggle('open');
+        arrow.classList.toggle('open');
+    }
+
+    // ==================== TIMER ====================
+    function startTimer() {
+        timerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+            const secs = (elapsed % 60).toString().padStart(2, '0');
+            document.getElementById('timer').textContent = '⏱ ' + mins + ':' + secs;
+        }, 1000);
+    }
+
+    // ==================== AUTO-SAVE ====================
+    async function autoSave() {
+        if (!currentUser || !sessionId) return;
+        const indicator = document.getElementById('saveIndicator');
+
+        try {
+            indicator.className = 'save-indicator saving';
+            indicator.textContent = '💾 Guardando...';
+
+            const saveData = {
+                answers: answers,
+                notes: notes,
+                highlights: highlightsData,
+                started_at: startTime,
+                last_save: Date.now(),
+                completada: isSubmitted,
+                tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000)
+            };
+
+            await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update(saveData);
+
+            // Also save to localStorage as backup
+            try {
+                localStorage.setItem('sesion_backup_' + sessionId, JSON.stringify(saveData));
+            } catch(e) { /* localStorage full */ }
+
+            indicator.className = 'save-indicator saved';
+            indicator.textContent = '💾 Guardado';
+            isDirty = false;
+        } catch(e) {
+            console.error('Auto-save error:', e);
+            indicator.className = 'save-indicator error';
+            indicator.textContent = '⚠️ Error al guardar';
+        }
+    }
+
+    // ==================== SUBMIT ====================
+    async function submitSession() {
+        if (isSubmitted) return;
+        const total = sessionData.preguntas.length;
+        const answered = Object.keys(answers).length;
+        if (answered < total) { showToast('Responde todas las preguntas antes de enviar.'); return; }
+
+        if (!confirm('¿Estás seguro/a de enviar tus respuestas? No podrás modificarlas después.')) return;
+
+        const btn = document.getElementById('btnSubmit');
+        btn.disabled = true;
+        btn.textContent = 'Enviando...';
+
+        try {
+            isSubmitted = true;
+
+            // Calculate results
+            let correct = 0;
+            const detail = {};
+            sessionData.preguntas.forEach(q => {
+                const isCorrect = answers[q.id] === q.correcta;
+                if (isCorrect) correct++;
+                detail[q.id] = { respuesta: answers[q.id], correcta: q.correcta, esCorrecta: isCorrect };
+            });
+
+            const porcentaje = Math.round((correct / total) * 100);
+
+            // Save response as completed
+            await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+                answers: answers,
+                notes: notes,
+                highlights: highlightsData,
+                completada: true,
+                submitted_at: Date.now(),
+                tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000)
+            });
+
+            // Save results
+            await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+                puntaje: correct,
+                total: total,
+                porcentaje: porcentaje,
+                detalle: detail,
+                nombre: studentData.nombre,
+                curso: studentData.curso,
+                submitted_at: Date.now()
+            });
+
+            // Update ranking
+            await db.ref(BASE + '/ranking/' + sessionId + '/' + studentData.curso + '/' + currentUser.uid).set({
+                nombre: studentData.nombre,
+                puntaje: correct,
+                porcentaje: porcentaje,
+                tiempo: Math.floor((Date.now() - startTime) / 1000)
+            });
+
+            showToast('✅ ¡Respuestas enviadas correctamente!');
+
+            // Re-render submit area
+            const submitArea = document.getElementById('submitArea');
+            let html = `<div class="progress-bar-container"><div class="progress-bar-fill" style="width:100%"></div></div>`;
+            html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente — ${correct}/${total}</p>`;
+
+            // Check if results visible
+            const resVisSnap = await db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value');
+            if (resVisSnap.val() === true) {
+                resultsVisible = true;
+                showResults();
+                html += `<p style="font-size:13px; color:#64748b;">Resultados: ${porcentaje}% de logro</p>`;
+            } else {
+                html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
+            }
+
+            html += `<a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Volver al Panel</a>`;
+            submitArea.innerHTML = html;
+
+            // Disable all options
+            document.querySelectorAll('.option-item').forEach(opt => opt.classList.add('disabled'));
+
+        } catch(e) {
+            console.error('Submit error:', e);
+            isSubmitted = false;
+            btn.disabled = false;
+            btn.textContent = 'Enviar Respuestas';
+            showToast('Error al enviar. Intenta de nuevo.');
+        }
+    }
+
+    // ==================== SHOW RESULTS ====================
+    function showResults() {
+        sessionData.preguntas.forEach(q => {
+            const block = document.getElementById('qblock-' + q.id);
+            const feedback = document.getElementById('feedback-' + q.id);
+            const userAnswer = answers[q.id];
+            const isCorrect = userAnswer === q.correcta;
+
+            block.classList.add(isCorrect ? 'correct' : 'incorrect');
+
+            block.querySelectorAll('.option-item').forEach(opt => {
+                opt.classList.add('disabled');
+                if (opt.dataset.letter === q.correcta) {
+                    opt.classList.add('is-correct');
+                }
+                if (opt.dataset.letter === userAnswer && !isCorrect) {
+                    opt.classList.add('selected-incorrect');
+                }
+                if (opt.dataset.letter === userAnswer && isCorrect) {
+                    opt.classList.add('selected-correct');
+                }
+            });
+
+            if (feedback) {
+                feedback.classList.add('show');
+                if (isCorrect) {
+                    feedback.className = 'q-feedback show correct';
+                    feedback.textContent = '✅ ¡Correcto! La respuesta es ' + q.correcta + '.';
+                } else {
+                    feedback.className = 'q-feedback show incorrect';
+                    feedback.textContent = '❌ Incorrecto. Tu respuesta: ' + userAnswer + '. La correcta es: ' + q.correcta + '.';
+                }
+            }
+        });
+    }
+
+    // ==================== UTILITIES ====================
+    function extractYoutubeId(url) {
+        if (!url) return null;
+        const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?#]+)/);
+        return match ? match[1] : null;
+    }
+
+    function showToast(msg) {
+        const toast = document.getElementById('toast');
+        toast.textContent = msg;
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+
+    // Save on page visibility change
+    document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isDirty) autoSave();
+    });
+    </script>
+</body>
+</html>

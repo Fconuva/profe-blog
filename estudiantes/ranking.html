@@ -158,8 +158,6 @@
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
 
-        let allStudents = {};
-        let allResults = {};
         let allRanking = {};
         let allSessions = {};
         let currentUid = null;
@@ -173,14 +171,10 @@
 
         async function loadData() {
             try {
-                const [estSnap, resSnap, rankSnap, sesSnap] = await Promise.all([
-                    db.ref(BASE + '/estudiantes').once('value'),
-                    db.ref(BASE + '/resultados').once('value'),
+                const [rankSnap, sesSnap] = await Promise.all([
                     db.ref(BASE + '/ranking').once('value'),
                     db.ref(BASE + '/sesiones').once('value')
                 ]);
-                allStudents = estSnap.val() || {};
-                allResults = resSnap.val() || {};
                 allRanking = rankSnap.val() || {};
                 allSessions = sesSnap.val() || {};
 
@@ -201,21 +195,28 @@
         }
 
         function loadComparison() {
-            const courseAvgs = { '2A-HC': [], '2B-HC': [] };
-            for (const [uid, est] of Object.entries(allStudents)) {
-                if (!courseAvgs[est.curso]) continue;
-                let total = 0, count = 0;
-                for (const sesId of Object.keys(allResults)) {
-                    if (allResults[sesId][uid]) {
-                        total += allResults[sesId][uid].porcentaje || 0;
-                        count++;
+            const courseScores = { '2A-HC': {}, '2B-HC': {} };
+            // Aggregate from ranking node: ranking/sesionId/curso/uid
+            for (const [sesId, cursos] of Object.entries(allRanking)) {
+                for (const [curso, students] of Object.entries(cursos || {})) {
+                    if (!courseScores[curso]) continue;
+                    for (const [uid, data] of Object.entries(students || {})) {
+                        if (!courseScores[curso][uid]) courseScores[curso][uid] = { total: 0, count: 0 };
+                        courseScores[curso][uid].total += (data.porcentaje || 0);
+                        courseScores[curso][uid].count++;
                     }
                 }
-                if (count > 0) courseAvgs[est.curso].push(total / count);
             }
 
-            const avgA = courseAvgs['2A-HC'].length ? Math.round(courseAvgs['2A-HC'].reduce((a,b)=>a+b,0)/courseAvgs['2A-HC'].length) : 0;
-            const avgB = courseAvgs['2B-HC'].length ? Math.round(courseAvgs['2B-HC'].reduce((a,b)=>a+b,0)/courseAvgs['2B-HC'].length) : 0;
+            function courseAvg(obj) {
+                const students = Object.values(obj);
+                if (students.length === 0) return 0;
+                const avgs = students.map(s => s.count > 0 ? s.total / s.count : 0);
+                return Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length);
+            }
+
+            const avgA = courseAvg(courseScores['2A-HC']);
+            const avgB = courseAvg(courseScores['2B-HC']);
 
             document.getElementById('globalA').textContent = avgA + '%';
             document.getElementById('globalB').textContent = avgB + '%';
@@ -232,49 +233,38 @@
 
         function loadRanking() {
             const selectedSession = document.getElementById('sessionSelect').value;
-            const scores = [];
+            const studentMap = {}; // uid -> aggregated data
 
-            for (const [uid, est] of Object.entries(allStudents)) {
-                let totalPuntaje = 0, totalPct = 0, totalTiempo = 0, count = 0;
-
-                if (selectedSession === 'all') {
-                    for (const sesId of Object.keys(allRanking)) {
-                        const cursoData = allRanking[sesId];
-                        for (const curso of Object.keys(cursoData || {})) {
-                            if (cursoData[curso] && cursoData[curso][uid]) {
-                                const r = cursoData[curso][uid];
-                                totalPuntaje += r.puntaje || 0;
-                                totalPct += r.porcentaje || 0;
-                                totalTiempo += r.tiempo || 0;
-                                count++;
-                            }
-                        }
-                    }
-                } else {
-                    const sesRanking = allRanking[selectedSession] || {};
-                    for (const curso of Object.keys(sesRanking)) {
-                        if (sesRanking[curso] && sesRanking[curso][uid]) {
-                            const r = sesRanking[curso][uid];
-                            totalPuntaje = r.puntaje || 0;
-                            totalPct = r.porcentaje || 0;
-                            totalTiempo = r.tiempo || 0;
-                            count = 1;
+            if (selectedSession === 'all') {
+                for (const [sesId, cursos] of Object.entries(allRanking)) {
+                    for (const [curso, students] of Object.entries(cursos || {})) {
+                        for (const [uid, r] of Object.entries(students || {})) {
+                            if (!studentMap[uid]) studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: 0, totalPct: 0, totalTiempo: 0, count: 0 };
+                            studentMap[uid].totalPuntaje += r.puntaje || 0;
+                            studentMap[uid].totalPct += r.porcentaje || 0;
+                            studentMap[uid].totalTiempo += r.tiempo || 0;
+                            studentMap[uid].count++;
                         }
                     }
                 }
-
-                if (count > 0) {
-                    scores.push({
-                        uid: uid,
-                        nombre: est.nombre,
-                        curso: est.curso,
-                        puntaje: totalPuntaje,
-                        promedio: Math.round(totalPct / count),
-                        tiempo: totalTiempo,
-                        sesiones: count
-                    });
+            } else {
+                const sesRanking = allRanking[selectedSession] || {};
+                for (const [curso, students] of Object.entries(sesRanking)) {
+                    for (const [uid, r] of Object.entries(students || {})) {
+                        studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: r.puntaje || 0, totalPct: r.porcentaje || 0, totalTiempo: r.tiempo || 0, count: 1 };
+                    }
                 }
             }
+
+            const scores = Object.entries(studentMap).map(([uid, s]) => ({
+                uid: uid,
+                nombre: s.nombre,
+                curso: s.curso,
+                puntaje: s.totalPuntaje,
+                promedio: Math.round(s.totalPct / s.count),
+                tiempo: s.totalTiempo,
+                sesiones: s.count
+            }));
 
             // Sort: most correct first, then fastest time as tiebreaker
             scores.sort((a, b) => {

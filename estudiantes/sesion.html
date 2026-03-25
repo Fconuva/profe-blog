@@ -459,8 +459,32 @@
             if (sesSnap.exists()) {
                 sessionData = sesSnap.val();
                 sessionData.id = sessionId;
+                // Flatten contenido wrapper if present (admin preload nests textos/preguntas inside contenido)
+                if (sessionData.contenido) {
+                    if (sessionData.contenido.textos && !sessionData.textos) sessionData.textos = sessionData.contenido.textos;
+                    if (sessionData.contenido.preguntas && !sessionData.preguntas) sessionData.preguntas = sessionData.contenido.preguntas;
+                }
+                // Convert Firebase objects back to arrays if needed
+                if (sessionData.textos && !Array.isArray(sessionData.textos)) {
+                    sessionData.textos = Object.values(sessionData.textos);
+                }
+                if (sessionData.preguntas && !Array.isArray(sessionData.preguntas)) {
+                    sessionData.preguntas = Object.values(sessionData.preguntas);
+                }
+                // Ensure parrafos arrays inside each texto
+                if (sessionData.textos) {
+                    sessionData.textos.forEach(t => {
+                        if (t.parrafos && !Array.isArray(t.parrafos)) t.parrafos = Object.values(t.parrafos);
+                    });
+                }
+                // Ensure opciones arrays inside each pregunta
+                if (sessionData.preguntas) {
+                    sessionData.preguntas.forEach(q => {
+                        if (q.opciones && !Array.isArray(q.opciones)) q.opciones = Object.values(q.opciones);
+                    });
+                }
             }
-        } catch(e) { /* fallback */ }
+        } catch(e) { console.error('Error loading session from Firebase:', e); }
 
         if (!sessionData && SESSIONS_EMBEDDED[sessionId]) {
             sessionData = SESSIONS_EMBEDDED[sessionId];

@@ -225,20 +225,29 @@
             const container = document.getElementById('sessionList');
             try {
                 const sesSnap = await db.ref(BASE + '/sesiones').orderByChild('orden').once('value');
-                const respSnap = await db.ref(BASE + '/respuestas').once('value');
-                const resSnap = await db.ref(BASE + '/resultados').once('value');
-                const respuestas = respSnap.val() || {};
-                const resultados = resSnap.val() || {};
 
                 if (!sesSnap.exists()) {
                     container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
                     return;
                 }
 
-                let html = '';
                 const sesiones = [];
                 sesSnap.forEach(s => { sesiones.push({ id: s.key, ...s.val() }); });
                 sesiones.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+                // Read only the current student's responses and results per session
+                const respuestas = {};
+                const resultados = {};
+                await Promise.all(sesiones.map(async (ses) => {
+                    try {
+                        const [myRespSnap, myResSnap] = await Promise.all([
+                            db.ref(BASE + '/respuestas/' + ses.id + '/' + uid).once('value'),
+                            db.ref(BASE + '/resultados/' + ses.id + '/' + uid).once('value')
+                        ]);
+                        if (myRespSnap.exists()) respuestas[ses.id] = { [uid]: myRespSnap.val() };
+                        if (myResSnap.exists()) resultados[ses.id] = { [uid]: myResSnap.val() };
+                    } catch(e) {}
+                }));
 
                 sesiones.forEach((ses, idx) => {
                     const isActive = ses.activa !== false;
@@ -289,23 +298,25 @@
 
         async function loadRankingPreview() {
             try {
-                const resSnap = await db.ref(BASE + '/resultados').once('value');
-                const estSnap = await db.ref(BASE + '/estudiantes').once('value');
-                const resultados = resSnap.val() || {};
-                const estudiantes = estSnap.val() || {};
+                const rankSnap = await db.ref(BASE + '/ranking').once('value');
+                const rankingData = rankSnap.val() || {};
 
                 const courseScores = { '2A-HC': [], '2B-HC': [] };
-                // Aggregate scores per student
-                for (const [uid, est] of Object.entries(estudiantes)) {
-                    if (!courseScores[est.curso]) continue;
-                    let totalPct = 0, count = 0;
-                    for (const sesId of Object.keys(resultados)) {
-                        if (resultados[sesId][uid]) {
-                            totalPct += resultados[sesId][uid].porcentaje || 0;
-                            count++;
+                // Aggregate scores per student from ranking data (already organized by session/course/uid)
+                const studentAvgs = {};
+                for (const [sesId, cursos] of Object.entries(rankingData)) {
+                    for (const [curso, students] of Object.entries(cursos)) {
+                        for (const [uid, data] of Object.entries(students)) {
+                            if (!studentAvgs[uid]) studentAvgs[uid] = { curso, total: 0, count: 0 };
+                            studentAvgs[uid].total += (data.porcentaje || 0);
+                            studentAvgs[uid].count++;
                         }
                     }
-                    if (count > 0) courseScores[est.curso].push(totalPct / count);
+                }
+                for (const [uid, info] of Object.entries(studentAvgs)) {
+                    if (courseScores[info.curso]) {
+                        courseScores[info.curso].push(info.count > 0 ? info.total / info.count : 0);
+                    }
                 }
 
                 const avgA = courseScores['2A-HC'].length ? Math.round(courseScores['2A-HC'].reduce((a,b) => a+b, 0) / courseScores['2A-HC'].length) : 0;
@@ -340,18 +351,21 @@
                 document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' disponibles';
                 document.getElementById('statAvg').textContent = completadas > 0 ? Math.round(totalPct / completadas) + '%' : '-';
 
-                // Ranking position
-                const estSnap = await db.ref(BASE + '/estudiantes').once('value');
-                const estudiantes = estSnap.val() || {};
-                const scores = [];
-                for (const [euid, est] of Object.entries(estudiantes)) {
-                    if (est.curso !== curso) continue;
-                    let pct = 0, cnt = 0;
-                    for (const sesId of Object.keys(resultados)) {
-                        if (resultados[sesId][euid]) { pct += resultados[sesId][euid].porcentaje || 0; cnt++; }
+                // Ranking position: use ranking node instead of estudiantes collection
+                const rankSnap = await db.ref(BASE + '/ranking').once('value');
+                const rankingData = rankSnap.val() || {};
+                const studentAvgs = {};
+                for (const [sesId, cursos] of Object.entries(rankingData)) {
+                    if (!cursos[curso]) continue;
+                    for (const [euid, data] of Object.entries(cursos[curso])) {
+                        if (!studentAvgs[euid]) { studentAvgs[euid] = { total: 0, count: 0 }; }
+                        studentAvgs[euid].total += (data.porcentaje || 0);
+                        studentAvgs[euid].count++;
                     }
-                    scores.push({ uid: euid, avg: cnt > 0 ? pct / cnt : 0 });
                 }
+                const scores = Object.entries(studentAvgs).map(([euid, info]) => ({
+                    uid: euid, avg: info.count > 0 ? info.total / info.count : 0
+                }));
                 scores.sort((a, b) => b.avg - a.avg);
                 const pos = scores.findIndex(s => s.uid === uid);
                 document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';

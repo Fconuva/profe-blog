@@ -153,6 +153,7 @@
 <div class="layout">
     <nav class="sidebar" id="sidebarNav">
         <a href="#" class="active" data-section="overview" onclick="showSection('overview',this)"><span class="icon">📊</span>Panel Principal</a>
+        <a href="#" data-section="live" onclick="showSection('live',this)"><span class="icon">🔴</span>En Vivo</a>
         <a href="#" data-section="students" onclick="showSection('students',this)"><span class="icon">👥</span>Estudiantes</a>
         <a href="#" data-section="sessions" onclick="showSection('sessions',this)"><span class="icon">📚</span>Sesiones</a>
         <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
@@ -168,6 +169,31 @@
                 <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">Actividad Reciente</h3>
                 <table><thead><tr><th>Estudiante</th><th>Sesión</th><th>Logro</th><th>Fecha</th></tr></thead>
                 <tbody id="recentActivity"></tbody></table>
+            </div>
+            <!-- Messaging -->
+            <div class="panel-table" style="margin-top:16px">
+                <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">📢 Enviar Mensaje a Estudiantes</h3>
+                <div style="padding:0 14px 14px;display:flex;gap:8px;align-items:flex-end">
+                    <textarea id="adminMsgText" rows="2" placeholder="Escribe un mensaje para todos los estudiantes..." style="flex:1;padding:10px;border:1px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:inherit;resize:vertical"></textarea>
+                    <button class="btn btn-primary" onclick="sendAdminMessage()" style="white-space:nowrap">🔔 Enviar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================== EN VIVO ================== -->
+        <div class="section" id="sec-live">
+            <h2>🔴 Progreso En Vivo</h2>
+            <div class="search-bar">
+                <select id="liveSesSelect" onchange="renderLiveProgress()">
+                    <option value="">Selecciona sesión...</option>
+                </select>
+                <button class="btn btn-primary" onclick="refreshLiveData()" id="btnRefreshLive">🔄 Actualizar</button>
+                <span id="liveLastUpdate" style="font-size:11px;color:#94a3b8;margin-left:auto"></span>
+            </div>
+            <div class="stat-row" id="liveStats"></div>
+            <div class="panel-table">
+                <table><thead><tr><th>Estudiante</th><th>Curso</th><th>Respondidas</th><th>Estado</th><th>Última Actividad</th><th>Acciones</th></tr></thead>
+                <tbody id="liveBody"></tbody></table>
             </div>
         </div>
 
@@ -321,6 +347,24 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
     </div>
 </div>
 
+<!-- View Session -->
+<div class="modal-overlay" id="modal-viewSession">
+    <div class="modal" style="max-width:800px;max-height:85vh;overflow-y:auto">
+        <h3 id="viewSessionTitle"></h3>
+        <div id="viewSessionContent" style="font-size:13px;line-height:1.7"></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('viewSession')">Cerrar</button></div>
+    </div>
+</div>
+
+<!-- Student Responses Detail -->
+<div class="modal-overlay" id="modal-studentResponses">
+    <div class="modal" style="max-width:850px;max-height:90vh;overflow-y:auto">
+        <h3 id="respStudentName"></h3>
+        <div id="respStudentContent" style="font-size:13px;line-height:1.7"></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('studentResponses')">Cerrar</button></div>
+    </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -396,6 +440,7 @@ async function loadAllData(){
     renderStudents();
     renderSessions();
     populateResultsDropdown();
+    populateLiveDropdown();
 }
 
 /* ============ NAVIGATION ============ */
@@ -414,6 +459,7 @@ function initMobileNav(){
     const nav=document.getElementById('mobileNav');
     const links=[
         {id:'overview',icon:'📊',label:'Panel'},
+        {id:'live',icon:'🔴',label:'En Vivo'},
         {id:'students',icon:'👥',label:'Estudiantes'},
         {id:'sessions',icon:'📚',label:'Sesiones'},
         {id:'results',icon:'📈',label:'Resultados'},
@@ -463,6 +509,102 @@ function renderOverview(){
         const date=a.ts?new Date(a.ts).toLocaleDateString('es-CL'):'—';
         return `<tr><td>${a.nombre}</td><td style="font-size:12px">${a.sesion}</td><td><span class="badge ${lvl}">${a.porcentaje}%</span></td><td style="font-size:12px;color:#64748b">${date}</td></tr>`;
     }).join('')||'<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:20px">Sin actividad aún</td></tr>';
+}
+
+/* ============ LIVE PROGRESS ============ */
+function populateLiveDropdown(){
+    const sel=document.getElementById('liveSesSelect');
+    const cur=sel.value;
+    let opts='<option value="">Selecciona sesión...</option>';
+    Object.entries(sessions).forEach(([id,s])=>{
+        opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
+    });
+    sel.innerHTML=opts;
+}
+
+async function refreshLiveData(){
+    const btn=document.getElementById('btnRefreshLive');
+    btn.textContent='⏳ Cargando...';btn.disabled=true;
+    try{
+        const [resS,respS]=await Promise.all([
+            db.ref(BASE+'/resultados').once('value'),
+            db.ref(BASE+'/respuestas').once('value')
+        ]);
+        allResults=resS.val()||{};
+        allResponses=respS.val()||{};
+        document.getElementById('liveLastUpdate').textContent='Actualizado: '+new Date().toLocaleTimeString('es-CL');
+        renderLiveProgress();
+        toast('Datos actualizados','ok');
+    }catch(e){toast('Error al actualizar','err');}
+    btn.textContent='🔄 Actualizar';btn.disabled=false;
+}
+
+function renderLiveProgress(){
+    populateLiveDropdown();
+    const sesId=document.getElementById('liveSesSelect').value;
+    if(!sesId){
+        document.getElementById('liveStats').innerHTML='';
+        document.getElementById('liveBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
+        return;
+    }
+    const ses=sessions[sesId];
+    const totalQ=(ses.contenido?.preguntas||[]).length;
+    let totalNotes=0;
+    (ses.contenido?.textos||[]).forEach(t=>{totalNotes+=(t.parrafos||[]).length;});
+    const responses=allResponses[sesId]||{};
+    const results=allResults[sesId]||{};
+
+    let working=0,submitted=0,notStarted=0;
+    const rows=[];
+    for(const[uid,est]of Object.entries(students)){
+        const resp=responses[uid];
+        const res=results[uid];
+        let status,statusBadge,answeredCount=0,filledNotes=0,lastAct='—';
+
+        if(res){
+            status='submitted';submitted++;
+            statusBadge=`<span class="badge badge-green">✅ Enviado (${res.porcentaje}%)</span>`;
+            answeredCount=totalQ;
+            filledNotes=totalNotes;
+            lastAct=res.submitted_at?new Date(res.submitted_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
+        } else if(resp){
+            status='working';working++;
+            const ans=resp.answers||{};
+            answeredCount=Object.keys(ans).length;
+            const nts=resp.notes||{};
+            filledNotes=Object.values(nts).filter(n=>n&&n.trim()).length;
+            statusBadge=`<span class="badge badge-amber">⏳ Trabajando</span>`;
+            lastAct=resp.last_save?new Date(resp.last_save).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
+        } else {
+            status='notstarted';notStarted++;
+            statusBadge='<span class="badge badge-gray">🔘 Sin iniciar</span>';
+        }
+
+        rows.push({uid,nombre:est.nombre,curso:est.curso,status,answeredCount,filledNotes,lastAct,statusBadge});
+    }
+    // Sort: working first, then not started, then submitted
+    const order={working:0,notstarted:1,submitted:2};
+    rows.sort((a,b)=>order[a.status]-order[b.status]||(a.nombre||'').localeCompare(b.nombre||''));
+
+    document.getElementById('liveStats').innerHTML=`
+        <div class="stat-card" style="border-left:4px solid #f59e0b"><div class="label">⏳ Trabajando</div><div class="value">${working}</div></div>
+        <div class="stat-card" style="border-left:4px solid #16a34a"><div class="label">✅ Enviados</div><div class="value">${submitted}</div></div>
+        <div class="stat-card" style="border-left:4px solid #94a3b8"><div class="label">🔘 Sin iniciar</div><div class="value">${notStarted}</div></div>
+        <div class="stat-card" style="border-left:4px solid #3b82f6"><div class="label">📊 Total</div><div class="value">${Object.keys(students).length}</div></div>
+    `;
+
+    document.getElementById('liveBody').innerHTML=rows.map(r=>{
+        const prog=totalQ>0?`${r.answeredCount}/${totalQ} preg · ${r.filledNotes}/${totalNotes} notas`:'—';
+        const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button>`:'';
+        return `<tr>
+            <td><strong>${r.nombre}</strong></td>
+            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${r.curso==='2A-HC'?'2°A':'2°B'}</span></td>
+            <td style="font-size:12px">${prog}</td>
+            <td>${r.statusBadge}</td>
+            <td style="font-size:12px;color:#64748b">${r.lastAct}</td>
+            <td>${actionBtn}</td>
+        </tr>`;
+    }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
 }
 
 /* ============ STUDENTS ============ */
@@ -660,6 +802,7 @@ function renderSessions(){
             <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.resultados_visibles?'checked':''} onchange="toggleSesField('${s.id}','resultados_visibles',this.checked)"><span class="slider"></span></label></td>
             <td>
+                <button class="btn btn-sm" style="background:#3b82f6;color:#fff" onclick="viewSession('${s.id}')">👁 Ver</button>
                 <button class="btn btn-sm btn-warn" onclick="resetSessionResults('${s.id}')">🔄 Reset</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteSession('${s.id}')">🗑</button>
             </td></tr>`;
@@ -787,6 +930,105 @@ async function resetSessionResults(sesId){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+function viewSession(sesId){
+    const ses=sessions[sesId];if(!ses)return;
+    document.getElementById('viewSessionTitle').textContent=ses.titulo||sesId;
+    const c=ses.contenido||{};
+    const textos=c.textos||[];
+    const pregs=c.preguntas||[];
+    let html=`<p style="color:#64748b;margin-bottom:12px">${ses.descripcion||''}</p>`;
+    html+=`<p style="margin-bottom:16px"><strong>${textos.length} textos</strong> · <strong>${pregs.length} preguntas</strong> · Estado: ${ses.activa!==false?'🟢 Activa':'🔴 Inactiva'} · Resultados: ${ses.resultados_visibles?'👁 Visibles':'🔒 Ocultos'}</p>`;
+    textos.forEach(t=>{
+        html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px">`;
+        html+=`<h4 style="font-size:14px;margin-bottom:4px">${t.titulo}</h4>`;
+        html+=`<span style="font-size:11px;color:#94a3b8">${t.tipo} — ${t.subtipo}</span>`;
+        (t.parrafos||[]).forEach(p=>{
+            html+=`<p style="margin-top:8px;font-size:13px"><strong>P${p.num}:</strong> ${p.texto.substring(0,120)}...</p>`;
+        });
+        html+='</div>';
+    });
+    html+='<h4 style="margin:16px 0 8px;font-size:14px">Preguntas y Claves</h4>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+    html+='<tr style="background:#f1f5f9"><th style="padding:6px;text-align:left">N°</th><th style="text-align:left">Enunciado</th><th>Texto</th><th>Correcta</th></tr>';
+    pregs.forEach(q=>{
+        html+=`<tr style="border-bottom:1px solid #e2e8f0"><td style="padding:6px;font-weight:700">${q.id}</td><td style="padding:6px">${q.enunciado.substring(0,80)}...</td><td style="text-align:center;font-size:11px">${q.textoRef}</td><td style="text-align:center;font-weight:800;color:#16a34a;font-size:15px">${q.correcta}</td></tr>`;
+    });
+    html+='</table>';
+    document.getElementById('viewSessionContent').innerHTML=html;
+    openModal('viewSession');
+}
+
+function viewStudentResponses(uid, sesId){
+    const est=students[uid];
+    const ses=sessions[sesId];
+    const res=allResults[sesId]?.[uid];
+    const resp=allResponses[sesId]?.[uid];
+    if(!est||!ses)return;
+
+    document.getElementById('respStudentName').textContent=est.nombre+' — '+(ses.titulo||sesId);
+
+    let html='';
+    // Summary bar
+    if(res){
+        const color=res.porcentaje>=60?'#16a34a':'#dc2626';
+        html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap">`;
+        html+=`<div><strong>Puntaje:</strong> ${res.puntaje}/${res.total}</div>`;
+        html+=`<div><strong>Logro:</strong> <span style="color:${color};font-weight:800">${res.porcentaje}%</span></div>`;
+        html+=`<div><strong>Nivel:</strong> ${getLevel(res.porcentaje)}</div>`;
+        if(res.notas_completadas) html+=`<div><strong>Notas:</strong> ${res.notas_completadas}</div>`;
+        html+=`</div>`;
+    }
+
+    // Questions detail
+    const pregs=ses.contenido?.preguntas||[];
+    const answers=resp?.answers||res?.detalle||{};
+    html+='<h4 style="font-size:14px;margin-bottom:8px">Respuestas por Pregunta</h4>';
+    pregs.forEach(q=>{
+        const detail=res?.detalle?.[q.id];
+        const userAns=detail?.respuesta||answers[q.id]||'—';
+        const isCorrect=detail?.esCorrecta||(userAns===q.correcta);
+        const icon=isCorrect?'✅':'❌';
+        const bg=isCorrect?'#f0fdf4':'#fef2f2';
+        const border=isCorrect?'#86efac':'#fca5a5';
+        html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
+        html+=`<div style="font-weight:700;font-size:12px">${icon} P${q.id}. ${q.enunciado}</div>`;
+        html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${q.correcta}</strong></div>`;
+        // Show options
+        (q.opciones||[]).forEach(o=>{
+            const isUser=o.letra===userAns;
+            const isCor=o.letra===q.correcta;
+            const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
+            html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.letra}) ${o.texto}</div>`;
+        });
+        html+='</div>';
+    });
+
+    // Notes
+    const notesData=res?.notas||resp?.notes||{};
+    const noteKeys=Object.keys(notesData);
+    if(noteKeys.length>0){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">📝 Notas del Estudiante</h4>';
+        const textos=ses.contenido?.textos||[];
+        textos.forEach(t=>{
+            const tNotes=(t.parrafos||[]).map(p=>{
+                const key=t.id+'-p'+p.num;
+                return {num:p.num, note:notesData[key]||''};
+            }).filter(n=>n.note.trim());
+            if(tNotes.length>0){
+                html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:8px">`;
+                html+=`<div style="font-weight:700;font-size:12px;margin-bottom:4px">${t.titulo}</div>`;
+                tNotes.forEach(n=>{
+                    html+=`<div style="font-size:12px;color:#92400e"><strong>P${n.num}:</strong> ${n.note}</div>`;
+                });
+                html+='</div>';
+            }
+        });
+    }
+
+    document.getElementById('respStudentContent').innerHTML=html;
+    openModal('studentResponses');
+}
+
 async function deleteSession(sesId){
     if(!confirm('¿ELIMINAR la sesión "'+sessions[sesId]?.titulo+'" y todos sus datos asociados?'))return;
     try{
@@ -866,7 +1108,10 @@ function loadResults(){
             <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
             <td>${getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
-            <td><button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">Ver detalle</button></td>
+            <td>
+                <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤 Perfil</button>
+                <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Respuestas</button>
+            </td>
         </tr>`;
     }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';
 }
@@ -998,6 +1243,21 @@ function exportCSV(type){
     a.href=url;a.download='reporte_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();URL.revokeObjectURL(url);
     toast('CSV descargado','ok');
+}
+
+/* ============ MESSAGING ============ */
+async function sendAdminMessage(){
+    const text=document.getElementById('adminMsgText').value.trim();
+    if(!text){toast('Escribe un mensaje','err');return;}
+    try{
+        await db.ref(BASE+'/mensajes').push({
+            texto:text,
+            from:currentUser.uid,
+            timestamp:Date.now()
+        });
+        document.getElementById('adminMsgText').value='';
+        toast('🔔 Mensaje enviado a los estudiantes','ok');
+    }catch(e){toast('Error al enviar: '+e.message,'err');}
 }
 
 /* ============ MODALS & TOAST ============ */

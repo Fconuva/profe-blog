@@ -132,6 +132,26 @@
         .option-item.selected .option-letter { background:#1e40af; color:#fff; }
         .option-item.disabled { pointer-events:none; opacity:.8; }
 
+        /* DISTRACTOR MARKING */
+        .option-item.distractor { opacity:.45; border-style:dashed; border-color:#fca5a5; background:repeating-linear-gradient(135deg,transparent,transparent 8px,rgba(252,165,165,.08) 8px,rgba(252,165,165,.08) 16px); }
+        .option-item.distractor span:last-child { text-decoration:line-through; text-decoration-color:#dc2626; }
+        .option-item.distractor .option-letter { background:#fee2e2; color:#dc2626; }
+        .option-item.distractor.selected { opacity:.65; }
+        .distractor-tip { font-size:10px; color:#94a3b8; margin-top:2px; margin-bottom:12px; }
+
+        /* BELL NOTIFICATION */
+        .bell-btn { position:relative; background:none; border:none; font-size:20px; cursor:pointer; padding:4px; line-height:1; }
+        .bell-dot { position:absolute; top:-2px; right:-2px; width:10px; height:10px; background:#dc2626; border-radius:50%; display:none; animation:bellpulse 1s infinite; }
+        .bell-dot.show { display:block; }
+        @keyframes bellpulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+        .msg-popup { position:fixed; top:60px; right:16px; background:#fff; border-radius:12px; padding:16px 20px; max-width:340px; width:calc(100% - 32px); box-shadow:0 8px 30px rgba(0,0,0,.25); z-index:300; display:none; border-left:4px solid #1e40af; }
+        .msg-popup.show { display:block; animation:slideIn .2s ease-out; }
+        @keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+        .msg-popup h4 { font-size:14px; color:#1e40af; margin-bottom:6px; }
+        .msg-popup p { font-size:13px; color:#334155; line-height:1.5; white-space:pre-wrap; }
+        .msg-popup .msg-time { font-size:11px; color:#94a3b8; margin-top:8px; }
+        .msg-popup .msg-close { float:right; background:none; border:none; font-size:18px; cursor:pointer; color:#94a3b8; margin:-4px -4px 0 0; }
+
         /* FEEDBACK (shown after results revealed) */
         .q-feedback { margin-top:10px; padding:10px 14px; border-radius:8px; font-size:13px; line-height:1.5; display:none; }
         .q-feedback.show { display:block; }
@@ -209,6 +229,7 @@
             <h1 id="sessionTitle">Cargando...</h1>
         </div>
         <div class="header-right">
+            <button class="bell-btn" id="bellBtn" onclick="toggleMsgPopup()" title="Mensajes del profesor">🔔<span class="bell-dot" id="bellDot"></span></button>
             <span class="timer" id="timer">⏱ 00:00</span>
             <span class="save-indicator saved" id="saveIndicator">💾 Guardado</span>
         </div>
@@ -232,6 +253,14 @@
     <!-- MAIN -->
     <div class="main" id="mainContent">
         <div style="text-align:center; padding:60px; color:#94a3b8;">Cargando sesión...</div>
+    </div>
+
+    <!-- MESSAGE POPUP -->
+    <div class="msg-popup" id="msgPopup">
+        <button class="msg-close" onclick="closeMsgPopup()">✕</button>
+        <h4>📢 Mensaje del Profesor</h4>
+        <p id="msgText"></p>
+        <div class="msg-time" id="msgTime"></div>
     </div>
 
     <!-- TOAST -->
@@ -542,6 +571,8 @@
     let resultsVisible = false;
     let activeHighlightColor = null;
     let isDirty = false;
+    let distractors = {};
+    let lastMsgId = null;
 
     // ==================== INIT ====================
     const urlParams = new URLSearchParams(window.location.search);
@@ -633,11 +664,12 @@
                 answers = saved.answers || {};
                 notes = saved.notes || {};
                 highlightsData = saved.highlights || {};
+                distractors = saved.distractors || {};
                 isSubmitted = saved.completada || false;
                 if (saved.started_at) startTime = saved.started_at;
             }
 
-            // Check if results are visible
+            // Check if results are visible (real-time listener)
             const sesRef = await db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value');
             resultsVisible = sesRef.val() === true;
 
@@ -645,9 +677,21 @@
             if (isSubmitted && resultsVisible) {
                 const resSnap = await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).once('value');
                 if (resSnap.exists()) {
-                    // Results will be shown
+                    // Results will be shown in renderSession
                 }
             }
+
+            // Listen for real-time changes to resultados_visibles
+            db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').on('value', snap => {
+                const newVal = snap.val() === true;
+                if (newVal !== resultsVisible) {
+                    resultsVisible = newVal;
+                    if (isSubmitted && resultsVisible) {
+                        showResults();
+                        showToast('📊 ¡El profesor ha activado los resultados!');
+                    }
+                }
+            });
         } catch(e) { console.error('Error loading progress:', e); }
     }
 
@@ -732,14 +776,16 @@
                     const isSelected = selectedAnswer === opt.letra;
                     let optClass = isSelected ? 'selected' : '';
                     if (isSubmitted) optClass += ' disabled';
+                    if (distractors[q.id] && distractors[q.id].includes(opt.letra)) optClass += ' distractor';
 
-                    html += `<li class="option-item ${optClass}" data-question="${q.id}" data-letter="${opt.letra}" onclick="selectAnswer('${q.id}','${opt.letra}')">
+                    html += `<li class="option-item ${optClass}" data-question="${q.id}" data-letter="${opt.letra}" onclick="selectAnswer('${q.id}','${opt.letra}')" oncontextmenu="toggleDistractor('${q.id}','${opt.letra}',event)">
                         <span class="option-letter">${opt.letra}</span>
                         <span>${opt.texto}</span>
                     </li>`;
                 });
 
                 html += '</ul>';
+                if (!isSubmitted) html += '<div class="distractor-tip">💡 Clic derecho en una alternativa para tacharla como distractor</div>';
                 html += `<div class="q-feedback" id="feedback-${q.id}"></div>`;
                 html += '</div>';
             });
@@ -748,11 +794,15 @@
         // Submit area
         const totalQ = sessionData.preguntas.length;
         const answeredQ = Object.keys(answers).length;
-        const pct = Math.round((answeredQ / totalQ) * 100);
+        const totalN = getTotalNotes();
+        const filledN = getFilledNotes();
+        const totalItems = totalQ + totalN;
+        const doneItems = answeredQ + filledN;
+        const pct = Math.round((doneItems / totalItems) * 100);
 
         html += `<div class="submit-area" id="submitArea">
             <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBar" style="width:${pct}%"></div></div>
-            <div class="progress-text" id="progressText">${answeredQ} de ${totalQ} preguntas respondidas</div>`;
+            <div class="progress-text" id="progressText">${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas</div>`;
 
         if (isSubmitted) {
             html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
@@ -760,8 +810,9 @@
                 html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
             }
         } else {
-            html += `<button class="btn-submit" id="btnSubmit" onclick="submitSession()" ${answeredQ < totalQ ? 'disabled' : ''}>
-                Enviar Respuestas (${answeredQ}/${totalQ})
+            const allDone = answeredQ >= totalQ && filledN >= totalN;
+            html += `<button class="btn-submit" id="btnSubmit" onclick="submitSession()" ${!allDone ? 'disabled' : ''}>
+                ${allDone ? 'Enviar Respuestas ✓' : 'Faltan '+((totalQ-answeredQ)+(totalN-filledN))+' items'}
             </button>`;
         }
 
@@ -883,19 +934,53 @@
         updateProgress();
     }
 
+    // ==================== DISTRACTOR MARKING ====================
+    function toggleDistractor(questionId, letter, event) {
+        event.preventDefault();
+        if (isSubmitted) return;
+        if (!distractors[questionId]) distractors[questionId] = [];
+        const idx = distractors[questionId].indexOf(letter);
+        if (idx >= 0) {
+            distractors[questionId].splice(idx, 1);
+        } else {
+            distractors[questionId].push(letter);
+        }
+        isDirty = true;
+        // Update UI
+        const block = document.getElementById('qblock-' + questionId);
+        block.querySelectorAll('.option-item').forEach(opt => {
+            const isD = distractors[questionId].includes(opt.dataset.letter);
+            opt.classList.toggle('distractor', isD);
+        });
+    }
+
+    function getTotalNotes() {
+        let count = 0;
+        sessionData.textos.forEach(t => { count += (t.parrafos || []).length; });
+        return count;
+    }
+    function getFilledNotes() {
+        return Object.values(notes).filter(n => n && n.trim().length > 0).length;
+    }
+
     function updateProgress() {
-        const total = sessionData.preguntas.length;
-        const answered = Object.keys(answers).length;
-        const pct = Math.round((answered / total) * 100);
+        const totalQ = sessionData.preguntas.length;
+        const answeredQ = Object.keys(answers).length;
+        const totalN = getTotalNotes();
+        const filledN = getFilledNotes();
+        const totalItems = totalQ + totalN;
+        const doneItems = answeredQ + filledN;
+        const pct = Math.round((doneItems / totalItems) * 100);
         const bar = document.getElementById('progressBar');
         const text = document.getElementById('progressText');
         const btn = document.getElementById('btnSubmit');
 
         if (bar) bar.style.width = pct + '%';
-        if (text) text.textContent = answered + ' de ' + total + ' preguntas respondidas';
+        if (text) text.textContent = `${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas`;
         if (btn) {
-            btn.disabled = answered < total;
-            btn.textContent = 'Enviar Respuestas (' + answered + '/' + total + ')';
+            const allDone = answeredQ >= totalQ && filledN >= totalN;
+            btn.disabled = !allDone;
+            btn.textContent = allDone ? 'Enviar Respuestas ✓' : `Faltan ${(totalQ-answeredQ)+(totalN-filledN)} items`;
         }
     }
 
@@ -904,6 +989,7 @@
         const key = el.dataset.noteKey;
         notes[key] = el.value;
         isDirty = true;
+        updateProgress();
     }
 
     // ==================== TECHNIQUES TOGGLE ====================
@@ -937,6 +1023,7 @@
                 answers: answers,
                 notes: notes,
                 highlights: highlightsData,
+                distractors: distractors,
                 started_at: startTime,
                 last_save: Date.now(),
                 completada: isSubmitted,
@@ -966,6 +1053,9 @@
         const total = sessionData.preguntas.length;
         const answered = Object.keys(answers).length;
         if (answered < total) { showToast('Responde todas las preguntas antes de enviar.'); return; }
+        const totalNotes = getTotalNotes();
+        const filledNotes = getFilledNotes();
+        if (filledNotes < totalNotes) { showToast('Completa todas las notas de párrafo antes de enviar. Faltan '+(totalNotes-filledNotes)+'.'); return; }
 
         if (!confirm('¿Estás seguro/a de enviar tus respuestas? No podrás modificarlas después.')) return;
 
@@ -1003,6 +1093,8 @@
                 total: total,
                 porcentaje: porcentaje,
                 detalle: detail,
+                notas: notes,
+                notas_completadas: filledNotes + '/' + totalNotes,
                 nombre: studentData.nombre,
                 curso: studentData.curso,
                 submitted_at: Date.now()
@@ -1102,6 +1194,38 @@
     document.addEventListener('visibilitychange', () => {
         if (document.hidden && isDirty) autoSave();
     });
+
+    // ==================== MESSAGING (Bell) ====================
+    function listenForMessages() {
+        db.ref(BASE + '/mensajes').orderByChild('timestamp').limitToLast(1).on('value', snap => {
+            if (!snap.exists()) return;
+            snap.forEach(child => {
+                const msg = child.val();
+                const msgId = child.key;
+                if (msgId !== lastMsgId && msg.timestamp > (Date.now() - 3600000)) {
+                    lastMsgId = msgId;
+                    document.getElementById('bellDot').classList.add('show');
+                    document.getElementById('msgText').textContent = msg.texto || '';
+                    const d = new Date(msg.timestamp);
+                    document.getElementById('msgTime').textContent = d.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+                    // Auto-show popup briefly
+                    document.getElementById('msgPopup').classList.add('show');
+                    setTimeout(() => document.getElementById('msgPopup').classList.remove('show'), 8000);
+                }
+            });
+        });
+    }
+    function toggleMsgPopup() {
+        const popup = document.getElementById('msgPopup');
+        popup.classList.toggle('show');
+        document.getElementById('bellDot').classList.remove('show');
+    }
+    function closeMsgPopup() {
+        document.getElementById('msgPopup').classList.remove('show');
+        document.getElementById('bellDot').classList.remove('show');
+    }
+    // Start listening after auth
+    auth.onAuthStateChanged(u => { if (u) listenForMessages(); });
     </script>
 </body>
 </html>

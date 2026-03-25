@@ -101,6 +101,19 @@
         }
         .connectivity.online { background:#dcfce7; color:#166534; }
         .connectivity.offline { background:#fef2f2; color:#dc2626; }
+        /* BELL NOTIFICATION */
+        .bell-btn { position:relative; background:none; border:none; font-size:20px; cursor:pointer; padding:4px; line-height:1; }
+        .bell-dot { position:absolute; top:-2px; right:-2px; width:10px; height:10px; background:#dc2626; border-radius:50%; display:none; animation:bellpulse 1s infinite; }
+        .bell-dot.show { display:block; }
+        @keyframes bellpulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.4)} }
+        .msg-popup { position:fixed; top:60px; right:16px; background:#fff; border-radius:12px; padding:16px 20px; max-width:340px; width:calc(100% - 32px); box-shadow:0 8px 30px rgba(0,0,0,.25); z-index:300; display:none; border-left:4px solid #1e40af; }
+        .msg-popup.show { display:block; animation:slideIn .2s ease-out; }
+        @keyframes slideIn { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+        .msg-popup h4 { font-size:14px; color:#1e40af; margin-bottom:6px; }
+        .msg-popup p { font-size:13px; color:#334155; line-height:1.5; white-space:pre-wrap; }
+        .msg-popup .msg-time { font-size:11px; color:#94a3b8; margin-top:8px; }
+        .msg-popup .msg-close { float:right; background:none; border:none; font-size:18px; cursor:pointer; color:#94a3b8; margin:-4px -4px 0 0; }
+        .header-right { display:flex; align-items:center; gap:10px; }
         @media (max-width:640px) {
             .header { padding:12px 16px; flex-wrap:wrap; gap:8px; }
             .stats-grid { grid-template-columns:1fr 1fr; }
@@ -118,7 +131,10 @@
                 <span class="curso-badge" id="studentCurso"></span>
             </div>
         </div>
-        <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        <div class="header-right">
+            <button class="bell-btn" id="bellBtn" onclick="toggleMsgPopup()" title="Mensajes del profesor">🔔<span class="bell-dot" id="bellDot"></span></button>
+            <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
+        </div>
     </div>
 
     <div class="main">
@@ -174,6 +190,14 @@
         </div>
     </div>
 
+    <!-- MESSAGE POPUP -->
+    <div class="msg-popup" id="msgPopup">
+        <button class="msg-close" onclick="closeMsgPopup()">✕</button>
+        <h4>📢 Mensaje del Profesor</h4>
+        <p id="msgText"></p>
+        <div class="msg-time" id="msgTime"></div>
+    </div>
+
     <div class="connectivity online" id="connectivity">🟢 Conectado</div>
 
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -217,6 +241,7 @@
                 loadSessions(user.uid, student.curso);
                 loadRankingPreview();
                 loadStats(user.uid, student.curso);
+                listenForMessages();
 
             } catch(e) { console.error(e); }
         });
@@ -329,6 +354,36 @@
                 document.getElementById('scoreA').textContent = avgA + '% promedio';
                 document.getElementById('scoreB').textContent = avgB + '% promedio';
             } catch(e) { console.error(e); }
+        }
+
+        // ==================== MESSAGING (Bell) ====================
+        let lastMsgId = null;
+        function listenForMessages() {
+            db.ref(BASE + '/mensajes').orderByChild('timestamp').limitToLast(1).on('value', snap => {
+                if (!snap.exists()) return;
+                snap.forEach(child => {
+                    const msg = child.val();
+                    const msgId = child.key;
+                    if (msgId !== lastMsgId && msg.timestamp > (Date.now() - 3600000)) {
+                        lastMsgId = msgId;
+                        document.getElementById('bellDot').classList.add('show');
+                        document.getElementById('msgText').textContent = msg.texto || '';
+                        const d = new Date(msg.timestamp);
+                        document.getElementById('msgTime').textContent = d.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
+                        document.getElementById('msgPopup').classList.add('show');
+                        setTimeout(() => document.getElementById('msgPopup').classList.remove('show'), 8000);
+                    }
+                });
+            });
+        }
+        function toggleMsgPopup() {
+            const popup = document.getElementById('msgPopup');
+            popup.classList.toggle('show');
+            document.getElementById('bellDot').classList.remove('show');
+        }
+        function closeMsgPopup() {
+            document.getElementById('msgPopup').classList.remove('show');
+            document.getElementById('bellDot').classList.remove('show');
         }
 
         async function loadStats(uid, curso) {

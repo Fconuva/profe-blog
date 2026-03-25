@@ -70,6 +70,8 @@
             letter-spacing:.5px; border-bottom:2px solid #e2e8f0;
         }
         .ranking-table td { padding:12px 16px; font-size:14px; border-bottom:1px solid #f1f5f9; }
+        .time-cell { font-variant-numeric:tabular-nums; color:#475569; font-weight:600; font-size:13px; }
+        .top10-note { text-align:center; padding:10px; font-size:12px; color:#94a3b8; font-style:italic; }
         .ranking-table tr:hover td { background:#f8fafc; }
         .ranking-table tr.highlight td { background:#eff6ff; font-weight:600; }
         .pos-badge {
@@ -158,6 +160,7 @@
 
         let allStudents = {};
         let allResults = {};
+        let allRanking = {};
         let allSessions = {};
         let currentUid = null;
         let currentTab = '2A-HC';
@@ -170,13 +173,15 @@
 
         async function loadData() {
             try {
-                const [estSnap, resSnap, sesSnap] = await Promise.all([
+                const [estSnap, resSnap, rankSnap, sesSnap] = await Promise.all([
                     db.ref(BASE + '/estudiantes').once('value'),
                     db.ref(BASE + '/resultados').once('value'),
+                    db.ref(BASE + '/ranking').once('value'),
                     db.ref(BASE + '/sesiones').once('value')
                 ]);
                 allStudents = estSnap.val() || {};
                 allResults = resSnap.val() || {};
+                allRanking = rankSnap.val() || {};
                 allSessions = sesSnap.val() || {};
 
                 // Populate session dropdown
@@ -230,19 +235,31 @@
             const scores = [];
 
             for (const [uid, est] of Object.entries(allStudents)) {
-                let total = 0, count = 0;
+                let totalPuntaje = 0, totalPct = 0, totalTiempo = 0, count = 0;
 
                 if (selectedSession === 'all') {
-                    for (const sesId of Object.keys(allResults)) {
-                        if (allResults[sesId][uid]) {
-                            total += allResults[sesId][uid].porcentaje || 0;
-                            count++;
+                    for (const sesId of Object.keys(allRanking)) {
+                        const cursoData = allRanking[sesId];
+                        for (const curso of Object.keys(cursoData || {})) {
+                            if (cursoData[curso] && cursoData[curso][uid]) {
+                                const r = cursoData[curso][uid];
+                                totalPuntaje += r.puntaje || 0;
+                                totalPct += r.porcentaje || 0;
+                                totalTiempo += r.tiempo || 0;
+                                count++;
+                            }
                         }
                     }
                 } else {
-                    if (allResults[selectedSession] && allResults[selectedSession][uid]) {
-                        total = allResults[selectedSession][uid].porcentaje || 0;
-                        count = 1;
+                    const sesRanking = allRanking[selectedSession] || {};
+                    for (const curso of Object.keys(sesRanking)) {
+                        if (sesRanking[curso] && sesRanking[curso][uid]) {
+                            const r = sesRanking[curso][uid];
+                            totalPuntaje = r.puntaje || 0;
+                            totalPct = r.porcentaje || 0;
+                            totalTiempo = r.tiempo || 0;
+                            count = 1;
+                        }
                     }
                 }
 
@@ -251,13 +268,19 @@
                         uid: uid,
                         nombre: est.nombre,
                         curso: est.curso,
-                        promedio: Math.round(total / count),
+                        puntaje: totalPuntaje,
+                        promedio: Math.round(totalPct / count),
+                        tiempo: totalTiempo,
                         sesiones: count
                     });
                 }
             }
 
-            scores.sort((a, b) => b.promedio - a.promedio);
+            // Sort: most correct first, then fastest time as tiebreaker
+            scores.sort((a, b) => {
+                if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
+                return a.tiempo - b.tiempo;
+            });
             renderTable(scores);
         }
 
@@ -266,6 +289,13 @@
             btn.classList.add('active');
             currentTab = btn.dataset.tab;
             loadRanking();
+        }
+
+        function formatTime(seconds) {
+            if (!seconds && seconds !== 0) return '-';
+            const m = Math.floor(seconds / 60);
+            const s = seconds % 60;
+            return m + ':' + String(s).padStart(2, '0');
         }
 
         function renderTable(scores) {
@@ -277,9 +307,13 @@
                 return;
             }
 
-            let html = '<table><thead><tr><th style="width:50px">#</th><th>Estudiante</th><th>Curso</th><th style="width:180px">Logro</th><th style="width:60px">Ses.</th></tr></thead><tbody>';
+            // Top 10 only
+            const top10 = filtered.slice(0, 10);
+            const totalStudents = filtered.length;
 
-            filtered.forEach((s, i) => {
+            let html = '<table><thead><tr><th style="width:50px">#</th><th>Estudiante</th><th>Curso</th><th style="width:160px">Logro</th><th style="width:70px">Buenas</th><th style="width:70px">⏱ Tiempo</th></tr></thead><tbody>';
+
+            top10.forEach((s, i) => {
                 const pos = i + 1;
                 const posClass = pos <= 3 ? 'pos-' + pos : 'pos-other';
                 const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
@@ -292,11 +326,22 @@
                     <td>${s.nombre}${isMe ? ' <span style="font-size:10px;color:#1e40af;">(tú)</span>' : ''}</td>
                     <td>${cursoLabel}</td>
                     <td><div class="pct-bar"><div class="bar"><div class="fill" style="width:${s.promedio}%"></div></div><span class="value">${s.promedio}%</span></div></td>
-                    <td style="text-align:center; color:#64748b;">${s.sesiones}</td>
+                    <td style="text-align:center; font-weight:700; color:#0f172a;">${s.puntaje}</td>
+                    <td class="time-cell" style="text-align:center;">${formatTime(s.tiempo)}</td>
                 </tr>`;
             });
 
             html += '</tbody></table>';
+
+            // Show current user position if outside top 10
+            const myIdx = filtered.findIndex(s => s.uid === currentUid);
+            if (myIdx >= 10) {
+                const me = filtered[myIdx];
+                html += '<div class="top10-note" style="background:#eff6ff; border-radius:0 0 12px 12px; padding:12px 16px; font-style:normal; color:#1e40af; font-weight:600;">Tu posición: #' + (myIdx + 1) + ' de ' + totalStudents + ' — ' + me.promedio + '% logro · ' + formatTime(me.tiempo) + '</div>';
+            } else if (totalStudents > 10) {
+                html += '<div class="top10-note">Mostrando Top 10 de ' + totalStudents + ' estudiantes</div>';
+            }
+
             container.innerHTML = html;
         }
     </script>

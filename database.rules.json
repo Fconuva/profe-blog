@@ -1,0 +1,55 @@
+{
+    "rules": {
+        "plataforma_estudiantes": {
+            "admins": {
+                "$uid": {
+                    ".read": "auth != null && auth.uid === $uid"
+                },
+                ".write": false
+            },
+            "estudiantes": {
+                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+                "$uid": {
+                    ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
+                    ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+                }
+            },
+            "sesiones": {
+                ".read": "auth != null",
+                ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+            },
+            "respuestas": {
+                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+                "$sesionId": {
+                    "$uid": {
+                        ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
+                        ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+                    }
+                }
+            },
+            "resultados": {
+                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+                "$sesionId": {
+                    ".read": "auth != null",
+                    "$uid": {
+                        ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+                    }
+                }
+            },
+            "ranking": {
+                ".read": "auth != null",
+                "$sesionId": {
+                    "$curso": {
+                        "$uid": {
+                            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+                        }
+                    }
+                }
+            },
+            "mensajes": {
+                ".read": "auth != null",
+                ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+            }
+        }
+    }
+}

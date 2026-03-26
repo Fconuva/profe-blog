@@ -11,6 +11,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("dashboard");
   eleventyConfig.addPassthroughCopy("admin");
   eleventyConfig.addPassthroughCopy("estudiantes");
+  eleventyConfig.addPassthroughCopy("publicaciones");
 
   // Ignore old/irrelevant files
   eleventyConfig.ignores.add("_site");

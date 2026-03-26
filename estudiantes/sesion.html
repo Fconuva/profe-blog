@@ -209,6 +209,75 @@
         }
         .toast.show { opacity:1; }
 
+        /* START OVERLAY */
+        .start-overlay {
+            position:fixed; inset:0; z-index:500; background:rgba(15,23,42,.92);
+            display:flex; align-items:center; justify-content:center; backdrop-filter:blur(6px);
+        }
+        .start-overlay.hidden { display:none; }
+        .start-card {
+            background:#fff; border-radius:20px; padding:40px 36px; max-width:480px; width:calc(100% - 32px);
+            text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.4); animation:fadeUp .4s ease-out;
+        }
+        @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .start-card h2 { font-size:22px; color:#0f172a; margin-bottom:8px; }
+        .start-card .start-desc { font-size:14px; color:#64748b; margin-bottom:6px; line-height:1.5; }
+        .start-card .start-stats { font-size:13px; color:#94a3b8; margin-bottom:24px; }
+        .start-card .start-rules { text-align:left; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:14px 16px; margin-bottom:24px; font-size:13px; color:#991b1b; line-height:1.6; }
+        .start-card .start-rules strong { color:#dc2626; }
+        .btn-start {
+            padding:18px 48px; background:linear-gradient(135deg,#1e40af,#3b82f6);
+            color:#fff; border:none; border-radius:14px; font-size:18px; font-weight:800;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s;
+            letter-spacing:.3px;
+        }
+        .btn-start:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(30,64,175,.4); }
+
+        /* STRIKE BAR */
+        .strike-bar {
+            position:fixed; top:52px; left:0; right:0; z-index:200;
+            background:#fef2f2; border-bottom:2px solid #fca5a5;
+            padding:6px 20px; display:flex; align-items:center; justify-content:center; gap:8px;
+            font-size:13px; font-weight:700; color:#991b1b; transition:all .3s;
+        }
+        .strike-bar.hidden { display:none; }
+        .strike-dot { width:18px; height:18px; border-radius:50%; border:2px solid #fca5a5; display:inline-flex; align-items:center; justify-content:center; font-size:10px; }
+        .strike-dot.active { background:#dc2626; border-color:#dc2626; color:#fff; }
+
+        /* STRIKE MODAL */
+        .strike-modal {
+            position:fixed; inset:0; z-index:600; background:rgba(127,29,29,.85);
+            display:flex; align-items:center; justify-content:center; backdrop-filter:blur(4px);
+        }
+        .strike-modal.hidden { display:none; }
+        .strike-modal-card {
+            background:#fff; border-radius:16px; padding:32px; max-width:420px; width:calc(100% - 32px);
+            text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.5); animation:shakeIn .4s ease-out;
+        }
+        @keyframes shakeIn { 0%{transform:translateX(-12px)} 25%{transform:translateX(12px)} 50%{transform:translateX(-6px)} 75%{transform:translateX(6px)} 100%{transform:translateX(0)} }
+        .strike-modal-card .strike-icon { font-size:48px; margin-bottom:12px; }
+        .strike-modal-card h3 { font-size:20px; color:#dc2626; margin-bottom:8px; }
+        .strike-modal-card p { font-size:14px; color:#334155; line-height:1.5; margin-bottom:20px; }
+        .btn-strike-ok {
+            padding:12px 32px; background:#dc2626; color:#fff; border:none; border-radius:10px;
+            font-size:15px; font-weight:700; cursor:pointer; font-family:inherit;
+        }
+        .btn-strike-ok:hover { background:#b91c1c; }
+
+        /* LOCKOUT */
+        .lockout-overlay {
+            position:fixed; inset:0; z-index:700; background:rgba(127,29,29,.95);
+            display:flex; align-items:center; justify-content:center;
+        }
+        .lockout-overlay.hidden { display:none; }
+        .lockout-card {
+            background:#fff; border-radius:16px; padding:40px; max-width:440px; width:calc(100% - 32px);
+            text-align:center; box-shadow:0 20px 60px rgba(0,0,0,.5);
+        }
+        .lockout-card .lock-icon { font-size:56px; margin-bottom:16px; }
+        .lockout-card h3 { font-size:22px; color:#dc2626; margin-bottom:10px; }
+        .lockout-card p { font-size:14px; color:#64748b; line-height:1.5; margin-bottom:24px; }
+
         @media (max-width:768px) {
             .p-row { flex-direction:column; }
             .p-note-box { width:100%; min-width:100%; }
@@ -217,6 +286,8 @@
             .main { padding:12px 10px; }
             .text-box { padding:16px; }
             .p-text { font-size:14px; }
+            .start-card { padding:28px 20px; }
+            .start-card h2 { font-size:18px; }
         }
     </style>
 </head>
@@ -261,6 +332,51 @@
         <h4>📢 Mensaje del Profesor</h4>
         <p id="msgText"></p>
         <div class="msg-time" id="msgTime"></div>
+    </div>
+
+    <!-- START OVERLAY -->
+    <div class="start-overlay hidden" id="startOverlay">
+        <div class="start-card">
+            <h2 id="startTitle">📝 Preparar Evaluación</h2>
+            <p class="start-desc" id="startDesc">Cargando...</p>
+            <p class="start-stats" id="startStats"></p>
+            <div class="start-rules">
+                <strong>⚠️ Reglas de la evaluación:</strong><br>
+                • No puedes cambiar de pestaña ni abrir otras ventanas.<br>
+                • Si sales de esta página recibirás un <strong>strike</strong>.<br>
+                • Al tercer strike la evaluación se enviará automáticamente tal como esté.<br>
+                • Usa las herramientas del destacador y las notas de párrafo.
+            </div>
+            <button class="btn-start" id="btnStart" onclick="beginSession()">▶ Iniciar Evaluación</button>
+        </div>
+    </div>
+
+    <!-- STRIKE BAR -->
+    <div class="strike-bar hidden" id="strikeBar">
+        <span>⚠️ Strikes:</span>
+        <span class="strike-dot" id="sd1">✕</span>
+        <span class="strike-dot" id="sd2">✕</span>
+        <span class="strike-dot" id="sd3">✕</span>
+    </div>
+
+    <!-- STRIKE MODAL -->
+    <div class="strike-modal hidden" id="strikeModal">
+        <div class="strike-modal-card">
+            <div class="strike-icon" id="strikeIcon">⚠️</div>
+            <h3 id="strikeTitle">Strike 1 de 3</h3>
+            <p id="strikeMsg">Saliste de la evaluación. No abras otras pestañas, ChatGPT, Gemini ni busques en Google. Al tercer strike se enviará automáticamente.</p>
+            <button class="btn-strike-ok" id="btnStrikeOk" onclick="dismissStrike()">Entendido, volver a la evaluación</button>
+        </div>
+    </div>
+
+    <!-- LOCKOUT -->
+    <div class="lockout-overlay hidden" id="lockoutOverlay">
+        <div class="lockout-card">
+            <div class="lock-icon">🔒</div>
+            <h3>Evaluación Bloqueada</h3>
+            <p>Has recibido 3 strikes por salir de la evaluación. Tus respuestas han sido enviadas automáticamente tal como estaban.</p>
+            <a href="dashboard.html" style="display:inline-block;padding:14px 28px;background:#1e40af;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">Volver al Panel</a>
+        </div>
     </div>
 
     <!-- TOAST -->
@@ -573,6 +689,10 @@
     let isDirty = false;
     let distractors = {};
     let lastMsgId = null;
+    let sessionStarted = false;
+    let strikes = 0;
+    let strikeMonitorActive = false;
+    let lockout = false;
 
     // ==================== INIT ====================
     const urlParams = new URLSearchParams(window.location.search);
@@ -658,11 +778,25 @@
         // Render content
         renderSession();
 
-        // Start timer
-        startTimer();
-
-        // Start auto-save
-        autoSaveInterval = setInterval(autoSave, 30000);
+        // If already submitted, go straight — no overlay needed
+        if (isSubmitted) {
+            sessionStarted = true;
+            startTimer();
+            autoSaveInterval = setInterval(autoSave, 30000);
+        } else {
+            // Show start overlay
+            const overlay = document.getElementById('startOverlay');
+            document.getElementById('startTitle').textContent = '📝 ' + sessionData.titulo;
+            document.getElementById('startDesc').textContent = sessionData.descripcion || 'Lee atentamente cada texto y responde las preguntas.';
+            const nTextos = sessionData.textos ? sessionData.textos.length : 0;
+            const nPreguntas = sessionData.preguntas ? sessionData.preguntas.length : 0;
+            document.getElementById('startStats').textContent = nTextos + ' textos · ' + nPreguntas + ' preguntas';
+            overlay.classList.remove('hidden');
+            // Hide content while not started
+            document.getElementById('mainContent').style.filter = 'blur(6px)';
+            document.getElementById('mainContent').style.pointerEvents = 'none';
+            document.querySelector('.highlighter-bar').style.display = 'none';
+        }
 
         // Warn before leaving
         window.addEventListener('beforeunload', (e) => {
@@ -1190,6 +1324,155 @@
         });
     }
 
+    // ==================== BEGIN SESSION (Start button) ====================
+    function beginSession() {
+        sessionStarted = true;
+        startTime = Date.now();
+
+        // Hide overlay, reveal content
+        document.getElementById('startOverlay').classList.add('hidden');
+        document.getElementById('mainContent').style.filter = '';
+        document.getElementById('mainContent').style.pointerEvents = '';
+        document.querySelector('.highlighter-bar').style.display = '';
+
+        // Show strike bar and offset highlighter
+        document.getElementById('strikeBar').classList.remove('hidden');
+        document.querySelector('.highlighter-bar').style.top = '86px';
+
+        // Start timer
+        startTimer();
+
+        // Start auto-save
+        autoSaveInterval = setInterval(autoSave, 30000);
+
+        // Activate strike monitor
+        activateStrikeMonitor();
+
+        showToast('⏱ ¡Evaluación iniciada! Buena suerte.');
+    }
+
+    // ==================== STRIKE SYSTEM ====================
+    function activateStrikeMonitor() {
+        if (strikeMonitorActive) return;
+        strikeMonitorActive = true;
+
+        document.addEventListener('visibilitychange', handleVisibilityStrike);
+        window.addEventListener('blur', handleBlurStrike);
+    }
+
+    function handleVisibilityStrike() {
+        if (document.hidden && sessionStarted && !isSubmitted && !lockout) {
+            registerStrike();
+        }
+    }
+
+    function handleBlurStrike() {
+        if (sessionStarted && !isSubmitted && !lockout) {
+            // Small delay to avoid false positives from alert/confirm dialogs
+            setTimeout(() => {
+                if (document.hidden && !lockout && !isSubmitted) {
+                    // Already handled by visibilitychange
+                }
+            }, 200);
+        }
+    }
+
+    function registerStrike() {
+        strikes++;
+
+        // Save strike to Firebase
+        db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/strikes').set(strikes);
+
+        // Update strike dots
+        for (let i = 1; i <= 3; i++) {
+            const dot = document.getElementById('sd' + i);
+            if (i <= strikes) dot.classList.add('active');
+        }
+
+        if (strikes >= 3) {
+            // LOCKOUT — force submit
+            lockout = true;
+            document.getElementById('strikeModal').classList.add('hidden');
+            forceSubmit();
+        } else {
+            // Show warning modal
+            const modal = document.getElementById('strikeModal');
+            document.getElementById('strikeIcon').textContent = strikes === 1 ? '⚠️' : '🚨';
+            document.getElementById('strikeTitle').textContent = 'Strike ' + strikes + ' de 3';
+            const msgs = [
+                '',
+                'Saliste de la evaluación. No puedes abrir otras pestañas, ChatGPT, Gemini, Google ni ninguna otra página. Si lo haces de nuevo recibirás otro strike.',
+                '¡Segundo strike! Si sales una vez más, la evaluación se cerrará automáticamente y se enviará con las respuestas que tengas hasta el momento.'
+            ];
+            document.getElementById('strikeMsg').textContent = msgs[strikes];
+            modal.classList.remove('hidden');
+        }
+    }
+
+    function dismissStrike() {
+        document.getElementById('strikeModal').classList.add('hidden');
+    }
+
+    async function forceSubmit() {
+        if (isSubmitted) {
+            document.getElementById('lockoutOverlay').classList.remove('hidden');
+            return;
+        }
+
+        isSubmitted = true;
+
+        try {
+            const total = sessionData.preguntas.length;
+            let correct = 0;
+            const detail = {};
+            sessionData.preguntas.forEach(q => {
+                const isCorrect = answers[q.id] === q.correcta;
+                if (isCorrect) correct++;
+                detail[q.id] = { respuesta: answers[q.id] || null, correcta: q.correcta, esCorrecta: isCorrect };
+            });
+            const porcentaje = Math.round((correct / total) * 100);
+
+            await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+                answers: answers,
+                notes: notes,
+                highlights: highlightsData,
+                completada: true,
+                submitted_at: Date.now(),
+                tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000),
+                strikes: strikes,
+                bloqueado_por_strikes: true
+            });
+
+            await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+                puntaje: correct,
+                total: total,
+                porcentaje: porcentaje,
+                detalle: detail,
+                notas: notes,
+                notas_completadas: getFilledNotes() + '/' + getTotalNotes(),
+                nombre: studentData.nombre,
+                curso: studentData.curso,
+                submitted_at: Date.now(),
+                strikes: strikes,
+                bloqueado_por_strikes: true
+            });
+
+            await db.ref(BASE + '/ranking/' + sessionId + '/' + studentData.curso + '/' + currentUser.uid).set({
+                nombre: studentData.nombre,
+                puntaje: correct,
+                porcentaje: porcentaje,
+                tiempo: Math.floor((Date.now() - startTime) / 1000)
+            });
+        } catch(e) { console.error('Force submit error:', e); }
+
+        // Show lockout screen
+        document.getElementById('lockoutOverlay').classList.remove('hidden');
+
+        // Stop timer and auto-save
+        if (timerInterval) clearInterval(timerInterval);
+        if (autoSaveInterval) clearInterval(autoSaveInterval);
+    }
+
     // ==================== UTILITIES ====================
     function extractYoutubeId(url) {
         if (!url) return null;
@@ -1204,9 +1487,9 @@
         setTimeout(() => toast.classList.remove('show'), 3000);
     }
 
-    // Save on page visibility change
+    // Save on page visibility change (also used by strike system)
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden && isDirty) autoSave();
+        if (document.hidden && isDirty && sessionStarted) autoSave();
     });
 
     // ==================== MESSAGING (Bell) ====================

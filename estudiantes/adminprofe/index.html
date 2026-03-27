@@ -225,7 +225,6 @@
             <h2>Gestión de Sesiones</h2>
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
-                <button class="btn btn-success" onclick="preloadSession1()">🚀 Precargar Sesión 1</button>
                 <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
             </div>
             <div class="panel-table">
@@ -1107,6 +1106,22 @@ async function resetSessionResults(sesId){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+async function resetStudentSession(uid,sesId,nombre){
+    if(!confirm('¿Dar otra oportunidad a '+nombre+' en esta sesión?\nSe eliminarán sus respuestas, resultado y ranking para que pueda volver a hacerla.'))return;
+    try{
+        await Promise.all([
+            db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid).remove(),
+            db.ref(BASE+'/ranking/'+sesId+'/2A-HC/'+uid).remove(),
+            db.ref(BASE+'/ranking/'+sesId+'/2B-HC/'+uid).remove()
+        ]);
+        if(allResults[sesId])delete allResults[sesId][uid];
+        if(allResponses[sesId])delete allResponses[sesId][uid];
+        loadResults();
+        toast(nombre+': oportunidad restablecida','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 function viewSession(sesId){
     const ses=sessions[sesId];if(!ses)return;
     document.getElementById('viewSessionTitle').textContent=ses.titulo||sesId;
@@ -1288,6 +1303,7 @@ function loadResults(){
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤 Perfil</button>
                 <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Respuestas</button>
+                <button class="btn btn-sm btn-warn" onclick="resetStudentSession('${r.uid}','${sesId}','${r.nombre}')">🔄 Otra Oportunidad</button>
             </td>
         </tr>`;
     }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';

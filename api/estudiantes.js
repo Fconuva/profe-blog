@@ -21,7 +21,7 @@ const BASE = 'plataforma_estudiantes';
 
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + '@est.profefranciscopancho.com'; }
-function defaultPassword(r) { return cleanRut(r).replace(/[^0-9]/g, '').substring(0, 4) + 'est!'; }
+function defaultPassword(r) { var d = cleanRut(r).replace(/[^0-9]/g, ''); return d.substring(0, 6).padEnd(6, '0'); }
 
 async function verifyAdmin(req) {
     const token = (req.headers.authorization || '').replace('Bearer ', '');

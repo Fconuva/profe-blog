@@ -130,6 +130,7 @@
                 <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
                     <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
                     <div class="flex items-center gap-3">
+                        <button id="btn-crear-usuario" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1">➕ Crear Usuario</button>
                         <div class="flex gap-1">
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-900 text-white" data-filter="all">Todos</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
@@ -207,6 +208,46 @@
         </div>
     </main>
 
+    <!-- ===== CREATE USER MODAL ===== -->
+    <div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-heading font-bold text-gray-900">➕ Crear Usuario Manual</h3>
+                <button id="create-modal-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="create-user-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+                    <input type="text" id="create-nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ej: César Chang">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico *</label>
+                    <input type="email" id="create-email" required class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="correo@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" id="create-telefono" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="+56 9 1234 5678">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">RUT</label>
+                    <input type="text" id="create-rut" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="12.345.678-9">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-gray-400 font-normal">(se genera una si se deja vacío)</span></label>
+                    <input type="text" id="create-password" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Mínimo 6 caracteres (opcional)">
+                </div>
+                <div id="create-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
+                <div id="create-result" class="hidden"></div>
+                <div id="create-success" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm"></div>
+                <button type="submit" id="create-submit-btn" class="w-full py-2.5 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors">
+                    ➕ Crear Usuario y Pre-Inscribir
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- ===== EDIT MODAL ===== -->
     <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -221,15 +262,34 @@
             <form id="edit-form" class="p-6 space-y-6">
                 <input type="hidden" id="edit-uid">
 
-                <!-- Section 1: Client Info -->
+                <!-- Section 1: Client Info (Editable) -->
                 <div class="bg-gray-50 rounded-xl p-4">
-                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <div><span class="text-gray-500 text-xs">Email</span><p class="font-medium text-gray-900" id="edit-email">—</p></div>
-                        <div><span class="text-gray-500 text-xs">RUT</span><p class="font-medium text-gray-900" id="edit-rut">—</p></div>
-                        <div><span class="text-gray-500 text-xs">Teléfono</span><p class="font-medium text-gray-900" id="edit-telefono">—</p></div>
-                        <div><span class="text-gray-500 text-xs">Registro</span><p class="font-medium text-gray-900" id="edit-fecha-registro">—</p></div>
-                        <div><span class="text-gray-500 text-xs">N° Inscripción</span><p class="font-medium text-primary-700 font-mono" id="edit-inscripcion-num">—</p></div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente <span class="text-gray-400 font-normal">(editable)</span></h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Nombre</label>
+                            <input type="text" id="edit-nombre" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Nombre completo">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Email</label>
+                            <p class="font-medium text-gray-900 py-1.5" id="edit-email">—</p>
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">RUT</label>
+                            <input type="text" id="edit-rut" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="12.345.678-9">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Teléfono</label>
+                            <input type="tel" id="edit-telefono" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="+56 9 1234 5678">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Registro</label>
+                            <p class="font-medium text-gray-900 py-1.5" id="edit-fecha-registro">—</p>
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">N° Inscripción</label>
+                            <p class="font-medium text-primary-700 font-mono py-1.5" id="edit-inscripcion-num">—</p>
+                        </div>
                     </div>
                 </div>
 
@@ -890,9 +950,10 @@
 
             document.getElementById('edit-uid').value = uid;
             document.getElementById('modal-title').textContent = (c.nombre || 'Cliente');
+            document.getElementById('edit-nombre').value = c.nombre || '';
             document.getElementById('edit-email').textContent = c.email || '—';
-            document.getElementById('edit-rut').textContent = c.rut || '—';
-            document.getElementById('edit-telefono').textContent = c.telefono || '—';
+            document.getElementById('edit-rut').value = c.rut || '';
+            document.getElementById('edit-telefono').value = c.telefono || '';
             document.getElementById('edit-fecha-registro').textContent = formatDate(c.createdAt);
             document.getElementById('edit-inscripcion-num').textContent = c.inscripcionNum || '—';
 
@@ -1039,6 +1100,7 @@
             };
             var lines = [
                 'Hola ' + (c.nombre || '') + ', actualización de tu portafolio docente 2026:',
+                c.inscripcionNum ? 'N° Inscripción: ' + c.inscripcionNum : '',
                 '',
                 modStatus(p.modulo1, 'Módulo 1 (Planificación)'),
                 modStatus(p.modulo2, 'Módulo 2 (Clase Grabada)'),
@@ -1146,6 +1208,15 @@
             if (!uid) return;
 
             var updates = {};
+
+            // Save user info changes (nombre, telefono, rut)
+            var newNombre = document.getElementById('edit-nombre').value.trim();
+            var newTelefono = document.getElementById('edit-telefono').value.trim();
+            var newRut = document.getElementById('edit-rut').value.trim();
+            if (newNombre) updates['users/' + uid + '/nombre'] = newNombre;
+            if (newTelefono !== undefined) updates['users/' + uid + '/telefono'] = newTelefono;
+            if (newRut !== undefined) updates['users/' + uid + '/rut'] = newRut;
+
             updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
 
             // M1
@@ -1179,6 +1250,74 @@
             db.ref().update(updates).then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
+            });
+        });
+
+        // ===== CREATE USER MODAL =====
+        var createModal = document.getElementById('create-modal');
+
+        document.getElementById('btn-crear-usuario').addEventListener('click', function() {
+            createModal.classList.remove('hidden');
+            document.getElementById('create-user-form').reset();
+            document.getElementById('create-result').classList.add('hidden');
+        });
+
+        document.getElementById('create-modal-close').addEventListener('click', function() {
+            createModal.classList.add('hidden');
+        });
+
+        createModal.addEventListener('click', function(e) {
+            if (e.target === createModal) createModal.classList.add('hidden');
+        });
+
+        document.getElementById('create-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+
+            var nombre = document.getElementById('create-nombre').value.trim();
+            var email = document.getElementById('create-email').value.trim();
+            var telefono = document.getElementById('create-telefono').value.trim();
+            var rut = document.getElementById('create-rut').value.trim();
+            var password = document.getElementById('create-password').value || (Math.random().toString(36).slice(-8));
+
+            auth.currentUser.getIdToken().then(function(token) {
+                return fetch('/api/admin/create-user', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        callerUid: auth.currentUser.uid,
+                        nombre: nombre,
+                        email: email,
+                        telefono: telefono,
+                        rut: rut,
+                        password: password
+                    })
+                });
+            }).then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario y Pre-Inscribir';
+                if (data.success) {
+                    var resultDiv = document.getElementById('create-result');
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.innerHTML = '<div class="bg-green-50 border border-green-300 rounded-lg p-4">' +
+                        '<p class="font-semibold text-green-800">✅ Usuario creado exitosamente</p>' +
+                        '<p class="text-sm mt-1">Nombre: <b>' + nombre + '</b></p>' +
+                        '<p class="text-sm">Email: <b>' + email + '</b></p>' +
+                        '<p class="text-sm">Contraseña: <b>' + (data.password || password) + '</b></p>' +
+                        '<p class="text-sm">N° Inscripción: <b>' + (data.inscripcionNum || '-') + '</b></p>' +
+                        (telefono ? '<p class="text-sm mt-2"><a href="https://wa.me/' + telefono.replace(/[^0-9]/g,'').replace(/^9/,'569') + '?text=' + encodeURIComponent('Hola ' + nombre + ', te informamos que tu inscripción ha sido registrada.\n\nN° Inscripción: ' + (data.inscripcionNum || '') + '\nEmail: ' + email + '\nContraseña: ' + (data.password || password) + '\n\nIngresa en: https://www.profefranciscopancho.com/cuenta/login.html\n\nProf. Francisco Núñez') + '" target="_blank" class="inline-flex items-center text-green-700 hover:underline">📱 Enviar datos por WhatsApp</a></p>' : '') +
+                        '</div>';
+                    loadData();
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo crear el usuario'));
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario y Pre-Inscribir';
+                alert('Error de conexión: ' + err.message);
             });
         });
 

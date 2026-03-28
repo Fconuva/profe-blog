@@ -22,9 +22,7 @@ function initFirebase() {
 
 const ADMIN_UID = 'DmsJlSiutEbVk5HgpNGF7PAfs693';
 
-module.exports = async (req, res) => {
-  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
-
+async function handleCreateUser(req, res) {
   const { callerUid, nombre, email, telefono, rut, password } = req.body || {};
 
   if (!callerUid || !nombre || !email) {
@@ -39,7 +37,6 @@ module.exports = async (req, res) => {
     const fb = initFirebase();
     const db = fb.database();
 
-    // Create Firebase Auth user with provided or generated password
     const userPassword = password || Math.random().toString(36).slice(-8) + 'A1!';
     const userRecord = await fb.auth().createUser({
       email: email,
@@ -49,13 +46,11 @@ module.exports = async (req, res) => {
 
     const uid = userRecord.uid;
 
-    // Get next inscription number
     const counterRef = db.ref('counters/inscripcion');
     const result = await counterRef.transaction((current) => (current || 0) + 1);
     const num = result.snapshot.val();
     const inscripcionNum = 'PRE-2026-' + String(num).padStart(4, '0');
 
-    // Save user data
     await db.ref('users/' + uid).set({
       nombre: nombre,
       email: email,
@@ -80,5 +75,55 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'Este correo ya está registrado.' });
     }
     return res.status(500).json({ error: err.message || 'Error interno' });
+  }
+}
+
+async function handleDeleteUser(req, res) {
+  const { uid, callerUid } = req.body || {};
+
+  if (!uid || !callerUid) {
+    return res.status(400).json({ error: 'Faltan datos (uid, callerUid)' });
+  }
+
+  if (callerUid !== ADMIN_UID) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+
+  if (uid === ADMIN_UID) {
+    return res.status(400).json({ error: 'No puedes eliminar la cuenta admin' });
+  }
+
+  try {
+    const fb = initFirebase();
+    const db = fb.database();
+
+    try {
+      await fb.auth().deleteUser(uid);
+    } catch (authErr) {
+      if (authErr.code !== 'auth/user-not-found') throw authErr;
+    }
+
+    await db.ref('users/' + uid).remove();
+    await db.ref('portafolios/' + uid).remove();
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('delete-user error:', err);
+    return res.status(500).json({ error: err.message || 'Error interno' });
+  }
+}
+
+module.exports = async (req, res) => {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
+
+  const { action } = req.body || {};
+
+  switch (action) {
+    case 'create-user':
+      return handleCreateUser(req, res);
+    case 'delete-user':
+      return handleDeleteUser(req, res);
+    default:
+      return res.status(400).json({ error: 'Acción no válida. Use action: "create-user" o "delete-user"' });
   }
 };

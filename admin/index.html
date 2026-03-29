@@ -505,6 +505,16 @@
                     <textarea id="edit-admin-notas" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Anotaciones privadas sobre este cliente..."></textarea>
                 </div>
 
+                <!-- Section 7: OneDrive Shared Folder -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">📁 Carpeta Compartida (OneDrive)</label>
+                    <p class="text-xs text-gray-400 mb-1">Pega aquí el enlace de compartir de la carpeta OneDrive del cliente</p>
+                    <div class="flex gap-2">
+                        <input type="url" id="edit-onedrive-url" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://1drv.ms/... o https://onedrive.live.com/...">
+                        <a id="edit-onedrive-open" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#0078d4">Abrir</a>
+                    </div>
+                </div>
+
                 <!-- Save -->
                 <div class="flex gap-3 pt-2 sticky bottom-0 bg-white py-4 border-t border-gray-200 -mx-6 px-6">
                     <button type="submit" class="flex-1 py-2.5 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-colors">
@@ -1071,6 +1081,12 @@
 
             document.getElementById('edit-admin-notas').value = p.adminNotas || '';
 
+            // OneDrive URL
+            var odUrl = (p.oneDrive && p.oneDrive.shareUrl) ? p.oneDrive.shareUrl : '';
+            document.getElementById('edit-onedrive-url').value = odUrl;
+            var odOpen = document.getElementById('edit-onedrive-open');
+            if (odUrl) { odOpen.classList.remove('hidden'); odOpen.href = odUrl; } else { odOpen.classList.add('hidden'); }
+
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
             modal.classList.remove('hidden');
@@ -1323,39 +1339,17 @@
             });
         });
 
-        // OneDrive Folder
+        // OneDrive Folder — open if exists, or scroll to field
         document.getElementById('btn-onedrive-folder').addEventListener('click', function() {
             if (!currentEditUid) return;
-            var c = allClients[currentEditUid] || {};
             var p = allPortafolios[currentEditUid] || {};
-            // If folder already exists, open it
             if (p.oneDrive && p.oneDrive.shareUrl) {
-                if (confirm('Ya existe carpeta OneDrive para ' + (c.nombre || 'este cliente') + '.\n\n¿Deseas abrirla?')) {
-                    window.open(p.oneDrive.shareUrl, '_blank');
-                }
-                return;
+                window.open(p.oneDrive.shareUrl, '_blank');
+            } else {
+                document.getElementById('edit-onedrive-url').focus();
+                document.getElementById('edit-onedrive-url').scrollIntoView({ behavior: 'smooth', block: 'center' });
+                showActionMsg('Pega aquí el enlace de OneDrive. Crea la carpeta en tu OneDrive → clic derecho → Compartir → Copiar vínculo.', 'success');
             }
-            if (!confirm('¿Crear carpeta OneDrive para ' + (c.nombre || 'este cliente') + '?\n\nSe creará la estructura:\n📁 ' + (c.nombre || 'Cliente') + '\n  ├── Modulo-1-Planificacion\n  ├── Modulo-2-Clase-Grabada\n  ├── Modulo-3-Reflexion\n  └── Documentos-Generales')) return;
-            var btn = document.getElementById('btn-onedrive-folder');
-            btn.disabled = true;
-            btn.textContent = 'Creando...';
-            fetch('/api/onedrive', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'create-folder', callerUid: auth.currentUser.uid, clientUid: currentEditUid, clientName: c.nombre || 'Cliente' })
-            }).then(function(r) { return r.json(); }).then(function(data) {
-                btn.disabled = false;
-                btn.textContent = '📁 Carpeta OneDrive';
-                if (data.success) {
-                    showActionMsg('✅ Carpeta OneDrive creada. <a href="' + data.shareUrl + '" target="_blank" class="underline font-bold">Abrir carpeta</a>', 'success');
-                } else {
-                    showActionMsg('Error: ' + (data.error || 'No se pudo crear la carpeta'), 'error');
-                }
-            }).catch(function(err) {
-                btn.disabled = false;
-                btn.textContent = '📁 Carpeta OneDrive';
-                showActionMsg('Error de red: ' + err.message, 'error');
-            });
         });
 
         // Reset Password (direct change)
@@ -1461,6 +1455,11 @@
             updates['portafolios/' + uid + '/modulo3/notas'] = document.getElementById('edit-m3-notas').value;
 
             updates['portafolios/' + uid + '/adminNotas'] = document.getElementById('edit-admin-notas').value;
+
+            // OneDrive URL
+            var oneDriveUrl = document.getElementById('edit-onedrive-url').value.trim();
+            updates['portafolios/' + uid + '/oneDrive/shareUrl'] = oneDriveUrl || null;
+
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 
             db.ref().update(updates).then(function() {

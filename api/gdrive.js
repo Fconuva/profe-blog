@@ -18,10 +18,12 @@ const ADMIN_UID = 'DmsJlSiutEbVk5HgpNGF7PAfs693';
 
 // Get access token using Google service account
 async function getAccessToken() {
-  const keyJson = process.env.GOOGLE_SERVICE_ACCOUNT;
-  if (!keyJson) throw new Error('Falta variable GOOGLE_SERVICE_ACCOUNT');
+  const raw = process.env.GOOGLE_SERVICE_ACCOUNT;
+  if (!raw) throw new Error('Falta variable GOOGLE_SERVICE_ACCOUNT');
 
-  const key = JSON.parse(keyJson);
+  let key;
+  if (raw.trim().startsWith('{')) key = JSON.parse(raw);
+  else key = JSON.parse(Buffer.from(raw, 'base64').toString('utf8'));
   const now = Math.floor(Date.now() / 1000);
 
   // Build JWT

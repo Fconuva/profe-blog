@@ -319,7 +319,7 @@
                     <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
                     <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Cambiar Contraseña</button>
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
-                    <button type="button" id="btn-onedrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0078d4">📁 Carpeta OneDrive</button>
+                    <button type="button" id="btn-gdrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0F9D58">📁 Carpeta Google Drive</button>
                     <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
@@ -505,13 +505,13 @@
                     <textarea id="edit-admin-notas" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Anotaciones privadas sobre este cliente..."></textarea>
                 </div>
 
-                <!-- Section 7: OneDrive Shared Folder -->
+                <!-- Section 7: Google Drive Shared Folder -->
                 <div>
-                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">📁 Carpeta Compartida (OneDrive)</label>
-                    <p class="text-xs text-gray-400 mb-1">Pega aquí el enlace de compartir de la carpeta OneDrive del cliente</p>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">📁 Carpeta Compartida (Google Drive)</label>
+                    <p class="text-xs text-gray-400 mb-1">Se crea automáticamente al presionar el botón 📁 Carpeta Google Drive</p>
                     <div class="flex gap-2">
-                        <input type="url" id="edit-onedrive-url" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://1drv.ms/... o https://onedrive.live.com/...">
-                        <a id="edit-onedrive-open" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#0078d4">Abrir</a>
+                        <input type="url" id="edit-gdrive-url" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://drive.google.com/drive/folders/..." readonly>
+                        <a id="edit-gdrive-open" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#0F9D58">Abrir</a>
                     </div>
                 </div>
 
@@ -1081,11 +1081,11 @@
 
             document.getElementById('edit-admin-notas').value = p.adminNotas || '';
 
-            // OneDrive URL
-            var odUrl = (p.oneDrive && p.oneDrive.shareUrl) ? p.oneDrive.shareUrl : '';
-            document.getElementById('edit-onedrive-url').value = odUrl;
-            var odOpen = document.getElementById('edit-onedrive-open');
-            if (odUrl) { odOpen.classList.remove('hidden'); odOpen.href = odUrl; } else { odOpen.classList.add('hidden'); }
+            // Google Drive URL
+            var gdUrl = (p.googleDrive && p.googleDrive.shareUrl) ? p.googleDrive.shareUrl : '';
+            document.getElementById('edit-gdrive-url').value = gdUrl;
+            var gdOpen = document.getElementById('edit-gdrive-open');
+            if (gdUrl) { gdOpen.classList.remove('hidden'); gdOpen.href = gdUrl; } else { gdOpen.classList.add('hidden'); }
 
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
@@ -1339,17 +1339,40 @@
             });
         });
 
-        // OneDrive Folder — open if exists, or scroll to field
-        document.getElementById('btn-onedrive-folder').addEventListener('click', function() {
+        // Google Drive Folder — create or open
+        document.getElementById('btn-gdrive-folder').addEventListener('click', function() {
             if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
             var p = allPortafolios[currentEditUid] || {};
-            if (p.oneDrive && p.oneDrive.shareUrl) {
-                window.open(p.oneDrive.shareUrl, '_blank');
-            } else {
-                document.getElementById('edit-onedrive-url').focus();
-                document.getElementById('edit-onedrive-url').scrollIntoView({ behavior: 'smooth', block: 'center' });
-                showActionMsg('Pega aquí el enlace de OneDrive. Crea la carpeta en tu OneDrive → clic derecho → Compartir → Copiar vínculo.', 'success');
+            if (p.googleDrive && p.googleDrive.shareUrl) {
+                window.open(p.googleDrive.shareUrl, '_blank');
+                return;
             }
+            if (!confirm('¿Crear carpeta Google Drive para ' + (c.nombre || 'este cliente') + '?\n\nSe crearán subcarpetas:\n📁 Módulo 1 - Planificación\n📁 Módulo 2 - Clase Grabada\n📁 Módulo 3 - Reflexión\n📁 Documentos Generales')) return;
+            var btn = document.getElementById('btn-gdrive-folder');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+            fetch('/api/gdrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create-folder', callerUid: auth.currentUser.uid, clientUid: currentEditUid, clientName: c.nombre || 'Cliente', clientEmail: c.email || '' })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta Google Drive';
+                if (data.success) {
+                    document.getElementById('edit-gdrive-url').value = data.shareUrl;
+                    var gdOpen = document.getElementById('edit-gdrive-open');
+                    gdOpen.href = data.shareUrl;
+                    gdOpen.classList.remove('hidden');
+                    showActionMsg('✅ Carpeta creada en Google Drive. <a href="' + data.shareUrl + '" target="_blank" class="underline font-bold">Abrir carpeta</a>', 'success');
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo crear la carpeta'), 'error');
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta Google Drive';
+                showActionMsg('Error de red: ' + err.message, 'error');
+            });
         });
 
         // Reset Password (direct change)
@@ -1456,9 +1479,9 @@
 
             updates['portafolios/' + uid + '/adminNotas'] = document.getElementById('edit-admin-notas').value;
 
-            // OneDrive URL
-            var oneDriveUrl = document.getElementById('edit-onedrive-url').value.trim();
-            updates['portafolios/' + uid + '/oneDrive/shareUrl'] = oneDriveUrl || null;
+            // Google Drive URL (read-only, set by API)
+            var gDriveUrl = document.getElementById('edit-gdrive-url').value.trim();
+            if (gDriveUrl) updates['portafolios/' + uid + '/googleDrive/shareUrl'] = gDriveUrl;
 
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 

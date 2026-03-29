@@ -152,6 +152,7 @@
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Monto</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Drive</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
@@ -819,6 +820,7 @@
                     '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
                     '<td class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
                     '<td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
+                    '<td class="px-4 py-3 text-center">' + (p.googleDrive && p.googleDrive.shareUrl ? '<a href="' + escapeHtml(p.googleDrive.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm" style="background-color:#0F9D58" title="Abrir carpeta Google Drive">📁</a>' : '<span class="text-gray-300 text-sm">—</span>') + '</td>' +
                     '<td class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
                     '<td class="px-4 py-3"><button class="text-primary-600 hover:text-primary-700 text-sm font-medium edit-btn" data-uid="' + uid + '">Ver / Editar</button></td>';
                 tbody.appendChild(tr);
@@ -1086,6 +1088,15 @@
             document.getElementById('edit-gdrive-url').value = gdUrl;
             var gdOpen = document.getElementById('edit-gdrive-open');
             if (gdUrl) { gdOpen.classList.remove('hidden'); gdOpen.href = gdUrl; } else { gdOpen.classList.add('hidden'); }
+            // Update GDrive button style when folder exists
+            var gdBtn = document.getElementById('btn-gdrive-folder');
+            if (gdUrl) {
+                gdBtn.innerHTML = '📂 Ir a Carpeta Drive';
+                gdBtn.style.backgroundColor = '#1a73e8';
+            } else {
+                gdBtn.innerHTML = '📁 Crear Carpeta Drive';
+                gdBtn.style.backgroundColor = '#0F9D58';
+            }
 
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
@@ -1166,7 +1177,15 @@
                 '• ✏️ Actualizar tus datos personales',
                 '• 📄 Completar el formulario de contexto',
                 '• 📊 Revisar el avance de tus módulos',
-                '',
+                ''
+            ];
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Tu carpeta Google Drive para subir documentos:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
+            lines.push(
                 'Ante cualquier duda, escríbeme por este medio.',
                 '',
                 'Saludos cordiales,',
@@ -1218,6 +1237,12 @@
                 lines.push('');
             }
 
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Sube tus archivos a tu carpeta Google Drive:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
             lines.push(
                 '🔗 Revisa el detalle en tu panel:',
                 'https://www.profefranciscopancho.com/cuenta/login.html',
@@ -1259,6 +1284,12 @@
                 lines.push('');
             }
 
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Todos tus documentos en tu carpeta Google Drive:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
             lines.push(
                 '🔗 También puedes revisar todo desde tu panel:',
                 'https://www.profefranciscopancho.com/cuenta/login.html',

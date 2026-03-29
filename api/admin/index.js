@@ -113,6 +113,31 @@ async function handleDeleteUser(req, res) {
   }
 }
 
+async function handleChangePassword(req, res) {
+  const { uid, callerUid, password } = req.body || {};
+
+  if (!uid || !callerUid || !password) {
+    return res.status(400).json({ error: 'Faltan datos (uid, callerUid, password)' });
+  }
+
+  if (callerUid !== ADMIN_UID) {
+    return res.status(403).json({ error: 'No autorizado' });
+  }
+
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'La contraseña debe tener al menos 6 caracteres' });
+  }
+
+  try {
+    const fb = initFirebase();
+    await fb.auth().updateUser(uid, { password: password });
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error('change-password error:', err);
+    return res.status(500).json({ error: err.message || 'Error interno' });
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -123,7 +148,9 @@ module.exports = async (req, res) => {
       return handleCreateUser(req, res);
     case 'delete-user':
       return handleDeleteUser(req, res);
+    case 'change-password':
+      return handleChangePassword(req, res);
     default:
-      return res.status(400).json({ error: 'Acción no válida. Use action: "create-user" o "delete-user"' });
+      return res.status(400).json({ error: 'Acción no válida. Use action: "create-user", "delete-user" o "change-password"' });
   }
 };

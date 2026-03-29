@@ -317,8 +317,9 @@
                         </div>
                     </div>
                     <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
-                    <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Restablecer Contraseña</button>
+                    <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Cambiar Contraseña</button>
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
+                    <button type="button" id="btn-onedrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0078d4">📁 Carpeta OneDrive</button>
                     <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
@@ -1322,16 +1323,67 @@
             });
         });
 
-        // Reset Password
+        // OneDrive Folder
+        document.getElementById('btn-onedrive-folder').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var p = allPortafolios[currentEditUid] || {};
+            // If folder already exists, open it
+            if (p.oneDrive && p.oneDrive.shareUrl) {
+                if (confirm('Ya existe carpeta OneDrive para ' + (c.nombre || 'este cliente') + '.\n\n¿Deseas abrirla?')) {
+                    window.open(p.oneDrive.shareUrl, '_blank');
+                }
+                return;
+            }
+            if (!confirm('¿Crear carpeta OneDrive para ' + (c.nombre || 'este cliente') + '?\n\nSe creará la estructura:\n📁 ' + (c.nombre || 'Cliente') + '\n  ├── Modulo-1-Planificacion\n  ├── Modulo-2-Clase-Grabada\n  ├── Modulo-3-Reflexion\n  └── Documentos-Generales')) return;
+            var btn = document.getElementById('btn-onedrive-folder');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+            fetch('/api/onedrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create-folder', callerUid: auth.currentUser.uid, clientUid: currentEditUid, clientName: c.nombre || 'Cliente' })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta OneDrive';
+                if (data.success) {
+                    showActionMsg('✅ Carpeta OneDrive creada. <a href="' + data.shareUrl + '" target="_blank" class="underline font-bold">Abrir carpeta</a>', 'success');
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo crear la carpeta'), 'error');
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta OneDrive';
+                showActionMsg('Error de red: ' + err.message, 'error');
+            });
+        });
+
+        // Reset Password (direct change)
         document.getElementById('btn-reset-pass').addEventListener('click', function() {
             if (!currentEditUid) return;
             var c = allClients[currentEditUid] || {};
-            if (!c.email) { showActionMsg('No hay email registrado.', 'error'); return; }
-            if (!confirm('¿Enviar email de restablecimiento de contraseña a ' + c.email + '?')) return;
-            auth.sendPasswordResetEmail(c.email).then(function() {
-                showActionMsg('📧 Email de restablecimiento enviado a ' + c.email, 'success');
+            var newPass = prompt('Ingresa la nueva contraseña para ' + (c.nombre || c.email) + '\n(mínimo 6 caracteres):');
+            if (!newPass) return;
+            if (newPass.length < 6) { showActionMsg('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+            var btn = document.getElementById('btn-reset-pass');
+            btn.disabled = true;
+            btn.textContent = 'Cambiando...';
+            fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'change-password', uid: currentEditUid, callerUid: auth.currentUser.uid, password: newPass })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '🔑 Cambiar Contraseña';
+                if (data.success) {
+                    showActionMsg('✅ Contraseña cambiada exitosamente. Nueva: ' + newPass, 'success');
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo cambiar'), 'error');
+                }
             }).catch(function(err) {
-                showActionMsg('Error: ' + err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🔑 Cambiar Contraseña';
+                showActionMsg('Error de red: ' + err.message, 'error');
             });
         });
 

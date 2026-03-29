@@ -296,7 +296,26 @@
                 <!-- Section 2: Quick Actions -->
                 <div class="flex flex-wrap gap-2">
                     <button type="button" id="btn-approve-pay" class="px-3 py-2 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">✅ Aprobar Pago</button>
-                    <button type="button" id="btn-whatsapp" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#25D366">📲 WhatsApp</button>
+                    <!-- WhatsApp dropdown -->
+                    <div class="relative" id="wsp-dropdown-wrap">
+                        <button type="button" id="btn-wsp-toggle" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#25D366">
+                            📲 WhatsApp <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div id="wsp-dropdown-menu" class="hidden absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50 py-1">
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 transition-colors flex items-center gap-2" data-msg="reserva">
+                                <span class="text-base">📋</span>
+                                <div><p class="font-medium text-gray-900">Reserva / Inscripción</p><p class="text-xs text-gray-500">Datos + link para ingresar</p></div>
+                            </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors flex items-center gap-2" data-msg="avance">
+                                <span class="text-base">🔄</span>
+                                <div><p class="font-medium text-gray-900">Avance de Portafolio</p><p class="text-xs text-gray-500">Estado módulos + progreso</p></div>
+                            </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2" data-msg="listo">
+                                <span class="text-base">✅</span>
+                                <div><p class="font-medium text-gray-900">Portafolio Listo</p><p class="text-xs text-gray-500">Entrega completa + descarga</p></div>
+                            </button>
+                        </div>
+                    </div>
                     <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
                     <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Restablecer Contraseña</button>
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
@@ -1083,37 +1102,182 @@
             });
         });
 
-        // WhatsApp
-        document.getElementById('btn-whatsapp').addEventListener('click', function() {
-            if (!currentEditUid) return;
-            var c = allClients[currentEditUid] || {};
-            var p = allPortafolios[currentEditUid] || {};
+        // ===== WHATSAPP DROPDOWN =====
+        var wspToggle = document.getElementById('btn-wsp-toggle');
+        var wspMenu = document.getElementById('wsp-dropdown-menu');
+
+        wspToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            wspMenu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('wsp-dropdown-wrap').contains(e.target)) {
+                wspMenu.classList.add('hidden');
+            }
+        });
+
+        function getWspPhone(c) {
             var phone = (c.telefono || '').replace(/[^0-9]/g, '');
             if (phone.startsWith('9') && phone.length === 9) phone = '56' + phone;
             if (!phone.startsWith('56')) phone = '56' + phone;
+            return phone;
+        }
 
-            var progress = calcProgress(p);
-            var modStatus = function(m, name) {
-                if (!m || m.estado === 'no-contratado') return '';
-                var icons = { pendiente: '⏳', 'en-progreso': '🔄', 'en-revision': '📋', completado: '✅' };
-                return name + ': ' + (icons[m.estado] || '⏳') + ' ' + (m.estado || 'pendiente');
-            };
+        function modStatusLine(m, name) {
+            if (!m || m.estado === 'no-contratado') return '';
+            var icons = { pendiente: '⏳', 'en-progreso': '🔄', 'en-revision': '📋', completado: '✅' };
+            return name + ': ' + (icons[m.estado] || '⏳') + ' ' + (m.estado || 'pendiente');
+        }
+
+        function buildWspReserva(c, p) {
             var lines = [
-                'Hola ' + (c.nombre || '') + ', actualización de tu portafolio docente 2026:',
-                c.inscripcionNum ? 'N° Inscripción: ' + c.inscripcionNum : '',
+                'Hola ' + (c.nombre || '') + ' 👋',
                 '',
-                modStatus(p.modulo1, 'Módulo 1 (Planificación)'),
-                modStatus(p.modulo2, 'Módulo 2 (Clase Grabada)'),
-                modStatus(p.modulo3, 'Módulo 3 (Reflexión)'),
+                'Tu inscripción al servicio de *Portafolio Docente 2026* ha sido registrada exitosamente.',
                 '',
-                'Progreso general: ' + progress + '%',
+                '📋 *Datos de tu reserva:*',
+                c.inscripcionNum ? '• N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                '• Nombre: ' + (c.nombre || '—'),
+                '• Email: ' + (c.email || '—'),
+                c.rut ? '• RUT: ' + c.rut : '',
+                p.plan && planNames[p.plan] ? '• Plan: *' + planNames[p.plan] + '* (' + formatCLP(getPlanPrice(p.plan)) + ')' : '',
                 '',
-                'Revisa tu panel: https://www.profefranciscopancho.com/dashboard/',
+                '🔗 *Ingresa a tu cuenta para revisar o editar tus datos:*',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
                 '',
-                'Prof. Francisco Núñez'
-            ].filter(Boolean);
+                'Desde tu panel podrás:',
+                '• ✏️ Actualizar tus datos personales',
+                '• 📄 Completar el formulario de contexto',
+                '• 📊 Revisar el avance de tus módulos',
+                '',
+                'Ante cualquier duda, escríbeme por este medio.',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            ];
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
 
-            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+        function buildWspAvance(c, p) {
+            var progress = calcProgress(p);
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 👋',
+                '',
+                'Te comparto una actualización del avance de tu *Portafolio Docente 2026*:',
+                '',
+                c.inscripcionNum ? '📋 N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                '',
+                '📊 *Estado de tus módulos:*',
+                modStatusLine(p.modulo1, '• Módulo 1 — Planificación'),
+                modStatusLine(p.modulo2, '• Módulo 2 — Clase Grabada'),
+                modStatusLine(p.modulo3, '• Módulo 3 — Reflexión'),
+                '',
+                '📈 *Progreso general: ' + progress + '%*',
+                ''
+            ];
+
+            // Add notes per module if any
+            var m1n = p.modulo1 && p.modulo1.notas ? p.modulo1.notas : '';
+            var m2n = p.modulo2 && p.modulo2.notas ? p.modulo2.notas : '';
+            var m3n = p.modulo3 && p.modulo3.notas ? p.modulo3.notas : '';
+            if (m1n || m2n || m3n) {
+                lines.push('📝 *Observaciones:*');
+                if (m1n) lines.push('• M1: ' + m1n);
+                if (m2n) lines.push('• M2: ' + m2n);
+                if (m3n) lines.push('• M3: ' + m3n);
+                lines.push('');
+            }
+
+            // Add file links if any
+            var m1f = p.modulo1 && p.modulo1.archivoUrl ? p.modulo1.archivoUrl : '';
+            var m2f = p.modulo2 && p.modulo2.archivoUrl ? p.modulo2.archivoUrl : '';
+            var m3f = p.modulo3 && p.modulo3.archivoUrl ? p.modulo3.archivoUrl : '';
+            if (m1f || m2f || m3f) {
+                lines.push('📎 *Archivos entregables:*');
+                if (m1f) lines.push('• M1: ' + m1f);
+                if (m2f) lines.push('• M2: ' + m2f);
+                if (m3f) lines.push('• M3: ' + m3f);
+                lines.push('');
+            }
+
+            lines.push(
+                '🔗 Revisa el detalle en tu panel:',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                'Cualquier duda, escríbeme por aquí.',
+                '',
+                'Saludos,',
+                '*Prof. Francisco Núñez Valenzuela*'
+            );
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
+        function buildWspListo(c, p) {
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 🎉',
+                '',
+                '¡Tu *Portafolio Docente 2026* está *LISTO*! ✅',
+                '',
+                c.inscripcionNum ? '📋 N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                p.plan && planNames[p.plan] ? '📦 Plan: *' + planNames[p.plan] + '*' : '',
+                '',
+                '✅ *Módulos completados:*'
+            ];
+
+            if (p.modulo1 && p.modulo1.contratado) lines.push('• ✅ Módulo 1 — Planificación');
+            if (p.modulo2 && p.modulo2.contratado) lines.push('• ✅ Módulo 2 — Clase Grabada');
+            if (p.modulo3 && p.modulo3.contratado) lines.push('• ✅ Módulo 3 — Reflexión');
+            lines.push('');
+
+            // Add file links
+            var m1f = p.modulo1 && p.modulo1.archivoUrl ? p.modulo1.archivoUrl : '';
+            var m2f = p.modulo2 && p.modulo2.archivoUrl ? p.modulo2.archivoUrl : '';
+            var m3f = p.modulo3 && p.modulo3.archivoUrl ? p.modulo3.archivoUrl : '';
+            if (m1f || m2f || m3f) {
+                lines.push('📎 *Descarga tus archivos:*');
+                if (m1f) lines.push('• M1 — Planificación: ' + m1f);
+                if (m2f) lines.push('• M2 — Clase Grabada: ' + m2f);
+                if (m3f) lines.push('• M3 — Reflexión: ' + m3f);
+                lines.push('');
+            }
+
+            lines.push(
+                '🔗 También puedes revisar todo desde tu panel:',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                'Recuerda que si necesitas alguna corrección o ajuste, puedes escribirme.',
+                '',
+                '¡Mucho éxito en tu evaluación docente! 💪',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            );
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
+        document.querySelectorAll('.wsp-msg-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                wspMenu.classList.add('hidden');
+                if (!currentEditUid) return;
+                var c = allClients[currentEditUid] || {};
+                var p = allPortafolios[currentEditUid] || {};
+                var phone = getWspPhone(c);
+
+                if (!phone || phone.length < 8) {
+                    showActionMsg('⚠️ Este cliente no tiene teléfono registrado.', 'error');
+                    return;
+                }
+
+                var msgType = this.getAttribute('data-msg');
+                var text = '';
+                if (msgType === 'reserva') text = buildWspReserva(c, p);
+                else if (msgType === 'avance') text = buildWspAvance(c, p);
+                else if (msgType === 'listo') text = buildWspListo(c, p);
+
+                window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(text), '_blank');
+            });
         });
 
         // Email

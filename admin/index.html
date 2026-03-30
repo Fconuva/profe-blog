@@ -130,6 +130,7 @@
                 <div class="px-6 py-4 border-b border-gray-200 flex flex-wrap items-center justify-between gap-3">
                     <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
                     <div class="flex items-center gap-3">
+                        <button id="btn-crear-usuario" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1">➕ Crear Usuario</button>
                         <div class="flex gap-1">
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-900 text-white" data-filter="all">Todos</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
@@ -151,6 +152,7 @@
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Monto</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Drive</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Registro</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th>
                             </tr>
@@ -207,6 +209,46 @@
         </div>
     </main>
 
+    <!-- ===== CREATE USER MODAL ===== -->
+    <div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
+            <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+                <h3 class="font-heading font-bold text-gray-900">➕ Crear Usuario Manual</h3>
+                <button id="create-modal-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                    <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="create-user-form" class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+                    <input type="text" id="create-nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ej: César Chang">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Correo Electrónico *</label>
+                    <input type="email" id="create-email" required class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="correo@ejemplo.com">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Teléfono</label>
+                    <input type="tel" id="create-telefono" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="+56 9 1234 5678">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">RUT</label>
+                    <input type="text" id="create-rut" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="12.345.678-9">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-gray-400 font-normal">(se genera una si se deja vacío)</span></label>
+                    <input type="text" id="create-password" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Mínimo 6 caracteres (opcional)">
+                </div>
+                <div id="create-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded-xl text-sm"></div>
+                <div id="create-result" class="hidden"></div>
+                <div id="create-success" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl text-sm"></div>
+                <button type="submit" id="create-submit-btn" class="w-full py-2.5 px-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transition-colors">
+                    ➕ Crear Usuario y Pre-Inscribir
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- ===== EDIT MODAL ===== -->
     <div id="edit-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -221,25 +263,64 @@
             <form id="edit-form" class="p-6 space-y-6">
                 <input type="hidden" id="edit-uid">
 
-                <!-- Section 1: Client Info -->
+                <!-- Section 1: Client Info (Editable) -->
                 <div class="bg-gray-50 rounded-xl p-4">
-                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente</h4>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <div><span class="text-gray-500 text-xs">Email</span><p class="font-medium text-gray-900" id="edit-email">—</p></div>
-                        <div><span class="text-gray-500 text-xs">RUT</span><p class="font-medium text-gray-900" id="edit-rut">—</p></div>
-                        <div><span class="text-gray-500 text-xs">Teléfono</span><p class="font-medium text-gray-900" id="edit-telefono">—</p></div>
-                        <div><span class="text-gray-500 text-xs">Registro</span><p class="font-medium text-gray-900" id="edit-fecha-registro">—</p></div>
-                        <div><span class="text-gray-500 text-xs">N° Inscripción</span><p class="font-medium text-primary-700 font-mono" id="edit-inscripcion-num">—</p></div>
+                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente <span class="text-gray-400 font-normal">(editable)</span></h4>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Nombre</label>
+                            <input type="text" id="edit-nombre" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Nombre completo">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Email</label>
+                            <p class="font-medium text-gray-900 py-1.5" id="edit-email">—</p>
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">RUT</label>
+                            <input type="text" id="edit-rut" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="12.345.678-9">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Teléfono</label>
+                            <input type="tel" id="edit-telefono" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="+56 9 1234 5678">
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">Registro</label>
+                            <p class="font-medium text-gray-900 py-1.5" id="edit-fecha-registro">—</p>
+                        </div>
+                        <div>
+                            <label class="text-gray-500 text-xs block mb-1">N° Inscripción</label>
+                            <p class="font-medium text-primary-700 font-mono py-1.5" id="edit-inscripcion-num">—</p>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Section 2: Quick Actions -->
                 <div class="flex flex-wrap gap-2">
                     <button type="button" id="btn-approve-pay" class="px-3 py-2 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors">✅ Aprobar Pago</button>
-                    <button type="button" id="btn-whatsapp" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#25D366">📲 WhatsApp</button>
+                    <!-- WhatsApp dropdown -->
+                    <div class="relative" id="wsp-dropdown-wrap">
+                        <button type="button" id="btn-wsp-toggle" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#25D366">
+                            📲 WhatsApp <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
+                        <div id="wsp-dropdown-menu" class="hidden absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50 py-1">
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 transition-colors flex items-center gap-2" data-msg="reserva">
+                                <span class="text-base">📋</span>
+                                <div><p class="font-medium text-gray-900">Reserva / Inscripción</p><p class="text-xs text-gray-500">Datos + link para ingresar</p></div>
+                            </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors flex items-center gap-2" data-msg="avance">
+                                <span class="text-base">🔄</span>
+                                <div><p class="font-medium text-gray-900">Avance de Portafolio</p><p class="text-xs text-gray-500">Estado módulos + progreso</p></div>
+                            </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 transition-colors flex items-center gap-2" data-msg="listo">
+                                <span class="text-base">✅</span>
+                                <div><p class="font-medium text-gray-900">Portafolio Listo</p><p class="text-xs text-gray-500">Entrega completa + descarga</p></div>
+                            </button>
+                        </div>
+                    </div>
                     <button type="button" id="btn-email" class="px-3 py-2 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors">📧 Email</button>
-                    <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Restablecer Contraseña</button>
+                    <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Cambiar Contraseña</button>
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
+                    <button type="button" id="btn-gdrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0F9D58">📁 Carpeta Google Drive</button>
                     <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
@@ -423,6 +504,16 @@
                 <div>
                     <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Notas Internas (solo admin, no visibles para el cliente)</label>
                     <textarea id="edit-admin-notas" rows="3" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none resize-none" placeholder="Anotaciones privadas sobre este cliente..."></textarea>
+                </div>
+
+                <!-- Section 7: Google Drive Shared Folder -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-500 uppercase mb-1">📁 Carpeta Compartida (Google Drive)</label>
+                    <p class="text-xs text-gray-400 mb-1">Se crea automáticamente al presionar el botón 📁 Carpeta Google Drive</p>
+                    <div class="flex gap-2">
+                        <input type="url" id="edit-gdrive-url" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none" placeholder="https://drive.google.com/drive/folders/..." readonly>
+                        <a id="edit-gdrive-open" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#0F9D58">Abrir</a>
+                    </div>
                 </div>
 
                 <!-- Save -->
@@ -729,6 +820,7 @@
                     '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
                     '<td class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
                     '<td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
+                    '<td class="px-4 py-3 text-center">' + (p.googleDrive && p.googleDrive.shareUrl ? '<a href="' + escapeHtml(p.googleDrive.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm" style="background-color:#0F9D58" title="Abrir carpeta Google Drive">📁</a>' : '<span class="text-gray-300 text-sm">—</span>') + '</td>' +
                     '<td class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
                     '<td class="px-4 py-3"><button class="text-primary-600 hover:text-primary-700 text-sm font-medium edit-btn" data-uid="' + uid + '">Ver / Editar</button></td>';
                 tbody.appendChild(tr);
@@ -890,9 +982,10 @@
 
             document.getElementById('edit-uid').value = uid;
             document.getElementById('modal-title').textContent = (c.nombre || 'Cliente');
+            document.getElementById('edit-nombre').value = c.nombre || '';
             document.getElementById('edit-email').textContent = c.email || '—';
-            document.getElementById('edit-rut').textContent = c.rut || '—';
-            document.getElementById('edit-telefono').textContent = c.telefono || '—';
+            document.getElementById('edit-rut').value = c.rut || '';
+            document.getElementById('edit-telefono').value = c.telefono || '';
             document.getElementById('edit-fecha-registro').textContent = formatDate(c.createdAt);
             document.getElementById('edit-inscripcion-num').textContent = c.inscripcionNum || '—';
 
@@ -990,6 +1083,21 @@
 
             document.getElementById('edit-admin-notas').value = p.adminNotas || '';
 
+            // Google Drive URL
+            var gdUrl = (p.googleDrive && p.googleDrive.shareUrl) ? p.googleDrive.shareUrl : '';
+            document.getElementById('edit-gdrive-url').value = gdUrl;
+            var gdOpen = document.getElementById('edit-gdrive-open');
+            if (gdUrl) { gdOpen.classList.remove('hidden'); gdOpen.href = gdUrl; } else { gdOpen.classList.add('hidden'); }
+            // Update GDrive button style when folder exists
+            var gdBtn = document.getElementById('btn-gdrive-folder');
+            if (gdUrl) {
+                gdBtn.innerHTML = '📂 Ir a Carpeta Drive';
+                gdBtn.style.backgroundColor = '#1a73e8';
+            } else {
+                gdBtn.innerHTML = '📁 Crear Carpeta Drive';
+                gdBtn.style.backgroundColor = '#0F9D58';
+            }
+
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
             modal.classList.remove('hidden');
@@ -1022,36 +1130,202 @@
             });
         });
 
-        // WhatsApp
-        document.getElementById('btn-whatsapp').addEventListener('click', function() {
-            if (!currentEditUid) return;
-            var c = allClients[currentEditUid] || {};
-            var p = allPortafolios[currentEditUid] || {};
+        // ===== WHATSAPP DROPDOWN =====
+        var wspToggle = document.getElementById('btn-wsp-toggle');
+        var wspMenu = document.getElementById('wsp-dropdown-menu');
+
+        wspToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            wspMenu.classList.toggle('hidden');
+        });
+        document.addEventListener('click', function(e) {
+            if (!document.getElementById('wsp-dropdown-wrap').contains(e.target)) {
+                wspMenu.classList.add('hidden');
+            }
+        });
+
+        function getWspPhone(c) {
             var phone = (c.telefono || '').replace(/[^0-9]/g, '');
             if (phone.startsWith('9') && phone.length === 9) phone = '56' + phone;
             if (!phone.startsWith('56')) phone = '56' + phone;
+            return phone;
+        }
 
-            var progress = calcProgress(p);
-            var modStatus = function(m, name) {
-                if (!m || m.estado === 'no-contratado') return '';
-                var icons = { pendiente: '⏳', 'en-progreso': '🔄', 'en-revision': '📋', completado: '✅' };
-                return name + ': ' + (icons[m.estado] || '⏳') + ' ' + (m.estado || 'pendiente');
-            };
+        function modStatusLine(m, name) {
+            if (!m || m.estado === 'no-contratado') return '';
+            var icons = { pendiente: '⏳', 'en-progreso': '🔄', 'en-revision': '📋', completado: '✅' };
+            return name + ': ' + (icons[m.estado] || '⏳') + ' ' + (m.estado || 'pendiente');
+        }
+
+        function buildWspReserva(c, p) {
             var lines = [
-                'Hola ' + (c.nombre || '') + ', actualización de tu portafolio docente 2026:',
+                'Hola ' + (c.nombre || '') + ' 👋',
                 '',
-                modStatus(p.modulo1, 'Módulo 1 (Planificación)'),
-                modStatus(p.modulo2, 'Módulo 2 (Clase Grabada)'),
-                modStatus(p.modulo3, 'Módulo 3 (Reflexión)'),
+                'Tu inscripción al servicio de *Portafolio Docente 2026* ha sido registrada exitosamente.',
                 '',
-                'Progreso general: ' + progress + '%',
+                '📋 *Datos de tu reserva:*',
+                c.inscripcionNum ? '• N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                '• Nombre: ' + (c.nombre || '—'),
+                '• Email: ' + (c.email || '—'),
+                c.rut ? '• RUT: ' + c.rut : '',
+                p.plan && planNames[p.plan] ? '• Plan: *' + planNames[p.plan] + '* (' + formatCLP(getPlanPrice(p.plan)) + ')' : '',
                 '',
-                'Revisa tu panel: https://www.profefranciscopancho.com/dashboard/',
+                '🔗 *Ingresa a tu cuenta para revisar o editar tus datos:*',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
                 '',
-                'Prof. Francisco Núñez'
-            ].filter(Boolean);
+                'Desde tu panel podrás:',
+                '• ✏️ Actualizar tus datos personales',
+                '• 📄 Completar el formulario de contexto',
+                '• 📊 Revisar el avance de tus módulos',
+                ''
+            ];
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Tu carpeta Google Drive para subir documentos:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
+            lines.push(
+                'Ante cualquier duda, escríbeme por este medio.',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            );
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
 
-            window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(lines.join('\n')), '_blank');
+        function buildWspAvance(c, p) {
+            var progress = calcProgress(p);
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 👋',
+                '',
+                'Te comparto una actualización del avance de tu *Portafolio Docente 2026*:',
+                '',
+                c.inscripcionNum ? '📋 N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                '',
+                '📊 *Estado de tus módulos:*',
+                modStatusLine(p.modulo1, '• Módulo 1 — Planificación'),
+                modStatusLine(p.modulo2, '• Módulo 2 — Clase Grabada'),
+                modStatusLine(p.modulo3, '• Módulo 3 — Reflexión'),
+                '',
+                '📈 *Progreso general: ' + progress + '%*',
+                ''
+            ];
+
+            // Add notes per module if any
+            var m1n = p.modulo1 && p.modulo1.notas ? p.modulo1.notas : '';
+            var m2n = p.modulo2 && p.modulo2.notas ? p.modulo2.notas : '';
+            var m3n = p.modulo3 && p.modulo3.notas ? p.modulo3.notas : '';
+            if (m1n || m2n || m3n) {
+                lines.push('📝 *Observaciones:*');
+                if (m1n) lines.push('• M1: ' + m1n);
+                if (m2n) lines.push('• M2: ' + m2n);
+                if (m3n) lines.push('• M3: ' + m3n);
+                lines.push('');
+            }
+
+            // Add file links if any
+            var m1f = p.modulo1 && p.modulo1.archivoUrl ? p.modulo1.archivoUrl : '';
+            var m2f = p.modulo2 && p.modulo2.archivoUrl ? p.modulo2.archivoUrl : '';
+            var m3f = p.modulo3 && p.modulo3.archivoUrl ? p.modulo3.archivoUrl : '';
+            if (m1f || m2f || m3f) {
+                lines.push('📎 *Archivos entregables:*');
+                if (m1f) lines.push('• M1: ' + m1f);
+                if (m2f) lines.push('• M2: ' + m2f);
+                if (m3f) lines.push('• M3: ' + m3f);
+                lines.push('');
+            }
+
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Sube tus archivos a tu carpeta Google Drive:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
+            lines.push(
+                '🔗 Revisa el detalle en tu panel:',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                'Cualquier duda, escríbeme por aquí.',
+                '',
+                'Saludos,',
+                '*Prof. Francisco Núñez Valenzuela*'
+            );
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
+        function buildWspListo(c, p) {
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 🎉',
+                '',
+                '¡Tu *Portafolio Docente 2026* está *LISTO*! ✅',
+                '',
+                c.inscripcionNum ? '📋 N° Inscripción: *' + c.inscripcionNum + '*' : '',
+                p.plan && planNames[p.plan] ? '📦 Plan: *' + planNames[p.plan] + '*' : '',
+                '',
+                '✅ *Módulos completados:*'
+            ];
+
+            if (p.modulo1 && p.modulo1.contratado) lines.push('• ✅ Módulo 1 — Planificación');
+            if (p.modulo2 && p.modulo2.contratado) lines.push('• ✅ Módulo 2 — Clase Grabada');
+            if (p.modulo3 && p.modulo3.contratado) lines.push('• ✅ Módulo 3 — Reflexión');
+            lines.push('');
+
+            // Add file links
+            var m1f = p.modulo1 && p.modulo1.archivoUrl ? p.modulo1.archivoUrl : '';
+            var m2f = p.modulo2 && p.modulo2.archivoUrl ? p.modulo2.archivoUrl : '';
+            var m3f = p.modulo3 && p.modulo3.archivoUrl ? p.modulo3.archivoUrl : '';
+            if (m1f || m2f || m3f) {
+                lines.push('📎 *Descarga tus archivos:*');
+                if (m1f) lines.push('• M1 — Planificación: ' + m1f);
+                if (m2f) lines.push('• M2 — Clase Grabada: ' + m2f);
+                if (m3f) lines.push('• M3 — Reflexión: ' + m3f);
+                lines.push('');
+            }
+
+            var gdUrl = p.googleDrive && p.googleDrive.shareUrl ? p.googleDrive.shareUrl : '';
+            if (gdUrl) {
+                lines.push('📁 *Todos tus documentos en tu carpeta Google Drive:*');
+                lines.push(gdUrl);
+                lines.push('');
+            }
+            lines.push(
+                '🔗 También puedes revisar todo desde tu panel:',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                'Recuerda que si necesitas alguna corrección o ajuste, puedes escribirme.',
+                '',
+                '¡Mucho éxito en tu evaluación docente! 💪',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            );
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
+        document.querySelectorAll('.wsp-msg-btn').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                wspMenu.classList.add('hidden');
+                if (!currentEditUid) return;
+                var c = allClients[currentEditUid] || {};
+                var p = allPortafolios[currentEditUid] || {};
+                var phone = getWspPhone(c);
+
+                if (!phone || phone.length < 8) {
+                    showActionMsg('⚠️ Este cliente no tiene teléfono registrado.', 'error');
+                    return;
+                }
+
+                var msgType = this.getAttribute('data-msg');
+                var text = '';
+                if (msgType === 'reserva') text = buildWspReserva(c, p);
+                else if (msgType === 'avance') text = buildWspAvance(c, p);
+                else if (msgType === 'listo') text = buildWspListo(c, p);
+
+                window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(text), '_blank');
+            });
         });
 
         // Email
@@ -1096,16 +1370,68 @@
             });
         });
 
-        // Reset Password
+        // Google Drive Folder — create or open
+        document.getElementById('btn-gdrive-folder').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var p = allPortafolios[currentEditUid] || {};
+            if (p.googleDrive && p.googleDrive.shareUrl) {
+                window.open(p.googleDrive.shareUrl, '_blank');
+                return;
+            }
+            if (!confirm('¿Crear carpeta Google Drive para ' + (c.nombre || 'este cliente') + '?\n\nSe crearán subcarpetas:\n📁 Módulo 1 - Planificación\n📁 Módulo 2 - Clase Grabada\n📁 Módulo 3 - Reflexión\n📁 Documentos Generales')) return;
+            var btn = document.getElementById('btn-gdrive-folder');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+            fetch('/api/gdrive', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'create-folder', callerUid: auth.currentUser.uid, clientUid: currentEditUid, clientName: c.nombre || 'Cliente', clientEmail: c.email || '' })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta Google Drive';
+                if (data.success) {
+                    document.getElementById('edit-gdrive-url').value = data.shareUrl;
+                    var gdOpen = document.getElementById('edit-gdrive-open');
+                    gdOpen.href = data.shareUrl;
+                    gdOpen.classList.remove('hidden');
+                    showActionMsg('✅ Carpeta creada en Google Drive. <a href="' + data.shareUrl + '" target="_blank" class="underline font-bold">Abrir carpeta</a>', 'success');
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo crear la carpeta'), 'error');
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = '📁 Carpeta Google Drive';
+                showActionMsg('Error de red: ' + err.message, 'error');
+            });
+        });
+
+        // Reset Password (direct change)
         document.getElementById('btn-reset-pass').addEventListener('click', function() {
             if (!currentEditUid) return;
             var c = allClients[currentEditUid] || {};
-            if (!c.email) { showActionMsg('No hay email registrado.', 'error'); return; }
-            if (!confirm('¿Enviar email de restablecimiento de contraseña a ' + c.email + '?')) return;
-            auth.sendPasswordResetEmail(c.email).then(function() {
-                showActionMsg('📧 Email de restablecimiento enviado a ' + c.email, 'success');
+            var newPass = prompt('Ingresa la nueva contraseña para ' + (c.nombre || c.email) + '\n(mínimo 6 caracteres):');
+            if (!newPass) return;
+            if (newPass.length < 6) { showActionMsg('La contraseña debe tener al menos 6 caracteres.', 'error'); return; }
+            var btn = document.getElementById('btn-reset-pass');
+            btn.disabled = true;
+            btn.textContent = 'Cambiando...';
+            fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'change-password', uid: currentEditUid, callerUid: auth.currentUser.uid, password: newPass })
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '🔑 Cambiar Contraseña';
+                if (data.success) {
+                    showActionMsg('✅ Contraseña cambiada exitosamente. Nueva: ' + newPass, 'success');
+                } else {
+                    showActionMsg('Error: ' + (data.error || 'No se pudo cambiar'), 'error');
+                }
             }).catch(function(err) {
-                showActionMsg('Error: ' + err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = '🔑 Cambiar Contraseña';
+                showActionMsg('Error de red: ' + err.message, 'error');
             });
         });
 
@@ -1119,10 +1445,10 @@
             var btn = this;
             btn.disabled = true;
             btn.textContent = 'Eliminando...';
-            fetch('/api/admin/delete-user', {
+            fetch('/api/admin', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ uid: currentEditUid, callerUid: auth.currentUser.uid })
+                body: JSON.stringify({ action: 'delete-user', uid: currentEditUid, callerUid: auth.currentUser.uid })
             }).then(function(r) { return r.json(); }).then(function(data) {
                 btn.disabled = false;
                 btn.textContent = '🗑️ Eliminar Usuario';
@@ -1146,6 +1472,15 @@
             if (!uid) return;
 
             var updates = {};
+
+            // Save user info changes (nombre, telefono, rut)
+            var newNombre = document.getElementById('edit-nombre').value.trim();
+            var newTelefono = document.getElementById('edit-telefono').value.trim();
+            var newRut = document.getElementById('edit-rut').value.trim();
+            if (newNombre) updates['users/' + uid + '/nombre'] = newNombre;
+            if (newTelefono !== undefined) updates['users/' + uid + '/telefono'] = newTelefono;
+            if (newRut !== undefined) updates['users/' + uid + '/rut'] = newRut;
+
             updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
 
             // M1
@@ -1174,11 +1509,85 @@
             updates['portafolios/' + uid + '/modulo3/notas'] = document.getElementById('edit-m3-notas').value;
 
             updates['portafolios/' + uid + '/adminNotas'] = document.getElementById('edit-admin-notas').value;
+
+            // Google Drive URL (read-only, set by API)
+            var gDriveUrl = document.getElementById('edit-gdrive-url').value.trim();
+            if (gDriveUrl) updates['portafolios/' + uid + '/googleDrive/shareUrl'] = gDriveUrl;
+
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 
             db.ref().update(updates).then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
+            });
+        });
+
+        // ===== CREATE USER MODAL =====
+        var createModal = document.getElementById('create-modal');
+
+        document.getElementById('btn-crear-usuario').addEventListener('click', function() {
+            createModal.classList.remove('hidden');
+            document.getElementById('create-user-form').reset();
+            document.getElementById('create-result').classList.add('hidden');
+        });
+
+        document.getElementById('create-modal-close').addEventListener('click', function() {
+            createModal.classList.add('hidden');
+        });
+
+        createModal.addEventListener('click', function(e) {
+            if (e.target === createModal) createModal.classList.add('hidden');
+        });
+
+        document.getElementById('create-user-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var btn = this.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Creando...';
+
+            var nombre = document.getElementById('create-nombre').value.trim();
+            var email = document.getElementById('create-email').value.trim();
+            var telefono = document.getElementById('create-telefono').value.trim();
+            var rut = document.getElementById('create-rut').value.trim();
+            var password = document.getElementById('create-password').value || (Math.random().toString(36).slice(-8));
+
+            auth.currentUser.getIdToken().then(function(token) {
+                return fetch('/api/admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'create-user',
+                        callerUid: auth.currentUser.uid,
+                        nombre: nombre,
+                        email: email,
+                        telefono: telefono,
+                        rut: rut,
+                        password: password
+                    })
+                });
+            }).then(function(res) { return res.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario y Pre-Inscribir';
+                if (data.success) {
+                    var resultDiv = document.getElementById('create-result');
+                    resultDiv.classList.remove('hidden');
+                    resultDiv.innerHTML = '<div class="bg-green-50 border border-green-300 rounded-lg p-4">' +
+                        '<p class="font-semibold text-green-800">✅ Usuario creado exitosamente</p>' +
+                        '<p class="text-sm mt-1">Nombre: <b>' + nombre + '</b></p>' +
+                        '<p class="text-sm">Email: <b>' + email + '</b></p>' +
+                        '<p class="text-sm">Contraseña: <b>' + (data.password || password) + '</b></p>' +
+                        '<p class="text-sm">N° Inscripción: <b>' + (data.inscripcionNum || '-') + '</b></p>' +
+                        (telefono ? '<p class="text-sm mt-2"><a href="https://wa.me/' + telefono.replace(/[^0-9]/g,'').replace(/^9/,'569') + '?text=' + encodeURIComponent('Hola ' + nombre + ', te informamos que tu inscripción ha sido registrada.\n\nN° Inscripción: ' + (data.inscripcionNum || '') + '\nEmail: ' + email + '\nContraseña: ' + (data.password || password) + '\n\nIngresa en: https://www.profefranciscopancho.com/cuenta/login.html\n\nProf. Francisco Núñez') + '" target="_blank" class="inline-flex items-center text-green-700 hover:underline">📱 Enviar datos por WhatsApp</a></p>' : '') +
+                        '</div>';
+                    loadData();
+                } else {
+                    alert('Error: ' + (data.error || 'No se pudo crear el usuario'));
+                }
+            }).catch(function(err) {
+                btn.disabled = false;
+                btn.textContent = 'Crear Usuario y Pre-Inscribir';
+                alert('Error de conexión: ' + err.message);
             });
         });
 

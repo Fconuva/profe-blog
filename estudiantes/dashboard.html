@@ -215,6 +215,7 @@
         };
         firebase.initializeApp(FIREBASE_CONFIG);
         const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
 
@@ -238,18 +239,20 @@
                 document.getElementById('studentName').textContent = student.nombre;
                 document.getElementById('studentCurso').textContent = student.curso === '2A-HC' ? '2°A HC' : '2°B HC';
 
-                loadSessions(user.uid, student.curso);
-                loadRankingPreview();
-                loadStats(user.uid, student.curso);
+                await loadDashboard(user.uid, student.curso);
                 listenForMessages();
 
             } catch(e) { console.error(e); }
         });
 
-        async function loadSessions(uid, curso) {
+        async function loadDashboard(uid, curso) {
             const container = document.getElementById('sessionList');
             try {
-                const sesSnap = await db.ref(BASE + '/sesiones').orderByChild('orden').once('value');
+                // Single batch: fetch sessions, this student's results+responses, and ranking in parallel
+                const [sesSnap, rankSnap] = await Promise.all([
+                    db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
+                    db.ref(BASE + '/ranking').once('value')
+                ]);
 
                 if (!sesSnap.exists()) {
                     container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
@@ -260,7 +263,7 @@
                 sesSnap.forEach(s => { sesiones.push({ id: s.key, ...s.val() }); });
                 sesiones.sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
-                // Read only the current student's responses and results per session
+                // Read only this student's respuestas and resultados per session (parallel)
                 const respuestas = {};
                 const resultados = {};
                 await Promise.all(sesiones.map(async (ses) => {
@@ -269,16 +272,17 @@
                             db.ref(BASE + '/respuestas/' + ses.id + '/' + uid).once('value'),
                             db.ref(BASE + '/resultados/' + ses.id + '/' + uid).once('value')
                         ]);
-                        if (myRespSnap.exists()) respuestas[ses.id] = { [uid]: myRespSnap.val() };
-                        if (myResSnap.exists()) resultados[ses.id] = { [uid]: myResSnap.val() };
+                        if (myRespSnap.exists()) respuestas[ses.id] = myRespSnap.val();
+                        if (myResSnap.exists()) resultados[ses.id] = myResSnap.val();
                     } catch(e) {}
                 }));
 
+                // === RENDER SESSIONS ===
                 let html = '';
                 sesiones.forEach((ses, idx) => {
                     const isActive = ses.activa !== false;
-                    const myResp = respuestas[ses.id] && respuestas[ses.id][uid];
-                    const myResult = resultados[ses.id] && resultados[ses.id][uid];
+                    const myResp = respuestas[ses.id];
+                    const myResult = resultados[ses.id];
                     const isCompleted = myResp && myResp.completada;
                     const hasResults = ses.resultados_visibles && myResult;
 
@@ -314,48 +318,76 @@
                         <div class="session-status">${statusBadge}</div>
                     </div>`;
                 });
-
                 container.innerHTML = html;
-            } catch(e) {
-                console.error(e);
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar sesiones.</div>';
-            }
-        }
 
-        async function loadRankingPreview() {
-            try {
-                const rankSnap = await db.ref(BASE + '/ranking').once('value');
+                // === STATS (reuse fetched data) ===
+                let totalSesiones = 0, completadas = 0, totalPct = 0;
+                sesiones.forEach(ses => {
+                    if (ses.activa !== false) totalSesiones++;
+                    if (resultados[ses.id]) {
+                        completadas++;
+                        totalPct += resultados[ses.id].porcentaje || 0;
+                    }
+                });
+                document.getElementById('statCompleted').textContent = completadas;
+                document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' disponibles';
+                document.getElementById('statAvg').textContent = completadas > 0 ? Math.round(totalPct / completadas) + '%' : '-';
+
+                // === RANKING (reuse fetched data) ===
                 const rankingData = rankSnap.val() || {};
 
-                const courseScores = { '2A-HC': [], '2B-HC': [] };
-                // Aggregate scores per student from ranking data (already organized by session/course/uid)
+                // Ranking position for this student
                 const studentAvgs = {};
                 for (const [sesId, cursos] of Object.entries(rankingData)) {
-                    for (const [curso, students] of Object.entries(cursos)) {
-                        for (const [uid, data] of Object.entries(students)) {
-                            if (!studentAvgs[uid]) studentAvgs[uid] = { curso, total: 0, count: 0 };
-                            studentAvgs[uid].total += (data.porcentaje || 0);
-                            studentAvgs[uid].count++;
+                    if (!cursos[curso]) continue;
+                    for (const [euid, data] of Object.entries(cursos[curso])) {
+                        if (!studentAvgs[euid]) { studentAvgs[euid] = { total: 0, count: 0 }; }
+                        studentAvgs[euid].total += (data.porcentaje || 0);
+                        studentAvgs[euid].count++;
+                    }
+                }
+                const scores = Object.entries(studentAvgs).map(([euid, info]) => ({
+                    uid: euid, avg: info.count > 0 ? info.total / info.count : 0
+                }));
+                scores.sort((a, b) => b.avg - a.avg);
+                const pos = scores.findIndex(s => s.uid === uid);
+                document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';
+                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (curso === '2A-HC' ? '2°A' : '2°B');
+
+                // Ranking preview (top 5 per course)
+                const courseScores = { '2A-HC': [], '2B-HC': [] };
+                for (const [sesId, cursos] of Object.entries(rankingData)) {
+                    for (const [c, students] of Object.entries(cursos)) {
+                        for (const [euid, data] of Object.entries(students)) {
+                            if (!courseScores[c]) courseScores[c] = [];
+                            const existing = courseScores[c].find(s => s.uid === euid);
+                            if (existing) { existing.total += (data.porcentaje || 0); existing.count++; }
+                            else courseScores[c].push({ uid: euid, nombre: data.nombre || 'Estudiante', total: data.porcentaje || 0, count: 1 });
                         }
                     }
                 }
-                for (const [uid, info] of Object.entries(studentAvgs)) {
-                    if (courseScores[info.curso]) {
-                        courseScores[info.curso].push(info.count > 0 ? info.total / info.count : 0);
-                    }
+                let rankHtml = '';
+                for (const [c, arr] of Object.entries(courseScores)) {
+                    arr.forEach(s => s.avg = s.count > 0 ? s.total / s.count : 0);
+                    arr.sort((a, b) => b.avg - a.avg);
+                    const top5 = arr.slice(0, 5);
+                    if (top5.length === 0) continue;
+                    const label = c === '2A-HC' ? '2°A HC' : '2°B HC';
+                    rankHtml += `<div style="margin-bottom:10px"><strong>${label}</strong></div>`;
+                    top5.forEach((s, i) => {
+                        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '  ';
+                        const isMe = s.uid === uid ? ' style="font-weight:700;color:#1e40af"' : '';
+                        rankHtml += `<div${isMe}>${medal} ${i + 1}. ${s.nombre} — ${Math.round(s.avg)}%</div>`;
+                    });
                 }
+                const rankEl = document.getElementById('rankingPreview');
+                if (rankEl) rankEl.innerHTML = rankHtml || '<div style="color:#94a3b8">Sin datos aún</div>';
 
-                const avgA = courseScores['2A-HC'].length ? Math.round(courseScores['2A-HC'].reduce((a,b) => a+b, 0) / courseScores['2A-HC'].length) : 0;
-                const avgB = courseScores['2B-HC'].length ? Math.round(courseScores['2B-HC'].reduce((a,b) => a+b, 0) / courseScores['2B-HC'].length) : 0;
-                const maxAvg = Math.max(avgA, avgB, 1);
-
-                document.getElementById('barA').style.height = Math.max(20, (avgA / maxAvg) * 100) + 'px';
-                document.getElementById('barB').style.height = Math.max(20, (avgB / maxAvg) * 100) + 'px';
-                document.getElementById('scoreA').textContent = avgA + '% promedio';
-                document.getElementById('scoreB').textContent = avgB + '% promedio';
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar el dashboard.</div>';
+            }
         }
-
         // ==================== MESSAGING (Bell) ====================
         let lastMsgId = null;
         function listenForMessages() {
@@ -386,49 +418,6 @@
             document.getElementById('bellDot').classList.remove('show');
         }
 
-        async function loadStats(uid, curso) {
-            try {
-                const sesSnap = await db.ref(BASE + '/sesiones').once('value');
-                const resSnap = await db.ref(BASE + '/resultados').once('value');
-                const resultados = resSnap.val() || {};
-
-                let totalSesiones = 0, completadas = 0, totalPct = 0;
-                if (sesSnap.exists()) {
-                    sesSnap.forEach(s => {
-                        if (s.val().activa !== false) totalSesiones++;
-                        if (resultados[s.key] && resultados[s.key][uid]) {
-                            completadas++;
-                            totalPct += resultados[s.key][uid].porcentaje || 0;
-                        }
-                    });
-                }
-
-                document.getElementById('statCompleted').textContent = completadas;
-                document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' disponibles';
-                document.getElementById('statAvg').textContent = completadas > 0 ? Math.round(totalPct / completadas) + '%' : '-';
-
-                // Ranking position: use ranking node instead of estudiantes collection
-                const rankSnap = await db.ref(BASE + '/ranking').once('value');
-                const rankingData = rankSnap.val() || {};
-                const studentAvgs = {};
-                for (const [sesId, cursos] of Object.entries(rankingData)) {
-                    if (!cursos[curso]) continue;
-                    for (const [euid, data] of Object.entries(cursos[curso])) {
-                        if (!studentAvgs[euid]) { studentAvgs[euid] = { total: 0, count: 0 }; }
-                        studentAvgs[euid].total += (data.porcentaje || 0);
-                        studentAvgs[euid].count++;
-                    }
-                }
-                const scores = Object.entries(studentAvgs).map(([euid, info]) => ({
-                    uid: euid, avg: info.count > 0 ? info.total / info.count : 0
-                }));
-                scores.sort((a, b) => b.avg - a.avg);
-                const pos = scores.findIndex(s => s.uid === uid);
-                document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';
-                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (curso === '2A-HC' ? '2°A' : '2°B');
-
-            } catch(e) { console.error(e); }
-        }
     </script>
 </body>
 </html>

@@ -253,7 +253,11 @@
 
                 const allSes = [];
                 sesSnap.forEach(s => { allSes.push({ id: s.key, ...s.val() }); });
-                const sesiones = allSes.filter(s => (s.programa || 'simce') === programa);
+                const sesiones = allSes.filter(s => {
+                    if ((s.programa || 'simce') !== programa) return false;
+                    if (s.asignados && !s.asignados.includes(uid)) return false;
+                    return true;
+                });
                 sesiones.sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
                 // Read only this student's respuestas and resultados per session (parallel)

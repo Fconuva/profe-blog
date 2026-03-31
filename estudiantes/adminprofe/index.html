@@ -349,6 +349,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
         <h3>Editar Estudiante</h3>
         <input type="hidden" id="editStudentUid">
         <div class="form-group"><label>Nombre Completo</label><input id="editStudentName"></div>
+        <div class="form-group"><label>RUT</label><input id="editStudentRut" placeholder="12345678-9"><div style="font-size:11px;color:#94a3b8;margin-top:2px">⚠️ Cambiar el RUT NO cambia la contraseña ni el email de Auth. Usar 🔑 para resetear.</div></div>
         <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></div>
         <div class="form-group"><label>Email Institucional</label><input id="editStudentEmail"></div>
         <div class="modal-actions">
@@ -757,6 +758,7 @@ function editStudent(uid){
     const s=students[uid];if(!s)return;
     document.getElementById('editStudentUid').value=uid;
     document.getElementById('editStudentName').value=s.nombre||'';
+    document.getElementById('editStudentRut').value=s.rut||'';
     document.getElementById('editStudentCurso').value=s.curso||'2A-HC';
     document.getElementById('editStudentEmail').value=s.email_institucional||'';
     openModal('editStudent');
@@ -764,9 +766,12 @@ function editStudent(uid){
 
 async function saveStudentEdit(){
     const uid=document.getElementById('editStudentUid').value;
+    const newCurso=document.getElementById('editStudentCurso').value;
     const updates={
         nombre:document.getElementById('editStudentName').value.trim(),
-        curso:document.getElementById('editStudentCurso').value,
+        rut:cleanRut(document.getElementById('editStudentRut').value),
+        curso:newCurso,
+        programa:progFromCurso(newCurso),
         email_institucional:document.getElementById('editStudentEmail').value.trim()
     };
     try{
@@ -842,9 +847,10 @@ function renderSessions(){
         const numTexts=(s.contenido?.textos||[]).length;
         const numQ=(s.contenido?.preguntas||[]).length;
         const progBadge=s.programa==='paes'?'<span class="badge badge-green">PAES</span>':'<span class="badge badge-blue">SIMCE</span>';
+        const asigBadge=s.asignados?`<span class="badge badge-purple">👤 ${s.asignados.length} asignado(s)</span>`:'';
         return `<tr>
             <td><strong>${s.orden||'—'}</strong></td>
-            <td>${s.titulo||'Sin título'} ${progBadge}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
+            <td>${s.titulo||'Sin título'} ${progBadge} ${asigBadge}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
             <td style="text-align:center">${numTexts}</td>
             <td style="text-align:center">${numQ}</td>
             <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>

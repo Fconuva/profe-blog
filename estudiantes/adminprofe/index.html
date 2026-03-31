@@ -209,8 +209,14 @@
                 <input type="text" id="studentSearch" placeholder="Buscar por nombre o RUT..." oninput="renderStudents()">
                 <select id="studentCourseFilter" onchange="renderStudents()">
                     <option value="">Todos los cursos</option>
+                    <option value="__simce">📘 SIMCE (2° medio)</option>
+                    <option value="__paes">📗 PAES (3°-4° medio)</option>
                     <option value="2A-HC">2°A HC</option>
                     <option value="2B-HC">2°B HC</option>
+                    <option value="3A-HC">3°A HC</option>
+                    <option value="3B-HC">3°B HC</option>
+                    <option value="4A-HC">4°A HC</option>
+                    <option value="4B-HC">4°B HC</option>
                 </select>
             </div>
             <div class="panel-table">
@@ -243,6 +249,10 @@
                     <option value="">Todos</option>
                     <option value="2A-HC">2°A HC</option>
                     <option value="2B-HC">2°B HC</option>
+                    <option value="3A-HC">3°A HC</option>
+                    <option value="3B-HC">3°B HC</option>
+                    <option value="4A-HC">4°A HC</option>
+                    <option value="4B-HC">4°B HC</option>
                 </select>
             </div>
             <div class="level-row" id="levelCards"></div>
@@ -284,6 +294,10 @@
                     <option value="">Todos los cursos</option>
                     <option value="2A-HC">2°A HC</option>
                     <option value="2B-HC">2°B HC</option>
+                    <option value="3A-HC">3°A HC</option>
+                    <option value="3B-HC">3°B HC</option>
+                    <option value="4A-HC">4°A HC</option>
+                    <option value="4B-HC">4°B HC</option>
                 </select>
             </div>
             <div class="stat-row" id="rankingStats"></div>
@@ -304,7 +318,7 @@
         <div class="form-group"><label>RUT (sin puntos, con guión)</label><input id="newStudentRut" placeholder="Ej: 12345678-9" maxlength="12"></div>
         <div class="form-group">
             <label>Curso</label>
-            <select id="newStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option></select>
+            <select id="newStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select>
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal('addStudent')">Cancelar</button>
@@ -335,7 +349,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
         <h3>Editar Estudiante</h3>
         <input type="hidden" id="editStudentUid">
         <div class="form-group"><label>Nombre Completo</label><input id="editStudentName"></div>
-        <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option></select></div>
+        <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></div>
         <div class="form-group"><label>Email Institucional</label><input id="editStudentEmail"></div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal('editStudent')">Cancelar</button>
@@ -352,6 +366,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
         <div class="form-group"><label>Descripción</label><textarea id="newSesDesc" rows="2" placeholder="Descripción breve..."></textarea></div>
         <div class="form-group"><label>Orden (número)</label><input id="newSesOrden" type="number" min="1" value="1"></div>
         <div class="form-group"><label>Video YouTube (URL, opcional)</label><input id="newSesVideo" placeholder="https://youtube.com/watch?v=..."></div>
+        <div class="form-group"><label>Programa</label><select id="newSesProg"><option value="simce">SIMCE (2° medio)</option><option value="paes">PAES (3°-4° medio)</option></select></div>
         <p style="font-size:11px;color:#94a3b8;margin-bottom:8px">Los textos y preguntas pueden agregarse editando la sesión después de crearla.</p>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal('addSession')">Cancelar</button>
@@ -402,6 +417,12 @@ const auth=firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
+const ALL_CURSOS={'2A-HC':{label:'2°A HC',short:'2°A',badge:'badge-blue',prog:'simce'},'2B-HC':{label:'2°B HC',short:'2°B',badge:'badge-purple',prog:'simce'},'3A-HC':{label:'3°A HC',short:'3°A',badge:'badge-green',prog:'paes'},'3B-HC':{label:'3°B HC',short:'3°B',badge:'badge-amber',prog:'paes'},'4A-HC':{label:'4°A HC',short:'4°A',badge:'badge-blue',prog:'paes'},'4B-HC':{label:'4°B HC',short:'4°B',badge:'badge-purple',prog:'paes'}};
+function cLabel(c){return ALL_CURSOS[c]?.label||c}
+function cShort(c){return ALL_CURSOS[c]?.short||c}
+function cBadge(c){return ALL_CURSOS[c]?.badge||'badge-gray'}
+function cursoOptions(sel){let h='';for(const[k,v]of Object.entries(ALL_CURSOS)){h+=`<option value="${k}"${k===sel?' selected':''}>${v.label}</option>`}return h}
+function progFromCurso(c){return ALL_CURSOS[c]?.prog||'simce'}
 
 // Secondary app for creating student accounts without signing out admin
 const secondaryApp=firebase.initializeApp(FIREBASE_CONFIG,"secondary");
@@ -497,8 +518,8 @@ function initMobileNav(){
 function renderOverview(){
     const totalStudents=Object.keys(students).length;
     const totalSessions=Object.keys(sessions).length;
-    const a=Object.values(students).filter(s=>s.curso==='2A-HC').length;
-    const b=Object.values(students).filter(s=>s.curso==='2B-HC').length;
+    const simceCount=Object.values(students).filter(s=>progFromCurso(s.curso)==='simce').length;
+    const paesCount=Object.values(students).filter(s=>progFromCurso(s.curso)==='paes').length;
     const perfilComplete=Object.values(students).filter(s=>s.perfil_completo).length;
 
     let totalSubmissions=0;
@@ -507,7 +528,7 @@ function renderOverview(){
     }
 
     document.getElementById('overviewStats').innerHTML=`
-        <div class="stat-card"><div class="label">Total Estudiantes</div><div class="value">${totalStudents}</div><div class="sub">2°A: ${a} | 2°B: ${b}</div></div>
+        <div class="stat-card"><div class="label">Total Estudiantes</div><div class="value">${totalStudents}</div><div class="sub">SIMCE: ${simceCount} | PAES: ${paesCount}</div></div>
         <div class="stat-card"><div class="label">Sesiones Creadas</div><div class="value">${totalSessions}</div><div class="sub">${Object.values(sessions).filter(s=>s.activa!==false).length} activas</div></div>
         <div class="stat-card"><div class="label">Evaluaciones Enviadas</div><div class="value">${totalSubmissions}</div></div>
         <div class="stat-card"><div class="label">Perfiles Completos</div><div class="value">${perfilComplete}/${totalStudents}</div><div class="sub">${totalStudents?Math.round(perfilComplete/totalStudents*100):0}%</div></div>
@@ -622,7 +643,7 @@ function renderLiveProgress(){
         const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button>`:'';
         return `<tr>
             <td><strong>${r.nombre}</strong></td>
-            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${r.curso==='2A-HC'?'2°A':'2°B'}</span></td>
+            <td><span class="badge ${cBadge(r.curso)}">${cShort(r.curso)}</span></td>
             <td style="font-size:12px">${prog}</td>
             <td>${r.statusBadge}</td>
             <td style="font-size:12px;color:#64748b">${r.lastAct}</td>
@@ -639,7 +660,9 @@ function renderStudents(){
 
     let items=Object.entries(students).map(([uid,s])=>({uid,...s}));
     if(search) items=items.filter(s=>(s.nombre||'').toLowerCase().includes(search)||(s.rut||'').includes(search));
-    if(courseF) items=items.filter(s=>s.curso===courseF);
+    if(courseF==='__simce') items=items.filter(s=>progFromCurso(s.curso)==='simce');
+    else if(courseF==='__paes') items=items.filter(s=>progFromCurso(s.curso)==='paes');
+    else if(courseF) items=items.filter(s=>s.curso===courseF);
     items.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
 
     tbody.innerHTML=items.map(s=>{
@@ -647,7 +670,7 @@ function renderStudents(){
         return `<tr>
             <td><strong>${s.nombre||'—'}</strong></td>
             <td style="font-size:12px">${s.rut||'—'}</td>
-            <td><span class="badge ${s.curso==='2A-HC'?'badge-blue':'badge-purple'}">${s.curso==='2A-HC'?'2°A':'2°B'}</span></td>
+            <td><span class="badge ${cBadge(s.curso)}">${cShort(s.curso)}</span></td>
             <td style="font-size:12px">${s.email_institucional||'—'}</td>
             <td>${perfilBadge}</td>
             <td>
@@ -681,11 +704,11 @@ async function createStudent(){
         await secondaryAuth.signOut();
         const uid=cred.user.uid;
         await db.ref(BASE+'/estudiantes/'+uid).set({
-            nombre:name,rut:rut,curso:curso,
+            nombre:name,rut:rut,curso:curso,programa:progFromCurso(curso),
             perfil_completo:false,password_changed:false,
             createdAt:Date.now(),createdBy:currentAdminUid
         });
-        students[uid]={nombre:name,rut:rut,curso:curso,perfil_completo:false};
+        students[uid]={nombre:name,rut:rut,curso:curso,programa:progFromCurso(curso),perfil_completo:false};
         renderStudents();renderOverview();
         closeModal('addStudent');
         document.getElementById('newStudentName').value='';
@@ -713,7 +736,7 @@ async function bulkCreateStudents(){
             const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
             await secondaryAuth.signOut();
             await db.ref(BASE+'/estudiantes/'+cred.user.uid).set({
-                nombre:name,rut:cleanRut(rut),curso:curso,
+                nombre:name,rut:cleanRut(rut),curso:curso,programa:progFromCurso(curso),
                 perfil_completo:false,password_changed:false,
                 createdAt:Date.now(),createdBy:currentAdminUid
             });
@@ -818,9 +841,10 @@ function renderSessions(){
     tbody.innerHTML=items.map(s=>{
         const numTexts=(s.contenido?.textos||[]).length;
         const numQ=(s.contenido?.preguntas||[]).length;
+        const progBadge=s.programa==='paes'?'<span class="badge badge-green">PAES</span>':'<span class="badge badge-blue">SIMCE</span>';
         return `<tr>
             <td><strong>${s.orden||'—'}</strong></td>
-            <td>${s.titulo||'Sin título'}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
+            <td>${s.titulo||'Sin título'} ${progBadge}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
             <td style="text-align:center">${numTexts}</td>
             <td style="text-align:center">${numQ}</td>
             <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>
@@ -849,9 +873,10 @@ async function createSession(){
     if(!title){toast('Ingresa un título','err');return}
 
     const id='sesion-'+orden;
+    const prog=document.getElementById('newSesProg').value||'simce';
     try{
         await db.ref(BASE+'/sesiones/'+id).set({
-            titulo:title,descripcion:desc,orden:orden,
+            titulo:title,descripcion:desc,orden:orden,programa:prog,
             activa:true,resultados_visibles:false,
             video_youtube:video||null,
             contenido:{textos:[],preguntas:[]},
@@ -1112,12 +1137,9 @@ async function resetSessionResults(sesId){
 async function resetStudentSession(uid,sesId,nombre){
     if(!confirm('¿Dar otra oportunidad a '+nombre+' en esta sesión?\nSe eliminarán sus respuestas, resultado y ranking para que pueda volver a hacerla.'))return;
     try{
-        await Promise.all([
-            db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove(),
-            db.ref(BASE+'/respuestas/'+sesId+'/'+uid).remove(),
-            db.ref(BASE+'/ranking/'+sesId+'/2A-HC/'+uid).remove(),
-            db.ref(BASE+'/ranking/'+sesId+'/2B-HC/'+uid).remove()
-        ]);
+        const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove(),db.ref(BASE+'/respuestas/'+sesId+'/'+uid).remove()];
+        for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
+        await Promise.all(rankRemovals);
         if(allResults[sesId])delete allResults[sesId][uid];
         if(allResponses[sesId])delete allResponses[sesId][uid];
         loadResults();
@@ -1294,11 +1316,11 @@ function loadResults(){
 
     const tbody=document.getElementById('resultsBody');
     tbody.innerHTML=items.map((r,i)=>{
-        const cursoLabel=r.curso==='2A-HC'?'2°A':'2°B';
+        const cursoLabel=cShort(r.curso);
         const mins=r.tiempo?Math.round(r.tiempo/60000):0;
         return `<tr>
             <td><strong>${r.nombre}</strong></td>
-            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${cursoLabel}</span></td>
+            <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
             <td>${r.puntaje}/${r.total}</td>
             <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
             <td>${getLevelBadge(r.porcentaje)}</td>
@@ -1352,7 +1374,8 @@ function generateSessionReport(output){
 }
 
 function generateCourseReport(output){
-    const courses={'2A-HC':{name:'2°A HC',scores:[]},'2B-HC':{name:'2°B HC',scores:[]}};
+    const courses={};
+    for(const[k,v]of Object.entries(ALL_CURSOS)) courses[k]={name:v.label,scores:[]};
     for(const[sesId,uidMap]of Object.entries(allResults)){
         for(const[uid,r]of Object.entries(uidMap)){
             const est=students[uid];
@@ -1360,7 +1383,7 @@ function generateCourseReport(output){
         }
     }
 
-    let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso</h3><div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">';
+    let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">';
     for(const[curso,data]of Object.entries(courses)){
         const avg=data.scores.length?Math.round(data.scores.reduce((a,b)=>a+b,0)/data.scores.length):0;
         const max=data.scores.length?Math.max(...data.scores):0;
@@ -1516,12 +1539,12 @@ async function loadAdminRanking(){
 
     tbody.innerHTML=items.map((r,i)=>{
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
-        const cursoLabel=r.curso==='2A-HC'?'2°A':'2°B';
+        const cursoLabel=cShort(r.curso);
         const scoreText=sesId==='__all__'?`Prom: ${r.porcentaje}% (${r.sesiones} ses.)`:`${r.puntaje}/${r.total}`;
         return `<tr${i<3?' style="background:#fffbeb"':''}>
             <td style="text-align:center;font-weight:800;font-size:15px">${medal||i+1}</td>
             <td><strong>${r.nombre}</strong></td>
-            <td><span class="badge ${r.curso==='2A-HC'?'badge-blue':'badge-purple'}">${cursoLabel}</span></td>
+            <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
             <td style="font-size:12px">${scoreText}</td>
             <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
             <td>${getLevelBadge(r.porcentaje)}</td>

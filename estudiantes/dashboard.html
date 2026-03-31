@@ -173,20 +173,9 @@
         <div class="ranking-preview">
             <div class="ranking-header">
                 <h3>Puntaje promedio por curso</h3>
-                <a href="ranking.html">Ver ranking completo →</a>
             </div>
-            <div class="ranking-bars" id="rankingBars">
-                <div class="rank-bar">
-                    <div class="bar a" id="barA" style="height:20px;"></div>
-                    <div class="label">2°A HC</div>
-                    <div class="score" id="scoreA">-</div>
-                </div>
-                <div class="rank-bar">
-                    <div class="bar b" id="barB" style="height:20px;"></div>
-                    <div class="label">2°B HC</div>
-                    <div class="score" id="scoreB">-</div>
-                </div>
-            </div>
+            <div class="ranking-bars" id="rankingBars"></div>
+            <div id="rankingList" style="margin-top:12px;font-size:13px"></div>
         </div>
     </div>
 
@@ -218,6 +207,8 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
+        const CURSO_LABELS = {'2A-HC':'2°A HC','2B-HC':'2°B HC','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
+        const PROGRAMA_CURSOS = {simce:['2A-HC','2B-HC'], paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
 
         // Connectivity
         window.addEventListener('online', () => { document.getElementById('connectivity').className = 'connectivity online'; document.getElementById('connectivity').textContent = '🟢 Conectado'; });
@@ -237,15 +228,16 @@
                 if (!student.perfil_completo) { window.location.href = 'perfil.html'; return; }
 
                 document.getElementById('studentName').textContent = student.nombre;
-                document.getElementById('studentCurso').textContent = student.curso === '2A-HC' ? '2°A HC' : '2°B HC';
+                document.getElementById('studentCurso').textContent = CURSO_LABELS[student.curso] || student.curso;
 
-                await loadDashboard(user.uid, student.curso);
+                const programa = student.programa || 'simce';
+                await loadDashboard(user.uid, student.curso, programa);
                 listenForMessages();
 
             } catch(e) { console.error(e); }
         });
 
-        async function loadDashboard(uid, curso) {
+        async function loadDashboard(uid, curso, programa) {
             const container = document.getElementById('sessionList');
             try {
                 // Single batch: fetch sessions, this student's results+responses, and ranking in parallel
@@ -259,8 +251,9 @@
                     return;
                 }
 
-                const sesiones = [];
-                sesSnap.forEach(s => { sesiones.push({ id: s.key, ...s.val() }); });
+                const allSes = [];
+                sesSnap.forEach(s => { allSes.push({ id: s.key, ...s.val() }); });
+                const sesiones = allSes.filter(s => (s.programa || 'simce') === programa);
                 sesiones.sort((a, b) => (a.orden || 0) - (b.orden || 0));
 
                 // Read only this student's respuestas and resultados per session (parallel)
@@ -352,36 +345,49 @@
                 scores.sort((a, b) => b.avg - a.avg);
                 const pos = scores.findIndex(s => s.uid === uid);
                 document.getElementById('statRank').textContent = pos >= 0 ? '#' + (pos + 1) : '-';
-                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (curso === '2A-HC' ? '2°A' : '2°B');
+                document.getElementById('statRankCurso').textContent = 'de ' + scores.length + ' en ' + (CURSO_LABELS[curso] || curso);
 
                 // Ranking preview (top 5 per course)
-                const courseScores = { '2A-HC': [], '2B-HC': [] };
+                // Ranking preview — dynamic per programa
+                const myCursos = PROGRAMA_CURSOS[programa] || [curso];
+                const courseScores = {};
+                myCursos.forEach(c => courseScores[c] = []);
                 for (const [sesId, cursos] of Object.entries(rankingData)) {
-                    for (const [c, students] of Object.entries(cursos)) {
-                        for (const [euid, data] of Object.entries(students)) {
-                            if (!courseScores[c]) courseScores[c] = [];
+                    for (const [c, studs] of Object.entries(cursos)) {
+                        if (!courseScores[c]) continue;
+                        for (const [euid, data] of Object.entries(studs)) {
                             const existing = courseScores[c].find(s => s.uid === euid);
                             if (existing) { existing.total += (data.porcentaje || 0); existing.count++; }
                             else courseScores[c].push({ uid: euid, nombre: data.nombre || 'Estudiante', total: data.porcentaje || 0, count: 1 });
                         }
                     }
                 }
-                let rankHtml = '';
-                for (const [c, arr] of Object.entries(courseScores)) {
+                const colors = ['a','b','a','b'];
+                let barsHtml = '';
+                myCursos.forEach((c, ci) => {
+                    const arr = courseScores[c] || [];
                     arr.forEach(s => s.avg = s.count > 0 ? s.total / s.count : 0);
+                    arr.sort((a, b) => b.avg - a.avg);
+                    const avg = arr.length ? Math.round(arr.reduce((s,x) => s + x.avg, 0) / arr.length) : 0;
+                    const h = Math.max(20, avg * 1.2);
+                    barsHtml += `<div class="rank-bar"><div class="bar ${colors[ci % 4]}" style="height:${h}px"></div><div class="label">${CURSO_LABELS[c] || c}</div><div class="score">${avg}%</div></div>`;
+                });
+                document.getElementById('rankingBars').innerHTML = barsHtml;
+
+                let rankListHtml = '';
+                for (const [c, arr] of Object.entries(courseScores)) {
                     arr.sort((a, b) => b.avg - a.avg);
                     const top5 = arr.slice(0, 5);
                     if (top5.length === 0) continue;
-                    const label = c === '2A-HC' ? '2°A HC' : '2°B HC';
-                    rankHtml += `<div style="margin-bottom:10px"><strong>${label}</strong></div>`;
+                    rankListHtml += `<div style="margin-bottom:10px"><strong>${CURSO_LABELS[c] || c}</strong></div>`;
                     top5.forEach((s, i) => {
                         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '  ';
                         const isMe = s.uid === uid ? ' style="font-weight:700;color:#1e40af"' : '';
-                        rankHtml += `<div${isMe}>${medal} ${i + 1}. ${s.nombre} — ${Math.round(s.avg)}%</div>`;
+                        rankListHtml += `<div${isMe}>${medal} ${i + 1}. ${s.nombre} — ${Math.round(s.avg)}%</div>`;
                     });
                 }
-                const rankEl = document.getElementById('rankingPreview');
-                if (rankEl) rankEl.innerHTML = rankHtml || '<div style="color:#94a3b8">Sin datos aún</div>';
+                const rankEl = document.getElementById('rankingList');
+                if (rankEl) rankEl.innerHTML = rankListHtml || '<div style="color:#94a3b8">Sin datos aún</div>';
 
             } catch(e) {
                 console.error(e);

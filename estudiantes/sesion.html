@@ -289,6 +289,44 @@
             .start-card { padding:28px 20px; }
             .start-card h2 { font-size:18px; }
         }
+
+        /* ==================== TUTORIAL / ONBOARDING ==================== */
+        .tuto-backdrop {
+            position:fixed; inset:0; z-index:800;
+            background:rgba(15,23,42,.7); backdrop-filter:blur(3px);
+            transition:opacity .3s;
+        }
+        .tuto-backdrop.hidden { display:none; }
+        .tuto-spotlight {
+            position:absolute; border-radius:12px;
+            box-shadow:0 0 0 4000px rgba(15,23,42,.72);
+            transition:all .4s ease; pointer-events:none;
+        }
+        .tuto-card {
+            position:absolute; z-index:810;
+            background:#fff; border-radius:16px; padding:20px 22px;
+            max-width:360px; width:calc(100vw - 40px);
+            box-shadow:0 12px 40px rgba(0,0,0,.35);
+            animation:tutoIn .35s ease-out;
+        }
+        @keyframes tutoIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+        .tuto-card .tuto-emoji { font-size:32px; margin-bottom:6px; }
+        .tuto-card h4 { font-size:15px; font-weight:800; color:#0f172a; margin-bottom:6px; }
+        .tuto-card p { font-size:13px; color:#475569; line-height:1.6; margin-bottom:14px; }
+        .tuto-footer { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+        .tuto-dots { display:flex; gap:5px; }
+        .tuto-dot { width:8px; height:8px; border-radius:50%; background:#cbd5e1; transition:background .2s; }
+        .tuto-dot.active { background:#1e40af; width:20px; border-radius:4px; }
+        .tuto-btn {
+            padding:10px 22px; border:none; border-radius:10px;
+            font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;
+            transition:transform .15s, box-shadow .15s;
+        }
+        .tuto-btn.primary { background:linear-gradient(135deg,#1e40af,#3b82f6); color:#fff; }
+        .tuto-btn.primary:hover { transform:translateY(-1px); box-shadow:0 4px 12px rgba(30,64,175,.3); }
+        .tuto-btn.skip { background:transparent; color:#94a3b8; font-size:12px; padding:8px 12px; }
+        .tuto-btn.skip:hover { color:#64748b; }
+        .tuto-step { font-size:11px; color:#94a3b8; font-weight:600; }
     </style>
 </head>
 <body>
@@ -381,6 +419,26 @@
 
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
+
+    <!-- TUTORIAL OVERLAY -->
+    <div class="tuto-backdrop hidden" id="tutoBackdrop">
+        <div class="tuto-spotlight" id="tutoSpotlight"></div>
+    </div>
+    <div class="tuto-card" id="tutoCard" style="display:none">
+        <div class="tuto-emoji" id="tutoEmoji"></div>
+        <h4 id="tutoTitle"></h4>
+        <p id="tutoMsg"></p>
+        <div class="tuto-footer">
+            <div>
+                <div class="tuto-dots" id="tutoDots"></div>
+                <span class="tuto-step" id="tutoStep"></span>
+            </div>
+            <div style="display:flex;gap:8px">
+                <button class="tuto-btn skip" id="tutoSkip" onclick="tutoEnd()">Saltar tutorial</button>
+                <button class="tuto-btn primary" id="tutoNext" onclick="tutoAdvance()">Siguiente →</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -1364,6 +1422,166 @@
         // Activate strike monitor
         activateStrikeMonitor();
 
+        // Check if first time — show tutorial
+        if (!localStorage.getItem('tuto_sesion_done')) {
+            setTimeout(tutoStart, 600);
+        } else {
+            showToast('⏱ ¡Evaluación iniciada! Buena suerte.');
+        }
+    }
+
+    // ==================== TUTORIAL / ONBOARDING ====================
+    const TUTO_STEPS = [
+        {
+            emoji: '👋',
+            title: '¡Bienvenido a tu primera evaluación!',
+            msg: 'Te vamos a mostrar cómo funciona todo en 30 segundos. Puedes saltar el tutorial en cualquier momento.',
+            target: null
+        },
+        {
+            emoji: '✏️',
+            title: 'Barra de destacador',
+            msg: 'Selecciona texto en los párrafos y márcalo con colores: 📌 Amarillo = idea principal, ✅ Verde = evidencia, ⚠️ Rosa = distractor, 📘 Azul = vocabulario.',
+            target: '.highlighter-bar'
+        },
+        {
+            emoji: '📝',
+            title: 'Notas de párrafo',
+            msg: 'Cada párrafo tiene un espacio para notas. Escribe 1-3 palabras clave — es tu mapa para localizar información rápido. Son obligatorias para enviar.',
+            target: '.p-note-input'
+        },
+        {
+            emoji: '🖱️',
+            title: 'Selecciona tu respuesta',
+            msg: 'Haz clic en una alternativa para elegirla. Puedes cambiarla cuantas veces quieras antes de enviar.',
+            target: '.option-item'
+        },
+        {
+            emoji: '🚫',
+            title: 'Tachar distractores',
+            msg: 'Haz clic derecho (o mantén presionado en celular) en una alternativa para tacharla como distractor. Descarta las trampas antes de elegir.',
+            target: '.distractor-tip'
+        },
+        {
+            emoji: '🏷️',
+            title: 'Etiqueta de habilidad',
+            msg: 'Cada pregunta indica qué habilidad evalúa: LOCALIZAR (buscar dato explícito), INTERPRETAR (deducir significado) o REFLEXIONAR (evaluar y opinar).',
+            target: '.skill-tag'
+        },
+        {
+            emoji: '📊',
+            title: 'Barra de progreso',
+            msg: 'Aquí ves cuántas preguntas y notas has completado. El botón "Enviar" se activa solo cuando está todo listo.',
+            target: '.submit-area'
+        },
+        {
+            emoji: '⏱️',
+            title: 'Temporizador',
+            msg: 'El reloj mide tu tiempo. No hay límite, pero el profesor verá cuánto tardaste.',
+            target: '#timer'
+        },
+        {
+            emoji: '💾',
+            title: 'Guardado automático',
+            msg: 'Tu progreso se guarda cada 30 segundos automáticamente. Si se corta la luz o internet, no pierdes nada.',
+            target: '#saveIndicator'
+        },
+        {
+            emoji: '⚠️',
+            title: 'Sistema de strikes',
+            msg: 'Si cambias de pestaña, abres ChatGPT o sales de la página recibirás un strike. Al tercer strike la evaluación se envía automáticamente.',
+            target: '#strikeBar'
+        },
+        {
+            emoji: '🔔',
+            title: 'Mensajes del profesor',
+            msg: 'Si el profesor envía un mensaje durante la evaluación, aparecerá con la campana. Revísalo sin salir de la página.',
+            target: '#bellBtn'
+        }
+    ];
+
+    let tutoIdx = 0;
+    let tutoActive = false;
+
+    function tutoStart() {
+        tutoIdx = 0;
+        tutoActive = true;
+        document.getElementById('tutoBackdrop').classList.remove('hidden');
+        document.getElementById('tutoCard').style.display = '';
+        tutoRender();
+    }
+
+    function tutoRender() {
+        const step = TUTO_STEPS[tutoIdx];
+        document.getElementById('tutoEmoji').textContent = step.emoji;
+        document.getElementById('tutoTitle').textContent = step.title;
+        document.getElementById('tutoMsg').textContent = step.msg;
+        document.getElementById('tutoStep').textContent = (tutoIdx + 1) + ' de ' + TUTO_STEPS.length;
+        document.getElementById('tutoNext').textContent = tutoIdx === TUTO_STEPS.length - 1 ? '¡Comenzar! 🚀' : 'Siguiente →';
+        document.getElementById('tutoSkip').style.display = tutoIdx === TUTO_STEPS.length - 1 ? 'none' : '';
+
+        // Dots
+        let dots = '';
+        for (let i = 0; i < TUTO_STEPS.length; i++) {
+            dots += '<div class="tuto-dot' + (i === tutoIdx ? ' active' : '') + '"></div>';
+        }
+        document.getElementById('tutoDots').innerHTML = dots;
+
+        // Spotlight + position card
+        const spotlight = document.getElementById('tutoSpotlight');
+        const card = document.getElementById('tutoCard');
+
+        if (step.target) {
+            const el = document.querySelector(step.target);
+            if (el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => {
+                    const rect = el.getBoundingClientRect();
+                    const pad = 8;
+                    spotlight.style.left = (rect.left - pad + window.scrollX) + 'px';
+                    spotlight.style.top = (rect.top - pad + window.scrollY) + 'px';
+                    spotlight.style.width = (rect.width + pad * 2) + 'px';
+                    spotlight.style.height = (rect.height + pad * 2) + 'px';
+                    spotlight.style.display = '';
+
+                    // Position card below or above target
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    if (spaceBelow > 220) {
+                        card.style.top = (rect.bottom + 16 + window.scrollY) + 'px';
+                    } else {
+                        card.style.top = Math.max(10, rect.top - 220 + window.scrollY) + 'px';
+                    }
+                    card.style.left = Math.min(Math.max(20, rect.left), window.innerWidth - 380) + 'px';
+                }, 350);
+            } else {
+                spotlight.style.display = 'none';
+                tutoPositionCenter(card);
+            }
+        } else {
+            spotlight.style.display = 'none';
+            tutoPositionCenter(card);
+        }
+    }
+
+    function tutoPositionCenter(card) {
+        card.style.top = (window.scrollY + window.innerHeight / 2 - 120) + 'px';
+        card.style.left = Math.max(20, (window.innerWidth - 360) / 2) + 'px';
+    }
+
+    function tutoAdvance() {
+        tutoIdx++;
+        if (tutoIdx >= TUTO_STEPS.length) {
+            tutoEnd();
+        } else {
+            tutoRender();
+        }
+    }
+
+    function tutoEnd() {
+        tutoActive = false;
+        document.getElementById('tutoBackdrop').classList.add('hidden');
+        document.getElementById('tutoCard').style.display = 'none';
+        localStorage.setItem('tuto_sesion_done', '1');
         showToast('⏱ ¡Evaluación iniciada! Buena suerte.');
     }
 

@@ -792,21 +792,18 @@ async function saveStudentEdit(){
 async function resetPassword(uid){
     const s=students[uid];if(!s)return;
     if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto (6 primeros números del RUT).'))return;
-    // Note: client SDK cannot reset another user's password directly.
-    // We mark it for reset; the student's next login will use default.
-    // For full implementation, use API endpoint with Admin SDK.
     const newPass=defaultPassword(s.rut);
     try{
-        // Try via secondary app sign-in and update
-        const email=rutToEmail(s.rut);
-        await secondaryAuth.signInWithEmailAndPassword(email,newPass);
-        await secondaryAuth.signOut();
-        toast('La contraseña ya está en su valor por defecto','ok');
-    }catch(e){
-        // If default fails, need to mark for admin reset via API
-        await db.ref(BASE+'/estudiantes/'+uid).update({password_reset_pending:true});
-        toast('Se marcó para restablecer contraseña','ok');
-    }
+        const token=await firebase.auth().currentUser.getIdToken();
+        const resp=await fetch('/api/estudiantes?action=reset-password',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({studentUid:uid,newPassword:newPass})
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.error||'Error del servidor');
+        toast('Contraseña restablecida correctamente','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
 }
 
 function deleteStudent(uid){

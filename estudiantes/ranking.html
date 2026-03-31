@@ -101,18 +101,18 @@
     </div>
 
     <div class="main">
-        <!-- Course Comparison -->
+        <!-- Course Comparison (dynamic) -->
         <div class="comparison" id="comparison">
             <h2>Comparación General</h2>
             <div class="vs-container">
                 <div class="course-block a">
-                    <div class="course-name">2°A HC</div>
+                    <div class="course-name" id="nameA">-</div>
                     <div class="course-pct" id="globalA">-</div>
                     <div class="course-sub">promedio general</div>
                 </div>
                 <div class="vs-badge">VS</div>
                 <div class="course-block b">
-                    <div class="course-name">2°B HC</div>
+                    <div class="course-name" id="nameB">-</div>
                     <div class="course-pct" id="globalB">-</div>
                     <div class="course-sub">promedio general</div>
                 </div>
@@ -127,11 +127,8 @@
             </select>
         </div>
 
-        <!-- Tabs -->
-        <div class="tabs">
-            <button class="tab active" data-tab="2A-HC" onclick="switchTab(this)">2°A HC</button>
-            <button class="tab" data-tab="2B-HC" onclick="switchTab(this)">2°B HC</button>
-            <button class="tab" data-tab="all" onclick="switchTab(this)">Todos</button>
+        <!-- Tabs (dynamic) -->
+        <div class="tabs" id="tabsContainer">
         </div>
 
         <!-- Ranking Table -->
@@ -158,14 +155,42 @@
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
 
+        // Course pairs for ranking comparison (each pair gets its own ranking view)
+        const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
+        const CURSO_SHORT = {'1A-HC':'1°A','1B-HC':'1°B','2A-HC':'2°A','2B-HC':'2°B','3A-HC':'3°A','3B-HC':'3°B','4A-HC':'4°A','4B-HC':'4°B'};
+        const RANKING_PAIRS = {
+            '1A-HC': ['1A-HC','1B-HC'],
+            '1B-HC': ['1A-HC','1B-HC'],
+            '2A-HC': ['2A-HC','2B-HC'],
+            '2B-HC': ['2A-HC','2B-HC']
+        };
+
         let allRanking = {};
         let allSessions = {};
         let currentUid = null;
-        let currentTab = '2A-HC';
+        let currentTab = '';
+        let myPair = [];
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             currentUid = user.uid;
+
+            // Get student's curso to determine which pair to show
+            const snap = await db.ref(BASE + '/estudiantes/' + user.uid + '/curso').once('value');
+            const curso = snap.val() || '2A-HC';
+            myPair = RANKING_PAIRS[curso] || ['2A-HC','2B-HC'];
+            currentTab = myPair[0];
+
+            // Build dynamic UI
+            document.getElementById('nameA').textContent = CURSO_LABELS[myPair[0]] || myPair[0];
+            document.getElementById('nameB').textContent = CURSO_LABELS[myPair[1]] || myPair[1];
+
+            // Build tabs
+            const tabsHtml = `<button class="tab active" data-tab="${myPair[0]}" onclick="switchTab(this)">${CURSO_LABELS[myPair[0]]}</button>` +
+                `<button class="tab" data-tab="${myPair[1]}" onclick="switchTab(this)">${CURSO_LABELS[myPair[1]]}</button>` +
+                `<button class="tab" data-tab="all" onclick="switchTab(this)">Todos</button>`;
+            document.getElementById('tabsContainer').innerHTML = tabsHtml;
+
             await loadData();
         });
 
@@ -195,8 +220,11 @@
         }
 
         function loadComparison() {
-            const courseScores = { '2A-HC': {}, '2B-HC': {} };
-            // Aggregate from ranking node: ranking/sesionId/curso/uid
+            const courseA = myPair[0], courseB = myPair[1];
+            const courseScores = {};
+            courseScores[courseA] = {};
+            courseScores[courseB] = {};
+
             for (const [sesId, cursos] of Object.entries(allRanking)) {
                 for (const [curso, students] of Object.entries(cursos || {})) {
                     if (!courseScores[curso]) continue;
@@ -215,17 +243,18 @@
                 return Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length);
             }
 
-            const avgA = courseAvg(courseScores['2A-HC']);
-            const avgB = courseAvg(courseScores['2B-HC']);
+            const avgA = courseAvg(courseScores[courseA]);
+            const avgB = courseAvg(courseScores[courseB]);
 
             document.getElementById('globalA').textContent = avgA + '%';
             document.getElementById('globalB').textContent = avgB + '%';
 
+            const labelA = CURSO_LABELS[courseA], labelB = CURSO_LABELS[courseB];
             const banner = document.getElementById('winnerBanner');
             if (avgA > avgB && avgA > 0) {
-                banner.innerHTML = '<div class="winner-banner a">🏆 2°A HC lidera con ' + (avgA - avgB) + ' puntos de ventaja</div>';
+                banner.innerHTML = '<div class="winner-banner a">🏆 ' + labelA + ' lidera con ' + (avgA - avgB) + ' puntos de ventaja</div>';
             } else if (avgB > avgA && avgB > 0) {
-                banner.innerHTML = '<div class="winner-banner b">🏆 2°B HC lidera con ' + (avgB - avgA) + ' puntos de ventaja</div>';
+                banner.innerHTML = '<div class="winner-banner b">🏆 ' + labelB + ' lidera con ' + (avgB - avgA) + ' puntos de ventaja</div>';
             } else if (avgA > 0) {
                 banner.innerHTML = '<div class="winner-banner tie">🤝 ¡Empate técnico!</div>';
             }
@@ -233,11 +262,13 @@
 
         function loadRanking() {
             const selectedSession = document.getElementById('sessionSelect').value;
-            const studentMap = {}; // uid -> aggregated data
+            const studentMap = {};
 
             if (selectedSession === 'all') {
                 for (const [sesId, cursos] of Object.entries(allRanking)) {
                     for (const [curso, students] of Object.entries(cursos || {})) {
+                        // Only show students from my pair
+                        if (!myPair.includes(curso)) continue;
                         for (const [uid, r] of Object.entries(students || {})) {
                             if (!studentMap[uid]) studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: 0, totalPct: 0, totalTiempo: 0, count: 0 };
                             studentMap[uid].totalPuntaje += r.puntaje || 0;
@@ -250,6 +281,7 @@
             } else {
                 const sesRanking = allRanking[selectedSession] || {};
                 for (const [curso, students] of Object.entries(sesRanking)) {
+                    if (!myPair.includes(curso)) continue;
                     for (const [uid, r] of Object.entries(students || {})) {
                         studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: r.puntaje || 0, totalPct: r.porcentaje || 0, totalTiempo: r.tiempo || 0, count: 1 };
                     }
@@ -266,7 +298,6 @@
                 sesiones: s.count
             }));
 
-            // Sort: most correct first, then fastest time as tiebreaker
             scores.sort((a, b) => {
                 if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
                 return a.tiempo - b.tiempo;
@@ -297,7 +328,6 @@
                 return;
             }
 
-            // Top 10 only
             const top10 = filtered.slice(0, 10);
             const totalStudents = filtered.length;
 
@@ -309,7 +339,7 @@
                 const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
                 const isMe = s.uid === currentUid;
                 const rowClass = isMe ? 'highlight' : '';
-                const cursoLabel = s.curso === '2A-HC' ? '2°A' : '2°B';
+                const cursoLabel = CURSO_SHORT[s.curso] || s.curso;
 
                 html += `<tr class="${rowClass}">
                     <td><span class="pos-badge ${posClass}">${medal}</span></td>
@@ -323,7 +353,6 @@
 
             html += '</tbody></table>';
 
-            // Show current user position if outside top 10
             const myIdx = filtered.findIndex(s => s.uid === currentUid);
             if (myIdx >= 10) {
                 const me = filtered[myIdx];

@@ -267,6 +267,7 @@
             </div>
             <div id="resultActions" style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
                 <button class="btn btn-danger" id="btnDetenerRes" onclick="toggleDetenerFromResults()" style="font-size:12px">⏸ Detener Respuestas</button>
+                <button class="btn btn-warn" onclick="forceSubmitPending()" style="font-size:12px">📤 Forzar Envío Pendientes</button>
                 <span id="detenerStatus" style="font-size:12px;color:#64748b;line-height:32px"></span>
             </div>
             <div class="level-row" id="levelCards"></div>
@@ -1068,6 +1069,75 @@ async function resetStudentSession(uid,sesId,nombre){
         loadResults();
         toast(nombre+': oportunidad restablecida','ok');
     }catch(e){toast('Error: '+e.message,'err')}
+}
+
+function calcNota(pct){
+    if(pct<=0)return 1.0;
+    if(pct<60)return Math.round((1.0+(pct/60)*3.0)*10)/10;
+    return Math.round((4.0+((pct-60)/40)*3.0)*10)/10;
+}
+
+async function forceSubmitPending(){
+    const sesId=document.getElementById('resultSession').value;
+    if(!sesId){toast('Selecciona una sesión primero','err');return}
+    const ses=sessions[sesId];
+    const preguntas=ses.contenido?.preguntas||[];
+    if(preguntas.length===0){toast('La sesión no tiene preguntas','err');return}
+
+    // Find incomplete students in this session
+    const respSes=allResponses[sesId]||{};
+    const pending=[];
+    for(const [uid,resp] of Object.entries(respSes)){
+        if(!resp.completada && students[uid]){
+            pending.push({uid,resp,est:students[uid]});
+        }
+    }
+    if(pending.length===0){toast('No hay respuestas pendientes','ok');return}
+    if(!confirm('Se forzará el envío de '+pending.length+' estudiante(s) que no completaron.\nSus notas se calcularán con las respuestas que hayan alcanzado a guardar.\n\n¿Continuar?'))return;
+
+    let processed=0;
+    for(const p of pending){
+        const answers=p.resp.answers||{};
+        const notes=p.resp.notes||{};
+        let correct=0;
+        const detalle={};
+        preguntas.forEach(q=>{
+            const userAns=answers[q.id]||null;
+            const isCorrect=userAns===q.correcta;
+            if(isCorrect)correct++;
+            detalle[q.id]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
+        });
+        const total=preguntas.length;
+        const porcentaje=Math.round((correct/total)*100);
+        const nota=calcNota(porcentaje);
+        const notesCount=Object.values(notes).filter(n=>n&&n.trim()).length;
+        const notasPct=total>0?Math.round((notesCount/total)*100):0;
+        const tiempo=p.resp.started_at?Math.floor((Date.now()-p.resp.started_at)/1000):0;
+
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+p.uid).update({
+            completada:true,submitted_at:Date.now(),auto_submitted:true,
+            auto_submit_motivo:'Cierre administrativo — forzado desde panel'
+        });
+        await db.ref(BASE+'/resultados/'+sesId+'/'+p.uid).set({
+            puntaje:correct,total,porcentaje,nota,detalle,notas:notes,
+            notas_completadas:notesCount+'/'+total,notas_pct:notasPct,
+            puntaje_combinado:Math.round(porcentaje*0.7+notasPct*0.3),
+            nombre:p.est.nombre,curso:p.est.curso,submitted_at:Date.now(),
+            strikes:p.resp.strikes||0,auto_submitted:true,
+            auto_submit_motivo:'Cierre administrativo'
+        });
+        await db.ref(BASE+'/ranking/'+sesId+'/'+p.est.curso+'/'+p.uid).set({
+            nombre:p.est.nombre,puntaje:correct,porcentaje,
+            tiempo:Math.floor(tiempo/1000)
+        });
+
+        if(!allResults[sesId])allResults[sesId]={};
+        allResults[sesId][p.uid]={puntaje:correct,total,porcentaje,nota,nombre:p.est.nombre,curso:p.est.curso,notas_pct:notasPct,puntaje_combinado:Math.round(porcentaje*0.7+notasPct*0.3),strikes:p.resp.strikes||0,auto_submitted:true};
+        allResponses[sesId][p.uid].completada=true;
+        processed++;
+    }
+    loadResults();
+    toast('✅ '+processed+' respuestas forzadas exitosamente','ok');
 }
 
 function viewSession(sesId){

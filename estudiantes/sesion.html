@@ -451,9 +451,22 @@
     <div class="lockout-overlay hidden" id="detenidaOverlay">
         <div class="lockout-card" style="border-top:6px solid #f59e0b">
             <div class="lock-icon">⏸️</div>
-            <h3 style="color:#b45309">Respuestas Detenidas</h3>
-            <p>El profesor ha detenido la recepción de respuestas para esta sesión.</p>
-            <p style="margin-top:8px;font-size:13px;color:#64748b">Tus respuestas guardadas hasta este momento se conservan.</p>
+            <h3 style="color:#b45309">Sesión Finalizada</h3>
+            <p>El profesor ha cerrado la recepción de respuestas.</p>
+            <p id="detenidaMsg" style="margin-top:8px;font-size:13px;color:#64748b">Tus respuestas han sido enviadas automáticamente.</p>
+            <p id="detenidaTimer" style="margin-top:12px;font-size:18px;font-weight:800;color:#b45309"></p>
+            <a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:14px 28px;background:#1e40af;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">Volver al Panel</a>
+        </div>
+    </div>
+
+    <!-- TIEMPO AGOTADO OVERLAY -->
+    <div class="lockout-overlay hidden" id="tiempoOverlay">
+        <div class="lockout-card" style="border-top:6px solid #dc2626">
+            <div class="lock-icon">⏰</div>
+            <h3 style="color:#dc2626">Tiempo Agotado</h3>
+            <p>El tiempo asignado para esta evaluación ha terminado.</p>
+            <p id="tiempoMsg" style="margin-top:8px;font-size:13px;color:#64748b">Tus respuestas han sido enviadas automáticamente.</p>
+            <p id="tiempoTimer" style="margin-top:12px;font-size:18px;font-weight:800;color:#dc2626"></p>
             <a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:14px 28px;background:#1e40af;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">Volver al Panel</a>
         </div>
     </div>
@@ -797,6 +810,7 @@
     let lastMsgId = null;
     let sessionStarted = false;
     let strikes = 0;
+    let tiempoLimite = 0; // minutes, 0 = unlimited
     let strikeMonitorActive = false;
     let lockout = false;
 
@@ -913,6 +927,9 @@
         // Render content
         renderSession();
 
+        // Load time limit from session config
+        tiempoLimite = sessionData.tiempo_limite || 0;
+
         // If already submitted, go straight — no overlay needed
         if (isSubmitted) {
             sessionStarted = true;
@@ -925,7 +942,7 @@
             document.getElementById('startDesc').textContent = sessionData.descripcion || 'Lee atentamente cada texto y responde las preguntas.';
             const nTextos = sessionData.textos ? sessionData.textos.length : 0;
             const nPreguntas = sessionData.preguntas ? sessionData.preguntas.length : 0;
-            document.getElementById('startStats').textContent = nTextos + ' textos · ' + nPreguntas + ' preguntas';
+            document.getElementById('startStats').textContent = nTextos + ' textos · ' + nPreguntas + ' preguntas' + (tiempoLimite > 0 ? ' · ⏱ ' + tiempoLimite + ' min' : '');
             overlay.classList.remove('hidden');
             // Hide content while not started
             document.getElementById('mainContent').style.filter = 'blur(6px)';
@@ -990,13 +1007,30 @@
             });
 
             // Listen for respuestas_bloqueadas (admin detuvo respuestas)
-            db.ref(BASE + '/sesiones/' + sessionId + '/respuestas_bloqueadas').on('value', snap => {
-                if (snap.val() === true && !isSubmitted) {
-                    // Force submit what they have, then show stopped screen
-                    resetByAdmin = true;
-                    if (autoSaveInterval) clearInterval(autoSaveInterval);
-                    if (timerInterval) clearInterval(timerInterval);
+            db.ref(BASE + '/sesiones/' + sessionId + '/respuestas_bloqueadas').on('value', async snap => {
+                if (snap.val() === true && !isSubmitted && !resetByAdmin) {
+                    const result = await forceAutoSubmit('Detenida por profesor');
+
+                    if (result) {
+                        const answered = Object.keys(answers).length;
+                        document.getElementById('detenidaMsg').textContent =
+                            'Se enviaron ' + answered + '/' + result.total + ' respuestas (' + result.correct + ' correctas — ' + result.porcentaje + '%).';
+                    }
+
                     document.getElementById('detenidaOverlay').classList.remove('hidden');
+
+                    // Auto-redirect to dashboard after 60 seconds
+                    let countdown = 60;
+                    const timerEl = document.getElementById('detenidaTimer');
+                    timerEl.textContent = 'Redirigiendo en ' + countdown + 's...';
+                    const cdInterval = setInterval(() => {
+                        countdown--;
+                        timerEl.textContent = 'Redirigiendo en ' + countdown + 's...';
+                        if (countdown <= 0) {
+                            clearInterval(cdInterval);
+                            window.location.href = 'dashboard.html';
+                        }
+                    }, 1000);
                 }
             });
 
@@ -1426,10 +1460,106 @@
     function startTimer() {
         timerInterval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - startTime) / 1000);
-            const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
-            const secs = (elapsed % 60).toString().padStart(2, '0');
-            document.getElementById('timer').textContent = '⏱ ' + mins + ':' + secs;
+
+            if (tiempoLimite > 0) {
+                // Countdown mode
+                const totalSec = tiempoLimite * 60;
+                const remaining = Math.max(0, totalSec - elapsed);
+                const mins = Math.floor(remaining / 60).toString().padStart(2, '0');
+                const secs = (remaining % 60).toString().padStart(2, '0');
+                const timerEl = document.getElementById('timer');
+
+                if (remaining <= 300 && remaining > 60) {
+                    timerEl.textContent = '⏱ ' + mins + ':' + secs + ' ⚠️';
+                    timerEl.style.color = '#f59e0b';
+                } else if (remaining <= 60) {
+                    timerEl.textContent = '⏱ ' + mins + ':' + secs + ' 🔴';
+                    timerEl.style.color = '#dc2626';
+                    timerEl.style.fontWeight = '800';
+                } else {
+                    timerEl.textContent = '⏱ ' + mins + ':' + secs;
+                    timerEl.style.color = '';
+                    timerEl.style.fontWeight = '';
+                }
+
+                // Auto-submit when time runs out
+                if (remaining <= 0 && !isSubmitted && !resetByAdmin) {
+                    clearInterval(timerInterval);
+                    forceAutoSubmit('Tiempo agotado').then(result => {
+                        if (result) {
+                            const answered = Object.keys(answers).length;
+                            document.getElementById('tiempoMsg').textContent =
+                                'Se enviaron ' + answered + '/' + result.total + ' respuestas (' + result.correct + ' correctas — ' + result.porcentaje + '%).';
+                        }
+                        document.getElementById('tiempoOverlay').classList.remove('hidden');
+                        let cd = 60;
+                        const te = document.getElementById('tiempoTimer');
+                        te.textContent = 'Redirigiendo en ' + cd + 's...';
+                        const ci = setInterval(() => {
+                            cd--;
+                            te.textContent = 'Redirigiendo en ' + cd + 's...';
+                            if (cd <= 0) { clearInterval(ci); window.location.href = 'dashboard.html'; }
+                        }, 1000);
+                    });
+                }
+            } else {
+                // Count-up mode (no limit)
+                const mins = Math.floor(elapsed / 60).toString().padStart(2, '0');
+                const secs = (elapsed % 60).toString().padStart(2, '0');
+                document.getElementById('timer').textContent = '⏱ ' + mins + ':' + secs;
+            }
         }, 1000);
+    }
+
+    // Force auto-submit (used by timer expiry and detener)
+    async function forceAutoSubmit(motivo) {
+        if (isSubmitted || resetByAdmin) return;
+        resetByAdmin = true;
+        isSubmitted = true;
+        if (autoSaveInterval) clearInterval(autoSaveInterval);
+        if (timerInterval) clearInterval(timerInterval);
+
+        try {
+            await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+                answers: answers,
+                notes: notes,
+                highlights: highlightsData,
+                completada: true,
+                submitted_at: Date.now(),
+                auto_submitted: motivo,
+                tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000)
+            });
+
+            const total = sessionData.preguntas.length;
+            let correct = 0;
+            const detail = {};
+            sessionData.preguntas.forEach(q => {
+                const isCorrect = answers[q.id] === q.correcta;
+                if (isCorrect) correct++;
+                detail[q.id] = { respuesta: answers[q.id] || null, correcta: q.correcta, esCorrecta: isCorrect };
+            });
+            const porcentaje = Math.round((correct / total) * 100);
+            const tiempoMin = Math.floor((Date.now() - startTime) / 60000);
+
+            await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+                puntaje: correct, total: total, porcentaje: porcentaje,
+                detalle: detail, notas: notes,
+                notas_completadas: getFilledNotes() + '/' + getTotalNotes(),
+                nombre: studentData.nombre, curso: studentData.curso,
+                submitted_at: Date.now(), tiempo_min: tiempoMin,
+                auto_submitted: motivo
+            });
+
+            await db.ref(BASE + '/ranking/' + sessionId + '/' + studentData.curso + '/' + currentUser.uid).set({
+                nombre: studentData.nombre, puntaje: correct,
+                porcentaje: porcentaje, tiempo: Math.floor((Date.now() - startTime) / 1000)
+            });
+
+            return { correct, total, porcentaje };
+        } catch(e) {
+            console.error('forceAutoSubmit error:', e);
+            return null;
+        }
     }
 
     // ==================== AUTO-SAVE ====================

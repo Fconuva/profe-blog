@@ -46,7 +46,7 @@ async function handleCreate(req, res, decoded) {
         createdAt: Date.now(), createdBy: decoded.uid
     });
 
-    return res.status(200).json({ success: true, uid: userRecord.uid, email, defaultPassword: password });
+    return res.status(200).json({ success: true, uid: userRecord.uid, email });
 }
 
 async function handleResetPassword(req, res) {
@@ -61,7 +61,7 @@ async function handleResetPassword(req, res) {
     await auth.updateUser(studentUid, { password: newPassword });
     await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false });
 
-    return res.status(200).json({ success: true, defaultPassword: newPassword });
+    return res.status(200).json({ success: true });
 }
 
 async function handleBulkCreate(req, res, decoded) {

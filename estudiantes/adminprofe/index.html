@@ -424,6 +424,7 @@ const auth=firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
+function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
 const ALL_CURSOS={'1A-HC':{label:'1°A HC',short:'1°A',badge:'badge-cyan',prog:'simce'},'1B-HC':{label:'1°B HC',short:'1°B',badge:'badge-teal',prog:'simce'},'2A-HC':{label:'2°A HC',short:'2°A',badge:'badge-blue',prog:'simce'},'2B-HC':{label:'2°B HC',short:'2°B',badge:'badge-purple',prog:'simce'},'3A-HC':{label:'3°A HC',short:'3°A',badge:'badge-green',prog:'paes'},'3B-HC':{label:'3°B HC',short:'3°B',badge:'badge-amber',prog:'paes'},'4A-HC':{label:'4°A HC',short:'4°A',badge:'badge-blue',prog:'paes'},'4B-HC':{label:'4°B HC',short:'4°B',badge:'badge-purple',prog:'paes'}};
 function cLabel(c){return ALL_CURSOS[c]?.label||c}
 function cShort(c){return ALL_CURSOS[c]?.short||c}
@@ -792,13 +793,12 @@ async function saveStudentEdit(){
 async function resetPassword(uid){
     const s=students[uid];if(!s)return;
     if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto (6 primeros números del RUT).'))return;
-    const newPass=defaultPassword(s.rut);
     try{
         const token=await firebase.auth().currentUser.getIdToken();
         const resp=await fetch('/api/estudiantes?action=reset-password',{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
-            body:JSON.stringify({studentUid:uid,newPassword:newPass})
+            body:JSON.stringify({studentUid:uid})
         });
         const data=await resp.json();
         if(!resp.ok) throw new Error(data.error||'Error del servidor');
@@ -1244,7 +1244,7 @@ function viewStudentResponses(uid, sesId){
                 html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:8px">`;
                 html+=`<div style="font-weight:700;font-size:12px;margin-bottom:4px">${t.titulo}</div>`;
                 tNotes.forEach(n=>{
-                    html+=`<div style="font-size:12px;color:#92400e"><strong>P${n.num}:</strong> ${n.note}</div>`;
+                    html+=`<div style="font-size:12px;color:#92400e"><strong>P${n.num}:</strong> ${esc(n.note)}</div>`;
                 });
                 html+='</div>';
             }

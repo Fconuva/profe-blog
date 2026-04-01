@@ -158,6 +158,7 @@
         <a href="#" data-section="sessions" onclick="showSection('sessions',this)"><span class="icon">📚</span>Sesiones</a>
         <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
         <a href="#" data-section="reports" onclick="showSection('reports',this)"><span class="icon">📋</span>Reportes</a>
+        <a href="#" data-section="planilla" onclick="showSection('planilla',this);renderPlanilla()"><span class="icon">📝</span>Planilla Notas</a>
         <a href="#" data-section="ranking" onclick="showSection('ranking',this)"><span class="icon">🏆</span>Ranking</a>
     </nav>
 
@@ -288,6 +289,29 @@
                 </div>
             </div>
             <div id="reportOutput" style="background:#fff;border-radius:12px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);display:none"></div>
+        </div>
+
+        <!-- ================== PLANILLA DE NOTAS ================== -->
+        <div class="section" id="sec-planilla">
+            <h2>📝 Planilla de Notas</h2>
+            <div class="search-bar" style="margin-bottom:16px">
+                <select id="planillaCourse" onchange="renderPlanilla()">
+                    <option value="">Todos los cursos</option>
+                    <option value="1A-HC">1°A HC</option>
+                    <option value="1B-HC">1°B HC</option>
+                    <option value="2A-HC">2°A HC</option>
+                    <option value="2B-HC">2°B HC</option>
+                    <option value="3A-HC">3°A HC</option>
+                    <option value="3B-HC">3°B HC</option>
+                    <option value="4A-HC">4°A HC</option>
+                    <option value="4B-HC">4°B HC</option>
+                </select>
+                <button class="btn btn-primary" onclick="exportPlanillaCSV()" style="white-space:nowrap">📥 Exportar CSV</button>
+            </div>
+            <div class="stat-row" id="planillaStats"></div>
+            <div class="panel-table" style="overflow-x:auto">
+                <table id="planillaTable"><thead id="planillaHead"></thead><tbody id="planillaBody"></tbody></table>
+            </div>
         </div>
 
         <!-- ================== RANKING ================== -->
@@ -520,6 +544,7 @@ function initMobileNav(){
         {id:'sessions',icon:'📚',label:'Sesiones'},
         {id:'results',icon:'📈',label:'Resultados'},
         {id:'reports',icon:'📋',label:'Reportes'},
+        {id:'planilla',icon:'📝',label:'Planilla'},
         {id:'ranking',icon:'🏆',label:'Ranking'}
     ];
     nav.innerHTML=links.map(l=>`<a href="#" data-section="${l.id}" class="${l.id==='overview'?'active':''}" onclick="showSection('${l.id}',this)">${l.icon} ${l.label}</a>`).join('');
@@ -1586,6 +1611,146 @@ function exportCSV(type){
     a.href=url;a.download='reporte_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';
     a.click();URL.revokeObjectURL(url);
     toast('CSV descargado','ok');
+}
+
+/* ============ PLANILLA DE NOTAS ============ */
+function calcNotaPlanilla(pct){
+    if(pct<=0) return 1.0;
+    if(pct<60) return Math.round((1.0+(pct/60)*3.0)*10)/10;
+    return Math.round((4.0+((pct-60)/40)*3.0)*10)/10;
+}
+
+function renderPlanilla(){
+    const courseF=document.getElementById('planillaCourse').value;
+    const sesIds=Object.keys(sessions).sort();
+
+    // Build student list
+    let stuList=[];
+    for(const[uid,est]of Object.entries(students)){
+        if(courseF && est.curso!==courseF) continue;
+        stuList.push({uid,nombre:est.nombre,curso:est.curso});
+    }
+    stuList.sort((a,b)=>a.curso.localeCompare(b.curso)||a.nombre.localeCompare(b.nombre));
+
+    // Header
+    let headHtml='<tr><th style="position:sticky;left:0;background:#f1f5f9;z-index:2;min-width:200px">Estudiante</th><th style="min-width:70px">Curso</th>';
+    sesIds.forEach(sId=>{
+        const titulo=sessions[sId].titulo||sId;
+        const short=titulo.length>20?titulo.substring(0,18)+'…':titulo;
+        headHtml+=`<th style="min-width:80px;text-align:center;font-size:11px;writing-mode:horizontal-tb">${short}</th>`;
+    });
+    headHtml+='<th style="min-width:80px;text-align:center;font-weight:800">Promedio</th></tr>';
+    document.getElementById('planillaHead').innerHTML=headHtml;
+
+    // Body
+    let bodyHtml='';
+    let totalAvg=0,countAvg=0;
+    let sesionSums={};
+    let sesionCounts={};
+    sesIds.forEach(s=>{sesionSums[s]=0;sesionCounts[s]=0;});
+
+    stuList.forEach(stu=>{
+        let sum=0,cnt=0;
+        bodyHtml+='<tr>';
+        bodyHtml+=`<td style="position:sticky;left:0;background:#fff;z-index:1;white-space:nowrap;font-weight:600;font-size:13px">${stu.nombre}</td>`;
+        bodyHtml+=`<td style="text-align:center"><span class="badge ${cBadge(stu.curso)}" style="font-size:10px">${cShort(stu.curso)}</span></td>`;
+        sesIds.forEach(sId=>{
+            const r=allResults[sId]?.[stu.uid];
+            const resp=allResponses[sId]?.[stu.uid];
+            const esCopia=resp?.bloqueado_por_copia===true;
+            if(r){
+                const nota=r.nota||calcNotaPlanilla(r.porcentaje||0);
+                const pct=r.porcentaje||0;
+                const color=nota>=4.0?'#16a34a':'#dc2626';
+                const bg=esCopia?'#fde2e2':nota>=5.5?'#f0fdf4':nota>=4.0?'#fffbeb':nota>=2.5?'#fef2f2':'#fee2e2';
+                const copiaTag=esCopia?'<br><span style="font-size:9px;color:#dc2626">🚫 COPIA</span>':'';
+                bodyHtml+=`<td style="text-align:center;background:${bg}"><strong style="color:${color};font-size:15px">${nota.toFixed(1)}</strong><br><span style="font-size:10px;color:#64748b">${pct}%</span>${copiaTag}</td>`;
+                sum+=nota;cnt++;
+                sesionSums[sId]+=nota;sesionCounts[sId]++;
+            }else{
+                bodyHtml+='<td style="text-align:center;color:#cbd5e1;font-size:12px">—</td>';
+            }
+        });
+        // Promedio
+        if(cnt>0){
+            const avg=sum/cnt;
+            const avgColor=avg>=4.0?'#16a34a':'#dc2626';
+            bodyHtml+=`<td style="text-align:center;background:#f8fafc;font-weight:800"><strong style="color:${avgColor};font-size:15px">${avg.toFixed(1)}</strong></td>`;
+            totalAvg+=avg;countAvg++;
+        }else{
+            bodyHtml+='<td style="text-align:center;color:#cbd5e1">—</td>';
+        }
+        bodyHtml+='</tr>';
+    });
+
+    // Footer row with session averages
+    bodyHtml+='<tr style="background:#f1f5f9;font-weight:700;border-top:2px solid #94a3b8">';
+    bodyHtml+='<td style="position:sticky;left:0;background:#f1f5f9;z-index:1">PROMEDIO</td><td></td>';
+    sesIds.forEach(sId=>{
+        if(sesionCounts[sId]>0){
+            const avg=sesionSums[sId]/sesionCounts[sId];
+            const c=avg>=4.0?'#16a34a':'#dc2626';
+            bodyHtml+=`<td style="text-align:center"><strong style="color:${c}">${avg.toFixed(1)}</strong></td>`;
+        }else{
+            bodyHtml+='<td style="text-align:center;color:#cbd5e1">—</td>';
+        }
+    });
+    if(countAvg>0){
+        const ga=totalAvg/countAvg;
+        bodyHtml+=`<td style="text-align:center"><strong style="color:${ga>=4.0?'#16a34a':'#dc2626'};font-size:15px">${ga.toFixed(1)}</strong></td>`;
+    }else bodyHtml+='<td></td>';
+    bodyHtml+='</tr>';
+
+    document.getElementById('planillaBody').innerHTML=bodyHtml;
+
+    // Stats
+    const aprobados=stuList.filter(s=>{
+        let sm=0,c=0;
+        sesIds.forEach(sid=>{const r=allResults[sid]?.[s.uid];if(r){sm+=(r.nota||calcNotaPlanilla(r.porcentaje||0));c++;}});
+        return c>0&&(sm/c)>=4.0;
+    }).length;
+    document.getElementById('planillaStats').innerHTML=`
+        <div class="stat-card"><div class="label">Estudiantes</div><div class="value">${stuList.length}</div></div>
+        <div class="stat-card"><div class="label">Sesiones</div><div class="value">${sesIds.length}</div></div>
+        <div class="stat-card"><div class="label">Promedio Gral.</div><div class="value">${countAvg>0?(totalAvg/countAvg).toFixed(1):'—'}</div></div>
+        <div class="stat-card"><div class="label">Aprobados</div><div class="value">${aprobados}</div><div class="sub">${stuList.length>0?Math.round(aprobados/stuList.length*100):0}%</div></div>
+    `;
+}
+
+function exportPlanillaCSV(){
+    const courseF=document.getElementById('planillaCourse').value;
+    const sesIds=Object.keys(sessions).sort();
+    let csv='Estudiante,RUT,Curso';
+    sesIds.forEach(sId=>csv+=',"'+(sessions[sId].titulo||sId)+'"');
+    csv+=',Promedio\n';
+
+    let stuList=[];
+    for(const[uid,est]of Object.entries(students)){
+        if(courseF && est.curso!==courseF) continue;
+        stuList.push({uid,nombre:est.nombre,rut:est.rut||'',curso:est.curso});
+    }
+    stuList.sort((a,b)=>a.curso.localeCompare(b.curso)||a.nombre.localeCompare(b.nombre));
+
+    stuList.forEach(stu=>{
+        csv+=`"${stu.nombre}","${stu.rut}","${stu.curso}"`;
+        let sum=0,cnt=0;
+        sesIds.forEach(sId=>{
+            const r=allResults[sId]?.[stu.uid];
+            if(r){
+                const nota=r.nota||calcNotaPlanilla(r.porcentaje||0);
+                csv+=`,${nota.toFixed(1)}`;
+                sum+=nota;cnt++;
+            }else csv+=',';
+        });
+        csv+=`,${cnt>0?(sum/cnt).toFixed(1):''}\n`;
+    });
+
+    const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download='planilla_notas_'+(courseF||'todos')+'_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();URL.revokeObjectURL(url);
+    toast('Planilla CSV descargada','ok');
 }
 
 /* ============ RANKING (ADMIN) ============ */

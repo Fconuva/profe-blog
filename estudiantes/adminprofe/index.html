@@ -235,7 +235,7 @@
                 <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
             </div>
             <div class="panel-table">
-                <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Acciones</th></tr></thead>
+                <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Respuestas</th><th>Acciones</th></tr></thead>
                 <tbody id="sessionsBody"></tbody></table>
             </div>
         </div>
@@ -259,9 +259,13 @@
                     <option value="4B-HC">4°B HC</option>
                 </select>
             </div>
+            <div id="resultActions" style="margin:12px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-danger" id="btnDetenerRes" onclick="toggleDetenerFromResults()" style="font-size:12px">⏸ Detener Respuestas</button>
+                <span id="detenerStatus" style="font-size:12px;color:#64748b;line-height:32px"></span>
+            </div>
             <div class="level-row" id="levelCards"></div>
             <div class="panel-table">
-                <table><thead><tr><th>Nombre</th><th>Curso</th><th>Puntaje</th><th>Logro</th><th>Nivel</th><th>Tiempo</th><th>Acciones</th></tr></thead>
+                <table><thead><tr><th>Nombre</th><th>Curso</th><th>Puntaje</th><th>Logro</th><th>Nota</th><th>Nivel</th><th>Tiempo</th><th>Acciones</th></tr></thead>
                 <tbody id="resultsBody"></tbody></table>
             </div>
         </div>
@@ -880,6 +884,8 @@ function renderSessions(){
             <td style="text-align:center">${numQ}</td>
             <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.resultados_visibles?'checked':''} onchange="toggleSesField('${s.id}','resultados_visibles',this.checked)"><span class="slider"></span></label></td>
+            <td>${s.respuestas_bloqueadas?'<span style="color:#dc2626;font-weight:700">⛔ Detenidas</span>':'<span style="color:#16a34a;font-weight:600">✅ Abiertas</span>'}<br>
+                <button class="btn btn-sm ${s.respuestas_bloqueadas?'btn-success':'btn-danger'}" style="margin-top:4px;font-size:10px" onclick="toggleDetener('${s.id}',${!s.respuestas_bloqueadas})">${s.respuestas_bloqueadas?'▶ Reabrir':'⏸ Detener'}</button></td>
             <td>
                 <button class="btn btn-sm" style="background:#3b82f6;color:#fff" onclick="viewSession('${s.id}')">👁 Ver</button>
                 <button class="btn btn-sm btn-warn" onclick="resetSessionResults('${s.id}')">🔄 Reset</button>
@@ -894,6 +900,71 @@ async function toggleSesField(sesId,field,val){
         sessions[sesId][field]=val;
         toast(field+' actualizado','ok');
     }catch(e){toast('Error','err')}
+}
+
+async function toggleDetener(sesId,val){
+    const action=val?'DETENER':'REABRIR';
+    if(!confirm('¿'+action+' respuestas de "'+sessions[sesId]?.titulo+'"?\n'+(val?'Los estudiantes que no hayan enviado verán un mensaje de detenido.':'Se reanudarán las respuestas.')))return;
+    try{
+        await db.ref(BASE+'/sesiones/'+sesId+'/respuestas_bloqueadas').set(val);
+        sessions[sesId].respuestas_bloqueadas=val;
+        renderSessions();
+        updateDetenerButton(sesId);
+        toast(val?'Respuestas detenidas':'Respuestas reabiertas','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+function toggleDetenerFromResults(){
+    const sesId=document.getElementById('resultSession').value;
+    if(!sesId){toast('Selecciona una sesión','err');return;}
+    const current=sessions[sesId]?.respuestas_bloqueadas||false;
+    toggleDetener(sesId,!current);
+}
+
+function updateDetenerButton(sesId){
+    const btn=document.getElementById('btnDetenerRes');
+    const status=document.getElementById('detenerStatus');
+    if(!btn)return;
+    const ses=sessions[sesId];
+    if(!ses)return;
+    if(ses.respuestas_bloqueadas){
+        btn.textContent='▶ Reabrir Respuestas';
+        btn.className='btn btn-success';
+        btn.style.fontSize='12px';
+        status.textContent='⛔ Respuestas detenidas';
+        status.style.color='#dc2626';
+    }else{
+        btn.textContent='⏸ Detener Respuestas';
+        btn.className='btn btn-danger';
+        btn.style.fontSize='12px';
+        status.textContent='✅ Respuestas abiertas';
+        status.style.color='#16a34a';
+    }
+}
+
+async function marcarCopia(uid,sesId,nombre){
+    const motivo=prompt('Motivo de anulación por copia para '+nombre+':\n(Ej: "Notas idénticas a otro estudiante", "Uso de IA detectado")');
+    if(motivo===null)return;
+    try{
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+uid).update({
+            bloqueado_por_copia:true,
+            motivo_copia:motivo||'Copia detectada por el profesor',
+            copia_timestamp:Date.now()
+        });
+        toast('🚫 '+nombre+' marcado como copia','ok');
+        loadResults();
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function desmarcarCopia(uid,sesId,nombre){
+    if(!confirm('¿Quitar marca de copia de '+nombre+'?'))return;
+    try{
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_copia').remove();
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/motivo_copia').remove();
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/copia_timestamp').remove();
+        toast(nombre+': marca de copia removida','ok');
+        loadResults();
+    }catch(e){toast('Error: '+e.message,'err')}
 }
 
 async function createSession(){
@@ -1322,16 +1393,30 @@ function loadResults(){
     if(!sesId){
         document.getElementById('levelCards').innerHTML='';
         document.getElementById('resultsBody').innerHTML='<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
+        document.getElementById('resultActions').style.display='none';
         return;
     }
 
+    // Show detener button and update state
+    document.getElementById('resultActions').style.display='flex';
+    updateDetenerButton(sesId);
+
     const results=allResults[sesId]||{};
+    const responses=allResponses[sesId]||{};
     let items=[];
     for(const[uid,r]of Object.entries(results)){
         const est=students[uid];
         if(!est) continue;
         if(courseF && est.curso!==courseF) continue;
-        items.push({uid,nombre:est.nombre,curso:est.curso,puntaje:r.puntaje||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0});
+        const flags=r.suspicious_flags||[];
+        const resp=responses[uid]||{};
+        const copyAttempts=resp.copy_attempts?Object.keys(resp.copy_attempts).length:0;
+        const focusLogs=resp.focus_log?Object.keys(resp.focus_log).length:0;
+        const esCopia=resp.bloqueado_por_copia===true;
+        if(copyAttempts>0) flags.push('copy_x'+copyAttempts);
+        if(focusLogs>2) flags.push('foco_perdido_x'+focusLogs);
+        if(esCopia) flags.unshift('🚫 COPIA');
+        items.push({uid,nombre:est.nombre,curso:est.curso,puntaje:r.puntaje||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0,tiempo_min:r.tiempo_min||0,flags,esCopia,nota:r.nota||0,notas_pct:r.notas_pct||0,combinado:r.puntaje_combinado||0});
     }
     items.sort((a,b)=>b.porcentaje-a.porcentaje);
 
@@ -1348,21 +1433,29 @@ function loadResults(){
     const tbody=document.getElementById('resultsBody');
     tbody.innerHTML=items.map((r,i)=>{
         const cursoLabel=cShort(r.curso);
-        const mins=r.tiempo?Math.round(r.tiempo/60000):0;
-        return `<tr>
-            <td><strong>${r.nombre}</strong></td>
+        const mins=r.tiempo_min||Math.round(r.tiempo/60000)||0;
+        const flagHtml=r.flags.length>0?`<div style="margin-top:4px"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700">⚠️ ${r.flags.join(' · ')}</span></div>`:'';
+        const rowBg=r.esCopia?' style="background:#fde2e2"':r.flags.length>0?' style="background:#fef2f2"':'';
+        const notaColor=r.nota>=4.0?'#16a34a':'#dc2626';
+        const copiaBtn=r.esCopia?
+            `<button class="btn btn-sm btn-success" style="font-size:10px" onclick="desmarcarCopia('${r.uid}','${sesId}','${r.nombre}')">✅ Quitar</button>`:
+            `<button class="btn btn-sm btn-danger" style="font-size:10px" onclick="marcarCopia('${r.uid}','${sesId}','${r.nombre}')">🚫 Copia</button>`;
+        return `<tr${rowBg}>
+            <td><strong>${r.nombre}</strong>${flagHtml}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
             <td>${r.puntaje}/${r.total}</td>
-            <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong></td>
+            <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}</td>
+            <td><strong style="color:${notaColor};font-size:18px">${r.nota>0?r.nota.toFixed(1):'—'}</strong></td>
             <td>${getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
             <td>
-                <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤 Perfil</button>
-                <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Respuestas</button>
-                <button class="btn btn-sm btn-warn" onclick="resetStudentSession('${r.uid}','${sesId}','${r.nombre}')">🔄 Otra Oportunidad</button>
+                <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>
+                <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝</button>
+                <button class="btn btn-sm btn-warn" onclick="resetStudentSession('${r.uid}','${sesId}','${r.nombre}')">🔄</button>
+                ${copiaBtn}
             </td>
         </tr>`;
-    }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';
+    }).join('')||'<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';
 }
 
 /* ============ REPORTS ============ */

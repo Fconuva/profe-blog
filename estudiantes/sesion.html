@@ -11,6 +11,17 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:'Inter',system-ui,sans-serif; background:#f1f5f9; min-height:100vh; padding-bottom:80px; }
+        /* ANTI-COPY: prevent text selection/copy on text content */
+        .p-text, .option-item span, .q-header, .text-title, .text-source { -webkit-user-select:none; user-select:none; }
+        .p-note-input { -webkit-user-select:auto; user-select:auto; }
+        /* Copy-paste warning */
+        .copypaste-warn { position:fixed; top:60px; left:50%; transform:translateX(-50%); background:#dc2626; color:#fff; padding:12px 24px; border-radius:10px; font-size:13px; font-weight:700; z-index:9999; box-shadow:0 4px 20px rgba(220,38,38,.4); display:none; animation:fadeWarn .3s; }
+        @keyframes fadeWarn { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+        /* Focus-loss overlay */
+        .focus-warn-overlay { position:fixed; inset:0; background:rgba(15,23,42,.92); z-index:10000; display:none; flex-direction:column; align-items:center; justify-content:center; color:#fff; text-align:center; }
+        .focus-warn-overlay.show { display:flex; }
+        .focus-warn-overlay h2 { font-size:28px; margin-bottom:12px; }
+        .focus-warn-overlay p { font-size:15px; color:#94a3b8; max-width:400px; }
         @keyframes spin { to { transform:rotate(360deg) } }
 
         /* HEADER */
@@ -424,8 +435,37 @@
         </div>
     </div>
 
+    <!-- BLOQUEADO POR COPIA -->
+    <div class="lockout-overlay hidden" id="copiaOverlay">
+        <div class="lockout-card" style="border-top:6px solid #dc2626">
+            <div class="lock-icon">🚫</div>
+            <h3 style="color:#dc2626">Evaluación Anulada por Copia</h3>
+            <p style="margin-bottom:12px">Se detectó <strong>copia entre compañeros o uso de herramientas externas (IA, traductor, buscador)</strong> en tus respuestas.</p>
+            <p style="font-size:13px;color:#64748b" id="copiaMotivo"></p>
+            <p style="margin-top:12px;font-size:13px;color:#dc2626;font-weight:700">Tu evaluación ha sido anulada. Habla con el profesor.</p>
+            <a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:14px 28px;background:#64748b;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">Volver al Panel</a>
+        </div>
+    </div>
+
+    <!-- RESPUESTAS DETENIDAS POR ADMIN -->
+    <div class="lockout-overlay hidden" id="detenidaOverlay">
+        <div class="lockout-card" style="border-top:6px solid #f59e0b">
+            <div class="lock-icon">⏸️</div>
+            <h3 style="color:#b45309">Respuestas Detenidas</h3>
+            <p>El profesor ha detenido la recepción de respuestas para esta sesión.</p>
+            <p style="margin-top:8px;font-size:13px;color:#64748b">Tus respuestas guardadas hasta este momento se conservan.</p>
+            <a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:14px 28px;background:#1e40af;color:#fff;border-radius:10px;text-decoration:none;font-weight:700;">Volver al Panel</a>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
+    <div class="copypaste-warn" id="copyWarn">🚫 Acción no permitida — Se registra todo intento de copia o uso de herramientas externas</div>
+    <div class="focus-warn-overlay" id="focusWarnOverlay">
+        <h2>⚠️ ¡Vuelve a la evaluación!</h2>
+        <p>Se detectó que saliste de la ventana. Esto cuenta como strike si sigues fuera.</p>
+        <p style="margin-top:16px;font-size:20px;font-weight:800" id="focusCountdown"></p>
+    </div>
 
     <!-- TUTORIAL OVERLAY -->
     <div class="tuto-backdrop hidden" id="tutoBackdrop">
@@ -761,6 +801,29 @@
     let lockout = false;
 
     // ==================== INIT ====================
+    // NIVEL 4: Deterministic option shuffle per student+question
+    function shuffleOptions(opciones, uid, questionId) {
+        const arr = opciones.slice(); // clone
+        const seed = uid + ':q' + questionId;
+        let h = 0;
+        for (let i = 0; i < seed.length; i++) { h = ((h << 5) - h + seed.charCodeAt(i)) | 0; }
+        let rng = Math.abs(h) || 1;
+        const next = () => { rng = (rng * 1664525 + 1013904223) & 0x7fffffff; return rng / 0x7fffffff; };
+        // Fisher-Yates shuffle
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(next() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        // Reassign display letters A,B,C,D to shuffled positions
+        const letters = ['A', 'B', 'C', 'D'];
+        return arr.map((opt, i) => ({
+            ...opt,
+            letraOriginal: opt.letra, // keep original for answer key matching
+            letra: letters[i],        // new display letter
+            texto: opt.texto
+        }));
+    }
+
     const urlParams = new URLSearchParams(window.location.search);
     sessionId = urlParams.get('id') || 'sesion-1';
 
@@ -926,6 +989,32 @@
                 }
             });
 
+            // Listen for respuestas_bloqueadas (admin detuvo respuestas)
+            db.ref(BASE + '/sesiones/' + sessionId + '/respuestas_bloqueadas').on('value', snap => {
+                if (snap.val() === true && !isSubmitted) {
+                    // Force submit what they have, then show stopped screen
+                    resetByAdmin = true;
+                    if (autoSaveInterval) clearInterval(autoSaveInterval);
+                    if (timerInterval) clearInterval(timerInterval);
+                    document.getElementById('detenidaOverlay').classList.remove('hidden');
+                }
+            });
+
+            // Listen for bloqueado_por_copia (admin flagged as cheater)
+            db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/bloqueado_por_copia').on('value', snap => {
+                if (snap.val() === true) {
+                    resetByAdmin = true;
+                    if (autoSaveInterval) clearInterval(autoSaveInterval);
+                    if (timerInterval) clearInterval(timerInterval);
+                    // Get motive
+                    db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/motivo_copia').once('value', ms => {
+                        const motivo = ms.val() || '';
+                        if (motivo) document.getElementById('copiaMotivo').textContent = motivo;
+                    });
+                    document.getElementById('copiaOverlay').classList.remove('hidden');
+                }
+            });
+
             // Listen for admin reset ("Otra Oportunidad") — if response data is deleted, reload fresh
             db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/completada').on('value', snap => {
                 // If completada was removed (admin reset) while student had submitted
@@ -1019,24 +1108,27 @@
                 const selectedAnswer = answers[q.id] || null;
                 const blockClass = selectedAnswer ? 'answered' : '';
 
+                // NIVEL 4: Shuffle options deterministically per student+question
+                const shuffledOpts = shuffleOptions(q.opciones, currentUser.uid, q.id);
+
                 html += `<div class="question-block ${blockClass}" id="qblock-${q.id}">`;
                 html += `<div class="q-header"><span class="skill-tag">${q.habilidad}</span> ${q.enunciado}</div>`;
                 html += '<ul class="option-list">';
 
-                q.opciones.forEach(opt => {
-                    const isSelected = selectedAnswer === opt.letra;
+                shuffledOpts.forEach(opt => {
+                    const isSelected = selectedAnswer === opt.letraOriginal;
                     let optClass = isSelected ? 'selected' : '';
                     if (isSubmitted) optClass += ' disabled';
-                    if (distractors[q.id] && distractors[q.id].includes(opt.letra)) optClass += ' distractor';
+                    if (distractors[q.id] && distractors[q.id].includes(opt.letraOriginal)) optClass += ' distractor';
 
-                    html += `<li class="option-item ${optClass}" data-question="${q.id}" data-letter="${opt.letra}" onclick="selectAnswer('${q.id}','${opt.letra}')" oncontextmenu="toggleDistractor('${q.id}','${opt.letra}',event)">
+                    html += `<li class="option-item ${optClass}" data-question="${q.id}" data-letter="${opt.letraOriginal}" data-display="${opt.letra}" onclick="selectAnswer('${q.id}','${opt.letraOriginal}')" ondblclick="toggleDistractor('${q.id}','${opt.letraOriginal}',event)">
                         <span class="option-letter">${opt.letra}</span>
                         <span>${opt.texto}</span>
                     </li>`;
                 });
 
                 html += '</ul>';
-                if (!isSubmitted) html += '<div class="distractor-tip">💡 Clic derecho en una alternativa para tacharla como distractor</div>';
+                if (!isSubmitted) html += '<div class="distractor-tip">💡 Doble clic en una alternativa para tacharla como distractor</div>';
                 html += `<div class="q-feedback" id="feedback-${q.id}"></div>`;
                 html += '</div>';
             });
@@ -1241,6 +1333,85 @@
         notes[key] = el.value;
         isDirty = true;
         updateProgress();
+        // Check for copy-paste from texts
+        checkNoteCopyPaste(el);
+    }
+
+    // ==================== ANTI-COPY MEASURES ====================
+    // NIVEL 2: Block copy-paste and right-click on evaluation content
+    document.addEventListener('copy', function(e) {
+        if (sessionStarted && !isSubmitted) {
+            e.preventDefault();
+            showCopyWarn();
+        }
+    });
+    document.addEventListener('cut', function(e) {
+        if (sessionStarted && !isSubmitted) {
+            // Allow cut only inside note textareas
+            if (!e.target.closest('.p-note-input')) { e.preventDefault(); showCopyWarn(); }
+        }
+    });
+    // Block paste into note fields (they should type their own analysis)
+    document.addEventListener('paste', function(e) {
+        if (sessionStarted && !isSubmitted && e.target.closest('.p-note-input')) {
+            e.preventDefault();
+            showCopyWarn();
+        }
+    });
+    // Block printing (Ctrl+P)
+    document.addEventListener('keydown', function(e) {
+        if (sessionStarted && !isSubmitted) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); }
+            if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C') && !e.target.closest('.p-note-input')) { e.preventDefault(); showCopyWarn(); }
+        }
+    });
+
+    function showCopyWarn() {
+        const warn = document.getElementById('copyWarn');
+        warn.style.display = 'block';
+        clearTimeout(warn._timer);
+        warn._timer = setTimeout(() => { warn.style.display = 'none'; }, 4000);
+        // Log copy attempt
+        if (currentUser && sessionId) {
+            const logRef = db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/copy_attempts');
+            logRef.push({ at: Date.now(), type: 'copy_blocked' });
+        }
+    }
+
+    // NIVEL 5 (detector): Check if notes are copy-pasted from text content
+    function checkNoteCopyPaste(el) {
+        const noteText = (el.value || '').trim().toLowerCase();
+        if (noteText.length < 20) return; // too short to be meaningful copy-paste
+        // Get the texto content from the paragraph
+        const key = el.dataset.noteKey; // e.g. "texto-1-p1"
+        const parts = key.match(/^(texto-\d+)-p(\d+)$/);
+        if (!parts) return;
+        const pTextEl = document.getElementById('ptext-' + parts[1] + '-' + parts[2]);
+        if (!pTextEl) return;
+        const paraText = pTextEl.textContent.toLowerCase().replace(/^\d+\s*/, '');
+        // Check if note contains a significant chunk of the paragraph text
+        if (paraText.length > 30 && noteText.length > 20) {
+            // Use longest common substring approach (simplified)
+            const words = noteText.split(/\s+/);
+            let matchRun = 0, maxRun = 0;
+            words.forEach(w => {
+                if (paraText.includes(w) && w.length > 3) { matchRun++; maxRun = Math.max(maxRun, matchRun); }
+                else { matchRun = 0; }
+            });
+            if (maxRun >= 5) {
+                // 5+ consecutive words match the paragraph → likely copy-paste
+                showCopyWarn();
+                el.style.borderColor = '#dc2626';
+                el.style.background = '#fef2f2';
+                el.setAttribute('title', '⚠️ Esta nota parece copiada del texto. Escribe tu propio análisis.');
+                // Log
+                if (currentUser && sessionId) {
+                    db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/copy_attempts').push({
+                        at: Date.now(), type: 'note_copypaste', field: key, match_words: maxRun
+                    });
+                }
+            }
+        }
     }
 
     // ==================== TECHNIQUES TOGGLE ====================
@@ -1340,6 +1511,12 @@
                 tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000)
             });
 
+            // NIVEL 3: Calculate suspicious flags
+            const tiempoMin = Math.floor((Date.now() - startTime) / 60000);
+            const flags = [];
+            if (porcentaje >= 90 && tiempoMin < 15) flags.push('100%_en_menos_de_15min');
+            if (porcentaje >= 80 && tiempoMin < 10) flags.push('alto_puntaje_muy_rapido');
+
             // Save results
             await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
                 puntaje: correct,
@@ -1350,7 +1527,9 @@
                 notas_completadas: filledNotes + '/' + totalNotes,
                 nombre: studentData.nombre,
                 curso: studentData.curso,
-                submitted_at: Date.now()
+                submitted_at: Date.now(),
+                tiempo_min: tiempoMin,
+                suspicious_flags: flags.length > 0 ? flags : null
             });
 
             // Update ranking
@@ -1617,12 +1796,17 @@
     }
 
     // ==================== STRIKE SYSTEM ====================
+    let focusWarnTimer = null;
+    let focusLostAt = null;
+
     function activateStrikeMonitor() {
         if (strikeMonitorActive) return;
         strikeMonitorActive = true;
 
         document.addEventListener('visibilitychange', handleVisibilityStrike);
+        // NIVEL 1: Aggressive blur detection (catches split-screen)
         window.addEventListener('blur', handleBlurStrike);
+        window.addEventListener('focus', handleFocusReturn);
     }
 
     function handleVisibilityStrike() {
@@ -1632,13 +1816,40 @@
     }
 
     function handleBlurStrike() {
-        if (sessionStarted && !isSubmitted && !lockout) {
-            // Small delay to avoid false positives from alert/confirm dialogs
-            setTimeout(() => {
-                if (document.hidden && !lockout && !isSubmitted) {
-                    // Already handled by visibilitychange
+        if (!sessionStarted || isSubmitted || lockout) return;
+        focusLostAt = Date.now();
+        // Show warning overlay immediately
+        const overlay = document.getElementById('focusWarnOverlay');
+        overlay.classList.add('show');
+        let countdown = 5;
+        document.getElementById('focusCountdown').textContent = countdown + 's';
+        // Give 5 seconds grace before strike
+        if (focusWarnTimer) clearInterval(focusWarnTimer);
+        focusWarnTimer = setInterval(() => {
+            countdown--;
+            document.getElementById('focusCountdown').textContent = countdown + 's';
+            if (countdown <= 0) {
+                clearInterval(focusWarnTimer);
+                focusWarnTimer = null;
+                if (!document.hasFocus() && sessionStarted && !isSubmitted && !lockout) {
+                    registerStrike();
+                    overlay.classList.remove('show');
                 }
-            }, 200);
+            }
+        }, 1000);
+    }
+
+    function handleFocusReturn() {
+        if (focusWarnTimer) { clearInterval(focusWarnTimer); focusWarnTimer = null; }
+        document.getElementById('focusWarnOverlay').classList.remove('show');
+        if (focusLostAt) {
+            const away = Date.now() - focusLostAt;
+            focusLostAt = null;
+            // Log focus loss to Firebase for admin review
+            if (sessionStarted && away > 2000) {
+                const logRef = db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/focus_log');
+                logRef.push({ lost_at: Date.now() - away, duration_ms: away });
+            }
         }
     }
 

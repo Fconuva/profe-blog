@@ -813,6 +813,9 @@
     let tiempoLimite = 0; // minutes, 0 = unlimited
     let strikeMonitorActive = false;
     let lockout = false;
+    let anticopiaActivo = true;   // from session config
+    let notasEvaluadas = true;    // from session config
+    let envioParcial = false;     // from session config
 
     // ==================== INIT ====================
     // NIVEL 4: Deterministic option shuffle per student+question
@@ -929,6 +932,11 @@
 
         // Load time limit from session config
         tiempoLimite = sessionData.tiempo_limite || 0;
+
+        // Load session behavior flags
+        anticopiaActivo = sessionData.anticopia_activo !== false;  // default true
+        notasEvaluadas = sessionData.notas_evaluadas !== false;    // default true
+        envioParcial = sessionData.envio_parcial === true;         // default false
 
         // If already submitted, go straight — no overlay needed
         if (isSubmitted) {
@@ -1345,19 +1353,32 @@
         const answeredQ = Object.keys(answers).length;
         const totalN = getTotalNotes();
         const filledN = getFilledNotes();
-        const totalItems = totalQ + totalN;
-        const doneItems = answeredQ + filledN;
-        const pct = Math.round((doneItems / totalItems) * 100);
+        const totalItems = notasEvaluadas ? totalQ + totalN : totalQ;
+        const doneItems = notasEvaluadas ? answeredQ + filledN : answeredQ;
+        const pct = totalItems > 0 ? Math.round((doneItems / totalItems) * 100) : 0;
         const bar = document.getElementById('progressBar');
         const text = document.getElementById('progressText');
         const btn = document.getElementById('btnSubmit');
 
         if (bar) bar.style.width = pct + '%';
-        if (text) text.textContent = `${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas`;
+        if (text) text.textContent = notasEvaluadas
+            ? `${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas`
+            : `${answeredQ}/${totalQ} preguntas`;
         if (btn) {
-            const allDone = answeredQ >= totalQ && filledN >= totalN;
-            btn.disabled = !allDone;
-            btn.textContent = allDone ? 'Enviar Respuestas ✓' : `Faltan ${(totalQ-answeredQ)+(totalN-filledN)} items`;
+            const notesRequired = notasEvaluadas;
+            const allQDone = answeredQ >= totalQ;
+            const allNDone = !notesRequired || filledN >= totalN;
+            const allDone = allQDone && allNDone;
+            const canSubmit = envioParcial ? answeredQ > 0 : allDone;
+            btn.disabled = !canSubmit;
+            if (allDone) {
+                btn.textContent = 'Enviar Respuestas ✓';
+            } else if (envioParcial && answeredQ > 0) {
+                btn.textContent = `Enviar (${answeredQ}/${totalQ})`;
+            } else {
+                const remaining = (totalQ - answeredQ) + (notesRequired ? (totalN - filledN) : 0);
+                btn.textContent = `Faltan ${remaining} items`;
+            }
         }
     }
 
@@ -1374,27 +1395,27 @@
     // ==================== ANTI-COPY MEASURES ====================
     // NIVEL 2: Block copy-paste and right-click on evaluation content
     document.addEventListener('copy', function(e) {
-        if (sessionStarted && !isSubmitted) {
+        if (anticopiaActivo && sessionStarted && !isSubmitted) {
             e.preventDefault();
             showCopyWarn();
         }
     });
     document.addEventListener('cut', function(e) {
-        if (sessionStarted && !isSubmitted) {
+        if (anticopiaActivo && sessionStarted && !isSubmitted) {
             // Allow cut only inside note textareas
             if (!e.target.closest('.p-note-input')) { e.preventDefault(); showCopyWarn(); }
         }
     });
     // Block paste into note fields (they should type their own analysis)
     document.addEventListener('paste', function(e) {
-        if (sessionStarted && !isSubmitted && e.target.closest('.p-note-input')) {
+        if (anticopiaActivo && sessionStarted && !isSubmitted && e.target.closest('.p-note-input')) {
             e.preventDefault();
             showCopyWarn();
         }
     });
     // Block printing (Ctrl+P)
     document.addEventListener('keydown', function(e) {
-        if (sessionStarted && !isSubmitted) {
+        if (anticopiaActivo && sessionStarted && !isSubmitted) {
             if ((e.ctrlKey || e.metaKey) && (e.key === 'p' || e.key === 'P')) { e.preventDefault(); }
             if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C') && !e.target.closest('.p-note-input')) { e.preventDefault(); showCopyWarn(); }
         }
@@ -1606,12 +1627,16 @@
         if (isSubmitted) return;
         const total = sessionData.preguntas.length;
         const answered = Object.keys(answers).length;
-        if (answered < total) { showToast('Responde todas las preguntas antes de enviar.'); return; }
+        if (!envioParcial && answered < total) { showToast('Responde todas las preguntas antes de enviar.'); return; }
+        if (envioParcial && answered === 0) { showToast('Responde al menos una pregunta antes de enviar.'); return; }
         const totalNotes = getTotalNotes();
         const filledNotes = getFilledNotes();
-        if (filledNotes < totalNotes) { showToast('Completa todas las notas de párrafo antes de enviar. Faltan '+(totalNotes-filledNotes)+'.'); return; }
+        if (notasEvaluadas && filledNotes < totalNotes) { showToast('Completa todas las notas de párrafo antes de enviar. Faltan '+(totalNotes-filledNotes)+'.'); return; }
 
-        if (!confirm('¿Estás seguro/a de enviar tus respuestas? No podrás modificarlas después.')) return;
+        const confirmMsg = envioParcial && answered < total
+            ? `Has respondido ${answered} de ${total} preguntas. ¿Enviar de todas formas? No podrás modificar después.`
+            : '¿Estás seguro/a de enviar tus respuestas? No podrás modificarlas después.';
+        if (!confirm(confirmMsg)) return;
 
         const btn = document.getElementById('btnSubmit');
         btn.disabled = true;
@@ -1759,8 +1784,12 @@
         // Start auto-save
         autoSaveInterval = setInterval(autoSave, 30000);
 
-        // Activate strike monitor
-        activateStrikeMonitor();
+        // Activate strike monitor (only if anti-copia enabled)
+        if (anticopiaActivo) {
+            activateStrikeMonitor();
+        } else {
+            document.getElementById('strikeBar').classList.add('hidden');
+        }
 
         // Check if first time — show tutorial
         if (!localStorage.getItem('tuto_sesion_done')) {

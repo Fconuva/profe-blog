@@ -793,17 +793,39 @@ async function saveStudentEdit(){
 async function resetPassword(uid){
     const s=students[uid];if(!s)return;
     if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto (6 primeros números del RUT).'))return;
+    const rut=s.rut||'';
+    const digits=rut.replace(/[^0-9]/g,'');
+    const defPass=digits.substring(0,6).padEnd(6,'0');
+    // Try API first
     try{
         const token=await firebase.auth().currentUser.getIdToken();
+        const ctrl=new AbortController();
+        const timer=setTimeout(()=>ctrl.abort(),12000);
         const resp=await fetch('/api/estudiantes?action=reset-password',{
-            method:'POST',
+            method:'POST',signal:ctrl.signal,
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
             body:JSON.stringify({studentUid:uid})
         });
+        clearTimeout(timer);
         const data=await resp.json();
         if(!resp.ok) throw new Error(data.error||'Error del servidor');
         toast('Contraseña restablecida correctamente','ok');
-    }catch(e){toast('Error: '+e.message,'err')}
+        return;
+    }catch(apiErr){
+        console.warn('API reset failed, trying secondaryAuth fallback:',apiErr.message);
+    }
+    // Fallback: try signIn with default password then updatePassword (works if student never changed it)
+    try{
+        const email=rut.replace(/[.\s]/g,'').replace(/-/g,'').toUpperCase()+'@est.profefranciscopancho.com';
+        const cred=await secondaryAuth.signInWithEmailAndPassword(email.toLowerCase(),defPass);
+        await cred.user.updatePassword(defPass);
+        await secondaryAuth.signOut();
+        await db.ref(BASE+'/estudiantes/'+uid).update({password_changed:false,password_reset_pending:false});
+        toast('Contraseña restablecida (fallback local)','ok');
+    }catch(fbErr){
+        toast('Error al restablecer contraseña. El estudiante ya cambió su clave y el API no responde. Intenta de nuevo en unos minutos.','err');
+        console.error('Both reset methods failed:',fbErr.message);
+    }
 }
 
 function deleteStudent(uid){

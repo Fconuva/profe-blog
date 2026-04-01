@@ -4,15 +4,27 @@
 
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-    admin.initializeApp({
-        credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n')
-        }),
-        databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
-    });
+let initError = null;
+try {
+    if (!admin.apps.length) {
+        const pk = process.env.FIREBASE_PRIVATE_KEY || '';
+        if (!pk) {
+            initError = 'FIREBASE_PRIVATE_KEY no configurada';
+            console.error('[estudiantes.js] FIREBASE_PRIVATE_KEY is empty');
+        } else {
+            admin.initializeApp({
+                credential: admin.credential.cert({
+                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                    privateKey: pk.replace(/\\n/g, '\n')
+                }),
+                databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
+            });
+        }
+    }
+} catch (e) {
+    initError = e.message;
+    console.error('[estudiantes.js] Firebase init error:', e.message);
 }
 
 const db = admin.database();
@@ -95,6 +107,8 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
+
+    if (initError) return res.status(500).json({ error: 'Firebase no inicializado: ' + initError });
 
     try {
         const decoded = await verifyAdmin(req);

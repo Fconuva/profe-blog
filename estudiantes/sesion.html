@@ -925,6 +925,22 @@
                     }
                 }
             });
+
+            // Listen for admin reset ("Otra Oportunidad") — if response data is deleted, reload fresh
+            db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/completada').on('value', snap => {
+                // If completada was removed (admin reset) while student had submitted
+                if (snap.val() === null && isSubmitted) {
+                    // Stop auto-save so it doesn't re-write
+                    resetByAdmin = true;
+                    if (autoSaveInterval) clearInterval(autoSaveInterval);
+                    if (timerInterval) clearInterval(timerInterval);
+                    isSubmitted = false;
+                    strikes = 0;
+                    lockout = false;
+                    showToast('🔄 El profesor te ha dado otra oportunidad. Recargando...');
+                    setTimeout(() => { window.location.reload(); }, 1500);
+                }
+            });
         } catch(e) { console.error('Error loading progress:', e); }
     }
 
@@ -1246,8 +1262,10 @@
     }
 
     // ==================== AUTO-SAVE ====================
+    let resetByAdmin = false; // flag to prevent auto-save after admin reset
+
     async function autoSave() {
-        if (!currentUser || !sessionId) return;
+        if (!currentUser || !sessionId || resetByAdmin) return;
         const indicator = document.getElementById('saveIndicator');
 
         try {

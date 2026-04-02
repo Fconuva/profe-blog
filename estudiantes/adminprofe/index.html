@@ -269,6 +269,12 @@
                 <button class="btn btn-danger" id="btnDetenerRes" onclick="toggleDetenerFromResults()" style="font-size:12px">⏸ Detener Respuestas</button>
                 <button class="btn btn-warn" onclick="forceSubmitPending()" style="font-size:12px">📤 Forzar Envío Pendientes</button>
                 <span id="detenerStatus" style="font-size:12px;color:#64748b;line-height:32px"></span>
+                <div id="unlockRow" style="display:none;flex-basis:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;padding:8px;background:#f5f3ff;border-radius:8px;border:1px solid #e9d5ff">
+                    <span style="font-size:12px;font-weight:700;color:#7c3aed">🔓 Abrir Individual:</span>
+                    <select id="unlockStudentSel" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0;max-width:250px"></select>
+                    <button class="btn" style="background:#7c3aed;color:#fff;font-size:12px;padding:4px 12px" onclick="abrirIndividual()">Abrir</button>
+                    <div id="unlockList" style="flex-basis:100%;margin-top:4px"></div>
+                </div>
             </div>
             <div class="level-row" id="levelCards"></div>
             <div class="panel-table">
@@ -964,6 +970,7 @@ async function toggleDetener(sesId,val){
         sessions[sesId].respuestas_bloqueadas=val;
         renderSessions();
         updateDetenerButton(sesId);
+        updateUnlockUI(sesId);
         toast(val?'Respuestas detenidas':'Respuestas reabiertas','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
@@ -1294,6 +1301,7 @@ function loadResults(){
     // Show detener button and update state
     document.getElementById('resultActions').style.display='flex';
     updateDetenerButton(sesId);
+    updateUnlockUI(sesId);
 
     const results=allResults[sesId]||{};
     const responses=allResponses[sesId]||{};
@@ -1489,6 +1497,86 @@ function calcNotaPlanilla(pct){
     return Math.round((4.0+((pct-60)/40)*3.0)*10)/10;
 }
 
+function getLogroFromNota(nota){
+    if(nota>=6) return 7;
+    if(nota>=4) return 5;
+    if(nota>=2) return 3;
+    return 1;
+}
+
+const LOGRO_LABELS={7:'LOGRADO',5:'MED. LOGRADO',3:'PARC. LOGRADO',1:'NO LOGRADO'};
+const LOGRO_SHORT={7:'L',5:'ML',3:'PL',1:'NL'};
+const LOGRO_COLORS={7:'#16a34a',5:'#2563eb',3:'#d97706',1:'#dc2626'};
+const LOGRO_BG={7:'#f0fdf4',5:'#eff6ff',3:'#fffbeb',1:'#fee2e2'};
+
+async function setNotaManual(sesId,uid,val){
+    if(!val&&val!==0)return;
+    const nota=parseFloat(val);
+    try{
+        await db.ref(BASE+'/resultados/'+sesId+'/'+uid+'/nota').set(nota);
+        if(!allResults[sesId])allResults[sesId]={};
+        if(!allResults[sesId][uid])allResults[sesId][uid]={porcentaje:0,puntaje:0,total:0};
+        allResults[sesId][uid].nota=nota;
+        renderPlanilla();
+        toast('Nota: '+LOGRO_LABELS[nota]+' ('+nota.toFixed(1)+')','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function abrirIndividual(){
+    const sesId=document.getElementById('resultSession').value;
+    const uid=document.getElementById('unlockStudentSel').value;
+    if(!sesId||!uid){toast('Selecciona sesión y estudiante','err');return}
+    const est=students[uid];
+    if(!confirm('¿Abrir sesión "'+sessions[sesId]?.titulo+'" para '+est.nombre+'?\nPodrá realizar la evaluación aunque esté detenida.'))return;
+    try{
+        await db.ref(BASE+'/sesiones/'+sesId+'/excepciones_desbloqueo/'+uid).set(true);
+        if(!sessions[sesId].excepciones_desbloqueo)sessions[sesId].excepciones_desbloqueo={};
+        sessions[sesId].excepciones_desbloqueo[uid]=true;
+        updateUnlockUI(sesId);
+        toast('Sesión abierta para '+est.nombre,'ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function cerrarIndividual(uid,sesId){
+    const est=students[uid];
+    if(!confirm('¿Cerrar sesión individual para '+est?.nombre+'?\nSi está trabajando, se le detendrá.'))return;
+    try{
+        await db.ref(BASE+'/sesiones/'+sesId+'/excepciones_desbloqueo/'+uid).remove();
+        if(sessions[sesId].excepciones_desbloqueo)delete sessions[sesId].excepciones_desbloqueo[uid];
+        updateUnlockUI(sesId);
+        toast('Sesión cerrada para '+est?.nombre,'ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+function updateUnlockUI(sesId){
+    const sel=document.getElementById('unlockStudentSel');
+    const listEl=document.getElementById('unlockList');
+    const unlockRow=document.getElementById('unlockRow');
+    if(!sesId||!sessions[sesId]?.respuestas_bloqueadas){
+        unlockRow.style.display='none';
+        return;
+    }
+    unlockRow.style.display='flex';
+    const courseF=document.getElementById('resultCourse').value;
+    const results=allResults[sesId]||{};
+    const excepciones=sessions[sesId]?.excepciones_desbloqueo||{};
+    let opts='<option value="">Seleccionar estudiante...</option>';
+    for(const[uid,est]of Object.entries(students)){
+        if(courseF&&est.curso!==courseF)continue;
+        if(!results[uid]&&!excepciones[uid]){
+            opts+=`<option value="${uid}">${est.nombre} (${cShort(est.curso)})</option>`;
+        }
+    }
+    sel.innerHTML=opts;
+    const unlocked=Object.keys(excepciones).filter(uid=>excepciones[uid]&&students[uid]);
+    if(unlocked.length>0){
+        listEl.innerHTML='<strong>🔓 Abierta para:</strong> '+
+            unlocked.map(uid=>`<span style="display:inline-block;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;margin:2px;font-size:11px">${students[uid].nombre} <a href="#" style="color:#dc2626;text-decoration:none;font-weight:700" onclick="event.preventDefault();cerrarIndividual('${uid}','${sesId}')">✕</a></span>`).join(' ');
+    }else{
+        listEl.innerHTML='';
+    }
+}
+
 function renderPlanilla(){
     const courseF=document.getElementById('planillaCourse').value;
     const sesIds=Object.keys(sessions).sort();
@@ -1528,16 +1616,31 @@ function renderPlanilla(){
             const resp=allResponses[sId]?.[stu.uid];
             const esCopia=resp?.bloqueado_por_copia===true;
             if(r){
-                const nota=r.nota||calcNotaPlanilla(r.porcentaje||0);
+                const notaRaw=r.nota||calcNotaPlanilla(r.porcentaje||0);
+                const logro=getLogroFromNota(notaRaw);
                 const pct=r.porcentaje||0;
-                const color=nota>=4.0?'#16a34a':'#dc2626';
-                const bg=esCopia?'#fde2e2':nota>=5.5?'#f0fdf4':nota>=4.0?'#fffbeb':nota>=2.5?'#fef2f2':'#fee2e2';
+                const color=LOGRO_COLORS[logro];
+                const bg=esCopia?'#fde2e2':LOGRO_BG[logro];
                 const copiaTag=esCopia?'<br><span style="font-size:9px;color:#dc2626">🚫 COPIA</span>':'';
-                bodyHtml+=`<td style="text-align:center;background:${bg}"><strong style="color:${color};font-size:15px">${nota.toFixed(1)}</strong><br><span style="font-size:10px;color:#64748b">${pct}%</span>${copiaTag}</td>`;
-                sum+=nota;cnt++;
-                sesionSums[sId]+=nota;sesionCounts[sId]++;
+                bodyHtml+=`<td style="text-align:center;background:${bg};padding:4px">
+                    <select style="font-size:11px;padding:2px 4px;border-radius:4px;border:1px solid #e2e8f0;font-weight:700;color:${color};cursor:pointer;width:90%;background:transparent" onchange="setNotaManual('${sId}','${stu.uid}',this.value)">
+                        <option value="7" ${logro===7?'selected':''}>L (7.0)</option>
+                        <option value="5" ${logro===5?'selected':''}>ML (5.0)</option>
+                        <option value="3" ${logro===3?'selected':''}>PL (3.0)</option>
+                        <option value="1" ${logro===1?'selected':''}>NL (1.0)</option>
+                    </select>
+                    <br><span style="font-size:10px;color:#64748b">${pct}%</span>${copiaTag}</td>`;
+                sum+=logro;cnt++;
+                sesionSums[sId]+=logro;sesionCounts[sId]++;
             }else{
-                bodyHtml+='<td style="text-align:center;color:#cbd5e1;font-size:12px">—</td>';
+                bodyHtml+=`<td style="text-align:center;padding:4px">
+                    <select style="font-size:11px;padding:2px 4px;border-radius:4px;border:1px solid #e2e8f0;color:#94a3b8;cursor:pointer;width:90%;background:transparent" onchange="setNotaManual('${sId}','${stu.uid}',this.value)">
+                        <option value="" selected>—</option>
+                        <option value="7">L (7.0)</option>
+                        <option value="5">ML (5.0)</option>
+                        <option value="3">PL (3.0)</option>
+                        <option value="1">NL (1.0)</option>
+                    </select></td>`;
             }
         });
         // Promedio
@@ -1575,7 +1678,7 @@ function renderPlanilla(){
     // Stats
     const aprobados=stuList.filter(s=>{
         let sm=0,c=0;
-        sesIds.forEach(sid=>{const r=allResults[sid]?.[s.uid];if(r){sm+=(r.nota||calcNotaPlanilla(r.porcentaje||0));c++;}});
+        sesIds.forEach(sid=>{const r=allResults[sid]?.[s.uid];if(r){sm+=getLogroFromNota(r.nota||calcNotaPlanilla(r.porcentaje||0));c++;}});
         return c>0&&(sm/c)>=4.0;
     }).length;
     document.getElementById('planillaStats').innerHTML=`
@@ -1606,9 +1709,9 @@ function exportPlanillaCSV(){
         sesIds.forEach(sId=>{
             const r=allResults[sId]?.[stu.uid];
             if(r){
-                const nota=r.nota||calcNotaPlanilla(r.porcentaje||0);
-                csv+=`,${nota.toFixed(1)}`;
-                sum+=nota;cnt++;
+                const logro=getLogroFromNota(r.nota||calcNotaPlanilla(r.porcentaje||0));
+                csv+=`,"${LOGRO_SHORT[logro]} (${logro}.0)"`;
+                sum+=logro;cnt++;
             }else csv+=',';
         });
         csv+=`,${cnt>0?(sum/cnt).toFixed(1):''}\n`;

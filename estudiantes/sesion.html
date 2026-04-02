@@ -1017,6 +1017,12 @@
             // Listen for respuestas_bloqueadas (admin detuvo respuestas)
             db.ref(BASE + '/sesiones/' + sessionId + '/respuestas_bloqueadas').on('value', async snap => {
                 if (snap.val() === true && !isSubmitted && !resetByAdmin) {
+                    // Check if student has individual exception (opened by teacher for late arrival)
+                    const excSnap = await db.ref(BASE + '/sesiones/' + sessionId + '/excepciones_desbloqueo/' + currentUser.uid).once('value');
+                    if (excSnap.val() === true) {
+                        console.log('Estudiante tiene excepción individual — sesión no bloqueada');
+                        return;
+                    }
                     const result = await forceAutoSubmit('Detenida por profesor');
 
                     if (result) {

@@ -1094,11 +1094,12 @@ async function forceSubmitPending(){
     const preguntas=ses.contenido?.preguntas||[];
     if(preguntas.length===0){toast('La sesión no tiene preguntas','err');return}
 
-    // Find incomplete students in this session
+    // Find incomplete students OR students with completada but no result
     const respSes=allResponses[sesId]||{};
+    const resSes=allResults[sesId]||{};
     const pending=[];
     for(const [uid,resp] of Object.entries(respSes)){
-        if(!resp.completada && students[uid]){
+        if(students[uid] && (!resp.completada || !resSes[uid])){
             pending.push({uid,resp,est:students[uid]});
         }
     }

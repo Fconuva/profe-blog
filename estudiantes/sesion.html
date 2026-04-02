@@ -1567,15 +1567,28 @@
             });
             const porcentaje = Math.round((correct / total) * 100);
             const tiempoMin = Math.floor((Date.now() - startTime) / 60000);
+            const nota = porcentaje <= 0 ? 1.0 : porcentaje < 60 ? Math.round((1.0 + (porcentaje / 60) * 3.0) * 10) / 10 : Math.round((4.0 + ((porcentaje - 60) / 40) * 3.0) * 10) / 10;
 
-            await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
-                puntaje: correct, total: total, porcentaje: porcentaje,
+            const resultData = {
+                puntaje: correct, total: total, porcentaje: porcentaje, nota: nota,
                 detalle: detail, notas: notes,
                 notas_completadas: getFilledNotes() + '/' + getTotalNotes(),
                 nombre: studentData.nombre, curso: studentData.curso,
                 submitted_at: Date.now(), tiempo_min: tiempoMin,
                 auto_submitted: motivo
-            });
+            };
+
+            // Write result with retry to prevent orphaned completada without resultado
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set(resultData);
+                    break;
+                } catch(retryErr) {
+                    console.warn('Resultado write attempt ' + (attempt+1) + ' failed:', retryErr);
+                    if (attempt === 2) throw retryErr;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
 
             await db.ref(BASE + '/ranking/' + sessionId + '/' + studentData.curso + '/' + currentUser.uid).set({
                 nombre: studentData.nombre, puntaje: correct,
@@ -1677,12 +1690,14 @@
             const flags = [];
             if (porcentaje >= 90 && tiempoMin < 15) flags.push('100%_en_menos_de_15min');
             if (porcentaje >= 80 && tiempoMin < 10) flags.push('alto_puntaje_muy_rapido');
+            const nota = porcentaje <= 0 ? 1.0 : porcentaje < 60 ? Math.round((1.0 + (porcentaje / 60) * 3.0) * 10) / 10 : Math.round((4.0 + ((porcentaje - 60) / 40) * 3.0) * 10) / 10;
 
-            // Save results
-            await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+            // Save results (with retry to prevent orphaned completada without resultado)
+            const resultData = {
                 puntaje: correct,
                 total: total,
                 porcentaje: porcentaje,
+                nota: nota,
                 detalle: detail,
                 notas: notes,
                 notas_completadas: filledNotes + '/' + totalNotes,
@@ -1691,7 +1706,17 @@
                 submitted_at: Date.now(),
                 tiempo_min: tiempoMin,
                 suspicious_flags: flags.length > 0 ? flags : null
-            });
+            };
+            for (let attempt = 0; attempt < 3; attempt++) {
+                try {
+                    await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set(resultData);
+                    break;
+                } catch(retryErr) {
+                    console.warn('Resultado write attempt ' + (attempt+1) + ' failed:', retryErr);
+                    if (attempt === 2) throw retryErr;
+                    await new Promise(r => setTimeout(r, 1000));
+                }
+            }
 
             // Update ranking
             await db.ref(BASE + '/ranking/' + sessionId + '/' + studentData.curso + '/' + currentUser.uid).set({

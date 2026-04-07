@@ -20,8 +20,8 @@ try {
     }
 } catch (e) { initError = e.message; }
 
-const db = admin.apps.length ? admin.database() : null;
 const BASE = 'plataforma_estudiantes';
+function getDb() { return admin.database(); }
 
 module.exports = async (req, res) => {
     if (req.method === 'OPTIONS') {
@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     if (!token) return res.status(401).json({ error: 'Token requerido' });
     try {
         const decoded = await admin.auth().verifyIdToken(token);
-        const snap = await db.ref(`${BASE}/admins/${decoded.uid}`).once('value');
+        const snap = await getDb().ref(`${BASE}/admins/${decoded.uid}`).once('value');
         if (!snap.val()) return res.status(403).json({ error: 'No autorizado' });
     } catch (e) {
         return res.status(403).json({ error: 'Token inválido' });
@@ -95,6 +95,7 @@ module.exports = async (req, res) => {
     };
 
     try {
+        const db = getDb();
         await db.ref(BASE + '/sesiones/sesion-3').set(sesData);
         const snap = await db.ref(BASE + '/sesiones/sesion-3/titulo').once('value');
         res.json({ ok: true, titulo: snap.val(), preguntas: sesData.contenido.preguntas.length, textos: sesData.contenido.textos.length });

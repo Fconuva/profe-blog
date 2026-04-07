@@ -118,6 +118,7 @@ select.fill-select{background:var(--bg);border:1px solid var(--accent);color:var
 <script>
 let xp=0,currentSection=0,timerSeconds=75*60,timerInterval=null;
 const S=['welcome','motivation','prevknow','lesson','reading','puzzle','game','simce','closing'];
+const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
 function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.style.animation='none';void d.offsetHeight;d.style.animation='fadeIn .3s';}
 function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
 function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
@@ -296,13 +297,14 @@ B.reading=()=>`
 const PP=[['🎭 Narrador','Protagonista en 1ª persona (el nieto adulto que recuerda)'],['👤 Protagonista','La abuela (es quien vive el conflicto central)'],['🏠 Espacio','La cocina / las orillas del río Maule'],['⏰ Tiempo','Presente (15 años después) → flashback a la infancia → flashback al río'],['⚔️ Conflicto','Cruzar el río para salvar a la familia atrapada'],['💡 Tema','La valentía y el sacrificio: sostener cuando soltar es más fácil']];
 let pSel=null,pDone=0;
 B.puzzle=()=>{
+pSel=null;pDone=0;
 const R=[...Array(6).keys()].sort(()=>Math.random()-.5);
 let h=`<div class="section-header"><div class="icon">🧩</div><h2>Puzzle: Conecta los Elementos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Haz clic en un elemento y luego en su descripción</div></div>
 <div class="card"><div class="match-container"><div class="match-left">`;
 for(let i=0;i<6;i++)h+=`<div class="puzzle-item" id="pl${i}" onclick="pClk('l',${i})">${PP[i][0]}</div>`;
 h+=`</div><div class="match-right">`;
 R.forEach(i=>{h+=`<div class="puzzle-item" id="pr${i}" onclick="pClk('r',${i})">${PP[i][1]}</div>`;});
-h+=`</div></div><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2</span> — Aplicar conceptos al texto leído</div><div id="pRes"></div><div class="nav-row"><button class="btn btn-back" onclick="go(4)">← Lectura</button><button class="btn btn-next" onclick="go(6)">Ir al Juego →</button></div></div>`;
+h+=`</div></div><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2</span> — Aplicar conceptos al texto leído</div><div id="pRes"></div><div class="nav-row"><button class="btn btn-back" onclick="go(4)">← Lectura</button><button class="btn btn-next" id="pzNxt" onclick="go(6)" disabled>Ir al Juego →</button></div></div>`;
 return h;
 };
 window.pClk=function(s,i){
@@ -313,7 +315,7 @@ else{
 if(pSel.s===s){document.getElementById((s==='l'?'pl':'pr')+pSel.i).classList.remove('selected');pSel={s,i};el.classList.add('selected');return;}
 const o=document.getElementById((pSel.s==='l'?'pl':'pr')+pSel.i);
 if(pSel.i===i){o.classList.remove('selected');o.classList.add('matched');el.classList.add('matched');pDone++;addXP(10);pSel=null;
-if(pDone>=6)document.getElementById('pRes').innerHTML='<div class="achievement"><h3>🧩 ¡Puzzle resuelto!</h3><p>+60 XP · Todos los elementos identificados</p></div><div style="text-align:center"><button class="btn btn-next" onclick="go(6)">Ir al Juego →</button></div>';
+if(pDone>=6){document.getElementById('pRes').innerHTML='<div class="achievement"><h3>🧩 ¡Puzzle resuelto!</h3><p>+60 XP · Todos los elementos identificados</p></div>';var nx=document.getElementById('pzNxt');if(nx)nx.disabled=false;}
 }else{o.classList.remove('selected');el.classList.add('selected');pSel={s,i};}
 }};
 
@@ -382,14 +384,13 @@ correct:1,skill:'REF',explain:'La opción B reflexiona críticamente sobre el al
 ];
 let sIdx=0,sOk=0;
 B.simce=()=>{
-if(sIdx>=SQ.length)return`<div class="section-header"><div class="icon">✍️</div><h2>Resultado Práctica SIMCE</h2></div>
-<div class="card" style="text-align:center"><div class="game-score">${sOk}/${SQ.length}</div>
-<p style="color:var(--dim)">${sOk>=5?'¡Excelente!':sOk>=3?'¡Buen avance!':'Sigue practicando.'}</p>
+if(sIdx>=SQ.length)return`<div class="section-header"><div class="icon">✍️</div><h2>Práctica SIMCE Completada</h2></div>
+<div class="card" style="text-align:center">${adminMode?'<div class="game-score">'+sOk+'/'+SQ.length+'</div><p style="color:var(--dim)">'+(sOk>=5?'¡Excelente!':sOk>=3?'¡Buen avance!':'Sigue practicando.')+'</p>':'<div style="font-size:2rem;margin:12px 0">✅</div><p style="color:var(--dim);font-size:.9rem">Respuestas registradas.<br>Tu profesor revisará los resultados.</p>'}
 <div class="audit-box"><strong>Desglose:</strong> LOC ${SQ.filter((q,i)=>q.skill==='LOC').length} preg. · INF ${SQ.filter(q=>q.skill==='INF').length} preg. · REF ${SQ.filter(q=>q.skill==='REF').length} preg.</div>
 <div class="nav-row"><button class="btn btn-back" onclick="go(6)">← Juego</button><button class="btn btn-next" onclick="go(8)">Ir al Cierre →</button></div></div>`;
 const q=SQ[sIdx];
 return`<div class="section-header"><div class="icon">✍️</div><h2>Práctica SIMCE</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Pregunta ${sIdx+1}/${SQ.length}</div></div>
-<details class="text-toggle"><summary>📖 Ver texto: "La cicatriz"</summary><div class="story-box"><div class="title">La cicatriz</div><p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p><p>—Abuela, ¿cómo te hiciste eso? —le pregunté una tarde de invierno, mientras el olor a masa cruda llenaba la cocina.</p><p>Ella sonrió sin mirarme, hundiendo los nudillos en la masa con una fuerza que desmentía sus setenta y tres años.</p><p>—Fue por una promesa —respondió.</p><p>Yo tenía doce años y las promesas me parecían cosas de películas. Me senté en el banco de madera y esperé, porque había aprendido que mi abuela contaba las historias a su propio ritmo, como quien desenrolla un ovillo de lana.</p><p>—Cuando yo era joven, más joven que tú —comenzó—, vivíamos cerca del río Maule. Mi hermano Rodrigo y yo éramos inseparables. Un verano, el río creció por las lluvias y arrastró el puente viejo. Al otro lado quedó atrapada la señora Carmen con sus tres hijos pequeños, sin comida ni manera de cruzar.</p><p>Hizo una pausa para espolvorear harina sobre la mesa. Yo contuve la respiración.</p><p>—Tu bisabuelo dijo que era imposible cruzar. El agua estaba helada y la corriente era brutal. Pero Rodrigo y yo nos miramos y supimos, sin decirnos nada, que teníamos que intentarlo.</p><p>—¿Cruzaron el río? —pregunté, con los ojos abiertos de asombro.</p><p>—Amarramos una cuerda al sauce viejo de la orilla. Rodrigo iba primero, yo le sujetaba la cuerda desde atrás. A mitad del cruce, un tronco que venía con la corriente me golpeó el brazo y la cuerda me cortó la muñeca. Pero no la solté.</p><p>Sus ojos brillaron con algo que no era tristeza, sino algo más firme, como el orgullo de quien sabe que tomó la decisión correcta.</p><p>—¿Y Rodrigo? —susurré.</p><p>—Llegó al otro lado. Ayudó a la señora Carmen y a sus hijos a cruzar con la cuerda. Todos sobrevivieron.</p><p>Mi abuela levantó la muñeca y la giró lentamente bajo la luz amarillenta de la cocina.</p><p>—Yo me quedé con esto —dijo, tocando la cicatriz—. Y con la certeza de que hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto.</p><p>Terminó de dar forma al pan y lo puso en la bandeja. Antes de meterlo al horno, me miró con esos ojos oscuros que parecían contener todas las tormentas y todas las calmas del mundo.</p><p>—Algún día, mi niño, algo te va a pedir que no sueltes. Y cuando eso pase, acuérdate de esta cicatriz.</p><p>Han pasado quince años desde esa tarde. Mi abuela ya no está, pero cada vez que la vida me pide soltar, cierro los ojos y siento su mano firme, sosteniendo la cuerda.</p></div></details>
+<div class="story-box" style="max-height:250px;overflow-y:auto;font-size:.78rem;line-height:1.7;margin-bottom:12px"><div class="title" style="font-size:.9rem">📖 La cicatriz</div><p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p><p>—Abuela, ¿cómo te hiciste eso? —le pregunté una tarde de invierno, mientras el olor a masa cruda llenaba la cocina.</p><p>Ella sonrió sin mirarme, hundiendo los nudillos en la masa con una fuerza que desmentía sus setenta y tres años.</p><p>—Fue por una promesa —respondió.</p><p>Yo tenía doce años y las promesas me parecían cosas de películas. Me senté en el banco de madera y esperé, porque había aprendido que mi abuela contaba las historias a su propio ritmo, como quien desenrolla un ovillo de lana.</p><p>—Cuando yo era joven, más joven que tú —comenzó—, vivíamos cerca del río Maule. Mi hermano Rodrigo y yo éramos inseparables. Un verano, el río creció por las lluvias y arrastró el puente viejo. Al otro lado quedó atrapada la señora Carmen con sus tres hijos pequeños, sin comida ni manera de cruzar.</p><p>Hizo una pausa para espolvorear harina sobre la mesa. Yo contuve la respiración.</p><p>—Tu bisabuelo dijo que era imposible cruzar. El agua estaba helada y la corriente era brutal. Pero Rodrigo y yo nos miramos y supimos, sin decirnos nada, que teníamos que intentarlo.</p><p>—¿Cruzaron el río? —pregunté, con los ojos abiertos de asombro.</p><p>—Amarramos una cuerda al sauce viejo de la orilla. Rodrigo iba primero, yo le sujetaba la cuerda desde atrás. A mitad del cruce, un tronco que venía con la corriente me golpeó el brazo y la cuerda me cortó la muñeca. Pero no la solté.</p><p>Sus ojos brillaron con algo que no era tristeza, sino algo más firme, como el orgullo de quien sabe que tomó la decisión correcta.</p><p>—¿Y Rodrigo? —susurré.</p><p>—Llegó al otro lado. Ayudó a la señora Carmen y a sus hijos a cruzar con la cuerda. Todos sobrevivieron.</p><p>Mi abuela levantó la muñeca y la giró lentamente bajo la luz amarillenta de la cocina.</p><p>—Yo me quedé con esto —dijo, tocando la cicatriz—. Y con la certeza de que hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto.</p><p>Terminó de dar forma al pan y lo puso en la bandeja. Antes de meterlo al horno, me miró con esos ojos oscuros que parecían contener todas las tormentas y todas las calmas del mundo.</p><p>—Algún día, mi niño, algo te va a pedir que no sueltes. Y cuando eso pase, acuérdate de esta cicatriz.</p><p>Han pasado quince años desde esa tarde. Mi abuela ya no está, pero cada vez que la vida me pide soltar, cierro los ojos y siento su mano firme, sosteniendo la cuerda.</p></div>
 <div class="card">
 <div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-${q.diff.toLowerCase().replace('-','')}">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span> · <strong>Distractores:</strong> N2 (parcialmente correctos)</div>
 <div class="simce-q"><span class="q-num">Pregunta ${sIdx+1}/${SQ.length} <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></span><div class="q-text">${q.q}</div></div>
@@ -402,8 +403,8 @@ window.sAns=function(i){
 if(document.getElementById('s0').classList.contains('locked'))return;
 document.querySelectorAll('[id^="s"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^s\d$/))b.classList.remove('picked');});
 document.getElementById('s'+i).classList.add('picked');
-document.getElementById('srev').dataset.pick=i;
-document.getElementById('srev').classList.add('show');
+if(adminMode){document.getElementById('srev').dataset.pick=i;document.getElementById('srev').classList.add('show');}
+else{document.getElementById('snx').style.display='block';}
 };
 window.revealS=function(){
 var i=parseInt(document.getElementById('srev').dataset.pick);
@@ -483,8 +484,7 @@ window.chkExit=function(i){
 if(document.getElementById('ex0').classList.contains('locked'))return;
 document.querySelectorAll('[id^="ex"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^ex\d$/))b.classList.remove('picked');});
 document.getElementById('ex'+i).classList.add('picked');
-document.getElementById('exrev').dataset.pick=i;
-document.getElementById('exrev').classList.add('show');
+if(adminMode){document.getElementById('exrev').dataset.pick=i;document.getElementById('exrev').classList.add('show');}
 };
 window.revealExit=function(){
 var i=parseInt(document.getElementById('exrev').dataset.pick);

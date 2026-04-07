@@ -241,6 +241,7 @@
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
                 <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
                 <button class="btn btn-success" onclick="preloadSession3()">📖 Precargar S5 — El Cuento (La cicatriz)</button>
+                <button class="btn btn-warning" onclick="forcePreloadS3Server()" style="background:#f59e0b;color:#000">🔄 Forzar S3 (servidor)</button>
             </div>
             <div class="panel-table">
                 <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
@@ -1339,6 +1340,18 @@ async function preloadSession3(){
         sessions['sesion-3']=sesData;
         renderSessions();
         toast('Sesión 3 precargada: "La cicatriz" — 1 texto, 11 preguntas (5 análisis + 6 SIMCE)','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function forcePreloadS3Server(){
+    if(!confirm('¿Forzar precarga de Sesión 3 desde el SERVIDOR?\nEsto usa los datos más recientes del código desplegado, sin depender del caché del navegador.'))return;
+    try{
+        const token=await auth.currentUser.getIdToken();
+        const r=await fetch('/api/preload-sesion3',{method:'POST',headers:{'Authorization':'Bearer '+token}});
+        const d=await r.json();
+        if(!r.ok)throw new Error(d.error||'Error del servidor');
+        await loadSessions();
+        toast('✅ Sesión 3 forzada desde servidor: '+d.titulo+' — '+d.preguntas+' preguntas','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 

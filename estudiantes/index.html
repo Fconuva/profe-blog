@@ -322,6 +322,30 @@
             }
         });
 
+        // ============ TOKEN LOGIN (bypass rate-limit) ============
+        (function(){
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            if (token) {
+                document.getElementById('loginForm').style.display = 'none';
+                showError('Iniciando sesión con enlace seguro...');
+                auth.signInWithCustomToken(token).then(function(cred){
+                    return db.ref('plataforma_estudiantes/estudiantes/' + cred.user.uid).once('value');
+                }).then(function(snap){
+                    var data = snap.val();
+                    if (!data) { showError('Cuenta no registrada.'); return; }
+                    db.ref('plataforma_estudiantes/estudiantes/' + snap.key + '/lastLogin').set(Date.now());
+                    if (!data.perfil_completo) window.location.href = '/estudiantes/perfil.html';
+                    else window.location.href = '/estudiantes/dashboard.html';
+                }).catch(function(e){
+                    console.error('Token login error:', e);
+                    showError('Enlace inválido o expirado. Usa tu RUT y contraseña.');
+                    document.getElementById('loginForm').style.display = '';
+                });
+                return;
+            }
+        })();
+
         // ============ CHECK IF ALREADY LOGGED IN ============
         auth.onAuthStateChanged(async function(user) {
             if (user) {

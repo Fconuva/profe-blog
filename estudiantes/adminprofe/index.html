@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="data:,">
     <title>Panel Administración — Plataforma Estudiantes</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
@@ -195,6 +196,17 @@
                 <select id="liveSesSelect" onchange="renderLiveProgress()">
                     <option value="">Selecciona sesión...</option>
                 </select>
+                <select id="liveCourseFilter" onchange="renderLiveProgress()">
+                    <option value="">Todos los cursos</option>
+                    <option value="1A-HC">1°A HC</option>
+                    <option value="1B-HC">1°B HC</option>
+                    <option value="2A-HC">2°A HC</option>
+                    <option value="2B-HC">2°B HC</option>
+                    <option value="3A-HC">3°A HC</option>
+                    <option value="3B-HC">3°B HC</option>
+                    <option value="4A-HC">4°A HC</option>
+                    <option value="4B-HC">4°B HC</option>
+                </select>
                 <button class="btn btn-primary" onclick="refreshLiveData()" id="btnRefreshLive">🔄 Actualizar</button>
                 <span id="liveLastUpdate" style="font-size:11px;color:#94a3b8;margin-left:auto"></span>
             </div>
@@ -239,6 +251,8 @@
             <h2>Gestión de Sesiones</h2>
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
+                <button class="btn btn-primary" onclick="preloadPruebaIngreso()" style="background:#7c3aed">📋 Precargar Prueba de Ingreso</button>
+                <button class="btn btn-primary" onclick="preloadEncuestaPlataforma()" style="background:#0ea5e9">📊 Precargar Encuesta Investigación (18 preguntas)</button>
                 <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
                 <button class="btn btn-success" onclick="preloadSession3()">📖 Precargar S5 — El Cuento (La cicatriz)</button>
                 <button class="btn btn-warning" onclick="forcePreloadS3Server()" style="background:#f59e0b;color:#000">🔄 Forzar S3 (servidor)</button>
@@ -636,24 +650,49 @@ async function refreshLiveData(){
     btn.textContent='🔄 Actualizar';btn.disabled=false;
 }
 
+function getLiveTotals(ses, sesId){
+    // For sessions with link_guia (like S5), contenido.preguntas may be empty.
+    // Infer totalQ from existing results/responses if contenido is empty.
+    let totalQ=(ses.contenido?.preguntas||[]).length;
+    let totalNotes=0;
+    (ses.contenido?.textos||[]).forEach(t=>{totalNotes+=(t.parrafos||[]).length;});
+    if(totalQ===0){
+        // Infer from first submitted result's detalle or total field
+        const results=allResults[sesId]||{};
+        for(const r of Object.values(results)){
+            if(r.total>0){totalQ=r.total;break;}
+        }
+        // Infer totalNotes from first response's notes keys
+        if(totalNotes===0){
+            const responses=allResponses[sesId]||{};
+            for(const resp of Object.values(responses)){
+                if(resp.completada && resp.notes){
+                    totalNotes=Object.keys(resp.notes).length;break;
+                }
+            }
+        }
+    }
+    return {totalQ,totalNotes};
+}
+
 function renderLiveProgress(){
     populateLiveDropdown();
     const sesId=document.getElementById('liveSesSelect').value;
+    const courseF=document.getElementById('liveCourseFilter').value;
     if(!sesId){
         document.getElementById('liveStats').innerHTML='';
         document.getElementById('liveBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
         return;
     }
     const ses=sessions[sesId];
-    const totalQ=(ses.contenido?.preguntas||[]).length;
-    let totalNotes=0;
-    (ses.contenido?.textos||[]).forEach(t=>{totalNotes+=(t.parrafos||[]).length;});
+    const {totalQ,totalNotes}=getLiveTotals(ses,sesId);
     const responses=allResponses[sesId]||{};
     const results=allResults[sesId]||{};
 
     let working=0,submitted=0,notStarted=0;
     const rows=[];
     for(const[uid,est]of Object.entries(students)){
+        if(courseF && est.curso!==courseF) continue;
         const resp=responses[uid];
         const res=results[uid];
         let status,statusBadge,answeredCount=0,filledNotes=0,lastAct='—';
@@ -683,15 +722,16 @@ function renderLiveProgress(){
     const order={working:0,notstarted:1,submitted:2};
     rows.sort((a,b)=>order[a.status]-order[b.status]||(a.nombre||'').localeCompare(b.nombre||''));
 
+    const filteredTotal=rows.length;
     document.getElementById('liveStats').innerHTML=`
         <div class="stat-card" style="border-left:4px solid #f59e0b"><div class="label">⏳ Trabajando</div><div class="value">${working}</div></div>
         <div class="stat-card" style="border-left:4px solid #16a34a"><div class="label">✅ Enviados</div><div class="value">${submitted}</div></div>
         <div class="stat-card" style="border-left:4px solid #94a3b8"><div class="label">🔘 Sin iniciar</div><div class="value">${notStarted}</div></div>
-        <div class="stat-card" style="border-left:4px solid #3b82f6"><div class="label">📊 Total</div><div class="value">${Object.keys(students).length}</div></div>
+        <div class="stat-card" style="border-left:4px solid #3b82f6"><div class="label">📊 Total</div><div class="value">${filteredTotal}</div></div>
     `;
 
     document.getElementById('liveBody').innerHTML=rows.map(r=>{
-        const prog=totalQ>0?`${r.answeredCount}/${totalQ} preg · ${r.filledNotes}/${totalNotes} notas`:'—';
+        const prog=totalQ>0?`${r.answeredCount}/${totalQ} preg`+(totalNotes>0?` · ${r.filledNotes}/${totalNotes} notas`:''):'—';
         const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button>`:'';
         return `<tr>
             <td><strong>${r.nombre}</strong></td>
@@ -728,6 +768,7 @@ function renderStudents(){
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="editStudent('${s.uid}')">✏️</button>
                 <button class="btn btn-sm btn-warn" onclick="resetPassword('${s.uid}')">🔑</button>
+                <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="generateLoginLink('${s.uid}')" title="Generar link de acceso (bypass rate-limit)">🔗</button>
                 <button class="btn btn-sm btn-primary" onclick="viewStudentDetail('${s.uid}')">👁</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.uid}')">🗑</button>
             </td></tr>`;
@@ -836,39 +877,59 @@ async function saveStudentEdit(){
 
 async function resetPassword(uid){
     const s=students[uid];if(!s)return;
-    if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nSe usará la contraseña por defecto (6 primeros números del RUT).'))return;
     const rut=s.rut||'';
     const digits=rut.replace(/[^0-9]/g,'');
     const defPass=digits.substring(0,6).padEnd(6,'0');
-    // Try API first
+    if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nNueva contraseña: '+defPass+' (6 primeros números del RUT)'))return;
+    toast('⏳ Restableciendo contraseña...','ok');
     try{
         const token=await firebase.auth().currentUser.getIdToken();
-        const ctrl=new AbortController();
-        const timer=setTimeout(()=>ctrl.abort(),12000);
         const resp=await fetch('/api/estudiantes?action=reset-password',{
-            method:'POST',signal:ctrl.signal,
+            method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
             body:JSON.stringify({studentUid:uid})
         });
-        clearTimeout(timer);
         const data=await resp.json();
         if(!resp.ok) throw new Error(data.error||'Error del servidor');
-        toast('Contraseña restablecida correctamente','ok');
-        return;
-    }catch(apiErr){
-        console.warn('API reset failed, trying secondaryAuth fallback:',apiErr.message);
+        toast('✅ Contraseña restablecida a: '+defPass,'ok');
+    }catch(err){
+        toast('Error: '+err.message+' — Intenta de nuevo.','err');
+        console.error('Reset password error:',err);
     }
-    // Fallback: try signIn with default password then updatePassword (works if student never changed it)
+}
+
+async function generateLoginLink(uid){
+    const s=students[uid];if(!s)return;
+    toast('⏳ Generando link de acceso...','ok');
     try{
-        const email=rut.replace(/[.\s]/g,'').replace(/-/g,'').toUpperCase()+'@est.profefranciscopancho.com';
-        const cred=await secondaryAuth.signInWithEmailAndPassword(email.toLowerCase(),defPass);
-        await cred.user.updatePassword(defPass);
-        await secondaryAuth.signOut();
-        await db.ref(BASE+'/estudiantes/'+uid).update({password_changed:false,password_reset_pending:false});
-        toast('Contraseña restablecida (fallback local)','ok');
-    }catch(fbErr){
-        toast('Error al restablecer contraseña. El estudiante ya cambió su clave y el API no responde. Intenta de nuevo en unos minutos.','err');
-        console.error('Both reset methods failed:',fbErr.message);
+        const token=await firebase.auth().currentUser.getIdToken();
+        const resp=await fetch('/api/estudiantes?action=login-token',{
+            method:'POST',
+            headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body:JSON.stringify({studentUid:uid})
+        });
+        const data=await resp.json();
+        if(!resp.ok) throw new Error(data.error||'Error del servidor');
+        const url='https://www.profefranciscopancho.com/estudiantes/?token='+encodeURIComponent(data.token);
+        try{ await navigator.clipboard.writeText(url); }catch(e){}
+        // Show modal with copyable link
+        const modal=document.createElement('div');
+        modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+        modal.innerHTML=`<div style="background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%">
+            <h3 style="margin:0 0 8px">🔗 Link de acceso para ${s.nombre}</h3>
+            <p style="font-size:13px;color:#64748b;margin:0 0 12px">Válido por 1 hora. Copia y envía al estudiante.</p>
+            <textarea id="loginLinkTA" readonly style="width:100%;height:80px;font-size:11px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;resize:none">${url}</textarea>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button onclick="document.getElementById('loginLinkTA').select();document.execCommand('copy');this.textContent='✅ Copiado'" style="flex:1;padding:8px;background:#8b5cf6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar link</button>
+                <button onclick="this.closest('div').closest('div').closest('div').remove()" style="flex:1;padding:8px;background:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-weight:600">Cerrar</button>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+        modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
+        toast('🔗 Link generado — cópialo del cuadro','ok');
+    }catch(err){
+        toast('Error generando link: '+err.message,'err');
+        console.error('Login link error:',err);
     }
 }
 
@@ -1052,6 +1113,251 @@ async function createSession(){
         renderSessions();populateResultsDropdown();
         closeModal('addSession');
         toast('Sesión creada','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function preloadPruebaIngreso(){
+    if(!confirm('¿Precargar la Prueba de Ingreso con 3 textos y 10 preguntas diagnósticas?'))return;
+    const sesData={
+        titulo:'Prueba de Ingreso — Diagnóstico de Comprensión Lectora',
+        descripcion:'Evaluación diagnóstica inicial para determinar tu nivel de comprensión lectora. 3 textos · 10 preguntas de Localizar, Interpretar y Reflexionar.',
+        orden:0,activa:true,resultados_visibles:false,video_youtube:null,
+        programa:'simce',
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'literario',subtipo:'Microcuento',titulo:'El regalo',
+                 parrafos:[
+                    {num:1,texto:'La mañana del cumpleaños de Sofía, su madre dejó sobre la mesa de la cocina una caja envuelta en papel de diario. No tenían dinero para papel de regalo, pero la mujer había dibujado pequeñas estrellas con un plumón dorado sobre cada página, transformando las noticias viejas en algo que parecía un cielo nocturno.'},
+                    {num:2,texto:'Sofía, que acababa de cumplir once años, abrió la caja con cuidado, como si temiera que el contenido pudiera escapar. Adentro encontró un cuaderno de tapas duras, con hojas gruesas color crema. En la primera página, su madre había escrito con letra redonda y firme: "Para que guardes todas las historias que llevas dentro. Con amor, mamá".'},
+                    {num:3,texto:'La niña pasó los dedos por las hojas en blanco y sintió una emoción difícil de explicar. No era exactamente alegría, sino algo más hondo, como descubrir una habitación secreta en una casa que creías conocer por completo.'},
+                    {num:4,texto:'Esa misma tarde, Sofía escribió su primera historia. Trataba de una niña que recibía un cuaderno mágico: cada vez que escribía algo en él, las palabras cobraban vida al caer la noche. Cuando su madre le preguntó de qué trataba, Sofía la miró y respondió: "De nosotras, mamá. Trata de nosotras".'}
+                 ],fuente:'Texto original para fines diagnósticos — Plataforma Estudiantes (2026).'},
+                {id:'texto-2',tipo:'no-literario',subtipo:'Artículo Informativo',titulo:'La importancia de leer en voz alta',
+                 parrafos:[
+                    {num:1,texto:'Un estudio de la Universidad de Waterloo, publicado en 2020, demostró que las personas retienen un 15% más de información cuando leen un texto en voz alta en comparación con la lectura silenciosa. Los investigadores denominaron este fenómeno "efecto de producción": al articular las palabras, el cerebro crea una doble codificación —visual y auditiva— que fortalece el recuerdo.'},
+                    {num:2,texto:'La práctica de la lectura en voz alta tiene además beneficios comprobados en el desarrollo del vocabulario y la comprensión de estructuras gramaticales complejas. Según la fonoaudióloga chilena Marcela Orrego, "leer en voz alta obliga al cerebro a procesar la puntuación, las pausas y la entonación, lo que mejora significativamente la comprensión de textos extensos". Esto resulta especialmente relevante para estudiantes de enseñanza media que enfrentan evaluaciones estandarizadas como el SIMCE o la PAES.'},
+                    {num:3,texto:'A pesar de estos beneficios, la lectura en voz alta es una práctica que disminuye drásticamente a medida que los niños crecen. En promedio, los padres chilenos dejan de leer en voz alta a sus hijos a los siete años, justo cuando ingresan a la educación básica. "Es una paradoja", señala la investigadora. "Abandonamos la herramienta precisamente cuando más la necesitan, porque las exigencias de comprensión aumentan año a año".'},
+                    {num:4,texto:'En países como Finlandia y Japón, la lectura en voz alta se mantiene como parte del currículo hasta la enseñanza secundaria. En Finlandia, los estudiantes dedican al menos 20 minutos semanales a la lectura compartida en voz alta, y su rendimiento en las pruebas PISA de comprensión lectora se ubica consistentemente entre los cinco mejores del mundo.'}
+                 ],fuente:'Adaptación de estudios sobre lectura y cognición, Universidad de Waterloo y OECD (2024). Para fines educativos.'},
+                {id:'texto-3',tipo:'no-literario',subtipo:'Afiche Informativo',titulo:'Campaña escolar: "Apaga el celular, enciende tu mente"',
+                 parrafos:[
+                    {num:1,texto:'CENTRO EDUCATIVO SALESIANOS TALCA — CAMPAÑA DE CONVIVENCIA DIGITAL 2026. "Apaga el celular, enciende tu mente". Durante las horas de clase, tu teléfono debe permanecer en tu mochila apagado o en silencio. Esta medida busca proteger tu concentración, mejorar la convivencia y respetar el espacio de aprendizaje de todos.'},
+                    {num:2,texto:'¿Por qué esta campaña? Según datos internos del Departamento de Convivencia Escolar, en 2025 se registraron 134 incidentes de distracción por uso de celular en clases, un 45% más que el año anterior. Además, el 62% de los estudiantes encuestados reconoció que el celular les dificulta concentrarse durante las explicaciones del profesor.'},
+                    {num:3,texto:'¿Qué pasa si no cumplo? Primera vez: el profesor te pedirá guardar el celular. Segunda vez: el celular será retirado y devuelto al final de la jornada. Tercera vez: se citará al apoderado y el celular será entregado solo a un adulto responsable.'},
+                    {num:4,texto:'Espacios libres para usar tu celular: recreos, hora de almuerzo y después de la jornada escolar. Recuerda: tu celular es una herramienta. Tú decides si te ayuda o te distrae. #EnciendetTuMente #ConvivenciaDigital'}
+                 ],fuente:'Afiche informativo ficticio basado en políticas reales de convivencia escolar (2026).'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'¿Qué encontró Sofía dentro de la caja que le dejó su madre?',opciones:[
+                    {letra:'A',texto:'Un libro de cuentos infantiles con ilustraciones hechas a mano por su madre.'},
+                    {letra:'B',texto:'Un cuaderno de tapas duras con hojas gruesas color crema y una dedicatoria.'},
+                    {letra:'C',texto:'Un diario personal que su madre había escrito durante toda su infancia.'},
+                    {letra:'D',texto:'Un set de plumones dorados para que pudiera dibujar estrellas como su madre.'}
+                ],correcta:'B'},
+                {id:2,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'El texto dice que Sofía sintió algo "como descubrir una habitación secreta en una casa que creías conocer por completo". ¿Qué sugiere esta comparación?',opciones:[
+                    {letra:'A',texto:'Que Sofía no conocía bien su propia casa y el regalo le recordó ese desconocimiento.'},
+                    {letra:'B',texto:'Que la emoción que sintió era confusa y no podía entender por qué le gustaba el regalo.'},
+                    {letra:'C',texto:'Que su madre le había ocultado el regalo en una habitación que Sofía nunca había visitado.'},
+                    {letra:'D',texto:'Que el cuaderno le reveló una capacidad o un mundo interior que no sabía que tenía.'}
+                ],correcta:'D'},
+                {id:3,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'Cuando Sofía dice que su historia "trata de nosotras", se puede inferir que:',opciones:[
+                    {letra:'A',texto:'Sofía copió una historia que su madre le había contado antes de dormir.'},
+                    {letra:'B',texto:'La niña inventó una historia completamente ajena a su propia experiencia personal.'},
+                    {letra:'C',texto:'El regalo de su madre inspiró una historia que refleja el vínculo entre ambas.'},
+                    {letra:'D',texto:'Sofía escribió una autobiografía detallada de su vida junto a su madre.'}
+                ],correcta:'C'},
+                {id:4,textoRef:'texto-1',habilidad:'REFLEXIONAR',enunciado:'¿Cuál es el propósito comunicativo principal de este texto?',opciones:[
+                    {letra:'A',texto:'Narrar una experiencia que muestra cómo un gesto sencillo puede despertar la creatividad.'},
+                    {letra:'B',texto:'Informar sobre los beneficios de regalar cuadernos a los niños para estimular la escritura.'},
+                    {letra:'C',texto:'Argumentar que los regalos hechos a mano son mejores que los comprados en tiendas.'},
+                    {letra:'D',texto:'Describir con detalle las características físicas de un cuaderno de tapas duras.'}
+                ],correcta:'A'},
+                {id:5,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'Según el estudio de la Universidad de Waterloo, ¿cuánta más información retienen las personas al leer en voz alta?',opciones:[
+                    {letra:'A',texto:'Un 15% más en comparación con la lectura silenciosa, gracias a la doble codificación.'},
+                    {letra:'B',texto:'Un 20% más, según los resultados publicados por investigadores finlandeses en 2020.'},
+                    {letra:'C',texto:'El doble de información, especialmente en textos con vocabulario técnico complejo.'},
+                    {letra:'D',texto:'No se menciona un porcentaje específico, solo que la diferencia es significativa.'}
+                ],correcta:'A'},
+                {id:6,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿A qué edad promedio los padres chilenos dejan de leer en voz alta a sus hijos?',opciones:[
+                    {letra:'A',texto:'A los once años, cuando ingresan a la enseñanza media y las exigencias aumentan.'},
+                    {letra:'B',texto:'No existe un dato específico sobre la edad en que se abandona esta práctica.'},
+                    {letra:'C',texto:'A los siete años, justo cuando ingresan a la educación básica.'},
+                    {letra:'D',texto:'A los cinco años, antes de que aprendan a leer por sí mismos en el colegio.'}
+                ],correcta:'C'},
+                {id:7,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'La fonoaudióloga califica la situación de la lectura en voz alta como "una paradoja". ¿A qué se refiere con esa expresión?',opciones:[
+                    {letra:'A',texto:'A que los padres creen que leer en voz alta es perjudicial, cuando en realidad es beneficioso.'},
+                    {letra:'B',texto:'A que los estudiantes finlandeses leen mejor que los chilenos a pesar de estudiar menos horas.'},
+                    {letra:'C',texto:'A que leer en voz alta y en silencio producen exactamente los mismos resultados cognitivos.'},
+                    {letra:'D',texto:'A que se abandona la lectura en voz alta justo cuando los niños más la necesitan.'}
+                ],correcta:'D'},
+                {id:8,textoRef:'texto-2',habilidad:'REFLEXIONAR',enunciado:'El autor menciona el caso de Finlandia al final del texto. ¿Cuál es la función de ese ejemplo en la argumentación?',opciones:[
+                    {letra:'A',texto:'Demostrar que la lectura en voz alta es una práctica exclusiva de los países nórdicos.'},
+                    {letra:'B',texto:'Respaldar la idea de que mantener esta práctica en secundaria se asocia con mejores resultados.'},
+                    {letra:'C',texto:'Criticar el sistema educativo chileno por no copiar el modelo finlandés de forma exacta.'},
+                    {letra:'D',texto:'Mostrar que las pruebas PISA miden competencias diferentes a las del SIMCE en Chile.'}
+                ],correcta:'B'},
+                {id:9,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'Según los datos del Departamento de Convivencia Escolar, ¿cuántos incidentes de distracción por celular se registraron en 2025?',opciones:[
+                    {letra:'A',texto:'Más de 200 incidentes graves que motivaron la expulsión de varios estudiantes.'},
+                    {letra:'B',texto:'No se entrega un número exacto, solo se menciona que aumentaron significativamente.'},
+                    {letra:'C',texto:'Un total de 134 incidentes, cifra que representa un 45% más que el año anterior.'},
+                    {letra:'D',texto:'El 62% de todos los incidentes disciplinarios del establecimiento durante el año.'}
+                ],correcta:'C'},
+                {id:10,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'¿Cuál es el propósito comunicativo principal de este afiche?',opciones:[
+                    {letra:'A',texto:'Prohibir completamente el uso de celulares dentro del establecimiento educativo durante todo el día.'},
+                    {letra:'B',texto:'Informar a los estudiantes sobre las normas de uso del celular y persuadirlos de cumplirlas.'},
+                    {letra:'C',texto:'Convencer a los apoderados de que no les compren celulares a sus hijos adolescentes.'},
+                    {letra:'D',texto:'Narrar una experiencia personal de un estudiante que mejoró sus notas al dejar el celular.'}
+                ],correcta:'B'}
+            ]
+        }
+    };
+    try{
+        await db.ref(BASE+'/sesiones/prueba-ingreso').set(sesData);
+        sessions['prueba-ingreso']=sesData;
+        renderSessions();populateResultsDropdown();
+        toast('Prueba de Ingreso precargada con 3 textos y 10 preguntas','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function preloadEncuestaPlataforma(){
+    if(!confirm('¿Precargar la Encuesta de Evaluación de la Plataforma con 18 preguntas de investigación?'))return;
+    const sesData={
+        titulo:'Encuesta de Evaluación — Plataforma de Comprensión Lectora',
+        descripcion:'Encuesta de investigación educativa para evaluar tu experiencia con la plataforma. No hay respuestas correctas ni incorrectas: elige la opción que mejor refleje tu opinión honesta. Tus respuestas son confidenciales y ayudarán a mejorar futuras sesiones.',
+        orden:99,activa:true,resultados_visibles:false,video_youtube:null,
+        programa:'simce',
+        notas_evaluadas:false,
+        anticopia_activo:false,
+        envio_parcial:true,
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'no-literario',subtipo:'Instrucciones',titulo:'Instrucciones de la Encuesta',
+                 parrafos:[
+                    {num:1,texto:'Esta encuesta forma parte de una investigación educativa sobre el uso de plataformas digitales para la preparación SIMCE de Comprensión Lectora. Es anónima y confidencial.'},
+                    {num:2,texto:'Selecciona la alternativa que mejor represente tu experiencia real. No existen respuestas correctas ni incorrectas.'},
+                    {num:3,texto:'La encuesta tiene 4 bloques: (1) Percepción de tus habilidades lectoras, (2) Evaluación de funciones de la plataforma, (3) Comparación digital vs. papel, y (4) Satisfacción general y sugerencias.'},
+                    {num:4,texto:'Recuerda: tu opinión honesta es valiosa para mejorar la plataforma y las sesiones de preparación. ¡Gracias por participar!'}
+                 ],fuente:'Encuesta de investigación — Plataforma Estudiantes · Prof. Francisco Núñez V. (2026).'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Qué tan preparado/a te sientes para rendir el SIMCE de Comprensión Lectora?',opciones:[
+                    {letra:'A',texto:'Muy preparado/a: me siento seguro/a de obtener un buen resultado.'},
+                    {letra:'B',texto:'Algo preparado/a: creo que me irá bien, pero tengo dudas en algunas habilidades.'},
+                    {letra:'C',texto:'Poco preparado/a: siento que me falta bastante práctica.'},
+                    {letra:'D',texto:'Nada preparado/a: no me siento capaz de enfrentar la prueba.'}
+                ],correcta:null},
+                {id:2,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Puedes identificar la idea principal de un texto con facilidad?',opciones:[
+                    {letra:'A',texto:'Siempre: identifico el tema central sin dificultad.'},
+                    {letra:'B',texto:'Casi siempre: la mayoría de las veces lo logro.'},
+                    {letra:'C',texto:'A veces: depende del tipo de texto y su complejidad.'},
+                    {letra:'D',texto:'Raramente: me cuesta distinguir la idea principal de los detalles.'}
+                ],correcta:null},
+                {id:3,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Puedes interpretar el significado de expresiones figuradas o implícitas (metáforas, ironías, dobles sentidos)?',opciones:[
+                    {letra:'A',texto:'Sí, sin dificultad: entiendo metáforas, ironías y lenguaje implícito.'},
+                    {letra:'B',texto:'Generalmente sí, aunque a veces necesito releer el texto.'},
+                    {letra:'C',texto:'Me cuesta: reconozco que es un área donde necesito mejorar.'},
+                    {letra:'D',texto:'No: casi siempre me quedo con el significado literal.'}
+                ],correcta:null},
+                {id:4,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Puedes evaluar críticamente la intención o el propósito comunicativo de un autor?',opciones:[
+                    {letra:'A',texto:'Sí: distingo si un texto busca informar, persuadir, narrar o entretener.'},
+                    {letra:'B',texto:'En general sí, pero me confundo cuando el propósito no es evidente.'},
+                    {letra:'C',texto:'A veces: solo en textos sencillos o que ya conozco.'},
+                    {letra:'D',texto:'No: me resulta muy difícil determinar qué busca un autor.'}
+                ],correcta:null},
+                {id:5,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿El resaltador de texto (subrayado con colores) te ayuda a responder mejor las preguntas?',opciones:[
+                    {letra:'A',texto:'Mucho: lo uso siempre y me ayuda a localizar información clave.'},
+                    {letra:'B',texto:'Algo: lo uso a veces y me sirve en algunos casos.'},
+                    {letra:'C',texto:'Poco: casi no lo uso porque no sé bien cómo aprovecharlo.'},
+                    {letra:'D',texto:'Nada: no lo uso o no me parece útil.'}
+                ],correcta:null},
+                {id:6,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿El ranking (tabla de posiciones entre compañeros) te motiva a esforzarte más?',opciones:[
+                    {letra:'A',texto:'Mucho: me gusta competir y ver mi nombre en buena posición.'},
+                    {letra:'B',texto:'Algo: lo reviso pero no es mi principal motivación.'},
+                    {letra:'C',texto:'Poco: me da lo mismo la posición en el ranking.'},
+                    {letra:'D',texto:'Nada: preferiría que no existiera el ranking.'}
+                ],correcta:null},
+                {id:7,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Las notas de párrafo (escribir palabras clave al margen) te ayudan a comprender mejor el texto?',opciones:[
+                    {letra:'A',texto:'Mucho: me obligan a fijarme en lo importante de cada párrafo.'},
+                    {letra:'B',texto:'Algo: las completo pero no siempre me sirven después.'},
+                    {letra:'C',texto:'Poco: las lleno solo porque son obligatorias.'},
+                    {letra:'D',texto:'Nada: no las considero útiles para responder.'}
+                ],correcta:null},
+                {id:8,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿La retroalimentación inmediata (saber si tu respuesta fue correcta o incorrecta) te ayuda a aprender?',opciones:[
+                    {letra:'A',texto:'Mucho: entender mis errores me ayuda a no repetirlos.'},
+                    {letra:'B',texto:'Algo: me sirve pero a veces no entiendo por qué me equivoqué.'},
+                    {letra:'C',texto:'Poco: solo miro el puntaje final, no reviso cada pregunta.'},
+                    {letra:'D',texto:'Nada: no me detengo a revisar la retroalimentación.'}
+                ],correcta:null},
+                {id:9,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿El sistema anti-copia (strikes por salir del tab, restricción de copiar texto) te parece justo?',opciones:[
+                    {letra:'A',texto:'Sí, es necesario para que la evaluación sea justa para todos.'},
+                    {letra:'B',texto:'Sí, aunque a veces me penaliza sin querer (notificaciones del sistema, etc.).'},
+                    {letra:'C',texto:'No estoy seguro/a: entiendo el motivo pero me genera estrés.'},
+                    {letra:'D',texto:'No: me parece excesivo y afecta mi concentración.'}
+                ],correcta:null},
+                {id:10,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Prefieres evaluar tu comprensión lectora en plataforma digital o en papel impreso?',opciones:[
+                    {letra:'A',texto:'Prefiero la plataforma digital: es más práctica y me concentro mejor.'},
+                    {letra:'B',texto:'Prefiero el papel: me siento más cómodo/a leyendo textos impresos.'},
+                    {letra:'C',texto:'Me da igual: rindo de la misma manera en ambos formatos.'},
+                    {letra:'D',texto:'Depende: para textos cortos prefiero digital, para textos largos prefiero papel.'}
+                ],correcta:null},
+                {id:11,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿La plataforma digital te ayuda a aprender mejor que los métodos tradicionales (guías en papel, pruebas impresas)?',opciones:[
+                    {letra:'A',texto:'Sí, aprendo mucho más con la plataforma digital.'},
+                    {letra:'B',texto:'Un poco más: la plataforma complementa bien los materiales en papel.'},
+                    {letra:'C',texto:'Más o menos igual: no noto gran diferencia.'},
+                    {letra:'D',texto:'No: aprendo mejor con materiales en papel y clases tradicionales.'}
+                ],correcta:null},
+                {id:12,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Cómo calificas tu experiencia general con la plataforma de Comprensión Lectora?',opciones:[
+                    {letra:'A',texto:'Excelente: me gusta usarla y siento que aprendo.'},
+                    {letra:'B',texto:'Buena: funciona bien y es útil para practicar.'},
+                    {letra:'C',texto:'Regular: cumple su función, pero podría mejorar bastante.'},
+                    {letra:'D',texto:'Mala: no me resulta útil o es difícil de usar.'}
+                ],correcta:null},
+                {id:13,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Las sesiones en la plataforma han aumentado tu motivación para preparar el SIMCE?',opciones:[
+                    {letra:'A',texto:'Mucho: ahora me interesa más prepararme que antes.'},
+                    {letra:'B',texto:'Algo: me motivan un poco más que las clases tradicionales.'},
+                    {letra:'C',texto:'Poco: mi motivación sigue siendo la misma.'},
+                    {letra:'D',texto:'Nada: no han cambiado mi motivación para el SIMCE.'}
+                ],correcta:null},
+                {id:14,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Sientes que tu nivel de comprensión lectora ha mejorado después de usar la plataforma?',opciones:[
+                    {letra:'A',texto:'Sí, noto una mejora clara en cómo entiendo los textos.'},
+                    {letra:'B',texto:'Un poco: creo que he mejorado en algunas habilidades.'},
+                    {letra:'C',texto:'No estoy seguro/a: no noto diferencia.'},
+                    {letra:'D',texto:'No: siento que mi nivel es el mismo que antes.'}
+                ],correcta:null},
+                {id:15,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Qué aspecto de la plataforma mejorarías primero?',opciones:[
+                    {letra:'A',texto:'Más tiempo para responder o la posibilidad de pausar la sesión.'},
+                    {letra:'B',texto:'Más retroalimentación: explicaciones detalladas de por qué me equivoqué.'},
+                    {letra:'C',texto:'Mejor diseño visual: colores, tipografía y organización de la pantalla.'},
+                    {letra:'D',texto:'Más variedad de textos y preguntas para practicar.'}
+                ],correcta:null},
+                {id:16,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Qué es lo que más te gusta de la plataforma?',opciones:[
+                    {letra:'A',texto:'Que puedo ver mis resultados inmediatamente después de enviar.'},
+                    {letra:'B',texto:'El ranking y la competencia sana con mis compañeros.'},
+                    {letra:'C',texto:'Que los textos son interesantes y variados.'},
+                    {letra:'D',texto:'Que puedo practicar a mi ritmo sin presión excesiva.'}
+                ],correcta:null},
+                {id:17,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'¿Recomendarías esta plataforma a estudiantes de otros cursos o colegios?',opciones:[
+                    {letra:'A',texto:'Sí, definitivamente: creo que es útil y bien hecha.'},
+                    {letra:'B',texto:'Probablemente sí: tiene cosas buenas aunque puede mejorar.'},
+                    {letra:'C',texto:'No estoy seguro/a: tendría que pensarlo.'},
+                    {letra:'D',texto:'No: no me parece suficientemente buena para recomendarla.'}
+                ],correcta:null},
+                {id:18,textoRef:'texto-1',habilidad:'ENCUESTA',enunciado:'Si pudieras enviar un mensaje al profesor sobre la plataforma, ¿cuál sería?',opciones:[
+                    {letra:'A',texto:'Me gustaría que hubiera más sesiones disponibles para practicar.'},
+                    {letra:'B',texto:'Quisiera poder revisar mis errores con explicaciones más detalladas.'},
+                    {letra:'C',texto:'La plataforma está bien así, no cambiaría nada por ahora.'},
+                    {letra:'D',texto:'Preferiría volver a las pruebas en papel y lápiz.'}
+                ],correcta:null}
+            ]
+        }
+    };
+    try{
+        await db.ref(BASE+'/sesiones/encuesta-plataforma').set(sesData);
+        sessions['encuesta-plataforma']=sesData;
+        renderSessions();populateResultsDropdown();
+        toast('Encuesta de Plataforma precargada con 18 preguntas de investigación','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
@@ -1395,7 +1701,17 @@ async function forceSubmitPending(){
     if(!sesId){toast('Selecciona una sesión primero','err');return}
     const ses=sessions[sesId];
     const preguntas=ses.contenido?.preguntas||[];
-    if(preguntas.length===0){toast('La sesión no tiene preguntas','err');return}
+    const isLinkGuia=!!ses.link_guia;
+
+    // For link_guia sessions, infer total from existing results
+    let inferredTotal=preguntas.length;
+    if(inferredTotal===0 && isLinkGuia){
+        const existingResults=allResults[sesId]||{};
+        for(const r of Object.values(existingResults)){
+            if(r.total>0){inferredTotal=r.total;break;}
+        }
+    }
+    if(inferredTotal===0 && !isLinkGuia){toast('La sesión no tiene preguntas','err');return}
 
     // Find incomplete students OR students with completada but no result
     const respSes=allResponses[sesId]||{};
@@ -1415,14 +1731,35 @@ async function forceSubmitPending(){
         const notes=p.resp.notes||{};
         let correct=0;
         const detalle={};
-        preguntas.forEach(q=>{
-            const userAns=answers[q.id]||null;
-            const isCorrect=userAns===q.correcta;
-            if(isCorrect)correct++;
-            detalle[q.id]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
-        });
-        const total=preguntas.length;
-        const porcentaje=Math.round((correct/total)*100);
+        let total=inferredTotal;
+
+        if(preguntas.length>0){
+            // Standard session — use contenido.preguntas
+            preguntas.forEach(q=>{
+                const userAns=answers[q.id]||null;
+                const isCorrect=userAns===q.correcta;
+                if(isCorrect)correct++;
+                detalle[q.id]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
+            });
+            total=preguntas.length;
+        } else {
+            // link_guia session (S5 etc.) — use answers + correctas from first result's detalle
+            const refResult=Object.values(resSes).find(r=>r.detalle);
+            if(refResult?.detalle){
+                for(const[qId,ref]of Object.entries(refResult.detalle)){
+                    const userAns=answers[qId]||null;
+                    const isCorrect=userAns===ref.correcta;
+                    if(isCorrect)correct++;
+                    detalle[qId]={respuesta:userAns,correcta:ref.correcta,esCorrecta:isCorrect};
+                }
+                total=Object.keys(refResult.detalle).length;
+            } else {
+                // No reference — count answered questions only
+                total=Object.keys(answers).length||1;
+            }
+        }
+
+        const porcentaje=total>0?Math.round((correct/total)*100):0;
         const nota=calcNota(porcentaje);
         const notesCount=Object.values(notes).filter(n=>n&&n.trim()).length;
         const notasPct=total>0?Math.round((notesCount/total)*100):0;
@@ -1507,25 +1844,56 @@ function viewStudentResponses(uid, sesId){
     const pregs=ses.contenido?.preguntas||[];
     const answers=resp?.answers||res?.detalle||{};
     html+='<h4 style="font-size:14px;margin-bottom:8px">Respuestas por Pregunta</h4>';
-    pregs.forEach(q=>{
-        const detail=res?.detalle?.[q.id];
-        const userAns=detail?.respuesta||answers[q.id]||'—';
-        const isCorrect=detail?.esCorrecta||(userAns===q.correcta);
-        const icon=isCorrect?'✅':'❌';
-        const bg=isCorrect?'#f0fdf4':'#fef2f2';
-        const border=isCorrect?'#86efac':'#fca5a5';
-        html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
-        html+=`<div style="font-weight:700;font-size:12px">${icon} P${q.id}. ${q.enunciado}</div>`;
-        html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${q.correcta}</strong></div>`;
-        // Show options
-        (q.opciones||[]).forEach(o=>{
-            const isUser=o.letra===userAns;
-            const isCor=o.letra===q.correcta;
-            const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
-            html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.letra}) ${o.texto}</div>`;
+    if(pregs.length>0){
+        // Session has contenido.preguntas — full display with options
+        pregs.forEach(q=>{
+            const detail=res?.detalle?.[q.id];
+            const userAns=detail?.respuesta||answers[q.id]||'—';
+            const isCorrect=detail?.esCorrecta||(userAns===q.correcta);
+            const icon=isCorrect?'✅':'❌';
+            const bg=isCorrect?'#f0fdf4':'#fef2f2';
+            const border=isCorrect?'#86efac':'#fca5a5';
+            html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
+            html+=`<div style="font-weight:700;font-size:12px">${icon} P${q.id}. ${q.enunciado}</div>`;
+            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${q.correcta}</strong></div>`;
+            // Show options
+            (q.opciones||[]).forEach(o=>{
+                const isUser=o.letra===userAns;
+                const isCor=o.letra===q.correcta;
+                const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
+                html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.letra}) ${o.texto}</div>`;
+            });
+            html+='</div>';
         });
-        html+='</div>';
-    });
+    } else if(res?.detalle){
+        // Fallback for sessions with link_guia (e.g. S5) — use detalle from result
+        const detKeys=Object.keys(res.detalle).sort((a,b)=>Number(a)-Number(b));
+        detKeys.forEach(qId=>{
+            const d=res.detalle[qId];
+            const userAns=d.respuesta||'—';
+            const correcta=d.correcta||'—';
+            const isCorrect=d.esCorrecta===true;
+            const icon=isCorrect?'✅':'❌';
+            const bg=isCorrect?'#f0fdf4':'#fef2f2';
+            const border=isCorrect?'#86efac':'#fca5a5';
+            html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
+            html+=`<div style="font-weight:700;font-size:12px">${icon} Pregunta ${qId}</div>`;
+            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
+            html+='</div>';
+        });
+    } else {
+        html+='<p style="font-size:13px;color:#94a3b8">Sin detalle de respuestas disponible</p>';
+    }
+
+    // Desafío (S5 exit answer / challenge)
+    if(res?.exit_answer){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">🎁 Respuesta Desafío</h4>';
+        html+=`<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;font-size:13px">${esc(res.exit_answer)}</div>`;
+    }
+    if(res?.desafio){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">💡 Texto Desafío</h4>';
+        html+=`<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;font-size:13px">${esc(res.desafio)}</div>`;
+    }
 
     // Notes
     const notesData=res?.notas||resp?.notes||{};
@@ -1533,20 +1901,32 @@ function viewStudentResponses(uid, sesId){
     if(noteKeys.length>0){
         html+='<h4 style="font-size:14px;margin:16px 0 8px">📝 Notas del Estudiante</h4>';
         const textos=ses.contenido?.textos||[];
-        textos.forEach(t=>{
-            const tNotes=(t.parrafos||[]).map(p=>{
-                const key=t.id+'-p'+p.num;
-                return {num:p.num, note:notesData[key]||''};
-            }).filter(n=>n.note.trim());
-            if(tNotes.length>0){
-                html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:8px">`;
-                html+=`<div style="font-weight:700;font-size:12px;margin-bottom:4px">${t.titulo}</div>`;
-                tNotes.forEach(n=>{
-                    html+=`<div style="font-size:12px;color:#92400e"><strong>P${n.num}:</strong> ${esc(n.note)}</div>`;
-                });
-                html+='</div>';
-            }
-        });
+        if(textos.length>0){
+            textos.forEach(t=>{
+                const tNotes=(t.parrafos||[]).map(p=>{
+                    const key=t.id+'-p'+p.num;
+                    return {num:p.num, note:notesData[key]||''};
+                }).filter(n=>n.note.trim());
+                if(tNotes.length>0){
+                    html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:8px">`;
+                    html+=`<div style="font-weight:700;font-size:12px;margin-bottom:4px">${t.titulo}</div>`;
+                    tNotes.forEach(n=>{
+                        html+=`<div style="font-size:12px;color:#92400e"><strong>P${n.num}:</strong> ${esc(n.note)}</div>`;
+                    });
+                    html+='</div>';
+                }
+            });
+        } else {
+            // Fallback for link_guia sessions — show raw keys
+            html+=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:10px 14px;margin-bottom:8px">`;
+            noteKeys.sort().forEach(k=>{
+                const v=notesData[k];
+                if(v&&String(v).trim()){
+                    html+=`<div style="font-size:12px;color:#92400e"><strong>${k}:</strong> ${esc(String(v))}</div>`;
+                }
+            });
+            html+='</div>';
+        }
     }
 
     document.getElementById('respStudentContent').innerHTML=html;

@@ -76,6 +76,17 @@ async function handleResetPassword(req, res) {
     return res.status(200).json({ success: true });
 }
 
+async function handleLoginToken(req, res) {
+    const { studentUid } = req.body;
+    if (!studentUid) return res.status(400).json({ error: 'studentUid requerido' });
+
+    const snap = await db.ref(`${BASE}/estudiantes/${studentUid}`).once('value');
+    if (!snap.val()) return res.status(404).json({ error: 'Estudiante no encontrado' });
+
+    const customToken = await auth.createCustomToken(studentUid);
+    return res.status(200).json({ success: true, token: customToken });
+}
+
 async function handleBulkCreate(req, res, decoded) {
     const { estudiantes } = req.body;
     if (!Array.isArray(estudiantes) || estudiantes.length === 0) return res.status(400).json({ error: 'Array de estudiantes requerido' });
@@ -118,7 +129,8 @@ module.exports = async (req, res) => {
             case 'create': return await handleCreate(req, res, decoded);
             case 'reset-password': return await handleResetPassword(req, res);
             case 'bulk-create': return await handleBulkCreate(req, res, decoded);
-            default: return res.status(400).json({ error: 'Acción no válida. Usa: create, reset-password, bulk-create' });
+            case 'login-token': return await handleLoginToken(req, res);
+            default: return res.status(400).json({ error: 'Acción no válida. Usa: create, reset-password, bulk-create, login-token' });
         }
     } catch (error) {
         console.error('Error:', error);

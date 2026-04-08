@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>SIMCE S6 — Inferencia y Símbolos: "La libreta azul"</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--border:#334155;--accent:#3b82f6;--accent2:#8b5cf6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--text:#e2e8f0;--dim:#94a3b8;--gold:#fbbf24}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.top-bar{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--accent2);position:sticky;top:0;z-index:100}
+.top-bar h1{font-size:.9rem;color:#fff}.top-bar .xp{background:var(--accent2);color:#fff;padding:3px 12px;border-radius:20px;font-weight:700;font-size:.8rem}
+.progress-wrap{background:#0d1117;padding:6px 20px;position:sticky;top:44px;z-index:99}
+.progress-bar{height:6px;background:var(--border);border-radius:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:6px;transition:width .6s;width:0%}
+.progress-labels{display:flex;justify-content:space-between;font-size:.6rem;color:var(--dim);margin-top:3px}
+.main{max-width:800px;margin:0 auto;padding:14px}
+.section{display:none;animation:fadeIn .5s}.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:10px 0}
+.card h2{font-size:1.1rem;margin-bottom:8px;color:#fff}
+.card h3{font-size:.9rem;margin:10px 0 6px;color:var(--accent2)}
+.card p,.card li{font-size:.82rem;line-height:1.6;color:var(--dim);margin-bottom:5px}
+.card ul{padding-left:16px}
+.highlight{background:rgba(139,92,246,.12);border-left:3px solid var(--accent2);padding:8px 12px;border-radius:0 8px 8px 0;margin:8px 0;font-size:.8rem}
+.highlight.green{background:rgba(16,185,129,.1);border-color:var(--green)}
+.highlight.amber{background:rgba(245,158,11,.1);border-color:var(--amber)}
+.highlight.blue{background:rgba(59,130,246,.12);border-color:var(--accent)}
+.highlight.red{background:rgba(239,68,68,.08);border-color:var(--red)}
+.concept-box{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:10px;margin:8px 0}
+.concept-box .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--accent2);font-weight:700;margin-bottom:3px}
+.concept-box .def{font-size:.78rem;color:var(--text)}
+.btn{display:inline-block;padding:9px 20px;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;border:none;transition:.2s;font-family:inherit}
+.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-next{background:linear-gradient(135deg,var(--accent2),var(--accent));color:#fff;margin-top:12px;padding:11px 28px;font-size:.88rem;border-radius:10px;box-shadow:0 4px 15px rgba(139,92,246,.3)}
+.btn-next:hover{box-shadow:0 6px 20px rgba(139,92,246,.45)}
+.btn-back{background:transparent;border:2px solid var(--border);color:var(--dim);margin-top:12px;padding:10px 22px;font-size:.82rem;border-radius:10px}
+.btn-back:hover{border-color:var(--accent2);color:var(--text)}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin:5px 0;border-radius:8px;border:2px solid var(--border);background:rgba(255,255,255,.02);color:var(--text);font-size:.8rem;cursor:pointer;transition:.2s;font-family:inherit}
+.quiz-option:hover:not(.locked){border-color:var(--accent2);background:rgba(139,92,246,.06)}
+.quiz-option.correct{border-color:var(--green)!important;background:rgba(16,185,129,.12)!important}
+.quiz-option.wrong{border-color:var(--red)!important;background:rgba(239,68,68,.08)!important}
+.quiz-option.locked{cursor:default}
+.quiz-option.picked{border-color:var(--accent2)!important;background:rgba(139,92,246,.1)!important}
+.btn-reveal{background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;margin-top:8px;padding:8px 18px;font-size:.8rem;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-weight:700;display:none}
+.btn-reveal.show{display:inline-block;animation:fadeIn .3s}
+.feedback{padding:8px 12px;border-radius:8px;margin:6px 0;font-size:.78rem;display:none}
+.feedback.show{display:block;animation:fadeIn .3s}
+.feedback.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7}
+.feedback.nok{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+.story-box{background:linear-gradient(135deg,rgba(30,41,59,.9),rgba(15,23,42,.95));border:1px solid var(--border);border-radius:12px;padding:20px;margin:10px 0;font-size:.85rem;line-height:1.8;color:#cbd5e1}
+.story-box .title{font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:10px;text-align:center}
+.story-box p{margin-bottom:8px;text-indent:1.5em}
+.badge{display:inline-block;font-size:.6rem;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:4px}
+.badge-loc{background:rgba(59,130,246,.2);color:#93c5fd}
+.badge-inf{background:rgba(139,92,246,.2);color:#c4b5fd}
+.badge-ref{background:rgba(16,185,129,.2);color:#6ee7b7}
+.simce-q{border-left:3px solid var(--accent2);padding-left:12px;margin:10px 0}
+.simce-q .q-num{font-size:.65rem;color:var(--accent2);font-weight:700;text-transform:uppercase;margin-bottom:3px}
+.simce-q .q-text{font-size:.82rem;color:#fff;font-weight:600;margin-bottom:6px}
+.section-header{text-align:center;padding:14px 0 8px}
+.section-header .icon{font-size:2.2rem;margin-bottom:6px}
+.section-header h2{font-size:1.2rem;background:linear-gradient(135deg,var(--accent2),var(--accent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.section-header .sub{font-size:.75rem;color:var(--dim);margin-top:3px}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.cols-2{grid-template-columns:1fr}}
+.achievement{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:14px;text-align:center;margin:10px 0;animation:fadeIn .5s}
+.achievement h3{color:var(--gold);font-size:.95rem}.achievement p{color:var(--dim);font-size:.75rem;margin-top:3px}
+.phase-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700;margin:4px 2px}
+.phase-motiv{background:rgba(245,158,11,.15);color:var(--amber)}
+.phase-prev{background:rgba(139,92,246,.15);color:#c4b5fd}
+.phase-dev{background:rgba(59,130,246,.15);color:#93c5fd}
+.phase-close{background:rgba(16,185,129,.15);color:#6ee7b7}
+.diff-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:700}
+.diff-n1{background:rgba(16,185,129,.15);color:#6ee7b7}
+.diff-n2{background:rgba(59,130,246,.15);color:#93c5fd}
+.diff-n3{background:rgba(139,92,246,.15);color:#c4b5fd}
+.audit-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px;margin:8px 0;font-size:.72rem;color:var(--dim)}
+.audit-box strong{color:var(--accent)}
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+@media(max-width:600px){.how-grid{grid-template-columns:repeat(2,1fr)}}
+.how-step{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;transition:.2s}
+.how-step:hover{border-color:var(--accent2);background:rgba(139,92,246,.04)}
+.hw-icon{font-size:1.5rem;margin-bottom:4px}
+.hw-title{font-size:.72rem;font-weight:700;color:var(--text)}.hw-desc{font-size:.6rem;color:var(--dim);margin-top:2px;line-height:1.3}
+.task-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(139,92,246,.12),rgba(59,130,246,.08));border:1px solid rgba(139,92,246,.2);border-radius:20px;padding:4px 14px;font-size:.7rem;font-weight:700;color:var(--accent2);margin:8px 0}
+.hl-tip{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(245,158,11,.04));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 14px;margin:8px 0;font-size:.75rem;color:var(--amber);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.hl-tip strong{color:var(--text)}
+select.fill-select{background:var(--bg);border:1px solid var(--accent2);color:var(--gold);padding:3px 6px;border-radius:4px;font-family:inherit;font-size:.8rem;font-weight:600}
+.step-indicator{display:flex;gap:5px;justify-content:center;margin:8px 0}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.step-dot.active{background:var(--accent2)}.step-dot.done{background:var(--green)}
+.timer{font-size:.72rem;color:var(--amber);font-weight:600}
+/* Symbol hunt grid */
+.symbol-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+@media(max-width:600px){.symbol-grid{grid-template-columns:1fr}}
+.symbol-card{background:rgba(255,255,255,.03);border:2px solid var(--border);border-radius:10px;padding:12px;cursor:pointer;transition:.2s;text-align:center}
+.symbol-card:hover{border-color:var(--accent2);background:rgba(139,92,246,.06)}
+.symbol-card.matched{border-color:var(--green);background:rgba(16,185,129,.08);cursor:default}
+.symbol-card .sym-icon{font-size:1.6rem;margin-bottom:4px}
+.symbol-card .sym-name{font-size:.78rem;font-weight:700;color:#fff}
+.symbol-card .sym-meaning{font-size:.7rem;color:var(--dim);margin-top:4px;display:none}
+.symbol-card.matched .sym-meaning{display:block}
+/* Strike system */
+.strike-bar{position:fixed;top:44px;left:0;right:0;z-index:150;background:rgba(127,29,29,.85);border-bottom:2px solid #fca5a5;padding:6px 20px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.75rem;font-weight:700;color:#fca5a5;transition:.3s;backdrop-filter:blur(6px)}
+.strike-bar.hidden{display:none}
+.strike-dot{width:20px;height:20px;border-radius:50%;border:2px solid #fca5a5;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fca5a5;transition:.3s}
+.strike-dot.active{background:#dc2626;border-color:#dc2626;color:#fff}
+.strike-modal{position:fixed;inset:0;z-index:600;background:rgba(127,29,29,.9);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.strike-modal.hidden{display:none}
+.strike-modal-card{background:var(--panel);border:2px solid #dc2626;border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.strike-modal-card h3{font-size:1.1rem;color:#fca5a5;margin-bottom:8px}
+.strike-modal-card p{font-size:.8rem;color:var(--dim);line-height:1.6;margin-bottom:16px}
+.btn-strike-ok{padding:10px 28px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.lockout-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,23,42,.95);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.lockout-overlay.hidden{display:none}
+.lockout-card{background:var(--panel);border:2px solid var(--red);border-radius:16px;padding:32px;max-width:440px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.focus-warn-overlay{position:fixed;inset:0;background:rgba(127,29,29,.92);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;backdrop-filter:blur(6px)}
+.focus-warn-overlay.show{display:flex}
+.focus-warn-overlay h2{font-size:1.5rem;margin-bottom:10px;color:#fca5a5}
+.focus-warn-overlay p{font-size:.85rem;color:#fca5a5;max-width:380px;line-height:1.5}
+.focus-countdown{font-size:2.5rem;font-weight:900;color:#dc2626;margin:12px 0}
+.confetti-box{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.conf-p{position:absolute;top:-12px;opacity:.95}
+@keyframes confDrop{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}100%{transform:translateY(105vh) rotate(720deg) scale(.2);opacity:0}}
+@keyframes xpPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.xp-pop{animation:xpPop .35s ease-out}
+.quiz-option.wrong{animation:qShake .4s}
+@keyframes qShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+mark.hl-loc{background:rgba(251,191,36,.28);border-radius:2px;padding:0 2px}
+mark.hl-inf{background:rgba(139,92,246,.28);border-radius:2px;padding:0 2px}
+mark.hl-ref{background:rgba(16,185,129,.28);border-radius:2px;padding:0 2px}
+/* CEST teacher badge (hidden by default, shown with ?cest=1) */
+.cest-badge{display:none;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.3);border-radius:6px;padding:4px 8px;font-size:.6rem;color:#6ee7b7;margin:4px 0;font-weight:600}
+.show-cest .cest-badge{display:inline-block}
+.home-fab{position:fixed;bottom:20px;left:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent2),#7c3aed);color:#fff;border:none;font-size:1.5rem;cursor:pointer;z-index:200;box-shadow:0 4px 15px rgba(139,92,246,.4);transition:.3s;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.home-fab:hover{transform:scale(1.1)}
+.hl-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;border:none;font-size:1.5rem;cursor:pointer;z-index:200;box-shadow:0 4px 15px rgba(245,158,11,.4);transition:.3s;display:flex;align-items:center;justify-content:center}
+.hl-fab:hover{transform:scale(1.1)}
+.hl-fab.open{background:linear-gradient(135deg,var(--red),#dc2626)}
+.hl-panel{position:fixed;bottom:82px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;z-index:200;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.hl-panel.show{display:block}
+.hl-panel h4{font-size:.72rem;color:var(--dim);margin-bottom:8px;text-align:center}
+.hl-colors{display:flex;gap:10px;justify-content:center}.hl-color-wrap{text-align:center}
+.hl-btn{width:38px;height:38px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:.2s;font-weight:800;font-size:.8rem;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.hl-btn:hover{transform:scale(1.15)}.hl-btn.active{border-color:#fff;box-shadow:0 0 14px currentColor}
+.hl-btn-loc{background:rgba(251,191,36,.65);color:#78350f}.hl-btn-inf{background:rgba(139,92,246,.65);color:#fff}
+.hl-btn-ref{background:rgba(16,185,129,.65);color:#fff}
+.hl-btn-clr{background:var(--border);color:var(--dim);font-size:1rem}
+.hl-lbl{font-size:.55rem;color:var(--dim);margin-top:3px}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<h1>🔮 SIMCE S6 — Inferencia y Símbolos · NM2</h1>
+<div style="display:flex;align-items:center;gap:10px">
+<span class="timer" id="timer">⏱ 75:00</span>
+<span class="xp" id="xp-display">⭐ 0 XP</span>
+</div>
+</div>
+<div class="progress-wrap">
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="progress-labels"><span>Inicio</span><span>Motivación</span><span>Repaso</span><span>Lección</span><span>Lectura</span><span>Símbolos</span><span>SIMCE</span><span>Cierre</span></div>
+</div>
+<div class="main" id="app"></div>
+
+<!-- STRIKE BAR -->
+<div class="strike-bar hidden" id="strikeBar">
+<span>⚠️ Strikes:</span>
+<span class="strike-dot" id="sd1">✕</span>
+<span class="strike-dot" id="sd2">✕</span>
+<span class="strike-dot" id="sd3">✕</span>
+</div>
+<!-- STRIKE MODAL -->
+<div class="strike-modal hidden" id="strikeModal">
+<div class="strike-modal-card">
+<div style="font-size:3rem;margin-bottom:10px" id="strikeIcon">⚠️</div>
+<h3 id="strikeTitle">Strike 1 de 3</h3>
+<p id="strikeMsg">Saliste de la evaluación.</p>
+<button class="btn-strike-ok" onclick="dismissStrike()">Entendido, volver</button>
+</div>
+</div>
+<!-- FOCUS WARNING -->
+<div class="focus-warn-overlay" id="focusWarnOverlay">
+<h2>⚠️ ¡Vuelve a la evaluación!</h2>
+<div class="focus-countdown" id="focusCountdown">5s</div>
+<p>Si no vuelves, recibirás un strike.<br>No abras otras pestañas ni busques en Google.</p>
+</div>
+<!-- LOCKOUT -->
+<div class="lockout-overlay hidden" id="lockoutOverlay">
+<div class="lockout-card">
+<div style="font-size:3.5rem;margin-bottom:12px">🔒</div>
+<h3 style="color:#fca5a5">Práctica Bloqueada</h3>
+<p style="color:var(--dim);font-size:.8rem;line-height:1.6;margin-bottom:20px">Has recibido 3 strikes por salir de la página. Tus respuestas quedaron registradas tal como estaban.</p>
+<button class="btn-strike-ok" style="background:var(--accent2)" onclick="dismissLockout()">Continuar con la guía</button>
+</div>
+</div>
+
+<script>
+/* ==================== GLOBAL STATE ==================== */
+let xp=0,currentSection=0,timerSeconds=75*60,timerInterval=null;
+const S=['welcome','motivation','prevknow','lesson','reading','symbols','simce','closing'];
+const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
+const showCEST=new URLSearchParams(window.location.search).get('cest')==='1';
+if(showCEST) document.body.classList.add('show-cest');
+let strikes=0,strikeMonitorActive=false,strikeLockout=false,focusWarnTimer=null,focusLostAt=null;
+var simceAnswers={},fbDirty=false;
+
+function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
+function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
+function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
+function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i>=6&&!strikeMonitorActive)activateStrikeMonitor();if(i<6)deactivateStrikeMonitor();if(i===6&&sIdx>=SQ.length)setTimeout(launchConfetti,400);requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
+const B={};
+
+/* ==================== 0. WELCOME ==================== */
+/* CEST #1: Declara y explica objetivos · #7: Organiza inicio/desarrollo/cierre */
+B.welcome=()=>`
+<div class="section-header"><div class="icon">🔮</div><h2>Clase 6 SIMCE — Inferencia y Símbolos</h2><div class="sub">75 minutos · Chromebook · Interactiva</div></div>
+<div class="card">
+<h2>🎯 Objetivo de la clase</h2>
+<div class="highlight"><strong>Inferir significados implícitos</strong> e identificar <strong>elementos simbólicos</strong> en textos narrativos, diferenciando entre <strong>tema</strong> y <strong>asunto</strong>, y reconociendo el <strong>tono narrativo</strong>, mediante el análisis textual.</div>
+<div class="cest-badge">CEST #1 — Objetivo declarado con lenguaje claro para los estudiantes</div>
+<h3>👆 ¿Cómo funciona esta guía?</h3>
+<div class="how-grid">
+<div class="how-step"><div class="hw-icon">🔍</div><div class="hw-title">Observa</div><div class="hw-desc">Busca los significados ocultos</div></div>
+<div class="how-step"><div class="hw-icon">🖍️</div><div class="hw-title">Resalta</div><div class="hw-desc">Marca con colores las pistas simbólicas</div></div>
+<div class="how-step"><div class="hw-icon">✍️</div><div class="hw-title">Responde</div><div class="hw-desc">Practica con preguntas SIMCE</div></div>
+<div class="how-step"><div class="hw-icon">💬</div><div class="hw-title">Comparte</div><div class="hw-desc">Discute en parejas tus hallazgos</div></div>
+</div>
+<h3>Ruta de la clase</h3>
+<ul>
+<li><span class="phase-tag phase-motiv">5 min</span> <strong>Motivación</strong> — Conexión con lo que ya sabes</li>
+<li><span class="phase-tag phase-prev">6 min</span> <strong>Repaso</strong> — Flashback SIMCE: 3 preguntas de inferencia</li>
+<li><span class="phase-tag phase-dev">50 min</span> <strong>Desarrollo</strong> — Lección de símbolos + Lectura + Cacería de símbolos + Práctica SIMCE</li>
+<li><span class="phase-tag phase-close">9 min</span> <strong>Cierre</strong> — Ticket de salida + Metacognición</li>
+</ul>
+<div class="cest-badge">CEST #7 — Actividades organizadas en inicio, desarrollo y cierre</div>
+<div style="text-align:center"><button class="btn btn-next" onclick="go(1)">¡Comenzar! →</button></div>
+</div>`;
+
+/* ==================== 1. MOTIVACIÓN ==================== */
+/* CEST #2: Vincula con conocimientos previos · #10: Ambiente sin temor */
+B.motivation=()=>`
+<div class="section-header"><div class="icon">💡</div><h2>Motivación</h2><div class="sub"><span class="phase-tag phase-motiv">5 minutos</span></div></div>
+<div class="card">
+<h2>¿Recuerdas "La cicatriz"?</h2>
+<div class="task-badge">💬 Tu tarea: piensa y comparte con tu compañero/a de al lado</div>
+<div class="cest-badge">CEST #2 — Vincula objetivos con conocimientos previos (S5)</div>
+<p>En la clase pasada leímos el cuento "La cicatriz". La abuela sostenía una cuerda para salvar a la familia atrapada al otro lado del río. La cicatriz en su muñeca quedó como marca de ese momento.</p>
+<div class="highlight amber">🤔 <strong>Pregunta para pensar:</strong> La cicatriz de la abuela, ¿era solo una herida vieja o <em>significaba algo más</em>?</div>
+<p>Cuando un objeto, una acción o un detalle en un cuento <strong>significa algo más allá de lo literal</strong>, estamos frente a un <strong>símbolo literario</strong>.</p>
+<div class="highlight green">📖 Hoy aprenderemos a <strong>leer entre líneas</strong>: descubrir lo que el texto dice sin decirlo directamente. Eso se llama <strong>inferir</strong>, y es la habilidad más importante del SIMCE.</div>
+<div class="highlight blue">💬 <strong>Comparte:</strong> ¿Tienes algún objeto que te recuerde a alguien o a un momento importante? Cuéntale a tu compañero/a. No hay respuestas correctas ni incorrectas aquí.</div>
+<div class="cest-badge">CEST #10 — Ambiente que permite preguntas sin temor</div>
+<div class="cest-badge">CEST #13 — Diálogo entre pares</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(0)">← Inicio</button><button class="btn btn-next" onclick="go(2)">Repaso SIMCE →</button></div>
+</div>`;
+
+/* ==================== 2. CONOCIMIENTOS PREVIOS (FLASHBACK) ==================== */
+/* CEST #2, #3, #6, #12 */
+const fbQs=[
+{q:'En el cuento "La cicatriz", la abuela dice: "Soltar es más fácil, pero sostener es lo correcto". ¿Qué significa "sostener" en este contexto?',opts:['Sujetar físicamente la cuerda con las manos para evitar que Rodrigo cayera al río','Asumir un compromiso o responsabilidad aunque implique sacrificio personal','Resistir emocionalmente la pérdida de su hermano Rodrigo tras el accidente','Mantener la tradición familiar de ayudar a los vecinos del otro lado del río'],correct:1,skill:'INF',explain:'La abuela usa "sostener" en sentido figurado: no soltar = no abandonar la responsabilidad. A literaliza la frase (solo la cuerda). C inventa una pérdida no mencionada. D sobregeneraliza (tradición familiar sin evidencia).',diff:'N2'},
+{q:'Un texto informativo dice: "Aunque el reciclaje en Chile alcanza solo un 12,5%, el caso de Peñalolén demuestra que con inversión municipal la tasa puede triplicarse en dos años." ¿Qué se puede inferir de esta afirmación?',opts:['Que Peñalolén recicla el 100% de sus residuos gracias a la inversión municipal','Que el problema del reciclaje en Chile podría resolverse si los municipios invirtieran más recursos','Que el 12,5% de reciclaje nacional es suficiente comparado con otros países de Latinoamérica','Que la inversión municipal en reciclaje solo funciona en comunas de altos ingresos económicos'],correct:1,skill:'INF',explain:'El caso de Peñalolén se usa como ejemplo de que la inversión sí funciona → se infiere que con más inversión mejoraría el panorama nacional. A exagera (100%). C contradice el tono del texto. D inventa un dato no mencionado.',diff:'N2'},
+{q:'"La maestra revisó los cuadernos de sus alumnos y, al llegar al último, se detuvo. Lo cerró despacio, miró por la ventana y sonrió." ¿Cuál de estas inferencias es más coherente con el texto?',opts:['La maestra estaba cansada de revisar cuadernos y decidió no continuar con la corrección','El último cuaderno contenía algo que la conmovió o sorprendió positivamente','La ventana tenía una vista agradable que la distrajo de su tarea de revisión habitual','La maestra descubrió que el último alumno había copiado las respuestas y decidió no decir nada'],correct:1,skill:'INF',explain:'Detenerse + cerrar despacio + sonreír: la cadena de acciones sugiere emoción positiva (algo la conmovió). A contradice la sonrisa. C cambia el foco. D inventa una situación negativa que no cuadra con sonreír.',diff:'N1-N2'}
+];
+let fbDone=0;
+B.prevknow=()=>{
+let h=`<div class="section-header"><div class="icon">⚡</div><h2>Repaso: Activación del Inferir</h2><div class="sub"><span class="phase-tag phase-prev">6 minutos</span> · Flashback SIMCE — 3 preguntas de inferencia</div></div>
+<div class="task-badge">📝 Tu tarea: responde 3 preguntas de repaso — Habilidad INTERPRETAR</div>
+<div class="highlight">Antes de avanzar, activemos la habilidad de <strong>inferir</strong>. Recuerda: inferir es descubrir lo que el texto dice <em>sin decirlo directamente</em>, usando las pistas que te da.</div>
+<div class="cest-badge">CEST #2 — Vincula con aprendizajes de S2, S3, S5</div>
+<div class="cest-badge">CEST #3 — Participación activa de todos</div>`;
+fbQs.forEach((q,i)=>{
+h+=`<div class="card" id="fb-q${i}"><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></div>
+<div class="simce-q"><span class="q-num">Pregunta ${i+1}</span><div class="q-text">${q.q}</div></div>`;
+q.opts.forEach((o,j)=>{h+=`<button class="quiz-option" onclick="chkFB(${i},${j})" id="fb${i}-${j}">${'ABCD'[j]}) ${o}</button>`;});
+h+=`<div class="feedback ok" id="fbok${i}">✅ ¡Correcto! +10 XP — ${q.explain}</div><div class="feedback nok" id="fbnk${i}">❌ ${q.explain}</div><button class="btn-reveal" id="fbrev${i}" onclick="revealFB(${i})">👁 Ver Respuesta</button></div>`;
+});
+h+=`<div id="fb-next" style="display:none"><div class="achievement"><h3>⚡ Flashback completado</h3><p>La habilidad de inferir está activada. ¡Vamos a aprender sobre símbolos!</p></div></div>`;
+h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(1)">← Motivación</button><button class="btn btn-next" onclick="go(3)">Ir a la Lección →</button></div>`;
+return h;
+};
+window.chkFB=function(qi,oi){
+if(document.getElementById('fb'+qi+'-0').classList.contains('locked'))return;
+document.querySelectorAll('[id^="fb'+qi+'-"]').forEach(b=>b.classList.remove('picked'));
+document.getElementById('fb'+qi+'-'+oi).classList.add('picked');
+document.getElementById('fbrev'+qi).dataset.pick=oi;
+document.getElementById('fbrev'+qi).classList.add('show');
+};
+window.revealFB=function(qi){
+var oi=parseInt(document.getElementById('fbrev'+qi).dataset.pick);
+document.querySelectorAll('[id^="fb'+qi+'-"]').forEach(b=>{b.classList.add('locked');b.disabled=true;b.classList.remove('picked');});
+if(oi===fbQs[qi].correct){document.getElementById('fb'+qi+'-'+oi).classList.add('correct');document.getElementById('fbok'+qi).classList.add('show');addXP(10);}
+else{document.getElementById('fb'+qi+'-'+oi).classList.add('wrong');document.getElementById('fb'+qi+'-'+fbQs[qi].correct).classList.add('correct');document.getElementById('fbnk'+qi).classList.add('show');}
+document.getElementById('fbrev'+qi).style.display='none';
+fbDone++;if(fbDone>=3)setTimeout(()=>document.getElementById('fb-next').style.display='block',600);
+};
+
+/* ==================== 3. LECCIÓN: SÍMBOLOS, TEMA VS. ASUNTO, TONO ==================== */
+/* CEST #1, #4, #5, #6 */
+let lStep=0;
+const LS=[
+{title:'¿Qué es un símbolo literario?',icon:'🔮',content:`
+<p>Un <strong>símbolo</strong> es un objeto, acción o detalle dentro de un texto que tiene un <strong>significado más profundo</strong> que su sentido literal.</p>
+<div class="cols-2">
+<div class="concept-box"><div class="label">Sentido LITERAL</div><div class="def">Lo que dice el texto directamente. La cicatriz es una marca en la muñeca de la abuela.</div></div>
+<div class="concept-box"><div class="label">Sentido SIMBÓLICO</div><div class="def">Lo que <em>representa</em>. La cicatriz simboliza el sacrificio, el compromiso y la valentía.</div></div>
+</div>
+<div class="highlight amber">💡 <strong>Clave SIMCE:</strong> Cuando una pregunta dice "¿qué representa…?" o "¿qué sugiere…?", te están pidiendo que identifiques el <strong>valor simbólico</strong>, no el literal.</div>
+<div class="highlight green">✏️ <strong>Ejercicio:</strong> ¿Qué crees que simboliza?</div>
+<p>Una paloma blanca en un cuento sobre la guerra simboliza <select class="fill-select" id="l1" onchange="chkL(0)"><option value="">—</option><option value="un ave">un ave</option><option value="la paz">la paz</option><option value="el miedo">el miedo</option></select></p>
+<p>Un reloj detenido en un cuento sobre la vejez simboliza <select class="fill-select" id="l2" onchange="chkL(0)"><option value="">—</option><option value="un objeto roto">un objeto roto</option><option value="el tiempo detenido">el tiempo detenido</option><option value="la tecnología">la tecnología</option></select></p>
+<div class="feedback ok" id="lfb0">✅ ¡Exacto! La paloma = paz · El reloj detenido = tiempo que no avanza. +15 XP</div>
+<div class="cest-badge">CEST #5 — Recurso TIC interactivo</div>`},
+{title:'Tema vs. Asunto',icon:'🎯',content:`
+<p>Muchos estudiantes confunden el <strong>tema</strong> con el <strong>asunto</strong>. Son diferentes:</p>
+<div class="cols-2">
+<div class="concept-box"><div class="label">📋 ASUNTO (¿de qué trata?)</div><div class="def">Los <strong>hechos concretos</strong> que ocurren. Se puede resumir en 1-2 oraciones. Es <em>explícito</em>.<br><br><strong>Ejemplo:</strong> "Un nieto le pregunta a su abuela por una cicatriz. Ella le cuenta cómo se la hizo al cruzar un río para salvar a una familia."</div></div>
+<div class="concept-box"><div class="label">💡 TEMA (¿qué enseña o transmite?)</div><div class="def">La <strong>idea profunda</strong> que el cuento comunica. Hay que <em>inferirlo</em>.<br><br><strong>Ejemplo:</strong> "El valor del sacrificio y la responsabilidad: a veces lo correcto es lo más difícil."</div></div>
+</div>
+<div class="highlight amber">💡 <strong>Clave SIMCE:</strong> Si la pregunta dice "¿cuál es el <strong>tema</strong>?", NO cuentes la historia: busca la <strong>enseñanza</strong> o idea central que se puede generalizar más allá del cuento.</div>
+<div class="highlight green">✏️ <strong>Ejercicio:</strong> Clasifica si se refiere al ASUNTO o al TEMA:</div>
+<p>"Una chica encuentra una libreta vieja de su padre" → <select class="fill-select" id="l3" onchange="chkL(1)"><option value="">—</option><option value="asunto">Asunto</option><option value="tema">Tema</option></select></p>
+<p>"La memoria se transmite a través de los hábitos cotidianos" → <select class="fill-select" id="l4" onchange="chkL(1)"><option value="">—</option><option value="asunto">Asunto</option><option value="tema">Tema</option></select></p>
+<div class="feedback ok" id="lfb1">✅ Asunto = hechos concretos · Tema = idea profunda. +15 XP</div>
+<div class="cest-badge">CEST #4 — Estrategia diferenciada: tabla comparativa visual</div>`},
+{title:'Tono Narrativo',icon:'🎵',content:`
+<p>El <strong>tono</strong> es la <strong>atmósfera emocional</strong> que transmite el texto. Es el "color" del relato.</p>
+<div class="cols-2">
+<div class="concept-box"><div class="label">🌅 Nostálgico</div><div class="def">Evoca el pasado con ternura y cierta tristeza. "Recuerdo aquellas tardes..."</div></div>
+<div class="concept-box"><div class="label">😨 Tenso / Dramático</div><div class="def">Genera angustia o suspenso. "El agua subía sin detenerse..."</div></div>
+<div class="concept-box"><div class="label">🌱 Esperanzador</div><div class="def">Sugiere que algo bueno vendrá. "Por primera vez, sonrió..."</div></div>
+<div class="concept-box"><div class="label">🪞 Contemplativo</div><div class="def">Reflexivo, meditativo, pausado. "Se quedó mirando sin prisa..."</div></div>
+</div>
+<div class="highlight amber">💡 <strong>Clave SIMCE:</strong> Para identificar el tono, fíjate en las <strong>palabras que elige el narrador</strong> (adjetivos, verbos), no solo en lo que pasa. ¿El narrador describe con angustia, calma, ironía o ternura?</div>
+<div class="highlight green">✏️ <strong>Ejercicio:</strong> ¿Qué tono tiene cada fragmento?</div>
+<p>"Apagó la luz y se durmió con la certeza de que hay silencios que hablan" → <select class="fill-select" id="l5" onchange="chkL(2)"><option value="">—</option><option value="tenso">Tenso</option><option value="contemplativo">Contemplativo</option><option value="irónico">Irónico</option></select></p>
+<p>"El río crecía y la cuerda cortaba su muñeca, pero no soltó" → <select class="fill-select" id="l6" onchange="chkL(2)"><option value="">—</option><option value="nostálgico">Nostálgico</option><option value="esperanzador">Esperanzador</option><option value="tenso">Tenso</option></select></p>
+<div class="feedback ok" id="lfb2">✅ Contemplativo (calma + reflexión) · Tenso (peligro + acción urgente). +15 XP</div>
+<div class="cest-badge">CEST #5 — Múltiples recursos didácticos (ejemplos + ejercicios interactivos)</div>`}
+];
+const LA=[[{id:'l1',v:'la paz'},{id:'l2',v:'el tiempo detenido'}],[{id:'l3',v:'asunto'},{id:'l4',v:'tema'}],[{id:'l5',v:'contemplativo'},{id:'l6',v:'tenso'}]];
+window.chkL=function(s){const a=LA[s];if(!a.every(x=>document.getElementById(x.id).value!==''))return;if(a.every(x=>document.getElementById(x.id).value===x.v)){document.getElementById('lfb'+s).classList.add('show');addXP(15);}};
+B.lesson=()=>{
+let h=`<div class="section-header"><div class="icon">📚</div><h2>Lección: Inferencia y Símbolos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Paso ${lStep+1} de ${LS.length}</div></div>
+<div class="step-indicator">${LS.map((_,i)=>`<div class="step-dot ${i<lStep?'done':i===lStep?'active':''}"></div>`).join('')}</div>`;
+const s=LS[lStep];
+h+=`<div class="card"><h2>${s.icon} ${s.title}</h2>${s.content}`;
+if(lStep<LS.length-1)h+=`<div class="nav-row">${lStep>0?'<button class="btn btn-back" onclick="lStep--;go(3)">← Paso anterior</button>':'<button class="btn btn-back" onclick="go(2)">← Repaso</button>'}<button class="btn btn-next" onclick="lStep++;go(3)">Siguiente paso →</button></div>`;
+else h+=`<div class="nav-row"><button class="btn btn-back" onclick="lStep--;go(3)">← Paso anterior</button><button class="btn btn-next" onclick="go(4)">¡Ir a la Lectura! →</button></div>`;
+return h+`</div>`;
+};
+
+/* ==================== 4. LECTURA ==================== */
+/* CEST #3, #4, #5, #8 */
+B.reading=()=>`
+<div class="section-header"><div class="icon">📖</div><h2>Lectura: "La libreta azul"</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Lee con atención</div></div>
+<div class="task-badge">📝 Tu tarea: lee el cuento buscando símbolos ocultos</div>
+<div class="highlight amber">🔍 <strong>Mientras lees, busca:</strong> ¿Qué objetos o detalles podrían tener un significado más profundo que el literal? ¿Cuál es el tono? ¿Cuál sería el tema (no el asunto)?</div>
+<div class="hl-tip">🖍️ <strong>Usa los lápices:</strong> toca 🖍️ abajo a la derecha. <span style="background:rgba(251,191,36,.3);padding:1px 5px;border-radius:4px">Amarillo</span> = dato explícito · <span style="background:rgba(139,92,246,.3);padding:1px 5px;border-radius:4px">Morado</span> = pista para inferir / símbolo · <span style="background:rgba(16,185,129,.3);padding:1px 5px;border-radius:4px">Verde</span> = reflexión</div>
+<div class="cest-badge">CEST #4 — Estrategia diferenciada: lápices de colores por habilidad</div>
+<div class="story-box">
+<div class="title">La libreta azul</div>
+<p>Valentina encontró la libreta azul un sábado de marzo, dentro de una caja de cartón que olía a diarios viejos y humedad. Su madre le había pedido que la ayudara a ordenar las cosas que guardaba en el clóset desde que su padre murió, hacía dos años. "Ya es hora", había dicho su madre, con esa voz que usaba cuando intentaba ser valiente.</p>
+<p>La libreta tenía una tapa azul, no celeste sino más profundo, como el color del mar justo antes de anochecer. Sus páginas eran gruesas, ligeramente amarillentas en los bordes, y cuando Valentina la abrió, una pequeña hoja seca cayó de entre las páginas, de un árbol que no supo reconocer.</p>
+<p>En la primera página, su padre había escrito con su letra característica —pequeña, inclinada hacia la derecha, como si las palabras tuvieran apuro por llegar a alguna parte—: <em>"3 de marzo, 2022. Hoy el panadero de calle Comercio envolvió el pan en papel café y lo ató con un cordel, igual que hace cincuenta años. ¿Por qué algunos gestos resisten al tiempo?"</em></p>
+<p>Valentina fue pasando las páginas lentamente. Cada entrada era breve, rara vez superaba las tres líneas. Su padre había escrito sobre el sonido del último micro de las 23:15, sobre un gato que miraba la lluvia desde una ventana, sobre una niña que leía bajo un farol de la calle. Y todas las entradas, sin excepción, terminaban de la misma forma: con un signo de interrogación.</p>
+<p><em>"¿Por qué los perros siempre parecen entender más de lo que dicen?"</em>, decía una anotación de junio. <em>"¿Qué pasa con las palabras de los libros que nadie abre jamás?"</em>, preguntaba otra de septiembre. Valentina comprendió que su padre no había estado escribiendo un diario en el sentido habitual: había estado coleccionando preguntas sobre el mundo.</p>
+<p>Cerró la libreta y la apretó contra su pecho. Su madre apareció en la puerta. "¿Qué encontraste?", preguntó. Valentina le mostró la libreta y su madre sonrió con esa sonrisa frágil que siempre antecedía a las lágrimas. "Tu papá y sus apuntes", dijo. "Llevaba esa libreta a todas partes. En el bolsillo de la chaqueta, siempre".</p>
+</div>
+<div class="story-box">
+<p>Durante las semanas siguientes, Valentina comenzó a leer una entrada por día, siempre antes de dormir. Descubrió que su padre tenía la capacidad de notar cosas que los demás pasaban por alto: el minuto exacto en que el sol desaparecía detrás del Cerro de la Virgen, el dibujo que la lluvia hacía sobre la vereda, el gesto de un anciano que alimentaba palomas mientras les hablaba como si pudieran responder.</p>
+<p>Una noche, después de leer una entrada sobre el olor del pan tostado a las seis de la mañana, Valentina pasó a las páginas del final de la libreta, donde varias hojas quedaban en blanco. Tomó un lápiz negro y escribió: <em>"8 de abril, 2024. Hoy el profesor de matemáticas se detuvo a mitad de una frase para mirar por la ventana. Durante cinco segundos pareció estar en otro lugar. ¿Qué estaba recordando?"</em></p>
+<p>Se quedó un momento mirando lo que había escrito. Luego agregó, casi sin pensarlo: <em>"¿Desde cuándo empecé a mirar el mundo como tú lo mirabas, papá?"</em></p>
+<p>Desde esa noche, Valentina escribió cada día. Sus entradas eran más cortas que las de su padre, a veces apenas una sola pregunta. Pero la libreta, que había estado en silencio durante dos años, comenzó a llenarse otra vez con palabras nuevas escritas en una letra que, poco a poco, empezó a inclinarse hacia la derecha, igual que la de él.</p>
+<p>Una tarde, su mejor amiga Camila notó la libreta. "¿Qué es eso?", preguntó. Valentina vaciló, pero luego dijo: "Es una libreta donde mi papá coleccionaba preguntas. Ahora yo también". Camila la miró con una expresión que Valentina nunca le había visto: algo entre admiración y ternura. "¿Preguntas sobre qué?". Valentina se encogió de hombros. "Sobre todo lo que nos hace preguntarnos".</p>
+<p>Esa misma noche, Valentina abrió la libreta por última vez y escribió: <em>"¿Por qué algunas cosas que se pierden encuentran la forma de seguir?"</em>. Puso la hoja seca de vuelta entre las páginas, apagó la luz y se durmió abrazando la libreta, con la certeza de que hay silencios que hablan más fuerte que cualquier respuesta.</p>
+</div>
+<div class="audit-box"><strong>Texto:</strong> ~500 palabras · <span class="diff-tag diff-n2">N2</span> · Narrativo · Rico en simbolismo · Tono: contemplativo/nostálgico con esperanza</div>
+<div class="cest-badge">CEST #8 — Espacio para que el estudiante lea a su ritmo y forme opinión</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(3)">← Volver a Lección</button><button class="btn btn-next" onclick="go(5)">Cacería de Símbolos →</button></div>`;
+
+/* ==================== 5. CACERÍA DE SÍMBOLOS ==================== */
+/* CEST #3, #6, #12, #13 */
+const SYMBOLS=[
+{icon:'📓',name:'La libreta azul',meaning:'Memoria preservada, continuidad de la identidad entre padre e hija, puente entre pasado y presente.'},
+{icon:'🍂',name:'La hoja seca',meaning:'Algo que, aunque marchito, conserva su forma y su historia. Anticipa el tono nostálgico del cuento.'},
+{icon:'❓',name:'Los signos de interrogación',meaning:'La curiosidad constante, la búsqueda de sentido, las preguntas que no necesitan respuesta definitiva.'},
+{icon:'✍️',name:'La letra inclinada a la derecha',meaning:'Valentina adopta inconscientemente la forma de ver el mundo de su padre: herencia de identidad.'},
+{icon:'📦',name:'La caja de cartón',meaning:'Los recuerdos enterrados que esperan ser encontrados, el duelo contenido durante dos años.'},
+{icon:'📄',name:'Las páginas en blanco',meaning:'El espacio disponible para continuar lo que se detuvo: el futuro, la posibilidad de seguir escribiendo.'}
+];
+let symbolsFound=0;
+B.symbols=()=>{
+let h=`<div class="section-header"><div class="icon">🔎</div><h2>Cacería de Símbolos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Encuentra los elementos simbólicos</div></div>
+<div class="card">
+<div class="task-badge">🎯 Tu tarea: toca cada símbolo para descubrir su significado oculto</div>
+<div class="highlight">Acabas de leer "La libreta azul". Ahora identificaremos los <strong>6 elementos simbólicos</strong> del cuento. Toca cada tarjeta para revelar qué representa más allá de lo literal.</div>
+<div class="cest-badge">CEST #3 — Participación activa de todos</div>
+<div class="cest-badge">CEST #13 — Discusión colaborativa entre pares</div>
+<div class="highlight blue">💬 <strong>Actividad en parejas:</strong> Antes de tocar las tarjetas, comenta con tu compañero/a: ¿qué crees tú que simboliza cada elemento? Luego comprueba tocando.</div>
+<div class="symbol-grid" id="symbolGrid">`;
+SYMBOLS.forEach((s,i)=>{
+h+=`<div class="symbol-card" id="sym${i}" onclick="revealSymbol(${i})"><div class="sym-icon">${s.icon}</div><div class="sym-name">${s.name}</div><div class="sym-meaning">→ ${s.meaning}</div></div>`;
+});
+h+=`</div>
+<div id="sym-complete" style="display:none"><div class="achievement"><h3>🔮 ¡Todos los símbolos descubiertos! +20 XP</h3><p>Ahora puedes reconocer significados ocultos en cualquier texto.</p></div></div>
+<div class="highlight green" style="margin-top:14px">💬 <strong>Pregunta para el grupo:</strong> ¿Cuáles de estos símbolos les parecieron más difíciles de identificar? ¿Por qué?</div>
+<div class="cest-badge">CEST #6 — Usa preguntas de estudiantes para profundizar</div>
+<div class="cest-badge">CEST #12 — Todos los estudiantes son animados a opinar</div>
+</div>`;
+h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(4)">← Volver a Lectura</button><button class="btn btn-next" onclick="go(6)">Práctica SIMCE →</button></div>`;
+return h;
+};
+window.revealSymbol=function(i){
+var el=document.getElementById('sym'+i);
+if(el.classList.contains('matched'))return;
+el.classList.add('matched');
+symbolsFound++;
+if(symbolsFound>=SYMBOLS.length){addXP(20);setTimeout(()=>document.getElementById('sym-complete').style.display='block',400);}
+};
+
+/* ==================== 6. PRÁCTICA SIMCE ==================== */
+/* CEST #11: Monitorea y retroalimenta · #3: Participación activa */
+const SQ=[
+{q:'Según el texto, ¿qué característica tenían todas las anotaciones que el padre de Valentina escribía en la libreta?',opts:['Eran relatos extensos que narraban hechos importantes de su vida personal y familiar.','Contenían reflexiones filosóficas profundas acompañadas de citas de autores reconocidos.','Eran breves, rara vez superaban tres líneas, y terminaban siempre con un signo de interrogación.','Incluían dibujos y esquemas que complementaban las descripciones de los objetos cotidianos.'],correct:2,skill:'LOC',explain:'Evidencia textual directa: "Cada entrada era breve, rara vez superaba las tres líneas" + "todas terminaban con un signo de interrogación". A sobregeneraliza. B y D inventan sin evidencia.'},
+{q:'En el contexto del cuento, ¿qué representa la libreta azul que Valentina encontró en la caja de cartón?',opts:['Un objeto de valor material que la familia conservaba por su antigüedad y su significado afectivo.','Un puente entre el pasado de su padre y el presente de Valentina, que permite mantener la conexión entre ambos.','Un diario personal donde el padre registraba sus emociones más profundas y sus preocupaciones.','Una herramienta de estudio que el padre utilizaba para anotar ideas para su trabajo profesional.'],correct:1,skill:'INF',explain:'La libreta conecta dos tiempos: el padre escribió en ella y ahora Valentina continúa. A confunde valor material con simbólico. C literaliza (no era diario de emociones). D inventa sin evidencia.'},
+{q:'El texto señala que las páginas de la libreta estaban "ligeramente amarillentas en los bordes". ¿Qué sugiere este detalle sobre la libreta?',opts:['Que ha pasado un tiempo considerable desde que fue usada, reforzando la idea de pérdida y distancia temporal.','Que fue fabricada con materiales de mala calidad y por eso se deterioró rápidamente con el uso.','Que el padre de Valentina no la cuidaba y la exponía frecuentemente al sol y la humedad del ambiente.','Que Valentina la encontró en mal estado y necesitó repararla antes de poder leer su contenido.'],correct:0,skill:'INF',explain:'Las páginas amarillentas son un indicador visual del paso del tiempo y refuerzan el contexto de pérdida (el padre murió hace 2 años). B, C y D inventan causas no mencionadas.'},
+{q:'A medida que avanza el cuento, la letra de Valentina empieza a "inclinarse hacia la derecha, igual que la de él". Este detalle sugiere que:',opts:['Valentina está copiando intencionalmente la caligrafía de su padre para sentirse más cercana a él.','Su madre le enseñó a escribir de la misma forma en que lo hacía su padre cuando estaba vivo.','La inclinación de la letra es una coincidencia casual que no tiene relación con la historia del padre.','Valentina está adoptando, de forma inconsciente, la manera de observar y estar en el mundo que tenía su padre.'],correct:3,skill:'INF',explain:'La letra que se inclina es un símbolo de identidad heredada inconscientemente. A literaliza (copia intencional ≠ proceso inconsciente). B inventa. C trivializa un detalle narrativo clave.'},
+{q:'¿Cuál es la diferencia entre el asunto y el tema de este cuento?',opts:['El asunto es que todos deberíamos escribir en libretas para recordar a nuestros seres queridos; el tema es la tristeza que provoca la pérdida.','El asunto es que una adolescente encuentra la libreta de su padre fallecido y empieza a escribir en ella; el tema es cómo la memoria y la identidad se transmiten a través de los hábitos cotidianos.','El asunto y el tema son lo mismo: una adolescente que supera la muerte de su padre a través de la escritura creativa.','El asunto es la relación entre Valentina y su amiga Camila; el tema es la importancia de compartir los sentimientos con otros.'],correct:1,skill:'INF',explain:'Asunto = hechos concretos (encuentra libreta. escribe). Tema = idea profunda (memoria e identidad se heredan por hábitos). A sobregeneraliza y reduce el tema a "tristeza". C confunde ambos conceptos. D cambia el foco.'},
+{q:'¿Cuál es la función narrativa de la hoja seca que cae de la libreta cuando Valentina la abre por primera vez?',opts:['Demostrar que la libreta estuvo guardada en un lugar húmedo y sin cuidado durante los últimos dos años.','Indicar la estación del año en que ocurren los hechos, ayudando a situar la trama de manera temporal.','Anticipar simbólicamente el tono del cuento, sugiriendo un objeto que, aunque marchito, conserva su forma y su historia.','Evidenciar que el padre de Valentina coleccionaba objetos naturales además de preguntas sobre el mundo.'],correct:2,skill:'REF',explain:'La hoja seca funciona como símbolo: algo que murió pero conserva su esencia, anticipando el tema central del cuento. A y B literalizan. D inventa sin evidencia.'}
+];
+let sIdx=0;
+B.simce=()=>{
+let h=`<div class="section-header"><div class="icon">📝</div><h2>Práctica SIMCE — Inferencia y Símbolos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · 6 preguntas · Preguntas ${sIdx<SQ.length?sIdx+1:SQ.length} de ${SQ.length}</div></div>`;
+if(sIdx>=SQ.length){
+var c=0;for(var k in simceAnswers)if(simceAnswers[k]!==undefined&&simceAnswers[k]===SQ[k].correct)c++;
+h+=`<div class="achievement"><h3>📝 Práctica SIMCE completada</h3><p>Resultado: ${c} de ${SQ.length} correctas (${Math.round(c/SQ.length*100)}%)</p></div>`;
+h+=`<div class="card"><h2>Revisión de respuestas</h2>`;
+SQ.forEach((q,i)=>{
+var ans=simceAnswers[i];var ok=ans===q.correct;
+h+=`<div class="simce-q" style="border-color:${ok?'var(--green)':'var(--red)'}"><span class="q-num">${ok?'✅':'❌'} Pregunta ${i+1} — <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></span><div class="q-text">${q.q}</div><div class="feedback ${ok?'ok':'nok'}" style="display:block">${ok?'✅ Correcto':'❌ Tu respuesta: '+('ABCD'[ans])+' — Correcta: '+('ABCD'[q.correct])}. ${q.explain}</div></div>`;
+});
+h+=`</div>`;
+h+=`<div class="cest-badge">CEST #11 — Retroalimentación inmediata para mejorar aprendizaje</div>`;
+h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Símbolos</button><button class="btn btn-next" onclick="go(7)">Cierre →</button></div>`;
+return h;
+}
+var q=SQ[sIdx];
+h+=`<div class="card"><div class="audit-box"><strong>Pregunta ${sIdx+1} de ${SQ.length}</strong> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></div>
+<div class="simce-q"><span class="q-num">Pregunta ${sIdx+1}</span><div class="q-text">${q.q}</div></div>`;
+q.opts.forEach((o,j)=>{h+=`<button class="quiz-option" onclick="sAns(${j})" id="sq-${j}">${'ABCD'[j]}) ${o}</button>`;});
+h+=`<div class="feedback ok" id="sfbok">✅ ¡Correcto! +15 XP — ${q.explain}</div>`;
+h+=`<div class="feedback nok" id="sfbnk">❌ Respuesta correcta: ${'ABCD'[q.correct]}. ${q.explain}</div>`;
+h+=`<button class="btn-reveal" id="srev" onclick="sReveal()">👁 Ver Respuesta</button>`;
+h+=`</div>`;
+h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Símbolos</button><span></span></div>`;
+return h;
+};
+window.sAns=function(i){
+if(document.getElementById('sq-0').classList.contains('locked'))return;
+document.querySelectorAll('[id^="sq-"]').forEach(b=>b.classList.remove('picked'));
+document.getElementById('sq-'+i).classList.add('picked');
+document.getElementById('srev').dataset.pick=i;
+document.getElementById('srev').classList.add('show');
+};
+window.sReveal=function(){
+var oi=parseInt(document.getElementById('srev').dataset.pick);
+document.querySelectorAll('[id^="sq-"]').forEach(b=>{b.classList.add('locked');b.disabled=true;b.classList.remove('picked');});
+simceAnswers[sIdx]=oi;
+fbDirty=true;
+if(oi===SQ[sIdx].correct){document.getElementById('sq-'+oi).classList.add('correct');document.getElementById('sfbok').classList.add('show');addXP(15);}
+else{document.getElementById('sq-'+oi).classList.add('wrong');document.getElementById('sq-'+SQ[sIdx].correct).classList.add('correct');document.getElementById('sfbnk').classList.add('show');}
+document.getElementById('srev').style.display='none';
+sIdx++;
+setTimeout(()=>go(6),1800);
+};
+
+/* ==================== 7. CIERRE ==================== */
+/* CEST #8, #9, #11, #14 */
+B.closing=()=>{
+var c=0;for(var k in simceAnswers)if(simceAnswers[k]!==undefined&&simceAnswers[k]===SQ[k].correct)c++;
+var pct=Math.round(c/SQ.length*100);
+return`
+<div class="section-header"><div class="icon">🏁</div><h2>Cierre y Reflexión</h2><div class="sub"><span class="phase-tag phase-close">9 minutos</span></div></div>
+<div class="card">
+<h2>📊 Tu resultado</h2>
+<div style="text-align:center;font-size:2rem;font-weight:900;color:${pct>=80?'var(--green)':pct>=60?'var(--amber)':'var(--red)'};margin:8px 0">${c}/${SQ.length} (${pct}%)</div>
+<p style="text-align:center">XP ganado en esta sesión: <strong style="color:var(--gold)">${xp} XP</strong></p>
+</div>
+<div class="card">
+<h2>🎫 Ticket de Salida</h2>
+<div class="task-badge">✍️ Responde en 2-3 líneas</div>
+<div class="highlight">En el cuento "La libreta azul", ¿qué <strong>simboliza</strong> la hoja seca que cae de la libreta? Responde con tus propias palabras.</div>
+<textarea id="exitResp" rows="3" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:.82rem;resize:vertical" placeholder="Escribe tu respuesta aquí..."></textarea>
+<button class="btn btn-next" style="margin-top:8px;font-size:.8rem;padding:8px 20px" onclick="submitExit(this)">Enviar Ticket ✓</button>
+<div class="feedback ok" id="exitFb" style="margin-top:8px">✅ Ticket enviado. ¡Gracias por tu reflexión!</div>
+</div>
+<div class="card">
+<h2>🧠 Metacognición — ¿Qué aprendí hoy?</h2>
+<div class="cest-badge">CEST #14 — Práctica replicable: reflexión metacognitiva</div>
+<div class="highlight green">💬 Comparte con tu curso (levanta la mano o escríbelo):</div>
+<ul>
+<li>¿Qué es un <strong>símbolo literario</strong>? Da un ejemplo del cuento.</li>
+<li>¿Cuál es la diferencia entre <strong>tema</strong> y <strong>asunto</strong>?</li>
+<li>¿Qué estrategia te sirvió más para <strong>inferir</strong> en las preguntas SIMCE?</li>
+</ul>
+<div class="cest-badge">CEST #8 — Escucha y acoge opiniones de todos</div>
+<div class="cest-badge">CEST #11 — Retroalimentación final</div>
+</div>
+<div class="card" style="text-align:center">
+<h2>🎉 ¡Clase completada!</h2>
+<p>Has trabajado con inferencia, símbolos, tema vs. asunto y tono narrativo.</p>
+<p style="color:var(--gold);font-weight:700;font-size:1.1rem;margin:8px 0">Total: ${xp} XP</p>
+<a href="/estudiantes/dashboard.html" class="btn btn-next" style="display:inline-block;text-decoration:none;margin-top:12px">🏠 Volver al Menú Principal</a>
+</div>`;
+};
+var exitAnswer=null;
+window.submitExit=function(btn){
+var resp=document.getElementById('exitResp').value.trim();
+if(resp.length<10){alert('Escribe al menos una respuesta breve.');return;}
+exitAnswer=resp;
+document.getElementById('exitFb').classList.add('show');
+addXP(10);
+btn.disabled=true;btn.textContent='✓ Enviado';
+fbDirty=true;
+};
+
+/* ==================== STRIKE SYSTEM ==================== */
+function activateStrikeMonitor(){if(strikeMonitorActive||strikeLockout)return;strikeMonitorActive=true;document.getElementById('strikeBar').classList.remove('hidden');document.addEventListener('visibilitychange',handleVisStrike);window.addEventListener('blur',handleBlurStrike);window.addEventListener('focus',handleFocusReturn);}
+function deactivateStrikeMonitor(){if(!strikeMonitorActive)return;strikeMonitorActive=false;document.getElementById('strikeBar').classList.add('hidden');document.removeEventListener('visibilitychange',handleVisStrike);window.removeEventListener('blur',handleBlurStrike);window.removeEventListener('focus',handleFocusReturn);}
+function handleVisStrike(){if(document.hidden&&strikeMonitorActive&&!strikeLockout)registerStrike();}
+function handleBlurStrike(){if(!strikeMonitorActive||strikeLockout)return;focusLostAt=Date.now();var ov=document.getElementById('focusWarnOverlay');ov.classList.add('show');var cd=5;document.getElementById('focusCountdown').textContent=cd+'s';if(focusWarnTimer)clearInterval(focusWarnTimer);focusWarnTimer=setInterval(function(){cd--;document.getElementById('focusCountdown').textContent=cd+'s';if(cd<=0){clearInterval(focusWarnTimer);focusWarnTimer=null;if(!document.hasFocus()&&strikeMonitorActive&&!strikeLockout){registerStrike();ov.classList.remove('show');}}},1000);}
+function handleFocusReturn(){if(focusWarnTimer){clearInterval(focusWarnTimer);focusWarnTimer=null;}document.getElementById('focusWarnOverlay').classList.remove('show');focusLostAt=null;}
+function registerStrike(){strikes++;for(var i=1;i<=3;i++){var d=document.getElementById('sd'+i);if(i<=strikes)d.classList.add('active');}if(strikes>=3){strikeLockout=true;document.getElementById('strikeModal').classList.add('hidden');document.getElementById('lockoutOverlay').classList.remove('hidden');document.querySelectorAll('.quiz-option').forEach(function(b){b.classList.add('locked');b.disabled=true;});if(typeof submitFinal==='function')submitFinal();}else{var modal=document.getElementById('strikeModal');document.getElementById('strikeIcon').textContent=strikes===1?'⚠️':'🚨';document.getElementById('strikeTitle').textContent='Strike '+strikes+' de 3';var msgs=['','Saliste de la página durante la práctica SIMCE. No abras otras pestañas, ChatGPT, Gemini ni busques en Google.','¡Segundo strike! Si sales una vez más, la práctica se bloqueará y tus respuestas quedarán registradas.'];document.getElementById('strikeMsg').textContent=msgs[strikes];modal.classList.remove('hidden');}}
+window.dismissStrike=function(){document.getElementById('strikeModal').classList.add('hidden');};
+window.dismissLockout=function(){document.getElementById('lockoutOverlay').classList.add('hidden');deactivateStrikeMonitor();go(0);};
+
+/* ==================== CONFETTI ==================== */
+function launchConfetti(){var c=document.createElement('div');c.className='confetti-box';var cols=['#fbbf24','#8b5cf6','#3b82f6','#10b981','#ef4444','#ec4899','#06b6d4'];for(var i=0;i<50;i++){var p=document.createElement('div');p.className='conf-p';p.style.left=Math.random()*100+'%';var sz=(5+Math.random()*8)+'px';p.style.width=sz;p.style.height=sz;p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animation='confDrop '+(2+Math.random()*2)+'s ease-in '+Math.random()*.8+'s forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},5000);}
+
+/* ==================== HIGHLIGHTER ==================== */
+var hlColor=null;
+(function(){var fab=document.createElement('button');fab.className='hl-fab';fab.id='hl-fab';fab.innerHTML='🖍️';fab.onclick=function(){var p=document.getElementById('hl-panel');p.classList.toggle('show');this.classList.toggle('open');this.innerHTML=this.classList.contains('open')?'✕':'🖍️';};var panel=document.createElement('div');panel.className='hl-panel';panel.id='hl-panel';panel.innerHTML='<h4>🖍️ Selecciona un color y resalta texto</h4><div class="hl-colors"><div class="hl-color-wrap"><button class="hl-btn hl-btn-loc" data-hl="loc">L</button><div class="hl-lbl">Localizar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-inf" data-hl="inf">I</button><div class="hl-lbl">Inferir</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-ref" data-hl="ref">R</button><div class="hl-lbl">Reflexionar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-clr" data-hl="clear">✕</button><div class="hl-lbl">Borrar</div></div></div>';document.body.appendChild(fab);document.body.appendChild(panel);panel.querySelectorAll('[data-hl]').forEach(function(b){b.onclick=function(){if(this.dataset.hl==='clear')clearHL();else setHL(this.dataset.hl);};});document.addEventListener('mouseup',function(){setTimeout(applyHL,10);});document.addEventListener('touchend',function(){setTimeout(applyHL,80);});})();
+window.setHL=function(c){hlColor=hlColor===c?null:c;document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});if(hlColor)document.querySelector('.hl-btn-'+hlColor).classList.add('active');};
+function applyHL(){if(!hlColor)return;var s=window.getSelection();if(!s.rangeCount||s.isCollapsed)return;var r=s.getRangeAt(0);var a=r.commonAncestorContainer;if(a.nodeType===3)a=a.parentElement;if(!a||!a.closest||(!a.closest('.story-box')&&!a.closest('.card')))return;try{var m=document.createElement('mark');m.className='hl-'+hlColor;r.surroundContents(m);}catch(e){}s.removeAllRanges();}
+window.clearHL=function(){document.querySelectorAll('mark[class^="hl-"]').forEach(function(m){var t=document.createTextNode(m.textContent);m.parentNode.replaceChild(t,m);});document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});hlColor=null;};
+
+go(0);
+
+/* ==================== FIREBASE: AUTH + AUTOGUARDADO ==================== */
+(function(){
+var FCFG={apiKey:"AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",authDomain:"profe-blog.firebaseapp.com",databaseURL:"https://profe-blog-default-rtdb.firebaseio.com",projectId:"profe-blog",storageBucket:"profe-blog.firebasestorage.app",messagingSenderId:"305920739217",appId:"1:305920739217:web:2e08c7469d2988d8b3bc30"};
+
+function loadScript(src,cb){var s=document.createElement('script');s.src=src;s.onload=cb;document.head.appendChild(s);}
+
+loadScript('js/avatar-levels.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',function(){
+
+if(!firebase.apps.length) firebase.initializeApp(FCFG);
+var fbAuth=firebase.auth();
+var fbDb=firebase.database();
+var BASE='plataforma_estudiantes';
+var SESSION_ID='sesion-4';
+var fbUser=null, fbStudentData=null, fbSubmitted=false, fbAutoSaveTimer=null;
+
+// simceAnswers and fbDirty declared in global scope
+
+function buildSaveData(){
+    var answered=0, correct=0, detail={};
+    for(var k in simceAnswers){
+        if(simceAnswers[k]!==null&&simceAnswers[k]!==undefined){
+            answered++;
+            var qi=parseInt(k);
+            var isCorrect=simceAnswers[k]===SQ[qi].correct;
+            if(isCorrect) correct++;
+            detail['q'+qi]={respuesta:simceAnswers[k],correcta:SQ[qi].correct,esCorrecta:isCorrect,habilidad:SQ[qi].skill};
+        }
+    }
+    return{
+        answers:simceAnswers,
+        exit_answer:exitAnswer,
+        simce_answered:answered,
+        simce_total:SQ.length,
+        simce_correct:correct,
+        simce_detail:detail,
+        xp:xp,
+        strikes:strikes,
+        last_save:Date.now(),
+        section:currentSection
+    };
+}
+
+function autoSave(){
+    if(!fbUser||fbSubmitted||!fbDirty) return;
+    var data=buildSaveData();
+    data.completada=false;
+    fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid).update(data)
+    .then(function(){fbDirty=false;})
+    .catch(function(e){console.error('[S6] Autoguardado error:',e);});
+}
+
+window.submitFinal=function(){
+    if(!fbUser||fbSubmitted) return;
+    fbSubmitted=true;
+    if(fbAutoSaveTimer){clearInterval(fbAutoSaveTimer);fbAutoSaveTimer=null;}
+    var data=buildSaveData();
+    data.completada=true;
+    data.submitted_at=Date.now();
+    if(fbStudentData){data.nombre=fbStudentData.nombre;data.curso=fbStudentData.curso;}
+    var porcentaje=data.simce_total>0?Math.round((data.simce_correct/data.simce_total)*100):0;
+    var nota=porcentaje<=0?1.0:porcentaje<60?Math.round((1.0+(porcentaje/60)*3.0)*10)/10:Math.round((4.0+((porcentaje-60)/40)*3.0)*10)/10;
+    data.porcentaje=porcentaje;
+    data.nota=nota;
+
+    fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid).update(data);
+    var now=Date.now();
+    var elapsed=timerInterval?(75*60-timerSeconds)*1000:0;
+    var resultData={
+        puntaje:data.simce_correct,total:data.simce_total,porcentaje:porcentaje,nota:nota,
+        detalle:data.simce_detail,
+        exit_answer:exitAnswer,xp:xp,strikes:strikes,
+        submitted_at:now,timestamp:now,
+        tiempo_transcurrido:elapsed,
+        tiempo_min:Math.round(elapsed/60000)
+    };
+    if(fbStudentData){resultData.nombre=fbStudentData.nombre;resultData.curso=fbStudentData.curso;}
+    fbDb.ref(BASE+'/resultados/'+SESSION_ID+'/'+fbUser.uid).set(resultData);
+    if(fbStudentData){
+        fbDb.ref(BASE+'/ranking/'+SESSION_ID+'/'+fbStudentData.curso+'/'+fbUser.uid).set({
+            nombre:fbStudentData.nombre,puntaje:data.simce_correct,porcentaje:porcentaje
+        });
+    }
+    awardXP_S6(xp);
+};
+
+function awardXP_S6(sessionXP){
+    if(!fbUser||!sessionXP) return;
+    fbDb.ref(BASE+'/avatar/'+fbUser.uid+'/sesiones/'+SESSION_ID).once('value').then(function(snap){
+        if(snap.exists()) return;
+        fbDb.ref(BASE+'/avatar/'+fbUser.uid+'/xp_total').once('value').then(function(tSnap){
+            var cur=tSnap.val()||0;
+            var newTotal=cur+sessionXP;
+            var lvl=AvatarSystem.getLevel(newTotal);
+            var updates={};
+            updates['/avatar/'+fbUser.uid+'/sesiones/'+SESSION_ID]={xp:sessionXP,timestamp:Date.now()};
+            updates['/avatar/'+fbUser.uid+'/xp_total']=newTotal;
+            updates['/avatar/'+fbUser.uid+'/nivel']=lvl.level;
+            updates['/avatar/'+fbUser.uid+'/titulo']=lvl.title;
+            updates['/avatar/'+fbUser.uid+'/emoji']=lvl.emoji;
+            fbDb.ref(BASE).update(updates);
+        });
+    });
+}
+
+// Auto-submit on closing section
+var _origGo=window.go;
+window.go=function(i){
+    _origGo(i);
+    if(i===7&&!fbSubmitted&&fbUser) submitFinal();
+};
+
+// Submit on page unload
+window.addEventListener('beforeunload',function(){
+    if(fbUser&&!fbSubmitted){
+        var data=buildSaveData();
+        data.auto_submitted='page_close';
+        data.completada=sIdx>=SQ.length;
+        data.last_save=Date.now();
+        try{
+            fetch('https://profe-blog-default-rtdb.firebaseio.com/'+BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid+'.json',{
+                method:'PATCH',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(data),keepalive:true
+            });
+        }catch(e){}
+    }
+});
+
+fbAuth.onAuthStateChanged(function(user){
+    if(!user){
+        if(!adminMode) window.location.href='index.html';
+        return;
+    }
+    fbUser=user;
+    fbDb.ref(BASE+'/estudiantes/'+user.uid).once('value').then(function(snap){
+        fbStudentData=snap.val();
+        fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value').then(function(rSnap){
+            var prev=rSnap.val();
+            if(prev&&prev.completada){
+                fbSubmitted=true;
+                document.getElementById('app').innerHTML='<div class="card" style="text-align:center;margin-top:40px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:2px solid #86efac"><div style="font-size:3rem;margin-bottom:12px">✅</div><h2 style="color:#16a34a">Sesión ya completada</h2><p style="color:#64748b">Tus respuestas ya fueron enviadas al profesor.</p><a href="/estudiantes/dashboard.html" class="btn btn-next" style="display:inline-block;text-decoration:none;margin-top:16px">🏠 Volver al Menú Principal</a></div>';
+                return;
+            }
+            if(prev&&prev.answers){
+                simceAnswers=prev.answers||{};
+                exitAnswer=prev.exit_answer||null;
+            }
+            fbAutoSaveTimer=setInterval(autoSave,30000);
+        });
+    });
+});
+
+});});});});
+})();
+</script>
+<a href="/estudiantes/" class="home-fab" title="Volver al Menú Principal">🏠</a>
+</body>
+</html>

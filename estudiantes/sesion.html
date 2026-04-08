@@ -1392,7 +1392,7 @@
 
         html += `<div class="submit-area" id="submitArea">
             <div class="progress-bar-container"><div class="progress-bar-fill" id="progressBar" style="width:${pct}%"></div></div>
-            <div class="progress-text" id="progressText">${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas</div>`;
+            <div class="progress-text" id="progressText">${notasEvaluadas ? `${answeredQ}/${totalQ} preguntas · ${filledN}/${totalN} notas` : `${answeredQ}/${totalQ} preguntas`}</div>`;
 
         if (isSubmitted) {
             html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
@@ -1400,9 +1400,13 @@
                 html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
             }
         } else {
-            const allDone = answeredQ >= totalQ && filledN >= totalN;
-            html += `<button class="btn-submit" id="btnSubmit" onclick="submitSession()" ${!allDone ? 'disabled' : ''}>
-                ${allDone ? 'Enviar Respuestas ✓' : 'Faltan '+((totalQ-answeredQ)+(totalN-filledN))+' items'}
+            const allQDone = answeredQ >= totalQ;
+            const allNDone = !notasEvaluadas || filledN >= totalN;
+            const allDone = allQDone && allNDone;
+            const canSubmit = envioParcial ? answeredQ > 0 : allDone;
+            const remaining = (totalQ - answeredQ) + (notasEvaluadas ? (totalN - filledN) : 0);
+            html += `<button class="btn-submit" id="btnSubmit" onclick="submitSession()" ${!canSubmit ? 'disabled' : ''}>
+                ${allDone ? 'Enviar Respuestas ✓' : envioParcial && answeredQ > 0 ? `Enviar (${answeredQ}/${totalQ})` : `Faltan ${remaining} items`}
             </button>`;
         }
 
@@ -1515,9 +1519,15 @@
         // Update UI
         const block = document.getElementById('qblock-' + questionId);
         block.classList.add('answered');
+        // Standard ABCD options
         block.querySelectorAll('.option-item').forEach(opt => {
             opt.classList.remove('selected');
             if (opt.dataset.letter === letter) opt.classList.add('selected');
+        });
+        // Likert buttons
+        block.querySelectorAll('.likert-btn').forEach(btn => {
+            btn.classList.remove('selected');
+            if (btn.textContent.trim() === letter) btn.classList.add('selected');
         });
 
         // Update progress

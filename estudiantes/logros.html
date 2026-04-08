@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logros — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;min-height:100vh;color:#e2e8f0}
+        .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(15,23,42,.85);backdrop-filter:blur(10px);position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.06)}
+        .back-link{color:#94a3b8;text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;transition:color .2s}
+        .back-link:hover{color:#fff}
+        .top-right{display:flex;align-items:center;gap:10px}
+        .badge-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700}
+        .bp-unlocked{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff}
+        .bp-xp{background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff}
+
+        /* HERO */
+        .hero{text-align:center;padding:32px 20px 20px;background:linear-gradient(180deg,#1c1917 0%,#0f172a 100%);position:relative}
+        .hero::before{content:'';position:absolute;top:0;left:50%;width:400px;height:300px;transform:translateX(-50%);background:radial-gradient(circle,rgba(245,158,11,.08) 0%,transparent 70%);pointer-events:none}
+        .hero-icon{font-size:56px;margin-bottom:8px}
+        .hero h1{font-size:22px;font-weight:800;margin-bottom:4px}
+        .hero .sub{font-size:13px;color:#94a3b8;margin-bottom:16px}
+        .progress-wrap{max-width:400px;margin:0 auto}
+        .progress-bg{background:rgba(255,255,255,.08);border-radius:8px;height:14px;overflow:hidden}
+        .progress-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,#f59e0b,#ef4444,#ec4899);transition:width .6s ease}
+        .progress-labels{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-top:4px}
+
+        /* TABS */
+        .tabs{display:flex;gap:6px;overflow-x:auto;padding:16px 20px 12px;max-width:680px;margin:0 auto}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{padding:8px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;background:rgba(255,255,255,.04);color:#64748b;border:1px solid rgba(255,255,255,.06);white-space:nowrap;transition:all .2s;flex-shrink:0}
+        .tab:hover{color:#e2e8f0}
+        .tab.active{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+
+        /* NEW UNLOCKS */
+        .new-section{max-width:640px;margin:0 auto;padding:0 20px 8px}
+        .new-banner{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(239,68,68,.1));border:1px solid rgba(245,158,11,.2);border-radius:14px;padding:16px;text-align:center;animation:glow 2s ease-in-out infinite}
+        @keyframes glow{0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)}50%{box-shadow:0 0 20px rgba(245,158,11,.1)}}
+        .new-banner h3{font-size:14px;font-weight:700;color:#fbbf24;margin-bottom:4px}
+        .new-banner p{font-size:12px;color:#94a3b8}
+
+        /* GRID */
+        .ach-grid{max-width:640px;margin:0 auto;padding:0 20px 40px}
+        .cat-header{font-size:13px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:.5px;margin:16px 0 10px;padding-left:4px;display:flex;align-items:center;gap:8px}
+        .cat-count{font-size:11px;color:#475569;font-weight:600}
+
+        .ach-card{display:flex;align-items:center;gap:14px;padding:14px 16px;margin-bottom:8px;border-radius:14px;border:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.025);transition:all .4s}
+        .ach-card.locked{opacity:.45}
+        .ach-card.unlocked{opacity:1;background:rgba(255,255,255,.05)}
+        .ach-card.new-unlock{animation:unlockPop .6s ease}
+        @keyframes unlockPop{0%{transform:scale(.95);opacity:.5}50%{transform:scale(1.02)}100%{transform:scale(1);opacity:1}}
+
+        /* Rarity borders */
+        .ach-card.unlocked.r-comun{border-color:rgba(156,163,175,.25)}
+        .ach-card.unlocked.r-poco_comun{border-color:rgba(34,197,94,.3)}
+        .ach-card.unlocked.r-raro{border-color:rgba(59,130,246,.35)}
+        .ach-card.unlocked.r-epico{border-color:rgba(168,85,247,.35);box-shadow:0 0 16px rgba(168,85,247,.06)}
+        .ach-card.unlocked.r-legendario{border-color:rgba(245,158,11,.4);box-shadow:0 0 24px rgba(245,158,11,.08)}
+
+        .ach-icon{font-size:28px;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;flex-shrink:0;background:rgba(255,255,255,.03)}
+        .ach-card.locked .ach-icon{filter:grayscale(1) brightness(.5)}
+        .ach-info{flex:1;min-width:0}
+        .ach-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .ach-desc{font-size:11px;color:#64748b;margin-top:2px;line-height:1.4}
+        .ach-right{text-align:right;flex-shrink:0}
+        .ach-xp{font-size:12px;font-weight:700}
+        .ach-card.unlocked .ach-xp{color:#4ade80}
+        .ach-card.locked .ach-xp{color:#475569}
+        .ach-rarity{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+        .r-comun .ach-rarity{color:#9ca3af}
+        .r-poco_comun .ach-rarity{color:#22c55e}
+        .r-raro .ach-rarity{color:#3b82f6}
+        .r-epico .ach-rarity{color:#a855f7}
+        .r-legendario .ach-rarity{color:#f59e0b}
+        .ach-date{font-size:9px;color:#475569;margin-top:2px}
+
+        /* LOADING */
+        .loading-screen{display:flex;align-items:center;justify-content:center;min-height:60vh}
+        .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.1);border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(80px);background:#1e293b;border:1px solid rgba(245,158,11,.3);color:#fbbf24;padding:12px 24px;border-radius:12px;font-size:13px;font-weight:600;opacity:0;transition:transform .4s ease,opacity .3s;z-index:999;pointer-events:none}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+        /* EMPTY */
+        .empty-state{text-align:center;padding:40px 20px;color:#475569;font-size:13px}
+
+        @media(max-width:480px){
+            .hero{padding:24px 16px 16px}
+            .hero h1{font-size:18px}
+            .ach-card{padding:12px 14px;gap:10px}
+            .ach-icon{width:40px;height:40px;font-size:22px}
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-right">
+            <span class="badge-pill bp-unlocked" id="pillCount">0/32</span>
+            <span class="badge-pill bp-xp" id="pillXP">+0 XP</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="hero-icon">🏆</div>
+            <h1>Mis Logros</h1>
+            <div class="sub" id="heroSub">Desbloquea logros completando sesiones, misiones y desafíos</div>
+            <div class="progress-wrap">
+                <div class="progress-bg"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+                <div class="progress-labels"><span id="progressLabel">0 de 32</span><span>100%</span></div>
+            </div>
+        </div>
+
+        <div class="tabs" id="tabs"></div>
+        <div id="newSection" class="new-section" style="display:none"></div>
+        <div class="ach-grid" id="achGrid"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey:"AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",authDomain:"profe-blog.firebaseapp.com",
+            databaseURL:"https://profe-blog-default-rtdb.firebaseio.com",projectId:"profe-blog",
+            storageBucket:"profe-blog.firebasestorage.app",messagingSenderId:"305920739217",
+            appId:"1:305920739217:web:2e08c7469d2988d8b3bc30"
+        });
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC'],paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
+
+        // ============ RARITY ============
+        const RARITY_LABELS = {comun:'Común',poco_comun:'Poco Común',raro:'Raro',epico:'Épico',legendario:'Legendario'};
+
+        // ============ CATEGORIES ============
+        const CATEGORIES = [
+            {id:'sesiones',    emoji:'📖',name:'Sesiones'},
+            {id:'rendimiento', emoji:'📊',name:'Rendimiento'},
+            {id:'paes',        emoji:'📝',name:'Ensayos PAES'},
+            {id:'misiones',    emoji:'🗺️',name:'Misiones'},
+            {id:'experiencia', emoji:'⭐',name:'Experiencia'},
+            {id:'social',      emoji:'🏅',name:'Social'},
+            {id:'secreto',     emoji:'🔒',name:'Secretos'}
+        ];
+
+        // ============ ALL MISSIONS (for counting) ============
+        const ALL_MISSIONS = ['tarea-cuento-1'];
+
+        // ============ AVATAR LEVELS ============
+        const AVATAR_LEVELS = [
+            {level:1,xp:0,title:'Aprendiz',emoji:'🌱'},
+            {level:2,xp:100,title:'Lector Novato',emoji:'📖'},
+            {level:3,xp:250,title:'Explorador de Textos',emoji:'🔍'},
+            {level:4,xp:500,title:'Analista Junior',emoji:'🧩'},
+            {level:5,xp:800,title:'Analista Senior',emoji:'⚡'},
+            {level:6,xp:1200,title:'Maestro Lector',emoji:'🏆'},
+            {level:7,xp:1800,title:'Leyenda SIMCE',emoji:'👑'}
+        ];
+        function getLevel(t){for(let i=AVATAR_LEVELS.length-1;i>=0;i--){if(t>=AVATAR_LEVELS[i].xp)return AVATAR_LEVELS[i]}return AVATAR_LEVELS[0]}
+
+        // ============ ACHIEVEMENT DEFINITIONS (32 total) ============
+        const LOGROS = [
+            // SESIONES (4)
+            {id:'first_session',   cat:'sesiones',   emoji:'🎯', name:'Primer Paso',        desc:'Completa tu primera sesión',                    rarity:'comun',       xp:20},
+            {id:'three_sessions',  cat:'sesiones',   emoji:'🔥', name:'En Racha',            desc:'Completa 3 sesiones',                           rarity:'poco_comun',  xp:40},
+            {id:'five_sessions',   cat:'sesiones',   emoji:'💪', name:'Dedicación Total',    desc:'Completa 5 sesiones',                           rarity:'raro',        xp:60},
+            {id:'all_sessions',    cat:'sesiones',   emoji:'🏁', name:'Imparable',           desc:'Completa todas las sesiones activas',            rarity:'epico',       xp:100},
+
+            // RENDIMIENTO (5)
+            {id:'score_80',        cat:'rendimiento', emoji:'📈', name:'Sobre el Promedio',   desc:'Obtén 80%+ en una sesión',                      rarity:'comun',       xp:20},
+            {id:'score_90',        cat:'rendimiento', emoji:'🌟', name:'Sobresaliente',       desc:'Obtén 90%+ en una sesión',                      rarity:'poco_comun',  xp:40},
+            {id:'perfect_score',   cat:'rendimiento', emoji:'💎', name:'Perfeccionista',      desc:'Obtén 100% en una sesión',                      rarity:'raro',        xp:80},
+            {id:'above_80_three',  cat:'rendimiento', emoji:'📊', name:'Consistente',         desc:'Obtén 80%+ en 3 sesiones distintas',            rarity:'poco_comun',  xp:60},
+            {id:'avg_90',          cat:'rendimiento', emoji:'🏅', name:'Élite Académica',     desc:'Promedio general sobre 90% (mínimo 3 sesiones)',rarity:'epico',       xp:120},
+
+            // ENSAYOS PAES (6)
+            {id:'paes_debut',      cat:'paes',       emoji:'📝', name:'Debut PAES',           desc:'Completa tu primer ensayo PAES',                rarity:'comun',       xp:30},
+            {id:'paes_500',        cat:'paes',       emoji:'🎯', name:'Sobre 500 pts',        desc:'Obtén 500+ puntos en un ensayo PAES',           rarity:'poco_comun',  xp:50},
+            {id:'paes_700',        cat:'paes',       emoji:'🔥', name:'Sobre 700 pts',        desc:'Obtén 700+ puntos en un ensayo PAES',           rarity:'raro',        xp:80},
+            {id:'paes_850',        cat:'paes',       emoji:'⭐', name:'Sobre 850 pts',        desc:'Obtén 850+ puntos en un ensayo PAES',           rarity:'epico',       xp:120},
+            {id:'paes_900',        cat:'paes',       emoji:'👑', name:'Élite Nacional',       desc:'Obtén 900+ puntos en un ensayo PAES',           rarity:'legendario',  xp:200},
+            {id:'paes_improve',    cat:'paes',       emoji:'📈', name:'Mejora Continua',      desc:'Mejora tu puntaje entre dos ensayos PAES',      rarity:'poco_comun',  xp:60},
+
+            // MISIONES (4)
+            {id:'first_mission',   cat:'misiones',   emoji:'🗺️', name:'Misión Cumplida',     desc:'Completa tu primera misión secundaria',          rarity:'comun',       xp:20},
+            {id:'three_missions',  cat:'misiones',   emoji:'⚔️', name:'Explorador',           desc:'Completa 3 misiones secundarias',                rarity:'poco_comun',  xp:50},
+            {id:'all_missions',    cat:'misiones',   emoji:'🏆', name:'Completista',          desc:'Completa todas las misiones secundarias',         rarity:'epico',       xp:150},
+            {id:'story_500',       cat:'misiones',   emoji:'✍️', name:'Maestro Narrador',     desc:'Escribe 500+ palabras en tu cuento',             rarity:'raro',        xp:60},
+
+            // EXPERIENCIA (6)
+            {id:'xp_250',          cat:'experiencia', emoji:'💫', name:'Primeros 250',        desc:'Acumula 250 XP en total',                        rarity:'comun',       xp:0},
+            {id:'xp_500',          cat:'experiencia', emoji:'💪', name:'Medio Millar',        desc:'Acumula 500 XP en total',                        rarity:'poco_comun',  xp:0},
+            {id:'xp_1000',         cat:'experiencia', emoji:'⚡', name:'Mil XP',              desc:'Acumula 1000 XP en total',                       rarity:'raro',        xp:0},
+            {id:'level_3',         cat:'experiencia', emoji:'🌿', name:'Nivel 3',             desc:'Alcanza el nivel 3',                             rarity:'comun',       xp:0},
+            {id:'level_5',         cat:'experiencia', emoji:'⚡', name:'Nivel 5',             desc:'Alcanza el nivel 5',                             rarity:'raro',        xp:0},
+            {id:'level_max',       cat:'experiencia', emoji:'👑', name:'Nivel Máximo',        desc:'Alcanza el nivel 7 — Leyenda SIMCE',             rarity:'legendario',  xp:0},
+
+            // SOCIAL (3)
+            {id:'top5',            cat:'social',     emoji:'🏅', name:'Top 5',                desc:'Entra al top 5 de tu curso',                     rarity:'poco_comun',  xp:30},
+            {id:'podium',          cat:'social',     emoji:'🥉', name:'Podio',                desc:'Entra al top 3 de tu curso',                     rarity:'raro',        xp:50},
+            {id:'number_one',      cat:'social',     emoji:'🥇', name:'Número Uno',           desc:'Sé el #1 de tu curso',                           rarity:'epico',       xp:100},
+
+            // SECRETOS (4)
+            {id:'night_owl',       cat:'secreto',    emoji:'🦉', name:'Búho Nocturno',        desc:'Completa una actividad después de las 22:00',    rarity:'raro',        xp:30, secret:true},
+            {id:'early_bird',      cat:'secreto',    emoji:'🐦', name:'Madrugador',           desc:'Completa una actividad antes de las 7:00',       rarity:'raro',        xp:30, secret:true},
+            {id:'title_creative',  cat:'secreto',    emoji:'🎨', name:'Título Creativo',      desc:'Pon un título de más de 8 palabras a tu cuento', rarity:'comun',       xp:10, secret:true},
+            {id:'weekend_warrior', cat:'secreto',    emoji:'📅', name:'Guerrero de Fin de Semana', desc:'Completa una actividad un sábado o domingo', rarity:'poco_comun',  xp:20, secret:true}
+        ];
+        const TOTAL_LOGROS = LOGROS.length;
+
+        // ============ STATE ============
+        let currentUID = null;
+        let currentCurso = null;
+        let currentPrograma = null;
+        let activeTab = 'todos';
+
+        // ============ CONDITION CHECKER ============
+        function checkCondition(id, d) {
+            switch(id) {
+                // Sesiones
+                case 'first_session':   return d.completed >= 1;
+                case 'three_sessions':  return d.completed >= 3;
+                case 'five_sessions':   return d.completed >= 5;
+                case 'all_sessions':    return d.totalActive > 0 && d.completed >= d.totalActive;
+                // Rendimiento
+                case 'score_80':        return d.scores.some(s => s >= 80);
+                case 'score_90':        return d.scores.some(s => s >= 90);
+                case 'perfect_score':   return d.scores.some(s => s >= 100);
+                case 'above_80_three':  return d.scores.filter(s => s >= 80).length >= 3;
+                case 'avg_90':          return d.scores.length >= 3 && (d.scores.reduce((a,b)=>a+b,0)/d.scores.length) >= 90;
+                // PAES
+                case 'paes_debut':      return d.paesScores.length >= 1;
+                case 'paes_500':        return d.paesScores.some(s => s >= 500);
+                case 'paes_700':        return d.paesScores.some(s => s >= 700);
+                case 'paes_850':        return d.paesScores.some(s => s >= 850);
+                case 'paes_900':        return d.paesScores.some(s => s >= 900);
+                case 'paes_improve':    return d.paesScores.length >= 2 && d.paesScores[d.paesScores.length-1] > d.paesScores[0];
+                // Misiones
+                case 'first_mission':   return d.missionsCompleted >= 1;
+                case 'three_missions':  return d.missionsCompleted >= 3;
+                case 'all_missions':    return d.totalMissions > 0 && d.missionsCompleted >= d.totalMissions;
+                case 'story_500':       return d.cuentoWords >= 500;
+                // Experiencia
+                case 'xp_250':          return d.xpTotal >= 250;
+                case 'xp_500':          return d.xpTotal >= 500;
+                case 'xp_1000':         return d.xpTotal >= 1000;
+                case 'level_3':         return d.level >= 3;
+                case 'level_5':         return d.level >= 5;
+                case 'level_max':       return d.level >= 7;
+                // Social
+                case 'top5':            return d.rankPos > 0 && d.rankPos <= 5;
+                case 'podium':          return d.rankPos > 0 && d.rankPos <= 3;
+                case 'number_one':      return d.rankPos === 1;
+                // Secretos
+                case 'night_owl':       return d.timestamps.some(t => new Date(t).getHours() >= 22);
+                case 'early_bird':      return d.timestamps.some(t => new Date(t).getHours() < 7);
+                case 'title_creative':  return d.cuentoTitleWords > 8;
+                case 'weekend_warrior': return d.timestamps.some(t => {const day=new Date(t).getDay();return day===0||day===6});
+                default: return false;
+            }
+        }
+
+        // ============ GATHER DATA ============
+        async function gatherData(uid, curso, programa) {
+            // Parallel fetch
+            const [avatarSnap, sesSnap, rankSnap, tareaSnap] = await Promise.all([
+                db.ref(BASE + '/avatar/' + uid).once('value'),
+                db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
+                db.ref(BASE + '/ranking').once('value'),
+                db.ref(BASE + '/tareas/tarea-cuento-1/' + uid).once('value')
+            ]);
+
+            const avatar = avatarSnap.val() || {};
+            const tarea = tareaSnap.val() || {};
+
+            // Filter sessions by programa
+            const allSes = [];
+            sesSnap.forEach(s => allSes.push({id:s.key, ...s.val()}));
+            const mySessions = allSes.filter(s => (s.programa || 'simce') === programa && s.activa !== false);
+
+            // Fetch results per session
+            const myResults = {};
+            await Promise.all(mySessions.map(async ses => {
+                const rSnap = await db.ref(BASE + '/resultados/' + ses.id + '/' + uid).once('value');
+                if (rSnap.exists()) myResults[ses.id] = rSnap.val();
+            }));
+
+            const scores = Object.values(myResults).map(r => r.porcentaje || 0);
+            const completed = scores.length;
+            const totalActive = mySessions.length;
+
+            // PAES ensayos: sessions with tipo='ensayo_paes' or id starting with 'ensayo'
+            const ensayoSessions = allSes.filter(s => s.tipo === 'ensayo_paes' || (s.id && s.id.startsWith('ensayo')));
+            const paesScores = [];
+            for (const es of ensayoSessions) {
+                const r = myResults[es.id];
+                if (r && r.puntaje_paes) paesScores.push(r.puntaje_paes);
+            }
+
+            // Missions completed
+            let missionsCompleted = 0;
+            for (const mid of ALL_MISSIONS) {
+                if (mid === 'tarea-cuento-1' && tarea.completada) missionsCompleted++;
+            }
+
+            // Timestamps from avatar.sesiones + tareas
+            const timestamps = [];
+            const avSes = avatar.sesiones || {};
+            for (const [,v] of Object.entries(avSes)) {
+                if (v.timestamp) timestamps.push(v.timestamp);
+            }
+            if (tarea.submitted_at) timestamps.push(tarea.submitted_at);
+            if (tarea.last_save) timestamps.push(tarea.last_save);
+
+            // Ranking position
+            const rankingData = rankSnap.val() || {};
+            const studentAvgs = {};
+            for (const [sesId, cursos] of Object.entries(rankingData)) {
+                if (!cursos[curso]) continue;
+                for (const [euid, data] of Object.entries(cursos[curso])) {
+                    if (!studentAvgs[euid]) studentAvgs[euid] = {total:0, count:0};
+                    studentAvgs[euid].total += (data.porcentaje || 0);
+                    studentAvgs[euid].count++;
+                }
+            }
+            const ranking = Object.entries(studentAvgs).map(([euid,info]) => ({
+                uid:euid, avg: info.count > 0 ? info.total / info.count : 0
+            }));
+            ranking.sort((a,b) => b.avg - a.avg);
+            const pos = ranking.findIndex(s => s.uid === uid);
+            const rankPos = pos >= 0 ? pos + 1 : 0;
+
+            return {
+                avatar,
+                existingLogros: avatar.logros || {},
+                xpTotal: avatar.xp_total || 0,
+                level: avatar.nivel || 1,
+                completed,
+                totalActive,
+                scores,
+                paesScores,
+                missionsCompleted,
+                totalMissions: ALL_MISSIONS.length,
+                cuentoWords: tarea.palabras || 0,
+                cuentoTitleWords: (tarea.titulo || '').trim().split(/\s+/).filter(w=>w).length,
+                rankPos,
+                timestamps
+            };
+        }
+
+        // ============ CHECK & AWARD ============
+        async function checkAndAward(uid, data) {
+            const newlyUnlocked = [];
+
+            LOGROS.forEach(logro => {
+                if (data.existingLogros[logro.id]) return; // already unlocked
+                if (checkCondition(logro.id, data)) {
+                    newlyUnlocked.push(logro);
+                }
+            });
+
+            if (newlyUnlocked.length === 0) return newlyUnlocked;
+
+            // Save and award XP
+            const xpGain = newlyUnlocked.reduce((sum,l) => sum + (l.xp || 0), 0);
+            const updates = {};
+            newlyUnlocked.forEach(l => {
+                updates['/avatar/' + uid + '/logros/' + l.id] = {timestamp:Date.now(), xp:l.xp};
+            });
+            if (xpGain > 0) {
+                const newTotal = data.xpTotal + xpGain;
+                const lvl = getLevel(newTotal);
+                updates['/avatar/' + uid + '/xp_total'] = newTotal;
+                updates['/avatar/' + uid + '/nivel'] = lvl.level;
+                updates['/avatar/' + uid + '/titulo'] = lvl.title;
+                updates['/avatar/' + uid + '/emoji'] = lvl.emoji;
+                data.xpTotal = newTotal; // update local state
+            }
+            await db.ref(BASE).update(updates);
+            return newlyUnlocked;
+        }
+
+        // ============ RENDER ============
+        function renderTabs() {
+            let html = `<div class="tab ${activeTab==='todos'?'active':''}" onclick="filterCat('todos')">Todos</div>`;
+            CATEGORIES.forEach(c => {
+                html += `<div class="tab ${activeTab===c.id?'active':''}" onclick="filterCat('${c.id}')">${c.emoji} ${c.name}</div>`;
+            });
+            document.getElementById('tabs').innerHTML = html;
+        }
+
+        function renderGrid(data, newlyUnlocked) {
+            const newIds = new Set(newlyUnlocked.map(l => l.id));
+            const allUnlocked = {...data.existingLogros};
+            newlyUnlocked.forEach(l => allUnlocked[l.id] = true);
+
+            let totalUnlocked = Object.keys(allUnlocked).length;
+            let totalXP = 0;
+            LOGROS.forEach(l => { if (allUnlocked[l.id]) totalXP += (l.xp || 0); });
+
+            // Update header
+            document.getElementById('pillCount').textContent = totalUnlocked + '/' + TOTAL_LOGROS;
+            document.getElementById('pillXP').textContent = '+' + totalXP + ' XP';
+            const pct = Math.round((totalUnlocked / TOTAL_LOGROS) * 100);
+            document.getElementById('progressFill').style.width = pct + '%';
+            document.getElementById('progressLabel').textContent = totalUnlocked + ' de ' + TOTAL_LOGROS + ' desbloqueados (' + pct + '%)';
+
+            // New unlocks banner
+            if (newlyUnlocked.length > 0) {
+                const xpGain = newlyUnlocked.reduce((s,l) => s + (l.xp||0), 0);
+                document.getElementById('newSection').style.display = '';
+                document.getElementById('newSection').innerHTML = `
+                    <div class="new-banner">
+                        <h3>🎉 ¡${newlyUnlocked.length} nuevo${newlyUnlocked.length>1?'s':''} logro${newlyUnlocked.length>1?'s':''}!</h3>
+                        <p>${newlyUnlocked.map(l=>l.emoji+' '+l.name).join(' · ')}${xpGain ? ' · +'+xpGain+' XP' : ''}</p>
+                    </div>`;
+            }
+
+            // Group by category
+            let html = '';
+            CATEGORIES.forEach(cat => {
+                const items = LOGROS.filter(l => l.cat === cat.id);
+                if (items.length === 0) return;
+                const catUnlocked = items.filter(l => allUnlocked[l.id]).length;
+                const hidden = activeTab !== 'todos' && activeTab !== cat.id;
+
+                html += `<div ${hidden?'style="display:none"':''} data-cat-group="${cat.id}">`;
+                html += `<div class="cat-header">${cat.emoji} ${cat.name} <span class="cat-count">${catUnlocked}/${items.length}</span></div>`;
+
+                items.forEach(l => {
+                    const unlocked = !!allUnlocked[l.id];
+                    const isNew = newIds.has(l.id);
+                    const isSecret = l.secret && !unlocked;
+
+                    const cls = [
+                        'ach-card',
+                        unlocked ? 'unlocked' : 'locked',
+                        'r-' + l.rarity,
+                        isNew ? 'new-unlock' : ''
+                    ].join(' ');
+
+                    const emoji = isSecret ? '❓' : l.emoji;
+                    const name = isSecret ? '???' : l.name;
+                    const desc = isSecret ? 'Logro secreto — descúbrelo jugando' : l.desc;
+                    const xpText = unlocked
+                        ? (l.xp > 0 ? '✓ +' + l.xp : '✓')
+                        : (l.xp > 0 ? '+' + l.xp + ' XP' : '');
+                    const dateText = unlocked && data.existingLogros[l.id] && data.existingLogros[l.id].timestamp
+                        ? new Date(data.existingLogros[l.id].timestamp).toLocaleDateString('es-CL')
+                        : (isNew ? 'Ahora' : '');
+
+                    html += `<div class="${cls}">
+                        <div class="ach-icon">${emoji}</div>
+                        <div class="ach-info">
+                            <div class="ach-name">${name}</div>
+                            <div class="ach-desc">${desc}</div>
+                        </div>
+                        <div class="ach-right">
+                            <div class="ach-xp">${xpText}</div>
+                            <div class="ach-rarity">${RARITY_LABELS[l.rarity]}</div>
+                            ${dateText ? '<div class="ach-date">'+dateText+'</div>' : ''}
+                        </div>
+                    </div>`;
+                });
+
+                html += `</div>`;
+            });
+
+            document.getElementById('achGrid').innerHTML = html;
+        }
+
+        function filterCat(cat) {
+            activeTab = cat;
+            renderTabs();
+            document.querySelectorAll('[data-cat-group]').forEach(el => {
+                el.style.display = (cat === 'todos' || el.dataset.catGroup === cat) ? '' : 'none';
+            });
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.textContent = msg;
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 3000);
+        }
+
+        // ============ MAIN ============
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUID = user.uid;
+
+            try {
+                const studentSnap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
+                const student = studentSnap.val();
+                if (!student) { auth.signOut(); return; }
+
+                currentCurso = student.curso;
+                currentPrograma = student.programa || (currentCurso.match(/^(1|2)/) ? 'simce' : 'paes');
+
+                const data = await gatherData(currentUID, currentCurso, currentPrograma);
+                const newlyUnlocked = await checkAndAward(currentUID, data);
+
+                renderTabs();
+                renderGrid(data, newlyUnlocked);
+
+                if (newlyUnlocked.length > 0) {
+                    const xpGain = newlyUnlocked.reduce((s,l)=>s+(l.xp||0),0);
+                    showToast('🏆 ¡' + newlyUnlocked.length + ' logro' + (newlyUnlocked.length>1?'s':'') + ' desbloqueado' + (newlyUnlocked.length>1?'s':'') + '!' + (xpGain ? ' +' + xpGain + ' XP' : ''));
+                }
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+            } catch(e) {
+                console.error(e);
+                document.getElementById('loadingScreen').innerHTML = '<div style="text-align:center;padding:40px;color:#ef4444">Error al cargar logros</div>';
+            }
+        });
+    </script>
+</body>
+</html>

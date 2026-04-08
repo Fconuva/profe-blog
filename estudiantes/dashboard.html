@@ -233,18 +233,22 @@
             <div style="text-align:center; padding:40px; color:#94a3b8;">Cargando sesiones...</div>
         </div>
 
-        <!-- Side Quests -->
-        <div class="section-title">📝 Misiones Secundarias</div>
-        <div id="sideQuests" style="margin-bottom:20px">
-            <a href="tarea-cuento.html" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #8b5cf6">
-                <div class="session-num" style="background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff">✍️</div>
-                <div class="session-info">
-                    <h3>Misión: Escribe tu Cuento</h3>
-                    <p>Redacta un cuento original y gana XP según su extensión. ¡Hasta 480 XP!</p>
-                </div>
-                <div class="session-status" id="questCuentoStatus"></div>
-            </a>
+        <!-- Side Quests (dynamic) -->
+        <div id="sideQuestsSection" style="display:none">
+            <div class="section-title">📝 Misiones Secundarias</div>
+            <div id="sideQuests" style="margin-bottom:20px"></div>
         </div>
+
+        <!-- Logros -->
+        <div class="section-title">🏆 Logros</div>
+        <a href="logros.html" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #f59e0b;margin-bottom:20px;display:flex">
+            <div class="session-num" style="background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff">🏆</div>
+            <div class="session-info">
+                <h3>Mis Logros</h3>
+                <p id="logrosPreview">Cargando logros...</p>
+            </div>
+            <div class="session-status"><span class="badge badge-pending" id="logrosBadge"></span></div>
+        </a>
 
         <!-- Ranking Preview -->
         <div class="section-title">🏆 Ranking entre Cursos</div>
@@ -311,6 +315,8 @@
                 const programa = student.programa || 'simce';
                 await loadDashboard(user.uid, student.curso, programa);
                 loadAvatar(user.uid, student.nombre);
+                renderSideMissions(user.uid, student.curso);
+                loadLogrosPreview(user.uid);
                 listenForMessages();
 
             } catch(e) { console.error(e); }
@@ -555,17 +561,42 @@
                 document.getElementById('statVelS').textContent = makeStars(st.velocidad || 0, MAX_STAT);
 
             } catch(e) { console.error('Avatar load error:', e); }
+        }
 
-            // Check side quest status
+        // ==================== SIDE MISSIONS ====================
+        const SIDE_MISSIONS = [
+            {id:'tarea-cuento-1', emoji:'✍️', name:'Escribe tu Cuento', desc:'Redacta un cuento original y gana XP según su extensión. ¡Hasta 480 XP!', link:'tarea-cuento.html', cursos:['2A-HC','2B-HC']},
+            // Add more missions here as they are created
+        ];
+        async function renderSideMissions(uid, curso) {
+            const available = SIDE_MISSIONS.filter(m => !m.cursos || m.cursos.includes(curso));
+            if (available.length === 0) return;
+            document.getElementById('sideQuestsSection').style.display = '';
+            let html = '';
+            for (const m of available) {
+                let statusHtml = '';
+                try {
+                    const qSnap = await db.ref(BASE + '/tareas/' + m.id + '/' + uid).once('value');
+                    const q = qSnap.val();
+                    if (q && q.completada) statusHtml = '<span class="badge badge-done">✅ Entregado · +' + (q.xp_ganado||0) + ' XP</span>';
+                    else if (q && q.last_save) statusHtml = '<span class="badge badge-progress">📝 En progreso</span>';
+                } catch(e) {}
+                html += `<a href="${m.link}" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #8b5cf6;display:flex">
+                    <div class="session-num" style="background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff">${m.emoji}</div>
+                    <div class="session-info"><h3>Misión: ${m.name}</h3><p>${m.desc}</p></div>
+                    <div class="session-status">${statusHtml}</div></a>`;
+            }
+            document.getElementById('sideQuests').innerHTML = html;
+        }
+
+        // ==================== LOGROS PREVIEW ====================
+        async function loadLogrosPreview(uid) {
             try {
-                const qSnap = await db.ref(BASE + '/tareas/tarea-cuento-1/' + uid).once('value');
-                const q = qSnap.val();
-                const el = document.getElementById('questCuentoStatus');
-                if (q && q.completada) {
-                    el.innerHTML = '<span class="badge badge-done">✅ Entregado · +' + (q.xp_ganado || 0) + ' XP</span>';
-                } else if (q && q.last_save) {
-                    el.innerHTML = '<span class="badge badge-progress">📝 En progreso</span>';
-                }
+                const avSnap = await db.ref(BASE + '/avatar/' + uid + '/logros').once('value');
+                const logros = avSnap.val() || {};
+                const count = Object.keys(logros).length;
+                document.getElementById('logrosPreview').textContent = count + ' de 32 logros desbloqueados';
+                document.getElementById('logrosBadge').textContent = count > 0 ? '🏅 ' + count + '/32' : '🔒 0/32';
             } catch(e) {}
         }
 

@@ -99,6 +99,40 @@ select.fill-select{background:var(--bg);border:1px solid var(--accent);color:var
 .text-toggle summary::before{content:'▶';font-size:.7rem;transition:transform .2s}
 .text-toggle[open] summary::before{transform:rotate(90deg)}
 .text-toggle .story-box{margin:0;border:none;border-top:1px solid var(--border);border-radius:0}
+/* === MEJORAS V2 === */
+.hl-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;border:none;font-size:1.5rem;cursor:pointer;z-index:200;box-shadow:0 4px 15px rgba(245,158,11,.4);transition:.3s;display:flex;align-items:center;justify-content:center}
+.hl-fab:hover{transform:scale(1.1);box-shadow:0 6px 25px rgba(245,158,11,.6)}
+.hl-fab.open{background:linear-gradient(135deg,var(--red),#dc2626)}
+.hl-panel{position:fixed;bottom:82px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;z-index:200;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:slideUp .3s}
+.hl-panel.show{display:block}
+.hl-panel h4{font-size:.72rem;color:var(--dim);margin-bottom:8px;text-align:center}
+.hl-colors{display:flex;gap:10px;justify-content:center}.hl-color-wrap{text-align:center}
+.hl-btn{width:38px;height:38px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:.2s;font-weight:800;font-size:.8rem;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.hl-btn:hover{transform:scale(1.15)}.hl-btn.active{border-color:#fff;box-shadow:0 0 14px currentColor}
+.hl-btn-loc{background:rgba(251,191,36,.65);color:#78350f}.hl-btn-inf{background:rgba(139,92,246,.65);color:#fff}
+.hl-btn-ref{background:rgba(16,185,129,.65);color:#fff}
+.hl-btn-clr{background:var(--border);color:var(--dim);font-size:1rem}
+.hl-lbl{font-size:.55rem;color:var(--dim);margin-top:3px}
+mark.hl-loc{background:rgba(251,191,36,.28);border-radius:2px;padding:0 2px}
+mark.hl-inf{background:rgba(139,92,246,.28);border-radius:2px;padding:0 2px}
+mark.hl-ref{background:rgba(16,185,129,.28);border-radius:2px;padding:0 2px}
+.confetti-box{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.conf-p{position:absolute;top:-12px;opacity:.95}
+@keyframes confDrop{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}100%{transform:translateY(105vh) rotate(720deg) scale(.2);opacity:0}}
+@keyframes xpPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.xp-pop{animation:xpPop .35s ease-out}
+.quiz-option.wrong{animation:qShake .4s}
+@keyframes qShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+@media(max-width:600px){.how-grid{grid-template-columns:repeat(2,1fr)}}
+.how-step{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;transition:.2s}
+.how-step:hover{border-color:var(--accent);background:rgba(59,130,246,.04)}
+.hw-icon{font-size:1.5rem;margin-bottom:4px}
+.hw-title{font-size:.72rem;font-weight:700;color:var(--text)}.hw-desc{font-size:.6rem;color:var(--dim);margin-top:2px;line-height:1.3}
+.task-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:4px 14px;font-size:.7rem;font-weight:700;color:var(--accent);margin:8px 0}
+.hl-tip{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(245,158,11,.04));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 14px;margin:8px 0;font-size:.75rem;color:var(--amber);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.hl-tip strong{color:var(--text)}
 </style>
 </head>
 <body>
@@ -119,10 +153,10 @@ select.fill-select{background:var(--bg);border:1px solid var(--accent);color:var
 let xp=0,currentSection=0,timerSeconds=75*60,timerInterval=null;
 const S=['welcome','motivation','prevknow','lesson','reading','puzzle','game','simce','closing'];
 const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
-function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.style.animation='none';void d.offsetHeight;d.style.animation='fadeIn .3s';}
+function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
 function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
 function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
-function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();}
+function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i===6&&gIdx>=GQ.length&&gLives>0)setTimeout(launchConfetti,400);if(i===7&&sIdx>=SQ.length)setTimeout(launchConfetti,400);requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
 const B={};
 
 // ===== WELCOME =====
@@ -131,6 +165,13 @@ B.welcome=()=>`
 <div class="card">
 <h2>🎯 Objetivo de la clase</h2>
 <div class="highlight">Analizar la <strong>estructura y los elementos narrativos</strong> de un cuento (narrador, personajes, espacio, tiempo, conflicto), mediante lectura guiada y ejercicios interactivos, fortaleciendo las habilidades de <strong>Localizar, Inferir y Reflexionar</strong>.</div>
+<h3>👆 ¿Cómo funciona esta guía?</h3>
+<div class="how-grid">
+<div class="how-step"><div class="hw-icon">📖</div><div class="hw-title">Lee</div><div class="hw-desc">Lee los textos con calma</div></div>
+<div class="how-step"><div class="hw-icon">🖍️</div><div class="hw-title">Resalta</div><div class="hw-desc">Usa los lápices de colores para marcar pistas</div></div>
+<div class="how-step"><div class="hw-icon">✍️</div><div class="hw-title">Responde</div><div class="hw-desc">Elige tu respuesta y revisa</div></div>
+<div class="how-step"><div class="hw-icon">⭐</div><div class="hw-title">Gana XP</div><div class="hw-desc">Cada acierto suma puntos</div></div>
+</div>
 <h3>Ruta de la clase</h3>
 <ul>
 <li><span class="phase-tag phase-motiv">5 min</span> <strong>Motivación</strong> — Video pregunta + reflexión</li>
@@ -146,6 +187,7 @@ B.motivation=()=>`
 <div class="section-header"><div class="icon">💡</div><h2>Motivación</h2><div class="sub"><span class="phase-tag phase-motiv">5 minutos</span></div></div>
 <div class="card">
 <h2>¿Alguna vez una historia te cambió?</h2>
+<div class="task-badge">📝 Tu tarea: piensa y reflexiona</div>
 <p>Piensa en alguna historia que te haya contado un abuelo, un padre o alguien cercano. Una historia que recuerdes hasta hoy.</p>
 <div class="highlight amber">🤔 <strong>Pregunta para pensar:</strong> ¿Por qué algunas historias se nos quedan grabadas para siempre mientras otras las olvidamos al día siguiente?</div>
 <p>Hoy vamos a descubrir qué hace que un cuento funcione, qué piezas tiene por dentro, como un reloj. Vamos a <strong>desarmar un cuento</strong> pieza por pieza y entender cómo cada elemento construye la historia.</p>
@@ -162,7 +204,8 @@ const fbQs=[
 let fbDone=0;
 B.prevknow=()=>{
 let h=`<div class="section-header"><div class="icon">⚡</div><h2>Activación de Conocimientos Previos</h2><div class="sub"><span class="phase-tag phase-prev">6 minutos</span> · Flashback SIMCE — 3 preguntas de clases anteriores</div></div>
-<div class="highlight">Estas preguntas activan lo que ya sabes de las clases S2 (Localizar), S3 (Inferir) y S4 (Reflexionar).</div>`;
+<div class="task-badge">📝 Tu tarea: responde 3 preguntas de repaso</div>
+<div class="highlight">Estas preguntas activan lo que ya sabes de las clases S2 (Localizar), S3 (Inferir) y S4 (Reflexionar). Lee con calma, descarta lo que NO calza y luego elige.</div>`;
 fbQs.forEach((q,i)=>{
 h+=`<div class="card" id="fb-q${i}"><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n1">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></div>
 <div class="simce-q"><span class="q-num">Pregunta ${i+1}</span><div class="q-text">${q.q}</div></div>`;
@@ -258,7 +301,9 @@ return h+`</div>`;
 // ===== LECTURA =====
 B.reading=()=>`
 <div class="section-header"><div class="icon">📖</div><h2>Lectura: "La cicatriz"</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Lee con atención</div></div>
+<div class="task-badge">📝 Tu tarea: lee el cuento y busca pistas</div>
 <div class="highlight amber">💡 <strong>Mientras lees, identifica:</strong> ¿Quién narra? ¿Dónde ocurre? ¿Cuál es el conflicto? ¿Qué tema transmite?</div>
+<div class="hl-tip">🖍️ <strong>Usa los lápices:</strong> toca el botón 🖍️ abajo a la derecha, elige un color y selecciona texto para resaltarlo. <span style="background:rgba(251,191,36,.3);padding:1px 5px;border-radius:4px">Amarillo</span> = dato explícito · <span style="background:rgba(139,92,246,.3);padding:1px 5px;border-radius:4px">Morado</span> = pista para inferir · <span style="background:rgba(16,185,129,.3);padding:1px 5px;border-radius:4px">Verde</span> = reflexión</div>
 <div class="story-box">
 <div class="title">La cicatriz</div>
 <p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p>
@@ -291,8 +336,8 @@ let pSel=null,pDone=0;
 B.puzzle=()=>{
 pSel=null;pDone=0;
 const R=[...Array(6).keys()].sort(()=>Math.random()-.5);
-let h=`<div class="section-header"><div class="icon">🧩</div><h2>Puzzle: Conecta los Elementos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Haz clic en un elemento y luego en su descripción</div></div>
-<div class="card"><div class="match-container"><div class="match-left">`;
+let h=`<div class="section-header"><div class="icon">🧩</div><h2>Puzzle: Conecta los Elementos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span></div></div>
+<div class="card"><div class="task-badge">📝 Tu tarea: conecta cada elemento con su descripción</div><div class="highlight">👆 <strong>Paso 1:</strong> Toca un elemento de la columna izquierda (ej: 🎭 Narrador). <strong>Paso 2:</strong> Toca su descripción en la columna derecha. Si aciertas, ¡se ilumina en verde!</div><div class="match-container"><div class="match-left">`;
 for(let i=0;i<6;i++)h+=`<div class="puzzle-item" id="pl${i}" onclick="pClk('l',${i})">${PP[i][0]}</div>`;
 h+=`</div><div class="match-right">`;
 R.forEach(i=>{h+=`<div class="puzzle-item" id="pr${i}" onclick="pClk('r',${i})">${PP[i][1]}</div>`;});
@@ -307,7 +352,7 @@ else{
 if(pSel.s===s){document.getElementById((s==='l'?'pl':'pr')+pSel.i).classList.remove('selected');pSel={s,i};el.classList.add('selected');return;}
 const o=document.getElementById((pSel.s==='l'?'pl':'pr')+pSel.i);
 if(pSel.i===i){o.classList.remove('selected');o.classList.add('matched');el.classList.add('matched');pDone++;addXP(10);pSel=null;
-if(pDone>=6){document.getElementById('pRes').innerHTML='<div class="achievement"><h3>🧩 ¡Puzzle resuelto!</h3><p>+60 XP · Todos los elementos identificados</p></div>';var nx=document.getElementById('pzNxt');if(nx)nx.disabled=false;}
+if(pDone>=6){document.getElementById('pRes').innerHTML='<div class="achievement"><h3>🧩 ¡Puzzle resuelto!</h3><p>+60 XP · Todos los elementos identificados</p></div>';var nx=document.getElementById('pzNxt');if(nx)nx.disabled=false;setTimeout(launchConfetti,300);}
 }else{o.classList.remove('selected');el.classList.add('selected');pSel={s,i};}
 }};
 
@@ -384,6 +429,8 @@ const q=SQ[sIdx];
 return`<div class="section-header"><div class="icon">✍️</div><h2>Práctica SIMCE</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Pregunta ${sIdx+1}/${SQ.length}</div></div>
 <div class="story-box" style="max-height:250px;overflow-y:auto;font-size:.78rem;line-height:1.7;margin-bottom:12px"><div class="title" style="font-size:.9rem">📖 La cicatriz</div><p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p><p>—Abuela, ¿cómo te hiciste eso? —le pregunté una tarde de invierno, mientras el olor a masa cruda llenaba la cocina.</p><p>Ella sonrió sin mirarme, hundiendo los nudillos en la masa con una fuerza que desmentía sus setenta y tres años.</p><p>—Fue por una promesa —respondió.</p><p>Yo tenía doce años y las promesas me parecían cosas de películas. Me senté en el banco de madera y esperé, porque había aprendido que mi abuela contaba las historias a su propio ritmo, como quien desenrolla un ovillo de lana.</p><p>—Cuando yo era joven, más joven que tú —comenzó—, vivíamos cerca del río Maule. Mi hermano Rodrigo y yo éramos inseparables. Un verano, el río creció por las lluvias y arrastró el puente viejo. Al otro lado quedó atrapada la señora Carmen con sus tres hijos pequeños, sin comida ni manera de cruzar.</p><p>Hizo una pausa para espolvorear harina sobre la mesa. Yo contuve la respiración.</p><p>—Tu bisabuelo dijo que era imposible cruzar. El agua estaba helada y la corriente era brutal. Pero Rodrigo y yo nos miramos y supimos, sin decirnos nada, que teníamos que intentarlo.</p><p>—¿Cruzaron el río? —pregunté, con los ojos abiertos de asombro.</p><p>—Amarramos una cuerda al sauce viejo de la orilla. Rodrigo iba primero, yo le sujetaba la cuerda desde atrás. A mitad del cruce, un tronco que venía con la corriente me golpeó el brazo y la cuerda me cortó la muñeca. Pero no la solté.</p><p>Sus ojos brillaron con algo que no era tristeza, sino algo más firme, como el orgullo de quien sabe que tomó la decisión correcta.</p><p>—¿Y Rodrigo? —susurré.</p><p>—Llegó al otro lado. Ayudó a la señora Carmen y a sus hijos a cruzar con la cuerda. Todos sobrevivieron.</p><p>Mi abuela levantó la muñeca y la giró lentamente bajo la luz amarillenta de la cocina.</p><p>—Yo me quedé con esto —dijo, tocando la cicatriz—. Y con la certeza de que hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto.</p><p>Terminó de dar forma al pan y lo puso en la bandeja. Antes de meterlo al horno, me miró con esos ojos oscuros que parecían contener todas las tormentas y todas las calmas del mundo.</p><p>—Algún día, mi niño, algo te va a pedir que no sueltes. Y cuando eso pase, acuérdate de esta cicatriz.</p><p>Han pasado quince años desde esa tarde. Mi abuela ya no está, pero cada vez que la vida me pide soltar, cierro los ojos y siento su mano firme, sosteniendo la cuerda.</p></div>
 <div class="card">
+<div class="task-badge">📝 Tu tarea: lee la pregunta, vuelve al texto y elige</div>
+<div class="highlight amber" style="font-size:.75rem">📖 <strong>Recuerda:</strong> vuelve al texto de arriba antes de responder. Busca la evidencia que respalda tu opción y descarta las que no calzan.</div>
 <div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-${q.diff.toLowerCase().replace('-','')}">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span> · <strong>Distractores:</strong> N2 (parcialmente correctos)</div>
 <div class="simce-q"><span class="q-num">Pregunta ${sIdx+1}/${SQ.length} <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></span><div class="q-text">${q.q}</div></div>
 ${q.opts.map((o,i)=>`<button class="quiz-option" onclick="sAns(${i})" id="s${i}">${'ABCD'[i]}) ${o}</button>`).join('')}
@@ -449,7 +496,12 @@ h+=`
 <p>Mi padre decía que el valor no era cruzar el río, sino saber cuándo no cruzarlo. Yo nunca le creí. Hasta que un día, parado frente a la corriente, con la cuerda en las manos y el agua lamiéndome los tobillos, entendí que a veces la mayor valentía es quedarse en la orilla y buscar otro camino.</p>
 </div>
 <div class="simce-q"><span class="q-num">Desafío <span class="badge badge-ref">REF</span></span><div class="q-text">Este microcuento presenta una visión opuesta a la de la abuela en "La cicatriz". ¿Cuál de los dos mensajes te parece más convincente y por qué? Fundamenta con evidencia de ambos textos.</div></div>
-<div class="highlight amber">💡 <strong>Instrucciones:</strong> No hay respuesta única correcta. Se evalúa la calidad de tu argumento: que cites evidencia textual de ambos cuentos, que identifiques la tensión entre "sostener" vs. "soltar", y que tomes una postura fundamentada.</div>
+<div class="highlight amber">💡 <strong>Instrucciones paso a paso:</strong><br>
+<strong>1.</strong> Lee ambos textos (“La cicatriz” y “El otro lado del río”).<br>
+<strong>2.</strong> Identifica qué dice cada texto sobre la valentía: ¿sostener o soltar?<br>
+<strong>3.</strong> Elige cuál te convence más y explica por qué.<br>
+<strong>4.</strong> Cita al menos una frase de cada texto como evidencia.<br>
+<strong>5.</strong> No hay respuesta correcta: se evalúa la calidad de tu argumento.</div>
 <textarea id="t4resp" placeholder="Escribe tu respuesta argumentada aquí..." style="width:100%;min-height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:inherit;font-size:.8rem;resize:vertical;margin:10px 0"></textarea>
 <div class="highlight green" id="t4fb" style="display:none">✅ ¡Respuesta registrada! +30 XP. Tu profesor revisará tu argumentación.</div>
 <button class="btn btn-primary" onclick="if(document.getElementById('t4resp').value.trim().length>30){document.getElementById('t4fb').style.display='block';addXP(30);this.disabled=true;this.textContent='✓ Enviado';}else{alert('Escribe al menos una respuesta breve.');}">Enviar Desafío</button>
@@ -473,6 +525,15 @@ if(i===1){document.getElementById('ex'+i).classList.add('correct');document.getE
 else{document.getElementById('ex'+i).classList.add('wrong');document.getElementById('ex1').classList.add('correct');document.getElementById('exnk').classList.add('show');}
 document.getElementById('exrev').style.display='none';
 };
+
+// === CONFETTI ===
+function launchConfetti(){var c=document.createElement('div');c.className='confetti-box';var cols=['#fbbf24','#3b82f6','#8b5cf6','#10b981','#ef4444','#ec4899','#06b6d4'];for(var i=0;i<50;i++){var p=document.createElement('div');p.className='conf-p';p.style.left=Math.random()*100+'%';var sz=(5+Math.random()*8)+'px';p.style.width=sz;p.style.height=sz;p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animation='confDrop '+(2+Math.random()*2)+'s ease-in '+Math.random()*.8+'s forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},5000);}
+// === HIGHLIGHTER TOOLBOX ===
+var hlColor=null;
+(function(){var fab=document.createElement('button');fab.className='hl-fab';fab.id='hl-fab';fab.innerHTML='🖍️';fab.onclick=function(){var p=document.getElementById('hl-panel');p.classList.toggle('show');this.classList.toggle('open');this.innerHTML=this.classList.contains('open')?'✕':'🖍️';};var panel=document.createElement('div');panel.className='hl-panel';panel.id='hl-panel';panel.innerHTML='<h4>🖍️ Selecciona un color y resalta texto</h4><div class="hl-colors"><div class="hl-color-wrap"><button class="hl-btn hl-btn-loc" data-hl="loc">L</button><div class="hl-lbl">Localizar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-inf" data-hl="inf">I</button><div class="hl-lbl">Inferir</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-ref" data-hl="ref">R</button><div class="hl-lbl">Reflexionar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-clr" data-hl="clear">✕</button><div class="hl-lbl">Borrar</div></div></div>';document.body.appendChild(fab);document.body.appendChild(panel);panel.querySelectorAll('[data-hl]').forEach(function(b){b.onclick=function(){if(this.dataset.hl==='clear')clearHL();else setHL(this.dataset.hl);};});document.addEventListener('mouseup',function(){setTimeout(applyHL,10);});document.addEventListener('touchend',function(){setTimeout(applyHL,80);});})();
+window.setHL=function(c){hlColor=hlColor===c?null:c;document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});if(hlColor)document.querySelector('.hl-btn-'+hlColor).classList.add('active');};
+function applyHL(){if(!hlColor)return;var s=window.getSelection();if(!s.rangeCount||s.isCollapsed)return;var r=s.getRangeAt(0);var a=r.commonAncestorContainer;if(a.nodeType===3)a=a.parentElement;if(!a||!a.closest||(!a.closest('.story-box')&&!a.closest('.card')))return;try{var m=document.createElement('mark');m.className='hl-'+hlColor;r.surroundContents(m);}catch(e){}s.removeAllRanges();}
+window.clearHL=function(){document.querySelectorAll('mark[class^="hl-"]').forEach(function(m){var t=document.createTextNode(m.textContent);m.parentNode.replaceChild(t,m);});document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});hlColor=null;};
 
 go(0);
 </script>

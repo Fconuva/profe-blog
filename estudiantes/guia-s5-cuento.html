@@ -434,24 +434,24 @@ const GQ=[
 let gIdx=0,gLives=3,gScore=0;
 B.game=()=>{
 if(gIdx>=GQ.length||gLives<=0)return`<div class="section-header"><div class="icon">🎮</div><h2>Detective Narrativo — Resultado</h2></div>
-<div class="card" style="text-align:center"><div class="game-score">${gScore}/${GQ.length}</div><p style="color:var(--dim)">${gLives>0?'¡Gran detective!':'¡Sigue practicando!'}</p>
+<div class="card" style="text-align:center">${adminMode?'<div class="game-score">'+gScore+'/'+GQ.length+'</div><p style="color:var(--dim)">'+(gLives>0?'¡Gran detective!':'¡Sigue practicando!')+'</p>':'<div style="font-size:2rem;margin:12px 0">✅</div><p style="color:var(--dim);font-size:.9rem">Respuestas registradas.<br>Tu profesor revisará los resultados.</p>'}
 <div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Puzzle</button><button class="btn btn-next" onclick="go(7)">Ir a Práctica SIMCE →</button></div></div>`;
 const q=GQ[gIdx];
 return`<div class="section-header"><div class="icon">🎮</div><h2>Detective Narrativo</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Pregunta ${gIdx+1}/${GQ.length}</div></div>
-<div class="card"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><div>${'❤️'.repeat(gLives)}${'🖤'.repeat(3-gLives)}</div><div style="color:var(--gold);font-weight:700">Puntaje: ${gScore}</div></div>
+<div class="card">${adminMode?`<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div>${'❤️'.repeat(gLives)}${'🖤'.repeat(3-gLives)}</div><div style="color:var(--gold);font-weight:700">Puntaje: ${gScore}</div></div>`:''}
 <div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">${q.diff}</span></div>
 <div class="simce-q"><div class="q-text">${q.q}</div></div>
 ${q.opts.map((o,i)=>`<button class="quiz-option" onclick="gAns(${i})" id="g${i}">${'ABCD'[i]}) ${o}</button>`).join('')}
-<div class="feedback ok" id="gok">✅ ¡Correcto! ${q.explain}</div><div class="feedback nok" id="gnk">❌ ${q.explain}</div>
-<button class="btn-reveal" id="grev" onclick="revealG()">👁 Ver Respuesta</button>
+${adminMode?`<div class="feedback ok" id="gok">✅ ¡Correcto! ${q.explain}</div><div class="feedback nok" id="gnk">❌ ${q.explain}</div>
+<button class="btn-reveal" id="grev" onclick="revealG()">👁 Ver Respuesta</button>`:''}
 <div id="gnx" style="display:none"><div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Puzzle</button><button class="btn btn-next" onclick="gIdx++;go(6)">Siguiente →</button></div></div></div>`;
 };
 window.gAns=function(i){
 if(document.getElementById('g0').classList.contains('locked'))return;
 document.querySelectorAll('[id^="g"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^g\d$/))b.classList.remove('picked');});
 document.getElementById('g'+i).classList.add('picked');
-document.getElementById('grev').dataset.pick=i;
-document.getElementById('grev').classList.add('show');
+if(adminMode){document.getElementById('grev').dataset.pick=i;document.getElementById('grev').classList.add('show');}
+else{document.getElementById('gnx').style.display='block';}
 };
 window.revealG=function(){
 var i=parseInt(document.getElementById('grev').dataset.pick);

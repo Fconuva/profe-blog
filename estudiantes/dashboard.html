@@ -251,10 +251,11 @@
         </a>
 
         <!-- Ranking Preview -->
-        <div class="section-title">🏆 Ranking entre Cursos</div>
+        <div class="section-title">⚔️ Ranking de Poder</div>
         <div class="ranking-preview">
             <div class="ranking-header">
                 <h3>Puntaje promedio por curso</h3>
+                <a href="ranking.html">Ver Ranking Completo →</a>
             </div>
             <div class="ranking-bars" id="rankingBars"></div>
             <div id="rankingList" style="margin-top:12px;font-size:13px"></div>
@@ -271,6 +272,7 @@
 
     <div class="connectivity online" id="connectivity">🟢 Conectado</div>
 
+    <script src="js/avatar-levels.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -474,10 +476,7 @@
                 function rankEmoji(euid) {
                     const av = allAvatarsData[euid];
                     if (!av || !av.xp_total) return '';
-                    const xp = av.xp_total;
-                    const lvls = [[1800,'👑'],[1200,'🏆'],[800,'⚡'],[500,'🧩'],[250,'🔍'],[100,'📖'],[0,'🌱']];
-                    for (const [min,em] of lvls) { if (xp >= min) return em; }
-                    return '';
+                    return AvatarSystem.getLevel(av.xp_total).emoji;
                 }
 
                 let rankListHtml = '';
@@ -501,21 +500,10 @@
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar el dashboard.</div>';
             }
         }
-        // ==================== AVATAR SYSTEM ====================
-        const AVATAR_LEVELS = [
-            { level:1, xp:0,    title:'Aprendiz',             emoji:'🌱' },
-            { level:2, xp:100,  title:'Lector Novato',        emoji:'📖' },
-            { level:3, xp:250,  title:'Explorador de Textos',  emoji:'🔍' },
-            { level:4, xp:500,  title:'Analista Junior',       emoji:'🧩' },
-            { level:5, xp:800,  title:'Analista Senior',       emoji:'⚡' },
-            { level:6, xp:1200, title:'Maestro Lector',        emoji:'🏆' },
-            { level:7, xp:1800, title:'Leyenda SIMCE',         emoji:'👑' }
-        ];
+        // ==================== AVATAR SYSTEM (shared via js/avatar-levels.js) ====================
         function getLevelInfo(totalXP) {
-            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
-                if (totalXP >= AVATAR_LEVELS[i].xp) return { current: AVATAR_LEVELS[i], next: AVATAR_LEVELS[i + 1] || null };
-            }
-            return { current: AVATAR_LEVELS[0], next: AVATAR_LEVELS[1] };
+            var info = AvatarSystem.getLevelInfo(totalXP);
+            return { current: info.current, next: info.next };
         }
         function makeStars(value, max) {
             const filled = Math.min(max, Math.max(0, Math.round(value)));

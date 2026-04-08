@@ -351,6 +351,7 @@
                 <select id="rankingSesSelect" onchange="loadAdminRanking()">
                     <option value="">Selecciona sesión...</option>
                     <option value="__all__">📊 Histórico (Todas las sesiones)</option>
+                    <option value="__avatar__">⚔️ Ranking de Poder (Avatar/XP)</option>
                 </select>
                 <select id="rankingCourseFilter" onchange="loadAdminRanking()">
                     <option value="">Todos los cursos</option>
@@ -472,6 +473,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 
 </div><!-- /adminPanel -->
 
+<script src="../js/avatar-levels.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2451,7 +2453,7 @@ function exportPlanillaCSV(){
 function populateRankingDropdown(){
     const sel=document.getElementById('rankingSesSelect');
     const cur=sel.value;
-    let opts='<option value="">Selecciona sesión...</option><option value="__all__">📊 Histórico (Todas)</option>';
+    let opts='<option value="">Selecciona sesión...</option><option value="__all__">📊 Histórico (Todas)</option><option value="__avatar__">⚔️ Ranking de Poder (Avatar/XP)</option>';
     Object.entries(sessions).forEach(([id,s])=>{
         opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
     });
@@ -2471,6 +2473,51 @@ async function loadAdminRanking(){
         return;
     }
 
+    // ===== AVATAR RANKING MODE =====
+    if(sesId==='__avatar__'){
+        let avatarSnap;
+        try{ avatarSnap=await db.ref(BASE+'/avatar').once('value'); }catch(e){ toast('Error al cargar avatares','err'); return; }
+        const avatars=avatarSnap.val()||{};
+        let items=[];
+        for(const[uid,est]of Object.entries(students)){
+            if(courseF && est.curso!==courseF) continue;
+            const av=avatars[uid]||{};
+            const xp=av.xp_total||0;
+            const lvlInfo=AvatarSystem.getLevelInfo(xp);
+            items.push({uid,nombre:est.nombre,curso:est.curso,xp,level:lvlInfo.current.level,title:lvlInfo.current.title,emoji:lvlInfo.current.emoji,tier:lvlInfo.current.tier,color:lvlInfo.current.color,bg:lvlInfo.current.bg,power:AvatarSystem.getPower(xp)});
+        }
+        items.sort((a,b)=>b.power-a.power||a.nombre.localeCompare(b.nombre));
+        // Stats
+        if(items.length>0){
+            const avgLv=Math.round(items.reduce((s,i)=>s+i.level,0)/items.length);
+            const avgXp=Math.round(items.reduce((s,i)=>s+i.xp,0)/items.length);
+            const topLv=items[0].level;
+            const tierCounts={};
+            items.forEach(i=>{tierCounts[i.tier]=(tierCounts[i.tier]||0)+1;});
+            const topTier=Object.entries(tierCounts).sort((a,b)=>b[1]-a[1])[0];
+            statsDiv.innerHTML=`
+                <div class="stat-card"><div class="label">Estudiantes</div><div class="value">${items.length}</div></div>
+                <div class="stat-card"><div class="label">Nivel Promedio</div><div class="value">${avgLv}</div></div>
+                <div class="stat-card"><div class="label">Nivel Top</div><div class="value">${topLv}</div></div>
+                <div class="stat-card"><div class="label">XP Promedio</div><div class="value">${avgXp.toLocaleString()}</div></div>
+            `;
+        }else{statsDiv.innerHTML='';}
+        tbody.innerHTML=items.map((r,i)=>{
+            const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+            const cursoLabel=cShort(r.curso);
+            return `<tr${i<3?' style="background:#fffbeb"':''}>
+                <td style="text-align:center;font-weight:800;font-size:15px">${medal||i+1}</td>
+                <td><strong>${r.emoji} ${r.nombre}</strong></td>
+                <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
+                <td style="font-size:12px">${r.xp.toLocaleString()} XP</td>
+                <td><strong>Nv. ${r.level}</strong></td>
+                <td><span class="badge" style="background:${r.bg};color:#fff;font-size:11px">${r.title}</span></td>
+            </tr>`;
+        }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay datos de avatar</td></tr>';
+        return;
+    }
+
+    // ===== SESSION / HISTORIC RANKING (original) =====
     let items=[];
     if(sesId==='__all__'){
         // Historic: average across all sessions

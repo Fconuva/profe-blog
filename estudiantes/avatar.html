@@ -232,6 +232,7 @@
 
     <div class="toast" id="toast"></div>
 
+    <script src="js/avatar-levels.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -251,32 +252,24 @@
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
 
-        const AVATAR_LEVELS = [
-            { level:1, xp:0,    title:'Aprendiz',             emoji:'🌱' },
-            { level:2, xp:100,  title:'Lector Novato',        emoji:'📖' },
-            { level:3, xp:250,  title:'Explorador de Textos', emoji:'🔍' },
-            { level:4, xp:500,  title:'Analista Junior',      emoji:'🧩' },
-            { level:5, xp:800,  title:'Analista Senior',      emoji:'⚡' },
-            { level:6, xp:1200, title:'Maestro Lector',       emoji:'🏆' },
-            { level:7, xp:1800, title:'Leyenda SIMCE',        emoji:'👑' }
-        ];
+        // AVATAR_LEVELS now loaded from js/avatar-levels.js (AvatarSystem)
         const MAX_PER_STAT = 10;
         const POINTS_PER_LEVEL = 3;
 
-        // SHOP ITEMS — unlocked by XP thresholds
+        // SHOP ITEMS — unlocked by XP thresholds (scaled for 200-level system)
         const SHOP_ITEMS = [
             { id:'titulo_novato',      emoji:'📚', name:'Título: Ratón de Biblioteca', xp:50,   type:'titulo' },
-            { id:'marco_bronce',       emoji:'🥉', name:'Marco Bronce',                xp:100,  type:'marco' },
-            { id:'efecto_chispas',     emoji:'✨',   name:'Efecto: Chispas',             xp:150,  type:'efecto' },
-            { id:'titulo_detective',   emoji:'🕵️', name:'Título: Detective Textual',  xp:250,  type:'titulo' },
-            { id:'marco_plata',        emoji:'🥈', name:'Marco Plata',                 xp:350,  type:'marco' },
-            { id:'efecto_fuego',       emoji:'🔥', name:'Efecto: Llamas',              xp:500,  type:'efecto' },
-            { id:'titulo_sabio',       emoji:'🧙', name:'Título: Sabio Lector',       xp:600,  type:'titulo' },
-            { id:'marco_oro',          emoji:'🥇', name:'Marco Oro',                   xp:800,  type:'marco' },
-            { id:'efecto_rayo',        emoji:'⚡',   name:'Efecto: Rayo',                xp:1000, type:'efecto' },
-            { id:'titulo_leyenda',     emoji:'🌟', name:'Título: Leyenda Lectora',   xp:1200, type:'titulo' },
-            { id:'marco_diamante',     emoji:'💎', name:'Marco Diamante',              xp:1500, type:'marco' },
-            { id:'corona_suprema',     emoji:'👑', name:'Corona Suprema',              xp:1800, type:'efecto' },
+            { id:'marco_bronce',       emoji:'🥉', name:'Marco Bronce',                xp:150,  type:'marco' },
+            { id:'efecto_chispas',     emoji:'✨',   name:'Efecto: Chispas',             xp:300,  type:'efecto' },
+            { id:'titulo_detective',   emoji:'🕵️', name:'Título: Detective Textual',  xp:500,  type:'titulo' },
+            { id:'marco_plata',        emoji:'🥈', name:'Marco Plata',                 xp:800,  type:'marco' },
+            { id:'efecto_fuego',       emoji:'🔥', name:'Efecto: Llamas',              xp:1200, type:'efecto' },
+            { id:'titulo_sabio',       emoji:'🧙', name:'Título: Sabio Lector',       xp:1800, type:'titulo' },
+            { id:'marco_oro',          emoji:'🥇', name:'Marco Oro',                   xp:2500, type:'marco' },
+            { id:'efecto_rayo',        emoji:'⚡',   name:'Efecto: Rayo',                xp:3500, type:'efecto' },
+            { id:'titulo_leyenda',     emoji:'🌟', name:'Título: Leyenda Lectora',   xp:5000, type:'titulo' },
+            { id:'marco_diamante',     emoji:'💎', name:'Marco Diamante',              xp:8000, type:'marco' },
+            { id:'corona_suprema',     emoji:'👑', name:'Corona Suprema',              xp:12000,type:'efecto' },
         ];
 
         let currentUID = null;
@@ -285,10 +278,8 @@
         let totalPoints = 0;
 
         function getLevelInfo(totalXP) {
-            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
-                if (totalXP >= AVATAR_LEVELS[i].xp) return { current: AVATAR_LEVELS[i], next: AVATAR_LEVELS[i + 1] || null };
-            }
-            return { current: AVATAR_LEVELS[0], next: AVATAR_LEVELS[1] };
+            var info = AvatarSystem.getLevelInfo(totalXP);
+            return { current: info.current, next: info.next };
         }
 
         function usedPoints() { return stats.comprension + stats.constancia + stats.velocidad; }

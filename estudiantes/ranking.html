@@ -3,396 +3,357 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ranking — Plataforma Estudiantes</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Ranking de Poder — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:'Inter',system-ui,sans-serif; background:#f1f5f9; min-height:100vh; }
-        .header {
-            background:linear-gradient(135deg,#1e3a5f,#1e40af); color:#fff;
-            padding:14px 20px; display:flex; align-items:center; gap:10px;
-            position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(0,0,0,.15);
-        }
-        .header a { color:#fff; text-decoration:none; font-size:20px; padding:4px; }
-        .header h1 { font-size:16px; font-weight:700; }
-        .main { max-width:800px; margin:0 auto; padding:24px 16px; }
-        /* COURSE COMPARISON */
-        .comparison {
-            background:#fff; border-radius:16px; padding:28px; box-shadow:0 2px 8px rgba(0,0,0,.08);
-            margin-bottom:24px; text-align:center;
-        }
-        .comparison h2 { font-size:18px; font-weight:800; color:#0f172a; margin-bottom:20px; }
-        .vs-container { display:flex; align-items:center; justify-content:center; gap:24px; }
-        .course-block { flex:1; max-width:240px; }
-        .course-block .course-name { font-size:16px; font-weight:800; margin-bottom:8px; }
-        .course-block .course-pct {
-            font-size:42px; font-weight:800; line-height:1;
-        }
-        .course-block .course-sub { font-size:12px; color:#64748b; margin-top:4px; }
-        .course-block.a .course-name { color:#1e40af; }
-        .course-block.a .course-pct { color:#1e40af; }
-        .course-block.b .course-name { color:#7c3aed; }
-        .course-block.b .course-pct { color:#7c3aed; }
-        .vs-badge {
-            width:48px; height:48px; background:#f1f5f9; border-radius:50%;
-            display:flex; align-items:center; justify-content:center;
-            font-size:16px; font-weight:800; color:#94a3b8;
-        }
-        .winner-banner {
-            margin-top:16px; padding:8px 16px; border-radius:8px;
-            font-size:13px; font-weight:700; display:inline-block;
-        }
-        .winner-banner.a { background:#dbeafe; color:#1e40af; }
-        .winner-banner.b { background:#ede9fe; color:#7c3aed; }
-        .winner-banner.tie { background:#f1f5f9; color:#64748b; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;min-height:100vh;color:#e2e8f0}
+        /* TOP BAR */
+        .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.06)}
+        .back-link{color:#94a3b8;text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .back-link:hover{color:#fff}
+        .top-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+        .top-right{display:flex;align-items:center;gap:8px}
+        .pill{padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700}
+        .pill-rank{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff}
+        /* HERO */
+        .hero{text-align:center;padding:28px 20px 20px;background:linear-gradient(180deg,rgba(245,158,11,.08) 0%,#0f172a 100%);position:relative}
+        .hero::before{content:'';position:absolute;top:0;left:50%;width:500px;height:300px;transform:translateX(-50%);background:radial-gradient(circle,rgba(245,158,11,.1) 0%,transparent 70%);pointer-events:none}
+        .my-rank{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:12px}
+        .my-rank .emoji{font-size:48px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+        .my-rank .level-badge{font-size:12px;font-weight:800;padding:4px 14px;border-radius:16px;color:#fff}
+        .my-rank .pos{font-size:28px;font-weight:900;color:#fbbf24}
+        .my-rank .pos-label{font-size:12px;color:#94a3b8}
+        /* COMPARISON */
+        .comparison{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px;margin:0 auto 16px;max-width:800px;text-align:center}
+        .comparison h3{font-size:14px;font-weight:800;color:#94a3b8;margin-bottom:14px}
+        .vs-row{display:flex;align-items:center;justify-content:center;gap:20px}
+        .vs-block{flex:1;max-width:200px}
+        .vs-block .vs-name{font-size:13px;font-weight:700;margin-bottom:4px}
+        .vs-block .vs-val{font-size:32px;font-weight:900;line-height:1}
+        .vs-block .vs-sub{font-size:11px;color:#64748b;margin-top:2px}
+        .vs-block.a .vs-name,.vs-block.a .vs-val{color:#3b82f6}
+        .vs-block.b .vs-name,.vs-block.b .vs-val{color:#8b5cf6}
+        .vs-badge{width:40px;height:40px;background:rgba(255,255,255,.04);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#475569;flex-shrink:0}
+        .winner-line{margin-top:12px;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;display:inline-block}
+        .winner-line.a{background:rgba(59,130,246,.1);color:#60a5fa}
+        .winner-line.b{background:rgba(139,92,246,.1);color:#a78bfa}
+        .winner-line.tie{background:rgba(255,255,255,.04);color:#64748b}
         /* TABS */
-        .tabs { display:flex; gap:8px; margin-bottom:16px; }
-        .tab {
-            padding:10px 20px; border-radius:8px; font-size:13px; font-weight:700;
-            cursor:pointer; border:2px solid #e2e8f0; background:#fff; color:#64748b;
-            transition:all .2s; font-family:inherit;
-        }
-        .tab.active { background:#1e40af; color:#fff; border-color:#1e40af; }
-        .tab:hover:not(.active) { background:#f8fafc; border-color:#cbd5e1; }
-        /* SESSION SELECTOR */
-        .session-select { margin-bottom:16px; }
-        .session-select select {
-            padding:10px 16px; border:2px solid #e2e8f0; border-radius:8px;
-            font-size:14px; font-family:inherit; background:#fff; cursor:pointer;
-            min-width:250px;
-        }
-        /* TABLE */
-        .ranking-table { width:100%; background:#fff; border-radius:12px; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-        .ranking-table table { width:100%; border-collapse:collapse; }
-        .ranking-table th {
-            background:#f8fafc; padding:12px 16px; text-align:left;
-            font-size:12px; font-weight:700; color:#64748b; text-transform:uppercase;
-            letter-spacing:.5px; border-bottom:2px solid #e2e8f0;
-        }
-        .ranking-table td { padding:12px 16px; font-size:14px; border-bottom:1px solid #f1f5f9; }
-        .time-cell { font-variant-numeric:tabular-nums; color:#475569; font-weight:600; font-size:13px; }
-        .top10-note { text-align:center; padding:10px; font-size:12px; color:#94a3b8; font-style:italic; }
-        .ranking-table tr:hover td { background:#f8fafc; }
-        .ranking-table tr.highlight td { background:#eff6ff; font-weight:600; }
-        .pos-badge {
-            display:inline-flex; align-items:center; justify-content:center;
-            width:30px; height:30px; border-radius:8px; font-weight:800; font-size:13px;
-        }
-        .pos-1 { background:#fef08a; color:#854d0e; }
-        .pos-2 { background:#e2e8f0; color:#475569; }
-        .pos-3 { background:#fed7aa; color:#9a3412; }
-        .pos-other { background:#f1f5f9; color:#94a3b8; }
-        .pct-bar { display:flex; align-items:center; gap:8px; }
-        .pct-bar .bar { height:8px; border-radius:4px; background:#dbeafe; flex:1; max-width:100px; overflow:hidden; }
-        .pct-bar .bar .fill { height:100%; border-radius:4px; background:#3b82f6; }
-        .pct-bar .value { font-weight:700; font-size:13px; color:#1e40af; min-width:40px; }
-        .empty-state { text-align:center; padding:40px; color:#94a3b8; font-size:14px; }
-        @media (max-width:640px) {
-            .vs-container { flex-direction:column; gap:12px; }
-            .ranking-table td, .ranking-table th { padding:8px 10px; font-size:12px; }
-            .tabs { flex-wrap:wrap; }
+        .tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 20px;max-width:800px;margin:0 auto}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{padding:8px 16px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.04);color:#64748b;border:1px solid rgba(255,255,255,.06);white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:inherit}
+        .tab:hover{color:#e2e8f0}
+        .tab.active{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+        /* MAIN */
+        .main{max-width:800px;margin:0 auto;padding:16px 20px 60px}
+        /* TOP 3 PODIUM */
+        .podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:24px;padding:0 10px}
+        .podium-slot{display:flex;flex-direction:column;align-items:center;transition:transform .3s}
+        .podium-slot:hover{transform:translateY(-4px)}
+        .podium-slot.p1{order:2;width:130px}
+        .podium-slot.p2{order:1;width:110px}
+        .podium-slot.p3{order:3;width:110px}
+        .podium-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:6px;border:3px solid rgba(255,255,255,.15);position:relative}
+        .p1 .podium-avatar{width:80px;height:80px;font-size:38px;border-width:4px}
+        .podium-medal{position:absolute;top:-8px;right:-8px;font-size:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+        .podium-name{font-size:12px;font-weight:700;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+        .podium-level{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;margin-bottom:4px}
+        .podium-xp{font-size:10px;color:#64748b}
+        .podium-base{width:100%;padding:12px 8px;border-radius:12px;text-align:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+        .p1 .podium-base{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);padding:16px 8px}
+        /* RANKING LIST */
+        .rank-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;margin-bottom:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);transition:all .25s}
+        .rank-card:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08)}
+        .rank-card.me{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)}
+        .rank-pos{width:36px;text-align:center;font-size:15px;font-weight:900;color:#475569;flex-shrink:0}
+        .rank-pos.top{color:#fbbf24}
+        .rank-ava{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid rgba(255,255,255,.08)}
+        .rank-info{flex:1;min-width:0}
+        .rank-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rank-sub{font-size:11px;color:#64748b;margin-top:1px}
+        .rank-right{text-align:right;flex-shrink:0}
+        .rank-level{font-size:12px;font-weight:800;padding:3px 10px;border-radius:10px;color:#fff;display:inline-block}
+        .rank-xp{font-size:10px;color:#475569;margin-top:3px}
+        .rank-curso{font-size:10px;color:#64748b;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.04)}
+        /* POWER BAR */
+        .power-bar{display:flex;align-items:center;gap:6px;margin-top:4px}
+        .pb-bg{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.06);max-width:100px;overflow:hidden}
+        .pb-fill{height:100%;border-radius:3px;transition:width .4s}
+        .pb-text{font-size:10px;font-weight:700;color:#64748b;min-width:30px}
+        /* SEPARATOR */
+        .sep{text-align:center;padding:12px;font-size:11px;color:#475569;font-weight:600}
+        /* LOADING */
+        .loading{display:flex;align-items:center;justify-content:center;min-height:60vh}
+        .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.1);border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        /* EMPTY */
+        .empty{text-align:center;padding:60px 20px;color:#475569}
+        @media(max-width:480px){
+            .podium{gap:8px}
+            .podium-slot.p1{width:110px}
+            .podium-slot.p2,.podium-slot.p3{width:90px}
+            .podium-avatar{width:52px;height:52px;font-size:24px}
+            .p1 .podium-avatar{width:64px;height:64px;font-size:30px}
+            .rank-card{padding:10px 12px;gap:8px}
+            .vs-row{flex-direction:column;gap:10px}
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <a href="dashboard.html">←</a>
-        <h1>🏆 Ranking entre Cursos</h1>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-title">⚔️ Ranking de Poder</div>
+        <div class="top-right"><span class="pill pill-rank" id="myPosPill">-</span></div>
     </div>
 
-    <div class="main">
-        <!-- Course Comparison (dynamic) -->
-        <div class="comparison" id="comparison">
-            <h2>Comparación General</h2>
-            <div class="vs-container">
-                <div class="course-block a">
-                    <div class="course-name" id="nameA">-</div>
-                    <div class="course-pct" id="globalA">-</div>
-                    <div class="course-sub">promedio general</div>
+    <div id="loadingScreen" class="loading"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="my-rank" id="myRank"></div>
+        </div>
+
+        <!-- Course Comparison (avatar-power based) -->
+        <div class="comparison" id="comparison" style="display:none">
+            <h3>⚡ Poder Promedio — Curso vs Curso</h3>
+            <div class="vs-row">
+                <div class="vs-block a">
+                    <div class="vs-name" id="nameA">-</div>
+                    <div class="vs-val" id="globalA">-</div>
+                    <div class="vs-sub">nivel promedio</div>
                 </div>
                 <div class="vs-badge">VS</div>
-                <div class="course-block b">
-                    <div class="course-name" id="nameB">-</div>
-                    <div class="course-pct" id="globalB">-</div>
-                    <div class="course-sub">promedio general</div>
+                <div class="vs-block b">
+                    <div class="vs-name" id="nameB">-</div>
+                    <div class="vs-val" id="globalB">-</div>
+                    <div class="vs-sub">nivel promedio</div>
                 </div>
             </div>
             <div id="winnerBanner"></div>
         </div>
 
-        <!-- Session Selector -->
-        <div class="session-select">
-            <select id="sessionSelect" onchange="loadRanking()">
-                <option value="all">Todas las sesiones (promedio)</option>
-            </select>
-        </div>
+        <div class="tabs" id="tabsContainer"></div>
 
-        <!-- Tabs (dynamic) -->
-        <div class="tabs" id="tabsContainer">
-        </div>
-
-        <!-- Ranking Table -->
-        <div class="ranking-table" id="rankingTable">
-            <div class="empty-state">Cargando ranking...</div>
+        <div class="main">
+            <div id="podium" class="podium"></div>
+            <div id="rankList"></div>
         </div>
     </div>
 
+    <script src="js/avatar-levels.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script>
-        const FIREBASE_CONFIG = {
-            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
-            authDomain: "profe-blog.firebaseapp.com",
-            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
-            projectId: "profe-blog",
-            storageBucket: "profe-blog.firebasestorage.app",
-            messagingSenderId: "305920739217",
-            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
-        };
-        firebase.initializeApp(FIREBASE_CONFIG);
+        firebase.initializeApp({
+            apiKey:"AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",authDomain:"profe-blog.firebaseapp.com",
+            databaseURL:"https://profe-blog-default-rtdb.firebaseio.com",projectId:"profe-blog",
+            storageBucket:"profe-blog.firebasestorage.app",messagingSenderId:"305920739217",
+            appId:"1:305920739217:web:2e08c7469d2988d8b3bc30"
+        });
         const auth = firebase.auth();
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
 
-        // Course pairs for ranking comparison (each pair gets its own ranking view)
         const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
-        const CURSO_SHORT = {'1A-HC':'1°A','1B-HC':'1°B','2A-HC':'2°A','2B-HC':'2°B','3A-HC':'3°A','3B-HC':'3°B','4A-HC':'4°A','4B-HC':'4°B'};
+        const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC'],paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
         const RANKING_PAIRS = {
-            '1A-HC': ['1A-HC','1B-HC'],
-            '1B-HC': ['1A-HC','1B-HC'],
-            '2A-HC': ['2A-HC','2B-HC'],
-            '2B-HC': ['2A-HC','2B-HC'],
-            '3A-HC': ['3A-HC','3B-HC'],
-            '3B-HC': ['3A-HC','3B-HC'],
-            '4A-HC': ['4A-HC','4B-HC'],
-            '4B-HC': ['4A-HC','4B-HC']
+            '1A-HC':['1A-HC','1B-HC'],'1B-HC':['1A-HC','1B-HC'],
+            '2A-HC':['2A-HC','2B-HC'],'2B-HC':['2A-HC','2B-HC'],
+            '3A-HC':['3A-HC','3B-HC'],'3B-HC':['3A-HC','3B-HC'],
+            '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
         };
 
-        let allRanking = {};
-        let allSessions = {};
-        let allAvatars = {};
         let currentUid = null;
-        let currentTab = '';
+        let currentCurso = null;
+        let allStudents = [];
+        let activeTab = 'programa';
         let myPair = [];
-
-        const AVATAR_LEVELS = [
-            { level:1, xp:0,    emoji:'🌱' },
-            { level:2, xp:100,  emoji:'📖' },
-            { level:3, xp:250,  emoji:'🔍' },
-            { level:4, xp:500,  emoji:'🧩' },
-            { level:5, xp:800,  emoji:'⚡' },
-            { level:6, xp:1200, emoji:'🏆' },
-            { level:7, xp:1800, emoji:'👑' }
-        ];
-        function getAvatarEmoji(uid) {
-            const av = allAvatars[uid];
-            if (!av) return '';
-            const xp = av.xp_total || 0;
-            let emoji = '🌱';
-            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
-                if (xp >= AVATAR_LEVELS[i].xp) { emoji = AVATAR_LEVELS[i].emoji; break; }
-            }
-            return emoji;
-        }
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             currentUid = user.uid;
 
-            // Get student's curso to determine which pair to show
-            const snap = await db.ref(BASE + '/estudiantes/' + user.uid + '/curso').once('value');
-            const curso = snap.val() || '2A-HC';
-            myPair = RANKING_PAIRS[curso] || ['2A-HC','2B-HC'];
-            currentTab = myPair[0];
-
-            // Build dynamic UI
-            document.getElementById('nameA').textContent = CURSO_LABELS[myPair[0]] || myPair[0];
-            document.getElementById('nameB').textContent = CURSO_LABELS[myPair[1]] || myPair[1];
-
-            // Build tabs
-            const tabsHtml = `<button class="tab active" data-tab="${myPair[0]}" onclick="switchTab(this)">${CURSO_LABELS[myPair[0]]}</button>` +
-                `<button class="tab" data-tab="${myPair[1]}" onclick="switchTab(this)">${CURSO_LABELS[myPair[1]]}</button>` +
-                `<button class="tab" data-tab="all" onclick="switchTab(this)">Todos</button>`;
-            document.getElementById('tabsContainer').innerHTML = tabsHtml;
-
-            await loadData();
-        });
-
-        async function loadData() {
             try {
-                const [rankSnap, sesSnap, avatarSnap] = await Promise.all([
-                    db.ref(BASE + '/ranking').once('value'),
-                    db.ref(BASE + '/sesiones').once('value'),
+                const [studentSnap, allEstSnap, avatarSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/estudiantes').once('value'),
                     db.ref(BASE + '/avatar').once('value')
                 ]);
-                allRanking = rankSnap.val() || {};
-                allSessions = sesSnap.val() || {};
-                allAvatars = avatarSnap.val() || {};
 
-                // Populate session dropdown
-                const select = document.getElementById('sessionSelect');
-                Object.entries(allSessions).forEach(([id, ses]) => {
-                    if (ses.activa !== false) {
-                        const opt = document.createElement('option');
-                        opt.value = id;
-                        opt.textContent = ses.titulo || id;
-                        select.appendChild(opt);
-                    }
+                const me = studentSnap.val();
+                if (!me) { auth.signOut(); return; }
+                currentCurso = me.curso;
+                const programa = me.programa || (currentCurso.match(/^(1|2)/) ? 'simce' : 'paes');
+                const myCursos = PROGRAMA_CURSOS[programa] || [currentCurso];
+                myPair = RANKING_PAIRS[currentCurso] || [currentCurso];
+
+                const avatars = avatarSnap.val() || {};
+                const allEst = allEstSnap.val() || {};
+
+                // Build student list with XP/level data
+                allStudents = [];
+                for (const [uid, est] of Object.entries(allEst)) {
+                    const av = avatars[uid] || {};
+                    const xp = av.xp_total || 0;
+                    const lvlInfo = AvatarSystem.getLevelInfo(xp);
+                    allStudents.push({
+                        uid, nombre: est.nombre || 'Estudiante',
+                        curso: est.curso || '?',
+                        programa: est.programa || (est.curso && est.curso.match(/^(1|2)/) ? 'simce' : 'paes'),
+                        xp, level: lvlInfo.current.level, tier: lvlInfo.current.tier,
+                        tierIdx: lvlInfo.current.tierIdx, emoji: lvlInfo.current.emoji,
+                        title: lvlInfo.current.title, color: lvlInfo.current.color,
+                        bg: lvlInfo.current.bg, power: AvatarSystem.getPower(xp),
+                        progress: lvlInfo.progress
+                    });
+                }
+
+                // Build tabs
+                let tabsHtml = '<button class="tab active" onclick="setTab(\'programa\',this)">🏫 Mi Programa</button>';
+                myCursos.forEach(c => {
+                    tabsHtml += '<button class="tab" onclick="setTab(\'' + c + '\',this)">' + (CURSO_LABELS[c] || c) + '</button>';
                 });
+                tabsHtml += '<button class="tab" onclick="setTab(\'global\',this)">🌐 Global</button>';
+                document.getElementById('tabsContainer').innerHTML = tabsHtml;
 
-                loadRanking();
-                loadComparison();
-            } catch(e) { console.error(e); }
+                renderComparison();
+                renderRanking();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+            } catch(e) {
+                console.error(e);
+                document.getElementById('loadingScreen').innerHTML = '<div class="empty">Error al cargar ranking</div>';
+            }
+        });
+
+        function setTab(tab, btn) {
+            activeTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderRanking();
         }
 
-        function loadComparison() {
+        function renderComparison() {
             const courseA = myPair[0], courseB = myPair[1];
-            const courseScores = {};
-            courseScores[courseA] = {};
-            courseScores[courseB] = {};
+            if (!courseA || !courseB || courseA === courseB) return;
 
-            for (const [sesId, cursos] of Object.entries(allRanking)) {
-                for (const [curso, students] of Object.entries(cursos || {})) {
-                    if (!courseScores[curso]) continue;
-                    for (const [uid, data] of Object.entries(students || {})) {
-                        if (!courseScores[curso][uid]) courseScores[curso][uid] = { total: 0, count: 0 };
-                        courseScores[curso][uid].total += (data.porcentaje || 0);
-                        courseScores[curso][uid].count++;
-                    }
-                }
-            }
+            const studA = allStudents.filter(s => s.curso === courseA);
+            const studB = allStudents.filter(s => s.curso === courseB);
+            const avgA = studA.length ? Math.round(studA.reduce((s, x) => s + x.level, 0) / studA.length) : 0;
+            const avgB = studB.length ? Math.round(studB.reduce((s, x) => s + x.level, 0) / studB.length) : 0;
 
-            function courseAvg(obj) {
-                const students = Object.values(obj);
-                if (students.length === 0) return 0;
-                const avgs = students.map(s => s.count > 0 ? s.total / s.count : 0);
-                return Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length);
-            }
-
-            const avgA = courseAvg(courseScores[courseA]);
-            const avgB = courseAvg(courseScores[courseB]);
-
-            document.getElementById('globalA').textContent = avgA + '%';
-            document.getElementById('globalB').textContent = avgB + '%';
+            document.getElementById('nameA').textContent = CURSO_LABELS[courseA] || courseA;
+            document.getElementById('nameB').textContent = CURSO_LABELS[courseB] || courseB;
+            document.getElementById('globalA').textContent = 'Nv. ' + avgA;
+            document.getElementById('globalB').textContent = 'Nv. ' + avgB;
 
             const labelA = CURSO_LABELS[courseA], labelB = CURSO_LABELS[courseB];
             const banner = document.getElementById('winnerBanner');
             if (avgA > avgB && avgA > 0) {
-                banner.innerHTML = '<div class="winner-banner a">🏆 ' + labelA + ' lidera con ' + (avgA - avgB) + ' puntos de ventaja</div>';
+                banner.innerHTML = '<div class="winner-line a">⚡ ' + labelA + ' lidera con ' + (avgA - avgB) + ' niveles de ventaja</div>';
             } else if (avgB > avgA && avgB > 0) {
-                banner.innerHTML = '<div class="winner-banner b">🏆 ' + labelB + ' lidera con ' + (avgB - avgA) + ' puntos de ventaja</div>';
+                banner.innerHTML = '<div class="winner-line b">⚡ ' + labelB + ' lidera con ' + (avgB - avgA) + ' niveles de ventaja</div>';
             } else if (avgA > 0) {
-                banner.innerHTML = '<div class="winner-banner tie">🤝 ¡Empate técnico!</div>';
+                banner.innerHTML = '<div class="winner-line tie">🤝 ¡Empate técnico!</div>';
             }
+            document.getElementById('comparison').style.display = '';
         }
 
-        function loadRanking() {
-            const selectedSession = document.getElementById('sessionSelect').value;
-            const studentMap = {};
-
-            if (selectedSession === 'all') {
-                for (const [sesId, cursos] of Object.entries(allRanking)) {
-                    for (const [curso, students] of Object.entries(cursos || {})) {
-                        // Only show students from my pair
-                        if (!myPair.includes(curso)) continue;
-                        for (const [uid, r] of Object.entries(students || {})) {
-                            if (!studentMap[uid]) studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: 0, totalPct: 0, totalTiempo: 0, count: 0 };
-                            studentMap[uid].totalPuntaje += r.puntaje || 0;
-                            studentMap[uid].totalPct += r.porcentaje || 0;
-                            studentMap[uid].totalTiempo += r.tiempo || 0;
-                            studentMap[uid].count++;
-                        }
-                    }
-                }
+        function renderRanking() {
+            let filtered;
+            if (activeTab === 'global') {
+                filtered = [...allStudents];
+            } else if (activeTab === 'programa') {
+                const myProg = allStudents.find(s => s.uid === currentUid);
+                const prog = myProg ? myProg.programa : 'simce';
+                const cursos = PROGRAMA_CURSOS[prog] || [];
+                filtered = allStudents.filter(s => cursos.includes(s.curso));
             } else {
-                const sesRanking = allRanking[selectedSession] || {};
-                for (const [curso, students] of Object.entries(sesRanking)) {
-                    if (!myPair.includes(curso)) continue;
-                    for (const [uid, r] of Object.entries(students || {})) {
-                        studentMap[uid] = { nombre: r.nombre, curso: curso, totalPuntaje: r.puntaje || 0, totalPct: r.porcentaje || 0, totalTiempo: r.tiempo || 0, count: 1 };
-                    }
-                }
+                filtered = allStudents.filter(s => s.curso === activeTab);
             }
 
-            const scores = Object.entries(studentMap).map(([uid, s]) => ({
-                uid: uid,
-                nombre: s.nombre,
-                curso: s.curso,
-                puntaje: s.totalPuntaje,
-                promedio: Math.round(s.totalPct / s.count),
-                tiempo: s.totalTiempo,
-                sesiones: s.count
-            }));
-
-            scores.sort((a, b) => {
-                if (b.puntaje !== a.puntaje) return b.puntaje - a.puntaje;
-                return a.tiempo - b.tiempo;
-            });
-            renderTable(scores);
-        }
-
-        function switchTab(btn) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            btn.classList.add('active');
-            currentTab = btn.dataset.tab;
-            loadRanking();
-        }
-
-        function formatTime(seconds) {
-            if (!seconds && seconds !== 0) return '-';
-            const m = Math.floor(seconds / 60);
-            const s = seconds % 60;
-            return m + ':' + String(s).padStart(2, '0');
-        }
-
-        function renderTable(scores) {
-            const container = document.getElementById('rankingTable');
-            let filtered = currentTab === 'all' ? scores : scores.filter(s => s.curso === currentTab);
+            // Sort by power descending, then alphabetical for ties
+            filtered.sort((a, b) => b.power - a.power || a.nombre.localeCompare(b.nombre));
 
             if (filtered.length === 0) {
-                container.innerHTML = '<div class="empty-state">No hay resultados disponibles aún.</div>';
+                document.getElementById('podium').innerHTML = '';
+                document.getElementById('rankList').innerHTML = '<div class="empty">Sin estudiantes en esta categoría</div>';
+                document.getElementById('myPosPill').textContent = '-';
                 return;
             }
 
-            const top10 = filtered.slice(0, 10);
-            const totalStudents = filtered.length;
-
-            let html = '<table><thead><tr><th style="width:50px">#</th><th>Estudiante</th><th>Curso</th><th style="width:160px">Logro</th><th style="width:70px">Buenas</th><th style="width:70px">⏱ Tiempo</th></tr></thead><tbody>';
-
-            top10.forEach((s, i) => {
-                const pos = i + 1;
-                const posClass = pos <= 3 ? 'pos-' + pos : 'pos-other';
-                const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : pos === 3 ? '🥉' : pos;
-                const isMe = s.uid === currentUid;
-                const rowClass = isMe ? 'highlight' : '';
-                const cursoLabel = CURSO_SHORT[s.curso] || s.curso;
-
-                const emojiAv = getAvatarEmoji(s.uid);
-                const emojiSpan = emojiAv ? '<span style="margin-right:4px">' + emojiAv + '</span>' : '';
-
-                html += `<tr class="${rowClass}">
-                    <td><span class="pos-badge ${posClass}">${medal}</span></td>
-                    <td>${emojiSpan}${s.nombre}${isMe ? ' <span style="font-size:10px;color:#1e40af;">(tú)</span>' : ''}</td>
-                    <td>${cursoLabel}</td>
-                    <td><div class="pct-bar"><div class="bar"><div class="fill" style="width:${s.promedio}%"></div></div><span class="value">${s.promedio}%</span></div></td>
-                    <td style="text-align:center; font-weight:700; color:#0f172a;">${s.puntaje}</td>
-                    <td class="time-cell" style="text-align:center;">${formatTime(s.tiempo)}</td>
-                </tr>`;
-            });
-
-            html += '</tbody></table>';
-
+            // My position
             const myIdx = filtered.findIndex(s => s.uid === currentUid);
-            if (myIdx >= 10) {
-                const me = filtered[myIdx];
-                html += '<div class="top10-note" style="background:#eff6ff; border-radius:0 0 12px 12px; padding:12px 16px; font-style:normal; color:#1e40af; font-weight:600;">Tu posición: #' + (myIdx + 1) + ' de ' + totalStudents + ' — ' + me.promedio + '% logro · ' + formatTime(me.tiempo) + '</div>';
-            } else if (totalStudents > 10) {
-                html += '<div class="top10-note">Mostrando Top 10 de ' + totalStudents + ' estudiantes</div>';
+            const myPos = myIdx >= 0 ? myIdx + 1 : '-';
+            const me = myIdx >= 0 ? filtered[myIdx] : null;
+            document.getElementById('myPosPill').textContent = '#' + myPos + ' de ' + filtered.length;
+
+            // Hero section
+            if (me) {
+                document.getElementById('myRank').innerHTML =
+                    '<div class="emoji">' + me.emoji + '</div>' +
+                    '<div class="level-badge" style="background:' + me.bg + '">' + me.title + '</div>' +
+                    '<div class="pos">#' + myPos + '</div>' +
+                    '<div class="pos-label">' + me.xp.toLocaleString() + ' XP · Nivel ' + me.level + '</div>';
             }
 
-            container.innerHTML = html;
+            // TOP 3 PODIUM
+            const top3 = filtered.slice(0, Math.min(3, filtered.length));
+            const hasPodium = top3.length >= 3;
+            let podiumHtml = '';
+
+            if (hasPodium) {
+                [1, 0, 2].forEach(idx => {
+                    const s = top3[idx];
+                    const pos = idx + 1;
+                    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+                    podiumHtml +=
+                        '<div class="podium-slot p' + pos + '">' +
+                        '<div class="podium-base">' +
+                        '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
+                        s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
+                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-level" style="background:' + s.bg + '">Nv. ' + s.level + '</div>' +
+                        '<div class="podium-xp">' + s.xp.toLocaleString() + ' XP</div>' +
+                        '</div></div>';
+                });
+            }
+            document.getElementById('podium').innerHTML = podiumHtml;
+
+            // FULL LIST (skip first 3 if podium shown)
+            let listHtml = '';
+            const startIdx = hasPodium ? 3 : 0;
+            if (filtered.length > 3 && hasPodium) {
+                listHtml += '<div class="sep">── Ranking Completo ──</div>';
+            }
+
+            for (let i = startIdx; i < filtered.length; i++) {
+                const s = filtered[i];
+                const pos = i + 1;
+                const isMe = s.uid === currentUid;
+                const cursoLabel = CURSO_LABELS[s.curso] || s.curso;
+
+                listHtml +=
+                    '<div class="rank-card' + (isMe ? ' me' : '') + '">' +
+                    '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
+                    '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
+                    '<div class="rank-info">' +
+                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-sub">' + s.title + ' · ' + s.xp.toLocaleString() + ' XP</div>' +
+                    '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + s.progress + '%;background:' + s.color + '"></div></div>' +
+                    '<span class="pb-text">Nv. ' + s.level + '</span></div>' +
+                    '</div>' +
+                    '<div class="rank-right">' +
+                    '<div class="rank-level" style="background:' + s.bg + '">Nv. ' + s.level + '</div>' +
+                    '<div class="rank-xp"><span class="rank-curso">' + cursoLabel + '</span></div>' +
+                    '</div></div>';
+            }
+
+            document.getElementById('rankList').innerHTML = listHtml;
         }
     </script>
 </body>

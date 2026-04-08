@@ -207,7 +207,7 @@ const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
 const showCEST=new URLSearchParams(window.location.search).get('cest')==='1';
 if(showCEST) document.body.classList.add('show-cest');
 let strikes=0,strikeMonitorActive=false,strikeLockout=false,focusWarnTimer=null,focusLostAt=null;
-var simceAnswers={},fbDirty=false;
+var simceAnswers={},abiertaAnswers={},fbDirty=false;
 
 function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
 function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
@@ -239,14 +239,14 @@ B.welcome=()=>`
 <div class="how-grid">
 <div class="how-step"><div class="hw-icon">🔍</div><div class="hw-title">Observa</div><div class="hw-desc">Busca los significados ocultos</div></div>
 <div class="how-step"><div class="hw-icon">🖍️</div><div class="hw-title">Resalta</div><div class="hw-desc">Marca con colores las pistas simbólicas</div></div>
-<div class="how-step"><div class="hw-icon">✍️</div><div class="hw-title">Responde</div><div class="hw-desc">Practica con 10 preguntas SIMCE</div></div>
+<div class="how-step"><div class="hw-icon">✍️</div><div class="hw-title">Responde</div><div class="hw-desc">Practica con preguntas tipo SIMCE</div></div>
 <div class="how-step"><div class="hw-icon">💬</div><div class="hw-title">Comparte</div><div class="hw-desc">Discute en parejas tus hallazgos</div></div>
 </div>
 <h3>Ruta de la clase</h3>
 <ul>
 <li><span class="phase-tag phase-motiv">5 min</span> <strong>Motivación</strong> — Conexión con lo que ya sabes</li>
 <li><span class="phase-tag phase-prev">6 min</span> <strong>Repaso</strong> — Flashback: 3 preguntas de inferencia</li>
-<li><span class="phase-tag phase-dev">50 min</span> <strong>Desarrollo</strong> — Lección + Lectura + Símbolos + Práctica SIMCE (3 textos, 10 preguntas)</li>
+<li><span class="phase-tag phase-dev">50 min</span> <strong>Desarrollo</strong> — Lección + Lectura + Símbolos + Práctica SIMCE (4 textos, 12 preguntas + 1 desarrollo)</li>
 <li><span class="phase-tag phase-close">9 min</span> <strong>Cierre</strong> — Ticket de salida + Metacognición</li>
 </ul>
 <div class="cest-badge">CEST #7 — Actividades organizadas en inicio, desarrollo y cierre</div>
@@ -463,18 +463,19 @@ if(symbolsFound>=SYMBOLS.length){addXP(20);setTimeout(()=>document.getElementByI
 /*
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │  BLOQUE DE CONTROL ANTI-ADIVINACIÓN                                        │
-│  Distribución de claves (10 reactivos):                                     │
+│  Distribución de claves (12 reactivos SM + 1 desarrollo):                   │
 │    A = 3  (Q3, Q6, Q9)                                                      │
-│    B = 2  (Q2, Q7)                                                           │
-│    C = 3  (Q1, Q5, Q8)                                                       │
-│    D = 2  (Q4, Q10)                                                          │
+│    B = 3  (Q2, Q7, Q12)                                                     │
+│    C = 3  (Q1, Q5, Q8)                                                      │
+│    D = 3  (Q4, Q10, Q11)                                                    │
 │  No hay 3+ consecutivas iguales.                                            │
-│  Habilidades: LOC 3 · INF 4 · REF 3                                        │
+│  Habilidades SM: LOC 4 · INF 5 · REF 3 | Desarrollo: REF 1               │
 │  Longitud de alternativas: equilibrada en cada reactivo (±5 palabras).      │
 │  Cada distractor falla por razón técnica:                                   │
 │    cambio de foco / sobregeneralización / literalización / invención sin    │
 │    evidencia.                                                                │
 │  Ninguna correcta usa absolutos (siempre/nunca/todos) sin evidencia.        │
+│  Q13: Pregunta de desarrollo (respuesta abierta) con rúbrica modelo.        │
 └──────────────────────────────────────────────────────────────────────────────┘
 */
 const STEXTS=[
@@ -586,7 +587,38 @@ opts:['Ambos textos narran historias de familias que perdieron a un ser querido 
 correct:3,skill:'REF',
 audit:'A: cambio de foco (superar el duelo no es el tema central de ninguno). B: sobregeneralización (ni el poema ni el cuento critican). C: literalización (los objetos no tienen valor económico sino simbólico). Evidencia D: Cuento → la letra que se inclina = herencia de identidad. Poema → "heredamos el gesto" = herencia de identidad.',
 explain:'Ambos textos muestran la misma idea: la identidad se transmite por hábitos (la letra que se inclina / el gesto heredado). A cambia el foco al duelo. B y C distorsionan.'}
-]}
+]},
+/* ───────── TEXTO 4: No literario — Columna de opinión ───────── */
+{id:'texto-4',tipo:'No literario — Columna de opinión',titulo:'"El valor de las preguntas"',fuente:'Texto creado para fines educativos',
+contenido:`<p style="text-transform:uppercase;font-size:.75rem;color:#888;letter-spacing:1px">OPINIÓN</p>
+<p style="font-size:1.05rem;font-weight:800;text-align:center;margin:8px 0">El valor de las preguntas</p>
+<p style="text-align:center;font-size:.78rem;color:var(--dim);margin-bottom:12px">Por: Carolina Muñoz Bravo · <em>El Mercurio de Talca</em>, 15 de marzo de 2024</p>
+<p>Vivimos en una sociedad que premia las respuestas. En las escuelas, un estudiante exitoso es aquel que entrega la respuesta correcta. En las pruebas estandarizadas, el puntaje se calcula por la cantidad de opciones acertadas. Incluso en las conversaciones cotidianas, valoramos a quien "sabe" por encima de quien "pregunta". Sin embargo, cabe cuestionarnos: ¿estamos formando personas que buscan certezas o personas capaces de cuestionar el mundo que las rodea?</p>
+<p>La filósofa y educadora Martha Nussbaum sostiene que la capacidad de formular preguntas es lo que distingue a un ciudadano crítico de un ciudadano pasivo. Según Nussbaum, las sociedades que incentivan únicamente la memorización y la respuesta exacta terminan por formar individuos que siguen instrucciones, pero que no se atreven a innovar ni a cuestionar las injusticias.</p>
+<p>Algo similar ocurre con la lectura. Cuando le pedimos a un adolescente que lea un cuento y luego le preguntamos "¿de qué se trata?", lo invitamos a resumir. Pero si le preguntamos "¿qué te hizo sentir?", "¿qué no entendiste?" o "¿qué pregunta te dejó el texto?", lo invitamos a pensar. La diferencia puede parecer sutil, pero es decisiva: en el primer caso, el texto es un producto terminado; en el segundo, es un punto de partida.</p>
+<p>He observado que los estudiantes que más progresan en comprensión lectora no son necesariamente los que mejor leen al principio, sino los que se atreven a decir "no entendí". Esa frase, lejos de revelar debilidad, demuestra que el lector está procesando activamente y que reconoce los límites de su comprensión. Ahí, en ese borde entre lo que se comprende y lo que se escapa, nace el pensamiento crítico.</p>
+<p>No pretendo que dejemos de valorar las respuestas, pues sin ellas el conocimiento no avanza. Lo que propongo es que les enseñemos a nuestros estudiantes que una buena pregunta vale tanto como una buena respuesta. Y que, en ciertos momentos de la vida, una pregunta honesta vale incluso más.</p>`,
+preguntas:[
+/* Q11 LOC · Key D */
+{q:'Según el texto, ¿qué distingue a un ciudadano crítico de uno pasivo, de acuerdo con Martha Nussbaum?',
+opts:['Su habilidad para obtener buenos resultados en pruebas estandarizadas de conocimiento general.','Su disposición a seguir instrucciones complejas de forma eficiente y disciplinada en la sociedad.','Su capacidad de memorizar información relevante y transmitirla fielmente a otras personas cercanas.','Su capacidad de formular preguntas que cuestionen el mundo en lugar de aceptar certezas sin reflexión.'],
+correct:3,skill:'LOC',
+audit:'A: cambio de foco (la autora critica las pruebas estandarizadas). B: literalización forzada (seguir instrucciones se menciona como negativo). C: cambio de foco (memorización criticada). Evidencia D: "la capacidad de formular preguntas es lo que distingue a un ciudadano crítico de un ciudadano pasivo".',
+explain:'El texto cita a Nussbaum: "la capacidad de formular preguntas es lo que distingue a un ciudadano crítico". A, B y C mencionan lo que el texto presenta como negativo.'},
+/* Q12 INF · Key B */
+{q:'Cuando la autora distingue entre preguntar "¿de qué se trata?" y "¿qué pregunta te dejó el texto?", ¿qué quiere dar a entender?',
+opts:['Que las preguntas de comprensión literal son inútiles y deberían eliminarse por completo del trabajo en aula.','Que el tipo de pregunta que se formula determina si el texto se convierte en un producto terminado o en un punto de partida.','Que los estudiantes prefieren las preguntas abiertas porque les resultan más sencillas de responder correctamente.','Que los profesores no saben formular preguntas adecuadas sobre los textos que entregan a sus estudiantes.'],
+correct:1,skill:'INF',
+audit:'A: sobregeneralización (no dice inútiles ni eliminar; dice que invitan a resumir vs. pensar). B: evidencia inferida de "en el primer caso, el texto es un producto terminado; en el segundo, un punto de partida". C: invención (preferencia/facilidad no mencionadas). D: invención (no critica a los profesores).',
+explain:'La distinción "producto terminado" vs. "punto de partida" implica que el tipo de pregunta transforma la relación del lector con el texto. A exagera. C y D inventan información.'}
+],
+abiertas:[
+{q:'Considerando la columna de opinión leída (Texto 4) y el cuento "La libreta azul" (Texto 1), ¿de qué manera el padre de Valentina representa el tipo de persona que la autora de esta columna valora? Justifica tu respuesta con información de ambos textos.',
+instruccion:'Indica la relación y fundamenta tu opinión entregando citas o ejemplos concretos de ambos textos. Tu respuesta debe tener al menos 3 líneas.',
+rubric:'El padre de Valentina "coleccionaba preguntas sobre el mundo" en vez de buscar respuestas (Texto 1). Esto coincide con lo que la autora valora: "una buena pregunta vale tanto como una buena respuesta" (Texto 4). Además, el padre observaba lo cotidiano (el panadero, el gato, la niña bajo el farol) y lo transformaba en materia de reflexión, sin buscar respuestas definitivas. La autora llama a esto convertir el mundo en "un punto de partida", que es exactamente lo que hacía el padre al escribir sus preguntas en la libreta.',
+skill:'REF'}
+]
+}
 ];
 /* Array plano para cálculos */
 const SQ=[];STEXTS.forEach(function(t){t.preguntas.forEach(function(p){SQ.push(p);});});
@@ -595,9 +627,10 @@ let tIdx=0; /* texto actual */
 B.simce=()=>{
 /* Si ya se respondieron todos los textos → pantalla de resultados */
 var totalAnswered=0;for(var k in simceAnswers)if(simceAnswers[k]!==null&&simceAnswers[k]!==undefined)totalAnswered++;
-if(totalAnswered>=SQ.length){
+var abTotal=0,abOk=0;STEXTS.forEach(function(t,ti){if(t.abiertas)t.abiertas.forEach(function(a,ai){abTotal++;if(abiertaAnswers[ti+'-'+ai])abOk++;});});
+if(totalAnswered>=SQ.length&&abOk>=abTotal){
 var c=0;SQ.forEach(function(q,i){if(simceAnswers[i]===q.correct)c++;});
-var h=`<div class="section-header"><div class="icon">📝</div><h2>Resultados — Práctica SIMCE</h2><div class="sub">3 textos · 10 preguntas</div></div>`;
+var h=`<div class="section-header"><div class="icon">📝</div><h2>Resultados — Práctica SIMCE</h2><div class="sub">4 textos · 12 preguntas + 1 desarrollo</div></div>`;
 h+=`<div class="achievement"><h3>📝 Práctica SIMCE completada</h3><p>Resultado: ${c} de ${SQ.length} correctas (${Math.round(c/SQ.length*100)}%)</p></div>`;
 var qGlobal=0;
 STEXTS.forEach(function(t,ti){
@@ -605,7 +638,9 @@ h+=`<div class="card"><h3>Texto ${ti+1}: ${t.titulo} <span class="badge" style="
 t.preguntas.forEach(function(q,qi){
 var gi=qGlobal++;var ans=simceAnswers[gi];var ok=ans===q.correct;
 h+=`<div class="simce-q" style="border-color:${ok?'var(--green)':'var(--red)'}"><span class="q-num">${ok?'✅':'❌'} Pregunta ${gi+1} — <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></span><div class="q-text">${q.q}</div><div class="feedback ${ok?'ok':'nok'}" style="display:block">${ok?'✅ Correcto':'❌ Tu respuesta: '+('ABCD'[ans])+' — Correcta: '+('ABCD'[q.correct])}. ${q.explain}</div></div>`;
-});h+=`</div>`;
+});
+if(t.abiertas){t.abiertas.forEach(function(a,ai){h+=`<div class="simce-q" style="border-color:var(--accent)"><span class="q-num">📝 Desarrollo — <span class="badge badge-${a.skill.toLowerCase()}">${a.skill}</span></span><div class="q-text">${a.q}</div><div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;font-size:.82rem"><strong>Tu respuesta:</strong><br>${abiertaAnswers[ti+'-'+ai]||'(sin respuesta)'}</div><div class="feedback ok" style="display:block">📋 <strong>Respuesta modelo:</strong> ${a.rubric}</div></div>`;});}
+h+=`</div>`;
 });
 h+=`<div class="cest-badge">CEST #11 — Retroalimentación inmediata para mejorar aprendizaje</div>`;
 h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Símbolos</button><button class="btn btn-next" onclick="go(7)">Cierre →</button></div>`;
@@ -614,7 +649,7 @@ return h;
 /* Mostrar texto actual con todas sus preguntas */
 var t=STEXTS[tIdx];
 var qOffset=0;for(var i=0;i<tIdx;i++)qOffset+=STEXTS[i].preguntas.length;
-var h=`<div class="section-header"><div class="icon">📝</div><h2>Práctica SIMCE</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Texto ${tIdx+1} de ${STEXTS.length} — ${t.preguntas.length} preguntas</div></div>`;
+var h=`<div class="section-header"><div class="icon">📝</div><h2>Práctica SIMCE</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Texto ${tIdx+1} de ${STEXTS.length} — ${t.preguntas.length} preguntas${t.abiertas?' + '+t.abiertas.length+' desarrollo':''}</div></div>`;
 /* Texto */
 h+=`<div class="card"><div class="audit-box"><strong>Texto ${tIdx+1}:</strong> ${t.titulo} · <span class="badge" style="background:rgba(139,92,246,.2);color:#c4b5fd">${t.tipo}</span> · <em>${t.fuente}</em></div></div>`;
 h+=`<div class="story-box">${t.contenido}</div>`;
@@ -629,6 +664,9 @@ h+=`<div class="feedback nok" id="sfbnk-${gi}">❌ Respuesta correcta: ${'ABCD'[
 h+=`<button class="btn-reveal" id="srev-${gi}" onclick="sReveal(${gi})">👁 Ver Respuesta</button>`;
 h+=`</div>`;
 });
+/* Preguntas abiertas (desarrollo) */
+if(t.abiertas){t.abiertas.forEach(function(a,ai){var aKey=tIdx+'-'+ai;var answered=!!abiertaAnswers[aKey];
+h+=`<div class="card" id="ab-card-${aKey}"><div class="audit-box"><strong>Pregunta de Desarrollo</strong> · <strong>Habilidad:</strong> <span class="badge badge-${a.skill.toLowerCase()}">${a.skill}</span> · <span style="color:var(--amber)">Tipo SIMCE: Respuesta abierta</span></div><div class="simce-q"><span class="q-num">✍️ Desarrollo</span><div class="q-text">${a.q}</div></div><div style="background:#fff9f6;border:2px dashed var(--amber);border-radius:8px;padding:14px;margin:8px 0"><p style="font-size:.82rem;color:var(--dim);margin-bottom:8px;font-style:italic">${a.instruccion}</p><textarea id="ab-${aKey}" rows="6" style="width:100%;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:10px;font-family:inherit;font-size:.82rem;resize:vertical" placeholder="Escribe tu respuesta aquí..." ${answered?'disabled':''}>${answered?abiertaAnswers[aKey]:''}</textarea><button class="btn" style="background:var(--amber);color:#fff;margin-top:8px;font-size:.78rem;padding:7px 16px" onclick="submitAbierta('${aKey}',this)" ${answered?'disabled':''}>${answered?'✓ Enviada':'Enviar respuesta ✓'}</button></div><div class="feedback ok" id="abFb-${aKey}" ${answered?'style="display:block"':''}>✅ Respuesta enviada. +20 XP<br><br>📋 <strong>Respuesta modelo:</strong> ${a.rubric}</div></div>`;});}
 /* Navegación */
 h+=`<div class="nav-row">`;
 if(tIdx===0)h+=`<button class="btn btn-back" onclick="go(5)">← Símbolos</button>`;
@@ -658,6 +696,7 @@ function checkTextComplete(){
 var t=STEXTS[tIdx];var qOffset=0;for(var i=0;i<tIdx;i++)qOffset+=STEXTS[i].preguntas.length;
 var allDone=true;
 for(var i=0;i<t.preguntas.length;i++){if(simceAnswers[qOffset+i]===undefined||simceAnswers[qOffset+i]===null){allDone=false;break;}}
+if(allDone&&t.abiertas){t.abiertas.forEach(function(a,ai){if(!abiertaAnswers[tIdx+'-'+ai])allDone=false;});}
 if(allDone){var btn=document.getElementById('btnNextText');if(btn){btn.disabled=false;btn.classList.add('xp-pop');}}
 }
 window.advanceText=function(){
@@ -665,6 +704,7 @@ tIdx++;
 if(tIdx>=STEXTS.length){go(6);return;} /* re-render shows results */
 go(6);
 };
+window.submitAbierta=function(key,btn){var ta=document.getElementById('ab-'+key);var v=ta.value.trim();if(v.length<20){alert('Tu respuesta debe tener al menos 3 líneas. Escribe un poco más.');return;}abiertaAnswers[key]=v;ta.disabled=true;btn.disabled=true;btn.textContent='✓ Enviada';document.getElementById('abFb-'+key).style.display='block';addXP(20);fbDirty=true;checkTextComplete();};
 
 /* ==================== 7. CIERRE ==================== */
 /* CEST #8, #9, #11, #14 */
@@ -794,6 +834,7 @@ function buildSaveData(){
     }
     return{
         answers:simceAnswers,
+        abierta_answers:abiertaAnswers,
         exit_answer:exitAnswer,
         simce_answered:answered,
         simce_total:SQ.length,
@@ -908,6 +949,7 @@ fbAuth.onAuthStateChanged(function(user){
             }
             if(prev&&prev.answers){
                 simceAnswers=prev.answers||{};
+                abiertaAnswers=prev.abierta_answers||{};
                 exitAnswer=prev.exit_answer||null;
             }
             fbAutoSaveTimer=setInterval(autoSave,30000);

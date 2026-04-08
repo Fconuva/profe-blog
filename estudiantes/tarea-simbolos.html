@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misión: Cazador de Símbolos — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:#0f172a; min-height:100vh; color:#e2e8f0; }
+        .top-bar {
+            display:flex; align-items:center; justify-content:space-between; padding:14px 20px;
+            background:rgba(15,23,42,.85); backdrop-filter:blur(10px); position:sticky; top:0; z-index:50;
+            border-bottom:1px solid rgba(255,255,255,.06);
+        }
+        .back-link { color:#94a3b8; text-decoration:none; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; transition:color .2s; }
+        .back-link:hover { color:#fff; }
+        .top-right { display:flex; align-items:center; gap:12px; }
+        .xp-pill { background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:700; }
+        .word-pill { background:rgba(255,255,255,.1); color:#94a3b8; padding:4px 14px; border-radius:20px; font-size:12px; font-weight:600; transition:color .3s; }
+        /* HERO */
+        .hero {
+            text-align:center; padding:32px 20px 24px; position:relative;
+            background:linear-gradient(180deg,#3b1f5e 0%,#0f172a 100%);
+        }
+        .hero::before {
+            content:''; position:absolute; top:0; left:50%; width:400px; height:300px; transform:translateX(-50%);
+            background:radial-gradient(circle,rgba(245,158,11,.1) 0%,transparent 70%); pointer-events:none;
+        }
+        .hero-icon { font-size:56px; margin-bottom:12px; }
+        .hero h1 { font-size:22px; font-weight:800; margin-bottom:4px; }
+        .hero p { font-size:13px; color:#94a3b8; max-width:500px; margin:0 auto 16px; line-height:1.5; }
+        /* MISSIONS */
+        .missions-bar {
+            max-width:640px; margin:0 auto; display:flex; gap:8px; padding:0 20px 8px; overflow-x:auto;
+        }
+        .mission-chip {
+            flex-shrink:0; padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700;
+            border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.04); color:#64748b;
+            transition:all .3s; white-space:nowrap;
+        }
+        .mission-chip.done { border-color:rgba(74,222,128,.3); color:#4ade80; background:rgba(74,222,128,.06); }
+        .mission-chip.active { border-color:rgba(245,158,11,.4); color:#fbbf24; background:rgba(245,158,11,.08); animation:pulse 2s infinite; }
+        @keyframes pulse { 0%,100%{box-shadow:none} 50%{box-shadow:0 0 12px rgba(245,158,11,.2)} }
+        /* MAIN */
+        .main-content { max-width:640px; margin:0 auto; padding:16px 20px 40px; }
+        /* WRITING AREA */
+        .writing-card {
+            background:rgba(255,255,255,.04); border-radius:16px; border:1px solid rgba(255,255,255,.08);
+            padding:24px; margin-bottom:20px;
+        }
+        .writing-label { font-size:13px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:8px; }
+        .title-input {
+            width:100%; padding:12px 16px; border-radius:10px; border:1px solid rgba(255,255,255,.12);
+            background:rgba(255,255,255,.05); color:#fff; font-size:16px; font-weight:700;
+            font-family:inherit; margin-bottom:16px; transition:border-color .2s;
+        }
+        .title-input:focus { outline:none; border-color:#f59e0b; }
+        .title-input::placeholder { color:#475569; }
+        .story-textarea {
+            width:100%; min-height:300px; padding:16px; border-radius:12px;
+            border:1px solid rgba(255,255,255,.1); background:rgba(255,255,255,.03);
+            color:#e2e8f0; font-size:15px; font-family:'Inter',sans-serif; line-height:1.8;
+            resize:vertical; transition:border-color .2s;
+        }
+        .story-textarea:focus { outline:none; border-color:#f59e0b; }
+        .story-textarea::placeholder { color:#475569; }
+        /* COUNTERS */
+        .counters { display:flex; gap:16px; margin-top:12px; flex-wrap:wrap; }
+        .counter-item { font-size:12px; color:#64748b; }
+        .counter-item span { font-weight:700; color:#e2e8f0; }
+        /* MILESTONES */
+        .milestones-section { margin-bottom:24px; }
+        .milestones-title { font-size:13px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; }
+        .milestone {
+            display:flex; align-items:center; gap:12px; padding:12px 16px; margin-bottom:8px;
+            background:rgba(255,255,255,.03); border-radius:12px; border:1px solid rgba(255,255,255,.06);
+            transition:all .3s;
+        }
+        .milestone.reached { border-color:rgba(74,222,128,.25); background:rgba(74,222,128,.05); }
+        .milestone.next { border-color:rgba(245,158,11,.2); background:rgba(245,158,11,.04); }
+        .milestone-icon { font-size:24px; width:40px; text-align:center; flex-shrink:0; }
+        .milestone-info { flex:1; }
+        .milestone-name { font-size:13px; font-weight:700; }
+        .milestone-desc { font-size:11px; color:#64748b; margin-top:2px; }
+        .milestone-xp { font-size:12px; font-weight:800; color:#f59e0b; flex-shrink:0; }
+        .milestone.reached .milestone-xp { color:#4ade80; }
+        .milestone-check { color:#4ade80; font-weight:800; }
+        /* PROGRESS BAR */
+        .word-progress { margin-bottom:20px; }
+        .wp-bar-bg { background:rgba(255,255,255,.08); border-radius:8px; height:12px; overflow:hidden; }
+        .wp-bar-fill { height:100%; border-radius:8px; background:linear-gradient(90deg,#f59e0b,#ef4444,#d946ef); transition:width .4s ease; }
+        .wp-labels { display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:4px; }
+        /* SAVE */
+        .save-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .btn-save {
+            background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff; border:none;
+            padding:14px 32px; border-radius:12px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s;
+        }
+        .btn-save:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(245,158,11,.3); }
+        .btn-save:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-submit {
+            background:linear-gradient(135deg,#16a34a,#4ade80); color:#fff; border:none;
+            padding:14px 32px; border-radius:12px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s;
+        }
+        .btn-submit:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(22,163,74,.3); }
+        .btn-submit:disabled { opacity:.4; cursor:not-allowed; transform:none; box-shadow:none; }
+        .save-status { font-size:12px; color:#64748b; }
+        /* SUBMITTED STATE */
+        .submitted-banner {
+            background:linear-gradient(135deg,#065f46,#064e3b); border:1px solid rgba(74,222,128,.3);
+            border-radius:14px; padding:24px; text-align:center; margin-bottom:20px;
+        }
+        .submitted-banner .icon { font-size:48px; margin-bottom:8px; }
+        .submitted-banner h2 { font-size:18px; font-weight:800; color:#4ade80; margin-bottom:4px; }
+        .submitted-banner p { font-size:13px; color:#94a3b8; }
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px);
+            background:#1e293b; border:1px solid rgba(255,255,255,.1); color:#fff;
+            padding:12px 24px; border-radius:12px; font-size:13px; font-weight:600;
+            opacity:0; transition:transform .4s ease, opacity .3s; z-index:999; pointer-events:none;
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        /* TIPS */
+        .tips-card {
+            background:rgba(245,158,11,.06); border:1px solid rgba(245,158,11,.15); border-radius:14px;
+            padding:18px; margin-bottom:20px;
+        }
+        .tips-card h3 { font-size:14px; font-weight:700; color:#fbbf24; margin-bottom:8px; }
+        .tips-card ul { padding-left:18px; }
+        .tips-card li { font-size:12px; color:#94a3b8; margin-bottom:4px; line-height:1.5; }
+        /* EXAMPLE */
+        .example-card {
+            background:rgba(139,92,246,.06); border:1px solid rgba(139,92,246,.15); border-radius:14px;
+            padding:18px; margin-bottom:20px;
+        }
+        .example-card h3 { font-size:14px; font-weight:700; color:#a78bfa; margin-bottom:10px; }
+        .example-entry { font-size:13px; color:#cbd5e1; line-height:1.7; }
+        .example-entry strong { color:#e2e8f0; }
+        .example-entry .label { color:#f59e0b; font-weight:700; font-size:11px; text-transform:uppercase; letter-spacing:.5px; }
+        /* LOADING */
+        .loading-screen { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+        .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,.1); border-top-color:#f59e0b; border-radius:50%; animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @media (max-width:480px) {
+            .hero { padding:24px 16px 20px; }
+            .hero h1 { font-size:18px; }
+            .writing-card { padding:16px; }
+            .story-textarea { min-height:220px; font-size:14px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-right">
+            <span class="word-pill" id="wordPill">0 palabras</span>
+            <span class="xp-pill" id="xpPill">+0 XP</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="hero-icon">🔍</div>
+            <h1>Misión: Cazador de Símbolos</h1>
+            <p>Encuentra símbolos en textos, canciones, películas o la vida cotidiana y explica su significado oculto. Mientras más símbolos analices, más XP ganarás. Inspirado en la libreta azul de Valentina.</p>
+        </div>
+
+        <div class="missions-bar" id="missionsBar"></div>
+
+        <div class="main-content">
+            <div id="submittedBanner" style="display:none"></div>
+
+            <!-- Word Progress -->
+            <div class="word-progress">
+                <div class="wp-bar-bg"><div class="wp-bar-fill" id="wpFill" style="width:0%"></div></div>
+                <div class="wp-labels"><span id="wpLabel">0 palabras</span><span>Meta máxima: 400+</span></div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="milestones-section">
+                <div class="milestones-title">🏅 Misiones de análisis</div>
+                <div id="milestonesList"></div>
+            </div>
+
+            <!-- Example -->
+            <div class="example-card">
+                <h3>📌 Ejemplo de entrada</h3>
+                <div class="example-entry">
+                    <p><span class="label">Símbolo:</span> La libreta azul</p>
+                    <p><span class="label">Dónde lo encontré:</span> Cuento "La libreta azul" (Sesión 6)</p>
+                    <p><span class="label">Significado literal:</span> Un cuaderno viejo con preguntas escritas a mano.</p>
+                    <p><span class="label">Significado simbólico:</span> Representa la herencia intelectual y emocional del padre. Las preguntas sin respuesta simbolizan la curiosidad como legado familiar. Valentina no hereda objetos materiales, sino la forma de mirar el mundo.</p>
+                    <p><span class="label">Evidencia:</span> «La letra se iba inclinando hacia el final, igual que la de ella» — esta frase conecta físicamente padre e hija a través de la escritura.</p>
+                </div>
+            </div>
+
+            <!-- Tips -->
+            <div class="tips-card">
+                <h3>💡 Consejos para cazar símbolos</h3>
+                <ul>
+                    <li>Un símbolo es un <strong>elemento concreto</strong> (objeto, color, animal, lugar) que representa una <strong>idea abstracta</strong> (libertad, muerte, esperanza).</li>
+                    <li>Busca elementos que se <strong>repiten</strong> o que reciben <strong>atención especial</strong> en el texto.</li>
+                    <li>Distingue bien el significado <strong>literal</strong> (lo que es) del <strong>simbólico</strong> (lo que representa).</li>
+                    <li>Usa <strong>evidencia textual</strong>: cita frases o detalles que apoyen tu interpretación.</li>
+                    <li>Puedes buscar en <strong>cualquier fuente</strong>: cuentos, poemas, canciones, películas, publicidad, la vida real.</li>
+                    <li>Intenta analizar al menos <strong>3 símbolos distintos</strong> para lograr un buen puntaje.</li>
+                </ul>
+            </div>
+
+            <!-- Writing Area -->
+            <div class="writing-card" id="writingCard">
+                <div class="writing-label">Título de tu diario de símbolos</div>
+                <input type="text" class="title-input" id="storyTitle" placeholder="Ej: Mi libreta de significados ocultos..." maxlength="120">
+
+                <div class="writing-label" style="margin-top:8px">Tus entradas de análisis</div>
+                <textarea class="story-textarea" id="storyBody" placeholder="Símbolo 1: &#10;Dónde lo encontré: &#10;Significado literal: &#10;Significado simbólico: &#10;Evidencia: &#10;&#10;Símbolo 2: &#10;..."></textarea>
+
+                <div class="counters">
+                    <div class="counter-item">Palabras: <span id="wordCount">0</span></div>
+                    <div class="counter-item">Caracteres: <span id="charCount">0</span></div>
+                    <div class="counter-item">Entradas: <span id="entryCount">0</span></div>
+                </div>
+            </div>
+
+            <!-- Save / Submit -->
+            <div class="save-row" id="saveRow">
+                <button class="btn-save" id="btnDraft" onclick="saveDraft()">💾 Guardar borrador</button>
+                <button class="btn-submit" id="btnSubmit" onclick="submitDiary()" disabled>📤 Entregar diario</button>
+                <span class="save-status" id="saveStatus"></span>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        const TASK_ID = 'tarea-simbolos-1';
+
+        // ============ MILESTONES ============
+        const MILESTONES = [
+            { id:'m1', words:50,  emoji:'🔎', name:'Primer hallazgo',         desc:'Escribe al menos 50 palabras',          xp:30 },
+            { id:'m2', words:100, emoji:'🧩', name:'Observador atento',       desc:'Alcanza las 100 palabras',              xp:50 },
+            { id:'m3', words:150, emoji:'💡', name:'Conexión simbólica',      desc:'Supera las 150 palabras',               xp:40 },
+            { id:'m4', words:200, emoji:'🎭', name:'Analista de textos',      desc:'Escribe 200+ palabras con evidencia',   xp:60 },
+            { id:'m5', words:300, emoji:'🔥', name:'Coleccionista',           desc:'¡300 palabras! Gran esfuerzo',          xp:80 },
+            { id:'m6', words:400, emoji:'👑', name:'Maestro de símbolos',     desc:'400+ palabras — nivel experto',         xp:100 },
+        ];
+        // Total possible: 30+50+40+60+80+100 = 360 XP
+
+        function getLevel(totalXP) {
+            return AvatarSystem.getLevel(totalXP);
+        }
+
+        let currentUID = null;
+        let studentData = null;
+        let isSubmitted = false;
+        let autoSaveTimer = null;
+
+        // ============ WORD / ENTRY COUNT ============
+        function countWords(text) {
+            return text.trim().split(/\s+/).filter(w => w.length > 0).length;
+        }
+        function countEntries(text) {
+            // Count occurrences of "Símbolo" as entry markers
+            const matches = text.match(/s[ií]mbolo\s*\d*\s*:/gi);
+            return matches ? matches.length : 0;
+        }
+
+        function updateCounters() {
+            const body = document.getElementById('storyBody').value;
+            const words = countWords(body);
+            const chars = body.length;
+            const entries = countEntries(body);
+
+            document.getElementById('wordCount').textContent = words;
+            document.getElementById('charCount').textContent = chars;
+            document.getElementById('entryCount').textContent = entries;
+            document.getElementById('wordPill').textContent = words + ' palabras';
+            document.getElementById('wpLabel').textContent = words + ' palabras';
+
+            // XP calculation
+            let totalXP = 0;
+            MILESTONES.forEach(m => { if (words >= m.words) totalXP += m.xp; });
+            document.getElementById('xpPill').textContent = '+' + totalXP + ' XP';
+
+            // Progress bar (max 400 words)
+            const pct = Math.min(100, Math.round((words / 400) * 100));
+            document.getElementById('wpFill').style.width = pct + '%';
+
+            // Update milestones UI
+            renderMilestones(words);
+
+            // Update missions bar
+            renderMissions(words);
+
+            // Enable submit if >= 50 words + has title + at least 1 entry
+            const title = document.getElementById('storyTitle').value.trim();
+            document.getElementById('btnSubmit').disabled = isSubmitted || words < 50 || !title;
+
+            // Word pill color
+            const pill = document.getElementById('wordPill');
+            pill.style.color = words >= 400 ? '#d946ef' : words >= 200 ? '#fbbf24' : words >= 50 ? '#e2e8f0' : '#64748b';
+
+            // Auto-save debounce
+            clearTimeout(autoSaveTimer);
+            if (!isSubmitted && currentUID) {
+                autoSaveTimer = setTimeout(() => saveDraft(true), 5000);
+            }
+        }
+
+        function renderMilestones(words) {
+            const list = document.getElementById('milestonesList');
+            let html = '';
+            let foundNext = false;
+            MILESTONES.forEach(m => {
+                const reached = words >= m.words;
+                let cls = '';
+                if (reached) cls = 'reached';
+                else if (!foundNext) { cls = 'next'; foundNext = true; }
+
+                const check = reached ? '<span class="milestone-check">✓</span>' : '';
+                const xpLabel = reached ? check + ' +' + m.xp + ' XP' : m.xp + ' XP';
+
+                html += `<div class="milestone ${cls}">
+                    <div class="milestone-icon">${m.emoji}</div>
+                    <div class="milestone-info">
+                        <div class="milestone-name">${m.name}</div>
+                        <div class="milestone-desc">${m.desc}</div>
+                    </div>
+                    <div class="milestone-xp">${xpLabel}</div>
+                </div>`;
+            });
+            list.innerHTML = html;
+        }
+
+        function renderMissions(words) {
+            const bar = document.getElementById('missionsBar');
+            let html = '';
+            MILESTONES.forEach(m => {
+                const reached = words >= m.words;
+                const cls = reached ? 'done' : '';
+                html += `<div class="mission-chip ${cls}">${m.emoji} ${m.words}+</div>`;
+            });
+            bar.innerHTML = html;
+        }
+
+        // ============ SAVE DRAFT ============
+        async function saveDraft(silent) {
+            if (!currentUID || isSubmitted) return;
+            const title = document.getElementById('storyTitle').value.trim();
+            const body = document.getElementById('storyBody').value;
+            const words = countWords(body);
+
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    titulo: title,
+                    contenido: body,
+                    palabras: words,
+                    entradas: countEntries(body),
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    last_save: Date.now(),
+                    completada: false
+                });
+                if (!silent) {
+                    document.getElementById('saveStatus').textContent = '✓ Borrador guardado';
+                    showToast('💾 Borrador guardado');
+                    setTimeout(() => document.getElementById('saveStatus').textContent = '', 3000);
+                }
+            } catch(e) {
+                console.error('Save error:', e);
+                if (!silent) showToast('Error al guardar');
+            }
+        }
+
+        // ============ SUBMIT DIARY ============
+        async function submitDiary() {
+            if (isSubmitted) return;
+            const title = document.getElementById('storyTitle').value.trim();
+            const body = document.getElementById('storyBody').value;
+            const words = countWords(body);
+
+            if (words < 50 || !title) {
+                showToast('Necesitas al menos 50 palabras y un título');
+                return;
+            }
+
+            if (!confirm('¿Estás seguro de entregar tu diario de símbolos? Después no podrás editarlo.')) return;
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Enviando...';
+
+            try {
+                // Calculate XP from milestones
+                let totalXP = 0;
+                MILESTONES.forEach(m => { if (words >= m.words) totalXP += m.xp; });
+
+                // Save final diary
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    titulo: title,
+                    contenido: body,
+                    palabras: words,
+                    entradas: countEntries(body),
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    submitted_at: Date.now(),
+                    completada: true,
+                    xp_ganado: totalXP
+                });
+
+                // Award XP to avatar (anti-exploit: check if already awarded)
+                await awardTaskXP(totalXP, words);
+
+                isSubmitted = true;
+                showSubmittedState(words, totalXP);
+                showToast('✅ ¡Diario entregado! +' + totalXP + ' XP');
+            } catch(e) {
+                console.error('Submit error:', e);
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = '📤 Entregar diario';
+                showToast('Error al enviar');
+            }
+        }
+
+        async function awardTaskXP(xpGained, words) {
+            try {
+                // Anti-exploit: check if already awarded
+                const existingSnap = await db.ref(BASE + '/avatar/' + currentUID + '/sesiones/' + TASK_ID).once('value');
+                if (existingSnap.exists()) {
+                    console.log('[XP] Task already awarded');
+                    return;
+                }
+
+                const totalSnap = await db.ref(BASE + '/avatar/' + currentUID + '/xp_total').once('value');
+                const currentTotal = totalSnap.val() || 0;
+                const newTotal = currentTotal + xpGained;
+                const lvl = getLevel(newTotal);
+
+                const updates = {};
+                updates['/avatar/' + currentUID + '/sesiones/' + TASK_ID] = {
+                    xp: xpGained, timestamp: Date.now(), type: 'tarea-simbolos', palabras: words
+                };
+                updates['/avatar/' + currentUID + '/xp_total'] = newTotal;
+                updates['/avatar/' + currentUID + '/nivel'] = lvl.level;
+                updates['/avatar/' + currentUID + '/titulo'] = lvl.title;
+                updates['/avatar/' + currentUID + '/emoji'] = lvl.emoji;
+                await db.ref(BASE).update(updates);
+
+                console.log('[XP] Task +' + xpGained + ' → Total: ' + newTotal);
+            } catch(e) { console.error('[XP] Task award error:', e); }
+        }
+
+        function showSubmittedState(words, xp) {
+            document.getElementById('submittedBanner').style.display = '';
+            document.getElementById('submittedBanner').innerHTML = `
+                <div class="submitted-banner">
+                    <div class="icon">🎉</div>
+                    <h2>¡Diario entregado!</h2>
+                    <p>${words} palabras · +${xp} XP ganados</p>
+                </div>`;
+            // Lock editing
+            document.getElementById('storyTitle').disabled = true;
+            document.getElementById('storyBody').disabled = true;
+            document.getElementById('saveRow').style.display = 'none';
+            document.getElementById('storyBody').style.opacity = '.7';
+            document.getElementById('storyTitle').style.opacity = '.7';
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        const ALLOWED_CURSOS = ['2A-HC', '2B-HC'];
+
+        // ============ AUTH + LOAD ============
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, taskSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/tareas/' + TASK_ID + '/' + user.uid).once('value')
+                ]);
+                studentData = studentSnap.val();
+                if (!studentData) { auth.signOut(); return; }
+
+                // Course restriction
+                if (!ALLOWED_CURSOS.includes(studentData.curso)) {
+                    document.getElementById('loadingScreen').innerHTML = '<div style="text-align:center;padding:60px 20px;color:#f59e0b;font-size:15px">⚠️ Esta misión no está disponible para tu curso.<br><a href="dashboard.html" style="color:#60a5fa;margin-top:12px;display:inline-block">← Volver al dashboard</a></div>';
+                    return;
+                }
+
+                const saved = taskSnap.val();
+                if (saved) {
+                    document.getElementById('storyTitle').value = saved.titulo || '';
+                    document.getElementById('storyBody').value = saved.contenido || '';
+
+                    if (saved.completada) {
+                        isSubmitted = true;
+                        updateCounters();
+                        showSubmittedState(saved.palabras || countWords(saved.contenido || ''), saved.xp_ganado || 0);
+                    }
+                }
+
+                // Setup listeners
+                document.getElementById('storyBody').addEventListener('input', updateCounters);
+                document.getElementById('storyTitle').addEventListener('input', updateCounters);
+                updateCounters();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+            } catch(e) {
+                console.error(e);
+                showToast('Error al cargar');
+            }
+        });
+    </script>
+</body>
+</html>

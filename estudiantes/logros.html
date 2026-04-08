@@ -157,7 +157,7 @@
         ];
 
         // ============ ALL MISSIONS (for counting) ============
-        const ALL_MISSIONS = ['tarea-cuento-1'];
+        const ALL_MISSIONS = ['tarea-cuento-1', 'tarea-simbolos-1'];
 
         // ============ AVATAR LEVELS (shared via js/avatar-levels.js) ============
         function getLevel(t){return AvatarSystem.getLevel(t)}
@@ -267,15 +267,17 @@
         // ============ GATHER DATA ============
         async function gatherData(uid, curso, programa) {
             // Parallel fetch
-            const [avatarSnap, sesSnap, rankSnap, tareaSnap] = await Promise.all([
+            const [avatarSnap, sesSnap, rankSnap, ...missionSnaps] = await Promise.all([
                 db.ref(BASE + '/avatar/' + uid).once('value'),
                 db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
                 db.ref(BASE + '/ranking').once('value'),
-                db.ref(BASE + '/tareas/tarea-cuento-1/' + uid).once('value')
+                ...ALL_MISSIONS.map(mid => db.ref(BASE + '/tareas/' + mid + '/' + uid).once('value'))
             ]);
 
             const avatar = avatarSnap.val() || {};
-            const tarea = tareaSnap.val() || {};
+            const missionData = {};
+            ALL_MISSIONS.forEach((mid, i) => { missionData[mid] = missionSnaps[i].val() || {}; });
+            const tarea = missionData['tarea-cuento-1'] || {};
 
             // Filter sessions by programa
             const allSes = [];
@@ -304,7 +306,7 @@
             // Missions completed
             let missionsCompleted = 0;
             for (const mid of ALL_MISSIONS) {
-                if (mid === 'tarea-cuento-1' && tarea.completada) missionsCompleted++;
+                if (missionData[mid] && missionData[mid].completada) missionsCompleted++;
             }
 
             // Timestamps from avatar.sesiones + tareas
@@ -313,8 +315,10 @@
             for (const [,v] of Object.entries(avSes)) {
                 if (v.timestamp) timestamps.push(v.timestamp);
             }
-            if (tarea.submitted_at) timestamps.push(tarea.submitted_at);
-            if (tarea.last_save) timestamps.push(tarea.last_save);
+            for (const md of Object.values(missionData)) {
+                if (md.submitted_at) timestamps.push(md.submitted_at);
+                if (md.last_save) timestamps.push(md.last_save);
+            }
 
             // Ranking position
             const rankingData = rankSnap.val() || {};

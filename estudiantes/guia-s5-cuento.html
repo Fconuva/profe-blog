@@ -133,6 +133,30 @@ mark.hl-ref{background:rgba(16,185,129,.28);border-radius:2px;padding:0 2px}
 .task-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:4px 14px;font-size:.7rem;font-weight:700;color:var(--accent);margin:8px 0}
 .hl-tip{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(245,158,11,.04));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 14px;margin:8px 0;font-size:.75rem;color:var(--amber);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
 .hl-tip strong{color:var(--text)}
+/* === STRIKE SYSTEM === */
+.strike-bar{position:fixed;top:44px;left:0;right:0;z-index:150;background:rgba(127,29,29,.85);border-bottom:2px solid #fca5a5;padding:6px 20px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.75rem;font-weight:700;color:#fca5a5;transition:.3s;backdrop-filter:blur(6px)}
+.strike-bar.hidden{display:none}
+.strike-dot{width:20px;height:20px;border-radius:50%;border:2px solid #fca5a5;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fca5a5;transition:.3s}
+.strike-dot.active{background:#dc2626;border-color:#dc2626;color:#fff;animation:qShake .4s}
+.strike-modal{position:fixed;inset:0;z-index:600;background:rgba(127,29,29,.9);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.strike-modal.hidden{display:none}
+.strike-modal-card{background:var(--panel);border:2px solid #dc2626;border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:qShake .4s}
+.strike-modal-card .strike-icon{font-size:3rem;margin-bottom:10px}
+.strike-modal-card h3{font-size:1.1rem;color:#fca5a5;margin-bottom:8px}
+.strike-modal-card p{font-size:.8rem;color:var(--dim);line-height:1.6;margin-bottom:16px}
+.btn-strike-ok{padding:10px 28px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.btn-strike-ok:hover{background:#b91c1c}
+.lockout-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,23,42,.95);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.lockout-overlay.hidden{display:none}
+.lockout-card{background:var(--panel);border:2px solid var(--red);border-radius:16px;padding:32px;max-width:440px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lockout-card .lock-icon{font-size:3.5rem;margin-bottom:12px}
+.lockout-card h3{font-size:1.1rem;color:#fca5a5;margin-bottom:8px}
+.lockout-card p{font-size:.8rem;color:var(--dim);line-height:1.6;margin-bottom:20px}
+.focus-warn-overlay{position:fixed;inset:0;background:rgba(127,29,29,.92);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;backdrop-filter:blur(6px)}
+.focus-warn-overlay.show{display:flex}
+.focus-warn-overlay h2{font-size:1.5rem;margin-bottom:10px;color:#fca5a5}
+.focus-warn-overlay p{font-size:.85rem;color:#fca5a5;max-width:380px;line-height:1.5}
+.focus-countdown{font-size:2.5rem;font-weight:900;color:#dc2626;margin:12px 0}
 </style>
 </head>
 <body>
@@ -149,14 +173,50 @@ mark.hl-ref{background:rgba(16,185,129,.28);border-radius:2px;padding:0 2px}
 </div>
 <div class="main" id="app"></div>
 
+<!-- STRIKE BAR -->
+<div class="strike-bar hidden" id="strikeBar">
+<span>⚠️ Strikes:</span>
+<span class="strike-dot" id="sd1">✕</span>
+<span class="strike-dot" id="sd2">✕</span>
+<span class="strike-dot" id="sd3">✕</span>
+</div>
+
+<!-- STRIKE MODAL -->
+<div class="strike-modal hidden" id="strikeModal">
+<div class="strike-modal-card">
+<div class="strike-icon" id="strikeIcon">⚠️</div>
+<h3 id="strikeTitle">Strike 1 de 3</h3>
+<p id="strikeMsg">Saliste de la evaluación.</p>
+<button class="btn-strike-ok" onclick="dismissStrike()">Entendido, volver</button>
+</div>
+</div>
+
+<!-- FOCUS WARNING -->
+<div class="focus-warn-overlay" id="focusWarnOverlay">
+<h2>⚠️ ¡Vuelve a la evaluación!</h2>
+<div class="focus-countdown" id="focusCountdown">5s</div>
+<p>Si no vuelves, recibirás un strike.<br>No abras otras pestañas ni busques en Google.</p>
+</div>
+
+<!-- LOCKOUT -->
+<div class="lockout-overlay hidden" id="lockoutOverlay">
+<div class="lockout-card">
+<div class="lock-icon">🔒</div>
+<h3>Práctica Bloqueada</h3>
+<p>Has recibido 3 strikes por salir de la página. Tus respuestas quedaron registradas tal como estaban. Puedes seguir revisando el resto de la guía.</p>
+<button class="btn-strike-ok" style="background:var(--accent)" onclick="dismissLockout()">Continuar con la guía</button>
+</div>
+</div>
+
 <script>
 let xp=0,currentSection=0,timerSeconds=75*60,timerInterval=null;
 const S=['welcome','motivation','prevknow','lesson','reading','puzzle','game','simce','closing'];
 const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
+let strikes=0,strikeMonitorActive=false,strikeLockout=false,focusWarnTimer=null,focusLostAt=null;
 function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
 function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
 function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
-function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i===6&&gIdx>=GQ.length&&gLives>0)setTimeout(launchConfetti,400);if(i===7&&sIdx>=SQ.length)setTimeout(launchConfetti,400);requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
+function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i===6&&gIdx>=GQ.length&&gLives>0)setTimeout(launchConfetti,400);if(i===7&&sIdx>=SQ.length)setTimeout(launchConfetti,400);if(i>=7&&!strikeMonitorActive)activateStrikeMonitor();if(i<7)deactivateStrikeMonitor();requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
 const B={};
 
 // ===== WELCOME =====
@@ -525,6 +585,16 @@ if(i===1){document.getElementById('ex'+i).classList.add('correct');document.getE
 else{document.getElementById('ex'+i).classList.add('wrong');document.getElementById('ex1').classList.add('correct');document.getElementById('exnk').classList.add('show');}
 document.getElementById('exrev').style.display='none';
 };
+
+// === STRIKE SYSTEM ===
+function activateStrikeMonitor(){if(strikeMonitorActive||strikeLockout)return;strikeMonitorActive=true;document.getElementById('strikeBar').classList.remove('hidden');document.addEventListener('visibilitychange',handleVisStrike);window.addEventListener('blur',handleBlurStrike);window.addEventListener('focus',handleFocusReturn);}
+function deactivateStrikeMonitor(){if(!strikeMonitorActive)return;strikeMonitorActive=false;document.getElementById('strikeBar').classList.add('hidden');document.removeEventListener('visibilitychange',handleVisStrike);window.removeEventListener('blur',handleBlurStrike);window.removeEventListener('focus',handleFocusReturn);}
+function handleVisStrike(){if(document.hidden&&strikeMonitorActive&&!strikeLockout)registerStrike();}
+function handleBlurStrike(){if(!strikeMonitorActive||strikeLockout)return;focusLostAt=Date.now();var ov=document.getElementById('focusWarnOverlay');ov.classList.add('show');var cd=5;document.getElementById('focusCountdown').textContent=cd+'s';if(focusWarnTimer)clearInterval(focusWarnTimer);focusWarnTimer=setInterval(function(){cd--;document.getElementById('focusCountdown').textContent=cd+'s';if(cd<=0){clearInterval(focusWarnTimer);focusWarnTimer=null;if(!document.hasFocus()&&strikeMonitorActive&&!strikeLockout){registerStrike();ov.classList.remove('show');}}},1000);}
+function handleFocusReturn(){if(focusWarnTimer){clearInterval(focusWarnTimer);focusWarnTimer=null;}document.getElementById('focusWarnOverlay').classList.remove('show');focusLostAt=null;}
+function registerStrike(){strikes++;for(var i=1;i<=3;i++){var d=document.getElementById('sd'+i);if(i<=strikes)d.classList.add('active');}if(strikes>=3){strikeLockout=true;document.getElementById('strikeModal').classList.add('hidden');document.getElementById('lockoutOverlay').classList.remove('hidden');document.querySelectorAll('.quiz-option').forEach(function(b){b.classList.add('locked');b.disabled=true;});var ta=document.getElementById('t4resp');if(ta)ta.disabled=true;}else{var modal=document.getElementById('strikeModal');document.getElementById('strikeIcon').textContent=strikes===1?'⚠️':'🚨';document.getElementById('strikeTitle').textContent='Strike '+strikes+' de 3';var msgs=['','Saliste de la página durante la práctica SIMCE. No abras otras pestañas, ChatGPT, Gemini ni busques en Google. Si lo haces de nuevo recibirás otro strike.','¡Segundo strike! Si sales una vez más, la práctica SIMCE se bloqueará y tus respuestas quedarán registradas tal como estén.'];document.getElementById('strikeMsg').textContent=msgs[strikes];modal.classList.remove('hidden');}}
+window.dismissStrike=function(){document.getElementById('strikeModal').classList.add('hidden');};
+window.dismissLockout=function(){document.getElementById('lockoutOverlay').classList.add('hidden');deactivateStrikeMonitor();go(0);};
 
 // === CONFETTI ===
 function launchConfetti(){var c=document.createElement('div');c.className='confetti-box';var cols=['#fbbf24','#3b82f6','#8b5cf6','#10b981','#ef4444','#ec4899','#06b6d4'];for(var i=0;i<50;i++){var p=document.createElement('div');p.className='conf-p';p.style.left=Math.random()*100+'%';var sz=(5+Math.random()*8)+'px';p.style.width=sz;p.style.height=sz;p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animation='confDrop '+(2+Math.random()*2)+'s ease-in '+Math.random()*.8+'s forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},5000);}

@@ -233,6 +233,19 @@
             <div style="text-align:center; padding:40px; color:#94a3b8;">Cargando sesiones...</div>
         </div>
 
+        <!-- Side Quests -->
+        <div class="section-title">📝 Misiones Secundarias</div>
+        <div id="sideQuests" style="margin-bottom:20px">
+            <a href="tarea-cuento.html" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #8b5cf6">
+                <div class="session-num" style="background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff">✍️</div>
+                <div class="session-info">
+                    <h3>Misión: Escribe tu Cuento</h3>
+                    <p>Redacta un cuento original y gana XP según su extensión. ¡Hasta 480 XP!</p>
+                </div>
+                <div class="session-status" id="questCuentoStatus"></div>
+            </a>
+        </div>
+
         <!-- Ranking Preview -->
         <div class="section-title">🏆 Ranking entre Cursos</div>
         <div class="ranking-preview">
@@ -542,6 +555,18 @@
                 document.getElementById('statVelS').textContent = makeStars(st.velocidad || 0, MAX_STAT);
 
             } catch(e) { console.error('Avatar load error:', e); }
+
+            // Check side quest status
+            try {
+                const qSnap = await db.ref(BASE + '/tareas/tarea-cuento-1/' + uid).once('value');
+                const q = qSnap.val();
+                const el = document.getElementById('questCuentoStatus');
+                if (q && q.completada) {
+                    el.innerHTML = '<span class="badge badge-done">✅ Entregado · +' + (q.xp_ganado || 0) + ' XP</span>';
+                } else if (q && q.last_save) {
+                    el.innerHTML = '<span class="badge badge-progress">📝 En progreso</span>';
+                }
+            } catch(e) {}
         }
 
         // ==================== MESSAGING (Bell) ====================

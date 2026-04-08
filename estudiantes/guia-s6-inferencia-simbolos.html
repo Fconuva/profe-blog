@@ -212,7 +212,7 @@ var simceAnswers={},abiertaAnswers={},fbDirty=false;
 function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
 function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
 function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
-function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i>=6&&!strikeMonitorActive)activateStrikeMonitor();if(i<6)deactivateStrikeMonitor();if(i===6){var _ta=0;for(var _k in simceAnswers)if(simceAnswers[_k]!==null&&simceAnswers[_k]!==undefined)_ta++;if(_ta>=SQ.length)setTimeout(launchConfetti,400);}requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
+function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i>=6&&!strikeMonitorActive)activateStrikeMonitor();if(i<6)deactivateStrikeMonitor();if(i===6){var _ta=0;for(var _k in simceAnswers)if(simceAnswers[_k]!==null&&simceAnswers[_k]!==undefined)_ta++;var _abT=0,_abO=0;STEXTS.forEach(function(t,ti){if(t.abiertas)t.abiertas.forEach(function(a,ai){_abT++;if(abiertaAnswers[ti+'-'+ai])_abO++;});});if(_ta>=SQ.length&&_abO>=_abT)setTimeout(launchConfetti,400);}requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
 const B={};
 
 /* ==================== 0. WELCOME — OBJETIVO SEGMENTADO ==================== */
@@ -921,7 +921,7 @@ window.addEventListener('beforeunload',function(){
     if(fbUser&&!fbSubmitted){
         var data=buildSaveData();
         data.auto_submitted='page_close';
-        data.completada=sIdx>=SQ.length;
+        data.completada=data.simce_answered>=SQ.length;
         data.last_save=Date.now();
         try{
             fetch('https://profe-blog-default-rtdb.firebaseio.com/'+BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid+'.json',{

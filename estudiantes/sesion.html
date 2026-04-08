@@ -1811,11 +1811,62 @@
                 porcentaje: porcentaje, tiempo: Math.floor((Date.now() - startTime) / 1000)
             });
 
+            // Award XP (anti-exploit: only first time)
+            const isFullEnc = sessionData.preguntas.every(q => q.habilidad === 'ENCUESTA');
+            await awardXP(isFullEnc ? 50 : porcentaje * 2, isFullEnc);
+
             return { correct, total, porcentaje };
         } catch(e) {
             console.error('forceAutoSubmit error:', e);
             return null;
         }
+    }
+
+    // ==================== AVATAR XP SYSTEM ====================
+    const AVATAR_LEVELS = [
+        { level:1, xp:0,    title:'Aprendiz',             emoji:'🌱' },
+        { level:2, xp:100,  title:'Lector Novato',        emoji:'📖' },
+        { level:3, xp:250,  title:'Explorador de Textos',  emoji:'🔍' },
+        { level:4, xp:500,  title:'Analista Junior',       emoji:'🧩' },
+        { level:5, xp:800,  title:'Analista Senior',       emoji:'⚡' },
+        { level:6, xp:1200, title:'Maestro Lector',        emoji:'🏆' },
+        { level:7, xp:1800, title:'Leyenda SIMCE',         emoji:'👑' }
+    ];
+    function getLevel(totalXP) {
+        for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
+            if (totalXP >= AVATAR_LEVELS[i].xp) return AVATAR_LEVELS[i];
+        }
+        return AVATAR_LEVELS[0];
+    }
+    async function awardXP(sessionXP, isEncuesta) {
+        if (!currentUser || !sessionId) return;
+        try {
+            // Anti-exploit: check if XP already awarded for this session
+            const existingSnap = await db.ref(BASE + '/avatar/' + currentUser.uid + '/sesiones/' + sessionId).once('value');
+            if (existingSnap.exists()) { console.log('[XP] Already awarded for', sessionId); return; }
+
+            // Calculate XP: encuestas get flat 50, regular sessions get porcentaje × 2
+            const xpGained = isEncuesta ? 50 : Math.round(sessionXP);
+            if (xpGained <= 0) return;
+
+            // Read current total
+            const totalSnap = await db.ref(BASE + '/avatar/' + currentUser.uid + '/xp_total').once('value');
+            const currentTotal = totalSnap.val() || 0;
+            const newTotal = currentTotal + xpGained;
+            const lvl = getLevel(newTotal);
+
+            // Atomic write: session record + updated total + level
+            const updates = {};
+            updates['/avatar/' + currentUser.uid + '/sesiones/' + sessionId] = { xp: xpGained, timestamp: Date.now() };
+            updates['/avatar/' + currentUser.uid + '/xp_total'] = newTotal;
+            updates['/avatar/' + currentUser.uid + '/nivel'] = lvl.level;
+            updates['/avatar/' + currentUser.uid + '/titulo'] = lvl.title;
+            updates['/avatar/' + currentUser.uid + '/emoji'] = lvl.emoji;
+            await db.ref(BASE).update(updates);
+
+            console.log('[XP] +' + xpGained + ' → Total: ' + newTotal + ' (Nivel ' + lvl.level + ' ' + lvl.emoji + ')');
+            showToast('⭐ +' + xpGained + ' XP — ' + lvl.emoji + ' ' + lvl.title + ' (Nivel ' + lvl.level + ')');
+        } catch(e) { console.error('[XP] Error awarding XP:', e); }
     }
 
     // ==================== AUTO-SAVE ====================
@@ -1956,6 +2007,9 @@
             }
 
             showToast('✅ ¡Respuestas enviadas correctamente!');
+
+            // Award XP (anti-exploit: only first time)
+            await awardXP(isFullEncuesta ? 50 : porcentaje * 2, isFullEncuesta);
 
             // Re-render submit area
             const submitArea = document.getElementById('submitArea');

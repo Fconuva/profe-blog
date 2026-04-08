@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Avatar — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:#0f172a; min-height:100vh; color:#fff; }
+        /* HEADER */
+        .top-bar {
+            display:flex; align-items:center; justify-content:space-between; padding:14px 20px;
+            background:rgba(15,23,42,.8); backdrop-filter:blur(10px); position:sticky; top:0; z-index:50;
+            border-bottom:1px solid rgba(255,255,255,.06);
+        }
+        .back-link { color:#94a3b8; text-decoration:none; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; transition:color .2s; }
+        .back-link:hover { color:#fff; }
+        .top-title { font-size:14px; font-weight:700; color:#e2e8f0; }
+        /* HERO */
+        .hero {
+            text-align:center; padding:40px 20px 32px; position:relative;
+            background:linear-gradient(180deg,#1e3a5f 0%,#0f172a 100%);
+        }
+        .hero::before {
+            content:''; position:absolute; top:0; left:50%; width:400px; height:400px; transform:translateX(-50%);
+            background:radial-gradient(circle,rgba(59,130,246,.12) 0%,transparent 70%); pointer-events:none;
+        }
+        .hero-emoji { font-size:80px; width:120px; height:120px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08); border-radius:50%; border:3px solid rgba(59,130,246,.3); animation:float 3s ease-in-out infinite; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .hero-level { font-size:12px; font-weight:700; letter-spacing:1px; color:#60a5fa; margin-bottom:4px; text-transform:uppercase; }
+        .hero-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .hero-subtitle { font-size:13px; color:#94a3b8; margin-bottom:20px; }
+        /* XP BAR */
+        .xp-section { max-width:400px; margin:0 auto; }
+        .xp-bar-bg { background:rgba(255,255,255,.1); border-radius:10px; height:14px; overflow:hidden; }
+        .xp-bar-fill { height:100%; border-radius:10px; background:linear-gradient(90deg,#3b82f6,#8b5cf6); transition:width .8s ease; }
+        .xp-labels { display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:6px; }
+        /* MAIN CONTENT */
+        .main-content { max-width:540px; margin:0 auto; padding:0 20px 40px; }
+        /* AVAILABLE POINTS */
+        .points-banner {
+            background:linear-gradient(135deg,#1e3a5f,#312e81); border-radius:14px; padding:20px;
+            text-align:center; margin-bottom:24px; border:1px solid rgba(99,102,241,.2);
+        }
+        .points-banner .pts-label { font-size:11px; color:#a5b4fc; text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:4px; }
+        .points-banner .pts-value { font-size:42px; font-weight:800; color:#fff; }
+        .points-banner .pts-sub { font-size:12px; color:#94a3b8; margin-top:4px; }
+        /* STAT ROWS */
+        .stat-section-title { font-size:13px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
+        .stat-row {
+            background:rgba(255,255,255,.05); border-radius:14px; padding:18px 20px; margin-bottom:12px;
+            display:flex; align-items:center; gap:14px; border:1px solid rgba(255,255,255,.06);
+            transition:border-color .2s;
+        }
+        .stat-row:hover { border-color:rgba(59,130,246,.3); }
+        .stat-icon { font-size:28px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border-radius:12px; flex-shrink:0; }
+        .stat-info { flex:1; min-width:0; }
+        .stat-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+        .stat-desc { font-size:11px; color:#64748b; line-height:1.4; }
+        .stat-bar-row { display:flex; align-items:center; gap:4px; margin-top:8px; }
+        .stat-bar-bg { flex:1; background:rgba(255,255,255,.08); border-radius:6px; height:8px; overflow:hidden; }
+        .stat-bar-fill { height:100%; border-radius:6px; transition:width .4s ease; }
+        .stat-bar-fill.comp { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+        .stat-bar-fill.const { background:linear-gradient(90deg,#22c55e,#4ade80); }
+        .stat-bar-fill.vel { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+        .stat-pts { font-size:13px; font-weight:800; min-width:24px; text-align:center; }
+        .stat-controls { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+        .stat-btn {
+            width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
+            background:rgba(255,255,255,.06); color:#fff; font-size:18px; font-weight:700;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background .15s, transform .1s; font-family:inherit;
+        }
+        .stat-btn:hover { background:rgba(59,130,246,.3); }
+        .stat-btn:active { transform:scale(.92); }
+        .stat-btn:disabled { opacity:.2; cursor:not-allowed; }
+        /* SAVE BTN */
+        .save-area { margin-top:20px; text-align:center; }
+        .btn-save {
+            background:linear-gradient(135deg,#3b82f6,#8b5cf6); color:#fff; border:none;
+            padding:14px 40px; border-radius:12px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s;
+            letter-spacing:.3px;
+        }
+        .btn-save:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(59,130,246,.35); }
+        .btn-save:active { transform:translateY(0); }
+        .btn-save:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+        .save-msg { font-size:12px; color:#4ade80; margin-top:8px; display:none; }
+        .btn-reset {
+            background:none; border:1px solid rgba(255,255,255,.15); color:#94a3b8; padding:10px 24px;
+            border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+            margin-top:10px; transition:color .2s, border-color .2s;
+        }
+        .btn-reset:hover { color:#fff; border-color:rgba(255,255,255,.3); }
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px);
+            background:#1e293b; border:1px solid rgba(255,255,255,.1); color:#fff;
+            padding:12px 24px; border-radius:12px; font-size:13px; font-weight:600;
+            opacity:0; transition:transform .4s ease, opacity .3s; z-index:999; pointer-events:none;
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        /* LOADING */
+        .loading-screen { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+        .loading-screen .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,.1); border-top-color:#3b82f6; border-radius:50%; animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @media (max-width:480px) {
+            .hero { padding:28px 16px 24px; }
+            .hero-emoji { font-size:60px; width:96px; height:96px; }
+            .hero-title { font-size:20px; }
+            .stat-row { padding:14px 16px; gap:10px; }
+            .stat-icon { width:40px; height:40px; font-size:22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <span class="top-title">Mi Avatar</span>
+        <span style="width:60px"></span>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="hero-emoji" id="heroEmoji">🌱</div>
+            <div class="hero-level" id="heroLevel">NIVEL 1</div>
+            <div class="hero-title" id="heroTitle">Aprendiz</div>
+            <div class="hero-subtitle" id="heroSubtitle">0 XP totales</div>
+            <div class="xp-section">
+                <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+                <div class="xp-labels"><span id="xpLabelCurr">0 XP</span><span id="xpLabelNext">100 XP</span></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="points-banner">
+                <div class="pts-label">Puntos disponibles</div>
+                <div class="pts-value" id="ptsAvailable">0</div>
+                <div class="pts-sub" id="ptsSub">Gana más subiendo de nivel</div>
+            </div>
+
+            <div class="stat-section-title">Distribuye tus puntos</div>
+
+            <div class="stat-row" id="rowComp">
+                <div class="stat-icon">🧠</div>
+                <div class="stat-info">
+                    <div class="stat-name">Comprensión</div>
+                    <div class="stat-desc">Tu capacidad de analizar textos y extraer evidencia</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill comp" id="barComp" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsComp">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn" onclick="addPoint('comprension',1)">+</button>
+                    <button class="stat-btn" onclick="addPoint('comprension',-1)">−</button>
+                </div>
+            </div>
+
+            <div class="stat-row" id="rowConst">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <div class="stat-name">Constancia</div>
+                    <div class="stat-desc">Tu disciplina para completar sesiones sin faltar</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill const" id="barConst" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsConst">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn" onclick="addPoint('constancia',1)">+</button>
+                    <button class="stat-btn" onclick="addPoint('constancia',-1)">−</button>
+                </div>
+            </div>
+
+            <div class="stat-row" id="rowVel">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <div class="stat-name">Velocidad</div>
+                    <div class="stat-desc">Tu rapidez para resolver sin perder precisión</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill vel" id="barVel" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsVel">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn" onclick="addPoint('velocidad',1)">+</button>
+                    <button class="stat-btn" onclick="addPoint('velocidad',-1)">−</button>
+                </div>
+            </div>
+
+            <div class="save-area">
+                <button class="btn-save" id="btnSave" onclick="saveStats()">Guardar cambios</button>
+                <div class="save-msg" id="saveMsg">✓ Guardado correctamente</div>
+                <br>
+                <button class="btn-reset" onclick="resetStats()">Reiniciar puntos</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+
+        const AVATAR_LEVELS = [
+            { level:1, xp:0,    title:'Aprendiz',             emoji:'🌱' },
+            { level:2, xp:100,  title:'Lector Novato',        emoji:'📖' },
+            { level:3, xp:250,  title:'Explorador de Textos', emoji:'🔍' },
+            { level:4, xp:500,  title:'Analista Junior',      emoji:'🧩' },
+            { level:5, xp:800,  title:'Analista Senior',      emoji:'⚡' },
+            { level:6, xp:1200, title:'Maestro Lector',       emoji:'🏆' },
+            { level:7, xp:1800, title:'Leyenda SIMCE',        emoji:'👑' }
+        ];
+        const MAX_PER_STAT = 10;
+        const POINTS_PER_LEVEL = 3;
+
+        let currentUID = null;
+        let stats = { comprension:0, constancia:0, velocidad:0 };
+        let savedStats = { comprension:0, constancia:0, velocidad:0 };
+        let totalPoints = 0;
+
+        function getLevelInfo(totalXP) {
+            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
+                if (totalXP >= AVATAR_LEVELS[i].xp) return { current: AVATAR_LEVELS[i], next: AVATAR_LEVELS[i + 1] || null };
+            }
+            return { current: AVATAR_LEVELS[0], next: AVATAR_LEVELS[1] };
+        }
+
+        function usedPoints() { return stats.comprension + stats.constancia + stats.velocidad; }
+        function available() { return totalPoints - usedPoints(); }
+
+        function render() {
+            document.getElementById('ptsAvailable').textContent = available();
+            document.getElementById('ptsSub').textContent = 'Total: ' + totalPoints + ' pts (Nivel × ' + POINTS_PER_LEVEL + ')';
+
+            const fields = ['comprension','constancia','velocidad'];
+            const barIds = { comprension:'barComp', constancia:'barConst', velocidad:'barVel' };
+            const ptsIds = { comprension:'ptsComp', constancia:'ptsConst', velocidad:'ptsVel' };
+            fields.forEach(f => {
+                document.getElementById(ptsIds[f]).textContent = stats[f];
+                document.getElementById(barIds[f]).style.width = (stats[f] / MAX_PER_STAT * 100) + '%';
+            });
+
+            // Disable +/- buttons appropriately
+            const rows = document.querySelectorAll('.stat-row');
+            rows.forEach(row => {
+                const btns = row.querySelectorAll('.stat-btn');
+                const field = row.id === 'rowComp' ? 'comprension' : row.id === 'rowConst' ? 'constancia' : 'velocidad';
+                btns[0].disabled = available() <= 0 || stats[field] >= MAX_PER_STAT;
+                btns[1].disabled = stats[field] <= 0;
+            });
+
+            // Show save button only if changed
+            const changed = stats.comprension !== savedStats.comprension || stats.constancia !== savedStats.constancia || stats.velocidad !== savedStats.velocidad;
+            document.getElementById('btnSave').disabled = !changed;
+        }
+
+        function addPoint(stat, delta) {
+            const newVal = stats[stat] + delta;
+            if (newVal < 0 || newVal > MAX_PER_STAT) return;
+            if (delta > 0 && available() <= 0) return;
+            stats[stat] = newVal;
+            render();
+        }
+
+        function resetStats() {
+            stats = { comprension:0, constancia:0, velocidad:0 };
+            render();
+        }
+
+        async function saveStats() {
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+            try {
+                await db.ref(BASE + '/avatar/' + currentUID + '/stats').set({
+                    comprension: stats.comprension,
+                    constancia: stats.constancia,
+                    velocidad: stats.velocidad,
+                    updated: Date.now()
+                });
+                savedStats = { ...stats };
+                btn.textContent = 'Guardar cambios';
+                showToast('✓ Puntos guardados');
+                render();
+            } catch(e) {
+                console.error(e);
+                btn.textContent = 'Guardar cambios';
+                btn.disabled = false;
+                showToast('Error al guardar');
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        // ============ AUTH + LOAD ============
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, avatarSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/avatar/' + user.uid).once('value')
+                ]);
+                const student = studentSnap.val();
+                if (!student) { auth.signOut(); return; }
+
+                const av = avatarSnap.val() || {};
+                const xpTotal = av.xp_total || 0;
+                const { current, next } = getLevelInfo(xpTotal);
+
+                // Render hero
+                document.getElementById('heroEmoji').textContent = current.emoji;
+                document.getElementById('heroLevel').textContent = 'NIVEL ' + current.level;
+                document.getElementById('heroTitle').textContent = current.title;
+                document.getElementById('heroSubtitle').textContent = xpTotal + ' XP totales';
+
+                if (next) {
+                    const pct = Math.round(((xpTotal - current.xp) / (next.xp - current.xp)) * 100);
+                    document.getElementById('xpFill').style.width = pct + '%';
+                    document.getElementById('xpLabelCurr').textContent = xpTotal + ' XP';
+                    document.getElementById('xpLabelNext').textContent = next.xp + ' XP';
+                } else {
+                    document.getElementById('xpFill').style.width = '100%';
+                    document.getElementById('xpLabelCurr').textContent = xpTotal + ' XP';
+                    document.getElementById('xpLabelNext').textContent = '¡Máximo!';
+                }
+
+                // Points available based on level
+                totalPoints = current.level * POINTS_PER_LEVEL;
+
+                // Load saved stats
+                if (av.stats) {
+                    stats.comprension = Math.min(av.stats.comprension || 0, MAX_PER_STAT);
+                    stats.constancia = Math.min(av.stats.constancia || 0, MAX_PER_STAT);
+                    stats.velocidad = Math.min(av.stats.velocidad || 0, MAX_PER_STAT);
+                    // Clamp if student lost levels somehow
+                    while (usedPoints() > totalPoints) {
+                        if (stats.velocidad > 0) stats.velocidad--;
+                        else if (stats.constancia > 0) stats.constancia--;
+                        else stats.comprension--;
+                    }
+                }
+                savedStats = { ...stats };
+
+                render();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+
+            } catch(e) {
+                console.error(e);
+                showToast('Error al cargar avatar');
+            }
+        });
+    </script>
+</body>
+</html>

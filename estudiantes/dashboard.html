@@ -116,6 +116,38 @@
         .msg-popup .msg-time { font-size:11px; color:#94a3b8; margin-top:8px; }
         .msg-popup .msg-close { float:right; background:none; border:none; font-size:18px; cursor:pointer; color:#94a3b8; margin:-4px -4px 0 0; }
         .header-right { display:flex; align-items:center; gap:10px; }
+        /* AVATAR CARD */
+        .avatar-card {
+            background:linear-gradient(135deg,#0f172a,#1e3a5f); border-radius:16px; padding:24px;
+            color:#fff; margin-bottom:24px; display:flex; gap:24px; align-items:center;
+            box-shadow:0 4px 20px rgba(15,23,42,.3); position:relative; overflow:hidden;
+        }
+        .avatar-card::before {
+            content:''; position:absolute; top:-50%; right:-30%; width:200px; height:200px;
+            background:radial-gradient(circle,rgba(59,130,246,.15) 0%,transparent 70%); border-radius:50%;
+        }
+        .avatar-card { cursor:pointer; text-decoration:none; }
+        .avatar-card:hover { box-shadow:0 4px 24px rgba(59,130,246,.25); }
+        .avatar-emoji { font-size:56px; width:80px; height:80px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.1); border-radius:50%; flex-shrink:0; }
+        .avatar-info { flex:1; min-width:0; }
+        .avatar-title-row { display:flex; align-items:center; gap:8px; margin-bottom:2px; flex-wrap:wrap; }
+        .avatar-title-row h2 { font-size:18px; font-weight:800; margin:0; }
+        .avatar-level-badge { background:rgba(59,130,246,.3); padding:2px 10px; border-radius:12px; font-size:11px; font-weight:700; letter-spacing:.5px; }
+        .avatar-titulo { font-size:13px; color:#94a3b8; margin-bottom:10px; }
+        .xp-bar-wrap { margin-bottom:10px; }
+        .xp-bar-bg { background:rgba(255,255,255,.12); border-radius:8px; height:10px; overflow:hidden; }
+        .xp-bar-fill { height:100%; border-radius:8px; background:linear-gradient(90deg,#3b82f6,#60a5fa); transition:width .6s ease; }
+        .xp-bar-text { display:flex; justify-content:space-between; font-size:10px; color:#64748b; margin-top:3px; }
+        .avatar-stats { display:flex; gap:16px; flex-wrap:wrap; }
+        .avatar-stat { text-align:center; }
+        .avatar-stat .stat-label { font-size:10px; color:#64748b; text-transform:uppercase; letter-spacing:.5px; margin-bottom:2px; }
+        .avatar-stat .stars { font-size:13px; letter-spacing:1px; }
+        @media (max-width:640px) {
+            .avatar-card { flex-direction:column; text-align:center; gap:12px; padding:20px 16px; }
+            .avatar-stats { justify-content:center; }
+            .avatar-title-row { justify-content:center; }
+            .xp-bar-text { justify-content:center; gap:12px; }
+        }
         @media (max-width:640px) {
             .header { padding:12px 16px; flex-wrap:wrap; gap:8px; }
             .stats-grid { grid-template-columns:1fr 1fr; }
@@ -140,6 +172,28 @@
     </div>
 
     <div class="main">
+        <!-- Avatar -->
+        <a href="avatar.html" class="avatar-card" id="avatarCard" style="display:none">
+            <div class="avatar-emoji" id="avatarEmoji">🌱</div>
+            <div class="avatar-info">
+                <div class="avatar-title-row">
+                    <h2 id="avatarName">Cargando...</h2>
+                    <span class="avatar-level-badge" id="avatarLevelBadge">Nivel 1</span>
+                </div>
+                <div class="avatar-titulo" id="avatarTitulo">Aprendiz</div>
+                <div class="xp-bar-wrap">
+                    <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpBarFill" style="width:0%"></div></div>
+                    <div class="xp-bar-text"><span id="xpCurrent">0 XP</span><span id="xpNext">Sig. nivel: 100 XP</span></div>
+                </div>
+                <div class="avatar-stats">
+                    <div class="avatar-stat"><div class="stat-label">Comprensión</div><div class="stars" id="statCompS">☆☆☆☆☆</div></div>
+                    <div class="avatar-stat"><div class="stat-label">Constancia</div><div class="stars" id="statConstS">☆☆☆☆☆</div></div>
+                    <div class="avatar-stat"><div class="stat-label">Velocidad</div><div class="stars" id="statVelS">☆☆☆☆☆</div></div>
+                </div>
+                <div style="font-size:11px;color:#64748b;margin-top:8px">Toca para editar tu avatar →</div>
+            </div>
+        </a>
+
         <!-- Stats -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
@@ -234,6 +288,7 @@
 
                 const programa = student.programa || 'simce';
                 await loadDashboard(user.uid, student.curso, programa);
+                loadAvatar(user.uid, student.nombre);
                 listenForMessages();
 
             } catch(e) { console.error(e); }
@@ -402,6 +457,67 @@
                 container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar el dashboard.</div>';
             }
         }
+        // ==================== AVATAR SYSTEM ====================
+        const AVATAR_LEVELS = [
+            { level:1, xp:0,    title:'Aprendiz',             emoji:'🌱' },
+            { level:2, xp:100,  title:'Lector Novato',        emoji:'📖' },
+            { level:3, xp:250,  title:'Explorador de Textos',  emoji:'🔍' },
+            { level:4, xp:500,  title:'Analista Junior',       emoji:'🧩' },
+            { level:5, xp:800,  title:'Analista Senior',       emoji:'⚡' },
+            { level:6, xp:1200, title:'Maestro Lector',        emoji:'🏆' },
+            { level:7, xp:1800, title:'Leyenda SIMCE',         emoji:'👑' }
+        ];
+        function getLevelInfo(totalXP) {
+            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
+                if (totalXP >= AVATAR_LEVELS[i].xp) return { current: AVATAR_LEVELS[i], next: AVATAR_LEVELS[i + 1] || null };
+            }
+            return { current: AVATAR_LEVELS[0], next: AVATAR_LEVELS[1] };
+        }
+        function makeStars(value, max) {
+            const filled = Math.min(max, Math.max(0, Math.round(value)));
+            return '★'.repeat(filled) + '☆'.repeat(max - filled);
+        }
+        async function loadAvatar(uid, nombre) {
+            try {
+                const card = document.getElementById('avatarCard');
+                // Read avatar data + all resultados for stats
+                const [avatarSnap] = await Promise.all([
+                    db.ref(BASE + '/avatar/' + uid).once('value')
+                ]);
+                const av = avatarSnap.val() || {};
+                const xpTotal = av.xp_total || 0;
+                const { current, next } = getLevelInfo(xpTotal);
+
+                // Render avatar
+                document.getElementById('avatarEmoji').textContent = current.emoji;
+                document.getElementById('avatarName').textContent = nombre;
+                document.getElementById('avatarLevelBadge').textContent = 'Nivel ' + current.level;
+                document.getElementById('avatarTitulo').textContent = current.title;
+                document.getElementById('xpCurrent').textContent = xpTotal + ' XP';
+                // Header emoji update
+                const headerAvatar = document.querySelector('.header-left .avatar');
+                if (headerAvatar) headerAvatar.textContent = current.emoji;
+
+                if (next) {
+                    const progress = Math.round(((xpTotal - current.xp) / (next.xp - current.xp)) * 100);
+                    document.getElementById('xpBarFill').style.width = progress + '%';
+                    document.getElementById('xpNext').textContent = 'Sig. nivel: ' + next.xp + ' XP';
+                } else {
+                    document.getElementById('xpBarFill').style.width = '100%';
+                    document.getElementById('xpNext').textContent = '¡Nivel máximo!';
+                }
+
+                // Show allocated stats from avatar data
+                const st = av.stats || {};
+                const MAX_STAT = 10;
+                document.getElementById('statCompS').textContent = makeStars(st.comprension || 0, MAX_STAT);
+                document.getElementById('statConstS').textContent = makeStars(st.constancia || 0, MAX_STAT);
+                document.getElementById('statVelS').textContent = makeStars(st.velocidad || 0, MAX_STAT);
+
+                card.style.display = 'flex';
+            } catch(e) { console.error('Avatar load error:', e); }
+        }
+
         // ==================== MESSAGING (Bell) ====================
         let lastMsgId = null;
         function listenForMessages() {

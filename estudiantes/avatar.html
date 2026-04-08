@@ -93,6 +93,28 @@
             margin-top:10px; transition:color .2s, border-color .2s;
         }
         .btn-reset:hover { color:#fff; border-color:rgba(255,255,255,.3); }
+        /* SHOP */
+        .shop-section { margin-top:32px; padding-top:24px; border-top:1px solid rgba(255,255,255,.08); }
+        .shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; }
+        .shop-item {
+            background:rgba(255,255,255,.05); border-radius:14px; padding:16px 12px; text-align:center;
+            border:1px solid rgba(255,255,255,.08); transition:border-color .2s, transform .15s; position:relative;
+        }
+        .shop-item.locked { opacity:.45; }
+        .shop-item.unlocked { border-color:rgba(59,130,246,.3); }
+        .shop-item.owned { border-color:rgba(74,222,128,.3); }
+        .shop-item:not(.locked):hover { transform:translateY(-2px); border-color:rgba(59,130,246,.5); }
+        .shop-emoji { font-size:36px; margin-bottom:8px; }
+        .shop-name { font-size:12px; font-weight:700; margin-bottom:4px; }
+        .shop-cost { font-size:11px; color:#64748b; }
+        .shop-cost.free { color:#4ade80; }
+        .shop-badge {
+            position:absolute; top:8px; right:8px; font-size:9px; font-weight:700; padding:2px 8px;
+            border-radius:6px; letter-spacing:.3px;
+        }
+        .shop-badge.lock-badge { background:rgba(255,255,255,.1); color:#64748b; }
+        .shop-badge.owned-badge { background:rgba(74,222,128,.15); color:#4ade80; }
+        .shop-badge.new-badge { background:rgba(59,130,246,.2); color:#60a5fa; }
         /* TOAST */
         .toast {
             position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px);
@@ -198,6 +220,13 @@
                 <br>
                 <button class="btn-reset" onclick="resetStats()">Reiniciar puntos</button>
             </div>
+
+            <!-- SHOP -->
+            <div class="shop-section">
+                <div class="stat-section-title">🛍️ Tienda de Logros</div>
+                <p style="font-size:12px;color:#64748b;margin-bottom:16px">Desbloquea recompensas al acumular experiencia. Los ítems se desbloquean automáticamente al alcanzar el XP requerido.</p>
+                <div class="shop-grid" id="shopGrid"></div>
+            </div>
         </div>
     </div>
 
@@ -233,6 +262,22 @@
         ];
         const MAX_PER_STAT = 10;
         const POINTS_PER_LEVEL = 3;
+
+        // SHOP ITEMS — unlocked by XP thresholds
+        const SHOP_ITEMS = [
+            { id:'titulo_novato',      emoji:'📚', name:'Título: Ratón de Biblioteca', xp:50,   type:'titulo' },
+            { id:'marco_bronce',       emoji:'🥉', name:'Marco Bronce',                xp:100,  type:'marco' },
+            { id:'efecto_chispas',     emoji:'✨',   name:'Efecto: Chispas',             xp:150,  type:'efecto' },
+            { id:'titulo_detective',   emoji:'🕵️', name:'Título: Detective Textual',  xp:250,  type:'titulo' },
+            { id:'marco_plata',        emoji:'🥈', name:'Marco Plata',                 xp:350,  type:'marco' },
+            { id:'efecto_fuego',       emoji:'🔥', name:'Efecto: Llamas',              xp:500,  type:'efecto' },
+            { id:'titulo_sabio',       emoji:'🧙', name:'Título: Sabio Lector',       xp:600,  type:'titulo' },
+            { id:'marco_oro',          emoji:'🥇', name:'Marco Oro',                   xp:800,  type:'marco' },
+            { id:'efecto_rayo',        emoji:'⚡',   name:'Efecto: Rayo',                xp:1000, type:'efecto' },
+            { id:'titulo_leyenda',     emoji:'🌟', name:'Título: Leyenda Lectora',   xp:1200, type:'titulo' },
+            { id:'marco_diamante',     emoji:'💎', name:'Marco Diamante',              xp:1500, type:'marco' },
+            { id:'corona_suprema',     emoji:'👑', name:'Corona Suprema',              xp:1800, type:'efecto' },
+        ];
 
         let currentUID = null;
         let stats = { comprension:0, constancia:0, velocidad:0 };
@@ -318,6 +363,68 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
 
+        function renderShop(xpTotal) {
+            const grid = document.getElementById('shopGrid');
+            let html = '';
+            SHOP_ITEMS.forEach(item => {
+                const unlocked = xpTotal >= item.xp;
+                const cls = unlocked ? 'unlocked' : 'locked';
+                const badge = unlocked
+                    ? '<span class="shop-badge owned-badge">✓ Desbloqueado</span>'
+                    : '<span class="shop-badge lock-badge">🔒 Bloqueado</span>';
+                const costText = unlocked
+                    ? '<span class="shop-cost free">✓ Obtenido</span>'
+                    : '<span class="shop-cost">' + item.xp + ' XP necesarios</span>';
+                html += '<div class="shop-item ' + cls + '">' + badge +
+                    '<div class="shop-emoji">' + item.emoji + '</div>' +
+                    '<div class="shop-name">' + item.name + '</div>' +
+                    costText + '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        // ============ RETROACTIVE XP SYNC ============
+        async function syncMissingXP(uid, avatarData) {
+            try {
+                const resultadosSnap = await db.ref(BASE + '/resultados').once('value');
+                const allRes = resultadosSnap.val() || {};
+                const existingSessions = (avatarData && avatarData.sesiones) || {};
+                let xpToAdd = 0;
+                const newSessions = {};
+
+                for (const [sesId, students] of Object.entries(allRes)) {
+                    if (students[uid] && !existingSessions[sesId]) {
+                        const r = students[uid];
+                        const xp = r.es_encuesta ? 50 : Math.round((r.porcentaje || 0) * 2);
+                        if (xp > 0) {
+                            newSessions[sesId] = { xp: xp, timestamp: r.submitted_at || Date.now(), synced: true };
+                            xpToAdd += xp;
+                        }
+                    }
+                }
+
+                if (xpToAdd > 0) {
+                    const currentTotal = (avatarData && avatarData.xp_total) || 0;
+                    const newTotal = currentTotal + xpToAdd;
+                    const lvl = getLevelInfo(newTotal).current;
+
+                    const updates = {};
+                    for (const [sesId, data] of Object.entries(newSessions)) {
+                        updates['sesiones/' + sesId] = data;
+                    }
+                    updates['xp_total'] = newTotal;
+                    updates['nivel'] = lvl.level;
+                    updates['titulo'] = lvl.title;
+                    updates['emoji'] = lvl.emoji;
+
+                    await db.ref(BASE + '/avatar/' + uid).update(updates);
+                    showToast('⭐ +' + xpToAdd + ' XP sincronizados de sesiones anteriores');
+                    return newTotal;
+                }
+                return null;
+            } catch(e) { console.error('XP sync error:', e); return null; }
+        }
+
         // ============ AUTH + LOAD ============
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
@@ -332,7 +439,12 @@
                 if (!student) { auth.signOut(); return; }
 
                 const av = avatarSnap.val() || {};
-                const xpTotal = av.xp_total || 0;
+                let xpTotal = av.xp_total || 0;
+
+                // Sync missing XP from past sessions
+                const syncedTotal = await syncMissingXP(user.uid, av);
+                if (syncedTotal !== null) xpTotal = syncedTotal;
+
                 const { current, next } = getLevelInfo(xpTotal);
 
                 // Render hero
@@ -370,6 +482,7 @@
                 savedStats = { ...stats };
 
                 render();
+                renderShop(xpTotal);
 
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('mainView').style.display = '';

@@ -437,6 +437,21 @@
                 });
                 document.getElementById('rankingBars').innerHTML = barsHtml;
 
+                // Load all avatars for ranking emoji
+                let allAvatarsData = {};
+                try {
+                    const avSnap = await db.ref(BASE + '/avatar').once('value');
+                    allAvatarsData = avSnap.val() || {};
+                } catch(e) {}
+                function rankEmoji(euid) {
+                    const av = allAvatarsData[euid];
+                    if (!av || !av.xp_total) return '';
+                    const xp = av.xp_total;
+                    const lvls = [[1800,'👑'],[1200,'🏆'],[800,'⚡'],[500,'🧩'],[250,'🔍'],[100,'📖'],[0,'🌱']];
+                    for (const [min,em] of lvls) { if (xp >= min) return em; }
+                    return '';
+                }
+
                 let rankListHtml = '';
                 for (const [c, arr] of Object.entries(courseScores)) {
                     arr.sort((a, b) => b.avg - a.avg);
@@ -446,7 +461,8 @@
                     top5.forEach((s, i) => {
                         const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '  ';
                         const isMe = s.uid === uid ? ' style="font-weight:700;color:#1e40af"' : '';
-                        rankListHtml += `<div${isMe}>${medal} ${i + 1}. ${s.nombre} — ${Math.round(s.avg)}%</div>`;
+                        const avEm = rankEmoji(s.uid);
+                        rankListHtml += `<div${isMe}>${medal} ${i + 1}. ${avEm ? avEm + ' ' : ''}${s.nombre} — ${Math.round(s.avg)}%</div>`;
                     });
                 }
                 const rankEl = document.getElementById('rankingList');

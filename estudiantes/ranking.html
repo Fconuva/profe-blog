@@ -172,9 +172,30 @@
 
         let allRanking = {};
         let allSessions = {};
+        let allAvatars = {};
         let currentUid = null;
         let currentTab = '';
         let myPair = [];
+
+        const AVATAR_LEVELS = [
+            { level:1, xp:0,    emoji:'🌱' },
+            { level:2, xp:100,  emoji:'📖' },
+            { level:3, xp:250,  emoji:'🔍' },
+            { level:4, xp:500,  emoji:'🧩' },
+            { level:5, xp:800,  emoji:'⚡' },
+            { level:6, xp:1200, emoji:'🏆' },
+            { level:7, xp:1800, emoji:'👑' }
+        ];
+        function getAvatarEmoji(uid) {
+            const av = allAvatars[uid];
+            if (!av) return '';
+            const xp = av.xp_total || 0;
+            let emoji = '🌱';
+            for (let i = AVATAR_LEVELS.length - 1; i >= 0; i--) {
+                if (xp >= AVATAR_LEVELS[i].xp) { emoji = AVATAR_LEVELS[i].emoji; break; }
+            }
+            return emoji;
+        }
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
@@ -201,12 +222,14 @@
 
         async function loadData() {
             try {
-                const [rankSnap, sesSnap] = await Promise.all([
+                const [rankSnap, sesSnap, avatarSnap] = await Promise.all([
                     db.ref(BASE + '/ranking').once('value'),
-                    db.ref(BASE + '/sesiones').once('value')
+                    db.ref(BASE + '/sesiones').once('value'),
+                    db.ref(BASE + '/avatar').once('value')
                 ]);
                 allRanking = rankSnap.val() || {};
                 allSessions = sesSnap.val() || {};
+                allAvatars = avatarSnap.val() || {};
 
                 // Populate session dropdown
                 const select = document.getElementById('sessionSelect');
@@ -346,9 +369,12 @@
                 const rowClass = isMe ? 'highlight' : '';
                 const cursoLabel = CURSO_SHORT[s.curso] || s.curso;
 
+                const emojiAv = getAvatarEmoji(s.uid);
+                const emojiSpan = emojiAv ? '<span style="margin-right:4px">' + emojiAv + '</span>' : '';
+
                 html += `<tr class="${rowClass}">
                     <td><span class="pos-badge ${posClass}">${medal}</span></td>
-                    <td>${s.nombre}${isMe ? ' <span style="font-size:10px;color:#1e40af;">(tú)</span>' : ''}</td>
+                    <td>${emojiSpan}${s.nombre}${isMe ? ' <span style="font-size:10px;color:#1e40af;">(tú)</span>' : ''}</td>
                     <td>${cursoLabel}</td>
                     <td><div class="pct-bar"><div class="bar"><div class="fill" style="width:${s.promedio}%"></div></div><span class="value">${s.promedio}%</span></div></td>
                     <td style="text-align:center; font-weight:700; color:#0f172a;">${s.puntaje}</td>

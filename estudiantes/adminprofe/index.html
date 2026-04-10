@@ -70,6 +70,8 @@
         .badge-green{background:#dcfce7;color:#16a34a}
         .badge-red{background:#fee2e2;color:#dc2626}
         .badge-amber{background:#fef3c7;color:#d97706}
+        .badge-cyan{background:#cffafe;color:#0e7490}
+        .badge-teal{background:#ccfbf1;color:#0f766e}
         .badge-gray{background:#f1f5f9;color:#64748b}
         /* TOGGLE */
         .toggle{position:relative;width:42px;height:24px;display:inline-block;cursor:pointer}
@@ -202,6 +204,9 @@
                     <option value="1B-HC">1°B HC</option>
                     <option value="2A-HC">2°A HC</option>
                     <option value="2B-HC">2°B HC</option>
+                    <option value="2A-TP">2°A TP</option>
+                    <option value="2B-TP">2°B TP</option>
+                    <option value="2C-TP">2°C TP</option>
                     <option value="3A-HC">3°A HC</option>
                     <option value="3B-HC">3°B HC</option>
                     <option value="4A-HC">4°A HC</option>
@@ -384,7 +389,7 @@
         <div class="form-group"><label>RUT (sin puntos, con guión)</label><input id="newStudentRut" placeholder="Ej: 12345678-9" maxlength="12"></div>
         <div class="form-group">
             <label>Curso</label>
-            <select id="newStudentCurso"><option value="1A-HC">1°A HC</option><option value="1B-HC">1°B HC</option><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select>
+            <select id="newStudentCurso"><option value="1A-HC">1°A HC</option><option value="1B-HC">1°B HC</option><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="2A-TP">2°A TP</option><option value="2B-TP">2°B TP</option><option value="2C-TP">2°C TP</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select>
         </div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal('addStudent')">Cancelar</button>
@@ -416,7 +421,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
         <input type="hidden" id="editStudentUid">
         <div class="form-group"><label>Nombre Completo</label><input id="editStudentName"></div>
         <div class="form-group"><label>RUT</label><input id="editStudentRut" placeholder="12345678-9"><div style="font-size:11px;color:#94a3b8;margin-top:2px">⚠️ Cambiar el RUT NO cambia la contraseña ni el email de Auth. Usar 🔑 para resetear.</div></div>
-        <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="1A-HC">1°A HC</option><option value="1B-HC">1°B HC</option><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></div>
+        <div class="form-group"><label>Curso</label><select id="editStudentCurso"><option value="1A-HC">1°A HC</option><option value="1B-HC">1°B HC</option><option value="2A-HC">2°A HC</option><option value="2B-HC">2°B HC</option><option value="2A-TP">2°A TP</option><option value="2B-TP">2°B TP</option><option value="2C-TP">2°C TP</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></div>
         <div class="form-group"><label>Email Institucional</label><input id="editStudentEmail"></div>
         <div class="modal-actions">
             <button class="btn btn-secondary" onclick="closeModal('editStudent')">Cancelar</button>
@@ -486,11 +491,19 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
-const ALL_CURSOS={'1A-HC':{label:'1°A HC',short:'1°A',badge:'badge-cyan',prog:'simce'},'1B-HC':{label:'1°B HC',short:'1°B',badge:'badge-teal',prog:'simce'},'2A-HC':{label:'2°A HC',short:'2°A',badge:'badge-blue',prog:'simce'},'2B-HC':{label:'2°B HC',short:'2°B',badge:'badge-purple',prog:'simce'},'3A-HC':{label:'3°A HC',short:'3°A',badge:'badge-green',prog:'paes'},'3B-HC':{label:'3°B HC',short:'3°B',badge:'badge-amber',prog:'paes'},'4A-HC':{label:'4°A HC',short:'4°A',badge:'badge-blue',prog:'paes'},'4B-HC':{label:'4°B HC',short:'4°B',badge:'badge-purple',prog:'paes'}};
+const ALL_CURSOS={'1A-HC':{label:'1°A HC',short:'1°A',badge:'badge-cyan',prog:'simce'},'1B-HC':{label:'1°B HC',short:'1°B',badge:'badge-teal',prog:'simce'},'2A-HC':{label:'2°A HC',short:'2°A',badge:'badge-blue',prog:'simce'},'2B-HC':{label:'2°B HC',short:'2°B',badge:'badge-purple',prog:'simce'},'2A-TP':{label:'2°A TP',short:'2°A TP',badge:'badge-amber',prog:'simce'},'2B-TP':{label:'2°B TP',short:'2°B TP',badge:'badge-amber',prog:'simce'},'2C-TP':{label:'2°C TP',short:'2°C TP',badge:'badge-amber',prog:'simce'},'3A-HC':{label:'3°A HC',short:'3°A',badge:'badge-green',prog:'paes'},'3B-HC':{label:'3°B HC',short:'3°B',badge:'badge-amber',prog:'paes'},'4A-HC':{label:'4°A HC',short:'4°A',badge:'badge-blue',prog:'paes'},'4B-HC':{label:'4°B HC',short:'4°B',badge:'badge-purple',prog:'paes'}};
 function cLabel(c){return ALL_CURSOS[c]?.label||c}
 function cShort(c){return ALL_CURSOS[c]?.short||c}
 function cBadge(c){return ALL_CURSOS[c]?.badge||'badge-gray'}
-function cursoOptions(sel){let h='';for(const[k,v]of Object.entries(ALL_CURSOS)){h+=`<option value="${k}"${k===sel?' selected':''}>${v.label}</option>`}return h}
+function cursoOptions(sel,filterCursos){
+    let h='';
+    const cursos=filterCursos||Object.keys(ALL_CURSOS);
+    for(const k of cursos){
+        const v=ALL_CURSOS[k];if(!v) continue;
+        h+=`<option value="${k}"${k===sel?' selected':''}>${v.label}</option>`;
+    }
+    return h;
+}
 function progFromCurso(c){return ALL_CURSOS[c]?.prog||'simce'}
 
 // Secondary app for creating student accounts without signing out admin
@@ -502,6 +515,7 @@ let sessions={};
 let allResults={};
 let allResponses={};
 let currentAdminUid=null;
+let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
 
 /* ============ AUTH ============ */
 function adminLogin(){
@@ -529,14 +543,98 @@ auth.onAuthStateChanged(async user=>{
         setTimeout(()=>{auth.signOut()},2000);
         return;
     }
+    // Load docente profile
+    const docSnap=await db.ref(BASE+'/docentes/'+user.uid).once('value');
+    const docData=docSnap.val();
+    if(docData){
+        currentDocente={
+            nombre:docData.nombre||user.email,
+            cursos:docData.cursos||[],
+            superadmin:docData.superadmin===true
+        };
+    }else{
+        // Legacy admin without docente profile → superadmin (backward compat)
+        currentDocente={nombre:user.email,cursos:Object.keys(ALL_CURSOS),superadmin:true};
+    }
     // Mostrar panel, ocultar login
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('adminPanel').style.display='block';
     currentAdminUid=user.uid;
-    document.getElementById('adminName').textContent=user.email||'Admin';
+    const displayName=currentDocente.nombre+(currentDocente.superadmin?' (Superadmin)':' — '+currentDocente.cursos.map(c=>cLabel(c)).join(', '));
+    document.getElementById('adminName').textContent=displayName;
+    applyDocenteFilters();
     initMobileNav();
     await loadAllData();
 });
+
+/* ============ DOCENTE FILTERS ============ */
+function misCursos(){
+    // Returns the courses this teacher can see
+    if(currentDocente?.superadmin) return Object.keys(ALL_CURSOS);
+    return currentDocente?.cursos||[];
+}
+
+function isMiCurso(curso){
+    if(currentDocente?.superadmin) return true;
+    return (currentDocente?.cursos||[]).includes(curso);
+}
+
+function isMiSesion(ses){
+    // Superadmin sees all. Teachers see sessions they created or without docenteUid (legacy)
+    if(currentDocente?.superadmin) return true;
+    if(!ses.docenteUid) return true; // legacy sessions visible to all
+    return ses.docenteUid===currentAdminUid;
+}
+
+function applyDocenteFilters(){
+    // Update all course dropdowns to show only teacher's courses
+    const cursosDisponibles=misCursos();
+
+    // Student course filter
+    const studentFilter=document.getElementById('studentCourseFilter');
+    if(studentFilter) updateCourseSelect(studentFilter,cursosDisponibles,true);
+
+    // Live course filter
+    const liveFilter=document.getElementById('liveCourseFilter');
+    if(liveFilter) updateCourseSelect(liveFilter,cursosDisponibles,true);
+
+    // Result course filter
+    const resultFilter=document.getElementById('resultCourse');
+    if(resultFilter) updateCourseSelect(resultFilter,cursosDisponibles,true);
+
+    // Planilla course filter
+    const planillaFilter=document.getElementById('planillaCourse');
+    if(planillaFilter) updateCourseSelect(planillaFilter,cursosDisponibles,true);
+
+    // Ranking course filter
+    const rankingFilter=document.getElementById('rankingCourseFilter');
+    if(rankingFilter) updateCourseSelect(rankingFilter,cursosDisponibles,true);
+
+    // New student curso select
+    const newStudentCurso=document.getElementById('newStudentCurso');
+    if(newStudentCurso) updateCourseSelect(newStudentCurso,cursosDisponibles,false);
+
+    // Edit student curso select
+    const editStudentCurso=document.getElementById('editStudentCurso');
+    if(editStudentCurso) updateCourseSelect(editStudentCurso,cursosDisponibles,false);
+}
+
+function updateCourseSelect(selectEl,cursos,includeAll){
+    const current=selectEl.value;
+    let html='';
+    if(includeAll) html='<option value="">Todos los cursos</option>';
+    // Keep SIMCE/PAES groups if superadmin
+    if(includeAll && currentDocente?.superadmin){
+        html+='<option value="__simce">📘 SIMCE (1°-2° medio)</option>';
+        html+='<option value="__paes">📗 PAES (3°-4° medio)</option>';
+    }
+    for(const c of cursos){
+        const v=ALL_CURSOS[c];
+        if(!v) continue;
+        html+=`<option value="${c}"${c===current?' selected':''}>${v.label}</option>`;
+    }
+    selectEl.innerHTML=html;
+}
 
 async function loadAllData(){
     const [estS,sesS,resS,respS]=await Promise.all([
@@ -586,15 +684,19 @@ function initMobileNav(){
 
 /* ============ OVERVIEW ============ */
 function renderOverview(){
-    const totalStudents=Object.keys(students).length;
-    const totalSessions=Object.keys(sessions).length;
-    const simceCount=Object.values(students).filter(s=>progFromCurso(s.curso)==='simce').length;
-    const paesCount=Object.values(students).filter(s=>progFromCurso(s.curso)==='paes').length;
-    const perfilComplete=Object.values(students).filter(s=>s.perfil_completo).length;
+    const myStudents=Object.fromEntries(Object.entries(students).filter(([uid,s])=>isMiCurso(s.curso)));
+    const totalStudents=Object.keys(myStudents).length;
+    const totalSessions=Object.values(sessions).filter(s=>isMiSesion(s)).length;
+    const simceCount=Object.values(myStudents).filter(s=>progFromCurso(s.curso)==='simce').length;
+    const paesCount=Object.values(myStudents).filter(s=>progFromCurso(s.curso)==='paes').length;
+    const perfilComplete=Object.values(myStudents).filter(s=>s.perfil_completo).length;
 
     let totalSubmissions=0;
     for(const sesId of Object.keys(allResults)){
-        totalSubmissions+=Object.keys(allResults[sesId]).length;
+        if(!sessions[sesId]||!isMiSesion(sessions[sesId])) continue;
+        for(const uid of Object.keys(allResults[sesId])){
+            if(myStudents[uid]) totalSubmissions++;
+        }
     }
 
     document.getElementById('overviewStats').innerHTML=`
@@ -607,7 +709,9 @@ function renderOverview(){
     // Recent activity
     const activity=[];
     for(const[sesId,uidMap]of Object.entries(allResults)){
+        if(!sessions[sesId]||!isMiSesion(sessions[sesId])) continue;
         for(const[uid,res]of Object.entries(uidMap)){
+            if(!myStudents[uid]) continue;
             activity.push({
                 nombre:students[uid]?.nombre||'Desconocido',
                 sesion:sessions[sesId]?.titulo||sesId,
@@ -632,6 +736,7 @@ function populateLiveDropdown(){
     const cur=sel.value;
     let opts='<option value="">Selecciona sesión...</option>';
     Object.entries(sessions).forEach(([id,s])=>{
+        if(!isMiSesion(s)) return;
         opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
     });
     sel.innerHTML=opts;
@@ -696,6 +801,7 @@ function renderLiveProgress(){
     let working=0,submitted=0,notStarted=0;
     const rows=[];
     for(const[uid,est]of Object.entries(students)){
+        if(!isMiCurso(est.curso)) continue;
         if(courseF && est.curso!==courseF) continue;
         const resp=responses[uid];
         const res=results[uid];
@@ -755,6 +861,8 @@ function renderStudents(){
     const tbody=document.getElementById('studentsBody');
 
     let items=Object.entries(students).map(([uid,s])=>({uid,...s}));
+    // Filter by docente's courses
+    items=items.filter(s=>isMiCurso(s.curso));
     if(search) items=items.filter(s=>(s.nombre||'').toLowerCase().includes(search)||(s.rut||'').includes(search));
     if(courseF==='__simce') items=items.filter(s=>progFromCurso(s.curso)==='simce');
     else if(courseF==='__paes') items=items.filter(s=>progFromCurso(s.curso)==='paes');
@@ -975,6 +1083,8 @@ function viewStudentDetail(uid){
 function renderSessions(){
     const tbody=document.getElementById('sessionsBody');
     let items=Object.entries(sessions).map(([id,s])=>({id,...s}));
+    // Filter by docente ownership
+    items=items.filter(s=>isMiSesion(s));
     items.sort((a,b)=>(a.orden||0)-(b.orden||0));
 
     tbody.innerHTML=items.map(s=>{
@@ -1111,9 +1221,11 @@ async function createSession(){
             activa:true,resultados_visibles:false,
             video_youtube:video||null,
             contenido:{textos:[],preguntas:[]},
+            docenteUid:currentAdminUid,
+            docenteNombre:currentDocente?.nombre||'',
             createdAt:Date.now()
         });
-        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,contenido:{textos:[],preguntas:[]}};
+        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,contenido:{textos:[],preguntas:[]},docenteUid:currentAdminUid,docenteNombre:currentDocente?.nombre||''};
         renderSessions();populateResultsDropdown();
         closeModal('addSession');
         toast('Sesión creada','ok');
@@ -2071,6 +2183,7 @@ function populateResultsDropdown(){
     // Clear except first option
     while(sel.options.length>1) sel.remove(1);
     Object.entries(sessions).forEach(([id,s])=>{
+        if(!isMiSesion(s)) return;
         const opt=document.createElement('option');
         opt.value=id;opt.textContent=s.titulo||id;
         sel.appendChild(opt);
@@ -2110,6 +2223,7 @@ function loadResults(){
     for(const[uid,r]of Object.entries(results)){
         const est=students[uid];
         if(!est) continue;
+        if(!isMiCurso(est.curso)) continue;
         if(courseF && est.curso!==courseF) continue;
         const flags=r.suspicious_flags||[];
         const resp=responses[uid]||{};
@@ -2178,6 +2292,7 @@ function generateReport(type){
 function generateSessionReport(output){
     let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión</h3>';
     for(const[sesId,ses]of Object.entries(sessions)){
+        if(!isMiSesion(ses)) continue;
         const results=allResults[sesId]||{};
         const entries=Object.entries(results);
         if(entries.length===0) continue;
@@ -2202,7 +2317,10 @@ function generateSessionReport(output){
 
 function generateCourseReport(output){
     const courses={};
-    for(const[k,v]of Object.entries(ALL_CURSOS)) courses[k]={name:v.label,scores:[]};
+    for(const[k,v]of Object.entries(ALL_CURSOS)){
+        if(!isMiCurso(k)) continue;
+        courses[k]={name:v.label,scores:[]};
+    }
     for(const[sesId,uidMap]of Object.entries(allResults)){
         for(const[uid,r]of Object.entries(uidMap)){
             const est=students[uid];
@@ -2231,6 +2349,7 @@ function generateStudentReport(output){
     let html='<h3 style="margin-bottom:16px">👤 Reporte Individual</h3>';
     html+='<div class="search-bar" style="margin-bottom:12px"><select id="reportStudentSel" onchange="showStudentReport()" style="width:100%"><option value="">Selecciona estudiante...</option>';
     for(const[uid,est]of Object.entries(students)){
+        if(!isMiCurso(est.curso)) continue;
         html+=`<option value="${uid}">${est.nombre} (${est.curso})</option>`;
     }
     html+='</select></div><div id="studentReportContent"></div>';
@@ -2249,6 +2368,7 @@ function showStudentReport(){
 
     let totalPct=0,count=0;
     for(const[sesId,ses]of Object.entries(sessions)){
+        if(!isMiSesion(ses)) continue;
         const r=allResults[sesId]?.[uid];
         if(r){
             totalPct+=r.porcentaje;count++;
@@ -2267,14 +2387,17 @@ function exportCSV(type){
     if(type==='session'){
         csv='Sesión,Estudiante,Curso,Puntaje,Total,Porcentaje,Nivel\n';
         for(const[sesId,uidMap]of Object.entries(allResults)){
+            if(!isMiSesion(sessions[sesId])) continue;
             for(const[uid,r]of Object.entries(uidMap)){
                 const est=students[uid];
+                if(!est||!isMiCurso(est.curso)) continue;
                 csv+=`"${sessions[sesId]?.titulo||sesId}","${est?.nombre||''}","${est?.curso||''}",${r.puntaje||0},${r.total||0},${r.porcentaje||0},"${getLevel(r.porcentaje||0)}"\n`;
             }
         }
     }else if(type==='course'){
         csv='Estudiante,RUT,Curso,Sesiones Completadas,Promedio\n';
         for(const[uid,est]of Object.entries(students)){
+            if(!isMiCurso(est.curso)) continue;
             let t=0,c=0;
             for(const sesId of Object.keys(allResults)){
                 if(allResults[sesId][uid]){t+=allResults[sesId][uid].porcentaje||0;c++}
@@ -2380,11 +2503,12 @@ function updateUnlockUI(sesId){
 
 function renderPlanilla(){
     const courseF=document.getElementById('planillaCourse').value;
-    const sesIds=Object.keys(sessions).sort();
+    const sesIds=Object.keys(sessions).filter(sId=>isMiSesion(sessions[sId])).sort();
 
     // Build student list
     let stuList=[];
     for(const[uid,est]of Object.entries(students)){
+        if(!isMiCurso(est.curso)) continue;
         if(courseF && est.curso!==courseF) continue;
         stuList.push({uid,nombre:est.nombre,curso:est.curso});
     }
@@ -2492,13 +2616,14 @@ function renderPlanilla(){
 
 function exportPlanillaCSV(){
     const courseF=document.getElementById('planillaCourse').value;
-    const sesIds=Object.keys(sessions).sort();
+    const sesIds=Object.keys(sessions).filter(sId=>isMiSesion(sessions[sId])).sort();
     let csv='Estudiante,RUT,Curso';
     sesIds.forEach(sId=>csv+=',"'+(sessions[sId].titulo||sId)+'"');
     csv+=',Promedio\n';
 
     let stuList=[];
     for(const[uid,est]of Object.entries(students)){
+        if(!isMiCurso(est.curso)) continue;
         if(courseF && est.curso!==courseF) continue;
         stuList.push({uid,nombre:est.nombre,rut:est.rut||'',curso:est.curso});
     }
@@ -2532,6 +2657,7 @@ function populateRankingDropdown(){
     const cur=sel.value;
     let opts='<option value="">Selecciona sesión...</option><option value="__all__">📊 Histórico (Todas)</option><option value="__avatar__">⚔️ Ranking de Poder (Avatar/XP)</option>';
     Object.entries(sessions).forEach(([id,s])=>{
+        if(!isMiSesion(s)) return;
         opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
     });
     sel.innerHTML=opts;
@@ -2557,6 +2683,7 @@ async function loadAdminRanking(){
         const avatars=avatarSnap.val()||{};
         let items=[];
         for(const[uid,est]of Object.entries(students)){
+            if(!isMiCurso(est.curso)) continue;
             if(courseF && est.curso!==courseF) continue;
             const av=avatars[uid]||{};
             const xp=av.xp_total||0;
@@ -2600,6 +2727,7 @@ async function loadAdminRanking(){
         // Historic: average across all sessions
         const studentTotals={};
         for(const[sId,uidMap]of Object.entries(allResults)){
+            if(!isMiSesion(sessions[sId])) continue;
             for(const[uid,r]of Object.entries(uidMap)){
                 if(!studentTotals[uid]) studentTotals[uid]={sum:0,count:0,bestPct:0,bestPuntaje:0,bestTotal:0};
                 studentTotals[uid].sum+=(r.porcentaje||0);
@@ -2614,6 +2742,7 @@ async function loadAdminRanking(){
         for(const[uid,t]of Object.entries(studentTotals)){
             const est=students[uid];
             if(!est) continue;
+            if(!isMiCurso(est.curso)) continue;
             if(courseF && est.curso!==courseF) continue;
             const avg=Math.round(t.sum/t.count);
             items.push({uid,nombre:est.nombre,curso:est.curso,porcentaje:avg,puntaje:t.bestPuntaje,total:t.bestTotal,sesiones:t.count});
@@ -2623,6 +2752,7 @@ async function loadAdminRanking(){
         for(const[uid,r]of Object.entries(results)){
             const est=students[uid];
             if(!est) continue;
+            if(!isMiCurso(est.curso)) continue;
             if(courseF && est.curso!==courseF) continue;
             items.push({uid,nombre:est.nombre,curso:est.curso,porcentaje:r.porcentaje||0,puntaje:r.puntaje||0,total:r.total||0});
         }

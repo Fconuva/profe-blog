@@ -214,7 +214,8 @@
         '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
     };
 
-    const MAX_BATTLES_PER_DAY = 3;
+    const ADMIN_EMAIL = '111111111@est.profefranciscopancho.com';
+    let MAX_BATTLES_PER_DAY = 3;
     const XP_WIN = 5;
     const XP_LOSE = 2;
 
@@ -229,6 +230,7 @@
     auth.onAuthStateChanged(async (user) => {
         if (!user) { window.location.href = 'index.html'; return; }
         currentUid = user.uid;
+        if (user.email === ADMIN_EMAIL) MAX_BATTLES_PER_DAY = 10;
         try {
             const [studentSnap, avatarSnap, arenaSnap] = await Promise.all([
                 db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
@@ -483,7 +485,7 @@
     var battleAnimFrame = null;
 
     async function startBattle(oppUid) {
-        if (todayBattles >= MAX_BATTLES_PER_DAY) { toast('Ya usaste tus 3 batallas de hoy', 'err'); return; }
+        if (todayBattles >= MAX_BATTLES_PER_DAY) { toast('Ya usaste tus ' + MAX_BATTLES_PER_DAY + ' batallas de hoy', 'err'); return; }
 
         var opp = opponents.find(function(o){ return o.uid === oppUid; });
         if (!opp) { toast('Rival no encontrado', 'err'); return; }

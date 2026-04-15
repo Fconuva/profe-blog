@@ -156,6 +156,7 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
+        const ADMIN_EMAIL = '111111111@est.profefranciscopancho.com';
 
         const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
         const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC','2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
@@ -169,20 +170,25 @@
 
         let currentUid = null;
         let currentCurso = null;
+        let currentEmail = null;
         let allStudents = [];
+        let arenaRecords = {};
         let activeTab = 'programa';
         let myPair = [];
 
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             currentUid = user.uid;
+            currentEmail = user.email;
 
             try {
-                const [studentSnap, allEstSnap, avatarSnap] = await Promise.all([
+                const [studentSnap, allEstSnap, avatarSnap, arenaRecSnap] = await Promise.all([
                     db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
                     db.ref(BASE + '/estudiantes').once('value'),
-                    db.ref(BASE + '/avatar').once('value')
+                    db.ref(BASE + '/avatar').once('value'),
+                    db.ref(BASE + '/arena/records').once('value')
                 ]);
+                arenaRecords = arenaRecSnap.val() || {};
 
                 const me = studentSnap.val();
                 if (!me) { auth.signOut(); return; }
@@ -194,12 +200,15 @@
                 const avatars = avatarSnap.val() || {};
                 const allEst = allEstSnap.val() || {};
 
-                // Build student list with XP/level data
+                // Build student list with XP/level data (exclude admin demo account)
                 allStudents = [];
                 for (const [uid, est] of Object.entries(allEst)) {
+                    // Skip admin/demo account from ranking
+                    if (est.email === ADMIN_EMAIL) continue;
                     const av = avatars[uid] || {};
                     const xp = av.xp_total || 0;
                     const lvlInfo = AvatarSystem.getLevelInfo(xp);
+                    const arec = arenaRecords[uid] || {};
                     allStudents.push({
                         uid, nombre: est.nombre || 'Estudiante',
                         curso: est.curso || '?',
@@ -208,8 +217,16 @@
                         tierIdx: lvlInfo.current.tierIdx, emoji: lvlInfo.current.emoji,
                         title: lvlInfo.current.title, color: lvlInfo.current.color,
                         bg: lvlInfo.current.bg, power: AvatarSystem.getPower(xp),
-                        progress: lvlInfo.progress
+                        progress: lvlInfo.progress,
+                        arenaWins: arec.wins || 0,
+                        arenaLosses: arec.losses || 0,
+                        arenaStreak: arec.streak || 0,
+                        arenaBattles: (arec.wins || 0) + (arec.losses || 0)
                     });
+                }
+                // Also exclude self if admin viewing
+                if (currentEmail === ADMIN_EMAIL) {
+                    allStudents = allStudents.filter(s => s.uid !== currentUid);
                 }
 
                 // Build tabs
@@ -218,6 +235,7 @@
                     tabsHtml += '<button class="tab" onclick="setTab(\'' + c + '\',this)">' + (CURSO_LABELS[c] || c) + '</button>';
                 });
                 tabsHtml += '<button class="tab" onclick="setTab(\'global\',this)">🌐 Global</button>';
+                tabsHtml += '<button class="tab" onclick="setTab(\'arena\',this)">⚔️ Arena</button>';
                 document.getElementById('tabsContainer').innerHTML = tabsHtml;
 
                 renderComparison();
@@ -269,8 +287,9 @@
         }
 
         function renderRanking() {
+            const isArena = activeTab === 'arena';
             let filtered;
-            if (activeTab === 'global') {
+            if (activeTab === 'global' || isArena) {
                 filtered = [...allStudents];
             } else if (activeTab === 'programa') {
                 const myProg = allStudents.find(s => s.uid === currentUid);
@@ -279,6 +298,20 @@
                 filtered = allStudents.filter(s => cursos.includes(s.curso));
             } else {
                 filtered = allStudents.filter(s => s.curso === activeTab);
+            }
+
+            if (isArena) {
+                // Arena: only students who have battled, sort by wins desc then winRate
+                filtered = filtered.filter(s => s.arenaBattles > 0);
+                filtered.sort((a, b) => {
+                    if (b.arenaWins !== a.arenaWins) return b.arenaWins - a.arenaWins;
+                    const rateA = a.arenaBattles > 0 ? a.arenaWins / a.arenaBattles : 0;
+                    const rateB = b.arenaBattles > 0 ? b.arenaWins / b.arenaBattles : 0;
+                    if (rateB !== rateA) return rateB - rateA;
+                    return b.arenaStreak - a.arenaStreak;
+                });
+                renderArenaRanking(filtered);
+                return;
             }
 
             // Sort by power descending, then alphabetical for ties
@@ -358,6 +391,86 @@
                     '</div></div>';
             }
 
+            document.getElementById('rankList').innerHTML = listHtml;
+        }
+
+        function renderArenaRanking(filtered) {
+            document.getElementById('comparison').style.display = 'none';
+
+            if (filtered.length === 0) {
+                document.getElementById('podium').innerHTML = '';
+                document.getElementById('rankList').innerHTML = '<div class="empty">Nadie ha peleado aún en la Arena ⚔️</div>';
+                document.getElementById('myPosPill').textContent = '-';
+                document.getElementById('myRank').innerHTML = '<div class="emoji">⚔️</div><div style="font-size:14px;color:#94a3b8;margin-top:8px">Ranking de Arena</div>';
+                return;
+            }
+
+            const myIdx = filtered.findIndex(s => s.uid === currentUid);
+            const myPos = myIdx >= 0 ? myIdx + 1 : '-';
+            const me = myIdx >= 0 ? filtered[myIdx] : null;
+            document.getElementById('myPosPill').textContent = myPos !== '-' ? '#' + myPos + ' de ' + filtered.length : '-';
+
+            if (me) {
+                const wr = me.arenaBattles > 0 ? Math.round(me.arenaWins / me.arenaBattles * 100) : 0;
+                document.getElementById('myRank').innerHTML =
+                    '<div class="emoji">⚔️</div>' +
+                    '<div class="level-badge" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">Gladiador</div>' +
+                    '<div class="pos">#' + myPos + '</div>' +
+                    '<div class="pos-label">' + me.arenaWins + 'W / ' + me.arenaLosses + 'L · ' + wr + '% winrate</div>';
+            } else {
+                document.getElementById('myRank').innerHTML = '<div class="emoji">⚔️</div><div style="font-size:14px;color:#94a3b8;margin-top:8px">Ranking de Arena</div>';
+            }
+
+            // TOP 3 arena podium
+            const top3 = filtered.slice(0, Math.min(3, filtered.length));
+            const hasPodium = top3.length >= 3;
+            let podiumHtml = '';
+            if (hasPodium) {
+                [1, 0, 2].forEach(idx => {
+                    const s = top3[idx];
+                    const pos = idx + 1;
+                    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+                    const wr = s.arenaBattles > 0 ? Math.round(s.arenaWins / s.arenaBattles * 100) : 0;
+                    podiumHtml +=
+                        '<div class="podium-slot p' + pos + '">' +
+                        '<div class="podium-base">' +
+                        '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
+                        s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
+                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-level" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">' + s.arenaWins + 'W</div>' +
+                        '<div class="podium-xp">' + wr + '% · racha ' + s.arenaStreak + '</div>' +
+                        '</div></div>';
+                });
+            }
+            document.getElementById('podium').innerHTML = podiumHtml;
+
+            // Full arena list
+            let listHtml = '';
+            const startIdx = hasPodium ? 3 : 0;
+            if (filtered.length > 3 && hasPodium) {
+                listHtml += '<div class="sep">── Ranking Arena Completo ──</div>';
+            }
+            for (let i = startIdx; i < filtered.length; i++) {
+                const s = filtered[i];
+                const pos = i + 1;
+                const isMe = s.uid === currentUid;
+                const cursoLabel = CURSO_LABELS[s.curso] || s.curso;
+                const wr = s.arenaBattles > 0 ? Math.round(s.arenaWins / s.arenaBattles * 100) : 0;
+                listHtml +=
+                    '<div class="rank-card' + (isMe ? ' me' : '') + '">' +
+                    '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
+                    '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
+                    '<div class="rank-info">' +
+                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-sub">' + s.arenaWins + 'W / ' + s.arenaLosses + 'L · ' + wr + '% winrate</div>' +
+                    '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + wr + '%;background:linear-gradient(90deg,#ef4444,#f59e0b)"></div></div>' +
+                    '<span class="pb-text">🔥 ' + s.arenaStreak + '</span></div>' +
+                    '</div>' +
+                    '<div class="rank-right">' +
+                    '<div class="rank-level" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">' + s.arenaWins + 'W</div>' +
+                    '<div class="rank-xp"><span class="rank-curso">' + cursoLabel + '</span></div>' +
+                    '</div></div>';
+            }
             document.getElementById('rankList').innerHTML = listHtml;
         }
     </script>

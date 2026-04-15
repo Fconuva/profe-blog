@@ -983,12 +983,17 @@ async function saveStudentEdit(){
 }
 
 async function resetPassword(uid){
-    const s=students[uid];if(!s)return;
+    const s=students[uid];
+    if(!s){toast('❌ Estudiante no encontrado en memoria','err');return;}
     const rut=s.rut||'';
     const digits=rut.replace(/[^0-9]/g,'');
     const defPass=digits.substring(0,6).padEnd(6,'0');
     if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nNueva contraseña: '+defPass+' (6 primeros números del RUT)'))return;
-    toast('⏳ Restableciendo contraseña...','ok');
+    // Show persistent loading overlay
+    const loader=document.createElement('div');
+    loader.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+    loader.innerHTML='<div style="background:#fff;border-radius:12px;padding:32px 40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">🔑</div><p style="font-size:15px;font-weight:600;color:#0f172a;margin:0">Restableciendo contraseña...</p><p style="font-size:12px;color:#94a3b8;margin:4px 0 0">Puede tardar unos segundos</p></div>';
+    document.body.appendChild(loader);
     try{
         const token=await firebase.auth().currentUser.getIdToken();
         const resp=await fetch('/api/estudiantes?action=reset-password',{
@@ -998,8 +1003,10 @@ async function resetPassword(uid){
         });
         if(!resp.ok){ let errMsg='Error del servidor'; try{ const d=await resp.json(); errMsg=d.error||errMsg; }catch(e){} throw new Error(errMsg); }
         const data=await resp.json();
+        loader.remove();
         toast('✅ Contraseña restablecida a: '+defPass,'ok');
     }catch(err){
+        loader.remove();
         let msg=err.message;
         if(msg.includes('user-not-found')||msg.includes('no user record')) msg='La cuenta Auth de este estudiante no existe. Elimínalo y vuelve a crearlo.';
         else if(msg.includes('Token requerido')||msg.includes('No autorizado')) msg='Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';
@@ -1009,8 +1016,14 @@ async function resetPassword(uid){
 }
 
 async function generateLoginLink(uid){
-    const s=students[uid];if(!s)return;
-    toast('⏳ Generando link de acceso...','ok');
+    const s=students[uid];
+    if(!s){toast('❌ Estudiante no encontrado en memoria','err');return;}
+    // Show persistent loading overlay
+    const loader=document.createElement('div');
+    loader.id='linkLoader';
+    loader.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
+    loader.innerHTML='<div style="background:#fff;border-radius:12px;padding:32px 40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏳</div><p style="font-size:15px;font-weight:600;color:#0f172a;margin:0">Generando link seguro...</p><p style="font-size:12px;color:#94a3b8;margin:4px 0 0">Puede tardar unos segundos</p></div>';
+    document.body.appendChild(loader);
     try{
         const token=await firebase.auth().currentUser.getIdToken();
         const resp=await fetch('/api/estudiantes?action=login-token',{
@@ -1022,22 +1035,28 @@ async function generateLoginLink(uid){
         const data=await resp.json();
         const url='https://www.profefranciscopancho.com/estudiantes/?token='+encodeURIComponent(data.token);
         try{ await navigator.clipboard.writeText(url); }catch(e){}
-        // Show modal with copyable link
+        // Remove loader
+        loader.remove();
+        // Open in new tab
+        var win=window.open(url,'_blank');
+        // Show modal with copyable link (fallback + reference)
         const modal=document.createElement('div');
         modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
         modal.innerHTML=`<div style="background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%">
             <h3 style="margin:0 0 8px">🔗 Link de acceso para ${s.nombre}</h3>
-            <p style="font-size:13px;color:#64748b;margin:0 0 12px">Válido por 1 hora. Copia y envía al estudiante.</p>
+            <p style="font-size:13px;color:#64748b;margin:0 0 12px">Válido por 1 hora.${!win?' <strong style="color:#dc2626">El navegador bloqueó la pestaña. Usa el link de abajo:</strong>':' Se abrió en nueva pestaña. También puedes copiar:'}</p>
             <textarea id="loginLinkTA" readonly style="width:100%;height:80px;font-size:11px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;resize:none">${url}</textarea>
             <div style="display:flex;gap:8px;margin-top:12px">
                 <button onclick="document.getElementById('loginLinkTA').select();document.execCommand('copy');this.textContent='✅ Copiado'" style="flex:1;padding:8px;background:#8b5cf6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar link</button>
+                <button onclick="window.open(document.getElementById('loginLinkTA').value,'_blank')" style="flex:1;padding:8px;background:#1e40af;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">🔗 Abrir</button>
                 <button onclick="this.closest('div').closest('div').closest('div').remove()" style="flex:1;padding:8px;background:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-weight:600">Cerrar</button>
             </div>
         </div>`;
         document.body.appendChild(modal);
         modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
-        toast('🔗 Link generado — cópialo del cuadro','ok');
+        toast('🔗 Link generado'+(win?' y abierto en nueva pestaña':''),'ok');
     }catch(err){
+        loader.remove();
         let msg=err.message;
         if(msg.includes('user-not-found')||msg.includes('no user record')) msg='La cuenta Auth de este estudiante no existe. Elimínalo y vuelve a crearlo.';
         else if(msg.includes('Token requerido')||msg.includes('No autorizado')) msg='Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';

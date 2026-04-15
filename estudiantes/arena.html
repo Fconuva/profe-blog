@@ -85,12 +85,16 @@
         .result-btn:hover{transform:scale(1.03)}
         /* HISTORY */
         .history-list{display:flex;flex-direction:column;gap:6px}
-        .hist-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;font-size:12px}
-        .hist-item .result-icon{font-size:18px;width:28px;text-align:center;flex-shrink:0}
-        .hist-item .detail{flex:1;color:#94a3b8}
+        .hist-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:10px;font-size:12px;transition:background .2s}
+        .hist-item:hover{background:rgba(255,255,255,.06)}
+        .hist-item.win{border-left:3px solid #4ade80}
+        .hist-item.loss{border-left:3px solid #f87171}
+        .hist-item .result-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0}
+        .hist-item .detail{flex:1;color:#94a3b8;line-height:1.4}
         .hist-item .detail strong{color:#e2e8f0}
-        .hist-item .xp-earned{color:#fbbf24;font-weight:700;flex-shrink:0}
-        .hist-item .time{color:#475569;font-size:10px;flex-shrink:0}
+        .hist-item .detail .opp-curso-tag{font-size:10px;color:#64748b;background:rgba(255,255,255,.04);padding:1px 6px;border-radius:4px;margin-left:4px}
+        .hist-item .xp-earned{color:#fbbf24;font-weight:700;flex-shrink:0;font-size:11px}
+        .hist-item .time{color:#475569;font-size:10px;flex-shrink:0;text-align:right;min-width:30px}
         /* TOAST */
         .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:all .3s;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
@@ -343,13 +347,18 @@
             el.innerHTML = '<div class="empty-state"><div class="icon">⚔️</div><p>Aún no tienes batallas</p></div>';
             return;
         }
-        el.innerHTML = items.map(function(h) {
+        // Show last 10 most recent
+        var recent = items.slice(0, 10);
+        el.innerHTML = recent.map(function(h) {
             var icon = h.won ? '🏆' : '💀';
-            var xpEarned = h.won ? '+' + XP_WIN : '+' + XP_LOSE;
+            var label = h.won ? 'Victoria' : 'Derrota';
+            var xpEarned = '+' + (h.xpEarned || (h.won ? XP_WIN : XP_LOSE)) + ' XP';
             var ago = timeAgo(h.timestamp);
-            return '<div class="hist-item"><span class="result-icon">' + icon + '</span>' +
-                '<div class="detail">' + (h.won ? 'Victoria' : 'Derrota') + ' vs <strong>' + (h.opponentName || '?') + '</strong></div>' +
-                '<span class="xp-earned">' + xpEarned + ' XP</span>' +
+            var cursoTag = h.opponentCurso ? '<span class="opp-curso-tag">' + (CURSO_LABELS[h.opponentCurso] || h.opponentCurso) + '</span>' : '';
+            return '<div class="hist-item ' + (h.won ? 'win' : 'loss') + '">' +
+                '<span class="result-icon">' + icon + '</span>' +
+                '<div class="detail">' + label + ' vs <strong>' + (h.opponentName || '?') + '</strong>' + cursoTag + '</div>' +
+                '<span class="xp-earned">' + xpEarned + '</span>' +
                 '<span class="time">' + ago + '</span></div>';
         }).join('');
     }
@@ -1039,9 +1048,15 @@
 
         try {
             // Save arena data (history, daily, records) — separate writes to match per-path rules
+            // Find opponent curso
+            var oppCurso = '';
+            for (var i = 0; i < opponents.length; i++) {
+                if (opponents[i].uid === oppUid) { oppCurso = opponents[i].curso; break; }
+            }
             await db.ref(BASE + '/arena/history/' + currentUid + '/' + historyKey).set({
                 opponent: oppUid,
                 opponentName: oppName,
+                opponentCurso: oppCurso,
                 won: won,
                 xpEarned: xpEarned,
                 timestamp: firebase.database.ServerValue.TIMESTAMP

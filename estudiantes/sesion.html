@@ -3193,16 +3193,21 @@
             const isCorrect = userAnswer === q.correcta;
             block.classList.add(isCorrect ? 'correct' : 'incorrect');
 
+            // Map original letters to display letters for feedback text
+            let userDisplayLetter = userAnswer;
+            let correctDisplayLetter = q.correcta;
             block.querySelectorAll('.option-item').forEach(opt => {
                 opt.classList.add('disabled');
                 if (opt.dataset.letter === q.correcta) {
                     opt.classList.add('is-correct');
+                    correctDisplayLetter = opt.dataset.display || q.correcta;
                 }
                 if (opt.dataset.letter === userAnswer && !isCorrect) {
                     opt.classList.add('selected-incorrect');
                 }
-                if (opt.dataset.letter === userAnswer && isCorrect) {
-                    opt.classList.add('selected-correct');
+                if (opt.dataset.letter === userAnswer) {
+                    userDisplayLetter = opt.dataset.display || userAnswer;
+                    if (isCorrect) opt.classList.add('selected-correct');
                 }
             });
 
@@ -3210,10 +3215,10 @@
                 feedback.classList.add('show');
                 if (isCorrect) {
                     feedback.className = 'q-feedback show correct';
-                    feedback.textContent = '✅ ¡Correcto! La respuesta es ' + q.correcta + '.';
+                    feedback.textContent = '✅ ¡Correcto! La respuesta es ' + correctDisplayLetter + '.';
                 } else {
                     feedback.className = 'q-feedback show incorrect';
-                    feedback.textContent = '❌ Incorrecto. Tu respuesta: ' + userAnswer + '. La correcta es: ' + q.correcta + '.';
+                    feedback.textContent = '❌ Incorrecto. Tu respuesta: ' + userDisplayLetter + '. La correcta es: ' + correctDisplayLetter + '.';
                 }
             }
         });

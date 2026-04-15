@@ -1953,43 +1953,40 @@ async function resetSessionResults(sesId){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
-async function resetStudentSession(uid,sesId,nombre){
-    const choice=prompt('Reset para '+nombre+':\n\n1 = Solo desbloquear strikes (mantiene respuestas y progreso)\n2 = Reset completo (borra todo, debe hacerla de nuevo)\n\nEscribe 1 o 2:');
-    if(!choice)return;
+async function softResetStudent(uid,sesId,nombre){
+    if(!confirm('🔓 Desbloquear strikes de '+nombre+'?\n\nSe limpian strikes y bloqueos.\nSus respuestas se MANTIENEN (sigue donde quedó).'))return;
     try{
-        if(choice.trim()==='1'){
-            // Soft reset: only clear strikes and bloqueado_por_copia
-            await Promise.all([
-                db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/strikes').remove(),
-                db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_copia').remove(),
-                db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/completada').remove(),
-                db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/focus_log').remove()
-            ]);
-            if(allResponses[sesId]&&allResponses[sesId][uid]){
-                delete allResponses[sesId][uid].strikes;
-                delete allResponses[sesId][uid].bloqueado_por_copia;
-                delete allResponses[sesId][uid].completada;
-                delete allResponses[sesId][uid].focus_log;
-            }
-            // Also remove result and ranking so they can re-submit
-            const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove()];
-            for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
-            await Promise.all(rankRemovals);
-            if(allResults[sesId])delete allResults[sesId][uid];
-            loadResults();
-            toast(nombre+': strikes limpiados, conserva sus respuestas','ok');
-        }else if(choice.trim()==='2'){
-            // Hard reset: delete everything
-            const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove(),db.ref(BASE+'/respuestas/'+sesId+'/'+uid).remove()];
-            for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
-            await Promise.all(rankRemovals);
-            if(allResults[sesId])delete allResults[sesId][uid];
-            if(allResponses[sesId])delete allResponses[sesId][uid];
-            loadResults();
-            toast(nombre+': reset completo, debe hacerla de nuevo','ok');
-        }else{
-            toast('Opción no válida. Escribe 1 o 2.','err');
+        await Promise.all([
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/strikes').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_copia').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/completada').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/focus_log').remove()
+        ]);
+        if(allResponses[sesId]&&allResponses[sesId][uid]){
+            delete allResponses[sesId][uid].strikes;
+            delete allResponses[sesId][uid].bloqueado_por_copia;
+            delete allResponses[sesId][uid].completada;
+            delete allResponses[sesId][uid].focus_log;
         }
+        const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove()];
+        for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
+        await Promise.all(rankRemovals);
+        if(allResults[sesId])delete allResults[sesId][uid];
+        loadResults();
+        toast(nombre+': strikes limpiados, conserva sus respuestas','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function hardResetStudent(uid,sesId,nombre){
+    if(!confirm('🔄 Reset COMPLETO de '+nombre+'?\n\nSe BORRA TODO: respuestas, resultado y ranking.\nDeberá hacerla desde cero.'))return;
+    try{
+        const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove(),db.ref(BASE+'/respuestas/'+sesId+'/'+uid).remove()];
+        for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
+        await Promise.all(rankRemovals);
+        if(allResults[sesId])delete allResults[sesId][uid];
+        if(allResponses[sesId])delete allResponses[sesId][uid];
+        loadResults();
+        toast(nombre+': reset completo, debe hacerla de nuevo','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
@@ -2342,7 +2339,8 @@ function loadResults(){
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>
                 <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝</button>
-                <button class="btn btn-sm btn-warn" onclick="resetStudentSession('${r.uid}','${sesId}','${r.nombre}')">🔄</button>
+                <button class="btn btn-sm" style="background:#0ea5e9;color:#fff" title="Desbloquear strikes (mantiene respuestas)" onclick="softResetStudent('${r.uid}','${sesId}','${r.nombre}')">🔓</button>
+                <button class="btn btn-sm btn-warn" title="Reset completo (borra todo)" onclick="hardResetStudent('${r.uid}','${sesId}','${r.nombre}')">🔄</button>
                 ${copiaBtn}
             </td>
         </tr>`;

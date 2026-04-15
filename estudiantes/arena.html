@@ -73,7 +73,7 @@
         /* Log */
         .battle-log{height:120px;overflow-y:auto;padding:8px 20px;background:rgba(0,0,0,.4);font-size:12px;line-height:1.6;scroll-behavior:smooth}
         .battle-log::-webkit-scrollbar{width:4px}.battle-log::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
-        .log-atk{color:#60a5fa}.log-def{color:#a78bfa}.log-crit{color:#fbbf24}.log-dodge{color:#94a3b8}.log-end{color:#4ade80;font-weight:700}
+        .log-atk{color:#60a5fa}.log-def{color:#a78bfa}.log-crit{color:#fbbf24}.log-dodge{color:#94a3b8}.log-end{color:#4ade80;font-weight:700}.log-regen{color:#4ade80}
         /* Result overlay */
         .result-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.85);flex-direction:column;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px)}
         .result-overlay.active{display:flex}
@@ -361,18 +361,47 @@
     }
 
     /* ========== COMBAT ENGINE ========== */
+    /*
+     * STATS → COMBAT MAPPING (no revelado a estudiantes):
+     *   COMPRENSIÓN → FUERZA: ATK base + HP bonus
+     *   VELOCIDAD   → AGILIDAD: velocidad de ataque (hits extra) + armadura (reduce daño)
+     *   CONSTANCIA  → RESISTENCIA: regeneración HP por turno + chance de contraataque
+     */
     function calcCombatStats(avatar) {
         var s = avatar.stats;
+        var comp = s.comprension || 0;
+        var vel = s.velocidad || 0;
+        var cons = s.constancia || 0;
+
+        // COMPRENSIÓN = FUERZA → ATK + HP
+        var baseHP = 100;
+        var hpBonus = comp * 1.5;              // +1.5 HP por punto comprensión
+        var maxHP = Math.round(baseHP + hpBonus);
+        var atk = 5 + comp * 0.2;              // daño base fuerte
+
+        // VELOCIDAD = AGILIDAD → velocidad de ataque + armadura
+        var armor = Math.min(35, vel * 0.12);  // reduce % daño recibido (max 35%)
+        var doubleHit = Math.min(30, vel * 0.1); // chance de golpe doble por turno (max 30%)
+        var dodge = Math.min(25, vel * 0.08);   // esquiva reducida vs antes
+
+        // CONSTANCIA = RESISTENCIA → regen + contraataque
+        var regen = Math.min(8, cons * 0.03);   // HP recuperado por turno (max 8)
+        var counter = Math.min(25, cons * 0.09); // chance de contraatacar al ser golpeado (max 25%)
+        var crit = Math.min(15, cons * 0.05);    // chance de crítico (max 15%)
+
         return {
             name: avatar.nombre,
             emoji: avatar.level.emoji,
-            maxHP: 100 + (s.constancia || 0) * 2,
-            hp: 100 + (s.constancia || 0) * 2,
-            atk: 5 + (s.comprension || 0) * 0.15,
-            dodge: Math.min(40, (s.velocidad || 0) / 5),
-            crit: Math.min(25, (s.velocidad || 0) / 8),
-            speed: s.velocidad || 0,
-            defense: Math.min(30, (s.constancia || 0) * 0.08)
+            maxHP: maxHP,
+            hp: maxHP,
+            atk: atk,
+            dodge: dodge,
+            doubleHit: doubleHit,
+            armor: armor,
+            regen: regen,
+            counter: counter,
+            crit: crit,
+            speed: vel
         };
     }
 
@@ -391,21 +420,48 @@
             var attacker = fighters[turn % 2];
             var defender = fighters[(turn + 1) % 2];
 
-            // Dodge check
-            if (Math.random() * 100 < defender.dodge) {
-                log.push({ type: 'dodge', attacker: attacker.name, defender: defender.name, text: defender.name + ' esquivó el ataque de ' + attacker.name });
-            } else {
-                var isCrit = Math.random() * 100 < attacker.crit;
-                var dmg = attacker.atk * (1 - defender.defense / 100);
-                if (isCrit) dmg *= 2;
-                dmg = Math.max(1, Math.round(dmg + (Math.random() * 4 - 2))); // ±2 variance
-                defender.hp = Math.max(0, defender.hp - dmg);
-                if (isCrit) {
-                    log.push({ type: 'crit', attacker: attacker.name, defender: defender.name, dmg: dmg, defHP: defender.hp, text: '💥 ¡CRÍTICO! ' + attacker.name + ' golpea a ' + defender.name + ' por ' + dmg + ' daño!' });
-                } else {
-                    log.push({ type: 'atk', attacker: attacker.name, defender: defender.name, dmg: dmg, defHP: defender.hp, text: attacker.name + ' golpea a ' + defender.name + ' por ' + dmg + ' daño' });
+            // Regen at start of turn
+            if (attacker.regen > 0 && attacker.hp < attacker.maxHP && attacker.hp > 0) {
+                var healed = Math.min(attacker.regen, attacker.maxHP - attacker.hp);
+                var actualHeal = Math.round(healed * 10) / 10;
+                if (actualHeal >= 1) {
+                    attacker.hp = Math.min(attacker.maxHP, attacker.hp + Math.round(actualHeal));
+                    log.push({ type: 'regen', attacker: attacker.name, defender: defender.name, text: '💚 ' + attacker.name + ' regenera ' + Math.round(actualHeal) + ' HP' });
                 }
             }
+
+            // Execute attack
+            function doAttack(atk, def, isCounter) {
+                var prefix = isCounter ? '🔄 ¡Contraataque! ' : '';
+                // Dodge check
+                if (Math.random() * 100 < def.dodge) {
+                    log.push({ type: 'dodge', attacker: atk.name, defender: def.name, text: prefix + def.name + ' esquivó el ataque de ' + atk.name });
+                    return;
+                }
+                var isCrit = Math.random() * 100 < atk.crit;
+                var dmg = atk.atk * (1 - def.armor / 100);
+                if (isCrit) dmg *= 2;
+                dmg = Math.max(1, Math.round(dmg + (Math.random() * 4 - 2)));
+                def.hp = Math.max(0, def.hp - dmg);
+                if (isCrit) {
+                    log.push({ type: 'crit', attacker: atk.name, defender: def.name, dmg: dmg, defHP: def.hp, text: prefix + '💥 ¡CRÍTICO! ' + atk.name + ' golpea a ' + def.name + ' por ' + dmg + ' daño!' });
+                } else {
+                    log.push({ type: 'atk', attacker: atk.name, defender: def.name, dmg: dmg, defHP: def.hp, text: prefix + atk.name + ' golpea a ' + def.name + ' por ' + dmg + ' daño' });
+                }
+                // Counterattack chance (only on normal attacks, not counters)
+                if (!isCounter && def.hp > 0 && Math.random() * 100 < def.counter) {
+                    doAttack(def, atk, true);
+                }
+            }
+
+            doAttack(attacker, defender, false);
+
+            // Double hit chance (agilidad)
+            if (defender.hp > 0 && attacker.hp > 0 && Math.random() * 100 < attacker.doubleHit) {
+                log.push({ type: 'atk', attacker: attacker.name, defender: defender.name, dmg: 0, defHP: defender.hp, text: '⚡ ¡' + attacker.name + ' ataca de nuevo!' });
+                doAttack(attacker, defender, false);
+            }
+
             turn++;
         }
 
@@ -670,14 +726,20 @@
                 else { canvasState.rightAction = 'attack'; canvasState.leftAction = 'hit'; }
                 canvasState.actionTimer = 20;
 
-                // Update HP
-                if (isLeftDefender) { leftHP = entry.defHP; }
-                else { rightHP = entry.defHP; }
-                updateHPBars(leftHP, leftMaxHP, rightHP, rightMaxHP);
+                // Update HP from defHP
+                if (entry.defHP !== undefined) {
+                    if (isLeftDefender) { leftHP = entry.defHP; }
+                    else { rightHP = entry.defHP; }
+                    updateHPBars(leftHP, leftMaxHP, rightHP, rightMaxHP);
+                }
             } else if (entry.type === 'dodge') {
                 if (isLeftDefender) { canvasState.leftAction = 'dodge'; canvasState.rightAction = 'attack'; }
                 else { canvasState.rightAction = 'dodge'; canvasState.leftAction = 'attack'; }
                 canvasState.actionTimer = 20;
+            } else if (entry.type === 'regen') {
+                // No strong animation, just a green flash
+                if (isLeftAttacker) { canvasState.leftAction = 'idle'; }
+                else { canvasState.rightAction = 'idle'; }
             } else if (entry.type === 'end') {
                 var meWon = entry.winner === left.name;
                 if (meWon) canvasState.rightAction = 'dead';
@@ -685,13 +747,14 @@
             }
 
             // Add log line
-            var cls = entry.type === 'crit' ? 'log-crit' : entry.type === 'dodge' ? 'log-dodge' : entry.type === 'end' ? 'log-end' : entry.type === 'atk' ? (isLeftAttacker ? 'log-atk' : 'log-def') : '';
+            var cls = entry.type === 'crit' ? 'log-crit' : entry.type === 'dodge' ? 'log-dodge' : entry.type === 'end' ? 'log-end' : entry.type === 'regen' ? 'log-regen' : entry.type === 'atk' ? (isLeftAttacker ? 'log-atk' : 'log-def') : '';
             logEl.innerHTML += '<div class="' + cls + '">' + entry.text + '</div>';
             logEl.scrollTop = logEl.scrollHeight;
 
             // Pause between actions
             if (entry.type === 'start') await sleep(1200);
             else if (entry.type === 'end') await sleep(600);
+            else if (entry.type === 'regen') await sleep(400);
             else await sleep(700);
         }
 

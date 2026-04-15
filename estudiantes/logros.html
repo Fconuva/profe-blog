@@ -100,7 +100,7 @@
     <div class="top-bar">
         <a href="dashboard.html" class="back-link">← Volver</a>
         <div class="top-right">
-            <span class="badge-pill bp-unlocked" id="pillCount">0/32</span>
+            <span class="badge-pill bp-unlocked" id="pillCount">0/39</span>
             <span class="badge-pill bp-xp" id="pillXP">+0 XP</span>
         </div>
     </div>
@@ -152,6 +152,7 @@
             {id:'paes',        emoji:'📝',name:'Ensayos PAES'},
             {id:'misiones',    emoji:'🗺️',name:'Misiones'},
             {id:'experiencia', emoji:'⭐',name:'Experiencia'},
+            {id:'arena',       emoji:'⚔️',name:'Arena'},
             {id:'social',      emoji:'🏅',name:'Social'},
             {id:'secreto',     emoji:'🔒',name:'Secretos'}
         ];
@@ -208,7 +209,16 @@
             {id:'night_owl',       cat:'secreto',    emoji:'🦉', name:'Búho Nocturno',        desc:'Completa una actividad después de las 22:00',    rarity:'raro',        xp:30, secret:true},
             {id:'early_bird',      cat:'secreto',    emoji:'🐦', name:'Madrugador',           desc:'Completa una actividad antes de las 7:00',       rarity:'raro',        xp:30, secret:true},
             {id:'title_creative',  cat:'secreto',    emoji:'🎨', name:'Título Creativo',      desc:'Pon un título de más de 8 palabras a tu cuento', rarity:'comun',       xp:10, secret:true},
-            {id:'weekend_warrior', cat:'secreto',    emoji:'📅', name:'Guerrero de Fin de Semana', desc:'Completa una actividad un sábado o domingo', rarity:'poco_comun',  xp:20, secret:true}
+            {id:'weekend_warrior', cat:'secreto',    emoji:'📅', name:'Guerrero de Fin de Semana', desc:'Completa una actividad un sábado o domingo', rarity:'poco_comun',  xp:20, secret:true},
+
+            // ARENA (7)
+            {id:'arena_debut',     cat:'arena',      emoji:'⚔️', name:'Debut en la Arena',     desc:'Gana o pierde tu primera batalla',              rarity:'comun',       xp:15},
+            {id:'arena_5_battles', cat:'arena',      emoji:'🥊', name:'Puños de Acero',        desc:'Completa 5 batallas en la arena',               rarity:'poco_comun',  xp:30},
+            {id:'arena_first_win', cat:'arena',      emoji:'🏆', name:'Primera Victoria',      desc:'Gana tu primera batalla',                       rarity:'comun',       xp:20},
+            {id:'arena_10_wins',   cat:'arena',      emoji:'💪', name:'Gladiador',             desc:'Acumula 10 victorias en la arena',              rarity:'raro',        xp:60},
+            {id:'arena_streak_3',  cat:'arena',      emoji:'🔥', name:'Racha Imparable',       desc:'Consigue una racha de 3 victorias seguidas',    rarity:'poco_comun',  xp:40},
+            {id:'arena_streak_5',  cat:'arena',      emoji:'⚡', name:'Invicto',               desc:'Consigue una racha de 5 victorias seguidas',    rarity:'epico',       xp:80},
+            {id:'arena_streak_10', cat:'arena',      emoji:'👑', name:'Leyenda de la Arena',   desc:'Consigue una racha de 10 victorias seguidas',   rarity:'legendario',  xp:150}
         ];
         const TOTAL_LOGROS = LOGROS.length;
 
@@ -260,6 +270,14 @@
                 case 'early_bird':      return d.timestamps.some(t => new Date(t).getHours() < 7);
                 case 'title_creative':  return d.cuentoTitleWords > 8;
                 case 'weekend_warrior': return d.timestamps.some(t => {const day=new Date(t).getDay();return day===0||day===6});
+                // Arena
+                case 'arena_debut':     return d.arenaTotalBattles >= 1;
+                case 'arena_5_battles': return d.arenaTotalBattles >= 5;
+                case 'arena_first_win': return d.arenaWins >= 1;
+                case 'arena_10_wins':   return d.arenaWins >= 10;
+                case 'arena_streak_3':  return d.arenaMaxStreak >= 3;
+                case 'arena_streak_5':  return d.arenaMaxStreak >= 5;
+                case 'arena_streak_10': return d.arenaMaxStreak >= 10;
                 default: return false;
             }
         }
@@ -267,10 +285,12 @@
         // ============ GATHER DATA ============
         async function gatherData(uid, curso, programa) {
             // Parallel fetch
-            const [avatarSnap, sesSnap, rankSnap, ...missionSnaps] = await Promise.all([
+            const [avatarSnap, sesSnap, rankSnap, arenaRecSnap, arenaHistSnap, ...missionSnaps] = await Promise.all([
                 db.ref(BASE + '/avatar/' + uid).once('value'),
                 db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
                 db.ref(BASE + '/ranking').once('value'),
+                db.ref(BASE + '/arena/records/' + uid).once('value'),
+                db.ref(BASE + '/arena/history/' + uid).once('value'),
                 ...ALL_MISSIONS.map(mid => db.ref(BASE + '/tareas/' + mid + '/' + uid).once('value'))
             ]);
 
@@ -338,6 +358,20 @@
             const pos = ranking.findIndex(s => s.uid === uid);
             const rankPos = pos >= 0 ? pos + 1 : 0;
 
+            // Arena data
+            const arenaRec = arenaRecSnap.val() || {};
+            const arenaHist = arenaHistSnap.val() || {};
+            const arenaTotalBattles = Object.keys(arenaHist).length;
+            const arenaWins = arenaRec.wins || 0;
+            // Calculate max streak ever from history
+            let arenaMaxStreak = arenaRec.streak || 0;
+            const histEntries = Object.values(arenaHist).sort((a,b) => (a.timestamp||0) - (b.timestamp||0));
+            let tmpStreak = 0;
+            for (const h of histEntries) {
+                if (h.won) { tmpStreak++; if (tmpStreak > arenaMaxStreak) arenaMaxStreak = tmpStreak; }
+                else { tmpStreak = 0; }
+            }
+
             return {
                 avatar,
                 existingLogros: avatar.logros || {},
@@ -352,7 +386,10 @@
                 cuentoWords: tarea.palabras || 0,
                 cuentoTitleWords: (tarea.titulo || '').trim().split(/\s+/).filter(w=>w).length,
                 rankPos,
-                timestamps
+                timestamps,
+                arenaTotalBattles,
+                arenaWins,
+                arenaMaxStreak
             };
         }
 

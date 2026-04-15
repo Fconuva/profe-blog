@@ -65,18 +65,22 @@
         .stat-bar-fill.const { background:linear-gradient(90deg,#22c55e,#4ade80); }
         .stat-bar-fill.vel { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
         .stat-pts { font-size:13px; font-weight:800; min-width:24px; text-align:center; }
-        .stat-controls { display:flex; flex-direction:column; gap:4px; flex-shrink:0; }
+        .stat-controls { display:flex; gap:4px; flex-shrink:0; align-items:center; }
         .stat-btn {
             width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
             background:rgba(255,255,255,.06); color:#fff; font-size:18px; font-weight:700;
             cursor:pointer; display:flex; align-items:center; justify-content:center;
             transition:background .15s, transform .1s; font-family:inherit;
         }
+        .stat-btn.small { width:28px; height:28px; font-size:11px; font-weight:800; border-radius:8px; }
         .stat-btn:hover { background:rgba(59,130,246,.3); }
         .stat-btn:active { transform:scale(.92); }
         .stat-btn:disabled { opacity:.2; cursor:not-allowed; }
         /* SAVE BTN */
         .save-area { margin-top:20px; text-align:center; }
+        /* RADAR CHART */
+        .radar-wrap { text-align:center; margin-bottom:24px; }
+        .radar-wrap svg { max-width:320px; width:100%; height:auto; filter:drop-shadow(0 0 20px rgba(59,130,246,.15)); }
         .btn-save {
             background:linear-gradient(135deg,#3b82f6,#8b5cf6); color:#fff; border:none;
             padding:14px 40px; border-radius:12px; font-size:15px; font-weight:700;
@@ -164,6 +168,38 @@
                 <div class="pts-sub" id="ptsSub">Gana más subiendo de nivel</div>
             </div>
 
+            <div class="radar-wrap">
+                <svg id="radarChart" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <!-- background glow -->
+                    <circle cx="150" cy="145" r="120" fill="url(#radarGlow)"/>
+                    <!-- grid rings -->
+                    <polygon class="radar-grid" id="rGrid4" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid3" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid2" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid1" fill="none" stroke="rgba(148,163,184,.15)" stroke-width="1"/>
+                    <!-- axis lines -->
+                    <line id="rAxis0" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <line id="rAxis1" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <line id="rAxis2" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <!-- data polygon -->
+                    <polygon id="radarPoly" fill="rgba(59,130,246,.22)" stroke="#3b82f6" stroke-width="2.5"/>
+                    <!-- data dots -->
+                    <circle id="rDot0" r="4" fill="#60a5fa"/>
+                    <circle id="rDot1" r="4" fill="#f97316"/>
+                    <circle id="rDot2" r="4" fill="#facc15"/>
+                    <!-- labels -->
+                    <text id="rLab0" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                    <text id="rLab1" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                    <text id="rLab2" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                </svg>
+            </div>
+
             <div class="stat-section-title">Distribuye tus puntos</div>
 
             <div class="stat-row" id="rowComp">
@@ -177,8 +213,10 @@
                     </div>
                 </div>
                 <div class="stat-controls">
-                    <button class="stat-btn" onclick="addPoint('comprension',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('comprension',-10)">-10</button>
                     <button class="stat-btn" onclick="addPoint('comprension',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('comprension',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('comprension',10)">+10</button>
                 </div>
             </div>
 
@@ -193,8 +231,10 @@
                     </div>
                 </div>
                 <div class="stat-controls">
-                    <button class="stat-btn" onclick="addPoint('constancia',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('constancia',-10)">-10</button>
                     <button class="stat-btn" onclick="addPoint('constancia',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('constancia',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('constancia',10)">+10</button>
                 </div>
             </div>
 
@@ -209,8 +249,10 @@
                     </div>
                 </div>
                 <div class="stat-controls">
-                    <button class="stat-btn" onclick="addPoint('velocidad',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('velocidad',-10)">-10</button>
                     <button class="stat-btn" onclick="addPoint('velocidad',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('velocidad',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('velocidad',10)">+10</button>
                 </div>
             </div>
 
@@ -253,7 +295,7 @@
         const BASE = 'plataforma_estudiantes';
 
         // AVATAR_LEVELS now loaded from js/avatar-levels.js (AvatarSystem)
-        const MAX_PER_STAT = 10;
+        const MAX_PER_STAT = 200;
         const POINTS_PER_LEVEL = 3;
 
         // SHOP ITEMS — unlocked by XP thresholds (scaled for 200-level system)
@@ -302,19 +344,76 @@
             rows.forEach(row => {
                 const btns = row.querySelectorAll('.stat-btn');
                 const field = row.id === 'rowComp' ? 'comprension' : row.id === 'rowConst' ? 'constancia' : 'velocidad';
-                btns[0].disabled = available() <= 0 || stats[field] >= MAX_PER_STAT;
+                // Order: -10, -, +, +10
+                btns[0].disabled = stats[field] < 10;
                 btns[1].disabled = stats[field] <= 0;
+                btns[2].disabled = available() <= 0 || stats[field] >= MAX_PER_STAT;
+                btns[3].disabled = available() < 10 || stats[field] + 10 > MAX_PER_STAT;
             });
 
             // Show save button only if changed
             const changed = stats.comprension !== savedStats.comprension || stats.constancia !== savedStats.constancia || stats.velocidad !== savedStats.velocidad;
             document.getElementById('btnSave').disabled = !changed;
+            renderRadar();
+        }
+
+        /* ---- RADAR CHART ---- */
+        function renderRadar() {
+            const cx = 150, cy = 145, R = 110;
+            const labels = [
+                { key:'comprension', icon:'🧠 Comprensión' },
+                { key:'constancia',  icon:'🔥 Constancia' },
+                { key:'velocidad',   icon:'⚡ Velocidad' }
+            ];
+            // 3 axes: top, bottom-right, bottom-left (angles: -90°, 30°, 150°)
+            const angles = [-Math.PI/2, Math.PI*2/3 - Math.PI/2, Math.PI*4/3 - Math.PI/2];
+            function pt(angle, r) {
+                return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+            }
+            function polyStr(r) {
+                return angles.map(a => pt(a, r).join(',')).join(' ');
+            }
+            // grid rings at 25%, 50%, 75%, 100%
+            [4,3,2,1].forEach((n,i) => {
+                document.getElementById('rGrid'+(4-i)).setAttribute('points', polyStr(R * n/4));
+            });
+            // axis lines
+            angles.forEach((a, i) => {
+                var p = pt(a, R);
+                var el = document.getElementById('rAxis'+i);
+                el.setAttribute('x1', cx); el.setAttribute('y1', cy);
+                el.setAttribute('x2', p[0]); el.setAttribute('y2', p[1]);
+            });
+            // data polygon
+            var vals = labels.map(l => Math.max(stats[l.key] / MAX_PER_STAT, 0.04));
+            var dataPts = angles.map((a, i) => pt(a, R * vals[i]));
+            document.getElementById('radarPoly').setAttribute('points', dataPts.map(p => p.join(',')).join(' '));
+            // dots
+            dataPts.forEach((p, i) => {
+                var d = document.getElementById('rDot'+i);
+                d.setAttribute('cx', p[0]); d.setAttribute('cy', p[1]);
+            });
+            // labels
+            var labelOffsets = [
+                [0, -14],  // top: above
+                [14, 14],  // bottom-right: offset right-down
+                [-14, 14]  // bottom-left: offset left-down
+            ];
+            angles.forEach((a, i) => {
+                var p = pt(a, R + 18);
+                var el = document.getElementById('rLab'+i);
+                el.setAttribute('x', p[0] + labelOffsets[i][0]);
+                el.setAttribute('y', p[1] + labelOffsets[i][1]);
+                el.textContent = labels[i].icon;
+            });
         }
 
         function addPoint(stat, delta) {
-            const newVal = stats[stat] + delta;
-            if (newVal < 0 || newVal > MAX_PER_STAT) return;
-            if (delta > 0 && available() <= 0) return;
+            let newVal = stats[stat] + delta;
+            if (newVal < 0) newVal = 0;
+            if (newVal > MAX_PER_STAT) newVal = MAX_PER_STAT;
+            const actualDelta = newVal - stats[stat];
+            if (actualDelta > 0 && available() < actualDelta) return;
             stats[stat] = newVal;
             render();
         }

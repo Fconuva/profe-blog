@@ -226,8 +226,12 @@
                 document.getElementById('loadingScreen').style.display = 'none';
                 document.getElementById('mainView').style.display = '';
             } catch(e) {
-                console.error(e);
-                document.getElementById('loadingScreen').innerHTML = '<div class="empty">Error al cargar ranking</div>';
+                console.error('Ranking load error:', e);
+                let msg = 'Error al cargar ranking';
+                if (e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('permission'))) {
+                    msg = 'No tienes permisos para ver el ranking. Cierra sesión y vuelve a ingresar.';
+                }
+                document.getElementById('loadingScreen').innerHTML = '<div class="empty">' + msg + '<br><br><button onclick="location.reload()" style="padding:8px 20px;border-radius:8px;background:#f59e0b;color:#0f172a;border:none;font-weight:700;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
             }
         });
 

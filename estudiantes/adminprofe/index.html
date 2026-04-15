@@ -258,13 +258,6 @@
             <h2>Gestión de Sesiones</h2>
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
-                <button class="btn btn-primary" onclick="preloadPruebaIngreso()" style="background:#7c3aed">📋 Precargar Prueba de Ingreso</button>
-                <button class="btn btn-primary" onclick="preloadEncuestaPlataforma()" style="background:#0ea5e9">📊 Precargar Encuesta Investigación (18 preguntas)</button>
-                <button class="btn btn-primary" onclick="preloadEncuestaFeedback()" style="background:#14b8a6">💬 Precargar Encuesta Feedback Plataforma (10 preg.)</button>
-                <button class="btn btn-success" onclick="preloadSession2()">🚀 Precargar Sesión 2 (SIMCE 2025)</button>
-                <button class="btn btn-success" onclick="preloadSession3()">📖 Precargar S5 — El Cuento (La cicatriz)</button>
-                <button class="btn btn-success" onclick="preloadSession4()">🔮 Precargar S6 — Inferencia y Símbolos (3 textos · 10 preguntas)</button>
-                <button class="btn btn-warning" onclick="forcePreloadS3Server()" style="background:#f59e0b;color:#000">🔄 Forzar S3 (servidor)</button>
             </div>
             <div class="panel-table">
                 <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
@@ -481,7 +474,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 
 </div><!-- /adminPanel -->
 
-<script src="../js/avatar-levels.js"></script>
+<script src="/estudiantes/js/avatar-levels.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -1003,11 +996,14 @@ async function resetPassword(uid){
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
             body:JSON.stringify({studentUid:uid})
         });
+        if(!resp.ok){ let errMsg='Error del servidor'; try{ const d=await resp.json(); errMsg=d.error||errMsg; }catch(e){} throw new Error(errMsg); }
         const data=await resp.json();
-        if(!resp.ok) throw new Error(data.error||'Error del servidor');
         toast('✅ Contraseña restablecida a: '+defPass,'ok');
     }catch(err){
-        toast('Error: '+err.message+' — Intenta de nuevo.','err');
+        let msg=err.message;
+        if(msg.includes('user-not-found')||msg.includes('no user record')) msg='La cuenta Auth de este estudiante no existe. Elimínalo y vuelve a crearlo.';
+        else if(msg.includes('Token requerido')||msg.includes('No autorizado')) msg='Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';
+        toast('❌ '+msg,'err');
         console.error('Reset password error:',err);
     }
 }
@@ -1022,8 +1018,8 @@ async function generateLoginLink(uid){
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
             body:JSON.stringify({studentUid:uid})
         });
+        if(!resp.ok){ let errMsg='Error del servidor'; try{ const d=await resp.json(); errMsg=d.error||errMsg; }catch(e){} throw new Error(errMsg); }
         const data=await resp.json();
-        if(!resp.ok) throw new Error(data.error||'Error del servidor');
         const url='https://www.profefranciscopancho.com/estudiantes/?token='+encodeURIComponent(data.token);
         try{ await navigator.clipboard.writeText(url); }catch(e){}
         // Show modal with copyable link
@@ -1042,7 +1038,11 @@ async function generateLoginLink(uid){
         modal.addEventListener('click',function(e){if(e.target===modal)modal.remove();});
         toast('🔗 Link generado — cópialo del cuadro','ok');
     }catch(err){
-        toast('Error generando link: '+err.message,'err');
+        let msg=err.message;
+        if(msg.includes('user-not-found')||msg.includes('no user record')) msg='La cuenta Auth de este estudiante no existe. Elimínalo y vuelve a crearlo.';
+        else if(msg.includes('Token requerido')||msg.includes('No autorizado')) msg='Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';
+        else if(msg.includes('Estudiante no encontrado')) msg='Estudiante no encontrado en la base de datos.';
+        toast('❌ '+msg,'err');
         console.error('Login link error:',err);
     }
 }
@@ -1234,12 +1234,38 @@ async function createSession(){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+async function migrateSessionMeta(){
+    if(!confirm('¿Actualizar títulos y orden de todas las sesiones?\nEsto NO toca contenido, preguntas ni resultados.'))return;
+    const updates={
+        'prueba-ingreso':{titulo:'Clase 1 — Diagnóstico de Comprensión Lectora',descripcion:'Evaluación diagnóstica inicial para determinar tu nivel de comprensión lectora. 3 textos · 10 preguntas de Localizar, Interpretar y Reflexionar.',orden:1},
+        'sesion-3':{titulo:'Clase 2 — El Cuento: «La cicatriz»',descripcion:'Clase SIMCE — El Cuento. Lee «La cicatriz» y responde 11 preguntas: 5 sobre elementos narrativos (figura literaria, vocabulario, conflicto, simbolismo, perspectiva temporal) y 6 de práctica SIMCE (Localizar, Interpretar, Reflexionar).',orden:2},
+        'sesion-4':{titulo:'Clase 3 — Inferencia y Símbolos: «La libreta azul»',descripcion:'Clase SIMCE — Inferencia y Símbolos. 3 textos (narrativo, informativo, poema) con 10 preguntas sobre significados implícitos, elementos simbólicos, tema vs. asunto y tono narrativo.',orden:3},
+        'sesion-2':{titulo:'Ensayo SIMCE 2025 — Comprensión de Lectura (Forma P)',descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',orden:4},
+        'feedback-plataforma':{titulo:'Encuesta — Feedback de Plataforma',descripcion:'Cuéntanos tu experiencia real usando la plataforma. No hay respuestas buenas ni malas: tu opinión honesta nos ayuda a mejorar.',orden:5}
+    };
+    try{
+        const batch={};
+        for(const[id,meta] of Object.entries(updates)){
+            batch[BASE+'/sesiones/'+id+'/titulo']=meta.titulo;
+            batch[BASE+'/sesiones/'+id+'/descripcion']=meta.descripcion;
+            batch[BASE+'/sesiones/'+id+'/orden']=meta.orden;
+        }
+        await db.ref().update(batch);
+        // refresh local
+        for(const[id,meta] of Object.entries(updates)){
+            if(sessions[id]){Object.assign(sessions[id],meta);}
+        }
+        renderSessions();
+        toast('Títulos y orden actualizados en las 5 sesiones','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 async function preloadPruebaIngreso(){
-    if(!confirm('¿Precargar la Prueba de Ingreso con 3 textos y 10 preguntas diagnósticas?'))return;
+    if(!confirm('¿Precargar Clase 1 — Diagnóstico con 3 textos y 10 preguntas?'))return;
     const sesData={
-        titulo:'Prueba de Ingreso — Diagnóstico de Comprensión Lectora',
+        titulo:'Clase 1 — Diagnóstico de Comprensión Lectora',
         descripcion:'Evaluación diagnóstica inicial para determinar tu nivel de comprensión lectora. 3 textos · 10 preguntas de Localizar, Interpretar y Reflexionar.',
-        orden:0,activa:true,resultados_visibles:false,video_youtube:null,
+        orden:1,activa:true,resultados_visibles:false,video_youtube:null,
         programa:'simce',
         createdAt:Date.now(),
         contenido:{
@@ -1334,7 +1360,7 @@ async function preloadPruebaIngreso(){
         await db.ref(BASE+'/sesiones/prueba-ingreso').set(sesData);
         sessions['prueba-ingreso']=sesData;
         renderSessions();populateResultsDropdown();
-        toast('Prueba de Ingreso precargada con 3 textos y 10 preguntas','ok');
+        toast('Clase 1 — Diagnóstico precargada con 3 textos y 10 preguntas','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
@@ -1483,9 +1509,9 @@ async function preloadEncuestaFeedback(){
     if(!confirm('¿Precargar la Encuesta de Feedback de la Plataforma con 10 preguntas Likert?'))return;
     const L=['Muy en desacuerdo','En desacuerdo','Neutral','De acuerdo','Muy de acuerdo'];
     const sesData={
-        titulo:'Feedback Plataforma — ¿Cómo te ha ido?',
+        titulo:'Encuesta — Feedback de Plataforma',
         descripcion:'Cuéntanos tu experiencia real usando la plataforma. No hay respuestas buenas ni malas: tu opinión honesta nos ayuda a mejorar.',
-        orden:4,activa:true,resultados_visibles:false,video_youtube:null,
+        orden:5,activa:true,resultados_visibles:false,video_youtube:null,
         programa:'simce',notas_evaluadas:false,anticopia_activo:false,envio_parcial:true,
         createdAt:Date.now(),
         contenido:{
@@ -1591,12 +1617,12 @@ async function preloadSession1(){
 }
 
 async function preloadSession2(){
-    if(!confirm('¿Precargar Sesión 2 con los 7 textos y 36 preguntas del SIMCE 2025 Forma P?'))return;
+    if(!confirm('¿Precargar Ensayo SIMCE 2025 con los 7 textos y 36 preguntas (Forma P)?'))return;
 
     const sesData={
-        titulo:'Sesión 2: SIMCE 2025 — Comprensión de Lectura (Forma P)',
+        titulo:'Ensayo SIMCE 2025 — Comprensión de Lectura (Forma P)',
         descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',
-        orden:2,activa:true,resultados_visibles:false,video_youtube:null,
+        orden:4,activa:true,resultados_visibles:false,video_youtube:null,
         createdAt:Date.now(),
         contenido:{
             textos:[
@@ -1741,17 +1767,17 @@ async function preloadSession2(){
         await db.ref(BASE+'/sesiones/sesion-2').set(sesData);
         sessions['sesion-2']=sesData;
         renderSessions();populateResultsDropdown();populateRankingDropdown();
-        toast('Sesión 2 precargada: 7 textos SIMCE 2025 y 36 preguntas','ok');
+        toast('Ensayo SIMCE 2025 precargado: 7 textos y 36 preguntas (Forma P)','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
 async function preloadSession3(){
-    if(!confirm('¿Precargar Sesión 3 — S5 El Cuento: "La cicatriz"\n\n1 texto · 11 preguntas (5 análisis narrativo + 6 SIMCE)\nHabilidades: LOC, INF, REF'))return;
+    if(!confirm('¿Precargar Clase 2 — El Cuento: «La cicatriz»\n\n1 texto · 11 preguntas (5 análisis narrativo + 6 SIMCE)\nHabilidades: LOC, INF, REF'))return;
 
     const sesData={
-        titulo:'Sesión 3: El Cuento — "La cicatriz" (S5)',
-        descripcion:'Clase S5 SIMCE — El Cuento. Lee "La cicatriz" y responde 11 preguntas: 5 sobre elementos narrativos (figura literaria, vocabulario, conflicto, simbolismo, perspectiva temporal) y 6 de práctica SIMCE (Localizar, Interpretar, Reflexionar).',
-        orden:3,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
+        titulo:'Clase 2 — El Cuento: «La cicatriz»',
+        descripcion:'Clase SIMCE — El Cuento. Lee «La cicatriz» y responde 11 preguntas: 5 sobre elementos narrativos (figura literaria, vocabulario, conflicto, simbolismo, perspectiva temporal) y 6 de práctica SIMCE (Localizar, Interpretar, Reflexionar).',
+        orden:2,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
         link_guia:'/estudiantes/guia-s5-cuento.html',
         createdAt:Date.now(),
         contenido:{
@@ -1800,7 +1826,7 @@ async function preloadSession3(){
         await db.ref(BASE+'/sesiones/sesion-3').set(sesData);
         sessions['sesion-3']=sesData;
         renderSessions();
-        toast('Sesión 3 precargada: "La cicatriz" — 1 texto, 11 preguntas (5 análisis + 6 SIMCE)','ok');
+        toast('Clase 2 precargada: «La cicatriz» — 1 texto, 11 preguntas (5 análisis + 6 SIMCE)','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
@@ -1817,12 +1843,12 @@ async function forcePreloadS3Server(){
 }
 
 async function preloadSession4(){
-    if(!confirm('¿Precargar Sesión 4 — S6 Inferencia y Símbolos\n\n3 textos · 10 preguntas (foco: inferencia y simbolismo)\nHabilidades: LOC 3, INF 4, REF 3\nClaves: C,B,A,D,C,A,B,C,A,D'))return;
+    if(!confirm('¿Precargar Clase 3 — Inferencia y Símbolos: «La libreta azul»\n\n3 textos · 10 preguntas (foco: inferencia y simbolismo)\nHabilidades: LOC 3, INF 4, REF 3'))return;
 
     const sesData={
-        titulo:'Sesión 4: Inferencia y Símbolos — "La libreta azul" (S6)',
-        descripcion:'Clase S6 SIMCE — Inferencia y Símbolos. 3 textos (narrativo, informativo, poema) con 10 preguntas sobre significados implícitos, elementos simbólicos, tema vs. asunto y tono narrativo.',
-        orden:4,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
+        titulo:'Clase 3 — Inferencia y Símbolos: «La libreta azul»',
+        descripcion:'Clase SIMCE — Inferencia y Símbolos. 3 textos (narrativo, informativo, poema) con 10 preguntas sobre significados implícitos, elementos simbólicos, tema vs. asunto y tono narrativo.',
+        orden:3,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
         link_guia:'/estudiantes/guia-s6-inferencia-simbolos.html',
         createdAt:Date.now(),
         contenido:{
@@ -1888,7 +1914,7 @@ async function preloadSession4(){
         await db.ref(BASE+'/sesiones/sesion-4').set(sesData);
         sessions['sesion-4']=sesData;
         renderSessions();
-        toast('Sesión 4 precargada: "La libreta azul" — 1 texto, 6 preguntas (inferencia + símbolos)','ok');
+        toast('Clase 3 precargada: «La libreta azul» — 1 texto, 6 preguntas (inferencia + símbolos)','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 

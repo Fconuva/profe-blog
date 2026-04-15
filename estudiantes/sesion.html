@@ -2904,10 +2904,11 @@
 
             const total = sessionData.preguntas.length;
             const isFullEncuesta = sessionData.preguntas.every(q => q.habilidad === 'ENCUESTA');
+            const UNSCORED = ['ENCUESTA', 'METACOGNICIÓN'];
             let correct = 0;
             const detail = {};
             sessionData.preguntas.forEach(q => {
-                if (q.habilidad === 'ENCUESTA') {
+                if (UNSCORED.includes(q.habilidad)) {
                     detail[q.id] = { respuesta: answers[q.id] || null, correcta: null, esCorrecta: null };
                 } else {
                     const isCorrect = answers[q.id] === q.correcta;
@@ -2915,7 +2916,7 @@
                     detail[q.id] = { respuesta: answers[q.id] || null, correcta: q.correcta, esCorrecta: isCorrect };
                 }
             });
-            const scoredTotal = sessionData.preguntas.filter(q => q.habilidad !== 'ENCUESTA').length;
+            const scoredTotal = sessionData.preguntas.filter(q => !UNSCORED.includes(q.habilidad)).length;
             const porcentaje = scoredTotal > 0 ? Math.round((correct / scoredTotal) * 100) : 100;
             const tiempoMin = Math.floor((Date.now() - startTime) / 60000);
             const nota = isFullEncuesta ? 7.0 : (porcentaje <= 0 ? 1.0 : porcentaje < 60 ? Math.round((1.0 + (porcentaje / 60) * 3.0) * 10) / 10 : Math.round((4.0 + ((porcentaje - 60) / 40) * 3.0) * 10) / 10);
@@ -3059,10 +3060,11 @@
             const isFullEncuesta = sessionData.preguntas.every(q => q.habilidad === 'ENCUESTA');
 
             // Calculate results
+            const UNSCORED = ['ENCUESTA', 'METACOGNICIÓN'];
             let correct = 0;
             const detail = {};
             sessionData.preguntas.forEach(q => {
-                if (q.habilidad === 'ENCUESTA') {
+                if (UNSCORED.includes(q.habilidad)) {
                     detail[q.id] = { respuesta: answers[q.id], correcta: null, esCorrecta: null };
                 } else {
                     const isCorrect = answers[q.id] === q.correcta;
@@ -3071,7 +3073,7 @@
                 }
             });
 
-            const scoredTotal = sessionData.preguntas.filter(q => q.habilidad !== 'ENCUESTA').length;
+            const scoredTotal = sessionData.preguntas.filter(q => !UNSCORED.includes(q.habilidad)).length;
             const porcentaje = scoredTotal > 0 ? Math.round((correct / scoredTotal) * 100) : 100;
 
             // Save response as completed
@@ -3174,8 +3176,8 @@
             const feedback = document.getElementById('feedback-' + q.id);
             const userAnswer = answers[q.id];
 
-            // ENCUESTA questions: no correct/incorrect — just show selection
-            if (q.habilidad === 'ENCUESTA') {
+            // ENCUESTA / METACOGNICIÓN questions: no correct/incorrect — just show selection
+            if (q.habilidad === 'ENCUESTA' || q.habilidad === 'METACOGNICIÓN') {
                 block.querySelectorAll('.option-item').forEach(opt => {
                     opt.classList.add('disabled');
                     if (opt.dataset.letter === userAnswer) {
@@ -3185,7 +3187,9 @@
                 if (feedback) {
                     feedback.classList.add('show');
                     feedback.className = 'q-feedback show correct';
-                    feedback.textContent = '✅ Respuesta registrada. Gracias por tu opinión.';
+                    feedback.textContent = q.habilidad === 'METACOGNICIÓN'
+                        ? '✅ Respuesta registrada. Gracias por tu reflexión.'
+                        : '✅ Respuesta registrada. Gracias por tu opinión.';
                 }
                 return;
             }
@@ -3519,14 +3523,20 @@
 
         try {
             const total = sessionData.preguntas.length;
+            const UNSCORED = ['ENCUESTA', 'METACOGNICIÓN'];
             let correct = 0;
             const detail = {};
             sessionData.preguntas.forEach(q => {
-                const isCorrect = answers[q.id] === q.correcta;
-                if (isCorrect) correct++;
-                detail[q.id] = { respuesta: answers[q.id] || null, correcta: q.correcta, esCorrecta: isCorrect };
+                if (UNSCORED.includes(q.habilidad)) {
+                    detail[q.id] = { respuesta: answers[q.id] || null, correcta: null, esCorrecta: null };
+                } else {
+                    const isCorrect = answers[q.id] === q.correcta;
+                    if (isCorrect) correct++;
+                    detail[q.id] = { respuesta: answers[q.id] || null, correcta: q.correcta, esCorrecta: isCorrect };
+                }
             });
-            const porcentaje = Math.round((correct / total) * 100);
+            const scoredTotal = sessionData.preguntas.filter(q => !UNSCORED.includes(q.habilidad)).length;
+            const porcentaje = scoredTotal > 0 ? Math.round((correct / scoredTotal) * 100) : 100;
 
             await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
                 answers: answers,
@@ -3541,7 +3551,7 @@
 
             await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
                 puntaje: correct,
-                total: total,
+                total: scoredTotal,
                 porcentaje: porcentaje,
                 detalle: detail,
                 notas: notes,

@@ -537,7 +537,7 @@
     }
 
     /* ========== STICK FIGURE CANVAS ========== */
-    var canvasState = { leftX: 0, rightX: 0, leftHP: 1, rightHP: 1, leftAction: 'idle', rightAction: 'idle', actionTimer: 0, groundY: 0 };
+    var canvasState = { leftX: 0, rightX: 0, leftHP: 1, rightHP: 1, leftAction: 'idle', rightAction: 'idle', actionTimer: 0, groundY: 0, particles: [], shakeTimer: 0, shakeX: 0, shakeY: 0 };
 
     function initCanvas(left, right) {
         var canvas = document.getElementById('battleCanvas');
@@ -549,14 +549,16 @@
         ctx.scale(dpr, dpr);
         var w = rect.width, h = rect.height;
 
-        canvasState.leftX = w * 0.25;
-        canvasState.rightX = w * 0.75;
+        canvasState.leftX = w * 0.28;
+        canvasState.rightX = w * 0.72;
         canvasState.groundY = h * 0.82;
         canvasState.leftHP = 1;
         canvasState.rightHP = 1;
         canvasState.leftAction = 'idle';
         canvasState.rightAction = 'idle';
         canvasState.actionTimer = 0;
+        canvasState.particles = [];
+        canvasState.shakeTimer = 0;
         canvasState.w = w;
         canvasState.h = h;
 
@@ -564,90 +566,208 @@
             drawFrame(ctx, w, h);
             if (canvasState.actionTimer > 0) canvasState.actionTimer--;
             else { canvasState.leftAction = 'idle'; canvasState.rightAction = 'idle'; }
+            if (canvasState.shakeTimer > 0) canvasState.shakeTimer--;
             battleAnimFrame = requestAnimationFrame(animate);
         }
         if (battleAnimFrame) cancelAnimationFrame(battleAnimFrame);
         animate();
     }
 
-    function drawFrame(ctx, w, h) {
-        // Background
-        ctx.fillStyle = '#0f172a';
-        ctx.fillRect(0, 0, w, h);
-
-        // Ground
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(0, canvasState.groundY + 40, w, h - canvasState.groundY - 40);
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.moveTo(0, canvasState.groundY + 40);
-        ctx.lineTo(w, canvasState.groundY + 40);
-        ctx.stroke();
-
-        // Draw fighters
-        drawStickFigure(ctx, canvasState.leftX, canvasState.groundY, canvasState.leftAction, '#60a5fa', '#3b82f6', false, canvasState.leftHP);
-        drawStickFigure(ctx, canvasState.rightX, canvasState.groundY, canvasState.rightAction, '#a78bfa', '#8b5cf6', true, canvasState.rightHP);
-
-        // HP labels under figures
-        ctx.font = '600 11px Inter, sans-serif';
-        ctx.textAlign = 'center';
-        ctx.fillStyle = canvasState.leftHP > .3 ? '#4ade80' : '#f87171';
-        ctx.fillText(Math.round(canvasState.leftHP * 100) + '%', canvasState.leftX, canvasState.groundY + 56);
-        ctx.fillStyle = canvasState.rightHP > .3 ? '#4ade80' : '#f87171';
-        ctx.fillText(Math.round(canvasState.rightHP * 100) + '%', canvasState.rightX, canvasState.groundY + 56);
+    // Particle effects
+    function addParticles(x, y, color, count, type) {
+        for (var i = 0; i < count; i++) {
+            canvasState.particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * (type === 'hit' ? 6 : 3),
+                vy: (Math.random() - 0.8) * (type === 'hit' ? 5 : 2),
+                life: 20 + Math.random() * 15,
+                maxLife: 35,
+                color: color,
+                size: type === 'hit' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2,
+                type: type
+            });
+        }
     }
 
-    function drawStickFigure(ctx, x, y, action, colorLight, colorDark, facingLeft, hpPct) {
-        var scale = 1.6;
+    function updateParticles(ctx) {
+        for (var i = canvasState.particles.length - 1; i >= 0; i--) {
+            var p = canvasState.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15; // gravity
+            p.life--;
+            if (p.life <= 0) { canvasState.particles.splice(i, 1); continue; }
+            var alpha = p.life / p.maxLife;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            if (p.type === 'hit') {
+                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function drawFrame(ctx, w, h) {
+        // Screen shake
+        ctx.save();
+        if (canvasState.shakeTimer > 0) {
+            canvasState.shakeX = (Math.random() - 0.5) * canvasState.shakeTimer * 0.8;
+            canvasState.shakeY = (Math.random() - 0.5) * canvasState.shakeTimer * 0.5;
+            ctx.translate(canvasState.shakeX, canvasState.shakeY);
+        }
+
+        // Background gradient
+        var grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#0c1222');
+        grad.addColorStop(0.6, '#0f172a');
+        grad.addColorStop(1, '#1a1a2e');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Arena ring floor (perspective ellipse)
+        var ringCX = w / 2, ringCY = canvasState.groundY + 30;
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.ellipse(ringCX, ringCY, w * 0.42, 28, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.ellipse(ringCX, ringCY, w * 0.38, 22, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Ropes (3 horizontal lines connecting posts)
+        var postLX = w * 0.1, postRX = w * 0.9;
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1.5;
+        for (var r = 0; r < 3; r++) {
+            var ropeY = canvasState.groundY - 10 - r * 30;
+            ctx.beginPath();
+            ctx.moveTo(postLX, ropeY);
+            // sag curve
+            ctx.quadraticCurveTo(w/2, ropeY + 6, postRX, ropeY);
+            ctx.stroke();
+        }
+
+        // Corner posts
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(postLX - 3, canvasState.groundY - 75, 6, 75 + 30);
+        ctx.fillRect(postRX - 3, canvasState.groundY - 75, 6, 75 + 30);
+
+        // Draw fighters
+        drawFighter(ctx, canvasState.leftX, canvasState.groundY, canvasState.leftAction, '#60a5fa', '#3b82f6', '#ef4444', false, canvasState.leftHP);
+        drawFighter(ctx, canvasState.rightX, canvasState.groundY, canvasState.rightAction, '#a78bfa', '#8b5cf6', '#3b82f6', true, canvasState.rightHP);
+
+        // Particles
+        updateParticles(ctx);
+
+        // HP labels under figures
+        ctx.font = '700 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = canvasState.leftHP > .3 ? '#4ade80' : '#f87171';
+        ctx.fillText(Math.round(canvasState.leftHP * 100) + '%', canvasState.leftX, canvasState.groundY + 60);
+        ctx.fillStyle = canvasState.rightHP > .3 ? '#4ade80' : '#f87171';
+        ctx.fillText(Math.round(canvasState.rightHP * 100) + '%', canvasState.rightX, canvasState.groundY + 60);
+
+        ctx.restore();
+    }
+
+    function drawFighter(ctx, x, y, action, colorLight, colorDark, gloveColor, facingLeft, hpPct) {
+        var scale = 1.8;
         var headR = 10 * scale;
         var bodyLen = 28 * scale;
         var limbLen = 20 * scale;
+        var gloveR = 7 * scale;
         var offsetX = 0, offsetY = 0;
-        var armAngle = 0, legSpread = 0.3;
+        var punchArm = false;
+        var guardArm = true;
+        var legAnim = 0;
         var hitFlash = false;
+        var t = Date.now();
 
         if (action === 'attack') {
-            offsetX = facingLeft ? -12 : 12;
-            armAngle = facingLeft ? -1.2 : 1.2;
+            offsetX = facingLeft ? -16 : 16;
+            punchArm = true;
+            legAnim = 1;
+            // Add hit particles on first frame
+            if (canvasState.actionTimer >= 18) {
+                var px = facingLeft ? x - 40 : x + 40;
+                addParticles(px, y - bodyLen * 0.5, '#fbbf24', 6, 'hit');
+                canvasState.shakeTimer = 6;
+            }
         } else if (action === 'hit') {
-            offsetX = facingLeft ? 6 : -6;
+            offsetX = facingLeft ? 8 : -8;
+            offsetY = 2;
             hitFlash = true;
+            if (canvasState.actionTimer >= 18) {
+                addParticles(x, y - bodyLen * 0.5, '#f87171', 5, 'hit');
+            }
         } else if (action === 'dodge') {
-            offsetY = -14;
-            offsetX = facingLeft ? 10 : -10;
+            offsetY = -20;
+            offsetX = facingLeft ? 14 : -14;
+            legAnim = 2;
+            if (canvasState.actionTimer >= 18) {
+                addParticles(x, y, 'rgba(148,163,184,0.6)', 4, 'dust');
+            }
         } else if (action === 'dead') {
-            // Fallen
             ctx.save();
+            ctx.globalAlpha = 0.5;
             ctx.translate(x, y);
             ctx.rotate(Math.PI / 2 * (facingLeft ? -1 : 1));
             ctx.translate(-x, -y);
-            drawStickBody(ctx, x, y - bodyLen * 0.3, headR, bodyLen * 0.7, limbLen * 0.7, 0, 0.3, '#475569', '#475569', false);
+            drawBody(ctx, x, y - bodyLen * 0.2, headR * 0.7, bodyLen * 0.7, limbLen * 0.7, gloveR * 0.7, false, true, 0, 0.3, '#475569', '#475569', '#475569', facingLeft);
             ctx.restore();
+            // X eyes for dead
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            var deadEyeX = x + (facingLeft ? 15 : -15);
+            var deadEyeY = y - 25;
+            ctx.beginPath(); ctx.moveTo(deadEyeX-3,deadEyeY-3); ctx.lineTo(deadEyeX+3,deadEyeY+3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(deadEyeX+3,deadEyeY-3); ctx.lineTo(deadEyeX-3,deadEyeY+3); ctx.stroke();
             return;
         }
 
         var dx = x + offsetX, dy = y + offsetY;
-        var bob = Math.sin(Date.now() / 400) * 2;
+        // Idle bobbing + breathing
+        var bob = Math.sin(t / 350) * 3;
+        var sway = Math.sin(t / 600) * 1.5;
         dy += bob;
+        dx += sway;
 
         var c1 = hitFlash ? '#f87171' : colorLight;
         var c2 = hitFlash ? '#ef4444' : colorDark;
-        drawStickBody(ctx, dx, dy, headR, bodyLen, limbLen, armAngle, legSpread, c1, c2, facingLeft);
+        var gc = hitFlash ? '#991b1b' : gloveColor;
+
+        // Shadow under fighter
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(x + offsetX, canvasState.groundY + 38, 18, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        drawBody(ctx, dx, dy, headR, bodyLen, limbLen, gloveR, punchArm, guardArm, legAnim, 0.3, c1, c2, gc, facingLeft);
 
         // HP circle glow
-        if (hpPct > 0) {
+        if (hpPct > 0 && action !== 'dead') {
             ctx.beginPath();
-            ctx.arc(dx, dy - bodyLen - headR, headR + 4, 0, Math.PI * 2);
-            ctx.strokeStyle = hpPct > .5 ? 'rgba(74,222,128,0.3)' : 'rgba(248,113,113,0.3)';
-            ctx.lineWidth = 2;
+            ctx.arc(dx, dy - bodyLen - headR, headR + 5, 0, Math.PI * 2);
+            var glowColor = hpPct > .5 ? 'rgba(74,222,128,' : 'rgba(248,113,113,';
+            var glowAlpha = 0.15 + Math.sin(t / 500) * 0.1;
+            ctx.strokeStyle = glowColor + glowAlpha + ')';
+            ctx.lineWidth = 3;
             ctx.stroke();
         }
     }
 
-    function drawStickBody(ctx, x, y, headR, bodyLen, limbLen, armAngle, legSpread, c1, c2, facingLeft) {
+    function drawBody(ctx, x, y, headR, bodyLen, limbLen, gloveR, punchArm, guardArm, legAnim, legSpread, c1, c2, gloveColor, facingLeft) {
+        var dir = facingLeft ? -1 : 1;
         ctx.lineCap = 'round';
-        ctx.lineWidth = 3.5;
+        ctx.lineJoin = 'round';
 
         // Head
         ctx.beginPath();
@@ -655,52 +775,173 @@
         ctx.fillStyle = c1;
         ctx.fill();
         ctx.strokeStyle = c2;
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.stroke();
 
-        // Eyes
-        ctx.fillStyle = '#0f172a';
-        var eyeDir = facingLeft ? -1 : 1;
+        // Headband
+        ctx.strokeStyle = gloveColor;
+        ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(x + eyeDir * 3, y - bodyLen - headR - 1, 1.5, 0, Math.PI * 2);
-        ctx.fill();
+        ctx.arc(x, y - bodyLen - headR, headR - 1, -0.3, Math.PI + 0.3, facingLeft);
+        ctx.stroke();
 
-        // Body
+        // Eyes (determined expression)
+        ctx.fillStyle = '#0f172a';
+        var eyeX = x + dir * headR * 0.35;
+        var eyeY = y - bodyLen - headR - 1;
+        ctx.beginPath();
+        ctx.ellipse(eyeX, eyeY, 2, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Eyebrow (angry)
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(eyeX - dir * 4, eyeY - 5);
+        ctx.lineTo(eyeX + dir * 3, eyeY - 3.5);
+        ctx.stroke();
+        // Mouth
+        ctx.strokeStyle = c2;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x + dir * 2, y - bodyLen - headR + headR * 0.45, 3, 0.1, Math.PI - 0.1);
+        ctx.stroke();
+
+        // Torso (thicker, athletic)
         ctx.strokeStyle = c1;
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = 5;
         ctx.beginPath();
         ctx.moveTo(x, y - bodyLen);
         ctx.lineTo(x, y);
         ctx.stroke();
-
-        // Arms
-        var armBaseY = y - bodyLen * 0.7;
-        // Front arm (potentially punching)
+        // Shoulders
+        ctx.lineWidth = 4;
         ctx.beginPath();
-        ctx.moveTo(x, armBaseY);
-        var armEndX = x + Math.cos(armAngle + (facingLeft ? Math.PI : 0)) * limbLen;
-        var armEndY = armBaseY + Math.sin(armAngle) * limbLen * 0.5 + limbLen * 0.4;
-        if (armAngle !== 0) {
-            armEndX = x + (facingLeft ? -1 : 1) * limbLen * 1.1;
-            armEndY = armBaseY - 2;
+        ctx.moveTo(x - 12, y - bodyLen * 0.78);
+        ctx.lineTo(x + 12, y - bodyLen * 0.78);
+        ctx.stroke();
+        // Shorts
+        ctx.fillStyle = c2;
+        ctx.fillRect(x - 10, y - 4, 20, 12);
+
+        // ========== ARMS ==========
+        var armBaseY = y - bodyLen * 0.72;
+
+        // Front arm (punching or guard)
+        var frontArmEndX, frontArmEndY;
+        if (punchArm) {
+            // Punching: arm fully extended forward
+            var elbowX = x + dir * limbLen * 0.5;
+            var elbowY = armBaseY - 4;
+            frontArmEndX = x + dir * limbLen * 1.4;
+            frontArmEndY = armBaseY - 6;
+            ctx.strokeStyle = c1;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(x, armBaseY);
+            ctx.quadraticCurveTo(elbowX, elbowY - 4, frontArmEndX, frontArmEndY);
+            ctx.stroke();
+        } else {
+            // Guard position: arm up protecting face
+            frontArmEndX = x + dir * limbLen * 0.4;
+            frontArmEndY = armBaseY - limbLen * 0.55;
+            ctx.strokeStyle = c1;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(x + dir * 4, armBaseY);
+            ctx.quadraticCurveTo(x + dir * limbLen * 0.3, armBaseY - 6, frontArmEndX, frontArmEndY);
+            ctx.stroke();
         }
-        ctx.lineTo(armEndX, armEndY);
-        ctx.stroke();
-        // Back arm
+        // Front BOXING GLOVE
         ctx.beginPath();
-        ctx.moveTo(x, armBaseY);
-        ctx.lineTo(x + (facingLeft ? 1 : -1) * limbLen * 0.5, armBaseY + limbLen * 0.6);
+        ctx.arc(frontArmEndX, frontArmEndY, gloveR, 0, Math.PI * 2);
+        ctx.fillStyle = gloveColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Glove shine
+        ctx.beginPath();
+        ctx.arc(frontArmEndX - 2, frontArmEndY - 2, gloveR * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fill();
+        // Glove wrist strap
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(frontArmEndX - gloveR * 0.6, frontArmEndY + gloveR * 0.5, gloveR * 1.2, 3);
+
+        // Back arm (always in guard)
+        var backArmEndX = x - dir * limbLen * 0.25;
+        var backArmEndY = armBaseY - limbLen * 0.35;
+        ctx.strokeStyle = c1;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(x - dir * 4, armBaseY);
+        ctx.quadraticCurveTo(x - dir * limbLen * 0.15, armBaseY - 8, backArmEndX, backArmEndY);
+        ctx.stroke();
+        // Back BOXING GLOVE
+        ctx.beginPath();
+        ctx.arc(backArmEndX, backArmEndY, gloveR * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = gloveColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
 
-        // Legs
+        // ========== LEGS ==========
+        ctx.strokeStyle = c1;
+        ctx.lineWidth = 4.5;
+        if (legAnim === 1) {
+            // Lunge forward
+            var kneeX = x + dir * limbLen * 0.4;
+            var kneeY = y + limbLen * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 6);
+            ctx.quadraticCurveTo(kneeX, kneeY, x + dir * limbLen * 0.7, y + limbLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y + 6);
+            ctx.lineTo(x - dir * limbLen * 0.3, y + limbLen);
+            ctx.stroke();
+        } else if (legAnim === 2) {
+            // Jump/dodge: legs tucked
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 6);
+            ctx.quadraticCurveTo(x + 10, y + limbLen * 0.3, x + 6, y + limbLen * 0.7);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y + 6);
+            ctx.quadraticCurveTo(x - 10, y + limbLen * 0.3, x - 6, y + limbLen * 0.7);
+            ctx.stroke();
+        } else {
+            // Idle: boxing stance (staggered)
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 6);
+            ctx.lineTo(x + dir * limbLen * 0.35, y + limbLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y + 6);
+            ctx.lineTo(x - dir * limbLen * 0.2, y + limbLen);
+            ctx.stroke();
+        }
+
+        // Shoes
+        ctx.fillStyle = c2;
+        if (legAnim === 1) {
+            drawShoe(ctx, x + dir * limbLen * 0.7, y + limbLen, dir);
+            drawShoe(ctx, x - dir * limbLen * 0.3, y + limbLen, -dir);
+        } else if (legAnim !== 2) {
+            drawShoe(ctx, x + dir * limbLen * 0.35, y + limbLen, dir);
+            drawShoe(ctx, x - dir * limbLen * 0.2, y + limbLen, -dir);
+        }
+    }
+
+    function drawShoe(ctx, x, y, dir) {
         ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x - limbLen * legSpread, y + limbLen);
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        ctx.lineTo(x + limbLen * legSpread, y + limbLen);
-        ctx.stroke();
+        ctx.moveTo(x - 4, y);
+        ctx.lineTo(x + dir * 10, y);
+        ctx.lineTo(x + dir * 10, y + 4);
+        ctx.lineTo(x - 4, y + 4);
+        ctx.closePath();
+        ctx.fill();
     }
 
     /* ========== BATTLE LOG ANIMATION ========== */
@@ -737,9 +978,12 @@
                 else { canvasState.rightAction = 'dodge'; canvasState.leftAction = 'attack'; }
                 canvasState.actionTimer = 20;
             } else if (entry.type === 'regen') {
-                // No strong animation, just a green flash
-                if (isLeftAttacker) { canvasState.leftAction = 'idle'; }
-                else { canvasState.rightAction = 'idle'; }
+                // Healing green particles
+                if (isLeftAttacker) {
+                    addParticles(canvasState.leftX, canvasState.groundY - 30, '#4ade80', 8, 'dust');
+                } else {
+                    addParticles(canvasState.rightX, canvasState.groundY - 30, '#4ade80', 8, 'dust');
+                }
             } else if (entry.type === 'end') {
                 var meWon = entry.winner === left.name;
                 if (meWon) canvasState.rightAction = 'dead';

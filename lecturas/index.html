@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Acceso Lecturas | Lengua y Literatura</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(251, 191, 36, 0.18), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(15, 118, 110, 0.20), transparent 34%),
+        linear-gradient(145deg, #172554 0%, #0f766e 48%, #1f2937 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #0f172a;
+    }
+    .shell {
+      width: 100%;
+      max-width: 980px;
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(2, 6, 23, 0.40);
+      background: rgba(255,255,255,0.98);
+    }
+    .hero {
+      padding: 42px 38px;
+      background:
+        linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        linear-gradient(135deg, #0f172a 0%, #134e4a 55%, #164e63 100%);
+      color: #ecfeff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      right: -90px;
+      top: -70px;
+      background: rgba(251, 191, 36, 0.15);
+      filter: blur(8px);
+    }
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .brand-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      padding: 6px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+      backdrop-filter: blur(6px);
+    }
+    .brand-copy {
+      display: grid;
+      gap: 3px;
+    }
+    .brand-copy span {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(236, 254, 255, 0.72);
+      font-weight: 700;
+    }
+    .brand-copy strong {
+      font-size: 18px;
+      line-height: 1.15;
+      color: #fefce8;
+      font-weight: 800;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 4vw, 42px);
+      line-height: 1.02;
+      font-weight: 800;
+      margin-bottom: 14px;
+      max-width: 420px;
+    }
+    .hero p {
+      font-size: 15px;
+      line-height: 1.65;
+      color: rgba(236, 254, 255, 0.88);
+      max-width: 460px;
+      margin-bottom: 0;
+    }
+    .card {
+      padding: 40px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+    .card .sub {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 24px;
+    }
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 16px;
+    }
+    .alert.show { display: block; }
+    .alert.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font: inherit;
+      font-size: 15px;
+      background: #f9fafb;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14);
+      background: #ffffff;
+    }
+    .hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .pass-wrap { position: relative; }
+    .toggle-pass {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      opacity: .7;
+    }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0f766e 0%, #0f4c81 100%);
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.25);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled {
+      cursor: not-allowed;
+      opacity: .65;
+      transform: none;
+    }
+    .loading {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.28);
+      border-top-color: #fff;
+      vertical-align: middle;
+      margin-right: 8px;
+      animation: spin .7s linear infinite;
+    }
+    .foot {
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid #e5e7eb;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .foot a {
+      color: #0f766e;
+      font-weight: 700;
+      text-decoration: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 860px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero { padding: 30px 24px; }
+      .card { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="brand-lockup">
+        <img class="brand-logo" src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+        <div class="brand-copy">
+          <span>Centro Educativo Salesianos Talca</span>
+          <strong>Lengua y Literatura 2026</strong>
+        </div>
+      </div>
+      <div class="hero-badge">Lecturas 2026 · LYL</div>
+      <h1>Acceso directo a tus pruebas de lectura</h1>
+      <p>Ingresa con tu RUT y contraseña habitual para ver tus evaluaciones asignadas de Lengua y Literatura.</p>
+    </section>
+
+    <section class="card">
+      <h2>Ingresar</h2>
+      <p class="sub">Usa tu RUT y tu contraseña habitual. Si tienes una sola prueba asignada, entrarás directamente a ella.</p>
+
+      <div class="alert error" id="errorBox"></div>
+
+      <form id="loginForm" autocomplete="off">
+        <div class="field">
+          <label for="rutInput">RUT del estudiante</label>
+          <input id="rutInput" type="text" maxlength="12" placeholder="Ej: 21.456.789-0" required>
+          <div class="hint">Ingresa tu RUT con puntos y guión.</div>
+        </div>
+
+        <div class="field">
+          <label for="passInput">Contraseña</label>
+          <div class="pass-wrap">
+            <input id="passInput" type="password" placeholder="Tu contraseña" required>
+            <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">👁️</button>
+          </div>
+          <div class="hint">Primera vez: usa los primeros 6 dígitos de tu RUT.</div>
+        </div>
+
+        <button class="btn" id="loginBtn" type="submit">Entrar a Lecturas</button>
+      </form>
+
+      <div class="foot">
+        Prof. Francisco Javier Núñez Valenzuela<br>
+        <a href="https://www.profefranciscopancho.com" target="_blank" rel="noreferrer">www.profefranciscopancho.com</a>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+      authDomain: "profe-blog.firebaseapp.com",
+      databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+      projectId: "profe-blog",
+      storageBucket: "profe-blog.firebasestorage.app",
+      messagingSenderId: "305920739217",
+      appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+    const LECTURAS_BASE = 'plataforma_lecturas';
+    const loginParams = new URLSearchParams(window.location.search);
+    const requestedTarget = (loginParams.get('target') || '').trim().toLowerCase();
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    const rutInput = document.getElementById('rutInput');
+    const passInput = document.getElementById('passInput');
+    const loginBtn = document.getElementById('loginBtn');
+    const errorBox = document.getElementById('errorBox');
+
+    function cleanRut(rut) {
+      return (rut || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    }
+
+    function formatRut(rut) {
+      const clean = cleanRut(rut);
+      if (clean.length < 2) return clean;
+      const body = clean.slice(0, -1);
+      const dv = clean.slice(-1);
+      let formatted = '';
+      for (let i = body.length - 1, j = 0; i >= 0; i--, j++) {
+        if (j > 0 && j % 3 === 0) formatted = '.' + formatted;
+        formatted = body[i] + formatted;
+      }
+      return formatted + '-' + dv;
+    }
+
+    function validateRut(rut) {
+      const clean = cleanRut(rut);
+      if (clean.length < 8 || clean.length > 9) return false;
+      const body = clean.slice(0, -1);
+      const dv = clean.slice(-1);
+      let sum = 0;
+      let multiplier = 2;
+      for (let i = body.length - 1; i >= 0; i--) {
+        sum += Number(body[i]) * multiplier;
+        multiplier = multiplier === 7 ? 2 : multiplier + 1;
+      }
+      const remainder = 11 - (sum % 11);
+      const expected = remainder === 11 ? '0' : remainder === 10 ? 'K' : String(remainder);
+      return dv === expected;
+    }
+
+    function rutToEmail(rut) {
+      return cleanRut(rut).toLowerCase() + '@est.profefranciscopancho.com';
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.add('show');
+    }
+
+    function hideError() {
+      errorBox.classList.remove('show');
+      errorBox.textContent = '';
+    }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.innerHTML = loading ? '<span class="loading"></span>Entrando...' : 'Entrar a Lecturas';
+    }
+
+    async function getStudent(uid) {
+      const snap = await db.ref(STUDENT_BASE + '/estudiantes/' + uid).once('value');
+      return snap.val();
+    }
+
+    async function getAssignedSessionIds(uid) {
+      const snap = await db.ref(LECTURAS_BASE + '/asignaciones/' + uid).once('value');
+      return snap.exists() ? Object.keys(snap.val()) : [];
+    }
+
+    async function getOpenAssignedSessions(uid) {
+      const ids = await getAssignedSessionIds(uid);
+      if (!ids.length) return [];
+      const list = [];
+      for (const id of ids) {
+        const snap = await db.ref(LECTURAS_BASE + '/sesiones/' + id).once('value');
+        if (!snap.exists()) continue;
+        const session = { id, ...snap.val() };
+        if (session.activa === false) continue;
+        list.push(session);
+      }
+      list.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+      return list;
+    }
+
+    function filterSessionsByTarget(sessions, target) {
+      if (!target) return [];
+      return sessions.filter(session => String(session.id || '').toLowerCase().includes(target));
+    }
+
+    async function openSessionForUser(uid, session) {
+      const responseSnap = await db.ref(LECTURAS_BASE + '/respuestas/' + session.id + '/' + uid).once('value');
+      const response = responseSnap.val();
+      if (!response || !response.completada) {
+        window.location.href = '/lecturas/prueba?id=' + encodeURIComponent(session.id);
+        return;
+      }
+      window.location.href = '/lecturas/dashboard';
+    }
+
+    async function routeAfterLogin(uid, student) {
+      const sessions = await getOpenAssignedSessions(uid);
+      const targetSessions = filterSessionsByTarget(sessions, requestedTarget);
+
+      if (targetSessions.length === 1) {
+        await openSessionForUser(uid, targetSessions[0]);
+        return;
+      }
+
+      if (sessions.length === 1) {
+        await openSessionForUser(uid, sessions[0]);
+        return;
+      }
+      window.location.href = '/lecturas/dashboard';
+    }
+
+    document.getElementById('togglePass').addEventListener('click', () => {
+      passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    });
+
+    rutInput.addEventListener('input', function() {
+      const before = this.value.length;
+      const pos = this.selectionStart || before;
+      this.value = formatRut(this.value);
+      const after = this.value.length;
+      const diff = after - before;
+      const next = Math.max(0, pos + diff);
+      this.setSelectionRange(next, next);
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      hideError();
+
+      const rut = rutInput.value.trim();
+      const password = passInput.value;
+
+      if (!rut || !password) {
+        showError('Completa ambos campos antes de continuar.');
+        return;
+      }
+      if (!validateRut(rut)) {
+        showError('El RUT ingresado no es válido.');
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const credential = await auth.signInWithEmailAndPassword(rutToEmail(rut), password);
+        const student = await getStudent(credential.user.uid);
+        if (!student) {
+          await auth.signOut();
+          showError('Tu cuenta no está habilitada para esta sección.');
+          setLoading(false);
+          return;
+        }
+        await db.ref(STUDENT_BASE + '/estudiantes/' + credential.user.uid + '/lastLogin').set(Date.now());
+        await routeAfterLogin(credential.user.uid, student);
+      } catch (error) {
+        console.error('[lecturas/login]', error);
+        if (error.code === 'auth/network-request-failed') {
+          showError('No hay conexión a internet en este momento.');
+        } else if (error.code === 'auth/too-many-requests') {
+          showError('Demasiados intentos fallidos. Espera unos minutos e intenta otra vez.');
+        } else {
+          showError('RUT o contraseña incorrectos.');
+        }
+        setLoading(false);
+      }
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) return;
+      try {
+        const student = await getStudent(user.uid);
+        if (!student) {
+          await auth.signOut();
+          return;
+        }
+        await routeAfterLogin(user.uid, student);
+      } catch (error) {
+        console.error('[lecturas/auto-route]', error);
+      }
+    });
+  </script>
+</body>
+</html>

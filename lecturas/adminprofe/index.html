@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Lecturas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .topbar {
+      padding: 14px 20px;
+      background: linear-gradient(135deg, #111827 0%, #115e59 55%, #164e63 100%);
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+    }
+    .topbar h1 {
+      font-size: 18px;
+      font-weight: 800;
+    }
+    .topbar p {
+      font-size: 12px;
+      color: rgba(248,250,252,0.76);
+      margin-top: 3px;
+    }
+    .topbar button {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .page {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 24px 20px 44px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .stat {
+      background: #fff;
+      border-radius: 20px;
+      padding: 18px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      border-left: 4px solid #0f766e;
+    }
+    .stat .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 800;
+      color: #6b7280;
+    }
+    .stat .value {
+      font-size: 30px;
+      font-weight: 800;
+      margin-top: 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 420px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .card {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .card h2 {
+      font-size: 18px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+    .card p.sub {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 14px;
+    }
+    .field { margin-bottom: 12px; }
+    .field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 800;
+      color: #374151;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .field input, .field textarea {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 12px 13px;
+      font: inherit;
+      font-size: 13px;
+      background: #f9fafb;
+    }
+    .field textarea {
+      min-height: 88px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+    .field input:focus, .field textarea:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.10);
+      background: #fff;
+    }
+    .hint {
+      margin-top: 5px;
+      font-size: 11px;
+      color: #9ca3af;
+      line-height: 1.5;
+    }
+    .row2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    .btn {
+      border: none;
+      border-radius: 14px;
+      padding: 13px 16px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .btn.primary {
+      background: linear-gradient(135deg, #0f766e, #155e75);
+      color: #fff;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.16);
+    }
+    .btn.secondary {
+      background: #e5e7eb;
+      color: #374151;
+    }
+    .btn.danger {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    .alert.show { display: block; }
+    .alert.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+    .alert.ok {
+      background: #ecfdf5;
+      border: 1px solid #86efac;
+      color: #166534;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      text-align: left;
+      padding: 12px 10px;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+      font-size: 13px;
+    }
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: #6b7280;
+      font-weight: 800;
+    }
+    .table-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+    .small-btn {
+      border: none;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .small-btn.toggle { background: #dbeafe; color: #1d4ed8; }
+    .small-btn.delete { background: #fee2e2; color: #b91c1c; }
+    .chip {
+      display: inline-flex;
+      padding: 5px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #ecfdf5;
+      color: #047857;
+    }
+    .chip.inactive { background: #f3f4f6; color: #6b7280; }
+    .json-box {
+      margin-top: 12px;
+      padding: 14px;
+      border-radius: 16px;
+      background: #111827;
+      color: #d1fae5;
+      font-family: Consolas, monospace;
+      font-size: 12px;
+      line-height: 1.6;
+      overflow: auto;
+      white-space: pre-wrap;
+      display: none;
+    }
+    .json-box.show { display: block; }
+    .hidden { display: none !important; }
+    .gate-shell {
+      min-height: calc(100vh - 76px);
+      display: grid;
+      place-items: center;
+      padding: 24px 20px 44px;
+    }
+    .gate-card {
+      width: 100%;
+      max-width: 540px;
+      background: #fff;
+      border-radius: 26px;
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
+      padding: 28px 24px;
+      border: 1px solid #d1d5db;
+    }
+    .gate-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .gate-brand img {
+      width: 62px;
+      height: 62px;
+      object-fit: contain;
+      border-radius: 18px;
+      background: #f0fdfa;
+      border: 1px solid #99f6e4;
+      padding: 6px;
+    }
+    .gate-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 11px;
+      border-radius: 999px;
+      background: #ccfbf1;
+      color: #115e59;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .gate-card h2 {
+      font-size: 28px;
+      line-height: 1.05;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 8px;
+    }
+    .gate-sub {
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.65;
+      margin-bottom: 18px;
+    }
+    .gate-lock {
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #dbeafe;
+      color: #1f2937;
+      margin-bottom: 18px;
+    }
+    .gate-lock .label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #6b7280;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .gate-lock .value {
+      font-size: 14px;
+      font-weight: 800;
+      color: #0f172a;
+      word-break: break-word;
+    }
+    .gate-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 6px;
+    }
+    @media (max-width: 980px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .row2 { grid-template-columns: 1fr; }
+      .gate-actions { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>Panel Lecturas</h1>
+      <p>Administración aislada de pruebas de Lengua y Literatura</p>
+    </div>
+    <button id="logoutBtn">Cerrar sesión</button>
+  </header>
+
+  <section class="gate-shell" id="loginGate">
+    <div class="gate-card">
+      <div class="gate-brand">
+        <img src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+        <div>
+          <div class="gate-badge">Acceso privado</div>
+          <h2>Administrador de Lecturas</h2>
+        </div>
+      </div>
+      <p class="gate-sub">Esta sección queda reservada para la cuenta administradora de Lecturas. Aquí podrás crear, activar, revisar y eliminar pruebas sin exponer el panel a otros docentes ni a estudiantes.</p>
+      <div class="gate-lock">
+        <span class="label">Cuenta autorizada</span>
+        <span class="value" id="ownerAccountLabel">francisco@profefranciscopancho.com</span>
+      </div>
+      <div class="alert error" id="gateErrorBox"></div>
+      <div class="field">
+        <label for="adminPassword">Contraseña de administrador</label>
+        <input id="adminPassword" type="password" placeholder="Ingresa tu contraseña docente">
+        <div class="hint">Solo la cuenta administradora configurada puede abrir este panel.</div>
+      </div>
+      <div class="gate-actions">
+        <button class="btn primary" id="adminLoginBtn" type="button">Entrar al panel</button>
+        <button class="btn secondary hidden" id="gateSignOutBtn" type="button">Cerrar sesión actual</button>
+      </div>
+    </div>
+  </section>
+
+  <main class="page hidden" id="adminApp">
+    <div class="stats">
+      <div class="stat"><div class="label">Sesiones</div><div class="value" id="statSessions">0</div></div>
+      <div class="stat"><div class="label">Asignaciones</div><div class="value" id="statAssignments">0</div></div>
+      <div class="stat"><div class="label">Respuestas</div><div class="value" id="statResponses">0</div></div>
+    </div>
+
+    <div class="grid">
+      <section class="card">
+        <h2>Nueva prueba</h2>
+        <p class="sub">Crea una sesión de Lecturas y asígnala explícitamente por curso o por RUT para que nadie vea pruebas que no le corresponden.</p>
+
+        <div class="alert error" id="errorBox"></div>
+        <div class="alert ok" id="successBox"></div>
+
+        <div class="field">
+          <label for="idField">ID de sesión</label>
+          <input id="idField" type="text" placeholder="Ej: maus-nm4-abril-2026">
+          <div class="hint">Usa un identificador único, sin espacios. Si lo dejas vacío, se genera desde el título.</div>
+        </div>
+
+        <div class="field">
+          <label for="titleField">Título</label>
+          <input id="titleField" type="text" placeholder="Ej: Prueba de Lectura — Maus">
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="bookField">Libro</label>
+            <input id="bookField" type="text" placeholder="Ej: Maus">
+          </div>
+          <div class="field">
+            <label for="orderField">Orden</label>
+            <input id="orderField" type="number" min="1" value="1">
+          </div>
+        </div>
+
+        <div class="row2">
+          <div class="field">
+            <label for="durationField">Duración (min)</label>
+            <input id="durationField" type="number" min="1" placeholder="90">
+          </div>
+          <div class="field">
+            <label for="activeField">Activa</label>
+            <input id="activeField" type="text" value="si">
+            <div class="hint">Escribe si o no.</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="descField">Descripción</label>
+          <textarea id="descField" placeholder="Describe brevemente la prueba y su foco evaluativo."></textarea>
+        </div>
+
+        <div class="field">
+          <label for="coursesField">Cursos asignados</label>
+          <input id="coursesField" type="text" placeholder="Ej: 4A-HC,4B-HC o NM3,NM4 si tus cuentas usan esos códigos">
+          <div class="hint">Busca coincidencia exacta con el campo curso de los estudiantes ya existentes.</div>
+        </div>
+
+        <div class="field">
+          <label for="rutsField">RUTs asignados</label>
+          <textarea id="rutsField" placeholder="Uno por línea o separados por coma. Ej: 21456789-0"></textarea>
+          <div class="hint">Puedes combinar asignación por curso y por RUT.</div>
+        </div>
+
+        <div class="field">
+          <label for="contentField">Contenido JSON</label>
+          <textarea id="contentField">{
+  "materiales": [],
+  "items": []
+}</textarea>
+          <div class="hint">Aquí luego podrás pegar el bloque JSON con materiales e ítems que construiremos para Maus o Pedro Páramo.</div>
+        </div>
+
+        <div class="actions">
+          <button class="btn primary" id="createBtn">Crear sesión</button>
+          <button class="btn secondary" id="resetBtn" type="button">Limpiar</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Sesiones creadas</h2>
+        <p class="sub">Vista resumida de las pruebas activas en /lecturas. El árbol de acceso se guarda en plataforma_lecturas/asignaciones para evitar que los estudiantes vean sesiones ajenas.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Sesión</th>
+              <th>Libro</th>
+              <th>Contenido</th>
+              <th>Asignados</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="sessionsBody">
+            <tr><td colspan="6">Cargando sesiones...</td></tr>
+          </tbody>
+        </table>
+        <div class="json-box" id="jsonPreview"></div>
+      </section>
+    </div>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+      authDomain: "profe-blog.firebaseapp.com",
+      databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+      projectId: "profe-blog",
+      storageBucket: "profe-blog.firebasestorage.app",
+      messagingSenderId: "305920739217",
+      appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+    const LECTURAS_BASE = 'plataforma_lecturas';
+    const OWNER_ADMIN_EMAIL = 'francisco@profefranciscopancho.com';
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    let currentUser = null;
+    let studentsMap = {};
+    let sessionsCache = {};
+    let pendingGateNotice = null;
+
+    const errorBox = document.getElementById('errorBox');
+    const successBox = document.getElementById('successBox');
+    const adminApp = document.getElementById('adminApp');
+    const loginGate = document.getElementById('loginGate');
+    const gateErrorBox = document.getElementById('gateErrorBox');
+    const adminLoginBtn = document.getElementById('adminLoginBtn');
+    const adminPassword = document.getElementById('adminPassword');
+    const gateSignOutBtn = document.getElementById('gateSignOutBtn');
+
+    document.getElementById('ownerAccountLabel').textContent = OWNER_ADMIN_EMAIL;
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.add('show');
+      successBox.classList.remove('show');
+    }
+
+    function showSuccess(message) {
+      successBox.textContent = message;
+      successBox.classList.add('show');
+      errorBox.classList.remove('show');
+    }
+
+    function hideMessages() {
+      errorBox.classList.remove('show');
+      successBox.classList.remove('show');
+    }
+
+    function normalizeEmail(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function setGateMessage(message) {
+      if (!message) {
+        gateErrorBox.textContent = '';
+        gateErrorBox.classList.remove('show');
+        return;
+      }
+      gateErrorBox.textContent = message;
+      gateErrorBox.classList.add('show');
+    }
+
+    function setGateLoading(loading) {
+      adminLoginBtn.disabled = loading;
+      adminLoginBtn.textContent = loading ? 'Validando...' : 'Entrar al panel';
+    }
+
+    function showLoginGate(message) {
+      currentUser = null;
+      loginGate.classList.remove('hidden');
+      adminApp.classList.add('hidden');
+      document.getElementById('logoutBtn').classList.add('hidden');
+      gateSignOutBtn.classList.toggle('hidden', !auth.currentUser);
+      adminPassword.value = '';
+      setGateLoading(false);
+      setGateMessage(message || '');
+    }
+
+    function showAdminApp() {
+      loginGate.classList.add('hidden');
+      adminApp.classList.remove('hidden');
+      document.getElementById('logoutBtn').classList.remove('hidden');
+      setGateMessage('');
+    }
+
+    async function getExclusiveAdminAccess(user) {
+      if (!user || normalizeEmail(user.email) !== OWNER_ADMIN_EMAIL) {
+        return { allowed: false, reason: 'exclusive' };
+      }
+
+      const [studentAdminSnap, lecturasAdminSnap, docenteSnap] = await Promise.all([
+        db.ref(STUDENT_BASE + '/admins/' + user.uid).once('value'),
+        db.ref(LECTURAS_BASE + '/admins/' + user.uid).once('value'),
+        db.ref(STUDENT_BASE + '/docentes/' + user.uid).once('value')
+      ]);
+
+      const docente = docenteSnap.val();
+      if (studentAdminSnap.exists() || lecturasAdminSnap.exists() || (docente && docente.superadmin === true)) {
+        return { allowed: true, docente };
+      }
+
+      return { allowed: false, reason: 'missing-role' };
+    }
+
+    function cleanRut(value) {
+      return String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    }
+
+    function slugify(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/(^-|-$)/g, '') || 'lectura-' + Date.now();
+    }
+
+    function parseCsv(text) {
+      return String(text || '')
+        .split(/[\n,;]/)
+        .map(part => part.trim())
+        .filter(Boolean);
+    }
+
+    function getContentCounts(session) {
+      const content = session.contenido || {};
+      const materials = content.materiales || content.textos || [];
+      const items = content.items || content.preguntas || [];
+      return { materials: materials.length, items: items.length };
+    }
+
+    function resetForm() {
+      document.getElementById('idField').value = '';
+      document.getElementById('titleField').value = '';
+      document.getElementById('bookField').value = '';
+      document.getElementById('orderField').value = '1';
+      document.getElementById('durationField').value = '';
+      document.getElementById('activeField').value = 'si';
+      document.getElementById('descField').value = '';
+      document.getElementById('coursesField').value = '';
+      document.getElementById('rutsField').value = '';
+      document.getElementById('contentField').value = '{\n  "materiales": [],\n  "items": []\n}';
+      hideMessages();
+    }
+
+    async function loadStudents() {
+      const snap = await db.ref(STUDENT_BASE + '/estudiantes').once('value');
+      studentsMap = snap.val() || {};
+    }
+
+    async function loadStatsAndSessions() {
+      const [sessionsSnap, responsesSnap, assignmentsSnap] = await Promise.all([
+        db.ref(LECTURAS_BASE + '/sesiones').once('value'),
+        db.ref(LECTURAS_BASE + '/respuestas').once('value'),
+        db.ref(LECTURAS_BASE + '/asignaciones').once('value')
+      ]);
+      sessionsCache = sessionsSnap.val() || {};
+      const responses = responsesSnap.val() || {};
+      const assignments = assignmentsSnap.val() || {};
+
+      document.getElementById('statSessions').textContent = Object.keys(sessionsCache).length;
+      document.getElementById('statAssignments').textContent = Object.values(assignments).reduce((sum, value) => sum + Object.keys(value || {}).length, 0);
+      document.getElementById('statResponses').textContent = Object.values(responses).reduce((sum, value) => sum + Object.keys(value || {}).length, 0);
+
+      renderSessionsTable();
+    }
+
+    function renderSessionsTable() {
+      const body = document.getElementById('sessionsBody');
+      const rows = Object.entries(sessionsCache)
+        .map(([id, session]) => ({ id, ...session }))
+        .sort((a, b) => (a.orden || 0) - (b.orden || 0));
+
+      if (!rows.length) {
+        body.innerHTML = '<tr><td colspan="6">Aún no hay sesiones creadas en Lecturas.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = rows.map(session => {
+        const counts = getContentCounts(session);
+        const assigned = Array.isArray(session.asignados) ? session.asignados.length : 0;
+        return '<tr>'
+          + '<td><strong>' + session.titulo + '</strong><br><span style="font-size:11px;color:#6b7280">' + session.id + '</span></td>'
+          + '<td>' + (session.libro || '—') + '</td>'
+          + '<td>' + counts.materials + ' materiales<br>' + counts.items + ' ítems</td>'
+          + '<td>' + assigned + '</td>'
+          + '<td><span class="chip ' + (session.activa === false ? 'inactive' : '') + '">' + (session.activa === false ? 'Inactiva' : 'Activa') + '</span></td>'
+          + '<td><div class="table-actions">'
+          + '<button class="small-btn toggle" onclick="toggleSession(\'' + session.id + '\')">Activar / Desactivar</button>'
+          + '<button class="small-btn toggle" onclick="previewJson(\'' + session.id + '\')">Ver JSON</button>'
+          + '<button class="small-btn delete" onclick="deleteSession(\'' + session.id + '\')">Eliminar</button>'
+          + '</div></td>'
+          + '</tr>';
+      }).join('');
+    }
+
+    async function resolveAssignedUids(courseList, rutList) {
+      const assigned = new Set();
+      const courses = courseList.map(value => value.trim()).filter(Boolean);
+      const ruts = rutList.map(value => cleanRut(value)).filter(Boolean);
+      Object.entries(studentsMap).forEach(([uid, student]) => {
+        if (courses.length && courses.includes(String(student.curso || '').trim())) assigned.add(uid);
+        if (ruts.length && ruts.includes(cleanRut(student.rut || ''))) assigned.add(uid);
+      });
+      return Array.from(assigned);
+    }
+
+    async function createSession() {
+      hideMessages();
+      const rawId = document.getElementById('idField').value.trim();
+      const title = document.getElementById('titleField').value.trim();
+      const book = document.getElementById('bookField').value.trim();
+      const description = document.getElementById('descField').value.trim();
+      const order = Number(document.getElementById('orderField').value) || 1;
+      const duration = Number(document.getElementById('durationField').value) || null;
+      const active = document.getElementById('activeField').value.trim().toLowerCase() !== 'no';
+      const courses = parseCsv(document.getElementById('coursesField').value);
+      const ruts = parseCsv(document.getElementById('rutsField').value);
+      const contentText = document.getElementById('contentField').value.trim();
+
+      if (!title) {
+        showError('Ingresa un título para la sesión.');
+        return;
+      }
+
+      let content;
+      try {
+        content = contentText ? JSON.parse(contentText) : { materiales: [], items: [] };
+      } catch (error) {
+        showError('El JSON del contenido no es válido.');
+        return;
+      }
+
+      const sessionId = rawId || slugify(title);
+      if (sessionsCache[sessionId]) {
+        showError('Ya existe una sesión con ese ID.');
+        return;
+      }
+
+      const assignedUids = await resolveAssignedUids(courses, ruts);
+      const session = {
+        id: sessionId,
+        titulo: title,
+        libro: book || '',
+        descripcion: description || '',
+        orden: order,
+        activa: active,
+        resultados_visibles: false,
+        duracion_min: duration,
+        cursosAsignados: courses,
+        rutsAsignados: ruts,
+        asignados: assignedUids,
+        contenido: content,
+        createdAt: Date.now(),
+        docenteUid: currentUser.uid
+      };
+
+      const updates = {};
+      updates[LECTURAS_BASE + '/sesiones/' + sessionId] = session;
+      assignedUids.forEach(uid => {
+        updates[LECTURAS_BASE + '/asignaciones/' + uid + '/' + sessionId] = true;
+      });
+
+      document.getElementById('createBtn').disabled = true;
+      try {
+        await db.ref().update(updates);
+        showSuccess('Sesión creada en /lecturas. Asignados: ' + assignedUids.length + ' estudiante(s).');
+        resetForm();
+        await loadStatsAndSessions();
+      } catch (error) {
+        console.error('[lecturas/admin/create]', error);
+        showError('No se pudo crear la sesión.');
+      } finally {
+        document.getElementById('createBtn').disabled = false;
+      }
+    }
+
+    async function toggleSession(id) {
+      const current = sessionsCache[id];
+      if (!current) return;
+      await db.ref(LECTURAS_BASE + '/sesiones/' + id + '/activa').set(current.activa === false);
+      await loadStatsAndSessions();
+    }
+    window.toggleSession = toggleSession;
+
+    async function deleteSession(id) {
+      const session = sessionsCache[id];
+      if (!session) return;
+      if (!confirm('¿Eliminar la sesión "' + session.titulo + '" y todas sus asignaciones/respuestas?')) return;
+      const updates = {};
+      updates[LECTURAS_BASE + '/sesiones/' + id] = null;
+      updates[LECTURAS_BASE + '/respuestas/' + id] = null;
+      updates[LECTURAS_BASE + '/resultados/' + id] = null;
+      if (Array.isArray(session.asignados)) {
+        session.asignados.forEach(uid => {
+          updates[LECTURAS_BASE + '/asignaciones/' + uid + '/' + id] = null;
+        });
+      }
+      await db.ref().update(updates);
+      await loadStatsAndSessions();
+    }
+    window.deleteSession = deleteSession;
+
+    function previewJson(id) {
+      const preview = document.getElementById('jsonPreview');
+      const session = sessionsCache[id];
+      if (!session) return;
+      preview.textContent = JSON.stringify(session.contenido || {}, null, 2);
+      preview.classList.add('show');
+      preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    window.previewJson = previewJson;
+
+    document.getElementById('createBtn').addEventListener('click', createSession);
+    document.getElementById('resetBtn').addEventListener('click', resetForm);
+    adminLoginBtn.addEventListener('click', async () => {
+      const password = adminPassword.value;
+      if (!password) {
+        setGateMessage('Ingresa tu contraseña de administrador.');
+        return;
+      }
+
+      setGateLoading(true);
+      setGateMessage('');
+      try {
+        await auth.signInWithEmailAndPassword(OWNER_ADMIN_EMAIL, password);
+      } catch (error) {
+        console.error('[lecturas/admin/login]', error);
+        setGateLoading(false);
+        setGateMessage('No se pudo abrir el panel. Verifica tu contraseña docente.');
+      }
+    });
+    adminPassword.addEventListener('keydown', event => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        adminLoginBtn.click();
+      }
+    });
+    gateSignOutBtn.addEventListener('click', async () => {
+      await auth.signOut();
+    });
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await auth.signOut();
+      showLoginGate();
+    });
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        const notice = pendingGateNotice;
+        pendingGateNotice = null;
+        showLoginGate(notice || '');
+        return;
+      }
+
+      const access = await getExclusiveAdminAccess(user);
+      if (!access.allowed) {
+        pendingGateNotice = access.reason === 'missing-role'
+          ? 'La cuenta administradora existe, pero todavía no tiene permisos activos en Firebase para Lecturas.'
+          : 'Esta sección de administrador está reservada solo para la cuenta privada de Francisco Núñez.';
+        await auth.signOut();
+        return;
+      }
+
+      currentUser = user;
+      showAdminApp();
+      await loadStudents();
+      await loadStatsAndSessions();
+    });
+  </script>
+</body>
+</html>

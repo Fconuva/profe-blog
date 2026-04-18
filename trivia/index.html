@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Competitiva - Semana de la Lectura CEST 2026</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --card-bg: #1e293b;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-color) 0%, #020617 100%);
+            color: var(--text-light);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 900px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
+            text-align: center;
+            position: relative;
+            margin: 20px;
+        }
+
+        .glow-circle {
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: var(--primary);
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.5;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            color: #fff;
+            text-shadow: 0 0 10px rgba(59, 130, 246, 0.8);
+            letter-spacing: 2px;
+        }
+
+        .subtitle {
+            color: var(--primary);
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .screen { display: none; flex-direction: column; align-items: center; width: 100%; }
+        .screen.active { display: flex; }
+
+        .btn {
+            background: linear-gradient(90deg, var(--primary) 0%, #60a5fa 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
+            text-transform: uppercase;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.6);
+        }
+
+        .btn-next {
+            background: linear-gradient(90deg, var(--accent) 0%, #34d399 100%);
+            box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
+            margin-top: 20px;
+        }
+
+        .btn-next:hover {
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6);
+        }
+
+        /* Instrucciones */
+        .rules-box {
+            background: var(--card-bg);
+            border: 1px solid #334155;
+            border-radius: 15px;
+            padding: 25px 30px;
+            text-align: left;
+            width: 100%;
+            max-width: 650px;
+            margin-bottom: 30px;
+        }
+
+        .rules-box h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.1rem;
+            color: var(--warning);
+            margin: 0 0 15px 0;
+            text-align: center;
+        }
+
+        .rules-box ol {
+            margin: 0;
+            padding-left: 20px;
+            line-height: 2;
+            color: var(--text-muted);
+            font-size: 1.05rem;
+        }
+
+        .rules-box ol li { margin-bottom: 5px; }
+
+        .rules-box ol li strong { color: var(--text-light); }
+
+        /* Quiz header */
+        .header-quiz {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 15px;
+            width: 100%;
+        }
+
+        .round-badge {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--warning);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+        }
+
+        .course-badge {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            padding: 6px 18px;
+            border-radius: 20px;
+            border: 1px solid var(--primary);
+            font-size: 0.85rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #334155;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            width: 0%;
+            transition: width 0.4s ease;
+        }
+
+        .question-text {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 25px;
+            line-height: 1.4;
+            min-height: 60px;
+            width: 100%;
+        }
+
+        /* Alerta de mano */
+        .buzzer-alert {
+            background: rgba(245, 158, 11, 0.15);
+            border: 1px dashed var(--warning);
+            color: var(--warning);
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.15rem;
+            margin-bottom: 20px;
+            width: 100%;
+            animation: pulse 2s infinite;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .option-btn {
+            background: var(--card-bg);
+            border: 2px solid #334155;
+            color: var(--text-light);
+            padding: 20px;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .option-btn .letter {
+            background: rgba(59, 130, 246, 0.2);
+            color: var(--primary);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .option-btn:hover:not(.locked) {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .option-btn.correct {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: var(--accent);
+            color: #fff;
+        }
+
+        .option-btn.correct .letter {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .option-btn.wrong {
+            background: rgba(239, 68, 68, 0.2);
+            border-color: var(--danger);
+            color: #fff;
+            animation: shake 0.4s;
+        }
+
+        .option-btn.wrong .letter {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .option-btn.locked { cursor: default; }
+
+        /* Fundamentación */
+        .fundament-box {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 18px 25px;
+            margin-top: 20px;
+            text-align: left;
+            width: 100%;
+            display: none;
+        }
+
+        .fundament-box .fundament-title {
+            color: var(--accent);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .fundament-box .fundament-text {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* Resultado final */
+        .final-icon {
+            font-size: 5rem;
+            margin: 10px 0;
+        }
+
+        .final-message {
+            font-size: 1.3rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .prize-alert {
+            background: rgba(251, 191, 36, 0.2);
+            border: 1px solid #f59e0b;
+            color: #fbd38d;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            animation: pulse 2s infinite;
+        }
+
+        .results-summary {
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 25px;
+        }
+
+        .result-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 18px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 1.05rem;
+        }
+
+        .result-row:last-child { border-bottom: none; }
+
+        .result-row .round-num { color: var(--text-muted); }
+        .result-row .result-icon { font-size: 1.3rem; }
+
+        /* Animaciones */
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            50% { transform: translateX(5px); }
+            75% { transform: translateX(-5px); }
+            100% { transform: translateX(0); }
+        }
+
+        .fade-in { animation: fadeIn 0.5s ease forwards; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(245, 158, 11, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .celebrate { animation: celebrate 0.6s ease 3; }
+
+        /* Selector de curso */
+        .course-select-label {
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .course-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .course-btn {
+            background: var(--card-bg);
+            border: 2px solid #334155;
+            color: var(--text-light);
+            padding: 18px 15px;
+            font-size: 1.1rem;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+        }
+
+        .course-btn:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .course-btn .emoji { font-size: 1.6rem; display: block; margin-bottom: 5px; }
+
+        @media (max-width: 768px) {
+            .options-grid, .course-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 2rem; }
+            .question-text { font-size: 1.2rem; }
+            .container { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container fade-in">
+        <div class="glow-circle"></div>
+
+        <!-- PANTALLA DE INSTRUCCIONES -->
+        <div id="start-screen" class="screen active">
+            <h1>TRIVIA COMPETITIVA</h1>
+            <div class="subtitle">Semana de la Lectura - CEST 2026</div>
+
+            <div class="rules-box">
+                <h2>📋 REGLAS DEL JUEGO</h2>
+                <ol>
+                    <li>Se proyectarán <strong>5 preguntas</strong> en pantalla, una a la vez.</li>
+                    <li>Para responder, <strong>levanta la mano primero</strong>. Solo el más rápido contesta.</li>
+                    <li>El estudiante elegido debe decir la alternativa <strong>y fundamentar su respuesta</strong>.</li>
+                    <li>Si la respuesta y la fundamentación son correctas, <strong>gana el punto</strong>.</li>
+                    <li>Si se equivoca o no fundamenta bien, <strong>pierde el turno</strong> y se pasa a la siguiente.</li>
+                    <li>Al final, <strong>solo quien tenga más puntos recibe el premio</strong>. 🎁</li>
+                </ol>
+            </div>
+
+            <div class="course-select-label">Selecciona el nivel:</div>
+            <div class="course-grid">
+                <div class="course-btn" onclick="startGame('1medio')"><span class="emoji">📗</span>1° Medio</div>
+                <div class="course-btn" onclick="startGame('2medio')"><span class="emoji">📘</span>2° Medio</div>
+                <div class="course-btn" onclick="startGame('3medio')"><span class="emoji">📙</span>3° Medio</div>
+                <div class="course-btn" onclick="startGame('4medio')"><span class="emoji">📕</span>4° Medio</div>
+            </div>
+        </div>
+
+        <!-- PANTALLA DE PREGUNTA -->
+        <div id="quiz-screen" class="screen">
+            <div class="header-quiz">
+                <div class="round-badge" id="round-badge">RONDA 1 / 5</div>
+                <div class="course-badge" id="course-badge">1° Medio</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+
+            <div class="question-text fade-in" id="question">Cargando pregunta...</div>
+
+            <div class="buzzer-alert" id="buzzer-alert">
+                ✋ ¡LEVANTA LA MANO PARA RESPONDER PRIMERO!
+            </div>
+
+            <div class="options-grid fade-in" id="options"></div>
+
+            <div class="fundament-box" id="fundament-box">
+                <div class="fundament-title">📝 Fundamentación esperada</div>
+                <div class="fundament-text" id="fundament-text"></div>
+            </div>
+
+            <button class="btn btn-next" id="btn-next" style="display:none;" onclick="nextRound()">
+                SIGUIENTE RONDA ▶
+            </button>
+        </div>
+
+        <!-- PANTALLA FINAL -->
+        <div id="result-screen" class="screen">
+            <h1>TRIVIA FINALIZADA</h1>
+            <div class="subtitle">Semana de la Lectura - CEST 2026</div>
+            <div class="final-icon celebrate">🏆</div>
+
+            <div class="results-summary" id="results-summary"></div>
+
+            <div class="prize-alert">
+                🎁 ¡El ganador pasa a reclamar su premio con el profesor!
+            </div>
+
+            <button class="btn" onclick="resetGame()">REINICIAR TRIVIA</button>
+        </div>
+
+    </div>
+
+    <script>
+        /* ══════════════════════════════════════════════
+           BANCO DE PREGUNTAS POR NIVEL
+           5 preguntas cada uno · cultura literaria general
+           ══════════════════════════════════════════════ */
+
+        const questionBank = {
+
+            /* ── 1° MEDIO ─────────────────────────────── */
+            '1medio': {
+                label: '1° Medio',
+                questions: [
+                    {
+                        question: 'El 23 de abril fue elegido por la UNESCO como Día del Libro porque en esa fecha fallecieron dos grandes escritores. ¿Quiénes fueron?',
+                        options: [
+                            'Gabriel García Márquez y Pablo Neruda.',
+                            'Miguel de Cervantes y William Shakespeare.',
+                            'Dante Alighieri y Geoffrey Chaucer.',
+                            'Víctor Hugo y León Tolstói.'
+                        ],
+                        correct: 1,
+                        fundament: 'Cervantes y Shakespeare murieron el 23 de abril de 1616 (aunque en calendarios distintos). La UNESCO declaró esa fecha como Día Mundial del Libro en 1995.'
+                    },
+                    {
+                        question: 'Lee el fragmento: "Recuerdo que aquella tarde llovía. Yo miraba por la ventana y pensaba en todo lo que había perdido." ¿Qué tipo de narrador se presenta?',
+                        options: [
+                            'Narrador omnisciente, porque conoce sentimientos de otros personajes.',
+                            'Narrador protagonista, porque narra en primera persona su propia experiencia.',
+                            'Narrador testigo, porque solo observa sin participar en la acción.',
+                            'Narrador objetivo, porque describe hechos sin mostrar emociones.'
+                        ],
+                        correct: 1,
+                        fundament: 'El uso de "recuerdo", "yo miraba", "pensaba" indica primera persona y experiencia propia. Es narrador protagonista porque él es el centro de la acción, no un observador de otro personaje.'
+                    },
+                    {
+                        question: 'En el verso "La ciudad era un monstruo de cemento que devoraba el horizonte", ¿qué figura literaria predomina?',
+                        options: [
+                            'Hipérbole, porque exagera el tamaño de la ciudad.',
+                            'Comparación, porque usa "como" para relacionar dos elementos.',
+                            'Personificación, porque atribuye a la ciudad la acción de "devorar".',
+                            'Anáfora, porque se repite una palabra al inicio de los versos.'
+                        ],
+                        correct: 2,
+                        fundament: '"Devorar" es una acción humana/animal atribuida a la ciudad (objeto inanimado). Eso es personificación. No es hipérbole porque el recurso central no es la exageración sino la atribución de vida.'
+                    },
+                    {
+                        question: '¿Cuál de las siguientes palabras es sinónimo de "efímero"?',
+                        options: [
+                            'Eterno.',
+                            'Pasajero.',
+                            'Intenso.',
+                            'Lejano.'
+                        ],
+                        correct: 1,
+                        fundament: '"Efímero" significa de corta duración, que dura poco. Su sinónimo es "pasajero" (transitorio, fugaz). "Eterno" es su antónimo. "Intenso" y "lejano" no se relacionan con la duración.'
+                    },
+                    {
+                        question: '"Bibliófilo", "bibliomanía" y "bibliofobia" comparten la raíz griega biblion. ¿Qué significa respectivamente cada término?',
+                        options: [
+                            'Amante de libros, obsesión por acumular libros, miedo a los libros.',
+                            'Vendedor de libros, coleccionista de libros, destructor de libros.',
+                            'Escritor de libros, lector compulsivo, crítico de libros.',
+                            'Cuidador de libros, ladrón de libros, quemador de libros.'
+                        ],
+                        correct: 0,
+                        fundament: 'Philos = amante → bibliófilo. Manía = obsesión → bibliomanía (acumulación patológica). Phobos = miedo → bibliofobia. Los sufijos griegos determinan el significado.'
+                    }
+                ]
+            },
+
+            /* ── 2° MEDIO ─────────────────────────────── */
+            '2medio': {
+                label: '2° Medio',
+                questions: [
+                    {
+                        question: 'Lee el fragmento: "Ella no se daba cuenta de nada. Caminaba por la calle pensando en sus problemas, ajena al mundo que la rodeaba." ¿Qué tipo de narrador se presenta?',
+                        options: [
+                            'Narrador protagonista, porque narra su propia experiencia.',
+                            'Narrador testigo, porque la observa desde fuera sin conocer sus pensamientos.',
+                            'Narrador omnisciente, porque narra en tercera persona y accede a la interioridad del personaje.',
+                            'Narrador en segunda persona, porque se dirige directamente al personaje.'
+                        ],
+                        correct: 2,
+                        fundament: 'Narra en tercera persona ("ella") y conoce sus pensamientos ("pensando en sus problemas") y percepciones internas ("ajena al mundo"). Un testigo no podría saber qué piensa; un protagonista narraría en primera persona.'
+                    },
+                    {
+                        question: 'En el verso "Tus manos son palomas que llegan a mi ventana cada mañana", ¿qué figura literaria predomina?',
+                        options: [
+                            'Comparación, porque relaciona las manos con palomas usando un nexo.',
+                            'Metáfora, porque identifica directamente las manos con palomas sin nexo comparativo.',
+                            'Hipérbole, porque exagera el tamaño de las manos.',
+                            'Metonimia, porque sustituye la parte por el todo.'
+                        ],
+                        correct: 1,
+                        fundament: 'No hay nexo comparativo ("como", "cual", "parecido a"): dice "son palomas", hay identificación directa entre manos y palomas. Eso distingue la metáfora de la comparación.'
+                    },
+                    {
+                        question: '¿Cuál de las siguientes opciones contiene un par de antónimos correctos?',
+                        options: [
+                            'Benévolo – Generoso.',
+                            'Elocuente – Locuaz.',
+                            'Soberbio – Humilde.',
+                            'Cauteloso – Prudente.'
+                        ],
+                        correct: 2,
+                        fundament: 'Soberbio (arrogante, altivo) y humilde (modesto, sencillo) son opuestos. Las demás opciones son pares de sinónimos o palabras cercanas, no antónimos.'
+                    },
+                    {
+                        question: 'Las palabras "democracia", "demografía" y "demagogia" comparten la raíz griega demos. ¿Qué significa esa raíz?',
+                        options: [
+                            'Poder.',
+                            'Pueblo.',
+                            'Gobierno.',
+                            'Ley.'
+                        ],
+                        correct: 1,
+                        fundament: 'Demos = pueblo. Democracia = gobierno del pueblo. Demografía = descripción/estudio del pueblo (población). Demagogia = conducir al pueblo (con manipulación). "Kratos" es poder y "arché" es gobierno.'
+                    },
+                    {
+                        question: 'Lee el fragmento: "Mi amigo cruzó la calle sin mirar. Un auto frenó a centímetros de él. Yo grité desde la vereda." ¿Qué tipo de narrador opera aquí?',
+                        options: [
+                            'Narrador omnisciente, porque conoce lo que piensa el amigo.',
+                            'Narrador protagonista, porque el que narra es el centro de la historia.',
+                            'Narrador testigo, porque narra en primera persona pero el foco está en otro personaje.',
+                            'Narrador objetivo, porque no expresa ninguna emoción.'
+                        ],
+                        correct: 2,
+                        fundament: 'Narra en primera persona ("yo grité") pero la acción central le ocurre a "mi amigo", no a él. El narrador testigo participa lateralmente y cuenta lo que le pasa a otro. No es protagonista porque no es el centro del conflicto.'
+                    }
+                ]
+            },
+
+            /* ── 3° MEDIO ─────────────────────────────── */
+            '3medio': {
+                label: '3° Medio',
+                questions: [
+                    {
+                        question: 'En la frase "La guerra es la paz. La libertad es la esclavitud. La ignorancia es la fuerza", ¿qué figura literaria se emplea?',
+                        options: [
+                            'Metáfora, porque sustituye un significado por otro.',
+                            'Paradoja, porque une conceptos contradictorios que revelan un sentido más profundo.',
+                            'Hipérbole, porque exagera las cualidades de cada concepto.',
+                            'Sinestesia, porque mezcla percepciones sensoriales.'
+                        ],
+                        correct: 1,
+                        fundament: 'Son paradojas: afirmaciones aparentemente absurdas que, sin embargo, pueden revelar una verdad subyacente. No son metáforas porque no sustituyen un significado sino que confrontan opuestos en una misma afirmación.'
+                    },
+                    {
+                        question: '¿Qué diferencia existe entre una "distopía" y una "utopía"?',
+                        options: [
+                            'La utopía es ficción y la distopía es un género histórico.',
+                            'La utopía imagina una sociedad ideal; la distopía, una opresiva o degradada.',
+                            'La distopía ocurre en el pasado y la utopía en el futuro.',
+                            'La utopía se escribe en verso y la distopía en prosa.'
+                        ],
+                        correct: 1,
+                        fundament: 'Utopía (eu/ou = bueno/no + topos = lugar) imagina una sociedad ideal. Distopía (dis = malo) proyecta una sociedad indeseable. Ambas son ficción especulativa, no se distinguen por época ni formato.'
+                    },
+                    {
+                        question: 'Lee el fragmento: "Sus ojos eran dos pozos oscuros donde se ahogaban las preguntas sin respuesta." ¿Qué figura literaria predomina?',
+                        options: [
+                            'Comparación, porque utiliza un nexo como "cual" o "como" para relacionar.',
+                            'Metáfora, porque identifica directamente los ojos con pozos sin nexo comparativo.',
+                            'Metonimia, porque sustituye la causa por el efecto.',
+                            'Oxímoron, porque une dos conceptos opuestos en una misma expresión.'
+                        ],
+                        correct: 1,
+                        fundament: 'No hay nexo comparativo: los ojos "eran" pozos, hay identificación directa. Eso la distingue de una comparación. "Se ahogaban las preguntas" añade personificación, pero la figura central es la metáfora.'
+                    },
+                    {
+                        question: '¿Qué significa la palabra "analfabeto" si descomponemos sus raíces griegas?',
+                        options: [
+                            'Persona que habla muchas lenguas (ana = muchas + glotta = lengua).',
+                            'Persona que no conoce las letras (an = sin + alfa + beta = primeras letras).',
+                            'Persona que escribe con ambas manos (ana = ambas + graphein = escribir).',
+                            'Persona que lee en sentido inverso (ana = hacia atrás + lecto = lectura).'
+                        ],
+                        correct: 1,
+                        fundament: 'An- = sin/no. Alfa y beta son las dos primeras letras griegas (equivalente a decir "el ABC"). Analfabeto = quien no conoce las letras, quien no sabe leer ni escribir.'
+                    },
+                    {
+                        question: 'Lee: "Desde la colina vi cómo Miguel abría la carta. Sus manos temblaron. Guardó el papel en el bolsillo y caminó sin rumbo." ¿Qué tipo de narrador opera aquí?',
+                        options: [
+                            'Narrador omnisciente, porque sabe que Miguel está triste.',
+                            'Narrador testigo, porque narra en primera persona lo que observa de Miguel sin acceder a su interior.',
+                            'Narrador protagonista, porque Miguel es quien narra la escena.',
+                            'Narrador omnisciente limitado, porque accede a los pensamientos de Miguel.'
+                        ],
+                        correct: 1,
+                        fundament: 'El narrador dice "vi" (primera persona) pero solo describe acciones externas de Miguel: abrir, temblar, guardar, caminar. No dice qué piensa ni qué siente internamente. Eso es narrador testigo: narra desde afuera lo que otro personaje hace.'
+                    }
+                ]
+            },
+
+            /* ── 4° MEDIO ─────────────────────────────── */
+            '4medio': {
+                label: '4° Medio',
+                questions: [
+                    {
+                        question: 'Lee el fragmento: "Me habían enseñado que la superficie era la muerte. Pero la verdadera muerte estaba aquí abajo, en el miedo que nos consumía." ¿Qué figura literaria central se emplea?',
+                        options: [
+                            'Antítesis, porque confronta "superficie" y "abajo" como opuestos con significados invertidos.',
+                            'Hipérbole, porque exagera la cantidad de miedo.',
+                            'Sinécdoque, porque toma una parte para representar el todo.',
+                            'Aliteración, porque repite sonidos consonánticos similares.'
+                        ],
+                        correct: 0,
+                        fundament: 'Se confrontan dos espacios (arriba/abajo) y se invierten sus significados convencionales: la "muerte" de la superficie es menos amenazante que la "muerte" interior del miedo. Es antítesis porque enfrenta ideas opuestas para revelar una verdad.'
+                    },
+                    {
+                        question: '¿Cuál es la diferencia entre un "narrador omnisciente" y un "narrador omnisciente limitado" (o focalizado)?',
+                        options: [
+                            'El omnisciente narra en primera persona y el limitado en tercera.',
+                            'El omnisciente accede a la mente de todos los personajes; el limitado solo a la de uno.',
+                            'El omnisciente cuenta hechos pasados y el limitado solo hechos presentes.',
+                            'No hay diferencia real; son dos nombres para lo mismo.'
+                        ],
+                        correct: 1,
+                        fundament: 'El omnisciente "total" conoce pensamientos, emociones y motivaciones de todos los personajes. El omnisciente limitado (o focalizado) narra en tercera persona pero restringe su acceso a la interioridad de un solo personaje.'
+                    },
+                    {
+                        question: 'Las palabras "euforia", "eufemismo" y "eutanasia" comparten el prefijo griego eu-. ¿Qué significa?',
+                        options: [
+                            'Nuevo.',
+                            'Fuera de.',
+                            'Bueno, bien.',
+                            'Verdadero.'
+                        ],
+                        correct: 2,
+                        fundament: 'Eu- = bueno/bien. Euforia = buen ánimo. Eufemismo = decir bien (suavizar). Eutanasia = buena muerte. No confundir con "neo-" (nuevo) ni "ex-" (fuera de).'
+                    },
+                    {
+                        question: '¿Cuál de las siguientes opciones presenta correctamente un sinónimo y un antónimo de la palabra "prolijo"?',
+                        options: [
+                            'Sinónimo: extenso — Antónimo: breve.',
+                            'Sinónimo: meticuloso — Antónimo: descuidado.',
+                            'Sinónimo: abundante — Antónimo: escaso.',
+                            'Sinónimo: lento — Antónimo: rápido.'
+                        ],
+                        correct: 1,
+                        fundament: '"Prolijo" significa cuidadoso, minucioso, detallista en el trabajo. Su sinónimo es "meticuloso" y su antónimo es "descuidado". En algunos contextos puede significar "extenso", pero su sentido principal es esmero.'
+                    },
+                    {
+                        question: 'Lee: "Ella miraba al horizonte. Pensaba en lo que vendría. Pero también sabía que Juan, a tres calles de ahí, pensaba exactamente lo mismo." ¿Qué tipo de narrador opera aquí?',
+                        options: [
+                            'Narrador testigo, porque narra lo que observa desde fuera.',
+                            'Narrador protagonista, porque ella cuenta su propia historia.',
+                            'Narrador omnisciente, porque accede a los pensamientos de dos personajes en lugares distintos.',
+                            'Narrador objetivo, porque no revela emociones de los personajes.'
+                        ],
+                        correct: 2,
+                        fundament: 'El narrador conoce lo que piensa ella Y lo que piensa Juan en otro lugar. Solo un narrador omnisciente puede acceder simultáneamente a la interioridad de múltiples personajes en espacios diferentes.'
+                    }
+                ]
+            }
+        };
+
+        let activeQuestions = [];
+        let activeCourseLabel = '';
+        let currentRound = 0;
+        let results = [];
+        let canAnswer = true;
+
+        function showScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+        }
+
+        function startGame(courseKey) {
+            const course = questionBank[courseKey];
+            activeQuestions = course.questions;
+            activeCourseLabel = course.label;
+            document.getElementById('course-badge').textContent = course.label;
+            currentRound = 0;
+            results = [];
+            showScreen('quiz-screen');
+            loadRound();
+        }
+
+        function loadRound() {
+            canAnswer = true;
+            const q = activeQuestions[currentRound];
+            const total = activeQuestions.length;
+
+            document.getElementById('round-badge').textContent = `RONDA ${currentRound + 1} / ${total}`;
+            document.getElementById('progress').style.width = `${(currentRound / total) * 100}%`;
+            document.getElementById('question').textContent = q.question;
+
+            /* Reset UI */
+            document.getElementById('buzzer-alert').style.display = 'block';
+            document.getElementById('fundament-box').style.display = 'none';
+            document.getElementById('btn-next').style.display = 'none';
+
+            const qText = document.getElementById('question');
+            qText.classList.remove('fade-in');
+            void qText.offsetWidth;
+            qText.classList.add('fade-in');
+
+            const opts = document.getElementById('options');
+            opts.innerHTML = '';
+            const letters = ['A', 'B', 'C', 'D'];
+
+            q.options.forEach((option, idx) => {
+                const btn = document.createElement('div');
+                btn.className = 'option-btn fade-in';
+                btn.style.animationDelay = `${idx * 0.1}s`;
+                btn.innerHTML = `<span class="letter">${letters[idx]}</span><span>${option}</span>`;
+                btn.onclick = () => selectAnswer(idx, btn);
+                opts.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(idx, btn) {
+            if (!canAnswer) return;
+            canAnswer = false;
+
+            const opts = document.getElementById('options');
+            Array.from(opts.children).forEach(c => c.classList.add('locked'));
+
+            const q = activeQuestions[currentRound];
+
+            document.getElementById('buzzer-alert').style.display = 'none';
+
+            if (idx === q.correct) {
+                btn.classList.add('correct');
+                results.push('correct');
+            } else {
+                btn.classList.add('wrong');
+                opts.children[q.correct].classList.add('correct');
+                results.push('wrong');
+            }
+
+            /* Mostrar fundamentación */
+            document.getElementById('fundament-text').textContent = q.fundament;
+            document.getElementById('fundament-box').style.display = 'block';
+
+            /* Mostrar botón siguiente */
+            const nextBtn = document.getElementById('btn-next');
+            if (currentRound < activeQuestions.length - 1) {
+                nextBtn.textContent = 'SIGUIENTE RONDA ▶';
+            } else {
+                nextBtn.textContent = 'VER RESULTADOS ▶';
+            }
+            nextBtn.style.display = 'inline-block';
+        }
+
+        function nextRound() {
+            currentRound++;
+            if (currentRound < activeQuestions.length) {
+                loadRound();
+            } else {
+                showFinalResults();
+            }
+        }
+
+        function showFinalResults() {
+            document.getElementById('progress').style.width = '100%';
+
+            const summary = document.getElementById('results-summary');
+            summary.innerHTML = '';
+
+            let correctCount = 0;
+            results.forEach((r, i) => {
+                const row = document.createElement('div');
+                row.className = 'result-row';
+                const icon = r === 'correct' ? '✅' : '❌';
+                if (r === 'correct') correctCount++;
+                row.innerHTML = `
+                    <span class="round-num">Ronda ${i + 1}</span>
+                    <span class="result-icon">${icon}</span>
+                `;
+                summary.appendChild(row);
+            });
+
+            /* Fila total */
+            const totalRow = document.createElement('div');
+            totalRow.className = 'result-row';
+            totalRow.style.borderTop = '1px solid rgba(255,255,255,0.15)';
+            totalRow.style.fontWeight = '700';
+            totalRow.style.marginTop = '5px';
+            totalRow.innerHTML = `
+                <span>Total aciertos</span>
+                <span style="color: var(--accent); font-family: 'Orbitron', sans-serif;">${correctCount} / ${activeQuestions.length}</span>
+            `;
+            summary.appendChild(totalRow);
+
+            showScreen('result-screen');
+        }
+
+        function resetGame() {
+            showScreen('start-screen');
+        }
+    </script>
+</body>
+</html>

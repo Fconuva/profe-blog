@@ -11,6 +11,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("dashboard");
   eleventyConfig.addPassthroughCopy("admin");
   eleventyConfig.addPassthroughCopy("estudiantes");
+  eleventyConfig.addPassthroughCopy("lecturas");
   eleventyConfig.addPassthroughCopy("publicaciones");
   eleventyConfig.addPassthroughCopy("trivia");
 

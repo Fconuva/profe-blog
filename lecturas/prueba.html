@@ -1,0 +1,1266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prueba | Lecturas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --lecturas-font-scale: 1;
+      --lecturas-line-height: 1.7;
+      --lecturas-answer-min-height: 140px;
+      --lecturas-card-padding: 22px;
+      --lecturas-option-padding-y: 14px;
+      --lecturas-option-padding-x: 15px;
+    }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #eef2f7;
+      color: #111827;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: linear-gradient(135deg, #0f172a 0%, #115e59 55%, #164e63 100%);
+      color: #f8fafc;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.18);
+    }
+    .topbar-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .brand-logo {
+      width: 52px;
+      height: 52px;
+      flex: 0 0 auto;
+      object-fit: contain;
+      padding: 5px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .title-copy {
+      min-width: 0;
+    }
+    .title-copy h1 {
+      font-size: calc(18px * var(--lecturas-font-scale));
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .title-copy p {
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: rgba(248,250,252,0.78);
+      line-height: var(--lecturas-line-height);
+    }
+    .status {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .pill {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.10);
+      white-space: nowrap;
+    }
+    .save.ok { color: #bbf7d0; }
+    .save.err { color: #fecaca; }
+    .layout {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 22px 20px 40px;
+      display: grid;
+      grid-template-columns: 290px minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+    .side, .main {
+      min-width: 0;
+    }
+    .panel {
+      background: #fff;
+      border-radius: 22px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      padding: calc(18px * var(--lecturas-font-scale));
+      margin-bottom: 16px;
+    }
+    .panel h2, .panel h3 {
+      font-size: calc(16px * var(--lecturas-font-scale));
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 10px;
+    }
+    .panel p {
+      font-size: calc(13px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      color: #4b5563;
+    }
+    .meta-grid {
+      display: grid;
+      gap: 10px;
+    }
+    .meta-item {
+      border: 1px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 10px 12px;
+      background: #f9fafb;
+    }
+    .meta-label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 800;
+      color: #6b7280;
+      margin-bottom: 3px;
+    }
+    .meta-value {
+      font-size: calc(13px * var(--lecturas-font-scale));
+      font-weight: 700;
+      color: #111827;
+      line-height: var(--lecturas-line-height);
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e5e7eb;
+      margin: 10px 0 8px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0f766e, #0ea5e9);
+      width: 0;
+      transition: width .2s ease;
+    }
+    .toc {
+      display: grid;
+      gap: 8px;
+      max-height: 360px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+    .toc button {
+      width: 100%;
+      text-align: left;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid #d1d5db;
+      background: #fff;
+      font: inherit;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      cursor: pointer;
+      color: #374151;
+    }
+    .toc button.done {
+      border-color: #86efac;
+      background: #f0fdf4;
+      color: #166534;
+      font-weight: 700;
+    }
+    .material-card, .item-card {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      padding: var(--lecturas-card-padding);
+      margin-bottom: 18px;
+    }
+    .material-card h2 {
+      font-size: calc(22px * var(--lecturas-font-scale));
+      line-height: 1.1;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+    .material-card .subtype {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #ecfdf5;
+      color: #047857;
+      font-size: 11px;
+      font-weight: 800;
+      margin-bottom: 10px;
+    }
+    .material-card p {
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      color: #374151;
+      margin-bottom: 12px;
+    }
+    .material-card figure {
+      margin: 14px 0;
+    }
+    .material-card img {
+      max-width: 100%;
+      display: block;
+      border-radius: 16px;
+      border: 1px solid #d1d5db;
+      background: #f3f4f6;
+    }
+    .material-card figcaption {
+      margin-top: 8px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: #6b7280;
+      line-height: var(--lecturas-line-height);
+    }
+    .material-card .source {
+      margin-top: 8px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: #6b7280;
+      font-style: italic;
+    }
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 8px;
+      align-items: flex-start;
+    }
+    .item-head h3 {
+      font-size: calc(17px * var(--lecturas-font-scale));
+      font-weight: 800;
+      line-height: var(--lecturas-line-height);
+      color: #111827;
+      margin: 0;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #dbeafe;
+      color: #1d4ed8;
+      white-space: nowrap;
+    }
+    .tag.type { background: #fef3c7; color: #92400e; }
+    .tag.score { background: #ede9fe; color: #6d28d9; }
+    .item-card .fragment {
+      margin: 10px 0 14px;
+      padding: 14px 15px;
+      border-left: 4px solid #0ea5e9;
+      background: #f8fafc;
+      border-radius: 16px;
+      color: #374151;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+    }
+    .item-card .fragment p { margin-bottom: 8px; }
+    .option-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .option {
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 0;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      background: #fff;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .option:hover {
+      border-color: #67e8f9;
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.10);
+    }
+    .option.selected {
+      border-color: #0f766e;
+      background: #ecfdf5;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+    .option.struck {
+      border-color: #9ca3af;
+      background: #f8fafc;
+    }
+    .option.struck .option-main {
+      opacity: .75;
+    }
+    .option.struck .option-text {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+    }
+    .option-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: var(--lecturas-option-padding-y) var(--lecturas-option-padding-x);
+      cursor: pointer;
+    }
+    .option-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .option .letter {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      margin-right: 10px;
+      vertical-align: top;
+    }
+    .option.selected .letter {
+      background: #0f766e;
+      color: #fff;
+    }
+    .strike-toggle {
+      border: none;
+      border-left: 1px solid #e5e7eb;
+      background: #f8fafc;
+      color: #6b7280;
+      font: inherit;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      min-width: 88px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .strike-toggle.active {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .option.selected .strike-toggle {
+      background: #d1fae5;
+      border-left-color: #a7f3d0;
+    }
+    textarea.answer-box {
+      width: 100%;
+      min-height: var(--lecturas-answer-min-height);
+      resize: vertical;
+      border: 2px solid #d1d5db;
+      border-radius: 16px;
+      padding: 14px 15px;
+      font: inherit;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      margin-top: 12px;
+      background: #fff;
+    }
+    textarea.answer-box:focus, .pair-select:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.10);
+    }
+    .pair-grid, .order-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .pair-row, .order-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 190px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 13px;
+      border-radius: 16px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .pair-row strong, .order-row strong {
+      font-size: calc(13px * var(--lecturas-font-scale));
+      color: #111827;
+      line-height: var(--lecturas-line-height);
+    }
+    .pair-select {
+      width: 100%;
+      border: 2px solid #d1d5db;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      background: #fff;
+    }
+    .unknown {
+      margin-top: 12px;
+      border-radius: 16px;
+      padding: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+    }
+    .submit-box {
+      position: sticky;
+      bottom: 16px;
+      background: rgba(255,255,255,0.94);
+      border: 1px solid #d1d5db;
+      backdrop-filter: blur(10px);
+      border-radius: 20px;
+      padding: 16px;
+      box-shadow: 0 10px 28px rgba(15, 23, 42, 0.10);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+    .submit-box p {
+      font-size: calc(13px * var(--lecturas-font-scale));
+      color: #4b5563;
+      line-height: var(--lecturas-line-height);
+    }
+    .submit-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 15px 20px;
+      min-width: 220px;
+      font: inherit;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      font-weight: 800;
+      color: #fff;
+      background: linear-gradient(135deg, #0f766e, #155e75);
+      cursor: pointer;
+      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.18);
+    }
+    .submit-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .notice {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 22px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      line-height: var(--lecturas-line-height);
+      font-size: calc(14px * var(--lecturas-font-scale));
+      color: #4b5563;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 980px) {
+      .layout { grid-template-columns: 1fr; }
+      .side { order: 2; }
+      .main { order: 1; }
+    }
+    @media (max-width: 700px) {
+      .topbar-inner { grid-template-columns: 1fr; }
+      .status { justify-content: flex-start; }
+      .pair-row, .order-row { grid-template-columns: 1fr; }
+      .submit-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="title">
+        <img class="brand-logo" src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+        <div class="title-copy">
+          <h1 id="sessionTitle">Cargando prueba...</h1>
+          <p id="sessionMeta">Sección Lecturas</p>
+        </div>
+      </div>
+      <div class="status">
+        <div class="pill" id="timerPill">Sin límite</div>
+        <div class="pill" id="progressPill">0/0 respondidos</div>
+        <div class="pill save" id="savePill">Guardado pendiente</div>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="side">
+      <div class="panel">
+        <h2>Ficha</h2>
+        <div class="meta-grid" id="metaGrid"></div>
+      </div>
+
+      <div class="panel">
+        <h3>Avance</h3>
+        <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+        <p id="progressText">Aún no comienzas a responder.</p>
+      </div>
+
+      <div class="panel">
+        <h3>Ítems</h3>
+        <div class="toc" id="tocList"></div>
+      </div>
+    </aside>
+
+    <main class="main" id="mainContent">
+      <div class="notice">Cargando contenido...</div>
+    </main>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+      authDomain: "profe-blog.firebaseapp.com",
+      databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+      projectId: "profe-blog",
+      storageBucket: "profe-blog.firebasestorage.app",
+      messagingSenderId: "305920739217",
+      appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+    const LECTURAS_BASE = 'plataforma_lecturas';
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('id');
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    let currentUser = null;
+    let studentData = null;
+    let sessionData = null;
+    let responseData = null;
+    let answers = {};
+    let uiState = { strikes: {} };
+    let isSubmitted = false;
+    let isDirty = false;
+    let autoSaveTimer = null;
+    let timerInterval = null;
+    let startTime = null;
+    let secondsRemaining = null;
+
+    function htmlEscape(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJsSingleQuoted(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+    }
+
+    function slugify(text) {
+      return String(text || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function getType(item) {
+      return (item.tipo || item.type || 'seleccion_multiple').toLowerCase();
+    }
+
+    function getRandomizationConfig(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return content.randomizacion || session.randomizacion || {};
+    }
+
+    function hashString(value) {
+      let hash = 2166136261;
+      const text = String(value || '');
+      for (let index = 0; index < text.length; index++) {
+        hash ^= text.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function createSeededRandom(seedText) {
+      let state = hashString(seedText) || 1;
+      return function() {
+        state += 0x6D2B79F5;
+        let value = state;
+        value = Math.imul(value ^ (value >>> 15), value | 1);
+        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function shuffleArray(list, seedText) {
+      const random = createSeededRandom(seedText);
+      const result = list.slice();
+      for (let index = result.length - 1; index > 0; index--) {
+        const otherIndex = Math.floor(random() * (index + 1));
+        const current = result[index];
+        result[index] = result[otherIndex];
+        result[otherIndex] = current;
+      }
+      return result;
+    }
+
+    function getDisplayItems() {
+      if (!sessionData) return [];
+      const { items } = normalizeContent(sessionData);
+      const randomization = getRandomizationConfig(sessionData);
+      if (!(randomization.mezclarItems || randomization.shuffleItems)) return items.slice();
+      if (!currentUser || !currentUser.uid) return items.slice();
+      const seed = [sessionId || 'lecturas', currentUser.uid, randomization.semilla || 'shuffle-items'].join(':');
+      return shuffleArray(items, seed);
+    }
+
+    function clampNumber(value, fallback, min, max) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(Math.max(number, min), max);
+    }
+
+    function getAccessibilityConfig(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return content.accesibilidad || session.accesibilidad || {};
+    }
+
+    function applyAccessibilityConfig(session) {
+      const config = getAccessibilityConfig(session);
+      const root = document.documentElement;
+      const fontScale = clampNumber(config.fontScale || config.escalaFuente, 1, 1, 1.6);
+      const lineHeight = clampNumber(config.lineHeight || config.interlineado, 1.7, 1.6, 2.2);
+      const answerMinHeight = clampNumber(config.answerBoxMinHeight || config.textareaMinHeight || config.alturaMinTextarea, 140, 140, 360);
+      const choicePaddingY = clampNumber(config.choicePaddingY || config.opcionPaddingY, 14, 14, 28);
+      const cardPadding = clampNumber(config.cardPadding || config.panelPadding, 22, 18, 34);
+      root.style.setProperty('--lecturas-font-scale', String(fontScale));
+      root.style.setProperty('--lecturas-line-height', String(lineHeight));
+      root.style.setProperty('--lecturas-answer-min-height', answerMinHeight + 'px');
+      root.style.setProperty('--lecturas-option-padding-y', choicePaddingY + 'px');
+      root.style.setProperty('--lecturas-card-padding', cardPadding + 'px');
+    }
+
+    function normalizeContent(session) {
+      const content = session.contenido || {};
+      const materials = content.materiales || content.textos || session.materiales || session.textos || [];
+      const items = content.items || content.preguntas || session.items || session.preguntas || [];
+      return { materials, items };
+    }
+
+    function normalizeMaterialParagraphs(material) {
+      if (Array.isArray(material.parrafos)) return material.parrafos;
+      if (Array.isArray(material.fragmentos)) return material.fragmentos;
+      if (material.texto) return [material.texto];
+      return [];
+    }
+
+    function normalizeChoiceOptions(item) {
+      if (Array.isArray(item.opciones)) return item.opciones.map((opt, index) => {
+        if (typeof opt === 'string') return { letra: String.fromCharCode(65 + index), texto: opt };
+        return { letra: opt.letra || opt.id || String.fromCharCode(65 + index), texto: opt.texto || opt.label || opt.valor || '' };
+      });
+      return [];
+    }
+
+    function getItemPoints(item) {
+      const raw = Number(item && (item.puntaje ?? item.points ?? 1));
+      return Number.isFinite(raw) && raw > 0 ? raw : 1;
+    }
+
+    function formatPoints(points) {
+      return points === 1 ? '1 pt' : points + ' pts';
+    }
+
+    function getTotalSessionPoints(items) {
+      return items.reduce((sum, item) => sum + getItemPoints(item), 0);
+    }
+
+    function normalizeMatchingSide(side) {
+      if (!Array.isArray(side)) return [];
+      return side.map((entry, index) => {
+        if (typeof entry === 'string') return { id: 'opt_' + index, texto: entry };
+        return { id: entry.id || 'opt_' + index, texto: entry.texto || entry.label || entry.valor || '' };
+      });
+    }
+
+    function normalizeMatchingAnswer(answer) {
+      return answer && typeof answer === 'object' ? answer : {};
+    }
+
+    function ensureUiState() {
+      if (!uiState || typeof uiState !== 'object') uiState = { strikes: {} };
+      if (!uiState.strikes || typeof uiState.strikes !== 'object') uiState.strikes = {};
+    }
+
+    function isOptionStruck(itemId, value) {
+      ensureUiState();
+      return !!(uiState.strikes[itemId] && uiState.strikes[itemId][value]);
+    }
+
+    function setSaveStatus(text, className) {
+      const pill = document.getElementById('savePill');
+      pill.textContent = text;
+      pill.className = 'pill save ' + (className || '');
+    }
+
+    function parseText(value) {
+      return String(value || '').trim();
+    }
+
+    function getAnsweredCount(items) {
+      return items.filter(item => isItemAnswered(item, answers[item.id])).length;
+    }
+
+    function isItemAnswered(item, answer) {
+      const type = getType(item);
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
+        return typeof answer === 'string' && answer !== '';
+      }
+      if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') {
+        return parseText(answer).length > 0;
+      }
+      if (type === 'pareados' || type === 'matching') {
+        const left = normalizeMatchingSide(item.izquierda || item.left || []);
+        const obj = normalizeMatchingAnswer(answer);
+        return left.length > 0 && left.every(entry => parseText(obj[entry.id]).length > 0);
+      }
+      if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') {
+        const entries = normalizeMatchingSide(item.elementos || item.items || []);
+        const obj = normalizeMatchingAnswer(answer);
+        return entries.length > 0 && entries.every(entry => parseText(obj[entry.id]).length > 0);
+      }
+      return parseText(answer).length > 0;
+    }
+
+    function updateProgress() {
+      if (!sessionData) return;
+      const items = getDisplayItems();
+      const answered = getAnsweredCount(items);
+      const total = items.length;
+      const percent = total ? Math.round((answered / total) * 100) : 0;
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = total ? answered + ' de ' + total + ' ítems completados.' : 'Esta prueba aún no tiene ítems cargados.';
+      document.getElementById('progressPill').textContent = answered + '/' + total + ' respondidos';
+      const tocButtons = document.querySelectorAll('[data-toc-id]');
+      tocButtons.forEach(btn => {
+        const item = items.find(entry => entry.id === btn.dataset.tocId);
+        if (!item) return;
+        if (isItemAnswered(item, answers[item.id])) btn.classList.add('done');
+        else btn.classList.remove('done');
+      });
+    }
+
+    function scrollToItem(id) {
+      const element = document.getElementById('item-' + slugify(id));
+      if (element) element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    window.scrollToItem = scrollToItem;
+
+    function renderMeta(session, student) {
+      const items = getDisplayItems();
+      const entries = [
+        { label: 'Libro', value: session.libro || 'Sin definir' },
+        { label: 'Curso', value: student.curso || 'Sin definir' },
+        { label: 'Duración', value: session.duracion_min ? session.duracion_min + ' min' : 'Sin límite' },
+        { label: 'Puntaje', value: formatPoints(getTotalSessionPoints(items)) + ' posibles' },
+        { label: 'Estado', value: isSubmitted ? 'Enviada' : 'Activa' }
+      ];
+      document.getElementById('metaGrid').innerHTML = entries.map(entry => {
+        return '<div class="meta-item"><span class="meta-label">' + entry.label + '</span><span class="meta-value">' + htmlEscape(entry.value) + '</span></div>';
+      }).join('');
+    }
+
+    function renderMaterial(material) {
+      const paragraphs = normalizeMaterialParagraphs(material);
+      let html = '<section class="material-card">';
+      if (material.subtipo || material.tipo) {
+        html += '<div class="subtype">' + htmlEscape(material.subtipo || material.tipo) + '</div>';
+      }
+      if (material.titulo) html += '<h2>' + htmlEscape(material.titulo) + '</h2>';
+      if (material.descripcion) html += '<p>' + htmlEscape(material.descripcion) + '</p>';
+      if (material.html) html += material.html;
+      paragraphs.forEach(paragraph => {
+        if (typeof paragraph === 'string') {
+          html += '<p>' + htmlEscape(paragraph) + '</p>';
+        } else if (paragraph && typeof paragraph === 'object') {
+          if (paragraph.html) html += paragraph.html;
+          else html += '<p>' + htmlEscape(paragraph.texto || paragraph.text || '') + '</p>';
+        }
+      });
+      const images = material.imagenes || material.images || [];
+      images.forEach(image => {
+        if (typeof image === 'string') {
+          html += '<figure><img src="' + htmlEscape(image) + '" alt="Material visual"><figcaption>Material visual de apoyo.</figcaption></figure>';
+        } else if (image && image.src) {
+          html += '<figure><img src="' + htmlEscape(image.src) + '" alt="' + htmlEscape(image.alt || 'Material visual') + '">';
+          if (image.caption) html += '<figcaption>' + htmlEscape(image.caption) + '</figcaption>';
+          html += '</figure>';
+        }
+      });
+      if (material.fuente) html += '<div class="source">' + htmlEscape(material.fuente) + '</div>';
+      html += '</section>';
+      return html;
+    }
+
+    function renderItem(item, index) {
+      const type = getType(item);
+      const points = getItemPoints(item);
+      const selected = answers[item.id];
+      const options = normalizeChoiceOptions(item);
+      const itemId = escapeJsSingleQuoted(item.id);
+      let body = '';
+
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
+        const resolvedOptions = options.length ? options : [
+          { letra: 'V', texto: 'Verdadero' },
+          { letra: 'F', texto: 'Falso' }
+        ];
+        body = '<div class="option-list">' + resolvedOptions.map(option => {
+          const selectedClass = selected === option.letra ? ' selected' : '';
+          const struckClass = isOptionStruck(item.id, option.letra) ? ' struck' : '';
+          const optionValue = escapeJsSingleQuoted(option.letra);
+          const strikeLabel = isOptionStruck(item.id, option.letra) ? 'Quitar' : 'Tachar';
+          return '<div class="option' + selectedClass + struckClass + '">'
+            + '<div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')">'
+            + '<span class="letter">' + htmlEscape(option.letra) + '</span>'
+            + '<span class="option-text">' + htmlEscape(option.texto) + '</span>'
+            + '</div>'
+            + '<button type="button" class="strike-toggle' + (isOptionStruck(item.id, option.letra) ? ' active' : '') + '" onclick="toggleStrikeById(\'' + itemId + '\', \'' + optionValue + '\')">' + strikeLabel + '</button>'
+            + '</div>';
+        }).join('') + '</div>';
+      } else if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') {
+        body = '<textarea class="answer-box" placeholder="Escribe tu respuesta aquí..." oninput="setTextAnswer(\'' + itemId + '\', this.value)">' + htmlEscape(selected || '') + '</textarea>';
+      } else if (type === 'pareados' || type === 'matching') {
+        const left = normalizeMatchingSide(item.izquierda || item.left || []);
+        const right = normalizeMatchingSide(item.derecha || item.right || []);
+        const answer = normalizeMatchingAnswer(selected);
+        body = '<div class="pair-grid">' + left.map(entry => {
+          const entryId = escapeJsSingleQuoted(entry.id);
+          const optionsHtml = ['<option value="">Selecciona...</option>'].concat(right.map(opt => {
+            const isSelected = answer[entry.id] === opt.id ? ' selected' : '';
+            return '<option value="' + htmlEscape(opt.id) + '"' + isSelected + '>' + htmlEscape(opt.texto) + '</option>';
+          })).join('');
+          return '<div class="pair-row"><strong>' + htmlEscape(entry.texto) + '</strong><select class="pair-select" onchange="setPairAnswer(\'' + itemId + '\', \'' + entryId + '\', this.value)">' + optionsHtml + '</select></div>';
+        }).join('') + '</div>';
+      } else if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') {
+        const entries = normalizeMatchingSide(item.elementos || item.items || []);
+        const answer = normalizeMatchingAnswer(selected);
+        const numberOptions = Array.from({ length: entries.length }, (_, idx) => idx + 1);
+        body = '<div class="order-grid">' + entries.map(entry => {
+          const entryId = escapeJsSingleQuoted(entry.id);
+          const optionsHtml = ['<option value="">Orden...</option>'].concat(numberOptions.map(number => {
+            const isSelected = String(answer[entry.id] || '') === String(number) ? ' selected' : '';
+            return '<option value="' + number + '"' + isSelected + '>' + number + '</option>';
+          })).join('');
+          return '<div class="order-row"><strong>' + htmlEscape(entry.texto) + '</strong><select class="pair-select" onchange="setOrderAnswer(\'' + itemId + '\', \'' + entryId + '\', this.value)">' + optionsHtml + '</select></div>';
+        }).join('') + '</div>';
+      } else {
+        body = '<div class="unknown">Este tipo de ítem aún no tiene corrección automática en la base inicial de Lecturas. Puedes responderlo manualmente y quedará guardado para revisión docente.</div>'
+          + '<textarea class="answer-box" placeholder="Escribe aquí tu respuesta o desarrollo..." oninput="setTextAnswer(\'' + itemId + '\', this.value)">' + htmlEscape(selected || '') + '</textarea>';
+      }
+
+      let fragment = '';
+      if (item.fragmento) {
+        if (typeof item.fragmento === 'string') {
+          fragment = '<div class="fragment"><p>' + htmlEscape(item.fragmento) + '</p></div>';
+        } else if (Array.isArray(item.fragmento)) {
+          fragment = '<div class="fragment">' + item.fragmento.map(line => '<p>' + htmlEscape(line) + '</p>').join('') + '</div>';
+        }
+      }
+
+      return '<section class="item-card" id="item-' + slugify(item.id) + '">'
+        + '<div class="item-head">'
+        + '<h3>' + (index + 1) + '. ' + htmlEscape(item.enunciado || 'Ítem sin enunciado') + '</h3>'
+        + '<div class="tags"><span class="tag">' + htmlEscape(item.habilidad || 'LYL') + '</span><span class="tag type">' + htmlEscape(type) + '</span><span class="tag score">' + htmlEscape(formatPoints(points)) + '</span></div>'
+        + '</div>'
+        + fragment
+        + body
+        + '</section>';
+    }
+
+    function renderTOC(items) {
+      document.getElementById('tocList').innerHTML = items.map((item, index) => {
+        const itemId = escapeJsSingleQuoted(item.id);
+        return '<button type="button" data-toc-id="' + htmlEscape(item.id) + '" onclick="scrollToItem(\'' + itemId + '\')">'
+          + '<strong>' + (index + 1) + '.</strong> ' + htmlEscape((item.enunciado || 'Ítem').slice(0, 64))
+          + '</button>';
+      }).join('');
+    }
+
+    function renderSession() {
+      const main = document.getElementById('mainContent');
+      const { materials } = normalizeContent(sessionData);
+      const items = getDisplayItems();
+      applyAccessibilityConfig(sessionData);
+      document.getElementById('sessionTitle').textContent = sessionData.titulo || 'Prueba de Lecturas';
+      document.getElementById('sessionMeta').textContent = (sessionData.libro || 'Sin libro') + ' · ' + (studentData.nombre || 'Estudiante');
+      renderMeta(sessionData, studentData);
+      renderTOC(items);
+
+      if (!items.length) {
+        main.innerHTML = '<div class="notice">Esta prueba aún no tiene contenido cargado. Desde el panel admin de Lecturas podrás pegar los materiales y los ítems en formato JSON.</div>';
+        updateProgress();
+        return;
+      }
+
+      let html = '';
+      const materialMap = {};
+      const renderedMaterials = new Set();
+      materials.forEach(material => {
+        if (material && material.id) materialMap[material.id] = material;
+      });
+
+      items.forEach((item, index) => {
+        const ref = item.materialRef || item.textoRef || item.recursoRef;
+        if (ref && materialMap[ref] && !renderedMaterials.has(ref)) {
+          html += renderMaterial(materialMap[ref]);
+          renderedMaterials.add(ref);
+        }
+        html += renderItem(item, index);
+      });
+
+      materials.forEach(material => {
+        if (!material || !material.id || renderedMaterials.has(material.id)) return;
+        html += renderMaterial(material);
+      });
+
+      if (!items.length && materials.length) {
+        html += '<section class="material-card"><h2>Materiales cargados</h2><p>Aún no hay preguntas visibles para esta sesión.</p></section>';
+      }
+
+      html += '<div class="submit-box">'
+        + '<p>Cuando termines, verifica que todos los ítems estén respondidos. El envío bloquea nuevas modificaciones.</p>'
+        + '<button class="submit-btn" id="submitBtn" onclick="submitSession()">Enviar respuestas</button>'
+        + '</div>';
+
+      main.innerHTML = html;
+      updateProgress();
+      if (isSubmitted) document.getElementById('submitBtn').disabled = true;
+    }
+
+    function setDirty() {
+      isDirty = true;
+      setSaveStatus('Guardado pendiente', '');
+      updateProgress();
+    }
+
+    function cloneAnswerObject(itemId) {
+      const current = answers[itemId] && typeof answers[itemId] === 'object' ? answers[itemId] : {};
+      return { ...current };
+    }
+
+    function selectOption(itemId, value) {
+      if (isSubmitted) return;
+      answers[itemId] = value;
+      setDirty();
+      renderSession();
+    }
+    window.selectOption = selectOption;
+
+    function setTextAnswer(itemId, value) {
+      if (isSubmitted) return;
+      answers[itemId] = value;
+      setDirty();
+    }
+    window.setTextAnswer = setTextAnswer;
+
+    function setPairAnswer(itemId, leftId, value) {
+      if (isSubmitted) return;
+      const next = cloneAnswerObject(itemId);
+      next[leftId] = value;
+      answers[itemId] = next;
+      setDirty();
+      updateProgress();
+    }
+    window.setPairAnswer = setPairAnswer;
+
+    function setOrderAnswer(itemId, elementId, value) {
+      if (isSubmitted) return;
+      const next = cloneAnswerObject(itemId);
+      next[elementId] = value;
+      answers[itemId] = next;
+      setDirty();
+      updateProgress();
+    }
+    window.setOrderAnswer = setOrderAnswer;
+
+    function toggleStrike(event, itemId, value) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (isSubmitted) return;
+      ensureUiState();
+      if (!uiState.strikes[itemId] || typeof uiState.strikes[itemId] !== 'object') uiState.strikes[itemId] = {};
+      if (uiState.strikes[itemId][value]) delete uiState.strikes[itemId][value];
+      else uiState.strikes[itemId][value] = true;
+      if (!Object.keys(uiState.strikes[itemId]).length) delete uiState.strikes[itemId];
+      setDirty();
+      renderSession();
+    }
+    window.toggleStrike = toggleStrike;
+
+    function toggleStrikeById(itemId, value) {
+      toggleStrike(null, itemId, value);
+    }
+    window.toggleStrikeById = toggleStrikeById;
+
+    function getExpectedMapping(item) {
+      return item.correcta || item.correct || item.solucion || {};
+    }
+
+    function evaluateOrdering(item, answer) {
+      const map = normalizeMatchingAnswer(answer);
+      const expected = getExpectedMapping(item);
+      if (Array.isArray(expected)) {
+        const ordered = Object.entries(map)
+          .filter(([, value]) => parseText(value).length > 0)
+          .sort((a, b) => Number(a[1]) - Number(b[1]))
+          .map(([key]) => key);
+        if (ordered.length !== expected.length) return false;
+        return ordered.every((value, index) => value === expected[index]);
+      }
+      if (expected && typeof expected === 'object') {
+        return Object.keys(expected).every(key => String(expected[key]) === String(map[key] || ''));
+      }
+      return false;
+    }
+
+    function evaluateMatching(item, answer) {
+      const expected = getExpectedMapping(item);
+      const map = normalizeMatchingAnswer(answer);
+      if (!expected || typeof expected !== 'object') return false;
+      return Object.keys(expected).every(key => String(expected[key]) === String(map[key] || ''));
+    }
+
+    function evaluateItem(item, answer) {
+      const type = getType(item);
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
+        const expected = item.correcta ?? item.correct ?? item.respuesta_correcta;
+        return String(answer || '') === String(expected || '');
+      }
+      if (type === 'pareados' || type === 'matching') return evaluateMatching(item, answer);
+      if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') return evaluateOrdering(item, answer);
+      return null;
+    }
+
+    function buildResults() {
+      const { items } = normalizeContent(sessionData);
+      let totalPoints = 0;
+      let autoTotalPoints = 0;
+      let autoEarnedPoints = 0;
+      let manualPending = 0;
+      let manualPendingPoints = 0;
+      const detail = {};
+
+      items.forEach(item => {
+        const answer = answers[item.id];
+        const evaluation = evaluateItem(item, answer);
+        const autoEvaluable = evaluation !== null;
+        const points = getItemPoints(item);
+        totalPoints += points;
+        if (autoEvaluable) {
+          autoTotalPoints += points;
+          if (evaluation) autoEarnedPoints += points;
+        } else {
+          manualPending += 1;
+          manualPendingPoints += points;
+        }
+        detail[item.id] = {
+          tipo: getType(item),
+          respuesta: answer || null,
+          esCorrecta: evaluation,
+          autoEvaluable: autoEvaluable,
+          habilidad: item.habilidad || null,
+          puntajeItem: points,
+          puntajeObtenido: autoEvaluable ? (evaluation ? points : 0) : null
+        };
+      });
+
+      const porcentaje = autoTotalPoints ? Math.round((autoEarnedPoints / autoTotalPoints) * 100) : 0;
+      return { totalPoints, autoTotalPoints, autoEarnedPoints, manualPending, manualPendingPoints, porcentaje, detail };
+    }
+
+    async function autoSave() {
+      if (!currentUser || !sessionData || isSubmitted || !isDirty) return;
+      try {
+        setSaveStatus('Guardando...', '');
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          answers,
+          ui_state: uiState,
+          started_at: startTime,
+          last_save: Date.now(),
+          completada: false,
+          tiempo_transcurrido: startTime ? Math.floor((Date.now() - startTime) / 1000) : 0
+        });
+        isDirty = false;
+        setSaveStatus('Guardado', 'ok');
+      } catch (error) {
+        console.error('[lecturas/autosave]', error);
+        setSaveStatus('Error al guardar', 'err');
+      }
+    }
+
+    async function submitSession() {
+      if (isSubmitted || !sessionData) return;
+      const items = getDisplayItems();
+      const missing = items.filter(item => !isItemAnswered(item, answers[item.id]));
+      if (missing.length) {
+        alert('Aún faltan ' + missing.length + ' ítems por responder.');
+        return;
+      }
+      if (!confirm('¿Estás seguro/a de enviar tus respuestas? Después del envío ya no podrás editarlas.')) return;
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Enviando...';
+
+      try {
+        isSubmitted = true;
+        const result = buildResults();
+        const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          answers,
+          ui_state: uiState,
+          started_at: startTime,
+          submitted_at: Date.now(),
+          completada: true,
+          tiempo_transcurrido: elapsed
+        });
+
+        await db.ref(LECTURAS_BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+          nombre: studentData.nombre || '',
+          curso: studentData.curso || '',
+          puntaje: result.autoEarnedPoints,
+          total: result.autoTotalPoints,
+          puntaje_total_prueba: result.totalPoints,
+          porcentaje: result.porcentaje,
+          manual_pendientes: result.manualPending,
+          puntaje_manual_pendiente: result.manualPendingPoints,
+          detalle: result.detail,
+          submitted_at: Date.now(),
+          tiempo_transcurrido: elapsed
+        });
+
+        setSaveStatus('Enviado', 'ok');
+        alert('Tus respuestas fueron enviadas correctamente. Puntaje autoevaluable: ' + result.autoEarnedPoints + ' de ' + result.autoTotalPoints + ' puntos.' + (result.manualPending ? ' Quedaron ' + result.manualPending + ' ítems para revisión docente.' : ''));
+        renderSession();
+      } catch (error) {
+        console.error('[lecturas/submit]', error);
+        isSubmitted = false;
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Enviar respuestas';
+        setSaveStatus('Error al enviar', 'err');
+        alert('No se pudo enviar la prueba. Intenta nuevamente.');
+      }
+    }
+    window.submitSession = submitSession;
+
+    function tickTimer() {
+      if (secondsRemaining === null) return;
+      if (secondsRemaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timerPill').textContent = 'Tiempo finalizado';
+        submitSession();
+        return;
+      }
+      const mins = Math.floor(secondsRemaining / 60);
+      const secs = secondsRemaining % 60;
+      document.getElementById('timerPill').textContent = 'Tiempo ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      secondsRemaining -= 1;
+    }
+
+    async function loadSession() {
+      const sessionSnap = await db.ref(LECTURAS_BASE + '/sesiones/' + sessionId).once('value');
+      if (!sessionSnap.exists()) throw new Error('Sesión no encontrada');
+      sessionData = { id: sessionId, ...sessionSnap.val() };
+      const responseSnap = await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).once('value');
+      responseData = responseSnap.val() || null;
+      answers = responseData && responseData.answers ? responseData.answers : {};
+      uiState = responseData && responseData.ui_state ? responseData.ui_state : { strikes: {} };
+      isSubmitted = !!(responseData && responseData.completada);
+      startTime = responseData && responseData.started_at ? responseData.started_at : Date.now();
+      if (!responseData) {
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          started_at: startTime,
+          last_save: Date.now(),
+          completada: false,
+          answers: {},
+          ui_state: { strikes: {} }
+        });
+      }
+      if (sessionData.duracion_min && !isSubmitted) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        secondsRemaining = Math.max((sessionData.duracion_min * 60) - elapsed, 0);
+        tickTimer();
+        timerInterval = setInterval(tickTimer, 1000);
+      }
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!sessionId) {
+        document.getElementById('mainContent').innerHTML = '<div class="notice">No se indicó ninguna prueba. Regresa al panel de Lecturas.</div>';
+        return;
+      }
+      if (!user) {
+        window.location.href = '/lecturas/';
+        return;
+      }
+      currentUser = user;
+
+      try {
+        const studentSnap = await db.ref(STUDENT_BASE + '/estudiantes/' + user.uid).once('value');
+        studentData = studentSnap.val();
+        if (!studentData) {
+          await auth.signOut();
+          window.location.href = '/lecturas/';
+          return;
+        }
+
+        const assignedSnap = await db.ref(LECTURAS_BASE + '/asignaciones/' + user.uid + '/' + sessionId).once('value');
+        if (!assignedSnap.exists()) {
+          document.getElementById('mainContent').innerHTML = '<div class="notice">Esta prueba no está asignada para tu cuenta.</div>';
+          return;
+        }
+
+        await loadSession();
+        renderSession();
+        autoSaveTimer = setInterval(autoSave, 20000);
+        setSaveStatus(isSubmitted ? 'Enviado' : 'Guardado pendiente', isSubmitted ? 'ok' : '');
+      } catch (error) {
+        console.error('[lecturas/prueba]', error);
+        document.getElementById('mainContent').innerHTML = '<div class="notice">No se pudo cargar esta prueba. Verifica que exista y que esté asignada correctamente.</div>';
+      }
+    });
+
+    window.addEventListener('beforeunload', (event) => {
+      if (isDirty && !isSubmitted) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    });
+  </script>
+</body>
+</html>

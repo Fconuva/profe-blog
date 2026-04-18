@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mis Lecturas | Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: #f3f4f6;
+      color: #111827;
+    }
+    .topbar {
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      background: linear-gradient(135deg, #0f172a 0%, #115e59 55%, #164e63 100%);
+      color: #f8fafc;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      box-shadow: 0 8px 22px rgba(15, 23, 42, 0.20);
+    }
+    .idblock {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.12);
+      font-size: 20px;
+    }
+    .avatar.logo {
+      object-fit: contain;
+      padding: 4px;
+      border: 1px solid rgba(255,255,255,0.14);
+    }
+    .idblock h1 {
+      font-size: 16px;
+      font-weight: 800;
+      margin-bottom: 3px;
+    }
+    .idblock p {
+      font-size: 12px;
+      color: rgba(248,250,252,0.75);
+    }
+    .logout {
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(255,255,255,0.10);
+      color: #fff;
+      border-radius: 12px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .page {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 28px 20px 44px;
+    }
+    .hero {
+      padding: 24px 24px 22px;
+      border-radius: 24px;
+      background:
+        radial-gradient(circle at top right, rgba(251, 191, 36, 0.18), transparent 24%),
+        linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+      border: 1px solid #d1fae5;
+      margin-bottom: 18px;
+    }
+    .hero h2 {
+      font-size: 30px;
+      line-height: 1.05;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #0f172a;
+    }
+    .hero p {
+      font-size: 14px;
+      color: #4b5563;
+      line-height: 1.65;
+      max-width: 760px;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat {
+      background: #ffffff;
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+      border-left: 4px solid #0f766e;
+    }
+    .stat .label {
+      font-size: 11px;
+      font-weight: 800;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+    .stat .value {
+      font-size: 30px;
+      font-weight: 800;
+      color: #111827;
+      margin-top: 5px;
+    }
+    .stat .sub {
+      font-size: 11px;
+      color: #9ca3af;
+      margin-top: 2px;
+    }
+    .redirect-box {
+      display: none;
+      margin-bottom: 18px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1d4ed8;
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .redirect-box.show { display: block; }
+    .section-title {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 12px;
+    }
+    .list {
+      display: grid;
+      gap: 14px;
+    }
+    .empty {
+      padding: 28px 24px;
+      background: #ffffff;
+      border-radius: 20px;
+      color: #6b7280;
+      line-height: 1.7;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.05);
+    }
+    .card {
+      background: #ffffff;
+      border-radius: 22px;
+      padding: 22px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: center;
+      border: 1px solid #e5e7eb;
+    }
+    .card h3 {
+      font-size: 18px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 4px;
+    }
+    .meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #ecfdf5;
+      color: #047857;
+    }
+    .chip.book { background: #fef3c7; color: #92400e; }
+    .chip.done { background: #dcfce7; color: #166534; }
+    .chip.progress { background: #dbeafe; color: #1d4ed8; }
+    .card p {
+      font-size: 13px;
+      line-height: 1.65;
+      color: #4b5563;
+      max-width: 680px;
+    }
+    .card .cta {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 18px;
+      min-width: 176px;
+      font: inherit;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0f766e, #155e75);
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+    }
+    .card .cta.secondary {
+      background: linear-gradient(135deg, #475569, #334155);
+      box-shadow: none;
+    }
+    @media (max-width: 720px) {
+      .card { grid-template-columns: 1fr; }
+      .card .cta { width: 100%; }
+      .topbar { align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="idblock">
+      <img class="avatar logo" src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+      <div>
+        <h1 id="studentName">Cargando...</h1>
+        <p id="studentMeta">Lecturas asignadas</p>
+      </div>
+    </div>
+    <button class="logout" id="logoutBtn">Cerrar sesión</button>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <h2>Panel de Lecturas</h2>
+      <p>Aquí solo aparecen las pruebas de Lengua y Literatura que fueron asignadas específicamente para ti. No se muestran sesiones de PAES, SIMCE ni otros recursos del sistema general.</p>
+    </section>
+
+    <div class="stats" id="statsRow">
+      <div class="stat"><div class="label">Asignadas</div><div class="value" id="statAssigned">0</div><div class="sub">pruebas visibles para ti</div></div>
+      <div class="stat"><div class="label">Completadas</div><div class="value" id="statDone">0</div><div class="sub">resueltas y enviadas</div></div>
+      <div class="stat"><div class="label">Pendientes</div><div class="value" id="statPending">0</div><div class="sub">listas para responder</div></div>
+    </div>
+
+    <div class="redirect-box" id="redirectBox"></div>
+
+    <h2 class="section-title">Tus pruebas</h2>
+    <section class="list" id="sessionList">
+      <div class="empty">Cargando asignaciones...</div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+      authDomain: "profe-blog.firebaseapp.com",
+      databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+      projectId: "profe-blog",
+      storageBucket: "profe-blog.firebasestorage.app",
+      messagingSenderId: "305920739217",
+      appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+    const LECTURAS_BASE = 'plataforma_lecturas';
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    const listEl = document.getElementById('sessionList');
+    const redirectBox = document.getElementById('redirectBox');
+
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+      await auth.signOut();
+      window.location.href = '/lecturas/';
+    });
+
+    function normalizeContent(session) {
+      const content = session.contenido || {};
+      const items = content.items || content.preguntas || session.items || session.preguntas || [];
+      const materials = content.materiales || content.textos || session.materiales || session.textos || [];
+      return { items, materials };
+    }
+
+    async function getStudent(uid) {
+      const snap = await db.ref(STUDENT_BASE + '/estudiantes/' + uid).once('value');
+      return snap.val();
+    }
+
+    async function getAssignedIds(uid) {
+      const snap = await db.ref(LECTURAS_BASE + '/asignaciones/' + uid).once('value');
+      return snap.exists() ? Object.keys(snap.val()) : [];
+    }
+
+    async function getSessionById(id) {
+      const snap = await db.ref(LECTURAS_BASE + '/sesiones/' + id).once('value');
+      return snap.exists() ? { id, ...snap.val() } : null;
+    }
+
+    async function getResponse(sessionId, uid) {
+      const snap = await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + uid).once('value');
+      return snap.val();
+    }
+
+    function updateStats(sessions) {
+      const assigned = sessions.length;
+      const done = sessions.filter(s => s.response && s.response.completada).length;
+      const pending = sessions.filter(s => !s.response || !s.response.completada).length;
+      document.getElementById('statAssigned').textContent = assigned;
+      document.getElementById('statDone').textContent = done;
+      document.getElementById('statPending').textContent = pending;
+    }
+
+    function renderSessions(sessions) {
+      if (!sessions.length) {
+        listEl.innerHTML = '<div class="empty">No tienes pruebas asignadas por ahora. Cuando el profesor publique una evaluación en esta sección, aparecerá aquí.</div>';
+        return;
+      }
+
+      listEl.innerHTML = sessions.map(session => {
+        const content = normalizeContent(session);
+        const itemCount = content.items.length;
+        const materialCount = content.materials.length;
+        const completed = session.response && session.response.completada;
+        const inProgress = session.response && !session.response.completada;
+        const chips = [
+          session.libro ? '<span class="chip book">' + session.libro + '</span>' : '',
+          materialCount ? '<span class="chip">' + materialCount + ' material(es)</span>' : '',
+          itemCount ? '<span class="chip">' + itemCount + ' ítem(s)</span>' : '',
+          completed ? '<span class="chip done">Completada</span>' : '',
+          inProgress ? '<span class="chip progress">En progreso</span>' : ''
+        ].join('');
+        const buttonLabel = completed ? 'Revisar prueba' : inProgress ? 'Continuar prueba' : 'Entrar a prueba';
+        const buttonClass = completed ? 'cta secondary' : 'cta';
+        return '<article class="card">'
+          + '<div>'
+          + '<h3>' + (session.titulo || 'Prueba sin título') + '</h3>'
+          + '<div class="meta">' + chips + '</div>'
+          + '<p>' + (session.descripcion || 'Sin descripción.') + '</p>'
+          + '</div>'
+          + '<button class="' + buttonClass + '" onclick="window.location.href=\'/lecturas/prueba?id=' + encodeURIComponent(session.id) + '\'">' + buttonLabel + '</button>'
+          + '</article>';
+      }).join('');
+    }
+
+    function maybeRedirect(sessions) {
+      const open = sessions.filter(s => !s.response || !s.response.completada);
+      if (open.length !== 1) return;
+      redirectBox.classList.add('show');
+      redirectBox.innerHTML = 'Solo tienes una prueba pendiente. Serás redirigido automáticamente en 3 segundos o puedes entrar de inmediato desde el botón.';
+      setTimeout(() => {
+        window.location.href = '/lecturas/prueba?id=' + encodeURIComponent(open[0].id);
+      }, 3000);
+    }
+
+    auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = '/lecturas/';
+        return;
+      }
+      try {
+        const student = await getStudent(user.uid);
+        if (!student) {
+          await auth.signOut();
+          window.location.href = '/lecturas/';
+          return;
+        }
+        document.getElementById('studentName').textContent = student.nombre || 'Estudiante';
+        document.getElementById('studentMeta').textContent = (student.curso || 'Sin curso') + ' · Sección Lecturas';
+
+        const ids = await getAssignedIds(user.uid);
+        const sessions = [];
+        for (const id of ids) {
+          const session = await getSessionById(id);
+          if (!session || session.activa === false) continue;
+          session.response = await getResponse(id, user.uid);
+          sessions.push(session);
+        }
+        sessions.sort((a, b) => (a.orden || 0) - (b.orden || 0));
+        updateStats(sessions);
+        renderSessions(sessions);
+        maybeRedirect(sessions);
+      } catch (error) {
+        console.error('[lecturas/dashboard]', error);
+        listEl.innerHTML = '<div class="empty">No se pudieron cargar tus pruebas. Recarga la página o intenta nuevamente más tarde.</div>';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -3,862 +3,1382 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Lecturas</title>
+  <title>Admin Panel — Plataforma Educativa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      font-family: 'Inter', system-ui, sans-serif;
-      background: #f3f4f6;
-      color: #111827;
-    }
-    .topbar {
-      padding: 14px 20px;
-      background: linear-gradient(135deg, #111827 0%, #115e59 55%, #164e63 100%);
-      color: #f8fafc;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
-    }
-    .topbar h1 {
-      font-size: 18px;
-      font-weight: 800;
-    }
-    .topbar p {
-      font-size: 12px;
-      color: rgba(248,250,252,0.76);
-      margin-top: 3px;
-    }
-    .topbar button {
-      border: 1px solid rgba(255,255,255,0.18);
-      background: rgba(255,255,255,0.10);
-      color: #fff;
-      border-radius: 12px;
-      padding: 10px 14px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .page {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 24px 20px 44px;
-    }
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-    .stat {
-      background: #fff;
-      border-radius: 20px;
-      padding: 18px;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-      border-left: 4px solid #0f766e;
-    }
-    .stat .label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      font-weight: 800;
-      color: #6b7280;
-    }
-    .stat .value {
-      font-size: 30px;
-      font-weight: 800;
-      margin-top: 6px;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: 420px minmax(0, 1fr);
-      gap: 18px;
-      align-items: start;
-    }
-    .card {
-      background: #fff;
-      border-radius: 22px;
-      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
-      padding: 20px;
-      margin-bottom: 18px;
-    }
-    .card h2 {
-      font-size: 18px;
-      font-weight: 800;
-      margin-bottom: 8px;
-    }
-    .card p.sub {
-      font-size: 13px;
-      color: #6b7280;
-      line-height: 1.6;
-      margin-bottom: 14px;
-    }
-    .field { margin-bottom: 12px; }
-    .field label {
-      display: block;
-      font-size: 12px;
-      font-weight: 800;
-      color: #374151;
-      margin-bottom: 6px;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-    .field input, .field textarea {
-      width: 100%;
-      border: 2px solid #e5e7eb;
-      border-radius: 14px;
-      padding: 12px 13px;
-      font: inherit;
-      font-size: 13px;
-      background: #f9fafb;
-    }
-    .field textarea {
-      min-height: 88px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-    .field input:focus, .field textarea:focus {
-      outline: none;
-      border-color: #0f766e;
-      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.10);
-      background: #fff;
-    }
-    .hint {
-      margin-top: 5px;
-      font-size: 11px;
-      color: #9ca3af;
-      line-height: 1.5;
-    }
-    .row2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-    .actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-    .btn {
-      border: none;
-      border-radius: 14px;
-      padding: 13px 16px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .btn.primary {
-      background: linear-gradient(135deg, #0f766e, #155e75);
-      color: #fff;
-      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.16);
-    }
-    .btn.secondary {
-      background: #e5e7eb;
-      color: #374151;
-    }
-    .btn.danger {
-      background: #fee2e2;
-      color: #b91c1c;
-    }
-    .alert {
-      display: none;
-      padding: 12px 14px;
-      border-radius: 14px;
-      margin-bottom: 14px;
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    .alert.show { display: block; }
-    .alert.error {
-      background: #fef2f2;
-      border: 1px solid #fecaca;
-      color: #b91c1c;
-    }
-    .alert.ok {
-      background: #ecfdf5;
-      border: 1px solid #86efac;
-      color: #166534;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-    th, td {
-      text-align: left;
-      padding: 12px 10px;
-      border-bottom: 1px solid #e5e7eb;
-      vertical-align: top;
-      font-size: 13px;
-    }
-    th {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: .05em;
-      color: #6b7280;
-      font-weight: 800;
-    }
-    .table-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-    }
-    .small-btn {
-      border: none;
-      border-radius: 10px;
-      padding: 8px 10px;
-      font: inherit;
-      font-size: 12px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .small-btn.toggle { background: #dbeafe; color: #1d4ed8; }
-    .small-btn.delete { background: #fee2e2; color: #b91c1c; }
-    .chip {
-      display: inline-flex;
-      padding: 5px 9px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 800;
-      background: #ecfdf5;
-      color: #047857;
-    }
-    .chip.inactive { background: #f3f4f6; color: #6b7280; }
-    .json-box {
-      margin-top: 12px;
-      padding: 14px;
-      border-radius: 16px;
-      background: #111827;
-      color: #d1fae5;
-      font-family: Consolas, monospace;
-      font-size: 12px;
-      line-height: 1.6;
-      overflow: auto;
-      white-space: pre-wrap;
-      display: none;
-    }
-    .json-box.show { display: block; }
-    .hidden { display: none !important; }
-    .gate-shell {
-      min-height: calc(100vh - 76px);
-      display: grid;
-      place-items: center;
-      padding: 24px 20px 44px;
-    }
-    .gate-card {
-      width: 100%;
-      max-width: 540px;
-      background: #fff;
-      border-radius: 26px;
-      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.12);
-      padding: 28px 24px;
-      border: 1px solid #d1d5db;
-    }
-    .gate-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 18px;
-    }
-    .gate-brand img {
-      width: 62px;
-      height: 62px;
-      object-fit: contain;
-      border-radius: 18px;
-      background: #f0fdfa;
-      border: 1px solid #99f6e4;
-      padding: 6px;
-    }
-    .gate-badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 7px 11px;
-      border-radius: 999px;
-      background: #ccfbf1;
-      color: #115e59;
-      font-size: 11px;
-      font-weight: 800;
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-bottom: 12px;
-    }
-    .gate-card h2 {
-      font-size: 28px;
-      line-height: 1.05;
-      font-weight: 800;
-      color: #111827;
-      margin-bottom: 8px;
-    }
-    .gate-sub {
-      color: #6b7280;
-      font-size: 14px;
-      line-height: 1.65;
-      margin-bottom: 18px;
-    }
-    .gate-lock {
-      padding: 12px 14px;
-      border-radius: 16px;
-      background: #f8fafc;
-      border: 1px solid #dbeafe;
-      color: #1f2937;
-      margin-bottom: 18px;
-    }
-    .gate-lock .label {
-      display: block;
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: .06em;
-      color: #6b7280;
-      font-weight: 800;
-      margin-bottom: 4px;
-    }
-    .gate-lock .value {
-      font-size: 14px;
-      font-weight: 800;
-      color: #0f172a;
-      word-break: break-word;
-    }
-    .gate-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 6px;
-    }
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 640px) {
-      .row2 { grid-template-columns: 1fr; }
-      .gate-actions { flex-direction: column; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',system-ui,sans-serif;background:#f1f5f9;min-height:100vh;display:flex;flex-direction:column}
+    /* HEADER */
+    .header{background:linear-gradient(135deg,#111827 0%,#115e59 55%,#164e63 100%);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+    .header h1{font-size:16px;font-weight:800;flex:1}
+    .header .admin-name{font-size:12px;color:rgba(248,250,252,.7)}
+    .header button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+    .header button:hover{background:rgba(255,255,255,.2)}
+    /* LAYOUT */
+    .layout{display:flex;flex:1;min-height:0}
+    /* SIDEBAR */
+    .sidebar{width:210px;background:#1e293b;padding:12px 0;flex-shrink:0;overflow-y:auto}
+    .sidebar a{display:flex;align-items:center;gap:8px;padding:11px 16px;color:#94a3b8;text-decoration:none;font-size:13px;font-weight:600;transition:all .15s;border-left:3px solid transparent}
+    .sidebar a:hover{color:#fff;background:#334155}
+    .sidebar a.active{color:#fff;background:rgba(15,118,110,.3);border-left-color:#14b8a6}
+    .sidebar a span.icon{font-size:16px;width:22px;text-align:center}
+    .sidebar .sep{height:1px;background:#334155;margin:8px 16px}
+    /* MAIN */
+    .content{flex:1;padding:24px;overflow-y:auto}
+    .section{display:none}
+    .section.active{display:block}
+    .section h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:16px}
+    /* CARDS */
+    .stat-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:20px}
+    .stat-card{background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 8px rgba(0,0,0,.04);border-left:4px solid #0f766e}
+    .stat-card .label{font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px}
+    .stat-card .value{font-size:26px;font-weight:800;color:#0f172a;margin-top:4px}
+    .stat-card .sub{font-size:11px;color:#94a3b8;margin-top:2px}
+    /* TABLE */
+    .panel-table{width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);margin-bottom:16px}
+    .panel-table table{width:100%;border-collapse:collapse}
+    .panel-table th{background:#f8fafc;padding:10px 14px;text-align:left;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;border-bottom:2px solid #e2e8f0}
+    .panel-table td{padding:10px 14px;font-size:13px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+    .panel-table tr:hover td{background:#f8fafc}
+    /* BTNS */
+    .btn{padding:8px 16px;border:none;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s}
+    .btn-primary{background:linear-gradient(135deg,#0f766e,#155e75);color:#fff}.btn-primary:hover{background:#0f766e}
+    .btn-success{background:#16a34a;color:#fff}.btn-success:hover{background:#15803d}
+    .btn-danger{background:#dc2626;color:#fff}.btn-danger:hover{background:#b91c1c}
+    .btn-warn{background:#f59e0b;color:#fff}.btn-warn:hover{background:#d97706}
+    .btn-secondary{background:#e2e8f0;color:#334155}.btn-secondary:hover{background:#cbd5e1}
+    .btn-sm{padding:5px 10px;font-size:11px;border-radius:8px}
+    .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+    /* FORMS */
+    .form-group{margin-bottom:14px}
+    .form-group label{display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:4px;text-transform:uppercase;letter-spacing:.03em}
+    .form-group input,.form-group select,.form-group textarea{width:100%;padding:10px 12px;border:2px solid #e2e8f0;border-radius:10px;font-size:14px;font-family:inherit;transition:border .2s;background:#f9fafb}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.1);background:#fff}
+    .form-group textarea{min-height:80px;resize:vertical}
+    .hint{font-size:11px;color:#9ca3af;margin-top:4px}
+    /* MODAL */
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;display:none;align-items:center;justify-content:center;padding:16px}
+    .modal-overlay.show{display:flex}
+    .modal{background:#fff;border-radius:20px;padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+    .modal h3{font-size:18px;font-weight:800;color:#0f172a;margin-bottom:16px}
+    .modal .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px}
+    /* BADGES */
+    .badge{display:inline-block;padding:3px 8px;border-radius:8px;font-size:11px;font-weight:700}
+    .badge-teal{background:#ccfbf1;color:#0f766e}
+    .badge-blue{background:#dbeafe;color:#1e40af}
+    .badge-purple{background:#ede9fe;color:#7c3aed}
+    .badge-green{background:#dcfce7;color:#16a34a}
+    .badge-red{background:#fee2e2;color:#dc2626}
+    .badge-amber{background:#fef3c7;color:#d97706}
+    .badge-gray{background:#f1f5f9;color:#64748b}
+    /* TOGGLE */
+    .toggle{position:relative;width:42px;height:24px;display:inline-block;cursor:pointer}
+    .toggle input{display:none}
+    .toggle .slider{position:absolute;inset:0;background:#cbd5e1;border-radius:12px;transition:.2s}
+    .toggle .slider:before{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:.2s}
+    .toggle input:checked+.slider{background:#0f766e}
+    .toggle input:checked+.slider:before{transform:translateX(18px)}
+    /* SEARCH BAR */
+    .search-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .search-bar input,.search-bar select{padding:10px 14px;border:2px solid #e2e8f0;border-radius:10px;font-size:13px;font-family:inherit;background:#f9fafb}
+    .search-bar input{flex:1;min-width:180px}
+    .search-bar input:focus,.search-bar select:focus{outline:none;border-color:#0f766e;box-shadow:0 0 0 3px rgba(15,118,110,.1);background:#fff}
+    /* CHIPS */
+    .chip{display:inline-flex;padding:5px 9px;border-radius:999px;font-size:11px;font-weight:800}
+    .chip-active{background:#dcfce7;color:#166534}
+    .chip-inactive{background:#f3f4f6;color:#6b7280}
+    .status-chip{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+    .status-chip.submitted{background:#dcfce7;color:#166534}
+    .status-chip.progress{background:#fef3c7;color:#92400e}
+    .status-chip.pending{background:#f3f4f6;color:#6b7280}
+    .status-chip.blocked{background:#fee2e2;color:#b91c1c}
+    .status-chip.correct{background:#dcfce7;color:#166534}
+    .status-chip.incorrect{background:#fee2e2;color:#b91c1c}
+    .status-chip.manual{background:#e0f2fe;color:#075985}
+    /* MINI STATS */
+    .mini-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+    .mini-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:12px}
+    .mini-stat .label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#6b7280;margin-bottom:3px}
+    .mini-stat .value{display:block;font-size:22px;font-weight:800;color:#111827}
+    /* REVIEW DETAIL */
+    .review-detail{margin-top:16px;padding:18px;border-radius:18px;border:1px solid #e5e7eb;background:#f8fafc}
+    .detail-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:14px 0}
+    .detail-item{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:12px}
+    .detail-item .label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;font-weight:800;color:#6b7280;margin-bottom:3px}
+    .detail-item .value{display:block;font-size:13px;font-weight:700;color:#111827;line-height:1.5;word-break:break-word}
+    .answer-list{display:grid;gap:12px;margin-top:16px}
+    .answer-row{background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:14px}
+    .answer-meta{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+    .answer-meta strong{display:block;font-size:14px;font-weight:800;color:#111827;margin-bottom:2px}
+    .answer-preview{margin-top:10px;border-radius:12px;background:#f8fafc;border:1px solid #e5e7eb;padding:10px 12px;font-family:Consolas,monospace;font-size:12px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+    /* LEVELS */
+    .level-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+    .level-card{padding:16px;border-radius:12px;text-align:center}
+    .level-card .lv-label{font-size:11px;font-weight:700;text-transform:uppercase}
+    .level-card .lv-val{font-size:24px;font-weight:800;margin-top:4px}
+    .lv-insuf{background:#fee2e2;color:#dc2626}
+    .lv-elem{background:#fef3c7;color:#d97706}
+    .lv-adeq{background:#dcfce7;color:#16a34a}
+    .lv-dest{background:#dbeafe;color:#1e40af}
+    /* GATE */
+    .gate-shell{min-height:100vh;display:grid;place-items:center;padding:24px 20px 44px;background:#f1f5f9}
+    .gate-card{width:100%;max-width:520px;background:#fff;border-radius:24px;box-shadow:0 16px 40px rgba(15,23,42,.12);padding:28px 24px;border:1px solid #d1d5db}
+    .gate-brand{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+    .gate-brand img{width:60px;height:60px;object-fit:contain;border-radius:16px;background:#f0fdfa;border:1px solid #99f6e4;padding:6px}
+    .gate-badge{display:inline-flex;padding:6px 10px;border-radius:999px;background:#ccfbf1;color:#115e59;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+    .gate-card h2{font-size:24px;font-weight:800;color:#111827;margin-bottom:6px}
+    .gate-sub{color:#6b7280;font-size:13px;line-height:1.6;margin-bottom:16px}
+    .gate-lock{padding:12px 14px;border-radius:14px;background:#f8fafc;border:1px solid #dbeafe;color:#1f2937;margin-bottom:16px}
+    .gate-lock .label{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:#6b7280;font-weight:800;margin-bottom:3px}
+    .gate-lock .value{font-size:14px;font-weight:700;color:#0f172a;word-break:break-word}
+    .alert{display:none;padding:12px 14px;border-radius:12px;margin-bottom:14px;font-size:13px;line-height:1.5}
+    .alert.show{display:block}
+    .alert.error{background:#fef2f2;border:1px solid #fecaca;color:#b91c1c}
+    .alert.ok{background:#ecfdf5;border:1px solid #86efac;color:#166534}
+    /* TOAST */
+    .toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;border-radius:12px;color:#fff;font-size:13px;font-weight:600;z-index:600;transform:translateY(80px);opacity:0;transition:all .3s}
+    .toast.show{transform:translateY(0);opacity:1}
+    .toast-ok{background:#0f766e}.toast-err{background:#dc2626}
+    .muted{font-size:11px;color:#6b7280}
+    .hidden{display:none!important}
+    /* MOBILE NAV */
+    .mobile-nav{display:none;overflow-x:auto;background:#1e293b;padding:4px 8px;gap:4px}
+    .mobile-nav a{white-space:nowrap;color:#94a3b8;text-decoration:none;padding:6px 12px;border-radius:8px;font-size:12px;font-weight:600}
+    .mobile-nav a.active{color:#fff;background:rgba(15,118,110,.3)}
+    @media(max-width:768px){
+      .sidebar{display:none}
+      .mobile-nav{display:flex!important}
+      .level-row{grid-template-columns:repeat(2,1fr)}
+      .header{flex-wrap:wrap}
     }
   </style>
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>Panel Lecturas</h1>
-      <p>Administración aislada de pruebas de Lengua y Literatura</p>
+
+<!-- ====== LOGIN GATE ====== -->
+<section class="gate-shell" id="loginGate">
+  <div class="gate-card">
+    <div class="gate-brand">
+      <img src="/estudiantes/assets/insignia_talca_1.png" alt="CEST">
+      <div>
+        <div class="gate-badge">Acceso privado</div>
+        <h2>Panel Administrador</h2>
+      </div>
     </div>
+    <p class="gate-sub">Panel unificado de administración para SIMCE y Lecturas. Solo la cuenta administradora configurada puede acceder.</p>
+    <div class="gate-lock">
+      <span class="label">Cuenta autorizada</span>
+      <span class="value" id="ownerLabel"></span>
+    </div>
+    <div class="alert error" id="gateError"></div>
+    <div class="form-group">
+      <label for="gatePassword">Contraseña</label>
+      <input id="gatePassword" type="password" placeholder="Ingresa tu contraseña docente">
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+      <button class="btn btn-primary" id="gateLoginBtn">Entrar al panel</button>
+      <button class="btn btn-secondary hidden" id="gateSignOutBtn">Cerrar sesión actual</button>
+    </div>
+  </div>
+</section>
+
+<!-- ====== ADMIN APP ====== -->
+<div class="hidden" id="adminApp">
+  <div class="header">
+    <h1>Panel Administrador</h1>
+    <span class="admin-name" id="adminName"></span>
     <button id="logoutBtn">Cerrar sesión</button>
-  </header>
+  </div>
+  <div class="mobile-nav" id="mobileNav"></div>
+  <div class="layout">
+    <nav class="sidebar" id="sidebarNav">
+      <a href="#" class="active" data-section="overview"><span class="icon">📊</span>Panel Principal</a>
+      <a href="#" data-section="students"><span class="icon">👥</span>Estudiantes</a>
+      <div class="sep"></div>
+      <a href="#" data-section="simce"><span class="icon">📚</span>SIMCE</a>
+      <a href="#" data-section="lecturas"><span class="icon">📖</span>Lecturas</a>
+      <div class="sep"></div>
+      <a href="#" data-section="reports"><span class="icon">📋</span>Reportes</a>
+    </nav>
 
-  <section class="gate-shell" id="loginGate">
-    <div class="gate-card">
-      <div class="gate-brand">
-        <img src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
-        <div>
-          <div class="gate-badge">Acceso privado</div>
-          <h2>Administrador de Lecturas</h2>
+    <div class="content">
+      <!-- ===== OVERVIEW ===== -->
+      <div class="section active" id="sec-overview">
+        <h2>Panel Principal</h2>
+        <div class="stat-row" id="overviewStats"></div>
+        <div class="panel-table">
+          <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">Actividad Reciente</h3>
+          <table><thead><tr><th>Estudiante</th><th>Plataforma</th><th>Sesión</th><th>Logro</th><th>Fecha</th></tr></thead>
+          <tbody id="recentActivity"></tbody></table>
         </div>
       </div>
-      <p class="gate-sub">Esta sección queda reservada para la cuenta administradora de Lecturas. Aquí podrás crear, activar, revisar y eliminar pruebas sin exponer el panel a otros docentes ni a estudiantes.</p>
-      <div class="gate-lock">
-        <span class="label">Cuenta autorizada</span>
-        <span class="value" id="ownerAccountLabel">francisco@profefranciscopancho.com</span>
+
+      <!-- ===== STUDENTS ===== -->
+      <div class="section" id="sec-students">
+        <h2>Gestión de Estudiantes</h2>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="openModal('addStudent')">+ Agregar Estudiante</button>
+          <button class="btn btn-secondary" onclick="openModal('bulkAdd')">📋 Carga Masiva</button>
+        </div>
+        <div class="search-bar">
+          <input type="text" id="studentSearch" placeholder="Buscar por nombre o RUT..." oninput="renderStudents()">
+          <select id="studentCourseFilter" onchange="renderStudents()"></select>
+        </div>
+        <div class="panel-table">
+          <table><thead><tr><th>Nombre</th><th>RUT</th><th>Curso</th><th>Email Inst.</th><th>Perfil</th><th>Acciones</th></tr></thead>
+          <tbody id="studentsBody"></tbody></table>
+        </div>
       </div>
-      <div class="alert error" id="gateErrorBox"></div>
-      <div class="field">
-        <label for="adminPassword">Contraseña de administrador</label>
-        <input id="adminPassword" type="password" placeholder="Ingresa tu contraseña docente">
-        <div class="hint">Solo la cuenta administradora configurada puede abrir este panel.</div>
+
+      <!-- ===== SIMCE ===== -->
+      <div class="section" id="sec-simce">
+        <h2>SIMCE — Sesiones y Resultados</h2>
+        <div class="panel-table" style="margin-bottom:20px">
+          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#334155">Sesiones SIMCE</h3>
+          <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados visibles</th><th>Acciones</th></tr></thead>
+          <tbody id="simceSessionsBody"></tbody></table>
+        </div>
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Resultados por Sesión</h3>
+        <div class="search-bar">
+          <select id="simceResultSession" onchange="loadSimceResults()"><option value="">Selecciona sesión...</option></select>
+          <select id="simceResultCourse" onchange="loadSimceResults()"></select>
+        </div>
+        <div class="level-row" id="simceLevelCards"></div>
+        <div class="panel-table">
+          <table><thead><tr><th>Nombre</th><th>Curso</th><th>Puntaje</th><th>Logro</th><th>Nivel</th><th>Tiempo</th></tr></thead>
+          <tbody id="simceResultsBody"></tbody></table>
+        </div>
       </div>
-      <div class="gate-actions">
-        <button class="btn primary" id="adminLoginBtn" type="button">Entrar al panel</button>
-        <button class="btn secondary hidden" id="gateSignOutBtn" type="button">Cerrar sesión actual</button>
+
+      <!-- ===== LECTURAS ===== -->
+      <div class="section" id="sec-lecturas">
+        <h2>Lecturas — Sesiones y Seguimiento</h2>
+        <div class="panel-table" style="margin-bottom:20px">
+          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#334155">Sesiones Lecturas</h3>
+          <table><thead><tr><th>Sesión</th><th>Libro</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
+          <tbody id="lecturasSessionsBody"></tbody></table>
+        </div>
+        <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Seguimiento de Respuestas</h3>
+        <div class="search-bar">
+          <select id="lecReviewSession" onchange="onLecReviewChange()"></select>
+          <select id="lecReviewCourse" onchange="renderLecReviewPanel()"></select>
+          <input type="text" id="lecReviewSearch" placeholder="Buscar nombre, RUT..." oninput="renderLecReviewPanel()">
+        </div>
+        <div class="mini-grid" id="lecReviewSummary"></div>
+        <div class="panel-table">
+          <table><thead><tr><th>Estudiante</th><th>Curso</th><th>RUT</th><th>Estado</th><th>Progreso</th><th>Correctas</th><th>Puntaje</th><th>Strikes</th><th>Acciones</th></tr></thead>
+          <tbody id="lecReviewBody"></tbody></table>
+        </div>
+        <div class="review-detail" id="lecReviewDetail">
+          <h3>Detalle del estudiante</h3>
+          <p class="muted">Selecciona una fila para ver respuestas por ítem.</p>
+        </div>
+      </div>
+
+      <!-- ===== REPORTS ===== -->
+      <div class="section" id="sec-reports">
+        <h2>Reportes y Exportación</h2>
+        <div class="stat-row" style="margin-bottom:24px">
+          <div class="stat-card" style="cursor:pointer" onclick="generateReport('session')">
+            <div class="label">📄 Reporte por Sesión</div>
+            <div class="sub" style="margin-top:6px">Resultados detallados de SIMCE con niveles de logro</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="generateReport('course')">
+            <div class="label">📊 Reporte por Curso</div>
+            <div class="sub" style="margin-top:6px">Comparación entre cursos con promedios y distribución</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="generateReport('student')">
+            <div class="label">👤 Reporte Individual</div>
+            <div class="sub" style="margin-top:6px">Progreso individual a lo largo de todas las sesiones</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="exportLecturasCSV()">
+            <div class="label">📥 CSV Lecturas</div>
+            <div class="sub" style="margin-top:6px">Exportar seguimiento de respuestas de Lecturas</div>
+          </div>
+        </div>
+        <div id="reportOutput" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04);display:none"></div>
       </div>
     </div>
-  </section>
+  </div>
+</div>
 
-  <main class="page hidden" id="adminApp">
-    <div class="stats">
-      <div class="stat"><div class="label">Sesiones</div><div class="value" id="statSessions">0</div></div>
-      <div class="stat"><div class="label">Asignaciones</div><div class="value" id="statAssignments">0</div></div>
-      <div class="stat"><div class="label">Respuestas</div><div class="value" id="statResponses">0</div></div>
+<!-- ====== MODALS ====== -->
+<!-- Add Student -->
+<div class="modal-overlay" id="modal-addStudent">
+  <div class="modal">
+    <h3>Agregar Estudiante</h3>
+    <div class="form-group"><label>Nombre completo</label><input id="newStudentName" placeholder="Ej: Juan Pérez López"></div>
+    <div class="form-group"><label>RUT (sin puntos, con guión)</label><input id="newStudentRut" placeholder="Ej: 12345678-9" maxlength="12"></div>
+    <div class="form-group"><label>Curso</label><input id="newStudentCurso" placeholder="Ej: 2A-HC"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('addStudent')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createStudent()">Crear Estudiante</button>
     </div>
-
-    <div class="grid">
-      <section class="card">
-        <h2>Nueva prueba</h2>
-        <p class="sub">Crea una sesión de Lecturas y asígnala explícitamente por curso o por RUT para que nadie vea pruebas que no le corresponden.</p>
-
-        <div class="alert error" id="errorBox"></div>
-        <div class="alert ok" id="successBox"></div>
-
-        <div class="field">
-          <label for="idField">ID de sesión</label>
-          <input id="idField" type="text" placeholder="Ej: maus-nm4-abril-2026">
-          <div class="hint">Usa un identificador único, sin espacios. Si lo dejas vacío, se genera desde el título.</div>
-        </div>
-
-        <div class="field">
-          <label for="titleField">Título</label>
-          <input id="titleField" type="text" placeholder="Ej: Prueba de Lectura — Maus">
-        </div>
-
-        <div class="row2">
-          <div class="field">
-            <label for="bookField">Libro</label>
-            <input id="bookField" type="text" placeholder="Ej: Maus">
-          </div>
-          <div class="field">
-            <label for="orderField">Orden</label>
-            <input id="orderField" type="number" min="1" value="1">
-          </div>
-        </div>
-
-        <div class="row2">
-          <div class="field">
-            <label for="durationField">Duración (min)</label>
-            <input id="durationField" type="number" min="1" placeholder="90">
-          </div>
-          <div class="field">
-            <label for="activeField">Activa</label>
-            <input id="activeField" type="text" value="si">
-            <div class="hint">Escribe si o no.</div>
-          </div>
-        </div>
-
-        <div class="field">
-          <label for="descField">Descripción</label>
-          <textarea id="descField" placeholder="Describe brevemente la prueba y su foco evaluativo."></textarea>
-        </div>
-
-        <div class="field">
-          <label for="coursesField">Cursos asignados</label>
-          <input id="coursesField" type="text" placeholder="Ej: 4A-HC,4B-HC o NM3,NM4 si tus cuentas usan esos códigos">
-          <div class="hint">Busca coincidencia exacta con el campo curso de los estudiantes ya existentes.</div>
-        </div>
-
-        <div class="field">
-          <label for="rutsField">RUTs asignados</label>
-          <textarea id="rutsField" placeholder="Uno por línea o separados por coma. Ej: 21456789-0"></textarea>
-          <div class="hint">Puedes combinar asignación por curso y por RUT.</div>
-        </div>
-
-        <div class="field">
-          <label for="contentField">Contenido JSON</label>
-          <textarea id="contentField">{
-  "materiales": [],
-  "items": []
-}</textarea>
-          <div class="hint">Aquí luego podrás pegar el bloque JSON con materiales e ítems que construiremos para Maus o Pedro Páramo.</div>
-        </div>
-
-        <div class="actions">
-          <button class="btn primary" id="createBtn">Crear sesión</button>
-          <button class="btn secondary" id="resetBtn" type="button">Limpiar</button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2>Sesiones creadas</h2>
-        <p class="sub">Vista resumida de las pruebas activas en /lecturas. El árbol de acceso se guarda en plataforma_lecturas/asignaciones para evitar que los estudiantes vean sesiones ajenas.</p>
-        <table>
-          <thead>
-            <tr>
-              <th>Sesión</th>
-              <th>Libro</th>
-              <th>Contenido</th>
-              <th>Asignados</th>
-              <th>Estado</th>
-              <th>Acciones</th>
-            </tr>
-          </thead>
-          <tbody id="sessionsBody">
-            <tr><td colspan="6">Cargando sesiones...</td></tr>
-          </tbody>
-        </table>
-        <div class="json-box" id="jsonPreview"></div>
-      </section>
+  </div>
+</div>
+<!-- Bulk Add -->
+<div class="modal-overlay" id="modal-bulkAdd">
+  <div class="modal">
+    <h3>Carga Masiva de Estudiantes</h3>
+    <p style="font-size:12px;color:#64748b;margin-bottom:12px">Formato: <strong>Nombre ; RUT ; Curso</strong> (uno por línea)</p>
+    <div class="form-group">
+      <textarea id="bulkData" rows="10" placeholder="Juan Pérez López ; 12345678-9 ; 2A-HC&#10;María González ; 98765432-1 ; 2B-HC"></textarea>
     </div>
-  </main>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('bulkAdd')">Cancelar</button>
+      <button class="btn btn-primary" onclick="bulkCreateStudents()">Crear Estudiantes</button>
+    </div>
+  </div>
+</div>
+<!-- Edit Student -->
+<div class="modal-overlay" id="modal-editStudent">
+  <div class="modal">
+    <h3>Editar Estudiante</h3>
+    <input type="hidden" id="editStudentUid">
+    <div class="form-group"><label>Nombre completo</label><input id="editStudentName"></div>
+    <div class="form-group"><label>Curso</label><input id="editStudentCurso"></div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal('editStudent')">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveStudentEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+<!-- Student Detail -->
+<div class="modal-overlay" id="modal-studentDetail">
+  <div class="modal" style="max-width:600px">
+    <h3 id="detailStudentName"></h3>
+    <div id="detailStudentContent"></div>
+    <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('studentDetail')">Cerrar</button></div>
+  </div>
+</div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-  <script>
-    const FIREBASE_CONFIG = {
-      apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
-      authDomain: "profe-blog.firebaseapp.com",
-      databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
-      projectId: "profe-blog",
-      storageBucket: "profe-blog.firebasestorage.app",
-      messagingSenderId: "305920739217",
-      appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
-    };
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ====================================================================
+   CONFIG & INIT
+   ==================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+  authDomain: "profe-blog.firebaseapp.com",
+  databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+  projectId: "profe-blog",
+  storageBucket: "profe-blog.firebasestorage.app",
+  messagingSenderId: "305920739217",
+  appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+};
+const STUDENT_BASE = 'plataforma_estudiantes';
+const LECTURAS_BASE = 'plataforma_lecturas';
+const OWNER_ADMIN_EMAIL = 'portafolio.admin@profefranciscopancho.com';
 
-    const STUDENT_BASE = 'plataforma_estudiantes';
-    const LECTURAS_BASE = 'plataforma_lecturas';
-    const OWNER_ADMIN_EMAIL = 'francisco@profefranciscopancho.com';
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db = firebase.database();
 
-    firebase.initializeApp(FIREBASE_CONFIG);
-    const auth = firebase.auth();
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const db = firebase.database();
+// Secondary app for creating student accounts without signing out admin
+const secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, 'secondary');
+const secondaryAuth = secondaryApp.auth();
 
-    let currentUser = null;
-    let studentsMap = {};
-    let sessionsCache = {};
-    let pendingGateNotice = null;
+/* ====================================================================
+   STATE
+   ==================================================================== */
+let currentUser = null;
+let studentsMap = {};
+let coursesAvailable = [];
+// SIMCE
+let simceSessions = {};
+let simceResults = {};
+let simceResponses = {};
+// Lecturas
+let lecSessions = {};
+let lecResponses = {};
+let lecResults = {};
+let lecAssignments = {};
+// UI
+let selectedLecSession = '';
+let selectedLecStudent = '';
 
-    const errorBox = document.getElementById('errorBox');
-    const successBox = document.getElementById('successBox');
-    const adminApp = document.getElementById('adminApp');
-    const loginGate = document.getElementById('loginGate');
-    const gateErrorBox = document.getElementById('gateErrorBox');
-    const adminLoginBtn = document.getElementById('adminLoginBtn');
-    const adminPassword = document.getElementById('adminPassword');
-    const gateSignOutBtn = document.getElementById('gateSignOutBtn');
+/* ====================================================================
+   DOM REFS
+   ==================================================================== */
+const $gate = document.getElementById('loginGate');
+const $app = document.getElementById('adminApp');
+const $gateError = document.getElementById('gateError');
+const $gatePassword = document.getElementById('gatePassword');
+const $gateLoginBtn = document.getElementById('gateLoginBtn');
+const $gateSignOutBtn = document.getElementById('gateSignOutBtn');
 
-    document.getElementById('ownerAccountLabel').textContent = OWNER_ADMIN_EMAIL;
+document.getElementById('ownerLabel').textContent = OWNER_ADMIN_EMAIL;
 
-    function showError(message) {
-      errorBox.textContent = message;
-      errorBox.classList.add('show');
-      successBox.classList.remove('show');
+/* ====================================================================
+   UTILITIES
+   ==================================================================== */
+function htmlEsc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function norm(v) { return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function cleanRut(r) { return String(r||'').replace(/[.\s]/g,'').toUpperCase(); }
+function rutToEmail(r) { return cleanRut(r).replace(/-/g,'')+'@est.profefranciscopancho.com'; }
+function defaultPassword(r) { var d=cleanRut(r).replace(/[^0-9]/g,''); return d.substring(0,6).padEnd(6,'0'); }
+function fmtDate(v) {
+  const ts=Number(v); if(!Number.isFinite(ts)||ts<=0) return '—';
+  return new Date(ts).toLocaleString('es-CL',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+}
+function fmtDuration(v) {
+  const s=Number(v); if(!Number.isFinite(s)||s<0) return '—';
+  const m=Math.floor(s/60); return m>0?m+' min':'<1 min';
+}
+function fmtPts(v) { const p=Number(v); return Number.isFinite(p)?(p===1?'1 pt':p+' pts'):'—'; }
+function getLevel(pct) { return pct>=80?'Destacado':pct>=60?'Adecuado':pct>=40?'Elemental':'Insuficiente'; }
+function getLevelBadge(pct) {
+  const lv=getLevel(pct);
+  const cls=pct>=80?'badge-blue':pct>=60?'badge-green':pct>=40?'badge-amber':'badge-red';
+  return '<span class="badge '+cls+'">'+lv+'</span>';
+}
+
+/* ====================================================================
+   MODAL & TOAST
+   ==================================================================== */
+function openModal(id) { document.getElementById('modal-'+id).classList.add('show'); }
+function closeModal(id) { document.getElementById('modal-'+id).classList.remove('show'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('show'); });
+});
+function toast(msg,type) {
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast '+(type==='ok'?'toast-ok':'toast-err')+' show';
+  setTimeout(()=>t.classList.remove('show'),3500);
+}
+
+/* ====================================================================
+   AUTH & GATE
+   ==================================================================== */
+function showGate(msg) {
+  currentUser=null;
+  $gate.classList.remove('hidden');
+  $app.classList.add('hidden');
+  $gatePassword.value='';
+  $gateLoginBtn.disabled=false;
+  $gateLoginBtn.textContent='Entrar al panel';
+  $gateSignOutBtn.classList.toggle('hidden',!auth.currentUser);
+  if(msg){$gateError.textContent=msg;$gateError.classList.add('show');}
+  else{$gateError.classList.remove('show');}
+}
+function showApp() {
+  $gate.classList.add('hidden');
+  $app.classList.remove('hidden');
+}
+
+$gateLoginBtn.addEventListener('click', async()=>{
+  const pw=$gatePassword.value;
+  if(!pw){$gateError.textContent='Ingresa tu contraseña.';$gateError.classList.add('show');return;}
+  $gateLoginBtn.disabled=true;$gateLoginBtn.textContent='Validando...';$gateError.classList.remove('show');
+  try{ await auth.signInWithEmailAndPassword(OWNER_ADMIN_EMAIL,pw); }
+  catch(e){ $gateLoginBtn.disabled=false;$gateLoginBtn.textContent='Entrar al panel';$gateError.textContent='Contraseña incorrecta.';$gateError.classList.add('show'); }
+});
+$gatePassword.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();$gateLoginBtn.click();} });
+$gateSignOutBtn.addEventListener('click',async()=>{ await auth.signOut(); });
+document.getElementById('logoutBtn').addEventListener('click',async()=>{ await auth.signOut(); showGate(); });
+
+auth.onAuthStateChanged(async user=>{
+  if(!user){ showGate(); return; }
+  if(String(user.email||'').trim().toLowerCase()!==OWNER_ADMIN_EMAIL){
+    await auth.signOut(); showGate('Solo la cuenta administradora puede acceder.'); return;
+  }
+  // Force token refresh to avoid race condition with RTDB auth propagation
+  try{ await user.getIdToken(true); }catch(ignore){}
+  let adminOk=false;
+  for(let attempt=0;attempt<3;attempt++){
+    try{
+      const snap=await db.ref(STUDENT_BASE+'/admins/'+user.uid).once('value');
+      if(snap.val()){ adminOk=true; break; }
+      else{ await auth.signOut(); showGate('No tienes permisos de administrador.'); return; }
+    }catch(e){
+      if(attempt<2){ await new Promise(r=>setTimeout(r,800)); }
+      else{ await auth.signOut(); showGate('Error verificando permisos.'); return; }
     }
+  }
+  if(!adminOk) return;
+  currentUser=user;
+  document.getElementById('adminName').textContent=user.email;
+  showApp();
+  initMobileNav();
+  await loadAllData();
+});
 
-    function showSuccess(message) {
-      successBox.textContent = message;
-      successBox.classList.add('show');
-      errorBox.classList.remove('show');
+/* ====================================================================
+   NAVIGATION
+   ==================================================================== */
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  document.querySelectorAll('.sidebar a, .mobile-nav a').forEach(a=>a.classList.remove('active'));
+  if(el) el.classList.add('active');
+  document.querySelectorAll('.mobile-nav a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
+  document.querySelectorAll('.sidebar a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
+}
+document.querySelectorAll('.sidebar a').forEach(a=>{
+  a.addEventListener('click',e=>{ e.preventDefault(); showSection(a.dataset.section,a); });
+});
+function initMobileNav() {
+  const nav=document.getElementById('mobileNav');
+  const links=[
+    {id:'overview',icon:'📊',label:'Panel'},{id:'students',icon:'👥',label:'Estudiantes'},
+    {id:'simce',icon:'📚',label:'SIMCE'},{id:'lecturas',icon:'📖',label:'Lecturas'},
+    {id:'reports',icon:'📋',label:'Reportes'}
+  ];
+  nav.innerHTML=links.map(l=>'<a href="#" data-section="'+l.id+'" class="'+(l.id==='overview'?'active':'')+'" onclick="showSection(\''+l.id+'\',this)">'+l.icon+' '+l.label+'</a>').join('');
+}
+
+/* ====================================================================
+   DATA LOADING
+   ==================================================================== */
+async function loadAllData() {
+  try {
+    const [estS,simSesS,simResS,simRespS,lecSesS,lecRespS,lecResS,lecAssS] = await Promise.all([
+      db.ref(STUDENT_BASE+'/estudiantes').once('value'),
+      db.ref(STUDENT_BASE+'/sesiones').once('value'),
+      db.ref(STUDENT_BASE+'/resultados').once('value'),
+      db.ref(STUDENT_BASE+'/respuestas').once('value'),
+      db.ref(LECTURAS_BASE+'/sesiones').once('value'),
+      db.ref(LECTURAS_BASE+'/respuestas').once('value'),
+      db.ref(LECTURAS_BASE+'/resultados').once('value'),
+      db.ref(LECTURAS_BASE+'/asignaciones').once('value')
+    ]);
+    studentsMap=estS.val()||{};
+    simceSessions=simSesS.val()||{};
+    simceResults=simResS.val()||{};
+    simceResponses=simRespS.val()||{};
+    lecSessions=lecSesS.val()||{};
+    lecResponses=lecRespS.val()||{};
+    lecResults=lecResS.val()||{};
+    lecAssignments=lecAssS.val()||{};
+
+    // Build dynamic course list
+    coursesAvailable=[...new Set(Object.values(studentsMap).map(s=>s.curso).filter(Boolean))].sort();
+    populateCourseFilters();
+    renderAll();
+  } catch(e) {
+    console.error('[loadAllData]',e);
+    toast('Error cargando datos: '+e.message,'err');
+  }
+}
+
+function populateCourseFilters() {
+  const opts='<option value="">Todos los cursos</option>'+coursesAvailable.map(c=>'<option value="'+htmlEsc(c)+'">'+htmlEsc(c)+'</option>').join('');
+  document.getElementById('studentCourseFilter').innerHTML=opts;
+  document.getElementById('simceResultCourse').innerHTML=opts;
+  document.getElementById('lecReviewCourse').innerHTML=opts;
+}
+
+function renderAll() {
+  renderOverview();
+  renderStudents();
+  renderSimceSessions();
+  populateSimceDropdown();
+  renderLecSessions();
+  updateLecReviewSessionSelect();
+  renderLecReviewPanel();
+}
+
+/* ====================================================================
+   OVERVIEW
+   ==================================================================== */
+function renderOverview() {
+  const totalStudents=Object.keys(studentsMap).length;
+  const totalSimce=Object.keys(simceSessions).length;
+  const totalLec=Object.keys(lecSessions).length;
+  let simceSubmissions=0;
+  for(const sesId of Object.keys(simceResults)) simceSubmissions+=Object.keys(simceResults[sesId]).length;
+  let lecSubmissions=0;
+  for(const sesId of Object.keys(lecResults)) lecSubmissions+=Object.keys(lecResults[sesId]).length;
+  const perfilComplete=Object.values(studentsMap).filter(s=>s.perfil_completo).length;
+
+  // Per-course counts
+  const courseBreakdown=coursesAvailable.map(c=>{
+    const count=Object.values(studentsMap).filter(s=>s.curso===c).length;
+    return c+': '+count;
+  }).join(' | ');
+
+  document.getElementById('overviewStats').innerHTML=
+    '<div class="stat-card"><div class="label">Estudiantes</div><div class="value">'+totalStudents+'</div><div class="sub">'+courseBreakdown+'</div></div>'
+    +'<div class="stat-card"><div class="label">Sesiones SIMCE</div><div class="value">'+totalSimce+'</div><div class="sub">'+Object.values(simceSessions).filter(s=>s.activa!==false).length+' activas</div></div>'
+    +'<div class="stat-card"><div class="label">Sesiones Lecturas</div><div class="value">'+totalLec+'</div><div class="sub">'+Object.values(lecSessions).filter(s=>s.activa!==false).length+' activas</div></div>'
+    +'<div class="stat-card"><div class="label">Envíos SIMCE</div><div class="value">'+simceSubmissions+'</div></div>'
+    +'<div class="stat-card"><div class="label">Envíos Lecturas</div><div class="value">'+lecSubmissions+'</div></div>'
+    +'<div class="stat-card"><div class="label">Perfiles completos</div><div class="value">'+perfilComplete+'/'+totalStudents+'</div><div class="sub">'+(totalStudents?Math.round(perfilComplete/totalStudents*100):0)+'%</div></div>';
+
+  // Recent activity (both platforms)
+  const activity=[];
+  for(const[sesId,uidMap] of Object.entries(simceResults)){
+    for(const[uid,r] of Object.entries(uidMap)){
+      activity.push({nombre:(studentsMap[uid]||{}).nombre||'Desc.',plataforma:'SIMCE',sesion:(simceSessions[sesId]||{}).titulo||sesId,pct:r.porcentaje||0,ts:r.timestamp||0});
     }
-
-    function hideMessages() {
-      errorBox.classList.remove('show');
-      successBox.classList.remove('show');
+  }
+  for(const[sesId,uidMap] of Object.entries(lecResults)){
+    for(const[uid,r] of Object.entries(uidMap)){
+      activity.push({nombre:(studentsMap[uid]||{}).nombre||'Desc.',plataforma:'Lecturas',sesion:(lecSessions[sesId]||{}).titulo||sesId,pct:r.porcentaje||0,ts:r.submitted_at||r.timestamp||0});
     }
+  }
+  activity.sort((a,b)=>b.ts-a.ts);
+  const tbody=document.getElementById('recentActivity');
+  tbody.innerHTML=activity.slice(0,12).map(a=>{
+    const cls=a.pct>=80?'badge-blue':a.pct>=60?'badge-green':a.pct>=40?'badge-amber':'badge-red';
+    const date=a.ts?new Date(a.ts).toLocaleDateString('es-CL'):'—';
+    return '<tr><td>'+htmlEsc(a.nombre)+'</td><td><span class="badge badge-teal">'+a.plataforma+'</span></td><td style="font-size:12px">'+htmlEsc(a.sesion)+'</td><td><span class="badge '+cls+'">'+a.pct+'%</span></td><td class="muted">'+date+'</td></tr>';
+  }).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px">Sin actividad aún</td></tr>';
+}
 
-    function normalizeEmail(value) {
-      return String(value || '').trim().toLowerCase();
-    }
+/* ====================================================================
+   STUDENTS CRUD
+   ==================================================================== */
+function renderStudents() {
+  const search=norm(document.getElementById('studentSearch').value);
+  const courseF=document.getElementById('studentCourseFilter').value;
+  const tbody=document.getElementById('studentsBody');
+  let items=Object.entries(studentsMap).map(([uid,s])=>({uid,...s}));
+  if(search) items=items.filter(s=>norm(s.nombre||'').includes(search)||norm(s.rut||'').includes(search));
+  if(courseF) items=items.filter(s=>s.curso===courseF);
+  items.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||'','es'));
 
-    function setGateMessage(message) {
-      if (!message) {
-        gateErrorBox.textContent = '';
-        gateErrorBox.classList.remove('show');
-        return;
-      }
-      gateErrorBox.textContent = message;
-      gateErrorBox.classList.add('show');
-    }
+  tbody.innerHTML=items.map(s=>{
+    const perfilBadge=s.perfil_completo?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">Pendiente</span>';
+    const email=s.email_institucional||rutToEmail(s.rut||'');
+    return '<tr>'
+      +'<td><strong>'+htmlEsc(s.nombre||'—')+'</strong></td>'
+      +'<td style="font-size:12px">'+htmlEsc(s.rut||'—')+'</td>'
+      +'<td><span class="badge badge-teal">'+htmlEsc(s.curso||'—')+'</span></td>'
+      +'<td style="font-size:12px">'+htmlEsc(email)+'</td>'
+      +'<td>'+perfilBadge+'</td>'
+      +'<td>'
+        +'<button class="btn btn-sm btn-secondary" onclick="editStudent(\''+s.uid+'\')" title="Editar">✏️</button> '
+        +'<button class="btn btn-sm btn-warn" onclick="resetPassword(\''+s.uid+'\')" title="Reset contraseña">🔑</button> '
+        +'<button class="btn btn-sm btn-secondary" onclick="copyCredentials(\''+s.uid+'\')" title="Copiar credenciales">📋</button> '
+        +'<button class="btn btn-sm btn-secondary" onclick="viewStudentDetail(\''+s.uid+'\')" title="Ver detalle">👁</button> '
+        +'<button class="btn btn-sm btn-danger" onclick="deleteStudent(\''+s.uid+'\')" title="Eliminar">🗑</button>'
+      +'</td></tr>';
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
+}
 
-    function setGateLoading(loading) {
-      adminLoginBtn.disabled = loading;
-      adminLoginBtn.textContent = loading ? 'Validando...' : 'Entrar al panel';
-    }
+async function createStudent() {
+  const name=document.getElementById('newStudentName').value.trim();
+  const rut=cleanRut(document.getElementById('newStudentRut').value);
+  const curso=document.getElementById('newStudentCurso').value.trim();
+  if(!name||!rut||!curso){toast('Completa todos los campos','err');return;}
+  const email=rutToEmail(rut);
+  const pass=defaultPassword(rut);
+  try{
+    const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+    await secondaryAuth.signOut();
+    const uid=cred.user.uid;
+    await db.ref(STUDENT_BASE+'/estudiantes/'+uid).set({
+      nombre:name,rut:rut,curso:curso,
+      perfil_completo:false,password_changed:false,
+      createdAt:Date.now(),createdBy:currentUser.uid
+    });
+    studentsMap[uid]={nombre:name,rut:rut,curso:curso,perfil_completo:false};
+    if(!coursesAvailable.includes(curso)){coursesAvailable.push(curso);coursesAvailable.sort();populateCourseFilters();}
+    renderStudents();renderOverview();
+    closeModal('addStudent');
+    document.getElementById('newStudentName').value='';
+    document.getElementById('newStudentRut').value='';
+    toast('Estudiante creado (contraseña: '+pass+')','ok');
+  }catch(e){console.error(e);toast('Error: '+e.message,'err');}
+}
 
-    function showLoginGate(message) {
-      currentUser = null;
-      loginGate.classList.remove('hidden');
-      adminApp.classList.add('hidden');
-      document.getElementById('logoutBtn').classList.add('hidden');
-      gateSignOutBtn.classList.toggle('hidden', !auth.currentUser);
-      adminPassword.value = '';
-      setGateLoading(false);
-      setGateMessage(message || '');
-    }
-
-    function showAdminApp() {
-      loginGate.classList.add('hidden');
-      adminApp.classList.remove('hidden');
-      document.getElementById('logoutBtn').classList.remove('hidden');
-      setGateMessage('');
-    }
-
-    async function getExclusiveAdminAccess(user) {
-      if (!user || normalizeEmail(user.email) !== OWNER_ADMIN_EMAIL) {
-        return { allowed: false, reason: 'exclusive' };
-      }
-
-      const [studentAdminSnap, lecturasAdminSnap, docenteSnap] = await Promise.all([
-        db.ref(STUDENT_BASE + '/admins/' + user.uid).once('value'),
-        db.ref(LECTURAS_BASE + '/admins/' + user.uid).once('value'),
-        db.ref(STUDENT_BASE + '/docentes/' + user.uid).once('value')
-      ]);
-
-      const docente = docenteSnap.val();
-      if (studentAdminSnap.exists() || lecturasAdminSnap.exists() || (docente && docente.superadmin === true)) {
-        return { allowed: true, docente };
-      }
-
-      return { allowed: false, reason: 'missing-role' };
-    }
-
-    function cleanRut(value) {
-      return String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
-    }
-
-    function slugify(value) {
-      return String(value || '')
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '') || 'lectura-' + Date.now();
-    }
-
-    function parseCsv(text) {
-      return String(text || '')
-        .split(/[\n,;]/)
-        .map(part => part.trim())
-        .filter(Boolean);
-    }
-
-    function getContentCounts(session) {
-      const content = session.contenido || {};
-      const materials = content.materiales || content.textos || [];
-      const items = content.items || content.preguntas || [];
-      return { materials: materials.length, items: items.length };
-    }
-
-    function resetForm() {
-      document.getElementById('idField').value = '';
-      document.getElementById('titleField').value = '';
-      document.getElementById('bookField').value = '';
-      document.getElementById('orderField').value = '1';
-      document.getElementById('durationField').value = '';
-      document.getElementById('activeField').value = 'si';
-      document.getElementById('descField').value = '';
-      document.getElementById('coursesField').value = '';
-      document.getElementById('rutsField').value = '';
-      document.getElementById('contentField').value = '{\n  "materiales": [],\n  "items": []\n}';
-      hideMessages();
-    }
-
-    async function loadStudents() {
-      const snap = await db.ref(STUDENT_BASE + '/estudiantes').once('value');
-      studentsMap = snap.val() || {};
-    }
-
-    async function loadStatsAndSessions() {
-      const [sessionsSnap, responsesSnap, assignmentsSnap] = await Promise.all([
-        db.ref(LECTURAS_BASE + '/sesiones').once('value'),
-        db.ref(LECTURAS_BASE + '/respuestas').once('value'),
-        db.ref(LECTURAS_BASE + '/asignaciones').once('value')
-      ]);
-      sessionsCache = sessionsSnap.val() || {};
-      const responses = responsesSnap.val() || {};
-      const assignments = assignmentsSnap.val() || {};
-
-      document.getElementById('statSessions').textContent = Object.keys(sessionsCache).length;
-      document.getElementById('statAssignments').textContent = Object.values(assignments).reduce((sum, value) => sum + Object.keys(value || {}).length, 0);
-      document.getElementById('statResponses').textContent = Object.values(responses).reduce((sum, value) => sum + Object.keys(value || {}).length, 0);
-
-      renderSessionsTable();
-    }
-
-    function renderSessionsTable() {
-      const body = document.getElementById('sessionsBody');
-      const rows = Object.entries(sessionsCache)
-        .map(([id, session]) => ({ id, ...session }))
-        .sort((a, b) => (a.orden || 0) - (b.orden || 0));
-
-      if (!rows.length) {
-        body.innerHTML = '<tr><td colspan="6">Aún no hay sesiones creadas en Lecturas.</td></tr>';
-        return;
-      }
-
-      body.innerHTML = rows.map(session => {
-        const counts = getContentCounts(session);
-        const assigned = Array.isArray(session.asignados) ? session.asignados.length : 0;
-        return '<tr>'
-          + '<td><strong>' + session.titulo + '</strong><br><span style="font-size:11px;color:#6b7280">' + session.id + '</span></td>'
-          + '<td>' + (session.libro || '—') + '</td>'
-          + '<td>' + counts.materials + ' materiales<br>' + counts.items + ' ítems</td>'
-          + '<td>' + assigned + '</td>'
-          + '<td><span class="chip ' + (session.activa === false ? 'inactive' : '') + '">' + (session.activa === false ? 'Inactiva' : 'Activa') + '</span></td>'
-          + '<td><div class="table-actions">'
-          + '<button class="small-btn toggle" onclick="toggleSession(\'' + session.id + '\')">Activar / Desactivar</button>'
-          + '<button class="small-btn toggle" onclick="previewJson(\'' + session.id + '\')">Ver JSON</button>'
-          + '<button class="small-btn delete" onclick="deleteSession(\'' + session.id + '\')">Eliminar</button>'
-          + '</div></td>'
-          + '</tr>';
-      }).join('');
-    }
-
-    async function resolveAssignedUids(courseList, rutList) {
-      const assigned = new Set();
-      const courses = courseList.map(value => value.trim()).filter(Boolean);
-      const ruts = rutList.map(value => cleanRut(value)).filter(Boolean);
-      Object.entries(studentsMap).forEach(([uid, student]) => {
-        if (courses.length && courses.includes(String(student.curso || '').trim())) assigned.add(uid);
-        if (ruts.length && ruts.includes(cleanRut(student.rut || ''))) assigned.add(uid);
+async function bulkCreateStudents() {
+  const raw=document.getElementById('bulkData').value.trim();
+  if(!raw){toast('Pega la lista de estudiantes','err');return;}
+  const lines=raw.split('\n').filter(l=>l.trim());
+  let created=0,errors=[];
+  for(const line of lines){
+    const parts=line.split(';').map(s=>s.trim());
+    if(parts.length<3){errors.push(line+' — formato inválido');continue;}
+    const[name,rut,curso]=parts;
+    const email=rutToEmail(rut);
+    const pass=defaultPassword(rut);
+    try{
+      const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
+      await secondaryAuth.signOut();
+      await db.ref(STUDENT_BASE+'/estudiantes/'+cred.user.uid).set({
+        nombre:name,rut:cleanRut(rut),curso:curso,
+        perfil_completo:false,password_changed:false,
+        createdAt:Date.now(),createdBy:currentUser.uid
       });
-      return Array.from(assigned);
+      created++;
+    }catch(e){errors.push(name+' — '+e.message);}
+  }
+  await loadAllData();
+  closeModal('bulkAdd');
+  document.getElementById('bulkData').value='';
+  let msg=created+' estudiantes creados.';
+  if(errors.length) msg+=' '+errors.length+' errores.';
+  toast(msg,errors.length?'err':'ok');
+  if(errors.length) console.warn('Errores carga masiva:',errors);
+}
+
+function editStudent(uid) {
+  const s=studentsMap[uid];if(!s)return;
+  document.getElementById('editStudentUid').value=uid;
+  document.getElementById('editStudentName').value=s.nombre||'';
+  document.getElementById('editStudentCurso').value=s.curso||'';
+  openModal('editStudent');
+}
+
+async function saveStudentEdit() {
+  const uid=document.getElementById('editStudentUid').value;
+  const updates={
+    nombre:document.getElementById('editStudentName').value.trim(),
+    curso:document.getElementById('editStudentCurso').value.trim()
+  };
+  try{
+    await db.ref(STUDENT_BASE+'/estudiantes/'+uid).update(updates);
+    Object.assign(studentsMap[uid],updates);
+    renderStudents();closeModal('editStudent');toast('Estudiante actualizado','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+async function resetPassword(uid) {
+  const s=studentsMap[uid];if(!s)return;
+  const pass=defaultPassword(s.rut);
+  if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nContraseña por defecto: '+pass)) return;
+  try{
+    const email=rutToEmail(s.rut);
+    await secondaryAuth.signInWithEmailAndPassword(email,pass);
+    await secondaryAuth.signOut();
+    toast('La contraseña ya es la por defecto: '+pass,'ok');
+  }catch(e){
+    await db.ref(STUDENT_BASE+'/estudiantes/'+uid).update({password_reset_pending:true});
+    toast('Se marcó para restablecer. Contraseña por defecto: '+pass,'ok');
+  }
+}
+
+function copyCredentials(uid) {
+  const s=studentsMap[uid];if(!s)return;
+  const email=rutToEmail(s.rut);
+  const pass=defaultPassword(s.rut);
+  const text='Nombre: '+s.nombre+'\nEmail: '+email+'\nContraseña: '+pass+'\nURL SIMCE: https://www.profefranciscopancho.com/estudiantes/\nURL Lecturas: https://www.profefranciscopancho.com/lecturas/';
+  navigator.clipboard.writeText(text).then(()=>toast('Credenciales copiadas al portapapeles','ok')).catch(()=>toast('No se pudo copiar','err'));
+}
+
+function deleteStudent(uid) {
+  const s=studentsMap[uid];if(!s)return;
+  if(!confirm('¿ELIMINAR a '+s.nombre+'?\nEsto eliminará sus datos de la plataforma (la cuenta auth se mantiene).'))return;
+  db.ref(STUDENT_BASE+'/estudiantes/'+uid).remove();
+  delete studentsMap[uid];
+  renderStudents();renderOverview();
+  toast('Estudiante eliminado','ok');
+}
+
+function viewStudentDetail(uid) {
+  const s=studentsMap[uid];if(!s)return;
+  document.getElementById('detailStudentName').textContent=s.nombre;
+  let html='<p style="font-size:13px;color:#64748b;margin-bottom:16px">RUT: '+htmlEsc(s.rut)+' | Curso: '+htmlEsc(s.curso)+' | Email: '+htmlEsc(rutToEmail(s.rut))+'</p>';
+
+  // SIMCE results
+  html+='<h4 style="font-size:14px;font-weight:700;margin-bottom:8px">Resultados SIMCE</h4>';
+  const simIds=Object.keys(simceSessions);
+  if(simIds.length){
+    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Puntaje</th><th>Nivel</th></tr>';
+    for(const sesId of simIds){
+      const ses=simceSessions[sesId];
+      const r=(simceResults[sesId]||{})[uid];
+      html+='<tr><td style="padding:6px 10px">'+(ses.titulo||sesId)+'</td><td style="text-align:center">'+(r?r.porcentaje+'%':'—')+'</td><td style="text-align:center">'+(r?getLevelBadge(r.porcentaje):'—')+'</td></tr>';
     }
+    html+='</table>';
+  } else html+='<p class="muted">No hay sesiones SIMCE</p>';
 
-    async function createSession() {
-      hideMessages();
-      const rawId = document.getElementById('idField').value.trim();
-      const title = document.getElementById('titleField').value.trim();
-      const book = document.getElementById('bookField').value.trim();
-      const description = document.getElementById('descField').value.trim();
-      const order = Number(document.getElementById('orderField').value) || 1;
-      const duration = Number(document.getElementById('durationField').value) || null;
-      const active = document.getElementById('activeField').value.trim().toLowerCase() !== 'no';
-      const courses = parseCsv(document.getElementById('coursesField').value);
-      const ruts = parseCsv(document.getElementById('rutsField').value);
-      const contentText = document.getElementById('contentField').value.trim();
+  // Lecturas results
+  html+='<h4 style="font-size:14px;font-weight:700;margin:16px 0 8px">Resultados Lecturas</h4>';
+  const lecIds=Object.keys(lecSessions);
+  if(lecIds.length){
+    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Puntaje</th><th>Estado</th></tr>';
+    for(const sesId of lecIds){
+      const ses=lecSessions[sesId];
+      const r=(lecResults[sesId]||{})[uid];
+      html+='<tr><td style="padding:6px 10px">'+(ses.titulo||sesId)+'</td><td style="text-align:center">'+(r?r.porcentaje+'%':'—')+'</td><td style="text-align:center">'+(r?'<span class="badge badge-green">Entregada</span>':'<span class="badge badge-gray">Pendiente</span>')+'</td></tr>';
+    }
+    html+='</table>';
+  } else html+='<p class="muted">No hay sesiones Lecturas</p>';
 
-      if (!title) {
-        showError('Ingresa un título para la sesión.');
-        return;
-      }
+  document.getElementById('detailStudentContent').innerHTML=html;
+  openModal('studentDetail');
+}
 
-      let content;
-      try {
-        content = contentText ? JSON.parse(contentText) : { materiales: [], items: [] };
-      } catch (error) {
-        showError('El JSON del contenido no es válido.');
-        return;
-      }
+/* ====================================================================
+   SIMCE
+   ==================================================================== */
+function renderSimceSessions() {
+  const tbody=document.getElementById('simceSessionsBody');
+  let items=Object.entries(simceSessions).map(([id,s])=>({id,...s}));
+  items.sort((a,b)=>(a.orden||0)-(b.orden||0));
+  tbody.innerHTML=items.map(s=>{
+    const numTexts=(s.contenido?.textos||[]).length;
+    const numQ=(s.contenido?.preguntas||[]).length;
+    return '<tr>'
+      +'<td><strong>'+(s.orden||'—')+'</strong></td>'
+      +'<td>'+htmlEsc(s.titulo||'Sin título')+'<br><span class="muted">'+htmlEsc((s.descripcion||'').substring(0,60))+'</span></td>'
+      +'<td style="text-align:center">'+numTexts+'</td>'
+      +'<td style="text-align:center">'+numQ+'</td>'
+      +'<td><label class="toggle"><input type="checkbox" '+(s.activa!==false?'checked':'')+' onchange="toggleSimceField(\''+s.id+'\',\'activa\',this.checked)"><span class="slider"></span></label></td>'
+      +'<td><label class="toggle"><input type="checkbox" '+(s.resultados_visibles?'checked':'')+' onchange="toggleSimceField(\''+s.id+'\',\'resultados_visibles\',this.checked)"><span class="slider"></span></label></td>'
+      +'<td>'
+        +'<button class="btn btn-sm btn-warn" onclick="resetSimceResults(\''+s.id+'\')" title="Reset resultados">🔄</button> '
+        +'<button class="btn btn-sm btn-danger" onclick="deleteSimceSession(\''+s.id+'\')" title="Eliminar">🗑</button>'
+      +'</td></tr>';
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones SIMCE</td></tr>';
+}
 
-      const sessionId = rawId || slugify(title);
-      if (sessionsCache[sessionId]) {
-        showError('Ya existe una sesión con ese ID.');
-        return;
-      }
+async function toggleSimceField(sesId,field,val) {
+  try{ await db.ref(STUDENT_BASE+'/sesiones/'+sesId+'/'+field).set(val); simceSessions[sesId][field]=val; toast(field+' actualizado','ok'); }
+  catch(e){toast('Error','err');}
+}
 
-      const assignedUids = await resolveAssignedUids(courses, ruts);
-      const session = {
-        id: sessionId,
-        titulo: title,
-        libro: book || '',
-        descripcion: description || '',
-        orden: order,
-        activa: active,
-        resultados_visibles: false,
-        duracion_min: duration,
-        cursosAsignados: courses,
-        rutsAsignados: ruts,
-        asignados: assignedUids,
-        contenido: content,
-        createdAt: Date.now(),
-        docenteUid: currentUser.uid
-      };
+async function resetSimceResults(sesId) {
+  const ses=simceSessions[sesId];
+  if(!confirm('¿Eliminar TODOS los resultados y respuestas de "'+ses.titulo+'"?')) return;
+  try{
+    await Promise.all([
+      db.ref(STUDENT_BASE+'/resultados/'+sesId).remove(),
+      db.ref(STUDENT_BASE+'/respuestas/'+sesId).remove(),
+      db.ref(STUDENT_BASE+'/ranking/'+sesId).remove()
+    ]);
+    delete simceResults[sesId];delete simceResponses[sesId];
+    renderOverview();toast('Resultados SIMCE reseteados','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
 
-      const updates = {};
-      updates[LECTURAS_BASE + '/sesiones/' + sessionId] = session;
-      assignedUids.forEach(uid => {
-        updates[LECTURAS_BASE + '/asignaciones/' + uid + '/' + sessionId] = true;
-      });
+async function deleteSimceSession(sesId) {
+  if(!confirm('¿ELIMINAR "'+simceSessions[sesId]?.titulo+'" y todos sus datos?')) return;
+  try{
+    await Promise.all([
+      db.ref(STUDENT_BASE+'/sesiones/'+sesId).remove(),
+      db.ref(STUDENT_BASE+'/resultados/'+sesId).remove(),
+      db.ref(STUDENT_BASE+'/respuestas/'+sesId).remove(),
+      db.ref(STUDENT_BASE+'/ranking/'+sesId).remove()
+    ]);
+    delete simceSessions[sesId];
+    renderSimceSessions();populateSimceDropdown();renderOverview();
+    toast('Sesión SIMCE eliminada','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
 
-      document.getElementById('createBtn').disabled = true;
-      try {
-        await db.ref().update(updates);
-        showSuccess('Sesión creada en /lecturas. Asignados: ' + assignedUids.length + ' estudiante(s).');
-        resetForm();
-        await loadStatsAndSessions();
-      } catch (error) {
-        console.error('[lecturas/admin/create]', error);
-        showError('No se pudo crear la sesión.');
-      } finally {
-        document.getElementById('createBtn').disabled = false;
+function populateSimceDropdown() {
+  const sel=document.getElementById('simceResultSession');
+  while(sel.options.length>1) sel.remove(1);
+  Object.entries(simceSessions).sort((a,b)=>(a[1].orden||0)-(b[1].orden||0)).forEach(([id,s])=>{
+    const opt=document.createElement('option');
+    opt.value=id;opt.textContent=s.titulo||id;
+    sel.appendChild(opt);
+  });
+}
+
+function loadSimceResults() {
+  const sesId=document.getElementById('simceResultSession').value;
+  const courseF=document.getElementById('simceResultCourse').value;
+  if(!sesId){
+    document.getElementById('simceLevelCards').innerHTML='';
+    document.getElementById('simceResultsBody').innerHTML='<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">Selecciona una sesión</td></tr>';
+    return;
+  }
+  const results=simceResults[sesId]||{};
+  let items=[];
+  for(const[uid,r] of Object.entries(results)){
+    const est=studentsMap[uid];if(!est)continue;
+    if(courseF&&est.curso!==courseF)continue;
+    items.push({uid,nombre:est.nombre,curso:est.curso,puntaje:r.puntaje||0,total:r.total||0,porcentaje:r.porcentaje||0,timestamp:r.timestamp||0,tiempo:r.tiempo_transcurrido||0});
+  }
+  items.sort((a,b)=>b.porcentaje-a.porcentaje);
+
+  const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
+  items.forEach(i=>levels[getLevel(i.porcentaje)]++);
+  document.getElementById('simceLevelCards').innerHTML=
+    '<div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">'+levels.Insuficiente+'</div></div>'
+    +'<div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">'+levels.Elemental+'</div></div>'
+    +'<div class="level-card lv-adeq"><div class="lv-label">Adecuado (60-79%)</div><div class="lv-val">'+levels.Adecuado+'</div></div>'
+    +'<div class="level-card lv-dest"><div class="lv-label">Destacado (≥80%)</div><div class="lv-val">'+levels.Destacado+'</div></div>';
+
+  document.getElementById('simceResultsBody').innerHTML=items.map(r=>{
+    const mins=r.tiempo?Math.round(r.tiempo/60000):0;
+    return '<tr>'
+      +'<td><strong>'+htmlEsc(r.nombre)+'</strong></td>'
+      +'<td><span class="badge badge-teal">'+htmlEsc(r.curso)+'</span></td>'
+      +'<td>'+r.puntaje+'/'+r.total+'</td>'
+      +'<td><strong style="color:'+(r.porcentaje>=60?'#16a34a':'#dc2626')+'">'+r.porcentaje+'%</strong></td>'
+      +'<td>'+getLevelBadge(r.porcentaje)+'</td>'
+      +'<td class="muted">'+(mins>0?mins+' min':'—')+'</td></tr>';
+  }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay resultados para esta sesión</td></tr>';
+}
+
+/* ====================================================================
+   LECTURAS — Session List
+   ==================================================================== */
+function renderLecSessions() {
+  const tbody=document.getElementById('lecturasSessionsBody');
+  let items=Object.entries(lecSessions).map(([id,s])=>({id,...s}));
+  items.sort((a,b)=>{
+    const cA=(a.cursosAsignados||[]).slice().sort().join(',');
+    const cB=(b.cursosAsignados||[]).slice().sort().join(',');
+    if(cA!==cB) return cA.localeCompare(cB,'es');
+    return (a.orden||0)-(b.orden||0);
+  });
+
+  tbody.innerHTML=items.map(s=>{
+    const content=s.contenido||{};
+    const itemCount=(content.items||content.preguntas||[]).length;
+    const assignedCount=getLecAssignedUids(s.id).length;
+    const cursos=(s.cursosAsignados||[]).join(', ')||'—';
+    return '<tr>'
+      +'<td><strong>'+htmlEsc(s.titulo||s.id)+'</strong><br><span class="muted">'+htmlEsc(s.id)+'</span></td>'
+      +'<td>'+htmlEsc(s.libro||'—')+'</td>'
+      +'<td><span class="badge badge-teal">'+htmlEsc(cursos)+'</span></td>'
+      +'<td style="text-align:center">'+itemCount+'</td>'
+      +'<td style="text-align:center">'+assignedCount+'</td>'
+      +'<td><label class="toggle"><input type="checkbox" '+(s.activa!==false?'checked':'')+' onchange="toggleLecSession(\''+s.id+'\',this.checked)"><span class="slider"></span></label></td>'
+      +'<td>'
+        +'<button class="btn btn-sm btn-secondary" onclick="selectLecReviewSession(\''+s.id+'\')" title="Revisar">📊</button> '
+        +'<button class="btn btn-sm btn-danger" onclick="deleteLecSession(\''+s.id+'\')" title="Eliminar">🗑</button>'
+      +'</td></tr>';
+  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones Lecturas</td></tr>';
+}
+
+async function toggleLecSession(id,val) {
+  try{ await db.ref(LECTURAS_BASE+'/sesiones/'+id+'/activa').set(val); lecSessions[id].activa=val; toast('Estado actualizado','ok'); }
+  catch(e){toast('Error','err');}
+}
+
+async function deleteLecSession(id) {
+  const ses=lecSessions[id];if(!ses)return;
+  if(!confirm('¿Eliminar "'+ses.titulo+'" y todas sus asignaciones/respuestas?'))return;
+  const updates={};
+  updates[LECTURAS_BASE+'/sesiones/'+id]=null;
+  updates[LECTURAS_BASE+'/respuestas/'+id]=null;
+  updates[LECTURAS_BASE+'/resultados/'+id]=null;
+  if(Array.isArray(ses.asignados)){
+    ses.asignados.forEach(uid=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+id]=null; });
+  }
+  await db.ref().update(updates);
+  delete lecSessions[id];delete lecResponses[id];delete lecResults[id];
+  renderLecSessions();updateLecReviewSessionSelect();renderLecReviewPanel();renderOverview();
+  toast('Sesión Lecturas eliminada','ok');
+}
+
+/* ====================================================================
+   LECTURAS — Review/Tracking (with course filter)
+   ==================================================================== */
+function getLecAssignedUids(sessionId) {
+  const assigned=new Set(Array.isArray((lecSessions[sessionId]||{}).asignados)?(lecSessions[sessionId]).asignados:[]);
+  Object.entries(lecAssignments).forEach(([uid,map])=>{ if(map&&map[sessionId]) assigned.add(uid); });
+  return Array.from(assigned);
+}
+
+function normalizeContent(session) {
+  const c=session&&session.contenido?session.contenido:{};
+  return {materials:c.materiales||c.textos||[],items:c.items||c.preguntas||[]};
+}
+function getSessionItems(session){return normalizeContent(session).items;}
+function getType(item){return String(item&&(item.tipo||item.type||'seleccion_multiple')).toLowerCase();}
+function getItemPoints(item){const r=Number(item&&(item.puntaje??item.points??1));return Number.isFinite(r)&&r>0?r:1;}
+
+function normalizeMatchingSide(side){
+  if(!Array.isArray(side))return[];
+  return side.map((e,i)=>typeof e==='string'?{id:'opt_'+i,texto:e}:{id:e.id||'opt_'+i,texto:e.texto||e.label||e.valor||''});
+}
+function normalizeMatchingAnswer(a){return a&&typeof a==='object'?a:{};}
+function parseText(v){return String(v||'').trim();}
+
+function isItemAnswered(item,answer){
+  const type=getType(item);
+  if(type==='seleccion_multiple'||type==='multiple_choice'||type==='verdadero_falso'||type==='true_false')return typeof answer==='string'&&answer!=='';
+  if(type==='respuesta_corta'||type==='short_text'||type==='desarrollo')return parseText(answer).length>0;
+  if(type==='pareados'||type==='matching'){const l=normalizeMatchingSide(item.izquierda||item.left||[]);const m=normalizeMatchingAnswer(answer);return l.length>0&&l.every(e=>parseText(m[e.id]).length>0);}
+  if(type==='ordenamiento'||type==='ordering'||type==='puzzle'){const l=normalizeMatchingSide(item.elementos||item.items||[]);const m=normalizeMatchingAnswer(answer);return l.length>0&&l.every(e=>parseText(m[e.id]).length>0);}
+  return parseText(answer).length>0;
+}
+
+function countAnsweredItems(session,answers){
+  const m=answers&&typeof answers==='object'?answers:{};
+  return getSessionItems(session).filter(item=>isItemAnswered(item,m[item.id])).length;
+}
+
+function getCorrectCounts(result){
+  const d=result&&result.detalle?Object.values(result.detalle):[];
+  if(!d.length)return{correct:null,total:null};
+  return{correct:d.filter(e=>e.esCorrecta===true).length,total:d.filter(e=>e.autoEvaluable!==false).length};
+}
+
+function getLecReviewRows(sessionId) {
+  const session=lecSessions[sessionId];if(!session)return[];
+  const items=getSessionItems(session);
+  const totalItems=items.length;
+  const sesResp=lecResponses[sessionId]||{};
+  const sesRes=lecResults[sessionId]||{};
+  return getLecAssignedUids(sessionId).map(uid=>{
+    const student=studentsMap[uid]||{};
+    const response=sesResp[uid]||null;
+    const result=sesRes[uid]||null;
+    const answers=response&&response.answers?response.answers:{};
+    const submitted=!!((response&&response.completada)||result);
+    const started=!!(response&&(response.started_at||Object.keys(answers).length));
+    const status=submitted?'submitted':(started?'progress':'pending');
+    const answeredCount=result&&Number.isFinite(Number(result.answered_count))?Number(result.answered_count):countAnsweredItems(session,answers);
+    const strikes=Number(response&&response.strikes);
+    const resStrikes=Number(result&&result.strikes);
+    const resolvedStrikes=Number.isFinite(strikes)?strikes:(Number.isFinite(resStrikes)?resStrikes:0);
+    const cc=getCorrectCounts(result);
+    const scoreE=Number(result&&result.puntaje);const scoreT=Number(result&&result.total);const pct=Number(result&&result.porcentaje);
+    const manualP=Number(result&&result.manual_pendientes);
+    return{uid,student,response,result,status,submitted,started,answeredCount,totalItems,
+      strikes:resolvedStrikes,blockedByStrikes:!!((response&&response.bloqueado_por_strikes)||(result&&result.bloqueado_por_strikes)),
+      correctCount:cc.correct,correctTotal:cc.total,
+      scoreEarned:Number.isFinite(scoreE)?scoreE:null,scoreTotal:Number.isFinite(scoreT)?scoreT:null,
+      percentage:Number.isFinite(pct)?pct:null,manualPending:Number.isFinite(manualP)?manualP:0,
+      submittedAt:(response&&response.submitted_at)||(result&&result.submitted_at)||null,
+      lastSave:response&&response.last_save?response.last_save:null,
+      duration:(response&&response.tiempo_transcurrido)||(result&&result.tiempo_transcurrido)||null,
+      searchText:norm([student.nombre,student.curso,student.rut].join(' '))};
+  }).sort((a,b)=>{
+    const cA=norm(a.student.curso||'');const cB=norm(b.student.curso||'');
+    if(cA!==cB)return cA.localeCompare(cB,'es');
+    return norm(a.student.nombre||a.uid).localeCompare(norm(b.student.nombre||b.uid),'es');
+  });
+}
+
+function updateLecReviewSessionSelect() {
+  const sel=document.getElementById('lecReviewSession');
+  const sessions=Object.entries(lecSessions).map(([id,s])=>({id,...s})).sort((a,b)=>{
+    const cA=(a.cursosAsignados||[]).slice().sort().join(',');
+    const cB=(b.cursosAsignados||[]).slice().sort().join(',');
+    if(cA!==cB) return cA.localeCompare(cB,'es');
+    return (a.orden||0)-(b.orden||0);
+  });
+  if(!sessions.length){sel.innerHTML='<option value="">Sin sesiones</option>';selectedLecSession='';return;}
+  if(!selectedLecSession||!lecSessions[selectedLecSession]) selectedLecSession=sessions[0].id;
+  sel.innerHTML=sessions.map(s=>'<option value="'+htmlEsc(s.id)+'"'+(s.id===selectedLecSession?' selected':'')+'>'+htmlEsc(s.titulo||s.id)+'</option>').join('');
+}
+
+function onLecReviewChange() {
+  selectedLecSession=document.getElementById('lecReviewSession').value;
+  selectedLecStudent='';
+  renderLecReviewPanel();
+}
+
+function selectLecReviewSession(id) {
+  selectedLecSession=id;
+  selectedLecStudent='';
+  showSection('lecturas');
+  document.getElementById('lecReviewSession').value=id;
+  renderLecReviewPanel();
+}
+
+function renderLecReviewPanel() {
+  updateLecReviewSessionSelect();
+  const detail=document.getElementById('lecReviewDetail');
+  if(!selectedLecSession){
+    document.getElementById('lecReviewSummary').innerHTML='';
+    document.getElementById('lecReviewBody').innerHTML='<tr><td colspan="9">Selecciona una sesión.</td></tr>';
+    detail.innerHTML='<h3>Detalle del estudiante</h3><p class="muted">Selecciona una fila.</p>';
+    return;
+  }
+  const allRows=getLecReviewRows(selectedLecSession);
+  const search=norm(document.getElementById('lecReviewSearch').value);
+  const courseF=document.getElementById('lecReviewCourse').value;
+  let rows=allRows;
+  if(courseF) rows=rows.filter(r=>(r.student.curso||'')===courseF);
+  if(search) rows=rows.filter(r=>r.searchText.includes(search));
+
+  const submittedC=allRows.filter(r=>r.submitted).length;
+  const progressC=allRows.filter(r=>r.status==='progress').length;
+  const pendingC=allRows.filter(r=>r.status==='pending').length;
+  const blockedC=allRows.filter(r=>r.blockedByStrikes).length;
+  const scoredRows=allRows.filter(r=>r.percentage!==null);
+  const avgAuto=scoredRows.length?Math.round(scoredRows.reduce((s,r)=>s+r.percentage,0)/scoredRows.length):0;
+
+  document.getElementById('lecReviewSummary').innerHTML=[
+    {label:'Asignados',value:allRows.length},{label:'Entregadas',value:submittedC},
+    {label:'En progreso',value:progressC},{label:'Pendientes',value:pendingC},
+    {label:'Bloqueadas',value:blockedC},{label:'Promedio auto',value:scoredRows.length?avgAuto+'%':'—'}
+  ].map(e=>'<div class="mini-stat"><span class="label">'+e.label+'</span><span class="value">'+e.value+'</span></div>').join('');
+
+  if(selectedLecStudent&&!rows.some(r=>r.uid===selectedLecStudent)) selectedLecStudent='';
+
+  document.getElementById('lecReviewBody').innerHTML=rows.length?rows.map(r=>{
+    const statusLabel=r.status==='submitted'?'Entregada':(r.status==='progress'?'En progreso':'Pendiente');
+    return '<tr style="'+(r.uid===selectedLecStudent?'background:#eff6ff':'')+'">'
+      +'<td><strong>'+htmlEsc(r.student.nombre||r.uid)+'</strong></td>'
+      +'<td>'+htmlEsc(r.student.curso||'—')+'</td>'
+      +'<td style="font-size:12px">'+htmlEsc(r.student.rut||'—')+'</td>'
+      +'<td><span class="status-chip '+r.status+'">'+statusLabel+'</span>'+(r.blockedByStrikes?' <span class="status-chip blocked">Strikes</span>':'')+'</td>'
+      +'<td>'+r.answeredCount+'/'+r.totalItems+'</td>'
+      +'<td>'+(r.correctCount===null?'—':r.correctCount+'/'+r.correctTotal)+'</td>'
+      +'<td>'+(r.scoreEarned===null?'—':r.scoreEarned+'/'+r.scoreTotal+(r.percentage!==null?' · '+r.percentage+'%':''))+'</td>'
+      +'<td>'+r.strikes+'</td>'
+      +'<td>'
+        +'<button class="btn btn-sm btn-secondary" onclick="selectLecStudent(\''+r.uid+'\')">👁</button> '
+        +'<button class="btn btn-sm btn-warn" onclick="resetLecStrikes(\''+r.uid+'\')" title="Reset strikes">🔄</button> '
+        +'<button class="btn btn-sm btn-danger" onclick="resetLecStudentFull(\''+r.uid+'\')" title="Reset total">💥</button>'
+      +'</td></tr>';
+  }).join(''):'<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:20px">No hay coincidencias.</td></tr>';
+
+  renderLecReviewDetail();
+}
+
+function selectLecStudent(uid) {
+  selectedLecStudent=uid;
+  renderLecReviewPanel();
+  document.getElementById('lecReviewDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function renderLecReviewDetail() {
+  const detail=document.getElementById('lecReviewDetail');
+  if(!selectedLecSession||!selectedLecStudent){
+    detail.innerHTML='<h3>Detalle del estudiante</h3><p class="muted">Selecciona una fila para ver respuestas por ítem.</p>';
+    return;
+  }
+  const session=lecSessions[selectedLecSession];
+  const row=getLecReviewRows(selectedLecSession).find(r=>r.uid===selectedLecStudent);
+  if(!session||!row){detail.innerHTML='<h3>Detalle</h3><p class="muted">No encontrado.</p>';return;}
+
+  const items=getSessionItems(session);
+  const detailByItem=row.result&&row.result.detalle?row.result.detalle:{};
+  const answers=row.response&&row.response.answers?row.response.answers:{};
+
+  const answerRows=items.map((item,i)=>{
+    const d=detailByItem[item.id]||{};
+    const answer=typeof answers[item.id]!=='undefined'?answers[item.id]:d.respuesta;
+    const sc=d.autoEvaluable===false||d.esCorrecta===null||typeof d.esCorrecta==='undefined'?'manual':(d.esCorrecta?'correct':'incorrect');
+    const sl=sc==='manual'?'Revisión manual':(sc==='correct'?'Correcta':'Incorrecta');
+    const preview=answer===null||typeof answer==='undefined'||answer===''?'Sin respuesta':(typeof answer==='object'?JSON.stringify(answer,null,2):String(answer));
+    return '<div class="answer-row">'
+      +'<div class="answer-meta"><div><strong>Pregunta '+(i+1)+'</strong><div class="muted">'+htmlEsc(item.habilidad||getType(item))+'</div></div>'
+      +'<div><span class="status-chip '+sc+'">'+sl+'</span> <span class="badge badge-gray">'+htmlEsc(fmtPts(d.puntajeObtenido??0))+' / '+htmlEsc(fmtPts(getItemPoints(item)))+'</span></div></div>'
+      +'<div class="muted">'+htmlEsc(item.enunciado||'Ítem sin enunciado')+'</div>'
+      +'<div class="answer-preview">'+htmlEsc(preview)+'</div></div>';
+  }).join('');
+
+  const statusLabel=row.status==='submitted'?'Entregada':(row.status==='progress'?'En progreso':'Pendiente');
+  detail.innerHTML='<h3>'+htmlEsc(row.student.nombre||row.uid)+'</h3>'
+    +'<p class="muted">'+htmlEsc(session.titulo||selectedLecSession)+' · '+htmlEsc(row.student.curso||'Sin curso')+'</p>'
+    +'<div style="margin:8px 0"><span class="status-chip '+row.status+'">'+statusLabel+'</span>'
+    +(row.blockedByStrikes?' <span class="status-chip blocked">Bloqueada por strikes</span>':'')+'</div>'
+    +'<div class="detail-grid">'
+    +'<div class="detail-item"><span class="label">RUT</span><span class="value">'+htmlEsc(row.student.rut||'—')+'</span></div>'
+    +'<div class="detail-item"><span class="label">Progreso</span><span class="value">'+row.answeredCount+'/'+row.totalItems+'</span></div>'
+    +'<div class="detail-item"><span class="label">Correctas</span><span class="value">'+(row.correctCount===null?'—':row.correctCount+'/'+row.correctTotal)+'</span></div>'
+    +'<div class="detail-item"><span class="label">Puntaje auto</span><span class="value">'+(row.scoreEarned===null?'—':row.scoreEarned+'/'+row.scoreTotal+(row.percentage!==null?' · '+row.percentage+'%':''))+'</span></div>'
+    +'<div class="detail-item"><span class="label">Manual pendientes</span><span class="value">'+row.manualPending+'</span></div>'
+    +'<div class="detail-item"><span class="label">Strikes</span><span class="value">'+row.strikes+'</span></div>'
+    +'<div class="detail-item"><span class="label">Último guardado</span><span class="value">'+htmlEsc(fmtDate(row.lastSave))+'</span></div>'
+    +'<div class="detail-item"><span class="label">Envío</span><span class="value">'+htmlEsc(fmtDate(row.submittedAt))+'</span></div>'
+    +'<div class="detail-item"><span class="label">Tiempo</span><span class="value">'+htmlEsc(fmtDuration(row.duration))+'</span></div>'
+    +'</div>'
+    +'<div class="answer-list">'+answerRows+'</div>';
+}
+
+/* Strike reset (soft: just strikes to 0) */
+async function resetLecStrikes(uid) {
+  if(!selectedLecSession)return;
+  const student=studentsMap[uid];
+  if(!confirm('¿Resetear strikes de '+(student?student.nombre:uid)+' a 0?'))return;
+  const updates={};
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/strikes']=0;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/strikes']=0;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  try{
+    await db.ref().update(updates);
+    // Update local cache
+    if(lecResponses[selectedLecSession]&&lecResponses[selectedLecSession][uid]){
+      lecResponses[selectedLecSession][uid].strikes=0;
+      delete lecResponses[selectedLecSession][uid].bloqueado_por_strikes;
+    }
+    if(lecResults[selectedLecSession]&&lecResults[selectedLecSession][uid]){
+      lecResults[selectedLecSession][uid].strikes=0;
+      delete lecResults[selectedLecSession][uid].bloqueado_por_strikes;
+    }
+    renderLecReviewPanel();
+    toast('Strikes reseteados a 0','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+/* Strike reset (total: clear all response + result data for that student/session) */
+async function resetLecStudentFull(uid) {
+  if(!selectedLecSession)return;
+  const student=studentsMap[uid];
+  if(!confirm('¿RESET TOTAL de '+(student?student.nombre:uid)+'?\nSe eliminarán todas sus respuestas y resultados para esta sesión. Deberá completarla de nuevo.'))return;
+  try{
+    await Promise.all([
+      db.ref(LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid).remove(),
+      db.ref(LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid).remove()
+    ]);
+    if(lecResponses[selectedLecSession]) delete lecResponses[selectedLecSession][uid];
+    if(lecResults[selectedLecSession]) delete lecResults[selectedLecSession][uid];
+    renderLecReviewPanel();renderOverview();
+    toast('Reset total completado','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+/* ====================================================================
+   REPORTS & CSV
+   ==================================================================== */
+function generateReport(type) {
+  const output=document.getElementById('reportOutput');
+  output.style.display='block';
+  if(type==='session') generateSessionReport(output);
+  else if(type==='course') generateCourseReport(output);
+  else if(type==='student') generateStudentReport(output);
+}
+
+function generateSessionReport(output) {
+  let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión (SIMCE)</h3>';
+  for(const[sesId,ses] of Object.entries(simceSessions)){
+    const results=simceResults[sesId]||{};
+    const entries=Object.entries(results);
+    if(!entries.length) continue;
+    let totalPct=0;
+    const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
+    entries.forEach(([,r])=>{totalPct+=r.porcentaje||0;levels[getLevel(r.porcentaje||0)]++;});
+    const avg=Math.round(totalPct/entries.length);
+    html+='<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:12px">'
+      +'<h4>'+htmlEsc(ses.titulo||sesId)+'</h4>'
+      +'<p style="font-size:13px;color:#64748b;margin:4px 0">'+entries.length+' evaluados | Promedio: <strong>'+avg+'%</strong></p>'
+      +'<p style="font-size:12px">Destacado: '+levels.Destacado+' | Adecuado: '+levels.Adecuado+' | Elemental: '+levels.Elemental+' | Insuficiente: '+levels.Insuficiente+'</p></div>';
+  }
+  html+='<button class="btn btn-primary" onclick="exportSimceCSV(\'session\')" style="margin-top:12px">📥 Exportar CSV</button>';
+  output.innerHTML=html;
+}
+
+function generateCourseReport(output) {
+  const courses={};
+  coursesAvailable.forEach(c=>{courses[c]={name:c,scores:[]};});
+  for(const[,uidMap] of Object.entries(simceResults)){
+    for(const[uid,r] of Object.entries(uidMap)){
+      const est=studentsMap[uid];
+      if(est&&courses[est.curso]) courses[est.curso].scores.push(r.porcentaje||0);
+    }
+  }
+  let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso (SIMCE)</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">';
+  for(const[,data] of Object.entries(courses)){
+    const avg=data.scores.length?Math.round(data.scores.reduce((a,b)=>a+b,0)/data.scores.length):0;
+    const max=data.scores.length?Math.max(...data.scores):0;
+    const min=data.scores.length?Math.min(...data.scores):0;
+    html+='<div style="padding:20px;background:#f8fafc;border-radius:12px">'
+      +'<h4>'+htmlEsc(data.name)+'</h4>'
+      +'<p style="font-size:13px;margin:4px 0">Evaluaciones: '+data.scores.length+'</p>'
+      +'<p style="font-size:13px">Promedio: <strong>'+avg+'%</strong></p>'
+      +'<p style="font-size:12px;color:#64748b">Máx: '+max+'% | Mín: '+min+'%</p></div>';
+  }
+  html+='</div><button class="btn btn-primary" onclick="exportSimceCSV(\'course\')" style="margin-top:16px">📥 Exportar CSV</button>';
+  output.innerHTML=html;
+}
+
+function generateStudentReport(output) {
+  let html='<h3 style="margin-bottom:16px">👤 Reporte Individual (SIMCE)</h3>';
+  html+='<div class="search-bar" style="margin-bottom:12px"><select id="reportStudentSel" onchange="showStudentReport()" style="width:100%"><option value="">Selecciona estudiante...</option>';
+  Object.entries(studentsMap).sort((a,b)=>(a[1].nombre||'').localeCompare(b[1].nombre||'','es')).forEach(([uid,est])=>{
+    html+='<option value="'+uid+'">'+htmlEsc(est.nombre)+' ('+htmlEsc(est.curso)+')</option>';
+  });
+  html+='</select></div><div id="studentReportContent"></div>';
+  output.innerHTML=html;
+}
+
+function showStudentReport() {
+  const uid=document.getElementById('reportStudentSel').value;
+  const container=document.getElementById('studentReportContent');
+  if(!uid){container.innerHTML='';return;}
+  const est=studentsMap[uid];
+  let html='<div style="padding:16px;background:#f8fafc;border-radius:12px;margin-bottom:12px"><h4>'+htmlEsc(est.nombre)+'</h4><p style="font-size:12px;color:#64748b">RUT: '+htmlEsc(est.rut)+' | Curso: '+htmlEsc(est.curso)+'</p></div>';
+  html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Sesión</th><th>Puntaje</th><th>%</th><th>Nivel</th></tr>';
+  let totalPct=0,count=0;
+  for(const[sesId,ses] of Object.entries(simceSessions)){
+    const r=(simceResults[sesId]||{})[uid];
+    if(r){totalPct+=r.porcentaje;count++;
+      html+='<tr><td style="padding:8px">'+htmlEsc(ses.titulo)+'</td><td style="text-align:center">'+r.puntaje+'/'+r.total+'</td><td style="text-align:center">'+r.porcentaje+'%</td><td style="text-align:center">'+getLevelBadge(r.porcentaje)+'</td></tr>';
+    }else{
+      html+='<tr><td style="padding:8px">'+htmlEsc(ses.titulo)+'</td><td colspan="3" style="text-align:center;color:#94a3b8">Sin completar</td></tr>';
+    }
+  }
+  html+='</table>';
+  if(count>0) html+='<p style="margin-top:12px;font-weight:700">Promedio general: '+Math.round(totalPct/count)+'% — '+getLevel(Math.round(totalPct/count))+'</p>';
+  container.innerHTML=html;
+}
+
+function exportSimceCSV(type) {
+  let csv='';
+  if(type==='session'){
+    csv='Sesión,Estudiante,RUT,Curso,Puntaje,Total,Porcentaje,Nivel\n';
+    for(const[sesId,uidMap] of Object.entries(simceResults)){
+      for(const[uid,r] of Object.entries(uidMap)){
+        const est=studentsMap[uid]||{};
+        csv+='"'+(simceSessions[sesId]?.titulo||sesId)+'","'+(est.nombre||'')+'","'+(est.rut||'')+'","'+(est.curso||'')+'",'+(r.puntaje||0)+','+(r.total||0)+','+(r.porcentaje||0)+',"'+getLevel(r.porcentaje||0)+'"\n';
       }
     }
-
-    async function toggleSession(id) {
-      const current = sessionsCache[id];
-      if (!current) return;
-      await db.ref(LECTURAS_BASE + '/sesiones/' + id + '/activa').set(current.activa === false);
-      await loadStatsAndSessions();
+  }else if(type==='course'){
+    csv='Estudiante,RUT,Curso,Sesiones Completadas,Promedio\n';
+    for(const[uid,est] of Object.entries(studentsMap)){
+      let t=0,c=0;
+      for(const sesId of Object.keys(simceResults)){if((simceResults[sesId]||{})[uid]){t+=(simceResults[sesId][uid].porcentaje||0);c++;}}
+      csv+='"'+est.nombre+'","'+est.rut+'","'+est.curso+'",'+c+','+(c?Math.round(t/c):0)+'\n';
     }
-    window.toggleSession = toggleSession;
+  }
+  downloadCSV(csv,'reporte_simce_'+type);
+}
 
-    async function deleteSession(id) {
-      const session = sessionsCache[id];
-      if (!session) return;
-      if (!confirm('¿Eliminar la sesión "' + session.titulo + '" y todas sus asignaciones/respuestas?')) return;
-      const updates = {};
-      updates[LECTURAS_BASE + '/sesiones/' + id] = null;
-      updates[LECTURAS_BASE + '/respuestas/' + id] = null;
-      updates[LECTURAS_BASE + '/resultados/' + id] = null;
-      if (Array.isArray(session.asignados)) {
-        session.asignados.forEach(uid => {
-          updates[LECTURAS_BASE + '/asignaciones/' + uid + '/' + id] = null;
-        });
-      }
-      await db.ref().update(updates);
-      await loadStatsAndSessions();
+function exportLecturasCSV() {
+  let csv='Sesión,Estudiante,RUT,Curso,Estado,Respondidas,Total Ítems,Correctas,Puntaje,Porcentaje,Strikes\n';
+  for(const[sesId,ses] of Object.entries(lecSessions)){
+    const rows=getLecReviewRows(sesId);
+    for(const r of rows){
+      const statusLabel=r.status==='submitted'?'Entregada':(r.status==='progress'?'En progreso':'Pendiente');
+      csv+='"'+htmlEsc(ses.titulo||sesId)+'","'+htmlEsc(r.student.nombre||'')+'","'+htmlEsc(r.student.rut||'')+'","'+htmlEsc(r.student.curso||'')+'","'+statusLabel+'",'+r.answeredCount+','+r.totalItems+','+(r.correctCount===null?'':r.correctCount)+','+(r.scoreEarned===null?'':r.scoreEarned)+','+(r.percentage===null?'':r.percentage)+','+r.strikes+'\n';
     }
-    window.deleteSession = deleteSession;
+  }
+  downloadCSV(csv,'reporte_lecturas');
+}
 
-    function previewJson(id) {
-      const preview = document.getElementById('jsonPreview');
-      const session = sessionsCache[id];
-      if (!session) return;
-      preview.textContent = JSON.stringify(session.contenido || {}, null, 2);
-      preview.classList.add('show');
-      preview.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-    window.previewJson = previewJson;
+function downloadCSV(csv,name) {
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=name+'_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();URL.revokeObjectURL(url);
+  toast('CSV descargado','ok');
+}
 
-    document.getElementById('createBtn').addEventListener('click', createSession);
-    document.getElementById('resetBtn').addEventListener('click', resetForm);
-    adminLoginBtn.addEventListener('click', async () => {
-      const password = adminPassword.value;
-      if (!password) {
-        setGateMessage('Ingresa tu contraseña de administrador.');
-        return;
-      }
-
-      setGateLoading(true);
-      setGateMessage('');
-      try {
-        await auth.signInWithEmailAndPassword(OWNER_ADMIN_EMAIL, password);
-      } catch (error) {
-        console.error('[lecturas/admin/login]', error);
-        setGateLoading(false);
-        setGateMessage('No se pudo abrir el panel. Verifica tu contraseña docente.');
-      }
-    });
-    adminPassword.addEventListener('keydown', event => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        adminLoginBtn.click();
-      }
-    });
-    gateSignOutBtn.addEventListener('click', async () => {
-      await auth.signOut();
-    });
-    document.getElementById('logoutBtn').addEventListener('click', async () => {
-      await auth.signOut();
-      showLoginGate();
-    });
-
-    auth.onAuthStateChanged(async (user) => {
-      if (!user) {
-        const notice = pendingGateNotice;
-        pendingGateNotice = null;
-        showLoginGate(notice || '');
-        return;
-      }
-
-      const access = await getExclusiveAdminAccess(user);
-      if (!access.allowed) {
-        pendingGateNotice = access.reason === 'missing-role'
-          ? 'La cuenta administradora existe, pero todavía no tiene permisos activos en Firebase para Lecturas.'
-          : 'Esta sección de administrador está reservada solo para la cuenta privada de Francisco Núñez.';
-        await auth.signOut();
-        return;
-      }
-
-      currentUser = user;
-      showAdminApp();
-      await loadStudents();
-      await loadStatsAndSessions();
-    });
-  </script>
+/* ====================================================================
+   GLOBAL BINDINGS
+   ==================================================================== */
+window.showSection=showSection;
+window.openModal=openModal;
+window.closeModal=closeModal;
+window.createStudent=createStudent;
+window.bulkCreateStudents=bulkCreateStudents;
+window.editStudent=editStudent;
+window.saveStudentEdit=saveStudentEdit;
+window.resetPassword=resetPassword;
+window.copyCredentials=copyCredentials;
+window.deleteStudent=deleteStudent;
+window.viewStudentDetail=viewStudentDetail;
+window.renderStudents=renderStudents;
+window.toggleSimceField=toggleSimceField;
+window.resetSimceResults=resetSimceResults;
+window.deleteSimceSession=deleteSimceSession;
+window.loadSimceResults=loadSimceResults;
+window.toggleLecSession=toggleLecSession;
+window.deleteLecSession=deleteLecSession;
+window.selectLecReviewSession=selectLecReviewSession;
+window.selectLecStudent=selectLecStudent;
+window.resetLecStrikes=resetLecStrikes;
+window.resetLecStudentFull=resetLecStudentFull;
+window.generateReport=generateReport;
+window.showStudentReport=showStudentReport;
+window.exportSimceCSV=exportSimceCSV;
+window.exportLecturasCSV=exportLecturasCSV;
+</script>
 </body>
 </html>

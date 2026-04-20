@@ -1,98 +1,160 @@
 {
-    "rules": {
-        "plataforma_estudiantes": {
-            "admins": {
-                "$uid": {
-                    ".read": "auth != null && auth.uid === $uid"
-                },
-                ".write": false
-            },
-            "docentes": {
-                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-                ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-                "$uid": {
-                    ".read": "auth != null && auth.uid === $uid"
-                }
-            },
-            "estudiantes": {
-                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-                "$uid": {
-                    ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
-                    ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
-                }
-            },
-            "sesiones": {
-                ".read": "auth != null",
-                ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
-            },
-            "respuestas": {
-                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-                "$sesionId": {
-                    "$uid": {
-                        ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
-                        ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
-                    }
-                }
-            },
-            "resultados": {
-                ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-                "$sesionId": {
-                    ".read": "auth != null",
-                    "$uid": {
-                        ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
-                    }
-                }
-            },
-            "ranking": {
-                ".read": "auth != null",
-                "$sesionId": {
-                    "$curso": {
-                        "$uid": {
-                            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
-                        }
-                    }
-                }
-            },
-            "mensajes": {
-                ".read": "auth != null",
-                ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
-            }
-        },
-        "plataforma_lecturas": {
-            "admins": {
-                "$uid": {
-                    ".read": "auth != null && auth.uid === $uid"
-                },
-                ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)"
-            },
-            "sesiones": {
-                "$sesionId": {
-                    ".read": "auth != null && ((root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true) || root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true)",
-                    ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)"
-                }
-            },
-            "asignaciones": {
-                "$uid": {
-                    ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)",
-                    ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)"
-                }
-            },
-            "respuestas": {
-                "$sesionId": {
-                    "$uid": {
-                        ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)",
-                        ".write": "auth != null && ((auth.uid === $uid && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true) || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)"
-                    }
-                }
-            },
-            "resultados": {
-                "$sesionId": {
-                    "$uid": {
-                        ".read": "auth != null && ((auth.uid === $uid && root.child('plataforma_lecturas/sesiones').child($sesionId).child('resultados_visibles').val() === true) || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)",
-                        ".write": "auth != null && ((auth.uid === $uid && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true) || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_lecturas/admins').child(auth.uid).val() === true)"
-                    }
-                }
-            }
+  "rules": {
+
+    "users": {
+      ".read": "auth != null",
+      ".indexOn": ["username", "email"],
+      "$uid": {
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+
+    "portafolios": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+      }
+    },
+
+    "verified_payments": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": false,
+      ".indexOn": ["email", "paymentId", "uid"]
+    },
+
+    "courses": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      ".indexOn": ["userId", "courseName", "period"]
+    },
+
+    "counters": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+
+    "logs": {
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
+      ".write": "auth != null",
+      ".indexOn": ["timestamp", "userId", "action"]
+    },
+
+    "plataforma_estudiantes": {
+      "admins": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
         }
-    }
+      },
+      "docentes": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "estudiantes": {
+        ".read": "auth != null",
+        ".indexOn": ["curso"],
+        "$uid": {
+          ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+        }
+      },
+      "sesiones": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+      },
+      "respuestas": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "$sesionId": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+          }
+        }
+      },
+      "resultados": {
+        ".read": "auth != null",
+        "$sesionId": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+          }
+        }
+      },
+      "ranking": {
+        ".read": "auth != null",
+        "$sesionId": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+          "$curso": {
+            "$uid": {
+              ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+            }
+          }
+        }
+      },
+      "avatar": {
+        ".read": "auth != null",
+        "$uid": {
+          ".read": "auth != null",
+          ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+        }
+      },
+      "tareas": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "$tareaId": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+          }
+        }
+      },
+      "mensajes": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+      }
+    },
+
+    "plataforma_lecturas": {
+      ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+      ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+      "admins": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "sesiones": {
+        "$sesionId": {
+          ".read": "auth != null && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true"
+        }
+      },
+      "asignaciones": {
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
+      },
+      "respuestas": {
+        "$sesionId": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true"
+          }
+        }
+      },
+      "resultados": {
+        "$sesionId": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid && root.child('plataforma_lecturas/sesiones').child($sesionId).child('resultados_visibles').val() === true",
+            ".write": "auth != null && auth.uid === $uid && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true"
+          }
+        }
+      }
+    },
+
+    ".read": false,
+    ".write": false
+  }
 }

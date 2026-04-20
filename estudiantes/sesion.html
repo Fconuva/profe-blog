@@ -2065,10 +2065,17 @@
     let tiempoLimite = 0; // minutes, 0 = unlimited
     let strikeMonitorActive = false;
     let lockout = false;
+    let focusWarnTimer = null;
+    let focusWarnInterval = null;
+    let focusLostAt = null;
+    let focusLossActive = false;
+    let strikeCountedForFocusLoss = false;
     let anticopiaActivo = true;   // from session config
     let notasEvaluadas = true;    // from session config
     let envioParcial = false;     // from session config
     let autoEncuesta = false;     // true if all questions are ENCUESTA
+
+    const BLUR_STRIKE_DELAY_MS = 5000;
 
     // ==================== INIT ====================
     // NIVEL 4: Deterministic option shuffle per student+question
@@ -3420,64 +3427,141 @@
     }
 
     // ==================== STRIKE SYSTEM ====================
-    let focusWarnTimer = null;
-    let focusLostAt = null;
+    function canMonitorStrike() {
+        return sessionStarted && !isSubmitted && !lockout;
+    }
+
+    function showFocusWarning(secondsRemaining) {
+        const overlay = document.getElementById('focusWarnOverlay');
+        const countdown = document.getElementById('focusCountdown');
+
+        if (countdown && Number.isFinite(secondsRemaining)) {
+            countdown.textContent = secondsRemaining + 's';
+        }
+        if (overlay) {
+            overlay.classList.add('show');
+        }
+    }
+
+    function hideFocusWarning() {
+        const overlay = document.getElementById('focusWarnOverlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+        }
+    }
+
+    function clearBlurStrikeTimers() {
+        if (focusWarnTimer) {
+            clearTimeout(focusWarnTimer);
+            focusWarnTimer = null;
+        }
+        if (focusWarnInterval) {
+            clearInterval(focusWarnInterval);
+            focusWarnInterval = null;
+        }
+        hideFocusWarning();
+    }
+
+    function startBlurGracePeriod() {
+        clearBlurStrikeTimers();
+
+        let secondsRemaining = Math.ceil(BLUR_STRIKE_DELAY_MS / 1000);
+        showFocusWarning(secondsRemaining);
+
+        focusWarnInterval = setInterval(() => {
+            secondsRemaining--;
+            if (secondsRemaining > 0) {
+                showFocusWarning(secondsRemaining);
+            } else {
+                clearInterval(focusWarnInterval);
+                focusWarnInterval = null;
+            }
+        }, 1000);
+
+        focusWarnTimer = setTimeout(() => {
+            focusWarnTimer = null;
+            if (focusWarnInterval) {
+                clearInterval(focusWarnInterval);
+                focusWarnInterval = null;
+            }
+            hideFocusWarning();
+
+            if (
+                focusLossActive &&
+                !strikeCountedForFocusLoss &&
+                !document.hidden &&
+                !document.hasFocus() &&
+                canMonitorStrike()
+            ) {
+                registerStrike();
+            }
+        }, BLUR_STRIKE_DELAY_MS);
+    }
 
     function activateStrikeMonitor() {
         if (strikeMonitorActive) return;
         strikeMonitorActive = true;
 
         document.addEventListener('visibilitychange', handleVisibilityStrike);
-        // NIVEL 1: Aggressive blur detection (catches split-screen)
         window.addEventListener('blur', handleBlurStrike);
         window.addEventListener('focus', handleFocusReturn);
     }
 
     function handleVisibilityStrike() {
-        if (document.hidden && sessionStarted && !isSubmitted && !lockout) {
-            registerStrike();
+        if (!canMonitorStrike()) return;
+
+        if (document.hidden) {
+            if (!focusLossActive) {
+                focusLossActive = true;
+                strikeCountedForFocusLoss = false;
+                focusLostAt = Date.now();
+            }
+
+            clearBlurStrikeTimers();
+
+            if (!strikeCountedForFocusLoss) {
+                registerStrike();
+            }
+            return;
         }
+
+        handleFocusReturn();
     }
 
     function handleBlurStrike() {
-        if (!sessionStarted || isSubmitted || lockout) return;
-        focusLostAt = Date.now();
-        // Show warning overlay immediately
-        const overlay = document.getElementById('focusWarnOverlay');
-        overlay.classList.add('show');
-        let countdown = 5;
-        document.getElementById('focusCountdown').textContent = countdown + 's';
-        // Give 5 seconds grace before strike
-        if (focusWarnTimer) clearInterval(focusWarnTimer);
-        focusWarnTimer = setInterval(() => {
-            countdown--;
-            document.getElementById('focusCountdown').textContent = countdown + 's';
-            if (countdown <= 0) {
-                clearInterval(focusWarnTimer);
-                focusWarnTimer = null;
-                if (!document.hasFocus() && sessionStarted && !isSubmitted && !lockout) {
-                    registerStrike();
-                    overlay.classList.remove('show');
-                }
-            }
-        }, 1000);
+        if (!canMonitorStrike() || document.hidden) return;
+
+        if (!focusLossActive) {
+            focusLossActive = true;
+            strikeCountedForFocusLoss = false;
+            focusLostAt = Date.now();
+        }
+
+        if (strikeCountedForFocusLoss) return;
+        startBlurGracePeriod();
     }
 
     function handleFocusReturn() {
-        if (focusWarnTimer) { clearInterval(focusWarnTimer); focusWarnTimer = null; }
-        document.getElementById('focusWarnOverlay').classList.remove('show');
-        if (focusLostAt) {
+        clearBlurStrikeTimers();
+
+        if (focusLostAt && sessionStarted && currentUser && sessionId) {
             const away = Date.now() - focusLostAt;
-            focusLostAt = null;
-            // Log focus loss to Firebase for admin review
-            if (sessionStarted && away > 2000) {
+            if (away > 2000) {
                 const logRef = db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/focus_log');
                 logRef.push({ lost_at: Date.now() - away, duration_ms: away });
             }
         }
+
+        focusLostAt = null;
+        focusLossActive = false;
+        strikeCountedForFocusLoss = false;
     }
 
     function registerStrike() {
+        if (!canMonitorStrike()) return;
+
+        strikeCountedForFocusLoss = true;
+        clearBlurStrikeTimers();
         strikes++;
 
         // Save strike to Firebase

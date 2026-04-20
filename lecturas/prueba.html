@@ -913,8 +913,11 @@
     let strikeMonitorActive = false;
     let blurStrikeTimer = null;
     let strikeCooldownUntil = 0;
-    let focusPollInterval = null;
+    let focusPollInterval = null; // kept for compatibility, no longer used
     let lastKnownWidth = 0;
+    let focusLossActive = false;
+    let strikeCountedForCurrentLoss = false;
+    const BLUR_GRACE_MS = 1500;
     let questionMenuOpen = false;
 
     function htmlEscape(value) {
@@ -1704,57 +1707,83 @@
       lastKnownWidth = window.innerWidth;
       document.addEventListener('visibilitychange', handleVisibilityStrike);
       window.addEventListener('blur', handleBlurStrike);
-      window.addEventListener('focus', clearPendingBlurStrike);
+      window.addEventListener('focus', handleFocusReturn);
       window.addEventListener('resize', handleResizeStrike);
       window.addEventListener('pagehide', handlePageHide);
-      focusPollInterval = setInterval(pollFocusState, 4000);
     }
 
     function deactivateStrikeMonitor() {
       if (!strikeMonitorActive) return;
       strikeMonitorActive = false;
       clearPendingBlurStrike();
-      if (focusPollInterval) { clearInterval(focusPollInterval); focusPollInterval = null; }
+      focusLossActive = false;
+      strikeCountedForCurrentLoss = false;
       document.removeEventListener('visibilitychange', handleVisibilityStrike);
       window.removeEventListener('blur', handleBlurStrike);
-      window.removeEventListener('focus', clearPendingBlurStrike);
+      window.removeEventListener('focus', handleFocusReturn);
       window.removeEventListener('resize', handleResizeStrike);
       window.removeEventListener('pagehide', handlePageHide);
     }
 
-    function scheduleStrikeCheck() {
+    function handleVisibilityStrike() {
       if (!strikeMonitorActive || isSubmitted) return;
+      if (document.hidden) {
+        // Tab switch away — one strike per focus-loss event
+        if (!focusLossActive) {
+          focusLossActive = true;
+          strikeCountedForCurrentLoss = false;
+        }
+        clearPendingBlurStrike();
+        if (!strikeCountedForCurrentLoss) {
+          registerStrike();
+        }
+      } else {
+        handleFocusReturn();
+      }
+    }
+
+    function handleBlurStrike() {
+      // Window lost focus but tab is still visible (switched to another app/window)
+      if (!strikeMonitorActive || isSubmitted || document.hidden) return;
+      if (focusLossActive) return; // already tracking this event
+      focusLossActive = true;
+      strikeCountedForCurrentLoss = false;
       clearPendingBlurStrike();
       blurStrikeTimer = setTimeout(function() {
-        if (document.hidden || !document.hasFocus()) registerStrike();
-      }, 3500);
+        blurStrikeTimer = null;
+        if (!document.hidden && !document.hasFocus() &&
+            focusLossActive && !strikeCountedForCurrentLoss &&
+            strikeMonitorActive && !isSubmitted) {
+          registerStrike();
+        }
+      }, BLUR_GRACE_MS);
     }
 
-    function handleVisibilityStrike() {
-      if (document.hidden) scheduleStrikeCheck();
-      else clearPendingBlurStrike();
+    function handleFocusReturn() {
+      clearPendingBlurStrike();
+      focusLossActive = false;
+      strikeCountedForCurrentLoss = false;
     }
-
-    function handleBlurStrike() { scheduleStrikeCheck(); }
 
     function handleResizeStrike() {
       if (!strikeMonitorActive || isSubmitted) return;
       var newWidth = window.innerWidth;
       var threshold = screen.availWidth * 0.65;
       if (newWidth < threshold && lastKnownWidth >= threshold) {
-        scheduleStrikeCheck();
+        if (!focusLossActive || !strikeCountedForCurrentLoss) {
+          focusLossActive = true;
+          strikeCountedForCurrentLoss = false;
+          registerStrike();
+        }
       }
       lastKnownWidth = newWidth;
     }
 
     function handlePageHide() {
       if (!strikeMonitorActive || isSubmitted) return;
-      scheduleStrikeCheck();
-    }
-
-    function pollFocusState() {
-      if (!strikeMonitorActive || isSubmitted) return;
-      if (document.hidden || !document.hasFocus()) {
+      if (!focusLossActive || !strikeCountedForCurrentLoss) {
+        focusLossActive = true;
+        strikeCountedForCurrentLoss = false;
         registerStrike();
       }
     }
@@ -1790,7 +1819,8 @@
       clearPendingBlurStrike();
       const now = Date.now();
       if (now < strikeCooldownUntil || isSubmitted || !currentUser) return;
-      strikeCooldownUntil = now + 6000;
+      strikeCooldownUntil = now + 1500; // small safety margin against races
+      strikeCountedForCurrentLoss = true;
       antiCopyStrikes += 1;
       updateStrikeUi();
       showStrikeModal();
@@ -1961,6 +1991,27 @@
         || (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
         e.preventDefault();
         alert('No se permite abrir herramientas de desarrollo durante la evaluación.');
+        return false;
+      }
+    });
+    document.addEventListener('keyup', function(e) {
+      if (e.key === 'PrintScreen' && !isSubmitted && isAntiCopyEnabled()) {
+        e.preventDefault();
+        navigator.clipboard.writeText('').catch(function(){});
+      }
+    });
+
+    /* ── Detect window.open / popups (extra layer) ── */
+    (function() {
+      var origOpen = window.open;
+      window.open = function() {
+        if (!isSubmitted && isAntiCopyEnabled()) {
+          alert('No puedes abrir ventanas emergentes durante la evaluación.');
+          return null;
+        }
+        return origOpen.apply(window, arguments);
+      };
+    })(   alert('No se permite abrir herramientas de desarrollo durante la evaluación.');
         return false;
       }
     });

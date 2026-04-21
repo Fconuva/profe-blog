@@ -1085,6 +1085,7 @@
       if (!uiState || typeof uiState !== 'object') uiState = { crossouts: {} };
       const legacyCrossouts = uiState.crossouts || ((uiState.strikes && typeof uiState.strikes === 'object' && !Array.isArray(uiState.strikes)) ? uiState.strikes : {});
       uiState.crossouts = legacyCrossouts || {};
+      if (!isCrossoutEnabled()) uiState.crossouts = {};
     }
 
     function sanitizeUiState() {
@@ -1092,7 +1093,13 @@
       return { crossouts: uiState.crossouts || {} };
     }
 
+    function isCrossoutEnabled() {
+      const currentSessionId = String((sessionData && sessionData.id) || sessionId || '').toLowerCase();
+      return !currentSessionId.startsWith('maus-nm4') && !currentSessionId.startsWith('pedro-paramo-nm3');
+    }
+
     function isOptionStruck(itemId, value) {
+      if (!isCrossoutEnabled()) return false;
       ensureUiState();
       return !!(uiState.crossouts[itemId] && uiState.crossouts[itemId][value]);
     }
@@ -1294,6 +1301,7 @@
       const type = getType(item);
       const selected = answers[item.id];
       const options = normalizeChoiceOptions(item);
+      const crossoutEnabled = isCrossoutEnabled();
       const itemId = escapeJsSingleQuoted(item.id);
       let body = '';
       if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
@@ -1302,14 +1310,19 @@
         var bannerIcon = (type === 'verdadero_falso' || type === 'true_false') ? '⚖️' : '📝';
         var bannerText = (type === 'verdadero_falso' || type === 'true_false')
           ? '<strong>Verdadero o Falso.</strong> Lee el enunciado y selecciona la opción correcta.'
-          : '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa. Puedes usar el botón <em>Tachar</em> para descartar opciones que creas incorrectas.';
+          : (crossoutEnabled
+            ? '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa. Puedes usar el botón <em>Tachar</em> para descartar opciones que creas incorrectas.'
+            : '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa.');
         body = '<div class="instruction-banner ' + bannerColor + '"><span class="ib-icon">' + bannerIcon + '</span><div class="ib-body">' + bannerText + '</div></div>';
         body += '<div class="option-list">' + resolvedOptions.map(function(option) {
           const selectedClass = selected === option.letra ? ' selected' : '';
-          const struckClass = isOptionStruck(item.id, option.letra) ? ' struck' : '';
+          const struckClass = crossoutEnabled && isOptionStruck(item.id, option.letra) ? ' struck' : '';
           const optionValue = escapeJsSingleQuoted(option.letra);
           const strikeLabel = isOptionStruck(item.id, option.letra) ? 'Quitar' : 'Tachar';
-          return '<div class="option' + selectedClass + struckClass + '"><div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')"><span class="letter">' + htmlEscape(option.letra) + '</span><span class="option-text">' + htmlEscape(option.texto) + '</span></div><div role="button" tabindex="0" class="strike-toggle' + (isOptionStruck(item.id, option.letra) ? ' active' : '') + '" data-strike-item="' + htmlEscape(item.id) + '" data-strike-option="' + htmlEscape(option.letra) + '">' + strikeLabel + '</div></div>';
+          const strikeControl = crossoutEnabled
+            ? '<div role="button" tabindex="0" class="strike-toggle' + (isOptionStruck(item.id, option.letra) ? ' active' : '') + '" data-strike-item="' + htmlEscape(item.id) + '" data-strike-option="' + htmlEscape(option.letra) + '">' + strikeLabel + '</div>'
+            : '';
+          return '<div class="option' + selectedClass + struckClass + '"><div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')"><span class="letter">' + htmlEscape(option.letra) + '</span><span class="option-text">' + htmlEscape(option.texto) + '</span></div>' + strikeControl + '</div>';
         }).join('') + '</div>';
       } else if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') {
         var pts = getItemPoints(item);
@@ -1501,6 +1514,7 @@
         event.preventDefault();
         event.stopPropagation();
       }
+      if (!isCrossoutEnabled()) return;
       if (isSubmitted) return;
       ensureUiState();
       if (!uiState.crossouts[itemId] || typeof uiState.crossouts[itemId] !== 'object') uiState.crossouts[itemId] = {};

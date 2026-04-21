@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Panel — Plataforma Educativa</title>
+  <title>Admin Lecturas — Plataforma Educativa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -167,7 +167,7 @@
         <h2>Panel Administrador</h2>
       </div>
     </div>
-    <p class="gate-sub">Panel unificado de administración para SIMCE y Lecturas. Solo la cuenta administradora configurada puede acceder.</p>
+    <p class="gate-sub">Panel privado de administración para Lecturas. Solo la cuenta administradora configurada puede acceder.</p>
     <div class="gate-lock">
       <span class="label">Cuenta autorizada</span>
       <span class="value" id="ownerLabel"></span>
@@ -187,7 +187,7 @@
 <!-- ====== ADMIN APP ====== -->
 <div class="hidden" id="adminApp">
   <div class="header">
-    <h1>Panel Administrador</h1>
+    <h1>Panel Administrador Lecturas</h1>
     <span class="admin-name" id="adminName"></span>
     <button id="logoutBtn">Cerrar sesión</button>
   </div>
@@ -197,7 +197,6 @@
       <a href="#" class="active" data-section="overview"><span class="icon">📊</span>Panel Principal</a>
       <a href="#" data-section="students"><span class="icon">👥</span>Estudiantes</a>
       <div class="sep"></div>
-      <a href="#" data-section="simce"><span class="icon">📚</span>SIMCE</a>
       <a href="#" data-section="lecturas"><span class="icon">📖</span>Lecturas</a>
       <div class="sep"></div>
       <a href="#" data-section="reports"><span class="icon">📋</span>Reportes</a>
@@ -210,7 +209,7 @@
         <div class="stat-row" id="overviewStats"></div>
         <div class="panel-table">
           <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">Actividad Reciente</h3>
-          <table><thead><tr><th>Estudiante</th><th>Plataforma</th><th>Sesión</th><th>Logro</th><th>Fecha</th></tr></thead>
+          <table><thead><tr><th>Estudiante</th><th>Sesión</th><th>Estado</th><th>Progreso</th><th>Última actividad</th></tr></thead>
           <tbody id="recentActivity"></tbody></table>
         </div>
       </div>
@@ -233,7 +232,7 @@
       </div>
 
       <!-- ===== SIMCE ===== -->
-      <div class="section" id="sec-simce">
+      <div class="section hidden" id="sec-simce">
         <h2>SIMCE — Sesiones y Resultados</h2>
         <div class="panel-table" style="margin-bottom:20px">
           <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#334155">Sesiones SIMCE</h3>
@@ -264,11 +263,44 @@
         <div class="search-bar">
           <select id="lecReviewSession" onchange="onLecReviewChange()"></select>
           <select id="lecReviewCourse" onchange="renderLecReviewPanel()"></select>
+          <select id="lecReviewStatus" onchange="renderLecReviewPanel()">
+            <option value="">Todos los estados</option>
+            <option value="submitted">Terminadas</option>
+            <option value="progress">En progreso</option>
+            <option value="pending">Pendientes</option>
+          </select>
+          <select id="lecReviewResponseState" onchange="renderLecReviewPanel()">
+            <option value="">Con o sin respuestas</option>
+            <option value="answered">Con respuestas</option>
+            <option value="not-answered">Sin respuestas</option>
+          </select>
+          <select id="lecReviewStrikeFilter" onchange="renderLecReviewPanel()">
+            <option value="">Strikes: todos</option>
+            <option value="with-strikes">Con strikes</option>
+            <option value="no-strikes">Sin strikes</option>
+            <option value="blocked">Bloqueadas por strikes</option>
+          </select>
+          <select id="lecReviewProgressFilter" onchange="renderLecReviewPanel()">
+            <option value="">Todo el progreso</option>
+            <option value="0">0%</option>
+            <option value="1-49">1% a 49%</option>
+            <option value="50-99">50% a 99%</option>
+            <option value="100">100%</option>
+          </select>
+          <select id="lecReviewSort" onchange="renderLecReviewPanel()">
+            <option value="course-name">Ordenar: curso y nombre</option>
+            <option value="progress-desc">Mayor progreso</option>
+            <option value="submitted-desc">Terminadas primero</option>
+            <option value="last-activity-desc">Actividad reciente</option>
+            <option value="score-desc">Mejor puntaje</option>
+            <option value="strikes-desc">Más strikes</option>
+            <option value="name-asc">Nombre A-Z</option>
+          </select>
           <input type="text" id="lecReviewSearch" placeholder="Buscar nombre, RUT..." oninput="renderLecReviewPanel()">
         </div>
         <div class="mini-grid" id="lecReviewSummary"></div>
         <div class="panel-table">
-          <table><thead><tr><th>Estudiante</th><th>Curso</th><th>RUT</th><th>Estado</th><th>Progreso</th><th>Correctas</th><th>Puntaje</th><th>Strikes</th><th>Acciones</th></tr></thead>
+          <table><thead><tr><th>Estudiante</th><th>Curso</th><th>RUT</th><th>Estado</th><th>Progreso</th><th>Actividad</th><th>Strikes</th><th>Acciones</th></tr></thead>
           <tbody id="lecReviewBody"></tbody></table>
         </div>
         <div class="review-detail" id="lecReviewDetail">
@@ -283,15 +315,15 @@
         <div class="stat-row" style="margin-bottom:24px">
           <div class="stat-card" style="cursor:pointer" onclick="generateReport('session')">
             <div class="label">📄 Reporte por Sesión</div>
-            <div class="sub" style="margin-top:6px">Resultados detallados de SIMCE con niveles de logro</div>
+            <div class="sub" style="margin-top:6px">Avance, entregas, strikes y promedio por sesión de Lecturas</div>
           </div>
           <div class="stat-card" style="cursor:pointer" onclick="generateReport('course')">
             <div class="label">📊 Reporte por Curso</div>
-            <div class="sub" style="margin-top:6px">Comparación entre cursos con promedios y distribución</div>
+            <div class="sub" style="margin-top:6px">Comparación de avance y desempeño entre cursos en Lecturas</div>
           </div>
           <div class="stat-card" style="cursor:pointer" onclick="generateReport('student')">
             <div class="label">👤 Reporte Individual</div>
-            <div class="sub" style="margin-top:6px">Progreso individual a lo largo de todas las sesiones</div>
+            <div class="sub" style="margin-top:6px">Trayectoria individual del estudiante en todas las sesiones de Lecturas</div>
           </div>
           <div class="stat-card" style="cursor:pointer" onclick="exportLecturasCSV()">
             <div class="label">📥 CSV Lecturas</div>
@@ -529,7 +561,7 @@ function initMobileNav() {
   const nav=document.getElementById('mobileNav');
   const links=[
     {id:'overview',icon:'📊',label:'Panel'},{id:'students',icon:'👥',label:'Estudiantes'},
-    {id:'simce',icon:'📚',label:'SIMCE'},{id:'lecturas',icon:'📖',label:'Lecturas'},
+    {id:'lecturas',icon:'📖',label:'Lecturas'},
     {id:'reports',icon:'📋',label:'Reportes'}
   ];
   nav.innerHTML=links.map(l=>'<a href="#" data-section="'+l.id+'" class="'+(l.id==='overview'?'active':'')+'" onclick="showSection(\''+l.id+'\',this)">'+l.icon+' '+l.label+'</a>').join('');
@@ -540,20 +572,17 @@ function initMobileNav() {
    ==================================================================== */
 async function loadAllData() {
   try {
-    const [estS,simSesS,simResS,simRespS,lecSesS,lecRespS,lecResS,lecAssS] = await Promise.all([
+    const [estS,lecSesS,lecRespS,lecResS,lecAssS] = await Promise.all([
       db.ref(STUDENT_BASE+'/estudiantes').once('value'),
-      db.ref(STUDENT_BASE+'/sesiones').once('value'),
-      db.ref(STUDENT_BASE+'/resultados').once('value'),
-      db.ref(STUDENT_BASE+'/respuestas').once('value'),
       db.ref(LECTURAS_BASE+'/sesiones').once('value'),
       db.ref(LECTURAS_BASE+'/respuestas').once('value'),
       db.ref(LECTURAS_BASE+'/resultados').once('value'),
       db.ref(LECTURAS_BASE+'/asignaciones').once('value')
     ]);
     studentsMap=estS.val()||{};
-    simceSessions=simSesS.val()||{};
-    simceResults=simResS.val()||{};
-    simceResponses=simRespS.val()||{};
+    simceSessions={};
+    simceResults={};
+    simceResponses={};
     lecSessions=lecSesS.val()||{};
     lecResponses=lecRespS.val()||{};
     lecResults=lecResS.val()||{};
@@ -579,8 +608,6 @@ function populateCourseFilters() {
 function renderAll() {
   renderOverview();
   renderStudents();
-  renderSimceSessions();
-  populateSimceDropdown();
   renderLecSessions();
   updateLecReviewSessionSelect();
   renderLecReviewPanel();
@@ -591,13 +618,17 @@ function renderAll() {
    ==================================================================== */
 function renderOverview() {
   const totalStudents=Object.keys(studentsMap).length;
-  const totalSimce=Object.keys(simceSessions).length;
   const totalLec=Object.keys(lecSessions).length;
-  let simceSubmissions=0;
-  for(const sesId of Object.keys(simceResults)) simceSubmissions+=Object.keys(simceResults[sesId]).length;
   let lecSubmissions=0;
   for(const sesId of Object.keys(lecResults)) lecSubmissions+=Object.keys(lecResults[sesId]).length;
   const perfilComplete=Object.values(studentsMap).filter(s=>s.perfil_completo).length;
+  const allLecRows=getAllLecturasReviewRows();
+  const assignmentsC=allLecRows.length;
+  const responseC=allLecRows.filter(r=>r.hasAnswers).length;
+  const progressC=allLecRows.filter(r=>r.status==='progress').length;
+  const strikeC=allLecRows.filter(r=>r.strikes>0).length;
+  const blockedC=allLecRows.filter(r=>r.blockedByStrikes).length;
+  const avgProgress=assignmentsC?Math.round(allLecRows.reduce((sum,row)=>sum+row.progressPct,0)/assignmentsC):0;
 
   // Per-course counts
   const courseBreakdown=coursesAvailable.map(c=>{
@@ -607,30 +638,23 @@ function renderOverview() {
 
   document.getElementById('overviewStats').innerHTML=
     '<div class="stat-card"><div class="label">Estudiantes</div><div class="value">'+totalStudents+'</div><div class="sub">'+courseBreakdown+'</div></div>'
-    +'<div class="stat-card"><div class="label">Sesiones SIMCE</div><div class="value">'+totalSimce+'</div><div class="sub">'+Object.values(simceSessions).filter(s=>s.activa!==false).length+' activas</div></div>'
     +'<div class="stat-card"><div class="label">Sesiones Lecturas</div><div class="value">'+totalLec+'</div><div class="sub">'+Object.values(lecSessions).filter(s=>s.activa!==false).length+' activas</div></div>'
-    +'<div class="stat-card"><div class="label">Envíos SIMCE</div><div class="value">'+simceSubmissions+'</div></div>'
+    +'<div class="stat-card"><div class="label">Asignaciones</div><div class="value">'+assignmentsC+'</div><div class="sub">'+responseC+' con respuestas</div></div>'
     +'<div class="stat-card"><div class="label">Envíos Lecturas</div><div class="value">'+lecSubmissions+'</div></div>'
+    +'<div class="stat-card"><div class="label">En progreso</div><div class="value">'+progressC+'</div><div class="sub">'+blockedC+' bloqueadas</div></div>'
+    +'<div class="stat-card"><div class="label">Con strikes</div><div class="value">'+strikeC+'</div><div class="sub">'+avgProgress+'% de progreso medio</div></div>'
     +'<div class="stat-card"><div class="label">Perfiles completos</div><div class="value">'+perfilComplete+'/'+totalStudents+'</div><div class="sub">'+(totalStudents?Math.round(perfilComplete/totalStudents*100):0)+'%</div></div>';
 
-  // Recent activity (both platforms)
-  const activity=[];
-  for(const[sesId,uidMap] of Object.entries(simceResults)){
-    for(const[uid,r] of Object.entries(uidMap)){
-      activity.push({nombre:(studentsMap[uid]||{}).nombre||'Desc.',plataforma:'SIMCE',sesion:(simceSessions[sesId]||{}).titulo||sesId,pct:r.porcentaje||0,ts:r.timestamp||0});
-    }
-  }
-  for(const[sesId,uidMap] of Object.entries(lecResults)){
-    for(const[uid,r] of Object.entries(uidMap)){
-      activity.push({nombre:(studentsMap[uid]||{}).nombre||'Desc.',plataforma:'Lecturas',sesion:(lecSessions[sesId]||{}).titulo||sesId,pct:r.porcentaje||0,ts:r.submitted_at||r.timestamp||0});
-    }
-  }
-  activity.sort((a,b)=>b.ts-a.ts);
+  const activity=allLecRows.filter(r=>r.lastActivity).sort((a,b)=>b.lastActivity-a.lastActivity);
   const tbody=document.getElementById('recentActivity');
   tbody.innerHTML=activity.slice(0,12).map(a=>{
-    const cls=a.pct>=80?'badge-blue':a.pct>=60?'badge-green':a.pct>=40?'badge-amber':'badge-red';
-    const date=a.ts?new Date(a.ts).toLocaleDateString('es-CL'):'—';
-    return '<tr><td>'+htmlEsc(a.nombre)+'</td><td><span class="badge badge-teal">'+a.plataforma+'</span></td><td style="font-size:12px">'+htmlEsc(a.sesion)+'</td><td><span class="badge '+cls+'">'+a.pct+'%</span></td><td class="muted">'+date+'</td></tr>';
+    return '<tr>'
+      +'<td>'+htmlEsc(a.student.nombre||a.uid)+'</td>'
+      +'<td style="font-size:12px">'+htmlEsc((a.session&&a.session.titulo)||a.sessionId)+'</td>'
+      +'<td><span class="status-chip '+a.status+'">'+getLecStatusLabel(a)+'</span></td>'
+      +'<td><strong>'+a.answeredCount+'/'+a.totalItems+'</strong><br><span class="muted">'+a.progressPct+'%</span></td>'
+      +'<td class="muted">'+htmlEsc(fmtDate(a.lastActivity))+'</td>'
+      +'</tr>';
   }).join('')||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px">Sin actividad aún</td></tr>';
 }
 
@@ -780,28 +804,20 @@ function viewStudentDetail(uid) {
   document.getElementById('detailStudentName').textContent=s.nombre;
   let html='<p style="font-size:13px;color:#64748b;margin-bottom:16px">RUT: '+htmlEsc(s.rut)+' | Curso: '+htmlEsc(s.curso)+' | Email: '+htmlEsc(rutToEmail(s.rut))+'</p>';
 
-  // SIMCE results
-  html+='<h4 style="font-size:14px;font-weight:700;margin-bottom:8px">Resultados SIMCE</h4>';
-  const simIds=Object.keys(simceSessions);
-  if(simIds.length){
-    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Puntaje</th><th>Nivel</th></tr>';
-    for(const sesId of simIds){
-      const ses=simceSessions[sesId];
-      const r=(simceResults[sesId]||{})[uid];
-      html+='<tr><td style="padding:6px 10px">'+(ses.titulo||sesId)+'</td><td style="text-align:center">'+(r?r.porcentaje+'%':'—')+'</td><td style="text-align:center">'+(r?getLevelBadge(r.porcentaje):'—')+'</td></tr>';
-    }
-    html+='</table>';
-  } else html+='<p class="muted">No hay sesiones SIMCE</p>';
-
-  // Lecturas results
-  html+='<h4 style="font-size:14px;font-weight:700;margin:16px 0 8px">Resultados Lecturas</h4>';
+  html+='<h4 style="font-size:14px;font-weight:700;margin:16px 0 8px">Seguimiento Lecturas</h4>';
   const lecIds=Object.keys(lecSessions);
   if(lecIds.length){
-    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Puntaje</th><th>Estado</th></tr>';
+    html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f8fafc"><th style="padding:6px 10px;text-align:left">Sesión</th><th>Estado</th><th>Progreso</th><th>Puntaje auto</th><th>Strikes</th></tr>';
     for(const sesId of lecIds){
-      const ses=lecSessions[sesId];
-      const r=(lecResults[sesId]||{})[uid];
-      html+='<tr><td style="padding:6px 10px">'+(ses.titulo||sesId)+'</td><td style="text-align:center">'+(r?r.porcentaje+'%':'—')+'</td><td style="text-align:center">'+(r?'<span class="badge badge-green">Entregada</span>':'<span class="badge badge-gray">Pendiente</span>')+'</td></tr>';
+      const row=getLecReviewRows(sesId).find(r=>r.uid===uid);
+      if(!row) continue;
+      html+='<tr>'
+        +'<td style="padding:6px 10px">'+htmlEsc((lecSessions[sesId]||{}).titulo||sesId)+'</td>'
+        +'<td style="text-align:center"><span class="status-chip '+row.status+'">'+getLecStatusLabel(row)+'</span></td>'
+        +'<td style="text-align:center">'+row.answeredCount+'/'+row.totalItems+' · '+row.progressPct+'%</td>'
+        +'<td style="text-align:center">'+(row.scoreEarned===null?'—':row.scoreEarned+'/'+row.scoreTotal+(row.percentage!==null?' · '+row.percentage+'%':''))+'</td>'
+        +'<td style="text-align:center">'+row.strikes+'</td>'
+        +'</tr>';
     }
     html+='</table>';
   } else html+='<p class="muted">No hay sesiones Lecturas</p>';
@@ -1012,6 +1028,27 @@ function getCorrectCounts(result){
   return{correct:d.filter(e=>e.esCorrecta===true).length,total:d.filter(e=>e.autoEvaluable!==false).length};
 }
 
+function getLecStatusLabel(row){
+  return row.status==='submitted'?'Terminada':(row.status==='progress'?'En progreso':'Pendiente');
+}
+
+function sortLecReviewRows(rows,sortKey){
+  const list=rows.slice();
+  const byName=(a,b)=>norm(a.student.nombre||a.uid).localeCompare(norm(b.student.nombre||b.uid),'es');
+  const byCourseName=(a,b)=>{
+    const courseCmp=norm(a.student.curso||'').localeCompare(norm(b.student.curso||''),'es');
+    return courseCmp||byName(a,b);
+  };
+  if(sortKey==='progress-desc') list.sort((a,b)=>(b.progressPct-a.progressPct)||(b.answeredCount-a.answeredCount)||byCourseName(a,b));
+  else if(sortKey==='submitted-desc') list.sort((a,b)=>((b.submitted?1:0)-(a.submitted?1:0))||(b.progressPct-a.progressPct)||((b.submittedAt||0)-(a.submittedAt||0))||byCourseName(a,b));
+  else if(sortKey==='last-activity-desc') list.sort((a,b)=>((b.lastActivity||0)-(a.lastActivity||0))||byCourseName(a,b));
+  else if(sortKey==='score-desc') list.sort((a,b)=>((b.percentage??-1)-(a.percentage??-1))||((b.scoreEarned??-1)-(a.scoreEarned??-1))||byCourseName(a,b));
+  else if(sortKey==='strikes-desc') list.sort((a,b)=>(b.strikes-a.strikes)||((b.blockedByStrikes?1:0)-(a.blockedByStrikes?1:0))||byCourseName(a,b));
+  else if(sortKey==='name-asc') list.sort(byName);
+  else list.sort(byCourseName);
+  return list;
+}
+
 function getLecReviewRows(sessionId) {
   const session=lecSessions[sessionId];if(!session)return[];
   const items=getSessionItems(session);
@@ -1027,19 +1064,24 @@ function getLecReviewRows(sessionId) {
     const started=!!(response&&(response.started_at||Object.keys(answers).length));
     const status=submitted?'submitted':(started?'progress':'pending');
     const answeredCount=result&&Number.isFinite(Number(result.answered_count))?Number(result.answered_count):countAnsweredItems(session,answers);
+    const progressPct=totalItems?Math.round((answeredCount/totalItems)*100):0;
     const strikes=Number(response&&response.strikes);
     const resStrikes=Number(result&&result.strikes);
     const resolvedStrikes=Number.isFinite(strikes)?strikes:(Number.isFinite(resStrikes)?resStrikes:0);
     const cc=getCorrectCounts(result);
     const scoreE=Number(result&&result.puntaje);const scoreT=Number(result&&result.total);const pct=Number(result&&result.porcentaje);
     const manualP=Number(result&&result.manual_pendientes);
+    const startedAt=response&&response.started_at?response.started_at:null;
+    const submittedAt=(response&&response.submitted_at)||(result&&result.submitted_at)||null;
+    const lastSave=response&&response.last_save?response.last_save:null;
+    const lastActivity=submittedAt||lastSave||startedAt||null;
     return{uid,student,response,result,status,submitted,started,answeredCount,totalItems,
+      progressPct,hasAnswers:answeredCount>0,
       strikes:resolvedStrikes,blockedByStrikes:!!((response&&response.bloqueado_por_strikes)||(result&&result.bloqueado_por_strikes)),
       correctCount:cc.correct,correctTotal:cc.total,
       scoreEarned:Number.isFinite(scoreE)?scoreE:null,scoreTotal:Number.isFinite(scoreT)?scoreT:null,
       percentage:Number.isFinite(pct)?pct:null,manualPending:Number.isFinite(manualP)?manualP:0,
-      submittedAt:(response&&response.submitted_at)||(result&&result.submitted_at)||null,
-      lastSave:response&&response.last_save?response.last_save:null,
+      startedAt,submittedAt,lastSave,lastActivity,
       duration:(response&&response.tiempo_transcurrido)||(result&&result.tiempo_transcurrido)||null,
       searchText:norm([student.nombre,student.curso,student.rut].join(' '))};
   }).sort((a,b)=>{
@@ -1047,6 +1089,14 @@ function getLecReviewRows(sessionId) {
     if(cA!==cB)return cA.localeCompare(cB,'es');
     return norm(a.student.nombre||a.uid).localeCompare(norm(b.student.nombre||b.uid),'es');
   });
+}
+
+function getAllLecturasReviewRows() {
+  return Object.keys(lecSessions).flatMap(sessionId=>getLecReviewRows(sessionId).map(row=>({
+    ...row,
+    sessionId,
+    session:lecSessions[sessionId]||null
+  })));
 }
 
 function updateLecReviewSessionSelect() {
@@ -1081,50 +1131,80 @@ function renderLecReviewPanel() {
   const detail=document.getElementById('lecReviewDetail');
   if(!selectedLecSession){
     document.getElementById('lecReviewSummary').innerHTML='';
-    document.getElementById('lecReviewBody').innerHTML='<tr><td colspan="9">Selecciona una sesión.</td></tr>';
+    document.getElementById('lecReviewBody').innerHTML='<tr><td colspan="8">Selecciona una sesión.</td></tr>';
     detail.innerHTML='<h3>Detalle del estudiante</h3><p class="muted">Selecciona una fila.</p>';
     return;
   }
   const allRows=getLecReviewRows(selectedLecSession);
   const search=norm(document.getElementById('lecReviewSearch').value);
   const courseF=document.getElementById('lecReviewCourse').value;
+  const statusF=document.getElementById('lecReviewStatus').value;
+  const responseF=document.getElementById('lecReviewResponseState').value;
+  const strikeF=document.getElementById('lecReviewStrikeFilter').value;
+  const progressF=document.getElementById('lecReviewProgressFilter').value;
+  const sortF=document.getElementById('lecReviewSort').value||'course-name';
   let rows=allRows;
   if(courseF) rows=rows.filter(r=>(r.student.curso||'')===courseF);
   if(search) rows=rows.filter(r=>r.searchText.includes(search));
+  if(statusF) rows=rows.filter(r=>r.status===statusF);
+  if(responseF==='answered') rows=rows.filter(r=>r.hasAnswers);
+  if(responseF==='not-answered') rows=rows.filter(r=>!r.hasAnswers);
+  if(strikeF==='with-strikes') rows=rows.filter(r=>r.strikes>0);
+  if(strikeF==='no-strikes') rows=rows.filter(r=>r.strikes===0);
+  if(strikeF==='blocked') rows=rows.filter(r=>r.blockedByStrikes);
+  if(progressF==='0') rows=rows.filter(r=>r.progressPct===0);
+  if(progressF==='1-49') rows=rows.filter(r=>r.progressPct>0&&r.progressPct<50);
+  if(progressF==='50-99') rows=rows.filter(r=>r.progressPct>=50&&r.progressPct<100);
+  if(progressF==='100') rows=rows.filter(r=>r.progressPct===100);
+  rows=sortLecReviewRows(rows,sortF);
 
   const submittedC=allRows.filter(r=>r.submitted).length;
   const progressC=allRows.filter(r=>r.status==='progress').length;
   const pendingC=allRows.filter(r=>r.status==='pending').length;
   const blockedC=allRows.filter(r=>r.blockedByStrikes).length;
+  const responseC=allRows.filter(r=>r.hasAnswers).length;
+  const strikeC=allRows.filter(r=>r.strikes>0).length;
+  const avgProgress=allRows.length?Math.round(allRows.reduce((sum,row)=>sum+row.progressPct,0)/allRows.length):0;
   const scoredRows=allRows.filter(r=>r.percentage!==null);
   const avgAuto=scoredRows.length?Math.round(scoredRows.reduce((s,r)=>s+r.percentage,0)/scoredRows.length):0;
 
   document.getElementById('lecReviewSummary').innerHTML=[
-    {label:'Asignados',value:allRows.length},{label:'Entregadas',value:submittedC},
+    {label:'Asignados',value:allRows.length},{label:'Visibles',value:rows.length},
+    {label:'Con respuestas',value:responseC},{label:'Terminadas',value:submittedC},
     {label:'En progreso',value:progressC},{label:'Pendientes',value:pendingC},
-    {label:'Bloqueadas',value:blockedC},{label:'Promedio auto',value:scoredRows.length?avgAuto+'%':'—'}
+    {label:'Con strikes',value:strikeC},{label:'Bloqueadas',value:blockedC},
+    {label:'Progreso medio',value:avgProgress+'%'},{label:'Promedio auto',value:scoredRows.length?avgAuto+'%':'—'}
   ].map(e=>'<div class="mini-stat"><span class="label">'+e.label+'</span><span class="value">'+e.value+'</span></div>').join('');
 
   if(selectedLecStudent&&!rows.some(r=>r.uid===selectedLecStudent)) selectedLecStudent='';
 
   document.getElementById('lecReviewBody').innerHTML=rows.length?rows.map(r=>{
-    const statusLabel=r.status==='submitted'?'Entregada':(r.status==='progress'?'En progreso':'Pendiente');
+    const statusLabel=getLecStatusLabel(r);
+    const progressHtml='<strong>'+r.answeredCount+'/'+r.totalItems+' · '+r.progressPct+'%</strong>'
+      +(r.correctCount===null?'':'<br><span class="muted">Correctas: '+r.correctCount+'/'+r.correctTotal+'</span>')
+      +(r.scoreEarned===null?'':'<br><span class="muted">Auto: '+r.scoreEarned+'/'+r.scoreTotal+(r.percentage!==null?' · '+r.percentage+'%':'')+'</span>')
+      +(r.manualPending?'<br><span class="muted">Manual pendientes: '+r.manualPending+'</span>':'');
+    const activityParts=[];
+    if(r.submittedAt) activityParts.push('Envío: '+fmtDate(r.submittedAt));
+    if(r.lastSave&&!r.submittedAt) activityParts.push('Guardado: '+fmtDate(r.lastSave));
+    if(r.startedAt&&!r.lastSave&&!r.submittedAt) activityParts.push('Inicio: '+fmtDate(r.startedAt));
+    if(r.duration) activityParts.push('Tiempo: '+fmtDuration(r.duration));
+    const activityHtml=activityParts.length?activityParts.map(part=>'<span class="muted">'+htmlEsc(part)+'</span>').join('<br>'):'<span class="muted">Sin actividad</span>';
     return '<tr style="'+(r.uid===selectedLecStudent?'background:#eff6ff':'')+'">'
       +'<td><strong>'+htmlEsc(r.student.nombre||r.uid)+'</strong></td>'
       +'<td>'+htmlEsc(r.student.curso||'—')+'</td>'
       +'<td style="font-size:12px">'+htmlEsc(r.student.rut||'—')+'</td>'
       +'<td><span class="status-chip '+r.status+'">'+statusLabel+'</span>'+(r.blockedByStrikes?' <span class="status-chip blocked">Strikes</span>':'')+'</td>'
-      +'<td>'+r.answeredCount+'/'+r.totalItems+'</td>'
-      +'<td>'+(r.correctCount===null?'—':r.correctCount+'/'+r.correctTotal)+'</td>'
-      +'<td>'+(r.scoreEarned===null?'—':r.scoreEarned+'/'+r.scoreTotal+(r.percentage!==null?' · '+r.percentage+'%':''))+'</td>'
-      +'<td>'+r.strikes+'</td>'
+      +'<td>'+progressHtml+'</td>'
+      +'<td>'+activityHtml+'</td>'
+      +'<td>'+(r.strikes>0?'<span class="status-chip blocked" style="background:#fef3c7;color:#92400e">'+r.strikes+'</span>':r.strikes)+'</td>'
       +'<td>'
         +'<button class="btn btn-sm btn-secondary" onclick="selectLecStudent(\''+r.uid+'\')">👁</button> '
         +'<button class="btn btn-sm btn-warn" onclick="resetLecStrikes(\''+r.uid+'\')" title="Reset strikes">🔄</button> '
         +(r.submitted?'<button class="btn btn-sm btn-warn" style="background:#7c3aed" onclick="resetLecReopen(\''+r.uid+'\')" title="Reabrir prueba">🔓</button> ':' ')
         +'<button class="btn btn-sm btn-danger" onclick="resetLecStudentFull(\''+r.uid+'\')" title="Reset total">💥</button>'
       +'</td></tr>';
-  }).join(''):'<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:20px">No hay coincidencias.</td></tr>';
+  }).join(''):'<tr><td colspan="8" style="text-align:center;color:#94a3b8;padding:20px">No hay coincidencias.</td></tr>';
 
   renderLecReviewDetail();
 }
@@ -1162,7 +1242,7 @@ function renderLecReviewDetail() {
       +'<div class="answer-preview">'+htmlEsc(preview)+'</div></div>';
   }).join('');
 
-  const statusLabel=row.status==='submitted'?'Entregada':(row.status==='progress'?'En progreso':'Pendiente');
+  const statusLabel=getLecStatusLabel(row);
   detail.innerHTML='<h3>'+htmlEsc(row.student.nombre||row.uid)+'</h3>'
     +'<p class="muted">'+htmlEsc(session.titulo||selectedLecSession)+' · '+htmlEsc(row.student.curso||'Sin curso')+'</p>'
     +'<div style="margin:8px 0"><span class="status-chip '+row.status+'">'+statusLabel+'</span>'
@@ -1170,11 +1250,12 @@ function renderLecReviewDetail() {
     +(row.submitted?' <button class="btn btn-sm btn-warn" style="background:#7c3aed;margin-left:8px" onclick="resetLecReopen(\''+row.uid+'\')">🔓 Reabrir prueba</button>':'')+'</div>'
     +'<div class="detail-grid">'
     +'<div class="detail-item"><span class="label">RUT</span><span class="value">'+htmlEsc(row.student.rut||'—')+'</span></div>'
-    +'<div class="detail-item"><span class="label">Progreso</span><span class="value">'+row.answeredCount+'/'+row.totalItems+'</span></div>'
+    +'<div class="detail-item"><span class="label">Progreso</span><span class="value">'+row.answeredCount+'/'+row.totalItems+' · '+row.progressPct+'%</span></div>'
     +'<div class="detail-item"><span class="label">Correctas</span><span class="value">'+(row.correctCount===null?'—':row.correctCount+'/'+row.correctTotal)+'</span></div>'
     +'<div class="detail-item"><span class="label">Puntaje auto</span><span class="value">'+(row.scoreEarned===null?'—':row.scoreEarned+'/'+row.scoreTotal+(row.percentage!==null?' · '+row.percentage+'%':''))+'</span></div>'
     +'<div class="detail-item"><span class="label">Manual pendientes</span><span class="value">'+row.manualPending+'</span></div>'
     +'<div class="detail-item"><span class="label">Strikes</span><span class="value">'+row.strikes+'</span></div>'
+    +'<div class="detail-item"><span class="label">Inicio</span><span class="value">'+htmlEsc(fmtDate(row.startedAt))+'</span></div>'
     +'<div class="detail-item"><span class="label">Último guardado</span><span class="value">'+htmlEsc(fmtDate(row.lastSave))+'</span></div>'
     +'<div class="detail-item"><span class="label">Envío</span><span class="value">'+htmlEsc(fmtDate(row.submittedAt))+'</span></div>'
     +'<div class="detail-item"><span class="label">Tiempo</span><span class="value">'+htmlEsc(fmtDuration(row.duration))+'</span></div>'
@@ -1266,50 +1347,53 @@ function generateReport(type) {
 }
 
 function generateSessionReport(output) {
-  let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión (SIMCE)</h3>';
-  for(const[sesId,ses] of Object.entries(simceSessions)){
-    const results=simceResults[sesId]||{};
-    const entries=Object.entries(results);
-    if(!entries.length) continue;
-    let totalPct=0;
-    const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
-    entries.forEach(([,r])=>{totalPct+=r.porcentaje||0;levels[getLevel(r.porcentaje||0)]++;});
-    const avg=Math.round(totalPct/entries.length);
+  let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión (Lecturas)</h3>';
+  for(const[sesId,ses] of Object.entries(lecSessions)){
+    const rows=getLecReviewRows(sesId);
+    if(!rows.length) continue;
+    const submittedC=rows.filter(r=>r.submitted).length;
+    const progressC=rows.filter(r=>r.status==='progress').length;
+    const pendingC=rows.filter(r=>r.status==='pending').length;
+    const strikeC=rows.filter(r=>r.strikes>0).length;
+    const blockedC=rows.filter(r=>r.blockedByStrikes).length;
+    const avgProgress=rows.length?Math.round(rows.reduce((sum,row)=>sum+row.progressPct,0)/rows.length):0;
+    const scoredRows=rows.filter(r=>r.percentage!==null);
+    const avgAuto=scoredRows.length?Math.round(scoredRows.reduce((sum,row)=>sum+row.percentage,0)/scoredRows.length):0;
     html+='<div style="margin-bottom:20px;padding:16px;background:#f8fafc;border-radius:12px">'
       +'<h4>'+htmlEsc(ses.titulo||sesId)+'</h4>'
-      +'<p style="font-size:13px;color:#64748b;margin:4px 0">'+entries.length+' evaluados | Promedio: <strong>'+avg+'%</strong></p>'
-      +'<p style="font-size:12px">Destacado: '+levels.Destacado+' | Adecuado: '+levels.Adecuado+' | Elemental: '+levels.Elemental+' | Insuficiente: '+levels.Insuficiente+'</p></div>';
+      +'<p style="font-size:13px;color:#64748b;margin:4px 0">Asignados: <strong>'+rows.length+'</strong> | Terminadas: <strong>'+submittedC+'</strong> | En progreso: <strong>'+progressC+'</strong> | Pendientes: <strong>'+pendingC+'</strong></p>'
+      +'<p style="font-size:12px">Con strikes: '+strikeC+' | Bloqueadas: '+blockedC+' | Progreso medio: '+avgProgress+'% | Promedio auto: '+(scoredRows.length?avgAuto+'%':'—')+'</p></div>';
   }
-  html+='<button class="btn btn-primary" onclick="exportSimceCSV(\'session\')" style="margin-top:12px">📥 Exportar CSV</button>';
+  html+='<button class="btn btn-primary" onclick="exportLecturasCSV()" style="margin-top:12px">📥 Exportar CSV Lecturas</button>';
   output.innerHTML=html;
 }
 
 function generateCourseReport(output) {
   const courses={};
-  coursesAvailable.forEach(c=>{courses[c]={name:c,scores:[]};});
-  for(const[,uidMap] of Object.entries(simceResults)){
-    for(const[uid,r] of Object.entries(uidMap)){
-      const est=studentsMap[uid];
-      if(est&&courses[est.curso]) courses[est.curso].scores.push(r.porcentaje||0);
-    }
-  }
-  let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso (SIMCE)</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">';
-  for(const[,data] of Object.entries(courses)){
-    const avg=data.scores.length?Math.round(data.scores.reduce((a,b)=>a+b,0)/data.scores.length):0;
-    const max=data.scores.length?Math.max(...data.scores):0;
-    const min=data.scores.length?Math.min(...data.scores):0;
+  getAllLecturasReviewRows().forEach(row=>{
+    const course=row.student.curso||'Sin curso';
+    if(!courses[course]) courses[course]={name:course,rows:[]};
+    courses[course].rows.push(row);
+  });
+  let html='<h3 style="margin-bottom:16px">📊 Reporte por Curso (Lecturas)</h3><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px">';
+  for(const data of Object.values(courses).sort((a,b)=>norm(a.name).localeCompare(norm(b.name),'es'))){
+    const avgProgress=data.rows.length?Math.round(data.rows.reduce((sum,row)=>sum+row.progressPct,0)/data.rows.length):0;
+    const scoredRows=data.rows.filter(row=>row.percentage!==null);
+    const avgAuto=scoredRows.length?Math.round(scoredRows.reduce((sum,row)=>sum+row.percentage,0)/scoredRows.length):0;
+    const submittedC=data.rows.filter(row=>row.submitted).length;
+    const strikeC=data.rows.filter(row=>row.strikes>0).length;
     html+='<div style="padding:20px;background:#f8fafc;border-radius:12px">'
       +'<h4>'+htmlEsc(data.name)+'</h4>'
-      +'<p style="font-size:13px;margin:4px 0">Evaluaciones: '+data.scores.length+'</p>'
-      +'<p style="font-size:13px">Promedio: <strong>'+avg+'%</strong></p>'
-      +'<p style="font-size:12px;color:#64748b">Máx: '+max+'% | Mín: '+min+'%</p></div>';
+      +'<p style="font-size:13px;margin:4px 0">Asignaciones: '+data.rows.length+' | Terminadas: '+submittedC+'</p>'
+      +'<p style="font-size:13px">Progreso medio: <strong>'+avgProgress+'%</strong></p>'
+      +'<p style="font-size:12px;color:#64748b">Promedio auto: '+(scoredRows.length?avgAuto+'%':'—')+' | Con strikes: '+strikeC+'</p></div>';
   }
-  html+='</div><button class="btn btn-primary" onclick="exportSimceCSV(\'course\')" style="margin-top:16px">📥 Exportar CSV</button>';
+  html+='</div><button class="btn btn-primary" onclick="exportLecturasCSV()" style="margin-top:16px">📥 Exportar CSV Lecturas</button>';
   output.innerHTML=html;
 }
 
 function generateStudentReport(output) {
-  let html='<h3 style="margin-bottom:16px">👤 Reporte Individual (SIMCE)</h3>';
+  let html='<h3 style="margin-bottom:16px">👤 Reporte Individual (Lecturas)</h3>';
   html+='<div class="search-bar" style="margin-bottom:12px"><select id="reportStudentSel" onchange="showStudentReport()" style="width:100%"><option value="">Selecciona estudiante...</option>';
   Object.entries(studentsMap).sort((a,b)=>(a[1].nombre||'').localeCompare(b[1].nombre||'','es')).forEach(([uid,est])=>{
     html+='<option value="'+uid+'">'+htmlEsc(est.nombre)+' ('+htmlEsc(est.curso)+')</option>';
@@ -1323,19 +1407,27 @@ function showStudentReport() {
   const container=document.getElementById('studentReportContent');
   if(!uid){container.innerHTML='';return;}
   const est=studentsMap[uid];
+  const rows=getAllLecturasReviewRows().filter(row=>row.uid===uid).sort((a,b)=>((a.session&&a.session.orden)||0)-((b.session&&b.session.orden)||0));
   let html='<div style="padding:16px;background:#f8fafc;border-radius:12px;margin-bottom:12px"><h4>'+htmlEsc(est.nombre)+'</h4><p style="font-size:12px;color:#64748b">RUT: '+htmlEsc(est.rut)+' | Curso: '+htmlEsc(est.curso)+'</p></div>';
-  html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Sesión</th><th>Puntaje</th><th>%</th><th>Nivel</th></tr>';
-  let totalPct=0,count=0;
-  for(const[sesId,ses] of Object.entries(simceSessions)){
-    const r=(simceResults[sesId]||{})[uid];
-    if(r){totalPct+=r.porcentaje;count++;
-      html+='<tr><td style="padding:8px">'+htmlEsc(ses.titulo)+'</td><td style="text-align:center">'+r.puntaje+'/'+r.total+'</td><td style="text-align:center">'+r.porcentaje+'%</td><td style="text-align:center">'+getLevelBadge(r.porcentaje)+'</td></tr>';
-    }else{
-      html+='<tr><td style="padding:8px">'+htmlEsc(ses.titulo)+'</td><td colspan="3" style="text-align:center;color:#94a3b8">Sin completar</td></tr>';
-    }
+  if(!rows.length){
+    container.innerHTML=html+'<p class="muted">No tiene sesiones de Lecturas asignadas.</p>';
+    return;
   }
+  html+='<table style="width:100%;border-collapse:collapse;font-size:13px"><tr style="background:#f1f5f9"><th style="padding:8px;text-align:left">Sesión</th><th>Estado</th><th>Progreso</th><th>Puntaje auto</th><th>Strikes</th></tr>';
+  const scoredRows=rows.filter(row=>row.percentage!==null);
+  const avgProgress=Math.round(rows.reduce((sum,row)=>sum+row.progressPct,0)/rows.length);
+  const avgAuto=scoredRows.length?Math.round(scoredRows.reduce((sum,row)=>sum+row.percentage,0)/scoredRows.length):null;
+  rows.forEach(row=>{
+    html+='<tr>'
+      +'<td style="padding:8px">'+htmlEsc((row.session&&row.session.titulo)||row.sessionId)+'</td>'
+      +'<td style="text-align:center"><span class="status-chip '+row.status+'">'+getLecStatusLabel(row)+'</span></td>'
+      +'<td style="text-align:center">'+row.answeredCount+'/'+row.totalItems+' · '+row.progressPct+'%</td>'
+      +'<td style="text-align:center">'+(row.scoreEarned===null?'—':row.scoreEarned+'/'+row.scoreTotal+(row.percentage!==null?' · '+row.percentage+'%':''))+'</td>'
+      +'<td style="text-align:center">'+row.strikes+'</td>'
+      +'</tr>';
+  });
   html+='</table>';
-  if(count>0) html+='<p style="margin-top:12px;font-weight:700">Promedio general: '+Math.round(totalPct/count)+'% — '+getLevel(Math.round(totalPct/count))+'</p>';
+  html+='<p style="margin-top:12px;font-weight:700">Progreso medio: '+avgProgress+'%'+(avgAuto===null?'':' | Promedio auto: '+avgAuto+'%')+'</p>';
   container.innerHTML=html;
 }
 
@@ -1361,12 +1453,12 @@ function exportSimceCSV(type) {
 }
 
 function exportLecturasCSV() {
-  let csv='Sesión,Estudiante,RUT,Curso,Estado,Respondidas,Total Ítems,Correctas,Puntaje,Porcentaje,Strikes\n';
+  let csv='Sesión,Estudiante,RUT,Curso,Estado,Respondidas,Total Ítems,Progreso %,Correctas,Puntaje,Porcentaje,Manual pendientes,Strikes,Bloqueada,Inicio,Último guardado,Envío,Tiempo\n';
   for(const[sesId,ses] of Object.entries(lecSessions)){
     const rows=getLecReviewRows(sesId);
     for(const r of rows){
-      const statusLabel=r.status==='submitted'?'Entregada':(r.status==='progress'?'En progreso':'Pendiente');
-      csv+='"'+htmlEsc(ses.titulo||sesId)+'","'+htmlEsc(r.student.nombre||'')+'","'+htmlEsc(r.student.rut||'')+'","'+htmlEsc(r.student.curso||'')+'","'+statusLabel+'",'+r.answeredCount+','+r.totalItems+','+(r.correctCount===null?'':r.correctCount)+','+(r.scoreEarned===null?'':r.scoreEarned)+','+(r.percentage===null?'':r.percentage)+','+r.strikes+'\n';
+      const statusLabel=getLecStatusLabel(r);
+      csv+='"'+(ses.titulo||sesId)+'","'+(r.student.nombre||'')+'","'+(r.student.rut||'')+'","'+(r.student.curso||'')+'","'+statusLabel+'",'+r.answeredCount+','+r.totalItems+','+r.progressPct+','+(r.correctCount===null?'':r.correctCount)+','+(r.scoreEarned===null?'':r.scoreEarned)+','+(r.percentage===null?'':r.percentage)+','+r.manualPending+','+r.strikes+','+(r.blockedByStrikes?'1':'0')+',"'+fmtDate(r.startedAt)+'","'+fmtDate(r.lastSave)+'","'+fmtDate(r.submittedAt)+'","'+fmtDuration(r.duration)+'"\n';
     }
   }
   downloadCSV(csv,'reporte_lecturas');

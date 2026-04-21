@@ -1121,6 +1121,7 @@ function renderLecReviewPanel() {
       +'<td>'
         +'<button class="btn btn-sm btn-secondary" onclick="selectLecStudent(\''+r.uid+'\')">👁</button> '
         +'<button class="btn btn-sm btn-warn" onclick="resetLecStrikes(\''+r.uid+'\')" title="Reset strikes">🔄</button> '
+        +(r.submitted?'<button class="btn btn-sm btn-warn" style="background:#7c3aed" onclick="resetLecReopen(\''+r.uid+'\')" title="Reabrir prueba">🔓</button> ':' ')
         +'<button class="btn btn-sm btn-danger" onclick="resetLecStudentFull(\''+r.uid+'\')" title="Reset total">💥</button>'
       +'</td></tr>';
   }).join(''):'<tr><td colspan="9" style="text-align:center;color:#94a3b8;padding:20px">No hay coincidencias.</td></tr>';
@@ -1165,7 +1166,8 @@ function renderLecReviewDetail() {
   detail.innerHTML='<h3>'+htmlEsc(row.student.nombre||row.uid)+'</h3>'
     +'<p class="muted">'+htmlEsc(session.titulo||selectedLecSession)+' · '+htmlEsc(row.student.curso||'Sin curso')+'</p>'
     +'<div style="margin:8px 0"><span class="status-chip '+row.status+'">'+statusLabel+'</span>'
-    +(row.blockedByStrikes?' <span class="status-chip blocked">Bloqueada por strikes</span>':'')+'</div>'
+    +(row.blockedByStrikes?' <span class="status-chip blocked">Bloqueada por strikes</span>':'')
+    +(row.submitted?' <button class="btn btn-sm btn-warn" style="background:#7c3aed;margin-left:8px" onclick="resetLecReopen(\''+row.uid+'\')">🔓 Reabrir prueba</button>':'')+'</div>'
     +'<div class="detail-grid">'
     +'<div class="detail-item"><span class="label">RUT</span><span class="value">'+htmlEsc(row.student.rut||'—')+'</span></div>'
     +'<div class="detail-item"><span class="label">Progreso</span><span class="value">'+row.answeredCount+'/'+row.totalItems+'</span></div>'
@@ -1203,6 +1205,35 @@ async function resetLecStrikes(uid) {
     }
     renderLecReviewPanel();
     toast('Strikes reseteados a 0','ok');
+  }catch(e){toast('Error: '+e.message,'err');}
+}
+
+/* Reopen: reset strikes + mark completada=false so student can retake */
+async function resetLecReopen(uid) {
+  if(!selectedLecSession)return;
+  const student=studentsMap[uid];
+  if(!confirm('¿Reabrir prueba de '+(student?student.nombre:uid)+'?\nSe resetearán los strikes y se marcará como no completada. El estudiante podrá responder de nuevo.'))return;
+  const updates={};
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/strikes']=0;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/completada']=false;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/strikes']=0;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/completada']=false;
+  try{
+    await db.ref().update(updates);
+    if(lecResponses[selectedLecSession]&&lecResponses[selectedLecSession][uid]){
+      lecResponses[selectedLecSession][uid].strikes=0;
+      delete lecResponses[selectedLecSession][uid].bloqueado_por_strikes;
+      lecResponses[selectedLecSession][uid].completada=false;
+    }
+    if(lecResults[selectedLecSession]&&lecResults[selectedLecSession][uid]){
+      lecResults[selectedLecSession][uid].strikes=0;
+      delete lecResults[selectedLecSession][uid].bloqueado_por_strikes;
+      lecResults[selectedLecSession][uid].completada=false;
+    }
+    renderLecReviewPanel();renderOverview();
+    toast('Prueba reabierta — estudiante puede responder de nuevo','ok');
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
@@ -1374,6 +1405,7 @@ window.deleteLecSession=deleteLecSession;
 window.selectLecReviewSession=selectLecReviewSession;
 window.selectLecStudent=selectLecStudent;
 window.resetLecStrikes=resetLecStrikes;
+window.resetLecReopen=resetLecReopen;
 window.resetLecStudentFull=resetLecStudentFull;
 window.generateReport=generateReport;
 window.showStudentReport=showStudentReport;

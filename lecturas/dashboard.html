@@ -382,6 +382,8 @@
         document.getElementById('studentMeta').textContent = (student.curso || 'Sin curso') + ' · Sección Lecturas';
 
         const ids = await getAssignedIds(user.uid);
+        const TEST_RUT = '222222222';
+        const isTestAccount = student && typeof student.rut === 'string' && student.rut.replace(/[^0-9kK]/g,'').toLowerCase() === TEST_RUT;
         const sessions = [];
         for (const id of ids) {
           const session = await getSessionById(id);
@@ -401,6 +403,8 @@
           }
           session.__locked = locked;
           session.__lockReason = reason;
+          // Cuenta de prueba (22.222.222-2): bypass total para previsualizar
+          if (isTestAccount) { session.__locked = false; session.__lockReason = ''; }
           sessions.push(session);
         }
         sessions.sort((a, b) => (a.orden || 0) - (b.orden || 0));

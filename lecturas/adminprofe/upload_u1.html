@@ -486,9 +486,42 @@ function findTestAccount(){
 async function assignAllSessionsToTest(){
   if(!testAccount) return;
   const uid = testAccount.uid;
-  // Reload all sessions in case new ones were just created
-  const snap = await db.ref(LECTURAS_BASE+'/sesiones').once('value');
-  const sesiones = snap.val() || {};
+  // 1. Asegurar que las sesiones U1 (SESSIONS) existan en RTDB. Si faltan, crearlas con disponibleDesde y activa:false.
+  const sesSnap = await db.ref(LECTURAS_BASE+'/sesiones').once('value');
+  let sesiones = sesSnap.val() || {};
+  const missing = SESSIONS.filter(cfg=>!sesiones[cfg.id]);
+  if(missing.length){
+    if(!confirm('Faltan '+missing.length+' sesion(es) U1 en RTDB ('+missing.map(m=>m.id).join(', ')+'). ¿Crearlas ahora con sus JSON y activa:false?')) {
+      logMsg('Cancelado: sesiones U1 no creadas.','warn');
+    } else {
+      for(const cfg of missing){
+        try{
+          let json = jsonCache[cfg.id];
+          if(!json){
+            const r = await fetch(cfg.jsonPath+'?v='+Date.now());
+            json = await r.json();
+            jsonCache[cfg.id] = json;
+          }
+          const node = {
+            titulo: cfg.titulo,
+            libro: cfg.libro,
+            cursosAsignados: cfg.cursosPrefer || [],
+            activa: false,
+            disponibleDesde: cfg.disponibleDesde,
+            orden: cfg.orden,
+            visado: json.visado || 'Visado por EPM · Sr. Gabriel Castro · Encargado de Modalidad',
+            duracion_min: json.duracion_min || 90,
+            contenido: json
+          };
+          await db.ref(LECTURAS_BASE+'/sesiones/'+cfg.id).set(node);
+          sesCache[cfg.id] = node;
+          sesiones[cfg.id] = node;
+          logMsg('Auto-creada sesión '+cfg.id+'.','ok');
+        }catch(e){ logMsg('Error auto-creando '+cfg.id+': '+e.message,'err'); }
+      }
+    }
+  }
+  // 2. Asignar TODAS las sesiones existentes a la cuenta de prueba
   const ids = Object.keys(sesiones);
   if(ids.length===0){ logMsg('No hay sesiones Lecturas en RTDB.','warn'); return; }
   if(!confirm('Asignar '+ids.length+' sesión(es) Lecturas a la cuenta de prueba ('+testAccount.nombre+')?\n\n'+ids.join('\n'))) return;
@@ -496,7 +529,7 @@ async function assignAllSessionsToTest(){
   ids.forEach(id=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+id]=true; });
   try{
     await db.ref().update(updates);
-    ids.forEach(id=>{ if(asigCache[id]) asigCache[id].add(uid); });
+    ids.forEach(id=>{ if(!asigCache[id]) asigCache[id]=new Set(); asigCache[id].add(uid); });
     logMsg('Asignadas '+ids.length+' sesiones a la cuenta de prueba.','ok');
     renderCards();
   }catch(e){ logMsg('Error asignando a cuenta de prueba: '+e.message,'err'); }

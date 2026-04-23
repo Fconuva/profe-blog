@@ -258,9 +258,14 @@
           <a href="upload_u1.html" class="btn btn-primary" style="text-decoration:none">📘 Panel Prueba Unidad 1 (NM3 / NM4)</a>
         </div>
         <div class="panel-table" style="margin-bottom:20px">
-          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#334155">Sesiones Lecturas</h3>
+          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#334155">📖 Lecturas (Plan Lector)</h3>
           <table><thead><tr><th>Sesión</th><th>Libro</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
           <tbody id="lecturasSessionsBody"></tbody></table>
+        </div>
+        <div class="panel-table" style="margin-bottom:20px;border:2px solid #2563eb">
+          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#1d4ed8">📝 Pruebas de Unidad (Escritas)</h3>
+          <table><thead><tr><th>Sesión</th><th>Unidad</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
+          <tbody id="pruebasUnidadBody"></tbody></table>
         </div>
         <h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Seguimiento de Respuestas</h3>
         <div class="search-bar">
@@ -937,8 +942,13 @@ function loadSimceResults() {
 /* ====================================================================
    LECTURAS — Session List
    ==================================================================== */
+function isPruebaUnidad(s){
+  return /^lengua_u\d+_/i.test(s.id||'') || (s.tipo==='prueba_unidad');
+}
+
 function renderLecSessions() {
-  const tbody=document.getElementById('lecturasSessionsBody');
+  const tbodyLec=document.getElementById('lecturasSessionsBody');
+  const tbodyPU=document.getElementById('pruebasUnidadBody');
   let items=Object.entries(lecSessions).map(([id,s])=>({id,...s}));
   items.sort((a,b)=>{
     const cA=(a.cursosAsignados||[]).slice().sort().join(',');
@@ -947,7 +957,7 @@ function renderLecSessions() {
     return (a.orden||0)-(b.orden||0);
   });
 
-  tbody.innerHTML=items.map(s=>{
+  const renderRow = s => {
     const content=s.contenido||{};
     const itemCount=(content.items||content.preguntas||[]).length;
     const assignedCount=getLecAssignedUids(s.id).length;
@@ -963,7 +973,15 @@ function renderLecSessions() {
         +'<button class="btn btn-sm btn-secondary" onclick="selectLecReviewSession(\''+s.id+'\')" title="Revisar">📊</button> '
         +'<button class="btn btn-sm btn-danger" onclick="deleteLecSession(\''+s.id+'\')" title="Eliminar">🗑</button>'
       +'</td></tr>';
-  }).join('')||'<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones Lecturas</td></tr>';
+  };
+
+  const pu = items.filter(isPruebaUnidad);
+  const lec = items.filter(s=>!isPruebaUnidad(s));
+
+  tbodyLec.innerHTML = lec.map(renderRow).join('')
+    || '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones de Lecturas</td></tr>';
+  tbodyPU.innerHTML = pu.map(renderRow).join('')
+    || '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay pruebas de unidad. Crea desde <a href="upload_u1.html">Panel Unidad 1</a>.</td></tr>';
 }
 
 async function toggleLecSession(id,val) {

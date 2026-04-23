@@ -73,8 +73,8 @@
     <ol style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.7">
       <li>Revisa los JSON detectados (NM3 y NM4) y confirma conteo de ítems.</li>
       <li>Selecciona los cursos destino con los chips.</li>
-      <li>Presiona <strong>Crear/actualizar sesión</strong> (queda <em>inactiva</em> hasta el día de la prueba).</li>
-      <li>Presiona <strong>Asignar a cursos seleccionados</strong>.</li>
+      <li>Presiona <strong>Crear sesión en RTDB</strong> o <strong>Guardar cambios en RTDB</strong>. Este botón solo sube el JSON/configuración a Firebase; <strong>no asigna</strong> alumnos.</li>
+      <li>Luego presiona <strong>Asignar a cursos seleccionados</strong> para aplicar o quitar asignaciones según los chips marcados.</li>
       <li>El día de la prueba, activa desde esta página o desde el admin general.</li>
     </ol>
     <p class="muted" style="margin-top:10px">Estas pruebas viven en <code>plataforma_lecturas/sesiones/lengua_u1_nm3_2026</code> y <code>…/lengua_u1_nm4_2026</code>. No tocan a Pedro Páramo ni Maus.</p>
@@ -92,10 +92,10 @@
         <input type="text" id="testRut" value="22.222.222-2" placeholder="22.222.222-2">
       </div>
       <div style="flex:1;align-self:end">
-        <button id="btnFindTest" onclick="findTestAccount()">🔎 Buscar</button>
+        <button id="btnFindTest" disabled onclick="findTestAccount()">🔎 Buscar cuenta por RUT</button>
       </div>
     </div>
-    <div id="testInfo" class="muted" style="margin-top:8px">—</div>
+    <div id="testInfo" class="muted" style="margin-top:8px">Espera a que termine la carga inicial para buscar la cuenta.</div>
     <div class="row" style="margin-top:10px">
       <button id="btnAssignAll" disabled onclick="assignAllSessionsToTest()">📥 Asignar TODAS las sesiones a esta cuenta</button>
       <button class="warn" id="btnUnassignAll" disabled onclick="unassignAllFromTest()">🧹 Quitar todas las asignaciones de la cuenta de prueba</button>
@@ -205,8 +205,14 @@ let coursesAvailable = [];
 let jsonCache = {};          // id -> loaded JSON
 let sesCache = {};           // id -> existing session node (or null)
 let asigCache = {};          // id -> Set(uid) ya asignados
+let bootstrapReady = false;
 
 async function bootstrap(){
+  bootstrapReady = false;
+  document.getElementById('btnFindTest').disabled = true;
+  document.getElementById('btnAssignAll').disabled = true;
+  document.getElementById('btnUnassignAll').disabled = true;
+  document.getElementById('testInfo').innerHTML = '<span class="badge warn">Cargando</span> Espera a que termine la carga de estudiantes y sesiones.';
   logMsg('Cargando estudiantes y sesiones…');
   const [estS, sesS, asigS] = await Promise.all([
     db.ref(STUDENT_BASE+'/estudiantes').once('value'),
@@ -237,6 +243,8 @@ async function bootstrap(){
     }
   }
   renderCards();
+  bootstrapReady = true;
+  document.getElementById('btnFindTest').disabled = false;
   // auto-lookup test account
   try{ findTestAccount(); }catch(e){}
 }
@@ -302,14 +310,15 @@ function renderCard(cfg){
     </div>
 
     <div class="row" style="margin-top:14px">
-      <button ${json?'':'disabled'} onclick="doUpsertSession('${cfg.id}')">
-        ${exists?'Actualizar sesión':'Crear sesión'} (inactiva)
+      <button ${json?'':'disabled'} title="Guarda el JSON y la configuración de esta prueba en Firebase. No asigna estudiantes." onclick="doUpsertSession('${cfg.id}')">
+        ${exists?'Guardar cambios en RTDB':'Crear sesión en RTDB'}
       </button>
-      <button class="sec" onclick="doAssign('${cfg.id}')">Asignar a cursos seleccionados</button>
+      <button class="sec" title="Aplica las asignaciones según los chips marcados y quita a los cursos desmarcados." onclick="doAssign('${cfg.id}')">Asignar a cursos seleccionados</button>
       <button class="${activa?'warn':''}" onclick="toggleActiva('${cfg.id}',${activa?'false':'true'})">
         ${activa?'Desactivar ahora':'Activar ahora'}
       </button>
     </div>
+    <p class="muted" style="margin:8px 0 0;font-size:12px">Paso 1: guardar la sesión en RTDB. Paso 2: aplicar asignación a cursos. Guardar no asigna estudiantes.</p>
 
     <div class="danger-zone">
       <strong style="font-size:12px;color:#991b1b">Zona sensible</strong>
@@ -463,12 +472,29 @@ function normalizeRut(s){
   return String(s||'').replace(/\./g,'').replace(/\s/g,'').replace(/-/g,'').toUpperCase();
 }
 
+function getRutCandidates(student){
+  return [
+    student && student.rut,
+    student && student.RUT,
+    student && student.rut_formateado,
+    student && student.rutFormateado,
+    student && student.rut_alumno,
+    student && student.rutAlumno
+  ].map(normalizeRut).filter(Boolean);
+}
+
 function findTestAccount(){
+  if(!bootstrapReady){
+    document.getElementById('testInfo').innerHTML = '<span class="badge warn">Cargando</span> Todavía no termina la carga inicial. Espera un momento y vuelve a buscar.';
+    document.getElementById('btnAssignAll').disabled=true;
+    document.getElementById('btnUnassignAll').disabled=true;
+    return;
+  }
   const rutIn = normalizeRut(document.getElementById('testRut').value);
   if(!rutIn){ document.getElementById('testInfo').innerHTML='<span class="badge err">RUT vacío</span>'; return; }
   let found = null;
   for(const [uid, s] of Object.entries(studentsMap)){
-    if(normalizeRut(s.rut) === rutIn){ found = {uid, ...s}; break; }
+    if(getRutCandidates(s).includes(rutIn)){ found = {uid, ...s}; break; }
   }
   testAccount = found;
   const info = document.getElementById('testInfo');
@@ -484,6 +510,8 @@ function findTestAccount(){
 }
 
 async function assignAllSessionsToTest(){
+  if(!bootstrapReady){ alert('Espera a que termine la carga inicial del panel.'); return; }
+  if(!testAccount) findTestAccount();
   if(!testAccount) return;
   const uid = testAccount.uid;
   // 1. Asegurar que las sesiones U1 (SESSIONS) existan en RTDB. Si faltan, crearlas con disponibleDesde y activa:false.
@@ -536,6 +564,7 @@ async function assignAllSessionsToTest(){
 }
 
 async function unassignAllFromTest(){
+  if(!bootstrapReady){ alert('Espera a que termine la carga inicial del panel.'); return; }
   if(!testAccount) return;
   if(!confirm('Quitar TODAS las asignaciones Lecturas de la cuenta de prueba ('+testAccount.nombre+')?')) return;
   const uid = testAccount.uid;
@@ -550,6 +579,12 @@ async function unassignAllFromTest(){
 window.findTestAccount=findTestAccount;
 window.assignAllSessionsToTest=assignAllSessionsToTest;
 window.unassignAllFromTest=unassignAllFromTest;
+document.getElementById('testRut').addEventListener('keydown', function(ev){
+  if(ev.key==='Enter'){
+    ev.preventDefault();
+    findTestAccount();
+  }
+});
 </script>
 </body>
 </html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel Prueba Unidad 1 · NM3 / NM4 · Lecturas</title>
+<style>
+  :root{--b:#0f172a;--m:#64748b;--bg:#f1f5f9;--card:#fff;--ok:#059669;--warn:#b45309;--err:#dc2626;--accent:#2563eb}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:var(--bg);color:var(--b)}
+  header{background:linear-gradient(135deg,#0f172a,#334155);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+  header h1{margin:0;font-size:18px}
+  header .who{font-size:12px;opacity:.8}
+  header a{color:#cbd5e1;font-size:12px;margin-right:8px}
+  main{max-width:1100px;margin:0 auto;padding:18px}
+  .card{background:var(--card);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+  .card h2{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .row>*{flex:1;min-width:200px}
+  label{display:block;font-size:12px;color:var(--m);margin-bottom:4px;font-weight:600}
+  input[type=text],input[type=datetime-local],input[type=password],select,textarea{width:100%;padding:8px 10px;border:1px solid #cbd5e1;border-radius:8px;font:inherit}
+  button{padding:9px 14px;border:none;border-radius:8px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+  button.sec{background:#e2e8f0;color:var(--b)}
+  button.warn{background:var(--warn);color:#fff}
+  button.err{background:var(--err);color:#fff}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+  .chip{padding:4px 10px;border-radius:999px;border:1px solid #cbd5e1;background:#f8fafc;font-size:12px;cursor:pointer;user-select:none}
+  .chip.on{background:#2563eb;color:#fff;border-color:#1d4ed8}
+  .chip small{opacity:.75;margin-left:5px}
+  .log{background:#0f172a;color:#e2e8f0;border-radius:8px;padding:10px 12px;font:12px/1.5 ui-monospace,Consolas,monospace;max-height:220px;overflow:auto;white-space:pre-wrap}
+  .status-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:8px}
+  .stat{border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px}
+  .stat .k{font-size:11px;color:var(--m);text-transform:uppercase}
+  .stat .v{font-size:20px;font-weight:800}
+  .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;font-weight:700}
+  .badge.ok{background:#d1fae5;color:#065f46}.badge.warn{background:#fef3c7;color:#78350f}.badge.err{background:#fee2e2;color:#991b1b}
+  .session-block{border-top:3px solid var(--accent);padding-top:12px;margin-top:10px}
+  .session-block.nm4{border-top-color:#9333ea}
+  #login{max-width:360px;margin:60px auto;padding:26px}
+  .muted{color:var(--m);font-size:12px}
+  .danger-zone{border:1px dashed var(--err);padding:10px;border-radius:8px;margin-top:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📘 Panel · Prueba Unidad 1 NM3 / NM4</h1>
+    <div class="who" id="who">— no conectado —</div>
+  </div>
+  <div>
+    <a href="./">← adminprofe</a>
+    <button class="sec" id="logoutBtn" style="display:none">Salir</button>
+  </div>
+</header>
+
+<section id="login" class="card" style="display:none">
+  <h2>🔐 Iniciar sesión admin</h2>
+  <p class="muted">Solo <code>portafolio.admin@profefranciscopancho.com</code> puede operar este panel.</p>
+  <div class="row" style="margin-top:10px">
+    <div><label>Contraseña</label><input id="pw" type="password" autocomplete="current-password"></div>
+  </div>
+  <div style="margin-top:10px"><button id="loginBtn">Entrar</button></div>
+  <div id="loginMsg" class="muted" style="margin-top:8px"></div>
+</section>
+
+<main id="app" style="display:none">
+
+  <div class="card">
+    <h2>ℹ️ Cómo usar este panel</h2>
+    <ol style="margin:4px 0 0 18px;padding:0;font-size:13px;line-height:1.7">
+      <li>Revisa los JSON detectados (NM3 y NM4) y confirma conteo de ítems.</li>
+      <li>Selecciona los cursos destino con los chips.</li>
+      <li>Presiona <strong>Crear/actualizar sesión</strong> (queda <em>inactiva</em> hasta el día de la prueba).</li>
+      <li>Presiona <strong>Asignar a cursos seleccionados</strong>.</li>
+      <li>El día de la prueba, activa desde esta página o desde el admin general.</li>
+    </ol>
+    <p class="muted" style="margin-top:10px">Estas pruebas viven en <code>plataforma_lecturas/sesiones/lengua_u1_nm3_2026</code> y <code>…/lengua_u1_nm4_2026</code>. No tocan a Pedro Páramo ni Maus.</p>
+  </div>
+
+  <div class="card" id="cards-nm3"></div>
+  <div class="card" id="cards-nm4"></div>
+
+  <div class="card">
+    <h2>🧪 Cuenta de prueba</h2>
+    <p class="muted">Asigna <strong>todas</strong> las sesiones Lecturas existentes en Firebase (Pedro Páramo, Maus, U1 NM3/NM4, etc.) a una cuenta de prueba identificada por RUT. Útil para previsualizar sin afectar a estudiantes reales.</p>
+    <div class="row" style="margin-top:8px">
+      <div style="flex:2">
+        <label>RUT de la cuenta de prueba</label>
+        <input type="text" id="testRut" value="22.222.222-2" placeholder="22.222.222-2">
+      </div>
+      <div style="flex:1;align-self:end">
+        <button id="btnFindTest" onclick="findTestAccount()">🔎 Buscar</button>
+      </div>
+    </div>
+    <div id="testInfo" class="muted" style="margin-top:8px">—</div>
+    <div class="row" style="margin-top:10px">
+      <button id="btnAssignAll" disabled onclick="assignAllSessionsToTest()">📥 Asignar TODAS las sesiones a esta cuenta</button>
+      <button class="warn" id="btnUnassignAll" disabled onclick="unassignAllFromTest()">🧹 Quitar todas las asignaciones de la cuenta de prueba</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📜 Registro</h2>
+    <div class="log" id="log">listo.</div>
+  </div>
+
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+  authDomain: "profe-blog.firebaseapp.com",
+  databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+  projectId: "profe-blog",
+  storageBucket: "profe-blog.firebasestorage.app",
+  messagingSenderId: "305920739217",
+  appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+};
+const OWNER_EMAIL = 'portafolio.admin@profefranciscopancho.com';
+const STUDENT_BASE = 'plataforma_estudiantes';
+const LECTURAS_BASE = 'plataforma_lecturas';
+
+// Config for each session
+const SESSIONS = [
+  {
+    id: 'lengua_u1_nm3_2026',
+    jsonPath: '../contenidos/lengua_u1_nm3_2026_base.json',
+    titulo: 'Prueba Escrita Unidad 1 · Lengua · NM3',
+    libro: 'Unidad 1 — Diálogos literarios y efecto estético',
+    curso_level: 'NM3',
+    cursosPrefer: ['3A-TP','3B-TP','3D-TP','3A-HC','3B-HC'],
+    disponibleDesde: '2026-05-02T08:00:00-04:00',
+    orden: 30,
+    mount: 'cards-nm3',
+    accent: ''
+  },
+  {
+    id: 'lengua_u1_nm4_2026',
+    jsonPath: '../contenidos/lengua_u1_nm4_2026_base.json',
+    titulo: 'Prueba Escrita Unidad 1 · Lengua · NM4',
+    libro: 'Unidad 1 — Diálogos literarios y efecto estético',
+    curso_level: 'NM4',
+    cursosPrefer: ['4A-TP','4B-TP','4C-TP','4D-TP','4E-TP'],
+    disponibleDesde: '2026-05-04T08:00:00-04:00',
+    orden: 31,
+    mount: 'cards-nm4',
+    accent: 'nm4'
+  }
+];
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db = firebase.database();
+
+const $ = s => document.querySelector(s);
+function logMsg(txt, kind){
+  const el = $('#log');
+  const ts = new Date().toLocaleTimeString('es-CL');
+  const tag = kind==='err'?'❌':kind==='ok'?'✅':kind==='warn'?'⚠️':'·';
+  el.textContent = '['+ts+'] '+tag+' '+txt+'\n' + el.textContent;
+}
+
+auth.onAuthStateChanged(user => {
+  if(!user){
+    $('#login').style.display='block';
+    $('#app').style.display='none';
+    $('#logoutBtn').style.display='none';
+    $('#who').textContent='— no conectado —';
+    return;
+  }
+  if(String(user.email||'').toLowerCase() !== OWNER_EMAIL){
+    alert('Esta cuenta no está autorizada para este panel.');
+    auth.signOut();
+    return;
+  }
+  $('#login').style.display='none';
+  $('#app').style.display='block';
+  $('#logoutBtn').style.display='inline-block';
+  $('#who').textContent = user.email;
+  bootstrap().catch(e=>{console.error(e); logMsg('bootstrap: '+e.message,'err');});
+});
+
+$('#loginBtn').onclick = async ()=>{
+  const pw = $('#pw').value.trim();
+  if(!pw){$('#loginMsg').textContent='Ingresa la contraseña.';return;}
+  $('#loginBtn').disabled=true;
+  try{
+    await auth.signInWithEmailAndPassword(OWNER_EMAIL, pw);
+    $('#pw').value='';
+  }catch(e){
+    $('#loginMsg').innerHTML='<span class="badge err">Error</span> '+e.message;
+  }finally{$('#loginBtn').disabled=false;}
+};
+$('#logoutBtn').onclick = ()=>auth.signOut();
+
+let studentsMap = {};
+let coursesAvailable = [];
+let jsonCache = {};          // id -> loaded JSON
+let sesCache = {};           // id -> existing session node (or null)
+let asigCache = {};          // id -> Set(uid) ya asignados
+
+async function bootstrap(){
+  logMsg('Cargando estudiantes y sesiones…');
+  const [estS, sesS, asigS] = await Promise.all([
+    db.ref(STUDENT_BASE+'/estudiantes').once('value'),
+    db.ref(LECTURAS_BASE+'/sesiones').once('value'),
+    db.ref(LECTURAS_BASE+'/asignaciones').once('value')
+  ]);
+  studentsMap = estS.val() || {};
+  const sesiones = sesS.val() || {};
+  const asignaciones = asigS.val() || {};
+  coursesAvailable = [...new Set(Object.values(studentsMap).map(s=>s.curso).filter(Boolean))].sort();
+
+  for(const cfg of SESSIONS){
+    sesCache[cfg.id] = sesiones[cfg.id] || null;
+    // asignaciones/{uid}/{sessionId}=true
+    const set = new Set();
+    for(const uid in asignaciones){
+      if(asignaciones[uid] && asignaciones[uid][cfg.id]) set.add(uid);
+    }
+    asigCache[cfg.id] = set;
+    try{
+      const r = await fetch(cfg.jsonPath + '?v=' + Date.now());
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      jsonCache[cfg.id] = await r.json();
+      logMsg('JSON cargado: '+cfg.id);
+    }catch(e){
+      jsonCache[cfg.id] = null;
+      logMsg('No se pudo cargar '+cfg.jsonPath+': '+e.message,'err');
+    }
+  }
+  renderCards();
+  // auto-lookup test account
+  try{ findTestAccount(); }catch(e){}
+}
+
+function renderCards(){
+  for(const cfg of SESSIONS) renderCard(cfg);
+}
+
+function renderCard(cfg){
+  const mount = document.getElementById(cfg.mount);
+  const json = jsonCache[cfg.id];
+  const ses = sesCache[cfg.id];
+  const asigSet = asigCache[cfg.id] || new Set();
+  const itemCount = json ? (json.items||json.preguntas||[]).length : 0;
+  const matCount  = json ? (json.materiales||json.textos||[]).length : 0;
+  const exists = !!ses;
+  const activa = exists && ses.activa !== false;
+
+  // preferred order: cursosPrefer first (if exist), then others
+  const orderedCursos = [
+    ...cfg.cursosPrefer.filter(c=>coursesAvailable.includes(c)),
+    ...coursesAvailable.filter(c=>!cfg.cursosPrefer.includes(c))
+  ];
+  // default selected = cursosPrefer that exist in data + whatever the session already saved
+  const preSel = new Set(cfg.cursosPrefer.filter(c=>coursesAvailable.includes(c)));
+  if(exists && Array.isArray(ses.cursosAsignados)) ses.cursosAsignados.forEach(c=>preSel.add(c));
+
+  const dispLocal = toLocalInput(cfg.disponibleDesde);
+
+  mount.classList.add('session-block');
+  if(cfg.accent==='nm4') mount.classList.add('nm4');
+  mount.innerHTML = `
+    <h2>${cfg.curso_level==='NM3'?'🟦':'🟪'} ${cfg.titulo}
+      ${exists?('<span class="badge '+(activa?'ok':'warn')+'" style="margin-left:8px">'+(activa?'ACTIVA':'INACTIVA')+'</span>'):'<span class="badge err" style="margin-left:8px">NO CREADA</span>'}
+    </h2>
+    <p class="muted">ID: <code>${cfg.id}</code> · JSON: <code>${cfg.jsonPath.replace('../','')}</code></p>
+
+    <div class="status-grid">
+      <div class="stat"><div class="k">Ítems</div><div class="v">${itemCount}</div></div>
+      <div class="stat"><div class="k">Textos/materiales</div><div class="v">${matCount}</div></div>
+      <div class="stat"><div class="k">Ya asignados</div><div class="v">${asigSet.size}</div></div>
+      <div class="stat"><div class="k">Sesión en RTDB</div><div class="v">${exists?'Sí':'No'}</div></div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <div>
+        <label>Disponible desde</label>
+        <input type="datetime-local" id="disp_${cfg.id}" value="${dispLocal}">
+      </div>
+      <div>
+        <label>Duración (min)</label>
+        <input type="text" id="dur_${cfg.id}" value="${(json&&json.duracion_min)||90}">
+      </div>
+    </div>
+
+    <label style="margin-top:12px">Cursos (tap para seleccionar)</label>
+    <div class="chips" id="chips_${cfg.id}">
+      ${orderedCursos.map(c=>{
+        const count = Object.values(studentsMap).filter(s=>s.curso===c).length;
+        const on = preSel.has(c);
+        return '<span class="chip'+(on?' on':'')+'" data-curso="'+escapeAttr(c)+'">'+escapeAttr(c)+' <small>'+count+'</small></span>';
+      }).join('')}
+    </div>
+
+    <div class="row" style="margin-top:14px">
+      <button ${json?'':'disabled'} onclick="doUpsertSession('${cfg.id}')">
+        ${exists?'Actualizar sesión':'Crear sesión'} (inactiva)
+      </button>
+      <button class="sec" onclick="doAssign('${cfg.id}')">Asignar a cursos seleccionados</button>
+      <button class="${activa?'warn':''}" onclick="toggleActiva('${cfg.id}',${activa?'false':'true'})">
+        ${activa?'Desactivar ahora':'Activar ahora'}
+      </button>
+    </div>
+
+    <div class="danger-zone">
+      <strong style="font-size:12px;color:#991b1b">Zona sensible</strong>
+      <div class="row" style="margin-top:6px">
+        <button class="err" onclick="doResetResponses('${cfg.id}')">🧹 Resetear TODAS las respuestas de esta sesión</button>
+        <button class="err" onclick="doDeleteSession('${cfg.id}')">🗑 Eliminar sesión completa</button>
+      </div>
+      <p class="muted" style="margin:6px 0 0">El reset borra <code>respuestas/${cfg.id}</code> y <code>resultados/${cfg.id}</code>. No toca otras pruebas.</p>
+    </div>
+  `;
+
+  // wire chip toggles
+  mount.querySelectorAll('.chip').forEach(ch=>{
+    ch.onclick = ()=> ch.classList.toggle('on');
+  });
+}
+
+function getSelectedCursos(sessionId){
+  return [...document.querySelectorAll('#chips_'+sessionId+' .chip.on')].map(c=>c.dataset.curso);
+}
+
+function toLocalInput(iso){
+  // iso like 2026-05-02T08:00:00-04:00 → local input value YYYY-MM-DDTHH:mm
+  try{ const d = new Date(iso); const pad=n=>String(n).padStart(2,'0');
+    return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+  }catch(e){return '';}
+}
+function fromLocalInput(v){ // keep ISO with local tz
+  if(!v) return null;
+  const d = new Date(v);
+  const tzMin = -d.getTimezoneOffset();
+  const sgn = tzMin>=0?'+':'-';
+  const pad=n=>String(Math.abs(n)).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())
+    +'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'
+    +sgn+pad(Math.floor(tzMin/60))+':'+pad(tzMin%60);
+}
+function escapeAttr(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+async function doUpsertSession(sessionId){
+  const cfg = SESSIONS.find(s=>s.id===sessionId);
+  const json = jsonCache[sessionId];
+  if(!json) return alert('JSON no cargado.');
+  const cursos = getSelectedCursos(sessionId);
+  if(cursos.length===0){ if(!confirm('No seleccionaste cursos. ¿Crear sin cursosAsignados?')) return; }
+  const disp = fromLocalInput(document.getElementById('disp_'+sessionId).value) || cfg.disponibleDesde;
+  const dur  = parseInt(document.getElementById('dur_'+sessionId).value,10) || json.duracion_min || 90;
+
+  const node = {
+    titulo: cfg.titulo,
+    libro: cfg.libro,
+    cursosAsignados: cursos,
+    activa: (sesCache[sessionId] && sesCache[sessionId].activa) || false,
+    disponibleDesde: disp,
+    orden: cfg.orden,
+    visado: json.visado || 'Visado por EPM · Sr. Gabriel Castro · Encargado de Modalidad',
+    duracion_min: dur,
+    contenido: json
+  };
+  // Preserve activa explicitly as false on first create
+  if(!sesCache[sessionId]) node.activa = false;
+
+  try{
+    await db.ref(LECTURAS_BASE+'/sesiones/'+sessionId).set(node);
+    sesCache[sessionId] = node;
+    logMsg('Sesión '+sessionId+' guardada ('+cursos.length+' cursos, '+(json.items||[]).length+' ítems).','ok');
+    renderCard(cfg);
+  }catch(e){ logMsg('Error guardando '+sessionId+': '+e.message,'err'); }
+}
+
+async function doAssign(sessionId){
+  const cursos = getSelectedCursos(sessionId);
+  if(cursos.length===0) return alert('Selecciona al menos un curso.');
+  const uids = Object.entries(studentsMap).filter(([uid,s])=>cursos.includes(s.curso)).map(([uid])=>uid);
+  if(uids.length===0) return alert('No hay estudiantes en esos cursos.');
+  if(!confirm('Se asignará la sesión a '+uids.length+' estudiantes ('+cursos.join(', ')+'). ¿Continuar?')) return;
+  const updates={};
+  uids.forEach(uid=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+sessionId]=true; });
+  try{
+    await db.ref().update(updates);
+    uids.forEach(uid=>asigCache[sessionId].add(uid));
+    logMsg('Asignados '+uids.length+' estudiantes a '+sessionId+'.','ok');
+    const cfg = SESSIONS.find(s=>s.id===sessionId);
+    renderCard(cfg);
+  }catch(e){ logMsg('Error asignando: '+e.message,'err'); }
+}
+
+async function toggleActiva(sessionId, toVal){
+  const val = toVal===true||toVal==='true';
+  if(val && !confirm('¿Activar la prueba AHORA para todos los cursos asignados?')) return;
+  try{
+    await db.ref(LECTURAS_BASE+'/sesiones/'+sessionId+'/activa').set(val);
+    if(sesCache[sessionId]) sesCache[sessionId].activa = val;
+    logMsg('Sesión '+sessionId+' ahora está '+(val?'ACTIVA':'INACTIVA')+'.','ok');
+    const cfg = SESSIONS.find(s=>s.id===sessionId);
+    renderCard(cfg);
+  }catch(e){ logMsg('Error: '+e.message,'err'); }
+}
+
+async function doResetResponses(sessionId){
+  if(!confirm('⚠️ Esto BORRA respuestas y resultados de '+sessionId+'. ¿Seguro?')) return;
+  if(!confirm('Confirmación final: se borrarán TODAS las respuestas de esta sesión. Teclea OK para continuar.')) return;
+  const updates={};
+  updates[LECTURAS_BASE+'/respuestas/'+sessionId]=null;
+  updates[LECTURAS_BASE+'/resultados/'+sessionId]=null;
+  try{
+    await db.ref().update(updates);
+    logMsg('Respuestas y resultados de '+sessionId+' eliminados.','warn');
+  }catch(e){ logMsg('Error reseteando: '+e.message,'err'); }
+}
+
+async function doDeleteSession(sessionId){
+  if(!confirm('🛑 Eliminar la sesión '+sessionId+' completa (incluye asignaciones y respuestas). ¿Seguro?')) return;
+  if(!confirm('Confirmación final: esto es irreversible.')) return;
+  const updates={};
+  updates[LECTURAS_BASE+'/sesiones/'+sessionId]=null;
+  updates[LECTURAS_BASE+'/respuestas/'+sessionId]=null;
+  updates[LECTURAS_BASE+'/resultados/'+sessionId]=null;
+  for(const uid of asigCache[sessionId]) updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+sessionId]=null;
+  try{
+    await db.ref().update(updates);
+    sesCache[sessionId]=null; asigCache[sessionId]=new Set();
+    logMsg('Sesión '+sessionId+' eliminada.','warn');
+    const cfg = SESSIONS.find(s=>s.id===sessionId);
+    renderCard(cfg);
+  }catch(e){ logMsg('Error eliminando: '+e.message,'err'); }
+}
+
+// expose for inline handlers
+window.doUpsertSession=doUpsertSession;
+window.doAssign=doAssign;
+window.toggleActiva=toggleActiva;
+window.doResetResponses=doResetResponses;
+window.doDeleteSession=doDeleteSession;
+
+/* ====================================================================
+   CUENTA DE PRUEBA
+   ==================================================================== */
+let testAccount = null; // {uid, nombre, rut, curso}
+
+function normalizeRut(s){
+  return String(s||'').replace(/\./g,'').replace(/\s/g,'').replace(/-/g,'').toUpperCase();
+}
+
+function findTestAccount(){
+  const rutIn = normalizeRut(document.getElementById('testRut').value);
+  if(!rutIn){ document.getElementById('testInfo').innerHTML='<span class="badge err">RUT vacío</span>'; return; }
+  let found = null;
+  for(const [uid, s] of Object.entries(studentsMap)){
+    if(normalizeRut(s.rut) === rutIn){ found = {uid, ...s}; break; }
+  }
+  testAccount = found;
+  const info = document.getElementById('testInfo');
+  if(!found){
+    info.innerHTML = '<span class="badge err">No encontrada</span> Ningún estudiante con ese RUT. Crea la cuenta desde el admin principal primero.';
+    document.getElementById('btnAssignAll').disabled=true;
+    document.getElementById('btnUnassignAll').disabled=true;
+    return;
+  }
+  info.innerHTML = '<span class="badge ok">Encontrada</span> <strong>'+escapeAttr(found.nombre||'(sin nombre)')+'</strong> · curso '+escapeAttr(found.curso||'—')+' · uid <code>'+escapeAttr(found.uid)+'</code>';
+  document.getElementById('btnAssignAll').disabled=false;
+  document.getElementById('btnUnassignAll').disabled=false;
+}
+
+async function assignAllSessionsToTest(){
+  if(!testAccount) return;
+  const uid = testAccount.uid;
+  // Reload all sessions in case new ones were just created
+  const snap = await db.ref(LECTURAS_BASE+'/sesiones').once('value');
+  const sesiones = snap.val() || {};
+  const ids = Object.keys(sesiones);
+  if(ids.length===0){ logMsg('No hay sesiones Lecturas en RTDB.','warn'); return; }
+  if(!confirm('Asignar '+ids.length+' sesión(es) Lecturas a la cuenta de prueba ('+testAccount.nombre+')?\n\n'+ids.join('\n'))) return;
+  const updates={};
+  ids.forEach(id=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+id]=true; });
+  try{
+    await db.ref().update(updates);
+    ids.forEach(id=>{ if(asigCache[id]) asigCache[id].add(uid); });
+    logMsg('Asignadas '+ids.length+' sesiones a la cuenta de prueba.','ok');
+    renderCards();
+  }catch(e){ logMsg('Error asignando a cuenta de prueba: '+e.message,'err'); }
+}
+
+async function unassignAllFromTest(){
+  if(!testAccount) return;
+  if(!confirm('Quitar TODAS las asignaciones Lecturas de la cuenta de prueba ('+testAccount.nombre+')?')) return;
+  const uid = testAccount.uid;
+  try{
+    await db.ref(LECTURAS_BASE+'/asignaciones/'+uid).remove();
+    for(const id in asigCache){ asigCache[id].delete(uid); }
+    logMsg('Asignaciones de '+testAccount.nombre+' removidas.','warn');
+    renderCards();
+  }catch(e){ logMsg('Error: '+e.message,'err'); }
+}
+
+window.findTestAccount=findTestAccount;
+window.assignAllSessionsToTest=assignAllSessionsToTest;
+window.unassignAllFromTest=unassignAllFromTest;
+</script>
+</body>
+</html>

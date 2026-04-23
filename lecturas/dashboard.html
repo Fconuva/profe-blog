@@ -331,28 +331,33 @@
         const materialCount = content.materials.length;
         const completed = session.response && session.response.completada;
         const inProgress = session.response && !session.response.completada;
+        const locked = session.__locked;
+        const lockReason = session.__lockReason || '';
         const chips = [
           session.libro ? '<span class="chip book">' + session.libro + '</span>' : '',
           materialCount ? '<span class="chip">' + materialCount + ' material(es)</span>' : '',
           itemCount ? '<span class="chip">' + itemCount + ' ítem(s)</span>' : '',
           completed ? '<span class="chip done">Completada</span>' : '',
-          inProgress ? '<span class="chip progress">En progreso</span>' : ''
+          inProgress ? '<span class="chip progress">En progreso</span>' : '',
+          locked ? '<span class="chip" style="background:#fee2e2;color:#b91c1c;border-color:#fecaca">🔒 Bloqueada</span>' : ''
         ].join('');
-        const buttonLabel = completed ? 'Revisar prueba' : inProgress ? 'Continuar prueba' : 'Entrar a prueba';
-        const buttonClass = completed ? 'cta secondary' : 'cta';
+        const buttonLabel = locked ? '🔒 Bloqueada' : (completed ? 'Revisar prueba' : inProgress ? 'Continuar prueba' : 'Entrar a prueba');
+        const buttonClass = locked ? 'cta secondary' : (completed ? 'cta secondary' : 'cta');
+        const clickHandler = locked ? 'return false' : 'window.location.href=\'/lecturas/prueba?id=' + encodeURIComponent(session.id) + '\'';
+        const disabledAttr = locked ? ' disabled style="opacity:.6;cursor:not-allowed"' : '';
         return '<article class="card">'
           + '<div>'
           + '<h3>' + (session.titulo || 'Prueba sin título') + '</h3>'
           + '<div class="meta">' + chips + '</div>'
-          + '<p>' + (session.descripcion || 'Sin descripción.') + '</p>'
+          + '<p>' + (locked && lockReason ? lockReason : (session.descripcion || 'Sin descripción.')) + '</p>'
           + '</div>'
-          + '<button class="' + buttonClass + '" onclick="window.location.href=\'/lecturas/prueba?id=' + encodeURIComponent(session.id) + '\'">' + buttonLabel + '</button>'
+          + '<button class="' + buttonClass + '"' + disabledAttr + ' onclick="' + clickHandler + '">' + buttonLabel + '</button>'
           + '</article>';
       }).join('');
     }
 
     function maybeRedirect(sessions) {
-      const open = sessions.filter(s => !s.response || !s.response.completada);
+      const open = sessions.filter(s => !s.__locked && (!s.response || !s.response.completada));
       if (open.length !== 1) return;
       redirectBox.classList.add('show');
       redirectBox.innerHTML = 'Solo tienes una prueba pendiente. Serás redirigido automáticamente en 3 segundos o puedes entrar de inmediato desde el botón.';
@@ -380,8 +385,22 @@
         const sessions = [];
         for (const id of ids) {
           const session = await getSessionById(id);
-          if (!session || session.activa === false) continue;
+          if (!session) continue;
           session.response = await getResponse(id, user.uid);
+          // Bloqueo por activa:false o por disponibleDesde futuro
+          let locked = false; let reason = '';
+          if (session.activa === false) { locked = true; reason = 'Prueba aún no habilitada por el docente.'; }
+          const content = session.contenido || {};
+          const dd = session.disponibleDesde || content.disponibleDesde;
+          if (!locked && dd) {
+            const ts = Date.parse(dd);
+            if (!isNaN(ts) && Date.now() < ts) {
+              locked = true;
+              reason = 'Disponible desde ' + new Date(ts).toLocaleString('es-CL') + '.';
+            }
+          }
+          session.__locked = locked;
+          session.__lockReason = reason;
           sessions.push(session);
         }
         sessions.sort((a, b) => (a.orden || 0) - (b.orden || 0));

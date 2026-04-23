@@ -381,11 +381,18 @@
       const ids = await getAssignedSessionIds(uid);
       if (!ids.length) return [];
       const list = [];
+      const now = Date.now();
       for (const id of ids) {
         const snap = await db.ref(LECTURAS_BASE + '/sesiones/' + id).once('value');
         if (!snap.exists()) continue;
         const session = { id, ...snap.val() };
         if (session.activa === false) continue;
+        const content = session.contenido || {};
+        const dd = session.disponibleDesde || content.disponibleDesde;
+        if (dd) {
+          const ts = Date.parse(dd);
+          if (!isNaN(ts) && now < ts) continue;
+        }
         list.push(session);
       }
       list.sort((a, b) => (a.orden || 0) - (b.orden || 0));

@@ -1016,6 +1016,34 @@
       return shuffleArray(items, seed);
     }
 
+    function getDisplayOptions(item) {
+      const options = normalizeChoiceOptions(item);
+      if (!sessionData || !currentUser || !currentUser.uid) return options;
+      const randomization = getRandomizationConfig(sessionData);
+      if (!(randomization.mezclarOpciones || randomization.shuffleOptions)) return options;
+      const type = getType(item);
+      if (type === 'verdadero_falso' || type === 'true_false') return options;
+      if (options.length < 2) return options;
+      const seed = [sessionId || 'lecturas', currentUser.uid, item.id || '', randomization.semilla || 'shuffle-opt', 'opt'].join(':');
+      return shuffleArray(options, seed);
+    }
+
+    function getAvailability(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      const disponibleDesde = session.disponibleDesde || content.disponibleDesde || null;
+      const disponibleHasta = session.disponibleHasta || content.disponibleHasta || null;
+      const now = Date.now();
+      const fromTs = disponibleDesde ? Date.parse(disponibleDesde) : null;
+      const toTs = disponibleHasta ? Date.parse(disponibleHasta) : null;
+      if (fromTs && !isNaN(fromTs) && now < fromTs) return { blocked: true, reason: 'Disponible desde ' + new Date(fromTs).toLocaleString('es-CL') };
+      if (toTs && !isNaN(toTs) && now > toTs) return { blocked: true, reason: 'Periodo de aplicación cerrado (' + new Date(toTs).toLocaleString('es-CL') + ')' };
+      return { blocked: false };
+    }
+
+    function getVisado(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return session.visado || content.visado || null;
+
     function getMaterialsMap() {
       const map = {};
       normalizeContent(sessionData).materials.forEach(function(material) {
@@ -1300,7 +1328,7 @@
     function renderCurrentItem(item, index, total) {
       const type = getType(item);
       const selected = answers[item.id];
-      const options = normalizeChoiceOptions(item);
+      const options = getDisplayOptions(item);
       const crossoutEnabled = isCrossoutEnabled();
       const itemId = escapeJsSingleQuoted(item.id);
       let body = '';
@@ -1314,7 +1342,8 @@
             ? '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa. Puedes usar el botón <em>Tachar</em> para descartar opciones que creas incorrectas.'
             : '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa.');
         body = '<div class="instruction-banner ' + bannerColor + '"><span class="ib-icon">' + bannerIcon + '</span><div class="ib-body">' + bannerText + '</div></div>';
-        body += '<div class="option-list">' + resolvedOptions.map(function(option) {
+        body += '<div class="option-list">' + resolvedOptions.map(function(option, optIdx) {
+          const displayLetter = (type === 'verdadero_falso' || type === 'true_false') ? option.letra : String.fromCharCode(65 + optIdx);
           const selectedClass = selected === option.letra ? ' selected' : '';
           const struckClass = crossoutEnabled && isOptionStruck(item.id, option.letra) ? ' struck' : '';
           const optionValue = escapeJsSingleQuoted(option.letra);
@@ -1322,7 +1351,7 @@
           const strikeControl = crossoutEnabled
             ? '<div role="button" tabindex="0" class="strike-toggle' + (isOptionStruck(item.id, option.letra) ? ' active' : '') + '" data-strike-item="' + htmlEscape(item.id) + '" data-strike-option="' + htmlEscape(option.letra) + '">' + strikeLabel + '</div>'
             : '';
-          return '<div class="option' + selectedClass + struckClass + '"><div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')"><span class="letter">' + htmlEscape(option.letra) + '</span><span class="option-text">' + htmlEscape(option.texto) + '</span></div>' + strikeControl + '</div>';
+          return '<div class="option' + selectedClass + struckClass + '"><div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')"><span class="letter">' + htmlEscape(displayLetter) + '</span><span class="option-text">' + htmlEscape(option.texto) + '</span></div>' + strikeControl + '</div>';
         }).join('') + '</div>';
       } else if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') {
         var pts = getItemPoints(item);
@@ -1415,6 +1444,14 @@
     function renderSession() {
       if (!sessionData) return;
       applyAccessibilityConfig(sessionData);
+      const availability = getAvailability(sessionData);
+      if (availability.blocked && !isSubmitted) {
+        document.getElementById('sessionTitle').textContent = sessionData.titulo || 'Prueba bloqueada';
+        document.getElementById('sessionMeta').textContent = (sessionData.libro || '') + ' · ' + (studentData && studentData.nombre ? studentData.nombre : 'Estudiante');
+        document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>🔒 Prueba bloqueada</h2><p>' + availability.reason + '. Podrás rendirla cuando el docente habilite el acceso.</p></section>';
+        updateProgress();
+        return;
+      }
       const items = getDisplayItems();
       if (!items.length) {
         document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>Sin ítems</h2><p>Esta prueba aún no tiene contenido cargado.</p></section>';
@@ -1431,7 +1468,12 @@
       currentItemIndex = globalOffset;
       document.getElementById('sessionTitle').textContent = sessionData.titulo || 'Prueba de Lecturas';
       document.getElementById('sessionMeta').textContent = (sessionData.libro || 'Sin libro') + ' · ' + (studentData.nombre || 'Estudiante');
+      const visado = getVisado(sessionData);
       let html = '';
+      if (visado) {
+        const visadoText = typeof visado === 'string' ? visado : (visado.texto || 'Visado por EPM · Gabriel Castro');
+        html += '<section class="notice" style="background:#fef3c7;border:2px solid #b45309;color:#78350f;padding:10px 14px;margin-bottom:14px;border-radius:6px;font-size:13px;font-weight:600;text-align:center">✅ ' + htmlEscape(visadoText) + '</section>';
+      }
       if (section.material) html += renderMaterial(section.material);
       section.items.forEach(function(item, localIdx) {
         html += renderCurrentItem(item, globalOffset + localIdx, items.length);

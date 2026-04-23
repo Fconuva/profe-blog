@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel PIE Individual · Lecturas</title>
+<style>
+  :root{--b:#0f172a;--m:#64748b;--bg:#f8fafc;--card:#fff;--ok:#059669;--warn:#b45309;--err:#dc2626;--accent:#2563eb;--rose:#db2777;--amber:#d97706}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,Segoe UI,Arial,sans-serif;margin:0;background:linear-gradient(180deg,#fff7ed 0%,#eff6ff 100%);color:var(--b)}
+  header{background:linear-gradient(135deg,#1d4ed8,#0f766e,#ea580c);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;box-shadow:0 10px 24px rgba(15,23,42,.15)}
+  header h1{margin:0;font-size:18px}
+  header .who{font-size:12px;opacity:.84}
+  header a{color:#dbeafe;font-size:12px;margin-right:8px}
+  main{max-width:1320px;margin:0 auto;padding:18px}
+  .card{background:rgba(255,255,255,.96);border:1px solid rgba(251,191,36,.22);border-radius:18px;padding:18px;margin-bottom:16px;box-shadow:0 12px 28px rgba(37,99,235,.08)}
+  .card h2{margin:0 0 10px;font-size:16px;display:flex;align-items:center;gap:8px}
+  .muted{color:var(--m);font-size:12px;line-height:1.6}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  button{padding:10px 14px;border:none;border-radius:10px;font:inherit;font-weight:700;cursor:pointer;background:var(--accent);color:#fff}
+  button.secondary{background:#e2e8f0;color:var(--b)}
+  button.warn{background:var(--amber);color:#fff}
+  button.err{background:var(--err);color:#fff}
+  button.rose{background:var(--rose);color:#fff}
+  button:disabled{opacity:.55;cursor:not-allowed}
+  .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+  .stat{border-radius:14px;border:1px solid #e2e8f0;padding:12px 14px;background:#fff}
+  .stat .k{font-size:11px;color:var(--m);text-transform:uppercase;letter-spacing:.05em}
+  .stat .v{font-size:24px;font-weight:900;margin-top:4px}
+  .badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap}
+  .badge.ok{background:#d1fae5;color:#065f46}
+  .badge.warn{background:#fef3c7;color:#78350f}
+  .badge.err{background:#fee2e2;color:#991b1b}
+  .badge.info{background:#dbeafe;color:#1d4ed8}
+  .table-wrap{overflow:auto;border-radius:14px;border:1px solid #e2e8f0}
+  table{width:100%;border-collapse:collapse;background:#fff;min-width:1180px}
+  th,td{padding:12px 10px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top;font-size:13px}
+  th{background:#f8fafc;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#64748b;position:sticky;top:0;z-index:1}
+  tr:hover td{background:#fffbeb}
+  .student-name{font-weight:800;font-size:14px;margin-bottom:4px}
+  .student-sub{font-size:12px;color:#64748b}
+  .actions{display:flex;gap:8px;flex-wrap:wrap}
+  .actions button{padding:7px 10px;font-size:12px}
+  .log{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:12px 14px;font:12px/1.55 ui-monospace,Consolas,monospace;max-height:260px;overflow:auto;white-space:pre-wrap}
+  #login{max-width:380px;margin:60px auto;padding:26px}
+  label{display:block;font-size:12px;color:var(--m);margin-bottom:4px;font-weight:600}
+  input[type=password]{width:100%;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit}
+  .section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+  .pillset{display:flex;gap:8px;flex-wrap:wrap}
+  code{font-family:ui-monospace,Consolas,monospace}
+  @media (max-width: 820px){
+    header{padding:14px 16px}
+    main{padding:14px}
+    .actions{min-width:240px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>🎯 Panel PIE individual · Lecturas</h1>
+    <div class="who" id="who">— no conectado —</div>
+  </div>
+  <div>
+    <a href="./">← adminprofe</a>
+    <a href="upload_u1.html">Panel U1</a>
+    <button class="secondary" id="logoutBtn" style="display:none">Salir</button>
+  </div>
+</header>
+
+<section id="login" class="card" style="display:none">
+  <h2>🔐 Iniciar sesión admin</h2>
+  <p class="muted">Solo <code>portafolio.admin@profefranciscopancho.com</code> puede operar este panel.</p>
+  <div style="margin-top:10px">
+    <label>Contraseña</label>
+    <input id="pw" type="password" autocomplete="current-password">
+  </div>
+  <div style="margin-top:10px"><button id="loginBtn">Entrar</button></div>
+  <div id="loginMsg" class="muted" style="margin-top:8px"></div>
+</section>
+
+<main id="app" style="display:none">
+  <div class="card">
+    <h2>🧭 Flujo PIE</h2>
+    <p class="muted">Este panel crea y administra las 14 sesiones PIE individuales por estudiante. Al asignarlas, limpia la asignación agrupada anterior de Pedro Páramo o Maus para evitar duplicados. El botón de quitar restaura la sesión agrupada correspondiente al perfil.</p>
+    <div class="row" style="margin-top:12px">
+      <button onclick="upsertAllPieSessions()">⬆️ Crear / actualizar todas</button>
+      <button class="rose" onclick="assignAllPieSessions()">🎯 Asignar todas las PIE</button>
+      <button class="warn" onclick="restoreAllLegacyAssignments()">↩️ Quitar personales y restaurar agrupadas</button>
+      <button class="secondary" onclick="setAllPieActive(true)">🟢 Activar todas</button>
+      <button class="secondary" onclick="setAllPieActive(false)">⚪ Desactivar todas</button>
+      <button class="secondary" onclick="bootstrap()">🔄 Recargar estado</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📊 Resumen</h2>
+    <div class="summary-grid" id="summaryGrid"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">
+      <h2>📘 NM3 · Pedro Páramo</h2>
+      <div class="pillset" id="nm3Pills"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Curso</th>
+            <th>Perfil</th>
+            <th>JSON</th>
+            <th>Sesión RTDB</th>
+            <th>Asignación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="bodyPedronm3"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">
+      <h2>📗 NM4 · Maus</h2>
+      <div class="pillset" id="nm4Pills"></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Estudiante</th>
+            <th>Curso</th>
+            <th>Perfil</th>
+            <th>JSON</th>
+            <th>Sesión RTDB</th>
+            <th>Asignación</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="bodyMausnm4"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>📜 Registro</h2>
+    <div class="log" id="log">listo.</div>
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+  authDomain: "profe-blog.firebaseapp.com",
+  databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+  projectId: "profe-blog",
+  storageBucket: "profe-blog.firebasestorage.app",
+  messagingSenderId: "305920739217",
+  appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+};
+const OWNER_EMAIL = 'portafolio.admin@profefranciscopancho.com';
+const STUDENT_BASE = 'plataforma_estudiantes';
+const LECTURAS_BASE = 'plataforma_lecturas';
+const DEFAULT_RELEASE = {
+  pedro_nm3: '2026-05-02T08:00:00-04:00',
+  maus_nm4: '2026-05-05T08:00:00-04:00'
+};
+
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db = firebase.database();
+
+const $ = s => document.querySelector(s);
+function escapeHtml(value){
+  return String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function logMsg(txt, kind){
+  const el = $('#log');
+  const ts = new Date().toLocaleTimeString('es-CL');
+  const tag = kind==='err' ? '❌' : kind==='ok' ? '✅' : kind==='warn' ? '⚠️' : '·';
+  el.textContent = '['+ts+'] '+tag+' '+txt+'\n' + el.textContent;
+}
+function normalizeRut(value){
+  return String(value || '').replace(/\./g,'').replace(/\s/g,'').replace(/-/g,'').toUpperCase();
+}
+function getRutCandidates(student){
+  return [
+    student && student.rut,
+    student && student.RUT,
+    student && student.rut_formateado,
+    student && student.rutFormateado,
+    student && student.rut_alumno,
+    student && student.rutAlumno
+  ].map(normalizeRut).filter(Boolean);
+}
+
+let studentsMap = {};
+let sessionNodes = {};
+let assignmentNodes = {};
+let registry = null;
+let entries = [];
+
+auth.onAuthStateChanged(user => {
+  if(!user){
+    $('#login').style.display = 'block';
+    $('#app').style.display = 'none';
+    $('#logoutBtn').style.display = 'none';
+    $('#who').textContent = '— no conectado —';
+    return;
+  }
+  if(String(user.email || '').toLowerCase() !== OWNER_EMAIL){
+    alert('Esta cuenta no está autorizada para este panel.');
+    auth.signOut();
+    return;
+  }
+  $('#login').style.display = 'none';
+  $('#app').style.display = 'block';
+  $('#logoutBtn').style.display = 'inline-block';
+  $('#who').textContent = user.email;
+  bootstrap().catch(error => {
+    console.error(error);
+    logMsg('bootstrap: ' + error.message, 'err');
+  });
+});
+
+$('#loginBtn').onclick = async () => {
+  const pw = $('#pw').value.trim();
+  if(!pw){
+    $('#loginMsg').textContent = 'Ingresa la contraseña.';
+    return;
+  }
+  $('#loginBtn').disabled = true;
+  try{
+    await auth.signInWithEmailAndPassword(OWNER_EMAIL, pw);
+    $('#pw').value = '';
+  }catch(error){
+    $('#loginMsg').innerHTML = '<span class="badge err">Error</span> ' + escapeHtml(error.message);
+  }finally{
+    $('#loginBtn').disabled = false;
+  }
+};
+$('#logoutBtn').onclick = () => auth.signOut();
+
+async function bootstrap(){
+  logMsg('Cargando estudiantes, sesiones y registro PIE...');
+  const [estSnap, sesSnap, asigSnap, regResponse] = await Promise.all([
+    db.ref(STUDENT_BASE + '/estudiantes').once('value'),
+    db.ref(LECTURAS_BASE + '/sesiones').once('value'),
+    db.ref(LECTURAS_BASE + '/asignaciones').once('value'),
+    fetch('../contenidos/pie_students_2026.json?v=' + Date.now())
+  ]);
+  if(!regResponse.ok) throw new Error('No se pudo cargar pie_students_2026.json (HTTP ' + regResponse.status + ')');
+  registry = await regResponse.json();
+  studentsMap = estSnap.val() || {};
+  sessionNodes = sesSnap.val() || {};
+  assignmentNodes = asigSnap.val() || {};
+
+  entries = await Promise.all(registry.students.map(async (student, index) => {
+    let json = null;
+    let jsonError = null;
+    try{
+      const response = await fetch(student.jsonPath + '?v=' + Date.now());
+      if(!response.ok) throw new Error('HTTP ' + response.status);
+      json = await response.json();
+    }catch(error){
+      jsonError = error.message;
+    }
+    const collection = registry.collections[student.bookKey] || { legacySessionIds: [] };
+    const matched = findStudentByRut(student.rut);
+    const session = sessionNodes[student.sessionId] || null;
+    const personalAssigned = !!(matched && assignmentNodes[matched.uid] && assignmentNodes[matched.uid][student.sessionId]);
+    const legacyAssigned = !!(matched && assignmentNodes[matched.uid] && assignmentNodes[matched.uid][student.legacySessionId]);
+    return {
+      ...student,
+      index,
+      collection,
+      json,
+      jsonError,
+      matchedUid: matched ? matched.uid : null,
+      matchedStudent: matched ? matched.student : null,
+      session,
+      personalAssigned,
+      legacyAssigned
+    };
+  }));
+
+  renderAll();
+  logMsg('Panel PIE listo. ' + entries.length + ' estudiantes cargados.', 'ok');
+}
+
+function findStudentByRut(rut){
+  const normalized = normalizeRut(rut);
+  for(const [uid, student] of Object.entries(studentsMap)){
+    if(getRutCandidates(student).includes(normalized)) return { uid, student };
+  }
+  return null;
+}
+
+function getEntry(entryId){
+  return entries.find(entry => entry.id === entryId);
+}
+
+function getSessionNodeForEntry(entry){
+  if(!entry.json) throw new Error('No se pudo cargar el JSON individual.');
+  const suggested = entry.json.sessionNode || {};
+  const current = sessionNodes[entry.sessionId] || {};
+  return {
+    titulo: suggested.titulo || ('Lecturas PIE · ' + entry.bookTitle + ' · ' + entry.displayName),
+    libro: suggested.libro || (entry.bookTitle + ' · ' + entry.profileLabel),
+    cursosAsignados: [entry.course],
+    activa: current.activa === true,
+    disponibleDesde: current.disponibleDesde || DEFAULT_RELEASE[entry.bookKey],
+    orden: current.orden || suggested.orden || (500 + entry.index),
+    visado: suggested.visado || entry.json.visado || 'Visado por EPM · Sr. Gabriel Castro · Encargado de Modalidad',
+    duracion_min: current.duracion_min || suggested.duracion_min || entry.json.duracion_min || 90,
+    contenido: entry.json
+  };
+}
+
+async function upsertStudentSession(entryId, silent){
+  const entry = getEntry(entryId);
+  if(!entry) return;
+  try{
+    const node = getSessionNodeForEntry(entry);
+    await db.ref(LECTURAS_BASE + '/sesiones/' + entry.sessionId).set(node);
+    logMsg('Sesión guardada: ' + entry.sessionId, 'ok');
+    if(!silent) await bootstrap();
+  }catch(error){
+    logMsg('Error guardando ' + entry.sessionId + ': ' + error.message, 'err');
+    if(!silent) throw error;
+  }
+}
+
+async function ensureMissingSessions(){
+  const missing = entries.filter(entry => !sessionNodes[entry.sessionId]);
+  for(const entry of missing) await upsertStudentSession(entry.id, true);
+  if(missing.length) await bootstrap();
+}
+
+async function assignStudentSession(entryId, silent){
+  const entry = getEntry(entryId);
+  if(!entry) return;
+  if(!entry.matchedUid){
+    logMsg('No se encontró UID para ' + entry.displayName + ' (' + entry.rut + ').', 'err');
+    return;
+  }
+  if(!sessionNodes[entry.sessionId]) await upsertStudentSession(entryId, true);
+  const updates = {};
+  updates[LECTURAS_BASE + '/asignaciones/' + entry.matchedUid + '/' + entry.sessionId] = true;
+  (entry.collection.legacySessionIds || []).forEach(legacyId => {
+    updates[LECTURAS_BASE + '/asignaciones/' + entry.matchedUid + '/' + legacyId] = null;
+  });
+  await db.ref().update(updates);
+  logMsg('Asignada sesión individual a ' + entry.displayName + '.', 'ok');
+  if(!silent) await bootstrap();
+}
+
+async function restoreStudentLegacy(entryId, silent){
+  const entry = getEntry(entryId);
+  if(!entry) return;
+  if(!entry.matchedUid){
+    logMsg('No se encontró UID para ' + entry.displayName + ' (' + entry.rut + ').', 'err');
+    return;
+  }
+  const updates = {};
+  updates[LECTURAS_BASE + '/asignaciones/' + entry.matchedUid + '/' + entry.sessionId] = null;
+  updates[LECTURAS_BASE + '/asignaciones/' + entry.matchedUid + '/' + entry.legacySessionId] = true;
+  await db.ref().update(updates);
+  logMsg('Restaurada la sesión agrupada para ' + entry.displayName + '.', 'warn');
+  if(!silent) await bootstrap();
+}
+
+async function toggleStudentSession(entryId, active){
+  const entry = getEntry(entryId);
+  if(!entry) return;
+  await db.ref(LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/activa').set(!!active);
+  logMsg('Sesión ' + entry.sessionId + ' ahora está ' + (active ? 'ACTIVA' : 'INACTIVA') + '.', 'ok');
+  await bootstrap();
+}
+
+async function upsertAllPieSessions(){
+  for(const entry of entries) await upsertStudentSession(entry.id, true);
+  await bootstrap();
+  logMsg('Todas las sesiones PIE fueron actualizadas.', 'ok');
+}
+
+async function assignAllPieSessions(){
+  if(!confirm('Asignar las 14 sesiones PIE individuales y limpiar las asignaciones agrupadas previas de esos estudiantes?')) return;
+  await ensureMissingSessions();
+  for(const entry of entries) await assignStudentSession(entry.id, true);
+  await bootstrap();
+  logMsg('Asignación masiva PIE aplicada.', 'ok');
+}
+
+async function restoreAllLegacyAssignments(){
+  if(!confirm('Quitar las sesiones PIE individuales y restaurar la sesión agrupada correspondiente al perfil de cada estudiante?')) return;
+  for(const entry of entries) await restoreStudentLegacy(entry.id, true);
+  await bootstrap();
+  logMsg('Se restauraron las asignaciones agrupadas previas.', 'warn');
+}
+
+async function setAllPieActive(active){
+  const label = active ? 'activar' : 'desactivar';
+  if(!confirm('¿Deseas ' + label + ' las 14 sesiones PIE individuales?')) return;
+  await ensureMissingSessions();
+  const updates = {};
+  entries.forEach(entry => {
+    updates[LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/activa'] = !!active;
+  });
+  await db.ref().update(updates);
+  await bootstrap();
+  logMsg('Sesiones PIE ' + (active ? 'activadas' : 'desactivadas') + ' en bloque.', 'ok');
+}
+
+function renderSummary(){
+  const jsonReady = entries.filter(entry => entry.json && !entry.jsonError).length;
+  const foundStudents = entries.filter(entry => entry.matchedUid).length;
+  const sessionsReady = entries.filter(entry => entry.session).length;
+  const activeSessions = entries.filter(entry => entry.session && entry.session.activa === true).length;
+  const personalAssigned = entries.filter(entry => entry.personalAssigned).length;
+  $('#summaryGrid').innerHTML = [
+    ['Estudiantes PIE', entries.length],
+    ['JSON individuales', jsonReady],
+    ['RUT resueltos', foundStudents],
+    ['Sesiones en RTDB', sessionsReady],
+    ['Sesiones activas', activeSessions],
+    ['Asignadas individualmente', personalAssigned]
+  ].map(pair => '<div class="stat"><div class="k">' + escapeHtml(pair[0]) + '</div><div class="v">' + escapeHtml(pair[1]) + '</div></div>').join('');
+}
+
+function renderPills(){
+  const nm3 = entries.filter(entry => entry.bookKey === 'pedro_nm3');
+  const nm4 = entries.filter(entry => entry.bookKey === 'maus_nm4');
+  $('#nm3Pills').innerHTML = buildPills(nm3);
+  $('#nm4Pills').innerHTML = buildPills(nm4);
+}
+
+function buildPills(group){
+  const ready = group.filter(entry => entry.session).length;
+  const assigned = group.filter(entry => entry.personalAssigned).length;
+  const active = group.filter(entry => entry.session && entry.session.activa === true).length;
+  return [
+    ['En RTDB', ready, 'info'],
+    ['Asignadas', assigned, 'ok'],
+    ['Activas', active, active ? 'warn' : 'info']
+  ].map(item => '<span class="badge ' + item[2] + '">' + escapeHtml(item[0]) + ': ' + escapeHtml(item[1]) + '</span>').join('');
+}
+
+function renderTable(bookKey, mountId){
+  const rows = entries.filter(entry => entry.bookKey === bookKey).map(entry => {
+    const jsonBadge = entry.jsonError
+      ? '<span class="badge err">JSON con error</span><div class="student-sub">' + escapeHtml(entry.jsonError) + '</div>'
+      : '<span class="badge ok">JSON listo</span><div class="student-sub">' + (entry.json ? ((entry.json.items || []).length + ' ítems') : 'Sin datos') + '</div>';
+    const sessionBadge = entry.session
+      ? '<span class="badge ' + (entry.session.activa ? 'warn' : 'info') + '">' + (entry.session.activa ? 'Activa' : 'Creada') + '</span><div class="student-sub"><code>' + escapeHtml(entry.sessionId) + '</code></div>'
+      : '<span class="badge err">No creada</span><div class="student-sub"><code>' + escapeHtml(entry.sessionId) + '</code></div>';
+    const studentBadge = entry.matchedUid
+      ? '<span class="badge ok">UID resuelto</span><div class="student-sub">' + escapeHtml((entry.matchedStudent && entry.matchedStudent.nombre) || entry.fullName) + '</div>'
+      : '<span class="badge err">Sin UID</span><div class="student-sub">RUT ' + escapeHtml(entry.rut) + ' no encontrado</div>';
+    const assignmentParts = [studentBadge];
+    assignmentParts.push(entry.personalAssigned ? '<span class="badge ok">Personal asignada</span>' : '<span class="badge info">Personal no asignada</span>');
+    assignmentParts.push(entry.legacyAssigned ? '<span class="badge warn">Agrupada activa</span>' : '<span class="badge info">Agrupada limpia</span>');
+    return '<tr>'
+      + '<td><div class="student-name">' + escapeHtml(entry.displayName) + '</div><div class="student-sub">' + escapeHtml(entry.fullName) + '<br>RUT ' + escapeHtml(entry.rut) + '</div></td>'
+      + '<td><strong>' + escapeHtml(entry.course) + '</strong><div class="student-sub">' + escapeHtml(entry.bookTitle) + '</div></td>'
+      + '<td><span class="badge info">' + escapeHtml(entry.profileLabel) + '</span><div class="student-sub">' + escapeHtml(entry.notes || '') + '</div></td>'
+      + '<td>' + jsonBadge + '</td>'
+      + '<td>' + sessionBadge + '</td>'
+      + '<td>' + assignmentParts.join('<div style="height:6px"></div>') + '</td>'
+      + '<td><div class="actions">'
+      + '<button onclick="upsertStudentSession(\'' + escapeHtml(entry.id) + '\')">Guardar</button>'
+      + '<button class="rose" onclick="assignStudentSession(\'' + escapeHtml(entry.id) + '\')"' + (!entry.matchedUid ? ' disabled' : '') + '>Asignar</button>'
+      + '<button class="warn" onclick="restoreStudentLegacy(\'' + escapeHtml(entry.id) + '\')"' + (!entry.matchedUid ? ' disabled' : '') + '>Quitar</button>'
+      + '<button class="secondary" onclick="toggleStudentSession(\'' + escapeHtml(entry.id) + '\',' + (entry.session && entry.session.activa ? 'false' : 'true') + ')"' + (!entry.session ? ' disabled' : '') + '>' + (entry.session && entry.session.activa ? 'Desactivar' : 'Activar') + '</button>'
+      + '</div></td>'
+      + '</tr>';
+  }).join('');
+  document.getElementById(mountId).innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:#64748b">Sin datos</td></tr>';
+}
+
+function renderAll(){
+  renderSummary();
+  renderPills();
+  renderTable('pedro_nm3', 'bodyPedronm3');
+  renderTable('maus_nm4', 'bodyMausnm4');
+}
+
+window.bootstrap = bootstrap;
+window.upsertStudentSession = upsertStudentSession;
+window.assignStudentSession = assignStudentSession;
+window.restoreStudentLegacy = restoreStudentLegacy;
+window.toggleStudentSession = toggleStudentSession;
+window.upsertAllPieSessions = upsertAllPieSessions;
+window.assignAllPieSessions = assignAllPieSessions;
+window.restoreAllLegacyAssignments = restoreAllLegacyAssignments;
+window.setAllPieActive = setAllPieActive;
+</script>
+</body>
+</html>

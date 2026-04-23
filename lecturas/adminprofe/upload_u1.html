@@ -134,7 +134,7 @@ const SESSIONS = [
     titulo: 'Prueba Escrita Unidad 1 · Lengua · NM3',
     libro: 'Unidad 1 — Diálogos literarios y efecto estético',
     curso_level: 'NM3',
-    cursosPrefer: ['3A-TP','3B-TP','3D-TP','3A-HC','3B-HC'],
+    cursosPrefer: ['3A-TP','3B-TP','3D-TP'],
     disponibleDesde: '2026-05-02T08:00:00-04:00',
     orden: 30,
     mount: 'cards-nm3',
@@ -382,16 +382,25 @@ async function doUpsertSession(sessionId){
 
 async function doAssign(sessionId){
   const cursos = getSelectedCursos(sessionId);
-  if(cursos.length===0) return alert('Selecciona al menos un curso.');
-  const uids = Object.entries(studentsMap).filter(([uid,s])=>cursos.includes(s.curso)).map(([uid])=>uid);
-  if(uids.length===0) return alert('No hay estudiantes en esos cursos.');
-  if(!confirm('Se asignará la sesión a '+uids.length+' estudiantes ('+cursos.join(', ')+'). ¿Continuar?')) return;
+  if(cursos.length===0) {
+    if(!confirm('No seleccionaste ningún curso. ¿Deseas DESASIGNAR la sesión de todos los estudiantes?')) return;
+  }
+  // Reconcilia: asigna a los marcados y desasigna a los no marcados
+  const desiredUids = new Set(Object.entries(studentsMap).filter(([uid,s])=>cursos.includes(s.curso)).map(([uid])=>uid));
+  const currentUids = asigCache[sessionId] ? new Set(asigCache[sessionId]) : new Set();
+  const toAdd = [...desiredUids].filter(u=>!currentUids.has(u));
+  const toRemove = [...currentUids].filter(u=>!desiredUids.has(u));
+  if(toAdd.length===0 && toRemove.length===0) return alert('No hay cambios que aplicar.');
+  if(!confirm('Se asignará a '+toAdd.length+' y se QUITARÁ a '+toRemove.length+' estudiantes. Cursos finales: '+(cursos.join(', ')||'(ninguno)')+'. ¿Continuar?')) return;
   const updates={};
-  uids.forEach(uid=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+sessionId]=true; });
+  toAdd.forEach(uid=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+sessionId]=true; });
+  toRemove.forEach(uid=>{ updates[LECTURAS_BASE+'/asignaciones/'+uid+'/'+sessionId]=null; });
   try{
     await db.ref().update(updates);
-    uids.forEach(uid=>asigCache[sessionId].add(uid));
-    logMsg('Asignados '+uids.length+' estudiantes a '+sessionId+'.','ok');
+    if(!asigCache[sessionId]) asigCache[sessionId]=new Set();
+    toAdd.forEach(uid=>asigCache[sessionId].add(uid));
+    toRemove.forEach(uid=>asigCache[sessionId].delete(uid));
+    logMsg('Asignaciones reconciliadas en '+sessionId+' (+'+toAdd.length+' / -'+toRemove.length+').','ok');
     const cfg = SESSIONS.find(s=>s.id===sessionId);
     renderCard(cfg);
   }catch(e){ logMsg('Error asignando: '+e.message,'err'); }

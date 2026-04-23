@@ -263,6 +263,12 @@
           <table><thead><tr><th>Sesión</th><th>Libro</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
           <tbody id="lecturasSessionsBody"></tbody></table>
         </div>
+        <div class="panel-table" style="margin-bottom:20px;border:2px solid #ea580c">
+          <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#c2410c">🎯 PIE individual</h3>
+          <div class="muted" style="padding:0 14px 12px">Estas sesiones reemplazan la asignación agrupada del libro para evitar duplicados. Cada fila corresponde a un estudiante PIE con su sesión personalizada.</div>
+          <table><thead><tr><th>Sesión</th><th>Libro</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
+          <tbody id="lecturasPieBody"></tbody></table>
+        </div>
         <div class="panel-table" style="margin-bottom:20px;border:2px solid #2563eb">
           <h3 style="padding:14px 14px 8px;font-size:14px;font-weight:700;color:#1d4ed8">📝 Pruebas de Unidad (Escritas)</h3>
           <table><thead><tr><th>Sesión</th><th>Unidad</th><th>Cursos</th><th>Ítems</th><th>Asignados</th><th>Activa</th><th>Acciones</th></tr></thead>
@@ -947,8 +953,14 @@ function isPruebaUnidad(s){
   return /^lengua_u\d+_/i.test(s.id||'') || (s.tipo==='prueba_unidad');
 }
 
+function isPieIndividualSession(s){
+  const meta=s&&s.contenido&&s.contenido.meta;
+  return /-pie-2026$/i.test(s.id||'') || !!(meta&&meta.estudiante);
+}
+
 function renderLecSessions() {
   const tbodyLec=document.getElementById('lecturasSessionsBody');
+  const tbodyPie=document.getElementById('lecturasPieBody');
   const tbodyPU=document.getElementById('pruebasUnidadBody');
   let items=Object.entries(lecSessions).map(([id,s])=>({id,...s}));
   items.sort((a,b)=>{
@@ -977,10 +989,13 @@ function renderLecSessions() {
   };
 
   const pu = items.filter(isPruebaUnidad);
-  const lec = items.filter(s=>!isPruebaUnidad(s));
+  const pie = items.filter(s=>!isPruebaUnidad(s)&&isPieIndividualSession(s));
+  const lec = items.filter(s=>!isPruebaUnidad(s)&&!isPieIndividualSession(s));
 
   tbodyLec.innerHTML = lec.map(renderRow).join('')
     || '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones de Lecturas</td></tr>';
+  tbodyPie.innerHTML = pie.map(renderRow).join('')
+    || '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones PIE individuales visibles</td></tr>';
   tbodyPU.innerHTML = pu.map(renderRow).join('')
     || '<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:20px">No hay pruebas de unidad. Crea desde <a href="upload_u1.html">Panel Unidad 1</a>.</td></tr>';
 }
@@ -1131,7 +1146,12 @@ function updateLecReviewSessionSelect() {
   });
   if(!sessions.length){sel.innerHTML='<option value="">Sin sesiones</option>';selectedLecSession='';return;}
   if(!selectedLecSession||!lecSessions[selectedLecSession]) selectedLecSession=sessions[0].id;
-  sel.innerHTML=sessions.map(s=>'<option value="'+htmlEsc(s.id)+'"'+(s.id===selectedLecSession?' selected':'')+'>'+htmlEsc(s.titulo||s.id)+'</option>').join('');
+  const groups = [
+    { label:'Lecturas', items:sessions.filter(s=>!isPruebaUnidad(s)&&!isPieIndividualSession(s)) },
+    { label:'PIE individual', items:sessions.filter(s=>!isPruebaUnidad(s)&&isPieIndividualSession(s)) },
+    { label:'Pruebas de unidad', items:sessions.filter(isPruebaUnidad) }
+  ].filter(group=>group.items.length);
+  sel.innerHTML=groups.map(group=>'<optgroup label="'+htmlEsc(group.label)+'">'+group.items.map(s=>'<option value="'+htmlEsc(s.id)+'"'+(s.id===selectedLecSession?' selected':'')+'>'+htmlEsc(s.titulo||s.id)+'</option>').join('')+'</optgroup>').join('');
 }
 
 function onLecReviewChange() {

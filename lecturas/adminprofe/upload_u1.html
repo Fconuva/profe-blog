@@ -356,6 +356,20 @@ function fromLocalInput(v){ // keep ISO with local tz
     +'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'
     +sgn+pad(Math.floor(tzMin/60))+':'+pad(tzMin%60);
 }
+function nowIsoLocal(){
+  const d = new Date();
+  const tzMin = -d.getTimezoneOffset();
+  const sgn = tzMin>=0?'+':'-';
+  const pad=n=>String(Math.abs(n)).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())
+    +'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'
+    +sgn+pad(Math.floor(tzMin/60))+':'+pad(tzMin%60);
+}
+function shouldReleaseNow(iso){
+  if(!iso) return true;
+  const ts = Date.parse(iso);
+  return Number.isNaN(ts) || ts > Date.now();
+}
 function escapeAttr(s){return String(s).replace(/"/g,'&quot;').replace(/</g,'&lt;');}
 
 async function doUpsertSession(sessionId){
@@ -417,11 +431,24 @@ async function doAssign(sessionId){
 
 async function toggleActiva(sessionId, toVal){
   const val = toVal===true||toVal==='true';
-  if(val && !confirm('¿Activar la prueba AHORA para todos los cursos asignados?')) return;
+  if(val && !confirm('¿Activar la prueba ahora para todos los cursos asignados y dejar su disponibilidad desde este momento?')) return;
   try{
-    await db.ref(LECTURAS_BASE+'/sesiones/'+sessionId+'/activa').set(val);
-    if(sesCache[sessionId]) sesCache[sessionId].activa = val;
-    logMsg('Sesión '+sessionId+' ahora está '+(val?'ACTIVA':'INACTIVA')+'.','ok');
+    const updates = {};
+    updates[LECTURAS_BASE+'/sesiones/'+sessionId+'/activa'] = val;
+    if(val){
+      const currentFrom = (sesCache[sessionId] && sesCache[sessionId].disponibleDesde) || null;
+      if(shouldReleaseNow(currentFrom)) updates[LECTURAS_BASE+'/sesiones/'+sessionId+'/disponibleDesde'] = nowIsoLocal();
+    }
+    await db.ref().update(updates);
+    if(sesCache[sessionId]){
+      sesCache[sessionId].activa = val;
+      if(val && updates[LECTURAS_BASE+'/sesiones/'+sessionId+'/disponibleDesde']){
+        sesCache[sessionId].disponibleDesde = updates[LECTURAS_BASE+'/sesiones/'+sessionId+'/disponibleDesde'];
+        const input = document.getElementById('disp_'+sessionId);
+        if(input) input.value = toLocalInput(sesCache[sessionId].disponibleDesde);
+      }
+    }
+    logMsg('Sesión '+sessionId+' ahora está '+(val?'ACTIVA':'INACTIVA')+(val?' y disponible desde ahora':'')+'.','ok');
     const cfg = SESSIONS.find(s=>s.id===sessionId);
     renderCard(cfg);
   }catch(e){ logMsg('Error: '+e.message,'err'); }

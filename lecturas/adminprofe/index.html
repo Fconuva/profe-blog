@@ -481,6 +481,20 @@ function fmtDuration(v) {
 }
 function fmtPts(v) { const p=Number(v); return Number.isFinite(p)?(p===1?'1 pt':p+' pts'):'—'; }
 function getLevel(pct) { return pct>=80?'Destacado':pct>=60?'Adecuado':pct>=40?'Elemental':'Insuficiente'; }
+function nowIsoLocal() {
+  const d=new Date();
+  const tzMin=-d.getTimezoneOffset();
+  const sgn=tzMin>=0?'+':'-';
+  const pad=n=>String(Math.abs(n)).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())
+    +'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'
+    +sgn+pad(Math.floor(tzMin/60))+':'+pad(tzMin%60);
+}
+function shouldReleaseNow(iso) {
+  if(!iso) return true;
+  const ts=Date.parse(iso);
+  return Number.isNaN(ts)||ts>Date.now();
+}
 function getLevelBadge(pct) {
   const lv=getLevel(pct);
   const cls=pct>=80?'badge-blue':pct>=60?'badge-green':pct>=40?'badge-amber':'badge-red';
@@ -1001,7 +1015,18 @@ function renderLecSessions() {
 }
 
 async function toggleLecSession(id,val) {
-  try{ await db.ref(LECTURAS_BASE+'/sesiones/'+id+'/activa').set(val); lecSessions[id].activa=val; toast('Estado actualizado','ok'); }
+  try{
+    const updates={};
+    updates[LECTURAS_BASE+'/sesiones/'+id+'/activa']=val;
+    if(val){
+      const currentFrom=lecSessions[id]&&lecSessions[id].disponibleDesde;
+      if(shouldReleaseNow(currentFrom)) updates[LECTURAS_BASE+'/sesiones/'+id+'/disponibleDesde']=nowIsoLocal();
+    }
+    await db.ref().update(updates);
+    lecSessions[id].activa=val;
+    if(val&&updates[LECTURAS_BASE+'/sesiones/'+id+'/disponibleDesde']) lecSessions[id].disponibleDesde=updates[LECTURAS_BASE+'/sesiones/'+id+'/disponibleDesde'];
+    toast('Estado actualizado','ok');
+  }
   catch(e){toast('Error','err');}
 }
 

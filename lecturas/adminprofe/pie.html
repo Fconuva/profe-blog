@@ -191,6 +191,20 @@ function logMsg(txt, kind){
 function normalizeRut(value){
   return String(value || '').replace(/\./g,'').replace(/\s/g,'').replace(/-/g,'').toUpperCase();
 }
+function nowIsoLocal(){
+  const d = new Date();
+  const tzMin = -d.getTimezoneOffset();
+  const sgn = tzMin>=0?'+':'-';
+  const pad=n=>String(Math.abs(n)).padStart(2,'0');
+  return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())
+    +'T'+pad(d.getHours())+':'+pad(d.getMinutes())+':00'
+    +sgn+pad(Math.floor(tzMin/60))+':'+pad(tzMin%60);
+}
+function shouldReleaseNow(iso){
+  if(!iso) return true;
+  const ts = Date.parse(iso);
+  return Number.isNaN(ts) || ts > Date.now();
+}
 function getRutCandidates(student){
   return [
     student && student.rut,
@@ -381,8 +395,14 @@ async function restoreStudentLegacy(entryId, silent){
 async function toggleStudentSession(entryId, active){
   const entry = getEntry(entryId);
   if(!entry) return;
-  await db.ref(LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/activa').set(!!active);
-  logMsg('Sesión ' + entry.sessionId + ' ahora está ' + (active ? 'ACTIVA' : 'INACTIVA') + '.', 'ok');
+  const updates = {};
+  updates[LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/activa'] = !!active;
+  if(active){
+    const currentFrom = entry.session && entry.session.disponibleDesde;
+    if(shouldReleaseNow(currentFrom)) updates[LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/disponibleDesde'] = nowIsoLocal();
+  }
+  await db.ref().update(updates);
+  logMsg('Sesión ' + entry.sessionId + ' ahora está ' + (active ? 'ACTIVA' : 'INACTIVA') + (active ? ' y disponible desde ahora.' : '.') , 'ok');
   await bootstrap();
 }
 
@@ -409,15 +429,19 @@ async function restoreAllLegacyAssignments(){
 
 async function setAllPieActive(active){
   const label = active ? 'activar' : 'desactivar';
-  if(!confirm('¿Deseas ' + label + ' las 14 sesiones PIE individuales?')) return;
+  if(!confirm('¿Deseas ' + label + ' las 14 sesiones PIE individuales' + (active ? ' y dejarlas disponibles desde ahora' : '') + '?')) return;
   await ensureMissingSessions();
   const updates = {};
   entries.forEach(entry => {
     updates[LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/activa'] = !!active;
+    if(active){
+      const currentFrom = entry.session && entry.session.disponibleDesde;
+      if(shouldReleaseNow(currentFrom)) updates[LECTURAS_BASE + '/sesiones/' + entry.sessionId + '/disponibleDesde'] = nowIsoLocal();
+    }
   });
   await db.ref().update(updates);
   await bootstrap();
-  logMsg('Sesiones PIE ' + (active ? 'activadas' : 'desactivadas') + ' en bloque.', 'ok');
+  logMsg('Sesiones PIE ' + (active ? 'activadas y publicadas para ahora' : 'desactivadas') + ' en bloque.', 'ok');
 }
 
 function renderSummary(){

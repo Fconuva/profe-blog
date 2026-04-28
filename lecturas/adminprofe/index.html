@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Lecturas — Plataforma Educativa</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E📚%3C/text%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -13,8 +14,7 @@
     /* HEADER */
     .header{background:linear-gradient(135deg,#111827 0%,#115e59 55%,#164e63 100%);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)}
     .header h1{font-size:16px;font-weight:800;flex:1}
-    .header .admin-name{font-size:12px;color:rgba(248,250,252,.7)}
-    .header button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);padding:8px 14px;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit}
+    .header button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
     .header button:hover{background:rgba(255,255,255,.2)}
     /* LAYOUT */
     .layout{display:flex;flex:1;min-height:0}
@@ -173,14 +173,17 @@
       <span class="value" id="ownerLabel"></span>
     </div>
     <div class="alert error" id="gateError"></div>
-    <div class="form-group">
-      <label for="gatePassword">Contraseña</label>
-      <input id="gatePassword" type="password" placeholder="Ingresa tu contraseña docente">
-    </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
-      <button class="btn btn-primary" id="gateLoginBtn">Entrar al panel</button>
-      <button class="btn btn-secondary hidden" id="gateSignOutBtn">Cerrar sesión actual</button>
-    </div>
+    <form id="gateForm">
+      <input type="text" name="username" id="gateUsername" autocomplete="username" value="docente" readonly aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div class="form-group">
+        <label for="gatePassword">Contraseña</label>
+          <input id="gatePassword" type="password" placeholder="Ingresa tu contraseña docente" autocomplete="current-password">
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px">
+        <button class="btn btn-primary" id="gateLoginBtn" type="submit">Entrar al panel</button>
+        <button class="btn btn-secondary hidden" id="gateSignOutBtn" type="button">Cerrar sesión actual</button>
+      </div>
+    </form>
   </div>
 </section>
 
@@ -200,6 +203,7 @@
       <a href="#" data-section="lecturas"><span class="icon">📖</span>Lecturas</a>
       <div class="sep"></div>
       <a href="#" data-section="reports"><span class="icon">📋</span>Reportes</a>
+      <a href="#" data-section="planilla"><span class="icon">📊</span>Planilla de Notas</a>
     </nav>
 
     <div class="content">
@@ -313,6 +317,17 @@
           </select>
           <input type="text" id="lecReviewSearch" placeholder="Buscar nombre, RUT..." oninput="renderLecReviewPanel()">
         </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+          <button class="btn btn-primary btn-sm" onclick="refreshLecReview()" title="Recargar datos en vivo sin refrescar la página">🔄 Actualizar seguimiento</button>
+          <button class="btn btn-sm" style="background:#dc2626;color:#fff;border:1px solid #991b1b;font-weight:800" onclick="forzarRecargaTodosLecturas()" title="F5 MASIVO: recarga la prueba en TODOS los estudiantes de esta sesión, sin importar curso. NO suma strike.">⚡ F5 MASIVO (toda la sesión)</button>
+          <button class="btn btn-sm" style="background:#0ea5e9;color:#fff;border:1px solid #0369a1;font-weight:700" onclick="forzarRecargaCursoLecturas()" title="Envía una recarga remota al curso filtrado o al curso que indiques. La recarga NO suma strike.">↻ Recargar curso (sin strike)</button>
+          <button class="btn btn-secondary btn-sm" onclick="extenderTiempoSesion()" title="Modificar duración de la sesión en curso">⏱ Extender tiempo</button>
+          <button class="btn btn-sm" style="background:#eab308;color:#422006;border:1px solid #a16207;font-weight:700" onclick="pausarPruebaPorCurso()" title="Pausar SIN enviar (respuestas preservadas, estudiantes ven banner de pausa)">⏸ Pausar curso (sin enviar)</button>
+          <button class="btn btn-sm" style="background:#16a34a;color:#fff;border:1px solid #166534;font-weight:700" onclick="reanudarPruebaPorCurso()" title="Reabrir la prueba pausada de un curso (opcional: agregar minutos)">▶ Reabrir curso pausado</button>
+          <button class="btn btn-sm" style="background:#7c3aed;color:#fff;border:1px solid #5b21b6;font-weight:700" onclick="reabrirPruebaPorCursoCompleto()" title="Reabre la prueba para TODO un curso en la sesión seleccionada — incluye los que ya enviaron. Limpia todos los flags de cierre.">🔓 Reabrir curso completo</button>
+          <button class="btn btn-sm" style="background:#dc2626;color:#fff;border:1px solid #991b1b" onclick="detenerPruebaPorCurso()" title="CIERRE DEFINITIVO: fuerza envío de todos (incluye PIE). No se puede reabrir.">⛔ Cerrar y enviar (definitivo)</button>
+          <span id="lecReviewLastRefresh" class="muted" style="font-size:11px;align-self:center"></span>
+        </div>
         <div class="mini-grid" id="lecReviewSummary"></div>
         <div class="panel-table">
           <table><thead><tr><th>Estudiante</th><th>Curso</th><th>RUT</th><th>Estado</th><th>Progreso</th><th>Actividad</th><th>Strikes</th><th>Acciones</th></tr></thead>
@@ -346,6 +361,28 @@
           </div>
         </div>
         <div id="reportOutput" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 2px 8px rgba(0,0,0,.04);display:none"></div>
+      </div>
+
+      <!-- ===== PLANILLA DE NOTAS ===== -->
+      <div class="section" id="sec-planilla">
+        <h2>📊 Planilla de Notas — Correcciones Manuales de Desarrollo</h2>
+        <div class="muted" style="margin-bottom:14px">Notas calculadas con exigencia 60% en escala 1.0-7.0. Se muestran las correcciones ya guardadas en la base de datos (tercios: 0/3, 1/3, 2/3, 3/3).</div>
+        <div class="search-bar">
+          <select id="planillaSession" onchange="loadPlanilla()"></select>
+          <button class="btn btn-primary btn-sm" onclick="loadPlanilla()" title="Recargar">🔄 Actualizar</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportPlanillaCSV()" title="Exportar CSV para Lirmi/planilla">📥 CSV Lirmi</button>
+        </div>
+        <div class="panel-table">
+          <table>
+            <thead><tr>
+              <th>Nombre</th><th>Curso</th><th>RUT</th>
+              <th>Auto</th><th>Des.</th><th>Total</th><th>%</th><th style="background:#fef3c7">Nota</th>
+              <th>Corregido</th><th>Acciones</th>
+            </tr></thead>
+            <tbody id="planillaBody"><tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Selecciona una sesión para cargar las notas.</td></tr></tbody>
+          </table>
+        </div>
+        <div id="planillaDetail" style="margin-top:20px"></div>
       </div>
     </div>
   </div>
@@ -400,6 +437,22 @@
     <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('studentDetail')">Cerrar</button></div>
   </div>
 </div>
+<!-- Direct Access Link -->
+<div class="modal-overlay" id="modal-accessLink">
+  <div class="modal" style="max-width:640px">
+    <h3>🔗 Acceso directo a Lecturas</h3>
+    <p style="margin:8px 0 12px;color:#475569">Comparte este enlace con <b id="accessLinkStudent"></b>. Al abrirlo entra sin contraseña (bypass del bloqueo de Firebase).</p>
+    <div class="form-group">
+      <label>Enlace de acceso directo</label>
+      <input id="accessLinkInput" type="text" readonly style="font-family:monospace;font-size:12px" onclick="this.select()">
+    </div>
+    <div class="modal-actions" style="gap:8px;flex-wrap:wrap">
+      <a id="accessLinkOpen" href="#" target="_blank" rel="noopener" class="btn btn-primary">Abrir en pestaña nueva</a>
+      <button class="btn btn-secondary" id="accessLinkCopy" onclick="copyAccessLink()">Copiar enlace</button>
+      <button class="btn btn-secondary" onclick="closeModal('accessLink')">Cerrar</button>
+    </div>
+  </div>
+</div>
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -428,10 +481,6 @@ const auth = firebase.auth();
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db = firebase.database();
 
-// Secondary app for creating student accounts without signing out admin
-const secondaryApp = firebase.initializeApp(FIREBASE_CONFIG, 'secondary');
-const secondaryAuth = secondaryApp.auth();
-
 /* ====================================================================
    STATE
    ==================================================================== */
@@ -457,6 +506,7 @@ let selectedLecStudent = '';
 const $gate = document.getElementById('loginGate');
 const $app = document.getElementById('adminApp');
 const $gateError = document.getElementById('gateError');
+const $gateForm = document.getElementById('gateForm');
 const $gatePassword = document.getElementById('gatePassword');
 const $gateLoginBtn = document.getElementById('gateLoginBtn');
 const $gateSignOutBtn = document.getElementById('gateSignOutBtn');
@@ -516,6 +566,69 @@ function toast(msg,type) {
   setTimeout(()=>t.classList.remove('show'),3500);
 }
 
+async function callStudentApi(action, payload) {
+  const adminUser = currentUser || auth.currentUser;
+  if (!adminUser) throw new Error('Tu sesión expiró. Recarga la página e inicia sesión de nuevo.');
+  const token = await adminUser.getIdToken(true);
+  const resp = await fetch('/api/estudiantes?action=' + encodeURIComponent(action), {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + token
+    },
+    body: JSON.stringify(payload || {})
+  });
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) throw new Error(data.error || 'Error del servidor');
+  return data;
+}
+
+function resetAddStudentForm() {
+  document.getElementById('newStudentName').value='';
+  document.getElementById('newStudentRut').value='';
+  document.getElementById('newStudentCurso').value='';
+}
+
+async function generateLecturasLoginLink(uid) {
+  const student = studentsMap[uid];
+  if (!student) {
+    toast('Estudiante no encontrado','err');
+    return;
+  }
+  try {
+    const data = await callStudentApi('login-token', { studentUid: uid });
+    const url = window.location.origin.replace(/\/$/, '') + '/lecturas/?token=' + encodeURIComponent(data.token);
+    // Rellenar modal
+    document.getElementById('accessLinkStudent').textContent = student.nombre + (student.curso?' — '+student.curso:'');
+    const input = document.getElementById('accessLinkInput');
+    input.value = url;
+    const openBtn = document.getElementById('accessLinkOpen');
+    openBtn.href = url;
+    // Intentar copiar al portapapeles (best-effort)
+    try { await navigator.clipboard.writeText(url); } catch (ignore) {}
+    // Mostrar modal
+    document.getElementById('modal-accessLink').classList.add('show');
+    toast('Enlace generado — click en Abrir o Copiar','ok');
+  } catch (error) {
+    console.error('[lecturas/admin/login-link]', error);
+    let message = error.message;
+    if (message.includes('Token requerido') || message.includes('No autorizado')) message = 'Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';
+    toast('Error: ' + message,'err');
+  }
+}
+
+async function copyAccessLink() {
+  const input = document.getElementById('accessLinkInput');
+  try {
+    await navigator.clipboard.writeText(input.value);
+    toast('Enlace copiado','ok');
+  } catch (e) {
+    input.select();
+    document.execCommand('copy');
+    toast('Enlace copiado','ok');
+  }
+}
+
 /* ====================================================================
    AUTH & GATE
    ==================================================================== */
@@ -535,14 +648,14 @@ function showApp() {
   $app.classList.remove('hidden');
 }
 
-$gateLoginBtn.addEventListener('click', async()=>{
+$gateForm.addEventListener('submit', async(event)=>{
+  event.preventDefault();
   const pw=$gatePassword.value;
   if(!pw){$gateError.textContent='Ingresa tu contraseña.';$gateError.classList.add('show');return;}
   $gateLoginBtn.disabled=true;$gateLoginBtn.textContent='Validando...';$gateError.classList.remove('show');
   try{ await auth.signInWithEmailAndPassword(OWNER_ADMIN_EMAIL,pw); }
   catch(e){ $gateLoginBtn.disabled=false;$gateLoginBtn.textContent='Entrar al panel';$gateError.textContent='Contraseña incorrecta.';$gateError.classList.add('show'); }
 });
-$gatePassword.addEventListener('keydown',e=>{ if(e.key==='Enter'){e.preventDefault();$gateLoginBtn.click();} });
 $gateSignOutBtn.addEventListener('click',async()=>{ await auth.signOut(); });
 document.getElementById('logoutBtn').addEventListener('click',async()=>{ await auth.signOut(); showGate(); });
 
@@ -582,6 +695,7 @@ function showSection(id, el) {
   if(el) el.classList.add('active');
   document.querySelectorAll('.mobile-nav a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
   document.querySelectorAll('.sidebar a').forEach(a=>{ if(a.dataset.section===id) a.classList.add('active'); });
+  if (id === 'planilla' && typeof loadPlanilla === 'function') { try { loadPlanilla(); } catch(e){ console.error(e); } }
 }
 document.querySelectorAll('.sidebar a').forEach(a=>{
   a.addEventListener('click',e=>{ e.preventDefault(); showSection(a.dataset.section,a); });
@@ -591,7 +705,8 @@ function initMobileNav() {
   const links=[
     {id:'overview',icon:'📊',label:'Panel'},{id:'students',icon:'👥',label:'Estudiantes'},
     {id:'lecturas',icon:'📖',label:'Lecturas'},
-    {id:'reports',icon:'📋',label:'Reportes'}
+    {id:'reports',icon:'📋',label:'Reportes'},
+    {id:'planilla',icon:'📊',label:'Planilla'}
   ];
   nav.innerHTML=links.map(l=>'<a href="#" data-section="'+l.id+'" class="'+(l.id==='overview'?'active':'')+'" onclick="showSection(\''+l.id+'\',this)">'+l.icon+' '+l.label+'</a>').join('');
 }
@@ -621,10 +736,41 @@ async function loadAllData() {
     coursesAvailable=[...new Set(Object.values(studentsMap).map(s=>s.curso).filter(Boolean))].sort();
     populateCourseFilters();
     renderAll();
+    attachLiveListeners();
   } catch(e) {
     console.error('[loadAllData]',e);
     toast('Error cargando datos: '+e.message,'err');
   }
+}
+
+let _liveListenersAttached=false;
+let _liveRenderTimer=null;
+function scheduleLiveRender(){
+  if(_liveRenderTimer) return;
+  _liveRenderTimer=setTimeout(()=>{
+    _liveRenderTimer=null;
+    try{ renderOverview(); }catch(e){ console.error('[live/overview]',e); }
+    try{ renderLecReviewPanel(); }catch(e){ console.error('[live/review]',e); }
+  },400);
+}
+function attachLiveListeners(){
+  if(_liveListenersAttached) return;
+  _liveListenersAttached=true;
+  // Live refresh de respuestas (incluye strikes y bloqueos en tiempo real)
+  db.ref(LECTURAS_BASE+'/respuestas').on('value',snap=>{
+    lecResponses=snap.val()||{};
+    scheduleLiveRender();
+  },err=>console.error('[live/respuestas]',err));
+  // Live refresh de resultados (incluye envíos automáticos por strike)
+  db.ref(LECTURAS_BASE+'/resultados').on('value',snap=>{
+    lecResults=snap.val()||{};
+    scheduleLiveRender();
+  },err=>console.error('[live/resultados]',err));
+  // Live refresh de asignaciones por si se asigna durante la sesión
+  db.ref(LECTURAS_BASE+'/asignaciones').on('value',snap=>{
+    lecAssignments=snap.val()||{};
+    scheduleLiveRender();
+  },err=>console.error('[live/asignaciones]',err));
 }
 
 function populateCourseFilters() {
@@ -710,7 +856,9 @@ function renderStudents() {
       +'<td>'+perfilBadge+'</td>'
       +'<td>'
         +'<button class="btn btn-sm btn-secondary" onclick="editStudent(\''+s.uid+'\')" title="Editar">✏️</button> '
+        +'<button class="btn btn-sm" style="background:#0ea5e9;color:#fff" onclick="cambiarRutEstudiante(\''+s.uid+'\')" title="Cambiar RUT (preserva asignaciones)">🆔</button> '
         +'<button class="btn btn-sm btn-warn" onclick="resetPassword(\''+s.uid+'\')" title="Reset contraseña">🔑</button> '
+        +'<button class="btn btn-sm" style="background:#7c3aed;color:#fff" onclick="generateLecturasLoginLink(\''+s.uid+'\')" title="Acceso directo sin contraseña">🔗</button> '
         +'<button class="btn btn-sm btn-secondary" onclick="copyCredentials(\''+s.uid+'\')" title="Copiar credenciales">📋</button> '
         +'<button class="btn btn-sm btn-secondary" onclick="viewStudentDetail(\''+s.uid+'\')" title="Ver detalle">👁</button> '
         +'<button class="btn btn-sm btn-danger" onclick="deleteStudent(\''+s.uid+'\')" title="Eliminar">🗑</button>'
@@ -723,24 +871,16 @@ async function createStudent() {
   const rut=cleanRut(document.getElementById('newStudentRut').value);
   const curso=document.getElementById('newStudentCurso').value.trim();
   if(!name||!rut||!curso){toast('Completa todos los campos','err');return;}
-  const email=rutToEmail(rut);
   const pass=defaultPassword(rut);
   try{
-    const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-    await secondaryAuth.signOut();
-    const uid=cred.user.uid;
-    await db.ref(STUDENT_BASE+'/estudiantes/'+uid).set({
-      nombre:name,rut:rut,curso:curso,
-      perfil_completo:false,password_changed:false,
-      createdAt:Date.now(),createdBy:currentUser.uid
-    });
-    studentsMap[uid]={nombre:name,rut:rut,curso:curso,perfil_completo:false};
-    if(!coursesAvailable.includes(curso)){coursesAvailable.push(curso);coursesAvailable.sort();populateCourseFilters();}
-    renderStudents();renderOverview();
+    const data=await callStudentApi('create',{nombre:name,rut:rut,curso:curso});
+    await loadAllData();
     closeModal('addStudent');
-    document.getElementById('newStudentName').value='';
-    document.getElementById('newStudentRut').value='';
-    toast('Estudiante creado (contraseña: '+pass+')','ok');
+    resetAddStudentForm();
+    const recovered = data.recoveredAuth || data.recoveredProfile;
+    toast(recovered
+      ? 'Cuenta existente vinculada. Si está bloqueado, usa el botón 🔗.'
+      : 'Estudiante creado (contraseña: '+pass+')','ok');
   }catch(e){console.error(e);toast('Error: '+e.message,'err');}
 }
 
@@ -748,28 +888,26 @@ async function bulkCreateStudents() {
   const raw=document.getElementById('bulkData').value.trim();
   if(!raw){toast('Pega la lista de estudiantes','err');return;}
   const lines=raw.split('\n').filter(l=>l.trim());
-  let created=0,errors=[];
+  const estudiantes=[];
+  const errors=[];
   for(const line of lines){
     const parts=line.split(';').map(s=>s.trim());
     if(parts.length<3){errors.push(line+' — formato inválido');continue;}
     const[name,rut,curso]=parts;
-    const email=rutToEmail(rut);
-    const pass=defaultPassword(rut);
+    estudiantes.push({nombre:name,rut:cleanRut(rut),curso:curso});
+  }
+  let processed=0;
+  if(estudiantes.length){
     try{
-      const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-      await secondaryAuth.signOut();
-      await db.ref(STUDENT_BASE+'/estudiantes/'+cred.user.uid).set({
-        nombre:name,rut:cleanRut(rut),curso:curso,
-        perfil_completo:false,password_changed:false,
-        createdAt:Date.now(),createdBy:currentUser.uid
-      });
-      created++;
-    }catch(e){errors.push(name+' — '+e.message);}
+      const data=await callStudentApi('bulk-create',{estudiantes:estudiantes});
+      processed=data.created||0;
+      if(Array.isArray(data.errors)&&data.errors.length) data.errors.forEach(err=>errors.push((err.nombre||'?')+' — '+err.error));
+    }catch(e){errors.push(e.message);}
   }
   await loadAllData();
   closeModal('bulkAdd');
   document.getElementById('bulkData').value='';
-  let msg=created+' estudiantes creados.';
+  let msg=processed+' estudiantes procesados.';
   if(errors.length) msg+=' '+errors.length+' errores.';
   toast(msg,errors.length?'err':'ok');
   if(errors.length) console.warn('Errores carga masiva:',errors);
@@ -796,18 +934,45 @@ async function saveStudentEdit() {
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
+async function cambiarRutEstudiante(uid) {
+  const s = studentsMap[uid]; if (!s) return;
+  const nuevoInput = prompt('🆔 CAMBIAR RUT\n\nEstudiante: '+s.nombre+'\nRUT actual: '+s.rut+'\n\nIngresa el nuevo RUT (con guión, ej: 29195029-9):');
+  if (!nuevoInput) return;
+  const nuevoRut = cleanRut(nuevoInput);
+  if (!nuevoRut || nuevoRut.length < 8) { toast('RUT inválido','err'); return; }
+  if (nuevoRut === cleanRut(s.rut)) { toast('El RUT nuevo es igual al actual','err'); return; }
+  const nuevoEmail = rutToEmail(nuevoRut);
+  const nuevaPass = defaultPassword(nuevoRut);
+  if (!confirm('Confirmar cambio:\n\n'+s.nombre+'\n  RUT '+s.rut+' → '+nuevoRut+'\n  Email: '+nuevoEmail+'\n  Password: '+nuevaPass+'\n\n✅ Se preservan asignaciones y respuestas (mismo UID).\n⚠️ La contraseña anterior queda invalidada.')) return;
+  try {
+    const data = await callStudentApi('change-rut', { studentUid: uid, nuevoRut: nuevoRut });
+    if (studentsMap[uid]) {
+      studentsMap[uid].rut = data.rutNuevo;
+      studentsMap[uid].password_changed = false;
+    }
+    renderStudents();
+    toast('RUT actualizado · Email: '+data.nuevoEmail+' · Password: '+data.nuevaPassword,'ok');
+  } catch (e) {
+    console.error('[change-rut]', e);
+    let msg = e.message;
+    if (msg.includes('Token requerido')||msg.includes('No autorizado')) msg = 'Tu sesión expiró. Recarga la página.';
+    toast('Error: '+msg,'err');
+  }
+}
+
 async function resetPassword(uid) {
   const s=studentsMap[uid];if(!s)return;
   const pass=defaultPassword(s.rut);
   if(!confirm('¿Restablecer contraseña de '+s.nombre+'?\nContraseña por defecto: '+pass)) return;
   try{
-    const email=rutToEmail(s.rut);
-    await secondaryAuth.signInWithEmailAndPassword(email,pass);
-    await secondaryAuth.signOut();
+    await callStudentApi('reset-password',{studentUid:uid});
+    if(studentsMap[uid]) studentsMap[uid].password_changed=false;
     toast('La contraseña ya es la por defecto: '+pass,'ok');
   }catch(e){
-    await db.ref(STUDENT_BASE+'/estudiantes/'+uid).update({password_reset_pending:true});
-    toast('Se marcó para restablecer. Contraseña por defecto: '+pass,'ok');
+    console.error('[lecturas/admin/reset-password]',e);
+    let msg=e.message;
+    if(msg.includes('Token requerido')||msg.includes('No autorizado')) msg='Tu sesión expiró. Recarga la página e inicia sesión de nuevo.';
+    toast('Error: '+msg,'err');
   }
 }
 
@@ -1122,7 +1287,11 @@ function getLecReviewRows(sessionId) {
     const response=sesResp[uid]||null;
     const result=sesRes[uid]||null;
     const answers=response&&response.answers?response.answers:{};
-    const submitted=!!((response&&response.completada)||result);
+    // Una prueba está "Terminada" SOLO si tiene marcador explícito de cierre.
+    // No basta con que exista el nodo /resultados/ (puede haberse reabierto y aún quedar nodo).
+    const respDone=!!(response && response.completada===true && response.submitted_at);
+    const resDone=!!(result && result.completada!==false && result.submitted_at);
+    const submitted=respDone || resDone;
     const started=!!(response&&(response.started_at||Object.keys(answers).length));
     const status=submitted?'submitted':(started?'progress':'pending');
     const answeredCount=result&&Number.isFinite(Number(result.answered_count))?Number(result.answered_count):countAnsweredItems(session,answers);
@@ -1267,7 +1436,9 @@ function renderLecReviewPanel() {
       +'<td>'+(r.strikes>0?'<span class="status-chip blocked" style="background:#fef3c7;color:#92400e">'+r.strikes+'</span>':r.strikes)+'</td>'
       +'<td>'
         +'<button class="btn btn-sm btn-secondary" onclick="selectLecStudent(\''+r.uid+'\')">👁</button> '
-        +'<button class="btn btn-sm btn-warn" onclick="resetLecStrikes(\''+r.uid+'\')" title="Reset strikes">🔄</button> '
+        +'<button class="btn btn-sm btn-warn" onclick="resetLecStrikes(\''+r.uid+'\')" title="Quitar strikes y reabrir (preserva respuestas)">🔄</button> '
+        +'<button class="btn btn-sm" style="background:#0ea5e9;color:#fff" onclick="forzarRecargaEstudianteLecturas(\''+r.uid+'\')" title="Recargar (F5) sin sumar strike">↻</button> '
+        +(!r.submitted?'<button class="btn btn-sm btn-danger" style="background:#b91c1c" onclick="cerrarPruebaEstudianteLecturas(\''+r.uid+'\')" title="Cerrar prueba (server-side, aunque esté offline)">⛔</button> ':' ')
         +(r.submitted?'<button class="btn btn-sm btn-warn" style="background:#7c3aed" onclick="resetLecReopen(\''+r.uid+'\')" title="Reabrir prueba">🔓</button> ':' ')
         +'<button class="btn btn-sm btn-danger" onclick="resetLecStudentFull(\''+r.uid+'\')" title="Reset total">💥</button>'
       +'</td></tr>';
@@ -1330,29 +1501,50 @@ function renderLecReviewDetail() {
     +'<div class="answer-list">'+answerRows+'</div>';
 }
 
-/* Strike reset (soft: just strikes to 0) */
+/* Strike reset (soft): quita strikes, desbloquea y reabre la prueba SIN borrar respuestas */
 async function resetLecStrikes(uid) {
   if(!selectedLecSession)return;
   const student=studentsMap[uid];
-  if(!confirm('¿Resetear strikes de '+(student?student.nombre:uid)+' a 0?'))return;
+  if(!confirm('¿Quitar strikes y reabrir prueba de '+(student?student.nombre:uid)+'?\n\n• Strikes → 0\n• Se desbloquea y puede seguir respondiendo\n• NO se borran sus respuestas previas'))return;
   const updates={};
+  const now = Date.now();
   updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/strikes']=0;
   updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/completada']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/submitted_at']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/forzar_envio']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausado_por_docente']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_motivo']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_at']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_curso']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/reanudado_at']=now;
   updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/strikes']=0;
   updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/completada']=false;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/submitted_at']=null;
+  appendLecturaForceReload(updates, selectedLecSession, uid, '✅ El profesor quitó tus strikes. La prueba se actualizará ahora sin sumar strike.', now);
   try{
     await db.ref().update(updates);
     // Update local cache
     if(lecResponses[selectedLecSession]&&lecResponses[selectedLecSession][uid]){
       lecResponses[selectedLecSession][uid].strikes=0;
       delete lecResponses[selectedLecSession][uid].bloqueado_por_strikes;
+      lecResponses[selectedLecSession][uid].completada=false;
+      lecResponses[selectedLecSession][uid].submitted_at=null;
+      lecResponses[selectedLecSession][uid].forzar_envio=false;
+      lecResponses[selectedLecSession][uid].pausado_por_docente=false;
+      delete lecResponses[selectedLecSession][uid].pausa_motivo;
+      delete lecResponses[selectedLecSession][uid].pausa_at;
+      delete lecResponses[selectedLecSession][uid].pausa_curso;
     }
     if(lecResults[selectedLecSession]&&lecResults[selectedLecSession][uid]){
       lecResults[selectedLecSession][uid].strikes=0;
       delete lecResults[selectedLecSession][uid].bloqueado_por_strikes;
+      lecResults[selectedLecSession][uid].completada=false;
+      lecResults[selectedLecSession][uid].submitted_at=null;
     }
-    renderLecReviewPanel();
-    toast('Strikes reseteados a 0','ok');
+    renderLecReviewPanel();renderOverview();
+    toast('Strikes quitados. Se envió recarga remota sin strike.','ok');
   }catch(e){toast('Error: '+e.message,'err');}
 }
 
@@ -1365,20 +1557,41 @@ async function resetLecReopen(uid) {
   updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/strikes']=0;
   updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
   updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/completada']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/submitted_at']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/forzar_envio']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausado_por_docente']=false;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_motivo']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_at']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/pausa_curso']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/cerrado_por_docente']=null;
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/reopened_at']=Date.now();
+  // Resetear started_at: si no, el timer del estudiante arranca con tiempo agotado y auto-envia
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/started_at']=Date.now();
+  updates[LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid+'/last_save']=Date.now();
   updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/strikes']=0;
   updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/bloqueado_por_strikes']=null;
   updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/completada']=false;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/submitted_at']=null;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/cerrado_por_docente']=null;
+  updates[LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+uid+'/reopened_at']=Date.now();
   try{
     await db.ref().update(updates);
     if(lecResponses[selectedLecSession]&&lecResponses[selectedLecSession][uid]){
       lecResponses[selectedLecSession][uid].strikes=0;
       delete lecResponses[selectedLecSession][uid].bloqueado_por_strikes;
       lecResponses[selectedLecSession][uid].completada=false;
+      lecResponses[selectedLecSession][uid].submitted_at=null;
+      lecResponses[selectedLecSession][uid].forzar_envio=false;
+      lecResponses[selectedLecSession][uid].pausado_por_docente=false;
+      delete lecResponses[selectedLecSession][uid].pausa_motivo;
+      delete lecResponses[selectedLecSession][uid].pausa_at;
+      delete lecResponses[selectedLecSession][uid].pausa_curso;
     }
     if(lecResults[selectedLecSession]&&lecResults[selectedLecSession][uid]){
       lecResults[selectedLecSession][uid].strikes=0;
       delete lecResults[selectedLecSession][uid].bloqueado_por_strikes;
       lecResults[selectedLecSession][uid].completada=false;
+      lecResults[selectedLecSession][uid].submitted_at=null;
     }
     renderLecReviewPanel();renderOverview();
     toast('Prueba reabierta — estudiante puede responder de nuevo','ok');
@@ -1540,6 +1753,603 @@ function downloadCSV(csv,name) {
   toast('CSV descargado','ok');
 }
 
+/* Recarga en vivo respuestas/resultados de la sesión seleccionada (sin refrescar página) */
+async function refreshLecReview() {
+  const btn = event && event.currentTarget;
+  const originalText = btn ? btn.innerHTML : '';
+  try {
+    if (btn) { btn.disabled = true; btn.innerHTML = '⏳ Actualizando...'; }
+    const [respS, resS, sesS] = await Promise.all([
+      db.ref(LECTURAS_BASE+'/respuestas').once('value'),
+      db.ref(LECTURAS_BASE+'/resultados').once('value'),
+      db.ref(LECTURAS_BASE+'/sesiones').once('value')
+    ]);
+    lecResponses = respS.val() || {};
+    lecResults = resS.val() || {};
+    lecSessions = sesS.val() || {};
+    renderLecReviewPanel();
+    renderOverview();
+    const now = new Date();
+    const label = document.getElementById('lecReviewLastRefresh');
+    if (label) label.textContent = 'Actualizado: ' + String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+    toast('Seguimiento actualizado','ok');
+  } catch (e) {
+    toast('Error al actualizar: '+e.message, 'err');
+  } finally {
+    if (btn) { btn.disabled = false; btn.innerHTML = originalText; }
+  }
+}
+
+function getLecturaCourseForBulkAction(title) {
+  const selectedCourse = document.getElementById('lecReviewCourse').value;
+  if (selectedCourse && coursesAvailable.includes(selectedCourse)) return selectedCourse;
+  if (!coursesAvailable || !coursesAvailable.length) {
+    toast('No hay cursos cargados','err');
+    return null;
+  }
+  const lista = coursesAvailable.map(function(c, i) { return (i + 1) + '. ' + c; }).join('\n');
+  const input = prompt(title + '\n\nEscribe el NOMBRE EXACTO del curso:\n\n' + lista + '\n\nCurso:');
+  if (!input) return null;
+  const curso = input.trim();
+  if (!coursesAvailable.includes(curso)) {
+    toast('Curso no encontrado: ' + curso, 'err');
+    return null;
+  }
+  return curso;
+}
+
+function appendLecturaForceReload(updates, sesionId, uid, message, token) {
+  const reloadBase = LECTURAS_BASE + '/respuestas/' + sesionId + '/' + uid;
+  updates[reloadBase + '/force_reload_at'] = token;
+  updates[reloadBase + '/force_reload_message'] = message;
+}
+
+async function forzarRecargaCursoLecturas() {
+  if (!selectedLecSession) {
+    toast('Selecciona una sesión primero', 'err');
+    return;
+  }
+  const curso = getLecturaCourseForBulkAction('↻ RECARGAR CURSO\n\nLa página se recargará en los alumnos SIN sumar strike.');
+  if (!curso) return;
+  const ses = lecSessions[selectedLecSession];
+  const sesTitulo = (ses && ses.titulo) || selectedLecSession;
+  const estudiantesCurso = Object.entries(studentsMap).filter(function(entry) {
+    return entry[1] && entry[1].curso === curso;
+  });
+  const afectados = estudiantesCurso.filter(function(entry) {
+    const uid = entry[0];
+    return !!(
+      (lecAssignments[uid] && lecAssignments[uid][selectedLecSession]) ||
+      (lecResponses[selectedLecSession] && lecResponses[selectedLecSession][uid]) ||
+      (lecResults[selectedLecSession] && lecResults[selectedLecSession][uid])
+    );
+  });
+  if (!afectados.length) {
+    toast('No hay estudiantes de ' + curso + ' asignados a esta sesión', 'err');
+    return;
+  }
+  const msg = '↻ ¿Recargar la prueba "' + sesTitulo + '" para ' + afectados.length + ' estudiante(s) de ' + curso + '?\n\n'
+    + 'La recarga es remota y NO suma strike. Úsalo cuando necesites forzar un F5 desde el panel docente.';
+  if (!confirm(msg)) return;
+
+  const token = Date.now();
+  const updates = {};
+  afectados.forEach(function(entry) {
+    appendLecturaForceReload(
+      updates,
+      selectedLecSession,
+      entry[0],
+      '↻ El profesor actualizó tu prueba. La página se recargará ahora sin sumar strike.',
+      token
+    );
+  });
+
+  try {
+    await db.ref().update(updates);
+    toast('Recarga enviada a ' + afectados.length + ' estudiante(s) de ' + curso, 'ok');
+  } catch (e) {
+    toast('Error al enviar recarga: ' + e.message, 'err');
+  }
+}
+
+/* F5 MASIVO: recarga TODOS los estudiantes de la sesión activa, sin filtro de curso. NO suma strike. */
+async function forzarRecargaTodosLecturas() {
+  if (!selectedLecSession) {
+    toast('Selecciona una sesión primero', 'err');
+    return;
+  }
+  const ses = lecSessions[selectedLecSession];
+  const sesTitulo = (ses && ses.titulo) || selectedLecSession;
+  // Reunir todos los uids con asignación, respuesta o resultado en la sesión actual.
+  const uidsSet = {};
+  if (lecResponses[selectedLecSession]) Object.keys(lecResponses[selectedLecSession]).forEach(function(u){ uidsSet[u]=true; });
+  if (lecResults[selectedLecSession]) Object.keys(lecResults[selectedLecSession]).forEach(function(u){ uidsSet[u]=true; });
+  Object.keys(lecAssignments || {}).forEach(function(u){
+    if (lecAssignments[u] && lecAssignments[u][selectedLecSession]) uidsSet[u] = true;
+  });
+  const uids = Object.keys(uidsSet);
+  if (!uids.length) {
+    toast('No hay estudiantes en esta sesión', 'err');
+    return;
+  }
+  const msg = '⚡ F5 MASIVO\n\n¿Recargar la prueba "' + sesTitulo + '" en TODOS los estudiantes (' + uids.length + ')?\n\n'
+    + '• La recarga es remota e inmediata (todos los cursos).\n'
+    + '• NO suma strike.\n'
+    + '• Las respuestas guardadas se preservan.\n\n'
+    + 'Úsalo cuando necesites forzar un F5 simultáneo (ej: cambio de versión en vivo).';
+  if (!confirm(msg)) return;
+
+  const token = Date.now();
+  const updates = {};
+  uids.forEach(function(uid) {
+    appendLecturaForceReload(
+      updates,
+      selectedLecSession,
+      uid,
+      '⚡ El profesor actualizó la prueba. Recargando ahora sin sumar strike.',
+      token
+    );
+  });
+
+  try {
+    await db.ref().update(updates);
+    toast('⚡ F5 enviado a ' + uids.length + ' estudiante(s) de toda la sesión', 'ok');
+  } catch (e) {
+    toast('Error al enviar F5 masivo: ' + e.message, 'err');
+  }
+}
+
+/* Cerrar prueba (server-side) a UN estudiante específico — funciona aunque esté offline */
+async function cerrarPruebaEstudianteLecturas(uid) {
+  if (!selectedLecSession) { toast('Selecciona una sesión primero','err'); return; }
+  if (!uid) { toast('UID inválido','err'); return; }
+  const stu = studentsMap[uid] || {};
+  const nombre = stu.nombre || stu.nombre_completo || uid;
+  const ses = lecSessions[selectedLecSession];
+  const sesTitulo = (ses && ses.titulo) || selectedLecSession;
+  const resp = (lecResponses[selectedLecSession] && lecResponses[selectedLecSession][uid]) || null;
+  if (resp && resp.completada === true) { toast(nombre+' ya está cerrada','ok'); return; }
+  if (!confirm('⛔ Cerrar prueba "'+sesTitulo+'" para '+nombre+'?\n\nSe marcará como enviada en la base de datos (server-side) — funciona aunque tenga la pestaña cerrada o sin internet. Las respuestas guardadas se preservan.')) return;
+  const now = Date.now();
+  const base = LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+uid;
+  try {
+    await db.ref(base).update({
+      forzar_envio: true,
+      cerrado_por_docente: { at: now, curso: stu.curso || null, individual: true },
+      completada: true,
+      submitted_at: now
+    });
+    toast('Prueba cerrada: '+nombre,'ok');
+    setTimeout(function(){ refreshLecReview(); }, 1500);
+  } catch(e) {
+    toast('Error: '+e.message,'err');
+  }
+}
+
+/* Forzar F5 a UN estudiante específico (sin strike) */
+async function forzarRecargaEstudianteLecturas(uid) {
+  if (!selectedLecSession) { toast('Selecciona una sesión primero', 'err'); return; }
+  if (!uid) { toast('UID inválido', 'err'); return; }
+  const stu = studentsMap[uid] || {};
+  const nombre = stu.nombre || stu.nombre_completo || uid;
+  const ses = lecSessions[selectedLecSession];
+  const sesTitulo = (ses && ses.titulo) || selectedLecSession;
+  if (!confirm('↻ Recargar la prueba "'+sesTitulo+'" para '+nombre+'?\n\nLa página se recargará en su dispositivo SIN sumar strike.')) return;
+  const updates = {};
+  appendLecturaForceReload(
+    updates,
+    selectedLecSession,
+    uid,
+    '↻ El profesor actualizó tu prueba. La página se recargará ahora sin sumar strike.',
+    Date.now()
+  );
+  try {
+    await db.ref().update(updates);
+    toast('Recarga enviada a '+nombre,'ok');
+  } catch (e) {
+    toast('Error al enviar recarga: '+e.message,'err');
+  }
+}
+
+/* Helper: pide curso y devuelve {curso, pendientes:[{uid,sesionId,nombre}], sesiones:[id]} */
+async function _seleccionarCursoConPendientes(titulo) {
+  if (!coursesAvailable || !coursesAvailable.length) { toast('No hay cursos cargados','err'); return null; }
+  const lista = coursesAvailable.map(function(c,i){ return (i+1)+'. '+c; }).join('\n');
+  const input = prompt(titulo+'\n\nEscribe el NOMBRE EXACTO del curso (se aplica a TODAS las sesiones activas incluyendo PIE/DIL/Accesible/Visión):\n\n'+lista+'\n\nCurso:');
+  if (!input) return null;
+  const curso = input.trim();
+  if (!coursesAvailable.includes(curso)) { toast('Curso no encontrado: '+curso,'err'); return null; }
+  const estudiantesCurso = Object.entries(studentsMap).filter(function(e){ return e[1] && e[1].curso===curso; });
+  if (!estudiantesCurso.length) { toast('Sin estudiantes en '+curso,'err'); return null; }
+  const pendientes = [];
+  for (const entry of estudiantesCurso) {
+    const uid = entry[0], s = entry[1];
+    for (const sesionId of Object.keys(lecResponses || {})) {
+      const resp = lecResponses[sesionId] && lecResponses[sesionId][uid];
+      if (!resp) continue;
+      const yaCompleta = resp.completada === true || (lecResults && lecResults[sesionId] && lecResults[sesionId][uid] && lecResults[sesionId][uid].completada === true);
+      if (!yaCompleta) pendientes.push({ uid: uid, sesionId: sesionId, nombre: s.nombre || s.nombre_completo || uid });
+    }
+  }
+  return { curso: curso, pendientes: pendientes };
+}
+
+/* Pausar prueba SIN enviar — respuestas preservadas, estudiantes ven banner de pausa */
+async function pausarPruebaPorCurso() {
+  const info = await _seleccionarCursoConPendientes('⏸ PAUSAR prueba por curso\n\nLa prueba queda inactiva para ese curso. NO se envían respuestas. Otro día puedes reabrir y dar más tiempo.');
+  if (!info) return;
+  if (!info.pendientes.length) { toast('No hay pruebas en progreso en '+info.curso,'ok'); return; }
+  const ejemplos = info.pendientes.slice(0,10).map(function(p){ return '• '+p.nombre; }).join('\n') + (info.pendientes.length>10?'\n... y '+(info.pendientes.length-10)+' más':'');
+  const motivo = prompt('Mensaje para los estudiantes (se muestra en pantalla):', 'La prueba fue pausada por el profesor. Tus respuestas están guardadas. Continuaremos otro día.');
+  if (motivo === null) return;
+  if (!confirm('⏸ Pausar prueba para '+info.pendientes.length+' estudiante(s) de '+info.curso+'?\n\nNO se envía nada. Los estudiantes verán un banner de pausa y la UI se desactiva.\n\n(muestra):\n'+ejemplos)) return;
+  toast('Pausando '+info.pendientes.length+' pruebas...','ok');
+  let ok=0, err=0;
+  for (const p of info.pendientes) {
+    try {
+      await db.ref(LECTURAS_BASE+'/respuestas/'+p.sesionId+'/'+p.uid).update({
+        pausado_por_docente: true,
+        pausa_motivo: motivo,
+        pausa_at: Date.now(),
+        pausa_curso: info.curso
+      });
+      ok++;
+    } catch(e) { console.error('[pausar]',p,e); err++; }
+  }
+  toast('Pausadas: '+ok+(err?' · '+err+' errores':''), err?'err':'ok');
+  setTimeout(function(){ refreshLecReview(); }, 2000);
+}
+
+/* Reanudar prueba pausada de un curso — opcional agregar minutos extra */
+async function reanudarPruebaPorCurso() {
+  const pausados = [];
+  for (const sesionId of Object.keys(lecResponses || {})) {
+    for (const uid of Object.keys(lecResponses[sesionId] || {})) {
+      const resp = lecResponses[sesionId][uid];
+      if (resp && resp.pausado_por_docente) {
+        const s = studentsMap[uid];
+        if (s && s.curso) pausados.push({ uid: uid, sesionId: sesionId, curso: s.curso, nombre: s.nombre || uid });
+      }
+    }
+  }
+  if (!pausados.length) { toast('No hay pruebas pausadas','ok'); return; }
+  const cursosPausados = [...new Set(pausados.map(function(p){ return p.curso; }))].sort();
+  const lista = cursosPausados.map(function(c,i){ var n=pausados.filter(function(p){return p.curso===c;}).length; return (i+1)+'. '+c+' ('+n+' estudiantes)'; }).join('\n');
+  const input = prompt('▶ REABRIR prueba pausada\n\nCursos con pruebas pausadas:\n\n'+lista+'\n\nEscribe el NOMBRE EXACTO del curso a reabrir:');
+  if (!input) return;
+  const curso = input.trim();
+  if (!cursosPausados.includes(curso)) { toast('Curso no tiene pausas: '+curso,'err'); return; }
+  const afectados = pausados.filter(function(p){ return p.curso===curso; });
+  const extraMin = prompt('¿Agregar minutos extra a la duración de la sesión?\n\nEjemplo: 30 para dar 30 minutos más.\n(0 o vacío = no cambiar duración)', '30');
+  const extra = parseInt(extraMin || '0', 10) || 0;
+  if (!confirm('▶ Reabrir prueba para '+afectados.length+' estudiante(s) de '+curso+'?' + (extra>0 ? '\n\n+ '+extra+' minutos extra en la sesión.' : ''))) return;
+
+  toast('Reabriendo '+afectados.length+' pruebas...','ok');
+  let ok=0, err=0;
+  const sesSet = {};
+  for (const p of afectados) {
+    try {
+      await db.ref(LECTURAS_BASE+'/respuestas/'+p.sesionId+'/'+p.uid).update({
+        pausado_por_docente: false,
+        pausa_motivo: null,
+        reanudado_at: Date.now()
+      });
+      // Reset del started_at para que el nuevo tiempo corra completo desde ahora (opcional)
+      if (extra > 0) {
+        await db.ref(LECTURAS_BASE+'/respuestas/'+p.sesionId+'/'+p.uid+'/started_at').set(Date.now());
+      }
+      sesSet[p.sesionId] = true;
+      ok++;
+    } catch(e) { console.error('[reanudar]',p,e); err++; }
+  }
+  if (extra > 0) {
+    for (const sid of Object.keys(sesSet)) {
+      try {
+        const actual = Number((lecSessions[sid]||{}).duracion_min) || 0;
+        const nueva = actual + extra;
+        await db.ref(LECTURAS_BASE+'/sesiones/'+sid+'/duracion_min').set(nueva);
+        if (lecSessions[sid]) lecSessions[sid].duracion_min = nueva;
+      } catch(e) { console.error('[extender]',sid,e); }
+    }
+  }
+  toast('Reabiertas: '+ok+(err?' · '+err+' errores':'')+(extra>0?' · +'+extra+'min':''), err?'err':'ok');
+  setTimeout(function(){ refreshLecReview(); }, 2000);
+}
+
+/* Detener prueba para todos los estudiantes de un curso (incluye PIE, todas las sesiones activas)
+   Fuerza envío remoto mediante flag forzar_envio en /respuestas/<sesion>/<uid>/forzar_envio
+   El cliente prueba.html escucha ese flag y llama submitSession({force:true}) al detectarlo. */
+async function detenerPruebaPorCurso() {
+  if (!coursesAvailable || !coursesAvailable.length) {
+    toast('No hay cursos cargados','err'); return;
+  }
+  const lista = coursesAvailable.map((c,i)=>(i+1)+'. '+c).join('\n');
+  const input = prompt('⛔ DETENER PRUEBA POR CURSO\n\nEscribe el NOMBRE EXACTO del curso a detener (se cierran TODAS las sesiones activas de ese curso, incluyendo PIE/DIL/Accesible/Visión):\n\n'+lista+'\n\nCurso:');
+  if (!input) return;
+  const curso = input.trim();
+  if (!coursesAvailable.includes(curso)) {
+    toast('Curso no encontrado: '+curso,'err'); return;
+  }
+  const estudiantesCurso = Object.entries(studentsMap).filter(function(entry){ var s=entry[1]; return s && s.curso===curso; });
+  if (!estudiantesCurso.length) { toast('Sin estudiantes en '+curso,'err'); return; }
+
+  const pendientes = [];
+  for (const entry of estudiantesCurso) {
+    const uid = entry[0], s = entry[1];
+    for (const sesionId of Object.keys(lecResponses || {})) {
+      const resp = lecResponses[sesionId] && lecResponses[sesionId][uid];
+      if (!resp) continue;
+      const yaCompleta = resp.completada === true || (lecResults && lecResults[sesionId] && lecResults[sesionId][uid] && lecResults[sesionId][uid].completada === true);
+      if (!yaCompleta) pendientes.push({ uid: uid, sesionId: sesionId, nombre: s.nombre || s.nombre_completo || uid });
+    }
+  }
+  if (!pendientes.length) { toast('No hay pruebas en progreso en '+curso,'ok'); return; }
+
+  const sesionesSet = {};
+  pendientes.forEach(function(p){ sesionesSet[p.sesionId]=true; });
+  const sesiones = Object.keys(sesionesSet).map(function(id){ return (lecSessions[id] && lecSessions[id].titulo) || id; });
+  const detalle = pendientes.slice(0,15).map(function(p){ return '• '+p.nombre; }).join('\n') + (pendientes.length>15?'\n... y '+(pendientes.length-15)+' más':'');
+  const msg = '⛔ CONFIRMA: Cerrar prueba para '+pendientes.length+' estudiante(s) de '+curso+'?\n\nSesiones afectadas:\n'+sesiones.map(function(s){return '  - '+s;}).join('\n')+'\n\nEstudiantes (muestra):\n'+detalle+'\n\nSe cerrará la prueba directamente en la base de datos (server-side) — funciona aunque el alumno tenga la pestaña cerrada. Las respuestas guardadas se preservan.';
+  if (!confirm(msg)) return;
+
+  toast('Cerrando prueba (server-side) a '+pendientes.length+' estudiantes...','ok');
+  const now = Date.now();
+  const updates = {};
+  pendientes.forEach(function(p){
+    const base = LECTURAS_BASE+'/respuestas/'+p.sesionId+'/'+p.uid;
+    updates[base+'/forzar_envio'] = true;
+    updates[base+'/cerrado_por_docente'] = { at: now, curso: curso };
+    // Cierre directo en BD (incluye estudiantes con la pestaña cerrada / sin internet)
+    updates[base+'/completada'] = true;
+    updates[base+'/submitted_at'] = now;
+  });
+  let ok = 0, err = 0;
+  try {
+    await db.ref().update(updates);
+    ok = pendientes.length;
+  } catch(e) {
+    console.error('[detener][bulk update]', e);
+    // fallback uno por uno
+    for (const p of pendientes) {
+      try {
+        const base = LECTURAS_BASE+'/respuestas/'+p.sesionId+'/'+p.uid;
+        await db.ref(base).update({
+          forzar_envio: true,
+          cerrado_por_docente: { at: now, curso: curso },
+          completada: true,
+          submitted_at: now
+        });
+        ok++;
+      } catch(e2) { console.error('[detener]',p,e2); err++; }
+    }
+  }
+  toast('Cierre forzado: '+ok+' ok'+(err?(' · '+err+' errores'):''), err?'err':'ok');
+  setTimeout(function(){ refreshLecReview(); }, 2500);
+}
+
+/* Reabrir prueba para TODO un curso en la sesión seleccionada
+   Limpia TODOS los flags de cierre (forzar_envio, cerrado_por_docente, pausado_por_docente,
+   strikes, completada, submitted_at) tanto en /respuestas como en /resultados.
+   Incluye estudiantes que ya enviaron y los que aún no han iniciado. */
+async function reabrirPruebaPorCursoCompleto() {
+  if (!selectedLecSession) { toast('Selecciona una sesión primero','err'); return; }
+  if (!coursesAvailable || !coursesAvailable.length) { toast('No hay cursos cargados','err'); return; }
+  const ses = lecSessions[selectedLecSession];
+  const sesTitulo = (ses && ses.titulo) || selectedLecSession;
+  const lista = coursesAvailable.map(function(c,i){ return (i+1)+'. '+c; }).join('\n');
+  const input = prompt('🔓 REABRIR CURSO COMPLETO\n\nSesión: '+sesTitulo+'\n\nEscribe el NOMBRE EXACTO del curso a reabrir (se reabre a TODO el curso, incluyendo los que ya enviaron):\n\n'+lista+'\n\nCurso:');
+  if (!input) return;
+  const curso = input.trim();
+  if (!coursesAvailable.includes(curso)) { toast('Curso no encontrado: '+curso,'err'); return; }
+  const estudiantesCurso = Object.entries(studentsMap).filter(function(entry){ var s=entry[1]; return s && s.curso===curso; });
+  if (!estudiantesCurso.length) { toast('Sin estudiantes en '+curso,'err'); return; }
+
+  const conRegistro = [];
+  const sinRegistro = [];
+  for (const entry of estudiantesCurso) {
+    const uid = entry[0], s = entry[1];
+    const hasResp = !!(lecResponses[selectedLecSession] && lecResponses[selectedLecSession][uid]);
+    const hasRes  = !!(lecResults[selectedLecSession] && lecResults[selectedLecSession][uid]);
+    if (hasResp || hasRes) conRegistro.push({ uid: uid, nombre: s.nombre || uid, hasResp: hasResp, hasRes: hasRes });
+    else sinRegistro.push({ uid: uid, nombre: s.nombre || uid });
+  }
+
+  const muestra = conRegistro.slice(0,15).map(function(p){ return '• '+p.nombre; }).join('\n')
+    + (conRegistro.length>15?'\n... y '+(conRegistro.length-15)+' más':'');
+  const msg = '🔓 CONFIRMA: Reabrir prueba "'+sesTitulo+'" para TODOS los estudiantes de '+curso+'?\n\n'
+    + 'Con registro: '+conRegistro.length+'\n'
+    + 'Sin registro previo: '+sinRegistro.length+' (se ignoran)\n\n'
+    + 'Se limpian: forzar_envio, cerrado_por_docente, pausado_por_docente, strikes, completada, submitted_at, bloqueado_por_strikes.\n\n'
+    + (conRegistro.length?'Estudiantes (muestra):\n'+muestra:'');
+  if (!conRegistro.length) { toast('No hay registros que reabrir en '+curso,'ok'); return; }
+  if (!confirm(msg)) return;
+
+  toast('Reabriendo '+conRegistro.length+' pruebas...','ok');
+  const now = Date.now();
+  const updates = {};
+  for (const p of conRegistro) {
+    const respBase = LECTURAS_BASE+'/respuestas/'+selectedLecSession+'/'+p.uid;
+    updates[respBase+'/strikes'] = 0;
+    updates[respBase+'/bloqueado_por_strikes'] = null;
+    updates[respBase+'/completada'] = false;
+    updates[respBase+'/submitted_at'] = null;
+    updates[respBase+'/forzar_envio'] = false;
+    updates[respBase+'/cerrado_por_docente'] = null;
+    updates[respBase+'/pausado_por_docente'] = false;
+    updates[respBase+'/pausa_motivo'] = null;
+    updates[respBase+'/pausa_at'] = null;
+    updates[respBase+'/pausa_curso'] = null;
+    updates[respBase+'/reopened_at'] = now;
+    updates[respBase+'/reanudado_at'] = now;
+    // CRITICO: resetear started_at para que el timer del estudiante arranque desde cero
+    // (sino, si ya consumio el tiempo, tickTimer dispara submitSession({force:true}) inmediatamente y revierte el estado)
+    updates[respBase+'/started_at'] = now;
+    updates[respBase+'/last_save'] = now;
+    if (p.hasRes) {
+      const resBase = LECTURAS_BASE+'/resultados/'+selectedLecSession+'/'+p.uid;
+      updates[resBase+'/strikes'] = 0;
+      updates[resBase+'/bloqueado_por_strikes'] = null;
+      updates[resBase+'/completada'] = false;
+      updates[resBase+'/submitted_at'] = null;
+      updates[resBase+'/cerrado_por_docente'] = null;
+      updates[resBase+'/reopened_at'] = now;
+    }
+  }
+
+  try {
+    await db.ref().update(updates);
+    // Sincroniza cache local para que el panel actualice sin esperar refresh
+    for (const p of conRegistro) {
+      if (lecResponses[selectedLecSession] && lecResponses[selectedLecSession][p.uid]) {
+        const r = lecResponses[selectedLecSession][p.uid];
+        r.strikes = 0;
+        r.completada = false;
+        r.submitted_at = null;
+        r.forzar_envio = false;
+        r.pausado_por_docente = false;
+        delete r.bloqueado_por_strikes;
+        delete r.cerrado_por_docente;
+        delete r.pausa_motivo;
+        delete r.pausa_at;
+        delete r.pausa_curso;
+        r.reopened_at = now;
+      }
+      if (lecResults[selectedLecSession] && lecResults[selectedLecSession][p.uid]) {
+        const r = lecResults[selectedLecSession][p.uid];
+        r.strikes = 0;
+        r.completada = false;
+        r.submitted_at = null;
+        delete r.bloqueado_por_strikes;
+        delete r.cerrado_por_docente;
+        r.reopened_at = now;
+      }
+    }
+    renderLecReviewPanel();
+    renderOverview();
+    toast('Reabiertos: '+conRegistro.length+' estudiantes de '+curso,'ok');
+    setTimeout(function(){ refreshLecReview(); }, 1500);
+  } catch (e) {
+    console.error('[reabrirCursoCompleto]', e);
+    toast('Error al reabrir: '+e.message, 'err');
+  }
+}
+
+/* Extender tiempo (duracion_min) de la sesión seleccionada */
+async function extenderTiempoSesion() {
+  if (!selectedLecSession) {
+    toast('Selecciona una sesión primero', 'err');
+    return;
+  }
+  const ses = lecSessions[selectedLecSession];
+  if (!ses) { toast('Sesión no encontrada', 'err'); return; }
+  const actual = Number(ses.duracion_min) || 0;
+  const input = prompt('Nueva duración en minutos para "'+(ses.titulo||selectedLecSession)+'"\n\nActual: '+(actual||'sin límite')+' min\n\nIngresa el nuevo valor (0 = sin límite):', String(actual || 90));
+  if (input === null) return;
+  const nueva = parseInt(input, 10);
+  if (isNaN(nueva) || nueva < 0) {
+    toast('Valor inválido', 'err');
+    return;
+  }
+  if (!confirm('Actualizar duración a '+nueva+' minutos?\n\n⚠️ Los estudiantes que estén rindiendo deben RECARGAR la página (F5) para que tome el nuevo tiempo. Sus respuestas se preservan por autosave.')) return;
+  try {
+    await db.ref(LECTURAS_BASE+'/sesiones/'+selectedLecSession+'/duracion_min').set(nueva);
+    if (lecSessions[selectedLecSession]) lecSessions[selectedLecSession].duracion_min = nueva;
+    renderLecReviewPanel();
+    toast('Duración actualizada a '+nueva+' min. Pide a los estudiantes que recarguen (F5).', 'ok');
+  } catch (e) {
+    toast('Error: '+e.message, 'err');
+  }
+}
+
+/* ====================================================================
+   PLANILLA DE NOTAS — Correcciones manuales + nota final 1-7 @ 60%
+   ==================================================================== */
+let _planillaCache = {};
+
+async function loadPlanilla() {
+  const sel = document.getElementById('planillaSession');
+  if (sel && !sel.dataset.populated) {
+    const opts = Object.keys(lecturasSessions || {}).map(function(sid){
+      const s = lecturasSessions[sid] || {};
+      return '<option value="'+sid+'">'+(s.titulo || sid)+'</option>';
+    }).join('');
+    sel.innerHTML = '<option value="">Selecciona sesión...</option>' + opts;
+    sel.dataset.populated = '1';
+    if (lecturasSessions && lecturasSessions['pedro-paramo-nm3-regular-2026']) sel.value = 'pedro-paramo-nm3-regular-2026';
+  }
+  const sid = sel ? sel.value : '';
+  const body = document.getElementById('planillaBody');
+  if (!sid) { body.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Selecciona una sesión.</td></tr>'; return; }
+  body.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Cargando...</td></tr>';
+  try {
+    const snap = await db.ref(LECTURAS_BASE+'/correcciones_manual/'+sid).once('value');
+    const data = snap.val() || {};
+    _planillaCache[sid] = data;
+    const rows = Object.entries(data).map(function(entry){
+      var uid = entry[0]; var c = entry[1];
+      var fecha = c.corregido_at ? new Date(c.corregido_at).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'short'}) : '—';
+      var notaVal = (typeof c.nota === 'number') ? c.nota.toFixed(1) : (c.nota || '—');
+      var notaColor = (c.nota || 0) >= 4.0 ? '#16a34a' : '#dc2626';
+      return '<tr>'
+        + '<td>'+(c.nombre||'—')+'</td>'
+        + '<td>'+(c.curso||'—')+'</td>'
+        + '<td>'+(c.rut||'—')+'</td>'
+        + '<td>'+(c.auto_puntaje||0)+'/'+(c.auto_total||25)+'</td>'
+        + '<td>'+(c.desarrollo_puntaje||0)+'/'+(c.desarrollo_total||9)+'</td>'
+        + '<td><strong>'+(c.puntaje_total||0)+'/'+(c.puntaje_max||34)+'</strong></td>'
+        + '<td>'+(c.porcentaje||0)+'%</td>'
+        + '<td style="background:#fef3c7;font-weight:800;font-size:15px;color:'+notaColor+'">'+notaVal+'</td>'
+        + '<td class="muted" style="font-size:11px">'+fecha+'</td>'
+        + '<td><button class="btn btn-sm btn-secondary" onclick="viewPlanillaDetail(\''+sid+'\',\''+uid+'\')" title="Ver evidencias y texto respondido">👁 Detalle</button></td>'
+        + '</tr>';
+    }).join('');
+    body.innerHTML = rows || '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Sin correcciones manuales guardadas para esta sesión.</td></tr>';
+    document.getElementById('planillaDetail').innerHTML = '';
+  } catch (e) {
+    console.error('[planilla]', e);
+    body.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px;color:#dc2626">Error: '+e.message+'</td></tr>';
+  }
+}
+
+async function viewPlanillaDetail(sid, uid) {
+  const c = (_planillaCache[sid] || {})[uid];
+  if (!c) return;
+  const respSnap = await db.ref(LECTURAS_BASE+'/respuestas/'+sid+'/'+uid+'/answers').once('value');
+  const answers = respSnap.val() || {};
+  const box = document.getElementById('planillaDetail');
+  function blk(itemId, corr) {
+    if (!corr) return '';
+    var txt = answers[itemId];
+    if (typeof txt !== 'string') txt = (txt && txt.text) ? txt.text : '';
+    return '<div style="background:#fff;border-radius:12px;padding:14px 16px;box-shadow:0 2px 6px rgba(0,0,0,.04);margin-bottom:12px">'
+      + '<div style="font-weight:700;color:#1e293b;margin-bottom:4px">Ítem <code>'+itemId+'</code> · Nivel <strong>'+corr.nivel+'</strong> → <strong>'+corr.puntos+' pts</strong></div>'
+      + '<div class="muted" style="font-size:12px;margin-bottom:8px"><em>Evidencia:</em> '+(corr.evidencia||'—')+'</div>'
+      + '<div style="background:#f8fafc;border-left:3px solid #94a3b8;padding:8px 12px;font-size:13px;white-space:pre-wrap">'+(txt || '(vacía)').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
+      + '</div>';
+  }
+  box.innerHTML = '<h3 style="font-size:16px;font-weight:800;margin-bottom:12px">Detalle de corrección · '+c.nombre+'</h3>'
+    + blk('pedro_11', c.pedro_11)
+    + blk('pedro_17', c.pedro_17)
+    + blk('pedro_25', c.pedro_25);
+}
+
+function exportPlanillaCSV() {
+  const sid = document.getElementById('planillaSession').value;
+  if (!sid) { toast('Selecciona una sesión','err'); return; }
+  const data = _planillaCache[sid] || {};
+  const rows = [['Nombre','RUT','Curso','Auto (25)','Desarrollo (9)','Total (34)','Porcentaje','Nota','Corregido_at']];
+  Object.values(data).forEach(function(c){
+    rows.push([c.nombre||'', c.rut||'', c.curso||'', c.auto_puntaje||0, c.desarrollo_puntaje||0, c.puntaje_total||0, (c.porcentaje||0)+'%', String(c.nota||'').replace('.',','), c.corregido_at ? new Date(c.corregido_at).toLocaleString('es-CL') : '']);
+  });
+  const csv = rows.map(function(r){ return r.map(function(v){ v = String(v==null?'':v); return /[",;\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }).join(';'); }).join('\n');
+  const blob = new Blob(['\ufeff'+csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'planilla-notas-'+sid+'.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('CSV descargado','ok');
+}
+
 /* ====================================================================
    GLOBAL BINDINGS
    ==================================================================== */
@@ -1551,6 +2361,14 @@ window.bulkCreateStudents=bulkCreateStudents;
 window.editStudent=editStudent;
 window.saveStudentEdit=saveStudentEdit;
 window.resetPassword=resetPassword;
+window.generateLecturasLoginLink=generateLecturasLoginLink;
+window.copyAccessLink=copyAccessLink;
+window.refreshLecReview=refreshLecReview;
+window.extenderTiempoSesion=extenderTiempoSesion;
+window.detenerPruebaPorCurso=detenerPruebaPorCurso;
+window.pausarPruebaPorCurso=pausarPruebaPorCurso;
+window.reanudarPruebaPorCurso=reanudarPruebaPorCurso;
+window.cambiarRutEstudiante=cambiarRutEstudiante;
 window.copyCredentials=copyCredentials;
 window.deleteStudent=deleteStudent;
 window.viewStudentDetail=viewStudentDetail;
@@ -1570,6 +2388,9 @@ window.generateReport=generateReport;
 window.showStudentReport=showStudentReport;
 window.exportSimceCSV=exportSimceCSV;
 window.exportLecturasCSV=exportLecturasCSV;
+window.loadPlanilla=loadPlanilla;
+window.exportPlanillaCSV=exportPlanillaCSV;
+window.viewPlanillaDetail=viewPlanillaDetail;
 </script>
 </body>
 </html>

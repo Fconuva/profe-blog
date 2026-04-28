@@ -258,6 +258,7 @@
             <h2>Gestión de Sesiones</h2>
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
+                <button class="btn" style="background:#f59e0b;color:#fff" onclick="preloadRetroIdee()">📦 Precargar Retro iDee</button>
             </div>
             <div class="panel-table">
                 <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
@@ -1041,6 +1042,7 @@ async function generateLoginLink(uid){
         var win=window.open(url,'_blank');
         // Show modal with copyable link (fallback + reference)
         const modal=document.createElement('div');
+        modal.id='loginLinkModal';
         modal.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:9999';
         modal.innerHTML=`<div style="background:#fff;border-radius:12px;padding:24px;max-width:500px;width:90%">
             <h3 style="margin:0 0 8px">🔗 Link de acceso para ${s.nombre}</h3>
@@ -1049,7 +1051,7 @@ async function generateLoginLink(uid){
             <div style="display:flex;gap:8px;margin-top:12px">
                 <button onclick="document.getElementById('loginLinkTA').select();document.execCommand('copy');this.textContent='✅ Copiado'" style="flex:1;padding:8px;background:#8b5cf6;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">📋 Copiar link</button>
                 <button onclick="window.open(document.getElementById('loginLinkTA').value,'_blank')" style="flex:1;padding:8px;background:#1e40af;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600">🔗 Abrir</button>
-                <button onclick="this.closest('div').closest('div').closest('div').remove()" style="flex:1;padding:8px;background:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-weight:600">Cerrar</button>
+                <button onclick="document.getElementById('loginLinkModal').remove()" style="flex:1;padding:8px;background:#e2e8f0;border:none;border-radius:6px;cursor:pointer;font-weight:600">Cerrar</button>
             </div>
         </div>`;
         document.body.appendChild(modal);
@@ -1934,6 +1936,104 @@ async function preloadSession4(){
         sessions['sesion-4']=sesData;
         renderSessions();
         toast('Clase 3 precargada: «La libreta azul» — 1 texto, 6 preguntas (inferencia + símbolos)','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
+async function preloadRetroIdee(){
+    if(!confirm('¿Precargar Clase 4 — Retroalimentación SIMCE iDee?\n\n3 textos · 10 preguntas (Loc 2 · Inf 5 · Ref 3)\nRepaso del ensayo iDee rendido la semana anterior.'))return;
+    const sesData={
+        titulo:'Clase 4 — Retroalimentación Ensayo SIMCE iDee',
+        descripcion:'Repaso del ensayo iDee rendido la semana anterior. Trabajamos los conceptos clave (EJE A) y los tipos de texto (EJE B), y luego respondes 10 preguntas para verificar tu aprendizaje. 3 textos · 10 preguntas.',
+        orden:5,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'No literario',subtipo:'Noticia',titulo:'El consumo de pantallas en adolescentes chilenos crece un 38 %',
+                 parrafos:[
+                    {num:1,texto:'Los adolescentes chilenos pasan en promedio <strong>seis horas y media diarias</strong> frente a pantallas, según un estudio elaborado por Criteria por encargo del Ministerio de Educación. La cifra representa un alza del 38 % respecto del año 2020. La directora del estudio, Carolina Montes, señaló que «<em>el dato más preocupante no es la cantidad, sino la calidad: el 60 % corresponde a contenido pasivo, sin interacción ni aprendizaje</em>».'},
+                    {num:2,texto:'El informe destaca además que el uso intensivo se concentra entre las 20:00 y las 24:00 horas, lo que afecta el ciclo del sueño. Especialistas recomiendan establecer rutinas familiares y zonas libres de pantallas en el hogar.'}
+                 ],fuente:'Adaptado de un estudio de Criteria · 2025. Texto utilizado para fines pedagógicos.'},
+                {id:'texto-2',tipo:'Literario',subtipo:'Cuento (fragmento)',titulo:'El regalo del abuelo',
+                 parrafos:[
+                    {num:1,texto:'Tomás recibió la caja con desconfianza. Su abuelo se la había hecho llegar tres días después del entierro, como si supiera —pensó él— que justo entonces necesitaría algo a lo que aferrarse. Adentro encontró un viejo reloj de bolsillo, oxidado en los bordes. <em>«No funciona —murmuró—, claro que no funciona»</em>. Pero al darle vuelta vio una inscripción: <em>«El tiempo no se mide, se vive. Tu abuelo»</em>.'},
+                    {num:2,texto:'Tomás cerró los ojos. Por primera vez desde la muerte del viejo, no sintió el nudo apretado en la garganta, sino algo distinto, parecido a la calma. Guardó el reloj en el bolsillo del pecho y salió a caminar. Afuera, la tarde ya se había llenado de luz.'}
+                 ],fuente:'Fragmento adaptado · narrador omnisciente · texto pedagógico (2026).'},
+                {id:'texto-3',tipo:'Literario',subtipo:'Poema',titulo:'Sin título',
+                 parrafos:[
+                    {num:1,texto:'<em>Y aprendí, finalmente, a no esperar la lluvia,<br>porque la lluvia llegaba sin avisar a nadie.</em>'},
+                    {num:2,texto:'<em>Aprendí a leer la noche en los ojos del perro,<br>a guardar mis silencios como se guarda el pan.</em>'},
+                    {num:3,texto:'<em>Aprendí, también, que las palabras pesan<br>cuando uno las dice con el cuerpo entero.</em>'}
+                 ],fuente:'Inspirado en la lírica chilena del siglo XX · texto pedagógico (2026).'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'¿Cuántas horas diarias en promedio pasan los adolescentes chilenos frente a pantallas, según el estudio?',opciones:[
+                    {letra:'A',texto:'Seis horas y media.'},
+                    {letra:'B',texto:'Ocho horas diarias.'},
+                    {letra:'C',texto:'Cuatro horas y media.'},
+                    {letra:'D',texto:'Doce horas diarias.'}
+                ],correcta:'A'},
+                {id:2,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'Cuando Carolina Montes señala que «el dato más preocupante no es la cantidad, sino la calidad», quiere decir que:',opciones:[
+                    {letra:'A',texto:'los adolescentes deberían usar menos horas las pantallas.'},
+                    {letra:'B',texto:'el problema es que las pantallas tienen mala resolución de imagen.'},
+                    {letra:'C',texto:'el tipo de contenido que consumen es más relevante que el tiempo total.'},
+                    {letra:'D',texto:'la cantidad de horas no es preocupante en absoluto.'}
+                ],correcta:'C'},
+                {id:3,textoRef:'texto-1',habilidad:'REFLEXIONAR',enunciado:'¿Cuál es el propósito comunicativo central del texto?',opciones:[
+                    {letra:'A',texto:'Convencer al lector de prohibir las pantallas en los hogares.'},
+                    {letra:'B',texto:'Informar acerca de los resultados de un estudio sobre uso de pantallas.'},
+                    {letra:'C',texto:'Narrar cómo es un día de un adolescente conectado a pantallas.'},
+                    {letra:'D',texto:'Expresar la nostalgia del autor por épocas sin pantallas.'}
+                ],correcta:'B'},
+                {id:4,textoRef:'texto-1',habilidad:'REFLEXIONAR',enunciado:'¿A qué tipo de audiencia está dirigido principalmente este texto?',opciones:[
+                    {letra:'A',texto:'A investigadores especializados en sociología digital.'},
+                    {letra:'B',texto:'A los propios adolescentes que aparecen en el estudio.'},
+                    {letra:'C',texto:'A docentes de informática que enseñan programación.'},
+                    {letra:'D',texto:'A la opinión pública general, especialmente padres y educadores.'}
+                ],correcta:'D'},
+                {id:5,textoRef:'texto-2',habilidad:'LOCALIZAR',enunciado:'¿Qué objeto contenía la caja que Tomás recibió?',opciones:[
+                    {letra:'A',texto:'Una libreta con anotaciones del abuelo.'},
+                    {letra:'B',texto:'Un viejo reloj de bolsillo con una inscripción.'},
+                    {letra:'C',texto:'Una fotografía de su abuelo de joven.'},
+                    {letra:'D',texto:'Una carta escrita antes de morir.'}
+                ],correcta:'B'},
+                {id:6,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'¿Qué tipo de narrador relata la historia?',opciones:[
+                    {letra:'A',texto:'Protagonista, porque cuenta sus propios sentimientos en primera persona.'},
+                    {letra:'B',texto:'Testigo, porque presencia los hechos desde fuera y solo describe.'},
+                    {letra:'C',texto:'Omnisciente, porque conoce los pensamientos y emociones de Tomás.'},
+                    {letra:'D',texto:'Objetivo, porque solo registra lo visible sin interpretar.'}
+                ],correcta:'C'},
+                {id:7,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'La inscripción «El tiempo no se mide, se vive» funciona en el texto como:',opciones:[
+                    {letra:'A',texto:'una enseñanza simbólica que transforma el dolor de Tomás en calma.'},
+                    {letra:'B',texto:'una instrucción técnica para reparar el reloj oxidado.'},
+                    {letra:'C',texto:'una crítica del abuelo a la modernidad y al uso del reloj.'},
+                    {letra:'D',texto:'una despedida formal que cierra la herencia familiar.'}
+                ],correcta:'A'},
+                {id:8,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'La frase final «la tarde ya se había llenado de luz» se puede interpretar como:',opciones:[
+                    {letra:'A',texto:'la indicación temporal exacta de que era mediodía.'},
+                    {letra:'B',texto:'una descripción meteorológica realista del clima de la región.'},
+                    {letra:'C',texto:'el anuncio de que el reloj de bolsillo había vuelto a funcionar.'},
+                    {letra:'D',texto:'una imagen simbólica del cambio interno y la esperanza de Tomás.'}
+                ],correcta:'D'},
+                {id:9,textoRef:'texto-3',habilidad:'INTERPRETAR',enunciado:'¿Cuál es la actitud lírica predominante del hablante?',opciones:[
+                    {letra:'A',texto:'Apostrófica: el hablante interpela directamente a otro personaje.'},
+                    {letra:'B',texto:'Enunciativa pura: el hablante narra hechos externos sin involucrarse.'},
+                    {letra:'C',texto:'Carmínica o reflexiva: el hablante expresa una experiencia íntima propia.'},
+                    {letra:'D',texto:'Dramática: el hablante representa un diálogo entre dos voces.'}
+                ],correcta:'C'},
+                {id:10,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'El recurso de iniciar varios versos con «Aprendí» corresponde a:',opciones:[
+                    {letra:'A',texto:'una hipérbole, pues exagera la cantidad de aprendizajes.'},
+                    {letra:'B',texto:'una anáfora, pues repite la misma palabra al inicio de versos sucesivos.'},
+                    {letra:'C',texto:'una metáfora, pues sustituye un concepto por otro distinto.'},
+                    {letra:'D',texto:'una personificación, pues atribuye cualidades humanas a un objeto.'}
+                ],correcta:'B'}
+            ]
+        }
+    };
+    try{
+        await db.ref(BASE+'/sesiones/retro-idee-nm2').set(sesData);
+        sessions['retro-idee-nm2']=sesData;
+        renderSessions();populateResultsDropdown();
+        toast('✅ Clase 4 precargada: Retroalimentación iDee — 3 textos · 10 preguntas','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 

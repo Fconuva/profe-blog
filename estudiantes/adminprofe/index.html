@@ -1947,9 +1947,10 @@ async function preloadRetroIdee(){
         orden:9,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
         createdAt:Date.now(),
         instruccion:{
-            titulo:'📚 Compendio: lo que midió la prueba',
-            objetivo:'Antes de responder, repasa los conceptos que el ensayo SIMCE evaluó. Cada concepto trae su definición, un ejemplo del propio ensayo y un mini-análisis de cómo reconocerlo. Después de leer este panel, vas a responder mejor las 15 preguntas.',
-            conceptos:[
+            titulo:'📚 Repaso del Ensayo SIMCE — Manual paginado',
+            objetivo:'Este panel tiene 3 páginas. <b>(1)</b> Cómo leer la pregunta SIMCE. <b>(2)</b> Tarjetas conceptuales por tipo de texto. <b>(3)</b> Escritura SIMCE. Usa los botones <b>« Atrás</b> / <b>Siguiente »</b> para navegar. Cuando termines, responde las 15 preguntas con estos conceptos en mente.',
+            conceptos:[],
+            _conceptosLegacy:[
                 {emoji:'🔍',titulo:'1. Localizar',color:'#3b82f6',
                  descripcion:'Encontrar información explícita: la respuesta está escrita literalmente en el texto.',
                  detalle:'<b>Verbos de pregunta:</b> «¿Qué dice el texto sobre…?», «¿Cuántos…?», «Según el texto…». <b>Ejemplo del ensayo:</b> «¿Cuántas horas pasan los adolescentes frente a pantallas?» → la cifra «seis horas y media» está literal en el párrafo 1. <b>Trampa típica:</b> el distractor cambia un número o pone una cifra parecida. Siempre vuelve al texto y subraya la cifra exacta.'},
@@ -1981,61 +1982,209 @@ async function preloadRetroIdee(){
                  descripcion:'Las alternativas incorrectas tienen 4 patrones típicos. Aprende a olerlos.',
                  detalle:'<b>(1) Literal falso:</b> copia palabras del texto pero responde otra cosa. <b>(2) Invento plausible:</b> suena lógico pero no aparece en el texto. <b>(3) Sobregeneralización:</b> cambia «algunos» por «todos», o «a veces» por «siempre». <b>(4) Inversión:</b> dice exactamente lo contrario del texto. <b>Test rápido:</b> si tu alternativa no se respalda en una frase concreta del texto, es trampa.'}
             ],
-            simceKey:{titulo:'🔑 Clave para esta retroalimentación',texto:'Antes de responder cada pregunta, identifica qué <b>habilidad</b> mide (LOC, INT o REF) y qué <b>concepto</b> está evaluando (narrador, símbolo, propósito, etc.). Si sabes qué te están preguntando, descartas distractores mucho más rápido.'},
-            infografia:'<style>.actbox{margin-top:16px;background:#eef2ff;border:2px solid #6366f1;border-radius:12px;padding:14px 16px}.actbox-title{font-weight:800;color:#3730a3;font-size:15px;margin-bottom:6px}.actbox-sub{font-size:11.5px;color:#4338ca;margin-bottom:12px}.actcard{background:#fff;border-radius:8px;padding:11px 13px;margin-bottom:10px;border-left:5px solid #6366f1;font-size:12.5px;line-height:1.55}.actcard b.actlabel{display:inline-block;background:#6366f1;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;margin-bottom:6px;letter-spacing:.3px}.actcard.c1{border-left-color:#3b82f6}.actcard.c1 b.actlabel{background:#3b82f6}.actcard.c2{border-left-color:#8b5cf6}.actcard.c2 b.actlabel{background:#8b5cf6}.actcard.c3{border-left-color:#10b981}.actcard.c3 b.actlabel{background:#10b981}.actcard.c4{border-left-color:#0ea5e9}.actcard.c4 b.actlabel{background:#0ea5e9}.actcard.c5{border-left-color:#ec4899}.actcard.c5 b.actlabel{background:#ec4899}.actcard.c6{border-left-color:#f59e0b}.actcard.c6 b.actlabel{background:#f59e0b}.actcard.c7{border-left-color:#a855f7}.actcard.c7 b.actlabel{background:#a855f7}.actcard.c8{border-left-color:#14b8a6}.actcard.c8 b.actlabel{background:#14b8a6}.actcard.c9{border-left-color:#ef4444}.actcard.c9 b.actlabel{background:#ef4444}.actcard.c10{border-left-color:#dc2626}.actcard.c10 b.actlabel{background:#dc2626}.actcard ul{margin:6px 0 6px 22px;padding:0}.actcard li{margin-bottom:3px}.actcard details{margin-top:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:8px 10px}.actcard details[open]{background:#dcfce7}.actcard summary{cursor:pointer;font-weight:700;color:#15803d;font-size:11.5px;user-select:none;outline:none}.actcard summary::marker{color:#16a34a}.actcard details>div{margin-top:8px;font-size:11.5px;color:#14532d;line-height:1.55}.actcard .pista{font-size:11px;color:#7c2d12;background:#fff7ed;border-left:3px solid #fb923c;padding:4px 8px;margin-top:6px;border-radius:4px}</style><div class="actbox"><div class="actbox-title">🛠 10 Actividades de práctica autónoma (Chromebook)</div><div class="actbox-sub">Una actividad por concepto. <b>Trabaja primero por tu cuenta:</b> escribe tu respuesta en una hoja o en tu cuaderno. Después haz click en «Ver análisis» para comparar. <i>No abras la respuesta antes de intentar.</i></div>'+
+            simceKey:null,
+            infografia:'<style>'+
+              '.s9-paginator{margin-top:16px;background:#fafbff;border:2px solid #6366f1;border-radius:14px;padding:0;overflow:hidden;font-size:13px;line-height:1.55}'+
+              '.s9-tabs{display:flex;background:#eef2ff;border-bottom:2px solid #6366f1}'+
+              '.s9-tab{flex:1;padding:10px 6px;text-align:center;font-weight:700;color:#6366f1;font-size:11.5px;border-right:1px solid #c7d2fe;letter-spacing:.3px}'+
+              '.s9-tab:last-child{border-right:none}'+
+              '.s9-tab.active{background:#6366f1;color:#fff}'+
+              '.s9-page{display:none;padding:18px 18px 14px}'+
+              '.s9-page.active{display:block}'+
+              '.s9-page h4{margin:0 0 10px;font-size:15px;color:#3730a3;font-weight:800}'+
+              '.s9-page h5{margin:14px 0 8px;font-size:13.5px;color:#4338ca;font-weight:800;border-left:4px solid #6366f1;padding-left:8px}'+
+              '.s9-page p{margin:0 0 8px;color:#1e293b}'+
+              '.s9-step{background:#fff;border:1px solid #e0e7ff;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:12.5px}'+
+              '.s9-step b{color:#3730a3}'+
+              '.s9-table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}'+
+              '.s9-table th,.s9-table td{border:1px solid #c7d2fe;padding:6px 8px;text-align:left;vertical-align:top}'+
+              '.s9-table th{background:#6366f1;color:#fff;font-size:11.5px}'+
+              '.s9-table tr:nth-child(even) td{background:#f5f7ff}'+
+              '.s9-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:8px 0}'+
+              '.s9-card{background:#fff;border-radius:8px;padding:11px 13px;border-left:5px solid #6366f1;font-size:12.5px;line-height:1.5}'+
+              '.s9-card .lbl{display:inline-block;background:#6366f1;color:#fff;padding:2px 8px;border-radius:4px;font-size:10.5px;font-weight:700;margin-bottom:6px;letter-spacing:.3px}'+
+              '.s9-card b.t{display:block;font-size:13px;color:#1e293b;margin-bottom:4px}'+
+              '.s9-card .ex{margin-top:6px;font-size:11.5px;color:#475569;font-style:italic;background:#f8fafc;padding:5px 8px;border-radius:4px;border-left:3px solid #94a3b8}'+
+              '.s9-card.cn{border-left-color:#0ea5e9}.s9-card.cn .lbl{background:#0ea5e9}'+
+              '.s9-card.cc{border-left-color:#ec4899}.s9-card.cc .lbl{background:#ec4899}'+
+              '.s9-card.cp{border-left-color:#a855f7}.s9-card.cp .lbl{background:#a855f7}'+
+              '.s9-card.cf{border-left-color:#14b8a6}.s9-card.cf .lbl{background:#14b8a6}'+
+              '.s9-card.cd{border-left-color:#dc2626}.s9-card.cd .lbl{background:#dc2626}'+
+              '.s9-card.cw{border-left-color:#f59e0b}.s9-card.cw .lbl{background:#f59e0b}'+
+              '.s9-nav{display:flex;justify-content:space-between;align-items:center;padding:12px 18px;background:#eef2ff;border-top:2px solid #c7d2fe}'+
+              '.s9-nav button{background:#6366f1;color:#fff;border:none;border-radius:8px;padding:9px 18px;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.3px}'+
+              '.s9-nav button:hover{background:#4f46e5}'+
+              '.s9-nav button:disabled{background:#cbd5e1;cursor:not-allowed}'+
+              '.s9-nav .ind{font-size:12px;color:#3730a3;font-weight:700}'+
+              '.s9-rubric{background:#fff7ed;border:1px solid #fdba74;border-radius:8px;padding:10px 12px;margin:8px 0;font-size:12px;color:#7c2d12}'+
+              '.s9-rubric b{color:#9a3412}'+
+            '</style>'+
 
-            // 1. LOCALIZAR
-            '<div class="actcard c1"><b class="actlabel">Actividad 1 · Localizar</b><br>Lee la siguiente afirmación y decide si es V o F según el texto de la noticia: «<i>El uso intensivo de pantallas se concentra entre las 20:00 y las 24:00 horas, en una franja en que se debilita la melatonina, hormona reguladora del sueño.</i>»<div class="pista">💡 Pista: subraya la hora exacta y el nombre de la hormona en el párrafo 2.</div><details><summary>✅ Ver análisis</summary><div><b>VERDADERO.</b> El párrafo 2 lo dice literalmente: «<i>el uso intensivo se concentra entre las 20:00 y las 24:00 horas, franja en la que se debilita la producción de melatonina</i>». Localizar exige <b>volver al texto y subrayar la frase exacta</b>. Si no encuentras la cita textual, no marques verdadero.</div></details></div>'+
+            '<div class="s9-paginator" id="s9pag">'+
+              '<div class="s9-tabs">'+
+                '<div class="s9-tab active" data-p="1">ðŸ“˜ 1. LEER LA PREGUNTA</div>'+
+                '<div class="s9-tab" data-p="2">ðŸ“— 2. CONCEPTOS</div>'+
+                '<div class="s9-tab" data-p="3">ðŸ“™ 3. ESCRITURA SIMCE</div>'+
+              '</div>'+
 
-            // 2. INTERPRETAR
-            '<div class="actcard c2"><b class="actlabel">Actividad 2 · Interpretar</b><br>En el cuento, Tomás «<i>se quedó un rato largo con el reloj entre las manos, recordando las tardes en que el abuelo lo llevaba al cerro a mirar pasar los trenes</i>». ¿Qué se puede inferir de Tomás a partir de esta escena? Escribe 2 inferencias y la pista textual que las apoya.<div class="pista">💡 Pista: una inferencia sobre su <b>estado emocional</b> y otra sobre su <b>relación con el abuelo</b>.</div><details><summary>✅ Ver análisis</summary><div><b>(1)</b> Tomás siente nostalgia/cariño hacia el abuelo (pista: «recordando las tardes en que el abuelo lo llevaba…»). <b>(2)</b> La relación entre ambos era cercana y rutinaria, no distante (pista: «las tardes», en plural, indica costumbre, no una vez aislada). <b>Verifica:</b> ambas inferencias se apoyan en frases concretas. No es invento plausible.</div></details></div>'+
+              // â•â•â• PÃGINA 1 â€” LEER LA PREGUNTA â•â•â•
+              '<div class="s9-page active" data-p="1">'+
+                '<h4>ðŸ“˜ PÃ¡gina 1 Â· CÃ³mo leer la pregunta SIMCE</h4>'+
+                '<p>El error mÃ¡s comÃºn en el ensayo no fue no entender el texto: fue <b>no entender quÃ© pedÃ­a la pregunta</b>. Antes de mirar las alternativas, la pregunta te dice <b>QUÃ‰ buscar</b> y <b>QUÃ‰ TIPO DE RESPUESTA</b> esperar.</p>'+
 
-            // 3. REFLEXIONAR
-            '<div class="actcard c3"><b class="actlabel">Actividad 3 · Reflexionar</b><br>El propósito comunicativo de la noticia sobre pantallas es: <b>(A)</b> entretener · <b>(B)</b> informar y advertir · <b>(C)</b> narrar una historia · <b>(D)</b> convencer de comprar un producto. Elige una opción y justifica con dos pistas del texto.<div class="pista">💡 Pista: mira el género (¿noticia?, ¿cuento?, ¿publicidad?) y los datos que entrega.</div><details><summary>✅ Ver análisis</summary><div>Respuesta: <b>(B) Informar y advertir</b>. <b>Pistas:</b> (1) entrega cifras verificables («38 %», «60 %», «20:00-24:00 hrs»); (2) cita expertos («Carolina Montes, directora del estudio») y entrega recomendaciones. No tiene personajes (descarta C), no vende productos (descarta D), no tiene tono lúdico (descarta A).</div></details></div>'+
+                '<h5>ðŸŽ¯ Estrategia de 3 pasos (siempre, sin excepciÃ³n)</h5>'+
+                '<div class="s9-step"><b>Paso 1 Â· Subraya el verbo de pregunta.</b> Es la palabra que indica la acciÃ³n mental que debes hacer. Ejemplos: <i>Â«Â¿CuÃ¡ntosâ€¦?Â»</i>, <i>Â«Â¿QuÃ© se puede inferirâ€¦?Â»</i>, <i>Â«Â¿CuÃ¡l es el propÃ³sitoâ€¦?Â»</i>.</div>'+
+                '<div class="s9-step"><b>Paso 2 Â· Decide quÃ© te piden.</b> El verbo te dice si el SIMCE quiere un <b>dato literal</b> (Localizar), una <b>deducciÃ³n con pistas</b> (Interpretar) o una <b>evaluaciÃ³n del texto</b> (Reflexionar). Sin esto, no puedes elegir bien.</div>'+
+                '<div class="s9-step"><b>Paso 3 Â· Vuelve al texto a buscar la evidencia.</b> Toda alternativa correcta se respalda con una frase concreta. Si tu opciÃ³n Â«suena lÃ³gicaÂ» pero no la encuentras en el texto â†’ es un distractor.</div>'+
 
-            // 4. NO LITERARIO vs LITERARIO
-            '<div class="actcard c4"><b class="actlabel">Actividad 4 · Texto NO literario</b><br>Lee estos 3 fragmentos y clasifica cada uno como <b>literario (L)</b> o <b>no literario (NL)</b>:<ul><li><b>(a)</b> «Adentro encontró un viejo reloj de bolsillo, oxidado en los bordes.»</li><li><b>(b)</b> «El 60 % corresponde a contenido pasivo, sin interacción ni aprendizaje.»</li><li><b>(c)</b> «Aprendí a leer la noche en los ojos del perro.»</li></ul><div class="pista">💡 Pista: ¿hay datos verificables o hay imágenes/emociones?</div><details><summary>✅ Ver análisis</summary><div><b>(a) Literario</b> — narra una acción ficcional con detalle estético («oxidado en los bordes»). <b>(b) No literario</b> — entrega un dato verificable con porcentaje. <b>(c) Literario</b> — usa una imagen poética: «leer la noche en los ojos del perro» no es información factual, es metáfora.</div></details></div>'+
+                '<h5>ðŸ”‘ Tabla de verbos de pregunta â†’ habilidad</h5>'+
+                '<table class="s9-table">'+
+                  '<tr><th>Si la pregunta diceâ€¦</th><th>Te piden</th><th>Habilidad</th></tr>'+
+                  '<tr><td>Â«SegÃºn el textoâ€¦Â», Â«Â¿CuÃ¡ntos/asâ€¦?Â», Â«Â¿QuÃ© dice el texto sobreâ€¦?Â», Â«Â¿DÃ³ndeâ€¦?Â», Â«Â¿CuÃ¡ndoâ€¦?Â»</td><td>Un dato escrito <b>literal</b> en el texto.</td><td>ðŸ” LOCALIZAR</td></tr>'+
+                  '<tr><td>Â«Â¿QuÃ© se puede inferir?Â», Â«Â¿QuÃ© sugiereâ€¦?Â», Â«Â¿QuÃ© quiere decir conâ€¦?Â», Â«Â¿Por quÃ©â€¦?Â»</td><td>Una <b>deducciÃ³n</b> apoyada en al menos 2 pistas del texto.</td><td>ðŸ§© INTERPRETAR</td></tr>'+
+                  '<tr><td>Â«Â¿CuÃ¡l es el propÃ³sitoâ€¦?Â», Â«Â¿A quÃ© audienciaâ€¦?Â», Â«Â¿QuÃ© funciÃ³n cumpleâ€¦?Â», Â«Â¿QuÃ© tipo de textoâ€¦?Â»</td><td>Una <b>evaluaciÃ³n</b> del texto: para quÃ© sirve, a quiÃ©n se dirige, quÃ© efecto busca.</td><td>ðŸ’¡ REFLEXIONAR</td></tr>'+
+                '</table>'+
 
-            // 5. LITERARIO (cuento + poema)
-            '<div class="actcard c5"><b class="actlabel">Actividad 5 · Cuento vs Poema</b><br>Identifica DOS diferencias entre el cuento «El regalo del abuelo» y el poema «Lo que aprendí», considerando: (a) quién habla, (b) cómo se organiza el texto.<div class="pista">💡 Pista: el cuento tiene <b>narrador</b>; el poema tiene <b>hablante lírico</b>. Uno se organiza en <b>párrafos</b>, el otro en <b>versos</b>.</div><details><summary>✅ Ver análisis</summary><div><b>Diferencia 1 — Quién habla:</b> en el cuento habla un <b>narrador omnisciente</b> en 3ª persona que conoce los pensamientos de Tomás; en el poema habla un <b>hablante lírico</b> en 1ª persona que dice «yo aprendí». <b>Diferencia 2 — Organización:</b> el cuento se organiza en <b>párrafos</b> con secuencia narrativa (recibe la caja → recuerda al abuelo → sale a caminar); el poema se organiza en <b>versos y estrofas</b>, sin trama, con repetición rítmica de «Aprendí».</div></details></div>'+
+                '<h5>ðŸ“ Ejemplos del propio ensayo</h5>'+
+                '<div class="s9-card"><span class="lbl">ðŸ” Localizar</span><b class="t">Â«Â¿CuÃ¡ntas horas pasan los adolescentes frente a pantallas?Â»</b>El verbo Â«cuÃ¡ntasÂ» te dice: busca un nÃºmero escrito en el texto. â†’ <b>Â«seis horas y mediaÂ»</b> estÃ¡ literal en el pÃ¡rrafo 1. <i>Trampa tÃ­pica:</i> el distractor cambia un nÃºmero parecido (8 hrs, 4 hrs).<div class="ex">Si no puedes seÃ±alar la cifra exacta en el texto, no es Localizar â€” es invento.</div></div>'+
+                '<div class="s9-card"><span class="lbl">ðŸ§© Interpretar</span><b class="t">Â«Cuando el reloj â€œhabÃ­a dejado de necesitar funcionarâ€, esto sugiere queâ€¦Â»</b>El verbo Â«sugiereÂ» te dice: el texto NO lo dice directo; tÃº deduces. Pistas en el texto: la inscripciÃ³n Â«el tiempo no se vive, se mideÂ», los recuerdos del cerro, la calma de TomÃ¡s. â†’ Resignifica el regalo.<div class="ex">Si tu deducciÃ³n no se apoya en al menos 2 pistas concretas, es invento plausible.</div></div>'+
+                '<div class="s9-card"><span class="lbl">ðŸ’¡ Reflexionar</span><b class="t">Â«Â¿A quÃ© audiencia estÃ¡ dirigida la noticia?Â»</b>El verbo Â«Â¿a quÃ© audiencia?Â» te dice: evalÃºa el texto como un todo. Â¿QuÃ© tono usa? Â¿QuÃ© recomendaciones da? La noticia habla de Â«padres y educadoresÂ» y da consejos para el hogar â†’ audiencia: padres y educadores, no los adolescentes mismos.<div class="ex">No confundas a quiÃ©n describe el texto (adolescentes) con a quiÃ©n va dirigido (padres).</div></div>'+
 
-            // 6. NARRADOR
-            '<div class="actcard c6"><b class="actlabel">Actividad 6 · Tipo de narrador</b><br>Clasifica cada fragmento (Protagonista / Testigo / Omnisciente):<ul><li><b>(a)</b> «<i>Tomás cerró los ojos. Por primera vez no sintió el nudo apretado en la garganta.</i>»</li><li><b>(b)</b> «<i>Yo recibí la caja con desconfianza. Mi abuelo me la había hecho llegar.</i>»</li><li><b>(c)</b> «<i>Vi cómo el chico abría la caja. No sé qué encontró adentro, pero salió de la pieza con una sonrisa.</i>»</li></ul><div class="pista">💡 Pista: ¿el narrador habla en yo? ¿es el protagonista o solo testigo? ¿accede a pensamientos?</div><details><summary>✅ Ver análisis</summary><div><b>(a) Omnisciente</b>: 3ª persona + accede al sentir interno («no sintió el nudo»). <b>(b) Protagonista</b>: 1ª persona + es el personaje principal («yo recibí», «mi abuelo»). <b>(c) Testigo</b>: 1ª persona pero secundario («vi cómo…», «no sé qué encontró»). Solo describe lo que ve, no entra a la mente del otro.</div></details></div>'+
+                '<h5>âš  Los 4 distractores tÃ­picos del SIMCE</h5>'+
+                '<table class="s9-table">'+
+                  '<tr><th>Tipo</th><th>CÃ³mo se reconoce</th></tr>'+
+                  '<tr><td><b>Literal falso</b></td><td>Copia palabras del texto pero responde otra cosa.</td></tr>'+
+                  '<tr><td><b>Invento plausible</b></td><td>Suena lÃ³gico, pero la informaciÃ³n NO estÃ¡ en el texto.</td></tr>'+
+                  '<tr><td><b>SobregeneralizaciÃ³n</b></td><td>Usa absolutos: Â«todosÂ», Â«siempreÂ», Â«nuncaÂ», Â«ningunoÂ».</td></tr>'+
+                  '<tr><td><b>InversiÃ³n</b></td><td>Dice exactamente lo contrario de lo que afirma el texto.</td></tr>'+
+                '</table>'+
+              '</div>'+
 
-            // 7. ACTITUD LÍRICA
-            '<div class="actcard c7"><b class="actlabel">Actividad 7 · Actitud lírica</b><br>Identifica la actitud lírica predominante (Enunciativa / Apostrófica / Carmínica) en cada fragmento:<ul><li><b>(a)</b> «El sol cae sobre el mar y los pájaros cruzan el cielo.»</li><li><b>(b)</b> «Madre, escucha mi voz: nunca dejé de quererte.»</li><li><b>(c)</b> «Aprendí, finalmente, a no esperar la lluvia.»</li></ul><div class="pista">💡 Pista: ¿describe el mundo? ¿se dirige a alguien? ¿habla de sí mismo?</div><details><summary>✅ Ver análisis</summary><div><b>(a) Enunciativa</b>: describe el mundo externo, sin involucrarse. <b>(b) Apostrófica</b>: se dirige a un tú («Madre, escucha…»). <b>(c) Carmínica</b>: expresa una experiencia íntima («yo aprendí…»). Truco: si hay un «<i>tú</i>» o un «<i>vosotros</i>» = apostrófica; si solo hay «<i>yo</i>» o sentimiento interior = carmínica; si no hay yo ni tú = enunciativa.</div></details></div>'+
+              // â•â•â• PÃGINA 2 â€” CONCEPTOS POR TIPO DE TEXTO â•â•â•
+              '<div class="s9-page" data-p="2">'+
+                '<h4>ðŸ“— PÃ¡gina 2 Â· Tarjetas conceptuales por tipo de texto</h4>'+
+                '<p>Estos son los conceptos que el SIMCE midiÃ³ en el ensayo, agrupados por tipo de texto. LÃ©elos como un repaso rÃ¡pido. Cuando respondas las 15 preguntas, identifica cuÃ¡l de estos conceptos estÃ¡ evaluando cada pregunta.</p>'+
 
-            // 8. RECURSOS
-            '<div class="actcard c8"><b class="actlabel">Actividad 8 · Recursos literarios</b><br>Identifica el recurso (Anáfora / Símbolo / Comparación) en cada caso:<ul><li><b>(a)</b> «Aprendí… / Aprendí… / Aprendí…»</li><li><b>(b)</b> El reloj oxidado del abuelo, que «<i>no necesitaba funcionar</i>».</li><li><b>(c)</b> «Guardar mis silencios <b>como</b> se guarda el pan.»</li></ul><div class="pista">💡 Pista: la palabra «como» delata uno de los recursos. La repetición al inicio delata otro.</div><details><summary>✅ Ver análisis</summary><div><b>(a) Anáfora</b>: repetición de la misma palabra al inicio de versos sucesivos (genera ritmo y énfasis). <b>(b) Símbolo</b>: el reloj es un objeto concreto que representa algo abstracto = el tiempo vivido y la memoria del abuelo. <b>(c) Comparación / símil</b>: usa el nexo «como» para conectar silencios (abstracto) con pan (concreto y cotidiano).</div></details></div>'+
+                '<h5>ðŸ“° Texto NO literario Â· Noticia</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cn"><span class="lbl">Estructura</span><b class="t">Titular Â· Lead Â· Cuerpo Â· Cierre</b>El <b>titular</b> resume la noticia (Â«El consumo crece 38 %Â»). El <b>lead</b> es el primer pÃ¡rrafo, que responde quÃ©/quiÃ©n/cuÃ¡ndo/dÃ³nde. El <b>cuerpo</b> entrega cifras y citas. El <b>cierre</b> trae la conclusiÃ³n o recomendaciÃ³n.<div class="ex">Si la pregunta dice Â«Â¿cuÃ¡l es la idea principal?Â» â†’ mira el titular y el lead.</div></div>'+
+                  '<div class="s9-card cn"><span class="lbl">Hechos</span><b class="t">Datos verificables, objetivos</b>Llevan cifras, fuentes, fechas, nombres de instituciones. Ej: <i>Â«38 % respecto del aÃ±o 2020Â»</i>, <i>Â«Carolina Montes, directora del estudioÂ»</i>.<div class="ex">No expresan emociÃ³n ni juicio, solo informan.</div></div>'+
+                  '<div class="s9-card cn"><span class="lbl">Opiniones</span><b class="t">Juicios, valoraciones</b>Llevan adjetivos valorativos, recomendaciones, juicios. Ej: <i>Â«No se trata de prohibir, sino de educar la miradaÂ»</i> es opiniÃ³n de la experta.<div class="ex">Las opiniones suelen ir entre comillas y citan a una persona.</div></div>'+
+                  '<div class="s9-card cn"><span class="lbl">Tesis y argumentos</b><b class="t">Idea central + razones que la sostienen</b>La <b>tesis</b> es la postura del autor (Â«el problema es la calidad, no la cantidadÂ»). Los <b>argumentos</b> son las razones (cifras, ejemplos, citas de expertos).<div class="ex">En textos argumentativos, la tesis suele aparecer al inicio o al final.</div></div>'+
+                '</div>'+
 
-            // 9. INTERTEXTUAL
-            '<div class="actcard c9"><b class="actlabel">Actividad 9 · Conexión intertextual</b><br>El cuento termina con Tomás guardando el reloj y saliendo a caminar mientras «la tarde ya se había llenado de luz». El poema termina con «aprendí a despedirme de los que se van sin cerrar del todo la puerta». Escribe en una frase qué <b>idea común</b> tienen ambos finales.<div class="pista">💡 Pista: pregúntate ¿qué hace cada protagonista con la pérdida? ¿la borra? ¿la abraza?</div><details><summary>✅ Ver análisis</summary><div>Idea común: <b>aceptar la pérdida sin negarla, como un proceso que abre algo nuevo</b>. Tomás no olvida al abuelo (guarda el reloj en el bolsillo del pecho), pero la tarde se «llena de luz» = encuentra paz. El hablante del poema se despide pero «no cierra del todo la puerta» = mantiene viva la conexión. Ambos textos enseñan que el duelo no es olvido, es <b>convivencia con la ausencia</b>.</div></details></div>'+
+                '<h5>ðŸ“– Texto literario Â· Cuento</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cc"><span class="lbl">Estructura</span><b class="t">Inicio Â· Conflicto Â· Desenlace</b><b>Inicio:</b> presenta personajes y situaciÃ³n (Â«TomÃ¡s recibiÃ³ la cajaâ€¦Â»). <b>Conflicto:</b> el problema central (la muerte del abuelo, el reloj que no funciona). <b>Desenlace:</b> resoluciÃ³n (TomÃ¡s resignifica el regalo y sale a caminar).<div class="ex">El conflicto puede ser interno (emocional) o externo.</div></div>'+
+                  '<div class="s9-card cc"><span class="lbl">Narrador</span><b class="t">Protagonista Â· Testigo Â· Omnisciente</b><b>Protagonista:</b> 1Âª persona, es el personaje principal (Â«yo recibÃ­â€¦Â»). <b>Testigo:</b> 1Âª persona pero secundario, solo ve (Â«vi cÃ³moâ€¦Â»). <b>Omnisciente:</b> 3Âª persona, conoce los pensamientos (Â«TomÃ¡s cerrÃ³ los ojos. No sintiÃ³ el nudoâ€¦Â»).<div class="ex">El cuento Â«El regalo del abueloÂ» tiene narrador omnisciente.</div></div>'+
+                  '<div class="s9-card cc"><span class="lbl">Personajes</span><b class="t">Principal Â· Secundario</b><b>Principal (protagonista):</b> sobre quien gira la historia (TomÃ¡s). <b>Secundario:</b> influye pero no es el centro (el abuelo, presente solo en recuerdos).<div class="ex">Pista: el principal es el que cambia o aprende algo al final.</div></div>'+
+                  '<div class="s9-card cc"><span class="lbl">Ambiente</span><b class="t">Espacio + tiempo + atmÃ³sfera</b>DÃ³nde, cuÃ¡ndo y con quÃ© clima emocional ocurre. En el cuento: la casa despuÃ©s del entierro (atmÃ³sfera de duelo) â†’ la calle iluminada al final (atmÃ³sfera de calma).<div class="ex">El ambiente puede cambiar para reflejar el cambio interno del personaje.</div></div>'+
+                '</div>'+
 
-            // 10. DISTRACTORES
-            '<div class="actcard c10"><b class="actlabel">Actividad 10 · Cazador de distractores</b><br>Pregunta: «<i>¿Qué simboliza el reloj del abuelo?</i>». Clasifica el TIPO DE ERROR (Literal falso / Invento plausible / Sobregeneralización / Inversión) de cada distractor:<ul><li><b>(A)</b> Que el abuelo era relojero de profesión.</li><li><b>(B)</b> Que TODOS los abuelos chilenos regalan relojes a sus nietos.</li><li><b>(C)</b> Que el abuelo quería que Tomás se olvidara de él.</li><li><b>(D)</b> Que el reloj funciona perfectamente y solo necesita batería.</li></ul><div class="pista">💡 Pista: una inventa un dato, otra dice lo contrario, otra exagera y otra mezcla palabras del texto sin sentido.</div><details><summary>✅ Ver análisis</summary><div><b>(A) Invento plausible</b>: que el abuelo fuera relojero «sonaría lógico», pero el texto NO lo dice en ninguna parte. <b>(B) Sobregeneralización</b>: usa el cuantificador absoluto «TODOS», típico de esta trampa. <b>(C) Inversión</b>: el sentido del cuento es exactamente lo contrario — el regalo es para que Tomás <b>recuerde</b>, no para que olvide. <b>(D) Literal falso</b>: copia palabras del texto («reloj», «funciona») pero responde algo que el texto descarta explícitamente («no estaba descompuesto, había dejado de necesitar funcionar»).</div></details></div>'+
+                '<h5>ðŸŽ™ Texto literario Â· Poema</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cp"><span class="lbl">Hablante lÃ­rico</span><b class="t">La voz que habla en el poema</b>NO es el autor. Es una voz construida que expresa una experiencia. En Â«Lo que aprendÃ­Â», el hablante dice Â«yo aprendÃ­Â» â†’ habla en 1Âª persona y comparte aprendizajes Ã­ntimos.<div class="ex">PregÃºntate: Â¿quiÃ©n dice Â«yoÂ» en este poema?</div></div>'+
+                  '<div class="s9-card cp"><span class="lbl">Objeto lÃ­rico</span><b class="t">Aquello sobre lo que habla el hablante</b>Puede ser una persona, un sentimiento, un lugar, una idea. En Â«Lo que aprendÃ­Â», el objeto lÃ­rico es <b>la propia experiencia</b> de aprender de la vida.<div class="ex">PregÃºntate: Â¿de quÃ© o sobre quÃ© estÃ¡ hablando el poema?</div></div>'+
+                  '<div class="s9-card cp"><span class="lbl">Temple de Ã¡nimo</span><b class="t">El estado emocional del hablante</b>AlegrÃ­a, melancolÃ­a, nostalgia, rabia, paz, esperanzaâ€¦ En Â«Lo que aprendÃ­Â» el temple es de <b>melancolÃ­a serena</b>: aceptaciÃ³n de la pÃ©rdida, sin tristeza desbordada.<div class="ex">PregÃºntate: Â¿con quÃ© emociÃ³n habla el hablante?</div></div>'+
+                  '<div class="s9-card cp"><span class="lbl">Actitud lÃ­rica</span><b class="t">Enunciativa Â· ApostrÃ³fica Â· CarmÃ­nica</b><b>Enunciativa:</b> describe el mundo externo (Â«El sol caeâ€¦Â»). <b>ApostrÃ³fica:</b> se dirige a un tÃº (Â«Madre, escÃºchameÂ»). <b>CarmÃ­nica:</b> expresa el yo Ã­ntimo (Â«AprendÃ­â€¦Â»).<div class="ex">Â«Lo que aprendÃ­Â» es claramente carmÃ­nica.</div></div>'+
+                '</div>'+
 
-            '</div>',
+                '<h5>âœ Figuras literarias del ensayo (y otras frecuentes)</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cf"><span class="lbl">AnÃ¡fora</span><b class="t">RepeticiÃ³n al inicio de versos</b>Â«AprendÃ­â€¦ / AprendÃ­â€¦ / AprendÃ­â€¦Â». Genera ritmo y Ã©nfasis.</div>'+
+                  '<div class="s9-card cf"><span class="lbl">SÃ­mbolo</span><b class="t">Objeto que representa una idea</b>El reloj detenido = el tiempo vivido con el abuelo, la memoria que ya no necesita medirse.</div>'+
+                  '<div class="s9-card cf"><span class="lbl">ComparaciÃ³n / SÃ­mil</span><b class="t">ConexiÃ³n con Â«comoÂ»</b>Â«Guardar mis silencios <b>como</b> se guarda el pan.Â»</div>'+
+                  '<div class="s9-card cf"><span class="lbl">MetÃ¡fora</span><b class="t">SustituciÃ³n sin Â«comoÂ»</b>Â«La calle entera era mÃ¡s anchaÂ» (no es real, es imagen del cambio interno).</div>'+
+                  '<div class="s9-card cf"><span class="lbl">PersonificaciÃ³n</span><b class="t">Atribuir cualidades humanas a algo no humano</b>Â«La tarde se habÃ­a llenado de luzÂ» (la tarde no actÃºa, pero se le da cualidad activa).</div>'+
+                  '<div class="s9-card cf"><span class="lbl">HipÃ©rbole</span><b class="t">ExageraciÃ³n con efecto expresivo</b>Â«Lo esperÃ© toda la vidaÂ» (no es literal, es Ã©nfasis).</div>'+
+                '</div>'+
+
+                '<h5>âš  CÃ³mo se construyen los distractores</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cd"><span class="lbl">Literal falso</span><b class="t">Copia palabras pero responde otra cosa</b>Usa tÃ©rminos del texto pero combinados de forma incorrecta.</div>'+
+                  '<div class="s9-card cd"><span class="lbl">Invento plausible</span><b class="t">Suena lÃ³gico, pero no estÃ¡ en el texto</b>Â«El abuelo era relojeroÂ» â†’ no aparece en el cuento.</div>'+
+                  '<div class="s9-card cd"><span class="lbl">SobregeneralizaciÃ³n</span><b class="t">Usa Â«todosÂ», Â«siempreÂ», Â«nuncaÂ»</b>Â«TODOS los abuelos chilenos regalan relojesÂ» â†’ exageraciÃ³n.</div>'+
+                  '<div class="s9-card cd"><span class="lbl">InversiÃ³n</span><b class="t">Dice lo contrario del texto</b>Â«El abuelo querÃ­a que TomÃ¡s lo olvidaraÂ» â†’ el cuento dice exactamente lo opuesto.</div>'+
+                '</div>'+
+              '</div>'+
+
+              // â•â•â• PÃGINA 3 â€” ESCRITURA SIMCE â•â•â•
+              '<div class="s9-page" data-p="3">'+
+                '<h4>ðŸ“™ PÃ¡gina 3 Â· Escritura SIMCE</h4>'+
+                '<p>El SIMCE no solo mide leer y comprender: tambiÃ©n mide <b>escribir</b>. En esta secciÃ³n repasamos tres tareas frecuentes: <b>(1)</b> dar tu opiniÃ³n, <b>(2)</b> diferenciar hechos y opiniones, y <b>(3)</b> transformar un texto informativo en una noticia o crÃ³nica.</p>'+
+
+                '<h5>1ï¸âƒ£ Dar opiniÃ³n: estructura bÃ¡sica</h5>'+
+                '<div class="s9-step"><b>Tesis</b> (1 oraciÃ³n): tu postura clara. <i>Â«Pienso que el uso de pantallas en adolescentes es preocupante porqueâ€¦Â»</i></div>'+
+                '<div class="s9-step"><b>Argumento 1</b> (1-2 oraciones): una razÃ³n con dato o ejemplo. <i>Â«El estudio muestra que el 60 % del consumo es pasivo, sin aprendizaje.Â»</i></div>'+
+                '<div class="s9-step"><b>Argumento 2</b> (1-2 oraciones): otra razÃ³n distinta. <i>Â«AdemÃ¡s, el uso intensivo entre las 20:00 y 24:00 afecta el sueÃ±o.Â»</i></div>'+
+                '<div class="s9-step"><b>Cierre</b> (1 oraciÃ³n): vuelve a tu postura, ya reforzada. <i>Â«Por eso creo que el problema no es prohibir, sino enseÃ±ar a elegir contenidos.Â»</i></div>'+
+                '<div class="s9-rubric">ðŸ“‹ <b>RÃºbrica de autoevaluaciÃ³n.</b> Â¿Tu texto tiene los 4 elementos? Â¿Cada argumento se apoya en un dato o ejemplo concreto? Â¿Tu cierre conecta con la tesis sin solo repetirla?</div>'+
+
+                '<h5>2ï¸âƒ£ Hechos vs. Opiniones</h5>'+
+                '<table class="s9-table">'+
+                  '<tr><th>Marca</th><th>Hecho</th><th>OpiniÃ³n</th></tr>'+
+                  '<tr><td>Verificable</td><td>SÃ­ (con datos, fuentes)</td><td>No (es valoraciÃ³n personal)</td></tr>'+
+                  '<tr><td>Lenguaje</td><td>Objetivo, sin adjetivos valorativos</td><td>Adjetivos valorativos: Â«preocupanteÂ», Â«hermosoÂ», Â«injustoÂ»</td></tr>'+
+                  '<tr><td>Ejemplo</td><td><i>Â«El consumo aumentÃ³ 38 % desde 2020.Â»</i></td><td><i>Â«Es alarmante que los jÃ³venes usen tanto las pantallas.Â»</i></td></tr>'+
+                '</table>'+
+                '<div class="s9-rubric">âš  En el SIMCE pueden pedirte: Â«Identifica un hecho y una opiniÃ³n del texto.Â» â†’ busca cifras (hecho) y adjetivos valorativos (opiniÃ³n).</div>'+
+
+                '<h5>3ï¸âƒ£ Transformar informativo â†’ noticia / crÃ³nica</h5>'+
+                '<div class="s9-cards">'+
+                  '<div class="s9-card cw"><span class="lbl">Texto informativo</span><b class="t">Solo entrega datos</b>Datos puros, sin contexto narrativo. Ej: <i>Â«Los adolescentes pasan 6,5 horas frente a pantallas. El 60 % es contenido pasivo.Â»</i></div>'+
+                  '<div class="s9-card cw"><span class="lbl">â†’ Noticia</span><b class="t">Datos + estructura periodÃ­stica</b>Agrega titular, lead (quÃ©/quiÃ©n/cuÃ¡ndo/dÃ³nde), cita de experto, recomendaciones. Ej: <i>Â«El consumo de pantallas crece 38 %, segÃºn estudio del Ministerio. Carolina Montes advirtiÃ³ queâ€¦Â»</i></div>'+
+                  '<div class="s9-card cw"><span class="lbl">â†’ CrÃ³nica</span><b class="t">Datos + narraciÃ³n + voz del autor</b>Cuenta la historia desde una experiencia concreta, con detalles sensoriales. Ej: <i>Â«Son las 22:30. En el living de los PÃ©rez, los tres hijos miran cada uno su pantalla. La mayor lleva cuatro horas asÃ­â€¦Â»</i></div>'+
+                '</div>'+
+
+                '<h5>ðŸ“ Mini-tarea de prÃ¡ctica (opcional, en tu cuaderno)</h5>'+
+                '<div class="s9-step">Toma uno de los datos de la noticia (por ej. Â«el 60 % es contenido pasivoÂ») y <b>escribe un pÃ¡rrafo de opiniÃ³n</b> (4-5 lÃ­neas) con tesis + 1 argumento + cierre. Esa es exactamente la habilidad de escritura que mide el SIMCE.</div>'+
+              '</div>'+
+
+              '<div class="s9-nav">'+
+                '<button id="s9prev" disabled>Â« AtrÃ¡s</button>'+
+                '<span class="ind" id="s9ind">PÃ¡gina 1 de 3</span>'+
+                '<button id="s9next">Siguiente Â»</button>'+
+              '</div>'+
+            '</div>'+
+
+            '<script>(function(){'+
+              'function init(){'+
+                'var pag=document.getElementById("s9pag");if(!pag||pag.dataset.init)return;pag.dataset.init="1";'+
+                'var tabs=pag.querySelectorAll(".s9-tab");var pages=pag.querySelectorAll(".s9-page");'+
+                'var prev=document.getElementById("s9prev");var next=document.getElementById("s9next");var ind=document.getElementById("s9ind");'+
+                'var cur=1,total=3;'+
+                'function show(n){cur=n;tabs.forEach(function(t){t.classList.toggle("active",+t.dataset.p===n)});pages.forEach(function(p){p.classList.toggle("active",+p.dataset.p===n)});prev.disabled=(n===1);next.disabled=(n===total);ind.textContent="PÃ¡gina "+n+" de "+total;}'+
+                'tabs.forEach(function(t){t.addEventListener("click",function(){show(+t.dataset.p)})});'+
+                'prev.addEventListener("click",function(){if(cur>1)show(cur-1)});'+
+                'next.addEventListener("click",function(){if(cur<total)show(cur+1)});'+
+              '}'+
+              'if(document.readyState==="loading"){document.addEventListener("DOMContentLoaded",init)}else{setTimeout(init,50)}'+
+              'setTimeout(init,300);setTimeout(init,1000);'+
+            '})();<\/script>',
             tips:[
-                {emoji:'📝',texto:'Lee primero el panel completo. Después, responde las preguntas con estos conceptos en mente.'},
-                {emoji:'🎯',texto:'Si dudas entre dos alternativas, identifica cuál tipo de distractor es la incorrecta (literal falso, invento, sobregeneralización o inversión).'},
-                {emoji:'💪',texto:'Esta sesión vale más por lo que aprendes que por la nota. Pregúntate: ¿qué error cometí en el ensayo y cómo lo corrijo ahora?'}
+                {emoji:'�',texto:'Recorre las 3 páginas del manual con « Atrás » y « Siguiente ». Léelas de corrido antes de pasar a las preguntas.'},
+                {emoji:'🎯',texto:'Antes de responder cada pregunta, identifica el verbo de pregunta (¿Cuántos? ¿Qué se infiere? ¿Cuál es el propósito?) y decide qué te piden.'},
+                {emoji:'⚠',texto:'Si dudas entre dos alternativas, clasifica el distractor: literal falso, invento plausible, sobregeneralización o inversión.'}
             ]
         },
         contenido:{
             textos:[
                 {id:'texto-1',tipo:'No literario',subtipo:'Noticia',titulo:'El consumo de pantallas en adolescentes chilenos crece un 38 %',
+                 imagen:'<div style="background:linear-gradient(135deg,#dbeafe,#e0f2fe);border:2px solid #0ea5e9;border-radius:10px;padding:12px 14px;margin:8px 0 12px;font-size:12px;line-height:1.55"><div style="font-weight:800;color:#075985;font-size:13px;margin-bottom:8px">📰 Tarjeta de apoyo · Texto NO literario (Noticia)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #0ea5e9"><b style="color:#0369a1">Estructura</b><br>Titular · Lead (1er párrafo) · Cuerpo (cifras+citas) · Cierre.</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #0ea5e9"><b style="color:#0369a1">Hechos</b><br>Datos verificables: «38 %», «6,5 horas», «Carolina Montes».</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #0ea5e9"><b style="color:#0369a1">Opiniones</b><br>Frases entre comillas con valoración: «No se trata de prohibir».</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #0ea5e9"><b style="color:#0369a1">Audiencia</b><br>Padres y educadores (no los adolescentes mismos).</div></div><div style="margin-top:8px;font-size:11px;color:#0c4a6e;font-style:italic">💡 Mientras lees, identifica: ¿qué es hecho y qué es opinión? ¿cuál es la tesis del experto?</div></div>',
                  parrafos:[
                     {num:1,texto:'Los adolescentes chilenos pasan en promedio <strong>seis horas y media diarias</strong> frente a pantallas, según un estudio elaborado por la consultora Criteria por encargo del Ministerio de Educación. La cifra representa un alza del 38 % respecto del año 2020 y se concentra principalmente en jóvenes de entre 13 y 17 años de zonas urbanas. La directora del estudio, Carolina Montes, señaló que «<em>el dato más preocupante no es la cantidad, sino la calidad: el 60 % corresponde a contenido pasivo, sin interacción ni aprendizaje</em>».'},
                     {num:2,texto:'El informe destaca además que el uso intensivo se concentra entre las 20:00 y las 24:00 horas, franja en la que se debilita la producción de melatonina, la hormona reguladora del sueño. La consecuencia más visible, advierten los especialistas, es el retraso en la hora de dormir y la disminución de las horas efectivas de descanso, especialmente en estudiantes que rinden pruebas al día siguiente.'},
                     {num:3,texto:'Frente a este escenario, expertos en salud mental recomiendan establecer rutinas familiares claras, zonas libres de pantallas en el hogar (como la mesa de comedor o los dormitorios) y, sobre todo, conversar con los adolescentes sobre el tipo de contenido que consumen. «<em>No se trata de prohibir, sino de educar la mirada</em>», concluyó Montes.'}
                  ],fuente:'Adaptado de un estudio de Criteria · 2025. Texto utilizado para fines pedagógicos.'},
                 {id:'texto-2',tipo:'Literario',subtipo:'Cuento (fragmento)',titulo:'El regalo del abuelo',
+                 imagen:'<div style="background:linear-gradient(135deg,#fce7f3,#fdf2f8);border:2px solid #ec4899;border-radius:10px;padding:12px 14px;margin:8px 0 12px;font-size:12px;line-height:1.55"><div style="font-weight:800;color:#9f1239;font-size:13px;margin-bottom:8px">📖 Tarjeta de apoyo · Texto Literario (Cuento)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #ec4899"><b style="color:#be185d">Estructura</b><br>Inicio (caja, entierro) → Conflicto (duelo, reloj que no funciona) → Desenlace (sale a caminar).</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #ec4899"><b style="color:#be185d">Narrador</b><br>OMNISCIENTE (3ª persona, conoce los pensamientos: «no sintió el nudo apretado»).</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #ec4899"><b style="color:#be185d">Personajes</b><br>Tomás (protagonista) · El abuelo (ausente, presente solo en recuerdo).</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #ec4899"><b style="color:#be185d">Símbolo clave</b><br>El reloj detenido = el tiempo vivido con el abuelo, la memoria que ya no necesita medirse.</div></div><div style="margin-top:8px;font-size:11px;color:#831843;font-style:italic">💡 Pregúntate: ¿qué cambia en Tomás entre el inicio y el final? ¿qué representa la tarde «llena de luz»?</div></div>',
                  parrafos:[
                     {num:1,texto:'Tomás recibió la caja con desconfianza. Su abuelo se la había hecho llegar tres días después del entierro, como si supiera —pensó él— que justo entonces necesitaría algo a lo que aferrarse. La caja era de madera oscura, con bisagras viejas, y olía a un mueble que nadie había abierto en años. Adentro encontró un viejo reloj de bolsillo, oxidado en los bordes. <em>«No funciona —murmuró—, claro que no funciona»</em>. Pero al darle vuelta vio una inscripción grabada con letra menuda: <em>«El tiempo no se mide, se vive. Tu abuelo»</em>.'},
                     {num:2,texto:'Tomás se quedó un rato largo con el reloj entre las manos, recordando las tardes en que el abuelo lo llevaba al cerro a mirar pasar los trenes. Por primera vez desde la muerte del viejo, no sintió el nudo apretado en la garganta, sino algo distinto, parecido a la calma. Comprendió, sin poder explicarlo del todo, que el reloj no estaba descompuesto: simplemente había dejado de necesitar funcionar.'},
                     {num:3,texto:'Guardó el reloj en el bolsillo del pecho y salió a caminar. Afuera, la tarde ya se había llenado de luz, y por un instante le pareció que la calle entera era más ancha que de costumbre, como si el mundo se hubiera abierto un poco para él.'}
                  ],fuente:'Fragmento adaptado · narrador omnisciente · texto pedagógico (2026).'},
                 {id:'texto-3',tipo:'Literario',subtipo:'Poema',titulo:'Lo que aprendí',
+                 imagen:'<div style="background:linear-gradient(135deg,#f3e8ff,#faf5ff);border:2px solid #a855f7;border-radius:10px;padding:12px 14px;margin:8px 0 12px;font-size:12px;line-height:1.55"><div style="font-weight:800;color:#6b21a8;font-size:13px;margin-bottom:8px">🎙 Tarjeta de apoyo · Texto Literario (Poema)</div><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px"><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #a855f7"><b style="color:#7e22ce">Hablante lírico</b><br>El que dice «yo aprendí» (1ª persona). NO es el autor: es una voz construida.</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #a855f7"><b style="color:#7e22ce">Objeto lírico</b><br>La propia experiencia de aprender de la vida y la pérdida.</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #a855f7"><b style="color:#7e22ce">Temple de ánimo</b><br>Melancolía serena: aceptación de lo perdido, sin tristeza desbordada.</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #a855f7"><b style="color:#7e22ce">Actitud lírica</b><br>CARMÍNICA (habla de su yo íntimo y sus aprendizajes).</div><div style="background:#fff;padding:8px 10px;border-radius:6px;border-left:3px solid #a855f7"><b style="color:#7e22ce">Figuras</b><br>Anáfora («Aprendí…»), comparación («como se guarda el pan»), símbolo (la puerta entreabierta).</div></div><div style="margin-top:8px;font-size:11px;color:#581c87;font-style:italic">💡 Mientras lees: ¿qué emoción transmite el hablante? ¿qué aprendizaje es «el más difícil»?</div></div>',
                  parrafos:[
                     {num:1,texto:'<em>Y aprendí, finalmente, a no esperar la lluvia,<br>porque la lluvia llegaba sin avisar a nadie.</em>'},
                     {num:2,texto:'<em>Aprendí a leer la noche en los ojos del perro,<br>a guardar mis silencios como se guarda el pan.</em>'},

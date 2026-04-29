@@ -2549,6 +2549,7 @@
         html += '</div>';
 
         main.innerHTML = html;
+        initInstructionPaginators();
 
         // Restore highlights
         restoreHighlights();
@@ -2833,6 +2834,81 @@
         const arrow = document.getElementById('insArrow');
         content.classList.toggle('open');
         arrow.classList.toggle('open');
+    }
+
+    function initInstructionPaginators() {
+        document.querySelectorAll('.s9-paginator').forEach(paginator => {
+            const scope = paginator.parentElement || document;
+            const radios = Array.from(scope.querySelectorAll('input.s9-radio[name="s9p"]'));
+            const pages = Array.from(paginator.querySelectorAll('.s9-page'));
+            const tabs = Array.from(paginator.querySelectorAll('.s9-tab'));
+            const prevButtons = Array.from(paginator.querySelectorAll('[data-prev]'));
+            const nextButtons = Array.from(paginator.querySelectorAll('[data-next]'));
+            const indicators = Array.from(paginator.querySelectorAll('[id^="s9ind"]'));
+
+            if (!pages.length) return;
+
+            const paintTab = (tab, active) => {
+                tab.style.background = active ? '#6366f1' : '';
+                tab.style.color = active ? '#fff' : '';
+            };
+
+            const showPage = (index) => {
+                const safeIndex = Math.max(0, Math.min(index, pages.length - 1));
+
+                pages.forEach((page, pageIndex) => {
+                    page.style.display = pageIndex === safeIndex ? 'block' : 'none';
+                });
+
+                tabs.forEach((tab, tabIndex) => {
+                    paintTab(tab, tabIndex === safeIndex);
+                });
+
+                prevButtons.forEach((button, buttonIndex) => {
+                    button.style.display = (safeIndex > 0 && buttonIndex === safeIndex - 1) ? 'inline-block' : 'none';
+                });
+
+                nextButtons.forEach((button, buttonIndex) => {
+                    button.style.display = (safeIndex < pages.length - 1 && buttonIndex === safeIndex) ? 'inline-block' : 'none';
+                });
+
+                indicators.forEach((indicator, indicatorIndex) => {
+                    indicator.style.display = indicatorIndex === safeIndex ? 'inline' : 'none';
+                });
+
+                radios.forEach((radio, radioIndex) => {
+                    radio.checked = radioIndex === safeIndex;
+                });
+            };
+
+            tabs.forEach((tab, index) => {
+                tab.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    showPage(index);
+                });
+            });
+
+            prevButtons.forEach((button, index) => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    showPage(index);
+                });
+            });
+
+            nextButtons.forEach((button, index) => {
+                button.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    showPage(index + 1);
+                });
+            });
+
+            radios.forEach((radio, index) => {
+                radio.addEventListener('change', () => showPage(index));
+            });
+
+            const checkedIndex = radios.findIndex(radio => radio.checked);
+            showPage(checkedIndex >= 0 ? checkedIndex : 0);
+        });
     }
 
     // ==================== TIMER ====================

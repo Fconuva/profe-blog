@@ -1,0 +1,2620 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Prueba | Lecturas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --lecturas-font-scale: 1;
+      --lecturas-line-height: 1.7;
+      --lecturas-answer-min-height: 160px;
+      --lecturas-card-padding: 24px;
+      --lecturas-option-padding-y: 14px;
+      --lecturas-option-padding-x: 16px;
+    }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, 0.08), transparent 28%),
+        linear-gradient(180deg, #eef2f7 0%, #f8fafc 100%);
+      color: #111827;
+      font-size: calc(16px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      /* ANTIBIXBY/AI: bloquear menu contextual y seleccion larga (Samsung AI Search,
+         Google Lens, copiar-pegar). Sigue permitido en textareas / inputs. */
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Areas editables si o si seleccionables */
+    textarea, input[type="text"], input[type="number"], input[type="email"], [contenteditable="true"] {
+      -webkit-user-select: text !important;
+      -moz-user-select: text !important;
+      -ms-user-select: text !important;
+      user-select: text !important;
+      -webkit-touch-callout: default !important;
+    }
+    body.pie-theme {
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.14), transparent 32%),
+        radial-gradient(circle at top right, rgba(244, 114, 182, 0.14), transparent 26%),
+        radial-gradient(circle at bottom right, rgba(251, 191, 36, 0.12), transparent 24%),
+        linear-gradient(180deg, #fffaf2 0%, #f7fbff 52%, #fff7ed 100%);
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: linear-gradient(135deg, #0f172a 0%, #115e59 52%, #164e63 100%);
+      color: #f8fafc;
+      box-shadow: 0 12px 26px rgba(15, 23, 42, 0.18);
+    }
+    body.pie-theme .topbar {
+      background: linear-gradient(135deg, #1d4ed8 0%, #0f766e 50%, #ea580c 100%);
+    }
+    .topbar-inner {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 7px 16px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+    .title {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-width: 0;
+    }
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      object-fit: contain;
+      padding: 3px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.14);
+      flex: 0 0 auto;
+    }
+    .title-copy {
+      min-width: 0;
+    }
+    .title-copy h1 {
+      font-size: calc(14px * var(--lecturas-font-scale));
+      font-weight: 800;
+      margin-bottom: 2px;
+      line-height: 1.1;
+    }
+    .title-copy p {
+      font-size: calc(11px * var(--lecturas-font-scale));
+      color: rgba(248,250,252,0.78);
+    }
+    .header-right {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .status-cluster {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      max-width: 700px;
+    }
+    .pill {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 700;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.12);
+      white-space: nowrap;
+    }
+    .save.ok { color: #bbf7d0; }
+    .save.err { color: #fecaca; }
+    .strike-mini {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 8px;
+      border-radius: 999px;
+      background: rgba(248, 113, 113, 0.14);
+      border: 1px solid rgba(248, 113, 113, 0.22);
+      color: #fee2e2;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 700;
+    }
+    .strike-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 2px solid #fca5a5;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #fee2e2;
+    }
+    .strike-dot.active {
+      background: #dc2626;
+      border-color: #dc2626;
+      color: #fff;
+    }
+    .question-menu-shell {
+      position: relative;
+    }
+    .btn-logout {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(220,38,38,0.18);
+      color: #fca5a5;
+      border-radius: 16px;
+      padding: 4px 10px;
+      font: inherit;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-logout:hover {
+      background: rgba(220,38,38,0.35);
+      color: #fff;
+    }
+    .btn-back {
+      border: 1px solid rgba(255,255,255,0.18);
+      background: rgba(255,255,255,0.10);
+      color: #e2e8f0;
+      border-radius: 16px;
+      padding: 4px 10px;
+      font: inherit;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.2s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,0.22); color:#fff; }
+    .question-menu-btn {
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.12);
+      color: #fff;
+      border-radius: 12px;
+      padding: 5px 12px;
+      font: inherit;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 110px;
+    }
+    .question-menu {
+      position: absolute;
+      top: calc(100% + 10px);
+      right: 0;
+      width: min(340px, calc(100vw - 28px));
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+      background: #fff;
+      color: #0f172a;
+      border-radius: 18px;
+      border: 1px solid #dbeafe;
+      box-shadow: 0 24px 48px rgba(15, 23, 42, 0.22);
+      padding: 12px;
+    }
+    .question-menu h3 {
+      font-size: calc(14px * var(--lecturas-font-scale));
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+    .question-menu p {
+      font-size: calc(11px * var(--lecturas-font-scale));
+      color: #475569;
+      line-height: 1.35;
+      margin-bottom: 8px;
+    }
+    .question-summary {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    .question-summary-card {
+      border-radius: 10px;
+      padding: 6px 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      flex: 1;
+      min-width: 80px;
+    }
+    .question-summary-card .label {
+      display: block;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      font-weight: 800;
+      color: #64748b;
+      margin-bottom: 2px;
+    }
+    .question-summary-card .value {
+      display: block;
+      font-size: calc(15px * var(--lecturas-font-scale));
+      font-weight: 800;
+      color: #0f172a;
+    }
+    .question-menu-legend {
+      display: flex;
+      gap: 10px;
+      font-size: 10px;
+      color: #475569;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .question-menu-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .question-menu-legend i {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 3px;
+    }
+    .question-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+      gap: 6px;
+    }
+    .question-chip {
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      color: #334155;
+      padding: 6px 2px;
+      font: inherit;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 800;
+      cursor: pointer;
+      text-align: center;
+      min-width: 30px;
+    }
+    .question-chip.active {
+      background: #0f766e;
+      border-color: #0f766e;
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, 0.16);
+    }
+    .question-chip.done {
+      background: #bbf7d0;
+      border-color: #22c55e;
+      color: #14532d;
+    }
+    .question-chip.pending {
+      background: #fef08a;
+      border-color: #eab308;
+      color: #713f12;
+    }
+    .page-shell {
+      max-width: 1020px;
+      margin: 0 auto;
+      padding: 24px 20px 80px;
+    }
+    .summary-card,
+    .material-card,
+    .item-card,
+    .notice,
+    .navigation-card,
+    .submit-box {
+      background: rgba(255,255,255,0.94);
+      border-radius: 26px;
+      border: 1px solid rgba(203, 213, 225, 0.65);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 14px 30px rgba(15, 23, 42, 0.08);
+      margin-bottom: 18px;
+      padding: var(--lecturas-card-padding);
+    }
+    body.pie-theme .summary-card,
+    body.pie-theme .material-card,
+    body.pie-theme .item-card,
+    body.pie-theme .notice,
+    body.pie-theme .navigation-card,
+    body.pie-theme .submit-box {
+      border: 1px solid rgba(251, 191, 36, 0.22);
+      box-shadow: 0 16px 34px rgba(30, 64, 175, 0.09);
+    }
+    body.pie-theme .material-card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(255,250,244,0.96));
+    }
+    .summary-card h2,
+    .material-card h2,
+    .item-card h3,
+    .navigation-card h2,
+    .submit-box h2,
+    .notice h2 {
+      font-size: calc(18px * var(--lecturas-font-scale));
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+    }
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .summary-item {
+      border-radius: 18px;
+      padding: 12px 13px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .summary-item .label {
+      display: block;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 800;
+      color: #64748b;
+      margin-bottom: 5px;
+    }
+    .summary-item .value {
+      display: block;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: #e5e7eb;
+      margin: 14px 0 10px;
+    }
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #0f766e, #0ea5e9);
+      width: 0;
+      transition: width .2s ease;
+    }
+    .summary-card p,
+    .material-card p,
+    .item-card p,
+    .notice p,
+    .navigation-card p,
+    .submit-box p {
+      color: #475569;
+      line-height: var(--lecturas-line-height);
+    }
+    .material-card .subtype,
+    .item-card .eyebrow {
+      display: inline-flex;
+      padding: 7px 11px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .material-card .subtype {
+      background: #ecfdf5;
+      color: #047857;
+    }
+    .item-card .eyebrow {
+      background: #dbeafe;
+      color: #1d4ed8;
+    }
+    .material-card figure {
+      margin: 14px 0;
+    }
+    .material-card img {
+      max-width: 100%;
+      display: block;
+      border-radius: 18px;
+      border: 1px solid #d1d5db;
+      background: #f3f4f6;
+    }
+    .material-card img.img-broken { display: none; }
+    .material-card .img-fallback {
+      display: flex; align-items: center; gap: 10px;
+      background: #fef3c7; border: 1.5px solid #f59e0b; border-radius: 10px;
+      padding: 12px 16px; margin: 10px 0; font-size: calc(13px * var(--lecturas-font-scale));
+      color: #92400e; line-height: 1.5;
+    }
+    .material-card .img-fallback::before { content: '🖼️'; font-size: 1.5em; }
+    .material-card figcaption {
+      margin-top: 8px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: #64748b;
+    }
+    .vineta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(90deg,#f59e0b 0%,#ef4444 100%);
+      color: #fff;
+      font-weight: 800;
+      font-size: calc(15px * var(--lecturas-font-scale));
+      padding: 8px 16px;
+      border-radius: 999px;
+      letter-spacing: 0.04em;
+      box-shadow: 0 2px 6px rgba(239,68,68,0.25);
+      margin: 4px 0 8px;
+      text-transform: uppercase;
+    }
+    .vineta-badge::before {
+      content: '🔍';
+      font-size: 1.1em;
+    }
+    .vineta-shuffle-note {
+      margin: 12px 0 4px;
+      padding: 10px 14px;
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      border-radius: 8px;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      color: #92400e;
+      line-height: 1.5;
+    }
+    .vineta-shuffle-note strong { color: #b45309; }
+    .material-card .source {
+      margin-top: 12px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: #64748b;
+      font-style: italic;
+    }
+    .pie-student-note {
+      margin: 0 0 16px;
+      padding: 18px 20px;
+      border-radius: 24px;
+      border: 2px solid #fbbf24;
+      background: linear-gradient(135deg, #fff7ed 0%, #eff6ff 100%);
+      box-shadow: 0 14px 28px rgba(234, 88, 12, 0.08);
+    }
+    .pie-note-topline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: #1d4ed8;
+      color: #eff6ff;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 800;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .pie-note-title {
+      font-size: calc(22px * var(--lecturas-font-scale));
+      font-weight: 900;
+      line-height: 1.1;
+      color: #9a3412;
+      margin-bottom: 10px;
+    }
+    .pie-student-note p {
+      color: #334155;
+      margin-bottom: 8px;
+      line-height: calc(var(--lecturas-line-height) + 0.04);
+    }
+    .pie-student-note p:last-child {
+      margin-bottom: 0;
+    }
+    .pie-reading-line {
+      margin: 12px 0;
+    }
+    .pie-reading-line > span {
+      display: block;
+      padding: 14px 16px;
+      border-radius: 20px;
+      font-weight: 700;
+      line-height: calc(var(--lecturas-line-height) + 0.06);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.55);
+    }
+    .pie-rich-block {
+      margin: 12px 0;
+      padding: 8px 10px;
+      border-radius: 22px;
+      border: 1px solid transparent;
+    }
+    .pie-rich-block.tone-1 { background: #eff6ff; border-color: #bfdbfe; }
+    .pie-rich-block.tone-2 { background: #fdf2f8; border-color: #fbcfe8; }
+    .pie-rich-block.tone-3 { background: #fff7ed; border-color: #fdba74; }
+    .pie-rich-block.tone-4 { background: #faf5ff; border-color: #d8b4fe; }
+    .pie-rich-block.tone-5 { background: #fef2f2; border-color: #fca5a5; }
+    .hl-blue {
+      background: #dbeafe;
+      color: #1e3a8a;
+      border-left: 6px solid #2563eb;
+    }
+    .hl-pink {
+      background: #fce7f3;
+      color: #9d174d;
+      border-left: 6px solid #db2777;
+    }
+    .hl-orange {
+      background: #ffedd5;
+      color: #9a3412;
+      border-left: 6px solid #ea580c;
+    }
+    .hl-purple {
+      background: #f3e8ff;
+      color: #6b21a8;
+      border-left: 6px solid #9333ea;
+    }
+    .hl-red {
+      background: #fee2e2;
+      color: #991b1b;
+      border-left: 6px solid #dc2626;
+    }
+    body.pie-theme .material-card .subtype,
+    body.pie-theme .item-card .eyebrow {
+      background: linear-gradient(135deg, #f59e0b 0%, #ef4444 100%);
+      color: #fff7ed;
+    }
+    body.pie-theme .item-card .tag {
+      background: #eff6ff;
+      color: #1d4ed8;
+    }
+    body.pie-theme .item-card .tag.type {
+      background: #fff7ed;
+      color: #c2410c;
+    }
+    body.pie-theme .item-card .tag.score {
+      background: #fdf2f8;
+      color: #be185d;
+    }
+    .item-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      margin-bottom: 8px;
+    }
+    .item-head h3 {
+      margin: 0;
+      flex: 1;
+      min-width: 0;
+    }
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      background: #dbeafe;
+      color: #1d4ed8;
+      white-space: nowrap;
+    }
+    .tag.type { background: #fef3c7; color: #92400e; }
+    .tag.score { background: #ede9fe; color: #6d28d9; }
+    .fragment {
+      margin: 10px 0 16px;
+      padding: 14px 15px;
+      border-left: 4px solid #0ea5e9;
+      background: #f8fafc;
+      border-radius: 18px;
+      color: #334155;
+    }
+    .fragment p { margin-bottom: 8px; }
+    .option-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .option {
+      border: 2px solid #e5e7eb;
+      border-radius: 18px;
+      padding: 0;
+      transition: border-color .15s, background .15s, box-shadow .15s;
+      background: #fff;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: stretch;
+      overflow: hidden;
+    }
+    .option:hover {
+      border-color: #67e8f9;
+      box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.10);
+    }
+    .option.selected {
+      border-color: #0f766e;
+      background: #ecfdf5;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.12);
+    }
+    .option.struck {
+      border-color: #94a3b8;
+      background: #f8fafc;
+    }
+    .option.struck .option-main { opacity: .76; }
+    .option.struck .option-text {
+      text-decoration: line-through;
+      text-decoration-thickness: 2px;
+    }
+    .option-main {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: var(--lecturas-option-padding-y) var(--lecturas-option-padding-x);
+      cursor: pointer;
+    }
+    .letter {
+      display: inline-flex;
+      width: 26px;
+      height: 26px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #f3f4f6;
+      color: #374151;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      flex: 0 0 auto;
+    }
+    .option.selected .letter {
+      background: #0f766e;
+      color: #fff;
+    }
+    .option-text {
+      flex: 1;
+      min-width: 0;
+    }
+    .strike-toggle {
+      border: none;
+      border-left: 1px solid #e5e7eb;
+      background: #f8fafc;
+      color: #6b7280;
+      font: inherit;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      min-width: 92px;
+      padding: 0 12px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .strike-toggle.active {
+      background: #fee2e2;
+      color: #b91c1c;
+    }
+    .option.selected .strike-toggle {
+      background: #d1fae5;
+      border-left-color: #a7f3d0;
+    }
+    /* ── Instruction banners ── */
+    .instruction-banner {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      margin: 10px 0 6px;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      line-height: 1.55;
+      font-weight: 500;
+    }
+    .instruction-banner .ib-icon {
+      font-size: 1.35em;
+      flex: 0 0 auto;
+      margin-top: 1px;
+    }
+    .instruction-banner .ib-body { flex: 1; min-width: 0; }
+    .instruction-banner .ib-body strong { font-weight: 700; }
+    .ib-blue {
+      background: #eff6ff;
+      border: 1.5px solid #93c5fd;
+      color: #1e40af;
+    }
+    .ib-amber {
+      background: #fffbeb;
+      border: 1.5px solid #fcd34d;
+      color: #92400e;
+    }
+    .ib-teal {
+      background: #f0fdfa;
+      border: 1.5px solid #5eead4;
+      color: #115e59;
+    }
+    .ib-purple {
+      background: #f5f3ff;
+      border: 1.5px solid #c4b5fd;
+      color: #5b21b6;
+    }
+    .ib-rose {
+      background: #fff1f2;
+      border: 1.5px solid #fda4af;
+      color: #9f1239;
+    }
+
+    /* ── Criteria list for desarrollo ── */
+    .criteria-box {
+      margin: 12px 0 4px;
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: #faf5ff;
+      border: 1.5px solid #d8b4fe;
+    }
+    .criteria-box .cb-title {
+      font-size: calc(12px * var(--lecturas-font-scale));
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: #7c3aed;
+      margin-bottom: 8px;
+    }
+    .criteria-box ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .criteria-box li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 5px;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      color: #4c1d95;
+      line-height: 1.5;
+    }
+    .criteria-box li::before {
+      content: '✓';
+      position: absolute;
+      left: 0;
+      color: #7c3aed;
+      font-weight: 800;
+    }
+
+    /* ── Character counter ── */
+    .char-counter {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 6px;
+      padding: 0 4px;
+      font-size: calc(12px * var(--lecturas-font-scale));
+      color: #64748b;
+      font-weight: 600;
+    }
+    .char-counter .cc-count { font-variant-numeric: tabular-nums; }
+    .char-counter .cc-low { color: #dc2626; }
+    .char-counter .cc-ok { color: #16a34a; }
+
+    /* ── Scoring badge inside instruction ── */
+    .scoring-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(124, 58, 237, 0.12);
+      color: #6d28d9;
+      font-size: calc(11px * var(--lecturas-font-scale));
+      font-weight: 800;
+      margin-top: 6px;
+    }
+
+    textarea.answer-box {
+      width: 100%;
+      min-height: var(--lecturas-answer-min-height);
+      resize: vertical;
+      border: 2px solid #d1d5db;
+      border-radius: 18px;
+      padding: 14px 15px;
+      font: inherit;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      line-height: var(--lecturas-line-height);
+      margin-top: 14px;
+      background: #fff;
+    }
+    textarea.answer-box:focus,
+    .pair-select:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.10);
+    }
+    textarea.answer-box.no-copy {
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .pair-grid,
+    .order-grid {
+      display: grid;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .pair-row,
+    .order-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 13px;
+      border-radius: 18px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+    }
+    .pair-row strong,
+    .order-row strong {
+      font-size: calc(13px * var(--lecturas-font-scale));
+      color: #111827;
+      line-height: var(--lecturas-line-height);
+    }
+    .pair-select {
+      width: 100%;
+      border: 2px solid #d1d5db;
+      border-radius: 14px;
+      padding: 10px 12px;
+      font: inherit;
+      font-size: calc(13px * var(--lecturas-font-scale));
+      background: #fff;
+    }
+    .unknown {
+      margin-top: 14px;
+      border-radius: 18px;
+      padding: 14px;
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+    }
+    .navigation-card {
+      padding: 18px;
+    }
+    .navigation-card .meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .navigation-card .meta strong {
+      font-size: calc(16px * var(--lecturas-font-scale));
+      color: #0f172a;
+    }
+    .nav-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .nav-btn,
+    .submit-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .nav-btn {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .nav-btn.primary {
+      background: linear-gradient(135deg, #0f766e, #155e75);
+      color: #fff;
+      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.16);
+    }
+    .nav-btn:disabled,
+    .submit-btn:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+    .submit-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    .submit-btn {
+      min-width: 220px;
+      color: #fff;
+      background: linear-gradient(135deg, #0f766e, #155e75);
+      box-shadow: 0 14px 26px rgba(15, 118, 110, 0.16);
+    }
+    .strike-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.62);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 60;
+    }
+    .strike-modal-card {
+      width: min(460px, 100%);
+      background: #fff;
+      border-radius: 28px;
+      box-shadow: 0 24px 46px rgba(15, 23, 42, 0.20);
+      padding: 28px 24px;
+      text-align: center;
+    }
+    .strike-icon {
+      font-size: 52px;
+      margin-bottom: 12px;
+    }
+    .strike-modal-card h3 {
+      font-size: calc(24px * var(--lecturas-font-scale));
+      color: #b91c1c;
+      margin-bottom: 10px;
+      font-weight: 800;
+    }
+    .strike-modal-card p {
+      color: #334155;
+      margin-bottom: 18px;
+    }
+    .btn-strike-ok {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-size: calc(14px * var(--lecturas-font-scale));
+      font-weight: 800;
+      cursor: pointer;
+      background: #dc2626;
+      color: #fff;
+      width: 100%;
+    }
+    .hidden { display: none !important; }
+    @media (max-width: 960px) {
+      .topbar-inner {
+        flex-direction: column;
+      }
+      .header-right,
+      .status-cluster {
+        justify-content: flex-start;
+      }
+    }
+    @media (max-width: 720px) {
+      .pair-row,
+      .order-row,
+      .question-grid,
+      .question-summary {
+        grid-template-columns: 1fr;
+      }
+      .item-head,
+      .submit-box,
+      .navigation-card .meta,
+      .nav-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .option {
+        grid-template-columns: 1fr;
+      }
+      .strike-toggle {
+        min-height: 46px;
+        border-left: none;
+        border-top: 1px solid #e5e7eb;
+      }
+      .question-menu {
+        left: 0;
+        right: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="title">
+        <img class="brand-logo" src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+        <div class="title-copy">
+          <h1 id="sessionTitle">Cargando prueba...</h1>
+          <p id="sessionMeta">Sección Lecturas</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="status-cluster">
+          <div class="strike-mini hidden" id="strikeBar">
+            <span>Strikes</span>
+            <span class="strike-dot" id="sd1">✕</span>
+            <span class="strike-dot" id="sd2">✕</span>
+            <span class="strike-dot" id="sd3">✕</span>
+          </div>
+          <div class="pill" id="questionPill">Pregunta 0/0</div>
+          <div class="pill" id="timerPill">Sin límite</div>
+          <div class="pill" id="progressPill">0/0 respondidas</div>
+          <div class="pill save" id="savePill">Guardado pendiente</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <div class="question-menu-shell">
+            <button class="question-menu-btn" id="questionMenuBtn" type="button" onclick="toggleQuestionMenu()">Preguntas</button>
+            <div class="question-menu hidden" id="questionMenu"></div>
+          </div>
+          <button class="btn-back" id="btnBack" type="button" onclick="goToMenu()" title="Volver al menú principal">← Menú</button>
+          <button class="btn-logout" id="btnLogout" type="button" onclick="doLogout()">Cerrar sesión</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="page-shell">
+    <section class="summary-card" id="summaryCard">
+      <h2>Ficha de la evaluación</h2>
+      <p id="summaryLead">Cargando datos de la prueba...</p>
+      <div class="progress"><div class="progress-bar" id="progressBar"></div></div>
+      <p id="progressText">Aún no comienzas a responder.</p>
+      <div class="summary-grid" id="summaryGrid"></div>
+    </section>
+
+    <main id="mainContent">
+      <section class="notice"><h2>Preparando contenido</h2><p>Cargando prueba...</p></section>
+    </main>
+  </div>
+
+  <div class="strike-modal hidden" id="strikeModal">
+    <div class="strike-modal-card">
+      <div class="strike-icon" id="strikeIcon">⚠️</div>
+      <h3 id="strikeTitle">Strike 1 de 3</h3>
+      <p id="strikeMsg">Saliste de la evaluación. No abras otras pestañas ni otras páginas mientras respondes.</p>
+      <button class="btn-strike-ok" id="btnStrikeOk" type="button" onclick="dismissStrike()">Entendido, volver a la evaluación</button>
+    </div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+      authDomain: "estudiacest.firebaseapp.com",
+      databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+      projectId: "estudiacest",
+      storageBucket: "estudiacest.firebasestorage.app",
+      messagingSenderId: "999002169815",
+      appId: "1:999002169815:web:51203237bc77c2e74deb92"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+    const LECTURAS_BASE = 'plataforma_lecturas';
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('id');
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    let currentUser = null;
+    let studentData = null;
+    let sessionData = null;
+    let responseData = null;
+    let answers = {};
+    let uiState = { crossouts: {} };
+    let isSubmitted = false;
+    let isDirty = false;
+    let autoSaveTimer = null;
+    let debounceAutoSaveTimer = null;
+    let timerInterval = null;
+    let startTime = null;
+    let secondsRemaining = null;
+    let currentItemIndex = 0;
+    let currentSectionIndex = 0;
+    let antiCopyStrikes = 0;
+    let strikeMonitorActive = false;
+    let blurStrikeTimer = null;
+    let strikeCooldownUntil = 0;
+    let focusPollInterval = null; // kept for compatibility, no longer used
+    let lastKnownWidth = 0;
+    let focusLossActive = false;
+    let strikeCountedForCurrentLoss = false;
+    let adminReloadBypassTimer = null;
+    const BLUR_GRACE_MS = 15000; // 15s de gracia: bloqueo de pantalla, notificacion, rotacion no cuentan
+    const ADMIN_RELOAD_BYPASS_MS = 20000;
+    const ADMIN_RELOAD_STORAGE_KEY = 'lecturas_admin_reload_' + sessionId;
+    let questionMenuOpen = false;
+
+    function htmlEscape(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function escapeJsSingleQuoted(value) {
+      return String(value || '')
+        .replace(/\\/g, '\\\\')
+        .replace(/'/g, "\\'");
+    }
+
+    function readAdminReloadState() {
+      try {
+        const raw = sessionStorage.getItem(ADMIN_RELOAD_STORAGE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        if (parsed && typeof parsed === 'object') return parsed;
+      } catch (error) {}
+      return { until: 0, token: 0, message: '' };
+    }
+
+    function writeAdminReloadState(state) {
+      try {
+        sessionStorage.setItem(ADMIN_RELOAD_STORAGE_KEY, JSON.stringify({
+          until: Number(state && state.until) || 0,
+          token: Number(state && state.token) || 0,
+          message: String(state && state.message || '')
+        }));
+      } catch (error) {}
+    }
+
+    function getAdminReloadBypassRemainingMs() {
+      const state = readAdminReloadState();
+      return Math.max((Number(state.until) || 0) - Date.now(), 0);
+    }
+
+    function hasHandledAdminReload(token) {
+      return Number(token || 0) > 0 && Number(readAdminReloadState().token || 0) >= Number(token || 0);
+    }
+
+    function rememberAdminReload(token, message) {
+      writeAdminReloadState({
+        until: Date.now() + ADMIN_RELOAD_BYPASS_MS,
+        token: Number(token || Date.now()),
+        message: String(message || '')
+      });
+    }
+
+    function consumeAdminReloadMessage() {
+      const state = readAdminReloadState();
+      if (!state.message || (Number(state.until) || 0) <= Date.now()) return '';
+      const message = state.message;
+      state.message = '';
+      writeAdminReloadState(state);
+      return message;
+    }
+
+    function showTopBanner(message, background, durationMs) {
+      try {
+        const banner = document.createElement('div');
+        banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:' + background + ';color:#fff;padding:14px;text-align:center;font-weight:700;z-index:9999';
+        banner.textContent = message;
+        document.body.appendChild(banner);
+        if (durationMs) {
+          setTimeout(function() {
+            if (banner && banner.parentNode) banner.parentNode.removeChild(banner);
+          }, durationMs);
+        }
+      } catch (error) {}
+    }
+
+    function showPendingAdminReloadMessage() {
+      const message = consumeAdminReloadMessage();
+      if (!message) return;
+      showTopBanner(message, '#0f766e', 5200);
+    }
+
+    function beginAdminForcedReload(message, token) {
+      rememberAdminReload(token, message);
+      strikeCooldownUntil = Date.now() + ADMIN_RELOAD_BYPASS_MS;
+      clearPendingBlurStrike();
+      focusLossActive = false;
+      strikeCountedForCurrentLoss = false;
+      deactivateStrikeMonitor();
+      showTopBanner(message || '↻ El profesor actualizó la prueba. Recargando...', '#0f766e');
+      setTimeout(function() { window.location.reload(); }, 900);
+    }
+
+    function slugify(text) {
+      return String(text || '').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function parseText(value) {
+      return String(value || '').trim();
+    }
+
+    function clampNumber(value, fallback, min, max) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return fallback;
+      return Math.min(Math.max(number, min), max);
+    }
+
+    function getType(item) {
+      return (item.tipo || item.type || 'seleccion_multiple').toLowerCase();
+    }
+
+    function getItemPoints(item) {
+      const raw = Number(item && (item.puntaje ?? item.points ?? 1));
+      return Number.isFinite(raw) && raw > 0 ? raw : 1;
+    }
+
+    function formatPoints(points) {
+      return points === 1 ? '1 pt' : points + ' pts';
+    }
+
+    function getRandomizationConfig(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return content.randomizacion || session.randomizacion || {};
+    }
+
+    function hashString(value) {
+      let hash = 2166136261;
+      const text = String(value || '');
+      for (let index = 0; index < text.length; index++) {
+        hash ^= text.charCodeAt(index);
+        hash = Math.imul(hash, 16777619);
+      }
+      return hash >>> 0;
+    }
+
+    function createSeededRandom(seedText) {
+      let state = hashString(seedText) || 1;
+      return function() {
+        state += 0x6D2B79F5;
+        let value = state;
+        value = Math.imul(value ^ (value >>> 15), value | 1);
+        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function shuffleArray(list, seedText) {
+      const random = createSeededRandom(seedText);
+      const result = list.slice();
+      for (let index = result.length - 1; index > 0; index--) {
+        const otherIndex = Math.floor(random() * (index + 1));
+        const current = result[index];
+        result[index] = result[otherIndex];
+        result[otherIndex] = current;
+      }
+      return result;
+    }
+
+    function normalizeContent(session) {
+      const content = session.contenido || {};
+      return {
+        materials: content.materiales || content.textos || session.materiales || session.textos || [],
+        items: content.items || content.preguntas || session.items || session.preguntas || []
+      };
+    }
+
+    function getDisplayItems() {
+      if (!sessionData) return [];
+      const items = normalizeContent(sessionData).items;
+      // FIX 28-abr-2026: deshabilitar barajado para que los números de pregunta
+      // ("Pregunta 6 a 10", "11 a 16") coincidan con el orden visible.
+      return items.slice();
+    }
+
+    function getDisplayOptions(item) {
+      const options = normalizeChoiceOptions(item);
+      // FIX 28-abr-2026: también se mantiene el orden de opciones (A,B,C,D)
+      // para coincidir con el solucionario impreso.
+      return options;
+    }
+
+    function getAvailability(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      const disponibleDesde = session.disponibleDesde || content.disponibleDesde || null;
+      const disponibleHasta = session.disponibleHasta || content.disponibleHasta || null;
+      const now = Date.now();
+      const fromTs = disponibleDesde ? Date.parse(disponibleDesde) : null;
+      const toTs = disponibleHasta ? Date.parse(disponibleHasta) : null;
+      // Cuenta de prueba (22.222.222-2): bypass total
+      if (studentData && typeof studentData.rut === 'string' && studentData.rut.replace(/[^0-9kK]/g,'').toLowerCase() === '222222222') {
+        return { blocked: false };
+      }
+      if (fromTs && !isNaN(fromTs) && now < fromTs) return { blocked: true, reason: 'Disponible desde ' + new Date(fromTs).toLocaleString('es-CL') };
+      if (toTs && !isNaN(toTs) && now > toTs) return { blocked: true, reason: 'Periodo de aplicación cerrado (' + new Date(toTs).toLocaleString('es-CL') + ')' };
+      return { blocked: false };
+    }
+
+    function getVisado(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return session.visado || content.visado || null;
+    }
+
+    function getMaterialsMap() {
+      const map = {};
+      normalizeContent(sessionData).materials.forEach(function(material) {
+        if (material && material.id) map[material.id] = material;
+      });
+      return map;
+    }
+
+    function getSections(items) {
+      var sections = [];
+      var map = {};
+      var matMap = getMaterialsMap();
+      items.forEach(function(item) {
+        var ref = item.materialRef || '__no_material__';
+        if (!map[ref]) {
+          map[ref] = { materialRef: ref, material: matMap[ref] || null, items: [] };
+          sections.push(map[ref]);
+        }
+        map[ref].items.push(item);
+      });
+      return sections;
+    }
+
+    function normalizeMaterialParagraphs(material) {
+      if (Array.isArray(material.parrafos)) return material.parrafos;
+      if (Array.isArray(material.fragmentos)) return material.fragmentos;
+      if (material.texto) return [material.texto];
+      return [];
+    }
+
+    function normalizeChoiceOptions(item) {
+      if (!Array.isArray(item.opciones)) return [];
+      return item.opciones.map(function(option, index) {
+        if (typeof option === 'string') return { letra: String.fromCharCode(65 + index), texto: option };
+        return { letra: option.letra || option.id || String.fromCharCode(65 + index), texto: option.texto || option.label || option.valor || '' };
+      });
+    }
+
+    function normalizeMatchingSide(side) {
+      if (!Array.isArray(side)) return [];
+      return side.map(function(entry, index) {
+        if (typeof entry === 'string') return { id: 'opt_' + index, texto: entry };
+        return { id: entry.id || 'opt_' + index, texto: entry.texto || entry.label || entry.valor || '' };
+      });
+    }
+
+    function normalizeMatchingAnswer(answer) {
+      return answer && typeof answer === 'object' ? answer : {};
+    }
+
+    function getAccessibilityConfig(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return content.accesibilidad || session.accesibilidad || {};
+    }
+
+    function getVisualConfig(session) {
+      const content = session && session.contenido ? session.contenido : {};
+      return content.estiloVisual || session.estiloVisual || {};
+    }
+
+    function applyAccessibilityConfig(session) {
+      const config = getAccessibilityConfig(session);
+      const root = document.documentElement;
+      root.style.setProperty('--lecturas-font-scale', String(clampNumber(config.fontScale || config.escalaFuente, 1, 1, 1.6)));
+      root.style.setProperty('--lecturas-line-height', String(clampNumber(config.lineHeight || config.interlineado, 1.7, 1.6, 2.2)));
+      root.style.setProperty('--lecturas-answer-min-height', clampNumber(config.answerBoxMinHeight || config.textareaMinHeight || config.alturaMinTextarea, 160, 140, 360) + 'px');
+      root.style.setProperty('--lecturas-option-padding-y', clampNumber(config.choicePaddingY || config.opcionPaddingY, 14, 14, 28) + 'px');
+      root.style.setProperty('--lecturas-card-padding', clampNumber(config.cardPadding || config.panelPadding, 24, 18, 34) + 'px');
+    }
+
+    function applyVisualConfig(session) {
+      const config = getVisualConfig(session);
+      const isPieTheme = config && config.theme === 'pie-dylan';
+      document.body.classList.toggle('pie-theme', !!isPieTheme);
+      if (isPieTheme && config.preset) document.body.setAttribute('data-pie-preset', config.preset);
+      else document.body.removeAttribute('data-pie-preset');
+    }
+
+    function ensureUiState() {
+      if (!uiState || typeof uiState !== 'object') uiState = { crossouts: {} };
+      const legacyCrossouts = uiState.crossouts || ((uiState.strikes && typeof uiState.strikes === 'object' && !Array.isArray(uiState.strikes)) ? uiState.strikes : {});
+      uiState.crossouts = legacyCrossouts || {};
+      if (!isCrossoutEnabled()) uiState.crossouts = {};
+    }
+
+    function sanitizeUiState() {
+      ensureUiState();
+      return { crossouts: uiState.crossouts || {} };
+    }
+
+    function isCrossoutEnabled() {
+      const currentSessionId = String((sessionData && sessionData.id) || sessionId || '').toLowerCase();
+      return !currentSessionId.startsWith('maus-nm4') && !currentSessionId.startsWith('pedro-paramo-nm3');
+    }
+
+    function isOptionStruck(itemId, value) {
+      if (!isCrossoutEnabled()) return false;
+      ensureUiState();
+      return !!(uiState.crossouts[itemId] && uiState.crossouts[itemId][value]);
+    }
+
+    function isAntiCopyEnabled() {
+      return !!(sessionData && sessionData.anti_copia !== false);
+    }
+
+    function setSaveStatus(text, className) {
+      const pill = document.getElementById('savePill');
+      pill.textContent = text;
+      pill.className = 'pill save ' + (className || '');
+    }
+
+    function isItemAnswered(item, answer) {
+      const type = getType(item);
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') return typeof answer === 'string' && answer !== '';
+      if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') return parseText(answer).length > 0;
+      if (type === 'pareados' || type === 'matching') {
+        const left = normalizeMatchingSide(item.izquierda || item.left || []);
+        const map = normalizeMatchingAnswer(answer);
+        return left.length > 0 && left.every(function(entry) { return parseText(map[entry.id]).length > 0; });
+      }
+      if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') {
+        const entries = normalizeMatchingSide(item.elementos || item.items || []);
+        const map = normalizeMatchingAnswer(answer);
+        return entries.length > 0 && entries.every(function(entry) { return parseText(map[entry.id]).length > 0; });
+      }
+      return parseText(answer).length > 0;
+    }
+
+    function getAnsweredCount(items) {
+      return items.filter(function(item) { return isItemAnswered(item, answers[item.id]); }).length;
+    }
+
+    function getExpectedMapping(item) {
+      return item.correcta || item.correct || item.solucion || {};
+    }
+
+    function evaluateOrdering(item, answer) {
+      const map = normalizeMatchingAnswer(answer);
+      const expected = getExpectedMapping(item);
+      if (Array.isArray(expected)) {
+        const ordered = Object.entries(map)
+          .filter(function(entry) { return parseText(entry[1]).length > 0; })
+          .sort(function(a, b) { return Number(a[1]) - Number(b[1]); })
+          .map(function(entry) { return entry[0]; });
+        if (ordered.length !== expected.length) return false;
+        return ordered.every(function(value, index) { return value === expected[index]; });
+      }
+      if (expected && typeof expected === 'object') {
+        return Object.keys(expected).every(function(key) { return String(expected[key]) === String(map[key] || ''); });
+      }
+      return false;
+    }
+
+    function evaluateMatching(item, answer) {
+      const expected = getExpectedMapping(item);
+      const map = normalizeMatchingAnswer(answer);
+      if (!expected || typeof expected !== 'object') return false;
+      return Object.keys(expected).every(function(key) { return String(expected[key]) === String(map[key] || ''); });
+    }
+
+    function evaluateItem(item, answer) {
+      const type = getType(item);
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
+        const expected = item.correcta ?? item.correct ?? item.respuesta_correcta;
+        return String(answer || '') === String(expected || '');
+      }
+      if (type === 'pareados' || type === 'matching') return evaluateMatching(item, answer);
+      if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') return evaluateOrdering(item, answer);
+      return null;
+    }
+
+    function buildResults() {
+      const items = getDisplayItems();
+      let totalPoints = 0;
+      let autoTotalPoints = 0;
+      let autoEarnedPoints = 0;
+      let manualPending = 0;
+      let manualPendingPoints = 0;
+      const detail = {};
+      items.forEach(function(item, index) {
+        const answer = answers[item.id];
+        const evaluation = evaluateItem(item, answer);
+        const autoEvaluable = evaluation !== null;
+        const points = getItemPoints(item);
+        totalPoints += points;
+        if (autoEvaluable) {
+          autoTotalPoints += points;
+          if (evaluation) autoEarnedPoints += points;
+        } else {
+          manualPending += 1;
+          manualPendingPoints += points;
+        }
+        detail[item.id] = {
+          indice: index + 1,
+          tipo: getType(item),
+          respuesta: answer || null,
+          esCorrecta: evaluation,
+          autoEvaluable: autoEvaluable,
+          habilidad: item.habilidad || null,
+          puntajeItem: points,
+          puntajeObtenido: autoEvaluable ? (evaluation ? points : 0) : null,
+          enunciado: item.enunciado || ''
+        };
+      });
+      return {
+        totalPoints: totalPoints,
+        autoTotalPoints: autoTotalPoints,
+        autoEarnedPoints: autoEarnedPoints,
+        manualPending: manualPending,
+        manualPendingPoints: manualPendingPoints,
+        porcentaje: autoTotalPoints ? Math.round((autoEarnedPoints / autoTotalPoints) * 100) : 0,
+        detail: detail
+      };
+    }
+
+    function renderSummaryCard(items) {
+      const answered = getAnsweredCount(items);
+      const pending = Math.max(items.length - answered, 0);
+      const totalPoints = items.reduce(function(sum, item) { return sum + getItemPoints(item); }, 0);
+      document.getElementById('summaryLead').textContent = (sessionData.descripcion || 'Lee cada sección de texto y responde las preguntas asociadas. Usa los botones para avanzar entre secciones.') + (isSubmitted ? ' Esta evaluación ya fue enviada.' : '');
+      document.getElementById('summaryGrid').innerHTML = [
+        { label: 'Estudiante', value: studentData.nombre || 'Sin nombre' },
+        { label: 'Curso', value: studentData.curso || 'Sin curso' },
+        { label: 'Libro', value: sessionData.libro || 'Sin libro' },
+        { label: 'Perfil', value: sessionData.perfil || 'Regular' },
+        { label: 'Ítems', value: items.length },
+        { label: 'Puntaje', value: totalPoints },
+        { label: 'Respondidas', value: answered },
+        { label: 'Pendientes', value: pending }
+      ].map(function(entry) {
+        return '<div class="summary-item"><span class="label">' + htmlEscape(entry.label) + '</span><span class="value">' + htmlEscape(entry.value) + '</span></div>';
+      }).join('');
+    }
+
+    function buildQuestionMenu(items) {
+      const answered = getAnsweredCount(items);
+      const pending = Math.max(items.length - answered, 0);
+      const sections = getSections(items);
+      let globalIdx = 0;
+      return '<h3>Panel de preguntas</h3>'
+        + '<div class="question-menu-legend">'
+        +   '<span><i style="background:#bbf7d0;border:1px solid #22c55e"></i>Respondida</span>'
+        +   '<span><i style="background:#fef08a;border:1px solid #eab308"></i>Falta</span>'
+        +   '<span><i style="background:#0f766e;border:1px solid #0f766e"></i>Actual</span>'
+        + '</div>'
+        + '<div class="question-summary">'
+        + '<div class="question-summary-card"><span class="label">Sección</span><span class="value">' + (currentSectionIndex + 1) + '/' + sections.length + '</span></div>'
+        + '<div class="question-summary-card"><span class="label">Listas</span><span class="value">' + answered + '</span></div>'
+        + '<div class="question-summary-card"><span class="label">Faltan</span><span class="value">' + pending + '</span></div>'
+        + '</div>'
+        + sections.map(function(section, secIdx) {
+          var secTitle = section.material ? (section.material.titulo || 'Texto ' + (secIdx + 1)) : 'Texto ' + (secIdx + 1);
+          var secAnswered = section.items.filter(function(it) { return isItemAnswered(it, answers[it.id]); }).length;
+          var isCurrent = secIdx === currentSectionIndex;
+          var chips = section.items.map(function(item) {
+            var chipClass = 'question-chip';
+            if (isItemAnswered(item, answers[item.id])) chipClass += ' done';
+            else chipClass += ' pending';
+            var thisIdx = globalIdx;
+            var clickHandler = 'goToQuestion(' + thisIdx + ');toggleQuestionMenu(false)';
+            globalIdx++;
+            return '<span class="' + chipClass + '" onclick="' + clickHandler + '" style="cursor:pointer">' + (thisIdx + 1) + '</span>';
+          }).join('');
+          return '<div class="section-menu-item" style="padding:6px 8px;margin:6px 0;border-radius:10px;border:1px solid var(--border);background:' + (isCurrent ? 'rgba(15,118,110,0.08)' : 'var(--card)') + '">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:12px;margin-bottom:6px;cursor:pointer" onclick="goToSection(' + secIdx + ');toggleQuestionMenu(false)">'
+            +   '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:75%">' + htmlEscape(secTitle) + '</span>'
+            +   '<small style="color:#64748b;white-space:nowrap">' + secAnswered + '/' + section.items.length + '</small>'
+            + '</div>'
+            + '<div class="question-grid" style="margin:0">' + chips + '</div>'
+            + '</div>';
+        }).join('');
+    }
+
+    function renderMaterial(material) {
+      const paragraphs = normalizeMaterialParagraphs(material);
+      const images = material.imagenes || material.images || [];
+      let html = '<section class="material-card">';
+      html += '<div class="subtype">' + htmlEscape(material.subtipo || material.tipo || 'Material') + '</div>';
+      if (material.titulo) html += '<h2>' + htmlEscape(material.titulo) + '</h2>';
+      if (material.descripcion) html += '<p>' + htmlEscape(material.descripcion) + '</p>';
+      if (material.html) html += material.html;
+      paragraphs.forEach(function(paragraph) {
+        if (typeof paragraph === 'string') html += '<p>' + htmlEscape(paragraph) + '</p>';
+        else if (paragraph && typeof paragraph === 'object') {
+          if (paragraph.html) html += paragraph.html;
+          else html += '<p>' + htmlEscape(paragraph.texto || paragraph.text || '') + '</p>';
+        }
+      });
+      images.forEach(function(image) {
+        var src, alt, cap;
+        if (typeof image === 'string') { src = image; alt = 'Material visual'; cap = 'Material visual de apoyo.'; }
+        else if (image && image.src) { src = image.src; alt = image.alt || 'Material visual'; cap = image.caption || ''; }
+        else return;
+        // Extraer número de viñeta del caption o alt para badge destacado
+        var vinNum = '';
+        var vinMatch = (cap + ' ' + alt).match(/Vi[ñn]eta\s+(\d+)/i);
+        if (vinMatch) vinNum = vinMatch[1];
+        // Fallback: extraer del nombre del archivo (ej. maus_vineta_05_*.jpg)
+        if (!vinNum) {
+          var srcMatch = String(src).match(/vineta[_-](\d+)/i);
+          if (srcMatch) vinNum = String(parseInt(srcMatch[1], 10));
+        }
+        var srcCB = src + (src.indexOf('?') >= 0 ? '&' : '?') + 'v=20260428';
+        html += '<figure>'
+          + (vinNum ? '<div class="vineta-badge">Viñeta ' + htmlEscape(vinNum) + '</div>' : '')
+          + '<img src="' + htmlEscape(srcCB) + '" alt="' + htmlEscape(alt) + '" loading="eager" onerror="this.classList.add(\'img-broken\');var fb=document.createElement(\'div\');fb.className=\'img-fallback\';fb.textContent=this.alt;this.parentNode.insertBefore(fb,this);">'
+          + (cap ? '<figcaption>' + htmlEscape(cap) + '</figcaption>' : '')
+          + '</figure>';
+      });
+      if (images.length > 0) {
+        html += '<div class="vineta-shuffle-note">'
+          + '<strong>📌 Observa:</strong> el número de cada viñeta aparece en la etiqueta naranja sobre la imagen. '
+          + 'Las preguntas siguen el orden numérico (6, 7, 8…). Si una pregunta menciona “viñeta N”, busca esa imagen en esta sección.'
+          + '</div>';
+      }
+      if (material.fuente) html += '<div class="source">' + htmlEscape(material.fuente) + '</div>';
+      html += '</section>';
+      return html;
+    }
+
+    function renderCurrentItem(item, index, total, material) {
+      const type = getType(item);
+      const selected = answers[item.id];
+      const options = getDisplayOptions(item);
+      const crossoutEnabled = isCrossoutEnabled();
+      const itemId = escapeJsSingleQuoted(item.id);
+      let body = '';
+      if (type === 'seleccion_multiple' || type === 'multiple_choice' || type === 'verdadero_falso' || type === 'true_false') {
+        const resolvedOptions = options.length ? options : [{ letra: 'V', texto: 'Verdadero' }, { letra: 'F', texto: 'Falso' }];
+        var bannerColor = (type === 'verdadero_falso' || type === 'true_false') ? 'ib-amber' : 'ib-blue';
+        var bannerIcon = (type === 'verdadero_falso' || type === 'true_false') ? '⚖️' : '📝';
+        var bannerText = (type === 'verdadero_falso' || type === 'true_false')
+          ? '<strong>Verdadero o Falso.</strong> Lee el enunciado y selecciona la opción correcta.'
+          : (crossoutEnabled
+            ? '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa. Puedes usar el botón <em>Tachar</em> para descartar opciones que creas incorrectas.'
+            : '<strong>Selección múltiple.</strong> Elige <strong>UNA</strong> alternativa.');
+        body = '<div class="instruction-banner ' + bannerColor + '"><span class="ib-icon">' + bannerIcon + '</span><div class="ib-body">' + bannerText + '</div></div>';
+        body += '<div class="option-list">' + resolvedOptions.map(function(option, optIdx) {
+          const displayLetter = (type === 'verdadero_falso' || type === 'true_false') ? option.letra : String.fromCharCode(65 + optIdx);
+          const selectedClass = selected === option.letra ? ' selected' : '';
+          const struckClass = crossoutEnabled && isOptionStruck(item.id, option.letra) ? ' struck' : '';
+          const optionValue = escapeJsSingleQuoted(option.letra);
+          const strikeLabel = isOptionStruck(item.id, option.letra) ? 'Quitar' : 'Tachar';
+          const strikeControl = crossoutEnabled
+            ? '<div role="button" tabindex="0" class="strike-toggle' + (isOptionStruck(item.id, option.letra) ? ' active' : '') + '" data-strike-item="' + htmlEscape(item.id) + '" data-strike-option="' + htmlEscape(option.letra) + '">' + strikeLabel + '</div>'
+            : '';
+          return '<div class="option' + selectedClass + struckClass + '"><div class="option-main" onclick="selectOption(\'' + itemId + '\', \'' + optionValue + '\')"><span class="letter">' + htmlEscape(displayLetter) + '</span><span class="option-text">' + htmlEscape(option.texto) + '</span></div>' + strikeControl + '</div>';
+        }).join('') + '</div>';
+      } else if (type === 'respuesta_corta' || type === 'short_text' || type === 'desarrollo') {
+        var pts = getItemPoints(item);
+        var criteriaArr = item.criterios || [];
+        var hasC = criteriaArr.length > 0;
+        var recLines = 0;
+        var enText = (item.enunciado || '').toLowerCase();
+        var lineMatch = enText.match(/(\d+)\s*a\s*(\d+)\s*l[ií]neas/);
+        if (lineMatch) recLines = parseInt(lineMatch[2], 10);
+        var recChars = recLines > 0 ? recLines * 80 : (pts >= 4 ? 600 : (pts >= 2 ? 300 : 150));
+
+        body = '<div class="instruction-banner ib-purple"><span class="ib-icon">✍️</span><div class="ib-body"><strong>Pregunta de desarrollo.</strong> Escribe tu respuesta en el recuadro. '
+          + (recLines > 0 ? 'Se sugiere entre <strong>' + (recLines > 3 ? recLines - 3 : 1) + ' y ' + recLines + ' líneas</strong>. ' : '')
+          + 'No se permite copiar, pegar ni imprimir pantalla.<br>'
+          + '<span class="scoring-badge">🏆 ' + formatPoints(pts) + (hasC ? ' · ' + criteriaArr.length + ' criterios' : '') + '</span>'
+          + '</div></div>';
+        if (hasC) {
+          body += '<div class="criteria-box"><div class="cb-title">Criterios de evaluación — ¿Cómo se asignan los puntos?</div><ul>'
+            + criteriaArr.map(function(c) { return '<li>' + htmlEscape(c) + '</li>'; }).join('')
+            + '</ul></div>';
+        }
+        body += '<textarea class="answer-box no-copy" id="ta_' + itemId + '" placeholder="Escribe tu respuesta aquí..." '
+          + 'oninput="setTextAnswer(\'' + itemId + '\', this.value); updateCharCounter(\'' + itemId + '\', ' + recChars + ')" '
+          + 'oncopy="return blockCopy(event)" oncut="return blockCopy(event)" onpaste="return blockPaste(event)" '
+          + 'oncontextmenu="return false"'
+          + '>' + htmlEscape(selected || '') + '</textarea>';
+        var currentLen = (selected || '').length;
+        body += '<div class="char-counter"><span class="cc-count ' + (currentLen >= recChars ? 'cc-ok' : 'cc-low') + '" id="cc_' + itemId + '">' + currentLen + ' / ' + recChars + ' caracteres</span>'
+          + '<span>' + (currentLen >= recChars ? '✅ Extensión suficiente' : '⚠️ Sigue escribiendo') + '</span></div>';
+      } else if (type === 'pareados' || type === 'matching') {
+        const left = normalizeMatchingSide(item.izquierda || item.left || []);
+        const right = normalizeMatchingSide(item.derecha || item.right || []);
+        const answer = normalizeMatchingAnswer(selected);
+        body = '<div class="instruction-banner ib-teal"><span class="ib-icon">🔗</span><div class="ib-body"><strong>Pareados.</strong> Asocia cada elemento de la columna izquierda con su correspondiente de la columna derecha usando los selectores.</div></div>';
+        body += '<div class="pair-grid">' + left.map(function(entry) {
+          const entryId = escapeJsSingleQuoted(entry.id);
+          const optionsHtml = ['<option value="">Selecciona...</option>'].concat(right.map(function(opt) {
+            const isSelected = answer[entry.id] === opt.id ? ' selected' : '';
+            return '<option value="' + htmlEscape(opt.id) + '"' + isSelected + '>' + htmlEscape(opt.texto) + '</option>';
+          })).join('');
+          return '<div class="pair-row"><strong>' + htmlEscape(entry.texto) + '</strong><select class="pair-select" onchange="setPairAnswer(\'' + itemId + '\', \'' + entryId + '\', this.value)">' + optionsHtml + '</select></div>';
+        }).join('') + '</div>';
+      } else if (type === 'ordenamiento' || type === 'ordering' || type === 'puzzle') {
+        const entries = normalizeMatchingSide(item.elementos || item.items || []);
+        const answer = normalizeMatchingAnswer(selected);
+        const numberOptions = Array.from({ length: entries.length }, function(_, idx) { return idx + 1; });
+        body = '<div class="instruction-banner ib-amber"><span class="ib-icon">🔢</span><div class="ib-body"><strong>Ordenamiento.</strong> Asigna un número a cada elemento para indicar el orden correcto (1 = primero).</div></div>';
+        body += '<div class="order-grid">' + entries.map(function(entry) {
+          const entryId = escapeJsSingleQuoted(entry.id);
+          const optionsHtml = ['<option value="">Orden...</option>'].concat(numberOptions.map(function(number) {
+            const isSelected = String(answer[entry.id] || '') === String(number) ? ' selected' : '';
+            return '<option value="' + number + '"' + isSelected + '>' + number + '</option>';
+          })).join('');
+          return '<div class="order-row"><strong>' + htmlEscape(entry.texto) + '</strong><select class="pair-select" onchange="setOrderAnswer(\'' + itemId + '\', \'' + entryId + '\', this.value)">' + optionsHtml + '</select></div>';
+        }).join('') + '</div>';
+      } else {
+        body = '<div class="unknown">Este tipo de ítem aún no tiene corrección automática. Puedes responderlo manualmente y quedará guardado para revisión docente.</div><textarea class="answer-box" placeholder="Escribe aquí tu respuesta..." oninput="setTextAnswer(\'' + itemId + '\', this.value)">' + htmlEscape(selected || '') + '</textarea>';
+      }
+      let fragment = '';
+      if (item.fragmento) {
+        if (typeof item.fragmento === 'string') fragment = '<div class="fragment"><p>' + htmlEscape(item.fragmento) + '</p></div>';
+        else if (Array.isArray(item.fragmento)) fragment = '<div class="fragment">' + item.fragmento.map(function(line) { return '<p>' + htmlEscape(line) + '</p>'; }).join('') + '</div>';
+      }
+      let html = '<section class="item-card">';
+      html += '<div class="eyebrow" style="font-size:18px;font-weight:800;color:#1e40af;background:#dbeafe;padding:6px 14px;border-radius:8px;display:inline-block;margin-bottom:8px">✏️ Pregunta ' + (index + 1) + '</div>';
+      html += '<div class="item-head"><h3>' + htmlEscape(item.enunciado || 'Ítem sin enunciado') + '</h3><div class="tags"><span class="tag">' + htmlEscape(item.habilidad || 'LYL') + '</span><span class="tag type">' + htmlEscape(type) + '</span><span class="tag score">' + htmlEscape(formatPoints(getItemPoints(item))) + '</span></div></div>';
+      html += renderItemAnchoredImages(item, material);
+      if (item.reformulacion_simple) html += '<p><strong>Consigna simple:</strong> ' + htmlEscape(item.reformulacion_simple) + '</p>';
+      html += fragment;
+      html += body;
+      html += '</section>';
+      return html;
+    }
+
+    function renderItemAnchoredImages(item, material) {
+      if (!material || !item) return '';
+      var refs = item.vinetaRefs || item.vinetas || [];
+      // Inferir desde enunciado si no hay refs
+      if (!Array.isArray(refs) || !refs.length) {
+        var en = item.enunciado || '';
+        var matches = en.match(/Vi[ñn]eta\s*(\d+)/gi) || [];
+        refs = matches.map(function(m){var x=m.match(/(\d+)/);return x?parseInt(x[1],10):null;}).filter(Boolean);
+      }
+      if (!refs.length) return '';
+      var images = material.imagenes || material.images || [];
+      var matched = [];
+      refs.forEach(function(num){
+        var img = images.find(function(im){
+          if (!im) return false;
+          var capAlt = String((im.caption||'') + ' ' + (im.alt||''));
+          var src = String(im.src||'');
+          var m = capAlt.match(/Vi[ñn]eta\s*(\d+)/i);
+          if (m && parseInt(m[1],10) === num) return true;
+          var sm = src.match(/vineta[_-](\d+)/i);
+          if (sm && parseInt(sm[1],10) === num) return true;
+          return false;
+        });
+        if (img) matched.push({num: num, img: img});
+      });
+      if (!matched.length) return '';
+      var label = matched.length === 1 ? ('Esta pregunta es sobre la viñeta ' + matched[0].num) : ('Esta pregunta es sobre las viñetas ' + matched.map(function(x){return x.num;}).join(', '));
+      var html = '<div class="item-vineta-anchor" style="margin:10px 0 14px;padding:10px 12px;background:#fff7ed;border:2px solid #f59e0b;border-radius:10px">';
+      html += '<div style="font-weight:800;color:#92400e;margin-bottom:8px;font-size:13px">📌 ' + htmlEscape(label) + ' — observa con atención antes de responder.</div>';
+      html += '<div class="item-vineta-grid" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">';
+      matched.forEach(function(x){
+        var im = x.img;
+        var src = im.src || '';
+        var srcCB = src + (src.indexOf('?') >= 0 ? '&' : '?') + 'v=20260428';
+        var alt = im.alt || ('Viñeta ' + x.num);
+        var cap = im.caption || ('Viñeta ' + x.num);
+        html += '<figure style="margin:0;flex:1 1 260px;max-width:520px;text-align:center">'
+          + '<div class="vineta-badge" style="display:inline-block;background:#f59e0b;color:#fff;font-weight:800;padding:3px 10px;border-radius:999px;font-size:11px;margin-bottom:6px">Viñeta ' + x.num + '</div>'
+          + '<img src="' + htmlEscape(srcCB) + '" alt="' + htmlEscape(alt) + '" loading="eager" style="max-width:100%;border-radius:8px;border:1px solid #fcd34d;cursor:zoom-in" onclick="window.open(this.src,\'_blank\')" onerror="this.classList.add(\'img-broken\');var fb=document.createElement(\'div\');fb.className=\'img-fallback\';fb.textContent=this.alt;this.parentNode.insertBefore(fb,this);">'
+          + '<figcaption style="font-size:11px;color:#78350f;margin-top:4px">' + htmlEscape(cap) + '</figcaption>'
+          + '</figure>';
+      });
+      html += '</div></div>';
+      return html;
+    }
+
+    function renderNavigation(items) {
+      const answered = getAnsweredCount(items);
+      const total = items.length;
+      const pending = Math.max(total - answered, 0);
+      const sections = getSections(items);
+      const totalSections = sections.length;
+      const onFirst = currentSectionIndex === 0;
+      const onLast = currentSectionIndex === totalSections - 1;
+      var secTitle = sections[currentSectionIndex] && sections[currentSectionIndex].material ? (sections[currentSectionIndex].material.titulo || 'Texto ' + (currentSectionIndex + 1)) : 'Texto ' + (currentSectionIndex + 1);
+      return '<section class="navigation-card"><div class="meta"><div><strong>Sección ' + (currentSectionIndex + 1) + ' de ' + totalSections + ' — ' + htmlEscape(secTitle) + '</strong><p>' + answered + ' respondidas · ' + pending + ' pendientes.</p></div><p>' + (onLast ? 'Estás en la última sección.' : 'Usa los botones para avanzar a la siguiente sección de lectura.') + '</p></div><div class="nav-actions"><button type="button" class="nav-btn" onclick="goToPreviousSection()"' + (onFirst ? ' disabled' : '') + '>← Anterior</button><button type="button" class="nav-btn" onclick="goToNextSection()"' + (onLast ? ' disabled' : '') + '>Siguiente →</button><button type="button" class="nav-btn primary" onclick="toggleQuestionMenu(true)">Abrir panel de preguntas</button></div></section>';
+    }
+
+    function renderSubmitBox() {
+      return '<section class="submit-box"><div><h2>Enviar respuestas</h2><p>Cuando termines, revisa el panel de preguntas para confirmar cuántas quedaron respondidas. El envío bloquea nuevas modificaciones.</p></div><button class="submit-btn" id="submitBtn" type="button" onclick="submitSession()">Enviar prueba</button></section>';
+    }
+
+    function renderSession() {
+      if (!sessionData) return;
+      applyAccessibilityConfig(sessionData);
+      applyVisualConfig(sessionData);
+      const availability = getAvailability(sessionData);
+      if (availability.blocked && !isSubmitted) {
+        document.getElementById('sessionTitle').textContent = sessionData.titulo || 'Prueba bloqueada';
+        document.getElementById('sessionMeta').textContent = (sessionData.libro || '') + ' · ' + (studentData && studentData.nombre ? studentData.nombre : 'Estudiante');
+        document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>🔒 Prueba bloqueada</h2><p>' + availability.reason + '. Podrás rendirla cuando el docente habilite el acceso.</p></section>';
+        updateProgress();
+        return;
+      }
+      const items = getDisplayItems();
+      if (!items.length) {
+        document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>Sin ítems</h2><p>Esta prueba aún no tiene contenido cargado.</p></section>';
+        updateProgress();
+        return;
+      }
+      const sections = getSections(items);
+      if (currentSectionIndex < 0) currentSectionIndex = 0;
+      if (currentSectionIndex >= sections.length) currentSectionIndex = sections.length - 1;
+      const section = sections[currentSectionIndex];
+      // Keep currentItemIndex pointing to first item of current section (for compatibility)
+      var globalOffset = 0;
+      for (var si = 0; si < currentSectionIndex; si++) globalOffset += sections[si].items.length;
+      currentItemIndex = globalOffset;
+      document.getElementById('sessionTitle').textContent = sessionData.titulo || 'Prueba de Lecturas';
+      document.getElementById('sessionMeta').textContent = (sessionData.libro || 'Sin libro') + ' · ' + (studentData.nombre || 'Estudiante');
+      const visado = getVisado(sessionData);
+      let html = '';
+      if (visado) {
+        const visadoText = typeof visado === 'string' ? visado : (visado.texto || 'Visado por EPM · Gabriel Castro');
+        html += '<section class="notice" style="background:#fef3c7;border:2px solid #b45309;color:#78350f;padding:10px 14px;margin-bottom:14px;border-radius:6px;font-size:13px;font-weight:600;text-align:center">✅ ' + htmlEscape(visadoText) + '</section>';
+      }
+      // Banner de sección: "TEXTO N — Viñetas X-Y — Preguntas A-B"
+      if (section.material) {
+        var mat = section.material;
+        var subt = String(mat.subtipo || '');
+        var textNumMatch = subt.match(/Texto\s*(\d+)/i);
+        var textNum = textNumMatch ? textNumMatch[1] : (currentSectionIndex + 1);
+        var imgs = mat.imagenes || mat.images || [];
+        var vinNums = imgs.map(function(im){
+          if (!im) return null;
+          var m = String((im.caption||'') + ' ' + (im.alt||'')).match(/Vi[ñn]eta\s*(\d+)/i);
+          if (m) return parseInt(m[1],10);
+          var sm = String(im.src||'').match(/vineta[_-](\d+)/i);
+          return sm ? parseInt(sm[1],10) : null;
+        }).filter(function(x){return x!==null;}).sort(function(a,b){return a-b;});
+        var vinText = '';
+        if (vinNums.length === 1) vinText = 'Viñeta ' + vinNums[0];
+        else if (vinNums.length > 1) vinText = 'Viñetas ' + vinNums.join(', ');
+        var firstQ = globalOffset + 1;
+        var lastQ = globalOffset + section.items.length;
+        var qText = section.items.length === 1 ? ('Pregunta ' + firstQ) : ('Preguntas ' + firstQ + ' a ' + lastQ);
+        html += '<section style="background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;padding:16px 20px;border-radius:12px;margin-bottom:14px;box-shadow:0 4px 10px rgba(30,64,175,.25)">'
+          + '<div style="font-size:22px;font-weight:800;letter-spacing:.5px">📖 TEXTO ' + htmlEscape(String(textNum)) + '</div>'
+          + (vinText ? '<div style="font-size:15px;font-weight:600;margin-top:4px;background:rgba(255,255,255,.18);display:inline-block;padding:4px 12px;border-radius:999px">🖼️ ' + htmlEscape(vinText) + '</div>' : '')
+          + '<div style="font-size:14px;font-weight:600;margin-top:6px;background:rgba(255,255,255,.18);display:inline-block;padding:4px 12px;border-radius:999px;margin-left:6px">✏️ ' + htmlEscape(qText) + '</div>'
+          + '</section>';
+        html += renderMaterial(section.material);
+      }
+      section.items.forEach(function(item, localIdx) {
+        html += renderCurrentItem(item, globalOffset + localIdx, items.length, section.material);
+      });
+      html += renderNavigation(items);
+      html += renderSubmitBox();
+      document.getElementById('mainContent').innerHTML = html;
+      if (isSubmitted) {
+        document.getElementById('submitBtn').disabled = true;
+        document.getElementById('submitBtn').textContent = 'Prueba enviada';
+      }
+      document.getElementById('questionMenu').innerHTML = buildQuestionMenu(items);
+      renderSummaryCard(items);
+      updateProgress();
+      updateStrikeUi();
+    }
+
+    function updateProgress() {
+      if (!sessionData) return;
+      const items = getDisplayItems();
+      const answered = getAnsweredCount(items);
+      const total = items.length;
+      const percent = total ? Math.round((answered / total) * 100) : 0;
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressText').textContent = total ? answered + ' de ' + total + ' preguntas respondidas.' : 'Aún no hay preguntas visibles.';
+      document.getElementById('progressPill').textContent = answered + '/' + total + ' respondidas';
+      document.getElementById('questionPill').textContent = total ? 'Sección ' + (currentSectionIndex + 1) + '/' + getSections(items).length : 'Sección 0/0';
+      const menuBtn = document.getElementById('questionMenuBtn');
+      if (menuBtn) menuBtn.textContent = 'Preguntas (' + answered + '/' + total + ')';
+      if (questionMenuOpen) document.getElementById('questionMenu').innerHTML = buildQuestionMenu(items);
+      renderSummaryCard(items);
+    }
+
+    function setDirty() {
+      isDirty = true;
+      setSaveStatus('Guardado pendiente', '');
+      updateProgress();
+      // Autosave con debounce: 1 segundo después del último cambio
+      if (typeof debounceAutoSaveTimer !== 'undefined' && debounceAutoSaveTimer) {
+        clearTimeout(debounceAutoSaveTimer);
+      }
+      debounceAutoSaveTimer = setTimeout(function(){ if (typeof autoSave === 'function') autoSave(); }, 1000);
+    }
+
+    function cloneAnswerObject(itemId) {
+      const current = answers[itemId] && typeof answers[itemId] === 'object' ? answers[itemId] : {};
+      return { ...current };
+    }
+
+    function selectOption(itemId, value) {
+      if (isSubmitted) return;
+      answers[itemId] = value;
+      setDirty();
+      renderSession();
+    }
+    window.selectOption = selectOption;
+
+    function setTextAnswer(itemId, value) {
+      if (isSubmitted) return;
+      answers[itemId] = value;
+      setDirty();
+    }
+    window.setTextAnswer = setTextAnswer;
+
+    function setPairAnswer(itemId, leftId, value) {
+      if (isSubmitted) return;
+      const next = cloneAnswerObject(itemId);
+      next[leftId] = value;
+      answers[itemId] = next;
+      setDirty();
+    }
+    window.setPairAnswer = setPairAnswer;
+
+    function setOrderAnswer(itemId, elementId, value) {
+      if (isSubmitted) return;
+      const next = cloneAnswerObject(itemId);
+      next[elementId] = value;
+      answers[itemId] = next;
+      setDirty();
+    }
+    window.setOrderAnswer = setOrderAnswer;
+
+    function toggleCrossout(event, itemId, value) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      if (!isCrossoutEnabled()) return;
+      if (isSubmitted) return;
+      ensureUiState();
+      if (!uiState.crossouts[itemId] || typeof uiState.crossouts[itemId] !== 'object') uiState.crossouts[itemId] = {};
+      if (uiState.crossouts[itemId][value]) delete uiState.crossouts[itemId][value];
+      else uiState.crossouts[itemId][value] = true;
+      if (!Object.keys(uiState.crossouts[itemId]).length) delete uiState.crossouts[itemId];
+      setDirty();
+      renderSession();
+    }
+    window.toggleCrossout = toggleCrossout;
+
+    function toggleCrossoutById(itemId, value) { toggleCrossout(null, itemId, value); }
+    window.toggleCrossoutById = toggleCrossoutById;
+
+    function goToSection(index) {
+      const items = getDisplayItems();
+      const sections = getSections(items);
+      if (index < 0 || index >= sections.length) return;
+      currentSectionIndex = index;
+      questionMenuOpen = false;
+      document.getElementById('questionMenu').classList.add('hidden');
+      renderSession();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.goToSection = goToSection;
+
+    function goToQuestion(index) {
+      // Navigate to the section that contains item at given global index
+      const items = getDisplayItems();
+      const sections = getSections(items);
+      var offset = 0;
+      for (var si = 0; si < sections.length; si++) {
+        if (index < offset + sections[si].items.length) {
+          goToSection(si);
+          return;
+        }
+        offset += sections[si].items.length;
+      }
+    }
+    window.goToQuestion = goToQuestion;
+
+    function goToPreviousSection() { goToSection(currentSectionIndex - 1); }
+    window.goToPreviousSection = goToPreviousSection;
+    function goToNextSection() { goToSection(currentSectionIndex + 1); }
+    window.goToNextSection = goToNextSection;
+    function goToPreviousQuestion() { goToSection(currentSectionIndex - 1); }
+    window.goToPreviousQuestion = goToPreviousQuestion;
+    function goToNextQuestion() { goToSection(currentSectionIndex + 1); }
+    window.goToNextQuestion = goToNextQuestion;
+
+    function toggleQuestionMenu(forceOpen) {
+      const menu = document.getElementById('questionMenu');
+      const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !questionMenuOpen;
+      questionMenuOpen = shouldOpen;
+      menu.classList.toggle('hidden', !shouldOpen);
+      if (shouldOpen) {
+        menu.innerHTML = buildQuestionMenu(getDisplayItems());
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+    window.toggleQuestionMenu = toggleQuestionMenu;
+
+    async function doLogout() {
+      if (isDirty && !isSubmitted) {
+        const ok = confirm('Tienes cambios sin guardar. ¿Deseas cerrar sesión de todas formas?');
+        if (!ok) return;
+      }
+      try { await auth.signOut(); } catch(e) { console.error(e); }
+      window.location.href = '/lecturas/';
+    }
+    window.doLogout = doLogout;
+
+    function goToMenu() {
+      if (isDirty && !isSubmitted) {
+        const ok = confirm('Tienes cambios sin guardar. ¿Deseas volver al menú de todas formas?');
+        if (!ok) return;
+      }
+      window.location.href = '/lecturas/dashboard';
+    }
+    window.goToMenu = goToMenu;
+
+    async function autoSave() {
+      if (!currentUser || !sessionData || isSubmitted || !isDirty) return;
+      try {
+        setSaveStatus('Guardando...', '');
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          answers: answers,
+          ui_state: sanitizeUiState(),
+          started_at: startTime,
+          last_save: Date.now(),
+          completada: false,
+          tiempo_transcurrido: startTime ? Math.floor((Date.now() - startTime) / 1000) : 0,
+          strikes: antiCopyStrikes,
+          bloqueado_por_strikes: antiCopyStrikes >= 3
+        });
+        isDirty = false;
+        setSaveStatus('Guardado', 'ok');
+      } catch (error) {
+        console.error('[lecturas/autosave]', error);
+        setSaveStatus('Error al guardar', 'err');
+      }
+    }
+
+    async function submitSession(options) {
+      options = options || {};
+      if (isSubmitted && !options.force) return;
+      const items = getDisplayItems();
+      const missing = items.filter(function(item) { return !isItemAnswered(item, answers[item.id]); });
+      // Aviso (NO bloqueo) si faltan preguntas o si hay desarrollos cortos
+      if (!options.force) {
+        var warnings = [];
+        if (missing.length) warnings.push('• ' + missing.length + ' pregunta(s) sin responder.');
+        // Avisar desarrollos bajo extensión recomendada
+        var shortDev = 0;
+        items.forEach(function(it){
+          var type = getType(it);
+          if (type === 'desarrollo') {
+            var ans = answers[it.id];
+            var txt = (typeof ans === 'string') ? ans : (ans && ans.text ? ans.text : '');
+            var pts = Number(it.puntaje || it.puntos || it.points || 0);
+            var recLines = Number(it.lineas_sugeridas || it.suggested_lines || 0);
+            var recChars = recLines > 0 ? recLines * 80 : (pts >= 4 ? 600 : (pts >= 2 ? 300 : 150));
+            if (txt && txt.length > 0 && txt.length < Math.floor(recChars * 0.5)) shortDev++;
+          }
+        });
+        if (shortDev) warnings.push('• ' + shortDev + ' pregunta(s) de desarrollo con extensión breve (puedes enviarlas igual).');
+        var msg = warnings.length
+          ? 'Antes de enviar revisa:\n\n' + warnings.join('\n') + '\n\n¿Enviar de todas formas?\n(Después del envío ya no podrás editar)'
+          : '¿Estás seguro/a de enviar tus respuestas? Después del envío ya no podrás editarlas.';
+        if (!confirm(msg)) {
+          if (missing.length) { goToQuestion(items.indexOf(missing[0])); }
+          return;
+        }
+      }
+      const submitBtn = document.getElementById('submitBtn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = options.force ? 'Enviando automáticamente...' : 'Enviando...';
+      }
+      try {
+        isSubmitted = true;
+        deactivateStrikeMonitor();
+        const result = buildResults();
+        const elapsed = startTime ? Math.floor((Date.now() - startTime) / 1000) : 0;
+        const answeredCount = getAnsweredCount(items);
+        const blockedByStrikes = !!options.triggeredByStrike || antiCopyStrikes >= 3;
+        const now = Date.now();
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          answers: answers,
+          ui_state: sanitizeUiState(),
+          started_at: startTime,
+          submitted_at: now,
+          last_save: now,
+          completada: true,
+          tiempo_transcurrido: elapsed,
+          strikes: antiCopyStrikes,
+          bloqueado_por_strikes: blockedByStrikes
+        });
+        await db.ref(LECTURAS_BASE + '/resultados/' + sessionId + '/' + currentUser.uid).set({
+          nombre: studentData.nombre || '',
+          curso: studentData.curso || '',
+          puntaje: result.autoEarnedPoints,
+          total: result.autoTotalPoints,
+          puntaje_total_prueba: result.totalPoints,
+          porcentaje: result.porcentaje,
+          manual_pendientes: result.manualPending,
+          puntaje_manual_pendiente: result.manualPendingPoints,
+          detalle: result.detail,
+          answered_count: answeredCount,
+          total_items: items.length,
+          strikes: antiCopyStrikes,
+          bloqueado_por_strikes: blockedByStrikes,
+          auto_submitted: !!options.triggeredByStrike,
+          submitted_at: now,
+          tiempo_transcurrido: elapsed
+        });
+        isDirty = false;
+        setSaveStatus('Enviado', 'ok');
+        renderSession();
+        if (options.triggeredByStrike) alert('Recibiste 3 strikes. Se enviaron ' + answeredCount + '/' + items.length + ' respuestas automáticamente.');
+        else alert('Tus respuestas fueron enviadas correctamente. Puntaje autoevaluable: ' + result.autoEarnedPoints + ' de ' + result.autoTotalPoints + ' puntos.' + (result.manualPending ? ' Quedaron ' + result.manualPending + ' ítems para revisión docente.' : ''));
+      } catch (error) {
+        console.error('[lecturas/submit]', error);
+        isSubmitted = false;
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Enviar prueba';
+        }
+        setSaveStatus('Error al enviar', 'err');
+        alert('No se pudo enviar la prueba. Intenta nuevamente.');
+      }
+    }
+    window.submitSession = submitSession;
+
+    function tickTimer() {
+      if (secondsRemaining === null) return;
+      if (secondsRemaining <= 0) {
+        clearInterval(timerInterval);
+        document.getElementById('timerPill').textContent = 'Tiempo finalizado';
+        submitSession({ force: true });
+        return;
+      }
+      const mins = Math.floor(secondsRemaining / 60);
+      const secs = secondsRemaining % 60;
+      document.getElementById('timerPill').textContent = 'Tiempo ' + String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+      secondsRemaining -= 1;
+    }
+
+    function clearPendingBlurStrike() {
+      if (blurStrikeTimer) {
+        clearTimeout(blurStrikeTimer);
+        blurStrikeTimer = null;
+      }
+    }
+
+    function updateStrikeUi() {
+      const strikeBar = document.getElementById('strikeBar');
+      if (!isAntiCopyEnabled() || isSubmitted) {
+        strikeBar.classList.add('hidden');
+        return;
+      }
+      strikeBar.classList.remove('hidden');
+      [1, 2, 3].forEach(function(index) {
+        document.getElementById('sd' + index).classList.toggle('active', antiCopyStrikes >= index);
+      });
+    }
+
+    function activateStrikeMonitor() {
+      if (strikeMonitorActive || !isAntiCopyEnabled() || isSubmitted) return;
+      const bypassRemaining = getAdminReloadBypassRemainingMs();
+      if (bypassRemaining > 0) {
+        if (!adminReloadBypassTimer) {
+          adminReloadBypassTimer = setTimeout(function() {
+            adminReloadBypassTimer = null;
+            activateStrikeMonitor();
+          }, bypassRemaining + 150);
+        }
+        return;
+      }
+      strikeMonitorActive = true;
+      lastKnownWidth = window.innerWidth;
+      document.addEventListener('visibilitychange', handleVisibilityStrike);
+      window.addEventListener('blur', handleBlurStrike);
+      window.addEventListener('focus', handleFocusReturn);
+      window.addEventListener('resize', handleResizeStrike);
+      // pagehide deshabilitado: causa falsos positivos al cerrar/recargar pestana o caidas de WiFi
+      // window.addEventListener('pagehide', handlePageHide);
+    }
+
+    /* ANTIBIXBY/AI: bloquea menu contextual + presion larga en zonas no editables.
+       En Samsung tablets esto evita Bixby Vision / Buscar con IA / Google Lens / copiar texto.
+       Permite seleccionar dentro de textareas/inputs (respuestas de desarrollo). */
+    function __isEditableTargetLec(target) {
+      if (!target) return false;
+      var tag = (target.tagName || '').toLowerCase();
+      if (tag === 'textarea' || tag === 'input' || tag === 'select') return true;
+      if (target.isContentEditable) return true;
+      if (typeof target.closest === 'function' && target.closest('textarea, input, [contenteditable="true"]')) return true;
+      return false;
+    }
+    document.addEventListener('contextmenu', function(e) {
+      if (!__isEditableTargetLec(e.target)) e.preventDefault();
+    }, true);
+    document.addEventListener('selectstart', function(e) {
+      if (!__isEditableTargetLec(e.target)) e.preventDefault();
+    }, true);
+
+    function deactivateStrikeMonitor() {
+      if (adminReloadBypassTimer) {
+        clearTimeout(adminReloadBypassTimer);
+        adminReloadBypassTimer = null;
+      }
+      if (!strikeMonitorActive) return;
+      strikeMonitorActive = false;
+      clearPendingBlurStrike();
+      focusLossActive = false;
+      strikeCountedForCurrentLoss = false;
+      document.removeEventListener('visibilitychange', handleVisibilityStrike);
+      window.removeEventListener('blur', handleBlurStrike);
+      window.removeEventListener('focus', handleFocusReturn);
+      window.removeEventListener('resize', handleResizeStrike);
+      // window.removeEventListener('pagehide', handlePageHide);
+    }
+
+    function handleVisibilityStrike() {
+      if (!strikeMonitorActive || isSubmitted || getAdminReloadBypassRemainingMs() > 0) return;
+      if (document.hidden) {
+        // Tablet/mobile: el bloqueo de pantalla, notificaciones del top o cambio de app
+        // dispara visibilitychange. Aplicamos GRACE de 15s: si vuelve a la app antes,
+        // NO cuenta strike. Solo cuenta si efectivamente se queda fuera mucho rato.
+        if (focusLossActive) return;
+        focusLossActive = true;
+        strikeCountedForCurrentLoss = false;
+        clearPendingBlurStrike();
+        blurStrikeTimer = setTimeout(function() {
+          blurStrikeTimer = null;
+          if (document.hidden && focusLossActive && !strikeCountedForCurrentLoss &&
+              strikeMonitorActive && !isSubmitted) {
+            registerStrike();
+          }
+        }, BLUR_GRACE_MS);
+      } else {
+        handleFocusReturn();
+      }
+    }
+
+    function handleBlurStrike() {
+      // Window lost focus but tab is still visible (switched to another app/window)
+      if (!strikeMonitorActive || isSubmitted || document.hidden || getAdminReloadBypassRemainingMs() > 0) return;
+      if (focusLossActive) return; // already tracking this event
+      focusLossActive = true;
+      strikeCountedForCurrentLoss = false;
+      clearPendingBlurStrike();
+      blurStrikeTimer = setTimeout(function() {
+        blurStrikeTimer = null;
+        if (!document.hidden && !document.hasFocus() &&
+            focusLossActive && !strikeCountedForCurrentLoss &&
+            strikeMonitorActive && !isSubmitted) {
+          registerStrike();
+        }
+      }, BLUR_GRACE_MS);
+    }
+
+    function handleFocusReturn() {
+      clearPendingBlurStrike();
+      focusLossActive = false;
+      strikeCountedForCurrentLoss = false;
+    }
+
+    function handleResizeStrike() {
+      // Resize handler deshabilitado: causa falsos positivos al rotar tablets
+      // o cambiar orientacion. Solo se mantiene para tracking de ancho.
+      if (!strikeMonitorActive || isSubmitted) return;
+      lastKnownWidth = window.innerWidth;
+    }
+
+    function handlePageHide() {
+      if (!strikeMonitorActive || isSubmitted) return;
+      if (!focusLossActive || !strikeCountedForCurrentLoss) {
+        focusLossActive = true;
+        strikeCountedForCurrentLoss = false;
+        registerStrike();
+      }
+    }
+
+    function showStrikeModal() {
+      document.getElementById('strikeIcon').textContent = antiCopyStrikes >= 3 ? '🚫' : (antiCopyStrikes === 1 ? '⚠️' : '🚨');
+      document.getElementById('strikeTitle').textContent = antiCopyStrikes >= 3 ? '3 strikes detectados' : 'Strike ' + antiCopyStrikes + ' de 3';
+      document.getElementById('strikeMsg').textContent = antiCopyStrikes >= 3
+        ? 'La prueba se enviará automáticamente con las respuestas que tengas hasta este momento.'
+        : (antiCopyStrikes === 1
+          ? 'Saliste de la evaluación. No puedes abrir otras pestañas, ChatGPT, Gemini, Google ni otra página mientras respondes.'
+          : 'Segundo strike. Si sales una vez más, la prueba se enviará automáticamente tal como esté.');
+      document.getElementById('strikeModal').classList.remove('hidden');
+    }
+
+    async function saveStrikeState(blocked) {
+      try {
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          strikes: antiCopyStrikes,
+          bloqueado_por_strikes: !!blocked,
+          last_save: Date.now(),
+          started_at: startTime || Date.now(),
+          completada: isSubmitted,
+          answers: answers,
+          ui_state: sanitizeUiState()
+        });
+      } catch (error) {
+        console.error('[lecturas/strike-save]', error);
+      }
+    }
+
+    async function registerStrike() {
+      clearPendingBlurStrike();
+      const now = Date.now();
+      if (now < strikeCooldownUntil || isSubmitted || !currentUser || getAdminReloadBypassRemainingMs() > 0) return;
+      strikeCooldownUntil = now + 1500; // small safety margin against races
+      strikeCountedForCurrentLoss = true;
+      antiCopyStrikes += 1;
+      updateStrikeUi();
+      showStrikeModal();
+      await saveStrikeState(antiCopyStrikes >= 3);
+      if (antiCopyStrikes >= 3) {
+        setTimeout(function() {
+          document.getElementById('strikeModal').classList.add('hidden');
+          submitSession({ force: true, triggeredByStrike: true });
+        }, 1300);
+      }
+    }
+
+    function dismissStrike() {
+      document.getElementById('strikeModal').classList.add('hidden');
+      if (!document.hidden) window.focus();
+    }
+    window.dismissStrike = dismissStrike;
+
+    async function loadSession() {
+      const sessionSnap = await db.ref(LECTURAS_BASE + '/sesiones/' + sessionId).once('value');
+      if (!sessionSnap.exists()) throw new Error('Sesión no encontrada');
+      sessionData = { id: sessionId, ...sessionSnap.val() };
+      const responseSnap = await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).once('value');
+      responseData = responseSnap.val() || null;
+      answers = responseData && responseData.answers ? responseData.answers : {};
+      uiState = responseData && responseData.ui_state ? responseData.ui_state : { crossouts: {} };
+      ensureUiState();
+      antiCopyStrikes = responseData && Number.isFinite(Number(responseData.strikes)) ? Number(responseData.strikes) : 0;
+      isSubmitted = !!(responseData && responseData.completada);
+      startTime = responseData && responseData.started_at ? responseData.started_at : Date.now();
+      // Si el docente reabrio la prueba y reopened_at es mas reciente que started_at,
+      // usar reopened_at como punto de partida del timer (evita auto-submit instantaneo
+      // cuando el estudiante ya habia consumido el tiempo en la sesion anterior).
+      if (responseData && responseData.reopened_at && (!responseData.started_at || responseData.reopened_at > responseData.started_at)) {
+        startTime = responseData.reopened_at;
+      }
+      if (!responseData) {
+        await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).update({
+          started_at: startTime,
+          last_save: Date.now(),
+          completada: false,
+          answers: {},
+          ui_state: { crossouts: {} },
+          strikes: 0,
+          bloqueado_por_strikes: false
+        });
+      }
+      if (sessionData.duracion_min && !isSubmitted) {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        secondsRemaining = Math.max((sessionData.duracion_min * 60) - elapsed, 0);
+        tickTimer();
+        timerInterval = setInterval(tickTimer, 1000);
+      }
+    }
+
+    document.addEventListener('click', function(event) {
+      const shell = document.querySelector('.question-menu-shell');
+      if (!shell || !questionMenuOpen) return;
+      if (!shell.contains(event.target)) {
+        questionMenuOpen = false;
+        document.getElementById('questionMenu').classList.add('hidden');
+      }
+    });
+
+    document.addEventListener('click', function(event) {
+      var btn = event.target.closest('[data-strike-item]');
+      if (!btn) return;
+      event.preventDefault();
+      event.stopPropagation();
+      toggleCrossout(null, btn.dataset.strikeItem, btn.dataset.strikeOption);
+    });
+
+    auth.onAuthStateChanged(async function(user) {
+      if (!sessionId) {
+        document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>Sin sesión</h2><p>No se indicó ninguna prueba. Regresa al panel de Lecturas.</p></section>';
+        return;
+      }
+      if (!user) {
+        window.location.href = '/lecturas/';
+        return;
+      }
+      currentUser = user;
+      try {
+        const studentSnap = await db.ref(STUDENT_BASE + '/estudiantes/' + user.uid).once('value');
+        studentData = studentSnap.val();
+        if (!studentData) {
+          await auth.signOut();
+          window.location.href = '/lecturas/';
+          return;
+        }
+        const assignedSnap = await db.ref(LECTURAS_BASE + '/asignaciones/' + user.uid + '/' + sessionId).once('value');
+        if (!assignedSnap.exists()) {
+          document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>Sin acceso</h2><p>Esta prueba no está asignada para tu cuenta.</p></section>';
+          return;
+        }
+        await loadSession();
+        renderSession();
+        showPendingAdminReloadMessage();
+        updateStrikeUi();
+        if (!isSubmitted && isAntiCopyEnabled()) {
+          activateStrikeMonitor();
+          if (antiCopyStrikes >= 3 && !(responseData && responseData.bloqueado_por_strikes)) {
+            submitSession({ force: true, triggeredByStrike: true });
+            return;
+          }
+        }
+        autoSaveTimer = setInterval(autoSave, 5000);
+        setSaveStatus(isSubmitted ? 'Enviado' : 'Guardado pendiente', isSubmitted ? 'ok' : '');
+
+        // SYNC LIVE de strikes con DB: si el docente baja strikes a 0 (boton 🔄),
+        // el cliente debe actualizarse para no sobreescribir el reset al proximo evento.
+        db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/strikes').on('value', function(snap){
+          const dbStrikes = Number(snap.val() || 0);
+          if (dbStrikes < antiCopyStrikes) {
+            // Docente bajo strikes: sincronizar y limpiar estado de focus loss
+            antiCopyStrikes = dbStrikes;
+            focusLossActive = false;
+            strikeCountedForCurrentLoss = false;
+            clearPendingBlurStrike();
+            updateStrikeUi();
+            try { document.getElementById('strikeModal').classList.add('hidden'); } catch(_) {}
+          } else if (dbStrikes > antiCopyStrikes) {
+            antiCopyStrikes = dbStrikes;
+            updateStrikeUi();
+          }
+        });
+
+        // Escucha cierre forzado desde el panel docente (por curso o individual)
+        db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid + '/forzar_envio').on('value', function(snap){
+          if (snap.val() === true && !isSubmitted) {
+            try {
+              const banner = document.createElement('div');
+              banner.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#dc2626;color:#fff;padding:14px;text-align:center;font-weight:700;z-index:9999';
+              banner.textContent = '⛔ El docente ha cerrado la prueba. Enviando tus respuestas...';
+              document.body.appendChild(banner);
+            } catch(e) {}
+            submitSession({ force: true, triggeredByStrike: false });
+          }
+        });
+
+        // Escucha PAUSA desde el panel docente — NO envía, solo bloquea UI
+        db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).on('value', function(snap){
+          const data = snap.val() || {};
+          const forceReloadAt = Number(data.force_reload_at || 0);
+          if (forceReloadAt && !hasHandledAdminReload(forceReloadAt)) {
+            beginAdminForcedReload(
+              data.force_reload_message || '↻ El profesor actualizó la prueba. La página se recargará sin sumar strike.',
+              forceReloadAt
+            );
+            return;
+          }
+          const pausado = data.pausado_por_docente === true;
+          // REABRIR EN VIVO: si el docente usa 🔓 reopen mientras el alumno tiene la pestaña abierta
+          // reopened_at nuevo + la prueba estaba enviada en memoria -> recargar para volver a edición
+          if (isSubmitted && data.completada === false) {
+            beginAdminForcedReload('🔓 El docente reabrió tu prueba. Recargando para continuar...', Number(data.reopened_at || Date.now()));
+            return;
+          }
+          let overlay = document.getElementById('__pausaOverlay');
+          if (pausado && !isSubmitted) {
+            if (!overlay) {
+              overlay = document.createElement('div');
+              overlay.id = '__pausaOverlay';
+              overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,0.97);color:#fff;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;';
+              overlay.innerHTML = '<div style="max-width:560px;text-align:center;background:#1e293b;border:3px solid #eab308;border-radius:18px;padding:32px 26px;box-shadow:0 20px 60px rgba(0,0,0,0.5)">'
+                + '<div style="font-size:64px;margin-bottom:14px">⏸</div>'
+                + '<h1 style="font-size:26px;margin:0 0 12px;color:#fde047">Prueba pausada</h1>'
+                + '<p id="__pausaMsg" style="font-size:16px;line-height:1.5;margin:0 0 18px;color:#e2e8f0"></p>'
+                + '<div style="background:#0f172a;padding:14px;border-radius:10px;font-size:14px;color:#94a3b8;margin-bottom:18px">✅ Tus respuestas están guardadas<br>📖 Cuando tu profesor reabra la prueba, podrás continuar desde donde quedaste.</div>'
+                + '<button onclick="window.location.href=\'/lecturas/\'" style="background:#eab308;color:#422006;border:0;padding:12px 26px;border-radius:10px;font-weight:700;cursor:pointer;font-size:15px">Volver al menú</button>'
+                + '</div>';
+              document.body.appendChild(overlay);
+            }
+            document.getElementById('__pausaMsg').textContent = data.pausa_motivo || 'La prueba fue pausada por el profesor. Tus respuestas están guardadas.';
+            // Parar timer y autosave mientras esté pausado
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            if (autoSaveTimer) { clearInterval(autoSaveTimer); autoSaveTimer = null; }
+          } else if (!pausado && overlay) {
+            // Reanudado: recargar para tomar nueva duración + started_at
+            overlay.remove();
+            beginAdminForcedReload('▶ El docente reanudó la prueba. Recargando para continuar...', Number(data.reanudado_at || Date.now()));
+          }
+        });
+      } catch (error) {
+        console.error('[lecturas/prueba]', error);
+        document.getElementById('mainContent').innerHTML = '<section class="notice"><h2>Error de carga</h2><p>No se pudo cargar esta prueba. Verifica que exista y que esté asignada correctamente.</p></section>';
+      }
+    });
+
+    window.addEventListener('beforeunload', function(event) {
+      if (isDirty && !isSubmitted) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    });
+
+    /* ── Character counter for desarrollo ── */
+    function updateCharCounter(itemId, recommended) {
+      var ta = document.getElementById('ta_' + itemId);
+      var cc = document.getElementById('cc_' + itemId);
+      if (!ta || !cc) return;
+      var len = ta.value.length;
+      var cls = len >= recommended ? 'cc-ok' : 'cc-low';
+      cc.className = 'cc-count ' + cls;
+      cc.textContent = len + ' / ' + recommended + ' caracteres';
+      var parent = cc.parentNode;
+      if (parent) {
+        var hint = parent.querySelector('span:last-child');
+        if (hint) hint.textContent = len >= recommended ? '✅ Extensión suficiente' : '⚠️ Sigue escribiendo';
+      }
+    }
+    window.updateCharCounter = updateCharCounter;
+
+    /* ── Block copy/paste in desarrollo textareas ── */
+    function blockCopy(e) {
+      e.preventDefault();
+      registerAntiCopyAttempt('copiar');
+      return false;
+    }
+    window.blockCopy = blockCopy;
+
+    function blockPaste(e) {
+      e.preventDefault();
+      registerAntiCopyAttempt('pegar');
+      return false;
+    }
+    window.blockPaste = blockPaste;
+
+    function registerAntiCopyAttempt(action) {
+      if (isSubmitted) return;
+      var msg = action === 'copiar'
+        ? 'No puedes copiar ni cortar texto de las respuestas de desarrollo.'
+        : 'No puedes pegar texto en las respuestas de desarrollo. Debes escribir tu respuesta.';
+      alert(msg);
+    }
+
+    /* ── Block PrintScreen & DevTools shortcuts ── */
+    document.addEventListener('keydown', function(e) {
+      if (isSubmitted || !isAntiCopyEnabled()) return;
+      // Block PrintScreen
+      if (e.key === 'PrintScreen') {
+        e.preventDefault();
+        navigator.clipboard.writeText('').catch(function(){});
+        alert('No se permite capturar pantalla durante la evaluación.');
+        return false;
+      }
+      // Block DevTools: F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U (view source)
+      if (e.key === 'F12'
+        || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j'))
+        || (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+        e.preventDefault();
+        alert('No se permite abrir herramientas de desarrollo durante la evaluación.');
+        return false;
+      }
+    });
+    document.addEventListener('keyup', function(e) {
+      if (e.key === 'PrintScreen' && !isSubmitted && isAntiCopyEnabled()) {
+        e.preventDefault();
+        navigator.clipboard.writeText('').catch(function(){});
+      }
+    });
+
+    /* ── Detect window.open / popups (extra layer) ── */
+    (function() {
+      var origOpen = window.open;
+      window.open = function() {
+        if (!isSubmitted && isAntiCopyEnabled()) {
+          alert('No puedes abrir ventanas emergentes durante la evaluación.');
+          return null;
+        }
+        return origOpen.apply(window, arguments);
+      };
+    })();
+  </script>
+</body>
+</html>

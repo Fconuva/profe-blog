@@ -1,0 +1,856 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="icon" href="data:,">
+<title>SIMCE S5 — El Cuento: Estructura y Elementos Narrativos</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0f172a;--panel:#1e293b;--border:#334155;--accent:#3b82f6;--accent2:#8b5cf6;--green:#10b981;--amber:#f59e0b;--red:#ef4444;--text:#e2e8f0;--dim:#94a3b8;--gold:#fbbf24}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.top-bar{background:linear-gradient(135deg,#1e3a5f,#0f172a);padding:10px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--accent);position:sticky;top:0;z-index:100}
+.top-bar h1{font-size:.9rem;color:#fff}.top-bar .xp{background:var(--accent);color:#fff;padding:3px 12px;border-radius:20px;font-weight:700;font-size:.8rem}
+.progress-wrap{background:#0d1117;padding:6px 20px;position:sticky;top:44px;z-index:99}
+.top-bar{top:0;z-index:100;position:sticky}
+.progress-bar{height:6px;background:var(--border);border-radius:6px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:6px;transition:width .6s;width:0%}
+.progress-labels{display:flex;justify-content:space-between;font-size:.6rem;color:var(--dim);margin-top:3px}
+.main{max-width:800px;margin:0 auto;padding:14px}
+.section{display:none;animation:fadeIn .5s}.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:18px;margin:10px 0}
+.card h2{font-size:1.1rem;margin-bottom:8px;color:#fff}
+.card h3{font-size:.9rem;margin:10px 0 6px;color:var(--accent)}
+.card p,.card li{font-size:.82rem;line-height:1.6;color:var(--dim);margin-bottom:5px}
+.card ul{padding-left:16px}
+.hero-img{width:100%;border-radius:10px;margin:10px 0;max-height:220px;object-fit:cover}
+.highlight{background:rgba(59,130,246,.12);border-left:3px solid var(--accent);padding:8px 12px;border-radius:0 8px 8px 0;margin:8px 0;font-size:.8rem}
+.highlight.green{background:rgba(16,185,129,.1);border-color:var(--green)}
+.highlight.amber{background:rgba(245,158,11,.1);border-color:var(--amber)}
+.highlight.purple{background:rgba(139,92,246,.1);border-color:var(--accent2)}
+.highlight.red{background:rgba(239,68,68,.08);border-color:var(--red)}
+.concept-box{background:rgba(139,92,246,.06);border:1px solid rgba(139,92,246,.2);border-radius:8px;padding:10px;margin:8px 0}
+.concept-box .label{font-size:.65rem;text-transform:uppercase;letter-spacing:.04em;color:var(--accent2);font-weight:700;margin-bottom:3px}
+.concept-box .def{font-size:.78rem;color:var(--text)}
+.btn{display:inline-block;padding:9px 20px;border-radius:8px;font-weight:700;font-size:.82rem;cursor:pointer;border:none;transition:.2s;font-family:inherit}
+.btn:hover{transform:translateY(-1px)}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.btn-next{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;margin-top:12px;padding:11px 28px;font-size:.88rem;border-radius:10px;box-shadow:0 4px 15px rgba(59,130,246,.3)}
+.btn-next:hover{box-shadow:0 6px 20px rgba(59,130,246,.45)}
+.btn-back{background:transparent;border:2px solid var(--border);color:var(--dim);margin-top:12px;padding:10px 22px;font-size:.82rem;border-radius:10px}
+.btn-back:hover{border-color:var(--accent);color:var(--text)}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:16px;gap:10px}
+.nav-row .spacer{flex:1}
+.btn-primary{background:var(--accent);color:#fff}
+.quiz-option{display:block;width:100%;text-align:left;padding:10px 14px;margin:5px 0;border-radius:8px;border:2px solid var(--border);background:rgba(255,255,255,.02);color:var(--text);font-size:.8rem;cursor:pointer;transition:.2s;font-family:inherit}
+.quiz-option:hover:not(.locked){border-color:var(--accent);background:rgba(59,130,246,.06)}
+.quiz-option.correct{border-color:var(--green)!important;background:rgba(16,185,129,.12)!important}
+.quiz-option.wrong{border-color:var(--red)!important;background:rgba(239,68,68,.08)!important}
+.quiz-option.locked{cursor:default}
+.quiz-option.picked{border-color:var(--accent)!important;background:rgba(59,130,246,.1)!important}
+.btn-reveal{background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;margin-top:8px;padding:8px 18px;font-size:.8rem;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-weight:700;display:none}
+.btn-reveal.show{display:inline-block;animation:fadeIn .3s}
+.feedback{padding:8px 12px;border-radius:8px;margin:6px 0;font-size:.78rem;display:none}
+.feedback.show{display:block;animation:fadeIn .3s}
+.feedback.ok{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#6ee7b7}
+.feedback.nok{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);color:#fca5a5}
+select.fill-select{background:var(--bg);border:1px solid var(--accent);color:var(--gold);padding:3px 6px;border-radius:4px;font-family:inherit;font-size:.8rem;font-weight:600}
+.story-box{background:linear-gradient(135deg,rgba(30,41,59,.9),rgba(15,23,42,.95));border:1px solid var(--border);border-radius:12px;padding:20px;margin:10px 0;font-size:.85rem;line-height:1.8;color:#cbd5e1}
+.story-box .title{font-size:1.05rem;font-weight:800;color:#fff;margin-bottom:10px;text-align:center}
+.story-box p{margin-bottom:8px;text-indent:1.5em}
+.badge{display:inline-block;font-size:.6rem;padding:2px 6px;border-radius:10px;font-weight:700;margin-left:4px}
+.badge-loc{background:rgba(59,130,246,.2);color:#93c5fd}
+.badge-inf{background:rgba(139,92,246,.2);color:#c4b5fd}
+.badge-ref{background:rgba(16,185,129,.2);color:#6ee7b7}
+.puzzle-item{background:rgba(255,255,255,.03);border:2px solid var(--border);border-radius:8px;padding:10px;text-align:center;font-size:.78rem;cursor:pointer;transition:.2s;user-select:none}
+.puzzle-item:hover{border-color:var(--accent2)}
+.puzzle-item.selected{border-color:var(--gold);background:rgba(251,191,36,.06);box-shadow:0 0 10px rgba(251,191,36,.12)}
+.puzzle-item.matched{border-color:var(--green);background:rgba(16,185,129,.08);cursor:default}
+.match-container{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0}
+.match-left,.match-right{display:flex;flex-direction:column;gap:6px}
+.game-score{text-align:center;font-size:1.8rem;font-weight:900;color:var(--gold);margin:8px 0}
+.simce-q{border-left:3px solid var(--accent);padding-left:12px;margin:10px 0}
+.simce-q .q-num{font-size:.65rem;color:var(--accent);font-weight:700;text-transform:uppercase;margin-bottom:3px}
+.simce-q .q-text{font-size:.82rem;color:#fff;font-weight:600;margin-bottom:6px}
+.section-header{text-align:center;padding:14px 0 8px}
+.section-header .icon{font-size:2.2rem;margin-bottom:6px}
+.section-header h2{font-size:1.2rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.section-header .sub{font-size:.75rem;color:var(--dim);margin-top:3px}
+.cols-2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:600px){.cols-2,.match-container{grid-template-columns:1fr}}
+.achievement{background:linear-gradient(135deg,rgba(251,191,36,.12),rgba(245,158,11,.06));border:1px solid rgba(251,191,36,.25);border-radius:10px;padding:14px;text-align:center;margin:10px 0;animation:fadeIn .5s}
+.achievement h3{color:var(--gold);font-size:.95rem}.achievement p{color:var(--dim);font-size:.75rem;margin-top:3px}
+.timer{font-size:.72rem;color:var(--amber);font-weight:600}
+.step-indicator{display:flex;gap:5px;justify-content:center;margin:8px 0}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border)}
+.step-dot.active{background:var(--accent)}.step-dot.done{background:var(--green)}
+.audit-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px;margin:8px 0;font-size:.72rem;color:var(--dim)}
+.audit-box strong{color:var(--accent)}
+.phase-tag{display:inline-block;padding:3px 10px;border-radius:12px;font-size:.7rem;font-weight:700;margin:4px 2px}
+.phase-motiv{background:rgba(245,158,11,.15);color:var(--amber)}
+.phase-prev{background:rgba(139,92,246,.15);color:#c4b5fd}
+.phase-dev{background:rgba(59,130,246,.15);color:#93c5fd}
+.phase-close{background:rgba(16,185,129,.15);color:#6ee7b7}
+.diff-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.65rem;font-weight:700}
+.diff-n1{background:rgba(16,185,129,.15);color:#6ee7b7}
+.diff-n2{background:rgba(59,130,246,.15);color:#93c5fd}
+.text-toggle{background:var(--panel);border:1px solid var(--border);border-radius:10px;margin:10px 0;overflow:hidden}
+.text-toggle summary{padding:12px 16px;cursor:pointer;font-weight:700;font-size:.85rem;color:var(--accent);list-style:none;display:flex;align-items:center;gap:8px}
+.text-toggle summary::before{content:'▶';font-size:.7rem;transition:transform .2s}
+.text-toggle[open] summary::before{transform:rotate(90deg)}
+.text-toggle .story-box{margin:0;border:none;border-top:1px solid var(--border);border-radius:0}
+/* === MEJORAS V2 === */
+.home-fab{position:fixed;bottom:20px;left:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#2563eb);color:#fff;border:none;font-size:1.5rem;cursor:pointer;z-index:200;box-shadow:0 4px 15px rgba(59,130,246,.4);transition:.3s;display:flex;align-items:center;justify-content:center;text-decoration:none}
+.home-fab:hover{transform:scale(1.1);box-shadow:0 6px 25px rgba(59,130,246,.6)}
+.hl-fab{position:fixed;bottom:20px;right:20px;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--amber),#d97706);color:#fff;border:none;font-size:1.5rem;cursor:pointer;z-index:200;box-shadow:0 4px 15px rgba(245,158,11,.4);transition:.3s;display:flex;align-items:center;justify-content:center}
+.hl-fab:hover{transform:scale(1.1);box-shadow:0 6px 25px rgba(245,158,11,.6)}
+.hl-fab.open{background:linear-gradient(135deg,var(--red),#dc2626)}
+.hl-panel{position:fixed;bottom:82px;right:14px;background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:14px 16px;z-index:200;display:none;box-shadow:0 8px 30px rgba(0,0,0,.5);animation:slideUp .3s}
+.hl-panel.show{display:block}
+.hl-panel h4{font-size:.72rem;color:var(--dim);margin-bottom:8px;text-align:center}
+.hl-colors{display:flex;gap:10px;justify-content:center}.hl-color-wrap{text-align:center}
+.hl-btn{width:38px;height:38px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:.2s;font-weight:800;font-size:.8rem;font-family:inherit;display:flex;align-items:center;justify-content:center}
+.hl-btn:hover{transform:scale(1.15)}.hl-btn.active{border-color:#fff;box-shadow:0 0 14px currentColor}
+.hl-btn-loc{background:rgba(251,191,36,.65);color:#78350f}.hl-btn-inf{background:rgba(139,92,246,.65);color:#fff}
+.hl-btn-ref{background:rgba(16,185,129,.65);color:#fff}
+.hl-btn-clr{background:var(--border);color:var(--dim);font-size:1rem}
+.hl-lbl{font-size:.55rem;color:var(--dim);margin-top:3px}
+mark.hl-loc{background:rgba(251,191,36,.28);border-radius:2px;padding:0 2px}
+mark.hl-inf{background:rgba(139,92,246,.28);border-radius:2px;padding:0 2px}
+mark.hl-ref{background:rgba(16,185,129,.28);border-radius:2px;padding:0 2px}
+.confetti-box{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:999;overflow:hidden}
+.conf-p{position:absolute;top:-12px;opacity:.95}
+@keyframes confDrop{0%{transform:translateY(0) rotate(0) scale(1);opacity:1}100%{transform:translateY(105vh) rotate(720deg) scale(.2);opacity:0}}
+@keyframes xpPop{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+.xp-pop{animation:xpPop .35s ease-out}
+.quiz-option.wrong{animation:qShake .4s}
+@keyframes qShake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.how-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+@media(max-width:600px){.how-grid{grid-template-columns:repeat(2,1fr)}}
+.how-step{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:10px 8px;text-align:center;transition:.2s}
+.how-step:hover{border-color:var(--accent);background:rgba(59,130,246,.04)}
+.hw-icon{font-size:1.5rem;margin-bottom:4px}
+.hw-title{font-size:.72rem;font-weight:700;color:var(--text)}.hw-desc{font-size:.6rem;color:var(--dim);margin-top:2px;line-height:1.3}
+.task-badge{display:inline-flex;align-items:center;gap:5px;background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(139,92,246,.08));border:1px solid rgba(59,130,246,.2);border-radius:20px;padding:4px 14px;font-size:.7rem;font-weight:700;color:var(--accent);margin:8px 0}
+.hl-tip{background:linear-gradient(135deg,rgba(251,191,36,.08),rgba(245,158,11,.04));border:1px solid rgba(251,191,36,.2);border-radius:10px;padding:10px 14px;margin:8px 0;font-size:.75rem;color:var(--amber);display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.hl-tip strong{color:var(--text)}
+/* === STRIKE SYSTEM === */
+.strike-bar{position:fixed;top:44px;left:0;right:0;z-index:150;background:rgba(127,29,29,.85);border-bottom:2px solid #fca5a5;padding:6px 20px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:.75rem;font-weight:700;color:#fca5a5;transition:.3s;backdrop-filter:blur(6px)}
+.strike-bar.hidden{display:none}
+.strike-dot{width:20px;height:20px;border-radius:50%;border:2px solid #fca5a5;display:inline-flex;align-items:center;justify-content:center;font-size:10px;color:#fca5a5;transition:.3s}
+.strike-dot.active{background:#dc2626;border-color:#dc2626;color:#fff;animation:qShake .4s}
+.strike-modal{position:fixed;inset:0;z-index:600;background:rgba(127,29,29,.9);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px)}
+.strike-modal.hidden{display:none}
+.strike-modal-card{background:var(--panel);border:2px solid #dc2626;border-radius:16px;padding:28px;max-width:420px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6);animation:qShake .4s}
+.strike-modal-card .strike-icon{font-size:3rem;margin-bottom:10px}
+.strike-modal-card h3{font-size:1.1rem;color:#fca5a5;margin-bottom:8px}
+.strike-modal-card p{font-size:.8rem;color:var(--dim);line-height:1.6;margin-bottom:16px}
+.btn-strike-ok{padding:10px 28px;background:#dc2626;color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s}
+.btn-strike-ok:hover{background:#b91c1c}
+.lockout-overlay{position:fixed;inset:0;z-index:700;background:rgba(15,23,42,.95);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px)}
+.lockout-overlay.hidden{display:none}
+.lockout-card{background:var(--panel);border:2px solid var(--red);border-radius:16px;padding:32px;max-width:440px;width:calc(100% - 32px);text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.lockout-card .lock-icon{font-size:3.5rem;margin-bottom:12px}
+.lockout-card h3{font-size:1.1rem;color:#fca5a5;margin-bottom:8px}
+.lockout-card p{font-size:.8rem;color:var(--dim);line-height:1.6;margin-bottom:20px}
+.focus-warn-overlay{position:fixed;inset:0;background:rgba(127,29,29,.92);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;backdrop-filter:blur(6px)}
+.focus-warn-overlay.show{display:flex}
+.focus-warn-overlay h2{font-size:1.5rem;margin-bottom:10px;color:#fca5a5}
+.focus-warn-overlay p{font-size:.85rem;color:#fca5a5;max-width:380px;line-height:1.5}
+.focus-countdown{font-size:2.5rem;font-weight:900;color:#dc2626;margin:12px 0}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<h1>📖 SIMCE S5 — El Cuento · NM2</h1>
+<div style="display:flex;align-items:center;gap:10px">
+<span class="timer" id="timer">⏱ 75:00</span>
+<span class="xp" id="xp-display">⭐ 0 XP</span>
+</div>
+</div>
+<div class="progress-wrap">
+<div class="progress-bar"><div class="progress-fill" id="progress"></div></div>
+<div class="progress-labels"><span>Motivación</span><span>Conocimientos</span><span>Lección</span><span>Lectura</span><span>Puzzle</span><span>Juego</span><span>SIMCE</span><span>Cierre</span></div>
+</div>
+<div class="main" id="app"></div>
+
+<!-- STRIKE BAR -->
+<div class="strike-bar hidden" id="strikeBar">
+<span>⚠️ Strikes:</span>
+<span class="strike-dot" id="sd1">✕</span>
+<span class="strike-dot" id="sd2">✕</span>
+<span class="strike-dot" id="sd3">✕</span>
+</div>
+
+<!-- STRIKE MODAL -->
+<div class="strike-modal hidden" id="strikeModal">
+<div class="strike-modal-card">
+<div class="strike-icon" id="strikeIcon">⚠️</div>
+<h3 id="strikeTitle">Strike 1 de 3</h3>
+<p id="strikeMsg">Saliste de la evaluación.</p>
+<button class="btn-strike-ok" onclick="dismissStrike()">Entendido, volver</button>
+</div>
+</div>
+
+<!-- FOCUS WARNING -->
+<div class="focus-warn-overlay" id="focusWarnOverlay">
+<h2>⚠️ ¡Vuelve a la evaluación!</h2>
+<div class="focus-countdown" id="focusCountdown">5s</div>
+<p>Si no vuelves, recibirás un strike.<br>No abras otras pestañas ni busques en Google.</p>
+</div>
+
+<!-- LOCKOUT -->
+<div class="lockout-overlay hidden" id="lockoutOverlay">
+<div class="lockout-card">
+<div class="lock-icon">🔒</div>
+<h3>Práctica Bloqueada</h3>
+<p>Has recibido 3 strikes por salir de la página. Tus respuestas quedaron registradas tal como estaban. Puedes seguir revisando el resto de la guía.</p>
+<button class="btn-strike-ok" style="background:var(--accent)" onclick="dismissLockout()">Continuar con la guía</button>
+</div>
+</div>
+
+<script>
+let xp=0,currentSection=0,timerSeconds=75*60,timerInterval=null;
+const S=['welcome','motivation','prevknow','lesson','reading','puzzle','game','simce','closing'];
+const adminMode=new URLSearchParams(window.location.search).get('r')==='1';
+let strikes=0,strikeMonitorActive=false,strikeLockout=false,focusWarnTimer=null,focusLostAt=null;
+function addXP(n){xp+=n;const d=document.getElementById('xp-display');d.textContent='⭐ '+xp+' XP';d.classList.remove('xp-pop');void d.offsetHeight;d.classList.add('xp-pop');}
+function updateProgress(){document.getElementById('progress').style.width=((currentSection/(S.length-1))*100)+'%';}
+function startTimer(){timerInterval=setInterval(()=>{timerSeconds--;if(timerSeconds<=0){clearInterval(timerInterval);return;}const m=Math.floor(timerSeconds/60),s=timerSeconds%60;document.getElementById('timer').textContent='⏱ '+m+':'+(s<10?'0':'')+s;},1000);}
+function go(i){currentSection=i;updateProgress();document.getElementById('app').innerHTML=B[S[i]]();window.scrollTo({top:0,behavior:'smooth'});if(i===1&&!timerInterval)startTimer();if(i===6&&gIdx>=GQ.length&&gLives>0)setTimeout(launchConfetti,400);if(i===7&&sIdx>=SQ.length)setTimeout(launchConfetti,400);if(i>=7&&!strikeMonitorActive)activateStrikeMonitor();if(i<7)deactivateStrikeMonitor();requestAnimationFrame(function(){document.querySelectorAll('.quiz-option').forEach(function(el,idx){el.style.opacity='0';el.style.transform='translateX(-10px)';setTimeout(function(){el.style.transition='opacity .3s,transform .3s';el.style.opacity='1';el.style.transform='translateX(0)';},idx*70+80);});});}
+const B={};
+
+// ===== WELCOME =====
+B.welcome=()=>`
+<div class="section-header"><div class="icon">🚀</div><h2>Clase 5 SIMCE — El Cuento</h2><div class="sub">75 minutos · Chromebook · Interactiva</div></div>
+<div class="card">
+<h2>🎯 Objetivo de la clase</h2>
+<div class="highlight">Analizar la <strong>estructura y los elementos narrativos</strong> de un cuento (narrador, personajes, espacio, tiempo, conflicto), mediante lectura guiada y ejercicios interactivos, fortaleciendo las habilidades de <strong>Localizar, Inferir y Reflexionar</strong>.</div>
+<h3>👆 ¿Cómo funciona esta guía?</h3>
+<div class="how-grid">
+<div class="how-step"><div class="hw-icon">📖</div><div class="hw-title">Lee</div><div class="hw-desc">Lee los textos con calma</div></div>
+<div class="how-step"><div class="hw-icon">🖍️</div><div class="hw-title">Resalta</div><div class="hw-desc">Usa los lápices de colores para marcar pistas</div></div>
+<div class="how-step"><div class="hw-icon">✍️</div><div class="hw-title">Responde</div><div class="hw-desc">Elige tu respuesta y revisa</div></div>
+<div class="how-step"><div class="hw-icon">⭐</div><div class="hw-title">Gana XP</div><div class="hw-desc">Cada acierto suma puntos</div></div>
+</div>
+<h3>Ruta de la clase</h3>
+<ul>
+<li><span class="phase-tag phase-motiv">5 min</span> <strong>Motivación</strong> — Video pregunta + reflexión</li>
+<li><span class="phase-tag phase-prev">6 min</span> <strong>Conocimientos previos</strong> — Flashback SIMCE (3 preguntas)</li>
+<li><span class="phase-tag phase-dev">52 min</span> <strong>Desarrollo</strong> — Lección + Lectura + Puzzle + Juego + Práctica SIMCE</li>
+<li><span class="phase-tag phase-close">7 min</span> <strong>Cierre y reflexión</strong> — Ticket de salida + Metacognición</li>
+</ul>
+<div style="text-align:center"><button class="btn btn-next" onclick="go(1)">¡Comenzar! →</button></div>
+</div>`;
+
+// ===== MOTIVACIÓN =====
+B.motivation=()=>`
+<div class="section-header"><div class="icon">💡</div><h2>Motivación</h2><div class="sub"><span class="phase-tag phase-motiv">5 minutos</span></div></div>
+<img src="assets/img_motivacion.jpg" alt="Motivación: ¿Alguna vez una historia te cambió?" class="hero-img">
+<div class="card">
+<h2>¿Alguna vez una historia te cambió?</h2>
+<div class="task-badge">📝 Tu tarea: piensa y reflexiona</div>
+<p>Piensa en alguna historia que te haya contado un abuelo, un padre o alguien cercano. Una historia que recuerdes hasta hoy.</p>
+<div class="highlight amber">🤔 <strong>Pregunta para pensar:</strong> ¿Por qué algunas historias se nos quedan grabadas para siempre mientras otras las olvidamos al día siguiente?</div>
+<p>Hoy vamos a descubrir qué hace que un cuento funcione, qué piezas tiene por dentro, como un reloj. Vamos a <strong>desarmar un cuento</strong> pieza por pieza y entender cómo cada elemento construye la historia.</p>
+<div class="highlight green">📖 Al final de esta clase, serás capaz de leer un cuento en la prueba SIMCE y saber exactamente <strong>dónde buscar</strong> cada respuesta.</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(0)">← Inicio</button><button class="btn btn-next" onclick="go(2)">Conocimientos Previos →</button></div>
+</div>`;
+
+// ===== CONOCIMIENTOS PREVIOS (FLASHBACK) =====
+const fbQs=[
+{q:'Un reportaje sobre contaminación en Talca señala: "Según datos del MMA 2024, el 73% de las emisiones de material particulado en la Región del Maule provienen del uso de leña húmeda durante el invierno." ¿Cuál es la función principal de la referencia "según datos del MMA 2024" dentro del texto?',opts:['Indicar que el problema de contaminación es exclusivo de la Región del Maule y no ocurre en otras zonas','Contextualizar cronológicamente el reportaje para que el lector sepa en qué año fue escrito','Respaldar la afirmación con una fuente institucional, otorgando credibilidad al dato presentado','Alertar al lector de que los datos podrían estar desactualizados al provenir de un año específico'],correct:2,skill:'LOC',explain:'La referencia a una fuente oficial (MMA) da credibilidad. A cambia el foco al alcance geográfico. B confunde fecha de fuente con fecha del reportaje. D interpreta la fecha como advertencia de caducidad, sin evidencia.',diff:'N2'},
+{q:'"María cerró la puerta sin hacer ruido y caminó de puntillas, conteniendo la respiración." ¿Qué se puede inferir sobre la situación de María?',opts:['Que se encuentra en un estado de nerviosismo intenso y quiere escapar del lugar cuanto antes','Que intenta pasar desapercibida porque no quiere que alguien note su presencia o movimiento','Que actúa con cuidado porque el piso de la casa está en mal estado y teme caerse','Que está jugando a las escondidas con alguien y forma parte de una actividad recreativa'],correct:1,skill:'INF',explain:'Las tres acciones (sin ruido, puntillas, contener respiración) convergen en evitar ser percibida. A sobregeneraliza: infiere "escapar" sin evidencia. C inventa una causa física no mencionada. D inventa un contexto lúdico sin sustento.',diff:'N1'},
+{q:'"Prohibir los celulares en las salas es la ÚNICA solución para mejorar el bajo rendimiento escolar." ¿Qué debilidad argumentativa presenta esta afirmación?',opts:['Confunde causa y efecto, ya que el rendimiento bajo podría ser la razón del uso excesivo de celulares','Presenta una sola medida como solución absoluta para un problema que tiene múltiples causas','Carece de evidencia empírica porque no cita estudios que respalden la relación celular-rendimiento','Utiliza un tono demasiado autoritario que descalifica la opinión de los estudiantes sobre el tema'],correct:1,skill:'REF',explain:'El uso de "ÚNICA" es una sobregeneralización: reduce un problema multicausal a una sola solución. A confunde la dirección causal (plausible pero no es la debilidad principal). C señala falta de evidencia, pero la debilidad central es el absolutismo. D evalúa tono, no estructura lógica.',diff:'N1-N2'}
+];
+let fbDone=0;
+B.prevknow=()=>{
+let h=`<div class="section-header"><div class="icon">⚡</div><h2>Activación de Conocimientos Previos</h2><div class="sub"><span class="phase-tag phase-prev">6 minutos</span> · Flashback SIMCE — 3 preguntas de clases anteriores</div></div>
+<div class="task-badge">📝 Tu tarea: responde 3 preguntas de repaso</div>
+<div class="highlight">Estas preguntas activan lo que ya sabes de las clases S2 (Localizar), S3 (Inferir) y S4 (Reflexionar). Lee con calma, descarta lo que NO calza y luego elige.</div>`;
+fbQs.forEach((q,i)=>{
+h+=`<div class="card" id="fb-q${i}"><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n1">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></div>
+<div class="simce-q"><span class="q-num">Pregunta ${i+1}</span><div class="q-text">${q.q}</div></div>`;
+q.opts.forEach((o,j)=>{h+=`<button class="quiz-option" onclick="chkFB(${i},${j})" id="fb${i}-${j}">${'ABCD'[j]}) ${o}</button>`;});
+h+=`<div class="feedback ok" id="fbok${i}">✅ ¡Correcto! +10 XP — ${q.explain}</div><div class="feedback nok" id="fbnk${i}">❌ ${q.explain}</div><button class="btn-reveal" id="fbrev${i}" onclick="revealFB(${i})">👁 Ver Respuesta</button></div>`;
+});
+h+=`<div id="fb-next" style="display:none"><div class="achievement"><h3>⚡ Flashback completado</h3><p>Conocimientos previos activados. ¡Vamos a la lección!</p></div></div>`;
+h+=`<div class="nav-row"><button class="btn btn-back" onclick="go(1)">← Motivación</button><button class="btn btn-next" onclick="go(3)">Ir a la Lección →</button></div>`;
+return h;
+};
+window.chkFB=function(qi,oi){
+if(document.getElementById(`fb${qi}-0`).classList.contains('locked'))return;
+document.querySelectorAll(`[id^="fb${qi}-"]`).forEach(b=>b.classList.remove('picked'));
+document.getElementById(`fb${qi}-${oi}`).classList.add('picked');
+document.getElementById(`fbrev${qi}`).dataset.pick=oi;
+document.getElementById(`fbrev${qi}`).classList.add('show');
+};
+window.revealFB=function(qi){
+var oi=parseInt(document.getElementById(`fbrev${qi}`).dataset.pick);
+document.querySelectorAll(`[id^="fb${qi}-"]`).forEach(b=>{b.classList.add('locked');b.disabled=true;b.classList.remove('picked');});
+if(oi===fbQs[qi].correct){document.getElementById(`fb${qi}-${oi}`).classList.add('correct');document.getElementById(`fbok${qi}`).classList.add('show');addXP(10);}
+else{document.getElementById(`fb${qi}-${oi}`).classList.add('wrong');document.getElementById(`fb${qi}-${fbQs[qi].correct}`).classList.add('correct');document.getElementById(`fbnk${qi}`).classList.add('show');}
+document.getElementById(`fbrev${qi}`).style.display='none';
+fbDone++;if(fbDone>=3)setTimeout(()=>document.getElementById('fb-next').style.display='block',600);
+};
+
+// ===== LECCIÓN PASO A PASO =====
+let lStep=0;
+const LS=[
+{title:'¿Qué es un cuento?',icon:'📖',content:`
+<p>Un <strong>cuento</strong> es un <strong>texto narrativo breve</strong> que relata una historia con inicio, desarrollo y desenlace.</p>
+<div class="highlight">A diferencia de la novela, el cuento tiene <strong>pocos personajes</strong>, un <strong>conflicto central</strong> y se lee de una sola vez.</div>
+<p>Todo cuento tiene <strong>6 elementos</strong> que aprenderemos paso a paso:</p>
+<img src="assets/img_elementos.jpg" alt="Elementos narrativos del cuento" class="hero-img">
+<div class="cols-2">
+<div class="concept-box"><div class="label">1. Narrador</div><div class="def">Quien cuenta la historia</div></div>
+<div class="concept-box"><div class="label">2. Personajes</div><div class="def">Quienes participan</div></div>
+<div class="concept-box"><div class="label">3. Espacio</div><div class="def">Dónde ocurre</div></div>
+<div class="concept-box"><div class="label">4. Tiempo</div><div class="def">Cuándo ocurre</div></div>
+<div class="concept-box"><div class="label">5. Conflicto</div><div class="def">El problema central</div></div>
+<div class="concept-box"><div class="label">6. Tema</div><div class="def">La idea principal</div></div>
+</div>
+<div class="highlight green">✏️ <strong>Ejercicio (opcional):</strong> Completa:</div>
+<p>Un cuento es un texto narrativo <select class="fill-select" id="l1" onchange="chkL(0)"><option value="">—</option><option value="extenso">extenso</option><option value="breve">breve</option><option value="poético">poético</option></select> que tiene inicio, desarrollo y <select class="fill-select" id="l2" onchange="chkL(0)"><option value="">—</option><option value="nudo">nudo</option><option value="desenlace">desenlace</option><option value="prólogo">prólogo</option></select>.</p>
+<div class="feedback ok" id="lfb0">✅ ¡Exacto! Breve + inicio, desarrollo y desenlace. +15 XP</div>
+<div class="audit-box"><strong>Dificultad ejercicio:</strong> <span class="diff-tag diff-n1">N1</span> — Reconocimiento de concepto básico</div>`},
+{title:'El Narrador',icon:'🎭',content:`
+<p>El <strong>narrador</strong> es la voz que cuenta la historia. <em>No es el autor.</em></p>
+<div class="cols-2">
+<div class="concept-box"><div class="label">Narrador Protagonista (1ª persona)</div><div class="def">Es el personaje principal. <em>"Yo caminé hacia la puerta..."</em></div></div>
+<div class="concept-box"><div class="label">Narrador Testigo (1ª persona)</div><div class="def">Observa, NO es el protagonista. <em>"Vi cómo ella cruzó..."</em></div></div>
+<div class="concept-box"><div class="label">Narrador Omnisciente (3ª persona)</div><div class="def">Lo sabe TODO. <em>"Ella pensó que todo estaba perdido..."</em></div></div>
+<div class="concept-box"><div class="label">Narrador Objetivo (3ª persona)</div><div class="def">Solo lo que se VE. <em>"Ella cerró la puerta y se fue..."</em></div></div>
+</div>
+<div class="highlight amber">💡 <strong>Clave SIMCE:</strong> Si dice "yo" → 1ª persona. Si dice "él/ella" → 3ª persona. Si conoce pensamientos → omnisciente.</div>
+<div class="highlight green">✏️ <strong>Ejercicio (opcional):</strong></div>
+<p><em>"Recuerdo que esa tarde llovía. Mi abuela levantó las manos y me miró."</em></p>
+<p>Narrador <select class="fill-select" id="l3" onchange="chkL(1)"><option value="">—</option><option value="omnisciente">Omnisciente</option><option value="protagonista">Protagonista</option><option value="objetivo">Objetivo</option></select> porque usa la <select class="fill-select" id="l4" onchange="chkL(1)"><option value="">—</option><option value="3a">3ª persona</option><option value="1a">1ª persona</option></select>.</p>
+<div class="feedback ok" id="lfb1">✅ Protagonista + 1ª persona ("recuerdo", "mi abuela"). +15 XP</div>
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n1">N1</span> — Identificación directa de persona gramatical</div>`},
+{title:'Personajes, Espacio, Tiempo',icon:'👥',content:`
+<div class="concept-box"><div class="label">👤 Protagonista</div><div class="def">Personaje principal. La historia gira en torno a él/ella.</div></div>
+<div class="concept-box"><div class="label">👿 Antagonista</div><div class="def">Se opone al protagonista. Puede ser una persona, la naturaleza o la sociedad.</div></div>
+<div class="concept-box"><div class="label">🏠 Espacio</div><div class="def">Dónde ocurre: lugar físico (casa, río) o psicológico (mente del personaje).</div></div>
+<div class="concept-box"><div class="label">⏰ Tiempo</div><div class="def">Cuándo ocurre y cuánto dura. Puede ser lineal o con saltos (flashbacks).</div></div>
+<div class="highlight green">✏️ <strong>Ejercicio (opcional):</strong> Clasifica:</div>
+<p>"Una tarde de invierno" → <select class="fill-select" id="l5" onchange="chkL(2)"><option value="">—</option><option value="espacio">Espacio</option><option value="tiempo">Tiempo</option><option value="conflicto">Conflicto</option></select></p>
+<p>"La cocina de la abuela" → <select class="fill-select" id="l6" onchange="chkL(2)"><option value="">—</option><option value="espacio">Espacio</option><option value="tiempo">Tiempo</option><option value="tema">Tema</option></select></p>
+<p>El personaje que se opone al protagonista es el <select class="fill-select" id="l7" onchange="chkL(2)"><option value="">—</option><option value="secundario">secundario</option><option value="antagonista">antagonista</option><option value="narrador">narrador</option></select>.</p>
+<div class="feedback ok" id="lfb2">✅ Tiempo + Espacio + Antagonista. ¡Perfecto! +15 XP</div>
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2</span> — Aplicación de conceptos a ejemplos concretos</div>`},
+{title:'Conflicto y Tema',icon:'⚔️',content:`
+<div class="concept-box"><div class="label">⚔️ Conflicto</div><div class="def">El <strong>problema central</strong> que mueve la historia. Sin conflicto, no hay cuento.<br>Tipos: personaje vs. personaje · vs. naturaleza · vs. sociedad · vs. sí mismo</div></div>
+<div class="concept-box"><div class="label">💡 Tema</div><div class="def">La <strong>idea principal</strong> o mensaje: valentía, soledad, amor, justicia, sacrificio...</div></div>
+<div class="highlight amber">💡 <strong>Clave SIMCE:</strong> El conflicto se LOCALIZA (es explícito). El tema se INFIERE (hay que deducirlo del mensaje general).</div>
+<div class="highlight green">✏️ <strong>Ejercicio (opcional):</strong></div>
+<p>"El protagonista debe cruzar un río peligroso para salvar a una familia" es un ejemplo de <select class="fill-select" id="l8" onchange="chkL(3)"><option value="">—</option><option value="espacio">Espacio</option><option value="conflicto">Conflicto</option><option value="tema">Tema</option></select>.</p>
+<p>El conflicto anterior es del tipo personaje vs. <select class="fill-select" id="l9" onchange="chkL(3)"><option value="">—</option><option value="personaje">personaje</option><option value="naturaleza">naturaleza</option><option value="sociedad">sociedad</option></select>.</p>
+<div class="feedback ok" id="lfb3">✅ Es un conflicto de personaje vs. naturaleza (el río). +15 XP</div>
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2</span> — Clasificación de conflicto por tipo</div>`}
+];
+const LA=[[{id:'l1',v:'breve'},{id:'l2',v:'desenlace'}],[{id:'l3',v:'protagonista'},{id:'l4',v:'1a'}],[{id:'l5',v:'tiempo'},{id:'l6',v:'espacio'},{id:'l7',v:'antagonista'}],[{id:'l8',v:'conflicto'},{id:'l9',v:'naturaleza'}]];
+window.chkL=function(s){const a=LA[s];if(!a.every(x=>document.getElementById(x.id).value!==''))return;if(a.every(x=>document.getElementById(x.id).value===x.v)){document.getElementById('lfb'+s).classList.add('show');addXP(15);const nb=document.getElementById('lnb'+s);if(nb){nb.style.boxShadow='0 0 20px rgba(16,185,129,.5)';nb.style.background='linear-gradient(135deg,#10b981,#3b82f6)';}}};
+B.lesson=()=>{
+let h=`<div class="section-header"><div class="icon">📚</div><h2>Lección: Elementos del Cuento</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Paso ${lStep+1} de ${LS.length}</div></div>
+<div class="step-indicator">${LS.map((_,i)=>`<div class="step-dot ${i<lStep?'done':i===lStep?'active':''}"></div>`).join('')}</div>`;
+const s=LS[lStep];
+h+=`<div class="card"><h2>${s.icon} ${s.title}</h2>${s.content}`;
+if(lStep<LS.length-1)h+=`<div class="nav-row">${lStep>0?'<button class="btn btn-back" onclick="lStep--;go(3)">← Paso anterior</button>':'<button class="btn btn-back" onclick="go(2)">← Conocimientos</button>'}<button class="btn btn-next" id="lnb${lStep}" onclick="lStep++;go(3)">Siguiente paso →</button></div>`;
+else h+=`<div class="nav-row"><button class="btn btn-back" onclick="lStep--;go(3)">← Paso anterior</button><button class="btn btn-next" id="lnb${lStep}" onclick="go(4)">¡Ir a la Lectura! →</button></div>`;
+return h+`</div>`;
+};
+
+// ===== LECTURA =====
+B.reading=()=>`
+<div class="section-header"><div class="icon">📖</div><h2>Lectura: "La cicatriz"</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Lee con atención</div></div>
+<div class="task-badge">📝 Tu tarea: lee el cuento y busca pistas</div>
+<div class="highlight amber">💡 <strong>Mientras lees, identifica:</strong> ¿Quién narra? ¿Dónde ocurre? ¿Cuál es el conflicto? ¿Qué tema transmite?</div>
+<div class="hl-tip">🖍️ <strong>Usa los lápices:</strong> toca el botón 🖍️ abajo a la derecha, elige un color y selecciona texto para resaltarlo. <span style="background:rgba(251,191,36,.3);padding:1px 5px;border-radius:4px">Amarillo</span> = dato explícito · <span style="background:rgba(139,92,246,.3);padding:1px 5px;border-radius:4px">Morado</span> = pista para inferir · <span style="background:rgba(16,185,129,.3);padding:1px 5px;border-radius:4px">Verde</span> = reflexión</div>
+<img src="assets/img_cicatriz_hero.jpg" alt="La cicatriz — Imagen del cuento" class="hero-img">
+<div class="story-box">
+<div class="title">La cicatriz</div>
+<p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p>
+<p>—Abuela, ¿cómo te hiciste eso? —le pregunté una tarde de invierno, mientras el olor a masa cruda llenaba la cocina.</p>
+<p>Ella sonrió sin mirarme, hundiendo los nudillos en la masa con una fuerza que desmentía sus setenta y tres años.</p>
+<p>—Fue por una promesa —respondió.</p>
+<p>Yo tenía doce años y las promesas me parecían cosas de películas. Me senté en el banco de madera y esperé, porque había aprendido que mi abuela contaba las historias a su propio ritmo, como quien desenrolla un ovillo de lana.</p>
+<p>—Cuando yo era joven, más joven que tú —comenzó—, vivíamos cerca del río Maule. Mi hermano Rodrigo y yo éramos inseparables. Un verano, el río creció por las lluvias y arrastró el puente viejo. Al otro lado quedó atrapada la señora Carmen con sus tres hijos pequeños, sin comida ni manera de cruzar.</p>
+<p>Hizo una pausa para espolvorear harina sobre la mesa. Yo contuve la respiración.</p>
+<p>—Tu bisabuelo dijo que era imposible cruzar. El agua estaba helada y la corriente era brutal. Pero Rodrigo y yo nos miramos y supimos, sin decirnos nada, que teníamos que intentarlo.</p>
+<p>—¿Cruzaron el río? —pregunté, con los ojos abiertos de asombro.</p>
+<p>—Amarramos una cuerda al sauce viejo de la orilla. Rodrigo iba primero, yo le sujetaba la cuerda desde atrás. A mitad del cruce, un tronco que venía con la corriente me golpeó el brazo y la cuerda me cortó la muñeca. Pero no la solté.</p>
+</div>
+<img src="assets/img_rio_escena.jpg" alt="Escena del cruce del río Maule" class="hero-img">
+<div class="story-box">
+<p>Sus ojos brillaron con algo que no era tristeza, sino algo más firme, como el orgullo de quien sabe que tomó la decisión correcta.</p>
+<p>—¿Y Rodrigo? —susurré.</p>
+<p>—Llegó al otro lado. Ayudó a la señora Carmen y a sus hijos a cruzar con la cuerda. Todos sobrevivieron.</p>
+<p>Mi abuela levantó la muñeca y la giró lentamente bajo la luz amarillenta de la cocina.</p>
+<p>—Yo me quedé con esto —dijo, tocando la cicatriz—. Y con la certeza de que hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto.</p>
+<p>Terminó de dar forma al pan y lo puso en la bandeja. Antes de meterlo al horno, me miró con esos ojos oscuros que parecían contener todas las tormentas y todas las calmas del mundo.</p>
+<p>—Algún día, mi niño, algo te va a pedir que no sueltes. Y cuando eso pase, acuérdate de esta cicatriz.</p>
+<p>Han pasado quince años desde esa tarde. Mi abuela ya no está, pero cada vez que la vida me pide soltar, cierro los ojos y siento su mano firme, sosteniendo la cuerda.</p>
+</div>
+<div class="audit-box"><strong>Texto:</strong> 450 palabras · <span class="diff-tag diff-n2">N2</span> · Narrativo · Lenguaje figurado accesible · Estructura temporal: presente → flashback → presente</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(3)">← Volver a Lección</button><button class="btn btn-next" onclick="go(5)">Analizar el cuento →</button></div>`;
+
+// ===== PUZZLE =====
+const PP=[['🎭 Narrador','Protagonista en 1ª persona (el nieto adulto que recuerda)'],['👤 Protagonista','La abuela (es quien vive el conflicto central)'],['🏠 Espacio','La cocina / las orillas del río Maule'],['⏰ Tiempo','Presente (15 años después) → flashback a la infancia → flashback al río'],['⚔️ Conflicto','Cruzar el río para salvar a la familia atrapada'],['💡 Tema','La valentía y el sacrificio: sostener cuando soltar es más fácil']];
+let pSel=null,pDone=0;
+B.puzzle=()=>{
+pSel=null;pDone=0;
+const R=[...Array(6).keys()].sort(()=>Math.random()-.5);
+let h=`<div class="section-header"><div class="icon">🧩</div><h2>Puzzle: Conecta los Elementos</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span></div></div>
+<div class="card"><div class="task-badge">📝 Tu tarea: conecta cada elemento con su descripción</div><div class="highlight">👆 <strong>Paso 1:</strong> Toca un elemento de la columna izquierda (ej: 🎭 Narrador). <strong>Paso 2:</strong> Toca su descripción en la columna derecha. Si aciertas, ¡se ilumina en verde!</div><div class="match-container"><div class="match-left">`;
+for(let i=0;i<6;i++)h+=`<div class="puzzle-item" id="pl${i}" onclick="pClk('l',${i})">${PP[i][0]}</div>`;
+h+=`</div><div class="match-right">`;
+R.forEach(i=>{h+=`<div class="puzzle-item" id="pr${i}" onclick="pClk('r',${i})">${PP[i][1]}</div>`;});
+h+=`</div></div><div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2</span> — Aplicar conceptos al texto leído</div><div id="pRes"></div><div class="nav-row"><button class="btn btn-back" onclick="go(4)">← Lectura</button><button class="btn btn-next" id="pzNxt" onclick="go(6)" disabled>Ir al Juego →</button></div></div>`;
+return h;
+};
+window.pClk=function(s,i){
+const el=document.getElementById((s==='l'?'pl':'pr')+i);
+if(el.classList.contains('matched'))return;
+if(!pSel){pSel={s,i};el.classList.add('selected');}
+else{
+if(pSel.s===s){document.getElementById((s==='l'?'pl':'pr')+pSel.i).classList.remove('selected');pSel={s,i};el.classList.add('selected');return;}
+const o=document.getElementById((pSel.s==='l'?'pl':'pr')+pSel.i);
+if(pSel.i===i){o.classList.remove('selected');o.classList.add('matched');el.classList.add('matched');pDone++;addXP(10);pSel=null;
+if(pDone>=6){document.getElementById('pRes').innerHTML='<div class="achievement"><h3>🧩 ¡Puzzle resuelto!</h3><p>+60 XP · Todos los elementos identificados</p></div>';var nx=document.getElementById('pzNxt');if(nx)nx.disabled=false;setTimeout(launchConfetti,300);}
+}else{o.classList.remove('selected');el.classList.add('selected');pSel={s,i};}
+}};
+
+// ===== JUEGO =====
+const GQ=[
+{q:'El texto dice que la cicatriz era "delgada y plateada como un río dibujado sobre un mapa antiguo". ¿Qué figura literaria predomina en esta expresión?',opts:['Comparación, porque establece una semejanza explícita usando la partícula "como"','Metáfora, porque reemplaza el término real por uno imaginario sin nexo comparativo','Hipérbole, porque exagera el tamaño de la cicatriz al compararla con un río','Personificación, porque atribuye características humanas a la cicatriz'],correct:0,explain:'La partícula "como" establece un nexo comparativo explícito: cicatriz como río. B falla porque sí hay nexo. C falla porque no hay exageración de tamaño. D falla porque no se le atribuyen acciones humanas.',diff:'N2'},
+{q:'El narrador dice que la fuerza de la abuela "desmentía sus setenta y tres años". ¿Qué significa esta expresión en el contexto?',opts:['Que la abuela ocultaba intencionalmente su edad real a las personas que la rodeaban','Que la abuela aparentaba tener más años de los que realmente tenía por su aspecto','Que la abuela mostraba una vitalidad física que contradecía lo esperable para su edad','Que la abuela se esforzaba por parecer joven imitando gestos de personas más jóvenes'],correct:2,explain:'"Desmentir" = contradecir. Su fuerza contradice lo que se esperaría de alguien de 73 años. A inventa una ocultación deliberada. B dice lo opuesto (más años). D inventa una imitación consciente sin evidencia.',diff:'N2'},
+{q:'¿Qué tipo de conflicto enfrenta la abuela cuando joven en el episodio del río?',opts:['Personaje vs. sí mismo, porque debe decidir internamente si arriesgarse o no','Personaje vs. sociedad, porque desafía la orden de su padre de no cruzar el río','Personaje vs. destino, porque la crecida del río estaba fuera de su control','Personaje vs. naturaleza, porque debe enfrentar la corriente y el frío del río para cruzar'],correct:3,explain:'El obstáculo concreto es el río (naturaleza): corriente, frío, troncos. A reduce el conflicto a la decisión interna, pero la acción central es física. B cambia el foco al padre. C confunde la causa con el antagonista.',diff:'N2'},
+{q:'La abuela dice: "Soltar es más fácil, pero sostener es lo correcto." En el contexto del cuento, ¿qué representa la cuerda que la abuela sostuvo?',opts:['La conexión afectiva entre la abuela y su hermano Rodrigo durante la infancia','Un recurso material necesario para la supervivencia de la familia atrapada al otro lado','El compromiso con una decisión difícil que exige sacrificio personal para cumplirse','La tradición familiar de ayudar a los vecinos que se transmitía de generación en generación'],correct:2,explain:'La cuerda funciona como símbolo del compromiso: sostenerla pese al dolor es mantener la decisión. A cambia el foco al vínculo fraternal. B se queda en lo literal (herramienta). D inventa una tradición familiar no mencionada.',diff:'N2'},
+{q:'El cuento "La cicatriz" utiliza una estructura temporal no lineal. ¿Cuál describe mejor la organización temporal del relato?',opts:['El narrador cuenta los hechos en orden cronológico desde la juventud de la abuela hasta el presente','El narrador parte desde el futuro imaginado y retrocede hasta los eventos del río Maule','Un narrador en tercera persona alterna entre la perspectiva de la abuela y la del nieto','El narrador adulto recuerda una tarde de infancia en la que la abuela evocó un episodio de su juventud'],correct:3,explain:'Hay tres capas temporales: presente adulto (15 años después) → infancia (12 años, cocina) → juventud de la abuela (río). A inventa orden cronológico lineal. B inventa un futuro. C cambia la persona narrativa.',diff:'N2'}
+];
+let gIdx=0,gLives=3,gScore=0;
+B.game=()=>{
+if(gIdx>=GQ.length||gLives<=0)return`<div class="section-header"><div class="icon">🎮</div><h2>Detective Narrativo — Resultado</h2></div>
+<div class="card" style="text-align:center">${adminMode?'<div class="game-score">'+gScore+'/'+GQ.length+'</div><p style="color:var(--dim)">'+(gLives>0?'¡Gran detective!':'¡Sigue practicando!')+'</p>':'<div style="font-size:2rem;margin:12px 0">✅</div><p style="color:var(--dim);font-size:.9rem">Respuestas registradas.<br>Tu profesor revisará los resultados.</p>'}
+<div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Puzzle</button><button class="btn btn-next" onclick="go(7)">Ir a Práctica SIMCE →</button></div></div>`;
+const q=GQ[gIdx];
+return`<div class="section-header"><div class="icon">🎮</div><h2>Detective Narrativo</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Pregunta ${gIdx+1}/${GQ.length}</div></div>
+<div class="card">${adminMode?`<div style="display:flex;justify-content:space-between;margin-bottom:8px"><div>${'❤️'.repeat(gLives)}${'🖤'.repeat(3-gLives)}</div><div style="color:var(--gold);font-weight:700">Puntaje: ${gScore}</div></div>`:''}
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">${q.diff}</span></div>
+<div class="simce-q"><div class="q-text">${q.q}</div></div>
+${q.opts.map((o,i)=>`<button class="quiz-option" onclick="gAns(${i})" id="g${i}">${'ABCD'[i]}) ${o}</button>`).join('')}
+${adminMode?`<div class="feedback ok" id="gok">✅ ¡Correcto! ${q.explain}</div><div class="feedback nok" id="gnk">❌ ${q.explain}</div>
+<button class="btn-reveal" id="grev" onclick="revealG()">👁 Ver Respuesta</button>`:''}
+<div id="gnx" style="display:none"><div class="nav-row"><button class="btn btn-back" onclick="go(5)">← Puzzle</button><button class="btn btn-next" onclick="gIdx++;go(6)">Siguiente →</button></div></div></div>`;
+};
+window.gAns=function(i){
+if(document.getElementById('g0').classList.contains('locked'))return;
+document.querySelectorAll('[id^="g"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^g\d$/))b.classList.remove('picked');});
+document.getElementById('g'+i).classList.add('picked');
+if(adminMode){document.getElementById('grev').dataset.pick=i;document.getElementById('grev').classList.add('show');}
+else{document.getElementById('gnx').style.display='block';}
+};
+window.revealG=function(){
+var i=parseInt(document.getElementById('grev').dataset.pick);
+document.querySelectorAll('[id^="g"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^g\d$/)){b.classList.add('locked');b.disabled=true;b.classList.remove('picked');}});
+if(i===GQ[gIdx].correct){document.getElementById('g'+i).classList.add('correct');document.getElementById('gok').classList.add('show');gScore++;addXP(15);}
+else{document.getElementById('g'+i).classList.add('wrong');document.getElementById('g'+GQ[gIdx].correct).classList.add('correct');document.getElementById('gnk').classList.add('show');gLives--;}
+document.getElementById('grev').style.display='none';
+setTimeout(()=>document.getElementById('gnx').style.display='block',500);
+};
+
+// ===== PRÁCTICA SIMCE =====
+const SQ=[
+{q:'Según el texto, ¿qué provocó que el puente viejo fuera arrastrado?',
+opts:['La acumulación de troncos y escombros que debilitaron su estructura durante el verano','Un desborde repentino causado por el deshielo de la cordillera cercana al río Maule','La fuerza habitual de la corriente del río Maule durante la temporada estival','El crecimiento del caudal del río provocado por las lluvias de ese verano'],
+correct:3,skill:'LOC',explain:'El texto dice: "el río creció por las lluvias y arrastró el puente viejo." A inventa troncos como causa. B inventa un deshielo. C habla de corriente habitual, pero el texto indica un evento excepcional (crecida).',diff:'N2'},
+{q:'¿Cuántos años tenía el narrador en el momento en que la abuela le contó la historia de la cicatriz?',
+opts:['No se menciona su edad exacta; solo se indica que era menor que la abuela cuando joven','Tenía quince años, edad que coincide con los años que han pasado desde esa tarde','Tenía doce años, según se indica directamente en el relato del narrador','Era un adolescente de unos catorce años, dado el nivel de madurez que muestra en el diálogo'],
+correct:2,skill:'LOC',explain:'"Yo tenía doce años" es dato explícito. A es falso (sí se menciona). B confunde los 15 años transcurridos con la edad. D inventa una edad inferida sin sustento textual.',diff:'N2'},
+{q:'Cuando el narrador pregunta por la cicatriz, la abuela "sonrió sin mirarme". ¿Qué se puede inferir de esta reacción?',
+opts:['Que la abuela prefería no hablar del tema y usó la sonrisa como forma de evadir la pregunta','Que estaba concentrada en el amasado y no registró completamente la pregunta de su nieto','Que el recuerdo le producía una emoción compleja, entre nostalgia y orgullo, que la hizo ensimismarse','Que sentía incomodidad por la cicatriz y evitaba el contacto visual para no mostrar vulnerabilidad'],
+correct:2,skill:'INF',explain:'Sonreír descarta emociones negativas (no evasión ni incomodidad). "Sin mirarme" indica ensimismamiento, no distracción. A contradice que luego cuenta la historia voluntariamente. B ignora que sí responde. D contradice la sonrisa y el orgullo posterior.',diff:'N2'},
+{q:'El narrador compara la forma de contar historias de su abuela con "quien desenrolla un ovillo de lana". ¿Qué sugiere esta comparación sobre la narración de la abuela?',
+opts:['Que la abuela contaba historias con calma y a su propio ritmo, desplegando los hechos gradualmente','Que el relato de la abuela resultaba confuso porque mezclaba distintos momentos temporales sin orden','Que la abuela usaba recursos manuales como analogía para conectar con el oficio de tejer que practicaba','Que el hilo narrativo era frágil y cualquier interrupción podía hacer que la abuela perdiera el relato'],
+correct:0,skill:'INF',explain:'Desenrollar un ovillo es lento, metódico y gradual: refiere al ritmo pausado de la narración. B contradice "desenrollar" (que implica orden). C literaliza "ovillo" vinculándolo a tejer. D inventa fragilidad sin base textual.',diff:'N2'},
+{q:'El texto dice que la abuela y Rodrigo "se miraron y supieron, sin decirnos nada, que teníamos que intentarlo". ¿Qué se puede inferir de esta frase?',
+opts:['Que Rodrigo era el hermano mayor y asumió la responsabilidad de tomar la decisión por ambos','Que habían planificado el cruce con anterioridad y la mirada fue una señal previamente acordada','Que ambos sentían miedo pero ninguno quería reconocerlo delante del otro ni del bisabuelo','Que existía entre ellos una conexión tan estrecha que podían comunicarse sin necesidad de palabras'],
+correct:3,skill:'INF',explain:'"Supieron sin decirnos nada" indica comunicación no verbal y conexión profunda. A inventa una jerarquía de edad. B inventa un plan previo. C introduce miedo, contradiciendo la determinación que describe el texto.',diff:'N2'},
+{q:'¿Cuál es la función principal del último párrafo del cuento ("Han pasado quince años...") en relación con el sentido global del texto?',
+opts:['Revelar que el narrador lamenta no haber valorado suficientemente a su abuela mientras vivió','Demostrar que la enseñanza de la abuela sigue vigente e influye en las decisiones del narrador adulto','Informar al lector sobre el fallecimiento de la abuela para generar un efecto emocional de cierre','Contrastar la juventud de la abuela durante el episodio del río con la madurez actual del narrador'],
+correct:1,skill:'REF',explain:'El párrafo muestra que 15 años después sigue aplicando la enseñanza ("me pide soltar, cierro los ojos"). A inventa arrepentimiento no presente. C se enfoca solo en la muerte, ignorando el mensaje central. D confunde las edades: contrasta al narrador, no a la abuela.',diff:'N2'},
+{q:'La abuela afirma: "Hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto." ¿Cuál de las siguientes opciones representa una evaluación crítica más fundamentada de esta idea?',
+opts:['La afirmación carece de valor práctico porque solo es aplicable a situaciones de peligro físico extremo','La afirmación es un lugar común que no aporta nada nuevo, ya que todas las personas mayores dan consejos parecidos','La afirmación es engañosa porque la abuela no eligió conscientemente sostener la cuerda, sino que se le enredó en la muñeca','La afirmación idealiza el sacrificio personal y omite que en ciertas circunstancias soltar puede ser igualmente válido y necesario'],
+correct:3,skill:'REF',explain:'D reflexiona críticamente reconociendo el valor de la idea pero señalando un límite válido: soltar no siempre es incorrecto. A reduce el mensaje a lo literal cuando es metáfora. B descalifica sin argumento (falacia). C contradice el texto (la abuela decidió conscientemente no soltar).',diff:'N2'}
+];
+let sIdx=0,sOk=0;
+B.simce=()=>{
+if(sIdx>=SQ.length)return`<div class="section-header"><div class="icon">✍️</div><h2>Práctica SIMCE Completada</h2></div>
+<div class="card" style="text-align:center">${adminMode?'<div class="game-score">'+sOk+'/'+SQ.length+'</div><p style="color:var(--dim)">'+(sOk>=5?'¡Excelente!':sOk>=3?'¡Buen avance!':'Sigue practicando.')+'</p>':'<div style="font-size:2rem;margin:12px 0">✅</div><p style="color:var(--dim);font-size:.9rem">Respuestas registradas.<br>Tu profesor revisará los resultados.</p>'}
+<div class="audit-box"><strong>Desglose:</strong> LOC ${SQ.filter((q,i)=>q.skill==='LOC').length} preg. · INF ${SQ.filter(q=>q.skill==='INF').length} preg. · REF ${SQ.filter(q=>q.skill==='REF').length} preg.</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(6)">← Juego</button><button class="btn btn-next" onclick="go(8)">Ir al Cierre →</button></div></div>`;
+const q=SQ[sIdx];
+return`<div class="section-header"><div class="icon">✍️</div><h2>Práctica SIMCE</h2><div class="sub"><span class="phase-tag phase-dev">Desarrollo</span> · Pregunta ${sIdx+1}/${SQ.length}</div></div>
+<div class="story-box" style="max-height:250px;overflow-y:auto;font-size:.78rem;line-height:1.7;margin-bottom:12px"><div class="title" style="font-size:.9rem">📖 La cicatriz</div><p>Cada vez que mi abuela levantaba las manos para amasar el pan, yo no podía dejar de mirar la cicatriz que cruzaba su muñeca izquierda, delgada y plateada como un río dibujado sobre un mapa antiguo.</p><p>—Abuela, ¿cómo te hiciste eso? —le pregunté una tarde de invierno, mientras el olor a masa cruda llenaba la cocina.</p><p>Ella sonrió sin mirarme, hundiendo los nudillos en la masa con una fuerza que desmentía sus setenta y tres años.</p><p>—Fue por una promesa —respondió.</p><p>Yo tenía doce años y las promesas me parecían cosas de películas. Me senté en el banco de madera y esperé, porque había aprendido que mi abuela contaba las historias a su propio ritmo, como quien desenrolla un ovillo de lana.</p><p>—Cuando yo era joven, más joven que tú —comenzó—, vivíamos cerca del río Maule. Mi hermano Rodrigo y yo éramos inseparables. Un verano, el río creció por las lluvias y arrastró el puente viejo. Al otro lado quedó atrapada la señora Carmen con sus tres hijos pequeños, sin comida ni manera de cruzar.</p><p>Hizo una pausa para espolvorear harina sobre la mesa. Yo contuve la respiración.</p><p>—Tu bisabuelo dijo que era imposible cruzar. El agua estaba helada y la corriente era brutal. Pero Rodrigo y yo nos miramos y supimos, sin decirnos nada, que teníamos que intentarlo.</p><p>—¿Cruzaron el río? —pregunté, con los ojos abiertos de asombro.</p><p>—Amarramos una cuerda al sauce viejo de la orilla. Rodrigo iba primero, yo le sujetaba la cuerda desde atrás. A mitad del cruce, un tronco que venía con la corriente me golpeó el brazo y la cuerda me cortó la muñeca. Pero no la solté.</p><p>Sus ojos brillaron con algo que no era tristeza, sino algo más firme, como el orgullo de quien sabe que tomó la decisión correcta.</p><p>—¿Y Rodrigo? —susurré.</p><p>—Llegó al otro lado. Ayudó a la señora Carmen y a sus hijos a cruzar con la cuerda. Todos sobrevivieron.</p><p>Mi abuela levantó la muñeca y la giró lentamente bajo la luz amarillenta de la cocina.</p><p>—Yo me quedé con esto —dijo, tocando la cicatriz—. Y con la certeza de que hay momentos en la vida en que soltar es más fácil, pero sostener es lo correcto.</p><p>Terminó de dar forma al pan y lo puso en la bandeja. Antes de meterlo al horno, me miró con esos ojos oscuros que parecían contener todas las tormentas y todas las calmas del mundo.</p><p>—Algún día, mi niño, algo te va a pedir que no sueltes. Y cuando eso pase, acuérdate de esta cicatriz.</p><p>Han pasado quince años desde esa tarde. Mi abuela ya no está, pero cada vez que la vida me pide soltar, cierro los ojos y siento su mano firme, sosteniendo la cuerda.</p></div>
+<div class="card">
+<div class="task-badge">📝 Tu tarea: lee la pregunta, vuelve al texto y elige</div>
+<div class="highlight amber" style="font-size:.75rem">📖 <strong>Recuerda:</strong> vuelve al texto de arriba antes de responder. Busca la evidencia que respalda tu opción y descarta las que no calzan.</div>
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-${q.diff.toLowerCase().replace('-','')}">${q.diff}</span> · <strong>Habilidad:</strong> <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span> · <strong>Distractores:</strong> N2 (parcialmente correctos)</div>
+<div class="simce-q"><span class="q-num">Pregunta ${sIdx+1}/${SQ.length} <span class="badge badge-${q.skill.toLowerCase()}">${q.skill}</span></span><div class="q-text">${q.q}</div></div>
+${q.opts.map((o,i)=>`<button class="quiz-option" onclick="sAns(${i})" id="s${i}">${'ABCD'[i]}) ${o}</button>`).join('')}
+<div class="feedback ok" id="sok">✅ ¡Correcto! +20 XP — ${q.explain}</div><div class="feedback nok" id="snk">❌ ${q.explain}</div>
+<button class="btn-reveal" id="srev" onclick="revealS()">👁 Ver Respuesta</button>
+<div id="snx" style="display:none"><div class="nav-row"><button class="btn btn-back" onclick="go(6)">← Juego</button><button class="btn btn-next" onclick="sIdx++;go(7)">Siguiente →</button></div></div></div>`;
+};
+window.sAns=function(i){
+if(document.getElementById('s0').classList.contains('locked'))return;
+document.querySelectorAll('[id^="s"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^s\d$/))b.classList.remove('picked');});
+document.getElementById('s'+i).classList.add('picked');
+if(adminMode){document.getElementById('srev').dataset.pick=i;document.getElementById('srev').classList.add('show');}
+else{document.getElementById('snx').style.display='block';}
+};
+window.revealS=function(){
+var i=parseInt(document.getElementById('srev').dataset.pick);
+document.querySelectorAll('[id^="s"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^s\d$/)){b.classList.add('locked');b.disabled=true;b.classList.remove('picked');}});
+if(i===SQ[sIdx].correct){document.getElementById('s'+i).classList.add('correct');document.getElementById('sok').classList.add('show');sOk++;addXP(20);}
+else{document.getElementById('s'+i).classList.add('wrong');document.getElementById('s'+SQ[sIdx].correct).classList.add('correct');document.getElementById('snk').classList.add('show');}
+document.getElementById('srev').style.display='none';
+setTimeout(()=>document.getElementById('snx').style.display='block',500);
+};
+
+// ===== CIERRE Y REFLEXIÓN =====
+B.closing=()=>{
+let h=`
+<div class="section-header"><div class="icon">🏁</div><h2>Cierre y Reflexión</h2><div class="sub"><span class="phase-tag phase-close">7 minutos</span></div></div>
+<div class="card" style="text-align:center">
+<div style="font-size:3rem">🎉</div>
+<div class="game-score">${xp} XP</div>
+<p style="color:var(--dim);font-size:.85rem">Puntaje total de la sesión</p>
+</div>
+<div class="card">
+<h2>🎫 Ticket de Salida</h2>
+<div class="highlight green"><strong>Pregunta evaluativa:</strong></div>
+<div class="story-box" style="font-size:.8rem;line-height:1.7">
+<div class="title" style="font-size:.9rem">Microcuento: "El espejo"</div>
+<p>Cada mañana, Andrés se miraba al espejo antes de salir. No buscaba su reflejo: buscaba al hombre que había prometido ser. Aquel día, por primera vez, lo encontró.</p>
+</div>
+<div class="simce-q"><span class="q-num">Ticket de salida <span class="badge badge-inf">INF</span></span><div class="q-text">¿Qué se puede inferir sobre Andrés a partir del microcuento?</div></div>
+<button class="quiz-option" onclick="chkExit(0)" id="ex0">A) Andrés atravesaba una etapa de insatisfacción personal y se miraba al espejo buscando defectos físicos que corregir</button>
+<button class="quiz-option" onclick="chkExit(1)" id="ex1">B) Andrés había estado trabajando en un cambio personal y finalmente siente que se convirtió en la persona que quería ser</button>
+<button class="quiz-option" onclick="chkExit(2)" id="ex2">C) Andrés tenía la costumbre de recordar sus metas matutinas frente al espejo, pero ese día olvidó cuáles eran</button>
+<button class="quiz-option" onclick="chkExit(3)" id="ex3">D) Andrés buscaba la aprobación de los demás y usaba el espejo como ensayo para mostrar la imagen que otros esperaban</button>
+<div class="feedback ok" id="exok">✅ ¡Correcto! +25 XP — "El hombre que había prometido ser" es una metáfora de un objetivo personal. "Lo encontró" indica que siente que lo alcanzó. A cambia el foco a defectos físicos. C inventa un olvido sin evidencia. D inventa una motivación externa cuando el texto apunta a una búsqueda interna.</div>
+<div class="feedback nok" id="exnk">❌ La clave es "el hombre que había prometido ser": metáfora de un propósito personal. "Lo encontró" = siente que se transformó en esa persona. A confunde la búsqueda con insatisfacción física. C inventa un olvido. D proyecta motivación externa sin sustento.</div>
+<button class="btn-reveal" id="exrev" onclick="revealExit()">👁 Ver Respuesta</button>
+</div>
+<div class="card">
+<h2>🧠 Reflexión Metacognitiva</h2>
+<div class="highlight purple"><strong>¿Qué estrategia nueva aprendí hoy que puedo usar en la próxima prueba SIMCE?</strong></div>
+<div class="cols-2">
+<div class="concept-box"><div class="label">📌 Para recordar</div><div class="def"><strong>Localizar</strong> = datos explícitos del texto<br><strong>Inferir</strong> = leer entre líneas (pistas)<br><strong>Reflexionar</strong> = evaluar y opinar con fundamento</div></div>
+<div class="concept-box"><div class="label">📅 Próxima clase (S6)</div><div class="def"><strong>Poema:</strong> hablante lírico, temple de ánimo, figuras literarias<br>¿Cómo se localiza información en un poema?</div></div>
+</div>
+</div>`;
+h+=`
+<div class="card" style="border-color:var(--amber)">
+<h2>🏆 Texto 4 — Desafío (no obligatorio)</h2>
+<div class="audit-box"><strong>Dificultad:</strong> <span class="diff-tag diff-n2">N2-N3</span> · <strong>Habilidad:</strong> <span class="badge badge-ref">REF</span> · Requiere justificación argumentada</div>
+<div class="story-box" style="font-size:.8rem;line-height:1.7">
+<div class="title" style="font-size:.9rem">"El otro lado del río"</div>
+<p>Mi padre decía que el valor no era cruzar el río, sino saber cuándo no cruzarlo. Yo nunca le creí. Hasta que un día, parado frente a la corriente, con la cuerda en las manos y el agua lamiéndome los tobillos, entendí que a veces la mayor valentía es quedarse en la orilla y buscar otro camino.</p>
+</div>
+<div class="simce-q"><span class="q-num">Desafío <span class="badge badge-ref">REF</span></span><div class="q-text">Este microcuento presenta una visión opuesta a la de la abuela en "La cicatriz". ¿Cuál de los dos mensajes te parece más convincente y por qué? Fundamenta con evidencia de ambos textos.</div></div>
+<div class="highlight amber">💡 <strong>Instrucciones paso a paso:</strong><br>
+<strong>1.</strong> Lee ambos textos (“La cicatriz” y “El otro lado del río”).<br>
+<strong>2.</strong> Identifica qué dice cada texto sobre la valentía: ¿sostener o soltar?<br>
+<strong>3.</strong> Elige cuál te convence más y explica por qué.<br>
+<strong>4.</strong> Cita al menos una frase de cada texto como evidencia.<br>
+<strong>5.</strong> No hay respuesta correcta: se evalúa la calidad de tu argumento.</div>
+<textarea id="t4resp" placeholder="Escribe tu respuesta argumentada aquí..." style="width:100%;min-height:120px;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;color:var(--text);font-family:inherit;font-size:.8rem;resize:vertical;margin:10px 0"></textarea>
+<div class="highlight green" id="t4fb" style="display:none">✅ ¡Respuesta registrada! +30 XP. Tu profesor revisará tu argumentación.</div>
+<button class="btn btn-primary" onclick="enviarDesafio(this)">Enviar Desafío</button>
+</div>`;
+h+=`
+<div class="card" style="text-align:center;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:2px solid #86efac">
+<div style="font-size:2.5rem;margin-bottom:8px">✅</div>
+<h2 style="color:#16a34a;margin:0 0 8px">¡Sesión completada!</h2>
+<p style="color:#64748b;font-size:.85rem;margin:0 0 16px">Tus respuestas han sido enviadas al profesor.</p>
+<a href="/estudiantes/dashboard.html" class="btn btn-next" style="display:inline-block;text-decoration:none;font-size:1rem;padding:12px 32px">🏠 Volver al Menú Principal</a>
+</div>
+<div class="nav-row"><button class="btn btn-back" onclick="go(7)">← Práctica SIMCE</button></div>
+`;
+return h;
+};
+
+window.chkExit=function(i){
+if(document.getElementById('ex0').classList.contains('locked'))return;
+document.querySelectorAll('[id^="ex"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^ex\d$/))b.classList.remove('picked');});
+document.getElementById('ex'+i).classList.add('picked');
+if(adminMode){document.getElementById('exrev').dataset.pick=i;document.getElementById('exrev').classList.add('show');}
+};
+window.revealExit=function(){
+var i=parseInt(document.getElementById('exrev').dataset.pick);
+document.querySelectorAll('[id^="ex"]').forEach(b=>{if(b.tagName==='BUTTON'&&b.id.match(/^ex\d$/)){b.classList.add('locked');b.disabled=true;b.classList.remove('picked');}});
+if(i===1){document.getElementById('ex'+i).classList.add('correct');document.getElementById('exok').classList.add('show');addXP(25);}
+else{document.getElementById('ex'+i).classList.add('wrong');document.getElementById('ex1').classList.add('correct');document.getElementById('exnk').classList.add('show');}
+document.getElementById('exrev').style.display='none';
+};
+
+// === STRIKE SYSTEM ===
+function activateStrikeMonitor(){if(strikeMonitorActive||strikeLockout)return;strikeMonitorActive=true;document.getElementById('strikeBar').classList.remove('hidden');document.addEventListener('visibilitychange',handleVisStrike);window.addEventListener('blur',handleBlurStrike);window.addEventListener('focus',handleFocusReturn);}
+function deactivateStrikeMonitor(){if(!strikeMonitorActive)return;strikeMonitorActive=false;document.getElementById('strikeBar').classList.add('hidden');document.removeEventListener('visibilitychange',handleVisStrike);window.removeEventListener('blur',handleBlurStrike);window.removeEventListener('focus',handleFocusReturn);}
+function handleVisStrike(){if(document.hidden&&strikeMonitorActive&&!strikeLockout)registerStrike();}
+function handleBlurStrike(){if(!strikeMonitorActive||strikeLockout)return;focusLostAt=Date.now();var ov=document.getElementById('focusWarnOverlay');ov.classList.add('show');var cd=5;document.getElementById('focusCountdown').textContent=cd+'s';if(focusWarnTimer)clearInterval(focusWarnTimer);focusWarnTimer=setInterval(function(){cd--;document.getElementById('focusCountdown').textContent=cd+'s';if(cd<=0){clearInterval(focusWarnTimer);focusWarnTimer=null;if(!document.hasFocus()&&strikeMonitorActive&&!strikeLockout){registerStrike();ov.classList.remove('show');}}},1000);}
+function handleFocusReturn(){if(focusWarnTimer){clearInterval(focusWarnTimer);focusWarnTimer=null;}document.getElementById('focusWarnOverlay').classList.remove('show');focusLostAt=null;}
+function registerStrike(){strikes++;for(var i=1;i<=3;i++){var d=document.getElementById('sd'+i);if(i<=strikes)d.classList.add('active');}if(strikes>=3){strikeLockout=true;document.getElementById('strikeModal').classList.add('hidden');document.getElementById('lockoutOverlay').classList.remove('hidden');document.querySelectorAll('.quiz-option').forEach(function(b){b.classList.add('locked');b.disabled=true;});var ta=document.getElementById('t4resp');if(ta)ta.disabled=true;}else{var modal=document.getElementById('strikeModal');document.getElementById('strikeIcon').textContent=strikes===1?'⚠️':'🚨';document.getElementById('strikeTitle').textContent='Strike '+strikes+' de 3';var msgs=['','Saliste de la página durante la práctica SIMCE. No abras otras pestañas, ChatGPT, Gemini ni busques en Google. Si lo haces de nuevo recibirás otro strike.','¡Segundo strike! Si sales una vez más, la práctica SIMCE se bloqueará y tus respuestas quedarán registradas tal como estén.'];document.getElementById('strikeMsg').textContent=msgs[strikes];modal.classList.remove('hidden');}}
+window.dismissStrike=function(){document.getElementById('strikeModal').classList.add('hidden');};
+window.dismissLockout=function(){document.getElementById('lockoutOverlay').classList.add('hidden');deactivateStrikeMonitor();go(0);};
+
+// === CONFETTI ===
+function launchConfetti(){var c=document.createElement('div');c.className='confetti-box';var cols=['#fbbf24','#3b82f6','#8b5cf6','#10b981','#ef4444','#ec4899','#06b6d4'];for(var i=0;i<50;i++){var p=document.createElement('div');p.className='conf-p';p.style.left=Math.random()*100+'%';var sz=(5+Math.random()*8)+'px';p.style.width=sz;p.style.height=sz;p.style.background=cols[Math.floor(Math.random()*cols.length)];p.style.borderRadius=Math.random()>.5?'50%':'2px';p.style.animation='confDrop '+(2+Math.random()*2)+'s ease-in '+Math.random()*.8+'s forwards';c.appendChild(p);}document.body.appendChild(c);setTimeout(function(){c.remove();},5000);}
+// === HIGHLIGHTER TOOLBOX ===
+var hlColor=null;
+(function(){var fab=document.createElement('button');fab.className='hl-fab';fab.id='hl-fab';fab.innerHTML='🖍️';fab.onclick=function(){var p=document.getElementById('hl-panel');p.classList.toggle('show');this.classList.toggle('open');this.innerHTML=this.classList.contains('open')?'✕':'🖍️';};var panel=document.createElement('div');panel.className='hl-panel';panel.id='hl-panel';panel.innerHTML='<h4>🖍️ Selecciona un color y resalta texto</h4><div class="hl-colors"><div class="hl-color-wrap"><button class="hl-btn hl-btn-loc" data-hl="loc">L</button><div class="hl-lbl">Localizar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-inf" data-hl="inf">I</button><div class="hl-lbl">Inferir</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-ref" data-hl="ref">R</button><div class="hl-lbl">Reflexionar</div></div><div class="hl-color-wrap"><button class="hl-btn hl-btn-clr" data-hl="clear">✕</button><div class="hl-lbl">Borrar</div></div></div>';document.body.appendChild(fab);document.body.appendChild(panel);panel.querySelectorAll('[data-hl]').forEach(function(b){b.onclick=function(){if(this.dataset.hl==='clear')clearHL();else setHL(this.dataset.hl);};});document.addEventListener('mouseup',function(){setTimeout(applyHL,10);});document.addEventListener('touchend',function(){setTimeout(applyHL,80);});})();
+window.setHL=function(c){hlColor=hlColor===c?null:c;document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});if(hlColor)document.querySelector('.hl-btn-'+hlColor).classList.add('active');};
+function applyHL(){if(!hlColor)return;var s=window.getSelection();if(!s.rangeCount||s.isCollapsed)return;var r=s.getRangeAt(0);var a=r.commonAncestorContainer;if(a.nodeType===3)a=a.parentElement;if(!a||!a.closest||(!a.closest('.story-box')&&!a.closest('.card')))return;try{var m=document.createElement('mark');m.className='hl-'+hlColor;r.surroundContents(m);}catch(e){}s.removeAllRanges();}
+window.clearHL=function(){document.querySelectorAll('mark[class^="hl-"]').forEach(function(m){var t=document.createTextNode(m.textContent);m.parentNode.replaceChild(t,m);});document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});hlColor=null;};
+
+go(0);
+
+// ==================== FIREBASE: AUTH + AUTOGUARDADO ====================
+(function(){
+var FCFG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
+
+function loadScript(src,cb){var s=document.createElement('script');s.src=src;s.onload=cb;document.head.appendChild(s);}
+
+loadScript('js/avatar-levels.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js',function(){
+loadScript('https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js',function(){
+
+if(!firebase.apps.length) firebase.initializeApp(FCFG);
+var fbAuth=firebase.auth();
+var fbDb=firebase.database();
+var BASE='plataforma_estudiantes';
+var SESSION_ID='sesion-3';
+var fbUser=null, fbStudentData=null, fbSubmitted=false, fbAutoSaveTimer=null;
+
+// Collect current answers
+function collectAnswers(){
+    var ans={};
+    // SIMCE answers (sIdx tracks how far they got)
+    for(var i=0;i<SQ.length;i++) ans['simce_'+i]=null;
+    // We need to track answers as they happen — patch into sAns
+    return ans;
+}
+
+// Tracked SIMCE answers
+var simceAnswers={};
+var exitAnswer=null;
+var desafioText='';
+
+// Enviar desafío function
+window.enviarDesafio=function(btn){
+    var resp=document.getElementById('t4resp').value.trim();
+    if(resp.length<30){alert('Escribe al menos una respuesta breve.');return;}
+    desafioText=resp;
+    document.getElementById('t4fb').style.display='block';
+    addXP(30);
+    btn.disabled=true;
+    btn.textContent='✓ Enviado';
+    fbDirty=true;
+    if(fbUser){
+        fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid+'/desafio_texto').set(resp);
+    }
+};
+
+// Patch sAns to track answers
+var origSAns=window.sAns;
+window.sAns=function(i){
+    origSAns(i);
+    simceAnswers[sIdx]=i;
+    fbDirty=true;
+};
+
+// Patch chkExit to track
+var origChkExit=window.chkExit;
+window.chkExit=function(i){
+    origChkExit(i);
+    exitAnswer=i;
+    fbDirty=true;
+};
+
+var fbDirty=false;
+
+function buildSaveData(){
+    var answered=0, correct=0, detail={};
+    for(var k in simceAnswers){
+        if(simceAnswers[k]!==null&&simceAnswers[k]!==undefined){
+            answered++;
+            var qi=parseInt(k);
+            var isCorrect=simceAnswers[k]===SQ[qi].correct;
+            if(isCorrect) correct++;
+            detail['q'+qi]={respuesta:simceAnswers[k],correcta:SQ[qi].correct,esCorrecta:isCorrect,habilidad:SQ[qi].skill};
+        }
+    }
+    var t4=document.getElementById('t4resp');
+    desafioText=t4?t4.value:'';
+    return{
+        answers:simceAnswers,
+        exit_answer:exitAnswer,
+        desafio_texto:desafioText,
+        simce_answered:answered,
+        simce_total:SQ.length,
+        simce_correct:correct,
+        simce_detail:detail,
+        xp:xp,
+        strikes:strikes,
+        last_save:Date.now(),
+        section:currentSection
+    };
+}
+
+function autoSave(){
+    if(!fbUser||fbSubmitted||!fbDirty) return;
+    var data=buildSaveData();
+    data.completada=false;
+    fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid).update(data)
+    .then(function(){fbDirty=false;console.log('[S5] Autoguardado OK');})
+    .catch(function(e){console.error('[S5] Autoguardado error:',e);});
+}
+
+function submitFinal(){
+    if(!fbUser||fbSubmitted) return;
+    fbSubmitted=true;
+    if(fbAutoSaveTimer){clearInterval(fbAutoSaveTimer);fbAutoSaveTimer=null;}
+    var data=buildSaveData();
+    data.completada=true;
+    data.submitted_at=Date.now();
+    if(fbStudentData){data.nombre=fbStudentData.nombre;data.curso=fbStudentData.curso;}
+    var porcentaje=data.simce_total>0?Math.round((data.simce_correct/data.simce_total)*100):0;
+    var nota=porcentaje<=0?1.0:porcentaje<60?Math.round((1.0+(porcentaje/60)*3.0)*10)/10:Math.round((4.0+((porcentaje-60)/40)*3.0)*10)/10;
+    data.porcentaje=porcentaje;
+    data.nota=nota;
+
+    // Save respuestas
+    fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid).update(data);
+    // Save resultado (fields match admin panel expectations)
+    var now=Date.now();
+    var elapsed=timerInterval?(75*60-timerSeconds)*1000:0;
+    var resultData={
+        puntaje:data.simce_correct,total:data.simce_total,porcentaje:porcentaje,nota:nota,
+        detalle:data.simce_detail,
+        desafio:desafioText,exit_answer:exitAnswer,xp:xp,strikes:strikes,
+        submitted_at:now,timestamp:now,
+        tiempo_transcurrido:elapsed,
+        tiempo_min:Math.round(elapsed/60000)
+    };
+    if(fbStudentData){resultData.nombre=fbStudentData.nombre;resultData.curso=fbStudentData.curso;}
+    fbDb.ref(BASE+'/resultados/'+SESSION_ID+'/'+fbUser.uid).set(resultData);
+    // Ranking
+    if(fbStudentData){
+        fbDb.ref(BASE+'/ranking/'+SESSION_ID+'/'+fbStudentData.curso+'/'+fbUser.uid).set({
+            nombre:fbStudentData.nombre,puntaje:data.simce_correct,porcentaje:porcentaje
+        });
+    }
+    // Award XP to avatar system (anti-exploit: once per session)
+    awardXP_S5(xp);
+    console.log('[S5] Respuestas enviadas a Firebase');
+}
+
+// ==================== AVATAR XP (S5) ====================
+function awardXP_S5(sessionXP){
+    if(!fbUser||!sessionXP) return;
+    function getLevel(t){return AvatarSystem.getLevel(t);}
+    // Check if already awarded
+    fbDb.ref(BASE+'/avatar/'+fbUser.uid+'/sesiones/'+SESSION_ID).once('value').then(function(snap){
+        if(snap.exists()){console.log('[XP] Already awarded for S5');return;}
+        fbDb.ref(BASE+'/avatar/'+fbUser.uid+'/xp_total').once('value').then(function(tSnap){
+            var cur=tSnap.val()||0;
+            var newTotal=cur+sessionXP;
+            var lvl=getLevel(newTotal);
+            var updates={};
+            updates['/avatar/'+fbUser.uid+'/sesiones/'+SESSION_ID]={xp:sessionXP,timestamp:Date.now()};
+            updates['/avatar/'+fbUser.uid+'/xp_total']=newTotal;
+            updates['/avatar/'+fbUser.uid+'/nivel']=lvl.level;
+            updates['/avatar/'+fbUser.uid+'/titulo']=lvl.title;
+            updates['/avatar/'+fbUser.uid+'/emoji']=lvl.emoji;
+            fbDb.ref(BASE).update(updates);
+            console.log('[XP] S5 +'+sessionXP+' \u2192 Total: '+newTotal+' (Nivel '+lvl.level+' '+lvl.emoji+')');
+        });
+    });
+}
+
+// Auto-submit when reaching closing section (section 8)
+var _origGoFb=window.go;
+window.go=function(i){
+    _origGoFb(i);
+    if(i===8&&!fbSubmitted&&fbUser) submitFinal();
+};
+
+// Also submit on lockout (3 strikes) — full submit including resultados
+if(typeof window.registerStrike==='function'){
+    var _origRS=window.registerStrike;
+    window.registerStrike=function(){
+        _origRS();
+        if(strikes>=3&&fbUser&&!fbSubmitted){
+            submitFinal();
+        }
+    };
+}
+
+// Submit on page unload — use PATCH via fetch keepalive (sendBeacon only does POST which Firebase ignores)
+window.addEventListener('beforeunload',function(){
+    if(fbUser&&!fbSubmitted){
+        var data=buildSaveData();
+        data.auto_submitted='page_close';
+        data.completada=sIdx>=SQ.length;
+        data.last_save=Date.now();
+        try{
+            fetch('https://estudiacest-default-rtdb.firebaseio.com/'+BASE+'/respuestas/'+SESSION_ID+'/'+fbUser.uid+'.json',{
+                method:'PATCH',headers:{'Content-Type':'application/json'},
+                body:JSON.stringify(data),keepalive:true
+            });
+        }catch(e){}
+    }
+});
+
+fbAuth.onAuthStateChanged(function(user){
+    if(!user){
+        // Not logged in and not admin mode — redirect to login
+        if(!adminMode) window.location.href='index.html';
+        return;
+    }
+    fbUser=user;
+    fbDb.ref(BASE+'/estudiantes/'+user.uid).once('value').then(function(snap){
+        fbStudentData=snap.val();
+        // Check for previous saved state
+        fbDb.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value').then(function(rSnap){
+            var prev=rSnap.val();
+            if(prev&&prev.completada){
+                fbSubmitted=true;
+                console.log('[S5] Sesión ya completada');
+                // Show completed message
+                document.getElementById('app').innerHTML='<div class="card" style="text-align:center;margin-top:40px;background:linear-gradient(135deg,#f0fdf4,#ecfdf5);border:2px solid #86efac"><div style="font-size:3rem;margin-bottom:12px">✅</div><h2 style="color:#16a34a">Sesión ya completada</h2><p style="color:#64748b">Tus respuestas ya fueron enviadas al profesor.</p><a href="/estudiantes/dashboard.html" class="btn btn-next" style="display:inline-block;text-decoration:none;margin-top:16px">🏠 Volver al Menú Principal</a></div>';
+                return;
+            }
+            if(prev&&prev.answers){
+                simceAnswers=prev.answers||{};
+                exitAnswer=prev.exit_answer||null;
+                if(prev.section) console.log('[S5] Restaurado desde sección',prev.section);
+            }
+            // Start autosave every 30s
+            fbAutoSaveTimer=setInterval(autoSave,30000);
+        });
+    });
+});
+
+});});});});
+})();
+</script>
+<a href="/estudiantes/" class="home-fab" title="Volver al Menú Principal">🏠</a>
+</body>
+</html>

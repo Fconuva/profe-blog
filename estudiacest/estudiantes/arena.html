@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arena de Avatares — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;min-height:100vh;color:#e2e8f0}
+        /* TOP BAR */
+        .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.06)}
+        .back-link{color:#94a3b8;text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .back-link:hover{color:#fff}
+        .top-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+        .top-right{display:flex;align-items:center;gap:8px}
+        .pill{padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700}
+        .pill-arena{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff}
+        /* MAIN */
+        .main{max-width:800px;margin:0 auto;padding:20px 20px 80px}
+        /* HERO */
+        .hero{text-align:center;padding:24px 16px;margin-bottom:20px;position:relative}
+        .hero h2{font-size:24px;font-weight:900;background:linear-gradient(135deg,#f97316,#ef4444,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+        .hero p{font-size:13px;color:#64748b}
+        .season-alert{margin-bottom:20px;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(249,115,22,.14),rgba(251,191,36,.12));border:1px solid rgba(251,191,36,.3);box-shadow:0 10px 28px rgba(0,0,0,.18)}
+        .season-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.45);color:#fef3c7;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+        .season-alert h3{font-size:20px;font-weight:900;color:#fff;margin-bottom:8px}
+        .season-alert p{font-size:13px;color:#fde68a;line-height:1.5}
+        .season-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+        .season-chip,.season-countdown{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:rgba(15,23,42,.45);color:#e2e8f0;font-size:12px;font-weight:700}
+        .season-countdown strong{color:#fbbf24;font-size:13px}
+        /* BATTLE LIMIT */
+        .battle-limit{text-align:center;margin-bottom:20px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
+        .battle-limit .count{font-size:20px;font-weight:800;color:#fbbf24}
+        .battle-limit .label{font-size:11px;color:#64748b;margin-top:2px}
+        /* MY RECORD */
+        .record-row{display:flex;gap:12px;margin-bottom:20px}
+        .record-card{flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:16px;text-align:center}
+        .record-card .val{font-size:24px;font-weight:900}
+        .record-card .lbl{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+        .record-card.win .val{color:#4ade80}
+        .record-card.loss .val{color:#f87171}
+        .record-card.streak .val{color:#fbbf24}
+        /* OPPONENT LIST */
+        .section-title{font-size:16px;font-weight:800;color:#e2e8f0;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .opponent-list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+        .opp-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .2s}
+        .opp-card:hover{background:rgba(255,255,255,.08);border-color:rgba(239,68,68,.3);transform:translateX(4px)}
+        .opp-card.disabled{opacity:.4;cursor:not-allowed}
+        .opp-card.disabled:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);transform:none}
+        .opp-avatar{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
+        .opp-info{flex:1;min-width:0}
+        .opp-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .opp-meta{font-size:11px;color:#64748b;margin-top:2px}
+        .opp-stats{display:flex;gap:8px;font-size:11px;color:#94a3b8}
+        .opp-stats span{display:flex;align-items:center;gap:3px}
+        .opp-fight{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;border:none;padding:8px 16px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;flex-shrink:0;transition:transform .15s}
+        .opp-fight:hover{transform:scale(1.05)}
+        /* ========== BATTLE SCREEN ========== */
+        .battle-screen{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#0f172a;z-index:1000;flex-direction:column}
+        .battle-screen.active{display:flex}
+        /* VS Header */
+        .vs-header{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 20px;background:rgba(0,0,0,.3)}
+        .vs-fighter{display:flex;align-items:center;gap:8px}
+        .vs-fighter .emoji{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.06)}
+        .vs-fighter .name{font-size:13px;font-weight:700;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .vs-badge{font-size:18px;font-weight:900;color:#f97316}
+        /* HP Bars */
+        .hp-container{display:flex;gap:12px;padding:8px 20px}
+        .hp-bar{flex:1}
+        .hp-label{display:flex;justify-content:space-between;font-size:10px;font-weight:700;margin-bottom:3px}
+        .hp-label .name{color:#94a3b8}.hp-label .val{color:#4ade80}
+        .hp-bg{height:14px;background:rgba(255,255,255,.1);border-radius:7px;overflow:hidden;position:relative}
+        .hp-fill{height:100%;border-radius:7px;transition:width .4s ease}
+        .hp-fill.left{background:linear-gradient(90deg,#3b82f6,#60a5fa)}
+        .hp-fill.right{background:linear-gradient(90deg,#a78bfa,#8b5cf6)}
+        /* Canvas */
+        .battle-canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+        #battleCanvas{width:100%;max-width:600px;image-rendering:pixelated}
+        /* Log */
+        .battle-log{height:120px;overflow-y:auto;padding:8px 20px;background:rgba(0,0,0,.4);font-size:12px;line-height:1.6;scroll-behavior:smooth}
+        .battle-log::-webkit-scrollbar{width:4px}.battle-log::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
+        .log-atk{color:#60a5fa}.log-def{color:#a78bfa}.log-crit{color:#fbbf24}.log-dodge{color:#94a3b8}.log-end{color:#4ade80;font-weight:700}.log-regen{color:#4ade80}
+        /* Result overlay */
+        .result-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.85);flex-direction:column;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px)}
+        .result-overlay.active{display:flex}
+        .result-emoji{font-size:64px;margin-bottom:8px;animation:resultPop .5s ease}
+        @keyframes resultPop{0%{transform:scale(0) rotate(-20deg)}60%{transform:scale(1.2) rotate(5deg)}100%{transform:scale(1) rotate(0)}}
+        .result-text{font-size:28px;font-weight:900;margin-bottom:4px}
+        .result-xp{font-size:16px;color:#fbbf24;font-weight:700;margin-bottom:20px}
+        .result-btn{background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;padding:12px 32px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
+        .result-btn:hover{transform:scale(1.03)}
+        /* HISTORY */
+        .history-list{display:flex;flex-direction:column;gap:6px}
+        .hist-item{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.04);border-radius:10px;font-size:12px;transition:background .2s}
+        .hist-item:hover{background:rgba(255,255,255,.06)}
+        .hist-item.win{border-left:3px solid #4ade80}
+        .hist-item.loss{border-left:3px solid #f87171}
+        .hist-item .result-icon{font-size:20px;width:30px;text-align:center;flex-shrink:0}
+        .hist-item .detail{flex:1;color:#94a3b8;line-height:1.4}
+        .hist-item .detail strong{color:#e2e8f0}
+        .hist-item .detail .opp-curso-tag{font-size:10px;color:#64748b;background:rgba(255,255,255,.04);padding:1px 6px;border-radius:4px;margin-left:4px}
+        .hist-item .xp-earned{color:#fbbf24;font-weight:700;flex-shrink:0;font-size:11px}
+        .hist-item .time{color:#475569;font-size:10px;flex-shrink:0;text-align:right;min-width:30px}
+        /* TOAST */
+        .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);padding:12px 24px;border-radius:10px;font-size:13px;font-weight:600;z-index:2000;opacity:0;transition:all .3s;pointer-events:none}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+        .toast-ok{background:#16a34a;color:#fff}
+        .toast-err{background:#dc2626;color:#fff}
+        /* EMPTY */
+        .empty-state{text-align:center;padding:40px 20px;color:#475569}
+        .empty-state .icon{font-size:48px;margin-bottom:8px}
+        .empty-state p{font-size:13px}
+        /* Responsive */
+        @media(max-width:640px){
+            .vs-fighter .name{max-width:70px;font-size:12px}
+            .opp-stats{display:none}
+            .record-card .val{font-size:20px}
+            .battle-log{height:90px;font-size:11px}
+        }
+    </style>
+</head>
+<body>
+    <!-- TOP BAR -->
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-title">⚔️ Arena de Avatares</div>
+        <div class="top-right"><span class="pill pill-arena" id="myLevelPill">Nivel ?</span></div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main" id="mainContent">
+        <div class="hero">
+            <h2>⚔️ Arena de Combate</h2>
+            <p>Desafía a tus compañeros. Tus stats definen tu poder.</p>
+        </div>
+
+        <div class="season-alert">
+            <div class="season-kicker">🏁 Season 1</div>
+            <h3>Al final de semestre, el 19 de junio, finaliza la Season 1.</h3>
+            <p>Los primeros 3 lugares del ranking reciben un premio "ÚNICO". Aprovecha cada combate para cerrar fuerte esta temporada.</p>
+            <div class="season-meta">
+                <span class="season-chip">🏆 Top 3 con premio único</span>
+                <span class="season-chip">📅 Cierre oficial: 19 de junio</span>
+                <span class="season-countdown">⏳ Queda <strong id="seasonCountdown">calculando...</strong></span>
+            </div>
+        </div>
+
+        <!-- Battle limit -->
+        <div class="battle-limit">
+            <div class="count" id="battlesLeft">3</div>
+            <div class="label">Batallas disponibles hoy</div>
+        </div>
+
+        <!-- My record -->
+        <div class="record-row">
+            <div class="record-card win"><div class="val" id="totalWins">0</div><div class="lbl">Victorias</div></div>
+            <div class="record-card loss"><div class="val" id="totalLosses">0</div><div class="lbl">Derrotas</div></div>
+            <div class="record-card streak"><div class="val" id="winStreak">0</div><div class="lbl">Racha 🔥</div></div>
+        </div>
+
+        <!-- Opponent selection -->
+        <div class="section-title">🎯 Elige tu rival</div>
+        <div class="opponent-list" id="opponentList">
+            <div class="empty-state"><div class="icon">⏳</div><p>Cargando compañeros...</p></div>
+        </div>
+
+        <!-- History -->
+        <div class="section-title" style="margin-top:32px">📜 Historial de batallas</div>
+        <div class="history-list" id="historyList">
+            <div class="empty-state"><div class="icon">⚔️</div><p>Aún no tienes batallas</p></div>
+        </div>
+    </div>
+
+    <!-- BATTLE SCREEN (fullscreen overlay) -->
+    <div class="battle-screen" id="battleScreen">
+        <div class="vs-header">
+            <div class="vs-fighter"><span class="emoji" id="bLeftEmoji"></span><span class="name" id="bLeftName">Tu</span></div>
+            <div class="vs-badge">VS</div>
+            <div class="vs-fighter"><span class="emoji" id="bRightEmoji"></span><span class="name" id="bRightName">Rival</span></div>
+        </div>
+        <div class="hp-container">
+            <div class="hp-bar">
+                <div class="hp-label"><span class="name" id="hpLeftName">Tú</span><span class="val" id="hpLeftVal">100</span></div>
+                <div class="hp-bg"><div class="hp-fill left" id="hpLeftFill" style="width:100%"></div></div>
+            </div>
+            <div class="hp-bar">
+                <div class="hp-label"><span class="name" id="hpRightName">Rival</span><span class="val" id="hpRightVal">100</span></div>
+                <div class="hp-bg"><div class="hp-fill right" id="hpRightFill" style="width:100%"></div></div>
+            </div>
+        </div>
+        <div class="battle-canvas-wrap">
+            <canvas id="battleCanvas" width="600" height="300"></canvas>
+            <div class="result-overlay" id="resultOverlay">
+                <div class="result-emoji" id="resultEmoji">🏆</div>
+                <div class="result-text" id="resultText">¡Victoria!</div>
+                <div class="result-xp" id="resultXp">+5 XP</div>
+                <button class="result-btn" onclick="closeBattle()">Volver a la Arena</button>
+            </div>
+        </div>
+        <div class="battle-log" id="battleLog"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Scripts -->
+    <script src="js/avatar-levels.js"></script>
+    <script src="js/avatar-look.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+    'use strict';
+
+    /* ========== FIREBASE ========== */
+    const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+        authDomain: "estudiacest.firebaseapp.com",
+        databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+        projectId: "estudiacest",
+        storageBucket: "estudiacest.firebasestorage.app",
+        messagingSenderId: "999002169815",
+        appId: "1:999002169815:web:51203237bc77c2e74deb92"
+    };
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+    const BASE = 'plataforma_estudiantes';
+    initStudentForcedRefresh({ auth, db, base: BASE });
+
+    const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
+    const RANKING_PAIRS = {
+        '1A-HC':['1A-HC','1B-HC'],'1B-HC':['1A-HC','1B-HC'],
+        '2A-HC':['2A-HC','2B-HC'],'2B-HC':['2A-HC','2B-HC'],
+        '2A-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2B-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2C-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2D-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2E-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],
+        '3A-HC':['3A-HC','3B-HC'],'3B-HC':['3A-HC','3B-HC'],
+        '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
+    };
+
+    const ADMIN_EMAIL = '111111111@est.estudiacest.com';
+    let MAX_BATTLES_PER_DAY = 3;
+    const XP_WIN = 5;
+    const XP_LOSE = 2;
+    const GOLD_GLOVE_COLOR = '#facc15';
+    const GOLD_AURA_CORE = '#fbbf24';
+    const GOLD_AURA_EDGE = '#fde68a';
+
+    let currentUid = null;
+    let currentCurso = null;
+    let myAvatar = null;
+    let opponents = [];
+    let myRecord = { wins: 0, losses: 0, streak: 0 };
+    let todayBattles = 0;
+
+    function formatCountdown(ms) {
+        var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        var days = Math.floor(totalSeconds / 86400);
+        var hours = Math.floor((totalSeconds % 86400) / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        if (days > 0) return days + 'd ' + hours + 'h ' + minutes + 'm';
+        return hours + 'h ' + minutes + 'm';
+    }
+
+    function startCountdown(elementId, targetDate, finishedText) {
+        var el = document.getElementById(elementId);
+        if (!el) return;
+        function render() {
+            var diff = targetDate.getTime() - Date.now();
+            if (diff <= 0) {
+                el.textContent = finishedText;
+                return true;
+            }
+            el.textContent = formatCountdown(diff);
+            return false;
+        }
+        if (render()) return;
+        var timer = setInterval(function() {
+            if (render()) clearInterval(timer);
+        }, 1000);
+    }
+
+    startCountdown('seasonCountdown', new Date('2026-06-19T23:59:59-04:00'), 'finaliza hoy');
+
+    function hasGoldenGloves(avatarData) {
+        var rewards = avatarData.recompensas || {};
+        var cosmetics = avatarData.cosmeticos || {};
+        return !!rewards.guantes_oro || cosmetics.guantes === 'oro';
+    }
+
+    function hasGoldenAura(avatarData) {
+        var rewards = avatarData.recompensas || {};
+        var cosmetics = avatarData.cosmeticos || {};
+        return !!rewards.aura_dorada || cosmetics.aura === 'dorada';
+    }
+
+    function resolveGloveColor(hasReward, fallback) {
+        return hasReward ? GOLD_GLOVE_COLOR : fallback;
+    }
+
+    /* ========== AUTH ========== */
+    auth.onAuthStateChanged(async (user) => {
+        if (!user) { window.location.href = 'index.html'; return; }
+        currentUid = user.uid;
+        if (user.email === ADMIN_EMAIL) MAX_BATTLES_PER_DAY = 10;
+        try {
+            const [studentSnap, avatarSnap, arenaSnap] = await Promise.all([
+                db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                db.ref(BASE + '/avatar/' + user.uid).once('value'),
+                db.ref(BASE + '/arena/records/' + user.uid).once('value')
+            ]);
+            const student = studentSnap.val();
+            if (!student) { window.location.href = 'index.html'; return; }
+            currentCurso = student.curso;
+
+            const avatar = avatarSnap.val() || {};
+            const xpTotal = avatar.xp_total || 0;
+            const lvl = AvatarSystem.getLevel(xpTotal);
+            const stats = avatar.stats || { comprension: 0, constancia: 0, velocidad: 0 };
+            const goldGloves = hasGoldenGloves(avatar);
+            const goldAura = hasGoldenAura(avatar);
+            myAvatar = {
+                uid: user.uid,
+                nombre: student.nombre,
+                curso: student.curso,
+                xp: xpTotal,
+                level: lvl,
+                stats: stats,
+                look: AvatarLookSystem.normalizeLook(avatar.look, { xpTotal: xpTotal, avatarData: avatar }),
+                avatarData: avatar,
+                hasGoldenGloves: goldGloves,
+                hasGoldenAura: goldAura
+            };
+            document.getElementById('myLevelPill').textContent = lvl.emoji + ' Nivel ' + lvl.level;
+
+            // Load record
+            const rec = arenaSnap.val() || {};
+            myRecord.wins = rec.wins || 0;
+            myRecord.losses = rec.losses || 0;
+            myRecord.streak = rec.streak || 0;
+            renderRecord();
+
+            // Count today's battles
+            await countTodayBattles();
+
+            // Load opponents
+            await loadOpponents();
+
+            // Load history
+            await loadHistory();
+        } catch (e) {
+            console.error('Arena init error:', e);
+            toast('Error al cargar la arena', 'err');
+        }
+    });
+
+    /* ========== DATA LOADING ========== */
+    function todayKey() {
+        var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    }
+
+    async function countTodayBattles() {
+        var snap = await db.ref(BASE + '/arena/daily/' + currentUid + '/' + todayKey()).once('value');
+        todayBattles = snap.val() || 0;
+        document.getElementById('battlesLeft').textContent = Math.max(0, MAX_BATTLES_PER_DAY - todayBattles);
+    }
+
+    async function loadOpponents() {
+        var pairCursos = RANKING_PAIRS[currentCurso] || [currentCurso];
+        var [estSnap, avSnap] = await Promise.all([
+            db.ref(BASE + '/estudiantes').once('value'),
+            db.ref(BASE + '/avatar').once('value')
+        ]);
+        var allEst = estSnap.val() || {};
+        var allAv = avSnap.val() || {};
+        opponents = [];
+        for (var uid in allEst) {
+            if (uid === currentUid) continue;
+            var s = allEst[uid];
+            if (!pairCursos.includes(s.curso)) continue;
+            var av = allAv[uid] || {};
+            var xp = av.xp_total || 0;
+            var st = av.stats || { comprension: 0, constancia: 0, velocidad: 0 };
+            var lvl = AvatarSystem.getLevel(xp);
+            opponents.push({
+                uid: uid,
+                nombre: s.nombre,
+                curso: s.curso,
+                xp: xp,
+                level: lvl,
+                stats: st,
+                look: AvatarLookSystem.normalizeLook(av.look, { xpTotal: xp, avatarData: av }),
+                avatarData: av,
+                hasGoldenGloves: hasGoldenGloves(av),
+                hasGoldenAura: hasGoldenAura(av)
+            });
+        }
+        opponents.sort(function(a,b){ return b.xp - a.xp; });
+        renderOpponents();
+    }
+
+    async function loadHistory() {
+        var snap = await db.ref(BASE + '/arena/history/' + currentUid).orderByChild('timestamp').limitToLast(20).once('value');
+        var items = [];
+        snap.forEach(function(c){ items.push(c.val()); });
+        items.reverse();
+        renderHistory(items);
+    }
+
+    /* ========== RENDER ========== */
+    function renderRecord() {
+        document.getElementById('totalWins').textContent = myRecord.wins;
+        document.getElementById('totalLosses').textContent = myRecord.losses;
+        document.getElementById('winStreak').textContent = myRecord.streak;
+    }
+
+    function renderOpponents() {
+        var el = document.getElementById('opponentList');
+        if (opponents.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="icon">🏜️</div><p>No hay rivales en tu grupo de cursos</p></div>';
+            return;
+        }
+        var noFights = todayBattles >= MAX_BATTLES_PER_DAY;
+        el.innerHTML = opponents.map(function(o) {
+            var disabled = noFights ? ' disabled' : '';
+            var rewardTags = [];
+            if (o.hasGoldenGloves) rewardTags.push('<span style="color:#facc15">🥇 Guantes de oro</span>');
+            if (o.hasGoldenAura) rewardTags.push('<span style="color:#fde68a">⚡ Aura dorada</span>');
+            var rewardTag = rewardTags.length
+                ? '<div style="margin-top:4px;font-size:10px;font-weight:800;display:flex;gap:8px;flex-wrap:wrap">' + rewardTags.join('') + '</div>'
+                : '';
+            return '<div class="opp-card' + disabled + '" ' + (noFights ? '' : 'onclick="startBattle(\'' + o.uid + '\')"') + '>' +
+                '<div class="opp-avatar" data-uid="' + o.uid + '"></div>' +
+                '<div class="opp-info"><div class="opp-name">' + o.nombre + '</div>' +
+                '<div class="opp-meta">' + (CURSO_LABELS[o.curso]||o.curso) + ' · ' + o.level.title + '</div>' +
+                rewardTag +
+                '<div class="opp-stats"><span>🧠 ' + o.stats.comprension + '</span><span>🔥 ' + o.stats.constancia + '</span><span>⚡ ' + o.stats.velocidad + '</span></div></div>' +
+                (noFights ? '<span style="font-size:11px;color:#475569">Sin batallas</span>' : '<button class="opp-fight">⚔️ Luchar</button>') +
+                '</div>';
+        }).join('');
+        Array.from(el.querySelectorAll('.opp-avatar')).forEach(function(node) {
+            var uid = node.getAttribute('data-uid');
+            var opp = opponents.find(function(item) { return item.uid === uid; });
+            if (!opp) return;
+            AvatarLookSystem.render(node, {
+                look: opp.look,
+                xpTotal: opp.xp,
+                avatarData: opp.avatarData,
+                size: 48,
+                shape: 'rounded',
+                background: opp.level.bg
+            });
+        });
+    }
+
+    function renderHistory(items) {
+        var el = document.getElementById('historyList');
+        if (!items || items.length === 0) {
+            el.innerHTML = '<div class="empty-state"><div class="icon">⚔️</div><p>Aún no tienes batallas</p></div>';
+            return;
+        }
+        // Show last 10 most recent
+        var recent = items.slice(0, 10);
+        el.innerHTML = recent.map(function(h) {
+            var icon = h.won ? '🏆' : '💀';
+            var label = h.won ? 'Victoria' : 'Derrota';
+            var xpEarned = '+' + (h.xpEarned || (h.won ? XP_WIN : XP_LOSE)) + ' XP';
+            var ago = timeAgo(h.timestamp);
+            var cursoTag = h.opponentCurso ? '<span class="opp-curso-tag">' + (CURSO_LABELS[h.opponentCurso] || h.opponentCurso) + '</span>' : '';
+            return '<div class="hist-item ' + (h.won ? 'win' : 'loss') + '">' +
+                '<span class="result-icon">' + icon + '</span>' +
+                '<div class="detail">' + label + ' vs <strong>' + (h.opponentName || '?') + '</strong>' + cursoTag + '</div>' +
+                '<span class="xp-earned">' + xpEarned + '</span>' +
+                '<span class="time">' + ago + '</span></div>';
+        }).join('');
+    }
+
+    function timeAgo(ts) {
+        var diff = Math.floor((Date.now() - ts) / 1000);
+        if (diff < 60) return 'ahora';
+        if (diff < 3600) return Math.floor(diff/60) + 'min';
+        if (diff < 86400) return Math.floor(diff/3600) + 'h';
+        return Math.floor(diff/86400) + 'd';
+    }
+
+    /* ========== COMBAT ENGINE ========== */
+    /*
+     * STATS → COMBAT MAPPING (no revelado a estudiantes):
+     *   COMPRENSIÓN → FUERZA: ATK base + HP bonus
+     *   VELOCIDAD   → AGILIDAD: velocidad de ataque (hits extra) + armadura (reduce daño)
+     *   CONSTANCIA  → RESISTENCIA: regeneración HP por turno + chance de contraataque
+     */
+    function calcCombatStats(avatar) {
+        var s = avatar.stats;
+        var comp = s.comprension || 0;
+        var vel = s.velocidad || 0;
+        var cons = s.constancia || 0;
+
+        // COMPRENSIÓN = FUERZA → ATK + HP
+        var baseHP = 100;
+        var hpBonus = comp * 1.5;              // +1.5 HP por punto comprensión
+        var maxHP = Math.round(baseHP + hpBonus);
+        var atk = 5 + comp * 0.2;              // daño base fuerte
+
+        // VELOCIDAD = AGILIDAD → velocidad de ataque + armadura
+        var armor = Math.min(35, vel * 0.12);  // reduce % daño recibido (max 35%)
+        var doubleHit = Math.min(30, vel * 0.1); // chance de golpe doble por turno (max 30%)
+        var dodge = Math.min(25, vel * 0.08);   // esquiva reducida vs antes
+
+        // CONSTANCIA = RESISTENCIA → regen + contraataque
+        var regen = Math.min(8, cons * 0.03);   // HP recuperado por turno (max 8)
+        var counter = Math.min(25, cons * 0.09); // chance de contraatacar al ser golpeado (max 25%)
+        var crit = Math.min(15, cons * 0.05);    // chance de crítico (max 15%)
+
+        return {
+            name: avatar.nombre,
+            emoji: avatar.level.emoji,
+            maxHP: maxHP,
+            hp: maxHP,
+            atk: atk,
+            dodge: dodge,
+            doubleHit: doubleHit,
+            armor: armor,
+            regen: regen,
+            counter: counter,
+            crit: crit,
+            speed: vel
+        };
+    }
+
+    function simulateBattle(me, opp) {
+        var a = calcCombatStats(me);
+        var b = calcCombatStats(opp);
+        // Faster goes first
+        var fighters = a.speed >= b.speed ? [a, b] : [b, a];
+        var log = [];
+        var turn = 0;
+        var maxTurns = 100;
+
+        log.push({ type: 'start', text: '⚔️ ¡' + a.name + ' vs ' + b.name + '! ¡Comienza el combate!' });
+
+        while (fighters[0].hp > 0 && fighters[1].hp > 0 && turn < maxTurns) {
+            var attacker = fighters[turn % 2];
+            var defender = fighters[(turn + 1) % 2];
+
+            // Regen at start of turn
+            if (attacker.regen > 0 && attacker.hp < attacker.maxHP && attacker.hp > 0) {
+                var healed = Math.min(attacker.regen, attacker.maxHP - attacker.hp);
+                var actualHeal = Math.round(healed * 10) / 10;
+                if (actualHeal >= 1) {
+                    attacker.hp = Math.min(attacker.maxHP, attacker.hp + Math.round(actualHeal));
+                    log.push({ type: 'regen', attacker: attacker.name, defender: defender.name, text: '💚 ' + attacker.name + ' regenera ' + Math.round(actualHeal) + ' HP' });
+                }
+            }
+
+            // Execute attack
+            function doAttack(atk, def, isCounter) {
+                var prefix = isCounter ? '🔄 ¡Contraataque! ' : '';
+                // Dodge check
+                if (Math.random() * 100 < def.dodge) {
+                    log.push({ type: 'dodge', attacker: atk.name, defender: def.name, text: prefix + def.name + ' esquivó el ataque de ' + atk.name });
+                    return;
+                }
+                var isCrit = Math.random() * 100 < atk.crit;
+                var dmg = atk.atk * (1 - def.armor / 100);
+                if (isCrit) dmg *= 2;
+                dmg = Math.max(1, Math.round(dmg + (Math.random() * 4 - 2)));
+                def.hp = Math.max(0, def.hp - dmg);
+                if (isCrit) {
+                    log.push({ type: 'crit', attacker: atk.name, defender: def.name, dmg: dmg, defHP: def.hp, text: prefix + '💥 ¡CRÍTICO! ' + atk.name + ' golpea a ' + def.name + ' por ' + dmg + ' daño!' });
+                } else {
+                    log.push({ type: 'atk', attacker: atk.name, defender: def.name, dmg: dmg, defHP: def.hp, text: prefix + atk.name + ' golpea a ' + def.name + ' por ' + dmg + ' daño' });
+                }
+                // Counterattack chance (only on normal attacks, not counters)
+                if (!isCounter && def.hp > 0 && Math.random() * 100 < def.counter) {
+                    doAttack(def, atk, true);
+                }
+            }
+
+            doAttack(attacker, defender, false);
+
+            // Double hit chance (agilidad)
+            if (defender.hp > 0 && attacker.hp > 0 && Math.random() * 100 < attacker.doubleHit) {
+                log.push({ type: 'atk', attacker: attacker.name, defender: defender.name, dmg: 0, defHP: defender.hp, text: '⚡ ¡' + attacker.name + ' ataca de nuevo!' });
+                doAttack(attacker, defender, false);
+            }
+
+            turn++;
+        }
+
+        var winner = fighters[0].hp > 0 ? fighters[0] : fighters[1];
+        var loser = fighters[0].hp > 0 ? fighters[1] : fighters[0];
+        log.push({ type: 'end', winner: winner.name, text: '🏆 ¡' + winner.name + ' gana con ' + winner.hp + ' HP restante!' });
+
+        return {
+            log: log,
+            meWon: winner.name === a.name,
+            aStats: a,
+            bStats: b,
+            turns: turn
+        };
+    }
+
+    /* ========== BATTLE FLOW ========== */
+    var currentBattle = null;
+    var battleAnimFrame = null;
+
+    async function startBattle(oppUid) {
+        if (todayBattles >= MAX_BATTLES_PER_DAY) { toast('Ya usaste tus ' + MAX_BATTLES_PER_DAY + ' batallas de hoy', 'err'); return; }
+
+        var opp = opponents.find(function(o){ return o.uid === oppUid; });
+        if (!opp) { toast('Rival no encontrado', 'err'); return; }
+
+        // Simulate
+        currentBattle = simulateBattle(myAvatar, opp);
+        currentBattle.oppUid = oppUid;
+        currentBattle.oppName = opp.nombre;
+
+        // Setup battle screen
+        var isLeftMe = currentBattle.aStats.name === myAvatar.nombre;
+        var left = isLeftMe ? currentBattle.aStats : currentBattle.bStats;
+        var right = isLeftMe ? currentBattle.bStats : currentBattle.aStats;
+        left.gloveColor = resolveGloveColor(myAvatar.hasGoldenGloves, '#ef4444');
+        right.gloveColor = resolveGloveColor(opp.hasGoldenGloves, '#3b82f6');
+        left.hasGoldenAura = !!myAvatar.hasGoldenAura;
+        right.hasGoldenAura = !!opp.hasGoldenAura;
+
+        AvatarLookSystem.render(document.getElementById('bLeftEmoji'), {
+            look: myAvatar.look,
+            xpTotal: myAvatar.xp,
+            avatarData: myAvatar.avatarData,
+            size: 42,
+            shape: 'rounded',
+            background: myAvatar.level.bg
+        });
+        document.getElementById('bLeftName').textContent = myAvatar.nombre.split(' ')[0];
+        AvatarLookSystem.render(document.getElementById('bRightEmoji'), {
+            look: opp.look,
+            xpTotal: opp.xp,
+            avatarData: opp.avatarData,
+            size: 42,
+            shape: 'rounded',
+            background: opp.level.bg
+        });
+        document.getElementById('bRightName').textContent = opp.nombre.split(' ')[0];
+        document.getElementById('hpLeftName').textContent = myAvatar.nombre.split(' ')[0];
+        document.getElementById('hpRightName').textContent = opp.nombre.split(' ')[0];
+        document.getElementById('hpLeftVal').textContent = left.maxHP;
+        document.getElementById('hpRightVal').textContent = right.maxHP;
+        document.getElementById('hpLeftFill').style.width = '100%';
+        document.getElementById('hpRightFill').style.width = '100%';
+        document.getElementById('battleLog').innerHTML = '';
+        document.getElementById('resultOverlay').classList.remove('active');
+
+        // Show battle screen
+        document.getElementById('battleScreen').classList.add('active');
+        document.body.style.overflow = 'hidden';
+
+        // Start canvas animation
+        initCanvas(left, right);
+
+        // Play log step by step
+        await playBattleLog(currentBattle.log, left, right);
+
+        // Save result
+        await saveBattleResult(currentBattle.meWon, oppUid, opp.nombre);
+    }
+
+    function closeBattle() {
+        document.getElementById('battleScreen').classList.remove('active');
+        document.body.style.overflow = '';
+        if (battleAnimFrame) cancelAnimationFrame(battleAnimFrame);
+        currentBattle = null;
+        // Refresh data
+        countTodayBattles();
+        renderOpponents();
+        loadHistory();
+    }
+
+    /* ========== STICK FIGURE CANVAS ========== */
+    var canvasState = { leftX: 0, rightX: 0, leftHP: 1, rightHP: 1, leftAction: 'idle', rightAction: 'idle', actionTimer: 0, groundY: 0, particles: [], shakeTimer: 0, shakeX: 0, shakeY: 0, leftGloveColor: '#ef4444', rightGloveColor: '#3b82f6', leftHasGoldenAura: false, rightHasGoldenAura: false };
+
+    function initCanvas(left, right) {
+        var canvas = document.getElementById('battleCanvas');
+        var dpr = window.devicePixelRatio || 1;
+        var rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        var ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+        var w = rect.width, h = rect.height;
+
+        canvasState.leftX = w * 0.28;
+        canvasState.rightX = w * 0.72;
+        canvasState.groundY = h * 0.82;
+        canvasState.leftHP = 1;
+        canvasState.rightHP = 1;
+        canvasState.leftAction = 'idle';
+        canvasState.rightAction = 'idle';
+        canvasState.actionTimer = 0;
+        canvasState.particles = [];
+        canvasState.shakeTimer = 0;
+        canvasState.leftGloveColor = left.gloveColor || '#ef4444';
+        canvasState.rightGloveColor = right.gloveColor || '#3b82f6';
+        canvasState.leftHasGoldenAura = !!left.hasGoldenAura;
+        canvasState.rightHasGoldenAura = !!right.hasGoldenAura;
+        canvasState.w = w;
+        canvasState.h = h;
+
+        function animate() {
+            drawFrame(ctx, w, h);
+            if (canvasState.actionTimer > 0) canvasState.actionTimer--;
+            else { canvasState.leftAction = 'idle'; canvasState.rightAction = 'idle'; }
+            if (canvasState.shakeTimer > 0) canvasState.shakeTimer--;
+            battleAnimFrame = requestAnimationFrame(animate);
+        }
+        if (battleAnimFrame) cancelAnimationFrame(battleAnimFrame);
+        animate();
+    }
+
+    // Particle effects
+    function addParticles(x, y, color, count, type) {
+        for (var i = 0; i < count; i++) {
+            canvasState.particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * (type === 'hit' ? 6 : 3),
+                vy: (Math.random() - 0.8) * (type === 'hit' ? 5 : 2),
+                life: 20 + Math.random() * 15,
+                maxLife: 35,
+                color: color,
+                size: type === 'hit' ? 2 + Math.random() * 3 : 1.5 + Math.random() * 2,
+                type: type
+            });
+        }
+    }
+
+    function updateParticles(ctx) {
+        for (var i = canvasState.particles.length - 1; i >= 0; i--) {
+            var p = canvasState.particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.vy += 0.15; // gravity
+            p.life--;
+            if (p.life <= 0) { canvasState.particles.splice(i, 1); continue; }
+            var alpha = p.life / p.maxLife;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = p.color;
+            if (p.type === 'hit') {
+                ctx.fillRect(p.x - p.size/2, p.y - p.size/2, p.size, p.size);
+            } else {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    function drawFrame(ctx, w, h) {
+        // Screen shake
+        ctx.save();
+        if (canvasState.shakeTimer > 0) {
+            canvasState.shakeX = (Math.random() - 0.5) * canvasState.shakeTimer * 0.8;
+            canvasState.shakeY = (Math.random() - 0.5) * canvasState.shakeTimer * 0.5;
+            ctx.translate(canvasState.shakeX, canvasState.shakeY);
+        }
+
+        // Background gradient
+        var grad = ctx.createLinearGradient(0, 0, 0, h);
+        grad.addColorStop(0, '#0c1222');
+        grad.addColorStop(0.6, '#0f172a');
+        grad.addColorStop(1, '#1a1a2e');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, w, h);
+
+        // Arena ring floor (perspective ellipse)
+        var ringCX = w / 2, ringCY = canvasState.groundY + 30;
+        ctx.fillStyle = '#1e293b';
+        ctx.beginPath();
+        ctx.ellipse(ringCX, ringCY, w * 0.42, 28, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 6]);
+        ctx.beginPath();
+        ctx.ellipse(ringCX, ringCY, w * 0.38, 22, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Ropes (3 horizontal lines connecting posts)
+        var postLX = w * 0.1, postRX = w * 0.9;
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1.5;
+        for (var r = 0; r < 3; r++) {
+            var ropeY = canvasState.groundY - 10 - r * 30;
+            ctx.beginPath();
+            ctx.moveTo(postLX, ropeY);
+            // sag curve
+            ctx.quadraticCurveTo(w/2, ropeY + 6, postRX, ropeY);
+            ctx.stroke();
+        }
+
+        // Corner posts
+        ctx.fillStyle = '#334155';
+        ctx.fillRect(postLX - 3, canvasState.groundY - 75, 6, 75 + 30);
+        ctx.fillRect(postRX - 3, canvasState.groundY - 75, 6, 75 + 30);
+
+        // Draw fighters
+        drawFighter(ctx, canvasState.leftX, canvasState.groundY, canvasState.leftAction, '#60a5fa', '#3b82f6', canvasState.leftGloveColor, canvasState.leftHasGoldenAura, false, canvasState.leftHP);
+        drawFighter(ctx, canvasState.rightX, canvasState.groundY, canvasState.rightAction, '#a78bfa', '#8b5cf6', canvasState.rightGloveColor, canvasState.rightHasGoldenAura, true, canvasState.rightHP);
+
+        // Particles
+        updateParticles(ctx);
+
+        // HP labels under figures
+        ctx.font = '700 12px Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillStyle = canvasState.leftHP > .3 ? '#4ade80' : '#f87171';
+        ctx.fillText(Math.round(canvasState.leftHP * 100) + '%', canvasState.leftX, canvasState.groundY + 60);
+        ctx.fillStyle = canvasState.rightHP > .3 ? '#4ade80' : '#f87171';
+        ctx.fillText(Math.round(canvasState.rightHP * 100) + '%', canvasState.rightX, canvasState.groundY + 60);
+
+        ctx.restore();
+    }
+
+    function drawFighter(ctx, x, y, action, colorLight, colorDark, gloveColor, hasGoldenAura, facingLeft, hpPct) {
+        var scale = 1.8;
+        var headR = 10 * scale;
+        var bodyLen = 28 * scale;
+        var limbLen = 20 * scale;
+        var gloveR = 7 * scale;
+        var offsetX = 0, offsetY = 0;
+        var punchArm = false;
+        var guardArm = true;
+        var legAnim = 0;
+        var hitFlash = false;
+        var t = Date.now();
+
+        if (action === 'attack') {
+            offsetX = facingLeft ? -16 : 16;
+            punchArm = true;
+            legAnim = 1;
+            // Add hit particles on first frame
+            if (canvasState.actionTimer >= 18) {
+                var px = facingLeft ? x - 40 : x + 40;
+                addParticles(px, y - bodyLen * 0.5, '#fbbf24', 6, 'hit');
+                canvasState.shakeTimer = 6;
+            }
+        } else if (action === 'hit') {
+            offsetX = facingLeft ? 8 : -8;
+            offsetY = 2;
+            hitFlash = true;
+            if (canvasState.actionTimer >= 18) {
+                addParticles(x, y - bodyLen * 0.5, '#f87171', 5, 'hit');
+            }
+        } else if (action === 'dodge') {
+            offsetY = -20;
+            offsetX = facingLeft ? 14 : -14;
+            legAnim = 2;
+            if (canvasState.actionTimer >= 18) {
+                addParticles(x, y, 'rgba(148,163,184,0.6)', 4, 'dust');
+            }
+        } else if (action === 'dead') {
+            ctx.save();
+            ctx.globalAlpha = 0.5;
+            ctx.translate(x, y);
+            ctx.rotate(Math.PI / 2 * (facingLeft ? -1 : 1));
+            ctx.translate(-x, -y);
+            drawBody(ctx, x, y - bodyLen * 0.2, headR * 0.7, bodyLen * 0.7, limbLen * 0.7, gloveR * 0.7, false, true, 0, 0.3, '#475569', '#475569', '#475569', facingLeft);
+            ctx.restore();
+            // X eyes for dead
+            ctx.strokeStyle = '#ef4444';
+            ctx.lineWidth = 2;
+            var deadEyeX = x + (facingLeft ? 15 : -15);
+            var deadEyeY = y - 25;
+            ctx.beginPath(); ctx.moveTo(deadEyeX-3,deadEyeY-3); ctx.lineTo(deadEyeX+3,deadEyeY+3); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(deadEyeX+3,deadEyeY-3); ctx.lineTo(deadEyeX-3,deadEyeY+3); ctx.stroke();
+            return;
+        }
+
+        var dx = x + offsetX, dy = y + offsetY;
+        // Idle bobbing + breathing
+        var bob = Math.sin(t / 350) * 3;
+        var sway = Math.sin(t / 600) * 1.5;
+        dy += bob;
+        dx += sway;
+
+        var c1 = hitFlash ? '#f87171' : colorLight;
+        var c2 = hitFlash ? '#ef4444' : colorDark;
+        var gc = hitFlash ? '#991b1b' : gloveColor;
+
+        if (hasGoldenAura && action !== 'dead') {
+            drawGoldenAura(ctx, dx, dy, scale, hpPct, t);
+        }
+
+        // Shadow under fighter
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.beginPath();
+        ctx.ellipse(x + offsetX, canvasState.groundY + 38, 18, 5, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        drawBody(ctx, dx, dy, headR, bodyLen, limbLen, gloveR, punchArm, guardArm, legAnim, 0.3, c1, c2, gc, facingLeft);
+
+        // HP circle glow
+        if (hpPct > 0 && action !== 'dead') {
+            ctx.beginPath();
+            ctx.arc(dx, dy - bodyLen - headR, headR + 5, 0, Math.PI * 2);
+            var glowColor = hpPct > .5 ? 'rgba(74,222,128,' : 'rgba(248,113,113,';
+            var glowAlpha = 0.15 + Math.sin(t / 500) * 0.1;
+            ctx.strokeStyle = glowColor + glowAlpha + ')';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+    }
+
+    function drawGoldenAura(ctx, x, y, scale, hpPct, t) {
+        var pulse = (Math.sin(t / 180) + 1) / 2;
+        var auraAlpha = 0.18 + pulse * 0.08 + (1 - hpPct) * 0.04;
+        var auraHeight = 86 * scale + pulse * 8;
+        var auraWidth = 48 * scale + pulse * 5;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        var halo = ctx.createRadialGradient(x, y - auraHeight * 0.72, 8, x, y - auraHeight * 0.52, auraHeight);
+        halo.addColorStop(0, 'rgba(255,255,220,' + Math.min(0.36, auraAlpha + 0.12) + ')');
+        halo.addColorStop(0.28, 'rgba(253,230,138,' + Math.min(0.32, auraAlpha + 0.08) + ')');
+        halo.addColorStop(0.6, 'rgba(251,191,36,' + auraAlpha + ')');
+        halo.addColorStop(1, 'rgba(251,191,36,0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.ellipse(x, y - auraHeight * 0.48, auraWidth * 1.15, auraHeight, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(251,191,36,' + (0.14 + pulse * 0.08) + ')';
+        var spikes = [
+            { dx: 0,   dy: -auraHeight * 1.18, w: 12 * scale, h: 28 * scale },
+            { dx: -22 * scale, dy: -auraHeight * 0.88, w: 11 * scale, h: 22 * scale },
+            { dx: 22 * scale, dy: -auraHeight * 0.92, w: 11 * scale, h: 24 * scale },
+            { dx: -30 * scale, dy: -auraHeight * 0.46, w: 10 * scale, h: 18 * scale },
+            { dx: 30 * scale, dy: -auraHeight * 0.42, w: 10 * scale, h: 18 * scale }
+        ];
+        spikes.forEach(function(spike, idx) {
+            var wobble = Math.sin(t / 220 + idx) * 3;
+            ctx.beginPath();
+            ctx.moveTo(x + spike.dx - spike.w, y + spike.dy + spike.h * 0.45);
+            ctx.quadraticCurveTo(x + spike.dx - spike.w * 0.3, y + spike.dy + wobble, x + spike.dx, y + spike.dy - spike.h);
+            ctx.quadraticCurveTo(x + spike.dx + spike.w * 0.3, y + spike.dy + wobble, x + spike.dx + spike.w, y + spike.dy + spike.h * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        ctx.strokeStyle = 'rgba(255,248,210,' + (0.28 + pulse * 0.12) + ')';
+        ctx.lineWidth = 1.6;
+        for (var i = 0; i < 3; i++) {
+            var sparkX = x - 22 * scale + i * 18 * scale + Math.sin(t / 200 + i) * 5;
+            var sparkY = y - auraHeight * (0.85 - i * 0.15);
+            ctx.beginPath();
+            ctx.moveTo(sparkX, sparkY + 6);
+            ctx.lineTo(sparkX, sparkY - 6);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    function drawBody(ctx, x, y, headR, bodyLen, limbLen, gloveR, punchArm, guardArm, legAnim, legSpread, c1, c2, gloveColor, facingLeft) {
+        var dir = facingLeft ? -1 : 1;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        // Head
+        ctx.beginPath();
+        ctx.arc(x, y - bodyLen - headR, headR, 0, Math.PI * 2);
+        ctx.fillStyle = c1;
+        ctx.fill();
+        ctx.strokeStyle = c2;
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Headband
+        ctx.strokeStyle = gloveColor;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y - bodyLen - headR, headR - 1, -0.3, Math.PI + 0.3, facingLeft);
+        ctx.stroke();
+
+        // Eyes (determined expression)
+        ctx.fillStyle = '#0f172a';
+        var eyeX = x + dir * headR * 0.35;
+        var eyeY = y - bodyLen - headR - 1;
+        ctx.beginPath();
+        ctx.ellipse(eyeX, eyeY, 2, 2.5, 0, 0, Math.PI * 2);
+        ctx.fill();
+        // Eyebrow (angry)
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(eyeX - dir * 4, eyeY - 5);
+        ctx.lineTo(eyeX + dir * 3, eyeY - 3.5);
+        ctx.stroke();
+        // Mouth
+        ctx.strokeStyle = c2;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(x + dir * 2, y - bodyLen - headR + headR * 0.45, 3, 0.1, Math.PI - 0.1);
+        ctx.stroke();
+
+        // Torso (thicker, athletic)
+        ctx.strokeStyle = c1;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.moveTo(x, y - bodyLen);
+        ctx.lineTo(x, y);
+        ctx.stroke();
+        // Shoulders
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.moveTo(x - 12, y - bodyLen * 0.78);
+        ctx.lineTo(x + 12, y - bodyLen * 0.78);
+        ctx.stroke();
+        // Shorts
+        ctx.fillStyle = c2;
+        ctx.fillRect(x - 10, y - 4, 20, 12);
+
+        // ========== ARMS ==========
+        var armBaseY = y - bodyLen * 0.72;
+
+        // Front arm (punching or guard)
+        var frontArmEndX, frontArmEndY;
+        if (punchArm) {
+            // Punching: arm fully extended forward
+            var elbowX = x + dir * limbLen * 0.5;
+            var elbowY = armBaseY - 4;
+            frontArmEndX = x + dir * limbLen * 1.4;
+            frontArmEndY = armBaseY - 6;
+            ctx.strokeStyle = c1;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(x, armBaseY);
+            ctx.quadraticCurveTo(elbowX, elbowY - 4, frontArmEndX, frontArmEndY);
+            ctx.stroke();
+        } else {
+            // Guard position: arm up protecting face
+            frontArmEndX = x + dir * limbLen * 0.4;
+            frontArmEndY = armBaseY - limbLen * 0.55;
+            ctx.strokeStyle = c1;
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(x + dir * 4, armBaseY);
+            ctx.quadraticCurveTo(x + dir * limbLen * 0.3, armBaseY - 6, frontArmEndX, frontArmEndY);
+            ctx.stroke();
+        }
+        // Front BOXING GLOVE
+        ctx.beginPath();
+        ctx.arc(frontArmEndX, frontArmEndY, gloveR, 0, Math.PI * 2);
+        ctx.fillStyle = gloveColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        // Glove shine
+        ctx.beginPath();
+        ctx.arc(frontArmEndX - 2, frontArmEndY - 2, gloveR * 0.3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.25)';
+        ctx.fill();
+        // Glove wrist strap
+        ctx.fillStyle = 'rgba(255,255,255,0.15)';
+        ctx.fillRect(frontArmEndX - gloveR * 0.6, frontArmEndY + gloveR * 0.5, gloveR * 1.2, 3);
+
+        // Back arm (always in guard)
+        var backArmEndX = x - dir * limbLen * 0.25;
+        var backArmEndY = armBaseY - limbLen * 0.35;
+        ctx.strokeStyle = c1;
+        ctx.lineWidth = 3.5;
+        ctx.beginPath();
+        ctx.moveTo(x - dir * 4, armBaseY);
+        ctx.quadraticCurveTo(x - dir * limbLen * 0.15, armBaseY - 8, backArmEndX, backArmEndY);
+        ctx.stroke();
+        // Back BOXING GLOVE
+        ctx.beginPath();
+        ctx.arc(backArmEndX, backArmEndY, gloveR * 0.85, 0, Math.PI * 2);
+        ctx.fillStyle = gloveColor;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        // ========== LEGS ==========
+        ctx.strokeStyle = c1;
+        ctx.lineWidth = 4.5;
+        if (legAnim === 1) {
+            // Lunge forward
+            var kneeX = x + dir * limbLen * 0.4;
+            var kneeY = y + limbLen * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(x + 3, y + 6);
+            ctx.quadraticCurveTo(kneeX, kneeY, x + dir * limbLen * 0.7, y + limbLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 3, y + 6);
+            ctx.lineTo(x - dir * limbLen * 0.3, y + limbLen);
+            ctx.stroke();
+        } else if (legAnim === 2) {
+            // Jump/dodge: legs tucked
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 6);
+            ctx.quadraticCurveTo(x + 10, y + limbLen * 0.3, x + 6, y + limbLen * 0.7);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y + 6);
+            ctx.quadraticCurveTo(x - 10, y + limbLen * 0.3, x - 6, y + limbLen * 0.7);
+            ctx.stroke();
+        } else {
+            // Idle: boxing stance (staggered)
+            ctx.beginPath();
+            ctx.moveTo(x + 4, y + 6);
+            ctx.lineTo(x + dir * limbLen * 0.35, y + limbLen);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x - 4, y + 6);
+            ctx.lineTo(x - dir * limbLen * 0.2, y + limbLen);
+            ctx.stroke();
+        }
+
+        // Shoes
+        ctx.fillStyle = c2;
+        if (legAnim === 1) {
+            drawShoe(ctx, x + dir * limbLen * 0.7, y + limbLen, dir);
+            drawShoe(ctx, x - dir * limbLen * 0.3, y + limbLen, -dir);
+        } else if (legAnim !== 2) {
+            drawShoe(ctx, x + dir * limbLen * 0.35, y + limbLen, dir);
+            drawShoe(ctx, x - dir * limbLen * 0.2, y + limbLen, -dir);
+        }
+    }
+
+    function drawShoe(ctx, x, y, dir) {
+        ctx.beginPath();
+        ctx.moveTo(x - 4, y);
+        ctx.lineTo(x + dir * 10, y);
+        ctx.lineTo(x + dir * 10, y + 4);
+        ctx.lineTo(x - 4, y + 4);
+        ctx.closePath();
+        ctx.fill();
+    }
+
+    /* ========== BATTLE LOG ANIMATION ========== */
+    function sleep(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+    async function playBattleLog(log, left, right) {
+        var logEl = document.getElementById('battleLog');
+        var leftMaxHP = left.maxHP;
+        var rightMaxHP = right.maxHP;
+        var leftHP = leftMaxHP;
+        var rightHP = rightMaxHP;
+
+        for (var i = 0; i < log.length; i++) {
+            var entry = log[i];
+
+            // Determine who is left/right
+            var isLeftAttacker = entry.attacker === left.name;
+            var isLeftDefender = entry.defender === left.name;
+
+            if (entry.type === 'atk' || entry.type === 'crit') {
+                // Attacker animation
+                if (isLeftAttacker) { canvasState.leftAction = 'attack'; canvasState.rightAction = 'hit'; }
+                else { canvasState.rightAction = 'attack'; canvasState.leftAction = 'hit'; }
+                canvasState.actionTimer = 20;
+
+                // Update HP from defHP
+                if (entry.defHP !== undefined) {
+                    if (isLeftDefender) { leftHP = entry.defHP; }
+                    else { rightHP = entry.defHP; }
+                    updateHPBars(leftHP, leftMaxHP, rightHP, rightMaxHP);
+                }
+            } else if (entry.type === 'dodge') {
+                if (isLeftDefender) { canvasState.leftAction = 'dodge'; canvasState.rightAction = 'attack'; }
+                else { canvasState.rightAction = 'dodge'; canvasState.leftAction = 'attack'; }
+                canvasState.actionTimer = 20;
+            } else if (entry.type === 'regen') {
+                // Healing green particles
+                if (isLeftAttacker) {
+                    addParticles(canvasState.leftX, canvasState.groundY - 30, '#4ade80', 8, 'dust');
+                } else {
+                    addParticles(canvasState.rightX, canvasState.groundY - 30, '#4ade80', 8, 'dust');
+                }
+            } else if (entry.type === 'end') {
+                var meWon = entry.winner === left.name;
+                if (meWon) canvasState.rightAction = 'dead';
+                else canvasState.leftAction = 'dead';
+            }
+
+            // Add log line
+            var cls = entry.type === 'crit' ? 'log-crit' : entry.type === 'dodge' ? 'log-dodge' : entry.type === 'end' ? 'log-end' : entry.type === 'regen' ? 'log-regen' : entry.type === 'atk' ? (isLeftAttacker ? 'log-atk' : 'log-def') : '';
+            logEl.innerHTML += '<div class="' + cls + '">' + entry.text + '</div>';
+            logEl.scrollTop = logEl.scrollHeight;
+
+            // Pause between actions
+            if (entry.type === 'start') await sleep(1200);
+            else if (entry.type === 'end') await sleep(600);
+            else if (entry.type === 'regen') await sleep(400);
+            else await sleep(700);
+        }
+
+        // Show result
+        await sleep(500);
+        showResult(currentBattle.meWon);
+    }
+
+    function updateHPBars(leftHP, leftMax, rightHP, rightMax) {
+        var lPct = Math.max(0, leftHP / leftMax);
+        var rPct = Math.max(0, rightHP / rightMax);
+        canvasState.leftHP = lPct;
+        canvasState.rightHP = rPct;
+        document.getElementById('hpLeftFill').style.width = (lPct * 100) + '%';
+        document.getElementById('hpRightFill').style.width = (rPct * 100) + '%';
+        document.getElementById('hpLeftVal').textContent = Math.max(0, leftHP);
+        document.getElementById('hpRightVal').textContent = Math.max(0, rightHP);
+        // Color change on low HP
+        if (lPct < 0.3) document.getElementById('hpLeftFill').style.background = 'linear-gradient(90deg,#ef4444,#f87171)';
+        if (rPct < 0.3) document.getElementById('hpRightFill').style.background = 'linear-gradient(90deg,#f87171,#ef4444)';
+    }
+
+    function showResult(won) {
+        var overlay = document.getElementById('resultOverlay');
+        document.getElementById('resultEmoji').textContent = won ? '🏆' : '💀';
+        document.getElementById('resultText').textContent = won ? '¡Victoria!' : 'Derrota';
+        document.getElementById('resultText').style.color = won ? '#4ade80' : '#f87171';
+        document.getElementById('resultXp').textContent = '+' + (won ? XP_WIN : XP_LOSE) + ' XP';
+        overlay.classList.add('active');
+    }
+
+    /* ========== SAVE RESULT ========== */
+    async function saveBattleResult(won, oppUid, oppName) {
+        var xpEarned = won ? XP_WIN : XP_LOSE;
+        var historyKey = db.ref().push().key;
+
+        try {
+            // Save arena data (history, daily, records) — separate writes to match per-path rules
+            // Find opponent curso
+            var oppCurso = '';
+            for (var i = 0; i < opponents.length; i++) {
+                if (opponents[i].uid === oppUid) { oppCurso = opponents[i].curso; break; }
+            }
+            await db.ref(BASE + '/arena/history/' + currentUid + '/' + historyKey).set({
+                opponent: oppUid,
+                opponentName: oppName,
+                opponentCurso: oppCurso,
+                won: won,
+                xpEarned: xpEarned,
+                timestamp: firebase.database.ServerValue.TIMESTAMP
+            });
+
+            await db.ref(BASE + '/arena/daily/' + currentUid + '/' + todayKey()).set(todayBattles + 1);
+
+            var newWins = myRecord.wins + (won ? 1 : 0);
+            var newLosses = myRecord.losses + (won ? 0 : 1);
+            var newStreak = won ? myRecord.streak + 1 : 0;
+            await db.ref(BASE + '/arena/records/' + currentUid).set({
+                wins: newWins, losses: newLosses, streak: newStreak
+            });
+
+            // Save XP to avatar
+            var currentXP = myAvatar.xp || 0;
+            var newXP = currentXP + xpEarned;
+            var newLevel = AvatarSystem.getLevel(newXP);
+            await db.ref(BASE + '/avatar/' + currentUid).update({
+                xp_total: newXP,
+                nivel: newLevel.level,
+                titulo: newLevel.title,
+                emoji: newLevel.emoji
+            });
+            await db.ref(BASE + '/avatar/' + currentUid + '/sesiones/arena-' + historyKey).set({
+                xp: xpEarned,
+                timestamp: firebase.database.ServerValue.TIMESTAMP,
+                synced: true
+            });
+
+            myAvatar.xp = newXP;
+            myAvatar.level = newLevel;
+            myRecord.wins = newWins;
+            myRecord.losses = newLosses;
+            myRecord.streak = newStreak;
+            todayBattles++;
+            renderRecord();
+            document.getElementById('myLevelPill').textContent = newLevel.emoji + ' Nivel ' + newLevel.level;
+            document.getElementById('battlesLeft').textContent = Math.max(0, MAX_BATTLES_PER_DAY - todayBattles);
+        } catch (e) {
+            console.error('Save battle error:', e);
+            toast('Error al guardar resultado', 'err');
+        }
+    }
+
+    /* ========== UTILS ========== */
+    function toast(msg, type) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.className = 'toast ' + (type === 'ok' ? 'toast-ok' : 'toast-err') + ' show';
+        setTimeout(function(){ t.classList.remove('show'); }, 3000);
+    }
+    </script>
+</body>
+</html>

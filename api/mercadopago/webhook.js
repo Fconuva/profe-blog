@@ -66,32 +66,39 @@ module.exports = async (req, res) => {
 
     // For payment notifications, fetch payment details
     const payment = await paymentClient.get({ id: id });
+    const metadata = payment.metadata || {};
+    const isCourseRegistration = metadata.registration_type === 'curso'
+      && metadata.course === 'docente-creador'
+      && metadata.registration_id;
+
     console.log('MP payment fetched:', {
       id: payment.id,
       status: payment.status,
       payer: payment.payer,
-      metadata: payment.metadata
+      metadata: metadata
     });
 
     if (payment.status === 'approved') {
       // Store approved payment info for later account creation by user
       const adminSdk = initFirebase();
       const db = adminSdk.database();
+      const paymentApprovedAt = new Date().toISOString();
+      const paymentApprovedAtMs = Date.now();
 
       // Get email from metadata first, then payer
       const payerEmail = 
-        (payment.metadata && payment.metadata.user_email) ||
+        (metadata.user_email) ||
         (payment.payer && payment.payer.email) ||
         (payment.additional_info && payment.additional_info.payer && payment.additional_info.payer.email) ||
         null;
       
       const payerName = 
-        (payment.metadata && payment.metadata.user_name) ||
+        (metadata.user_name) ||
         (payment.payer && payment.payer.first_name) ||
         '';
 
-      const payerUid = (payment.metadata && payment.metadata.user_uid) || null;
-      const payerPlan = (payment.metadata && payment.metadata.plan) || 'completo';
+      const payerUid = metadata.user_uid || null;
+      const payerPlan = metadata.plan || 'completo';
 
       if (!payerEmail) {
         console.error('No payer email found in payment');
@@ -105,23 +112,44 @@ module.exports = async (req, res) => {
         email: payerEmail,
         name: payerName,
         uid: payerUid,
+        registrationType: isCourseRegistration ? 'curso' : 'portafolio',
+        course: metadata.course || '',
+        registrationId: metadata.registration_id || '',
+        selectedDate: metadata.selected_date || '',
+        selectedDateLabel: metadata.selected_date_label || '',
         status: 'approved',
         amount: payment.transaction_amount,
         currency: payment.currency_id,
-        verifiedAt: new Date().toISOString(),
+        verifiedAt: paymentApprovedAt,
         plan: payerPlan
       });
 
+      if (isCourseRegistration) {
+        await db.ref('course_registrations/docente_creador/' + metadata.registration_id).update({
+          status: 'inscrito',
+          paymentStatus: 'approved',
+          paymentId: String(payment.id),
+          mercadoPagoPaymentId: String(payment.id),
+          amount: payment.transaction_amount,
+          holdUntilMs: 0,
+          updatedAt: paymentApprovedAt,
+          updatedAtMs: paymentApprovedAtMs,
+          paymentApprovedAt: paymentApprovedAt,
+          paymentApprovedAtMs: paymentApprovedAtMs
+        });
+      }
+
       // Update user's portfolio payment status if uid available
-      if (payerUid) {
+      if (!isCourseRegistration && payerUid) {
         await db.ref('portafolios/' + payerUid + '/paymentStatus').set('approved');
-        await db.ref('portafolios/' + payerUid + '/paidAt').set(new Date().toISOString());
+        await db.ref('portafolios/' + payerUid + '/paidAt').set(paymentApprovedAt);
       }
 
       console.log('Payment verified and stored:', {
         paymentId: payment.id,
         email: payerEmail,
-        status: 'approved'
+        status: 'approved',
+        registrationType: isCourseRegistration ? 'curso' : 'portafolio'
       });
 
       return res.status(200).send('ok');

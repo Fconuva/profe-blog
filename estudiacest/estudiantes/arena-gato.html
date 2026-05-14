@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gato Online - Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#020617;color:#e2e8f0;min-height:100vh}
+        .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(2,6,23,.9);backdrop-filter:blur(12px);position:sticky;top:0;z-index:40;border-bottom:1px solid rgba(255,255,255,.08)}
+        .back-link{color:#94a3b8;text-decoration:none;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px}
+        .back-link:hover{color:#fff}
+        .top-title{font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px}
+        .pill{padding:5px 12px;border-radius:999px;background:linear-gradient(135deg,#0f766e,#0891b2);color:#ecfeff;font-size:11px;font-weight:800}
+        .main{max-width:980px;margin:0 auto;padding:24px 20px 90px}
+        .hero{padding:24px;border-radius:24px;background:radial-gradient(circle at top left,rgba(6,182,212,.26),transparent 42%),linear-gradient(135deg,rgba(15,23,42,.94),rgba(8,47,73,.92),rgba(15,23,42,.96));border:1px solid rgba(103,232,249,.16);box-shadow:0 24px 56px rgba(0,0,0,.3);margin-bottom:18px}
+        .hero-kicker{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(8,47,73,.55);color:#67e8f9;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.3px;margin-bottom:12px}
+        .hero h1{font-size:30px;font-weight:900;margin-bottom:8px;color:#fff}
+        .hero p{font-size:14px;line-height:1.65;color:#cbd5e1;max-width:720px}
+        .summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-bottom:22px}
+        .summary-card{padding:16px 18px;border-radius:18px;background:linear-gradient(135deg,rgba(15,23,42,.92),rgba(30,41,59,.92));border:1px solid rgba(255,255,255,.08)}
+        .summary-card .label{font-size:11px;font-weight:800;letter-spacing:.35px;text-transform:uppercase;color:#67e8f9;margin-bottom:6px}
+        .summary-card .value{font-size:26px;font-weight:900;color:#fff}
+        .summary-card .copy{font-size:12px;color:#94a3b8;margin-top:4px;line-height:1.5}
+        .panel-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:22px}
+        .panel{padding:18px;border-radius:20px;background:rgba(15,23,42,.86);border:1px solid rgba(255,255,255,.08);box-shadow:0 18px 44px rgba(0,0,0,.22)}
+        .panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+        .panel-title{font-size:16px;font-weight:900;color:#fff}
+        .panel-copy{font-size:12px;color:#94a3b8;line-height:1.5}
+        .challenge-list,.history-list,.opponent-list{display:flex;flex-direction:column;gap:10px}
+        .challenge-card,.history-item,.opp-card{padding:14px 15px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+        .challenge-row,.opp-row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+        .challenge-name,.opp-name{font-size:14px;font-weight:800;color:#fff}
+        .challenge-meta,.opp-meta,.history-meta{font-size:12px;color:#94a3b8;line-height:1.5;margin-top:4px}
+        .challenge-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+        .btn{border:none;border-radius:999px;padding:9px 14px;font:inherit;font-size:12px;font-weight:800;cursor:pointer;transition:transform .15s,opacity .15s}
+        .btn:hover{transform:translateY(-1px)}
+        .btn-primary{background:linear-gradient(135deg,#22c55e,#14b8a6);color:#042f2e}
+        .btn-secondary{background:rgba(255,255,255,.1);color:#e2e8f0}
+        .btn-danger{background:linear-gradient(135deg,#dc2626,#f97316);color:#fff}
+        .btn-ghost{background:linear-gradient(135deg,#38bdf8,#22d3ee);color:#082f49}
+        .status-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.2px;text-transform:uppercase;flex-shrink:0}
+        .status-pending{background:rgba(245,158,11,.16);color:#fde68a}
+        .status-accepted{background:rgba(34,197,94,.16);color:#bbf7d0}
+        .status-finished{background:rgba(56,189,248,.16);color:#bae6fd}
+        .status-rejected,.status-cancelled{background:rgba(239,68,68,.16);color:#fecaca}
+        .section-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+        .game-card{padding:20px;border-radius:24px;background:linear-gradient(135deg,rgba(15,23,42,.96),rgba(12,74,110,.92),rgba(15,23,42,.94));border:1px solid rgba(103,232,249,.16);box-shadow:0 26px 56px rgba(0,0,0,.3);margin-bottom:24px}
+        .duel-header{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+        .duel-names{display:flex;flex-wrap:wrap;align-items:center;gap:12px;font-size:14px;font-weight:800}
+        .duel-names span{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.08)}
+        .turn-chip{padding:9px 14px;border-radius:999px;background:rgba(103,232,249,.14);color:#cffafe;font-size:12px;font-weight:900;letter-spacing:.25px;text-transform:uppercase}
+        .board-layout{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:16px;align-items:start}
+        .board{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .cell{aspect-ratio:1;border:none;border-radius:22px;background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.04));color:#fff;font-family:inherit;font-size:clamp(30px,7vw,52px);font-weight:900;cursor:pointer;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);transition:transform .15s,box-shadow .15s,background .15s}
+        .cell:hover{transform:translateY(-2px);box-shadow:inset 0 0 0 1px rgba(103,232,249,.32),0 12px 24px rgba(0,0,0,.18)}
+        .cell:disabled{cursor:not-allowed;opacity:.75;transform:none}
+        .cell.x{color:#67e8f9;background:linear-gradient(135deg,rgba(6,182,212,.2),rgba(8,47,73,.38))}
+        .cell.o{color:#fde68a;background:linear-gradient(135deg,rgba(251,191,36,.18),rgba(120,53,15,.38))}
+        .board-meta{display:flex;flex-direction:column;gap:10px}
+        .meta-card{padding:14px 15px;border-radius:16px;background:rgba(2,6,23,.32);border:1px solid rgba(255,255,255,.08)}
+        .meta-label{font-size:11px;font-weight:900;letter-spacing:.25px;text-transform:uppercase;color:#67e8f9;margin-bottom:4px}
+        .meta-value{font-size:16px;font-weight:900;color:#fff;line-height:1.4}
+        .game-summary{margin-top:14px;font-size:13px;line-height:1.65;color:#cbd5e1}
+        .opp-card{display:flex;align-items:center;justify-content:space-between;gap:14px}
+        .opp-card.disabled{opacity:.6}
+        .opp-main{display:flex;align-items:center;gap:12px;min-width:0}
+        .opp-avatar{width:56px;height:56px;border-radius:18px;overflow:hidden;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);flex-shrink:0}
+        .opp-copy{min-width:0}
+        .opp-level{font-size:11px;color:#67e8f9;font-weight:800;margin-top:5px}
+        .history-item{display:flex;align-items:center;justify-content:space-between;gap:12px}
+        .history-icon{font-size:22px;flex-shrink:0}
+        .history-copy{flex:1;min-width:0}
+        .history-result{font-size:13px;font-weight:800;color:#fff}
+        .history-time{font-size:11px;color:#64748b;flex-shrink:0}
+        .empty-state{text-align:center;padding:24px 16px;color:#64748b}
+        .empty-state .icon{font-size:38px;margin-bottom:8px}
+        .empty-state p{font-size:13px;line-height:1.6}
+        .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%) translateY(80px);padding:12px 22px;border-radius:12px;font-size:13px;font-weight:800;opacity:0;transition:transform .24s,opacity .24s;pointer-events:none;z-index:2000}
+        .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+        .toast-ok{background:#16a34a;color:#fff}
+        .toast-err{background:#dc2626;color:#fff}
+        @media(max-width:760px){
+            .hero h1{font-size:24px}
+            .board-layout{grid-template-columns:1fr}
+            .duel-header{align-items:flex-start}
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="arena.html" class="back-link">← Volver a la Arena</a>
+        <div class="top-title">🎮 Gato online</div>
+        <div><span class="pill" id="gatoLevelPill">Cargando...</span></div>
+    </div>
+
+    <div class="main">
+        <section class="hero">
+            <div class="hero-kicker">Sala aparte de la Arena</div>
+            <h1>Tres en linea en tiempo real</h1>
+            <p>Envia un desafio, espera que tu companero lo acepte y jueguen un gato online. Puedes jugar todas las veces que quieras. Las batallas normales siguen intactas y este modo queda separado del ranking de combate.</p>
+        </section>
+
+        <section class="summary-grid">
+            <div class="summary-card">
+                <div class="label">Partidas jugadas hoy</div>
+                <div class="value" id="gamesLeft">0</div>
+                <div class="copy">Este contador es solo informativo: no existe limite diario.</div>
+            </div>
+            <div class="summary-card">
+                <div class="label">Estado actual</div>
+                <div class="value" id="gatoStatus">Sin partida</div>
+                <div class="copy">Acepta un desafio o envia uno nuevo para abrir el tablero.</div>
+            </div>
+        </section>
+
+        <section class="panel-grid">
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title">📥 Desafios para ti</div>
+                        <div class="panel-copy">Acepta o rechaza los duelos pendientes.</div>
+                    </div>
+                </div>
+                <div class="challenge-list" id="incomingList">
+                    <div class="empty-state"><div class="icon">⏳</div><p>Cargando desafios...</p></div>
+                </div>
+            </div>
+            <div class="panel">
+                <div class="panel-head">
+                    <div>
+                        <div class="panel-title">📤 Tus desafios enviados</div>
+                        <div class="panel-copy">Revisa si ya aceptaron tu invitacion.</div>
+                    </div>
+                </div>
+                <div class="challenge-list" id="outgoingList">
+                    <div class="empty-state"><div class="icon">📨</div><p>Aun no envias desafios.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="gameSection">
+            <div class="section-title">🧠 Tablero en vivo</div>
+            <div class="game-card">
+                <div class="duel-header">
+                    <div class="duel-names">
+                        <span id="playerX">X: Esperando</span>
+                        <span id="playerO">O: Esperando</span>
+                    </div>
+                    <div class="turn-chip" id="turnChip">Esperando desafio</div>
+                </div>
+                <div class="board-layout">
+                    <div class="board" id="gatoBoard">
+                        <button class="cell" type="button" data-index="0"></button>
+                        <button class="cell" type="button" data-index="1"></button>
+                        <button class="cell" type="button" data-index="2"></button>
+                        <button class="cell" type="button" data-index="3"></button>
+                        <button class="cell" type="button" data-index="4"></button>
+                        <button class="cell" type="button" data-index="5"></button>
+                        <button class="cell" type="button" data-index="6"></button>
+                        <button class="cell" type="button" data-index="7"></button>
+                        <button class="cell" type="button" data-index="8"></button>
+                    </div>
+                    <div class="board-meta">
+                        <div class="meta-card">
+                            <div class="meta-label">Tu marca</div>
+                            <div class="meta-value" id="myMark">-</div>
+                        </div>
+                        <div class="meta-card">
+                            <div class="meta-label">Resultado</div>
+                            <div class="meta-value" id="gameResult">Sin partida</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="game-summary" id="gameSummary">Acepta un desafio o envia uno nuevo para comenzar.</div>
+            </div>
+        </section>
+
+        <section>
+            <div class="section-title">🎯 Elige companero</div>
+            <div class="opponent-list" id="opponentList">
+                <div class="empty-state"><div class="icon">👥</div><p>Cargando companeros...</p></div>
+            </div>
+        </section>
+
+        <section style="margin-top:28px">
+            <div class="section-title">🕓 Historial de gato</div>
+            <div class="history-list" id="historyList">
+                <div class="empty-state"><div class="icon">🧩</div><p>Aun no terminas partidas de gato.</p></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="js/avatar-look.js"></script>
+    <script src="js/gato-alerts.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+    'use strict';
+
+    const FIREBASE_CONFIG = {
+        apiKey: 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',
+        authDomain: 'estudiacest.firebaseapp.com',
+        databaseURL: 'https://estudiacest-default-rtdb.firebaseio.com',
+        projectId: 'estudiacest',
+        storageBucket: 'estudiacest.firebasestorage.app',
+        messagingSenderId: '999002169815',
+        appId: '1:999002169815:web:51203237bc77c2e74deb92'
+    };
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+    const BASE = 'plataforma_estudiantes';
+    const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/arena-gato.html');
+    const CURSO_LABELS = {'1A-HC':'1A HC','1B-HC':'1B HC','2A-HC':'2A HC','2B-HC':'2B HC','2A-TP':'2A TP','2B-TP':'2B TP','2C-TP':'2C TP','2D-TP':'2D TP','2E-TP':'2E TP','3A-HC':'3A HC','3B-HC':'3B HC','4A-HC':'4A HC','4B-HC':'4B HC'};
+    const RANKING_PAIRS = {
+        '1A-HC':['1A-HC','1B-HC'],'1B-HC':['1A-HC','1B-HC'],
+        '2A-HC':['2A-HC','2B-HC'],'2B-HC':['2A-HC','2B-HC'],
+        '2A-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2B-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2C-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2D-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2E-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],
+        '3A-HC':['3A-HC','3B-HC'],'3B-HC':['3A-HC','3B-HC'],
+        '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
+    };
+    initStudentForcedRefresh({ auth, db, base: BASE });
+    initGatoChallengeAlerts({ auth, db, base: BASE, openUrl: 'arena-gato.html', storageScope: 'estudiantes' });
+
+    let currentUid = null;
+    let currentStudent = null;
+    let currentAvatar = null;
+    let opponents = [];
+    let incomingChallenges = [];
+    let outgoingChallenges = [];
+    let todayGames = 0;
+    let currentGameId = null;
+    let currentGameData = null;
+    let incomingRef = null;
+    let outgoingRef = null;
+    let gameRef = null;
+    let isMutating = false;
+
+    Array.from(document.querySelectorAll('.cell')).forEach(function (cell) {
+        cell.addEventListener('click', function () {
+            makeMove(Number(cell.getAttribute('data-index')));
+        });
+    });
+
+    function todayKeyFromTimestamp(ts) {
+        const d = new Date(ts || Date.now());
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    function normalizeBoard(board) {
+        const normalized = Array.isArray(board) ? board.slice(0, 9) : [];
+        while (normalized.length < 9) normalized.push('');
+        return normalized.map(function (value) {
+            return value === 'X' || value === 'O' ? value : '';
+        });
+    }
+
+    function timeAgo(ts) {
+        if (!ts) return 'reciente';
+        const diff = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+        if (diff < 60) return 'ahora';
+        if (diff < 3600) return Math.floor(diff / 60) + ' min';
+        if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+        return Math.floor(diff / 86400) + ' d';
+    }
+
+    function toast(message, type) {
+        const el = document.getElementById('toast');
+        el.textContent = message;
+        el.className = 'toast show ' + (type === 'err' ? 'toast-err' : 'toast-ok');
+        clearTimeout(toast._timer);
+        toast._timer = setTimeout(function () {
+            el.className = 'toast';
+        }, 3000);
+    }
+
+    function sortByFreshness(items) {
+        items.sort(function (a, b) {
+            const aScore = a.updatedAt || a.respondedAt || a.createdAt || a.endedAt || 0;
+            const bScore = b.updatedAt || b.respondedAt || b.createdAt || b.endedAt || 0;
+            return bScore - aScore;
+        });
+        return items;
+    }
+
+    function parseChallengeSnapshot(snap) {
+        const items = [];
+        snap.forEach(function (child) {
+            const value = child.val() || {};
+            value.id = child.key;
+            items.push(value);
+        });
+        return sortByFreshness(items);
+    }
+
+    function getMyMark(game) {
+        if (!game) return '';
+        if (game.xUid === currentUid) return 'X';
+        if (game.oUid === currentUid) return 'O';
+        return '';
+    }
+
+    function activeGameInProgress() {
+        return !!(currentGameData && currentGameData.status === 'active');
+    }
+
+    function statusMeta(status) {
+        switch (status) {
+            case 'pending': return { label: 'Pendiente', className: 'status-pending' };
+            case 'accepted':
+            case 'active': return { label: 'Aceptado', className: 'status-accepted' };
+            case 'finished': return { label: 'Terminado', className: 'status-finished' };
+            case 'cancelled': return { label: 'Cancelado', className: 'status-cancelled' };
+            default: return { label: 'Rechazado', className: 'status-rejected' };
+        }
+    }
+
+    function findOpponentByUid(uid) {
+        return opponents.find(function (item) { return item.uid === uid; }) || null;
+    }
+
+    function findChallengeWithStudent(uid) {
+        const matches = [];
+        incomingChallenges.forEach(function (challenge) {
+            if (challenge.challengerUid === uid && ['pending', 'accepted', 'active'].indexOf(challenge.status) !== -1) matches.push(challenge);
+        });
+        outgoingChallenges.forEach(function (challenge) {
+            if (challenge.targetUid === uid && ['pending', 'accepted', 'active'].indexOf(challenge.status) !== -1) matches.push(challenge);
+        });
+        sortByFreshness(matches);
+        return matches[0] || null;
+    }
+
+    function calculateWinner(board) {
+        const lines = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8],
+            [0, 3, 6], [1, 4, 7], [2, 5, 8],
+            [0, 4, 8], [2, 4, 6]
+        ];
+        for (let i = 0; i < lines.length; i++) {
+            const line = lines[i];
+            const first = board[line[0]];
+            if (first && first === board[line[1]] && first === board[line[2]]) return first;
+        }
+        return '';
+    }
+
+    function updateStatusHeadline(text) {
+        document.getElementById('gatoStatus').textContent = text;
+    }
+
+    function renderGame(game) {
+        const board = normalizeBoard(game && game.board);
+        const myMark = getMyMark(game);
+        const boardCells = Array.from(document.querySelectorAll('.cell'));
+
+        if (!game) {
+            document.getElementById('playerX').textContent = 'X: Esperando';
+            document.getElementById('playerO').textContent = 'O: Esperando';
+            document.getElementById('turnChip').textContent = 'Esperando desafio';
+            document.getElementById('myMark').textContent = '-';
+            document.getElementById('gameResult').textContent = 'Sin partida';
+            document.getElementById('gameSummary').textContent = 'Acepta un desafio o envia uno nuevo para comenzar.';
+            updateStatusHeadline('Sin partida');
+        } else {
+            document.getElementById('playerX').textContent = 'X: ' + (game.xName || 'Jugador X');
+            document.getElementById('playerO').textContent = 'O: ' + (game.oName || 'Jugador O');
+            document.getElementById('myMark').textContent = myMark || '-';
+
+            if (game.status === 'active') {
+                const turnName = game.currentTurn === 'X' ? (game.xName || 'Jugador X') : (game.oName || 'Jugador O');
+                const myTurn = myMark && game.currentTurn === myMark;
+                document.getElementById('turnChip').textContent = myTurn ? 'Tu turno' : 'Turno de ' + turnName;
+                document.getElementById('gameResult').textContent = 'En juego';
+                document.getElementById('gameSummary').textContent = myTurn ? 'Marca una casilla libre para jugar tu turno.' : 'Espera la jugada de tu companero.';
+                updateStatusHeadline('En juego');
+            } else {
+                const winnerLabel = game.winner === 'draw'
+                    ? 'Empate'
+                    : (game.winner === 'X' ? (game.xName || 'Jugador X') : (game.oName || 'Jugador O')) + ' gano';
+                document.getElementById('turnChip').textContent = 'Partida terminada';
+                document.getElementById('gameResult').textContent = winnerLabel;
+                document.getElementById('gameSummary').textContent = game.winner === 'draw'
+                    ? 'La partida termino en empate. Puedes enviar otro desafio cuando quieras.'
+                    : winnerLabel + '. Puedes revisar el historial o abrir un nuevo duelo.';
+                updateStatusHeadline(game.winner === 'draw' ? 'Empate' : 'Terminada');
+            }
+        }
+
+        boardCells.forEach(function (cell, index) {
+            const mark = board[index];
+            cell.textContent = mark;
+            cell.className = 'cell' + (mark ? ' ' + mark.toLowerCase() : '');
+            const canPlay = !!(game && game.status === 'active' && myMark && game.currentTurn === myMark && !mark);
+            cell.disabled = !canPlay;
+        });
+    }
+
+    function renderIncomingChallenges() {
+        const container = document.getElementById('incomingList');
+        if (!incomingChallenges.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">🧘</div><p>No tienes desafios pendientes.</p></div>';
+            return;
+        }
+
+        container.innerHTML = incomingChallenges.map(function (challenge) {
+            const status = statusMeta(challenge.status);
+            const canOpen = !!challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1;
+            let actions = '';
+            if (challenge.status === 'pending') {
+                actions = '<button class="btn btn-primary" type="button" data-action="accept" data-id="' + challenge.id + '">Aceptar</button>' +
+                    '<button class="btn btn-danger" type="button" data-action="reject" data-id="' + challenge.id + '">Rechazar</button>';
+            } else if (canOpen) {
+                actions = '<button class="btn btn-ghost" type="button" data-action="open" data-game-id="' + challenge.gameId + '">Abrir partida</button>';
+            }
+            return '<article class="challenge-card">' +
+                '<div class="challenge-row"><div><div class="challenge-name">' + (challenge.challengerName || 'Companero') + '</div>' +
+                '<div class="challenge-meta">' + ((CURSO_LABELS[challenge.challengerCurso] || challenge.challengerCurso || 'Curso compartido')) + ' · hace ' + timeAgo(challenge.createdAt) + '</div></div>' +
+                '<span class="status-badge ' + status.className + '">' + status.label + '</span></div>' +
+                '<div class="challenge-actions">' + actions + '</div>' +
+                '</article>';
+        }).join('');
+
+        Array.from(container.querySelectorAll('[data-action="accept"]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                acceptChallenge(button.getAttribute('data-id'));
+            });
+        });
+        Array.from(container.querySelectorAll('[data-action="reject"]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                rejectChallenge(button.getAttribute('data-id'));
+            });
+        });
+        Array.from(container.querySelectorAll('[data-action="open"]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                openGame(button.getAttribute('data-game-id'));
+            });
+        });
+    }
+
+    function renderOutgoingChallenges() {
+        const container = document.getElementById('outgoingList');
+        if (!outgoingChallenges.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>Aun no envias desafios.</p></div>';
+            return;
+        }
+
+        container.innerHTML = outgoingChallenges.map(function (challenge) {
+            const status = statusMeta(challenge.status);
+            let actions = '';
+            if (challenge.status === 'pending') {
+                actions = '<button class="btn btn-secondary" type="button" data-action="cancel" data-id="' + challenge.id + '">Cancelar</button>';
+            } else if (challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1) {
+                actions = '<button class="btn btn-ghost" type="button" data-action="open" data-game-id="' + challenge.gameId + '">Abrir partida</button>';
+            }
+            return '<article class="challenge-card">' +
+                '<div class="challenge-row"><div><div class="challenge-name">' + (challenge.targetName || 'Companero') + '</div>' +
+                '<div class="challenge-meta">' + ((CURSO_LABELS[challenge.targetCurso] || challenge.targetCurso || 'Curso compartido')) + ' · hace ' + timeAgo(challenge.createdAt) + '</div></div>' +
+                '<span class="status-badge ' + status.className + '">' + status.label + '</span></div>' +
+                '<div class="challenge-actions">' + actions + '</div>' +
+                '</article>';
+        }).join('');
+
+        Array.from(container.querySelectorAll('[data-action="cancel"]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                cancelOutgoingChallenge(button.getAttribute('data-id'));
+            });
+        });
+        Array.from(container.querySelectorAll('[data-action="open"]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                openGame(button.getAttribute('data-game-id'));
+            });
+        });
+    }
+
+    function renderOpponents() {
+        const container = document.getElementById('opponentList');
+        if (!opponents.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">🏜️</div><p>No hay companeros disponibles en tu grupo de cursos.</p></div>';
+            return;
+        }
+
+        const cannotSendMore = activeGameInProgress();
+        container.innerHTML = opponents.map(function (opponent) {
+            const linkedChallenge = findChallengeWithStudent(opponent.uid);
+            let actionHtml = '<button class="btn btn-ghost" type="button" data-target="' + opponent.uid + '">Desafiar</button>';
+            let disabledClass = '';
+
+            if (linkedChallenge) {
+                disabledClass = ' disabled';
+                const linkedStatus = linkedChallenge.status === 'pending' ? 'Pendiente' : 'En curso';
+                actionHtml = '<span class="status-badge ' + (linkedChallenge.status === 'pending' ? 'status-pending' : 'status-accepted') + '">' + linkedStatus + '</span>';
+            } else if (cannotSendMore) {
+                disabledClass = ' disabled';
+                actionHtml = '<span class="status-badge status-rejected">Partida activa</span>';
+            }
+
+            return '<article class="opp-card' + disabledClass + '">' +
+                '<div class="opp-main"><div class="opp-avatar" data-uid="' + opponent.uid + '"></div>' +
+                '<div class="opp-copy"><div class="opp-name">' + opponent.nombre + '</div>' +
+                '<div class="opp-meta">' + (CURSO_LABELS[opponent.curso] || opponent.curso) + '</div>' +
+                '<div class="opp-level">' + opponent.level.emoji + ' ' + opponent.level.title + '</div></div></div>' +
+                actionHtml + '</article>';
+        }).join('');
+
+        Array.from(container.querySelectorAll('[data-target]')).forEach(function (button) {
+            button.addEventListener('click', function () {
+                sendChallenge(button.getAttribute('data-target'));
+            });
+        });
+        Array.from(container.querySelectorAll('.opp-avatar')).forEach(function (node) {
+            const uid = node.getAttribute('data-uid');
+            const opponent = findOpponentByUid(uid);
+            if (!opponent) return;
+            AvatarLookSystem.render(node, {
+                look: opponent.look,
+                xpTotal: opponent.xp,
+                avatarData: opponent.avatarData,
+                size: 52,
+                shape: 'rounded',
+                background: opponent.level.bg
+            });
+        });
+    }
+
+    function renderHistory(items) {
+        const container = document.getElementById('historyList');
+        if (!items.length) {
+            container.innerHTML = '<div class="empty-state"><div class="icon">🧩</div><p>Aun no terminas partidas de gato.</p></div>';
+            return;
+        }
+        container.innerHTML = items.slice(0, 12).map(function (item) {
+            const icon = item.result === 'win' ? '🏆' : (item.result === 'draw' ? '🤝' : '💀');
+            const label = item.result === 'win' ? 'Victoria' : (item.result === 'draw' ? 'Empate' : 'Derrota');
+            return '<article class="history-item">' +
+                '<div class="history-icon">' + icon + '</div>' +
+                '<div class="history-copy"><div class="history-result">' + label + ' vs ' + (item.opponentName || 'Companero') + '</div>' +
+                '<div class="history-meta">Jugaste con ' + (item.mark || '-') + ' · ' + timeAgo(item.endedAt) + '</div></div>' +
+                '<div class="history-time">' + timeAgo(item.endedAt) + '</div></article>';
+        }).join('');
+    }
+
+    async function countTodayGames() {
+        const snap = await db.ref(BASE + '/arena/gato/daily/' + currentUid + '/' + todayKeyFromTimestamp()).once('value');
+        const dailyEntries = snap.val() || {};
+        todayGames = Object.keys(dailyEntries).length;
+        document.getElementById('gamesLeft').textContent = todayGames;
+    }
+
+    async function loadOpponents() {
+        const pairCursos = RANKING_PAIRS[currentStudent.curso] || [currentStudent.curso];
+        const [estSnap, avatarSnap] = await Promise.all([
+            db.ref(BASE + '/estudiantes').once('value'),
+            db.ref(BASE + '/avatar').once('value')
+        ]);
+        const students = estSnap.val() || {};
+        const avatars = avatarSnap.val() || {};
+        opponents = [];
+        for (const uid in students) {
+            if (uid === currentUid) continue;
+            const student = students[uid];
+            if (pairCursos.indexOf(student.curso) === -1) continue;
+            const avatar = avatars[uid] || {};
+            const xpTotal = avatar.xp_total || 0;
+            const level = AvatarSystem.getLevel(xpTotal);
+            opponents.push({
+                uid: uid,
+                nombre: student.nombre,
+                curso: student.curso,
+                xp: xpTotal,
+                level: level,
+                avatarData: avatar,
+                look: AvatarLookSystem.normalizeLook(avatar.look, { xpTotal: xpTotal, avatarData: avatar })
+            });
+        }
+        opponents.sort(function (a, b) { return b.xp - a.xp; });
+        renderOpponents();
+    }
+
+    async function loadHistory() {
+        const snap = await db.ref(BASE + '/arena/gato/history/' + currentUid).once('value');
+        const items = [];
+        snap.forEach(function (child) {
+            const value = child.val() || {};
+            value.id = child.key;
+            items.push(value);
+        });
+        sortByFreshness(items);
+        renderHistory(items);
+    }
+
+    function detachChallengeRefs() {
+        if (incomingRef) incomingRef.off();
+        if (outgoingRef) outgoingRef.off();
+    }
+
+    function syncCurrentGameFromChallenges() {
+        const candidates = incomingChallenges.concat(outgoingChallenges).filter(function (challenge) {
+            return !!challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1;
+        });
+        sortByFreshness(candidates);
+        if (!candidates.length) {
+            if (!activeGameInProgress()) renderGame(null);
+            return;
+        }
+        const latest = candidates[0];
+        if (latest.gameId && latest.gameId !== currentGameId) attachGameListener(latest.gameId);
+    }
+
+    function subscribeChallenges() {
+        detachChallengeRefs();
+        incomingRef = db.ref(BASE + '/arena/gato/incoming/' + currentUid);
+        outgoingRef = db.ref(BASE + '/arena/gato/outgoing/' + currentUid);
+        incomingRef.on('value', function (snap) {
+            incomingChallenges = parseChallengeSnapshot(snap);
+            renderIncomingChallenges();
+            renderOpponents();
+            syncCurrentGameFromChallenges();
+        });
+        outgoingRef.on('value', function (snap) {
+            outgoingChallenges = parseChallengeSnapshot(snap);
+            renderOutgoingChallenges();
+            renderOpponents();
+            syncCurrentGameFromChallenges();
+        });
+    }
+
+    function attachGameListener(gameId) {
+        if (!gameId) return;
+        if (gameRef) gameRef.off();
+        currentGameId = gameId;
+        gameRef = db.ref(BASE + '/arena/gato/games/' + gameId);
+        gameRef.on('value', function (snap) {
+            if (!snap.exists()) {
+                currentGameData = null;
+                renderGame(null);
+                return;
+            }
+            currentGameData = snap.val() || {};
+            currentGameData.id = gameId;
+            renderGame(currentGameData);
+            if (currentGameData.status === 'finished') {
+                handleFinishedGame(currentGameData).catch(function (error) {
+                    console.error('Gato finish sync error:', error);
+                });
+            }
+        });
+    }
+
+    function openGame(gameId) {
+        attachGameListener(gameId);
+        document.getElementById('gameSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    async function sendChallenge(targetUid) {
+        if (isMutating) return;
+        if (activeGameInProgress()) { toast('Termina la partida actual antes de enviar otro desafio.', 'err'); return; }
+        if (findChallengeWithStudent(targetUid)) { toast('Ya tienes un desafio pendiente o activo con este companero.', 'err'); return; }
+
+        const target = findOpponentByUid(targetUid);
+        if (!target) { toast('Companero no encontrado.', 'err'); return; }
+
+        isMutating = true;
+        try {
+            const challengeId = db.ref().push().key;
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            const payload = {
+                challengeId: challengeId,
+                challengerUid: currentUid,
+                challengerName: currentStudent.nombre,
+                challengerCurso: currentStudent.curso,
+                targetUid: target.uid,
+                targetName: target.nombre,
+                targetCurso: target.curso,
+                status: 'pending',
+                message: 'Te han desafiado a un gato',
+                createdAt: timestamp,
+                updatedAt: timestamp
+            };
+            const updates = {};
+            updates[BASE + '/arena/gato/incoming/' + target.uid + '/' + challengeId] = payload;
+            updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId] = payload;
+            await db.ref().update(updates);
+            toast('Desafio enviado a ' + target.nombre + '.', 'ok');
+        } catch (error) {
+            console.error('Send challenge error:', error);
+            toast('No se pudo enviar el desafio.', 'err');
+        } finally {
+            isMutating = false;
+        }
+    }
+
+    async function acceptChallenge(challengeId) {
+        if (isMutating) return;
+        const challenge = incomingChallenges.find(function (item) { return item.id === challengeId; });
+        if (!challenge || challenge.status !== 'pending') { toast('Ese desafio ya no esta disponible.', 'err'); return; }
+        if (activeGameInProgress()) { toast('Ya tienes una partida en curso.', 'err'); return; }
+
+        isMutating = true;
+        try {
+            const gameId = db.ref().push().key;
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            const updates = {};
+            updates[BASE + '/arena/gato/games/' + gameId] = {
+                challengeId: challengeId,
+                xUid: challenge.challengerUid,
+                xName: challenge.challengerName || 'Jugador X',
+                xCurso: challenge.challengerCurso || '',
+                oUid: currentUid,
+                oName: currentStudent.nombre,
+                oCurso: currentStudent.curso,
+                status: 'active',
+                board: ['', '', '', '', '', '', '', '', ''],
+                currentTurn: 'X',
+                winner: '',
+                moves: 0,
+                createdAt: timestamp,
+                updatedAt: timestamp
+            };
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/status'] = 'accepted';
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/gameId'] = gameId;
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/respondedAt'] = timestamp;
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/status'] = 'accepted';
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/gameId'] = gameId;
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/respondedAt'] = timestamp;
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            await db.ref().update(updates);
+            toast('Desafio aceptado. El rival juega con X.', 'ok');
+            openGame(gameId);
+        } catch (error) {
+            console.error('Accept challenge error:', error);
+            toast('No se pudo aceptar el desafio.', 'err');
+        } finally {
+            isMutating = false;
+        }
+    }
+
+    async function rejectChallenge(challengeId) {
+        if (isMutating) return;
+        const challenge = incomingChallenges.find(function (item) { return item.id === challengeId; });
+        if (!challenge) return;
+        isMutating = true;
+        try {
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            const updates = {};
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/status'] = 'rejected';
+            updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/status'] = 'rejected';
+            updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            await db.ref().update(updates);
+            toast('Desafio rechazado.', 'ok');
+        } catch (error) {
+            console.error('Reject challenge error:', error);
+            toast('No se pudo rechazar el desafio.', 'err');
+        } finally {
+            isMutating = false;
+        }
+    }
+
+    async function cancelOutgoingChallenge(challengeId) {
+        if (isMutating) return;
+        const challenge = outgoingChallenges.find(function (item) { return item.id === challengeId; });
+        if (!challenge || challenge.status !== 'pending') return;
+        isMutating = true;
+        try {
+            const timestamp = firebase.database.ServerValue.TIMESTAMP;
+            const updates = {};
+            updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId + '/status'] = 'cancelled';
+            updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            updates[BASE + '/arena/gato/incoming/' + challenge.targetUid + '/' + challengeId + '/status'] = 'cancelled';
+            updates[BASE + '/arena/gato/incoming/' + challenge.targetUid + '/' + challengeId + '/updatedAt'] = timestamp;
+            await db.ref().update(updates);
+            toast('Desafio cancelado.', 'ok');
+        } catch (error) {
+            console.error('Cancel challenge error:', error);
+            toast('No se pudo cancelar el desafio.', 'err');
+        } finally {
+            isMutating = false;
+        }
+    }
+
+    async function makeMove(index) {
+        if (isMutating) return;
+        if (!currentGameId || !currentGameData) { toast('No hay partida activa.', 'err'); return; }
+        const myMark = getMyMark(currentGameData);
+        if (!myMark || currentGameData.status !== 'active') { toast('La partida ya termino.', 'err'); return; }
+        if (currentGameData.currentTurn !== myMark) { toast('Espera tu turno.', 'err'); return; }
+
+        isMutating = true;
+        try {
+            const gameRefTx = db.ref(BASE + '/arena/gato/games/' + currentGameId);
+            const result = await gameRefTx.transaction(function (game) {
+                if (!game || game.status !== 'active') return game;
+                const actor = game.xUid === currentUid ? 'X' : (game.oUid === currentUid ? 'O' : '');
+                if (!actor || game.currentTurn !== actor) return;
+                const board = normalizeBoard(game.board);
+                if (board[index]) return;
+
+                board[index] = actor;
+                const moves = (game.moves || 0) + 1;
+                const winner = calculateWinner(board);
+                game.board = board;
+                game.moves = moves;
+                game.updatedAt = Date.now();
+
+                if (winner) {
+                    game.status = 'finished';
+                    game.winner = winner;
+                    game.currentTurn = '';
+                    game.endedAt = Date.now();
+                } else if (moves >= 9) {
+                    game.status = 'finished';
+                    game.winner = 'draw';
+                    game.currentTurn = '';
+                    game.endedAt = Date.now();
+                } else {
+                    game.currentTurn = actor === 'X' ? 'O' : 'X';
+                    game.status = 'active';
+                }
+                return game;
+            });
+
+            if (!result.committed) {
+                toast('La jugada ya no es valida.', 'err');
+                return;
+            }
+
+            if (result.snapshot.exists()) {
+                const data = result.snapshot.val() || {};
+                data.id = currentGameId;
+                if (data.status === 'finished') await handleFinishedGame(data);
+            }
+        } catch (error) {
+            console.error('Move error:', error);
+            toast('No se pudo registrar la jugada.', 'err');
+        } finally {
+            isMutating = false;
+        }
+    }
+
+    async function handleFinishedGame(game) {
+        if (!game || game.status !== 'finished') return;
+        if (game.summarySyncedAt) {
+            await Promise.all([countTodayGames(), loadHistory()]);
+            renderOpponents();
+            return;
+        }
+
+        const lockRef = db.ref(BASE + '/arena/gato/games/' + game.id + '/summaryLock');
+        const lockTxn = await lockRef.transaction(function (current) {
+            if (current) return;
+            return { by: currentUid, at: Date.now() };
+        });
+
+        if (!lockTxn.committed) {
+            await Promise.all([countTodayGames(), loadHistory()]);
+            renderOpponents();
+            return;
+        }
+
+        const endedAt = game.endedAt || Date.now();
+        const dayKey = todayKeyFromTimestamp(endedAt);
+        const xResult = game.winner === 'draw' ? 'draw' : (game.winner === 'X' ? 'win' : 'loss');
+        const oResult = game.winner === 'draw' ? 'draw' : (game.winner === 'O' ? 'win' : 'loss');
+
+        const updates = {};
+        updates[BASE + '/arena/gato/history/' + game.xUid + '/' + game.id] = {
+            opponentUid: game.oUid,
+            opponentName: game.oName,
+            result: xResult,
+            winnerMark: game.winner,
+            mark: 'X',
+            endedAt: endedAt,
+            moves: game.moves || 0
+        };
+        updates[BASE + '/arena/gato/history/' + game.oUid + '/' + game.id] = {
+            opponentUid: game.xUid,
+            opponentName: game.xName,
+            result: oResult,
+            winnerMark: game.winner,
+            mark: 'O',
+            endedAt: endedAt,
+            moves: game.moves || 0
+        };
+        updates[BASE + '/arena/gato/daily/' + game.xUid + '/' + dayKey + '/' + game.id] = {
+            participantUid: game.xUid,
+            result: xResult,
+            createdAt: endedAt
+        };
+        updates[BASE + '/arena/gato/daily/' + game.oUid + '/' + dayKey + '/' + game.id] = {
+            participantUid: game.oUid,
+            result: oResult,
+            createdAt: endedAt
+        };
+        updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/status'] = 'finished';
+        updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/winnerMark'] = game.winner;
+        updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/endedAt'] = endedAt;
+        updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/status'] = 'finished';
+        updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/winnerMark'] = game.winner;
+        updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/endedAt'] = endedAt;
+        updates[BASE + '/arena/gato/games/' + game.id + '/summarySyncedAt'] = endedAt;
+
+        try {
+            await db.ref().update(updates);
+        } catch (error) {
+            await lockRef.remove();
+            throw error;
+        }
+
+        await Promise.all([countTodayGames(), loadHistory()]);
+        renderOpponents();
+        toast(game.winner === 'draw' ? 'Partida empatada.' : 'Partida finalizada.', 'ok');
+    }
+
+    auth.onAuthStateChanged(async function (user) {
+        if (!user) { window.location.href = SHARED_LOGIN_URL; return; }
+        currentUid = user.uid;
+        try {
+            const [studentSnap, avatarSnap] = await Promise.all([
+                db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                db.ref(BASE + '/avatar/' + user.uid).once('value')
+            ]);
+            const student = studentSnap.val();
+            if (!student) { auth.signOut(); window.location.href = SHARED_LOGIN_URL; return; }
+            if (!student.perfil_completo) { window.location.href = 'perfil.html'; return; }
+
+            currentStudent = student;
+            const avatar = avatarSnap.val() || {};
+            const xpTotal = avatar.xp_total || 0;
+            const level = AvatarSystem.getLevel(xpTotal);
+            currentAvatar = { avatarData: avatar, xp: xpTotal, level: level };
+
+            document.getElementById('gatoLevelPill').textContent = level.emoji + ' Nivel ' + level.level;
+            await countTodayGames();
+            await loadOpponents();
+            await loadHistory();
+            subscribeChallenges();
+            renderGame(null);
+        } catch (error) {
+            console.error('Gato init error:', error);
+            toast('Error al cargar la sala de gato.', 'err');
+        }
+    });
+    </script>
+</body>
+</html>

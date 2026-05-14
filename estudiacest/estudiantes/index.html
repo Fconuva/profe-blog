@@ -13,6 +13,7 @@
             font-family:'Inter',system-ui,sans-serif; background:linear-gradient(135deg,#1e3a5f 0%,#1e40af 50%,#7c3aed 100%);
             display:flex; align-items:center; justify-content:center; min-height:100vh; padding:20px;
         }
+        body.auth-pending .login-card { visibility:hidden; }
         .login-card {
             background:#fff; border-radius:16px; box-shadow:0 20px 60px rgba(0,0,0,.3);
             width:100%; max-width:420px; padding:40px 36px; animation:slideUp .5s ease;
@@ -77,8 +78,30 @@
             .logo-area h1 { font-size:18px; }
         }
     </style>
+    <script>
+        (function redirectToSharedLogin() {
+            const params = new URLSearchParams(window.location.search);
+            const rawNext = params.get('next');
+            let next = '';
+
+            if (rawNext && rawNext.startsWith('/') && !rawNext.startsWith('//')) {
+                try {
+                    const url = new URL(rawNext, window.location.origin);
+                    if (url.origin === window.location.origin) {
+                        next = url.pathname + url.search + url.hash;
+                    }
+                } catch (_error) {
+                    next = '';
+                }
+            }
+
+            const loginUrl = new URL('/lecturas/', window.location.origin);
+            if (next) loginUrl.searchParams.set('next', next);
+            window.location.replace(loginUrl.pathname + loginUrl.search);
+        })();
+    </script>
 </head>
-<body>
+<body class="auth-pending">
     <div class="login-card">
         <div class="logo-area">
             <div class="logo-strip">
@@ -137,6 +160,7 @@
         const auth = firebase.auth();
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
+        const bodyEl = document.body;
 
         function sanitizeNextPath(rawPath) {
             if (!rawPath || typeof rawPath !== 'string') return '';
@@ -164,10 +188,17 @@
         function consumeNextPath() {
             const next = getStoredNextPath();
             localStorage.removeItem('studentNextPath');
-            return next || '/estudiantes/dashboard.html';
+            return next || '/estudiantes/panel.html';
         }
 
         let authRedirectInProgress = false;
+        let authUiResolved = false;
+
+        function revealLoginShell() {
+            if (authUiResolved) return;
+            authUiResolved = true;
+            bodyEl.classList.remove('auth-pending');
+        }
 
         function profileRedirectPath() {
             const next = getStoredNextPath();
@@ -301,8 +332,8 @@
             const pass = passInput.value;
             const btn = document.getElementById('btnLogin');
 
-            if (!rut || !pass) { showError('Completa todos los campos.'); return; }
-            if (!validateRut(rut)) { showError('El RUT ingresado no es válido. Revisa los números.'); return; }
+            if (!rut || !pass) { showError('Completa todos los campos.'); revealLoginShell(); return; }
+            if (!validateRut(rut)) { showError('El RUT ingresado no es válido. Revisa los números.'); revealLoginShell(); return; }
 
             btn.disabled = true;
             btn.innerHTML = '<span class="loading-spinner"></span>Ingresando...';
@@ -341,6 +372,7 @@
                     await auth.signOut();
                     btn.disabled = false;
                     btn.textContent = 'Iniciar Sesión';
+                    revealLoginShell();
                     return;
                 }
 
@@ -365,6 +397,7 @@
                 }
                 btn.disabled = false;
                 btn.textContent = 'Iniciar Sesión';
+                revealLoginShell();
             }
         });
 
@@ -386,6 +419,7 @@
                         document.getElementById('loginForm').style.display = '';
                         // Clean token from URL
                         window.history.replaceState({}, '', window.location.pathname);
+                        revealLoginShell();
                         return;
                     }
                     db.ref('plataforma_estudiantes/estudiantes/' + snap.key).update({ lastLogin: Date.now(), email: tokenCred && tokenCred.user ? tokenCred.user.email : null });
@@ -394,6 +428,7 @@
                     console.error('Token login error:', e);
                     showError('Enlace inválido o expirado. Usa tu RUT y contraseña.');
                     document.getElementById('loginForm').style.display = '';
+                    revealLoginShell();
                 });
                 return;
             }
@@ -407,10 +442,14 @@
                     const data = snap.val();
                     if (data) {
                         redirectAfterStudentLogin(data);
+                        return;
                     }
                 } catch(e) { /* ignore, show login */ }
             }
+            revealLoginShell();
         });
+
+        setTimeout(revealLoginShell, 1200);
     </script>
 </body>
 </html>

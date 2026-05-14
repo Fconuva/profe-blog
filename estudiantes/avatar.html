@@ -26,7 +26,8 @@
             content:''; position:absolute; top:0; left:50%; width:400px; height:400px; transform:translateX(-50%);
             background:radial-gradient(circle,rgba(59,130,246,.12) 0%,transparent 70%); pointer-events:none;
         }
-        .hero-emoji { font-size:80px; width:120px; height:120px; margin:0 auto 16px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.08); border-radius:50%; border:3px solid rgba(59,130,246,.3); animation:float 3s ease-in-out infinite; }
+        .hero-avatar-shell { width:128px; height:128px; margin:0 auto 16px; padding:6px; background:rgba(255,255,255,.08); border-radius:28px; border:3px solid rgba(59,130,246,.3); animation:float 3s ease-in-out infinite; }
+        .hero-avatar-render { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
         .hero-level { font-size:12px; font-weight:700; letter-spacing:1px; color:#60a5fa; margin-bottom:4px; text-transform:uppercase; }
         .hero-title { font-size:24px; font-weight:800; margin-bottom:4px; }
@@ -38,6 +39,44 @@
         .xp-labels { display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:6px; }
         /* MAIN CONTENT */
         .main-content { max-width:540px; margin:0 auto; padding:0 20px 40px; }
+        .builder-card {
+            background:rgba(255,255,255,.05); border-radius:18px; padding:18px; margin:-10px 0 24px;
+            border:1px solid rgba(255,255,255,.08); box-shadow:0 12px 28px rgba(15,23,42,.18);
+        }
+        .builder-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:16px; }
+        .builder-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:4px; }
+        .builder-copy { font-size:12px; color:#94a3b8; line-height:1.5; }
+        .look-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn-look {
+            background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; border:none; padding:10px 16px;
+            border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
+            transition:transform .15s, box-shadow .15s;
+        }
+        .btn-look:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(59,130,246,.28); }
+        .btn-look:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-look.secondary { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+        .look-grid { display:grid; gap:14px; }
+        .look-category-card { background:rgba(15,23,42,.48); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,.06); }
+        .look-category-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .look-category-head h3 { font-size:12px; font-weight:800; color:#cbd5e1; text-transform:uppercase; letter-spacing:.7px; }
+        .look-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+        .look-option {
+            background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:12px; min-height:52px;
+            padding:10px 12px; color:#fff; text-align:left; display:flex; align-items:center; gap:10px; cursor:pointer; font-family:inherit;
+            transition:border-color .15s, transform .15s, background .15s;
+        }
+        .look-option:hover { border-color:rgba(96,165,250,.5); transform:translateY(-1px); background:rgba(59,130,246,.08); }
+        .look-option.active { border-color:#60a5fa; background:rgba(59,130,246,.15); }
+        .look-option.locked { opacity:.48; cursor:not-allowed; }
+        .look-option.locked:hover { transform:none; border-color:rgba(255,255,255,.1); background:rgba(255,255,255,.05); }
+        .look-name { font-size:12px; font-weight:700; flex:1; }
+        .look-swatch, .look-chip {
+            width:24px; height:24px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;
+            background:rgba(255,255,255,.08); font-size:10px; font-weight:800; color:#e2e8f0; border:1px solid rgba(255,255,255,.1);
+            flex-shrink:0;
+        }
+        .look-lock { font-size:10px; color:#93c5fd; font-weight:700; }
+        .look-hint { font-size:11px; color:#64748b; margin-top:12px; }
         /* AVAILABLE POINTS */
         .points-banner {
             background:linear-gradient(135deg,#1e3a5f,#312e81); border-radius:14px; padding:20px;
@@ -133,8 +172,10 @@
         @keyframes spin { to { transform:rotate(360deg); } }
         @media (max-width:480px) {
             .hero { padding:28px 16px 24px; }
-            .hero-emoji { font-size:60px; width:96px; height:96px; }
+            .hero-avatar-shell { width:112px; height:112px; border-radius:24px; }
             .hero-title { font-size:20px; }
+            .builder-head { flex-direction:column; }
+            .look-options { grid-template-columns:1fr; }
             .stat-row { padding:14px 16px; gap:10px; }
             .stat-icon { width:40px; height:40px; font-size:22px; }
         }
@@ -151,7 +192,7 @@
 
     <div id="mainView" style="display:none">
         <div class="hero">
-            <div class="hero-emoji" id="heroEmoji">🌱</div>
+            <div class="hero-avatar-shell"><div class="hero-avatar-render" id="heroAvatarRender"></div></div>
             <div class="hero-level" id="heroLevel">NIVEL 1</div>
             <div class="hero-title" id="heroTitle">Aprendiz</div>
             <div class="hero-subtitle" id="heroSubtitle">0 XP totales</div>
@@ -162,6 +203,21 @@
         </div>
 
         <div class="main-content">
+            <div class="builder-card">
+                <div class="builder-head">
+                    <div>
+                        <div class="builder-title">Taller de apariencia</div>
+                        <div class="builder-copy">Personaliza tu avatar por capas. Lo que equipes aqui se mostrara en tu perfil y en la arena.</div>
+                    </div>
+                    <div class="look-actions">
+                        <button class="btn-look secondary" type="button" onclick="randomizeLook()">Mezclar</button>
+                        <button class="btn-look" type="button" id="btnSaveLook" onclick="saveLook()" disabled>Guardar apariencia</button>
+                    </div>
+                </div>
+                <div class="look-grid" id="lookEditor"></div>
+                <div class="look-hint">Las opciones con requisito se desbloquean al subir tu XP. Tus stats siguen funcionando igual.</div>
+            </div>
+
             <div class="points-banner">
                 <div class="pts-label">Puntos disponibles</div>
                 <div class="pts-value" id="ptsAvailable">0</div>
@@ -275,9 +331,11 @@
     <div class="toast" id="toast"></div>
 
     <script src="js/avatar-levels.js"></script>
+    <script src="js/avatar-look.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
     <script>
         const FIREBASE_CONFIG = {
             apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
@@ -293,6 +351,7 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
+        initStudentForcedRefresh({ auth, db, base: BASE });
 
         // AVATAR_LEVELS now loaded from js/avatar-levels.js (AvatarSystem)
         const MAX_PER_STAT = 200;
@@ -318,6 +377,10 @@
         let stats = { comprension:0, constancia:0, velocidad:0 };
         let savedStats = { comprension:0, constancia:0, velocidad:0 };
         let totalPoints = 0;
+        let avatarDataCache = {};
+        let currentXPTotal = 0;
+        let currentLook = AvatarLookSystem.getDefaultLook();
+        let savedLook = AvatarLookSystem.getDefaultLook();
 
         function getLevelInfo(totalXP) {
             var info = AvatarSystem.getLevelInfo(totalXP);
@@ -421,6 +484,90 @@
         function resetStats() {
             stats = { comprension:0, constancia:0, velocidad:0 };
             render();
+        }
+
+        function lookChanged() {
+            return JSON.stringify(currentLook) !== JSON.stringify(savedLook);
+        }
+
+        function renderLookOption(categoryId, option) {
+            var classes = ['look-option'];
+            if (option.selected) classes.push('active');
+            if (option.locked) classes.push('locked');
+            var preview = option.swatch
+                ? '<span class="look-swatch" style="background:' + option.swatch + '"></span>'
+                : '<span class="look-chip">' + option.preview + '</span>';
+            var lockText = option.locked ? '<span class="look-lock">' + option.minXp + ' XP</span>' : '';
+            var action = option.locked ? 'disabled' : 'onclick="selectLookOption(\'' + categoryId + '\',\'' + option.id + '\')"';
+            return '<button type="button" class="' + classes.join(' ') + '" ' + action + '>' +
+                preview + '<span class="look-name">' + option.name + '</span>' + lockText + '</button>';
+        }
+
+        function renderLookPreview() {
+            AvatarLookSystem.render(document.getElementById('heroAvatarRender'), {
+                look: currentLook,
+                xpTotal: currentXPTotal,
+                avatarData: avatarDataCache,
+                size: 116,
+                shape: 'rounded'
+            });
+        }
+
+        function renderLookEditor() {
+            var categories = AvatarLookSystem.getEditorCategories({ xpTotal: currentXPTotal, avatarData: avatarDataCache }, currentLook);
+            document.getElementById('lookEditor').innerHTML = categories.map(function(category) {
+                return '<div class="look-category-card">' +
+                    '<div class="look-category-head"><h3>' + category.label + '</h3></div>' +
+                    '<div class="look-options">' + category.options.map(function(option) {
+                        return renderLookOption(category.id, option);
+                    }).join('') + '</div></div>';
+            }).join('');
+            renderLookPreview();
+            document.getElementById('btnSaveLook').disabled = !lookChanged();
+        }
+
+        function selectLookOption(categoryId, optionId) {
+            var option = AvatarLookSystem.getOptionMeta(categoryId, optionId, { xpTotal: currentXPTotal, avatarData: avatarDataCache });
+            if (!option || option.locked) {
+                showToast('Sube mas XP para usar esa pieza');
+                return;
+            }
+            currentLook[categoryId] = optionId;
+            renderLookEditor();
+        }
+
+        function randomizeLook() {
+            currentLook = AvatarLookSystem.randomizeLook({ xpTotal: currentXPTotal, avatarData: avatarDataCache });
+            renderLookEditor();
+        }
+
+        async function saveLook() {
+            var btn = document.getElementById('btnSaveLook');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+            try {
+                await db.ref(BASE + '/avatar/' + currentUID + '/look').set({
+                    skinTone: currentLook.skinTone,
+                    eyes: currentLook.eyes,
+                    mouth: currentLook.mouth,
+                    hairStyle: currentLook.hairStyle,
+                    hairColor: currentLook.hairColor,
+                    outfit: currentLook.outfit,
+                    accessory: currentLook.accessory,
+                    aura: currentLook.aura,
+                    updated: Date.now()
+                });
+                savedLook = Object.assign({}, currentLook);
+                avatarDataCache.look = Object.assign({}, currentLook);
+                btn.textContent = 'Guardar apariencia';
+                showToast('Apariencia guardada');
+                renderLookEditor();
+            } catch (e) {
+                console.error(e);
+                btn.textContent = 'Guardar apariencia';
+                btn.disabled = false;
+                showToast('Error al guardar apariencia');
+            }
         }
 
         async function saveStats() {
@@ -534,11 +681,14 @@
                 // Sync missing XP from past sessions
                 const syncedTotal = await syncMissingXP(user.uid, av);
                 if (syncedTotal !== null) xpTotal = syncedTotal;
+                currentXPTotal = xpTotal;
+                avatarDataCache = Object.assign({}, av, { xp_total: xpTotal });
+                currentLook = AvatarLookSystem.normalizeLook(av.look, { xpTotal: xpTotal, avatarData: avatarDataCache });
+                savedLook = Object.assign({}, currentLook);
 
                 const { current, next } = getLevelInfo(xpTotal);
 
                 // Render hero
-                document.getElementById('heroEmoji').textContent = current.emoji;
                 document.getElementById('heroLevel').textContent = 'NIVEL ' + current.level;
                 document.getElementById('heroTitle').textContent = current.title;
                 document.getElementById('heroSubtitle').textContent = xpTotal + ' XP totales';
@@ -572,6 +722,7 @@
                 savedStats = { ...stats };
 
                 render();
+                renderLookEditor();
                 renderShop(xpTotal);
 
                 document.getElementById('loadingScreen').style.display = 'none';

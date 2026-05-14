@@ -57,6 +57,20 @@
         .section-title { font-size:18px; font-weight:800; color:#0f172a; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
         /* SESSION CARDS */
         .session-list { display:flex; flex-direction:column; gap:12px; margin-bottom:32px; }
+        .session-groups { display:flex; flex-direction:column; gap:18px; }
+        .session-group {
+            background:#fff; border-radius:16px; border:1px solid #e2e8f0; padding:18px 18px 6px;
+            box-shadow:0 1px 4px rgba(0,0,0,.05);
+        }
+        .session-group-head {
+            display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:12px;
+        }
+        .session-group-title { font-size:16px; font-weight:800; color:#0f172a; margin-bottom:4px; }
+        .session-group-copy { font-size:12px; color:#64748b; line-height:1.45; }
+        .session-group-meta {
+            flex-shrink:0; display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px;
+            background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:800;
+        }
         .session-card {
             background:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 1px 4px rgba(0,0,0,.06);
             display:flex; align-items:center; gap:16px; transition:transform .15s, box-shadow .15s;
@@ -83,6 +97,7 @@
         .badge-pending { background:#fef3c7; color:#92400e; }
         .badge-progress { background:#dbeafe; color:#1e40af; }
         .badge-done { background:#dcfce7; color:#166534; }
+            .badge-grade { background:#ede9fe; color:#5b21b6; margin-left:4px; }
         .badge-locked { background:#f1f5f9; color:#94a3b8; }
         .badge-results { background:#f0fdf4; border:1px solid #86efac; color:#166534; margin-top:4px; font-size:10px; }
         .btn-guia { display:inline-block; margin-top:6px; padding:5px 12px; border-radius:6px; font-size:11px; font-weight:700; background:linear-gradient(135deg,#7c3aed,#a78bfa); color:#fff; text-decoration:none; transition:.15s; }
@@ -109,6 +124,14 @@
             border-radius:999px; background:#0f172a; color:#e2e8f0; font-size:12px; font-weight:700;
         }
         .unit-countdown strong { color:#fbbf24; font-size:13px; }
+        .unit-current-list {
+            display:none;
+            margin-top:16px;
+            padding-top:16px;
+            border-top:1px solid rgba(15,23,42,.08);
+        }
+        .unit-current-list.show { display:block; }
+        .unit-current-list .session-list { margin-bottom:0; }
         .unit-accordion { border-color:#e2e8f0; }
         .unit-accordion summary {
             list-style:none; display:flex; align-items:center; justify-content:space-between; gap:16px;
@@ -249,7 +272,7 @@
         <!-- Stats -->
         <div class="stats-grid" id="statsGrid">
             <div class="stat-card">
-                <div class="stat-label">Sesiones completadas</div>
+                <div class="stat-label">Clases completadas</div>
                 <div class="stat-value" id="statCompleted">-</div>
                 <div class="stat-sub" id="statTotal">de 0 disponibles</div>
             </div>
@@ -273,11 +296,14 @@
         <!-- Sessions -->
         <div class="section-title">📖 Mis Sesiones</div>
         <div class="units-shell">
-            <div class="unit-upcoming">
+            <div class="unit-upcoming" id="unit2Card">
                 <div class="unit-kicker">🚀 Unidad 2</div>
-                <h3>La próxima semana iniciamos la Unidad 2</h3>
-                <p>El miércoles 13 abrimos el nuevo tramo de trabajo. Mientras tanto, todo lo realizado hasta hoy queda organizado como Unidad 1.</p>
-                <div class="unit-countdown">⏳ Faltan <strong id="unit2Countdown">calculando...</strong></div>
+                <h3 id="unit2Title">La Unidad 2 comienza hoy</h3>
+                <p id="unit2Copy">Hoy se abre el nuevo tramo de trabajo. Las sesiones nuevas aparecerán aqui en cuanto se publiquen. Todo lo realizado hasta ahora queda organizado como Unidad 1.</p>
+                <div class="unit-countdown" id="unit2CountdownWrap">📍 <strong id="unit2Countdown">Comienza hoy</strong></div>
+                <div class="unit-current-list" id="currentUnitListWrap">
+                    <div class="session-list" id="currentSessionList"></div>
+                </div>
             </div>
 
             <details class="unit-accordion" id="unit1Accordion">
@@ -285,7 +311,7 @@
                     <div class="unit-summary-main">
                         <div class="unit-kicker">📚 Unidad 1</div>
                         <h3>Todo lo trabajado hasta hoy</h3>
-                        <p>Queda oculto por defecto para mantener el panel ordenado y evitar acumulación visual.</p>
+                        <p>El plan principal, los ensayos y otros apoyos quedan separados para leer mejor el avance.</p>
                     </div>
                     <div class="unit-summary-right">
                         <span class="unit-chip">Archivado por ahora</span>
@@ -352,6 +378,7 @@
 
     <script src="js/avatar-levels.js"></script>
     <script src="js/avatar-look.js"></script>
+    <script src="js/gato-alerts.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -371,9 +398,23 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
+        const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/dashboard.html');
         initStudentForcedRefresh({ auth, db, base: BASE });
+        initGatoChallengeAlerts({ auth, db, base: BASE, openUrl: 'arena-gato.html', storageScope: 'estudiantes' });
         const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC','4A-TP':'4°A TP','4B-TP':'4°B TP','4C-TP':'4°C TP','4D-TP':'4°D TP','4E-TP':'4°E TP'};
         const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC','2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'], paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
+        const CURRENT_PANEL_UNIT = 'u2';
+        const PANEL_SECTIONS = {
+            plan: { title:'📘 Plan SIMCE', copy:'Ruta principal de clases y trabajo progresivo.', prefix:'' },
+            ensayo: { title:'📝 Ensayos', copy:'Evaluaciones separadas del tramo principal.', prefix:'E' },
+            retro: { title:'📚 Retroalimentación', copy:'Se activa cuando ya tengas resultados o devolución de ensayo.', prefix:'R' },
+            otro: { title:'🧩 Otros', copy:'Encuestas y apoyos complementarios.', prefix:'O' }
+        };
+        const SIDE_MISSION_GROUPS = {
+            u1: { title:'📚 Unidad 1', copy:'Misiones del tramo ya trabajado para dejar visible el recorrido anterior.' },
+            u2: { title:'🚀 Unidad 2', copy:'Nuevas misiones del bloque argumentativo que comienza ahora.' },
+            current: { title:'🧭 Ruta actual', copy:'Misiones complementarias disponibles para tu curso.' }
+        };
 
         function formatCountdown(ms) {
             const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -409,16 +450,16 @@
         window.addEventListener('offline', () => { document.getElementById('connectivity').className = 'connectivity offline'; document.getElementById('connectivity').textContent = '🔴 Sin conexión'; });
 
         // Logout
-        document.getElementById('btnLogout').addEventListener('click', () => { auth.signOut().then(() => window.location.href = 'index.html'); });
+        document.getElementById('btnLogout').addEventListener('click', () => { auth.signOut().then(() => window.location.href = '/'); });
 
         // Auth check
         auth.onAuthStateChanged(async (user) => {
-            if (!user) { window.location.href = 'index.html'; return; }
+            if (!user) { window.location.href = SHARED_LOGIN_URL; return; }
 
             try {
                 const studentSnap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
                 const student = studentSnap.val();
-                if (!student) { auth.signOut(); window.location.href = 'index.html'; return; }
+                if (!student) { auth.signOut(); window.location.href = SHARED_LOGIN_URL; return; }
                 if (!student.perfil_completo) { window.location.href = 'perfil.html'; return; }
 
                 document.getElementById('studentName').textContent = student.nombre;
@@ -439,8 +480,211 @@
             return session.asignados.includes(uid) || session.asignados.includes(curso);
         }
 
+        function normalizePanelSection(value) {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (normalized === 'plan' || normalized === 'clase' || normalized === 'clases') return 'plan';
+            if (normalized === 'ensayo' || normalized === 'ensayos') return 'ensayo';
+            if (normalized === 'retro' || normalized === 'retroalimentacion' || normalized === 'retroalimentación') return 'retro';
+            if (normalized === 'otro' || normalized === 'otros' || normalized === 'encuesta' || normalized === 'encuestas') return 'otro';
+            return '';
+        }
+
+        function inferPanelSection(session) {
+            const explicitSection = normalizePanelSection(session && session.panel_seccion);
+            if (explicitSection) return explicitSection;
+            const title = String(session && session.titulo || '').toLowerCase();
+            const id = String(session && session.id || '').toLowerCase();
+            if (title.includes('ensayo') || id === 'sesion-2') return 'ensayo';
+            if (title.includes('repaso del ensayo') || id === 'retro-idee-nm2') return 'retro';
+            if (title.includes('encuesta') || id === 'feedback-plataforma') return 'otro';
+            return 'plan';
+        }
+
+        function normalizePanelUnit(value) {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (!normalized) return '';
+            if (normalized === 'u1' || normalized === 'unidad 1' || normalized === 'unidad1' || normalized === '1') return 'u1';
+            if (normalized === 'u2' || normalized === 'unidad 2' || normalized === 'unidad2' || normalized === '2') return 'u2';
+            return '';
+        }
+
+        function inferPanelUnit(session) {
+            const explicitUnit = normalizePanelUnit(session && session.panel_unidad);
+            if (explicitUnit) return explicitUnit;
+            const title = String(session && session.titulo || '').toLowerCase();
+            const id = String(session && session.id || '').toLowerCase();
+            if (title.includes('unidad 2') || title.includes('columna de opinión') || title.includes('columna de opinion') || id.includes('u2')) {
+                return 'u2';
+            }
+            return 'u1';
+        }
+
+        function getPanelOrder(session, fallbackOrder) {
+            const panelOrder = Number(session && session.panel_orden);
+            if (Number.isFinite(panelOrder) && panelOrder > 0) return panelOrder;
+            const baseOrder = Number(session && session.orden);
+            if (Number.isFinite(baseOrder) && baseOrder > 0) return baseOrder;
+            return fallbackOrder;
+        }
+
+        function getSessionToken(sectionKey, index) {
+            if (sectionKey === 'plan') return String(index);
+            return PANEL_SECTIONS[sectionKey].prefix + String(index);
+        }
+
+        function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult) {
+            const isActive = ses.activa !== false;
+            const isCompleted = myResp && myResp.completada;
+            const hasResults = ses.resultados_visibles && myResult;
+            const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
+                const noteValue = Number(myResult && myResult.nota);
+                const noteBadge = hasResults && Number.isFinite(noteValue)
+                    ? ' <span class="badge badge-grade">Nota ' + noteValue.toFixed(1) + '</span>'
+                    : '';
+
+            let statusBadge = '';
+            let cardClass = 'session-card';
+            let onclick = '';
+
+            if (!isActive) {
+                cardClass += ' locked';
+                statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>';
+            } else if (isCompleted) {
+                cardClass += ' completed';
+                    statusBadge = '<span class="badge badge-done">✅ Completada</span>' + noteBadge;
+                if (hasResults) statusBadge += '<br><span class="badge badge-results">📊 ' + myResult.porcentaje + '% logro</span>';
+                onclick = `onclick="window.location.href='${sessionTarget}'"`;
+            } else if (myResp) {
+                statusBadge = '<span class="badge badge-progress">📝 En progreso</span>';
+                onclick = `onclick="window.location.href='${sessionTarget}'"`;
+            } else {
+                statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>';
+                onclick = `onclick="window.location.href='${sessionTarget}'"`;
+            }
+
+            const videoIcon = ses.video_youtube ? ' 🎬' : '';
+            const guiaLink = ses.link_guia ? `<a href="${ses.link_guia}" class="btn-guia" onclick="event.stopPropagation()">🚀 Experiencia de Aprendizaje</a>` : '';
+            const sessionToken = getSessionToken(sectionKey, displayIndex);
+
+            return `
+                    <div class="${cardClass}" ${onclick}>
+                        <div class="session-num">${sessionToken}</div>
+                        <div class="session-info">
+                            <h3>${ses.titulo || 'Sesión ' + displayIndex}${videoIcon}</h3>
+                            <p>${ses.descripcion || ''}</p>
+                            ${guiaLink}
+                        </div>
+                        <div class="session-status">${statusBadge}</div>
+                    </div>`;
+        }
+
+        function createEmptySessionGroups() {
+            return { plan: [], ensayo: [], retro: [], otro: [] };
+        }
+
+        function flattenSessionGroups(grouped) {
+            return ['plan', 'ensayo', 'retro', 'otro'].flatMap(sectionKey => grouped[sectionKey].map(entry => entry.session));
+        }
+
+        function renderSectionGroupsHtml(grouped, respuestas, resultados) {
+            const order = ['plan', 'ensayo', 'retro', 'otro'];
+            const html = order.map(sectionKey => {
+                const entries = grouped[sectionKey];
+                if (!entries.length) return '';
+                const section = PANEL_SECTIONS[sectionKey];
+                const countLabel = entries.length === 1 ? '1 elemento' : entries.length + ' elementos';
+                const cards = entries.map((entry, index) => renderSessionCard(
+                    entry.session,
+                    index + 1,
+                    sectionKey,
+                    respuestas[entry.session.id],
+                    resultados[entry.session.id]
+                )).join('');
+
+                return `
+                    <section class="session-group">
+                        <div class="session-group-head">
+                            <div>
+                                <div class="session-group-title">${section.title}</div>
+                                <p class="session-group-copy">${section.copy}</p>
+                            </div>
+                            <div class="session-group-meta">${countLabel}</div>
+                        </div>
+                        <div class="session-list">${cards}</div>
+                    </section>`;
+            }).join('');
+
+            return {
+                html: html ? '<div class="session-groups">' + html + '</div>' : '',
+                totalCount: order.reduce((sum, sectionKey) => sum + grouped[sectionKey].length, 0)
+            };
+        }
+
+        function syncUnitShell(hasCurrentSessions) {
+            const titleEl = document.getElementById('unit2Title');
+            const copyEl = document.getElementById('unit2Copy');
+            const countdownWrap = document.getElementById('unit2CountdownWrap');
+            const currentWrap = document.getElementById('currentUnitListWrap');
+            const archiveAccordion = document.getElementById('unit1Accordion');
+            const today = new Date();
+            const hasReachedUnit2Start = today.getFullYear() > 2026 || (today.getFullYear() === 2026 && (today.getMonth() > 4 || (today.getMonth() === 4 && today.getDate() >= 13)));
+            const isUnit2StartDay = today.getFullYear() === 2026 && today.getMonth() === 4 && today.getDate() === 13;
+
+            if (hasCurrentSessions) {
+                titleEl.textContent = 'La Unidad 2 ya está activa';
+                copyEl.textContent = 'Aquí aparecen las clases nuevas del bloque argumentativo. Todo el recorrido anterior queda organizado abajo como Unidad 1.';
+                countdownWrap.innerHTML = '✅ <strong style="color:#86efac">Clase disponible ahora</strong>';
+                currentWrap.classList.add('show');
+                archiveAccordion.open = false;
+                return;
+            }
+
+            if (hasReachedUnit2Start) {
+                titleEl.textContent = isUnit2StartDay ? 'La Unidad 2 comienza hoy' : 'La Unidad 2 ya comenzo';
+                copyEl.textContent = 'Las sesiones nuevas apareceran aqui en cuanto se publiquen. Mientras tanto, todo lo realizado hasta ahora queda organizado como Unidad 1.';
+                countdownWrap.innerHTML = isUnit2StartDay
+                    ? '📍 <strong style="color:#fde68a">Comienza hoy</strong>'
+                    : '📍 <strong style="color:#fde68a">En desarrollo</strong>';
+                currentWrap.classList.remove('show');
+                archiveAccordion.open = true;
+                return;
+            }
+
+            titleEl.textContent = 'La próxima semana iniciamos la Unidad 2';
+            copyEl.textContent = 'El miércoles 13 abrimos el nuevo tramo de trabajo. Mientras tanto, todo lo realizado hasta hoy queda organizado como Unidad 1.';
+            countdownWrap.innerHTML = '⏳ <strong id="unit2Countdown">Muy pronto</strong>';
+            currentWrap.classList.remove('show');
+        }
+
+        function renderSessionGroups(sesiones, respuestas, resultados) {
+            const byUnit = {
+                u1: createEmptySessionGroups(),
+                u2: createEmptySessionGroups()
+            };
+            sesiones.forEach((ses, index) => {
+                const sectionKey = inferPanelSection(ses);
+                const unitKey = inferPanelUnit(ses) === CURRENT_PANEL_UNIT ? CURRENT_PANEL_UNIT : 'u1';
+                byUnit[unitKey][sectionKey].push({
+                    session: ses,
+                    sectionKey,
+                    sortOrder: getPanelOrder(ses, index + 1)
+                });
+            });
+
+            Object.values(byUnit).forEach(grouped => {
+                Object.values(grouped).forEach(group => group.sort((a, b) => a.sortOrder - b.sortOrder));
+            });
+
+            return {
+                byUnit,
+                current: renderSectionGroupsHtml(byUnit[CURRENT_PANEL_UNIT], respuestas, resultados),
+                archive: renderSectionGroupsHtml(byUnit.u1, respuestas, resultados)
+            };
+        }
+
         async function loadDashboard(uid, curso, programa) {
-            const container = document.getElementById('sessionList');
+            const archiveContainer = document.getElementById('sessionList');
+            const currentContainer = document.getElementById('currentSessionList');
             try {
                 // Single batch: fetch sessions, this student's results+responses, and ranking in parallel
                 const [sesSnap, rankSnap] = await Promise.all([
@@ -449,7 +693,7 @@
                 ]);
 
                 if (!sesSnap.exists()) {
-                    container.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
+                    archiveContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
                     return;
                 }
 
@@ -477,54 +721,20 @@
                 }));
 
                 // === RENDER SESSIONS ===
-                let html = '';
-                sesiones.forEach((ses, idx) => {
-                    const isActive = ses.activa !== false;
-                    const myResp = respuestas[ses.id];
-                    const myResult = resultados[ses.id];
-                    const isCompleted = myResp && myResp.completada;
-                    const hasResults = ses.resultados_visibles && myResult;
-                    const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
+                const rendered = renderSessionGroups(sesiones, respuestas, resultados);
+                currentContainer.innerHTML = rendered.current.html || '<div style="text-align:center;padding:12px 0;color:#475569;">Aún no hay clases activas nuevas para Unidad 2.</div>';
+                archiveContainer.innerHTML = rendered.archive.html || '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones archivadas aún.</div>';
+                syncUnitShell(rendered.current.totalCount > 0);
 
-                    let statusBadge = '';
-                    let cardClass = 'session-card';
-                    let onclick = '';
-
-                    if (!isActive) {
-                        cardClass += ' locked';
-                        statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>';
-                    } else if (isCompleted) {
-                        cardClass += ' completed';
-                        statusBadge = '<span class="badge badge-done">✅ Completada</span>';
-                        if (hasResults) statusBadge += '<br><span class="badge badge-results">📊 ' + myResult.porcentaje + '% logro</span>';
-                        onclick = `onclick="window.location.href='${sessionTarget}'"`;
-                    } else if (myResp) {
-                        statusBadge = '<span class="badge badge-progress">📝 En progreso</span>';
-                        onclick = `onclick="window.location.href='${sessionTarget}'"`;
-                    } else {
-                        statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>';
-                        onclick = `onclick="window.location.href='${sessionTarget}'"`;
-                    }
-
-                    const videoIcon = ses.video_youtube ? ' 🎬' : '';
-                    const guiaLink = ses.link_guia ? `<a href="${ses.link_guia}" class="btn-guia" onclick="event.stopPropagation()">🚀 Experiencia de Aprendizaje</a>` : '';
-
-                    html += `
-                    <div class="${cardClass}" ${onclick}>
-                        <div class="session-num">${idx + 1}</div>
-                        <div class="session-info">
-                            <h3>${ses.titulo || 'Sesión ' + (idx + 1)}${videoIcon}</h3>
-                            <p>${ses.descripcion || ''}</p>
-                            ${guiaLink}
-                        </div>
-                        <div class="session-status">${statusBadge}</div>
-                    </div>`;
-                });
-                container.innerHTML = html;
+                const primaryUnit = rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
+                const trackedSesiones = primaryUnit.plan.length
+                    ? primaryUnit.plan.map(entry => entry.session)
+                    : flattenSessionGroups(primaryUnit);
+                const trackedSessionIds = new Set(trackedSesiones.map(ses => ses.id));
 
                 // === STATS (reuse fetched data) ===
                 let totalSesiones = 0, completadas = 0, totalPct = 0, conResultados = 0;
-                sesiones.forEach(ses => {
+                trackedSesiones.forEach(ses => {
                     if (ses.activa !== false) totalSesiones++;
                     if (respuestas[ses.id] && respuestas[ses.id].completada) {
                         completadas++;
@@ -535,7 +745,7 @@
                     }
                 });
                 document.getElementById('statCompleted').textContent = completadas;
-                document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' disponibles';
+                document.getElementById('statTotal').textContent = 'de ' + totalSesiones + ' del plan';
                 document.getElementById('statAvg').textContent = conResultados > 0 ? Math.round(totalPct / conResultados) + '%' : '-';
 
                 // === RANKING (reuse fetched data) ===
@@ -544,6 +754,7 @@
                 // Ranking position for this student
                 const studentAvgs = {};
                 for (const [sesId, cursos] of Object.entries(rankingData)) {
+                    if (!trackedSessionIds.has(sesId)) continue;
                     if (!cursos[curso]) continue;
                     for (const [euid, data] of Object.entries(cursos[curso])) {
                         if (!studentAvgs[euid]) { studentAvgs[euid] = { total: 0, count: 0 }; }
@@ -565,6 +776,7 @@
                 const courseScores = {};
                 myCursos.forEach(c => courseScores[c] = []);
                 for (const [sesId, cursos] of Object.entries(rankingData)) {
+                    if (!trackedSessionIds.has(sesId)) continue;
                     for (const [c, studs] of Object.entries(cursos)) {
                         if (!courseScores[c]) continue;
                         for (const [euid, data] of Object.entries(studs)) {
@@ -616,7 +828,7 @@
 
             } catch(e) {
                 console.error(e);
-                container.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar el dashboard.</div>';
+                archiveContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#dc2626;">Error al cargar el dashboard.</div>';
             }
         }
         // ==================== AVATAR SYSTEM (shared via js/avatar-levels.js) ====================
@@ -674,17 +886,17 @@
 
         // ==================== SIDE MISSIONS ====================
         const SIDE_MISSIONS = [
-            {id:'tarea-argumentacion-1', emoji:'🧠', name:'Expediente Argumentativo', desc:'Investiga por tu cuenta tesis, base, garantía y respaldo; luego defiende una postura con evidencia. ¡Hasta 600 XP!', link:'tarea-argumentacion.html'},
-            {id:'tarea-cuento-1', emoji:'✍️', name:'Escribe tu Cuento', desc:'Redacta un cuento original y gana XP según su extensión. ¡Hasta 480 XP!', link:'tarea-cuento.html', cursos:['2A-HC','2B-HC']},
-            {id:'tarea-simbolos-1', emoji:'🔍', name:'Cazador de Símbolos', desc:'Encuentra símbolos en textos y la vida real, y explica su significado oculto. ¡Hasta 360 XP!', link:'tarea-simbolos.html', cursos:['2A-HC','2B-HC']},
-            {id:'tarea-distractores-1', emoji:'🧪', name:'Auditor de Distractores', desc:'Lee el Texto 4, defiende una tesis con evidencia e inventa dos distractores técnicos. ¡Hasta 420 XP!', link:'tarea-distractores.html', cursos:['2A-HC','2B-HC']},
-            {id:'nm4-u2-semana11', emoji:'📚', name:'NM4 · U2 Semana 11', desc:'Interpretación colaborativa sobre memoria, identidad y control. Guarda y entrega tu trabajo desde la tablet.', link:'/nm4/', cursos:['4A-HC','4B-HC','4A-TP','4B-TP','4C-TP','4D-TP','4E-TP']},
+            {id:'tarea-cuento-1', emoji:'✍️', name:'Escribe tu Cuento', desc:'Redacta un cuento original y gana XP según su extensión. ¡Hasta 480 XP!', link:'tarea-cuento.html', cursos:['2A-HC','2B-HC'], unit:'u1'},
+            {id:'tarea-simbolos-1', emoji:'🔍', name:'Cazador de Símbolos', desc:'Encuentra símbolos en textos y la vida real, y explica su significado oculto. ¡Hasta 360 XP!', link:'tarea-simbolos.html', cursos:['2A-HC','2B-HC'], unit:'u1'},
+            {id:'tarea-distractores-1', emoji:'🧪', name:'Auditor de Distractores', desc:'Incluye 7 contextos breves para practicar tesis, además de una crítica con evidencia y dos distractores técnicos. ¡Hasta 420 XP!', link:'tarea-distractores.html', cursos:['2A-HC','2B-HC'], unit:'u1'},
+            {id:'tarea-argumentacion-1', emoji:'🧠', name:'Columna de Opinión', desc:'Investiga tesis, argumentos, contraargumento, evidencia y marcadores; luego redacta tu postura completa y desbloquea el escudo inicial de la Arena. ¡Hasta 600 XP!', link:'tarea-argumentacion.html', cursos:['2A-HC','2B-HC'], unit:'u2'},
+            {id:'nm4-u2-semana11', emoji:'📚', name:'NM4 · U2 Semana 11', desc:'Interpretación colaborativa sobre memoria, identidad y control. Guarda y entrega tu trabajo desde la tablet.', link:'/nm4/', cursos:['4A-TP','4B-TP','4C-TP','4D-TP','4E-TP'], unit:'current'},
         ];
         async function renderSideMissions(uid, curso) {
             const available = SIDE_MISSIONS.filter(m => !m.cursos || m.cursos.includes(curso));
             if (available.length === 0) return;
             document.getElementById('sideQuestsSection').style.display = '';
-            let html = '';
+            const entries = [];
             for (const m of available) {
                 let statusHtml = '';
                 try {
@@ -693,12 +905,40 @@
                     if (q && q.completada) statusHtml = '<span class="badge badge-done">✅ Entregado · +' + (q.xp_ganado||0) + ' XP</span>';
                     else if (q && q.last_save) statusHtml = '<span class="badge badge-progress">📝 En progreso</span>';
                 } catch(e) {}
-                html += `<a href="${m.link}" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #8b5cf6;display:flex">
-                    <div class="session-num" style="background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff">${m.emoji}</div>
-                    <div class="session-info"><h3>Misión: ${m.name}</h3><p>${m.desc}</p></div>
-                    <div class="session-status">${statusHtml}</div></a>`;
+                if (!statusHtml) statusHtml = '<span class="badge badge-pending">⏳ Disponible</span>';
+                entries.push({ mission: m, statusHtml });
             }
-            document.getElementById('sideQuests').innerHTML = html;
+
+            const grouped = { u1: [], u2: [], current: [] };
+            entries.forEach(entry => {
+                const unitKey = entry.mission.unit || 'current';
+                if (!grouped[unitKey]) grouped[unitKey] = [];
+                grouped[unitKey].push(entry);
+            });
+
+            const order = ['u1', 'u2', 'current'];
+            const html = order.map(unitKey => {
+                const missions = grouped[unitKey];
+                if (!missions || missions.length === 0) return '';
+                const groupMeta = SIDE_MISSION_GROUPS[unitKey] || SIDE_MISSION_GROUPS.current;
+                const countLabel = missions.length === 1 ? '1 mision' : missions.length + ' misiones';
+                const cards = missions.map(({ mission, statusHtml }) => `<a href="${mission.link}" class="session-card" style="text-decoration:none;color:inherit;cursor:pointer;border-left:3px solid #8b5cf6;display:flex">
+                    <div class="session-num" style="background:linear-gradient(135deg,#8b5cf6,#d946ef);color:#fff">${mission.emoji}</div>
+                    <div class="session-info"><h3>Mision: ${mission.name}</h3><p>${mission.desc}</p></div>
+                    <div class="session-status">${statusHtml}</div></a>`);
+                return `<section class="session-group">
+                    <div class="session-group-head">
+                        <div>
+                            <div class="session-group-title">${groupMeta.title}</div>
+                            <p class="session-group-copy">${groupMeta.copy}</p>
+                        </div>
+                        <div class="session-group-meta">${countLabel}</div>
+                    </div>
+                    <div class="session-list">${cards.join('')}</div>
+                </section>`;
+            }).join('');
+
+            document.getElementById('sideQuests').innerHTML = '<div class="session-groups">' + html + '</div>';
         }
 
         // ==================== LOGROS PREVIEW ====================
@@ -715,7 +955,7 @@
         // ==================== MESSAGING (Bell) ====================
         let lastMsgId = null;
         function listenForMessages() {
-            db.ref(BASE + '/mensajes').orderByChild('timestamp').limitToLast(1).on('value', snap => {
+            db.ref(BASE + '/mensajes').limitToLast(1).on('value', snap => {
                 if (!snap.exists()) return;
                 snap.forEach(child => {
                     const msg = child.val();

@@ -1,0 +1,1303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NM4 U2 - Semana 11 - Interpretacion colaborativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+:root {
+  --bg: #eef3f8;
+  --panel: #ffffff;
+  --panel-2: #0f172a;
+  --border: #d9e2ec;
+  --text: #16202f;
+  --dim: #526175;
+  --blue: #1d4f91;
+  --blue-2: #2563eb;
+  --orange: #f59e0b;
+  --orange-2: #f97316;
+  --green: #15803d;
+  --green-soft: #ecfdf3;
+  --purple: #6d28d9;
+  --purple-soft: #f5f3ff;
+  --shadow: 0 18px 40px rgba(15, 23, 42, .12);
+}
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(37,99,235,.12), transparent 26%),
+    radial-gradient(circle at top right, rgba(249,115,22,.10), transparent 28%),
+    linear-gradient(180deg, #f8fbff 0%, #edf2f7 55%, #e6ecf4 100%);
+}
+.top-bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(148, 163, 184, .25);
+}
+.back-link {
+  color: var(--dim);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+}
+.back-link:hover { color: var(--blue); }
+.top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  border: 1px solid rgba(148,163,184,.22);
+  background: rgba(255,255,255,.75);
+}
+.pill.progress { color: var(--blue); }
+.pill.save { color: var(--orange-2); }
+.pill.identity { color: var(--green); }
+.hero {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 28px 20px 16px;
+}
+.hero-shell {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: 28px;
+  background: linear-gradient(140deg, rgba(15,23,42,.96), rgba(29,79,145,.90));
+  box-shadow: 0 22px 50px rgba(15, 23, 42, .22);
+}
+.hero-shell::after {
+  content: '';
+  position: absolute;
+  right: -80px;
+  bottom: -110px;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(249,115,22,.28), transparent 68%);
+}
+.hero-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 13px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #bfdbfe;
+  background: rgba(59,130,246,.14);
+  border: 1px solid rgba(147,197,253,.18);
+  margin-bottom: 14px;
+}
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(280px, .9fr);
+  gap: 22px;
+}
+.hero h1 {
+  font-size: 32px;
+  line-height: 1.06;
+  color: #fff;
+  margin-bottom: 10px;
+}
+.hero p {
+  font-size: 14px;
+  line-height: 1.7;
+  color: rgba(226,232,240,.92);
+  max-width: 720px;
+}
+.hero-tags {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.hero-tag {
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.10);
+}
+.hero-side {
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 20px;
+  padding: 18px;
+}
+.hero-side h2 {
+  font-size: 14px;
+  color: #fdba74;
+  margin-bottom: 10px;
+}
+.hero-side ul { padding-left: 18px; }
+.hero-side li {
+  color: rgba(226,232,240,.9);
+  font-size: 12px;
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+.step-bar {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 20px 14px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+}
+.step-chip {
+  flex-shrink: 0;
+  padding: 9px 14px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #64748b;
+  background: rgba(255,255,255,.72);
+  border: 1px solid rgba(148,163,184,.20);
+}
+.step-chip.done {
+  color: #166534;
+  background: rgba(134,239,172,.18);
+  border-color: rgba(22,163,74,.24);
+}
+.step-chip.active {
+  color: var(--blue);
+  background: rgba(59,130,246,.12);
+  border-color: rgba(37,99,235,.22);
+}
+.main {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 20px 40px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 20px;
+}
+.stack { display: flex; flex-direction: column; gap: 18px; }
+.panel {
+  background: rgba(255,255,255,.85);
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow: var(--shadow);
+}
+.panel h2 {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.panel-copy {
+  font-size: 13px;
+  line-height: 1.65;
+  color: var(--dim);
+  margin-bottom: 16px;
+}
+.callout {
+  border-radius: 18px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.callout.blue { background: rgba(37,99,235,.08); border: 1px solid rgba(37,99,235,.18); color: #1e3a5f; }
+.callout.orange { background: rgba(249,115,22,.08); border: 1px solid rgba(249,115,22,.18); color: #9a3412; }
+.callout.green { background: rgba(22,163,74,.08); border: 1px solid rgba(22,163,74,.18); color: #166534; }
+.mini-grid, .role-grid, .matrix-grid, .block-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.info-card, .role-card {
+  background: #f8fbff;
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 18px;
+  padding: 16px;
+}
+.info-card h3, .role-card h3 {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: var(--blue);
+}
+.info-card p, .role-card p, .info-card li, .role-card li {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--dim);
+}
+.info-card ul, .role-card ul { padding-left: 18px; }
+.field-card {
+  background: #fbfdff;
+  border: 1px solid rgba(148,163,184,.18);
+  border-radius: 18px;
+  padding: 16px;
+}
+.field-card.full { grid-column: 1 / -1; }
+.field-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  color: #334155;
+}
+.field-help {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.55;
+  margin-top: -2px;
+  margin-bottom: 10px;
+}
+.field-input, .field-select {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(148,163,184,.28);
+  background: #fff;
+  color: var(--text);
+  font-family: inherit;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+.field-input:focus, .field-select:focus {
+  outline: none;
+  border-color: rgba(37,99,235,.48);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.08);
+}
+textarea.field-input { min-height: 110px; resize: vertical; }
+textarea.compact { min-height: 90px; }
+textarea.long { min-height: 220px; }
+.story-box {
+  background: linear-gradient(180deg, #f8fbff 0%, #f1f6fd 100%);
+  border: 1px solid rgba(37,99,235,.16);
+  border-radius: 20px;
+  padding: 20px;
+  font-size: 14px;
+  line-height: 1.85;
+}
+.story-box .title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 4px;
+}
+.story-box .note {
+  font-size: 11px;
+  color: #64748b;
+  margin-bottom: 14px;
+  letter-spacing: .03em;
+  text-transform: uppercase;
+}
+.story-box p {
+  margin-bottom: 10px;
+  font-family: 'Merriweather', serif;
+  color: #1f2937;
+}
+.check-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+.check-item {
+  border-radius: 16px;
+  padding: 12px 14px;
+  font-size: 12px;
+  line-height: 1.55;
+  font-weight: 700;
+  border: 1px solid rgba(148,163,184,.20);
+  background: rgba(255,255,255,.88);
+  color: #64748b;
+}
+.check-item.ok {
+  background: rgba(134,239,172,.16);
+  border-color: rgba(22,163,74,.18);
+  color: #166534;
+}
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.btn {
+  border: none;
+  border-radius: 14px;
+  padding: 13px 22px;
+  font-size: 14px;
+  font-weight: 800;
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform .15s, box-shadow .15s;
+}
+.btn:hover { transform: translateY(-2px); }
+.btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--blue), var(--blue-2));
+  box-shadow: 0 14px 26px rgba(37,99,235,.18);
+}
+.btn-secondary {
+  color: #111827;
+  background: linear-gradient(135deg, #fdba74, #f59e0b);
+  box-shadow: 0 14px 26px rgba(245,158,11,.18);
+}
+.btn-ghost {
+  color: var(--dim);
+  background: rgba(255,255,255,.88);
+  border: 1px solid rgba(148,163,184,.24);
+}
+.meta-row {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+.meta-pill {
+  font-size: 12px;
+  color: #475569;
+}
+.meta-pill strong { color: #111827; }
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.progress-card {
+  position: sticky;
+  top: 76px;
+  background: rgba(15,23,42,.95);
+  color: #e2e8f0;
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 0 22px 40px rgba(15, 23, 42, .24);
+}
+.progress-card h3 {
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+.progress-bg {
+  background: rgba(255,255,255,.10);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #60a5fa, #f59e0b, #fb7185);
+  transition: width .25s ease;
+  width: 0;
+}
+.progress-copy {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 8px;
+}
+.side-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.side-item {
+  padding: 11px 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 12px;
+  line-height: 1.5;
+  color: #cbd5e1;
+}
+.side-item.done {
+  background: rgba(134,239,172,.12);
+  border-color: rgba(134,239,172,.18);
+  color: #dcfce7;
+}
+.word-box {
+  margin-top: 16px;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.08);
+  font-size: 12px;
+  line-height: 1.55;
+  color: #cbd5e1;
+}
+.footer-note {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.6;
+}
+@media (max-width: 980px) {
+  .hero-grid, .main { grid-template-columns: 1fr; }
+  .progress-card { position: static; }
+}
+@media (max-width: 700px) {
+  .mini-grid, .role-grid, .matrix-grid, .block-grid, .check-grid { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 26px; }
+}
+</style>
+</head>
+<body>
+<div class="top-bar">
+  <a class="back-link" href="/lecturas/dashboard">← Volver al panel</a>
+  <div class="top-right">
+    <span class="pill identity" id="identityPill">Identificando...</span>
+    <span class="pill progress" id="progressPill">Progreso: 0%</span>
+    <span class="pill save" id="savePill">Conectando...</span>
+  </div>
+</div>
+
+<section class="hero">
+  <div class="hero-shell">
+    <div class="hero-kicker">NM4 · Unidad 2 · Semana 11</div>
+    <div class="hero-grid">
+      <div>
+        <h1>Interpretacion literaria colaborativa: memoria, identidad y control</h1>
+        <p>Esta guia esta pensada para una sesion completa de 90 minutos en tablet. Toda la actividad se responde aqui mismo: lectura, investigacion breve en internet, hallazgos grupales, evidencias, contraste y sintesis final, sin pasar nada al cuaderno.</p>
+        <div class="hero-tags">
+          <span class="hero-tag">Sesion completa · 90 minutos</span>
+          <span class="hero-tag">Trabajo colaborativo con tablet</span>
+          <span class="hero-tag">OA 2 y OA 5</span>
+          <span class="hero-tag">Autoguardado en tu cuenta</span>
+        </div>
+      </div>
+      <aside class="hero-side">
+        <h2>Producto esperado</h2>
+        <ul>
+          <li>Una pregunta de entrada respondida individualmente.</li>
+          <li>Integrantes con rol seleccionado y registrado.</li>
+          <li>Cuatro respuestas breves de lectura en la misma guia.</li>
+          <li>Un dato oficial del INE verificado con su fuente.</li>
+          <li>Hallazgos diferenciados por rol.</li>
+          <li>Tres evidencias organizadas en matriz.</li>
+          <li>Una lectura cruzada con otro grupo.</li>
+          <li>Una sintesis personal breve con dos evidencias.</li>
+        </ul>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<div class="step-bar" id="stepBar">
+  <div class="step-chip" data-step="entrada">1. Entrada</div>
+  <div class="step-chip" data-step="roles">2. Roles</div>
+  <div class="step-chip" data-step="lectura">3. Lectura</div>
+  <div class="step-chip" data-step="investigacion">4. Investigacion</div>
+  <div class="step-chip" data-step="hallazgos">5. Hallazgos</div>
+  <div class="step-chip" data-step="matriz">6. Evidencias</div>
+  <div class="step-chip" data-step="contraste">7. Contraste</div>
+  <div class="step-chip" data-step="bloque">8. Sintesis</div>
+</div>
+
+<main class="main">
+  <div class="stack">
+    <section class="panel">
+      <h2>🧭 Antes de comenzar</h2>
+      <p class="panel-copy">Toda la secuencia se desarrolla en pantalla y todo queda almacenado en tu cuenta. La meta es sostener una actividad colaborativa completa de 90 minutos sin usar cuaderno como soporte principal.</p>
+      <div class="callout green" id="identityCallout">Estamos verificando tu cuenta y preparando el autoguardado de esta actividad.</div>
+      <div class="mini-grid">
+        <div class="info-card">
+          <h3>Materiales</h3>
+          <ul>
+            <li>Tu tablet o telefono con esta pagina abierta.</li>
+            <li>Conexion breve para consultar una fuente oficial del INE.</li>
+            <li>Grupo de 4 o 5 integrantes.</li>
+          </ul>
+        </div>
+        <div class="info-card">
+          <h3>Cronograma sugerido</h3>
+          <ul>
+            <li>08 min: entrada individual y acuerdo del equipo.</li>
+            <li>12 min: integrantes, roles y foco de lectura.</li>
+            <li>18 min: lectura guiada y respuestas base.</li>
+            <li>12 min: investigacion digital con un dato del INE.</li>
+            <li>18 min: hallazgos, tesis y matriz de evidencias.</li>
+            <li>10 min: contraste entre grupos.</li>
+            <li>12 min: sintesis final y ticket de salida.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout orange">No copies el texto completo en las respuestas. La meta es <strong>interpretar</strong>: proponer una idea, sostenerla con evidencia, sumar un dato real y explicar por que importa.</div>
+    </section>
+
+    <section class="panel">
+      <h2>💭 1. Pregunta de entrada</h2>
+      <p class="panel-copy">Responde primero de manera personal. Despues comparte tu idea con el grupo antes de comenzar la lectura.</p>
+      <label class="field-label" for="entrada">Si una institucion pudiera borrar un recuerdo para hacerte "mas funcional", ¿que perderias realmente: una imagen del pasado o una parte de tu identidad?</label>
+      <textarea id="entrada" class="field-input compact" data-save placeholder="Escribe una respuesta breve pero clara..."></textarea>
+      <div class="meta-row">
+        <div class="meta-pill"><strong>Meta:</strong> abrir la discusion antes de leer</div>
+        <div class="meta-pill"><strong>Sugerencia:</strong> responde en 3 o 4 lineas</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>🧩 2. Roles y criterio del grupo</h2>
+      <p class="panel-copy">Anoten a cada integrante y seleccionen su rol. Si son 4 personas, el relator o la relatora puede asumir tambien la investigacion digital.</p>
+      <div class="role-grid">
+        <div class="role-card">
+          <h3>Coordinador/a</h3>
+          <p>Ordena la discusion y se asegura de que todos participen antes de cerrar la tesis.</p>
+        </div>
+        <div class="role-card">
+          <h3>Rastreador/a de evidencia</h3>
+          <p>Localiza fragmentos exactos y vigila que cada idea tenga apoyo textual.</p>
+        </div>
+        <div class="role-card">
+          <h3>Interprete de simbolos</h3>
+          <p>Observa objetos, olores, luces, gestos o repeticiones cargadas de sentido.</p>
+        </div>
+        <div class="role-card">
+          <h3>Relator/a</h3>
+          <p>Redacta la sintesis grupal y la deja lista para compartir o ajustar.</p>
+        </div>
+        <div class="role-card">
+          <h3>Investigador/a digital</h3>
+          <p>Busca y verifica el dato oficial del INE que luego el grupo integrara a su interpretacion.</p>
+        </div>
+      </div>
+      <div class="matrix-grid" style="margin-top:12px;">
+        <div class="field-card">
+          <label class="field-label" for="integrante1">Integrante 1</label>
+          <input id="integrante1" class="field-input" data-save placeholder="Nombre o iniciales">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolIntegrante1">Rol 1</label>
+          <select id="rolIntegrante1" class="field-select" data-save>
+            <option value="">Selecciona un rol</option>
+            <option value="coordinacion">Coordinador/a</option>
+            <option value="evidencia">Rastreador/a de evidencia</option>
+            <option value="simbolos">Interprete de simbolos</option>
+            <option value="relatoria">Relator/a</option>
+            <option value="investigacion">Investigador/a digital</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="integrante2">Integrante 2</label>
+          <input id="integrante2" class="field-input" data-save placeholder="Nombre o iniciales">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolIntegrante2">Rol 2</label>
+          <select id="rolIntegrante2" class="field-select" data-save>
+            <option value="">Selecciona un rol</option>
+            <option value="coordinacion">Coordinador/a</option>
+            <option value="evidencia">Rastreador/a de evidencia</option>
+            <option value="simbolos">Interprete de simbolos</option>
+            <option value="relatoria">Relator/a</option>
+            <option value="investigacion">Investigador/a digital</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="integrante3">Integrante 3</label>
+          <input id="integrante3" class="field-input" data-save placeholder="Nombre o iniciales">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolIntegrante3">Rol 3</label>
+          <select id="rolIntegrante3" class="field-select" data-save>
+            <option value="">Selecciona un rol</option>
+            <option value="coordinacion">Coordinador/a</option>
+            <option value="evidencia">Rastreador/a de evidencia</option>
+            <option value="simbolos">Interprete de simbolos</option>
+            <option value="relatoria">Relator/a</option>
+            <option value="investigacion">Investigador/a digital</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="integrante4">Integrante 4</label>
+          <input id="integrante4" class="field-input" data-save placeholder="Nombre o iniciales">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolIntegrante4">Rol 4</label>
+          <select id="rolIntegrante4" class="field-select" data-save>
+            <option value="">Selecciona un rol</option>
+            <option value="coordinacion">Coordinador/a</option>
+            <option value="evidencia">Rastreador/a de evidencia</option>
+            <option value="simbolos">Interprete de simbolos</option>
+            <option value="relatoria">Relator/a</option>
+            <option value="investigacion">Investigador/a digital</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="integrante5">Integrante 5 (opcional)</label>
+          <input id="integrante5" class="field-input" data-save placeholder="Nombre o iniciales">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolIntegrante5">Rol 5 (opcional)</label>
+          <select id="rolIntegrante5" class="field-select" data-save>
+            <option value="">Selecciona un rol</option>
+            <option value="coordinacion">Coordinador/a</option>
+            <option value="evidencia">Rastreador/a de evidencia</option>
+            <option value="simbolos">Interprete de simbolos</option>
+            <option value="relatoria">Relator/a</option>
+            <option value="investigacion">Investigador/a digital</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="criterio">Criterio principal del grupo</label>
+          <select id="criterio" class="field-select" data-save>
+            <option value="">Selecciona un criterio</option>
+            <option value="personaje-conflicto">Personaje y conflicto</option>
+            <option value="simbolo-ambiente">Simbolo y ambiente</option>
+            <option value="voz-narradora">Voz narradora</option>
+            <option value="tema">Tema</option>
+            <option value="mixto">Combinado</option>
+          </select>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="preguntaFoco">Pregunta foco del grupo</label>
+          <input id="preguntaFoco" class="field-input" data-save placeholder="¿Que idea quieren poner a prueba mientras leen?">
+        </div>
+      </div>
+      <div class="callout blue">Criterios posibles: personaje, simbolo, conflicto, voz narradora o tema. Elijan uno para evitar respuestas dispersas.</div>
+    </section>
+
+    <section class="panel">
+      <h2>📘 3. Capsula de contexto y lectura</h2>
+      <p class="panel-copy">Antes de leer, recuerda que en una distopia el conflicto puede instalarse sobre la memoria, el lenguaje o los afectos. Lee el texto y responde aqui mismo las cuatro preguntas base antes de pasar al trabajo grupal.</p>
+      <div class="callout blue">Una interpretacion valida no se basa en "me tinca". Necesita <strong>evidencia textual</strong>, un criterio y una explicacion que conecte detalle y sentido.</div>
+      <div class="story-box">
+        <div class="title">La sala 17</div>
+        <div class="note">Texto original para trabajo pedagogico</div>
+        <p>Cada jueves, la Sala 17 olia a metal tibio y manzanilla artificial. Era el aroma que la Direccion del Archivo usaba para tranquilizar a quienes llegaban a entregar un recuerdo. Decian que ese olor reducia la resistencia y volvía mas facil aceptar el intercambio: un recuerdo retirado, una version corregida devuelta al ciudadano, una vida mas limpia. Yo habia repetido ese procedimiento durante siete años y ya casi no sentia nada cuando una memoria desaparecia frente a mis ojos. O eso creia.</p>
+        <p>Mi trabajo consistia en revisar los recuerdos que el sistema marcaba como "emocionalmente inestables". Las pantallas los ordenaban por intensidad, fecha y utilidad social. Los utiles se conservaban: ceremonias, logros, frases de incentivo, episodios que reforzaran disciplina o eficiencia. Los inconvenientes se derivaban a correccion. El lenguaje oficial no hablaba de perdida, sino de ajuste. Nadie decia que una mujer olvidaba la risa exacta de su hermano; el informe decia que se optimizaba un vinculo afectivo para evitar interferencias. Nadie decia que un niño dejaba de recordar la vergüenza de haber llorado en publico; el documento indicaba que se fortalecia su adaptacion comunitaria.</p>
+        <p>Ese jueves, al iniciar turno, la consola no abrio el archivo de un ciudadano en espera. Abrio el mio. Primero pense que era un error del sistema. Luego vi la advertencia roja: <strong>auditoria obligatoria de memoria persistente</strong>. El recuerdo señalado era breve. Yo tenia ocho años. Mi madre inclinaba la cabeza sobre una cocina apagada y me enseñaba una cancion que nunca aparecio en los himnarios escolares. No era una melodia heroica ni util. Hablaba de un hilo de cobre que nadie debia cortar, aunque el resto del mundo insistiera en volverlo nudo o chatarra. En el recuerdo, mi madre no parecia valiente. Parecia cansada. Pero su voz sostenia algo que no cabia en los formularios: la idea de que uno podia ser pequeño y aun asi negarse a entregar su nombre entero.</p>
+        <p>La inteligencia de archivo marco el recuerdo con tres observaciones: improductivo, heredado y resistente a reemplazo. Eso ultimo era raro. La mayoria de las memorias cedian cuando se les ofrecia una variante mas ordenada. Una despedida podia cambiarse por una resolucion serena. Una derrota, por una escena de aprendizaje. Pero esa cancion permanecia intacta, como si debajo de las palabras hubiera una costura que el programa no alcanzaba a descifrar. Vera, la supervisora, aparecio a mi lado sin hacer ruido. Miro la pantalla y dijo, con la misma voz con que sugeria cerrar una ventana mal archivada: "Presiona verde. Luego ya no pensaras tanto".</p>
+        <p>Detras de mi, la fila avanzaba en silencio. Una mujer salio sonriendo despues de devolver la memoria de la ultima discusion con su hijo. Un estudiante acepto que corrigieran el recuerdo de su examen fallido por una version mas sobria, mas apta para futuras entrevistas. Todos sostenian el comprobante de intercambio como si fuera una medicina. Yo, en cambio, segui mirando el borde del archivo. Alli, casi invisible, se repetia una anomalia: en cada reproduccion del recuerdo, la voz de mi madre bajaba justo antes de la ultima frase, como si quisiera esconderla del sistema. Amplie el audio tres veces. La frase estaba ahi: "No dejes que otros recuerden por ti".</p>
+        <p>La luz verde comenzo a parpadear. El protocolo me daba treinta segundos para autorizar la correccion o derivar mi caso a revision superior. Eso significaba vigilancia, entrevistas, reescritura completa. Pense en mi escritorio, en la sala perfumada, en los ciudadanos que salian agradecidos por haberse vuelto un poco menos complejos. Pense en la cancion, en el hilo de cobre, en lo poco util que parecia una advertencia asi dentro de una ciudad que premiaba los archivos sin ruido. Entonces tome la hoja de respaldo que usábamos para registrar fallas tecnicas, copie a mano la frase prohibida y la doble hasta volverla una astilla de papel. Cuando la luz verde parpadeo por tercera vez, apague la consola. La sala siguio oliendo a manzanilla un instante mas. Despues, por primera vez en años, me parecio sentir humo.</p>
+      </div>
+      <div class="matrix-grid">
+        <div class="field-card">
+          <label class="field-label" for="controlRelato">Pregunta 1</label>
+          <p class="field-help">¿Que se intenta controlar realmente en el relato?</p>
+          <textarea id="controlRelato" class="field-input compact" data-save placeholder="Responde con una idea clara y una pista textual..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="simboloHilo">Pregunta 2</label>
+          <p class="field-help">¿Que simboliza el hilo de cobre dentro del texto?</p>
+          <textarea id="simboloHilo" class="field-input compact" data-save placeholder="Explica el simbolo y lo que sugiere..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="rolProtagonista">Pregunta 3</label>
+          <p class="field-help">¿El protagonista funciona como complice, victima o resistente? Justifica.</p>
+          <textarea id="rolProtagonista" class="field-input compact" data-save placeholder="Formula tu postura y justificala..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="vozNarrativa">Pregunta 4</label>
+          <p class="field-help">¿Por que importa que el relato este narrado en primera persona?</p>
+          <textarea id="vozNarrativa" class="field-input compact" data-save placeholder="Comenta el efecto de la voz narradora..."></textarea>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>🌐 4. Investigacion digital breve</h2>
+      <p class="panel-copy">Usen internet durante un tramo acotado y entren al sitio oficial del Censo 2024 del INE. Deben verificar un dato exacto y conectarlo con la pregunta por memoria, datos e identidad que abre el relato.</p>
+      <div class="callout blue">Fuente sugerida y esperada: <strong>https://censo2024.ine.gob.cl/</strong>. En la portada aparecen tres cifras centrales que pueden servirte: poblacion censada, viviendas censadas y hogares censados.</div>
+      <div class="matrix-grid">
+        <div class="field-card">
+          <label class="field-label" for="preguntaInvestigacion">Pregunta de investigacion</label>
+          <textarea id="preguntaInvestigacion" class="field-input compact" data-save placeholder="Ejemplo: ¿Que dato del INE me ayuda a pensar el poder de clasificar y registrar personas?"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="datoIne">Dato oficial encontrado</label>
+          <textarea id="datoIne" class="field-input compact" data-save placeholder="Escribe el dato exacto que encontraste en el sitio del INE..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="fuenteIne">Fuente o enlace</label>
+          <input id="fuenteIne" class="field-input" data-save placeholder="Pega aqui la URL exacta o referencia del sitio oficial">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentarioIne">¿Por que ese dato es relevante?</label>
+          <textarea id="comentarioIne" class="field-input compact" data-save placeholder="Explica por que ese numero, porcentaje o indicador llama la atencion..."></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="conexionIneRelato">Conecta el dato con el relato</label>
+          <textarea id="conexionIneRelato" class="field-input compact" data-save placeholder="¿Que diferencia hay entre una estadistica publica legitima y el control distopico de La sala 17?"></textarea>
+        </div>
+      </div>
+      <div class="callout orange">El dato debe quedar escrito completo, con fuente y comentario. No basta con poner un numero suelto ni con decir "lo vimos en internet".</div>
+    </section>
+
+    <section class="panel">
+      <h2>🗂️ 5. Hallazgos por rol</h2>
+      <p class="panel-copy">Antes de cerrar la tesis, cada rol debe dejar un aporte visible. El investigador o la investigadora digital debe sumar el dato oficial del INE a la discusion general.</p>
+      <div class="mini-grid" style="margin-bottom:12px;">
+        <div class="field-card">
+          <label class="field-label" for="hallazgoCoordinacion">Hallazgo del coordinador/a</label>
+          <p class="field-help">Resume la idea mas fuerte que aparecio en la conversacion grupal.</p>
+          <textarea id="hallazgoCoordinacion" class="field-input compact" data-save placeholder="¿Que lectura parece mas solida hasta ahora?"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="hallazgoEvidencia">Hallazgo del rastreador/a</label>
+          <p class="field-help">Anota el fragmento o detalle que mejor sostiene la discusion.</p>
+          <textarea id="hallazgoEvidencia" class="field-input compact" data-save placeholder="Registra aqui la evidencia mas potente que encontro el grupo..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="hallazgoSimbolo">Hallazgo del interprete de simbolos</label>
+          <p class="field-help">Explica que objeto, olor, imagen o gesto concentra sentido en el relato.</p>
+          <textarea id="hallazgoSimbolo" class="field-input compact" data-save placeholder="Ejemplo: el hilo de cobre, el olor a manzanilla, la luz verde..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="hallazgoRelatoria">Hallazgo del relator/a</label>
+          <p class="field-help">Sintetiza que interpretacion queda mejor armada despues de escuchar los roles.</p>
+          <textarea id="hallazgoRelatoria" class="field-input compact" data-save placeholder="Formula aqui una sintesis provisoria del grupo..."></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="hallazgoInvestigacion">Hallazgo del investigador/a digital</label>
+          <p class="field-help">Integra el dato del INE a la discusion: ¿que tension agrega o aclara respecto del relato?</p>
+          <textarea id="hallazgoInvestigacion" class="field-input compact" data-save placeholder="Explica aqui como se integra el dato oficial a la interpretacion del grupo..."></textarea>
+        </div>
+      </div>
+      <div class="callout blue">Antes de pasar a la matriz, revisen si hay una idea descartada o una evidencia dudosa. Si no logran justificarla, no debe entrar a la tesis.</div>
+    </section>
+
+    <section class="panel">
+      <h2>🧱 6. Matriz de evidencias y tesis</h2>
+      <p class="panel-copy">Ahora conviertan los hallazgos en una tesis defendible. La tesis puede dialogar con el dato del INE, pero debe sostenerse primero en el texto literario.</p>
+      <div class="matrix-grid">
+        <div class="field-card full">
+          <label class="field-label" for="tesisGrupal">Tesis grupal preliminar</label>
+          <textarea id="tesisGrupal" class="field-input compact" data-save placeholder="Escribe una interpretacion breve, no un resumen del texto..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="evidencia1">Evidencia 1</label>
+          <textarea id="evidencia1" class="field-input compact" data-save placeholder="Fragmento o detalle textual"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentario1">¿Que sugiere y por que importa?</label>
+          <textarea id="comentario1" class="field-input compact" data-save placeholder="Explica la evidencia 1"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="evidencia2">Evidencia 2</label>
+          <textarea id="evidencia2" class="field-input compact" data-save placeholder="Fragmento o detalle textual"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentario2">¿Que sugiere y por que importa?</label>
+          <textarea id="comentario2" class="field-input compact" data-save placeholder="Explica la evidencia 2"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="evidencia3">Evidencia 3</label>
+          <textarea id="evidencia3" class="field-input compact" data-save placeholder="Fragmento o detalle textual"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentario3">¿Que sugiere y por que importa?</label>
+          <textarea id="comentario3" class="field-input compact" data-save placeholder="Explica la evidencia 3"></textarea>
+        </div>
+      </div>
+      <div class="callout green">Chequeo rapido: tu tesis debe poder sostenerse con las tres evidencias. Si una no encaja, cambia la evidencia o corrige la tesis.</div>
+    </section>
+
+    <section class="panel">
+      <h2>🔁 7. Contraste entre grupos</h2>
+      <p class="panel-copy">Antes de escribir individualmente, intercambien la tesis y la matriz con otro grupo. La meta es someter la interpretacion a una lectura externa breve, clara y tecnica.</p>
+      <div class="mini-grid">
+        <div class="field-card">
+          <label class="field-label" for="grupoObservado">Grupo observado</label>
+          <input id="grupoObservado" class="field-input" data-save placeholder="Ejemplo: Grupo 3 / mesa ventana">
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="fortalezaAjena">Fortaleza detectada</label>
+          <textarea id="fortalezaAjena" class="field-input compact" data-save placeholder="¿Que tiene de solido esa interpretacion?"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="dudaAjena">Duda interpretativa</label>
+          <textarea id="dudaAjena" class="field-input compact" data-save placeholder="¿Que parte queda debil, confusa o poco justificada?"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="sugerenciaAjena">Sugerencia concreta</label>
+          <textarea id="sugerenciaAjena" class="field-input compact" data-save placeholder="¿Que deberia mejorar ese grupo?"></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="ajusteTesis">Ajuste final de la tesis del propio grupo</label>
+          <textarea id="ajusteTesis" class="field-input compact" data-save placeholder="Despues de la lectura cruzada, reescribe o ajusta aqui la tesis final del grupo..."></textarea>
+        </div>
+      </div>
+      <div class="callout orange">La retroalimentacion debe ser precisa: una fortaleza, una duda y una sugerencia. Evita comentarios vagos como "esta bien" o "falta mas".</div>
+    </section>
+
+    <section class="panel">
+      <h2>✍️ 8. Sintesis personal final</h2>
+      <p class="panel-copy">Ahora transforma el trabajo grupal, el contraste y la investigacion breve en un registro personal: tesis breve, una cita, una parafrasis, una referencia al dato investigado y un comentario final que cierre la idea.</p>
+      <div class="block-grid">
+        <div class="field-card full">
+          <label class="field-label" for="tesisPersonal">Mi tesis personal</label>
+          <textarea id="tesisPersonal" class="field-input compact" data-save placeholder="Formula tu idea principal con tus propias palabras..."></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="citaDirecta">Cita directa</label>
+          <textarea id="citaDirecta" class="field-input compact" data-save placeholder="Escribe un fragmento preciso del relato"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentarioCita">Comentario de la cita</label>
+          <textarea id="comentarioCita" class="field-input compact" data-save placeholder="Explica por que apoya tu tesis"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="parafrasis">Parafrasis</label>
+          <textarea id="parafrasis" class="field-input compact" data-save placeholder="Reformula otra evidencia con tus palabras"></textarea>
+        </div>
+        <div class="field-card">
+          <label class="field-label" for="comentarioParafrasis">Comentario de la parafrasis</label>
+          <textarea id="comentarioParafrasis" class="field-input compact" data-save placeholder="Explica como fortalece tu interpretacion"></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="integracionInvestigacion">Integra el dato investigado</label>
+          <textarea id="integracionInvestigacion" class="field-input compact" data-save placeholder="Explica en 3 o 4 lineas como el dato del INE amplifica, tensiona o contextualiza tu lectura del relato..."></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="sintesisFinal">Sintesis individual final (8 a 10 lineas)</label>
+          <textarea id="sintesisFinal" class="field-input long" data-save placeholder="Escribe aqui tu version final: tesis + evidencia 1 + evidencia 2 + comentario de cierre..."></textarea>
+        </div>
+        <div class="field-card full">
+          <label class="field-label" for="revisionPar">Revision entre pares</label>
+          <textarea id="revisionPar" class="field-input compact" data-save placeholder="Anota una sugerencia concreta recibida o entregada a un companero..."></textarea>
+        </div>
+      </div>
+      <div class="callout orange">Revision entre pares: verifica si el texto tiene tesis clara, evidencias pertinentes y comentario interpretativo. No basta con copiar: hay que explicar.</div>
+    </section>
+
+    <section class="panel">
+      <h2>🔭 9. Cierre y proyeccion</h2>
+      <p class="panel-copy">Esta actividad instala preguntas que seguiran apareciendo en la Unidad 2: humanidad, tecnologia, obediencia, memoria e identidad. Es un puente directo hacia las siguientes lecturas del mes.</p>
+      <div class="field-card full">
+        <label class="field-label" for="ticketSalida">Ticket de salida</label>
+        <textarea id="ticketSalida" class="field-input compact" data-save placeholder="En una oracion: ¿que parece mas peligroso en el relato, la tecnologia del archivo o la costumbre de obedecerla sin discutir?"></textarea>
+      </div>
+      <div class="actions" style="margin-top:16px;">
+        <button class="btn btn-primary" id="saveBtn" type="button">Guardar borrador</button>
+        <button class="btn btn-primary" id="submitBtn" type="button">Entregar trabajo</button>
+        <button class="btn btn-secondary" id="printBtn" type="button">Imprimir / Exportar</button>
+        <button class="btn btn-ghost" id="clearBtn" type="button">Limpiar campos</button>
+      </div>
+      <div class="meta-row">
+        <div class="meta-pill"><strong>Consejo:</strong> imprime solo cuando tu texto ya este revisado.</div>
+        <div class="meta-pill"><strong>Importante:</strong> el borrador se guarda en tu cuenta de estudiante.</div>
+      </div>
+    </section>
+
+    <p class="footer-note">Material preparado para semana 11 de la Unidad 2 de NM4. Esta pagina identifica automaticamente tu nombre y curso desde la base de estudiantes, guarda borradores en Firebase y permite cerrar el trabajo con entrega final.</p>
+  </div>
+
+  <aside class="sidebar">
+    <div class="progress-card">
+      <h3>Tu avance</h3>
+      <div class="progress-bg"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-copy" id="progressCopy">Completa los campos clave para cerrar la ruta de trabajo.</div>
+
+      <div class="side-list" id="checkList">
+        <div class="side-item" data-check="entrada">Entrada personal respondida</div>
+        <div class="side-item" data-check="roles">Integrantes y roles registrados</div>
+        <div class="side-item" data-check="lectura">Respuestas de lectura completadas</div>
+        <div class="side-item" data-check="investigacion">Dato INE y fuente verificados</div>
+        <div class="side-item" data-check="hallazgos">Hallazgos por rol registrados</div>
+        <div class="side-item" data-check="matriz">Tesis y tres evidencias registradas</div>
+        <div class="side-item" data-check="contraste">Lectura cruzada completada</div>
+        <div class="side-item" data-check="bloque">Sintesis final con investigacion integrada</div>
+      </div>
+
+      <div class="word-box">
+        <strong>Contador de sintesis final</strong><br>
+        <span id="wordCount">0 palabras</span><br><br>
+        Busca una extension suficiente para desarrollar idea, evidencia y comentario con claridad.
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8',
+  authDomain: 'profe-blog.firebaseapp.com',
+  databaseURL: 'https://profe-blog-default-rtdb.firebaseio.com',
+  projectId: 'profe-blog',
+  storageBucket: 'profe-blog.firebasestorage.app',
+  messagingSenderId: '305920739217',
+  appId: '1:305920739217:web:2e08c7469d2988d8b3bc30'
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(FIREBASE_CONFIG);
+}
+
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db = firebase.database();
+
+const BASE = 'plataforma_estudiantes';
+const TASK_ID = 'nm4-u2-semana11';
+const STORAGE_KEY = 'nm4-u2-semana11-borrador';
+const fields = Array.from(document.querySelectorAll('[data-save]'));
+const savePill = document.getElementById('savePill');
+const progressPill = document.getElementById('progressPill');
+const progressFill = document.getElementById('progressFill');
+const progressCopy = document.getElementById('progressCopy');
+const wordCount = document.getElementById('wordCount');
+const identityPill = document.getElementById('identityPill');
+const identityCallout = document.getElementById('identityCallout');
+const submitBtn = document.getElementById('submitBtn');
+const saveBtn = document.getElementById('saveBtn');
+const clearBtn = document.getElementById('clearBtn');
+
+const CURSO_LABELS = {
+  '4A-HC': '4°A HC',
+  '4B-HC': '4°B HC',
+  '4A-TP': '4°A TP',
+  '4B-TP': '4°B TP',
+  '4C-TP': '4°C TP',
+  '4D-TP': '4°D TP',
+  '4E-TP': '4°E TP'
+};
+
+const checklist = {
+  entrada: () => valueOf('entrada').trim().length > 20,
+  roles: () => ['integrante1', 'integrante2', 'integrante3', 'integrante4'].every((id) => valueOf(id).trim().length > 1)
+    && ['rolIntegrante1', 'rolIntegrante2', 'rolIntegrante3', 'rolIntegrante4'].every((id) => valueOf(id).trim().length > 0)
+    && valueOf('criterio').trim().length > 0,
+  lectura: () => ['controlRelato', 'simboloHilo', 'rolProtagonista', 'vozNarrativa'].filter((id) => valueOf(id).trim().length > 25).length >= 3,
+  investigacion: () => valueOf('datoIne').trim().length > 12
+    && valueOf('fuenteIne').trim().length > 12
+    && valueOf('conexionIneRelato').trim().length > 35,
+  hallazgos: () => ['hallazgoCoordinacion', 'hallazgoEvidencia', 'hallazgoSimbolo', 'hallazgoRelatoria', 'hallazgoInvestigacion'].filter((id) => valueOf(id).trim().length > 18).length >= 4,
+  matriz: () => valueOf('tesisGrupal').trim().length > 20
+    && ['evidencia1', 'evidencia2', 'evidencia3'].every((id) => valueOf(id).trim().length > 12),
+  contraste: () => valueOf('fortalezaAjena').trim().length > 15 && valueOf('dudaAjena').trim().length > 15 && valueOf('ajusteTesis').trim().length > 25,
+  bloque: () => valueOf('integracionInvestigacion').trim().length > 25 && valueOf('sintesisFinal').trim().length > 140,
+};
+
+let currentUID = null;
+let studentData = null;
+let isSubmitted = false;
+let autoSaveTimer = null;
+
+function valueOf(id) {
+  const element = document.getElementById(id);
+  return element ? element.value || '' : '';
+}
+
+function redirectToLogin() {
+  window.location.href = '/lecturas/?target=nm4-u2-semana11';
+}
+
+function isAllowedCourse(curso) {
+  return /^4[A-E]-(HC|TP)$/.test(String(curso || ''));
+}
+
+function setSaveMessage(message, persist) {
+  savePill.textContent = message;
+  if (persist) return;
+  window.clearTimeout(setSaveMessage.timer);
+  setSaveMessage.timer = window.setTimeout(() => {
+    savePill.textContent = isSubmitted ? 'Entrega cerrada' : 'Autoguardado activo';
+  }, 2200);
+}
+
+function setIdentity(student) {
+  const courseLabel = CURSO_LABELS[student.curso] || student.curso || 'Curso sin registro';
+  identityPill.textContent = student.nombre + ' · ' + courseLabel;
+  identityCallout.innerHTML = 'Tu trabajo se esta guardando como <strong>' + student.nombre + '</strong> del curso <strong>' + courseLabel + '</strong>. No necesitas escribir tu nombre ni tu curso manualmente.';
+}
+
+function collectDraftPayload() {
+  const answers = {};
+  fields.forEach((field) => {
+    answers[field.id] = field.value || '';
+  });
+
+  const words = valueOf('sintesisFinal').trim().split(/\s+/).filter(Boolean).length;
+
+  return {
+    answers,
+    palabras_sintesis: words,
+    nombre: studentData ? studentData.nombre : null,
+    curso: studentData ? studentData.curso : null,
+    titulo: 'NM4 U2 Semana 11',
+    updatedAt: Date.now()
+  };
+}
+
+function loadFields(data) {
+  if (!data) return;
+  const answers = data.answers || data;
+  fields.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(answers, field.id)) {
+      field.value = answers[field.id] || '';
+    }
+  });
+}
+
+function persistLocal(showMessage) {
+  const payload = collectDraftPayload();
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+  if (showMessage) setSaveMessage('Borrador local actualizado', false);
+}
+
+function loadLocalDraft() {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if (!raw) return false;
+  try {
+    const data = JSON.parse(raw);
+    loadFields(data);
+    return true;
+  } catch (_error) {
+    localStorage.removeItem(STORAGE_KEY);
+    return false;
+  }
+}
+
+function updateWordCount() {
+  const words = valueOf('sintesisFinal').trim().split(/\s+/).filter(Boolean).length;
+  wordCount.textContent = words + ' palabras';
+}
+
+function updateChecklist() {
+  const states = Object.entries(checklist).map(([key, rule]) => [key, rule()]);
+  states.forEach(([key, done]) => {
+    const item = document.querySelector('[data-check="' + key + '"]');
+    const chip = document.querySelector('[data-step="' + key + '"]');
+    if (item) item.classList.toggle('done', done);
+    if (chip) {
+      chip.classList.toggle('done', done);
+      chip.classList.remove('active');
+    }
+  });
+
+  const firstPending = states.find(([, done]) => !done);
+  if (firstPending) {
+    const chip = document.querySelector('[data-step="' + firstPending[0] + '"]');
+    if (chip) chip.classList.add('active');
+  }
+
+  return states;
+}
+
+function updateProgress(states) {
+  const doneCount = states.filter(([, done]) => done).length;
+  const total = states.length;
+  const percentage = Math.round((doneCount / total) * 100);
+  progressFill.style.width = percentage + '%';
+  progressPill.textContent = 'Progreso: ' + percentage + '%';
+  progressCopy.textContent = doneCount === total
+    ? 'Ruta completa. Revisa y entrega tu trabajo si ya esta listo.'
+    : 'Llevas ' + doneCount + ' de ' + total + ' hitos de trabajo completados.';
+  submitBtn.disabled = isSubmitted || doneCount < total;
+}
+
+function updateUI() {
+  updateWordCount();
+  const states = updateChecklist();
+  updateProgress(states);
+}
+
+function lockForm() {
+  isSubmitted = true;
+  fields.forEach((field) => {
+    field.disabled = true;
+    field.style.opacity = '.78';
+  });
+  saveBtn.disabled = true;
+  clearBtn.disabled = true;
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Trabajo entregado';
+  setSaveMessage('Entrega cerrada', true);
+  identityCallout.innerHTML = 'La guia ya fue <strong>entregada</strong>. Puedes revisar tu trabajo e imprimirlo, pero ya no editarlo.';
+}
+
+async function saveDraft(showMessage) {
+  persistLocal(false);
+  if (!currentUID || !studentData || isSubmitted) {
+    updateUI();
+    return;
+  }
+
+  try {
+    const payload = collectDraftPayload();
+    await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+      ...payload,
+      last_save: Date.now(),
+      completada: false
+    });
+    if (showMessage) setSaveMessage('Borrador guardado en tu cuenta', false);
+  } catch (error) {
+    console.error('Save error:', error);
+    if (showMessage) setSaveMessage('Error al guardar en linea', false);
+  }
+
+  updateUI();
+}
+
+async function clearDraft() {
+  if (isSubmitted) return;
+  const confirmation = window.confirm('Se limpiaran los campos de esta guia y el borrador asociado a tu cuenta. ¿Deseas continuar?');
+  if (!confirmation) return;
+
+  fields.forEach((field) => {
+    field.value = '';
+  });
+  localStorage.removeItem(STORAGE_KEY);
+
+  if (currentUID && studentData) {
+    try {
+      await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+        answers: {},
+        palabras_sintesis: 0,
+        last_save: Date.now(),
+        completada: false,
+        nombre: studentData.nombre,
+        curso: studentData.curso
+      });
+    } catch (error) {
+      console.error('Clear error:', error);
+    }
+  }
+
+  updateUI();
+  setSaveMessage('Borrador limpiado', false);
+}
+
+async function submitWork() {
+  if (isSubmitted) return;
+  const states = updateChecklist();
+  const ready = states.every(([, done]) => done);
+  if (!ready) {
+    setSaveMessage('Completa todos los hitos antes de entregar', false);
+    return;
+  }
+
+  const confirmation = window.confirm('¿Confirmas la entrega final? Despues de enviar, la guia quedara bloqueada para edicion.');
+  if (!confirmation) return;
+
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Entregando...';
+
+  try {
+    const payload = collectDraftPayload();
+    await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+      ...payload,
+      completada: true,
+      submitted_at: Date.now(),
+      last_save: Date.now()
+    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+    lockForm();
+  } catch (error) {
+    console.error('Submit error:', error);
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Entregar trabajo';
+    setSaveMessage('No se pudo completar la entrega', false);
+  }
+}
+
+fields.forEach((field) => {
+  field.addEventListener('input', () => {
+    persistLocal(false);
+    updateUI();
+    window.clearTimeout(autoSaveTimer);
+    autoSaveTimer = window.setTimeout(() => {
+      saveDraft(false);
+    }, 3500);
+  });
+  field.addEventListener('change', () => {
+    persistLocal(false);
+    updateUI();
+  });
+});
+
+saveBtn.addEventListener('click', () => saveDraft(true));
+submitBtn.addEventListener('click', submitWork);
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+clearBtn.addEventListener('click', clearDraft);
+
+auth.onAuthStateChanged(async (user) => {
+  if (!user) {
+    redirectToLogin();
+    return;
+  }
+
+  currentUID = user.uid;
+
+  try {
+    const [studentSnap, taskSnap] = await Promise.all([
+      db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+      db.ref(BASE + '/tareas/' + TASK_ID + '/' + user.uid).once('value')
+    ]);
+
+    studentData = studentSnap.val();
+    if (!studentData) {
+      await auth.signOut();
+      redirectToLogin();
+      return;
+    }
+
+    if (!studentData.perfil_completo) {
+      const next = window.location.pathname + window.location.search;
+      window.location.href = '/estudiantes/perfil.html?next=' + encodeURIComponent(next);
+      return;
+    }
+
+    if (!isAllowedCourse(studentData.curso)) {
+      identityPill.textContent = studentData.nombre;
+      identityCallout.innerHTML = 'Esta guia esta disponible solo para cursos NM4. Tu cuenta fue identificada, pero no tiene un curso habilitado para esta actividad.';
+      saveBtn.disabled = true;
+      submitBtn.disabled = true;
+      clearBtn.disabled = true;
+      fields.forEach((field) => { field.disabled = true; });
+      setSaveMessage('Acceso restringido por curso', true);
+      updateUI();
+      return;
+    }
+
+    setIdentity(studentData);
+    const remoteTask = taskSnap.val();
+    if (remoteTask) {
+      loadFields(remoteTask);
+      if (remoteTask.completada) {
+        lockForm();
+      } else {
+        setSaveMessage('Autoguardado activo', true);
+      }
+    } else {
+      const loadedLocal = loadLocalDraft();
+      setSaveMessage(loadedLocal ? 'Recuperado desde este dispositivo' : 'Autoguardado activo', false);
+    }
+
+    updateUI();
+  } catch (error) {
+    console.error('Load error:', error);
+    identityPill.textContent = 'Sin conexion';
+    identityCallout.innerHTML = 'No fue posible cargar tu cuenta en este momento. Reintenta la pagina o vuelve a iniciar sesion.';
+    setSaveMessage('Error de carga', true);
+  }
+});
+
+loadLocalDraft();
+updateUI();
+</script>
+</body>
+</html>

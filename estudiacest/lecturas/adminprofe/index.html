@@ -14,8 +14,8 @@
     /* HEADER */
     .header{background:linear-gradient(135deg,#111827 0%,#115e59 55%,#164e63 100%);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200;box-shadow:0 4px 12px rgba(0,0,0,.15)}
     .header h1{font-size:16px;font-weight:800;flex:1}
-    .header button{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s}
-    .header button:hover{background:rgba(255,255,255,.2)}
+    .header button,.header .header-link{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:6px 12px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;text-decoration:none;display:inline-flex;align-items:center}
+    .header button:hover,.header .header-link:hover{background:rgba(255,255,255,.2)}
     /* LAYOUT */
     .layout{display:flex;flex:1;min-height:0}
     /* SIDEBAR */
@@ -167,14 +167,17 @@
         <h2>Panel Administrador</h2>
       </div>
     </div>
-    <p class="gate-sub">Panel privado de administración para Lecturas. Solo la cuenta administradora configurada puede acceder.</p>
+    <p class="gate-sub">Panel privado de administración para Lecturas. Solo docentes con rol administrador pueden acceder.</p>
     <div class="gate-lock">
-      <span class="label">Cuenta autorizada</span>
+      <span class="label">Acceso requerido</span>
       <span class="value" id="ownerLabel"></span>
     </div>
     <div class="alert error" id="gateError"></div>
     <form id="gateForm">
-      <input type="text" name="username" id="gateUsername" autocomplete="username" value="docente" readonly aria-hidden="true" tabindex="-1" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
+      <div class="form-group">
+        <label for="gateEmail">Correo</label>
+        <input id="gateEmail" type="email" placeholder="correo@estudiacest.com" autocomplete="username">
+      </div>
       <div class="form-group">
         <label for="gatePassword">Contraseña</label>
           <input id="gatePassword" type="password" placeholder="Ingresa tu contraseña docente" autocomplete="current-password">
@@ -192,6 +195,7 @@
   <div class="header">
     <h1>Panel Administrador Lecturas</h1>
     <span class="admin-name" id="adminName"></span>
+    <a class="header-link" href="/admin/" title="Ir al selector de paneles">Paneles</a>
     <button id="logoutBtn">Cerrar sesión</button>
   </div>
   <div class="mobile-nav" id="mobileNav"></div>
@@ -474,7 +478,6 @@ const FIREBASE_CONFIG = {
 };
 const STUDENT_BASE = 'plataforma_estudiantes';
 const LECTURAS_BASE = 'plataforma_lecturas';
-const OWNER_ADMIN_EMAIL = 'portafolio.admin@estudiacest.com';
 
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth = firebase.auth();
@@ -507,17 +510,19 @@ const $gate = document.getElementById('loginGate');
 const $app = document.getElementById('adminApp');
 const $gateError = document.getElementById('gateError');
 const $gateForm = document.getElementById('gateForm');
+const $gateEmail = document.getElementById('gateEmail');
 const $gatePassword = document.getElementById('gatePassword');
 const $gateLoginBtn = document.getElementById('gateLoginBtn');
 const $gateSignOutBtn = document.getElementById('gateSignOutBtn');
 
-document.getElementById('ownerLabel').textContent = OWNER_ADMIN_EMAIL;
+document.getElementById('ownerLabel').textContent = 'Correo docente con rol administrador';
 
 /* ====================================================================
    UTILITIES
    ==================================================================== */
 function htmlEsc(v) { return String(v||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function norm(v) { return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim(); }
+function normalizeEmail(value) { return String(value || '').trim().toLowerCase(); }
 function cleanRut(r) { return String(r||'').replace(/[.\s]/g,'').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g,'')+'@est.estudiacest.com'; }
 function defaultPassword(r) { var d=cleanRut(r).replace(/[^0-9]/g,''); return d.substring(0,6).padEnd(6,'0'); }
@@ -650,20 +655,18 @@ function showApp() {
 
 $gateForm.addEventListener('submit', async(event)=>{
   event.preventDefault();
+  const email=normalizeEmail($gateEmail.value);
   const pw=$gatePassword.value;
-  if(!pw){$gateError.textContent='Ingresa tu contraseña.';$gateError.classList.add('show');return;}
+  if(!email || !pw){$gateError.textContent='Ingresa correo y contraseña.';$gateError.classList.add('show');return;}
   $gateLoginBtn.disabled=true;$gateLoginBtn.textContent='Validando...';$gateError.classList.remove('show');
-  try{ await auth.signInWithEmailAndPassword(OWNER_ADMIN_EMAIL,pw); }
-  catch(e){ $gateLoginBtn.disabled=false;$gateLoginBtn.textContent='Entrar al panel';$gateError.textContent='Contraseña incorrecta.';$gateError.classList.add('show'); }
+  try{ await auth.signInWithEmailAndPassword(email,pw); }
+  catch(e){ $gateLoginBtn.disabled=false;$gateLoginBtn.textContent='Entrar al panel';$gateError.textContent='Correo o contraseña incorrectos.';$gateError.classList.add('show'); }
 });
 $gateSignOutBtn.addEventListener('click',async()=>{ await auth.signOut(); });
 document.getElementById('logoutBtn').addEventListener('click',async()=>{ await auth.signOut(); showGate(); });
 
 auth.onAuthStateChanged(async user=>{
   if(!user){ showGate(); return; }
-  if(String(user.email||'').trim().toLowerCase()!==OWNER_ADMIN_EMAIL){
-    await auth.signOut(); showGate('Solo la cuenta administradora puede acceder.'); return;
-  }
   // Force token refresh to avoid race condition with RTDB auth propagation
   try{ await user.getIdToken(true); }catch(ignore){}
   let adminOk=false;
@@ -671,7 +674,7 @@ auth.onAuthStateChanged(async user=>{
     try{
       const snap=await db.ref(STUDENT_BASE+'/admins/'+user.uid).once('value');
       if(snap.val()){ adminOk=true; break; }
-      else{ await auth.signOut(); showGate('No tienes permisos de administrador.'); return; }
+      else{ await auth.signOut(); showGate('No tienes permisos de administrador en Estudia CEST.'); return; }
     }catch(e){
       if(attempt<2){ await new Promise(r=>setTimeout(r,800)); }
       else{ await auth.signOut(); showGate('Error verificando permisos.'); return; }
@@ -711,17 +714,42 @@ function initMobileNav() {
   nav.innerHTML=links.map(l=>'<a href="#" data-section="'+l.id+'" class="'+(l.id==='overview'?'active':'')+'" onclick="showSection(\''+l.id+'\',this)">'+l.icon+' '+l.label+'</a>').join('');
 }
 
+function isPermissionDeniedError(error) {
+  const code = String((error && error.code) || '').toLowerCase();
+  const message = String((error && error.message) || '').toLowerCase();
+  return code.includes('permission') || message.includes('permission_denied');
+}
+
+async function readOnceWithRetry(path, attempts = 4, delayMs = 800) {
+  let lastError = null;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      if (currentUser && attempt > 0) {
+        try { await currentUser.getIdToken(true); } catch(ignore) {}
+      }
+      return await db.ref(path).once('value');
+    } catch (error) {
+      lastError = error;
+      if (!isPermissionDeniedError(error) || attempt === attempts - 1) {
+        throw error;
+      }
+      await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+    }
+  }
+  throw lastError;
+}
+
 /* ====================================================================
    DATA LOADING
    ==================================================================== */
 async function loadAllData() {
   try {
     const [estS,lecSesS,lecRespS,lecResS,lecAssS] = await Promise.all([
-      db.ref(STUDENT_BASE+'/estudiantes').once('value'),
-      db.ref(LECTURAS_BASE+'/sesiones').once('value'),
-      db.ref(LECTURAS_BASE+'/respuestas').once('value'),
-      db.ref(LECTURAS_BASE+'/resultados').once('value'),
-      db.ref(LECTURAS_BASE+'/asignaciones').once('value')
+      readOnceWithRetry(STUDENT_BASE+'/estudiantes'),
+      readOnceWithRetry(LECTURAS_BASE+'/sesiones'),
+      readOnceWithRetry(LECTURAS_BASE+'/respuestas'),
+      readOnceWithRetry(LECTURAS_BASE+'/resultados'),
+      readOnceWithRetry(LECTURAS_BASE+'/asignaciones')
     ]);
     studentsMap=estS.val()||{};
     simceSessions={};
@@ -753,24 +781,39 @@ function scheduleLiveRender(){
     try{ renderLecReviewPanel(); }catch(e){ console.error('[live/review]',e); }
   },400);
 }
+
+function attachLiveValueListener(path, label, assignValue, attempt = 0) {
+  const maxAttempts = 4;
+  const onValue = snap => {
+    assignValue(snap.val() || {});
+    scheduleLiveRender();
+  };
+  const onError = async err => {
+    if (isPermissionDeniedError(err) && attempt < maxAttempts - 1) {
+      try { if (currentUser) await currentUser.getIdToken(true); } catch(ignore) {}
+      setTimeout(() => attachLiveValueListener(path, label, assignValue, attempt + 1), 800 * (attempt + 1));
+      return;
+    }
+    console.error('[live/' + label + ']', err);
+  };
+  db.ref(path).on('value', onValue, onError);
+}
+
 function attachLiveListeners(){
   if(_liveListenersAttached) return;
   _liveListenersAttached=true;
   // Live refresh de respuestas (incluye strikes y bloqueos en tiempo real)
-  db.ref(LECTURAS_BASE+'/respuestas').on('value',snap=>{
-    lecResponses=snap.val()||{};
-    scheduleLiveRender();
-  },err=>console.error('[live/respuestas]',err));
+  attachLiveValueListener(LECTURAS_BASE+'/respuestas', 'respuestas', value => {
+    lecResponses = value;
+  });
   // Live refresh de resultados (incluye envíos automáticos por strike)
-  db.ref(LECTURAS_BASE+'/resultados').on('value',snap=>{
-    lecResults=snap.val()||{};
-    scheduleLiveRender();
-  },err=>console.error('[live/resultados]',err));
+  attachLiveValueListener(LECTURAS_BASE+'/resultados', 'resultados', value => {
+    lecResults = value;
+  });
   // Live refresh de asignaciones por si se asigna durante la sesión
-  db.ref(LECTURAS_BASE+'/asignaciones').on('value',snap=>{
-    lecAssignments=snap.val()||{};
-    scheduleLiveRender();
-  },err=>console.error('[live/asignaciones]',err));
+  attachLiveValueListener(LECTURAS_BASE+'/asignaciones', 'asignaciones', value => {
+    lecAssignments = value;
+  });
 }
 
 function populateCourseFilters() {
@@ -2270,20 +2313,20 @@ let _planillaCache = {};
 async function loadPlanilla() {
   const sel = document.getElementById('planillaSession');
   if (sel && !sel.dataset.populated) {
-    const opts = Object.keys(lecturasSessions || {}).map(function(sid){
-      const s = lecturasSessions[sid] || {};
+    const opts = Object.keys(lecSessions || {}).map(function(sid){
+      const s = lecSessions[sid] || {};
       return '<option value="'+sid+'">'+(s.titulo || sid)+'</option>';
     }).join('');
     sel.innerHTML = '<option value="">Selecciona sesión...</option>' + opts;
     sel.dataset.populated = '1';
-    if (lecturasSessions && lecturasSessions['pedro-paramo-nm3-regular-2026']) sel.value = 'pedro-paramo-nm3-regular-2026';
+    if (lecSessions && lecSessions['pedro-paramo-nm3-regular-2026']) sel.value = 'pedro-paramo-nm3-regular-2026';
   }
   const sid = sel ? sel.value : '';
   const body = document.getElementById('planillaBody');
   if (!sid) { body.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Selecciona una sesión.</td></tr>'; return; }
   body.innerHTML = '<tr><td colspan="10" class="muted" style="text-align:center;padding:24px">Cargando...</td></tr>';
   try {
-    const snap = await db.ref(LECTURAS_BASE+'/correcciones_manual/'+sid).once('value');
+    const snap = await readOnceWithRetry(LECTURAS_BASE+'/correcciones_manual/'+sid);
     const data = snap.val() || {};
     _planillaCache[sid] = data;
     const rows = Object.entries(data).map(function(entry){

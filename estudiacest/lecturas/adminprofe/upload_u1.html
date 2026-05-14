@@ -58,7 +58,10 @@
 
 <section id="login" class="card" style="display:none">
   <h2>🔐 Iniciar sesión admin</h2>
-  <p class="muted">Solo <code>portafolio.admin@estudiacest.com</code> puede operar este panel.</p>
+  <p class="muted">Solo cuentas docentes con rol administrador pueden operar este panel.</p>
+  <div class="row" style="margin-top:10px">
+    <div><label>Correo</label><input id="email" type="text" autocomplete="username" placeholder="correo@estudiacest.com"></div>
+  </div>
   <div class="row" style="margin-top:10px">
     <div><label>Contraseña</label><input id="pw" type="password" autocomplete="current-password"></div>
   </div>
@@ -122,7 +125,6 @@ const FIREBASE_CONFIG = {
   messagingSenderId: "999002169815",
   appId: "1:999002169815:web:51203237bc77c2e74deb92"
 };
-const OWNER_EMAIL = 'portafolio.admin@estudiacest.com';
 const STUDENT_BASE = 'plataforma_estudiantes';
 const LECTURAS_BASE = 'plataforma_lecturas';
 
@@ -160,6 +162,7 @@ auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 const db = firebase.database();
 
 const $ = s => document.querySelector(s);
+const LAST_ADMIN_EMAIL_KEY = 'estudiacestAdminEmail';
 function logMsg(txt, kind){
   const el = $('#log');
   const ts = new Date().toLocaleTimeString('es-CL');
@@ -175,30 +178,43 @@ auth.onAuthStateChanged(user => {
     $('#who').textContent='— no conectado —';
     return;
   }
-  if(String(user.email||'').toLowerCase() !== OWNER_EMAIL){
-    alert('Esta cuenta no está autorizada para este panel.');
+  db.ref(STUDENT_BASE + '/admins/' + user.uid).once('value').then(snap => {
+    if(!snap.val()){
+      alert('Esta cuenta no está autorizada para este panel.');
+      auth.signOut();
+      return;
+    }
+    $('#login').style.display='none';
+    $('#app').style.display='block';
+    $('#logoutBtn').style.display='inline-block';
+    $('#who').textContent = user.email;
+    bootstrap().catch(e=>{console.error(e); logMsg('bootstrap: '+e.message,'err');});
+  }).catch(error => {
+    console.error(error);
+    $('#loginMsg').innerHTML='<span class="badge err">Error</span> No se pudo validar permisos.';
     auth.signOut();
-    return;
-  }
-  $('#login').style.display='none';
-  $('#app').style.display='block';
-  $('#logoutBtn').style.display='inline-block';
-  $('#who').textContent = user.email;
-  bootstrap().catch(e=>{console.error(e); logMsg('bootstrap: '+e.message,'err');});
+  });
 });
 
 $('#loginBtn').onclick = async ()=>{
+  const email = ($('#email').value || '').trim();
   const pw = $('#pw').value.trim();
-  if(!pw){$('#loginMsg').textContent='Ingresa la contraseña.';return;}
+  if(!email || !pw){$('#loginMsg').textContent='Ingresa correo y contraseña.';return;}
   $('#loginBtn').disabled=true;
   try{
-    await auth.signInWithEmailAndPassword(OWNER_EMAIL, pw);
+    await auth.signInWithEmailAndPassword(email, pw);
+    try{ localStorage.setItem(LAST_ADMIN_EMAIL_KEY, email); }catch(ignore){}
     $('#pw').value='';
   }catch(e){
     $('#loginMsg').innerHTML='<span class="badge err">Error</span> '+e.message;
   }finally{$('#loginBtn').disabled=false;}
 };
 $('#logoutBtn').onclick = ()=>auth.signOut();
+
+try{
+  const lastEmail = localStorage.getItem(LAST_ADMIN_EMAIL_KEY);
+  if(lastEmail) $('#email').value = lastEmail;
+}catch(ignore){}
 
 let studentsMap = {};
 let coursesAvailable = [];

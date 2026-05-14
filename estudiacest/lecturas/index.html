@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Acceso Lecturas | Lengua y Literatura</title>
+  <title>Acceso Estudia CEST | Lengua y Literatura</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -21,6 +21,9 @@
       justify-content: center;
       padding: 24px;
       color: #0f172a;
+    }
+    body.auth-pending .shell {
+      visibility: hidden;
     }
     .shell {
       width: 100%;
@@ -206,6 +209,40 @@
       opacity: .65;
       transform: none;
     }
+    .admin-entry {
+      margin-top: 14px;
+      display: grid;
+      gap: 8px;
+    }
+    .admin-copy {
+      font-size: 11px;
+      color: #6b7280;
+      text-align: center;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      font-weight: 700;
+    }
+    .admin-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      border-radius: 14px;
+      padding: 14px 16px;
+      font-size: 14px;
+      font-weight: 800;
+      text-decoration: none;
+      color: #0f172a;
+      background: #ecfeff;
+      border: 1px solid rgba(15, 118, 110, 0.20);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.8);
+      transition: transform .15s, box-shadow .15s, background .15s;
+    }
+    .admin-link:hover {
+      transform: translateY(-1px);
+      background: #d9f99d;
+      box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+    }
     .loading {
       display: inline-block;
       width: 18px;
@@ -239,7 +276,7 @@
     }
   </style>
 </head>
-<body>
+<body class="auth-pending">
   <div class="shell">
     <section class="hero">
       <div class="brand-lockup">
@@ -249,14 +286,14 @@
           <strong>Lengua y Literatura 2026</strong>
         </div>
       </div>
-      <div class="hero-badge">Lecturas 2026 · LYL</div>
-      <h1>Acceso directo a tus pruebas de lectura</h1>
-      <p>Ingresa con tu RUT y contraseña habitual para ver tus evaluaciones asignadas de Lengua y Literatura.</p>
+      <div class="hero-badge">Estudia CEST 2026 · LYL</div>
+      <h1>Ingresa a tu espacio de Lengua</h1>
+      <p>Entra con tu RUT y tu clave habitual. Apenas ingreses verás el acceso disponible para tu curso y podrás entrar al panel correspondiente.</p>
     </section>
 
     <section class="card">
       <h2>Ingresar</h2>
-      <p class="sub">Usa tu RUT y tu contraseña habitual. Si tienes una sola prueba asignada, entrarás directamente a ella.</p>
+      <p class="sub">Usa tus datos de siempre. Si tu curso tiene sesiones o actividades publicadas, aparecerán en tu panel apenas ingreses.</p>
 
       <div class="alert error" id="errorBox"></div>
 
@@ -276,8 +313,13 @@
           <div class="hint">Primera vez: usa los primeros 6 dígitos de tu RUT.</div>
         </div>
 
-        <button class="btn" id="loginBtn" type="submit">Entrar a Lecturas</button>
+        <button class="btn" id="loginBtn" type="submit">Ingresar</button>
       </form>
+
+      <div class="admin-entry">
+        <div class="admin-copy">Acceso docente</div>
+        <a class="admin-link" href="/admin/">Administrador</a>
+      </div>
 
       <div class="foot">
         Prof. Francisco Javier Núñez Valenzuela<br>
@@ -302,8 +344,23 @@
 
     const STUDENT_BASE = 'plataforma_estudiantes';
     const LECTURAS_BASE = 'plataforma_lecturas';
+
+    function sanitizeAppPath(rawPath) {
+      if (!rawPath || typeof rawPath !== 'string') return '';
+      if (!rawPath.startsWith('/')) return '';
+      if (rawPath.startsWith('//')) return '';
+      try {
+        const url = new URL(rawPath, window.location.origin);
+        if (url.origin !== window.location.origin) return '';
+        return url.pathname + url.search + url.hash;
+      } catch (_error) {
+        return '';
+      }
+    }
+
     const loginParams = new URLSearchParams(window.location.search);
     const requestedTarget = (loginParams.get('target') || '').trim().toLowerCase();
+    const requestedNext = sanitizeAppPath(loginParams.get('next'));
     const GUIDE_TARGETS = {
       'nm4': '/nm4/',
       'nm4-u2-semana11': '/nm4/'
@@ -315,11 +372,17 @@
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const db = firebase.database();
 
+    const DEFAULT_STUDENT_PANEL = '/estudiantes/panel.html';
+    const DEFAULT_LECTURAS_DASHBOARD = '/lecturas/dashboard';
+
     const rutInput = document.getElementById('rutInput');
     const passInput = document.getElementById('passInput');
     const loginBtn = document.getElementById('loginBtn');
     const errorBox = document.getElementById('errorBox');
+    const bodyEl = document.body;
     let tokenLoginInProgress = false;
+    let credentialLoginInProgress = false;
+    let authStateResolved = false;
 
     function cleanRut(rut) {
       return (rut || '').replace(/[^0-9kK]/g, '').toUpperCase();
@@ -370,21 +433,48 @@
 
     function setLoading(loading) {
       loginBtn.disabled = loading;
-      loginBtn.innerHTML = loading ? '<span class="loading"></span>Entrando...' : 'Entrar a Lecturas';
+      loginBtn.innerHTML = loading ? '<span class="loading"></span>Entrando...' : 'Ingresar';
+    }
+
+    function revealLoginShell() {
+      if (authStateResolved) return;
+      authStateResolved = true;
+      bodyEl.classList.remove('auth-pending');
     }
 
     function getCleanLoginUrl() {
       const params = new URLSearchParams();
       if (requestedTarget) params.set('target', requestedTarget);
+      if (requestedNext) params.set('next', requestedNext);
       const query = params.toString();
       return window.location.pathname + (query ? '?' + query : '');
     }
 
-    function getProfileUrl() {
+    function normalizeCourse(value) {
+      return String(value || '').trim().toUpperCase();
+    }
+
+    function isNm4Course(curso) {
+      return /^4[A-E]-TP$/.test(normalizeCourse(curso));
+    }
+
+    function isNm3Course(curso) {
+      return /^(3A|3B|3D)(?:-TP)?$/.test(normalizeCourse(curso));
+    }
+
+    function isPaesCourse(curso) {
+      return /^(3A|3B|4A|4B)-HC$/.test(normalizeCourse(curso));
+    }
+
+    function isAccessOnlyStudent(student) {
+      return !!(student && (student.access_only === true || student.access_only === 'true' || student.access_only === 1));
+    }
+
+    function getProfileUrl(nextPath) {
       const params = new URLSearchParams();
-      if (requestedTarget) params.set('target', requestedTarget);
+      if (nextPath) params.set('next', nextPath);
       const query = params.toString();
-      return '/lecturas/perfil.html' + (query ? '?' + query : '');
+      return '/estudiantes/perfil.html' + (query ? '?' + query : '');
     }
 
     function getGuideTargetUrl(target) {
@@ -394,6 +484,34 @@
     async function getStudent(uid) {
       const snap = await db.ref(STUDENT_BASE + '/estudiantes/' + uid).once('value');
       return snap.val();
+    }
+
+    function isPermissionDeniedError(error) {
+      const code = String((error && error.code) || '').toLowerCase();
+      const message = String((error && error.message) || '').toLowerCase();
+      return code.includes('permission') || message.includes('permission_denied');
+    }
+
+    async function getStudentAfterAuth(user) {
+      if (!user) return null;
+      try {
+        await user.getIdToken(true);
+      } catch (tokenError) {
+        console.warn('[lecturas/auth-refresh]', tokenError);
+      }
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          return await getStudent(user.uid);
+        } catch (error) {
+          if (!isPermissionDeniedError(error) || attempt === 2) {
+            throw error;
+          }
+          await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+        }
+      }
+
+      return null;
     }
 
     async function getAssignedSessionIds(uid) {
@@ -428,38 +546,51 @@
       return sessions.filter(session => String(session.id || '').toLowerCase().includes(target));
     }
 
-    async function openSessionForUser(uid, session) {
+    async function getSessionTargetPath(uid, session) {
       const responseSnap = await db.ref(LECTURAS_BASE + '/respuestas/' + session.id + '/' + uid).once('value');
       const response = responseSnap.val();
       if (!response || !response.completada) {
-        window.location.href = '/lecturas/prueba?id=' + encodeURIComponent(session.id);
-        return;
+        return '/lecturas/prueba?id=' + encodeURIComponent(session.id);
       }
-      window.location.href = '/lecturas/dashboard';
+      return DEFAULT_LECTURAS_DASHBOARD;
     }
 
-    async function routeAfterLogin(uid, student) {
-      if (student && !student.perfil_completo) {
-        window.location.href = getProfileUrl();
-        return;
+    async function getDefaultRoute(uid, student) {
+      return DEFAULT_STUDENT_PANEL;
+    }
+
+    async function resolvePostLoginTarget(uid, student) {
+      if (isAccessOnlyStudent(student)) {
+        return DEFAULT_STUDENT_PANEL;
+      }
+
+      if (requestedNext) {
+        return requestedNext;
       }
 
       const guideTargetUrl = getGuideTargetUrl(requestedTarget);
       if (guideTargetUrl) {
-        window.location.href = guideTargetUrl;
-        return;
+        return guideTargetUrl;
       }
 
       if (requestedTarget) {
         const sessions = await getOpenAssignedSessions(uid);
         const matches = filterSessionsByTarget(sessions, requestedTarget);
         if (matches.length === 1) {
-          await openSessionForUser(uid, matches[0]);
-          return;
+          return getSessionTargetPath(uid, matches[0]);
         }
       }
 
-      window.location.href = '/lecturas/dashboard';
+      return getDefaultRoute(uid, student);
+    }
+
+    async function routeAfterLogin(uid, student) {
+      const nextPath = await resolvePostLoginTarget(uid, student);
+      const finalPath = (student && !student.perfil_completo && !isAccessOnlyStudent(student))
+        ? getProfileUrl(nextPath)
+        : nextPath;
+
+      window.location.href = finalPath;
     }
 
     async function signInWithAccessToken(token) {
@@ -469,7 +600,7 @@
       try {
         if (auth.currentUser) await auth.signOut();
         const credential = await auth.signInWithCustomToken(token);
-        const student = await getStudent(credential.user.uid);
+        const student = await getStudentAfterAuth(credential.user);
         if (!student) {
           await auth.signOut();
           throw new Error('Tu cuenta no está habilitada para esta sección.');
@@ -482,6 +613,7 @@
         showError('El enlace de acceso directo venció o no es válido. Pide uno nuevo al profesor.');
         setLoading(false);
         tokenLoginInProgress = false;
+        revealLoginShell();
       }
     }
 
@@ -508,14 +640,17 @@
 
       if (!rut || !password) {
         showError('Completa ambos campos antes de continuar.');
+        revealLoginShell();
         return;
       }
       if (!validateRut(rut)) {
         showError('El RUT ingresado no es válido.');
+        revealLoginShell();
         return;
       }
 
       setLoading(true);
+  credentialLoginInProgress = true;
 
       // 1) Intento via backend (Admin SDK) que NO esta sujeto a rate-limit.
       // Esto cubre la contrasena por defecto (primeros 6 digitos del RUT)
@@ -530,22 +665,31 @@
           const data = await resp.json();
           if (data && data.token) {
             const credential = await auth.signInWithCustomToken(data.token);
-            const student = await getStudent(credential.user.uid);
+            const student = await getStudentAfterAuth(credential.user);
             if (!student) {
               await auth.signOut();
               showError('Tu cuenta no está habilitada para esta sección.');
               setLoading(false);
+              credentialLoginInProgress = false;
+              revealLoginShell();
               return;
             }
             await routeAfterLogin(credential.user.uid, student);
             return;
           }
+          if (data && data.fallback) {
+            // Continua con Firebase Auth cuando el estudiante usa una clave propia.
+          } else {
+            throw new Error('Respuesta inesperada del login asistido.');
+          }
         } else if (resp.status === 401) {
           showError('RUT o contraseña incorrectos.');
           setLoading(false);
+          credentialLoginInProgress = false;
+          revealLoginShell();
           return;
         }
-        // status 409 (fallback) o cualquier otro: continuar con Firebase Auth
+        // Cualquier otro estado: continuar con Firebase Auth como respaldo.
       } catch (backendErr) {
         console.warn('[lecturas/backend-login]', backendErr);
         // Continuar con Firebase Auth como fallback
@@ -554,11 +698,13 @@
       // 2) Fallback: Firebase Auth normal (para estudiantes que cambiaron clave).
       try {
         const credential = await auth.signInWithEmailAndPassword(rutToEmail(rut), password);
-        const student = await getStudent(credential.user.uid);
+        const student = await getStudentAfterAuth(credential.user);
         if (!student) {
           await auth.signOut();
           showError('Tu cuenta no está habilitada para esta sección.');
           setLoading(false);
+          credentialLoginInProgress = false;
+          revealLoginShell();
           return;
         }
         await db.ref(STUDENT_BASE + '/estudiantes/' + credential.user.uid + '/lastLogin').set(Date.now());
@@ -574,24 +720,34 @@
           showError('RUT o contraseña incorrectos.');
         }
         setLoading(false);
+        credentialLoginInProgress = false;
+        revealLoginShell();
       }
     });
 
     if (accessToken) {
       signInWithAccessToken(accessToken);
+    } else {
+      setTimeout(revealLoginShell, 900);
     }
 
     auth.onAuthStateChanged(async (user) => {
-      if (!user || tokenLoginInProgress) return;
+      if (!user) {
+        if (!tokenLoginInProgress) revealLoginShell();
+        return;
+      }
+      if (tokenLoginInProgress || credentialLoginInProgress) return;
       try {
-        const student = await getStudent(user.uid);
+        const student = await getStudentAfterAuth(user);
         if (!student) {
           await auth.signOut();
+          revealLoginShell();
           return;
         }
         await routeAfterLogin(user.uid, student);
       } catch (error) {
         console.error('[lecturas/auto-route]', error);
+        revealLoginShell();
       }
     });
   </script>

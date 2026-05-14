@@ -13,8 +13,9 @@
         .header{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200}
         .header h1{font-size:15px;font-weight:700;flex:1}
         .header .admin-name{font-size:12px;color:#94a3b8}
-        .header button{background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
-        .header button:hover{background:#475569}
+        .header .header-actions{display:flex;align-items:center;gap:8px}
+        .header button,.header .header-link{background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+        .header button:hover,.header .header-link:hover{background:#475569}
         /* LAYOUT */
         .layout{display:flex;flex:1;min-height:0}
         /* SIDEBAR */
@@ -51,6 +52,7 @@
         .btn-secondary{background:#e2e8f0;color:#334155}.btn-secondary:hover{background:#cbd5e1}
         .btn-sm{padding:5px 10px;font-size:11px;border-radius:6px}
         .btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+        .search-actions{display:flex;gap:8px;flex-wrap:wrap}
         /* FORMS */
         .form-group{margin-bottom:14px}
         .form-group label{display:block;font-size:12px;font-weight:700;color:#334155;margin-bottom:4px}
@@ -122,6 +124,12 @@
         .login-box .login-btn{width:100%;padding:12px;background:#1e40af;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit}
         .login-box .login-btn:hover{background:#1e3a8a}
         .login-box .login-error{color:#dc2626;font-size:12px;font-weight:600;margin-top:10px;text-align:center;display:none}
+        .panel-picker-box{max-width:460px}
+        .panel-picker-box p{margin-bottom:16px}
+        .panel-picker-meta{font-size:12px;color:#475569;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;margin-bottom:16px;text-align:center;line-height:1.5}
+        .panel-picker-actions{display:grid;gap:10px}
+        .panel-picker-link{width:100%;padding:12px;background:#0f766e;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;text-decoration:none;display:flex;align-items:center;justify-content:center}
+        .panel-picker-link:hover{background:#115e59}
     </style>
 </head>
 <body>
@@ -146,12 +154,27 @@
     </div>
 </div>
 
+<div class="login-screen" id="panelPicker" style="display:none">
+    <div class="login-box panel-picker-box">
+        <h2>🧭 Elegir panel</h2>
+        <p>Tu sesión administrativa ya fue validada. Elige el panel que quieres abrir.</p>
+        <div class="panel-picker-meta" id="panelPickerMeta">Administrador validado.</div>
+        <div class="panel-picker-actions">
+            <button type="button" class="login-btn" onclick="enterStudentsPanel()">Entrar a Plataforma Estudiantes</button>
+            <a class="panel-picker-link" href="/lecturas/adminprofe/">Abrir Admin Lecturas</a>
+        </div>
+    </div>
+</div>
+
 <!-- PANEL ADMIN (oculto hasta autenticarse) -->
 <div id="adminPanel" style="display:none">
 <div class="header">
     <h1>📋 Panel de Administración</h1>
     <span class="admin-name" id="adminName"></span>
-    <button onclick="auth.signOut().then(()=>location.reload())" title="Cerrar sesión">Salir</button>
+    <div class="header-actions">
+        <a class="header-link" href="/estudiantes/adminprofe/?choose=1" onclick="goToAdminPanels(event)" title="Elegir panel">Paneles</a>
+        <button onclick="signOutAdmin()" title="Cerrar sesión">Salir</button>
+    </div>
 </div>
 <div class="mobile-nav" id="mobileNav" style="display:none"></div>
 
@@ -246,6 +269,9 @@
                     <option value="4A-HC">4°A HC</option>
                     <option value="4B-HC">4°B HC</option>
                 </select>
+                <div class="search-actions">
+                    <button class="btn btn-warn" onclick="forceRefreshCourse()">🔄 F5 al curso</button>
+                </div>
             </div>
             <div class="panel-table">
                 <table><thead><tr><th>Nombre</th><th>RUT</th><th>Curso</th><th>Email Inst.</th><th>Perfil</th><th>Acciones</th></tr></thead>
@@ -258,6 +284,7 @@
             <h2>Gestión de Sesiones</h2>
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
+                <button class="btn" style="background:#2563eb;color:#fff" onclick="preloadSession8()">📦 Precargar Clase 8</button>
                 <button class="btn" style="background:#f59e0b;color:#fff" onclick="preloadRetroIdee()">📦 Precargar Repaso Ensayo SIMCE</button>
             </div>
             <div class="panel-table">
@@ -512,6 +539,7 @@ let allResults={};
 let allResponses={};
 let currentAdminUid=null;
 let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
+let adminPanelInitialized=false;
 
 /* ============ AUTH ============ */
 function adminLogin(){
@@ -526,21 +554,96 @@ function adminLogin(){
     });
 }
 
+function isPermissionDeniedError(error){
+    const code=String((error&&error.code)||'').toLowerCase();
+    const message=String((error&&error.message)||'').toLowerCase();
+    return code.includes('permission')||message.includes('permission_denied');
+}
+
+async function readOnceWithRetry(path,attempts=4,delayMs=800){
+    let lastError=null;
+    for(let attempt=0;attempt<attempts;attempt++){
+        try{
+            if(auth.currentUser&&attempt>0){
+                try{ await auth.currentUser.getIdToken(true); }catch(ignore){}
+            }
+            return await db.ref(path).once('value');
+        }catch(error){
+            lastError=error;
+            if(!isPermissionDeniedError(error)||attempt===attempts-1) throw error;
+            await new Promise(resolve=>setTimeout(resolve,delayMs*(attempt+1)));
+        }
+    }
+    throw lastError;
+}
+
+function clearPanelChooserQuery(){
+    const url=new URL(window.location.href);
+    if(!url.searchParams.has('choose')) return;
+    url.searchParams.delete('choose');
+    const next=url.pathname+(url.searchParams.toString()?'?'+url.searchParams.toString():'');
+    window.history.replaceState({},document.title,next);
+}
+
+function shouldShowPanelChooser(){
+    const params=new URLSearchParams(window.location.search);
+    return params.get('choose')==='1'||sessionStorage.getItem('studentAdminPanelChoice')!=='students';
+}
+
+function renderAdminIdentity(){
+    const displayName=currentDocente.nombre+(currentDocente.superadmin?' (Superadmin)':' — '+currentDocente.cursos.map(c=>cLabel(c)).join(', '));
+    document.getElementById('adminName').textContent=displayName;
+    document.getElementById('panelPickerMeta').textContent=displayName;
+}
+
+function showPanelPicker(){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminPanel').style.display='none';
+    document.getElementById('panelPicker').style.display='flex';
+}
+
+async function enterStudentsPanel(){
+    sessionStorage.setItem('studentAdminPanelChoice','students');
+    clearPanelChooserQuery();
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('panelPicker').style.display='none';
+    document.getElementById('adminPanel').style.display='block';
+    if(adminPanelInitialized) return;
+    adminPanelInitialized=true;
+    applyDocenteFilters();
+    initMobileNav();
+    await loadAllData();
+}
+
+function goToAdminPanels(event){
+    if(event) event.preventDefault();
+    sessionStorage.removeItem('studentAdminPanelChoice');
+    window.location.href='/estudiantes/adminprofe/?choose=1';
+}
+
+function signOutAdmin(){
+    sessionStorage.removeItem('studentAdminPanelChoice');
+    auth.signOut().then(()=>location.reload());
+}
+
 auth.onAuthStateChanged(async user=>{
     if(!user){
         document.getElementById('loginScreen').style.display='flex';
+        document.getElementById('panelPicker').style.display='none';
         document.getElementById('adminPanel').style.display='none';
+        adminPanelInitialized=false;
         return;
     }
+    try{ await user.getIdToken(true); }catch(ignore){}
     // Check admin role
-    const snap=await db.ref(BASE+'/admins/'+user.uid).once('value');
+    const snap=await readOnceWithRetry(BASE+'/admins/'+user.uid,3,800);
     if(!snap.val()){
         toast('No tienes permisos de administrador','err');
         setTimeout(()=>{auth.signOut()},2000);
         return;
     }
     // Load docente profile
-    const docSnap=await db.ref(BASE+'/docentes/'+user.uid).once('value');
+    const docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,3,800);
     const docData=docSnap.val();
     if(docData){
         currentDocente={
@@ -552,15 +655,13 @@ auth.onAuthStateChanged(async user=>{
         // Legacy admin without docente profile → superadmin (backward compat)
         currentDocente={nombre:user.email,cursos:Object.keys(ALL_CURSOS),superadmin:true};
     }
-    // Mostrar panel, ocultar login
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('adminPanel').style.display='block';
     currentAdminUid=user.uid;
-    const displayName=currentDocente.nombre+(currentDocente.superadmin?' (Superadmin)':' — '+currentDocente.cursos.map(c=>cLabel(c)).join(', '));
-    document.getElementById('adminName').textContent=displayName;
-    applyDocenteFilters();
-    initMobileNav();
-    await loadAllData();
+    renderAdminIdentity();
+    if(shouldShowPanelChooser()){
+        showPanelPicker();
+        return;
+    }
+    await enterStudentsPanel();
 });
 
 /* ============ DOCENTE FILTERS ============ */
@@ -634,10 +735,10 @@ function updateCourseSelect(selectEl,cursos,includeAll){
 
 async function loadAllData(){
     const [estS,sesS,resS,respS]=await Promise.all([
-        db.ref(BASE+'/estudiantes').once('value'),
-        db.ref(BASE+'/sesiones').once('value'),
-        db.ref(BASE+'/resultados').once('value'),
-        db.ref(BASE+'/respuestas').once('value')
+        readOnceWithRetry(BASE+'/estudiantes'),
+        readOnceWithRetry(BASE+'/sesiones'),
+        readOnceWithRetry(BASE+'/resultados'),
+        readOnceWithRetry(BASE+'/respuestas')
     ]);
     students=estS.val()||{};
     sessions=sesS.val()||{};
@@ -851,10 +952,9 @@ function renderLiveProgress(){
 }
 
 /* ============ STUDENTS ============ */
-function renderStudents(){
+function getFilteredStudents(){
     const search=(document.getElementById('studentSearch').value||'').toLowerCase();
     const courseF=document.getElementById('studentCourseFilter').value;
-    const tbody=document.getElementById('studentsBody');
 
     let items=Object.entries(students).map(([uid,s])=>({uid,...s}));
     // Filter by docente's courses
@@ -864,6 +964,12 @@ function renderStudents(){
     else if(courseF==='__paes') items=items.filter(s=>progFromCurso(s.curso)==='paes');
     else if(courseF) items=items.filter(s=>s.curso===courseF);
     items.sort((a,b)=>(a.nombre||'').localeCompare(b.nombre||''));
+    return items;
+}
+
+function renderStudents(){
+    const tbody=document.getElementById('studentsBody');
+    const items=getFilteredStudents();
 
     tbody.innerHTML=items.map(s=>{
         const perfilBadge=s.perfil_completo?'<span class="badge badge-green">✓</span>':'<span class="badge badge-gray">Pendiente</span>';
@@ -876,11 +982,60 @@ function renderStudents(){
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="editStudent('${s.uid}')">✏️</button>
                 <button class="btn btn-sm btn-warn" onclick="resetPassword('${s.uid}')">🔑</button>
+                <button class="btn btn-sm" style="background:#0ea5e9;color:#fff" onclick="forceRefreshStudent('${s.uid}')" title="Forzar recarga de página">🔄</button>
                 <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="generateLoginLink('${s.uid}')" title="Generar link de acceso (bypass rate-limit)">🔗</button>
                 <button class="btn btn-sm btn-primary" onclick="viewStudentDetail('${s.uid}')">👁</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.uid}')">🗑</button>
             </td></tr>`;
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
+}
+
+async function forceRefreshCourse(){
+    const courseF=document.getElementById('studentCourseFilter').value;
+    if(!courseF || courseF==='__simce' || courseF==='__paes'){
+        toast('Filtra un curso especifico antes de usar F5 al curso','err');
+        return;
+    }
+
+    const filtered=getFilteredStudents();
+    if(filtered.length===0){
+        toast('No hay estudiantes en ese curso','err');
+        return;
+    }
+
+    const label=cLabel(courseF);
+    if(!confirm('¿Forzar F5 obligatorio al curso '+label+'?\n\nSe recargara la pagina abierta de '+filtered.length+' estudiante(s).')) return;
+
+    try{
+        await db.ref(BASE+'/admin_refresh/cursos/'+courseF).set({
+            timestamp:Date.now(),
+            curso:courseF,
+            by:currentAdminUid||'admin'
+        });
+        toast('F5 enviado a '+label,'ok');
+    }catch(e){
+        console.error(e);
+        toast('No se pudo enviar el F5 al curso','err');
+    }
+}
+
+async function forceRefreshStudent(uid){
+    const student=students[uid];
+    if(!student){toast('Estudiante no encontrado','err');return}
+    if(!confirm('¿Forzar F5 obligatorio a '+student.nombre+'?\n\nSu pagina se recargara apenas reciba la orden.')) return;
+
+    try{
+        await db.ref(BASE+'/admin_refresh/estudiantes/'+uid).set({
+            timestamp:Date.now(),
+            uid:uid,
+            curso:student.curso||'',
+            by:currentAdminUid||'admin'
+        });
+        toast('F5 enviado a '+student.nombre,'ok');
+    }catch(e){
+        console.error(e);
+        toast('No se pudo enviar el F5 al estudiante','err');
+    }
 }
 
 // RUT utilities
@@ -2285,6 +2440,63 @@ async function preloadRetroIdee(){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+async function preloadSession8(){
+    if(!confirm('¿Precargar Clase 8 — Evidencia y Distractores?\n\n5 textos · experiencia guiada + 14 preguntas objetivas\nIncluye 2 textos cuantitativos con tabla, gráfico y cálculos básicos, además de acceso directo a la guía viva.'))return;
+
+    const sesData={
+        titulo:'Clase 8 — Evidencia y Distractores',
+        descripcion:'Clase SIMCE — Evidencia y distractores. Experiencia guiada con 5 textos, organizador, taller de evidencia y 14 preguntas objetivas. Incluye 2 textos cuantitativos con suma, resta y porcentaje simple.',
+        orden:10,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
+        prefer_guia:true,
+        link_guia:'/estudiantes/guia-s8-evidencia-distractores.html',
+        createdAt:Date.now(),
+        contenido:{
+            textos:[
+                {id:'texto-1',tipo:'No literario',subtipo:'Reportaje',titulo:'Patio compartido',parrafos:[
+                    {num:1,texto:'Reportaje sobre un liceo que reorganiza el recreo para reducir la dependencia del teléfono y recuperar la conversación, el juego y la observación del entorno.'}
+                ],fuente:'Resumen breve para sesión enlazada a guía.'},
+                {id:'texto-2',tipo:'Literario',subtipo:'Cuento',titulo:'El taller pendiente',parrafos:[
+                    {num:1,texto:'Cuento sobre Tomás, un estudiante que vuelve al taller de tecnología y descubre que el verdadero legado del profesor no era un objeto, sino un trabajo pendiente para hacer con otros.'}
+                ],fuente:'Resumen breve para sesión enlazada a guía.'},
+                {id:'texto-3',tipo:'No literario',subtipo:'Columna',titulo:'Cuando el resumen ocupa el lugar de la lectura',parrafos:[
+                    {num:1,texto:'Columna que cuestiona la cultura del resumen extremo y defiende la necesidad de sostener ideas complejas en vez de reducirlas a fórmulas rápidas.'}
+                ],fuente:'Resumen breve para sesión enlazada a guía.'},
+                {id:'texto-4',tipo:'No literario',subtipo:'Informe con tabla',titulo:'Boletín de préstamos de biblioteca',parrafos:[
+                    {num:1,texto:'Informe escolar con tabla semanal de préstamos por categoría. Exige sumar registros y calcular qué porcentaje representa una parte del total mensual o semanal.'}
+                ],fuente:'Resumen breve para sesión enlazada a guía.'},
+                {id:'texto-5',tipo:'No literario',subtipo:'Infografía con gráfico',titulo:'Encuesta de movilidad para llegar al liceo',parrafos:[
+                    {num:1,texto:'Infografía con gráfico de barras sobre cómo llegan 120 estudiantes al liceo. Exige comparar cantidades, restar y convertir una fracción simple en porcentaje.'}
+                ],fuente:'Resumen breve para sesión enlazada a guía.'}
+            ],
+            preguntas:[
+                {id:1,textoRef:'texto-1',habilidad:'LOCALIZAR',enunciado:'Según el reportaje, ¿qué debían hacer los estudiantes durante el recreo largo?',opciones:[{letra:'A',texto:'Entregar el teléfono al inicio de la jornada.'},{letra:'B',texto:'Guardar el teléfono en bolsillos numerados a la entrada del patio.'},{letra:'C',texto:'Dejarlo en la sala durante actividades deportivas.'},{letra:'D',texto:'Apagarlo y mantenerlo en la mochila todo el recreo.'}],correcta:'B'},
+                {id:2,textoRef:'texto-1',habilidad:'INTERPRETAR',enunciado:'¿Qué sugiere la frase “el conflicto se había mudado del pasillo al grupo de mensajería”?',opciones:[{letra:'A',texto:'Que los conflictos ya no ocurrían en el liceo.'},{letra:'B',texto:'Que las redes reemplazaron todo contacto presencial.'},{letra:'C',texto:'Que los conflictos se iniciaban o intensificaban en mensajes digitales.'},{letra:'D',texto:'Que los inspectores ya no podían vigilar los pasillos.'}],correcta:'C'},
+                {id:3,textoRef:'texto-1',habilidad:'REFLEXIONAR',enunciado:'¿Cuál sintetiza mejor la idea central del reportaje?',opciones:[{letra:'A',texto:'Los teléfonos explican por sí solos los conflictos escolares.'},{letra:'B',texto:'El piloto funcionó porque castigó con firmeza.'},{letra:'C',texto:'El recreo mejora cuando hay alternativas y sentido compartido para limitar el teléfono.'},{letra:'D',texto:'La biblioteca hizo innecesaria cualquier otra medida.'}],correcta:'C'},
+                {id:4,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'¿Qué se puede inferir sobre Tomás cuando vuelve al taller?',opciones:[{letra:'A',texto:'Que solo quería quedarse con un recuerdo del profesor.'},{letra:'B',texto:'Que comienza a ver el taller como un trabajo pendiente y no como un espacio muerto.'},{letra:'C',texto:'Que esperaba encontrar un regalo escondido.'},{letra:'D',texto:'Que sospechaba que la llave no servía para nada.'}],correcta:'B'},
+                {id:5,textoRef:'texto-2',habilidad:'REFLEXIONAR',enunciado:'¿Qué representa mejor la llave en el cuento?',opciones:[{letra:'A',texto:'Una entrada a una responsabilidad compartida que seguía abierta.'},{letra:'B',texto:'Un premio simbólico por la cercanía con el profesor.'},{letra:'C',texto:'La prueba de que el profesor desconfiaba de otros cursos.'},{letra:'D',texto:'Un objeto sin función simbólica mayor.'}],correcta:'A'},
+                {id:6,textoRef:'texto-2',habilidad:'INTERPRETAR',enunciado:'¿Por qué el hallazgo final no es sentimental ni grandilocuente?',opciones:[{letra:'A',texto:'Porque el profesor había planeado un homenaje secreto.'},{letra:'B',texto:'Porque lo importante es el trabajo pendiente con estudiantes y no una despedida solemne.'},{letra:'C',texto:'Porque Tomás no siente nada especial al abrir el cajón.'},{letra:'D',texto:'Porque la caja estaba vacía y no había ningún mensaje.'}],correcta:'B'},
+                {id:7,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'¿Cuál es el problema central que denuncia la columna?',opciones:[{letra:'A',texto:'Que los resúmenes siempre son engañosos.'},{letra:'B',texto:'Que convertir todo en cápsulas rápidas reduce la tolerancia a la complejidad.'},{letra:'C',texto:'Que los docentes ya no quieren leer textos largos.'},{letra:'D',texto:'Que las instituciones deberían prohibir los microvideos.'}],correcta:'B'},
+                {id:8,textoRef:'texto-3',habilidad:'LOCALIZAR',enunciado:'¿Para qué sirvió el experimento con microvideos y lectura extendida?',opciones:[{letra:'A',texto:'Para mostrar la diferencia entre sentir dominio del tema y comprenderlo de verdad.'},{letra:'B',texto:'Para demostrar que siete páginas son mejores que cualquier video.'},{letra:'C',texto:'Para probar que los estudiantes prefieren la lectura en papel.'},{letra:'D',texto:'Para obligar a los docentes a abandonar recursos breves.'}],correcta:'A'},
+                {id:9,textoRef:'texto-3',habilidad:'INTERPRETAR',enunciado:'¿Con qué idea estaría más de acuerdo el autor?',opciones:[{letra:'A',texto:'El resumen puede servir para abrir, pero no para reemplazar el desarrollo completo de una idea.'},{letra:'B',texto:'Las instituciones deberían evitar toda comunicación breve.'},{letra:'C',texto:'La lentitud siempre es mejor que la rapidez.'},{letra:'D',texto:'Comprender un tema depende solo del esfuerzo individual.'}],correcta:'A'},
+                {id:10,textoRef:'texto-3',habilidad:'REFLEXIONAR',enunciado:'¿Qué propone la columna sobre el tiempo de la escuela?',opciones:[{letra:'A',texto:'Que debe competir con la velocidad del scroll.'},{letra:'B',texto:'Que puede ofrecer una experiencia distinta del tiempo para pensar mejor.'},{letra:'C',texto:'Que debe reducir todos los textos a ideas clave.'},{letra:'D',texto:'Que debería eliminar actividades introductorias breves.'}],correcta:'B'}
+                ,
+                {id:11,textoRef:'texto-4',habilidad:'CALCULAR',enunciado:'Según la tabla, ¿cuántos préstamos se registraron en total durante la Semana 2?',opciones:[{letra:'A',texto:'48 préstamos.'},{letra:'B',texto:'50 préstamos.'},{letra:'C',texto:'52 préstamos.'},{letra:'D',texto:'54 préstamos.'}],correcta:'C'},
+                {id:12,textoRef:'texto-4',habilidad:'CALCULAR',enunciado:'En la Semana 4 hubo 60 préstamos en total. Si 24 fueron de cuentos, ¿qué porcentaje representan los cuentos esa semana?',opciones:[{letra:'A',texto:'24%'},{letra:'B',texto:'36%'},{letra:'C',texto:'40%'},{letra:'D',texto:'60%'}],correcta:'C'},
+                {id:13,textoRef:'texto-5',habilidad:'CALCULAR',enunciado:'Según el gráfico, ¿cuántos estudiantes más llegan caminando que en auto compartido?',opciones:[{letra:'A',texto:'24 estudiantes.'},{letra:'B',texto:'30 estudiantes.'},{letra:'C',texto:'36 estudiantes.'},{letra:'D',texto:'48 estudiantes.'}],correcta:'C'},
+                {id:14,textoRef:'texto-5',habilidad:'CALCULAR',enunciado:'Si 36 de los 120 estudiantes encuestados llegan en bus, ¿qué porcentaje del total representa ese grupo?',opciones:[{letra:'A',texto:'20%'},{letra:'B',texto:'25%'},{letra:'C',texto:'30%'},{letra:'D',texto:'36%'}],correcta:'C'}
+            ]
+        }
+    };
+
+    try{
+        await db.ref(BASE+'/sesiones/sesion-7').set(sesData);
+        sessions['sesion-7']=sesData;
+        renderSessions();
+        populateResultsDropdown();
+        toast('Clase 8 precargada: 5 textos y 14 preguntas alineadas con la guía viva','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 async function resetSessionResults(sesId){
     const ses=sessions[sesId];
     if(!confirm('¿Eliminar TODOS los resultados y respuestas de "'+ses.titulo+'"?\nLos estudiantes deberán completar la sesión nuevamente.'))return;
@@ -2384,10 +2596,11 @@ async function forceSubmitPending(){
         if(preguntas.length>0){
             // Standard session — use contenido.preguntas
             preguntas.forEach(q=>{
-                const userAns=answers[q.id]||null;
+                const detailKey=isLinkGuia?(String(q.id).startsWith('q')?String(q.id):'q'+q.id):String(q.id);
+                const userAns=answers[detailKey]||answers[q.id]||null;
                 const isCorrect=userAns===q.correcta;
                 if(isCorrect)correct++;
-                detalle[q.id]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
+                detalle[detailKey]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
             });
             total=preguntas.length;
         } else {
@@ -2427,7 +2640,7 @@ async function forceSubmitPending(){
         });
         await db.ref(BASE+'/ranking/'+sesId+'/'+p.est.curso+'/'+p.uid).set({
             nombre:p.est.nombre,puntaje:correct,porcentaje,
-            tiempo:Math.floor(tiempo/1000)
+            tiempo:tiempo
         });
 
         if(!allResults[sesId])allResults[sesId]={};
@@ -2495,24 +2708,43 @@ function viewStudentResponses(uid, sesId){
     if(pregs.length>0){
         // Session has contenido.preguntas — full display with options
         pregs.forEach(q=>{
-            const detail=res?.detalle?.[q.id];
-            const userAns=detail?.respuesta||answers[q.id]||'—';
-            const isCorrect=detail?.esCorrecta||(userAns===q.correcta);
+            const detailKey=ses.link_guia?(String(q.id).startsWith('q')?String(q.id):'q'+q.id):String(q.id);
+            const detail=res?.detalle?.[detailKey]||res?.detalle?.[q.id];
+            const userAns=detail?.respuesta||answers[detailKey]||answers[q.id]||'—';
+            const correcta=detail?.correcta||q.correcta||'—';
+            const isCorrect=detail?.esCorrecta===true||(userAns===correcta);
             const icon=isCorrect?'✅':'❌';
             const bg=isCorrect?'#f0fdf4':'#fef2f2';
             const border=isCorrect?'#86efac':'#fca5a5';
             html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
             html+=`<div style="font-weight:700;font-size:12px">${icon} P${q.id}. ${q.enunciado}</div>`;
-            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${q.correcta}</strong></div>`;
+            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
             // Show options
             (q.opciones||[]).forEach(o=>{
                 const isUser=o.letra===userAns;
-                const isCor=o.letra===q.correcta;
+                const isCor=o.letra===correcta;
                 const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
                 html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.letra}) ${o.texto}</div>`;
             });
             html+='</div>';
         });
+        if(ses.link_guia&&res?.detalle){
+            const knownKeys=new Set(pregs.map(q=>String(q.id).startsWith('q')?String(q.id):'q'+q.id));
+            const extraKeys=Object.keys(res.detalle).filter(k=>!knownKeys.has(k));
+            extraKeys.forEach(qKey=>{
+                const d=res.detalle[qKey];
+                const userAns=d?.respuesta||'—';
+                const correcta=d?.correcta||'—';
+                const isCorrect=d?.esCorrecta===true;
+                const icon=isCorrect?'✅':'❌';
+                const bg=isCorrect?'#f0fdf4':'#fef2f2';
+                const border=isCorrect?'#86efac':'#fca5a5';
+                html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
+                html+=`<div style="font-weight:700;font-size:12px">${icon} ${qKey.toUpperCase()}</div>`;
+                html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
+                html+='</div>';
+            });
+        }
     } else if(res?.detalle){
         // Fallback for sessions with link_guia (e.g. S5) — use detalle from result
         const detKeys=Object.keys(res.detalle).sort((a,b)=>Number(a)-Number(b));

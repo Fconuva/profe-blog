@@ -13,8 +13,8 @@
         .header{background:linear-gradient(135deg,#0f172a,#1e293b);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;z-index:200}
         .header h1{font-size:15px;font-weight:700;flex:1}
         .header .admin-name{font-size:12px;color:#94a3b8}
-        .header button{background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit}
-        .header button:hover{background:#475569}
+        .header button,.header .header-link{background:#334155;color:#fff;border:none;padding:6px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-family:inherit;text-decoration:none;display:inline-flex;align-items:center}
+        .header button:hover,.header .header-link:hover{background:#475569}
         /* LAYOUT */
         .layout{display:flex;flex:1;min-height:0}
         /* SIDEBAR */
@@ -152,6 +152,7 @@
 <div class="header">
     <h1>📋 Panel de Administración</h1>
     <span class="admin-name" id="adminName"></span>
+    <a class="header-link" href="/admin/" title="Ir al selector de paneles">Paneles</a>
     <button onclick="auth.signOut().then(()=>location.reload())" title="Cerrar sesión">Salir</button>
 </div>
 <div class="mobile-nav" id="mobileNav" style="display:none"></div>
@@ -531,21 +532,45 @@ function adminLogin(){
     });
 }
 
+function isPermissionDeniedError(error){
+    const code=String((error&&error.code)||'').toLowerCase();
+    const message=String((error&&error.message)||'').toLowerCase();
+    return code.includes('permission')||message.includes('permission_denied');
+}
+
+async function readOnceWithRetry(path,attempts=4,delayMs=800){
+    let lastError=null;
+    for(let attempt=0;attempt<attempts;attempt++){
+        try{
+            if(auth.currentUser&&attempt>0){
+                try{ await auth.currentUser.getIdToken(true); }catch(ignore){}
+            }
+            return await db.ref(path).once('value');
+        }catch(error){
+            lastError=error;
+            if(!isPermissionDeniedError(error)||attempt===attempts-1) throw error;
+            await new Promise(resolve=>setTimeout(resolve,delayMs*(attempt+1)));
+        }
+    }
+    throw lastError;
+}
+
 auth.onAuthStateChanged(async user=>{
     if(!user){
         document.getElementById('loginScreen').style.display='flex';
         document.getElementById('adminPanel').style.display='none';
         return;
     }
+    try{ await user.getIdToken(true); }catch(ignore){}
     // Check admin role
-    const snap=await db.ref(BASE+'/admins/'+user.uid).once('value');
+    const snap=await readOnceWithRetry(BASE+'/admins/'+user.uid,3,800);
     if(!snap.val()){
         toast('No tienes permisos de administrador','err');
         setTimeout(()=>{auth.signOut()},2000);
         return;
     }
     // Load docente profile
-    const docSnap=await db.ref(BASE+'/docentes/'+user.uid).once('value');
+    const docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,3,800);
     const docData=docSnap.val();
     if(docData){
         currentDocente={
@@ -639,10 +664,10 @@ function updateCourseSelect(selectEl,cursos,includeAll){
 
 async function loadAllData(){
     const [estS,sesS,resS,respS]=await Promise.all([
-        db.ref(BASE+'/estudiantes').once('value'),
-        db.ref(BASE+'/sesiones').once('value'),
-        db.ref(BASE+'/resultados').once('value'),
-        db.ref(BASE+'/respuestas').once('value')
+        readOnceWithRetry(BASE+'/estudiantes'),
+        readOnceWithRetry(BASE+'/sesiones'),
+        readOnceWithRetry(BASE+'/resultados'),
+        readOnceWithRetry(BASE+'/respuestas')
     ]);
     students=estS.val()||{};
     sessions=sesS.val()||{};
@@ -1301,13 +1326,14 @@ async function createSession(){
         await db.ref(BASE+'/sesiones/'+id).set({
             titulo:title,descripcion:desc,orden:orden,programa:prog,
             activa:true,resultados_visibles:false,
+            panel_seccion:'plan',panel_orden:orden,
             video_youtube:video||null,
             contenido:{textos:[],preguntas:[]},
             docenteUid:currentAdminUid,
             docenteNombre:currentDocente?.nombre||'',
             createdAt:Date.now()
         });
-        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,contenido:{textos:[],preguntas:[]},docenteUid:currentAdminUid,docenteNombre:currentDocente?.nombre||''};
+        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,panel_seccion:'plan',panel_orden:orden,contenido:{textos:[],preguntas:[]},docenteUid:currentAdminUid,docenteNombre:currentDocente?.nombre||''};
         renderSessions();populateResultsDropdown();
         closeModal('addSession');
         toast('Sesión creada','ok');
@@ -1317,11 +1343,11 @@ async function createSession(){
 async function migrateSessionMeta(){
     if(!confirm('¿Actualizar títulos y orden de todas las sesiones?\nEsto NO toca contenido, preguntas ni resultados.'))return;
     const updates={
-        'prueba-ingreso':{titulo:'Clase 1 — Diagnóstico de Comprensión Lectora',descripcion:'Evaluación diagnóstica inicial para determinar tu nivel de comprensión lectora. 3 textos · 10 preguntas de Localizar, Interpretar y Reflexionar.',orden:1},
-        'sesion-3':{titulo:'Clase 2 — El Cuento: «La cicatriz»',descripcion:'Clase SIMCE — El Cuento. Lee «La cicatriz» y responde 11 preguntas: 5 sobre elementos narrativos (figura literaria, vocabulario, conflicto, simbolismo, perspectiva temporal) y 6 de práctica SIMCE (Localizar, Interpretar, Reflexionar).',orden:2},
-        'sesion-4':{titulo:'Clase 3 — Inferencia y Símbolos: «La libreta azul»',descripcion:'Clase SIMCE — Inferencia y Símbolos. 3 textos (narrativo, informativo, poema) con 10 preguntas sobre significados implícitos, elementos simbólicos, tema vs. asunto y tono narrativo.',orden:3},
-        'sesion-2':{titulo:'Ensayo SIMCE 2025 — Comprensión de Lectura (Forma P)',descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',orden:4},
-        'feedback-plataforma':{titulo:'Encuesta — Feedback de Plataforma',descripcion:'Cuéntanos tu experiencia real usando la plataforma. No hay respuestas buenas ni malas: tu opinión honesta nos ayuda a mejorar.',orden:5}
+        'prueba-ingreso':{titulo:'Clase 1 — Diagnóstico de Comprensión Lectora',descripcion:'Evaluación diagnóstica inicial para determinar tu nivel de comprensión lectora. 3 textos · 10 preguntas de Localizar, Interpretar y Reflexionar.',orden:1,panel_seccion:'plan',panel_orden:1},
+        'sesion-3':{titulo:'Clase 2 — El Cuento: «La cicatriz»',descripcion:'Clase SIMCE — El Cuento. Lee «La cicatriz» y responde 11 preguntas: 5 sobre elementos narrativos (figura literaria, vocabulario, conflicto, simbolismo, perspectiva temporal) y 6 de práctica SIMCE (Localizar, Interpretar, Reflexionar).',orden:2,panel_seccion:'plan',panel_orden:2},
+        'sesion-4':{titulo:'Clase 3 — Inferencia y Símbolos: «La libreta azul»',descripcion:'Clase SIMCE — Inferencia y Símbolos. 3 textos (narrativo, informativo, poema) con 10 preguntas sobre significados implícitos, elementos simbólicos, tema vs. asunto y tono narrativo.',orden:3,panel_seccion:'plan',panel_orden:3},
+        'sesion-2':{titulo:'Ensayo SIMCE 2025 — Comprensión de Lectura (Forma P)',descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',orden:4,panel_seccion:'ensayo',panel_orden:1},
+        'feedback-plataforma':{titulo:'Encuesta — Feedback de Plataforma',descripcion:'Cuéntanos tu experiencia real usando la plataforma. No hay respuestas buenas ni malas: tu opinión honesta nos ayuda a mejorar.',orden:5,panel_seccion:'otro',panel_orden:1}
     };
     try{
         const batch={};
@@ -1329,6 +1355,8 @@ async function migrateSessionMeta(){
             batch[BASE+'/sesiones/'+id+'/titulo']=meta.titulo;
             batch[BASE+'/sesiones/'+id+'/descripcion']=meta.descripcion;
             batch[BASE+'/sesiones/'+id+'/orden']=meta.orden;
+            batch[BASE+'/sesiones/'+id+'/panel_seccion']=meta.panel_seccion;
+            batch[BASE+'/sesiones/'+id+'/panel_orden']=meta.panel_orden;
         }
         await db.ref().update(batch);
         // refresh local
@@ -1592,6 +1620,7 @@ async function preloadEncuestaFeedback(){
         titulo:'Encuesta — Feedback de Plataforma',
         descripcion:'Cuéntanos tu experiencia real usando la plataforma. No hay respuestas buenas ni malas: tu opinión honesta nos ayuda a mejorar.',
         orden:5,activa:true,resultados_visibles:false,video_youtube:null,
+        panel_seccion:'otro',panel_orden:1,
         programa:'simce',notas_evaluadas:false,anticopia_activo:false,envio_parcial:true,
         createdAt:Date.now(),
         contenido:{
@@ -1703,6 +1732,7 @@ async function preloadSession2(){
         titulo:'Ensayo SIMCE 2025 — Comprensión de Lectura (Forma P)',
         descripcion:'Ensayo SIMCE 2025 con 7 textos de distintos géneros. Practica todas las habilidades de comprensión lectora: localizar, interpretar, reflexionar y evaluar.',
         orden:4,activa:true,resultados_visibles:false,video_youtube:null,
+        panel_seccion:'ensayo',panel_orden:1,
         createdAt:Date.now(),
         contenido:{
             textos:[
@@ -2004,6 +2034,7 @@ async function preloadRetroIdee(){
         titulo:'Clase 7 — Repaso del Ensayo SIMCE: lo que aprendimos',
         descripcion:'Retroalimentación del ensayo SIMCE rendido en clases. Volvemos sobre los tres tipos de texto trabajados (noticia, cuento y poema) con textos un poco más extensos y 15 preguntas que combinan localizar, interpretar y reflexionar. Termina con una pregunta de conexión entre el cuento y el poema. Foco: aprender de los errores y consolidar estrategias.',
         orden:9,activa:true,resultados_visibles:false,video_youtube:null,programa:'simce',tecnicas:false,
+        panel_seccion:'retro',panel_orden:1,
         createdAt:Date.now(),
         instruccion:{
             titulo:'📚 Repaso del Ensayo SIMCE — Manual paginado',
@@ -2598,10 +2629,18 @@ function viewStudentResponses(uid, sesId){
     // Summary bar
     if(res){
         const color=res.porcentaje>=60?'#16a34a':'#dc2626';
+        const noteValue=Number(res.nota);
+        const alternativasPts=Number(res.puntaje_alternativas);
+        const totalAlternativas=Number(res.total_alternativas);
+        const desarrolloPts=Number(res.puntaje_desarrollo);
+        const totalDesarrollo=Number(res.total_desarrollo);
         html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:16px;display:flex;gap:24px;flex-wrap:wrap">`;
         html+=`<div><strong>Puntaje:</strong> ${res.puntaje}/${res.total}</div>`;
         html+=`<div><strong>Logro:</strong> <span style="color:${color};font-weight:800">${res.porcentaje}%</span></div>`;
         html+=`<div><strong>Nivel:</strong> ${getLevel(res.porcentaje)}</div>`;
+        if(Number.isFinite(noteValue)) html+=`<div><strong>Nota:</strong> ${noteValue.toFixed(1)}</div>`;
+        if(Number.isFinite(alternativasPts)&&Number.isFinite(totalAlternativas)&&totalAlternativas>0) html+=`<div><strong>Alternativas:</strong> ${alternativasPts}/${totalAlternativas}</div>`;
+        if(Number.isFinite(desarrolloPts)&&Number.isFinite(totalDesarrollo)&&totalDesarrollo>0) html+=`<div><strong>Desarrollo:</strong> ${desarrolloPts}/${totalDesarrollo}</div>`;
         if(res.notas_completadas) html+=`<div><strong>Notas:</strong> ${res.notas_completadas}</div>`;
         html+=`</div>`;
     }
@@ -2712,6 +2751,52 @@ function viewStudentResponses(uid, sesId){
             });
             html+='</div>';
         }
+    }
+
+    const ticketData=res?.ticket||resp?.ticket||{};
+    const ticketLabels={
+        tesis:'Ticket · tesis posible',
+        contra:'Ticket · objecion',
+        markers:'Ticket · marcadores',
+        texto2:'Texto 2 · analisis escrito',
+        texto3:'Texto 3 · analisis escrito'
+    };
+    const ticketEntries=Object.entries(ticketData).filter(([,value])=>String(value||'').trim());
+    if(ticketEntries.length>0){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">✍️ Desarrollo escrito</h4>';
+        html+='<div style="background:#eff6ff;border:1px solid #93c5fd;border-radius:8px;padding:10px 14px;margin-bottom:8px">';
+        ticketEntries.forEach(([key,value])=>{
+            html+=`<div style="font-size:12px;color:#1d4ed8;margin-bottom:10px"><strong>${ticketLabels[key]||key}:</strong><br>${esc(String(value))}</div>`;
+        });
+        html+='</div>';
+    }
+
+    const thesisContexts=resp?.thesisContexts||res?.thesisContexts||{};
+    const thesisEntries=Object.entries(thesisContexts)
+        .filter(([,value])=>String(value||'').trim())
+        .sort((a,b)=>a[0].localeCompare(b[0], 'es'));
+    if(thesisEntries.length>0){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">🧭 Contextos de tesis</h4>';
+        html+='<div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:10px 14px;margin-bottom:8px">';
+        thesisEntries.forEach(([key,value])=>{
+            html+=`<div style="font-size:12px;color:#334155;margin-bottom:10px"><strong>${key.toUpperCase()}:</strong><br>${esc(String(value))}</div>`;
+        });
+        html+='</div>';
+    }
+
+    const developmentDetail=res?.detalle_desarrollo||{};
+    const developmentEntries=Object.entries(developmentDetail).filter(([,item])=>item&&typeof item==='object');
+    if(developmentEntries.length>0){
+        html+='<h4 style="font-size:14px;margin:16px 0 8px">📊 Puntaje de desarrollo</h4>';
+        html+='<div style="background:#f0fdf4;border:1px solid #86efac;border-radius:8px;padding:10px 14px;margin-bottom:8px">';
+        developmentEntries.forEach(([,item])=>{
+            const earned=Number(item.earned)||0;
+            const max=Number(item.max)||0;
+            const criterio=item.criterio?`<div style="font-size:11px;color:#166534;margin-top:4px"><strong>Criterio:</strong> ${esc(String(item.criterio))}</div>`:'';
+            const respuesta=item.respuesta?`<div style="font-size:11px;color:#14532d;margin-top:6px"><strong>Respuesta:</strong><br>${esc(String(item.respuesta))}</div>`:'';
+            html+=`<div style="font-size:12px;color:#166534;margin-bottom:10px"><strong>${esc(String(item.label||'Desarrollo'))}:</strong> ${earned}/${max}${criterio}${respuesta}</div>`;
+        });
+        html+='</div>';
     }
 
     document.getElementById('respStudentContent').innerHTML=html;

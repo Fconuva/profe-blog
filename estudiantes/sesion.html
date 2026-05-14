@@ -573,6 +573,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
 
     <script>
     // ==================== CONFIG ====================
@@ -590,6 +591,7 @@
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const db = firebase.database();
     const BASE = 'plataforma_estudiantes';
+    initStudentForcedRefresh({ auth, db, base: BASE });
 
     // ==================== SESSION 1 CONTENT (EMBEDDED) ====================
     const SESSIONS_EMBEDDED = {
@@ -2046,6 +2048,11 @@
     // ==================== STATE ====================
     let currentUser = null;
     let studentData = null;
+
+    function isSessionAssignedToStudent(sessionData, uid, curso) {
+        if (!sessionData || !Array.isArray(sessionData.asignados) || !sessionData.asignados.length) return true;
+        return sessionData.asignados.includes(uid) || sessionData.asignados.includes(curso);
+    }
     let sessionId = null;
     let sessionData = null;
     let answers = {};
@@ -2172,7 +2179,7 @@
         }
 
         // Check asignados: if session is restricted, verify student is allowed
-        if (sessionData.asignados && Array.isArray(sessionData.asignados) && !sessionData.asignados.includes(currentUser.uid)) {
+        if (!isSessionAssignedToStudent(sessionData, currentUser.uid, studentData && studentData.curso)) {
             document.getElementById('mainContent').innerHTML = '<div style="text-align:center;padding:60px;color:#dc2626;">No tienes acceso a esta sesión.</div>';
             return;
         }
@@ -2283,7 +2290,7 @@
                     resultsVisible = newVal;
                     if (isSubmitted && resultsVisible) {
                         showResults();
-                        showToast('📊 ¡El profesor ha activado los resultados!');
+                        showToast('El profesor ha entregado la retroalimentacion de esta sesion');
                     }
                 }
             });
@@ -3317,6 +3324,7 @@
 
             // Disable all options
             document.querySelectorAll('.option-item').forEach(opt => opt.classList.add('disabled'));
+            document.querySelectorAll('.likert-btn').forEach(btn => btn.classList.add('disabled'));
 
         } catch(e) {
             console.error('Submit error:', e);
@@ -3341,6 +3349,10 @@
                     if (opt.dataset.letter === userAnswer) {
                         opt.classList.add('selected-correct');
                     }
+                });
+                block.querySelectorAll('.likert-btn').forEach(btn => {
+                    btn.classList.add('disabled');
+                    btn.classList.toggle('selected', btn.textContent.trim() === String(userAnswer || ''));
                 });
                 if (feedback) {
                     feedback.classList.add('show');
@@ -3375,12 +3387,13 @@
 
             if (feedback) {
                 feedback.classList.add('show');
+                const explanation = q.retroalimentacion || q.explicacion || q.feedback || '';
                 if (isCorrect) {
                     feedback.className = 'q-feedback show correct';
-                    feedback.textContent = '✅ ¡Correcto! La respuesta es ' + correctDisplayLetter + '.';
+                    feedback.textContent = '✅ ¡Correcto! La respuesta es ' + correctDisplayLetter + '.' + (explanation ? ' ' + explanation : '');
                 } else {
                     feedback.className = 'q-feedback show incorrect';
-                    feedback.textContent = '❌ Incorrecto. Tu respuesta: ' + userDisplayLetter + '. La correcta es: ' + correctDisplayLetter + '.';
+                    feedback.textContent = '❌ Incorrecto. Tu respuesta: ' + userDisplayLetter + '. La correcta es: ' + correctDisplayLetter + '.' + (explanation ? ' ' + explanation : '');
                 }
             }
         });

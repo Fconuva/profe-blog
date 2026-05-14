@@ -4,10 +4,27 @@
 
 const admin = require('firebase-admin');
 
+function normalizePrivateKey(raw) {
+    let key = (raw || '').trim();
+    if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+    }
+    if (key.includes('\\n')) {
+        key = key.replace(/\\n/g, '\n');
+    }
+    // Si el PEM viene "empacado" (sin saltos), reconstruirlo en lineas de 64 chars
+    const packed = key.replace(/\s+/g, '').match(/^-+BEGINPRIVATEKEY-+([A-Za-z0-9+/=]+)-+ENDPRIVATEKEY-+$/);
+    if (packed) {
+        const lines = packed[1].match(/.{1,64}/g) || [];
+        key = '-----BEGIN PRIVATE KEY-----\n' + lines.join('\n') + '\n-----END PRIVATE KEY-----\n';
+    }
+    return key;
+}
+
 let initError = null;
 try {
     if (!admin.apps.length) {
-        const pk = process.env.FIREBASE_PRIVATE_KEY || '';
+        const pk = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
         if (!pk) {
             initError = 'FIREBASE_PRIVATE_KEY no configurada';
             console.error('[estudiantes.js] FIREBASE_PRIVATE_KEY is empty');
@@ -16,7 +33,7 @@ try {
                 credential: admin.credential.cert({
                     projectId: process.env.FIREBASE_PROJECT_ID,
                     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: pk.replace(/\\n/g, '\n')
+                    privateKey: pk
                 }),
                 databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
             });
@@ -30,16 +47,99 @@ try {
 const db = admin.database();
 const auth = admin.auth();
 const BASE = 'plataforma_estudiantes';
+const FIREBASE_OP_TIMEOUT_MS = 15000;
 
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + '@est.profefranciscopancho.com'; }
 function defaultPassword(r) { var d = cleanRut(r).replace(/[^0-9]/g, ''); return d.substring(0, 6).padEnd(6, '0'); }
 
+function makeHttpError(message, statusCode, code) {
+    const error = new Error(message);
+    error.statusCode = statusCode;
+    if (code) error.code = code;
+    return error;
+}
+
+async function withTimeout(promise, label, ms = FIREBASE_OP_TIMEOUT_MS) {
+    let timer = null;
+    try {
+        return await Promise.race([
+            Promise.resolve(promise),
+            new Promise((_, reject) => {
+                timer = setTimeout(() => reject(makeHttpError(`Tiempo de espera agotado en ${label}`, 504, 'timeout')), ms);
+            })
+        ]);
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
+}
+
+function isEmailAlreadyExistsError(error) {
+    return !!error && (
+        error.code === 'auth/email-already-exists'
+        || error.code === 'auth/email-already-in-use'
+        || String(error.message || '').toLowerCase().includes('already exists')
+        || String(error.message || '').toLowerCase().includes('already in use')
+    );
+}
+
+async function upsertStudentProfile(uid, student, decoded) {
+    const ref = db.ref(`${BASE}/estudiantes/${uid}`);
+    const snap = await ref.once('value');
+    const existing = snap.val() || {};
+    const payload = {
+        ...existing,
+        nombre: student.nombre,
+        rut: cleanRut(student.rut),
+        curso: student.curso,
+        perfil_completo: existing.perfil_completo === true,
+        password_changed: existing.password_changed === true,
+        createdAt: existing.createdAt || Date.now(),
+        createdBy: existing.createdBy || decoded.uid
+    };
+    await ref.set(payload);
+    return { existed: snap.exists(), payload };
+}
+
+async function createOrRecoverStudentAuth(student, decoded) {
+    const email = rutToEmail(student.rut);
+    const password = defaultPassword(student.rut);
+    let userRecord;
+    let recoveredAuth = false;
+
+    try {
+        userRecord = await auth.createUser({ email, password, displayName: student.nombre });
+    } catch (error) {
+        if (!isEmailAlreadyExistsError(error)) throw error;
+        userRecord = await auth.getUserByEmail(email);
+        recoveredAuth = true;
+        await auth.updateUser(userRecord.uid, { displayName: student.nombre }).catch(() => null);
+    }
+
+    const profile = await upsertStudentProfile(userRecord.uid, student, decoded);
+    return {
+        uid: userRecord.uid,
+        email,
+        password,
+        recoveredAuth,
+        recoveredProfile: profile.existed
+    };
+}
+
 async function verifyAdmin(req) {
     const token = (req.headers.authorization || '').replace('Bearer ', '');
     if (!token) throw new Error('Token requerido');
-    const decoded = await auth.verifyIdToken(token);
-    const snap = await db.ref(`${BASE}/admins/${decoded.uid}`).once('value');
+    let decoded;
+    try {
+        decoded = await withTimeout(auth.verifyIdToken(token), 'la validación del token de administrador');
+    } catch (error) {
+        const authCode = error && (error.code || error.errorInfo?.code || '');
+        if (String(authCode).startsWith('auth/')) {
+            throw makeHttpError('Sesión de administrador inválida o expirada', 401, authCode);
+        }
+        throw error;
+    }
+    const snap = await withTimeout(db.ref(`${BASE}/admins/${decoded.uid}`).once('value'), 'la verificación de permisos de administrador');
     if (!snap.val()) throw new Error('No autorizado');
     return decoded;
 }
@@ -48,32 +148,80 @@ async function handleCreate(req, res, decoded) {
     const { nombre, rut, curso } = req.body;
     if (!nombre || !rut || !curso) return res.status(400).json({ error: 'Campos requeridos: nombre, rut, curso' });
 
-    const email = rutToEmail(rut);
-    const password = defaultPassword(rut);
-
-    const userRecord = await auth.createUser({ email, password, displayName: nombre });
-    await db.ref(`${BASE}/estudiantes/${userRecord.uid}`).set({
-        nombre, rut: cleanRut(rut), curso,
-        perfil_completo: false, password_changed: false,
-        createdAt: Date.now(), createdBy: decoded.uid
-    });
-
-    return res.status(200).json({ success: true, uid: userRecord.uid, email });
+    const result = await createOrRecoverStudentAuth({ nombre, rut, curso }, decoded);
+    return res.status(200).json({ success: true, ...result });
 }
 
 async function handleResetPassword(req, res) {
     const { studentUid } = req.body;
     if (!studentUid) return res.status(400).json({ error: 'studentUid requerido' });
 
-    const snap = await db.ref(`${BASE}/estudiantes/${studentUid}`).once('value');
+    console.info('[reset-password] start', { studentUid });
+
+    const snap = await withTimeout(
+        db.ref(`${BASE}/estudiantes/${studentUid}`).once('value'),
+        'la lectura del perfil del estudiante'
+    );
     const student = snap.val();
     if (!student) return res.status(404).json({ error: 'Estudiante no encontrado' });
 
+    await withTimeout(auth.getUser(studentUid), 'la verificación del usuario en Firebase Auth');
+
     const newPassword = defaultPassword(student.rut);
-    await auth.updateUser(studentUid, { password: newPassword });
-    await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false });
+    await withTimeout(
+        auth.updateUser(studentUid, { password: newPassword }),
+        'la actualización de la contraseña en Firebase Auth'
+    );
+    await withTimeout(
+        db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false }),
+        'la actualización del perfil del estudiante'
+    );
+
+    console.info('[reset-password] success', { studentUid });
 
     return res.status(200).json({ success: true });
+}
+
+async function handleChangeRut(req, res, decoded) {
+  const { studentUid, nuevoRut } = req.body;
+  if (!studentUid || !nuevoRut) return res.status(400).json({ error: 'studentUid y nuevoRut requeridos' });
+
+  const snap = await db.ref(`${BASE}/estudiantes/${studentUid}`).once('value');
+  const student = snap.val();
+  if (!student) return res.status(404).json({ error: 'Estudiante no encontrado' });
+
+  const nuevoRutLimpio = cleanRut(nuevoRut);
+  const nuevoEmail = rutToEmail(nuevoRutLimpio);
+  const nuevaPassword = defaultPassword(nuevoRutLimpio);
+
+  // Validar que el nuevo email no esté tomado por OTRO usuario
+  try {
+    const existing = await auth.getUserByEmail(nuevoEmail);
+    if (existing && existing.uid !== studentUid) {
+      return res.status(409).json({ error: 'El nuevo RUT ya pertenece a otro estudiante: ' + (existing.displayName || existing.uid) });
+    }
+  } catch (e) {
+    if (!(e && (e.code === 'auth/user-not-found' || String(e.message || '').toLowerCase().includes('no user')))) {
+      console.warn('[change-rut] getUserByEmail:', e.message);
+    }
+  }
+
+  try {
+    await auth.updateUser(studentUid, { email: nuevoEmail, password: nuevaPassword });
+  } catch (e) {
+    return res.status(500).json({ error: 'Error actualizando Firebase Auth: ' + e.message });
+  }
+
+  await db.ref(`${BASE}/estudiantes/${studentUid}`).update({
+    rut: nuevoRutLimpio,
+    password_changed: false,
+    password_reset_pending: false,
+    rut_anterior: student.rut || null,
+    rut_cambiado_at: Date.now(),
+    rut_cambiado_por: decoded.uid
+  });
+
+  return res.status(200).json({ success: true, uid: studentUid, nuevoEmail, nuevaPassword, rutAnterior: student.rut, rutNuevo: nuevoRutLimpio });
 }
 
 async function handleLoginToken(req, res) {
@@ -87,6 +235,26 @@ async function handleLoginToken(req, res) {
     return res.status(200).json({ success: true, token: customToken });
 }
 
+async function handleAdminLogin(req, res) {
+    const { password } = req.body;
+    if (!password) return res.status(400).json({ error: 'password requerido' });
+
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '#huala88138929';
+    const ADMIN_UID = process.env.ADMIN_UID || 'admin_default';
+
+    if (password !== ADMIN_PASSWORD) {
+        return res.status(403).json({ error: 'Contraseña incorrecta' });
+    }
+
+    try {
+        const customToken = await auth.createCustomToken(ADMIN_UID);
+        return res.status(200).json({ success: true, token: customToken, uid: ADMIN_UID });
+    } catch (e) {
+        console.error('[admin-login] Error creating token:', e.message);
+        return res.status(500).json({ error: 'Error al generar token: ' + e.message });
+    }
+}
+
 async function handleBulkCreate(req, res, decoded) {
     const { estudiantes } = req.body;
     if (!Array.isArray(estudiantes) || estudiantes.length === 0) return res.status(400).json({ error: 'Array de estudiantes requerido' });
@@ -97,15 +265,8 @@ async function handleBulkCreate(req, res, decoded) {
         const { nombre, rut, curso } = est;
         if (!nombre || !rut || !curso) { results.errors.push({ nombre: nombre || '?', error: 'Campos incompletos' }); continue; }
         try {
-            const email = rutToEmail(rut);
-            const password = defaultPassword(rut);
-            const userRecord = await auth.createUser({ email, password, displayName: nombre });
-            await db.ref(`${BASE}/estudiantes/${userRecord.uid}`).set({
-                nombre, rut: cleanRut(rut), curso,
-                perfil_completo: false, password_changed: false,
-                createdAt: Date.now(), createdBy: decoded.uid
-            });
-            results.created.push({ nombre, uid: userRecord.uid });
+            const result = await createOrRecoverStudentAuth({ nombre, rut, curso }, decoded);
+            results.created.push({ nombre, uid: result.uid, recoveredAuth: result.recoveredAuth, recoveredProfile: result.recoveredProfile });
         } catch (e) { results.errors.push({ nombre, error: e.message }); }
     }
 
@@ -122,19 +283,24 @@ module.exports = async (req, res) => {
     if (initError) return res.status(500).json({ error: 'Firebase no inicializado: ' + initError });
 
     try {
-        const decoded = await verifyAdmin(req);
         const action = req.query.action || req.body.action;
+
+        // admin-login no requiere token previo
+        if (action === 'admin-login') return await handleAdminLogin(req, res);
+
+        const decoded = await verifyAdmin(req);
 
         switch (action) {
             case 'create': return await handleCreate(req, res, decoded);
             case 'reset-password': return await handleResetPassword(req, res);
             case 'bulk-create': return await handleBulkCreate(req, res, decoded);
             case 'login-token': return await handleLoginToken(req, res);
-            default: return res.status(400).json({ error: 'Acción no válida. Usa: create, reset-password, bulk-create, login-token' });
+            case 'change-rut': return await handleChangeRut(req, res, decoded);
+            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, create, reset-password, bulk-create, login-token, change-rut' });
         }
     } catch (error) {
         console.error('Error:', error);
-        const status = error.message === 'Token requerido' ? 401 : error.message === 'No autorizado' ? 403 : 500;
+        const status = error.statusCode || (error.message === 'Token requerido' ? 401 : error.message === 'No autorizado' ? 403 : 500);
         return res.status(status).json({ error: error.message });
     }
 };

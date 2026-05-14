@@ -166,6 +166,33 @@
         let studentData = null;
         let currentUid = null;
 
+        function sanitizeNextPath(rawPath) {
+            if (!rawPath || typeof rawPath !== 'string') return '';
+            if (!rawPath.startsWith('/')) return '';
+            if (rawPath.startsWith('//')) return '';
+            try {
+                const url = new URL(rawPath, window.location.origin);
+                if (url.origin !== window.location.origin) return '';
+                return url.pathname + url.search + url.hash;
+            } catch (_error) {
+                return '';
+            }
+        }
+
+        function rememberNextFromLocation() {
+            const params = new URLSearchParams(window.location.search);
+            const next = sanitizeNextPath(params.get('next'));
+            if (next) localStorage.setItem('studentNextPath', next);
+        }
+
+        function consumeNextPath() {
+            const next = sanitizeNextPath(localStorage.getItem('studentNextPath'));
+            localStorage.removeItem('studentNextPath');
+            return next || 'dashboard.html';
+        }
+
+        rememberNextFromLocation();
+
         function showError(msg) { const e = document.getElementById('errorMsg'); e.textContent = msg; e.classList.add('show'); document.getElementById('successMsg').classList.remove('show'); }
         function showSuccess(msg) { const e = document.getElementById('successMsg'); e.textContent = msg; e.classList.add('show'); document.getElementById('errorMsg').classList.remove('show'); }
         function hideMessages() { document.getElementById('errorMsg').classList.remove('show'); document.getElementById('successMsg').classList.remove('show'); }
@@ -178,7 +205,7 @@
                 const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
                 studentData = snap.val();
                 if (!studentData) { await auth.signOut(); window.location.href = 'index.html'; return; }
-                if (studentData.perfil_completo) { window.location.href = 'dashboard.html'; return; }
+                if (studentData.perfil_completo) { window.location.href = consumeNextPath(); return; }
                 document.getElementById('welcomeTitle').textContent = '¡Bienvenido/a, ' + (studentData.nombre || 'Estudiante') + '!';
                 document.getElementById('nombreField').value = studentData.nombre || '';
                 document.getElementById('rutField').value = studentData.rut || '';
@@ -253,7 +280,7 @@
                 await db.ref('plataforma_estudiantes/estudiantes/' + currentUid).update(updates);
 
                 showSuccess('¡Perfil completado! Redirigiendo...');
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+                setTimeout(() => { window.location.href = consumeNextPath(); }, 1500);
 
             } catch(err) {
                 console.error('Profile error:', err);

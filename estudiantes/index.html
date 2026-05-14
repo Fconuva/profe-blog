@@ -95,7 +95,7 @@
         <form id="loginForm" autocomplete="off">
             <div class="form-group">
                 <label for="rutInput">RUT del Estudiante</label>
-                <input type="text" id="rutInput" placeholder="Ej: 21.456.789-0" maxlength="12" inputmode="numeric" required>
+                <input type="text" id="rutInput" name="rut" autocomplete="username" placeholder="Ej: 21.456.789-0" maxlength="12" inputmode="numeric" required>
                 <div class="input-hint">Ingresa tu RUT con puntos y guión</div>
             </div>
 
@@ -137,6 +137,56 @@
         const auth = firebase.auth();
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
+
+        function sanitizeNextPath(rawPath) {
+            if (!rawPath || typeof rawPath !== 'string') return '';
+            if (!rawPath.startsWith('/')) return '';
+            if (rawPath.startsWith('//')) return '';
+            try {
+                const url = new URL(rawPath, window.location.origin);
+                if (url.origin !== window.location.origin) return '';
+                return url.pathname + url.search + url.hash;
+            } catch (_error) {
+                return '';
+            }
+        }
+
+        function rememberNextFromLocation() {
+            const params = new URLSearchParams(window.location.search);
+            const next = sanitizeNextPath(params.get('next'));
+            if (next) localStorage.setItem('studentNextPath', next);
+        }
+
+        function getStoredNextPath() {
+            return sanitizeNextPath(localStorage.getItem('studentNextPath'));
+        }
+
+        function consumeNextPath() {
+            const next = getStoredNextPath();
+            localStorage.removeItem('studentNextPath');
+            return next || '/estudiantes/dashboard.html';
+        }
+
+        let authRedirectInProgress = false;
+
+        function profileRedirectPath() {
+            const next = getStoredNextPath();
+            return next ? ('/estudiantes/perfil.html?next=' + encodeURIComponent(next)) : '/estudiantes/perfil.html';
+        }
+
+        function redirectAfterStudentLogin(data) {
+            if (authRedirectInProgress || !data) return;
+            authRedirectInProgress = true;
+
+            if (!data.perfil_completo) {
+                window.location.href = profileRedirectPath();
+                return;
+            }
+
+            window.location.href = consumeNextPath();
+        }
+
+        rememberNextFromLocation();
 
         // ============ RUT UTILITIES ============
         function cleanRut(rut) {
@@ -298,11 +348,7 @@
                 await db.ref('plataforma_estudiantes/estudiantes/' + uid).update({ lastLogin: Date.now(), email: cred.user.email });
 
                 // Check if profile is complete
-                if (!data.perfil_completo) {
-                    window.location.href = '/estudiantes/perfil.html';
-                } else {
-                    window.location.href = '/estudiantes/dashboard.html';
-                }
+                redirectAfterStudentLogin(data);
 
             } catch (err) {
                 console.error('Login error:', err);
@@ -329,7 +375,9 @@
             if (token) {
                 document.getElementById('loginForm').style.display = 'none';
                 showError('Iniciando sesión con enlace seguro...');
+                let tokenCred = null;
                 auth.signInWithCustomToken(token).then(function(cred){
+                    tokenCred = cred;
                     return db.ref('plataforma_estudiantes/estudiantes/' + cred.user.uid).once('value');
                 }).then(function(snap){
                     var data = snap.val();
@@ -340,9 +388,8 @@
                         window.history.replaceState({}, '', window.location.pathname);
                         return;
                     }
-                    db.ref('plataforma_estudiantes/estudiantes/' + snap.key).update({ lastLogin: Date.now(), email: cred.user.email });
-                    if (!data.perfil_completo) window.location.href = '/estudiantes/perfil.html';
-                    else window.location.href = '/estudiantes/dashboard.html';
+                    db.ref('plataforma_estudiantes/estudiantes/' + snap.key).update({ lastLogin: Date.now(), email: tokenCred && tokenCred.user ? tokenCred.user.email : null });
+                    redirectAfterStudentLogin(data);
                 }).catch(function(e){
                     console.error('Token login error:', e);
                     showError('Enlace inválido o expirado. Usa tu RUT y contraseña.');
@@ -359,8 +406,7 @@
                     const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
                     const data = snap.val();
                     if (data) {
-                        if (!data.perfil_completo) window.location.href = '/estudiantes/perfil.html';
-                        else window.location.href = '/estudiantes/dashboard.html';
+                        redirectAfterStudentLogin(data);
                     }
                 } catch(e) { /* ignore, show login */ }
             }

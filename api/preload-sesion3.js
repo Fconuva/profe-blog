@@ -1,10 +1,24 @@
 // api/preload-sesion3.js — Force preload sesion-3 data via serverless function
 const admin = require('firebase-admin');
 
+function normalizePrivateKey(raw) {
+    let key = (raw || '').trim();
+    if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) {
+        key = key.slice(1, -1);
+    }
+    if (key.includes('\\n')) key = key.replace(/\\n/g, '\n');
+    const packed = key.replace(/\s+/g, '').match(/^-+BEGINPRIVATEKEY-+([A-Za-z0-9+/=]+)-+ENDPRIVATEKEY-+$/);
+    if (packed) {
+        const lines = packed[1].match(/.{1,64}/g) || [];
+        key = '-----BEGIN PRIVATE KEY-----\n' + lines.join('\n') + '\n-----END PRIVATE KEY-----\n';
+    }
+    return key;
+}
+
 let initError = null;
 try {
     if (!admin.apps.length) {
-        const pk = process.env.FIREBASE_PRIVATE_KEY || '';
+        const pk = normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY);
         if (!pk) {
             initError = 'FIREBASE_PRIVATE_KEY no configurada';
         } else {
@@ -12,7 +26,7 @@ try {
                 credential: admin.credential.cert({
                     projectId: process.env.FIREBASE_PROJECT_ID,
                     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-                    privateKey: pk.replace(/\\n/g, '\n')
+                    privateKey: pk
                 }),
                 databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://profe-blog-default-rtdb.firebaseio.com'
             });

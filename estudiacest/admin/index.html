@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Administrador Estudia CEST</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(251, 191, 36, 0.16), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(14, 116, 144, 0.20), transparent 36%),
+        linear-gradient(145deg, #111827 0%, #0f766e 52%, #1f2937 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #0f172a;
+    }
+    .shell {
+      width: 100%;
+      max-width: 1080px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 28px 80px rgba(2, 6, 23, 0.44);
+      background: rgba(255,255,255,0.98);
+    }
+    .hero {
+      padding: 42px 38px;
+      background:
+        linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)),
+        linear-gradient(135deg, #0f172a 0%, #164e63 48%, #134e4a 100%);
+      color: #ecfeff;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      left: -80px;
+      bottom: -90px;
+      background: rgba(251, 191, 36, 0.16);
+      filter: blur(10px);
+    }
+    .brand-lockup {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .brand-logo {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+      padding: 6px;
+      border-radius: 18px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.16);
+    }
+    .brand-copy {
+      display: grid;
+      gap: 3px;
+    }
+    .brand-copy span {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: rgba(236, 254, 255, 0.72);
+      font-weight: 700;
+    }
+    .brand-copy strong {
+      font-size: 18px;
+      line-height: 1.15;
+      color: #fefce8;
+      font-weight: 800;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.10);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .hero h1 {
+      font-size: clamp(28px, 4vw, 40px);
+      line-height: 1.04;
+      font-weight: 800;
+      margin-bottom: 14px;
+      max-width: 430px;
+    }
+    .hero p {
+      font-size: 15px;
+      line-height: 1.7;
+      color: rgba(236, 254, 255, 0.88);
+      max-width: 470px;
+    }
+    .hero-list {
+      margin-top: 22px;
+      display: grid;
+      gap: 10px;
+    }
+    .hero-list div {
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(236, 254, 255, 0.9);
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 14px;
+      padding: 12px 14px;
+    }
+    .card {
+      padding: 40px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+    }
+    .card h2 {
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      margin-bottom: 6px;
+    }
+    .sub {
+      font-size: 13px;
+      color: #6b7280;
+      line-height: 1.6;
+    }
+    .alert {
+      display: none;
+      padding: 12px 14px;
+      border-radius: 12px;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .alert.show { display: block; }
+    .alert.error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: #b91c1c;
+    }
+    .field { margin-bottom: 16px; }
+    .field label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 7px;
+    }
+    .field input {
+      width: 100%;
+      border: 2px solid #e5e7eb;
+      border-radius: 14px;
+      padding: 15px 16px;
+      font: inherit;
+      font-size: 15px;
+      background: #f9fafb;
+      transition: border-color .15s, box-shadow .15s, background .15s;
+    }
+    .field input:focus {
+      outline: none;
+      border-color: #0f766e;
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.14);
+      background: #ffffff;
+    }
+    .hint {
+      margin-top: 6px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+    .pass-wrap { position: relative; }
+    .toggle-pass {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 18px;
+      opacity: .7;
+    }
+    .btn {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font: inherit;
+      font-size: 15px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0f766e 0%, #0f4c81 100%);
+      cursor: pointer;
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+      box-shadow: 0 12px 28px rgba(15, 118, 110, 0.25);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { cursor: not-allowed; opacity: .65; transform: none; }
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+      box-shadow: none;
+    }
+    .hidden { display: none !important; }
+    .loading {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 3px solid rgba(255,255,255,0.28);
+      border-top-color: #fff;
+      vertical-align: middle;
+      margin-right: 8px;
+      animation: spin .7s linear infinite;
+    }
+    .admin-home {
+      display: grid;
+      gap: 18px;
+    }
+    .identity {
+      display: grid;
+      gap: 6px;
+      padding: 18px;
+      border-radius: 18px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+    }
+    .identity .eyebrow {
+      font-size: 11px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: #64748b;
+      font-weight: 800;
+    }
+    .identity strong {
+      font-size: 20px;
+      color: #0f172a;
+      line-height: 1.2;
+    }
+    .identity span {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.55;
+    }
+    .identity-role {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+    }
+    .role-pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      border: 1px solid transparent;
+    }
+    .role-pill.superadmin {
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-color: rgba(29, 78, 216, 0.18);
+    }
+    .role-pill.subadmin {
+      background: #ecfeff;
+      color: #0f766e;
+      border-color: rgba(15, 118, 110, 0.18);
+    }
+    .course-chip-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .course-chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #dbe3ea;
+    }
+    .panel-grid {
+      display: grid;
+      gap: 14px;
+    }
+    .panel-card {
+      border: 1px solid #dbe3ea;
+      border-radius: 20px;
+      padding: 18px;
+      background: #ffffff;
+      display: grid;
+      gap: 12px;
+    }
+    .panel-card h3 {
+      font-size: 20px;
+      color: #0f172a;
+      line-height: 1.2;
+      font-weight: 800;
+    }
+    .panel-card p {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #64748b;
+    }
+    .panel-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      background: #ecfeff;
+      color: #0f766e;
+      border: 1px solid rgba(15, 118, 110, 0.18);
+    }
+    .panel-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(135deg, #0f766e 0%, #0f4c81 100%);
+      box-shadow: 0 14px 28px rgba(15, 118, 110, 0.18);
+      transition: transform .15s, box-shadow .15s, opacity .15s;
+    }
+    .panel-link:hover { transform: translateY(-1px); }
+    .panel-link.disabled {
+      pointer-events: none;
+      opacity: .45;
+      box-shadow: none;
+      background: #94a3b8;
+    }
+    .panel-note {
+      font-size: 12px;
+      color: #64748b;
+      line-height: 1.55;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .actions .btn { width: auto; min-width: 160px; }
+    .back-link {
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f766e;
+      text-decoration: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .hero { padding: 30px 24px; }
+      .card { padding: 30px 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <section class="hero">
+      <div class="brand-lockup">
+        <img class="brand-logo" src="/estudiantes/assets/insignia_talca_1.png" alt="Centro Educativo Salesianos Talca">
+        <div class="brand-copy">
+          <span>Centro Educativo Salesianos Talca</span>
+          <strong>Lengua y Literatura 2026</strong>
+        </div>
+      </div>
+      <div class="hero-badge">Administrador Estudia CEST</div>
+      <h1>Un solo acceso para tus paneles docentes</h1>
+      <p>Inicia sesión una vez y luego elige el panel administrativo que necesitas abrir. El acceso se valida contra Firebase antes de mostrar los destinos disponibles.</p>
+      <div class="hero-list">
+        <div>SIMCE y Plataforma Estudiantes: gestión de estudiantes, sesiones, resultados, planillas y ranking.</div>
+        <div>Lecturas: seguimiento de pruebas, revisión, correcciones manuales, planilla y herramientas de control en vivo.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div id="errorBox" class="alert error"></div>
+
+      <div id="loginView">
+        <h2>Ingresar como administrador</h2>
+        <p class="sub">Usa tu correo docente y tu contraseña administrativa. Si la cuenta tiene rol admin, aparecerán los accesos disponibles para esa sesión.</p>
+
+        <form id="loginForm" autocomplete="off">
+          <div class="field">
+            <label for="emailInput">Correo</label>
+            <input id="emailInput" type="email" placeholder="correo@estudiacest.com" required>
+          </div>
+
+          <div class="field">
+            <label for="passInput">Contraseña</label>
+            <div class="pass-wrap">
+              <input id="passInput" type="password" placeholder="Tu contraseña administrativa" required>
+              <button type="button" class="toggle-pass" id="togglePass" aria-label="Mostrar contraseña">👁️</button>
+            </div>
+            <div class="hint">Si ya estabas autenticado como admin en este navegador, el acceso se reconocerá automáticamente.</div>
+          </div>
+
+          <button class="btn" id="loginBtn" type="submit">Ingresar</button>
+        </form>
+      </div>
+
+      <div id="homeView" class="admin-home hidden">
+        <div>
+          <h2>Selecciona tu panel</h2>
+          <p class="sub">Tu sesión ya fue validada. Desde aquí puedes entrar al admin que corresponda sin volver a autenticarte.</p>
+        </div>
+
+        <div class="identity">
+          <div class="eyebrow">Sesión activa</div>
+          <strong id="adminName">Administrador</strong>
+          <span id="adminMeta">Cuenta validada.</span>
+          <div class="identity-role">
+            <span class="role-pill subadmin" id="adminRole">Subadmin</span>
+          </div>
+          <div class="course-chip-list" id="adminCourses"></div>
+        </div>
+
+        <div class="panel-grid">
+          <article class="panel-card">
+            <div class="panel-meta">
+              <span class="pill">SIMCE</span>
+              <span class="pill">Estudiantes</span>
+            </div>
+            <h3>Admin SIMCE y Plataforma Estudiantes</h3>
+            <p>Gestiona estudiantes, sesiones, resultados, planillas, ranking y seguimiento del trabajo evaluativo.</p>
+            <a class="panel-link" id="simceAdminLink" href="/estudiantes/adminprofe/">Entrar a admin SIMCE</a>
+          </article>
+
+          <article class="panel-card">
+            <div class="panel-meta">
+              <span class="pill">Lecturas</span>
+              <span class="pill">Seguimiento</span>
+            </div>
+            <h3>Admin Lecturas</h3>
+            <p>Revisa progreso, fuerza recargas, controla sesiones, corrige desarrollo y exporta planillas del módulo Lecturas.</p>
+            <a class="panel-link" id="lecturasAdminLink" href="/lecturas/adminprofe/">Entrar a admin Lecturas</a>
+            <div class="panel-note" id="lecturasNote"></div>
+          </article>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-secondary" id="signOutBtn" type="button">Cerrar sesión</button>
+          <a class="back-link" href="/lecturas/">Volver al acceso principal</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+      authDomain: "estudiacest.firebaseapp.com",
+      databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+      projectId: "estudiacest",
+      storageBucket: "estudiacest.firebasestorage.app",
+      messagingSenderId: "999002169815",
+      appId: "1:999002169815:web:51203237bc77c2e74deb92"
+    };
+
+    const STUDENT_BASE = 'plataforma_estudiantes';
+
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = firebase.database();
+
+    const loginView = document.getElementById('loginView');
+    const homeView = document.getElementById('homeView');
+    const loginForm = document.getElementById('loginForm');
+    const loginBtn = document.getElementById('loginBtn');
+    const emailInput = document.getElementById('emailInput');
+    const passInput = document.getElementById('passInput');
+    const errorBox = document.getElementById('errorBox');
+    const adminName = document.getElementById('adminName');
+    const adminMeta = document.getElementById('adminMeta');
+    const adminRole = document.getElementById('adminRole');
+    const adminCourses = document.getElementById('adminCourses');
+    const lecturasAdminLink = document.getElementById('lecturasAdminLink');
+    const lecturasNote = document.getElementById('lecturasNote');
+
+    function normalizeEmail(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function isPermissionDeniedError(error) {
+      const code = String((error && error.code) || '').toLowerCase();
+      const message = String((error && error.message) || '').toLowerCase();
+      return code.includes('permission') || message.includes('permission_denied');
+    }
+
+    async function readOnceWithRetry(path, attempts = 4, delayMs = 800) {
+      let lastError = null;
+      for (let attempt = 0; attempt < attempts; attempt++) {
+        try {
+          if (auth.currentUser && attempt > 0) {
+            try { await auth.currentUser.getIdToken(true); } catch(ignore) {}
+          }
+          return await db.ref(path).once('value');
+        } catch (error) {
+          lastError = error;
+          if (!isPermissionDeniedError(error) || attempt === attempts - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, delayMs * (attempt + 1)));
+        }
+      }
+      throw lastError;
+    }
+
+    function showError(message) {
+      errorBox.textContent = message;
+      errorBox.classList.add('show');
+    }
+
+    function hideError() {
+      errorBox.textContent = '';
+      errorBox.classList.remove('show');
+    }
+
+    function setLoading(loading) {
+      loginBtn.disabled = loading;
+      loginBtn.innerHTML = loading ? '<span class="loading"></span>Validando...' : 'Ingresar';
+    }
+
+    function showLogin() {
+      loginView.classList.remove('hidden');
+      homeView.classList.add('hidden');
+      setLoading(false);
+    }
+
+    function showHome(user, docente) {
+      hideError();
+      loginView.classList.add('hidden');
+      homeView.classList.remove('hidden');
+
+      const name = (docente && docente.nombre) || user.email || 'Administrador';
+      const role = docente && docente.superadmin ? 'Superadmin' : 'Subadmin';
+      const courseList = docente && Array.isArray(docente.cursos) && docente.cursos.length
+        ? docente.cursos.join(', ')
+        : 'Acceso administrativo general';
+      adminName.textContent = name;
+      adminMeta.textContent = (user.email || 'Cuenta sin correo') + ' · ' + courseList;
+      adminRole.textContent = role;
+      adminRole.className = 'role-pill ' + (docente && docente.superadmin ? 'superadmin' : 'subadmin');
+      adminCourses.innerHTML = docente && Array.isArray(docente.cursos) && docente.cursos.length
+        ? docente.cursos.map(course => '<span class="course-chip">' + course + '</span>').join('')
+        : '<span class="course-chip">Acceso general</span>';
+
+      const canAccessLecturas = true;
+      lecturasAdminLink.classList.toggle('disabled', !canAccessLecturas);
+      lecturasAdminLink.setAttribute('aria-disabled', canAccessLecturas ? 'false' : 'true');
+      lecturasNote.textContent = canAccessLecturas
+        ? 'Esta cuenta puede entrar directamente al admin Lecturas.'
+        : 'Esta cuenta no tiene permisos para el admin Lecturas.';
+    }
+
+    document.getElementById('togglePass').addEventListener('click', () => {
+      passInput.type = passInput.type === 'password' ? 'text' : 'password';
+    });
+
+    document.getElementById('signOutBtn').addEventListener('click', async () => {
+      await auth.signOut();
+      showLogin();
+    });
+
+    loginForm.addEventListener('submit', async event => {
+      event.preventDefault();
+      hideError();
+
+      const email = emailInput.value.trim();
+      const password = passInput.value;
+      if (!email || !password) {
+        showError('Completa correo y contraseña antes de continuar.');
+        return;
+      }
+
+      setLoading(true);
+      try {
+        await auth.signInWithEmailAndPassword(email, password);
+      } catch (error) {
+        console.error('[admin-gateway/login]', error);
+        if (error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          showError('Contraseña incorrecta.');
+        } else if (error.code === 'auth/user-not-found') {
+          showError('La cuenta indicada no existe como administrador.');
+        } else {
+          showError('No se pudo iniciar sesión en este momento.');
+        }
+        setLoading(false);
+      }
+    });
+
+    auth.onAuthStateChanged(async user => {
+      if (!user) {
+        showLogin();
+        return;
+      }
+
+      hideError();
+      setLoading(true);
+      try {
+        try { await user.getIdToken(true); } catch(ignore) {}
+        const adminSnap = await readOnceWithRetry(STUDENT_BASE + '/admins/' + user.uid, 3, 800);
+        if (!adminSnap.val()) {
+          await auth.signOut();
+          showError('Esta cuenta no tiene permisos administrativos en Estudia CEST.');
+          return;
+        }
+        const docenteSnap = await readOnceWithRetry(STUDENT_BASE + '/docentes/' + user.uid, 3, 800);
+        showHome(user, docenteSnap.val() || null);
+      } catch (error) {
+        console.error('[admin-gateway/auth]', error);
+        await auth.signOut();
+        showError('No se pudo validar la cuenta administrativa. Intenta nuevamente.');
+      } finally {
+        setLoading(false);
+      }
+    });
+  </script>
+</body>
+</html>

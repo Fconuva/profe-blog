@@ -72,7 +72,8 @@
           ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
-            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
+            ".validate": "root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || data.child('completada').val() !== true || newData.child('completada').val() === true"
           }
         }
       },
@@ -106,6 +107,7 @@
       "tareas": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         "$tareaId": {
+          ".indexOn": ["curso", "completada", "submitted_at", "last_save"],
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
             ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
@@ -115,6 +117,43 @@
       "mensajes": {
         ".read": "auth != null",
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+      },
+      "admin_refresh": {
+        ".read": "auth != null",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "all": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+        },
+        "cursos": {
+          "$curso": {
+            ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+          }
+        },
+        "estudiantes": {
+          "$uid": {
+            ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+          }
+        }
+      },
+      "arena": {
+        "history": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "daily": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "records": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        }
       }
     },
 
@@ -150,6 +189,34 @@
             ".read": "auth != null && auth.uid === $uid && root.child('plataforma_lecturas/sesiones').child($sesionId).child('resultados_visibles').val() === true",
             ".write": "auth != null && auth.uid === $uid && root.child('plataforma_lecturas/asignaciones').child(auth.uid).child($sesionId).val() === true"
           }
+        }
+      }
+    },
+
+    "plataforma_np": {
+      "access": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        "allowedUids": {
+          "$uid": {
+            ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
+            ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+          }
+        }
+      },
+      "$unitId": {
+        ".read": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_np/access/allowedUids').child(auth.uid).val() === true)",
+        "records": {
+          ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_np/access/allowedUids').child(auth.uid).val() === true)",
+          "$recordId": {
+            ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || root.child('plataforma_np/access/allowedUids').child(auth.uid).val() === true)"
+          }
+        },
+        "config": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
+        },
+        "importMeta": {
+          ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
         }
       }
     },

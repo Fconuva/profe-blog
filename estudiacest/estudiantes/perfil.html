@@ -185,10 +185,17 @@
             if (next) localStorage.setItem('studentNextPath', next);
         }
 
+        function getSharedLoginUrl(nextPath) {
+            const params = new URLSearchParams();
+            if (nextPath) params.set('next', nextPath);
+            const query = params.toString();
+            return '/lecturas/' + (query ? '?' + query : '');
+        }
+
         function consumeNextPath() {
             const next = sanitizeNextPath(localStorage.getItem('studentNextPath'));
             localStorage.removeItem('studentNextPath');
-            return next || 'dashboard.html';
+            return next || '/estudiantes/panel.html';
         }
 
         rememberNextFromLocation();
@@ -199,12 +206,12 @@
 
         // Check Auth
         auth.onAuthStateChanged(async function(user) {
-            if (!user) { window.location.href = 'index.html'; return; }
+            if (!user) { window.location.href = getSharedLoginUrl('/estudiantes/perfil.html'); return; }
             currentUid = user.uid;
             try {
                 const snap = await db.ref('plataforma_estudiantes/estudiantes/' + user.uid).once('value');
                 studentData = snap.val();
-                if (!studentData) { await auth.signOut(); window.location.href = 'index.html'; return; }
+                if (!studentData) { await auth.signOut(); window.location.href = getSharedLoginUrl('/estudiantes/perfil.html'); return; }
                 if (studentData.perfil_completo) { window.location.href = consumeNextPath(); return; }
                 document.getElementById('welcomeTitle').textContent = '¡Bienvenido/a, ' + (studentData.nombre || 'Estudiante') + '!';
                 document.getElementById('nombreField').value = studentData.nombre || '';
@@ -286,7 +293,7 @@
                 console.error('Profile error:', err);
                 if (err.code === 'auth/requires-recent-login') {
                     showError('Sesión expirada. Debes volver a iniciar sesión.');
-                    setTimeout(() => { auth.signOut(); window.location.href = 'index.html'; }, 2000);
+                    setTimeout(() => { auth.signOut(); window.location.href = getSharedLoginUrl('/estudiantes/perfil.html'); }, 2000);
                 } else {
                     showError('Error al guardar. Intenta de nuevo.');
                 }

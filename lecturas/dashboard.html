@@ -236,7 +236,7 @@
   <main class="page">
     <section class="hero">
       <h2>Panel de Lecturas</h2>
-      <p>Aquí solo aparecen las pruebas de Lengua y Literatura que fueron asignadas específicamente para ti. No se muestran sesiones de PAES, SIMCE ni otros recursos del sistema general.</p>
+      <p>Aquí aparecen las pruebas de Lengua y Literatura asignadas específicamente para ti y, cuando corresponda, actividades guiadas de trabajo en clase conectadas con esta misma cuenta.</p>
     </section>
 
     <div class="stats" id="statsRow">
@@ -250,6 +250,11 @@
     <h2 class="section-title">Tus pruebas</h2>
     <section class="list" id="sessionList">
       <div class="empty">Cargando asignaciones...</div>
+    </section>
+
+    <section id="guideSection" style="display:none;margin-top:24px;">
+      <h2 class="section-title">Actividades guiadas</h2>
+      <section class="list" id="guideList"></section>
     </section>
   </main>
 
@@ -269,6 +274,15 @@
 
     const STUDENT_BASE = 'plataforma_estudiantes';
     const LECTURAS_BASE = 'plataforma_lecturas';
+    const GUIDE_ACTIVITIES = [
+      {
+        id: 'nm4-u2-semana11',
+        title: 'Guía NM4 · Unidad 2 · Semana 11',
+        description: 'Interpretación colaborativa sobre memoria, identidad y control. Guarda borradores y entrega final desde la tablet.',
+        link: '/nm4/',
+        courses: ['4A-HC', '4B-HC', '4A-TP', '4B-TP', '4C-TP', '4D-TP', '4E-TP']
+      }
+    ];
 
     firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
@@ -277,6 +291,8 @@
 
     const listEl = document.getElementById('sessionList');
     const redirectBox = document.getElementById('redirectBox');
+    const guideSection = document.getElementById('guideSection');
+    const guideListEl = document.getElementById('guideList');
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await auth.signOut();
@@ -307,6 +323,11 @@
 
     async function getResponse(sessionId, uid) {
       const snap = await db.ref(LECTURAS_BASE + '/respuestas/' + sessionId + '/' + uid).once('value');
+      return snap.val();
+    }
+
+    async function getGuideProgress(taskId, uid) {
+      const snap = await db.ref(STUDENT_BASE + '/tareas/' + taskId + '/' + uid).once('value');
       return snap.val();
     }
 
@@ -354,6 +375,41 @@
           + '<button class="' + buttonClass + '"' + disabledAttr + ' onclick="' + clickHandler + '">' + buttonLabel + '</button>'
           + '</article>';
       }).join('');
+    }
+
+    async function renderGuideActivities(student, uid) {
+      const course = String(student && student.curso || '');
+      const visible = GUIDE_ACTIVITIES.filter(activity => !activity.courses || activity.courses.includes(course));
+      if (!visible.length) {
+        guideSection.style.display = 'none';
+        guideListEl.innerHTML = '';
+        return;
+      }
+
+      const cards = [];
+      for (const activity of visible) {
+        const progress = await getGuideProgress(activity.id, uid);
+        const completed = !!(progress && progress.completada);
+        const inProgress = !!(progress && !progress.completada && progress.last_save);
+        const chips = [
+          '<span class="chip book">Trabajo de clase</span>',
+          completed ? '<span class="chip done">Entregada</span>' : '',
+          inProgress ? '<span class="chip progress">En progreso</span>' : (!completed ? '<span class="chip">Disponible</span>' : '')
+        ].join('');
+        const buttonLabel = completed ? 'Revisar guía' : inProgress ? 'Continuar guía' : 'Abrir guía';
+        const buttonClass = completed ? 'cta secondary' : 'cta';
+        cards.push('<article class="card">'
+          + '<div>'
+          + '<h3>' + activity.title + '</h3>'
+          + '<div class="meta">' + chips + '</div>'
+          + '<p>' + activity.description + '</p>'
+          + '</div>'
+          + '<button class="' + buttonClass + '" onclick="window.location.href=\'' + activity.link + '\'">' + buttonLabel + '</button>'
+          + '</article>');
+      }
+
+      guideSection.style.display = '';
+      guideListEl.innerHTML = cards.join('');
     }
 
     function maybeRedirect(sessions) {
@@ -412,6 +468,7 @@
         sessions.sort((a, b) => (a.orden || 0) - (b.orden || 0));
         updateStats(sessions);
         renderSessions(sessions);
+        await renderGuideActivities(student, user.uid);
         // Auto-redirect deshabilitado: el estudiante siempre debe poder elegir entre sus pruebas
         // (incluyendo las bloqueadas, para ver fecha de habilitacion).
       } catch (error) {

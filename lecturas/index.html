@@ -231,6 +231,39 @@
       font-weight: 700;
       text-decoration: none;
     }
+    .admin-entry {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #dbe3ea;
+      background: #f8fafc;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .admin-copy {
+      font-size: 12px;
+      color: #475569;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+    .admin-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 140px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #0f766e 0%, #0f4c81 100%);
+      color: #fff;
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 800;
+      box-shadow: 0 12px 24px rgba(15, 118, 110, 0.18);
+    }
+    .admin-link:hover { background: linear-gradient(135deg, #115e59 0%, #1d4ed8 100%); }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (max-width: 860px) {
       .shell { grid-template-columns: 1fr; }
@@ -279,6 +312,11 @@
         <button class="btn" id="loginBtn" type="submit">Entrar a Lecturas</button>
       </form>
 
+      <div class="admin-entry">
+        <div class="admin-copy">Acceso docente</div>
+        <a class="admin-link" href="/estudiantes/adminprofe/?choose=1">Administrador</a>
+      </div>
+
       <div class="foot">
         Prof. Francisco Javier Núñez Valenzuela<br>
         <a href="https://www.profefranciscopancho.com" target="_blank" rel="noreferrer">www.profefranciscopancho.com</a>
@@ -304,6 +342,11 @@
     const LECTURAS_BASE = 'plataforma_lecturas';
     const loginParams = new URLSearchParams(window.location.search);
     const requestedTarget = (loginParams.get('target') || '').trim().toLowerCase();
+    const GUIDE_TARGETS = {
+      'nm4': '/nm4/',
+      'nm4-u2-semana11': '/nm4/'
+    };
+    const accessToken = (loginParams.get('token') || '').trim();
 
     firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
@@ -314,6 +357,7 @@
     const passInput = document.getElementById('passInput');
     const loginBtn = document.getElementById('loginBtn');
     const errorBox = document.getElementById('errorBox');
+    let tokenLoginInProgress = false;
 
     function cleanRut(rut) {
       return (rut || '').replace(/[^0-9kK]/g, '').toUpperCase();
@@ -367,6 +411,24 @@
       loginBtn.innerHTML = loading ? '<span class="loading"></span>Entrando...' : 'Entrar a Lecturas';
     }
 
+    function getCleanLoginUrl() {
+      const params = new URLSearchParams();
+      if (requestedTarget) params.set('target', requestedTarget);
+      const query = params.toString();
+      return window.location.pathname + (query ? '?' + query : '');
+    }
+
+    function getProfileUrl() {
+      const params = new URLSearchParams();
+      if (requestedTarget) params.set('target', requestedTarget);
+      const query = params.toString();
+      return '/lecturas/perfil.html' + (query ? '?' + query : '');
+    }
+
+    function getGuideTargetUrl(target) {
+      return GUIDE_TARGETS[target] || '';
+    }
+
     async function getStudent(uid) {
       const snap = await db.ref(STUDENT_BASE + '/estudiantes/' + uid).once('value');
       return snap.val();
@@ -415,9 +477,50 @@
     }
 
     async function routeAfterLogin(uid, student) {
-      // Siempre llevar al dashboard para que el estudiante elija la prueba.
-      // (No auto-abrir aunque solo tenga una asignada.)
+      if (student && !student.perfil_completo) {
+        window.location.href = getProfileUrl();
+        return;
+      }
+
+      const guideTargetUrl = getGuideTargetUrl(requestedTarget);
+      if (guideTargetUrl) {
+        window.location.href = guideTargetUrl;
+        return;
+      }
+
+      if (requestedTarget) {
+        const sessions = await getOpenAssignedSessions(uid);
+        const matches = filterSessionsByTarget(sessions, requestedTarget);
+        if (matches.length === 1) {
+          await openSessionForUser(uid, matches[0]);
+          return;
+        }
+      }
+
       window.location.href = '/lecturas/dashboard';
+    }
+
+    async function signInWithAccessToken(token) {
+      tokenLoginInProgress = true;
+      hideError();
+      setLoading(true);
+      try {
+        if (auth.currentUser) await auth.signOut();
+        const credential = await auth.signInWithCustomToken(token);
+        const student = await getStudent(credential.user.uid);
+        if (!student) {
+          await auth.signOut();
+          throw new Error('Tu cuenta no está habilitada para esta sección.');
+        }
+        await db.ref(STUDENT_BASE + '/estudiantes/' + credential.user.uid + '/lastLogin').set(Date.now());
+        window.history.replaceState({}, document.title, getCleanLoginUrl());
+        await routeAfterLogin(credential.user.uid, student);
+      } catch (error) {
+        console.error('[lecturas/token-login]', error);
+        showError('El enlace de acceso directo venció o no es válido. Pide uno nuevo al profesor.');
+        setLoading(false);
+        tokenLoginInProgress = false;
+      }
     }
 
     document.getElementById('togglePass').addEventListener('click', () => {
@@ -452,6 +555,41 @@
 
       setLoading(true);
 
+      // 1) Intento via backend (Admin SDK) que NO esta sujeto a rate-limit.
+      // Esto cubre la contrasena por defecto (primeros 6 digitos del RUT)
+      // y funciona aunque Firebase Auth haya bloqueado al cliente por intentos.
+      try {
+        const resp = await fetch('/api/lecturas-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rut, password })
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          if (data && data.token) {
+            const credential = await auth.signInWithCustomToken(data.token);
+            const student = await getStudent(credential.user.uid);
+            if (!student) {
+              await auth.signOut();
+              showError('Tu cuenta no está habilitada para esta sección.');
+              setLoading(false);
+              return;
+            }
+            await routeAfterLogin(credential.user.uid, student);
+            return;
+          }
+        } else if (resp.status === 401) {
+          showError('RUT o contraseña incorrectos.');
+          setLoading(false);
+          return;
+        }
+        // status 409 (fallback) o cualquier otro: continuar con Firebase Auth
+      } catch (backendErr) {
+        console.warn('[lecturas/backend-login]', backendErr);
+        // Continuar con Firebase Auth como fallback
+      }
+
+      // 2) Fallback: Firebase Auth normal (para estudiantes que cambiaron clave).
       try {
         const credential = await auth.signInWithEmailAndPassword(rutToEmail(rut), password);
         const student = await getStudent(credential.user.uid);
@@ -468,7 +606,8 @@
         if (error.code === 'auth/network-request-failed') {
           showError('No hay conexión a internet en este momento.');
         } else if (error.code === 'auth/too-many-requests') {
-          showError('Demasiados intentos fallidos. Espera unos minutos e intenta otra vez.');
+          // Ya intentamos backend y tampoco funciono: mensaje suave, sin bloquear.
+          showError('Vuelve a intentarlo. Si no entras, prueba con los primeros 6 dígitos de tu RUT como contraseña.');
         } else {
           showError('RUT o contraseña incorrectos.');
         }
@@ -476,8 +615,12 @@
       }
     });
 
+    if (accessToken) {
+      signInWithAccessToken(accessToken);
+    }
+
     auth.onAuthStateChanged(async (user) => {
-      if (!user) return;
+      if (!user || tokenLoginInProgress) return;
       try {
         const student = await getStudent(user.uid);
         if (!student) {

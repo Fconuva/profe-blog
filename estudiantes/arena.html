@@ -22,6 +22,13 @@
         .hero{text-align:center;padding:24px 16px;margin-bottom:20px;position:relative}
         .hero h2{font-size:24px;font-weight:900;background:linear-gradient(135deg,#f97316,#ef4444,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
         .hero p{font-size:13px;color:#64748b}
+        .season-alert{margin-bottom:20px;padding:18px 20px;border-radius:16px;background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(249,115,22,.14),rgba(251,191,36,.12));border:1px solid rgba(251,191,36,.3);box-shadow:0 10px 28px rgba(0,0,0,.18)}
+        .season-kicker{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(15,23,42,.45);color:#fef3c7;font-size:11px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;margin-bottom:10px}
+        .season-alert h3{font-size:20px;font-weight:900;color:#fff;margin-bottom:8px}
+        .season-alert p{font-size:13px;color:#fde68a;line-height:1.5}
+        .season-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+        .season-chip,.season-countdown{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;background:rgba(15,23,42,.45);color:#e2e8f0;font-size:12px;font-weight:700}
+        .season-countdown strong{color:#fbbf24;font-size:13px}
         /* BATTLE LIMIT */
         .battle-limit{text-align:center;margin-bottom:20px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:12px}
         .battle-limit .count{font-size:20px;font-weight:800;color:#fbbf24}
@@ -41,7 +48,7 @@
         .opp-card:hover{background:rgba(255,255,255,.08);border-color:rgba(239,68,68,.3);transform:translateX(4px)}
         .opp-card.disabled{opacity:.4;cursor:not-allowed}
         .opp-card.disabled:hover{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.06);transform:none}
-        .opp-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid rgba(255,255,255,.1)}
+        .opp-avatar{width:52px;height:52px;border-radius:16px;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1)}
         .opp-info{flex:1;min-width:0}
         .opp-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
         .opp-meta{font-size:11px;color:#64748b;margin-top:2px}
@@ -55,7 +62,7 @@
         /* VS Header */
         .vs-header{display:flex;align-items:center;justify-content:center;gap:16px;padding:14px 20px;background:rgba(0,0,0,.3)}
         .vs-fighter{display:flex;align-items:center;gap:8px}
-        .vs-fighter .emoji{font-size:28px}
+        .vs-fighter .emoji{width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:16px;overflow:hidden;background:rgba(255,255,255,.06)}
         .vs-fighter .name{font-size:13px;font-weight:700;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .vs-badge{font-size:18px;font-weight:900;color:#f97316}
         /* HP Bars */
@@ -73,7 +80,7 @@
         /* Log */
         .battle-log{height:120px;overflow-y:auto;padding:8px 20px;background:rgba(0,0,0,.4);font-size:12px;line-height:1.6;scroll-behavior:smooth}
         .battle-log::-webkit-scrollbar{width:4px}.battle-log::-webkit-scrollbar-thumb{background:#334155;border-radius:4px}
-        .log-atk{color:#60a5fa}.log-def{color:#a78bfa}.log-crit{color:#fbbf24}.log-dodge{color:#94a3b8}.log-end{color:#4ade80;font-weight:700}.log-regen{color:#4ade80}
+        .log-atk{color:#60a5fa}.log-def{color:#a78bfa}.log-crit{color:#fbbf24}.log-dodge{color:#94a3b8}.log-end{color:#4ade80;font-weight:700}.log-regen{color:#4ade80}.log-shield{color:#7dd3fc;font-weight:700}
         /* Result overlay */
         .result-overlay{display:none;position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,.85);flex-direction:column;align-items:center;justify-content:center;z-index:10;backdrop-filter:blur(6px)}
         .result-overlay.active{display:flex}
@@ -128,6 +135,17 @@
             <p>Desafía a tus compañeros. Tus stats definen tu poder.</p>
         </div>
 
+        <div class="season-alert">
+            <div class="season-kicker">🏁 Season 1</div>
+            <h3>Al final de semestre, el 19 de junio, finaliza la Season 1.</h3>
+            <p>Los primeros 3 lugares del ranking reciben un premio "ÚNICO". Aprovecha cada combate para cerrar fuerte esta temporada.</p>
+            <div class="season-meta">
+                <span class="season-chip">🏆 Top 3 con premio único</span>
+                <span class="season-chip">📅 Cierre oficial: 19 de junio</span>
+                <span class="season-countdown">⏳ Queda <strong id="seasonCountdown">calculando...</strong></span>
+            </div>
+        </div>
+
         <!-- Battle limit -->
         <div class="battle-limit">
             <div class="count" id="battlesLeft">3</div>
@@ -157,9 +175,9 @@
     <!-- BATTLE SCREEN (fullscreen overlay) -->
     <div class="battle-screen" id="battleScreen">
         <div class="vs-header">
-            <div class="vs-fighter"><span class="emoji" id="bLeftEmoji">🥉</span><span class="name" id="bLeftName">Tú</span></div>
+            <div class="vs-fighter"><span class="emoji" id="bLeftEmoji"></span><span class="name" id="bLeftName">Tu</span></div>
             <div class="vs-badge">VS</div>
-            <div class="vs-fighter"><span class="emoji" id="bRightEmoji">🥉</span><span class="name" id="bRightName">Rival</span></div>
+            <div class="vs-fighter"><span class="emoji" id="bRightEmoji"></span><span class="name" id="bRightName">Rival</span></div>
         </div>
         <div class="hp-container">
             <div class="hp-bar">
@@ -187,27 +205,30 @@
 
     <!-- Scripts -->
     <script src="js/avatar-levels.js"></script>
+    <script src="js/avatar-look.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
     <script>
     'use strict';
 
     /* ========== FIREBASE ========== */
     const FIREBASE_CONFIG = {
-        apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
-        authDomain: "profe-blog.firebaseapp.com",
-        databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
-        projectId: "profe-blog",
-        storageBucket: "profe-blog.firebasestorage.app",
-        messagingSenderId: "305920739217",
-        appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+        authDomain: "estudiacest.firebaseapp.com",
+        databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+        projectId: "estudiacest",
+        storageBucket: "estudiacest.firebasestorage.app",
+        messagingSenderId: "999002169815",
+        appId: "1:999002169815:web:51203237bc77c2e74deb92"
     };
     firebase.initializeApp(FIREBASE_CONFIG);
     const auth = firebase.auth();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const db = firebase.database();
     const BASE = 'plataforma_estudiantes';
+    initStudentForcedRefresh({ auth, db, base: BASE });
 
     const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
     const RANKING_PAIRS = {
@@ -218,10 +239,13 @@
         '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
     };
 
-    const ADMIN_EMAIL = '111111111@est.profefranciscopancho.com';
+    const ADMIN_EMAIL = '111111111@est.estudiacest.com';
     let MAX_BATTLES_PER_DAY = 3;
     const XP_WIN = 5;
     const XP_LOSE = 2;
+    const GOLD_GLOVE_COLOR = '#facc15';
+    const GOLD_AURA_CORE = '#fbbf24';
+    const GOLD_AURA_EDGE = '#fde68a';
 
     let currentUid = null;
     let currentCurso = null;
@@ -229,6 +253,57 @@
     let opponents = [];
     let myRecord = { wins: 0, losses: 0, streak: 0 };
     let todayBattles = 0;
+
+    function formatCountdown(ms) {
+        var totalSeconds = Math.max(0, Math.floor(ms / 1000));
+        var days = Math.floor(totalSeconds / 86400);
+        var hours = Math.floor((totalSeconds % 86400) / 3600);
+        var minutes = Math.floor((totalSeconds % 3600) / 60);
+        if (days > 0) return days + 'd ' + hours + 'h ' + minutes + 'm';
+        return hours + 'h ' + minutes + 'm';
+    }
+
+    function startCountdown(elementId, targetDate, finishedText) {
+        var el = document.getElementById(elementId);
+        if (!el) return;
+        function render() {
+            var diff = targetDate.getTime() - Date.now();
+            if (diff <= 0) {
+                el.textContent = finishedText;
+                return true;
+            }
+            el.textContent = formatCountdown(diff);
+            return false;
+        }
+        if (render()) return;
+        var timer = setInterval(function() {
+            if (render()) clearInterval(timer);
+        }, 1000);
+    }
+
+    startCountdown('seasonCountdown', new Date('2026-06-19T23:59:59-04:00'), 'finaliza hoy');
+
+    function hasGoldenGloves(avatarData) {
+        var rewards = avatarData.recompensas || {};
+        var cosmetics = avatarData.cosmeticos || {};
+        return !!rewards.guantes_oro || cosmetics.guantes === 'oro';
+    }
+
+    function hasGoldenAura(avatarData) {
+        var rewards = avatarData.recompensas || {};
+        var cosmetics = avatarData.cosmeticos || {};
+        return !!rewards.aura_dorada || cosmetics.aura === 'dorada';
+    }
+
+    function hasArenaShield(avatarData) {
+        var rewards = avatarData.recompensas || {};
+        var cosmetics = avatarData.cosmeticos || {};
+        return !!rewards.escudo_apertura || cosmetics.escudo === 'apertura';
+    }
+
+    function resolveGloveColor(hasReward, fallback) {
+        return hasReward ? GOLD_GLOVE_COLOR : fallback;
+    }
 
     /* ========== AUTH ========== */
     auth.onAuthStateChanged(async (user) => {
@@ -249,7 +324,21 @@
             const xpTotal = avatar.xp_total || 0;
             const lvl = AvatarSystem.getLevel(xpTotal);
             const stats = avatar.stats || { comprension: 0, constancia: 0, velocidad: 0 };
-            myAvatar = { uid: user.uid, nombre: student.nombre, curso: student.curso, xp: xpTotal, level: lvl, stats: stats };
+            const goldGloves = hasGoldenGloves(avatar);
+            const goldAura = hasGoldenAura(avatar);
+            myAvatar = {
+                uid: user.uid,
+                nombre: student.nombre,
+                curso: student.curso,
+                xp: xpTotal,
+                level: lvl,
+                stats: stats,
+                look: AvatarLookSystem.normalizeLook(avatar.look, { xpTotal: xpTotal, avatarData: avatar }),
+                avatarData: avatar,
+                hasGoldenGloves: goldGloves,
+                hasGoldenAura: goldAura,
+                hasArenaShield: hasArenaShield(avatar)
+            };
             document.getElementById('myLevelPill').textContent = lvl.emoji + ' Nivel ' + lvl.level;
 
             // Load record
@@ -301,7 +390,19 @@
             var xp = av.xp_total || 0;
             var st = av.stats || { comprension: 0, constancia: 0, velocidad: 0 };
             var lvl = AvatarSystem.getLevel(xp);
-            opponents.push({ uid: uid, nombre: s.nombre, curso: s.curso, xp: xp, level: lvl, stats: st });
+            opponents.push({
+                uid: uid,
+                nombre: s.nombre,
+                curso: s.curso,
+                xp: xp,
+                level: lvl,
+                stats: st,
+                look: AvatarLookSystem.normalizeLook(av.look, { xpTotal: xp, avatarData: av }),
+                avatarData: av,
+                hasGoldenGloves: hasGoldenGloves(av),
+                hasGoldenAura: hasGoldenAura(av),
+                hasArenaShield: hasArenaShield(av)
+            });
         }
         opponents.sort(function(a,b){ return b.xp - a.xp; });
         renderOpponents();
@@ -331,14 +432,35 @@
         var noFights = todayBattles >= MAX_BATTLES_PER_DAY;
         el.innerHTML = opponents.map(function(o) {
             var disabled = noFights ? ' disabled' : '';
+            var rewardTags = [];
+            if (o.hasGoldenGloves) rewardTags.push('<span style="color:#facc15">🥇 Guantes de oro</span>');
+            if (o.hasGoldenAura) rewardTags.push('<span style="color:#fde68a">⚡ Aura dorada</span>');
+            if (o.hasArenaShield) rewardTags.push('<span style="color:#7dd3fc">🛡️ Escudo inicial</span>');
+            var rewardTag = rewardTags.length
+                ? '<div style="margin-top:4px;font-size:10px;font-weight:800;display:flex;gap:8px;flex-wrap:wrap">' + rewardTags.join('') + '</div>'
+                : '';
             return '<div class="opp-card' + disabled + '" ' + (noFights ? '' : 'onclick="startBattle(\'' + o.uid + '\')"') + '>' +
-                '<div class="opp-avatar" style="background:' + o.level.bg + '">' + o.level.emoji + '</div>' +
+                '<div class="opp-avatar" data-uid="' + o.uid + '"></div>' +
                 '<div class="opp-info"><div class="opp-name">' + o.nombre + '</div>' +
                 '<div class="opp-meta">' + (CURSO_LABELS[o.curso]||o.curso) + ' · ' + o.level.title + '</div>' +
+                rewardTag +
                 '<div class="opp-stats"><span>🧠 ' + o.stats.comprension + '</span><span>🔥 ' + o.stats.constancia + '</span><span>⚡ ' + o.stats.velocidad + '</span></div></div>' +
                 (noFights ? '<span style="font-size:11px;color:#475569">Sin batallas</span>' : '<button class="opp-fight">⚔️ Luchar</button>') +
                 '</div>';
         }).join('');
+        Array.from(el.querySelectorAll('.opp-avatar')).forEach(function(node) {
+            var uid = node.getAttribute('data-uid');
+            var opp = opponents.find(function(item) { return item.uid === uid; });
+            if (!opp) return;
+            AvatarLookSystem.render(node, {
+                look: opp.look,
+                xpTotal: opp.xp,
+                avatarData: opp.avatarData,
+                size: 48,
+                shape: 'rounded',
+                background: opp.level.bg
+            });
+        });
     }
 
     function renderHistory(items) {
@@ -412,7 +534,9 @@
             regen: regen,
             counter: counter,
             crit: crit,
-            speed: vel
+            speed: vel,
+            shieldStart: !!avatar.hasArenaShield,
+            shieldActive: !!avatar.hasArenaShield
         };
     }
 
@@ -447,6 +571,11 @@
                 // Dodge check
                 if (Math.random() * 100 < def.dodge) {
                     log.push({ type: 'dodge', attacker: atk.name, defender: def.name, text: prefix + def.name + ' esquivó el ataque de ' + atk.name });
+                    return;
+                }
+                if (def.shieldActive) {
+                    def.shieldActive = false;
+                    log.push({ type: 'shield', attacker: atk.name, defender: def.name, dmg: 0, defHP: def.hp, text: prefix + '🛡️ ' + def.name + ' bloquea el primer golpe con su escudo inicial. El escudo se rompe.' });
                     return;
                 }
                 var isCrit = Math.random() * 100 < atk.crit;
@@ -508,10 +637,30 @@
         var isLeftMe = currentBattle.aStats.name === myAvatar.nombre;
         var left = isLeftMe ? currentBattle.aStats : currentBattle.bStats;
         var right = isLeftMe ? currentBattle.bStats : currentBattle.aStats;
+        left.gloveColor = resolveGloveColor(myAvatar.hasGoldenGloves, '#ef4444');
+        right.gloveColor = resolveGloveColor(opp.hasGoldenGloves, '#3b82f6');
+        left.hasGoldenAura = !!myAvatar.hasGoldenAura;
+        right.hasGoldenAura = !!opp.hasGoldenAura;
+        left.hasArenaShield = !!left.shieldStart;
+        right.hasArenaShield = !!right.shieldStart;
 
-        document.getElementById('bLeftEmoji').textContent = myAvatar.level.emoji;
+        AvatarLookSystem.render(document.getElementById('bLeftEmoji'), {
+            look: myAvatar.look,
+            xpTotal: myAvatar.xp,
+            avatarData: myAvatar.avatarData,
+            size: 42,
+            shape: 'rounded',
+            background: myAvatar.level.bg
+        });
         document.getElementById('bLeftName').textContent = myAvatar.nombre.split(' ')[0];
-        document.getElementById('bRightEmoji').textContent = opp.level.emoji;
+        AvatarLookSystem.render(document.getElementById('bRightEmoji'), {
+            look: opp.look,
+            xpTotal: opp.xp,
+            avatarData: opp.avatarData,
+            size: 42,
+            shape: 'rounded',
+            background: opp.level.bg
+        });
         document.getElementById('bRightName').textContent = opp.nombre.split(' ')[0];
         document.getElementById('hpLeftName').textContent = myAvatar.nombre.split(' ')[0];
         document.getElementById('hpRightName').textContent = opp.nombre.split(' ')[0];
@@ -548,7 +697,7 @@
     }
 
     /* ========== STICK FIGURE CANVAS ========== */
-    var canvasState = { leftX: 0, rightX: 0, leftHP: 1, rightHP: 1, leftAction: 'idle', rightAction: 'idle', actionTimer: 0, groundY: 0, particles: [], shakeTimer: 0, shakeX: 0, shakeY: 0 };
+    var canvasState = { leftX: 0, rightX: 0, leftHP: 1, rightHP: 1, leftAction: 'idle', rightAction: 'idle', actionTimer: 0, groundY: 0, particles: [], shakeTimer: 0, shakeX: 0, shakeY: 0, leftGloveColor: '#ef4444', rightGloveColor: '#3b82f6', leftHasGoldenAura: false, rightHasGoldenAura: false, leftHasShield: false, rightHasShield: false, leftShieldFlash: 0, rightShieldFlash: 0 };
 
     function initCanvas(left, right) {
         var canvas = document.getElementById('battleCanvas');
@@ -570,6 +719,14 @@
         canvasState.actionTimer = 0;
         canvasState.particles = [];
         canvasState.shakeTimer = 0;
+        canvasState.leftGloveColor = left.gloveColor || '#ef4444';
+        canvasState.rightGloveColor = right.gloveColor || '#3b82f6';
+        canvasState.leftHasGoldenAura = !!left.hasGoldenAura;
+        canvasState.rightHasGoldenAura = !!right.hasGoldenAura;
+        canvasState.leftHasShield = !!left.hasArenaShield;
+        canvasState.rightHasShield = !!right.hasArenaShield;
+        canvasState.leftShieldFlash = 0;
+        canvasState.rightShieldFlash = 0;
         canvasState.w = w;
         canvasState.h = h;
 
@@ -578,6 +735,8 @@
             if (canvasState.actionTimer > 0) canvasState.actionTimer--;
             else { canvasState.leftAction = 'idle'; canvasState.rightAction = 'idle'; }
             if (canvasState.shakeTimer > 0) canvasState.shakeTimer--;
+            if (canvasState.leftShieldFlash > 0) canvasState.leftShieldFlash--;
+            if (canvasState.rightShieldFlash > 0) canvasState.rightShieldFlash--;
             battleAnimFrame = requestAnimationFrame(animate);
         }
         if (battleAnimFrame) cancelAnimationFrame(battleAnimFrame);
@@ -672,8 +831,8 @@
         ctx.fillRect(postRX - 3, canvasState.groundY - 75, 6, 75 + 30);
 
         // Draw fighters
-        drawFighter(ctx, canvasState.leftX, canvasState.groundY, canvasState.leftAction, '#60a5fa', '#3b82f6', '#ef4444', false, canvasState.leftHP);
-        drawFighter(ctx, canvasState.rightX, canvasState.groundY, canvasState.rightAction, '#a78bfa', '#8b5cf6', '#3b82f6', true, canvasState.rightHP);
+        drawFighter(ctx, canvasState.leftX, canvasState.groundY, canvasState.leftAction, '#60a5fa', '#3b82f6', canvasState.leftGloveColor, canvasState.leftHasGoldenAura, canvasState.leftHasShield, canvasState.leftShieldFlash, false, canvasState.leftHP);
+        drawFighter(ctx, canvasState.rightX, canvasState.groundY, canvasState.rightAction, '#a78bfa', '#8b5cf6', canvasState.rightGloveColor, canvasState.rightHasGoldenAura, canvasState.rightHasShield, canvasState.rightShieldFlash, true, canvasState.rightHP);
 
         // Particles
         updateParticles(ctx);
@@ -689,7 +848,7 @@
         ctx.restore();
     }
 
-    function drawFighter(ctx, x, y, action, colorLight, colorDark, gloveColor, facingLeft, hpPct) {
+    function drawFighter(ctx, x, y, action, colorLight, colorDark, gloveColor, hasGoldenAura, hasShield, shieldFlash, facingLeft, hpPct) {
         var scale = 1.8;
         var headR = 10 * scale;
         var bodyLen = 28 * scale;
@@ -726,6 +885,11 @@
             if (canvasState.actionTimer >= 18) {
                 addParticles(x, y, 'rgba(148,163,184,0.6)', 4, 'dust');
             }
+        } else if (action === 'shield') {
+            offsetY = -4;
+            if (canvasState.actionTimer >= 18) {
+                addParticles(x, y - bodyLen * 0.55, 'rgba(125,211,252,0.82)', 9, 'dust');
+            }
         } else if (action === 'dead') {
             ctx.save();
             ctx.globalAlpha = 0.5;
@@ -755,6 +919,13 @@
         var c2 = hitFlash ? '#ef4444' : colorDark;
         var gc = hitFlash ? '#991b1b' : gloveColor;
 
+        if (hasGoldenAura && action !== 'dead') {
+            drawGoldenAura(ctx, dx, dy, scale, hpPct, t);
+        }
+        if ((hasShield || shieldFlash > 0) && action !== 'dead') {
+            drawArenaShield(ctx, dx, dy, scale, hasShield, shieldFlash, t);
+        }
+
         // Shadow under fighter
         ctx.fillStyle = 'rgba(0,0,0,0.2)';
         ctx.beginPath();
@@ -773,6 +944,108 @@
             ctx.lineWidth = 3;
             ctx.stroke();
         }
+    }
+
+    function drawArenaShield(ctx, x, y, scale, hasShield, shieldFlash, t) {
+        var pulse = (Math.sin(t / 220) + 1) / 2;
+        var auraAlpha = hasShield ? 0.18 + pulse * 0.05 : 0.10 + (shieldFlash / 24);
+        var rimAlpha = hasShield ? 0.34 + pulse * 0.08 : 0.24 + (shieldFlash / 22);
+        var radiusX = 20 * scale;
+        var radiusY = 31 * scale;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        ctx.fillStyle = 'rgba(125,211,252,' + auraAlpha + ')';
+        ctx.beginPath();
+        ctx.ellipse(x, y - 32 * scale, radiusX * 1.22, radiusY * 1.18, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.strokeStyle = 'rgba(191,219,254,' + rimAlpha + ')';
+        ctx.lineWidth = shieldFlash > 0 ? 3.2 : 2.4;
+        if (shieldFlash > 0) ctx.setLineDash([10, 6]);
+        ctx.beginPath();
+        ctx.ellipse(x, y - 32 * scale, radiusX, radiusY, 0, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.strokeStyle = 'rgba(219,234,254,' + Math.min(0.82, rimAlpha + 0.18) + ')';
+        ctx.lineWidth = 1.3;
+        ctx.beginPath();
+        ctx.moveTo(x, y - 55 * scale);
+        ctx.lineTo(x, y - 10 * scale);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(x - 12 * scale, y - 30 * scale);
+        ctx.lineTo(x + 12 * scale, y - 30 * scale);
+        ctx.stroke();
+
+        if (shieldFlash > 0) {
+            ctx.strokeStyle = 'rgba(255,255,255,' + Math.min(0.88, 0.34 + shieldFlash / 20) + ')';
+            ctx.beginPath();
+            ctx.moveTo(x - 11 * scale, y - 50 * scale);
+            ctx.lineTo(x - 2 * scale, y - 26 * scale);
+            ctx.lineTo(x - 13 * scale, y - 12 * scale);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x + 8 * scale, y - 48 * scale);
+            ctx.lineTo(x + 2 * scale, y - 31 * scale);
+            ctx.lineTo(x + 11 * scale, y - 16 * scale);
+            ctx.stroke();
+        }
+
+        ctx.restore();
+    }
+
+    function drawGoldenAura(ctx, x, y, scale, hpPct, t) {
+        var pulse = (Math.sin(t / 180) + 1) / 2;
+        var auraAlpha = 0.18 + pulse * 0.08 + (1 - hpPct) * 0.04;
+        var auraHeight = 86 * scale + pulse * 8;
+        var auraWidth = 48 * scale + pulse * 5;
+
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen';
+
+        var halo = ctx.createRadialGradient(x, y - auraHeight * 0.72, 8, x, y - auraHeight * 0.52, auraHeight);
+        halo.addColorStop(0, 'rgba(255,255,220,' + Math.min(0.36, auraAlpha + 0.12) + ')');
+        halo.addColorStop(0.28, 'rgba(253,230,138,' + Math.min(0.32, auraAlpha + 0.08) + ')');
+        halo.addColorStop(0.6, 'rgba(251,191,36,' + auraAlpha + ')');
+        halo.addColorStop(1, 'rgba(251,191,36,0)');
+        ctx.fillStyle = halo;
+        ctx.beginPath();
+        ctx.ellipse(x, y - auraHeight * 0.48, auraWidth * 1.15, auraHeight, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = 'rgba(251,191,36,' + (0.14 + pulse * 0.08) + ')';
+        var spikes = [
+            { dx: 0,   dy: -auraHeight * 1.18, w: 12 * scale, h: 28 * scale },
+            { dx: -22 * scale, dy: -auraHeight * 0.88, w: 11 * scale, h: 22 * scale },
+            { dx: 22 * scale, dy: -auraHeight * 0.92, w: 11 * scale, h: 24 * scale },
+            { dx: -30 * scale, dy: -auraHeight * 0.46, w: 10 * scale, h: 18 * scale },
+            { dx: 30 * scale, dy: -auraHeight * 0.42, w: 10 * scale, h: 18 * scale }
+        ];
+        spikes.forEach(function(spike, idx) {
+            var wobble = Math.sin(t / 220 + idx) * 3;
+            ctx.beginPath();
+            ctx.moveTo(x + spike.dx - spike.w, y + spike.dy + spike.h * 0.45);
+            ctx.quadraticCurveTo(x + spike.dx - spike.w * 0.3, y + spike.dy + wobble, x + spike.dx, y + spike.dy - spike.h);
+            ctx.quadraticCurveTo(x + spike.dx + spike.w * 0.3, y + spike.dy + wobble, x + spike.dx + spike.w, y + spike.dy + spike.h * 0.45);
+            ctx.closePath();
+            ctx.fill();
+        });
+
+        ctx.strokeStyle = 'rgba(255,248,210,' + (0.28 + pulse * 0.12) + ')';
+        ctx.lineWidth = 1.6;
+        for (var i = 0; i < 3; i++) {
+            var sparkX = x - 22 * scale + i * 18 * scale + Math.sin(t / 200 + i) * 5;
+            var sparkY = y - auraHeight * (0.85 - i * 0.15);
+            ctx.beginPath();
+            ctx.moveTo(sparkX, sparkY + 6);
+            ctx.lineTo(sparkX, sparkY - 6);
+            ctx.stroke();
+        }
+
+        ctx.restore();
     }
 
     function drawBody(ctx, x, y, headR, bodyLen, limbLen, gloveR, punchArm, guardArm, legAnim, legSpread, c1, c2, gloveColor, facingLeft) {
@@ -988,6 +1261,24 @@
                 if (isLeftDefender) { canvasState.leftAction = 'dodge'; canvasState.rightAction = 'attack'; }
                 else { canvasState.rightAction = 'dodge'; canvasState.leftAction = 'attack'; }
                 canvasState.actionTimer = 20;
+            } else if (entry.type === 'shield') {
+                if (isLeftDefender) {
+                    canvasState.leftAction = 'shield';
+                    canvasState.rightAction = 'attack';
+                    canvasState.leftHasShield = false;
+                    canvasState.leftShieldFlash = 20;
+                } else {
+                    canvasState.rightAction = 'shield';
+                    canvasState.leftAction = 'attack';
+                    canvasState.rightHasShield = false;
+                    canvasState.rightShieldFlash = 20;
+                }
+                canvasState.actionTimer = 20;
+                if (entry.defHP !== undefined) {
+                    if (isLeftDefender) { leftHP = entry.defHP; }
+                    else { rightHP = entry.defHP; }
+                    updateHPBars(leftHP, leftMaxHP, rightHP, rightMaxHP);
+                }
             } else if (entry.type === 'regen') {
                 // Healing green particles
                 if (isLeftAttacker) {
@@ -1002,7 +1293,7 @@
             }
 
             // Add log line
-            var cls = entry.type === 'crit' ? 'log-crit' : entry.type === 'dodge' ? 'log-dodge' : entry.type === 'end' ? 'log-end' : entry.type === 'regen' ? 'log-regen' : entry.type === 'atk' ? (isLeftAttacker ? 'log-atk' : 'log-def') : '';
+            var cls = entry.type === 'crit' ? 'log-crit' : entry.type === 'dodge' ? 'log-dodge' : entry.type === 'shield' ? 'log-shield' : entry.type === 'end' ? 'log-end' : entry.type === 'regen' ? 'log-regen' : entry.type === 'atk' ? (isLeftAttacker ? 'log-atk' : 'log-def') : '';
             logEl.innerHTML += '<div class="' + cls + '">' + entry.text + '</div>';
             logEl.scrollTop = logEl.scrollHeight;
 
@@ -1010,6 +1301,7 @@
             if (entry.type === 'start') await sleep(1200);
             else if (entry.type === 'end') await sleep(600);
             else if (entry.type === 'regen') await sleep(400);
+            else if (entry.type === 'shield') await sleep(780);
             else await sleep(700);
         }
 

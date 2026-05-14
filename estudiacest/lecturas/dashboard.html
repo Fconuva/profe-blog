@@ -235,8 +235,8 @@
 
   <main class="page">
     <section class="hero">
-      <h2>Panel de Lecturas</h2>
-      <p>Aquí aparecen las pruebas de Lengua y Literatura asignadas específicamente para ti y, cuando corresponda, actividades guiadas de trabajo en clase conectadas con esta misma cuenta.</p>
+      <h2 id="heroTitle">Panel de Lecturas</h2>
+      <p id="heroDescription">Aquí aparecen las pruebas de Lengua y Literatura asignadas específicamente para ti y, cuando corresponda, actividades guiadas de trabajo en clase conectadas con esta misma cuenta.</p>
     </section>
 
     <div class="stats" id="statsRow">
@@ -247,7 +247,7 @@
 
     <div class="redirect-box" id="redirectBox"></div>
 
-    <h2 class="section-title">Tus pruebas</h2>
+    <h2 class="section-title" id="sessionsTitle">Tus pruebas</h2>
     <section class="list" id="sessionList">
       <div class="empty">Cargando asignaciones...</div>
     </section>
@@ -280,7 +280,7 @@
         title: 'Guía NM4 · Unidad 2 · Semana 11',
         description: 'Interpretación colaborativa sobre memoria, identidad y control. Guarda borradores y entrega final desde la tablet.',
         link: '/nm4/',
-        courses: ['4A-HC', '4B-HC', '4A-TP', '4B-TP', '4C-TP', '4D-TP', '4E-TP']
+        courses: ['4A-TP', '4B-TP', '4C-TP', '4D-TP', '4E-TP']
       }
     ];
 
@@ -290,9 +290,13 @@
     const db = firebase.database();
 
     const listEl = document.getElementById('sessionList');
+    const statsRow = document.getElementById('statsRow');
     const redirectBox = document.getElementById('redirectBox');
     const guideSection = document.getElementById('guideSection');
     const guideListEl = document.getElementById('guideList');
+    const heroTitle = document.getElementById('heroTitle');
+    const heroDescription = document.getElementById('heroDescription');
+    const sessionsTitle = document.getElementById('sessionsTitle');
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
       await auth.signOut();
@@ -329,6 +333,24 @@
     async function getGuideProgress(taskId, uid) {
       const snap = await db.ref(STUDENT_BASE + '/tareas/' + taskId + '/' + uid).once('value');
       return snap.val();
+    }
+
+    function isAccessOnlyStudent(student) {
+      return !!(student && (student.access_only === true || student.access_only === 'true' || student.access_only === 1));
+    }
+
+    function renderAccessOnlyState(student) {
+      const course = String(student && student.curso || '').trim();
+      heroTitle.textContent = 'Acceso habilitado';
+      heroDescription.textContent = 'Tu cuenta está activa. Por ahora este espacio solo confirma el ingreso y no muestra evaluaciones ni actividades publicadas.';
+      sessionsTitle.textContent = 'Estado del acceso';
+      statsRow.style.display = 'none';
+      redirectBox.classList.remove('show');
+      redirectBox.innerHTML = '';
+      guideSection.style.display = 'none';
+      guideListEl.innerHTML = '';
+      document.getElementById('studentMeta').textContent = course ? (course + ' · Acceso habilitado') : 'Acceso habilitado';
+      listEl.innerHTML = '<div class="empty">Tu ingreso está habilitado correctamente. Cuando el profesor publique contenido para tu cuenta, aparecerá aquí.</div>';
     }
 
     function updateStats(sessions) {
@@ -436,6 +458,11 @@
         }
         document.getElementById('studentName').textContent = student.nombre || 'Estudiante';
         document.getElementById('studentMeta').textContent = (student.curso || 'Sin curso') + ' · Sección Lecturas';
+
+        if (isAccessOnlyStudent(student)) {
+          renderAccessOnlyState(student);
+          return;
+        }
 
         const ids = await getAssignedIds(user.uid);
         const TEST_RUT = '222222222';

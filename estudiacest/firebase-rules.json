@@ -76,6 +76,7 @@
       },
       "mensajes": {
         ".read": "auth != null",
+        ".indexOn": ["timestamp"],
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
       },
       "admin_refresh": {
@@ -99,7 +100,8 @@
         "history": {
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
-            ".write": "auth != null && auth.uid === $uid"
+            ".write": "auth != null && auth.uid === $uid",
+            ".indexOn": ["timestamp"]
           }
         },
         "daily": {
@@ -112,6 +114,48 @@
           ".read": "auth != null",
           "$uid": {
             ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "gato": {
+          "incoming": {
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
+              "$challengeId": {
+                ".write": "auth != null && (auth.uid === $uid || data.child('challengerUid').val() === auth.uid || newData.child('challengerUid').val() === auth.uid)"
+              }
+            }
+          },
+          "outgoing": {
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
+              "$challengeId": {
+                ".write": "auth != null && (auth.uid === $uid || data.child('targetUid').val() === auth.uid || newData.child('targetUid').val() === auth.uid)"
+              }
+            }
+          },
+          "games": {
+            "$gameId": {
+              ".read": "auth != null && (data.child('xUid').val() === auth.uid || data.child('oUid').val() === auth.uid)",
+              ".write": "auth != null && (data.child('xUid').val() === auth.uid || data.child('oUid').val() === auth.uid || newData.child('xUid').val() === auth.uid || newData.child('oUid').val() === auth.uid)"
+            }
+          },
+          "history": {
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
+              "$gameId": {
+                ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/arena/gato/games/' + $gameId + '/xUid').val() === auth.uid || root.child('plataforma_estudiantes/arena/gato/games/' + $gameId + '/oUid').val() === auth.uid)"
+              }
+            }
+          },
+          "daily": {
+            "$uid": {
+              ".read": "auth != null && auth.uid === $uid",
+              "$dayKey": {
+                "$gameId": {
+                  ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/arena/gato/games/' + $gameId + '/xUid').val() === auth.uid || root.child('plataforma_estudiantes/arena/gato/games/' + $gameId + '/oUid').val() === auth.uid)"
+                }
+              }
+            }
           }
         }
       }

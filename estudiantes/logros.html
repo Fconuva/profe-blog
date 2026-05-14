@@ -129,6 +129,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
     <script>
         firebase.initializeApp({
             apiKey:"AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",authDomain:"profe-blog.firebaseapp.com",
@@ -140,6 +141,7 @@
         auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const db = firebase.database();
         const BASE = 'plataforma_estudiantes';
+        initStudentForcedRefresh({ auth, db, base: BASE });
         const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC'],paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
 
         // ============ RARITY ============
@@ -158,7 +160,7 @@
         ];
 
         // ============ ALL MISSIONS (for counting) ============
-        const ALL_MISSIONS = ['tarea-cuento-1', 'tarea-simbolos-1'];
+        const ALL_MISSIONS = ['tarea-cuento-1', 'tarea-simbolos-1', 'tarea-argumentacion-1', 'tarea-figuras-1', 'tarea-distractores-1'];
 
         // ============ AVATAR LEVELS (shared via js/avatar-levels.js) ============
         function getLevel(t){return AvatarSystem.getLevel(t)}
@@ -186,11 +188,13 @@
             {id:'paes_900',        cat:'paes',       emoji:'👑', name:'Élite Nacional',       desc:'Obtén 900+ puntos en un ensayo PAES',           rarity:'legendario',  xp:200},
             {id:'paes_improve',    cat:'paes',       emoji:'📈', name:'Mejora Continua',      desc:'Mejora tu puntaje entre dos ensayos PAES',      rarity:'poco_comun',  xp:60},
 
-            // MISIONES (4)
+            // MISIONES (5)
             {id:'first_mission',   cat:'misiones',   emoji:'🗺️', name:'Misión Cumplida',     desc:'Completa tu primera misión secundaria',          rarity:'comun',       xp:20},
             {id:'three_missions',  cat:'misiones',   emoji:'⚔️', name:'Explorador',           desc:'Completa 3 misiones secundarias',                rarity:'poco_comun',  xp:50},
             {id:'all_missions',    cat:'misiones',   emoji:'🏆', name:'Completista',          desc:'Completa todas las misiones secundarias',         rarity:'epico',       xp:150},
             {id:'story_500',       cat:'misiones',   emoji:'✍️', name:'Maestro Narrador',     desc:'Escribe 500+ palabras en tu cuento',             rarity:'raro',        xp:60},
+            {id:'argument_treasure',cat:'misiones',  emoji:'🥇', name:'Tesoro del Argumento', desc:'Completa el Expediente Argumentativo y desbloquea los guantes de oro', rarity:'epico', xp:80},
+            {id:'distractor_aura', cat:'misiones',   emoji:'⚡', name:'Aura del Auditor',      desc:'Completa Auditor de Distractores y desbloquea el aura dorada para la Arena', rarity:'epico', xp:80},
 
             // EXPERIENCIA (6)
             {id:'xp_250',          cat:'experiencia', emoji:'💫', name:'Primeros 250',        desc:'Acumula 250 XP en total',                        rarity:'comun',       xp:0},
@@ -254,6 +258,8 @@
                 case 'three_missions':  return d.missionsCompleted >= 3;
                 case 'all_missions':    return d.totalMissions > 0 && d.missionsCompleted >= d.totalMissions;
                 case 'story_500':       return d.cuentoWords >= 500;
+                case 'argument_treasure': return d.argumentacionCompleted;
+                case 'distractor_aura': return d.distractoresCompleted;
                 // Experiencia
                 case 'xp_250':          return d.xpTotal >= 250;
                 case 'xp_500':          return d.xpTotal >= 500;
@@ -298,6 +304,8 @@
             const missionData = {};
             ALL_MISSIONS.forEach((mid, i) => { missionData[mid] = missionSnaps[i].val() || {}; });
             const tarea = missionData['tarea-cuento-1'] || {};
+            const tareaArgumentacion = missionData['tarea-argumentacion-1'] || {};
+            const tareaDistractores = missionData['tarea-distractores-1'] || {};
 
             // Filter sessions by programa
             const allSes = [];
@@ -385,6 +393,8 @@
                 totalMissions: ALL_MISSIONS.length,
                 cuentoWords: tarea.palabras || 0,
                 cuentoTitleWords: (tarea.titulo || '').trim().split(/\s+/).filter(w=>w).length,
+                argumentacionCompleted: !!tareaArgumentacion.completada,
+                distractoresCompleted: !!tareaDistractores.completada,
                 rankPos,
                 timestamps,
                 arenaTotalBattles,
@@ -392,6 +402,7 @@
                 arenaMaxStreak
             };
         }
+
 
         // ============ CHECK & AWARD ============
         async function checkAndAward(uid, data) {

@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mision: Columna de Opinion - Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:'Inter',system-ui,sans-serif;
+            min-height:100vh;
+            color:#f8fafc;
+            background:
+                radial-gradient(circle at top left, rgba(14,165,233,.18), transparent 28%),
+                radial-gradient(circle at top right, rgba(251,146,60,.14), transparent 32%),
+                linear-gradient(180deg, #14213d 0%, #0b1220 52%, #090f1a 100%);
+        }
+        .top-bar {
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+            padding:14px 20px; background:rgba(9,15,26,.82); backdrop-filter:blur(10px);
+            position:sticky; top:0; z-index:50; border-bottom:1px solid rgba(255,255,255,.08);
+        }
+        .back-link {
+            color:#cbd5e1; text-decoration:none; font-size:14px; font-weight:600;
+            display:flex; align-items:center; gap:6px; transition:color .2s;
+        }
+        .back-link:hover { color:#fff; }
+        .top-right { display:flex; align-items:center; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+        .top-pill {
+            padding:5px 14px; border-radius:999px; font-size:12px; font-weight:700;
+            border:1px solid rgba(255,255,255,.08); white-space:nowrap;
+        }
+        .progress-pill { background:rgba(251,146,60,.12); color:#fdba74; }
+        .word-pill { background:rgba(255,255,255,.08); color:#cbd5e1; }
+        .xp-pill { background:linear-gradient(135deg,#f97316,#facc15); color:#111827; }
+        .loading-screen { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+        .spinner {
+            width:42px; height:42px; border-radius:50%;
+            border:4px solid rgba(255,255,255,.08); border-top-color:#f97316;
+            animation:spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        .hero {
+            max-width:1040px; margin:0 auto; padding:34px 20px 22px;
+        }
+        .hero-shell {
+            position:relative; overflow:hidden;
+            background:linear-gradient(135deg, rgba(15,23,42,.9), rgba(30,41,59,.82));
+            border:1px solid rgba(255,255,255,.08); border-radius:28px; padding:28px;
+            box-shadow:0 18px 45px rgba(0,0,0,.22);
+        }
+        .hero-shell::before {
+            content:''; position:absolute; inset:auto -90px -110px auto; width:280px; height:280px;
+            background:radial-gradient(circle, rgba(251,146,60,.2) 0%, transparent 70%);
+            pointer-events:none;
+        }
+        .hero-kicker {
+            display:inline-flex; align-items:center; gap:8px; margin-bottom:14px;
+            padding:6px 12px; border-radius:999px; font-size:11px; font-weight:800;
+            text-transform:uppercase; letter-spacing:.08em;
+            background:rgba(14,165,233,.12); color:#7dd3fc; border:1px solid rgba(14,165,233,.2);
+        }
+        .hero-grid {
+            display:grid; grid-template-columns:minmax(0,1.5fr) minmax(260px,.9fr); gap:22px; align-items:start;
+        }
+        .hero h1 { font-size:30px; font-weight:800; line-height:1.08; margin-bottom:10px; }
+        .hero p { color:#cbd5e1; font-size:14px; line-height:1.7; max-width:700px; }
+        .hero-tags { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
+        .hero-tag {
+            padding:7px 12px; border-radius:999px; font-size:12px; font-weight:700;
+            background:rgba(255,255,255,.06); color:#e2e8f0; border:1px solid rgba(255,255,255,.08);
+        }
+        .hero-side {
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:20px;
+            padding:18px;
+        }
+        .hero-side h2 { font-size:14px; font-weight:800; margin-bottom:10px; color:#fdba74; }
+        .hero-side ul { padding-left:18px; }
+        .hero-side li { font-size:12px; line-height:1.55; color:#cbd5e1; margin-bottom:8px; }
+        .missions-bar {
+            max-width:1040px; margin:0 auto; padding:0 20px 10px;
+            display:flex; gap:8px; overflow-x:auto;
+        }
+        .mission-chip {
+            flex-shrink:0; padding:8px 14px; border-radius:999px; font-size:11px; font-weight:700;
+            border:1px solid rgba(255,255,255,.08); background:rgba(255,255,255,.04); color:#64748b;
+            white-space:nowrap; transition:all .25s;
+        }
+        .mission-chip.done { color:#fde68a; border-color:rgba(250,204,21,.25); background:rgba(250,204,21,.08); }
+        .mission-chip.active { color:#7dd3fc; border-color:rgba(14,165,233,.24); background:rgba(14,165,233,.08); }
+        .main-content {
+            max-width:1040px; margin:0 auto; padding:12px 20px 42px;
+            display:grid; grid-template-columns:minmax(0,1fr) 320px; gap:20px;
+        }
+        .stack { display:flex; flex-direction:column; gap:18px; }
+        .panel {
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08);
+            border-radius:22px; padding:22px;
+        }
+        .panel-title { font-size:15px; font-weight:800; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+        .panel-copy { font-size:13px; color:#cbd5e1; line-height:1.65; margin-bottom:16px; }
+        .dossier-grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px; }
+        .dossier-card {
+            background:rgba(15,23,42,.55); border:1px solid rgba(255,255,255,.07);
+            border-radius:18px; padding:16px;
+        }
+        .dossier-card h3 { font-size:13px; font-weight:800; margin-bottom:8px; color:#f8fafc; }
+        .dossier-card p, .dossier-card li { font-size:12px; line-height:1.6; color:#cbd5e1; }
+        .dossier-card ul { padding-left:18px; }
+        .dossier-card li + li { margin-top:6px; }
+        .warning-card {
+            background:linear-gradient(135deg, rgba(249,115,22,.12), rgba(234,179,8,.1));
+            border:1px solid rgba(251,146,60,.24);
+        }
+        .research-grid, .planner-grid {
+            display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:12px;
+        }
+        .field-card {
+            background:rgba(15,23,42,.55); border:1px solid rgba(255,255,255,.07);
+            border-radius:18px; padding:16px;
+        }
+        .field-card.full { grid-column:1 / -1; }
+        .field-label {
+            display:block; font-size:12px; font-weight:800; color:#f8fafc; margin-bottom:8px;
+            text-transform:uppercase; letter-spacing:.04em;
+        }
+        .field-help { font-size:11px; color:#94a3b8; line-height:1.5; margin-top:-2px; margin-bottom:10px; }
+        .field-input {
+            width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.08);
+            background:rgba(255,255,255,.04); color:#f8fafc; font-family:inherit;
+            padding:12px 14px; font-size:14px; line-height:1.6; transition:border-color .2s, background .2s;
+        }
+        .field-input:focus { outline:none; border-color:#f97316; background:rgba(255,255,255,.06); }
+        .field-input::placeholder { color:#64748b; }
+        textarea.field-input { min-height:120px; resize:vertical; }
+        textarea.field-input.compact { min-height:88px; }
+        .essay-textarea { min-height:360px; }
+        .requirements {
+            display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-top:14px;
+        }
+        .requirement-item {
+            background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06);
+            border-radius:14px; padding:12px 14px; font-size:12px; line-height:1.55; color:#cbd5e1;
+        }
+        .checklist-grid {
+            display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px; margin-top:12px;
+        }
+        .check-item {
+            border-radius:14px; padding:11px 14px; font-size:12px; line-height:1.55; font-weight:700;
+            border:1px solid rgba(255,255,255,.08);
+        }
+        .check-item.ok {
+            background:rgba(34,197,94,.12); border-color:rgba(74,222,128,.24); color:#bbf7d0;
+        }
+        .check-item.pending {
+            background:rgba(15,23,42,.62); border-color:rgba(255,255,255,.08); color:#cbd5e1;
+        }
+        .warning-box {
+            margin-top:12px; padding:13px 15px; border-radius:16px;
+            background:linear-gradient(135deg, rgba(239,68,68,.14), rgba(249,115,22,.12));
+            border:1px solid rgba(248,113,113,.25); color:#fecaca; font-size:12px; line-height:1.6; font-weight:800;
+        }
+        .counters { display:flex; flex-wrap:wrap; gap:14px; margin-top:14px; }
+        .counter-item { font-size:12px; color:#94a3b8; }
+        .counter-item span { color:#f8fafc; font-weight:700; }
+        .save-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+        .btn-save, .btn-submit {
+            border:none; border-radius:14px; padding:14px 28px; font-size:15px; font-weight:800;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s, opacity .2s;
+        }
+        .btn-save {
+            background:linear-gradient(135deg,#0ea5e9,#38bdf8); color:#082f49;
+            box-shadow:0 12px 28px rgba(14,165,233,.22);
+        }
+        .btn-submit {
+            background:linear-gradient(135deg,#f97316,#facc15); color:#111827;
+            box-shadow:0 12px 28px rgba(249,115,22,.24);
+        }
+        .btn-save:hover, .btn-submit:hover { transform:translateY(-2px); }
+        .btn-save:disabled, .btn-submit:disabled {
+            opacity:.45; cursor:not-allowed; transform:none; box-shadow:none;
+        }
+        .save-status { font-size:12px; color:#94a3b8; }
+        .submitted-banner {
+            background:linear-gradient(135deg,#14532d,#166534); border:1px solid rgba(74,222,128,.25);
+            border-radius:18px; padding:22px; text-align:center;
+        }
+        .submitted-banner .icon { font-size:46px; margin-bottom:8px; }
+        .submitted-banner h2 { font-size:18px; font-weight:800; color:#bbf7d0; margin-bottom:4px; }
+        .submitted-banner p { font-size:13px; color:#dcfce7; }
+        .reward-note {
+            margin-top:12px; display:inline-flex; align-items:center; gap:8px; flex-wrap:wrap;
+            padding:9px 14px; border-radius:999px; font-size:12px; font-weight:800;
+            background:rgba(250,204,21,.14); color:#fde68a; border:1px solid rgba(250,204,21,.24);
+        }
+        .sidebar { display:flex; flex-direction:column; gap:18px; }
+        .progress-card {
+            position:sticky; top:74px;
+            background:rgba(15,23,42,.68); border:1px solid rgba(255,255,255,.08);
+            border-radius:22px; padding:20px;
+        }
+        .progress-card h3 { font-size:14px; font-weight:800; margin-bottom:12px; }
+        .progress-bar-bg { background:rgba(255,255,255,.08); border-radius:999px; height:12px; overflow:hidden; }
+        .progress-bar-fill {
+            height:100%; border-radius:999px; background:linear-gradient(90deg,#0ea5e9,#f97316,#facc15);
+            transition:width .35s ease;
+        }
+        .progress-labels { display:flex; justify-content:space-between; gap:12px; font-size:11px; color:#94a3b8; margin-top:6px; }
+        .milestones-title {
+            font-size:11px; font-weight:800; color:#94a3b8; letter-spacing:.08em; text-transform:uppercase; margin:18px 0 10px;
+        }
+        .milestone {
+            display:flex; gap:12px; align-items:flex-start; padding:12px 14px; border-radius:16px;
+            background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); margin-bottom:8px;
+            transition:all .25s;
+        }
+        .milestone.reached { border-color:rgba(250,204,21,.28); background:rgba(250,204,21,.07); }
+        .milestone.next { border-color:rgba(14,165,233,.22); background:rgba(14,165,233,.05); }
+        .milestone-icon { width:34px; font-size:22px; text-align:center; flex-shrink:0; }
+        .milestone-info { flex:1; min-width:0; }
+        .milestone-name { font-size:13px; font-weight:800; margin-bottom:2px; }
+        .milestone-desc { font-size:11px; color:#94a3b8; line-height:1.5; }
+        .milestone-xp { font-size:12px; font-weight:800; color:#fdba74; white-space:nowrap; }
+        .milestone.reached .milestone-xp { color:#fde68a; }
+        .sidebar-list { padding-left:18px; }
+        .sidebar-list li { font-size:12px; line-height:1.6; color:#cbd5e1; margin-bottom:8px; }
+        .toast {
+            position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
+            background:#0f172a; color:#fff; border:1px solid rgba(255,255,255,.1); border-radius:14px;
+            padding:12px 24px; font-size:13px; font-weight:700; opacity:0; pointer-events:none;
+            transition:transform .35s ease, opacity .25s; z-index:120;
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        .chest-overlay {
+            position:fixed; inset:0; display:flex; align-items:center; justify-content:center;
+            padding:20px; background:rgba(2,6,23,.68); backdrop-filter:blur(8px);
+            opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:160;
+        }
+        .chest-overlay.show { opacity:1; }
+        .chest-scene {
+            position:relative; width:min(92vw, 460px); padding:30px 24px 26px; text-align:center;
+            background:linear-gradient(180deg, rgba(15,23,42,.96), rgba(30,41,59,.94));
+            border:1px solid rgba(255,255,255,.1); border-radius:28px; box-shadow:0 24px 70px rgba(0,0,0,.35);
+            overflow:hidden;
+        }
+        .chest-scene::before {
+            content:''; position:absolute; inset:-30% 20% auto; height:220px;
+            background:radial-gradient(circle, rgba(250,204,21,.22) 0%, transparent 70%);
+            animation:rewardPulse 2s ease-in-out infinite;
+        }
+        .chest-title { position:relative; font-size:22px; font-weight:800; margin-bottom:6px; }
+        .chest-copy { position:relative; font-size:13px; line-height:1.6; color:#cbd5e1; max-width:320px; margin:0 auto 18px; }
+        .chest-box { position:relative; width:150px; height:118px; margin:0 auto 12px; }
+        .chest-glow {
+            position:absolute; left:50%; top:10px; width:150px; height:150px; transform:translateX(-50%);
+            background:radial-gradient(circle, rgba(250,204,21,.42) 0%, rgba(251,191,36,.18) 34%, transparent 72%);
+            filter:blur(4px); animation:rewardPulse 1.6s ease-in-out infinite;
+        }
+        .chest-rays {
+            position:absolute; left:50%; top:14px; width:170px; height:170px; transform:translateX(-50%);
+            background:conic-gradient(from 0deg, rgba(250,204,21,.0) 0 8%, rgba(250,204,21,.42) 8% 12%, rgba(250,204,21,.0) 12% 20%, rgba(250,204,21,.3) 20% 24%, rgba(250,204,21,.0) 24% 32%, rgba(250,204,21,.42) 32% 36%, rgba(250,204,21,.0) 36% 44%, rgba(250,204,21,.28) 44% 48%, rgba(250,204,21,.0) 48% 56%, rgba(250,204,21,.42) 56% 60%, rgba(250,204,21,.0) 60% 68%, rgba(250,204,21,.28) 68% 72%, rgba(250,204,21,.0) 72% 80%, rgba(250,204,21,.42) 80% 84%, rgba(250,204,21,.0) 84% 100%);
+            mask:radial-gradient(circle, transparent 0 34%, #000 36% 60%, transparent 62%);
+            animation:raySpin 5s linear infinite;
+        }
+        .chest-base {
+            position:absolute; left:50%; bottom:4px; width:122px; height:62px; transform:translateX(-50%);
+            border-radius:16px 16px 22px 22px; background:linear-gradient(180deg,#9a3412,#7c2d12);
+            border:3px solid #f59e0b; box-shadow:0 16px 28px rgba(0,0,0,.28);
+        }
+        .chest-base::before, .chest-base::after {
+            content:''; position:absolute; top:10px; width:18px; height:42px; border-radius:10px;
+            background:linear-gradient(180deg,#facc15,#b45309);
+        }
+        .chest-base::before { left:18px; }
+        .chest-base::after { right:18px; }
+        .chest-lid {
+            position:absolute; left:50%; top:14px; width:132px; height:44px; transform:translateX(-50%) rotate(-24deg);
+            transform-origin:center bottom; border-radius:18px 18px 12px 12px;
+            background:linear-gradient(180deg,#c2410c,#9a3412); border:3px solid #f59e0b;
+            animation:chestOpen 1.2s cubic-bezier(.2,.7,.2,1) forwards;
+        }
+        .chest-lid::before {
+            content:''; position:absolute; inset:8px 12px auto; height:10px; border-radius:999px;
+            background:rgba(250,204,21,.52);
+        }
+        .chest-lock {
+            position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+            width:18px; height:22px; border-radius:8px; background:linear-gradient(180deg,#fde68a,#f59e0b);
+            border:2px solid rgba(120,53,15,.6); z-index:2;
+        }
+        .shield-token {
+            position:absolute; left:50%; top:12px; width:170px; height:118px; transform:translateX(-50%);
+            animation:shieldRise 1.2s cubic-bezier(.18,.9,.25,1) forwards;
+        }
+        .shield-body {
+            position:absolute; left:50%; top:12px; width:86px; height:100px; transform:translateX(-50%);
+            background:linear-gradient(180deg,#dbeafe,#60a5fa 42%,#1d4ed8 100%);
+            border:3px solid rgba(191,219,254,.94);
+            clip-path:polygon(50% 0%, 92% 16%, 84% 72%, 50% 100%, 16% 72%, 8% 16%);
+            box-shadow:0 12px 28px rgba(96,165,250,.24);
+        }
+        .shield-body::before {
+            content:''; position:absolute; inset:10px 12px 16px; border:2px solid rgba(239,246,255,.68);
+            clip-path:polygon(50% 0%, 90% 14%, 82% 70%, 50% 100%, 18% 70%, 10% 14%);
+        }
+        .shield-core {
+            position:absolute; left:50%; top:42px; width:24px; height:24px; transform:translateX(-50%);
+            border-radius:50%; background:radial-gradient(circle, #f8fafc 0%, #bfdbfe 38%, #2563eb 100%);
+            box-shadow:0 0 0 6px rgba(255,255,255,.12);
+        }
+        .shield-rim {
+            position:absolute; left:50%; top:6px; width:112px; height:112px; transform:translateX(-50%);
+            border-radius:50%; border:2px solid rgba(125,211,252,.36);
+            box-shadow:0 0 24px rgba(125,211,252,.22);
+        }
+        .reward-card {
+            position:relative; margin-top:18px; padding:16px 18px; border-radius:20px;
+            background:rgba(250,204,21,.08); border:1px solid rgba(250,204,21,.22);
+        }
+        .reward-card h3 { font-size:18px; font-weight:800; color:#fde68a; margin-bottom:4px; }
+        .reward-card p { font-size:13px; color:#e2e8f0; line-height:1.6; }
+        .reward-card .small { color:#fcd34d; font-size:12px; font-weight:700; margin-top:8px; }
+        @keyframes rewardPulse {
+            0%,100% { transform:scale(.96); opacity:.7; }
+            50% { transform:scale(1.05); opacity:1; }
+        }
+        @keyframes raySpin {
+            from { transform:translateX(-50%) rotate(0deg); }
+            to { transform:translateX(-50%) rotate(360deg); }
+        }
+        @keyframes chestOpen {
+            0% { transform:translateX(-50%) rotate(0deg); }
+            35% { transform:translateX(-50%) rotate(-8deg); }
+            100% { transform:translateX(-50%) rotate(-24deg); }
+        }
+        @keyframes shieldRise {
+            0% { transform:translateX(-50%) translateY(50px) scale(.82); opacity:0; }
+            30% { opacity:1; }
+            100% { transform:translateX(-50%) translateY(-10px) scale(1); opacity:1; }
+        }
+        @media (max-width:960px) {
+            .hero-grid, .main-content, .dossier-grid, .research-grid, .planner-grid, .requirements { grid-template-columns:1fr; }
+            .progress-card { position:static; }
+        }
+        @media (max-width:560px) {
+            .top-bar { padding:12px 14px; }
+            .hero { padding:22px 14px 16px; }
+            .hero-shell, .panel, .progress-card { padding:18px; border-radius:20px; }
+            .hero h1 { font-size:24px; }
+            .main-content, .missions-bar { padding-left:14px; padding-right:14px; }
+            .save-row { flex-direction:column; align-items:stretch; }
+            .btn-save, .btn-submit { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-right">
+            <span class="top-pill progress-pill" id="progressPill">0/7 hitos</span>
+            <span class="top-pill word-pill" id="wordPill">0 palabras</span>
+            <span class="top-pill xp-pill" id="xpPill">+0 XP</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="hero-shell">
+                <div class="hero-kicker">Mision secundaria · Unidad 2</div>
+                <div class="hero-grid">
+                    <div>
+                        <h1>Columna de opinion: el celular en clases</h1>
+                        <p>Recibirás un caso con datos, tensiones y posturas cruzadas. Tu trabajo es investigar por tu cuenta que significan <strong>tesis</strong>, <strong>argumento</strong>, <strong>contraargumento</strong>, <strong>evidencia</strong>, <strong>marcadores discursivos</strong> y <strong>conclusion</strong>, ordenar una postura y redactar una columna de opinion completa.</p>
+                        <div class="hero-tags">
+                            <span class="hero-tag">30-40 minutos de trabajo real</span>
+                            <span class="hero-tag">2 argumentos obligatorios</span>
+                            <span class="hero-tag">Minimo 420 palabras</span>
+                            <span class="hero-tag">Hasta 600 XP</span>
+                        </div>
+                    </div>
+                    <div class="hero-side">
+                        <h2>Entrega minima</h2>
+                        <ul>
+                            <li>6 conceptos investigados y explicados con tus palabras.</li>
+                            <li>Tesis clara mas 2 argumentos con evidencia y desarrollo.</li>
+                            <li>Una objecion reconocida y respondida dentro del plan.</li>
+                            <li>Texto final de 4 parrafos o mas con al menos 2 marcadores discursivos.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="missions-bar" id="missionsBar"></div>
+
+        <div class="main-content">
+            <div class="stack">
+                <div id="submittedBanner" style="display:none"></div>
+
+                <section class="panel">
+                    <div class="panel-title">🗂️ Dossier del caso</div>
+                    <div class="panel-copy">El consejo escolar evaluara la proxima semana si el liceo debe implementar una politica comun para el uso del celular durante la jornada. No se trata de repetir opiniones sueltas: debes convertir estos datos en una postura argumentada.</div>
+                    <div class="dossier-grid">
+                        <article class="dossier-card">
+                            <h3>Contexto</h3>
+                            <p>Hoy cada profesor decide su propia regla. En algunas clases el celular se usa para buscar informacion, diccionario o fotografiar apuntes; en otras se guarda por completo para evitar distracciones y conflictos de convivencia.</p>
+                        </article>
+                        <article class="dossier-card">
+                            <h3>Encuesta a 180 estudiantes</h3>
+                            <ul>
+                                <li>68% reconoce revisar el celular al menos una vez por clase.</li>
+                                <li>54% dice que le sirve para tareas rapidas, diccionario o calculadora.</li>
+                                <li>46% admite que una notificacion le hace perder el hilo de la explicacion.</li>
+                            </ul>
+                        </article>
+                        <article class="dossier-card">
+                            <h3>Registro de docentes</h3>
+                            <ul>
+                                <li>73% reporto interrupciones semanales por notificaciones, grabaciones o mensajes.</li>
+                                <li>En 3 cursos piloto, una regla de uso solo con autorizacion redujo las interrupciones de 11 a 4 por semana.</li>
+                                <li>En actividades guiadas con celular, la participacion oral subio 18%.</li>
+                            </ul>
+                        </article>
+                        <article class="dossier-card">
+                            <h3>Convivencia y propuestas</h3>
+                            <ul>
+                                <li>En 2 meses hubo 9 reportes por grabaciones o publicaciones sin permiso.</li>
+                                <li>El centro de estudiantes rechaza la prohibicion total y propone horarios y usos definidos.</li>
+                                <li>Biblioteca sugiere educacion digital y criterios claros, no solo castigos.</li>
+                            </ul>
+                        </article>
+                    </div>
+                </section>
+
+                <section class="panel warning-card">
+                    <div class="panel-title">🧭 Desafio de investigacion</div>
+                    <div class="panel-copy">Esta mision no trae glosario. Debes descubrir por tu cuenta que significa cada concepto y escribirlo con tus propias palabras. Si solo repites definiciones, tu columna queda hueca; si las entiendes, la postura gana fuerza y precision.</div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">📚 Paso 1: investiga los conceptos</div>
+                    <div class="panel-copy">Completa estas tarjetas despues de investigar. No basta una palabra suelta: explica cada concepto con una idea clara y util para planear tu propia columna.</div>
+                    <div class="research-grid">
+                        <div class="field-card">
+                            <label class="field-label" for="conceptTesis">Tesis</label>
+                            <textarea class="field-input compact js-lockable" id="conceptTesis" placeholder="Escribe lo que descubriste sobre tesis..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="conceptBase">Argumento</label>
+                            <textarea class="field-input compact js-lockable" id="conceptBase" placeholder="Escribe lo que descubriste sobre argumento..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="conceptGarantia">Contraargumento</label>
+                            <textarea class="field-input compact js-lockable" id="conceptGarantia" placeholder="Escribe lo que descubriste sobre contraargumento..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="conceptRespaldo">Evidencia</label>
+                            <textarea class="field-input compact js-lockable" id="conceptRespaldo" placeholder="Escribe lo que descubriste sobre evidencia..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="conceptDesarrollo">Marcadores discursivos</label>
+                            <textarea class="field-input compact js-lockable" id="conceptDesarrollo" placeholder="Escribe lo que descubriste sobre marcadores discursivos..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="conceptConclusion">Conclusion</label>
+                            <textarea class="field-input compact js-lockable" id="conceptConclusion" placeholder="Escribe lo que descubriste sobre conclusion..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">🧱 Paso 2: arma tu columna</div>
+                    <div class="panel-copy">Ordena tu postura antes de redactar. Aqui se ve si realmente entendiste la estructura de una columna de opinion y no solo sus nombres.</div>
+                    <div class="planner-grid">
+                        <div class="field-card full">
+                            <label class="field-label" for="planTesis">Tu tesis</label>
+                            <div class="field-help">Debe responder al caso: que politica defenderas frente al uso del celular en clases.</div>
+                            <textarea class="field-input compact js-lockable" id="planTesis" placeholder="Ejemplo de forma, no de contenido: 'Sostengo que...' o 'Considero que el liceo deberia...'"></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg1Base">Argumento 1: idea fuerza</label>
+                            <textarea class="field-input compact js-lockable" id="arg1Base" placeholder="Escribe la razon principal del argumento 1..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg1Garantia">Argumento 1: evidencia</label>
+                            <textarea class="field-input compact js-lockable" id="arg1Garantia" placeholder="Dato, ejemplo o hecho que sostiene el argumento 1..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg1Respaldo">Argumento 1: desarrollo</label>
+                            <textarea class="field-input compact js-lockable" id="arg1Respaldo" placeholder="Explica como esa evidencia fortalece tu tesis..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg2Base">Argumento 2: idea fuerza</label>
+                            <textarea class="field-input compact js-lockable" id="arg2Base" placeholder="Escribe la razon principal del argumento 2..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg2Garantia">Argumento 2: evidencia</label>
+                            <textarea class="field-input compact js-lockable" id="arg2Garantia" placeholder="Dato, ejemplo o hecho que sostiene el argumento 2..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="arg2Respaldo">Argumento 2: desarrollo</label>
+                            <textarea class="field-input compact js-lockable" id="arg2Respaldo" placeholder="Explica como esa evidencia fortalece tu tesis..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="planObjecion">Objecion y respuesta</label>
+                            <textarea class="field-input compact js-lockable" id="planObjecion" placeholder="Que diria alguien que no comparte tu postura y como responderias esa objecion..."></textarea>
+                        </div>
+                        <div class="field-card">
+                            <label class="field-label" for="planConclusion">Conclusion prevista</label>
+                            <textarea class="field-input compact js-lockable" id="planConclusion" placeholder="Idea final con la que quieres cerrar tu texto..."></textarea>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">✍️ Paso 3: redacta el texto final</div>
+                    <div class="panel-copy">Ahora escribe tu version final. Debe verse la tesis al inicio, dos argumentos desarrollados con evidencia, una objecion respondida y una conclusion clara al cierre.</div>
+                    <div class="field-card full" style="padding:0;background:none;border:none;">
+                        <label class="field-label" for="essayTitle">Titulo de tu columna</label>
+                        <input class="field-input js-lockable" id="essayTitle" type="text" maxlength="120" placeholder="Escribe un titulo preciso y serio para tu columna de opinion...">
+                    </div>
+                    <div class="field-card full" style="margin-top:12px;">
+                        <label class="field-label" for="finalEssay">Texto final</label>
+                        <div class="field-help">Sugerencia de orden: introduccion con tesis, argumento 1, argumento 2, objecion respondida y conclusion. Procura usar marcadores como “sin embargo”, “por eso” o “en otras palabras”.</div>
+                        <textarea class="field-input essay-textarea js-lockable" id="finalEssay" placeholder="Redacta aqui tu columna de opinion final..."></textarea>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirement-item">Titulo obligatorio: sin titulo, el boton de entrega no se habilita.</div>
+                        <div class="requirement-item">Investigacion completa: debes llenar los 6 conceptos antes de enviar.</div>
+                        <div class="requirement-item">Plan completo: tesis, 2 argumentos con evidencia y desarrollo, objecion y conclusion.</div>
+                        <div class="requirement-item">Texto final minimo: 420 palabras y 4 parrafos.</div>
+                    </div>
+                    <div class="checklist-grid">
+                        <div class="check-item pending" id="checkTitle">Pendiente: titulo de la columna</div>
+                        <div class="check-item pending" id="checkResearch">Pendiente: 6 conceptos investigados</div>
+                        <div class="check-item pending" id="checkPlan">Pendiente: plan argumentativo 9/9</div>
+                        <div class="check-item pending" id="checkEssay">Pendiente: 420 palabras y 4 parrafos</div>
+                    </div>
+                    <div class="warning-box">⚠️ Trampa significará perder todos tus puntos.</div>
+                    <div class="counters">
+                        <div class="counter-item">Palabras: <span id="wordCount">0</span></div>
+                        <div class="counter-item">Caracteres: <span id="charCount">0</span></div>
+                        <div class="counter-item">Parrafos: <span id="paraCount">0</span></div>
+                        <div class="counter-item">Conceptos listos: <span id="conceptCount">0/6</span></div>
+                        <div class="counter-item">Plan listo: <span id="planCount">0/9</span></div>
+                    </div>
+                </section>
+
+                <div class="panel">
+                    <div class="panel-title">📝 Antes de entregar</div>
+                    <ul class="sidebar-list">
+                        <li>No copies y pegues definiciones: reformulalas con tus palabras.</li>
+                        <li>No basta nombrar un dato; debes conectarlo con tu tesis y desarrollarlo.</li>
+                        <li>Si incluyes una objecion, respondela con claridad y no la dejes flotando.</li>
+                        <li>Lee tu texto al final y revisa si la conclusion responde a la tesis inicial y si usaste marcadores para ordenar el recorrido.</li>
+                    </ul>
+                </div>
+
+                <div class="save-row" id="saveRow">
+                    <button class="btn-save" id="btnDraft" onclick="saveDraft()">💾 Guardar borrador</button>
+                    <button class="btn-submit" id="btnSubmit" onclick="submitMission()" disabled>📤 Entregar columna</button>
+                    <span class="save-status" id="saveStatus"></span>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="progress-card">
+                    <h3>Progreso de la mision</h3>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+                    <div class="progress-labels"><span id="progressLabel">0 palabras</span><span>Meta maxima: 700+</span></div>
+
+                    <div class="milestones-title">Hitos de experiencia</div>
+                    <div id="milestonesList"></div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <div class="chest-overlay" id="rewardChest">
+        <div class="chest-scene">
+            <div class="chest-title">¡Cofre desbloqueado!</div>
+            <div class="chest-copy">Completaste correctamente la mision secundaria de Unidad 2 y abriste un premio exclusivo para la Arena.</div>
+            <div class="chest-box">
+                <div class="chest-glow"></div>
+                <div class="chest-rays"></div>
+                <div class="shield-token">
+                    <div class="shield-rim"></div>
+                    <div class="shield-body"></div>
+                    <div class="shield-core"></div>
+                </div>
+                <div class="chest-lid"></div>
+                <div class="chest-base"></div>
+                <div class="chest-lock"></div>
+            </div>
+            <div class="reward-card">
+                <h3>🛡️ Escudo de apertura</h3>
+                <p>En la Arena, el primer golpe que recibas no te hará daño. El escudo se rompe de inmediato y desaparece por el resto del combate.</p>
+                <div class="small">Logro nuevo: Tesoro del Argumento · +80 XP extra</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+            authDomain: "estudiacest.firebaseapp.com",
+            databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+            projectId: "estudiacest",
+            storageBucket: "estudiacest.firebasestorage.app",
+            messagingSenderId: "999002169815",
+            appId: "1:999002169815:web:51203237bc77c2e74deb92"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        const IS_LOCAL_PREVIEW = window.location.protocol === 'file:';
+        initStudentForcedRefresh({ auth, db, base: BASE });
+        const TASK_ID = 'tarea-argumentacion-1';
+        const MIN_WORDS = 420;
+        const TARGET_WORDS = 700;
+        const SPECIAL_ACHIEVEMENT = { id: 'argument_treasure', xp: 80 };
+
+        const RESEARCH_FIELDS = [
+            'conceptTesis',
+            'conceptBase',
+            'conceptGarantia',
+            'conceptRespaldo',
+            'conceptDesarrollo',
+            'conceptConclusion'
+        ];
+        const PLAN_FIELDS = [
+            'planTesis',
+            'arg1Base',
+            'arg1Garantia',
+            'arg1Respaldo',
+            'arg2Base',
+            'arg2Garantia',
+            'arg2Respaldo',
+            'planObjecion',
+            'planConclusion'
+        ];
+        const INPUT_FIELDS = ['essayTitle', 'finalEssay'].concat(RESEARCH_FIELDS, PLAN_FIELDS);
+        const MILESTONES = [
+            { id:'ms1', emoji:'🧭', name:'Rastreador de conceptos', desc:'Completa 3 conceptos clave de la columna de opinion', xp:40, isReached:(state) => state.researchCount >= 3 },
+            { id:'ms2', emoji:'📚', name:'Marco conceptual armado', desc:'Completa los 6 conceptos del genero argumentativo', xp:60, isReached:(state) => state.researchCount === RESEARCH_FIELDS.length },
+            { id:'ms3', emoji:'🧱', name:'Esqueleto argumentativo', desc:'Completa tesis, 2 argumentos, objecion y cierre', xp:90, isReached:(state) => state.planCount === PLAN_FIELDS.length },
+            { id:'ms4', emoji:'📝', name:'Borrador serio', desc:'Redacta 250 palabras en el texto final', xp:70, isReached:(state) => state.wordCount >= 250 },
+            { id:'ms5', emoji:'⚖️', name:'Defensa en desarrollo', desc:'Llega a 420 palabras y 4 parrafos', xp:100, isReached:(state) => state.wordCount >= MIN_WORDS && state.paragraphCount >= 4 },
+            { id:'ms6', emoji:'🔥', name:'Argumentacion robusta', desc:'Alcanza 550 palabras', xp:110, isReached:(state) => state.wordCount >= 550 },
+            { id:'ms7', emoji:'👑', name:'Columna completa', desc:'Supera las 700 palabras', xp:130, isReached:(state) => state.wordCount >= TARGET_WORDS }
+        ];
+
+        function getLevel(totalXP) {
+            return AvatarSystem.getLevel(totalXP);
+        }
+
+        let currentUID = null;
+        let studentData = null;
+        let isSubmitted = false;
+        let autoSaveTimer = null;
+        let chestTimer = null;
+
+        function getValue(id) {
+            const el = document.getElementById(id);
+            return el ? el.value.trim() : '';
+        }
+
+        function countWords(text) {
+            return text.trim().split(/\s+/).filter(Boolean).length;
+        }
+
+        function countParagraphs(text) {
+            return text.split(/\n+/).map(part => part.trim()).filter(Boolean).length;
+        }
+
+        function countSentences(text) {
+            const matches = text.match(/[^.!?]+[.!?]+/g);
+            return matches ? matches.length : 0;
+        }
+
+        function buildFallbackTitle() {
+            const thesis = getValue('planTesis') || getValue('finalEssay').split(/[.!?\n]/)[0] || '';
+            const compact = thesis.replace(/\s+/g, ' ').trim();
+            if (compact) return compact.slice(0, 80);
+            return 'Columna de opinion';
+        }
+
+        function countFilled(ids) {
+            return ids.filter(id => getValue(id).length > 0).length;
+        }
+
+        function collectResearch() {
+            return {
+                tesis: getValue('conceptTesis'),
+                base: getValue('conceptBase'),
+                garantia: getValue('conceptGarantia'),
+                respaldo: getValue('conceptRespaldo'),
+                desarrollo: getValue('conceptDesarrollo'),
+                conclusion: getValue('conceptConclusion')
+            };
+        }
+
+        function collectPlan() {
+            return {
+                tesis: getValue('planTesis'),
+                argumento_1: {
+                    base: getValue('arg1Base'),
+                    garantia: getValue('arg1Garantia'),
+                    respaldo: getValue('arg1Respaldo')
+                },
+                argumento_2: {
+                    base: getValue('arg2Base'),
+                    garantia: getValue('arg2Garantia'),
+                    respaldo: getValue('arg2Respaldo')
+                },
+                objecion: getValue('planObjecion'),
+                conclusion: getValue('planConclusion')
+            };
+        }
+
+        function getState() {
+            const finalEssay = getValue('finalEssay');
+            const wordCount = countWords(finalEssay);
+            const paragraphCount = countParagraphs(finalEssay);
+            const sentenceCount = countSentences(finalEssay);
+            const researchCount = countFilled(RESEARCH_FIELDS);
+            const planCount = countFilled(PLAN_FIELDS);
+            const chars = document.getElementById('finalEssay').value.length;
+            const title = getValue('essayTitle');
+            const normalizedTitle = title || buildFallbackTitle();
+            const structureReady = paragraphCount >= 4 || (wordCount >= MIN_WORDS && sentenceCount >= 8);
+
+            return {
+                title,
+                normalizedTitle,
+                finalEssay,
+                chars,
+                wordCount,
+                paragraphCount,
+                sentenceCount,
+                researchCount,
+                planCount,
+                structureReady,
+                canSubmit: wordCount >= MIN_WORDS && structureReady && researchCount === RESEARCH_FIELDS.length && planCount === PLAN_FIELDS.length
+            };
+        }
+
+        function calculateXP(state) {
+            let total = 0;
+            let completed = 0;
+            MILESTONES.forEach(m => {
+                if (m.isReached(state)) {
+                    total += m.xp;
+                    completed += 1;
+                }
+            });
+            return { total, completed };
+        }
+
+        function renderMilestones(state) {
+            const xpState = calculateXP(state);
+            const list = document.getElementById('milestonesList');
+            const bar = document.getElementById('missionsBar');
+            let html = '';
+            let chips = '';
+            let foundNext = false;
+
+            MILESTONES.forEach(m => {
+                const reached = m.isReached(state);
+                let cls = '';
+                if (reached) cls = 'reached';
+                else if (!foundNext) {
+                    cls = 'next';
+                    foundNext = true;
+                }
+
+                html += `<div class="milestone ${cls}">
+                    <div class="milestone-icon">${m.emoji}</div>
+                    <div class="milestone-info">
+                        <div class="milestone-name">${m.name}</div>
+                        <div class="milestone-desc">${m.desc}</div>
+                    </div>
+                    <div class="milestone-xp">${reached ? '✓ +' + m.xp + ' XP' : m.xp + ' XP'}</div>
+                </div>`;
+
+                let chipClass = '';
+                if (reached) chipClass = 'done';
+                else if (!foundNext && !reached) chipClass = 'active';
+                chips += `<div class="mission-chip ${chipClass}">${m.emoji} ${m.name}</div>`;
+            });
+
+            list.innerHTML = html;
+            bar.innerHTML = chips;
+            document.getElementById('progressPill').textContent = xpState.completed + '/' + MILESTONES.length + ' hitos';
+            document.getElementById('xpPill').textContent = '+' + xpState.total + ' XP';
+        }
+
+        function updateUI() {
+            const state = getState();
+            const xpState = calculateXP(state);
+
+            document.getElementById('wordCount').textContent = state.wordCount;
+            document.getElementById('charCount').textContent = state.chars;
+            document.getElementById('paraCount').textContent = state.paragraphCount;
+            document.getElementById('conceptCount').textContent = state.researchCount + '/6';
+            document.getElementById('planCount').textContent = state.planCount + '/9';
+            document.getElementById('wordPill').textContent = state.wordCount + ' palabras';
+            document.getElementById('progressLabel').textContent = state.wordCount + ' palabras';
+            document.getElementById('btnSubmit').disabled = isSubmitted || !state.canSubmit;
+
+            const titleReady = !!state.normalizedTitle;
+            const researchReady = state.researchCount === RESEARCH_FIELDS.length;
+            const planReady = state.planCount === PLAN_FIELDS.length;
+            const essayReady = state.wordCount >= MIN_WORDS && state.structureReady;
+
+            document.getElementById('checkTitle').className = 'check-item ' + (titleReady ? 'ok' : 'pending');
+            document.getElementById('checkTitle').textContent = state.title
+                ? 'Listo: titulo de la columna completo'
+                : 'Listo: titulo automatico desde tu tesis';
+
+            document.getElementById('checkResearch').className = 'check-item ' + (researchReady ? 'ok' : 'pending');
+            document.getElementById('checkResearch').textContent = researchReady
+                ? 'Listo: 6/6 conceptos investigados'
+                : 'Pendiente: conceptos investigados ' + state.researchCount + '/6';
+
+            document.getElementById('checkPlan').className = 'check-item ' + (planReady ? 'ok' : 'pending');
+            document.getElementById('checkPlan').textContent = planReady
+                ? 'Listo: plan argumentativo 9/9'
+                : 'Pendiente: plan argumentativo ' + state.planCount + '/9';
+
+            document.getElementById('checkEssay').className = 'check-item ' + (essayReady ? 'ok' : 'pending');
+            document.getElementById('checkEssay').textContent = essayReady
+                ? 'Listo: texto final con minimo cumplido'
+                : 'Pendiente: ' + state.wordCount + '/' + MIN_WORDS + ' palabras y ' + state.paragraphCount + '/4 parrafos (o 8 oraciones bien desarrolladas)';
+
+            const progressPct = Math.min(100, Math.round((state.wordCount / TARGET_WORDS) * 100));
+            document.getElementById('progressFill').style.width = progressPct + '%';
+
+            const wordPill = document.getElementById('wordPill');
+            wordPill.style.color = state.wordCount >= TARGET_WORDS ? '#fde68a' : state.wordCount >= MIN_WORDS ? '#f8fafc' : '#cbd5e1';
+
+            renderMilestones(state);
+
+            clearTimeout(autoSaveTimer);
+            if (!isSubmitted && currentUID) {
+                autoSaveTimer = setTimeout(() => saveDraft(true), 5000);
+            }
+
+            return { state, xpState };
+        }
+
+        function populateField(id, value) {
+            const el = document.getElementById(id);
+            if (el && typeof value === 'string') el.value = value;
+        }
+
+        function loadSavedTask(saved) {
+            populateField('essayTitle', saved.titulo || '');
+            populateField('finalEssay', saved.texto_final || '');
+
+            const investigacion = saved.investigacion || {};
+            populateField('conceptTesis', investigacion.tesis || '');
+            populateField('conceptBase', investigacion.base || '');
+            populateField('conceptGarantia', investigacion.garantia || '');
+            populateField('conceptRespaldo', investigacion.respaldo || '');
+            populateField('conceptDesarrollo', investigacion.desarrollo || '');
+            populateField('conceptConclusion', investigacion.conclusion || '');
+
+            const esquema = saved.esquema || {};
+            populateField('planTesis', esquema.tesis || '');
+            populateField('arg1Base', (esquema.argumento_1 || {}).base || '');
+            populateField('arg1Garantia', (esquema.argumento_1 || {}).garantia || '');
+            populateField('arg1Respaldo', (esquema.argumento_1 || {}).respaldo || '');
+            populateField('arg2Base', (esquema.argumento_2 || {}).base || '');
+            populateField('arg2Garantia', (esquema.argumento_2 || {}).garantia || '');
+            populateField('arg2Respaldo', (esquema.argumento_2 || {}).respaldo || '');
+            populateField('planObjecion', esquema.objecion || '');
+            populateField('planConclusion', esquema.conclusion || '');
+        }
+
+        async function saveDraft(silent) {
+            if (IS_LOCAL_PREVIEW) {
+                if (!silent) showToast('Vista previa local: el borrador no se guarda en Firebase.');
+                return;
+            }
+            if (!currentUID || isSubmitted) return;
+
+            const { state, xpState } = updateUI();
+
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    titulo: state.normalizedTitle,
+                    texto_final: state.finalEssay,
+                    palabras: state.wordCount,
+                    caracteres: state.chars,
+                    parrafos: state.paragraphCount,
+                    conceptos_completos: state.researchCount,
+                    plan_completo: state.planCount,
+                    xp_estimado: xpState.total,
+                    investigacion: collectResearch(),
+                    esquema: collectPlan(),
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    last_save: Date.now(),
+                    completada: false
+                });
+                if (!silent) {
+                    document.getElementById('saveStatus').textContent = '✓ Borrador guardado';
+                    showToast('💾 Borrador guardado');
+                    setTimeout(() => document.getElementById('saveStatus').textContent = '', 3000);
+                }
+            } catch (e) {
+                console.error('Save error:', e);
+                if (!silent) showToast('Error al guardar');
+            }
+        }
+
+        async function submitMission() {
+            if (IS_LOCAL_PREVIEW) {
+                showToast('Vista previa local: la entrega esta desactivada.');
+                return;
+            }
+            if (isSubmitted) return;
+
+            const { state, xpState } = updateUI();
+            if (!state.canSubmit) {
+                showToast('Falta completar 6 conceptos, plan 9/9 y una columna de 420 palabras con 4 parrafos o 8 oraciones bien desarrolladas.');
+                return;
+            }
+
+            if (!confirm('¿Estas seguro de entregar esta columna? Despues no podras editarla.')) return;
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Enviando columna...';
+
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    titulo: state.normalizedTitle,
+                    texto_final: state.finalEssay,
+                    palabras: state.wordCount,
+                    caracteres: state.chars,
+                    parrafos: state.paragraphCount,
+                    conceptos_completos: state.researchCount,
+                    plan_completo: state.planCount,
+                    investigacion: collectResearch(),
+                    esquema: collectPlan(),
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    submitted_at: Date.now(),
+                    completada: true,
+                    xp_ganado: xpState.total,
+                    recompensa: 'escudo_apertura'
+                });
+
+                const rewardInfo = await awardTaskXP(xpState.total, state.wordCount);
+
+                isSubmitted = true;
+                showSubmittedState(state.wordCount, xpState.total, rewardInfo.hasArenaShield);
+                if (rewardInfo.rewardUnlocked) showRewardChest();
+                if (rewardInfo.achievementUnlocked) {
+                    showToast('🏆 Logro nuevo: Tesoro del Argumento +80 XP');
+                }
+                showToast('✅ Columna entregada. +' + xpState.total + ' XP');
+            } catch (e) {
+                console.error('Submit error:', e);
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = '📤 Entregar columna';
+                showToast('Error al enviar');
+            }
+        }
+
+        async function awardTaskXP(xpGained, words) {
+            try {
+                const [existingSnap, rewardSnap, achievementSnap, totalSnap] = await Promise.all([
+                    db.ref(BASE + '/avatar/' + currentUID + '/sesiones/' + TASK_ID).once('value'),
+                    db.ref(BASE + '/avatar/' + currentUID + '/recompensas/escudo_apertura').once('value'),
+                    db.ref(BASE + '/avatar/' + currentUID + '/logros/' + SPECIAL_ACHIEVEMENT.id).once('value'),
+                    db.ref(BASE + '/avatar/' + currentUID + '/xp_total').once('value')
+                ]);
+                const currentTotal = totalSnap.val() || 0;
+
+                const updates = {};
+                let rewardUnlocked = false;
+                let achievementUnlocked = false;
+                let totalBonusXP = 0;
+
+                if (!existingSnap.exists()) {
+                    updates['/avatar/' + currentUID + '/sesiones/' + TASK_ID] = {
+                        xp: xpGained,
+                        timestamp: Date.now(),
+                        type: 'tarea-argumentacion',
+                        palabras: words
+                    };
+                    totalBonusXP += xpGained;
+                }
+
+                if (!rewardSnap.exists()) {
+                    rewardUnlocked = true;
+                    updates['/avatar/' + currentUID + '/recompensas/escudo_apertura'] = {
+                        timestamp: Date.now(),
+                        source: TASK_ID,
+                        nombre: 'Escudo de apertura'
+                    };
+                    updates['/avatar/' + currentUID + '/cosmeticos/escudo'] = 'apertura';
+                }
+
+                if (!achievementSnap.exists()) {
+                    achievementUnlocked = true;
+                    updates['/avatar/' + currentUID + '/logros/' + SPECIAL_ACHIEVEMENT.id] = {
+                        timestamp: Date.now(),
+                        xp: SPECIAL_ACHIEVEMENT.xp,
+                        source: TASK_ID
+                    };
+                    totalBonusXP += SPECIAL_ACHIEVEMENT.xp;
+                }
+
+                if (totalBonusXP > 0) {
+                    const newTotal = currentTotal + totalBonusXP;
+                    const lvl = getLevel(newTotal);
+                    updates['/avatar/' + currentUID + '/xp_total'] = newTotal;
+                    updates['/avatar/' + currentUID + '/nivel'] = lvl.level;
+                    updates['/avatar/' + currentUID + '/titulo'] = lvl.title;
+                    updates['/avatar/' + currentUID + '/emoji'] = lvl.emoji;
+                }
+
+                if (Object.keys(updates).length > 0) {
+                    await db.ref(BASE).update(updates);
+                }
+
+                return {
+                    rewardUnlocked,
+                    achievementUnlocked,
+                    hasArenaShield: true,
+                    achievementXP: achievementUnlocked ? SPECIAL_ACHIEVEMENT.xp : 0
+                };
+            } catch (e) {
+                console.error('[XP] Task award error:', e);
+                return {
+                    rewardUnlocked: false,
+                    achievementUnlocked: false,
+                    hasArenaShield: false,
+                    achievementXP: 0
+                };
+            }
+        }
+
+        function showSubmittedState(words, xp, hasReward) {
+            document.getElementById('submittedBanner').style.display = '';
+            document.getElementById('submittedBanner').innerHTML = `
+                <div class="submitted-banner">
+                    <div class="icon">🎯</div>
+                    <h2>¡Columna entregada!</h2>
+                    <p>${words} palabras · +${xp} XP ganados</p>
+                    ${hasReward ? '<div class="reward-note">🛡️ Recompensa equipada: escudo de apertura. El primer golpe no te hace daño y luego se rompe.</div>' : ''}
+                </div>`;
+            document.querySelectorAll('.js-lockable').forEach(el => {
+                el.disabled = true;
+                el.style.opacity = '.72';
+            });
+            document.getElementById('saveRow').style.display = 'none';
+        }
+
+        function showRewardChest() {
+            const overlay = document.getElementById('rewardChest');
+            overlay.classList.add('show');
+            clearTimeout(chestTimer);
+            chestTimer = setTimeout(() => overlay.classList.remove('show'), 4300);
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        function startLocalPreview() {
+            currentUID = 'preview-local';
+            studentData = { nombre: 'Vista previa local', curso: '2A-HC' };
+            INPUT_FIELDS.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.addEventListener('input', updateUI);
+            });
+            document.getElementById('saveStatus').textContent = 'Vista previa local · sin Firebase';
+            document.getElementById('loadingScreen').style.display = 'none';
+            document.getElementById('mainView').style.display = '';
+            updateUI();
+        }
+
+        if (IS_LOCAL_PREVIEW) {
+            startLocalPreview();
+        } else auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, taskSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/tareas/' + TASK_ID + '/' + user.uid).once('value')
+                ]);
+
+                studentData = studentSnap.val();
+                if (!studentData) {
+                    auth.signOut();
+                    return;
+                }
+
+                let rewardInfo = { hasArenaShield: false, rewardUnlocked: false, achievementUnlocked: false, achievementXP: 0 };
+                const saved = taskSnap.val();
+                if (saved) {
+                    loadSavedTask(saved);
+                    if (saved.completada) {
+                        isSubmitted = true;
+                        rewardInfo = await awardTaskXP(saved.xp_ganado || 0, saved.palabras || countWords(saved.texto_final || ''));
+                    }
+                }
+
+                INPUT_FIELDS.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('input', updateUI);
+                });
+
+                const currentState = updateUI();
+                if (saved && saved.completada) {
+                    showSubmittedState((saved.palabras || currentState.state.wordCount), (saved.xp_ganado || currentState.xpState.total), (saved.recompensa === 'escudo_apertura') || rewardInfo.hasArenaShield);
+                }
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+            } catch (e) {
+                console.error(e);
+                showToast('Error al cargar');
+            }
+        });
+    </script>
+</body>
+</html>

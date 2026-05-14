@@ -1,0 +1,948 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Misión: Auditor de Distractores</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Sora', sans-serif;
+            min-height: 100vh;
+            color: #f8fafc;
+            line-height: 1.6;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            background:
+                radial-gradient(circle at top left, rgba(245, 158, 11, 0.18), transparent 26%),
+                radial-gradient(circle at top right, rgba(244, 63, 94, 0.16), transparent 24%),
+                linear-gradient(180deg, #16111f 0%, #0d1321 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: rgba(13, 19, 33, 0.84);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .topbar-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            font-size: 12px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .shell {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 26px 18px 48px;
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 22px;
+        }
+        .sidebar {
+            position: sticky;
+            top: 84px;
+            display: grid;
+            gap: 18px;
+            align-content: start;
+        }
+        .card {
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.76);
+            box-shadow: 0 18px 44px rgba(0, 0, 0, 0.24);
+        }
+        .side-card,
+        .main-card,
+        .source-card,
+        .submitted-banner {
+            padding: 20px;
+        }
+        .side-title {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            margin: 12px 0 8px;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #f59e0b, #f43f5e);
+            transition: width .35s ease;
+        }
+        .milestone-list {
+            display: grid;
+            gap: 10px;
+        }
+        .milestone {
+            padding: 12px 14px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .milestone.done {
+            border-color: rgba(74, 222, 128, 0.26);
+            background: rgba(74, 222, 128, 0.08);
+        }
+        .milestone strong {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .milestone span {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        .hero {
+            padding: 24px;
+            margin-bottom: 18px;
+            overflow: hidden;
+        }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.2fr) minmax(280px, 0.8fr);
+            gap: 18px;
+            align-items: center;
+        }
+        .eyebrow {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            line-height: 1.12;
+            margin-bottom: 10px;
+        }
+        .lead {
+            font-size: 14px;
+            line-height: 1.75;
+            color: #e2e8f0;
+            max-width: 640px;
+        }
+        .hero-figure {
+            border-radius: 22px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            background: rgba(255, 255, 255, 0.04);
+        }
+        .hero-figure img {
+            display: block;
+            width: 100%;
+        }
+        .hero-figure figcaption {
+            padding: 10px 12px;
+            font-size: 12px;
+            color: #cbd5e1;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        .main-card {
+            display: grid;
+            gap: 16px;
+        }
+        .prompt-box {
+            padding: 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.10), rgba(244, 63, 94, 0.08));
+            border: 1px solid rgba(245, 158, 11, 0.18);
+        }
+        .prompt-box h2 {
+            font-size: 17px;
+            margin-bottom: 8px;
+        }
+        .prompt-box p,
+        .prompt-box li {
+            font-size: 13px;
+            line-height: 1.75;
+            color: #e2e8f0;
+        }
+        .prompt-box ul {
+            padding-left: 18px;
+            margin-top: 10px;
+        }
+        .form-grid {
+            display: grid;
+            gap: 14px;
+        }
+        .field {
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .field label {
+            display: block;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .field small {
+            display: block;
+            margin-bottom: 10px;
+            color: #cbd5e1;
+            line-height: 1.6;
+        }
+        .field textarea,
+        .field input {
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.88);
+            color: #f8fafc;
+            font: inherit;
+            padding: 12px 14px;
+        }
+        .field textarea {
+            min-height: 110px;
+            resize: vertical;
+            line-height: 1.7;
+        }
+        .field textarea:focus,
+        .field input:focus {
+            outline: 2px solid rgba(245, 158, 11, 0.18);
+            border-color: rgba(245, 158, 11, 0.34);
+        }
+        .two-col {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        .source-card h2 {
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .source-text {
+            display: grid;
+            gap: 12px;
+        }
+        .source-text p {
+            font-family: 'Source Serif 4', serif;
+            font-size: 18px;
+            line-height: 1.95;
+            color: #f8fafc;
+            text-align: left;
+            text-wrap: pretty;
+        }
+        .actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            border: none;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #f59e0b, #f43f5e);
+            color: #fff;
+        }
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+        }
+        .btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .save-status {
+            font-size: 12px;
+            color: #cbd5e1;
+        }
+        .submitted-banner {
+            margin-bottom: 18px;
+            background: linear-gradient(135deg, rgba(22, 163, 74, 0.16), rgba(14, 116, 144, 0.14));
+            border: 1px solid rgba(74, 222, 128, 0.22);
+        }
+        .submitted-banner h2 {
+            font-size: 20px;
+            margin-bottom: 6px;
+            color: #86efac;
+        }
+        .submitted-banner p {
+            font-size: 13px;
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+        .reward-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(13, 19, 33, 0.82);
+            backdrop-filter: blur(10px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 60;
+        }
+        .reward-overlay.show {
+            display: flex;
+        }
+        .reward-panel {
+            width: min(520px, 100%);
+            padding: 26px 24px;
+            border-radius: 28px;
+            border: 1px solid rgba(251, 191, 36, 0.24);
+            background: linear-gradient(180deg, rgba(38, 25, 9, 0.98), rgba(15, 23, 42, 0.98));
+            box-shadow: 0 24px 64px rgba(0, 0, 0, 0.42);
+            text-align: center;
+        }
+        .reward-kicker {
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 800;
+            color: #fde68a;
+            margin-bottom: 10px;
+        }
+        .reward-panel h3 {
+            font-size: 28px;
+            line-height: 1.1;
+            margin-bottom: 10px;
+            color: #fff7d6;
+        }
+        .reward-panel p {
+            font-size: 14px;
+            line-height: 1.75;
+            color: #f8fafc;
+            max-width: 420px;
+            margin: 0 auto;
+        }
+        .reward-aura-scene {
+            position: relative;
+            width: 190px;
+            height: 210px;
+            margin: 24px auto 18px;
+            display: grid;
+            place-items: center;
+        }
+        .reward-avatar-core {
+            position: relative;
+            z-index: 3;
+            width: 92px;
+            height: 92px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            font-size: 38px;
+            color: #fff7d6;
+            background: radial-gradient(circle at 35% 30%, #fff7d6 0%, #fbbf24 34%, #d97706 100%);
+            box-shadow: 0 0 34px rgba(251, 191, 36, 0.36);
+        }
+        .reward-aura-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(253, 230, 138, 0.38);
+            filter: blur(1px);
+            animation: auraPulse 2.8s ease-in-out infinite;
+        }
+        .reward-aura-ring.r1 {
+            width: 128px;
+            height: 156px;
+            box-shadow: 0 0 26px rgba(251, 191, 36, 0.28);
+        }
+        .reward-aura-ring.r2 {
+            width: 160px;
+            height: 188px;
+            animation-delay: .35s;
+            border-color: rgba(251, 191, 36, 0.24);
+        }
+        .reward-aura-ring.r3 {
+            width: 184px;
+            height: 206px;
+            animation-delay: .7s;
+            border-color: rgba(255, 248, 210, 0.16);
+        }
+        .reward-aura-flare {
+            position: absolute;
+            width: 26px;
+            height: 78px;
+            background: linear-gradient(180deg, rgba(255, 248, 210, 0.92), rgba(251, 191, 36, 0));
+            clip-path: polygon(50% 0%, 78% 20%, 100% 100%, 0% 100%, 22% 20%);
+            transform-origin: center bottom;
+            opacity: 0.8;
+            filter: blur(.2px);
+            animation: flareFlicker 2.2s ease-in-out infinite;
+        }
+        .reward-aura-flare.f1 { top: 6px; left: 82px; }
+        .reward-aura-flare.f2 { top: 28px; left: 34px; transform: rotate(-26deg); animation-delay: .28s; }
+        .reward-aura-flare.f3 { top: 24px; right: 34px; transform: rotate(26deg); animation-delay: .56s; }
+        .reward-footer {
+            margin-top: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fde68a;
+        }
+        @keyframes auraPulse {
+            0%, 100% { transform: scale(0.98); opacity: 0.62; }
+            50% { transform: scale(1.04); opacity: 1; }
+        }
+        @keyframes flareFlicker {
+            0%, 100% { transform: scaleY(0.96); opacity: 0.72; }
+            50% { transform: scaleY(1.08); opacity: 1; }
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(90px);
+            padding: 12px 18px;
+            border-radius: 14px;
+            background: #0f172a;
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: #fff;
+            font-size: 13px;
+            opacity: 0;
+            transition: transform .3s ease, opacity .3s ease;
+            pointer-events: none;
+            z-index: 40;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .loading {
+            min-height: 60vh;
+            display: grid;
+            place-items: center;
+        }
+        .spinner {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.12);
+            border-top-color: #f59e0b;
+            animation: spin .8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 920px) {
+            .shell { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .hero-grid,
+            .two-col { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .topbar { padding: 12px 14px; }
+            .shell { padding: 18px 12px 36px; }
+            .hero,
+            .side-card,
+            .main-card,
+            .source-card,
+            .submitted-banner,
+            .reward-panel { padding: 18px; }
+            .source-text p { font-size: 16.5px; line-height: 1.9; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="dashboard.html" class="back-link">← Volver al panel</a>
+        <div class="topbar-meta">
+            <span class="pill" id="progressPill">0/5 hitos</span>
+            <span class="pill" id="xpPill">+0 XP</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading"><div class="spinner"></div></div>
+
+    <div id="app" style="display:none;">
+        <div class="shell">
+            <aside class="sidebar">
+                <div class="card side-card">
+                    <div class="side-title">Meta de misión</div>
+                    <p style="font-size:13px; line-height:1.75; color:#cbd5e1;">Explica la crítica principal del texto, apóyala con evidencia y fabrica dos distractores técnicamente distintos.</p>
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                    <p style="font-size:12px; color:#cbd5e1;">Completa los 5 hitos para desbloquear los 420 XP completos.</p>
+                </div>
+
+                <div class="card side-card">
+                    <div class="side-title">Ruta de entrega</div>
+                    <div class="milestone-list" id="milestonesList"></div>
+                </div>
+            </aside>
+
+            <main>
+                <div id="submittedBanner" class="card submitted-banner" style="display:none;"></div>
+
+                <section class="card hero">
+                    <div class="hero-grid">
+                        <div>
+                            <div class="eyebrow">Misión secundaria · Clase 8</div>
+                            <h1>Auditor de Distractores</h1>
+                            <p class="lead">Esta misión separada te pide ir un paso más allá: no solo responder, sino demostrar que entiendes cómo se fabrica una buena alternativa correcta y cómo fallan los distractores plausibles.</p>
+                        </div>
+                        <figure class="hero-figure">
+                            <img src="assets/clase8/img_clase8_mision.png" alt="Collage editorial: documentos extensos, notas adhesivas, celular y persona comparando capas de información">
+                            <figcaption>Texto 4 · Resumen versus complejidad</figcaption>
+                        </figure>
+                    </div>
+                </section>
+
+                <section class="card main-card">
+                    <div class="prompt-box">
+                        <h2>Consigna</h2>
+                        <p>Responde: <strong>¿Cuál es la crítica principal del autor a la cultura del resumen extremo y qué evidencia del texto te permite sostenerla?</strong></p>
+                        <ul>
+                            <li>Después inventa un distractor por <strong>cambio de foco</strong> y otro por <strong>sobregeneralización</strong>.</li>
+                            <li>No basta con escribirlos: explica por qué cada uno parecería plausible y por qué falla técnicamente.</li>
+                        </ul>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="field">
+                            <label for="missionTitle">Título breve de tu expediente</label>
+                            <small>Ejemplo: "Cuando resumir achata la lectura".</small>
+                            <input id="missionTitle" maxlength="120" placeholder="Escribe un título breve para tu entrega.">
+                        </div>
+
+                        <div class="field">
+                            <label for="mainAnswer">1. Crítica principal del autor</label>
+                            <small>Resume con tus palabras cuál es la idea central del texto y qué cuestiona el autor.</small>
+                            <textarea id="mainAnswer" data-milestone="m1" placeholder="Explica la crítica principal con una idea clara y precisa."></textarea>
+                        </div>
+
+                        <div class="two-col">
+                            <div class="field">
+                                <label for="mainEvidence">2. Evidencia textual decisiva</label>
+                                <small>Cita o parafrasea el fragmento que mejor sostiene tu respuesta.</small>
+                                <textarea id="mainEvidence" data-milestone="m2" placeholder="Incluye una frase, una idea o una relación textual concreta."></textarea>
+                            </div>
+                            <div class="field">
+                                <label for="evidenceExplain">3. Explica por qué esa evidencia sirve</label>
+                                <small>Conecta la evidencia con la crítica del autor. No basta con copiarla.</small>
+                                <textarea id="evidenceExplain" data-milestone="m3" placeholder="Explica cómo la evidencia demuestra la crítica del autor."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="two-col">
+                            <div class="field">
+                                <label for="distractorFocus">4. Distractor por cambio de foco</label>
+                                <small>Escribe una alternativa incorrecta que tome una idea real del texto, pero responda otra cosa.</small>
+                                <textarea id="distractorFocus" placeholder="Redacta el distractor por cambio de foco."></textarea>
+                                <small style="margin-top:10px;">Explica por qué parece plausible y por qué no responde realmente la pregunta.</small>
+                                <textarea id="focusExplain" data-milestone="m4" placeholder="Explica el error técnico del distractor por cambio de foco."></textarea>
+                            </div>
+                            <div class="field">
+                                <label for="distractorGeneral">5. Distractor por sobregeneralización</label>
+                                <small>Escribe una alternativa incorrecta que exagere una idea acotada del texto.</small>
+                                <textarea id="distractorGeneral" placeholder="Redacta el distractor por sobregeneralización."></textarea>
+                                <small style="margin-top:10px;">Explica qué palabra o idea quedó exagerada y por qué eso la vuelve incorrecta.</small>
+                                <textarea id="generalExplain" data-milestone="m5" placeholder="Explica el error técnico del distractor por sobregeneralización."></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="actions">
+                        <button class="btn btn-secondary" id="btnDraft" type="button">Guardar borrador</button>
+                        <button class="btn btn-primary" id="btnSubmit" type="button" disabled>Entregar misión</button>
+                        <span class="save-status" id="saveStatus"></span>
+                    </div>
+                </section>
+
+                <section class="card source-card">
+                    <div class="eyebrow">Texto 4</div>
+                    <h2>Lee el texto base antes de responder</h2>
+                    <div class="source-text">
+                        <p>En los últimos años se ha extendido una costumbre aparentemente eficiente: pedir que toda información importante llegue convertida en un resumen ejecutivo. Lo vemos en reuniones de trabajo, en clases, en correos institucionales y hasta en conversaciones familiares. "Dímelo en una línea", "mándame solo los puntos clave", "necesito la versión corta". La exigencia de rapidez no es casual. Vivimos presionados por horarios, notificaciones y decisiones encadenadas. En ese contexto, resumir parece una forma responsable de administrar el tiempo. Sin embargo, existe un costo poco discutido: cuando una comunidad solo acepta ideas comprimidas, también reduce su tolerancia a la complejidad. Las discusiones difíciles empiezan a parecer defectuosas por el solo hecho de no caber en una frase cómoda.</p>
+                        <p>Esa reducción tiene consecuencias políticas y culturales. Un problema público serio rara vez se deja traducir limpiamente a una consigna. La convivencia escolar, por ejemplo, no se arregla con la frase "faltan límites", del mismo modo que la crisis de lectura no se explica solo diciendo "los estudiantes ya no leen". Esas fórmulas pueden contener algo de verdad, pero al mismo tiempo borran variables decisivas: condiciones materiales, experiencias familiares, desigualdad en el acceso cultural, tiempo real de acompañamiento, calidad de las prácticas pedagógicas. El resumen extremo funciona bien cuando se quiere circular rápido una opinión; funciona mal cuando lo que se necesita es comprender por qué un fenómeno resiste explicaciones simples.</p>
+                        <p>Lo paradójico es que muchas instituciones dicen valorar el pensamiento crítico, pero organizan su comunicación de un modo que lo dificulta. Piden matiz y, a la vez, exigen respuestas instantáneas. Celebran la reflexión, pero premian al que decide más rápido. Reclaman profundidad, pero sospechan del argumento que necesita espacio para desplegarse. No se trata de defender textos interminables ni de romantizar la lentitud por sí misma. Se trata de recordar que algunas comprensiones solo aparecen cuando se admite que un asunto merece más de una capa, más de una causa y más de una lectura. En ese sentido, educar no consiste en convertir cualquier asunto en una cápsula digerible, sino también en enseñar a soportar una idea antes de cerrarla demasiado pronto.</p>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div class="reward-overlay" id="rewardOverlay">
+        <div class="reward-panel">
+            <div class="reward-kicker">Recompensa de arena</div>
+            <h3>Aura dorada desbloqueada</h3>
+            <p>Desde ahora tu avatar aparece en la Arena envuelto en una energia dorada exclusiva al iniciar el combate.</p>
+            <div class="reward-aura-scene" aria-hidden="true">
+                <div class="reward-aura-ring r3"></div>
+                <div class="reward-aura-ring r2"></div>
+                <div class="reward-aura-ring r1"></div>
+                <div class="reward-aura-flare f1"></div>
+                <div class="reward-aura-flare f2"></div>
+                <div class="reward-aura-flare f3"></div>
+                <div class="reward-avatar-core">⚡</div>
+            </div>
+            <div class="reward-footer">Logro nuevo: Auditor de Distractores · +80 XP extra</div>
+            <button class="btn btn-primary" id="btnRewardClose" type="button" style="margin-top:18px;">Seguir</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: 'AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8',
+            authDomain: 'profe-blog.firebaseapp.com',
+            databaseURL: 'https://profe-blog-default-rtdb.firebaseio.com',
+            projectId: 'profe-blog',
+            storageBucket: 'profe-blog.firebasestorage.app',
+            messagingSenderId: '305920739217',
+            appId: '1:305920739217:web:2e08c7469d2988d8b3bc30'
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        const TASK_ID = 'tarea-distractores-1';
+        const ALLOWED_CURSOS = ['2A-HC', '2B-HC'];
+        const SPECIAL_ACHIEVEMENT = { id: 'distractor_aura', xp: 80 };
+        initStudentForcedRefresh({ auth, db, base: BASE });
+
+        const MILESTONES = [
+            { id: 'm1', name: 'Crítica principal', desc: 'Explica con claridad la idea central del texto.', xp: 80 },
+            { id: 'm2', name: 'Evidencia decisiva', desc: 'Selecciona un fragmento que realmente sostenga la respuesta.', xp: 80 },
+            { id: 'm3', name: 'Conexión evidencia-respuesta', desc: 'Demuestra por qué esa evidencia sirve.', xp: 70 },
+            { id: 'm4', name: 'Distractor por cambio de foco', desc: 'Inventa un distractor plausible y explica su error.', xp: 95 },
+            { id: 'm5', name: 'Distractor por sobregeneralización', desc: 'Inventa un distractor exagerado y explica su falla.', xp: 95 }
+        ];
+
+        const fieldMap = {
+            missionTitle: document.getElementById('missionTitle'),
+            mainAnswer: document.getElementById('mainAnswer'),
+            mainEvidence: document.getElementById('mainEvidence'),
+            evidenceExplain: document.getElementById('evidenceExplain'),
+            distractorFocus: document.getElementById('distractorFocus'),
+            focusExplain: document.getElementById('focusExplain'),
+            distractorGeneral: document.getElementById('distractorGeneral'),
+            generalExplain: document.getElementById('generalExplain')
+        };
+
+        const progressPill = document.getElementById('progressPill');
+        const xpPill = document.getElementById('xpPill');
+        const progressFill = document.getElementById('progressFill');
+        const milestonesList = document.getElementById('milestonesList');
+        const btnDraft = document.getElementById('btnDraft');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const saveStatus = document.getElementById('saveStatus');
+        const toast = document.getElementById('toast');
+        const submittedBanner = document.getElementById('submittedBanner');
+        const rewardOverlay = document.getElementById('rewardOverlay');
+        const btnRewardClose = document.getElementById('btnRewardClose');
+
+        let currentUID = null;
+        let studentData = null;
+        let isSubmitted = false;
+        let autoSaveTimer = null;
+
+        function showToast(message) {
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        function showRewardUnlock() {
+            rewardOverlay.classList.add('show');
+        }
+
+        function getValues() {
+            return Object.fromEntries(Object.entries(fieldMap).map(([key, element]) => [key, element.value.trim()]));
+        }
+
+        function evaluateMilestones(values) {
+            return {
+                m1: values.mainAnswer.length >= 70,
+                m2: values.mainEvidence.length >= 45,
+                m3: values.evidenceExplain.length >= 55,
+                m4: values.distractorFocus.length >= 50 && values.focusExplain.length >= 45,
+                m5: values.distractorGeneral.length >= 50 && values.generalExplain.length >= 45
+            };
+        }
+
+        function currentXP(doneMap) {
+            return MILESTONES.reduce((total, milestone) => total + (doneMap[milestone.id] ? milestone.xp : 0), 0);
+        }
+
+        function renderProgress() {
+            const values = getValues();
+            const doneMap = evaluateMilestones(values);
+            const doneCount = Object.values(doneMap).filter(Boolean).length;
+            const xp = currentXP(doneMap);
+
+            progressPill.textContent = doneCount + '/5 hitos';
+            xpPill.textContent = '+' + xp + ' XP';
+            progressFill.style.width = Math.round((doneCount / 5) * 100) + '%';
+            btnSubmit.disabled = isSubmitted || doneCount < 5 || !values.missionTitle;
+
+            milestonesList.innerHTML = MILESTONES.map((milestone) => `
+                <div class="milestone ${doneMap[milestone.id] ? 'done' : ''}">
+                    <strong>${doneMap[milestone.id] ? 'OK ' : ''}${milestone.name} · +${milestone.xp} XP</strong>
+                    <span>${milestone.desc}</span>
+                </div>`).join('');
+
+            return { values, doneMap, doneCount, xp };
+        }
+
+        async function saveDraft(silent) {
+            if (!currentUID || isSubmitted) return;
+            const { values, doneMap, doneCount, xp } = renderProgress();
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    ...values,
+                    milestones: doneMap,
+                    progress: doneCount,
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    xp_estimado: xp,
+                    last_save: Date.now(),
+                    completada: false
+                });
+                if (!silent) {
+                    saveStatus.textContent = 'Borrador guardado';
+                    showToast('Borrador guardado');
+                    setTimeout(() => saveStatus.textContent = '', 2500);
+                }
+            } catch (error) {
+                console.error('[Distractores] Save error:', error);
+                if (!silent) showToast('No se pudo guardar');
+            }
+        }
+
+        async function awardTaskXP(xpGained) {
+            if (!currentUID || typeof AvatarSystem === 'undefined') {
+                return { rewardUnlocked: false, achievementUnlocked: false, hasGoldenAura: false };
+            }
+
+            const [existingSnap, rewardSnap, achievementSnap, totalSnap] = await Promise.all([
+                db.ref(BASE + '/avatar/' + currentUID + '/sesiones/' + TASK_ID).once('value'),
+                db.ref(BASE + '/avatar/' + currentUID + '/recompensas/aura_dorada').once('value'),
+                db.ref(BASE + '/avatar/' + currentUID + '/logros/' + SPECIAL_ACHIEVEMENT.id).once('value'),
+                db.ref(BASE + '/avatar/' + currentUID + '/xp_total').once('value')
+            ]);
+
+            const updates = {};
+            const currentTotal = totalSnap.val() || 0;
+            let rewardUnlocked = false;
+            let achievementUnlocked = false;
+            let totalBonusXP = 0;
+
+            if (!existingSnap.exists() && xpGained) {
+                updates['/avatar/' + currentUID + '/sesiones/' + TASK_ID] = {
+                    xp: xpGained,
+                    timestamp: Date.now(),
+                    type: 'tarea-distractores'
+                };
+                totalBonusXP += xpGained;
+            }
+
+            if (!rewardSnap.exists()) {
+                rewardUnlocked = true;
+                updates['/avatar/' + currentUID + '/recompensas/aura_dorada'] = {
+                    timestamp: Date.now(),
+                    source: TASK_ID,
+                    nombre: 'Aura dorada'
+                };
+                updates['/avatar/' + currentUID + '/cosmeticos/aura'] = 'dorada';
+            }
+
+            if (!achievementSnap.exists()) {
+                achievementUnlocked = true;
+                updates['/avatar/' + currentUID + '/logros/' + SPECIAL_ACHIEVEMENT.id] = {
+                    timestamp: Date.now(),
+                    xp: SPECIAL_ACHIEVEMENT.xp,
+                    source: TASK_ID
+                };
+                totalBonusXP += SPECIAL_ACHIEVEMENT.xp;
+            }
+
+            if (totalBonusXP > 0) {
+                const newTotal = currentTotal + totalBonusXP;
+                const level = AvatarSystem.getLevel(newTotal);
+                updates['/avatar/' + currentUID + '/xp_total'] = newTotal;
+                updates['/avatar/' + currentUID + '/nivel'] = level.level;
+                updates['/avatar/' + currentUID + '/titulo'] = level.title;
+                updates['/avatar/' + currentUID + '/emoji'] = level.emoji;
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await db.ref(BASE).update(updates);
+            }
+
+            return {
+                rewardUnlocked: rewardUnlocked,
+                achievementUnlocked: achievementUnlocked,
+                hasGoldenAura: rewardUnlocked || rewardSnap.exists()
+            };
+        }
+
+        function lockForm() {
+            Object.values(fieldMap).forEach((element) => element.disabled = true);
+            btnDraft.disabled = true;
+            btnSubmit.disabled = true;
+        }
+
+        function showSubmitted(xp, hasGoldenAura) {
+            submittedBanner.style.display = '';
+            submittedBanner.innerHTML = `
+                <h2>Misión entregada</h2>
+                <p>Tu expediente quedó guardado con éxito. XP obtenido: <strong>+${xp}</strong>.</p>
+                ${hasGoldenAura ? '<p><strong>Recompensa equipada:</strong> aura dorada exclusiva para tu avatar en la Arena.</p>' : ''}`;
+            lockForm();
+        }
+
+        async function submitTask() {
+            if (isSubmitted) return;
+            const { values, doneMap, doneCount, xp } = renderProgress();
+            if (!values.missionTitle || doneCount < 5) {
+                showToast('Completa los 5 hitos antes de entregar.');
+                return;
+            }
+            if (!window.confirm('Vas a entregar tu misión secundaria. Después no podrás editarla.')) return;
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Enviando...';
+
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    ...values,
+                    milestones: doneMap,
+                    progress: doneCount,
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    xp_ganado: xp,
+                    recompensa: 'aura_dorada',
+                    completada: true,
+                    submitted_at: Date.now()
+                });
+                const rewardInfo = await awardTaskXP(xp);
+                isSubmitted = true;
+                showSubmitted(xp, rewardInfo.hasGoldenAura);
+                if (rewardInfo.rewardUnlocked) showRewardUnlock();
+                if (rewardInfo.achievementUnlocked && !rewardInfo.rewardUnlocked) {
+                    showToast('Logro nuevo: Auditor de Distractores +80 XP');
+                }
+                showToast('Misión entregada: +' + xp + ' XP');
+            } catch (error) {
+                console.error('[Distractores] Submit error:', error);
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = 'Entregar misión';
+                showToast('No se pudo enviar');
+            }
+        }
+
+        Object.values(fieldMap).forEach((element) => {
+            element.addEventListener('input', () => {
+                renderProgress();
+                clearTimeout(autoSaveTimer);
+                if (!isSubmitted && currentUID) {
+                    autoSaveTimer = setTimeout(() => saveDraft(true), 4500);
+                }
+            });
+        });
+
+        btnDraft.addEventListener('click', () => saveDraft(false));
+        btnSubmit.addEventListener('click', submitTask);
+        btnRewardClose.addEventListener('click', () => rewardOverlay.classList.remove('show'));
+        rewardOverlay.addEventListener('click', (event) => {
+            if (event.target === rewardOverlay) rewardOverlay.classList.remove('show');
+        });
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, taskSnap, rewardSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/tareas/' + TASK_ID + '/' + user.uid).once('value'),
+                    db.ref(BASE + '/avatar/' + user.uid + '/recompensas/aura_dorada').once('value')
+                ]);
+
+                studentData = studentSnap.val();
+                if (!studentData) {
+                    await auth.signOut();
+                    return;
+                }
+
+                if (!ALLOWED_CURSOS.includes(studentData.curso)) {
+                    document.getElementById('loadingScreen').innerHTML = '<div style="text-align:center;padding:50px 20px;color:#fbbf24;line-height:1.7">Esta misión no está disponible para tu curso.<br><a href="dashboard.html" style="color:#93c5fd;display:inline-block;margin-top:10px;">Volver al panel</a></div>';
+                    return;
+                }
+
+                const task = taskSnap.val();
+                if (task) {
+                    Object.keys(fieldMap).forEach((key) => {
+                        fieldMap[key].value = task[key] || '';
+                    });
+                    if (task.completada) {
+                        const rewardInfo = rewardSnap.exists()
+                            ? { hasGoldenAura: true }
+                            : await awardTaskXP(task.xp_ganado || 0);
+                        isSubmitted = true;
+                        showSubmitted(task.xp_ganado || 0, rewardInfo.hasGoldenAura || task.recompensa === 'aura_dorada');
+                    }
+                }
+
+                renderProgress();
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('app').style.display = '';
+            } catch (error) {
+                console.error('[Distractores] Init error:', error);
+                document.getElementById('loadingScreen').innerHTML = '<div style="text-align:center;padding:50px 20px;color:#fca5a5;line-height:1.7">No se pudo cargar la misión.<br><a href="dashboard.html" style="color:#93c5fd;display:inline-block;margin-top:10px;">Volver al panel</a></div>';
+            }
+        });
+    </script>
+</body>
+</html>
+

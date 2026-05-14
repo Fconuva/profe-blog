@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mision: Radar de Figuras Literarias</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Sora', sans-serif;
+            min-height: 100vh;
+            color: #f8fafc;
+            line-height: 1.6;
+            background:
+                radial-gradient(circle at top left, rgba(14, 165, 233, 0.20), transparent 24%),
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.18), transparent 28%),
+                linear-gradient(180deg, #111827 0%, #0f172a 100%);
+        }
+        a { color: inherit; text-decoration: none; }
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 30;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: rgba(15, 23, 42, 0.84);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255,255,255,.08);
+        }
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .topbar-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            font-size: 12px;
+            font-weight: 700;
+            color: #e2e8f0;
+        }
+        .shell {
+            max-width: 1180px;
+            margin: 0 auto;
+            padding: 26px 18px 48px;
+            display: grid;
+            grid-template-columns: 320px minmax(0, 1fr);
+            gap: 22px;
+        }
+        .sidebar {
+            position: sticky;
+            top: 84px;
+            display: grid;
+            gap: 18px;
+            align-content: start;
+        }
+        .card {
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(15, 23, 42, .78);
+            box-shadow: 0 18px 44px rgba(0,0,0,.24);
+        }
+        .side-card, .hero, .main-card, .submitted-banner { padding: 20px; }
+        .side-title {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #38bdf8;
+            margin-bottom: 10px;
+        }
+        .progress-bar {
+            height: 10px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            overflow: hidden;
+            margin: 12px 0 8px;
+        }
+        .progress-fill {
+            width: 0%;
+            height: 100%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, #38bdf8, #f59e0b);
+            transition: width .35s ease;
+        }
+        .side-copy { font-size: 13px; color: #cbd5e1; line-height: 1.75; }
+        .reward-preview {
+            margin-top: 14px;
+            padding: 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(56,189,248,.14), rgba(245,158,11,.10));
+            border: 1px solid rgba(56,189,248,.18);
+            display: grid;
+            gap: 10px;
+        }
+        .reward-icon {
+            width: 74px;
+            height: 74px;
+            border-radius: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            background: rgba(15,23,42,.58);
+            border: 1px solid rgba(255,255,255,.10);
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+        }
+        .hero { overflow: hidden; margin-bottom: 18px; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1.12fr) minmax(280px, .88fr);
+            gap: 18px;
+            align-items: center;
+        }
+        .eyebrow {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #fbbf24;
+            margin-bottom: 10px;
+        }
+        h1 {
+            font-size: clamp(28px, 4vw, 40px);
+            line-height: 1.12;
+            margin-bottom: 10px;
+        }
+        .lead {
+            font-size: 14px;
+            line-height: 1.8;
+            color: #e2e8f0;
+            max-width: 640px;
+        }
+        .hero-figure {
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,.10);
+            background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+            padding: 22px;
+            display: grid;
+            gap: 12px;
+        }
+        .hero-quote {
+            font-family: 'Source Serif 4', serif;
+            font-size: 24px;
+            line-height: 1.45;
+            color: #f8fafc;
+        }
+        .hero-caption {
+            font-size: 12px;
+            color: #cbd5e1;
+            line-height: 1.7;
+        }
+        .main-card { display: grid; gap: 16px; }
+        .intro-box {
+            padding: 18px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(56,189,248,.10), rgba(245,158,11,.08));
+            border: 1px solid rgba(56,189,248,.16);
+        }
+        .intro-box h2 { font-size: 17px; margin-bottom: 8px; }
+        .intro-box p, .intro-box li {
+            font-size: 13px;
+            line-height: 1.75;
+            color: #e2e8f0;
+        }
+        .intro-box ul { padding-left: 18px; margin-top: 10px; }
+        .question-list { display: grid; gap: 16px; }
+        .question-card {
+            padding: 18px;
+            border-radius: 22px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.03);
+        }
+        .question-head {
+            display: flex;
+            gap: 14px;
+            align-items: flex-start;
+            margin-bottom: 14px;
+        }
+        .question-num {
+            flex-shrink: 0;
+            width: 38px;
+            height: 38px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(56,189,248,.14);
+            color: #38bdf8;
+            font-size: 13px;
+            font-weight: 800;
+        }
+        .question-label {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .question-phrase {
+            font-family: 'Source Serif 4', serif;
+            font-size: 23px;
+            line-height: 1.55;
+            color: #f8fafc;
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 13px 14px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,.08);
+            background: rgba(255,255,255,.04);
+            color: #e2e8f0;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform .14s ease, border-color .2s ease, background .2s ease;
+            font-family: inherit;
+        }
+        .option-btn:hover { transform: translateY(-1px); border-color: rgba(56,189,248,.34); }
+        .option-btn.selected {
+            border-color: rgba(56,189,248,.42);
+            background: rgba(56,189,248,.12);
+        }
+        .option-btn.correct {
+            border-color: rgba(74,222,128,.38);
+            background: rgba(74,222,128,.12);
+            color: #dcfce7;
+        }
+        .option-btn.wrong {
+            border-color: rgba(248,113,113,.32);
+            background: rgba(248,113,113,.10);
+            color: #fee2e2;
+        }
+        .option-btn:disabled { cursor: default; }
+        .feedback {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            line-height: 1.75;
+            border: 1px solid rgba(255,255,255,.08);
+            color: #dbeafe;
+            background: rgba(15,23,42,.45);
+        }
+        .feedback strong { color: #f8fafc; }
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 14px 24px;
+            font-size: 14px;
+            font-weight: 800;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn-save {
+            background: linear-gradient(135deg, #334155, #475569);
+            color: #f8fafc;
+        }
+        .btn-submit {
+            background: linear-gradient(135deg, #0ea5e9, #f59e0b);
+            color: #0f172a;
+        }
+        .btn:disabled { opacity: .45; cursor: not-allowed; }
+        .save-status { font-size: 12px; color: #94a3b8; }
+        .submitted-banner {
+            display: none;
+            margin-bottom: 18px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(14,165,233,.14), rgba(245,158,11,.10));
+            border: 1px solid rgba(56,189,248,.20);
+        }
+        .submitted-banner .icon { font-size: 44px; margin-bottom: 8px; }
+        .submitted-banner h2 { font-size: 20px; margin-bottom: 6px; }
+        .submitted-banner p { font-size: 13px; color: #e2e8f0; line-height: 1.8; }
+        .toast {
+            position: fixed;
+            bottom: 26px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #0f172a;
+            color: #fff;
+            padding: 12px 22px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,.08);
+            font-size: 13px;
+            font-weight: 700;
+            opacity: 0;
+            transition: transform .35s ease, opacity .25s ease;
+            z-index: 200;
+            pointer-events: none;
+        }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .loading-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 60vh;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255,255,255,.1);
+            border-top-color: #38bdf8;
+            border-radius: 50%;
+            animation: spin .7s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @media (max-width: 980px) {
+            .shell { grid-template-columns: 1fr; }
+            .sidebar { position: static; }
+            .hero-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 700px) {
+            .options-grid { grid-template-columns: 1fr; }
+            .question-phrase { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="topbar-meta">
+            <span class="pill" id="answeredPill">0/20 respondidas</span>
+            <span class="pill" id="scorePill">Maximo: 400 XP</span>
+        </div>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="app" style="display:none">
+        <div class="shell">
+            <aside class="sidebar">
+                <div class="card side-card">
+                    <div class="side-title">Progreso</div>
+                    <div class="side-copy" id="progressCopy">Responde las 20 frases. La recompensa se desbloquea al entregar y tu XP depende de cuantas aciertes.</div>
+                    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+                    <div class="side-copy" id="progressMeta">0 de 20 preguntas completas</div>
+                </div>
+
+                <div class="card side-card">
+                    <div class="side-title">Premio de avatar</div>
+                    <div class="reward-preview">
+                        <div class="reward-icon">🕶️</div>
+                        <div>
+                            <strong>Lentes aviador</strong>
+                            <p class="side-copy" style="margin-top:6px">Al entregar la mision desbloqueas este accesorio para tu personaje en el editor de avatar.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card side-card">
+                    <div class="side-title">Pistas rapidas</div>
+                    <div class="side-copy">
+                        <p>Metafora: reemplaza una idea por otra sin usar "como".</p>
+                        <p style="margin-top:8px">Comparacion: relaciona dos elementos con nexo explicito.</p>
+                        <p style="margin-top:8px">Metonimia o sinecdoque: cambian el nombre por cercania o por parte/todo.</p>
+                        <p style="margin-top:8px">Oximoron o paradoja: cruzan ideas que chocan, pero no siempre del mismo modo.</p>
+                    </div>
+                </div>
+            </aside>
+
+            <main>
+                <section class="card hero">
+                    <div class="hero-grid">
+                        <div>
+                            <div class="eyebrow">Mision secundaria · figuras literarias</div>
+                            <h1>Radar de Figuras Literarias</h1>
+                            <p class="lead">Lee cada frase y marca la figura literaria que domina en ella. Hay 20 reactivos breves. Al final veras tus aciertos, la explicacion de cada respuesta y el XP obtenido.</p>
+                        </div>
+                        <div class="hero-figure">
+                            <div class="hero-quote">"Tus ojos son dos faros en la niebla"</div>
+                            <div class="hero-caption">La idea es reconocer el procedimiento principal de la frase, no una interpretacion libre ni una impresion general.</div>
+                        </div>
+                    </div>
+                </section>
+
+                <div class="submitted-banner card" id="submittedBanner"></div>
+
+                <section class="card main-card">
+                    <div class="intro-box">
+                        <h2>Como se corrige</h2>
+                        <ul>
+                            <li>Cada acierto vale <strong>20 XP</strong>. Puntaje maximo: <strong>400 XP</strong>.</li>
+                            <li>Debes responder las <strong>20 preguntas</strong> antes de entregar.</li>
+                            <li>La recompensa cosmética se desbloquea al cerrar la mision y luego queda disponible en tu avatar.</li>
+                        </ul>
+                    </div>
+
+                    <div class="question-list" id="questionsList"></div>
+
+                    <div class="actions" id="actionsRow">
+                        <button class="btn btn-save" id="btnSave" onclick="saveDraft(false)">💾 Guardar borrador</button>
+                        <button class="btn btn-submit" id="btnSubmit" onclick="submitTask()" disabled>📤 Entregar radar</button>
+                        <span class="save-status" id="saveStatus"></span>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCzN4xNEE_hKshXbsVqLhWSnzet1pHwRh8",
+            authDomain: "profe-blog.firebaseapp.com",
+            databaseURL: "https://profe-blog-default-rtdb.firebaseio.com",
+            projectId: "profe-blog",
+            storageBucket: "profe-blog.firebasestorage.app",
+            messagingSenderId: "305920739217",
+            appId: "1:305920739217:web:2e08c7469d2988d8b3bc30"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        initStudentForcedRefresh({ auth, db, base: BASE });
+
+        const TASK_ID = 'tarea-figuras-1';
+        const REWARD_KEY = 'lentes_aviador';
+        const ALLOWED_CURSOS = ['2A-HC', '2B-HC'];
+        const QUESTIONS = [
+            {
+                id: 'q1',
+                phrase: '"Tus ojos son dos faros en la niebla."',
+                correct: 'A',
+                explanation: 'Metafora: identifica una realidad con otra sin usar un nexo comparativo como "como".',
+                options: [
+                    { id: 'A', text: 'Metafora' },
+                    { id: 'B', text: 'Comparacion' },
+                    { id: 'C', text: 'Hiperbole' },
+                    { id: 'D', text: 'Metonimia' }
+                ]
+            },
+            {
+                id: 'q2',
+                phrase: '"Vuelve la lluvia, vuelve el frio, vuelve la duda."',
+                correct: 'A',
+                explanation: 'Anafora: repite la misma palabra al inicio de varias secuencias para insistir en una idea.',
+                options: [
+                    { id: 'A', text: 'Anafora' },
+                    { id: 'B', text: 'Enumeracion' },
+                    { id: 'C', text: 'Aliteracion' },
+                    { id: 'D', text: 'Ironia' }
+                ]
+            },
+            {
+                id: 'q3',
+                phrase: '"Corrio como un rayo cuando escucho la campana."',
+                correct: 'A',
+                explanation: 'Comparacion: relaciona dos elementos usando un nexo explicito, en este caso "como".',
+                options: [
+                    { id: 'A', text: 'Comparacion' },
+                    { id: 'B', text: 'Metafora' },
+                    { id: 'C', text: 'Sinestesia' },
+                    { id: 'D', text: 'Personificacion' }
+                ]
+            },
+            {
+                id: 'q4',
+                phrase: '"Necesitamos veinte cabezas mas para el taller de debate."',
+                correct: 'A',
+                explanation: 'Sinecdoque: usa una parte del cuerpo, "cabezas", para nombrar a personas completas.',
+                options: [
+                    { id: 'A', text: 'Sinecdoque' },
+                    { id: 'B', text: 'Metonimia' },
+                    { id: 'C', text: 'Hiperbaton' },
+                    { id: 'D', text: 'Oximoron' }
+                ]
+            },
+            {
+                id: 'q5',
+                phrase: '"Que puntual: llegaste solo cuarenta minutos tarde."',
+                correct: 'A',
+                explanation: 'Ironia: se dice lo contrario de lo que realmente se quiere dar a entender.',
+                options: [
+                    { id: 'A', text: 'Ironia' },
+                    { id: 'B', text: 'Hiperbole' },
+                    { id: 'C', text: 'Apostrofe' },
+                    { id: 'D', text: 'Antitesis' }
+                ]
+            },
+            {
+                id: 'q6',
+                phrase: '"Leimos a Neruda durante toda la mañana."',
+                correct: 'A',
+                explanation: 'Metonimia: se nombra al autor para referirse a su obra.',
+                options: [
+                    { id: 'A', text: 'Metonimia' },
+                    { id: 'B', text: 'Sinecdoque' },
+                    { id: 'C', text: 'Comparacion' },
+                    { id: 'D', text: 'Anafora' }
+                ]
+            },
+            {
+                id: 'q7',
+                phrase: '"Su voz tibia lleno de azul el pasillo."',
+                correct: 'A',
+                explanation: 'Sinestesia: mezcla sensaciones de distintos sentidos, como temperatura, color y sonido.',
+                options: [
+                    { id: 'A', text: 'Sinestesia' },
+                    { id: 'B', text: 'Metafora' },
+                    { id: 'C', text: 'Oximoron' },
+                    { id: 'D', text: 'Hiperbole' }
+                ]
+            },
+            {
+                id: 'q8',
+                phrase: '"Un silencio ensordecedor se tomo el gimnasio."',
+                correct: 'A',
+                explanation: 'Oximoron: junta dos terminos opuestos dentro de la misma expresion.',
+                options: [
+                    { id: 'A', text: 'Oximoron' },
+                    { id: 'B', text: 'Paradoja' },
+                    { id: 'C', text: 'Ironia' },
+                    { id: 'D', text: 'Personificacion' }
+                ]
+            },
+            {
+                id: 'q9',
+                phrase: '"Mi mama me mima mientras mezcla menta."',
+                correct: 'A',
+                explanation: 'Aliteracion: repite sonidos parecidos para producir un efecto fonico marcado.',
+                options: [
+                    { id: 'A', text: 'Aliteracion' },
+                    { id: 'B', text: 'Onomatopeya' },
+                    { id: 'C', text: 'Anafora' },
+                    { id: 'D', text: 'Comparacion' }
+                ]
+            },
+            {
+                id: 'q10',
+                phrase: '"La ciudad bosteza cuando pasa el primer bus."',
+                correct: 'A',
+                explanation: 'Personificacion: atribuye una accion humana, bostezar, a una realidad no humana.',
+                options: [
+                    { id: 'A', text: 'Personificacion' },
+                    { id: 'B', text: 'Metonimia' },
+                    { id: 'C', text: 'Epiteto' },
+                    { id: 'D', text: 'Sinecdoque' }
+                ]
+            },
+            {
+                id: 'q11',
+                phrase: '"Espere un siglo para que sonara el timbre."',
+                correct: 'A',
+                explanation: 'Hiperbole: exagera de forma evidente para intensificar la idea de espera.',
+                options: [
+                    { id: 'A', text: 'Hiperbole' },
+                    { id: 'B', text: 'Ironia' },
+                    { id: 'C', text: 'Oximoron' },
+                    { id: 'D', text: 'Comparacion' }
+                ]
+            },
+            {
+                id: 'q12',
+                phrase: '"Tan corto el recreo, tan larga la mañana."',
+                correct: 'A',
+                explanation: 'Antitesis: enfrenta ideas opuestas, corto y largo, para resaltar el contraste.',
+                options: [
+                    { id: 'A', text: 'Antitesis' },
+                    { id: 'B', text: 'Paradoja' },
+                    { id: 'C', text: 'Hiperbaton' },
+                    { id: 'D', text: 'Metafora' }
+                ]
+            },
+            {
+                id: 'q13',
+                phrase: '"Tic-tac, tic-tac, insistia el reloj durante la prueba."',
+                correct: 'A',
+                explanation: 'Onomatopeya: imita un sonido real mediante palabras.',
+                options: [
+                    { id: 'A', text: 'Onomatopeya' },
+                    { id: 'B', text: 'Aliteracion' },
+                    { id: 'C', text: 'Anafora' },
+                    { id: 'D', text: 'Enumeracion' }
+                ]
+            },
+            {
+                id: 'q14',
+                phrase: '"La blanca nieve cubrio el patio."',
+                correct: 'A',
+                explanation: 'Epiteto: agrega una cualidad propia del sustantivo para enfatizarla poeticamente.',
+                options: [
+                    { id: 'A', text: 'Epiteto' },
+                    { id: 'B', text: 'Metafora' },
+                    { id: 'C', text: 'Metonimia' },
+                    { id: 'D', text: 'Comparacion' }
+                ]
+            },
+            {
+                id: 'q15',
+                phrase: '"Oh tiempo, no corras tan rapido conmigo."',
+                correct: 'A',
+                explanation: 'Apostrofe: el hablante se dirige de forma directa a una realidad ausente o abstracta.',
+                options: [
+                    { id: 'A', text: 'Apostrofe' },
+                    { id: 'B', text: 'Personificacion' },
+                    { id: 'C', text: 'Ironia' },
+                    { id: 'D', text: 'Oximoron' }
+                ]
+            },
+            {
+                id: 'q16',
+                phrase: '"Vivo sin vivir en mi desde que te fuiste."',
+                correct: 'A',
+                explanation: 'Paradoja: presenta una union aparentemente imposible que obliga a pensar un sentido mas profundo.',
+                options: [
+                    { id: 'A', text: 'Paradoja' },
+                    { id: 'B', text: 'Oximoron' },
+                    { id: 'C', text: 'Hiperbole' },
+                    { id: 'D', text: 'Comparacion' }
+                ]
+            },
+            {
+                id: 'q17',
+                phrase: '"Trajo cuadernos, reglas, tijeras, plumones y paciencia."',
+                correct: 'A',
+                explanation: 'Enumeracion: acumula varios elementos de manera sucesiva dentro de una misma frase.',
+                options: [
+                    { id: 'A', text: 'Enumeracion' },
+                    { id: 'B', text: 'Anafora' },
+                    { id: 'C', text: 'Metonimia' },
+                    { id: 'D', text: 'Sinecdoque' }
+                ]
+            },
+            {
+                id: 'q18',
+                phrase: '"Del salon salio, callada, la profesora nueva."',
+                correct: 'A',
+                explanation: 'Hiperbaton: altera el orden habitual de la oracion para destacar una parte del enunciado.',
+                options: [
+                    { id: 'A', text: 'Hiperbaton' },
+                    { id: 'B', text: 'Antitesis' },
+                    { id: 'C', text: 'Ironia' },
+                    { id: 'D', text: 'Comparacion' }
+                ]
+            },
+            {
+                id: 'q19',
+                phrase: '"Pedro resolvio la primera guia; Ana, la segunda."',
+                correct: 'A',
+                explanation: 'Elipsis: omite un elemento que se entiende por el contexto, aqui el verbo "resolvio".',
+                options: [
+                    { id: 'A', text: 'Elipsis' },
+                    { id: 'B', text: 'Hiperbaton' },
+                    { id: 'C', text: 'Metafora' },
+                    { id: 'D', text: 'Personificacion' }
+                ]
+            },
+            {
+                id: 'q20',
+                phrase: '"La Moneda anuncio nuevas medidas para este semestre."',
+                correct: 'A',
+                explanation: 'Metonimia: se nombra el lugar o la institucion para referirse a las personas que actuan desde ahi.',
+                options: [
+                    { id: 'A', text: 'Metonimia' },
+                    { id: 'B', text: 'Sinecdoque' },
+                    { id: 'C', text: 'Personificacion' },
+                    { id: 'D', text: 'Ironia' }
+                ]
+            }
+        ];
+
+        let currentUID = null;
+        let studentData = null;
+        let isSubmitted = false;
+        let answers = {};
+        let autoSaveTimer = null;
+
+        function getLevel(totalXP) {
+            return AvatarSystem.getLevel(totalXP);
+        }
+
+        function answeredCount() {
+            return QUESTIONS.filter((question) => !!answers[question.id]).length;
+        }
+
+        function getResult() {
+            let correct = 0;
+            QUESTIONS.forEach((question) => {
+                if (answers[question.id] === question.correct) correct++;
+            });
+            return {
+                correct: correct,
+                total: QUESTIONS.length,
+                percentage: Math.round((correct / QUESTIONS.length) * 100),
+                xp: correct * 20
+            };
+        }
+
+        function renderQuestions() {
+            const container = document.getElementById('questionsList');
+            let html = '';
+            QUESTIONS.forEach((question, index) => {
+                const selected = answers[question.id] || '';
+                const correctOption = question.options.find((option) => option.id === question.correct);
+                html += `
+                    <article class="question-card">
+                        <div class="question-head">
+                            <div class="question-num">${String(index + 1).padStart(2, '0')}</div>
+                            <div>
+                                <div class="question-label">Frase ${index + 1}</div>
+                                <div class="question-phrase">${question.phrase}</div>
+                            </div>
+                        </div>
+                        <div class="options-grid">
+                            ${question.options.map((option) => {
+                                let classes = 'option-btn';
+                                if (selected === option.id) classes += ' selected';
+                                if (isSubmitted && option.id === question.correct) classes += ' correct';
+                                if (isSubmitted && selected === option.id && option.id !== question.correct) classes += ' wrong';
+                                return `<button type="button" class="${classes}" onclick="selectAnswer('${question.id}','${option.id}')" ${isSubmitted ? 'disabled' : ''}>${option.text}</button>`;
+                            }).join('')}
+                        </div>
+                        ${isSubmitted ? `<div class="feedback"><strong>Correcta:</strong> ${correctOption.text}. ${question.explanation}</div>` : ''}
+                    </article>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function updateProgress() {
+            const answered = answeredCount();
+            const progress = Math.round((answered / QUESTIONS.length) * 100);
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('answeredPill').textContent = answered + '/' + QUESTIONS.length + ' respondidas';
+            document.getElementById('progressMeta').textContent = answered + ' de ' + QUESTIONS.length + ' preguntas completas';
+
+            if (isSubmitted) {
+                const result = getResult();
+                document.getElementById('scorePill').textContent = result.correct + '/' + result.total + ' correctas · +' + result.xp + ' XP';
+                document.getElementById('progressCopy').textContent = 'Tu resultado ya quedo fijado. Revisa las explicaciones debajo de cada frase para estudiar el criterio correcto.';
+            } else {
+                document.getElementById('scorePill').textContent = 'Maximo: 400 XP';
+                document.getElementById('progressCopy').textContent = 'Responde las 20 frases. La recompensa se desbloquea al entregar y tu XP depende de cuantas aciertes.';
+            }
+
+            document.getElementById('btnSubmit').disabled = isSubmitted || answered !== QUESTIONS.length;
+            renderQuestions();
+
+            clearTimeout(autoSaveTimer);
+            if (!isSubmitted && currentUID) {
+                autoSaveTimer = setTimeout(() => saveDraft(true), 5000);
+            }
+        }
+
+        function selectAnswer(questionId, optionId) {
+            if (isSubmitted) return;
+            answers[questionId] = optionId;
+            updateProgress();
+        }
+
+        async function saveDraft(silent) {
+            if (!currentUID || isSubmitted) return;
+            try {
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    respuestas: answers,
+                    respondidas: answeredCount(),
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    last_save: Date.now(),
+                    completada: false
+                });
+                if (!silent) {
+                    document.getElementById('saveStatus').textContent = 'Borrador guardado';
+                    showToast('Borrador guardado');
+                    setTimeout(() => document.getElementById('saveStatus').textContent = '', 2500);
+                }
+            } catch (error) {
+                console.error('[Figuras] Save error:', error);
+                if (!silent) showToast('No se pudo guardar');
+            }
+        }
+
+        async function awardTaskXP(xpGained, correctCount) {
+            const [existingSnap, rewardSnap, totalSnap] = await Promise.all([
+                db.ref(BASE + '/avatar/' + currentUID + '/sesiones/' + TASK_ID).once('value'),
+                db.ref(BASE + '/avatar/' + currentUID + '/recompensas/' + REWARD_KEY).once('value'),
+                db.ref(BASE + '/avatar/' + currentUID + '/xp_total').once('value')
+            ]);
+
+            const updates = {};
+            let totalBonusXP = 0;
+            let rewardUnlocked = false;
+            const currentTotal = totalSnap.val() || 0;
+
+            if (!existingSnap.exists() && xpGained) {
+                updates['/avatar/' + currentUID + '/sesiones/' + TASK_ID] = {
+                    xp: xpGained,
+                    timestamp: Date.now(),
+                    type: 'tarea-figuras',
+                    correctas: correctCount
+                };
+                totalBonusXP += xpGained;
+            }
+
+            if (!rewardSnap.exists()) {
+                rewardUnlocked = true;
+                updates['/avatar/' + currentUID + '/recompensas/' + REWARD_KEY] = {
+                    timestamp: Date.now(),
+                    source: TASK_ID,
+                    nombre: 'Lentes aviador'
+                };
+                updates['/avatar/' + currentUID + '/look/accessory'] = 'aviador';
+            }
+
+            if (totalBonusXP > 0) {
+                const newTotal = currentTotal + totalBonusXP;
+                const lvl = getLevel(newTotal);
+                updates['/avatar/' + currentUID + '/xp_total'] = newTotal;
+                updates['/avatar/' + currentUID + '/nivel'] = lvl.level;
+                updates['/avatar/' + currentUID + '/titulo'] = lvl.title;
+                updates['/avatar/' + currentUID + '/emoji'] = lvl.emoji;
+            }
+
+            if (Object.keys(updates).length > 0) {
+                await db.ref(BASE).update(updates);
+            }
+
+            return {
+                rewardUnlocked: rewardUnlocked,
+                hasAviator: rewardUnlocked || rewardSnap.exists()
+            };
+        }
+
+        function showSubmittedState(result, hasReward) {
+            const banner = document.getElementById('submittedBanner');
+            banner.style.display = '';
+            banner.innerHTML = `
+                <div class="icon">🕶️</div>
+                <h2>Radar entregado</h2>
+                <p>${result.correct} de ${result.total} correctas · ${result.percentage}% de logro · +${result.xp} XP</p>
+                ${hasReward ? '<p style="margin-top:6px">Recompensa desbloqueada: lentes aviador disponibles en tu avatar.</p>' : ''}`;
+            document.getElementById('actionsRow').style.display = 'none';
+        }
+
+        async function submitTask() {
+            if (isSubmitted) return;
+            if (answeredCount() !== QUESTIONS.length) {
+                showToast('Debes responder las 20 preguntas antes de entregar.');
+                return;
+            }
+            if (!window.confirm('Vas a entregar el radar de figuras literarias. Despues no podras editarlo.')) return;
+
+            const btnSubmit = document.getElementById('btnSubmit');
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = 'Enviando...';
+
+            try {
+                const result = getResult();
+                await db.ref(BASE + '/tareas/' + TASK_ID + '/' + currentUID).update({
+                    respuestas: answers,
+                    respondidas: QUESTIONS.length,
+                    correctas: result.correct,
+                    porcentaje: result.percentage,
+                    nombre: studentData.nombre,
+                    curso: studentData.curso,
+                    xp_ganado: result.xp,
+                    recompensa: REWARD_KEY,
+                    completada: true,
+                    submitted_at: Date.now()
+                });
+
+                const rewardInfo = await awardTaskXP(result.xp, result.correct);
+                isSubmitted = true;
+                showSubmittedState(result, rewardInfo.hasAviator);
+                updateProgress();
+                if (rewardInfo.rewardUnlocked) {
+                    showToast('Lentes aviador desbloqueados');
+                } else {
+                    showToast('Radar entregado: +' + result.xp + ' XP');
+                }
+            } catch (error) {
+                console.error('[Figuras] Submit error:', error);
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = '📤 Entregar radar';
+                showToast('No se pudo enviar');
+            }
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2600);
+        }
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                window.location.href = 'index.html';
+                return;
+            }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, taskSnap, rewardSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/tareas/' + TASK_ID + '/' + user.uid).once('value'),
+                    db.ref(BASE + '/avatar/' + user.uid + '/recompensas/' + REWARD_KEY).once('value')
+                ]);
+
+                studentData = studentSnap.val();
+                if (!studentData) {
+                    await auth.signOut();
+                    return;
+                }
+
+                if (!ALLOWED_CURSOS.includes(studentData.curso)) {
+                    document.getElementById('loadingScreen').innerHTML = '<div style="text-align:center;padding:50px 20px;color:#fbbf24;line-height:1.8">Esta mision no esta disponible para tu curso.<br><a href="dashboard.html" style="color:#93c5fd;display:inline-block;margin-top:10px;">Volver al panel</a></div>';
+                    return;
+                }
+
+                const task = taskSnap.val();
+                if (task && task.respuestas) {
+                    answers = task.respuestas;
+                }
+
+                if (task && task.completada) {
+                    const result = {
+                        correct: task.correctas || getResult().correct,
+                        total: QUESTIONS.length,
+                        percentage: task.porcentaje || Math.round(((task.correctas || 0) / QUESTIONS.length) * 100),
+                        xp: task.xp_ganado || ((task.correctas || 0) * 20)
+                    };
+                    if (!rewardSnap.exists()) {
+                        await awardTaskXP(result.xp, result.correct);
+                    }
+                    isSubmitted = true;
+                    showSubmittedState(result, true);
+                }
+
+                updateProgress();
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('app').style.display = '';
+            } catch (error) {
+                console.error('[Figuras] Load error:', error);
+                showToast('No se pudo cargar la mision');
+            }
+        });
+    </script>
+</body>
+</html>

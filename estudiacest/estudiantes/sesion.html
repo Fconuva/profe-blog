@@ -2061,8 +2061,10 @@
     let startTime = Date.now();
     let timerInterval = null;
     let autoSaveInterval = null;
+    let autoSaveTimeout = null;
     let isSubmitted = false;
     let resultsVisible = false;
+    let currentResult = null;
     let activeHighlightColor = null;
     let isDirty = false;
     let distractors = {};
@@ -2279,7 +2281,7 @@
             if (isSubmitted && resultsVisible) {
                 const resSnap = await db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).once('value');
                 if (resSnap.exists()) {
-                    // Results will be shown in renderSession
+                    currentResult = resSnap.val();
                 }
             }
 
@@ -2289,8 +2291,14 @@
                 if (newVal !== resultsVisible) {
                     resultsVisible = newVal;
                     if (isSubmitted && resultsVisible) {
-                        showResults();
-                        showToast('El profesor ha entregado la retroalimentacion de esta sesion');
+                        db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).once('value').then(resSnap => {
+                            currentResult = resSnap.exists() ? resSnap.val() : null;
+                            renderSession();
+                            showToast('El profesor ha entregado la retroalimentacion de esta sesion');
+                        }).catch(() => {
+                            showResults();
+                            showToast('El profesor ha entregado la retroalimentacion de esta sesion');
+                        });
                     }
                 }
             });
@@ -2539,7 +2547,9 @@
 
         if (isSubmitted) {
             html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
-            if (!resultsVisible) {
+            if (resultsVisible && currentResult) {
+                html += `<p style="font-size:13px; color:#64748b;">${buildResultSummary(currentResult)}</p>`;
+            } else if (!resultsVisible) {
                 html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
             }
         } else {
@@ -2637,7 +2647,7 @@
 
         selection.removeAllRanges();
         saveHighlightsState(textoId, parrafoNum, pTextEl);
-        isDirty = true;
+        markDirtyAndQueueSave();
     }
 
     function saveHighlightsState(textoId, parrafoNum, el) {
@@ -2659,7 +2669,7 @@
     function selectAnswer(questionId, letter) {
         if (isSubmitted) return;
         answers[questionId] = letter;
-        isDirty = true;
+        markDirtyAndQueueSave();
 
         // Update UI
         const block = document.getElementById('qblock-' + questionId);
@@ -2690,7 +2700,7 @@
         } else {
             distractors[questionId].push(letter);
         }
-        isDirty = true;
+        markDirtyAndQueueSave();
         // Update UI
         const block = document.getElementById('qblock-' + questionId);
         block.querySelectorAll('.option-item').forEach(opt => {
@@ -2706,6 +2716,22 @@
     }
     function getFilledNotes() {
         return Object.values(notes).filter(n => n && n.trim().length > 0).length;
+    }
+
+    function buildResultSummary(result, fallbackPct) {
+        const notaValue = Number(result && result.nota);
+        const notaTexto = Number.isFinite(notaValue) ? notaValue.toFixed(1) : '—';
+        const totalPctValue = Number(result && (result.porcentaje_final ?? result.porcentaje ?? fallbackPct ?? 0));
+        const altPctValue = Number(result && (result.alternativas_pct ?? result.porcentaje ?? fallbackPct ?? 0));
+        const writingPctValue = Number(result && result.escritura_pct);
+        const totalPct = Number.isFinite(totalPctValue) ? Math.round(totalPctValue) : 0;
+        const altPct = Number.isFinite(altPctValue) ? Math.round(altPctValue) : 0;
+
+        if (Number.isFinite(writingPctValue)) {
+            return `Resultados: ${totalPct}% de logro total · Alt ${altPct}% · Escritura ${Math.round(writingPctValue)}% · Nota ${notaTexto}`;
+        }
+
+        return `Resultados: ${totalPct}% de logro · Nota ${notaTexto}`;
     }
 
     function updateProgress() {
@@ -2746,7 +2772,7 @@
     function onNoteChange(el) {
         const key = el.dataset.noteKey;
         notes[key] = el.value;
-        isDirty = true;
+        markDirtyAndQueueSave();
         updateProgress();
         // Check for copy-paste from texts
         checkNoteCopyPaste(el);
@@ -3162,8 +3188,31 @@
     // ==================== AUTO-SAVE ====================
     let resetByAdmin = false; // flag to prevent auto-save after admin reset
 
+    function markDirtyAndQueueSave() {
+        isDirty = true;
+
+        const indicator = document.getElementById('saveIndicator');
+        if (indicator && !resetByAdmin) {
+            indicator.className = 'save-indicator saving';
+            indicator.textContent = '💾 Pendiente';
+        }
+
+        if (!sessionStarted || isSubmitted || resetByAdmin || !currentUser || !sessionId) {
+            return;
+        }
+
+        if (autoSaveTimeout) clearTimeout(autoSaveTimeout);
+        autoSaveTimeout = setTimeout(() => {
+            if (isDirty && !resetByAdmin) autoSave();
+        }, 1200);
+    }
+
     async function autoSave() {
         if (!currentUser || !sessionId || resetByAdmin) return;
+        if (autoSaveTimeout) {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = null;
+        }
         const indicator = document.getElementById('saveIndicator');
 
         try {
@@ -3286,6 +3335,7 @@
                     await new Promise(r => setTimeout(r, 1000));
                 }
             }
+            currentResult = resultData;
 
             // Update ranking (skip for pure surveys)
             if (!isFullEncuesta) {
@@ -3314,7 +3364,7 @@
             if (resVisSnap.val() === true) {
                 resultsVisible = true;
                 showResults();
-                html += `<p style="font-size:13px; color:#64748b;">Resultados: ${porcentaje}% de logro</p>`;
+                html += `<p style="font-size:13px; color:#64748b;">${buildResultSummary(currentResult, porcentaje)}</p>`;
             } else {
                 html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
             }
@@ -3848,7 +3898,7 @@
 
     // ==================== MESSAGING (Bell) ====================
     function listenForMessages() {
-        db.ref(BASE + '/mensajes').orderByChild('timestamp').limitToLast(1).on('value', snap => {
+        db.ref(BASE + '/mensajes').limitToLast(1).on('value', snap => {
             if (!snap.exists()) return;
             snap.forEach(child => {
                 const msg = child.val();

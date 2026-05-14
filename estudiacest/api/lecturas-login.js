@@ -2,8 +2,8 @@
 // Backend login para plataforma de Lecturas que evita el rate-limit de Firebase Auth
 // (auth/too-many-requests) cuando el estudiante usa la contrasena por defecto (primeros 6
 // digitos del RUT). Devuelve un custom token para signInWithCustomToken en el cliente.
-// Si el estudiante cambio su contrasena (password_changed=true) responde 409 y el cliente
-// hace fallback al login normal de Firebase Auth.
+// Si el estudiante usa una contrasena distinta a la predeterminada, responde 200 con una
+// senal de fallback para que el cliente continue con Firebase Auth sin generar ruido en consola.
 
 const admin = require('firebase-admin');
 
@@ -69,7 +69,7 @@ module.exports = async function handler(req, res) {
     if (password !== expected) {
       // No coincide con la contrasena por defecto: dejar que el cliente intente
       // el flujo normal contra Firebase Auth (puede haber cambiado su clave).
-      res.status(409).json({ error: 'fallback', code: 'use-firebase-auth' });
+      res.status(200).json({ fallback: true, code: 'use-firebase-auth' });
       return;
     }
     const email = rutToEmail(rut);

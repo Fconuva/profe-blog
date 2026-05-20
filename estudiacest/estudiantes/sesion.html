@@ -2095,6 +2095,9 @@
     let envioParcial = false;     // from session config
     let autoEncuesta = false;     // true if all questions are ENCUESTA
 
+    window.isUnloading = false;
+    window.isForceReloading = false;
+
     const BLUR_STRIKE_DELAY_MS = 5000;
 
     // ==================== INIT ====================
@@ -2267,8 +2270,11 @@
             document.querySelector('.highlighter-bar').style.display = 'none';
         }
 
-        // Warn before leaving
+        // Warn before leaving and manage unload strikes
         window.addEventListener('beforeunload', (e) => {
+            window.isUnloading = true;
+            setTimeout(() => { window.isUnloading = false; }, 1500);
+            if (window.isForceReloading) return;
             if (isDirty && !isSubmitted) { e.preventDefault(); e.returnValue = ''; }
         });
     }
@@ -3706,7 +3712,7 @@
 
     // ==================== STRIKE SYSTEM ====================
     function canMonitorStrike() {
-        return sessionStarted && !isSubmitted && !lockout;
+        return sessionStarted && !isSubmitted && !lockout && !window.isUnloading;
     }
 
     function showFocusWarning(secondsRemaining) {

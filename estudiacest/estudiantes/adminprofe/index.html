@@ -248,8 +248,9 @@
                     <option value="4A-HC">4°A HC</option>
                     <option value="4B-HC">4°B HC</option>
                 </select>
-                <div class="search-actions">
+                <div class="search-actions" style="display:flex;gap:8px">
                     <button class="btn btn-warn" onclick="forceRefreshCourse()">🔄 F5 al curso</button>
+                    <button class="btn btn-danger" onclick="forceRefreshAllStudents()">🚨 F5 Masivo (Todos)</button>
                 </div>
             </div>
             <div class="panel-table">
@@ -1087,6 +1088,21 @@ function renderStudents(){
                 <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.uid}')">🗑</button>
             </td></tr>`;
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
+}
+
+async function forceRefreshAllStudents(){
+    if(!confirm('🚨 ¿Forzar F5 MASIVO a TODOS los estudiantes de la plataforma?\n\nEsta acción recargará la página de todos los estudiantes activos en este momento, guardando sus cambios y sin registrar strikes.')) return;
+
+    try{
+        await db.ref(BASE+'/admin_refresh/all').set({
+            timestamp:Date.now(),
+            by:currentAdminUid||'admin'
+        });
+        toast('F5 Masivo enviado a todos los estudiantes','ok');
+    }catch(e){
+        console.error(e);
+        toast('No se pudo enviar el F5 masivo','err');
+    }
 }
 
 async function forceRefreshCourse(){

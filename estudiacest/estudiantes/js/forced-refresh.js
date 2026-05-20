@@ -46,7 +46,21 @@
 
                         reloadTriggered = true;
                         sessionStorage.setItem('student-force-refresh-ts', String(timestamp));
-                        window.location.reload();
+
+                        // Prevent strikes and bypass confirm box
+                        window.isForceReloading = true;
+                        window.isUnloading = true;
+
+                        // Safely autoSave first if available, then reload
+                        if (typeof window.autoSave === 'function') {
+                            window.autoSave().then(() => {
+                                window.location.reload();
+                            }).catch(() => {
+                                window.location.reload();
+                            });
+                        } else {
+                            window.location.reload();
+                        }
                     };
 
                     ref.on('value', handler);

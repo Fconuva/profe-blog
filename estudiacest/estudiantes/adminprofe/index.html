@@ -1023,7 +1023,8 @@ function renderLiveProgress(){
             statusBadge='<span class="badge badge-gray">🔘 Sin iniciar</span>';
         }
 
-        rows.push({uid,nombre:est.nombre,curso:est.curso,status,answeredCount,filledNotes,lastAct,statusBadge});
+        const strikesCount = resp ? (resp.strikes || 0) : 0;
+        rows.push({uid,nombre:est.nombre,curso:est.curso,status,answeredCount,filledNotes,lastAct,statusBadge,strikes:strikesCount});
     }
     // Sort: working first, then not started, then submitted
     const order={working:0,notstarted:1,submitted:2};
@@ -1039,16 +1040,49 @@ function renderLiveProgress(){
 
     document.getElementById('liveBody').innerHTML=rows.map(r=>{
         const prog=totalQ>0?`${r.answeredCount}/${totalQ} preg`+(totalNotes>0?` · ${r.filledNotes}/${totalNotes} notas`:''):'—';
+        const strikeDots=r.strikes>0?`<span style="margin-left:6px;font-size:11px" title="${r.strikes} strike(s)">${'🔴'.repeat(Math.min(r.strikes,3))}${'⚪'.repeat(Math.max(0,3-r.strikes))}</span>`:'';
+        const strikeBtn=r.strikes>0?`<button class="btn btn-sm" style="background:#0ea5e9;color:#fff;font-size:10px" title="Quitar strikes (${r.strikes})" onclick="liveResetStrikes('${r.uid}','${sesId}','${r.nombre}')">🔓 Quitar Strikes</button>`:'';
         const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button>`:'';
         return `<tr>
-            <td><strong>${r.nombre}</strong></td>
+            <td><strong>${r.nombre}</strong>${strikeDots}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cShort(r.curso)}</span></td>
             <td style="font-size:12px">${prog}</td>
             <td>${r.statusBadge}</td>
             <td style="font-size:12px;color:#64748b">${r.lastAct}</td>
-            <td>${actionBtn}</td>
+            <td>${actionBtn} ${strikeBtn}</td>
         </tr>`;
     }).join('')||'<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px">No hay estudiantes</td></tr>';
+}
+
+async function liveResetStrikes(uid, sesId, nombre){
+    if(!confirm('🔓 ¿Quitar strikes de '+nombre+'?\n\nSe limpiarán todos los strikes y bloqueos.\nSus respuestas se mantienen intactas.')) return;
+    try {
+        await Promise.all([
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/strikes').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_strikes').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_copia').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/completada').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/auto_submitted').remove(),
+            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/auto_submit_motivo').remove()
+        ]);
+        if(allResponses[sesId]&&allResponses[sesId][uid]){
+            delete allResponses[sesId][uid].strikes;
+            delete allResponses[sesId][uid].bloqueado_por_strikes;
+            delete allResponses[sesId][uid].bloqueado_por_copia;
+            delete allResponses[sesId][uid].completada;
+            delete allResponses[sesId][uid].auto_submitted;
+            delete allResponses[sesId][uid].auto_submit_motivo;
+        }
+        // Also remove result if student was force-submitted by strikes
+        const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove()];
+        for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
+        await Promise.all(rankRemovals);
+        if(allResults[sesId]) delete allResults[sesId][uid];
+        renderLiveProgress();
+        toast(nombre+': strikes eliminados ✅','ok');
+    } catch(e) {
+        toast('Error al quitar strikes: '+e.message,'err');
+    }
 }
 
 /* ============ STUDENTS ============ */

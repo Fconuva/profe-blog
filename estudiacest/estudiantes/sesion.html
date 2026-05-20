@@ -2623,7 +2623,7 @@
         if (isSubmitted) {
             html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
             if (resultsVisible && currentResult) {
-                html += `<p style="font-size:13px; color:#64748b;">${buildResultSummary(currentResult)}</p>`;
+                html += `<div style="font-size:13px; color:#64748b; margin-bottom: 12px;">${buildResultSummary(currentResult)}</div>`;
                 if (!feedbackVisible) {
                     html += `<p style="font-size:13px; color:#64748b;">La retroalimentación detallada por pregunta se mostrará cuando el profesor la habilite.</p>`;
                 }
@@ -2805,12 +2805,35 @@
         const writingPctValue = Number(result && result.escritura_pct);
         const totalPct = Number.isFinite(totalPctValue) ? Math.round(totalPctValue) : 0;
         const altPct = Number.isFinite(altPctValue) ? Math.round(altPctValue) : 0;
+        const correct = Number(result && (result.puntaje ?? 0));
+        const total = Number(result && (result.total ?? 0));
 
-        if (Number.isFinite(writingPctValue)) {
-            return `Resultados: ${totalPct}% de logro total · Alt ${altPct}% · Escritura ${Math.round(writingPctValue)}% · Nota ${notaTexto}`;
+        let simceHtml = '';
+        if (sessionId && sessionId.includes('simce') && total > 0 && !(result && result.es_encuesta)) {
+            const simceScore = window.calculateSimceScore ? window.calculateSimceScore(correct, total) : Math.round(100 + (correct / total) * 300);
+            const lvl = window.getSimceLevelInfo ? window.getSimceLevelInfo(simceScore) : { name: 'Adecuado', color: '#22c55e', bg: '#dcfce7', text: '#15803d', emoji: '🟢' };
+            simceHtml = `
+                <div style="margin-top:16px; padding:16px; border-radius:16px; background:linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); color:#ffffff; box-shadow:0 8px 16px rgba(30, 58, 138, 0.25); text-align:center; max-width:320px; margin-left:auto; margin-right:auto; border: 2px solid #1e3a8a;">
+                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; opacity:0.9;">Puntaje SIMCE Estimado</div>
+                    <div style="font-size:36px; font-weight:900; margin:4px 0; font-family:system-ui, -apple-system, sans-serif;">${simceScore} <span style="font-size:16px; font-weight:700;">pts</span></div>
+                    <div style="display:inline-block; padding:4px 10px; background:${lvl.bg}; border-radius:20px; font-size:12px; font-weight:800; color:${lvl.text}; margin-top:2px;">
+                        ${lvl.emoji} Nivel: ${lvl.name}
+                    </div>
+                </div>
+            `;
         }
 
-        return `Resultados: ${totalPct}% de logro · Nota ${notaTexto}`;
+        let mainText = '';
+        if (Number.isFinite(writingPctValue)) {
+            mainText = `Resultados: ${totalPct}% de logro total · Alt ${altPct}% · Escritura ${Math.round(writingPctValue)}% · Nota ${notaTexto}`;
+        } else {
+            mainText = `Resultados: ${totalPct}% de logro · Nota ${notaTexto}`;
+        }
+
+        return `<div style="display:flex; flex-direction:column; gap:12px; align-items:center;">
+            <div>${mainText}</div>
+            ${simceHtml}
+        </div>`;
     }
 
     function updateProgress() {
@@ -3444,6 +3467,57 @@
             feedbackVisible = feedbackSnap.val() === true;
 
             renderSession();
+
+            // If it's a SIMCE session, show the popup modal
+            if (sessionId && sessionId.includes('simce') && !isFullEncuesta) {
+                const simceScore = window.calculateSimceScore ? window.calculateSimceScore(correct, scoredTotal) : Math.round(100 + (correct/scoredTotal)*300);
+                const lvl = window.getSimceLevelInfo ? window.getSimceLevelInfo(simceScore) : { name: 'Adecuado', color: '#22c55e', bg: '#dcfce7', text: '#15803d', emoji: '🟢' };
+                
+                const modalDiv = document.createElement('div');
+                modalDiv.id = 'simceScoreModal';
+                modalDiv.style.cssText = 'position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(15, 23, 42, 0.75); backdrop-filter:blur(6px); z-index:10000; display:flex; justify-content:center; align-items:center; animation: fadeIn 0.3s ease;';
+                modalDiv.innerHTML = `
+                    <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes scaleUp {
+                        from { transform: scale(0.9); opacity: 0; }
+                        to { transform: scale(1); opacity: 1; }
+                    }
+                    </style>
+                    <div style="background:#ffffff; border-radius:24px; box-shadow:0 20px 40px rgba(0,0,0,0.3); width:90%; max-width:480px; padding:32px; text-align:center; transform: scale(0.9); animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; position:relative; border: 4px solid #1e3a8a;">
+                        <div style="font-size:48px; margin-bottom:12px;">🎉</div>
+                        <h3 style="font-size:24px; font-weight:900; color:#1e3a8a; margin:0 0 8px 0; font-family:system-ui, -apple-system, sans-serif;">¡Ensayo SIMCE Finalizado!</h3>
+                        <p style="font-size:14px; color:#475569; margin:0 0 20px 0;">Has enviado con éxito todas tus respuestas de hoy.</p>
+                        
+                        <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 24px; border-radius: 18px; color: #ffffff; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2), 0 8px 16px rgba(59, 130, 246, 0.25); margin-bottom: 24px;">
+                            <div style="font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:0.1em; opacity:0.9;">Puntaje SIMCE Estimado</div>
+                            <div style="font-size:48px; font-weight:900; margin:6px 0; font-family:system-ui, -apple-system, sans-serif;">${simceScore} <span style="font-size:20px; font-weight:700;">pts</span></div>
+                            <div style="display:inline-block; padding:6px 14px; background:${lvl.bg}; border-radius:30px; font-size:13px; font-weight:800; color:${lvl.text}; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 4px;">
+                                ${lvl.emoji} Nivel: ${lvl.name}
+                            </div>
+                        </div>
+
+                        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; background:#f8fafc; padding:12px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:24px; font-size:13px; color:#334155;">
+                            <div>
+                                <strong style="color:#64748b; display:block; font-size:11px; text-transform:uppercase;">Respuestas Correctas</strong>
+                                <span style="font-size:16px; font-weight:800; color:#0f172a;">${correct} / ${scoredTotal}</span>
+                            </div>
+                            <div>
+                                <strong style="color:#64748b; display:block; font-size:11px; text-transform:uppercase;">Porcentaje de Logro</strong>
+                                <span style="font-size:16px; font-weight:800; color:#0f172a;">${porcentaje}%</span>
+                            </div>
+                        </div>
+
+                        <button onclick="document.getElementById('simceScoreModal').remove()" style="width:100%; padding:14px; background:#1e3a8a; color:#ffffff; border:none; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer; box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3); transition: all 0.2s ease;">
+                            Entendido
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(modalDiv);
+            }
 
         } catch(e) {
             console.error('Submit error:', e);

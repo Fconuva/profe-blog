@@ -3185,9 +3185,18 @@ function loadResults(){
     `;
 
     const tbody=document.getElementById('resultsBody');
+    const isSimce=(sesId||'').includes('simce');
     tbody.innerHTML=items.map((r,i)=>{
         const cursoLabel=cShort(r.curso);
         const mins=r.tiempo_min||Math.round(r.tiempo/60000)||0;
+        let simceHtml='';
+        if(isSimce && r.total>0){
+            const simceScore=window.calculateSimceScore ? window.calculateSimceScore(r.puntaje, r.total) : Math.round(100 + (r.puntaje/r.total)*300);
+            const lvl=window.getSimceLevelInfo ? window.getSimceLevelInfo(simceScore) : null;
+            if(lvl){
+                simceHtml=`<div style="margin-top:4px"><span style="background:${lvl.bg};color:${lvl.text};padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700">${lvl.emoji} SIMCE: ${simceScore} pts (${lvl.name})</span></div>`;
+            }
+        }
         const flagHtml=r.flags.length>0?`<div style="margin-top:4px"><span style="background:#fef2f2;color:#dc2626;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700">⚠️ ${r.flags.join(' · ')}</span></div>`:'';
         const rowBg=r.esCopia?' style="background:#fde2e2"':r.flags.length>0?' style="background:#fef2f2"':'';
         const notaColor=r.nota>=4.0?'#16a34a':'#dc2626';
@@ -3195,7 +3204,7 @@ function loadResults(){
             `<button class="btn btn-sm btn-success" style="font-size:10px" onclick="desmarcarCopia('${r.uid}','${sesId}','${r.nombre}')">✅ Quitar</button>`:
             `<button class="btn btn-sm btn-danger" style="font-size:10px" onclick="marcarCopia('${r.uid}','${sesId}','${r.nombre}')">🚫 Copia</button>`;
         return `<tr${rowBg}>
-            <td><strong>${r.nombre}</strong>${flagHtml}</td>
+            <td><strong>${r.nombre}</strong>${flagHtml}${simceHtml}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
             <td>${r.puntaje}/${r.total}</td>
             <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}</td>

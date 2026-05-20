@@ -771,9 +771,53 @@
         })
     };
 
+    window.calculateSimceScore = function (correct, total) {
+        if (typeof correct !== 'number' || typeof total !== 'number' || total <= 0) return 0;
+        if (total === 35) {
+            var table = [
+                100, 110, 120, 130, 140, // 0 to 4
+                148, 156, 164, 172, 180, // 5 to 9
+                188, 196, 202, 208, 214, // 10 to 14
+                220,                      // 15
+                226, 232, 238, 244, 250, // 16 to 20
+                256, 262, 268, 274,       // 21 to 24
+                280, 288, 296, 304, 314, // 25 to 29
+                324, 336, 348, 362, 378, // 30 to 34
+                400                      // 35
+            ];
+            return table[correct] || 100;
+        }
+        var scaledCorrect = Math.round((correct / total) * 35);
+        var fallbackTable = [
+            100, 110, 120, 130, 140,
+            148, 156, 164, 172, 180,
+            188, 196, 202, 208, 214,
+            220,
+            226, 232, 238, 244, 250,
+            256, 262, 268, 274,
+            280, 288, 296, 304, 314,
+            324, 336, 348, 362, 378,
+            400
+        ];
+        return fallbackTable[scaledCorrect] || 100;
+    };
+
+    window.getSimceLevelInfo = function (score) {
+        if (score >= 276) {
+            return { name: 'Adecuado', color: '#22c55e', bg: '#dcfce7', text: '#15803d', emoji: '🟢' };
+        } else if (score >= 221) {
+            return { name: 'Elemental', color: '#f59e0b', bg: '#fef3c7', text: '#b45309', emoji: '🟡' };
+        } else {
+            return { name: 'Insuficiente', color: '#ef4444', bg: '#fee2e2', text: '#b91c1c', emoji: '🔴' };
+        }
+    };
+
     window.SIMCE_PREASSIGNED_ENSAYOS_2026 = sessions;
     window.getSimcePreassignedEnsayo2026 = function (sessionId) {
-        var session = sessions[sessionId];
+        var cleanId = (sessionId || '').replace(/é/g, 'e').replace(/É/g, 'E');
+        var withAccent = cleanId.replace('miercoles', 'miércoles');
+        var withoutAccent = cleanId.replace('miércoles', 'miercoles');
+        var session = sessions[sessionId] || sessions[cleanId] || sessions[withAccent] || sessions[withoutAccent];
         return session ? JSON.parse(JSON.stringify(session)) : null;
     };
 }());

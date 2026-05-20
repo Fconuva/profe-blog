@@ -2087,6 +2087,7 @@
     let lockout = false;
     let focusWarnTimer = null;
     let focusWarnInterval = null;
+    let visibilityStrikeTimer = null;
     let focusLostAt = null;
     let focusLossActive = false;
     let strikeCountedForFocusLoss = false;
@@ -3866,7 +3867,13 @@
     }
 
     function handleVisibilityStrike() {
-        if (!canMonitorStrike()) return;
+        if (!canMonitorStrike()) {
+            if (visibilityStrikeTimer) {
+                clearTimeout(visibilityStrikeTimer);
+                visibilityStrikeTimer = null;
+            }
+            return;
+        }
 
         if (document.hidden) {
             if (!focusLossActive) {
@@ -3878,11 +3885,21 @@
             clearBlurStrikeTimers();
 
             if (!strikeCountedForFocusLoss) {
-                registerStrike();
+                if (visibilityStrikeTimer) clearTimeout(visibilityStrikeTimer);
+                visibilityStrikeTimer = setTimeout(() => {
+                    visibilityStrikeTimer = null;
+                    if (document.hidden && canMonitorStrike()) {
+                        registerStrike();
+                    }
+                }, 200);
             }
             return;
         }
 
+        if (visibilityStrikeTimer) {
+            clearTimeout(visibilityStrikeTimer);
+            visibilityStrikeTimer = null;
+        }
         handleFocusReturn();
     }
 

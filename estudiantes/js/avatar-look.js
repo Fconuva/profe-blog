@@ -215,12 +215,12 @@
             '.avatar-layer{position:absolute;inset:0;pointer-events:none}',
             '.avatar-mask{display:block;background-position:center;background-repeat:no-repeat;background-size:contain;transform-origin:center center}',
             '.avatar-aura{inset:-12%;filter:blur(12px);opacity:.9;transform:scale(1.04)}',
-            '.avatar-body{z-index:2;transform:translateY(4px) scale(.98)}',
-            '.avatar-outfit{z-index:3;transform:translateY(7px) scale(.98)}',
-            '.avatar-eyes{z-index:4;transform:translateY(-8px) scale(1.18)}',
-            '.avatar-mouth{z-index:5;transform:translateY(-4px) scale(1.14)}',
-            '.avatar-hair{z-index:6;transform:translateY(-10px) scale(1.16)}',
-            '.avatar-accessory{z-index:7;transform:translateY(-6px) scale(1.08)}',
+            '.avatar-body{z-index:2}',
+            '.avatar-outfit{z-index:3}',
+            '.avatar-eyes{z-index:4}',
+            '.avatar-mouth{z-index:5}',
+            '.avatar-hair{z-index:6}',
+            '.avatar-accessory{z-index:7}',
             '.avatar-badge{position:absolute;right:6px;bottom:6px;z-index:8;padding:3px 6px;border-radius:999px;background:rgba(15,23,42,.82);color:#fff;font-size:9px;font-weight:800;letter-spacing:.4px;text-transform:uppercase}'
         ].join('');
         document.head.appendChild(style);

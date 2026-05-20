@@ -264,10 +264,29 @@
             <div class="btn-row">
                 <button class="btn btn-primary" onclick="openModal('addSession')">+ Nueva Sesión</button>
                 <button class="btn" style="background:#2563eb;color:#fff" onclick="preloadSession8()">📦 Precargar Clase 8</button>
+                <button class="btn" style="background:#0f766e;color:#fff" onclick="preloadPreassignedEnsayo('ensayo-simce-miercoles-2a-hc-2026')">📦 Precargar Ensayo 2A HC</button>
+                <button class="btn" style="background:#1d4ed8;color:#fff" onclick="preloadPreassignedEnsayo('ensayo-simce-miercoles-2b-hc-2026')">📦 Precargar Ensayo 2B HC</button>
                 <button class="btn" style="background:#f59e0b;color:#fff" onclick="preloadRetroIdee()">📦 Precargar Repaso Ensayo SIMCE</button>
             </div>
+            <div class="search-bar" style="align-items:center;gap:10px">
+                <select id="sessionCourseFilter" onchange="applySessionScopeFilters()">
+                    <option value="">Todos los cursos</option>
+                    <option value="__general">📂 Sin curso / general</option>
+                </select>
+                <select id="sessionUnitFilter" onchange="applySessionScopeFilters()">
+                    <option value="">Todas las unidades</option>
+                    <option value="u2">🚀 Unidad 2</option>
+                    <option value="u1">📚 Unidad 1</option>
+                    <option value="__legacy">🗂 Sin unidad / legado</option>
+                </select>
+                <label style="display:flex;align-items:center;gap:8px;background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:8px 12px;font-size:12px;color:#475569;white-space:nowrap">
+                    <input type="checkbox" id="sessionHideArchived" checked onchange="applySessionScopeFilters()">
+                    Ocultar archivadas
+                </label>
+                <span id="sessionScopeSummary" style="margin-left:auto;font-size:12px;color:#64748b"></span>
+            </div>
             <div class="panel-table">
-                <table><thead><tr><th>#</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
+                <table><thead><tr><th>Creada</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Retro</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
                 <tbody id="sessionsBody"></tbody></table>
             </div>
         </div>
@@ -482,6 +501,7 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 </div><!-- /adminPanel -->
 
 <script src="/estudiantes/js/avatar-levels.js"></script>
+<script src="/estudiantes/js/simce-preassigned-ensayos-2026.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -605,11 +625,159 @@ function isMiCurso(curso){
     return (currentDocente?.cursos||[]).includes(curso);
 }
 
+function sesionAsignadaAMisCursos(ses){
+    if(currentDocente?.superadmin) return true;
+    const cursos=currentDocente?.cursos||[];
+    const asignados=getSessionAssignedCourses(ses);
+    return asignados.some(item=>cursos.includes(item));
+}
+
 function isMiSesion(ses){
-    // Superadmin sees all. Teachers see sessions they created or without docenteUid (legacy)
+    // Superadmin sees all. Teachers see their own sessions, legacy sessions,
+    // and course-assigned shared sessions like preloaded SIMCE essays.
     if(currentDocente?.superadmin) return true;
     if(!ses.docenteUid) return true; // legacy sessions visible to all
+    if(sesionAsignadaAMisCursos(ses)) return true;
     return ses.docenteUid===currentAdminUid;
+}
+
+function getSessionAssignedCourses(ses){
+    if(Array.isArray(ses?.asignados)) return ses.asignados.filter(Boolean);
+    if(typeof ses?.asignados==='string') return [ses.asignados];
+    if(ses?.asignados&&typeof ses.asignados==='object') return Object.keys(ses.asignados);
+    return [];
+}
+
+function isSessionArchived(ses){
+    return ses?.archivada===true;
+}
+
+function normalizeSessionUnit(unit){
+    const raw=String(unit||'').trim().toLowerCase();
+    if(!raw) return '';
+    const compact=raw.replace(/[^a-z0-9]/g,'');
+    if(compact==='u1'||compact==='unidad1') return 'u1';
+    if(compact==='u2'||compact==='unidad2') return 'u2';
+    return raw;
+}
+
+function getSessionCreatedAt(ses){
+    return Number(ses?.createdAt||ses?.created_at||ses?.timestamp||0)||0;
+}
+
+function getSessionUnitRank(unit){
+    const normalized=normalizeSessionUnit(unit);
+    const match=normalized.match(/^u(\d+)$/);
+    return match?parseInt(match[1],10):0;
+}
+
+function getSessionUnitLabel(unit){
+    const normalized=normalizeSessionUnit(unit);
+    if(normalized==='u1') return 'Unidad 1';
+    if(normalized==='u2') return 'Unidad 2';
+    if(!normalized) return 'Sin unidad';
+    return String(unit||'Sin unidad');
+}
+
+function formatSessionCreatedAt(ses){
+    const createdAt=getSessionCreatedAt(ses);
+    if(!createdAt) return '—';
+    return new Date(createdAt).toLocaleString('es-CL',{
+        day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'
+    });
+}
+
+function getSessionSelectorLabel(ses){
+    const parts=[];
+    const unit=normalizeSessionUnit(ses.panel_unidad);
+    const courses=getSessionAssignedCourses(ses);
+    if(unit) parts.push(getSessionUnitLabel(unit));
+    if(courses.length===1) parts.push(cShort(courses[0]));
+    else if(courses.length>1) parts.push(courses.map(cShort).join('/'));
+    const archivedPrefix=isSessionArchived(ses)?'🗄 ':'';
+    return archivedPrefix+(parts.length?`${ses.titulo||ses.id} · ${parts.join(' · ')}`:(ses.titulo||ses.id));
+}
+
+function populateSessionCourseFilter(){
+    const selectEl=document.getElementById('sessionCourseFilter');
+    if(!selectEl) return;
+    const current=selectEl.value;
+    const cursos=misCursos();
+    let html='<option value="">Todos los cursos</option><option value="__general">📂 Sin curso / general</option>';
+    for(const curso of cursos){
+        html+=`<option value="${curso}"${curso===current?' selected':''}>${cLabel(curso)}</option>`;
+    }
+    selectEl.innerHTML=html;
+}
+
+function getSessionScopeState(){
+    return {
+        courseFilter:document.getElementById('sessionCourseFilter')?.value||'',
+        unitFilter:document.getElementById('sessionUnitFilter')?.value||'',
+        hideArchived:document.getElementById('sessionHideArchived')?.checked===true
+    };
+}
+
+function getVisibleSessionEntries(){
+    const {courseFilter,unitFilter,hideArchived}=getSessionScopeState();
+    let items=Object.entries(sessions)
+        .map(([id,s])=>({id,...s}))
+        .filter(s=>isMiSesion(s));
+
+    if(hideArchived){
+        items=items.filter(s=>!isSessionArchived(s));
+    }
+
+    if(courseFilter==='__general'){
+        items=items.filter(s=>getSessionAssignedCourses(s).length===0);
+    }else if(courseFilter){
+        items=items.filter(s=>getSessionAssignedCourses(s).includes(courseFilter));
+    }
+
+    if(unitFilter==='__legacy'){
+        items=items.filter(s=>!normalizeSessionUnit(s.panel_unidad));
+    }else if(unitFilter){
+        items=items.filter(s=>normalizeSessionUnit(s.panel_unidad)===unitFilter);
+    }
+
+    items.sort((a,b)=>{
+        const byCreated=getSessionCreatedAt(b)-getSessionCreatedAt(a);
+        if(byCreated!==0) return byCreated;
+        const byUnit=getSessionUnitRank(b.panel_unidad)-getSessionUnitRank(a.panel_unidad);
+        if(byUnit!==0) return byUnit;
+        const byOrden=(Number(b.orden)||0)-(Number(a.orden)||0);
+        if(byOrden!==0) return byOrden;
+        return (a.titulo||a.id||'').localeCompare(b.titulo||b.id||'');
+    });
+
+    return items;
+}
+
+function renderSessionScopeSummary(items){
+    const el=document.getElementById('sessionScopeSummary');
+    if(!el) return;
+    const allItems=Object.values(sessions).filter(s=>isMiSesion(s));
+    const total=allItems.length;
+    const archivedCount=allItems.filter(s=>isSessionArchived(s)).length;
+    const {courseFilter,unitFilter,hideArchived}=getSessionScopeState();
+    const summary=['Mostrando '+items.length+' de '+total+' sesiones','mas nuevas primero'];
+    if(courseFilter==='__general') summary.push('Solo sin curso');
+    else if(courseFilter) summary.push(cLabel(courseFilter));
+    if(unitFilter==='__legacy') summary.push('Solo sin unidad');
+    else if(unitFilter) summary.push(getSessionUnitLabel(unitFilter));
+    summary.push(hideArchived?'Archivadas ocultas':'Archivadas visibles');
+    if(archivedCount) summary.push(archivedCount+' archivada(s)');
+    el.textContent=summary.join(' · ');
+}
+
+function applySessionScopeFilters(){
+    renderSessions();
+    populateResultsDropdown();
+    populateLiveDropdown();
+    populateRankingDropdown();
+    loadResults();
+    renderLiveProgress();
+    loadAdminRanking();
 }
 
 function applyDocenteFilters(){
@@ -635,6 +803,9 @@ function applyDocenteFilters(){
     // Ranking course filter
     const rankingFilter=document.getElementById('rankingCourseFilter');
     if(rankingFilter) updateCourseSelect(rankingFilter,cursosDisponibles,true);
+
+    // Session course filter
+    populateSessionCourseFilter();
 
     // New student curso select
     const newStudentCurso=document.getElementById('newStudentCurso');
@@ -761,9 +932,8 @@ function populateLiveDropdown(){
     const sel=document.getElementById('liveSesSelect');
     const cur=sel.value;
     let opts='<option value="">Selecciona sesión...</option>';
-    Object.entries(sessions).forEach(([id,s])=>{
-        if(!isMiSesion(s)) return;
-        opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
+    getVisibleSessionEntries().forEach(s=>{
+        opts+=`<option value="${s.id}" ${s.id===cur?'selected':''}>${getSessionSelectorLabel(s)}</option>`;
     });
     sel.innerHTML=opts;
 }
@@ -1189,23 +1359,33 @@ function viewStudentDetail(uid){
 /* ============ SESSIONS ============ */
 function renderSessions(){
     const tbody=document.getElementById('sessionsBody');
-    let items=Object.entries(sessions).map(([id,s])=>({id,...s}));
-    // Filter by docente ownership
-    items=items.filter(s=>isMiSesion(s));
-    items.sort((a,b)=>(a.orden||0)-(b.orden||0));
+    const items=getVisibleSessionEntries();
+    renderSessionScopeSummary(items);
 
     tbody.innerHTML=items.map(s=>{
         const numTexts=(s.contenido?.textos||[]).length;
         const numQ=(s.contenido?.preguntas||[]).length;
         const progBadge=s.programa==='paes'?'<span class="badge badge-green">PAES</span>':'<span class="badge badge-blue">SIMCE</span>';
-        const asigBadge=s.asignados?`<span class="badge badge-purple">👤 ${s.asignados.length} asignado(s)</span>`:'';
+        const archived=isSessionArchived(s);
+        const archivedBadge=archived?'<span class="badge badge-gray">🗄 Archivada</span>':'';
+        const assignedCourses=getSessionAssignedCourses(s);
+        const asignadosCount=assignedCourses.length;
+        const asigBadge=asignadosCount?`<span class="badge badge-purple">👤 ${asignadosCount} asignado(s)</span>`:'';
+        const meta=[];
+        const unit=normalizeSessionUnit(s.panel_unidad);
+        if(unit) meta.push(getSessionUnitLabel(unit));
+        if(assignedCourses.length) meta.push(assignedCourses.map(cLabel).join(', '));
+        else meta.push('Sin curso / general');
+        const createdLabel=formatSessionCreatedAt(s);
+        if(createdLabel!=='—') meta.push('Creada '+createdLabel);
         return `<tr>
-            <td><strong>${s.orden||'—'}</strong></td>
-            <td>${s.titulo||'Sin título'} ${progBadge} ${asigBadge}<br><span style="font-size:11px;color:#94a3b8">${(s.descripcion||'').substring(0,60)}</span></td>
+            <td><strong>${createdLabel}</strong></td>
+            <td>${s.titulo||'Sin título'} ${progBadge} ${archivedBadge} ${asigBadge}<br><span style="font-size:11px;color:#94a3b8">${meta.join(' · ')||'Sin metadatos'}${s.descripcion?' · '+(s.descripcion||'').substring(0,60):''}</span></td>
             <td style="text-align:center">${numTexts}</td>
             <td style="text-align:center">${numQ}</td>
             <td><label class="toggle"><input type="checkbox" ${s.activa!==false?'checked':''} onchange="toggleSesField('${s.id}','activa',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.resultados_visibles?'checked':''} onchange="toggleSesField('${s.id}','resultados_visibles',this.checked)"><span class="slider"></span></label></td>
+            <td><label class="toggle"><input type="checkbox" ${s.retroalimentacion_visible?'checked':''} onchange="toggleSesField('${s.id}','retroalimentacion_visible',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.anticopia_activo!==false?'checked':''} onchange="toggleSesField('${s.id}','anticopia_activo',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.notas_evaluadas!==false?'checked':''} onchange="toggleSesField('${s.id}','notas_evaluadas',this.checked)"><span class="slider"></span></label></td>
             <td><label class="toggle"><input type="checkbox" ${s.envio_parcial?'checked':''} onchange="toggleSesField('${s.id}','envio_parcial',this.checked)"><span class="slider"></span></label></td>
@@ -1217,6 +1397,7 @@ function renderSessions(){
                     <option value="30" ${s.tiempo_limite==30?'selected':''}>30 min</option>
                     <option value="45" ${s.tiempo_limite==45?'selected':''}>45 min</option>
                     <option value="60" ${s.tiempo_limite==60?'selected':''}>60 min</option>
+                    <option value="70" ${s.tiempo_limite==70?'selected':''}>70 min</option>
                     <option value="75" ${s.tiempo_limite==75?'selected':''}>75 min</option>
                     <option value="90" ${s.tiempo_limite==90?'selected':''}>90 min</option>
                     <option value="120" ${s.tiempo_limite==120?'selected':''}>120 min</option>
@@ -1224,18 +1405,47 @@ function renderSessions(){
             </td>
             <td>
                 <button class="btn btn-sm" style="background:#3b82f6;color:#fff" onclick="viewSession('${s.id}')">👁 Ver</button>
+                <button class="btn btn-sm" style="background:${archived?'#16a34a':'#64748b'};color:#fff" onclick="toggleSessionArchive('${s.id}',${!archived})">${archived?'📂 Desarchivar':'🗄 Archivar'}</button>
                 <button class="btn btn-sm btn-warn" onclick="resetSessionResults('${s.id}')">🔄 Reset</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteSession('${s.id}')">🗑</button>
             </td></tr>`;
-    }).join('')||'<tr><td colspan="10" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones</td></tr>';
+    }).join('')||'<tr><td colspan="13" style="text-align:center;color:#94a3b8;padding:20px">No hay sesiones</td></tr>';
 }
 
 async function toggleSesField(sesId,field,val){
     try{
         await db.ref(BASE+'/sesiones/'+sesId+'/'+field).set(val);
         sessions[sesId][field]=val;
-        toast(field+' actualizado','ok');
+        const labels={
+            activa:'Activa',
+            resultados_visibles:'Resultados',
+            retroalimentacion_visible:'Retroalimentación',
+            anticopia_activo:'Anti-copia',
+            notas_evaluadas:'Notas',
+            envio_parcial:'Envío parcial'
+        };
+        toast((labels[field]||field)+' actualizado','ok');
     }catch(e){toast('Error','err')}
+}
+
+async function toggleSessionArchive(sesId,val){
+    const ses=sessions[sesId];
+    if(!ses) return;
+    const action=val?'ARCHIVAR':'DESARCHIVAR';
+    const title=ses.titulo||sesId;
+    const hint=val
+        ? 'Seguirá existiendo, pero se ocultará cuando el filtro "Ocultar archivadas" esté activo.'
+        : 'Volverá a mostrarse normalmente en el admin.';
+    if(!confirm('¿'+action+' la sesión "'+title+'"?\n'+hint)) return;
+    try{
+        const patch=val
+            ? {archivada:true,archivedAt:Date.now(),archivedBy:currentAdminUid||true}
+            : {archivada:false,archivedAt:null,archivedBy:null};
+        await db.ref(BASE+'/sesiones/'+sesId).update(patch);
+        Object.assign(sessions[sesId],patch);
+        applySessionScopeFilters();
+        toast(val?'Sesión archivada':'Sesión desarchivada','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
 }
 
 async function setTiempoLimite(sesId,val){
@@ -1325,7 +1535,7 @@ async function createSession(){
     try{
         await db.ref(BASE+'/sesiones/'+id).set({
             titulo:title,descripcion:desc,orden:orden,programa:prog,
-            activa:true,resultados_visibles:false,
+            activa:true,resultados_visibles:false,retroalimentacion_visible:false,
             panel_seccion:'plan',panel_orden:orden,
             video_youtube:video||null,
             contenido:{textos:[],preguntas:[]},
@@ -1333,7 +1543,7 @@ async function createSession(){
             docenteNombre:currentDocente?.nombre||'',
             createdAt:Date.now()
         });
-        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,panel_seccion:'plan',panel_orden:orden,contenido:{textos:[],preguntas:[]},docenteUid:currentAdminUid,docenteNombre:currentDocente?.nombre||''};
+        sessions[id]={titulo:title,descripcion:desc,orden:orden,activa:true,resultados_visibles:false,retroalimentacion_visible:false,panel_seccion:'plan',panel_orden:orden,contenido:{textos:[],preguntas:[]},docenteUid:currentAdminUid,docenteNombre:currentDocente?.nombre||''};
         renderSessions();populateResultsDropdown();
         closeModal('addSession');
         toast('Sesión creada','ok');
@@ -2433,6 +2643,27 @@ async function preloadSession8(){
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
+async function preloadPreassignedEnsayo(sessionId){
+    const sesData=window.getSimcePreassignedEnsayo2026?window.getSimcePreassignedEnsayo2026(sessionId):null;
+    if(!sesData){toast('No se encontro la definicion del ensayo','err');return}
+
+    const cursos=(sesData.asignados||[]).join(', ')||'sin curso';
+    const totalTextos=(sesData.contenido?.textos||[]).length;
+    const totalPreguntas=(sesData.contenido?.preguntas||[]).length;
+    if(!confirm('¿Precargar '+sesData.titulo+'?\n\nCurso preasignado: '+cursos+'\nTextos: '+totalTextos+'\nPreguntas: '+totalPreguntas+'\nTiempo limite: '+(sesData.tiempo_limite||0)+' min\n\nLos estudiantes del curso asignado veran este ensayo directamente, sin elegir entre varias opciones.'))return;
+
+    try{
+        sesData.createdAt=Date.now();
+        sesData.docenteUid=currentAdminUid;
+        sesData.docenteNombre=currentDocente?.nombre||'';
+        await db.ref(BASE+'/sesiones/'+sessionId).set(sesData);
+        sessions[sessionId]=sesData;
+        renderSessions();
+        populateResultsDropdown();
+        toast('Ensayo preasignado cargado para '+cursos,'ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 async function resetSessionResults(sesId){
     const ses=sessions[sesId];
     if(!confirm('¿Eliminar TODOS los resultados y respuestas de "'+ses.titulo+'"?\nLos estudiantes deberán completar la sesión nuevamente.'))return;
@@ -2595,7 +2826,7 @@ function viewSession(sesId){
     const textos=c.textos||[];
     const pregs=c.preguntas||[];
     let html=`<p style="color:#64748b;margin-bottom:12px">${ses.descripcion||''}</p>`;
-    html+=`<p style="margin-bottom:16px"><strong>${textos.length} textos</strong> · <strong>${pregs.length} preguntas</strong> · Estado: ${ses.activa!==false?'🟢 Activa':'🔴 Inactiva'} · Resultados: ${ses.resultados_visibles?'👁 Visibles':'🔒 Ocultos'}</p>`;
+    html+=`<p style="margin-bottom:16px"><strong>${textos.length} textos</strong> · <strong>${pregs.length} preguntas</strong> · Estado: ${ses.activa!==false?'🟢 Activa':'🔴 Inactiva'} · Resultados: ${ses.resultados_visibles?'👁 Visibles':'🔒 Ocultos'} · Retro: ${ses.retroalimentacion_visible?'🧠 Visible':'🙈 Oculta'}</p>`;
     textos.forEach(t=>{
         html+=`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;margin-bottom:12px">`;
         html+=`<h4 style="font-size:14px;margin-bottom:4px">${t.titulo}</h4>`;
@@ -2624,6 +2855,32 @@ function viewStudentResponses(uid, sesId){
     if(!est||!ses)return;
 
     document.getElementById('respStudentName').textContent=est.nombre+' — '+(ses.titulo||sesId);
+
+    const presentedOptionsMap=resp?.presented_options||res?.presented_options||{};
+    function normalizePresentedOption(option,question){
+        if(!option)return null;
+        const originalLetter=option.originalLetter||option.original||option.letraOriginal||option.letra||'';
+        const displayLetter=option.displayLetter||option.display||option.letra||originalLetter;
+        const fallbackText=(question?.opciones||[]).find(o=>o.letra===originalLetter)?.texto||'';
+        return {originalLetter,displayLetter,text:option.text||fallbackText};
+    }
+    function getPresentedSet(question,...keys){
+        for(const key of keys){
+            const raw=presentedOptionsMap[key];
+            if(Array.isArray(raw)&&raw.length){
+                return raw
+                    .map(opt=>normalizePresentedOption(opt,question))
+                    .filter(Boolean)
+                    .sort((a,b)=>String(a.displayLetter).localeCompare(String(b.displayLetter)));
+            }
+        }
+        return (question?.opciones||[]).map(o=>({originalLetter:o.letra,displayLetter:o.letra,text:o.texto}));
+    }
+    function getDisplayedLetter(originalLetter,presentedSet){
+        if(!originalLetter||originalLetter==='—')return originalLetter;
+        const match=(presentedSet||[]).find(opt=>opt.originalLetter===originalLetter);
+        return match?match.displayLetter:originalLetter;
+    }
 
     let html='';
     // Summary bar
@@ -2654,21 +2911,24 @@ function viewStudentResponses(uid, sesId){
         pregs.forEach(q=>{
             const detailKey=ses.link_guia?(String(q.id).startsWith('q')?String(q.id):'q'+q.id):String(q.id);
             const detail=res?.detalle?.[detailKey]||res?.detalle?.[q.id];
+            const presentedSet=getPresentedSet(q,detailKey,String(q.id),'q'+String(q.id));
             const userAns=detail?.respuesta||answers[detailKey]||answers[q.id]||'—';
             const correcta=detail?.correcta||q.correcta||'—';
+            const userAnsDisplay=getDisplayedLetter(userAns,presentedSet);
+            const correctaDisplay=getDisplayedLetter(correcta,presentedSet);
             const isCorrect=detail?.esCorrecta===true||(userAns===correcta);
             const icon=isCorrect?'✅':'❌';
             const bg=isCorrect?'#f0fdf4':'#fef2f2';
             const border=isCorrect?'#86efac':'#fca5a5';
             html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
             html+=`<div style="font-weight:700;font-size:12px">${icon} P${q.id}. ${q.enunciado}</div>`;
-            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
+            html+=`<div style="font-size:12px;margin-top:4px">Respuesta vista: <strong>${userAnsDisplay}</strong> | Correcta vista: <strong style="color:#16a34a">${correctaDisplay}</strong></div>`;
             // Show options
-            (q.opciones||[]).forEach(o=>{
-                const isUser=o.letra===userAns;
-                const isCor=o.letra===correcta;
+            presentedSet.forEach(o=>{
+                const isUser=o.originalLetter===userAns;
+                const isCor=o.originalLetter===correcta;
                 const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
-                html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.letra}) ${o.texto}</div>`;
+                html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.displayLetter}) ${o.text}</div>`;
             });
             html+='</div>';
         });
@@ -2677,15 +2937,24 @@ function viewStudentResponses(uid, sesId){
             const extraKeys=Object.keys(res.detalle).filter(k=>!knownKeys.has(k));
             extraKeys.forEach(qKey=>{
                 const d=res.detalle[qKey];
+                const presentedSet=getPresentedSet(null,qKey,'q'+String(qKey));
                 const userAns=d?.respuesta||'—';
                 const correcta=d?.correcta||'—';
+                const userAnsDisplay=getDisplayedLetter(userAns,presentedSet);
+                const correctaDisplay=getDisplayedLetter(correcta,presentedSet);
                 const isCorrect=d?.esCorrecta===true;
                 const icon=isCorrect?'✅':'❌';
                 const bg=isCorrect?'#f0fdf4':'#fef2f2';
                 const border=isCorrect?'#86efac':'#fca5a5';
                 html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
                 html+=`<div style="font-weight:700;font-size:12px">${icon} ${qKey.toUpperCase()}</div>`;
-                html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
+                html+=`<div style="font-size:12px;margin-top:4px">Respuesta vista: <strong>${userAnsDisplay}</strong> | Correcta vista: <strong style="color:#16a34a">${correctaDisplay}</strong></div>`;
+                presentedSet.forEach(o=>{
+                    const isUser=o.originalLetter===userAns;
+                    const isCor=o.originalLetter===correcta;
+                    const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
+                    html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.displayLetter}) ${o.text}</div>`;
+                });
                 html+='</div>';
             });
         }
@@ -2694,15 +2963,24 @@ function viewStudentResponses(uid, sesId){
         const detKeys=Object.keys(res.detalle).sort((a,b)=>Number(a)-Number(b));
         detKeys.forEach(qId=>{
             const d=res.detalle[qId];
+            const presentedSet=getPresentedSet(null,qId,'q'+String(qId));
             const userAns=d.respuesta||'—';
             const correcta=d.correcta||'—';
+            const userAnsDisplay=getDisplayedLetter(userAns,presentedSet);
+            const correctaDisplay=getDisplayedLetter(correcta,presentedSet);
             const isCorrect=d.esCorrecta===true;
             const icon=isCorrect?'✅':'❌';
             const bg=isCorrect?'#f0fdf4':'#fef2f2';
             const border=isCorrect?'#86efac':'#fca5a5';
             html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
             html+=`<div style="font-weight:700;font-size:12px">${icon} Pregunta ${qId}</div>`;
-            html+=`<div style="font-size:12px;margin-top:4px">Respuesta: <strong>${userAns}</strong> | Correcta: <strong style="color:#16a34a">${correcta}</strong></div>`;
+            html+=`<div style="font-size:12px;margin-top:4px">Respuesta vista: <strong>${userAnsDisplay}</strong> | Correcta vista: <strong style="color:#16a34a">${correctaDisplay}</strong></div>`;
+            presentedSet.forEach(o=>{
+                const isUser=o.originalLetter===userAns;
+                const isCor=o.originalLetter===correcta;
+                const style=isCor?'color:#16a34a;font-weight:700':isUser&&!isCor?'color:#dc2626;text-decoration:line-through':'color:#64748b';
+                html+=`<div style="font-size:11px;margin-left:12px;${style}">${o.displayLetter}) ${o.text}</div>`;
+            });
             html+='</div>';
         });
     } else {
@@ -2821,12 +3099,14 @@ async function deleteSession(sesId){
 /* ============ RESULTS ============ */
 function populateResultsDropdown(){
     const sel=document.getElementById('resultSession');
+    const current=sel.value;
     // Clear except first option
     while(sel.options.length>1) sel.remove(1);
-    Object.entries(sessions).forEach(([id,s])=>{
-        if(!isMiSesion(s)) return;
+    getVisibleSessionEntries().forEach(s=>{
         const opt=document.createElement('option');
-        opt.value=id;opt.textContent=s.titulo||id;
+        opt.value=s.id;
+        opt.textContent=getSessionSelectorLabel(s);
+        if(s.id===current) opt.selected=true;
         sel.appendChild(opt);
     });
 }
@@ -3298,9 +3578,8 @@ function populateRankingDropdown(){
     const sel=document.getElementById('rankingSesSelect');
     const cur=sel.value;
     let opts='<option value="">Selecciona sesión...</option><option value="__all__">📊 Histórico (Todas)</option><option value="__avatar__">⚔️ Ranking de Poder (Avatar/XP)</option>';
-    Object.entries(sessions).forEach(([id,s])=>{
-        if(!isMiSesion(s)) return;
-        opts+=`<option value="${id}" ${id===cur?'selected':''}>${s.titulo||id}</option>`;
+    getVisibleSessionEntries().forEach(s=>{
+        opts+=`<option value="${s.id}" ${s.id===cur?'selected':''}>${getSessionSelectorLabel(s)}</option>`;
     });
     sel.innerHTML=opts;
 }

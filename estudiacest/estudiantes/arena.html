@@ -267,6 +267,21 @@
         '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
     };
 
+    function normalizeCourseKey(course) {
+        return String(course || '')
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[º°]/g, '')
+            .replace(/\s+/g, '')
+            .replace(/_/g, '-');
+    }
+
+    function getCoursePair(course) {
+        var normalized = normalizeCourseKey(course);
+        return RANKING_PAIRS[normalized] || (normalized ? [normalized] : []);
+    }
+
     const ADMIN_EMAIL = '111111111@est.estudiacest.com';
     let MAX_BATTLES_PER_DAY = 3;
     const XP_WIN = 5;
@@ -402,7 +417,7 @@
     }
 
     async function loadOpponents() {
-        var pairCursos = RANKING_PAIRS[currentCurso] || [currentCurso];
+        var pairCursos = getCoursePair(currentCurso);
         var [estSnap, avSnap] = await Promise.all([
             db.ref(BASE + '/estudiantes').once('value'),
             db.ref(BASE + '/avatar').once('value')
@@ -413,7 +428,7 @@
         for (var uid in allEst) {
             if (uid === currentUid) continue;
             var s = allEst[uid];
-            if (!pairCursos.includes(s.curso)) continue;
+            if (!pairCursos.includes(normalizeCourseKey(s.curso))) continue;
             var av = allAv[uid] || {};
             var xp = av.xp_total || 0;
             var st = av.stats || { comprension: 0, constancia: 0, velocidad: 0 };

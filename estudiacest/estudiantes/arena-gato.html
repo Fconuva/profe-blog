@@ -227,6 +227,21 @@
         '3A-HC':['3A-HC','3B-HC'],'3B-HC':['3A-HC','3B-HC'],
         '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
     };
+
+    function normalizeCourseKey(course) {
+        return String(course || '')
+            .toUpperCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/[º°]/g, '')
+            .replace(/\s+/g, '')
+            .replace(/_/g, '-');
+    }
+
+    function getCoursePair(course) {
+        const normalized = normalizeCourseKey(course);
+        return RANKING_PAIRS[normalized] || (normalized ? [normalized] : []);
+    }
     initStudentForcedRefresh({ auth, db, base: BASE });
     initGatoChallengeAlerts({ auth, db, base: BASE, openUrl: 'arena-gato.html', storageScope: 'estudiantes' });
 
@@ -556,7 +571,7 @@
     }
 
     async function loadOpponents() {
-        const pairCursos = RANKING_PAIRS[currentStudent.curso] || [currentStudent.curso];
+        const pairCursos = getCoursePair(currentStudent.curso);
         const [estSnap, avatarSnap] = await Promise.all([
             db.ref(BASE + '/estudiantes').once('value'),
             db.ref(BASE + '/avatar').once('value')
@@ -567,7 +582,7 @@
         for (const uid in students) {
             if (uid === currentUid) continue;
             const student = students[uid];
-            if (pairCursos.indexOf(student.curso) === -1) continue;
+            if (pairCursos.indexOf(normalizeCourseKey(student.curso)) === -1) continue;
             const avatar = avatars[uid] || {};
             const xpTotal = avatar.xp_total || 0;
             const level = AvatarSystem.getLevel(xpTotal);

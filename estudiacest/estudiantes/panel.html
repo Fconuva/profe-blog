@@ -565,6 +565,10 @@
             return /^2[A-E]-(HC|TP)$/.test(normalizeCourse(curso));
         }
 
+        function isNm4Course(curso) {
+            return /^4[A-E]-TP$/.test(normalizeCourse(curso));
+        }
+
         function isAccessOnlyStudent(student) {
             return !!(student && (student.access_only === true || student.access_only === 'true' || student.access_only === 1));
         }
@@ -627,13 +631,31 @@
         }
 
         function getPanelActivity(student) {
+            if (isNm4Course(student && student.curso)) {
+                return {
+                    title: 'NM4 U2 · Clase 2',
+                    description: 'Video breve, interpretacion y borrador para el diptico o triptico del plan lector.',
+                    href: '/nm4/clase2-video.html',
+                    badge: 'Disponible',
+                    icon: 'NM4',
+                    quickLinkText: 'Abrir actividad',
+                    statusText: 'Actividad NM4 disponible para tu curso.',
+                    welcomeTitle: 'Tu actividad de Lengua',
+                    welcomeText: 'Abre la actividad de NM4 para ver el video, responder la guia y avanzar el borrador de tu evaluacion.'
+                };
+            }
+
             if (!isNm2SimceCourse(student && student.curso)) return null;
             return {
                 title: 'Menú SIMCE',
                 description: 'Entra al panel donde están todas las sesiones disponibles para tu curso.',
                 href: '/estudiantes/dashboard.html',
                 badge: 'Disponible',
-                icon: '📚'
+                icon: 'SIMCE',
+                quickLinkText: 'Ver sesiones',
+                statusText: 'Menú de sesiones disponible.',
+                welcomeTitle: 'Tus sesiones SIMCE',
+                welcomeText: 'Entra al panel de sesiones para ver el listado completo de actividades publicadas.'
             };
         }
 
@@ -647,9 +669,9 @@
 
             if (panelActivity) {
                 quickLink.href = panelActivity.href;
-                quickLink.textContent = 'Ver sesiones';
+                quickLink.textContent = panelActivity.quickLinkText || 'Ver sesiones';
                 quickLink.classList.remove('hidden');
-                document.getElementById('studentStatus').textContent = 'Menú de sesiones disponible.';
+                document.getElementById('studentStatus').textContent = panelActivity.statusText || 'Menú de sesiones disponible.';
                 return;
             }
 
@@ -663,10 +685,10 @@
                 ? 'Menú disponible'
                 : 'Sin actividades';
             document.getElementById('welcomeTitle').textContent = panelActivity
-                ? 'Tus sesiones SIMCE'
+                ? (panelActivity.welcomeTitle || 'Tus sesiones')
                 : 'Tu cuenta está activa';
             document.getElementById('welcomeText').textContent = panelActivity
-                ? 'Entra al panel de sesiones para ver el listado completo de actividades publicadas.'
+                ? (panelActivity.welcomeText || 'Entra al panel de sesiones para ver el listado completo de actividades publicadas.')
                 : 'Cuando se publique una nueva clase, guía o evaluación para tu curso, aparecerá aquí lista para abrir.';
         }
 

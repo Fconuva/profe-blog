@@ -570,6 +570,7 @@
 
     <!-- Firebase -->
     <script src="js/avatar-levels.js"></script>
+    <script src="js/simce-preassigned-ensayos-2026.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -2045,6 +2046,14 @@
         }
     };
 
+    Object.entries(window.SIMCE_PREASSIGNED_ENSAYOS_2026 || {}).forEach(([id, ses]) => {
+        SESSIONS_EMBEDDED[id] = {
+            ...ses,
+            textos: ses.textos || (ses.contenido && ses.contenido.textos) || [],
+            preguntas: ses.preguntas || (ses.contenido && ses.contenido.preguntas) || []
+        };
+    });
+
     // ==================== STATE ====================
     let currentUser = null;
     let studentData = null;
@@ -2064,10 +2073,12 @@
     let autoSaveTimeout = null;
     let isSubmitted = false;
     let resultsVisible = false;
+    let feedbackVisible = false;
     let currentResult = null;
     let activeHighlightColor = null;
     let isDirty = false;
     let distractors = {};
+    let presentedOptions = {};
     let lastMsgId = null;
     let sessionStarted = false;
     let strikes = 0;
@@ -2107,6 +2118,15 @@
             letraOriginal: opt.letra, // keep original for answer key matching
             letra: letters[i],        // new display letter
             texto: opt.texto
+        }));
+    }
+
+    function rememberPresentedOptions(questionId, shuffledOpts) {
+        if (!questionId || !Array.isArray(shuffledOpts) || shuffledOpts.length === 0) return;
+        presentedOptions[questionId] = shuffledOpts.map(opt => ({
+            displayLetter: opt.letra,
+            originalLetter: opt.letraOriginal || opt.letra,
+            text: opt.texto
         }));
     }
 
@@ -2188,12 +2208,18 @@
 
         document.getElementById('sessionTitle').textContent = sessionData.titulo;
         document.title = sessionData.titulo + ' — Plataforma Estudiantes';
+        feedbackVisible = sessionData.retroalimentacion_visible === true;
 
         // Load saved progress
         await loadProgress();
 
-        // Shuffle text blocks (deterministic per student) — keep Actividad sections at the end
-        if (sessionData.textos && sessionData.textos.length > 1) {
+        const keepOriginalTextOrder = Object.prototype.hasOwnProperty.call(window.SIMCE_PREASSIGNED_ENSAYOS_2026 || {}, sessionId);
+        const shouldShuffleTextBlocks = sessionData.barajar_bloques === true
+            || (sessionData.barajar_bloques !== false && !keepOriginalTextOrder);
+
+        // Shuffle text blocks (deterministic per student) for regular sessions,
+        // but preserve the authored order for preassigned SIMCE essays.
+        if (shouldShuffleTextBlocks && sessionData.textos && sessionData.textos.length > 1) {
             const readingTexts = sessionData.textos.filter(t => (t.tipo || '').toLowerCase() !== 'actividad');
             const activityTexts = sessionData.textos.filter(t => (t.tipo || '').toLowerCase() === 'actividad');
             let h = 0;
@@ -2249,15 +2275,38 @@
 
     async function loadProgress() {
         try {
-            const snap = await db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid).once('value');
+            const responseRef = db.ref(BASE + '/respuestas/' + sessionId + '/' + currentUser.uid);
+            const resultRef = db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid);
+            const snap = await responseRef.once('value');
             if (snap.exists()) {
                 const saved = snap.val();
                 answers = saved.answers || {};
                 notes = saved.notes || {};
                 highlightsData = saved.highlights || {};
                 distractors = saved.distractors || {};
-                isSubmitted = saved.completada || false;
+                presentedOptions = saved.presented_options || {};
                 if (saved.started_at) startTime = saved.started_at;
+
+                const hasAnswerData = Object.keys(answers).length > 0;
+                const hasAdminLock = saved.auto_submitted || saved.auto_submit_motivo || saved.bloqueado_por_strikes || saved.bloqueado_por_copia;
+
+                if (saved.completada === true) {
+                    const resultSnap = await resultRef.once('value');
+                    if (!resultSnap.exists() && !hasAnswerData && !hasAdminLock) {
+                        // Recover sessions that were left as completed without any real submission.
+                        isSubmitted = false;
+                        await responseRef.update({
+                            completada: false,
+                            submitted_at: null,
+                            auto_submitted: null,
+                            auto_submit_motivo: null
+                        });
+                    } else {
+                        isSubmitted = true;
+                    }
+                } else {
+                    isSubmitted = false;
+                }
 
                 // Restore strikes from Firebase
                 if (saved.strikes) {
@@ -2273,9 +2322,11 @@
                 }
             }
 
-            // Check if results are visible (real-time listener)
+            // Check if results and detailed feedback are visible (real-time listeners)
             const sesRef = await db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value');
             resultsVisible = sesRef.val() === true;
+            const feedbackRef = await db.ref(BASE + '/sesiones/' + sessionId + '/retroalimentacion_visible').once('value');
+            feedbackVisible = feedbackRef.exists() ? feedbackRef.val() === true : (sessionData.retroalimentacion_visible === true);
 
             // If submitted, check results
             if (isSubmitted && resultsVisible) {
@@ -2294,11 +2345,27 @@
                         db.ref(BASE + '/resultados/' + sessionId + '/' + currentUser.uid).once('value').then(resSnap => {
                             currentResult = resSnap.exists() ? resSnap.val() : null;
                             renderSession();
-                            showToast('El profesor ha entregado la retroalimentacion de esta sesion');
+                            showToast('El profesor publicó los resultados de esta sesión');
                         }).catch(() => {
-                            showResults();
-                            showToast('El profesor ha entregado la retroalimentacion de esta sesion');
+                            renderSession();
+                            showToast('El profesor publicó los resultados de esta sesión');
                         });
+                    } else if (isSubmitted) {
+                        renderSession();
+                        showToast('El profesor ocultó los resultados de esta sesión');
+                    }
+                }
+            });
+
+            db.ref(BASE + '/sesiones/' + sessionId + '/retroalimentacion_visible').on('value', snap => {
+                const newVal = snap.val() === true;
+                if (newVal !== feedbackVisible) {
+                    feedbackVisible = newVal;
+                    if (isSubmitted) {
+                        renderSession();
+                        showToast(newVal
+                            ? 'El profesor habilitó la retroalimentación detallada'
+                            : 'El profesor ocultó la retroalimentación detallada');
                     }
                 }
             });
@@ -2373,6 +2440,7 @@
     // ==================== RENDER ====================
     function renderSession() {
         const main = document.getElementById('mainContent');
+        const revealSubmittedAnswers = !isSubmitted || feedbackVisible;
         let html = '';
 
         // Video
@@ -2484,7 +2552,7 @@
             // Questions for this text
             const textQuestions = sessionData.preguntas.filter(q => q.textoRef === texto.id);
             textQuestions.forEach(q => {
-                const selectedAnswer = answers[q.id] || null;
+                const selectedAnswer = revealSubmittedAnswers ? (answers[q.id] || null) : null;
                 const blockClass = selectedAnswer ? 'answered' : '';
 
                 // LIKERT rendering for survey questions with tipo=LIKERT
@@ -2508,6 +2576,7 @@
 
                 // NIVEL 4: Shuffle options deterministically per student+question
                 const shuffledOpts = shuffleOptions(q.opciones, currentUser.uid, q.id);
+                rememberPresentedOptions(q.id, shuffledOpts);
 
                 html += `<div class="question-block ${blockClass}" id="qblock-${q.id}">`;
                 html += `<div class="q-header"><span class="skill-tag">${q.habilidad}</span> ${q.enunciado}</div>`;
@@ -2549,9 +2618,13 @@
             html += `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente</p>`;
             if (resultsVisible && currentResult) {
                 html += `<p style="font-size:13px; color:#64748b;">${buildResultSummary(currentResult)}</p>`;
+                if (!feedbackVisible) {
+                    html += `<p style="font-size:13px; color:#64748b;">La retroalimentación detallada por pregunta se mostrará cuando el profesor la habilite.</p>`;
+                }
             } else if (!resultsVisible) {
                 html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
             }
+            html += `<a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Volver al Panel</a>`;
         } else {
             const allQDone = answeredQ >= totalQ;
             const allNDone = !notasEvaluadas || filledN >= totalN;
@@ -2573,7 +2646,7 @@
         restoreHighlights();
 
         // Show results if visible
-        if (isSubmitted && resultsVisible) {
+        if (isSubmitted && resultsVisible && feedbackVisible) {
             showResults();
         }
     }
@@ -3087,6 +3160,7 @@
                 answers: answers,
                 notes: notes,
                 highlights: highlightsData,
+                presented_options: presentedOptions,
                 completada: true,
                 submitted_at: Date.now(),
                 auto_submitted: motivo,
@@ -3116,6 +3190,7 @@
                 puntaje: isFullEncuesta ? total : correct, total: isFullEncuesta ? total : scoredTotal, porcentaje: porcentaje, nota: nota,
                 es_encuesta: isFullEncuesta,
                 detalle: detail, notas: notes,
+                presented_options: presentedOptions,
                 notas_completadas: getFilledNotes() + '/' + getTotalNotes(),
                 nombre: studentData.nombre, curso: studentData.curso,
                 submitted_at: Date.now(), tiempo_min: tiempoMin,
@@ -3224,6 +3299,7 @@
                 notes: notes,
                 highlights: highlightsData,
                 distractors: distractors,
+                presented_options: presentedOptions,
                 started_at: startTime,
                 last_save: Date.now(),
                 completada: isSubmitted,
@@ -3295,6 +3371,7 @@
                 answers: answers,
                 notes: notes,
                 highlights: highlightsData,
+                presented_options: presentedOptions,
                 completada: true,
                 submitted_at: Date.now(),
                 tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000)
@@ -3317,6 +3394,7 @@
                 nota: nota,
                 es_encuesta: isFullEncuesta,
                 detalle: detail,
+                presented_options: presentedOptions,
                 notas: notes,
                 notas_completadas: filledNotes + '/' + totalNotes,
                 nombre: studentData.nombre,
@@ -3352,29 +3430,14 @@
             // Award XP (anti-exploit: only first time)
             await awardXP(isFullEncuesta ? 50 : porcentaje * 2, isFullEncuesta);
 
-            // Re-render submit area
-            const submitArea = document.getElementById('submitArea');
-            let html = `<div class="progress-bar-container"><div class="progress-bar-fill" style="width:100%"></div></div>`;
-            html += isFullEncuesta
-                ? `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Encuesta enviada — ${total} respuestas registradas. ¡Gracias por participar!</p>`
-                : `<p style="font-size:15px; font-weight:700; color:#16a34a; margin:10px 0;">✅ Sesión enviada correctamente — ${correct}/${scoredTotal}</p>`;
+            const [resVisSnap, feedbackSnap] = await Promise.all([
+                db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value'),
+                db.ref(BASE + '/sesiones/' + sessionId + '/retroalimentacion_visible').once('value')
+            ]);
+            resultsVisible = resVisSnap.val() === true;
+            feedbackVisible = feedbackSnap.val() === true;
 
-            // Check if results visible
-            const resVisSnap = await db.ref(BASE + '/sesiones/' + sessionId + '/resultados_visibles').once('value');
-            if (resVisSnap.val() === true) {
-                resultsVisible = true;
-                showResults();
-                html += `<p style="font-size:13px; color:#64748b;">${buildResultSummary(currentResult, porcentaje)}</p>`;
-            } else {
-                html += `<p style="font-size:13px; color:#64748b;">Los resultados serán visibles cuando el profesor los active.</p>`;
-            }
-
-            html += `<a href="dashboard.html" style="display:inline-block;margin-top:16px;padding:12px 24px;background:#1e40af;color:#fff;border-radius:8px;text-decoration:none;font-weight:600;">Volver al Panel</a>`;
-            submitArea.innerHTML = html;
-
-            // Disable all options
-            document.querySelectorAll('.option-item').forEach(opt => opt.classList.add('disabled'));
-            document.querySelectorAll('.likert-btn').forEach(btn => btn.classList.add('disabled'));
+            renderSession();
 
         } catch(e) {
             console.error('Submit error:', e);
@@ -3387,6 +3450,7 @@
 
     // ==================== SHOW RESULTS ====================
     function showResults() {
+        if (!resultsVisible || !feedbackVisible) return;
         sessionData.preguntas.forEach(q => {
             const block = document.getElementById('qblock-' + q.id);
             const feedback = document.getElementById('feedback-' + q.id);
@@ -3840,6 +3904,7 @@
                 answers: answers,
                 notes: notes,
                 highlights: highlightsData,
+                presented_options: presentedOptions,
                 completada: true,
                 submitted_at: Date.now(),
                 tiempo_transcurrido: Math.floor((Date.now() - startTime) / 1000),
@@ -3852,6 +3917,7 @@
                 total: scoredTotal,
                 porcentaje: porcentaje,
                 detalle: detail,
+                presented_options: presentedOptions,
                 notas: notes,
                 notas_completadas: getFilledNotes() + '/' + getTotalNotes(),
                 nombre: studentData.nombre,

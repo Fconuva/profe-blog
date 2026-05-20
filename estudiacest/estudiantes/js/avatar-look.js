@@ -21,7 +21,9 @@
                 { id: 'clara', name: 'Clara', color: '#f6d5bf', swatch: '#f6d5bf' },
                 { id: 'miel', name: 'Miel', color: '#deab7e', swatch: '#deab7e' },
                 { id: 'canela', name: 'Canela', color: '#b8754d', swatch: '#b8754d' },
-                { id: 'bronce', name: 'Bronce', color: '#8a5339', swatch: '#8a5339' }
+                { id: 'bronce', name: 'Bronce', color: '#8a5339', swatch: '#8a5339' },
+                { id: 'cacao', name: 'Cacao', color: '#6b3f2c', swatch: '#6b3f2c' },
+                { id: 'ebano', name: 'Ebano', color: '#4a2a1e', swatch: '#4a2a1e' }
             ]
         },
         eyes: {
@@ -30,7 +32,9 @@
                 { id: 'amables', name: 'Amables', asset: 'amables.svg', preview: 'oo' },
                 { id: 'foco', name: 'Enfocados', asset: 'foco.svg', preview: '--' },
                 { id: 'chispa', name: 'Con chispa', asset: 'chispa.svg', preview: '**', minXp: 120 },
-                { id: 'calma', name: 'En calma', asset: 'calma.svg', preview: 'uu', minXp: 260 }
+                { id: 'calma', name: 'En calma', asset: 'calma.svg', preview: 'uu', minXp: 260 },
+                { id: 'picaros', name: 'Picaros', asset: 'picaros.svg', preview: '^^', minXp: 520 },
+                { id: 'brillo', name: 'De brillo', asset: 'brillo.svg', preview: '++', minXp: 980 }
             ]
         },
         mouth: {
@@ -39,7 +43,9 @@
                 { id: 'sonrisa', name: 'Sonrisa', asset: 'sonrisa.svg', preview: ')' },
                 { id: 'media', name: 'Media sonrisa', asset: 'media.svg', preview: '/' },
                 { id: 'seria', name: 'Seria', asset: 'seria.svg', preview: '_' },
-                { id: 'asombro', name: 'Asombro', asset: 'asombro.svg', preview: 'o', minXp: 220 }
+                { id: 'asombro', name: 'Asombro', asset: 'asombro.svg', preview: 'o', minXp: 220 },
+                { id: 'risa', name: 'Risa abierta', asset: 'risa.svg', preview: 'D', minXp: 480 },
+                { id: 'colmillo', name: 'Con colmillo', asset: 'colmillo.svg', preview: 'v', minXp: 1100 }
             ]
         },
         hairStyle: {
@@ -48,7 +54,9 @@
                 { id: 'onda', name: 'Onda', asset: 'onda.svg', preview: 'Ond', minXp: 0 },
                 { id: 'puntas', name: 'Puntas', asset: 'puntas.svg', preview: 'Pnt', minXp: 150 },
                 { id: 'bob', name: 'Bob', asset: 'bob.svg', preview: 'Bob', minXp: 420 },
-                { id: 'rizo', name: 'Rizo', asset: 'rizo.svg', preview: 'Riz', minXp: 900 }
+                { id: 'rizo', name: 'Rizo', asset: 'rizo.svg', preview: 'Riz', minXp: 900 },
+                { id: 'coleta', name: 'Coleta', asset: 'coleta.svg', preview: 'Col', minXp: 700 },
+                { id: 'mohicano', name: 'Mohicano', asset: 'mohicano.svg', preview: 'Moh', minXp: 1400 }
             ]
         },
         hairColor: {
@@ -57,7 +65,9 @@
                 { id: 'tinta', name: 'Tinta', color: '#1f2937', swatch: '#1f2937' },
                 { id: 'castana', name: 'Castana', color: '#6f4e37', swatch: '#6f4e37', minXp: 100 },
                 { id: 'miel', name: 'Miel', color: '#d4a64a', swatch: '#d4a64a', minXp: 300 },
-                { id: 'cobre', name: 'Cobre', color: '#c96f3b', swatch: '#c96f3b', minXp: 650 }
+                { id: 'cobre', name: 'Cobre', color: '#c96f3b', swatch: '#c96f3b', minXp: 650 },
+                { id: 'violeta', name: 'Violeta', color: '#7c3aed', swatch: '#7c3aed', minXp: 900 },
+                { id: 'plata', name: 'Plata', color: '#cbd5e1', swatch: '#cbd5e1', minXp: 1700 }
             ]
         },
         outfit: {
@@ -66,7 +76,9 @@
                 { id: 'uniforme', name: 'Uniforme', asset: 'uniforme.svg', color: '#2563eb', preview: 'UNI', minXp: 0 },
                 { id: 'hoodie', name: 'Hoodie', asset: 'hoodie.svg', color: '#7c3aed', preview: 'HD', minXp: 180 },
                 { id: 'deporte', name: 'Deporte', asset: 'deporte.svg', color: '#059669', preview: 'SP', minXp: 500 },
-                { id: 'armadura', name: 'Armadura', asset: 'armadura.svg', color: '#f97316', preview: 'AR', minXp: 1100 }
+                { id: 'armadura', name: 'Armadura', asset: 'armadura.svg', color: '#f97316', preview: 'AR', minXp: 1100 },
+                { id: 'blazer', name: 'Blazer', asset: 'blazer.svg', color: '#0f766e', preview: 'BZ', minXp: 850 },
+                { id: 'explorador', name: 'Explorador', asset: 'explorador.svg', color: '#b45309', preview: 'EX', minXp: 1500 }
             ]
         },
         accessory: {
@@ -75,6 +87,9 @@
                 { id: 'none', name: 'Sin accesorio', asset: '', color: 'transparent', preview: '0' },
                 { id: 'lentes', name: 'Lentes', asset: 'lentes.svg', color: '#111827', preview: 'LN', minXp: 120 },
                 { id: 'audifonos', name: 'Audifonos', asset: 'audifonos.svg', color: '#0f766e', preview: 'AU', minXp: 700 },
+                { id: 'visera', name: 'Visera', asset: 'visera.svg', color: '#2563eb', preview: 'VS', minXp: 450 },
+                { id: 'mascara', name: 'Mascara', asset: 'mascara.svg', color: '#475569', preview: 'MS', minXp: 1300 },
+                { id: 'aviador', name: 'Aviador', asset: 'aviador.svg', color: '#0f172a', preview: 'AV', rewardAnyOf: ['lentes_aviador'] },
                 { id: 'corona', name: 'Corona', asset: 'corona.svg', color: '#facc15', preview: 'CR', minXp: 2500, rewardAnyOf: ['corona_suprema'] }
             ]
         },
@@ -82,8 +97,10 @@
             label: 'Aura',
             options: [
                 { id: 'none', name: 'Sin aura', preview: '0' },
+                { id: 'menta', name: 'Menta', preview: 'MT', minXp: 720 },
                 { id: 'chispa', name: 'Chispas', preview: 'CH', minXp: 300 },
                 { id: 'fuego', name: 'Fuego', preview: 'FG', minXp: 1200 },
+                { id: 'nebula', name: 'Nebula', preview: 'NB', minXp: 2200 },
                 { id: 'oro', name: 'Oro', preview: 'OR', minXp: 3500, rewardAnyOf: ['aura_dorada'] }
             ]
         }
@@ -168,11 +185,17 @@
     }
 
     function auraBackground(auraId) {
+        if (auraId === 'menta') {
+            return 'radial-gradient(circle at 50% 50%, rgba(110,231,183,.72) 0%, rgba(16,185,129,.38) 42%, rgba(16,185,129,0) 76%)';
+        }
         if (auraId === 'chispa') {
             return 'radial-gradient(circle at 50% 50%, rgba(96,165,250,.7) 0%, rgba(59,130,246,.35) 42%, rgba(59,130,246,0) 74%)';
         }
         if (auraId === 'fuego') {
             return 'radial-gradient(circle at 50% 55%, rgba(251,146,60,.75) 0%, rgba(249,115,22,.42) 42%, rgba(249,115,22,0) 76%)';
+        }
+        if (auraId === 'nebula') {
+            return 'radial-gradient(circle at 50% 48%, rgba(192,132,252,.78) 0%, rgba(129,140,248,.42) 36%, rgba(59,130,246,.22) 58%, rgba(59,130,246,0) 80%)';
         }
         if (auraId === 'oro') {
             return 'radial-gradient(circle at 50% 50%, rgba(253,224,71,.88) 0%, rgba(250,204,21,.48) 42%, rgba(250,204,21,0) 78%)';
@@ -190,7 +213,7 @@
             '.avatar-shape-rounded{border-radius:24px}',
             '.avatar-shape-circle{border-radius:999px}',
             '.avatar-layer{position:absolute;inset:0;pointer-events:none}',
-            '.avatar-mask{display:block;background-position:center;background-repeat:no-repeat;background-size:contain;transform:translateZ(0)}',
+            '.avatar-mask{display:block;background-position:center;background-repeat:no-repeat;background-size:contain;transform-origin:center center}',
             '.avatar-aura{inset:-12%;filter:blur(12px);opacity:.9;transform:scale(1.04)}',
             '.avatar-body{z-index:2}',
             '.avatar-outfit{z-index:3}',

@@ -54,7 +54,7 @@
                 <nav class="flex gap-1 -mb-px">
                     <button class="tab-btn active px-4 py-3 text-sm font-medium border-b-2 transition-colors" data-tab="dashboard">📊 Dashboard</button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="clientes">👥 Clientes</button>
-                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pagos">💰 Pagos Pendientes <span id="pagos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white">0</span></button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pagos">💰 Pagos <span id="pagos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="preinscritos">📋 Pre-Inscritos <span id="preinscritos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-amber-500 text-white">0</span></button>
                 </nav>
             </div>
@@ -164,8 +164,9 @@
             </div>
         </div>
 
-        <!-- ===== TAB: PAGOS PENDIENTES ===== -->
-        <div id="tab-pagos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- ===== TAB: PAGOS ===== -->
+        <div id="tab-pagos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+            <!-- Sección 1: Pendientes de Aprobación -->
             <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-200">
                     <h2 class="font-heading font-bold text-gray-900">Pagos Pendientes de Aprobación</h2>
@@ -173,6 +174,29 @@
                 </div>
                 <div id="payments-list" class="divide-y divide-gray-100"></div>
                 <div id="no-payments" class="hidden px-6 py-12 text-center text-gray-500">No hay pagos pendientes.</div>
+            </div>
+
+            <!-- Sección 2: Historial de Pagos Aprobados -->
+            <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h2 class="font-heading font-bold text-gray-900">Historial de Pagos Aprobados</h2>
+                    <p class="text-sm text-gray-500 mt-1">Registro en tiempo real de todos los pagos verificados y aprobados.</p>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead class="bg-gray-50 text-left">
+                            <tr>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Cliente</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">ID Comprobante</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Fecha Aprobación</th>
+                            </tr>
+                        </thead>
+                        <tbody id="approved-payments-tbody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div id="no-approved-payments" class="hidden px-6 py-12 text-center text-gray-500">No hay pagos aprobados aún.</div>
             </div>
         </div>
 
@@ -307,6 +331,10 @@
                                 <span class="text-base">📋</span>
                                 <div><p class="font-medium text-gray-900">Reserva / Inscripción</p><p class="text-xs text-gray-500">Datos + link para ingresar</p></div>
                             </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 transition-colors flex items-center gap-2" data-msg="abierto_pago">
+                                <span class="text-base">🚀</span>
+                                <div><p class="font-medium text-gray-900">Inicio Proceso & Pago</p><p class="text-xs text-gray-500">Rúbricas publicadas + pago</p></div>
+                            </button>
                             <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 transition-colors flex items-center gap-2" data-msg="avance">
                                 <span class="text-base">🔄</span>
                                 <div><p class="font-medium text-gray-900">Avance de Portafolio</p><p class="text-xs text-gray-500">Estado módulos + progreso</p></div>
@@ -348,6 +376,8 @@
                             <div><span class="text-gray-500 text-xs">Nivel</span><p class="font-medium text-gray-900" id="edit-dp-nivel">—</p></div>
                             <div><span class="text-gray-500 text-xs">Colegio</span><p class="font-medium text-gray-900" id="edit-dp-colegio">—</p></div>
                             <div><span class="text-gray-500 text-xs">Tipo</span><p class="font-medium text-gray-900" id="edit-dp-tipo">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Género Colegio</span><p class="font-medium text-gray-900" id="edit-dp-genero">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Modalidad</span><p class="font-medium text-gray-900" id="edit-dp-modalidad">—</p></div>
                             <div><span class="text-gray-500 text-xs">Comuna</span><p class="font-medium text-gray-900" id="edit-dp-comuna">—</p></div>
                             <div><span class="text-gray-500 text-xs">Región</span><p class="font-medium text-gray-900" id="edit-dp-region">—</p></div>
                             <div><span class="text-gray-500 text-xs">Curso</span><p class="font-medium text-gray-900" id="edit-dp-curso">—</p></div>
@@ -358,14 +388,28 @@
                             <div><span class="text-gray-500 text-xs">IVE</span><p class="font-medium text-gray-900" id="edit-dp-ive">—</p></div>
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
-                            <div><span class="text-gray-500 text-xs">OA / Aprendizaje Esperado</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-oa">—</p></div>
-                            <div><span class="text-gray-500 text-xs">Unidad / Eje</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-unidad">—</p></div>
+                            <div><span class="text-gray-500 text-xs">OA / Aprendizaje Esperado</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-oa">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Unidad / Eje</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-unidad">—</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
+                            <div><span class="text-gray-500 text-xs">Fortalezas del curso</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-fortalezas">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Dificultades / Desafíos del curso</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-dificultades">—</p></div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">
+                            <div><span class="text-gray-500 text-xs">Recursos en sala</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-recursos">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Sellos / PEI</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-sellos">—</p></div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-3 text-xs bg-white p-3 rounded-lg border border-indigo-100">
+                            <div class="col-span-full font-bold text-gray-600 mb-1 text-xs">🎸 Intereses del Curso</div>
+                            <div><span class="text-gray-400 text-2xs uppercase">Música</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-intereses-musica">—</p></div>
+                            <div><span class="text-gray-400 text-2xs uppercase">Videojuegos</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-intereses-videojuegos">—</p></div>
+                            <div><span class="text-gray-400 text-2xs uppercase">Deportes</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-intereses-deporte">—</p></div>
+                            <div><span class="text-gray-400 text-2xs uppercase">Otros</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-intereses">—</p></div>
                         </div>
                         <div class="grid grid-cols-1 gap-3 mt-3 text-sm">
-                            <div><span class="text-gray-500 text-xs">Sellos / PEI</span><p class="font-medium text-gray-900 text-xs" id="edit-dp-sellos">—</p></div>
-                            <div><span class="text-gray-500 text-xs">Características del curso</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-desc">—</p></div>
-                            <div><span class="text-gray-500 text-xs">Conocimientos previos</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1" id="edit-dp-previos">—</p></div>
-                            <div><span class="text-gray-500 text-xs">Lista de alumnos</span><pre class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 whitespace-pre-wrap max-h-32 overflow-y-auto" id="edit-dp-lista">—</pre></div>
+                            <div><span class="text-gray-500 text-xs">Características del curso (legacy)</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-desc">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Conocimientos previos</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-previos">—</p></div>
+                            <div><span class="text-gray-500 text-xs">Lista de alumnos</span><pre class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100 whitespace-pre-wrap max-h-32 overflow-y-auto" id="edit-dp-lista">—</pre></div>
                         </div>
                     </div>
                 </div>
@@ -380,21 +424,24 @@
                                 <div><span class="text-gray-500 text-xs">OA preferido</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-oa">—</p></div>
                                 <div><span class="text-gray-500 text-xs">Unidad</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-unidad">—</p></div>
                                 <div><span class="text-gray-500 text-xs">Horas</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-horas">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Tipo clase</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-tipo">—</p></div>
-                                <div><span class="text-gray-500 text-xs">PPT y guía</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-ppt">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-com">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Organización Estudiantes</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-tipo">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Formato Material</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-material-preferido">—</p></div>
+                                <div><span class="text-gray-500 text-xs">PPT de apoyo</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m1-ppt">—</p></div>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2 mt-2 text-sm">
+                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-blue-100" id="edit-cq-m1-com">—</p></div>
                             </div>
                         </div>
                         <div class="bg-purple-50 rounded-xl p-4">
                             <p class="text-xs font-bold text-purple-700 mb-2">M2 — Clase Grabada</p>
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
                                 <div><span class="text-gray-500 text-xs">Duración bloque</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-dur">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Equipo grabación</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-equipo">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Tipo clase</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-tipo">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Equipamiento Tecnológico</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-equipamiento">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Tipo de dinámica clase</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-tipo">—</p></div>
                             </div>
                             <div class="grid grid-cols-1 gap-2 mt-2 text-sm">
-                                <div><span class="text-gray-500 text-xs">Restricciones</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-rest">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m2-com">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Características de la sala / restricciones físicas</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-purple-100" id="edit-cq-m2-rest">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-purple-100" id="edit-cq-m2-com">—</p></div>
                             </div>
                         </div>
                         <div class="bg-emerald-50 rounded-xl p-4">
@@ -404,8 +451,9 @@
                                 <div><span class="text-gray-500 text-xs">Colaborador</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m3-colab">—</p></div>
                             </div>
                             <div class="grid grid-cols-1 gap-2 mt-2 text-sm">
-                                <div><span class="text-gray-500 text-xs">Descripción experiencia</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m3-desc">—</p></div>
-                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs" id="edit-cq-m3-com">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Proyecto sugerido o anterior</span><div class="bg-white p-3 rounded-lg border border-emerald-200 mt-1" id="edit-cq-m3-proyecto-info">—</div></div>
+                                <div><span class="text-gray-500 text-xs">Descripción experiencia previa</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-emerald-100" id="edit-cq-m3-desc">—</p></div>
+                                <div><span class="text-gray-500 text-xs">Comentario</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-emerald-100" id="edit-cq-m3-com">—</p></div>
                             </div>
                         </div>
                     </div>
@@ -803,6 +851,7 @@
                 if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
                 if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado';
                 if (currentFilter === 'inprogress') return ['modulo1','modulo2','modulo3'].some(function(m) { return p[m] && (p[m].estado === 'en-progreso' || p[m].estado === 'en-revision'); });
+                if (currentFilter === 'preinscrito') return c.status === 'pre-inscrito' && (p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado');
                 return true;
             });
 
@@ -841,45 +890,82 @@
         // ===== RENDER PAYMENTS TAB =====
         function renderPayments() {
             var list = document.getElementById('payments-list');
-            var uids = getClientUids().filter(function(uid) {
+            var pendingUids = getClientUids().filter(function(uid) {
                 var p = allPortafolios[uid] || {};
                 return p.paymentStatus === 'pendiente_verificacion';
             });
 
-            if (uids.length === 0) {
+            if (pendingUids.length === 0) {
                 list.innerHTML = '';
                 document.getElementById('no-payments').classList.remove('hidden');
-                return;
-            }
-            document.getElementById('no-payments').classList.add('hidden');
+            } else {
+                document.getElementById('no-payments').classList.add('hidden');
+                list.innerHTML = pendingUids.map(function(uid) {
+                    var c = allClients[uid] || {};
+                    var p = allPortafolios[uid] || {};
+                    return '<div class="px-6 py-4 flex items-center justify-between">' +
+                        '<div class="flex-1">' +
+                            '<p class="font-medium text-gray-900">' + escapeHtml(c.nombre) + '</p>' +
+                            '<p class="text-sm text-gray-500">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.telefono || '') + '</p>' +
+                            '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · <strong>' + formatCLP(getPlanPrice(p.plan)) + '</strong> · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
+                        '</div>' +
+                        '<div class="flex gap-2">' +
+                            '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 pay-approve" data-uid="' + uid + '">✅ Aprobar</button>' +
+                            '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 edit-btn" data-uid="' + uid + '">Ver Detalle</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
 
-            list.innerHTML = uids.map(function(uid) {
-                var c = allClients[uid] || {};
-                var p = allPortafolios[uid] || {};
-                return '<div class="px-6 py-4 flex items-center justify-between">' +
-                    '<div class="flex-1">' +
-                        '<p class="font-medium text-gray-900">' + escapeHtml(c.nombre) + '</p>' +
-                        '<p class="text-sm text-gray-500">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.telefono || '') + '</p>' +
-                        '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · <strong>' + formatCLP(getPlanPrice(p.plan)) + '</strong> · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
-                    '</div>' +
-                    '<div class="flex gap-2">' +
-                        '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 pay-approve" data-uid="' + uid + '">✅ Aprobar</button>' +
-                        '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 edit-btn" data-uid="' + uid + '">Ver Detalle</button>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-
-            list.querySelectorAll('.pay-approve').forEach(function(btn) {
-                btn.addEventListener('click', function() {
-                    var uid = this.getAttribute('data-uid');
-                    if (confirm('¿Aprobar pago?')) {
-                        db.ref('portafolios/' + uid + '/paymentStatus').set('approved');
-                    }
+                list.querySelectorAll('.pay-approve').forEach(function(btn) {
+                    btn.addEventListener('click', function() {
+                        var uid = this.getAttribute('data-uid');
+                        if (confirm('¿Aprobar pago?')) {
+                            db.ref('portafolios/' + uid + '/paymentStatus').set('approved');
+                        }
+                    });
                 });
+                list.querySelectorAll('.edit-btn').forEach(function(btn) {
+                    btn.addEventListener('click', function() { openModal(this.getAttribute('data-uid')); });
+                });
+            }
+
+            // APPROVED PAYMENTS HISTORY
+            var approvedTbody = document.getElementById('approved-payments-tbody');
+            approvedTbody.innerHTML = '';
+            var approvedUids = getClientUids().filter(function(uid) {
+                var p = allPortafolios[uid] || {};
+                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
             });
-            list.querySelectorAll('.edit-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() { openModal(this.getAttribute('data-uid')); });
+
+            // Sort by approved/paid date descending
+            approvedUids.sort(function(a, b) {
+                var dateA = (allPortafolios[a] || {}).paidAt || (allPortafolios[a] || {}).paymentVerifiedAt || '';
+                var dateB = (allPortafolios[b] || {}).paidAt || (allPortafolios[b] || {}).paymentVerifiedAt || '';
+                return dateB.localeCompare(dateA);
             });
+
+            if (approvedUids.length === 0) {
+                document.getElementById('no-approved-payments').classList.remove('hidden');
+            } else {
+                document.getElementById('no-approved-payments').classList.add('hidden');
+                approvedUids.forEach(function(uid) {
+                    var c = allClients[uid] || {};
+                    var p = allPortafolios[uid] || {};
+                    var price = getPlanPrice(p.plan);
+                    var date = p.paidAt || p.paymentVerifiedAt || p.updatedAt || '';
+
+                    var tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors cursor-pointer';
+                    tr.onclick = function() { openModal(uid); };
+                    tr.innerHTML =
+                        '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
+                        '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
+                        '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
+                        '<td class="px-4 py-3 text-sm font-mono text-gray-600">' + escapeHtml(p.comprobantePago || 'MP Manual') + '</td>' +
+                        '<td class="px-4 py-3 text-xs text-gray-400">' + (date ? formatDate(date) : '—') + '</td>';
+                    approvedTbody.appendChild(tr);
+                });
+            }
         }
 
         // ===== RENDER PRE-INSCRITOS TAB =====
@@ -1007,6 +1093,8 @@
                 document.getElementById('edit-dp-nivel').textContent = dp.nivel || '—';
                 document.getElementById('edit-dp-colegio').textContent = dp.colegio || '—';
                 document.getElementById('edit-dp-tipo').textContent = dp.tipoColegio || '—';
+                document.getElementById('edit-dp-genero').textContent = dp.generoColegio || '—';
+                document.getElementById('edit-dp-modalidad').textContent = dp.modalidadColegio || '—';
                 document.getElementById('edit-dp-comuna').textContent = dp.comuna || '—';
                 document.getElementById('edit-dp-region').textContent = dp.region || '—';
                 document.getElementById('edit-dp-curso').textContent = dp.curso || '—';
@@ -1021,6 +1109,15 @@
                 document.getElementById('edit-dp-desc').textContent = dp.descripcion || '—';
                 document.getElementById('edit-dp-previos').textContent = dp.conocimientosPrevios || '—';
                 document.getElementById('edit-dp-lista').textContent = dp.listaAlumnos || '—';
+                
+                // Nuevos campos de contexto pre-inscripción
+                document.getElementById('edit-dp-fortalezas').textContent = dp.fortalezas || '—';
+                document.getElementById('edit-dp-dificultades').textContent = dp.dificultades || '—';
+                document.getElementById('edit-dp-recursos').textContent = dp.recursos || '—';
+                document.getElementById('edit-dp-intereses-musica').textContent = dp.interesesMusica || '—';
+                document.getElementById('edit-dp-intereses-videojuegos').textContent = dp.interesesVideojuegos || '—';
+                document.getElementById('edit-dp-intereses-deporte').textContent = dp.interesesDeporte || '—';
+                document.getElementById('edit-dp-intereses').textContent = dp.intereses || '—';
             } else {
                 dpSection.classList.add('hidden');
             }
@@ -1034,22 +1131,54 @@
                 document.getElementById('edit-cq-m1-oa').textContent = q1.oa || '(sin preferencia)';
                 document.getElementById('edit-cq-m1-unidad').textContent = q1.unidad || '(sin preferencia)';
                 document.getElementById('edit-cq-m1-horas').textContent = q1.horasPedagogicas ? q1.horasPedagogicas + ' hrs' : '—';
-                document.getElementById('edit-cq-m1-tipo').textContent = q1.tipoClase || '—';
+                
+                var orgText = { grupal: 'Trabajo Grupal (DUA)', parejas: 'Trabajo en Parejas', individual: 'Trabajo Individual' };
+                document.getElementById('edit-cq-m1-tipo').textContent = orgText[q1.tipoClase] || q1.tipoClase || '—';
+                
+                var matText = { 
+                    'guia-impresa': 'Guía impresa tradicional', 
+                    'tarjetas': 'Tarjetas de aprendizaje (Flashcards)', 
+                    'fichas': 'Fichas de trabajo o bitácora', 
+                    'manipulativo': 'Material concreto / manipulativo', 
+                    'gamificacion': 'Gamificación / Juego de roles' 
+                };
+                document.getElementById('edit-cq-m1-material-preferido').textContent = matText[q1.materialPreferido] || q1.materialPreferido || '—';
+                
                 document.getElementById('edit-cq-m1-ppt').textContent = q1.usaPPT === 'si' ? 'Sí' : 'No';
                 document.getElementById('edit-cq-m1-com').textContent = q1.comentario || '—';
 
                 var q2 = cq.modulo2 || {};
                 document.getElementById('edit-cq-m2-dur').textContent = q2.duracionBloque ? q2.duracionBloque + ' min' : '—';
-                document.getElementById('edit-cq-m2-equipo').textContent = q2.equipoGrabacion || '—';
+                
+                // Mapear el array del equipamiento
+                var eqLabels = {
+                    pantalla: 'Pantalla interactiva / Smartboard',
+                    data: 'Data / Proyector',
+                    parlantes: 'Parlantes de audio',
+                    computadores: 'Computadores / Tablets para estudiantes',
+                    'solo-pizarra': 'Solo pizarra tradicional (sin tecnología)'
+                };
+                var eqFormatted = (q2.equipamiento || []).map(function(k) { return eqLabels[k] || k; }).join(', ');
+                document.getElementById('edit-cq-m2-equipamiento').textContent = eqFormatted || '—';
+                
                 document.getElementById('edit-cq-m2-tipo').textContent = q2.tipoClase || '—';
                 document.getElementById('edit-cq-m2-rest').textContent = q2.restricciones || '—';
                 document.getElementById('edit-cq-m2-com').textContent = q2.comentario || '—';
 
                 var q3 = cq.modulo3 || {};
-                document.getElementById('edit-cq-m3-exp').textContent = q3.tieneExperiencia === 'si' ? 'Sí' : 'No → necesita ABP';
+                var tieneExp = q3.tieneExperiencia === 'si';
+                document.getElementById('edit-cq-m3-exp').textContent = tieneExp ? 'Sí, tiene experiencia previa' : 'No tiene experiencia previa';
                 document.getElementById('edit-cq-m3-colab').textContent = q3.colaborador || '—';
                 document.getElementById('edit-cq-m3-desc').textContent = q3.descripcionExperiencia || '—';
                 document.getElementById('edit-cq-m3-com').textContent = q3.comentario || '—';
+                
+                // Sugerencia ABP si no tiene experiencia
+                var pInfo = document.getElementById('edit-cq-m3-proyecto-info');
+                if (tieneExp) {
+                    pInfo.innerHTML = '<span class="text-xs text-indigo-700 font-semibold">📋 Se redactará la reflexión técnica y análisis de impacto basados en su proyecto anterior.</span>';
+                } else {
+                    pInfo.innerHTML = '<span class="text-xs text-emerald-700 font-semibold">📋 Planificación del Proyecto 2026:</span><p class="text-xs text-emerald-600 mt-1">El docente no cuenta con proyecto previo. Se le diseñará un proyecto colaborativo (ABP) práctico e innovador adaptado a su asignatura y estándares ministeriales.</p>';
+                }
             } else {
                 cqSection.classList.add('hidden');
             }
@@ -1305,6 +1434,36 @@
             return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
         }
 
+        function buildWspAbiertoPago(c, p) {
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 👋',
+                '',
+                '¡Te comento que las *Rúbricas de la Evaluación Docente 2026* ya han sido oficialmente publicadas y damos inicio al proceso de construcción de portafolios! 🚀',
+                '',
+                'Para comenzar a diseñar tu portafolio de manera única y 100% personalizada, requerimos que realices los siguientes pasos:',
+                '',
+                '1️⃣ *Realizar el pago de tu plan:*',
+                p.plan && planNames[p.plan] ? '• Tu plan seleccionado: *' + planNames[p.plan] + '*' : '• Recuerda seleccionar y contratar tu plan.',
+                '• Puedes realizar tu pago de manera rápida y segura ingresando a tu panel.',
+                '',
+                '2️⃣ *Completar tus datos de contexto:*',
+                '• Ingresa a tu cuenta y completa en su totalidad la información sobre tu *práctica docente, estudiantes, sala de clases y contexto educativo*.',
+                '• Con estos detalles elaboraremos un portafolio exclusivo para ti, alineado perfectamente a tu realidad y a las rúbricas actuales.',
+                '',
+                '🔗 *Ingresa a tu cuenta aquí:*',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                '¡Comencemos juntos este camino al éxito en tu evaluación docente! 💪',
+                '',
+                'Cualquier duda, escríbeme por este medio.',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            ];
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
         document.querySelectorAll('.wsp-msg-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 wspMenu.classList.add('hidden');
@@ -1323,6 +1482,7 @@
                 if (msgType === 'reserva') text = buildWspReserva(c, p);
                 else if (msgType === 'avance') text = buildWspAvance(c, p);
                 else if (msgType === 'listo') text = buildWspListo(c, p);
+                else if (msgType === 'abierto_pago') text = buildWspAbiertoPago(c, p);
 
                 window.open('https://wa.me/' + phone + '?text=' + encodeURIComponent(text), '_blank');
             });
@@ -1361,6 +1521,8 @@
                 var updates = {};
                 updates['users/' + currentEditUid + '/status'] = 'pre-inscrito';
                 updates['users/' + currentEditUid + '/inscripcionNum'] = inscripcionNum;
+                updates['portafolios/' + currentEditUid + '/plan'] = 'pre-inscripcion';
+                updates['portafolios/' + currentEditUid + '/paymentStatus'] = 'pre-inscrito';
                 return db.ref().update(updates).then(function() {
                     document.getElementById('edit-inscripcion-num').textContent = inscripcionNum;
                     showActionMsg('✅ Marcado como pre-inscrito: ' + inscripcionNum, 'success');

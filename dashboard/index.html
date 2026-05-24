@@ -959,7 +959,7 @@
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Estado de Pago</p>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">Aprobado</span>
+                    <span id="dash-payment-status" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">Aprobado</span>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 mb-1">Progreso General</p>
@@ -1102,6 +1102,7 @@
     var userData = null;
     var portData = null;
     var _suppressRender = false;
+    var _paymentVerificationStarted = false;
 
     (function() {
         firebase.initializeApp(FIREBASE_CONFIG);
@@ -1145,18 +1146,63 @@
 
                 // Now listen to portfolio data (userData is guaranteed loaded)
                 db.ref('portafolios/' + user.uid).on('value', function(pSnap) {
-                    portData = pSnap.val();
+                    portData = pSnap.val() || {};
                     if (_suppressRender) return; // Don't re-render during auto-save
-                    // If returning from MercadoPago success, update payment
+                    
+                    // Secure payment verification if query parameters are present
                     if (_paymentReturn === 'success' && portData && portData.paymentStatus !== 'approved') {
-                        db.ref('portafolios/' + user.uid + '/paymentStatus').set('approved');
-                        return; // will trigger this listener again
+                        // Check if we have an actual payment ID from Mercado Pago
+                        var paymentId = _params.get('payment_id') || _params.get('collection_id');
+                        if (paymentId) {
+                            verifyPaymentIDOnlyOnce(paymentId, user.uid, portData.plan);
+                        } else {
+                            console.warn('Alerta: Redirección de pago sin ID de transacción. No se puede auto-aprobar.');
+                        }
                     }
+                    
                     document.getElementById('loading').classList.add('hidden');
                     renderDashboard();
                 });
             });
         });
+
+        function verifyPaymentIDOnlyOnce(paymentId, uid, plan) {
+            if (_paymentVerificationStarted) return;
+            _paymentVerificationStarted = true;
+            
+            var errorEl = document.getElementById('pay-error');
+            if (errorEl) {
+                errorEl.textContent = 'Verificando con MercadoPago automáticamente...';
+                errorEl.classList.remove('hidden', 'text-red-600');
+                errorEl.classList.add('text-primary-600', 'font-medium');
+            }
+            
+            fetch('/api/mercadopago/verify-payment', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    paymentId: paymentId,
+                    uid: uid,
+                    plan: plan
+                })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.verified) {
+                    var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+                    window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = data.reason || 'No se pudo verificar el pago automático. Ingrese el número de operación manualmente.';
+                        errorEl.classList.remove('text-primary-600');
+                        errorEl.classList.add('text-red-600');
+                    }
+                }
+            })
+            .catch(function(err) {
+                console.error('Error in auto-verify:', err);
+            });
+        }
 
         function hideAll() {
             ['step-preinscripcion', 'step-select-plan', 'step-payment', 'step-datos', 'step-progress'].forEach(function(id) {
@@ -1598,6 +1644,23 @@
                 document.getElementById('welcome-title').textContent = 'Hola, ' + (userData.nombre || '').split(' ')[0];
             }
             document.getElementById('plan-name').textContent = planNames[portData.plan] || portData.plan;
+            
+            // Dynamic payment status badge
+            var payBadge = document.getElementById('dash-payment-status');
+            if (payBadge) {
+                var status = portData.paymentStatus || 'pendiente';
+                if (status === 'approved' || status === 'aprobado') {
+                    payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700';
+                    payBadge.textContent = 'Aprobado ✓';
+                } else if (status === 'pendiente_verificacion') {
+                    payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-amber-100 text-amber-700';
+                    payBadge.textContent = 'Por Verificar';
+                } else {
+                    payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700';
+                    payBadge.textContent = 'Pendiente';
+                }
+            }
+
             updateModule(1, portData.modulo1);
             updateModule(2, portData.modulo2);
             updateModule(3, portData.modulo3);

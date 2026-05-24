@@ -604,8 +604,8 @@
         var allPortafolios = {};
         var currentFilter = 'all';
 
-        var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión' };
-        var planPrices = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+        var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión', 'pre-inscripcion': 'Pre-Inscrito' };
+        var planPrices = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990, 'pre-inscripcion': 0 };
 
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
@@ -901,13 +901,27 @@
                 var p = allPortafolios[uid] || {};
                 var progress = calcProgress(p);
                 var price = getPlanPrice(p.plan);
+
+                var planText = planNames[p.plan] || p.plan;
+                if (!planText && c.status === 'pre-inscrito') {
+                    planText = 'Pre-Inscrito';
+                }
+                planText = planText || '—';
+
+                var priceText = '—';
+                if (price) {
+                    priceText = formatCLP(price);
+                } else if (p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') {
+                    priceText = 'Gratis';
+                }
+
                 var tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 transition-colors';
                 tr.innerHTML =
                     '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
                     '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
-                    '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
-                    '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
+                    '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + escapeHtml(planText) + '</span></td>' +
+                    '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + escapeHtml(priceText) + '</td>' +
                     '<td class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
                     '<td class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
                     '<td class="px-4 py-3 text-center">' + (p.googleDrive && p.googleDrive.shareUrl ? '<a href="' + escapeHtml(p.googleDrive.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm" style="background-color:#0F9D58" title="Abrir carpeta Google Drive">📁</a>' : '<span class="text-gray-300 text-sm">—</span>') + '</td>' +
@@ -1226,7 +1240,13 @@
 
             document.getElementById('edit-payment').value = p.paymentStatus || 'pendiente';
             var price = getPlanPrice(p.plan);
-            document.getElementById('edit-monto').textContent = price ? (planNames[p.plan] || p.plan) + ' · ' + formatCLP(price) : '—';
+            var montoText = '—';
+            if (price) {
+                montoText = (planNames[p.plan] || p.plan) + ' · ' + formatCLP(price);
+            } else if (p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') {
+                montoText = 'Pre-Inscrito · Gratis ($0)';
+            }
+            document.getElementById('edit-monto').textContent = montoText;
 
             // Modules
             var m1 = p.modulo1 || {};

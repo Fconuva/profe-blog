@@ -726,6 +726,39 @@
         function getClientUids() {
             return Object.keys(allClients).filter(function(uid) {
                 return allClients[uid].role !== 'admin';
+            }).sort(function(a, b) {
+                var cA = allClients[a];
+                var cB = allClients[b];
+                
+                var numA = 0;
+                if (cA.inscripcionNum) {
+                    var matchA = cA.inscripcionNum.match(/\d+/g);
+                    if (matchA && matchA.length > 0) {
+                        numA = parseInt(matchA[matchA.length - 1], 10);
+                    }
+                }
+                
+                var numB = 0;
+                if (cB.inscripcionNum) {
+                    var matchB = cB.inscripcionNum.match(/\d+/g);
+                    if (matchB && matchB.length > 0) {
+                        numB = parseInt(matchB[matchB.length - 1], 10);
+                    }
+                }
+                
+                // If neither has registration number, sort by creation date (newest first)
+                if (numA === 0 && numB === 0) {
+                    var dateA = cA.createdAt ? new Date(cA.createdAt).getTime() : 0;
+                    var dateB = cB.createdAt ? new Date(cB.createdAt).getTime() : 0;
+                    return dateB - dateA;
+                }
+                
+                // Put clients without registration numbers at the bottom
+                if (numA === 0) return 1;
+                if (numB === 0) return -1;
+                
+                // Sort descending (newest registration first)
+                return numB - numA;
             });
         }
 
@@ -1806,7 +1839,6 @@
                 btn.disabled = false;
                 btn.textContent = 'Crear Usuario y Pre-Inscribir';
                 alert('Error de conexión: ' + err.message);
-            });
             });
         });
 

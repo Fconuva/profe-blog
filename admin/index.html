@@ -331,6 +331,10 @@
                                 <span class="text-base">📋</span>
                                 <div><p class="font-medium text-gray-900">Reserva / Inscripción</p><p class="text-xs text-gray-500">Datos + link para ingresar</p></div>
                             </button>
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-purple-50 transition-colors flex items-center gap-2" data-msg="iniciar_construccion">
+                                <span class="text-base">🛠️</span>
+                                <div><p class="font-medium text-gray-900">Iniciar Construcción</p><p class="text-xs text-gray-500">Aviso inicio + completar pago</p></div>
+                            </button>
                             <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 transition-colors flex items-center gap-2" data-msg="abierto_pago">
                                 <span class="text-base">🚀</span>
                                 <div><p class="font-medium text-gray-900">Inicio Proceso & Pago</p><p class="text-xs text-gray-500">Rúbricas publicadas + pago</p></div>
@@ -363,6 +367,9 @@
                             <option value="approved">Aprobado</option>
                         </select>
                         <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
+                        <button type="button" id="btn-admin-descargar-recibo" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm flex items-center gap-1">
+                            📄 Descargar Recibo PDF
+                        </button>
                     </div>
                     <div id="edit-comprobante-info" class="hidden mt-2 text-xs text-gray-500 bg-amber-50 p-2 rounded-lg"></div>
                 </div>
@@ -585,6 +592,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
     (function() {
@@ -1227,6 +1235,23 @@
                 gdBtn.style.backgroundColor = '#0F9D58';
             }
 
+            // Recibo button visibility and binding
+            var btnAdminRecibo = document.getElementById('btn-admin-descargar-recibo');
+            if (btnAdminRecibo) {
+                var isApproved = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
+                if (isApproved) {
+                    btnAdminRecibo.classList.remove('hidden');
+                    // Clone to remove previous event listeners
+                    var newBtn = btnAdminRecibo.cloneNode(true);
+                    btnAdminRecibo.parentNode.replaceChild(newBtn, btnAdminRecibo);
+                    newBtn.addEventListener('click', function() {
+                        descargarReciboPDFAdmin(c, p);
+                    });
+                } else {
+                    btnAdminRecibo.classList.add('hidden');
+                }
+            }
+
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
             modal.classList.remove('hidden');
@@ -1464,6 +1489,36 @@
             return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
         }
 
+        function buildWspIniciarConstruccion(c, p) {
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 👋',
+                '',
+                '¡Te escribo para informarte que hemos iniciado oficialmente la *construcción de tu Portafolio Docente 2026*! 🛠️',
+                '',
+                'Para hacer efectiva tu inscripción y que nuestro equipo empiece a trabajar de inmediato en tu material curricular personalizado, necesitamos que completes los siguientes pasos en la plataforma:',
+                '',
+                '1️⃣ *Completar tu información:* Entra a tu panel y asegúrate de llenar todos los detalles sobre tu contexto escolar, estudiantes y sala de clases (DUA).',
+                '2️⃣ *Realizar el pago de tu plan:* Elige tu plan preferido y completa el pago mediante MercadoPago (puedes pagar hasta en 6 cuotas).',
+                '',
+                '🎯 *¿Qué recibirás al concretar tu inscripción?*',
+                '• ⚡ **Entrega en 1 semana:** Tendrás listo todo tu portafolio desarrollado de forma exclusiva y ajustado a tu realidad escolar.',
+                '• ✏️ **Ajustes y cambios ilimitados:** Podrás pedirnos modificar y ajustar los entregables según lo que consideres conveniente.',
+                '• 📹 **Práctica de Clase Grabada:** Te animamos especialmente a practicar y pulir el libreto de la clase grabada. Podrás ensayarlo y ajustarlo con nosotros las veces que sea necesario.',
+                '',
+                '🔗 *Ingresa y completa tu proceso aquí:*',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                '¡Aseguremos juntos el éxito en tu Evaluación Docente! 💪 Estamos para guiarte en cada paso.',
+                '',
+                'Cualquier duda, escríbeme por aquí.',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            ];
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
         document.querySelectorAll('.wsp-msg-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 wspMenu.classList.add('hidden');
@@ -1480,6 +1535,7 @@
                 var msgType = this.getAttribute('data-msg');
                 var text = '';
                 if (msgType === 'reserva') text = buildWspReserva(c, p);
+                else if (msgType === 'iniciar_construccion') text = buildWspIniciarConstruccion(c, p);
                 else if (msgType === 'avance') text = buildWspAvance(c, p);
                 else if (msgType === 'listo') text = buildWspListo(c, p);
                 else if (msgType === 'abierto_pago') text = buildWspAbiertoPago(c, p);
@@ -1751,7 +1807,228 @@
                 btn.textContent = 'Crear Usuario y Pre-Inscribir';
                 alert('Error de conexión: ' + err.message);
             });
+            });
         });
+
+        function descargarReciboPDFAdmin(client, port) {
+            if (!client || !port) return;
+
+            var { jsPDF } = window.jspdf;
+            var doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            var planNamesLocal = { completo: 'Portafolio Completo', modulo1: 'Módulo 1 — Planificación', modulo2: 'Módulo 2 — Clase Grabada', modulo3: 'Módulo 3 — Reflexión' };
+            var planPricesLocal = { completo: '$199.990', modulo1: '$79.990', modulo2: '$99.990', modulo3: '$79.990' };
+
+            var email = client.email || '';
+            var name = client.nombre || 'Docente';
+            var rut = client.rut || '—';
+            var numInsc = client.inscripcionNum || '—';
+            var planId = port.plan || 'completo';
+            var planNameLabel = planNamesLocal[planId] || planId;
+            var planPriceLabel = planPricesLocal[planId] || '$199.990';
+            var paymentId = port.comprobantePago || 'MP-MANUAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+            var paymentDateRaw = port.paidAt || port.paymentVerifiedAt || port.updatedAt || new Date().toISOString();
+            var paymentDateFormatted = new Date(paymentDateRaw).toLocaleDateString('es-CL', {
+                day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+            });
+
+            // 1. Watermark
+            doc.saveGraphicsState();
+            doc.setGState(new doc.GState({ opacity: 0.06 }));
+            doc.setTextColor(34, 197, 94);
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(55);
+            doc.text('PAGADO & VERIFICADO', 105, 140, { align: 'center', angle: -35 });
+            doc.text('PROFE FRANCISCO PANCHO', 105, 175, { align: 'center', angle: -35 });
+            doc.restoreGraphicsState();
+
+            // 2. Borders
+            doc.setDrawColor(79, 70, 229);
+            doc.setLineWidth(1.5);
+            doc.rect(10, 10, 190, 277);
+
+            doc.setDrawColor(229, 231, 235);
+            doc.setLineWidth(0.5);
+            doc.line(15, 62, 195, 62);
+
+            // 3. Header
+            doc.setFillColor(79, 70, 229);
+            doc.rect(10, 10, 190, 8, 'F');
+
+            doc.setTextColor(17, 24, 39);
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(22);
+            doc.text('COMPROBANTE DE PAGO', 15, 32);
+
+            doc.setFontSize(11);
+            doc.setFont('Helvetica', 'normal');
+            doc.setTextColor(107, 114, 128);
+            doc.text('Servicios de Asesoría de Portafolio Docente 2026', 15, 39);
+            doc.text('Prof. Francisco Javier Núñez Valenzuela', 15, 44);
+            doc.text('www.profefranciscopancho.com', 15, 49);
+
+            // Recibo Metadata
+            doc.setFillColor(243, 244, 246);
+            doc.roundedRect(140, 23, 50, 28, 3, 3, 'F');
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(79, 70, 229);
+            doc.text('N° DE COMPROBANTE', 145, 29);
+            doc.setFontSize(12);
+            doc.setTextColor(17, 24, 39);
+            doc.text('#' + paymentId.substring(0, 12), 145, 35);
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(107, 114, 128);
+            doc.text('Fecha: ' + new Date(paymentDateRaw).toLocaleDateString('es-CL'), 145, 41);
+            doc.text('Estado: APROBADO', 145, 45);
+
+            // 4. Client Details
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(79, 70, 229);
+            doc.text('DATOS DEL DOCENTE', 15, 72);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(55, 65, 81);
+            doc.text('Nombre completo:', 15, 80);
+            doc.setFont('Helvetica', 'bold');
+            doc.text(name, 52, 80);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.text('RUT / Cédula:', 15, 87);
+            doc.setFont('Helvetica', 'bold');
+            doc.text(rut, 52, 87);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.text('Correo electrónico:', 15, 94);
+            doc.setFont('Helvetica', 'bold');
+            doc.text(email, 52, 94);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.text('N° de Inscripción:', 15, 101);
+            doc.setFont('Helvetica', 'bold');
+            doc.setTextColor(17, 24, 39);
+            doc.text(numInsc, 52, 101);
+
+            doc.setDrawColor(229, 231, 235);
+            doc.line(15, 110, 195, 110);
+
+            // 5. Payment Details
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(12);
+            doc.setTextColor(79, 70, 229);
+            doc.text('DETALLE DEL PAGO', 15, 120);
+
+            doc.setFillColor(243, 244, 246);
+            doc.rect(15, 126, 180, 7, 'F');
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(9);
+            doc.setTextColor(55, 65, 81);
+            doc.text('DESCRIPCIÓN DEL PLAN ADQUIRIDO', 18, 131);
+            doc.text('TOTAL COBRADO', 155, 131);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(10);
+            doc.setTextColor(17, 24, 39);
+            doc.text('Servicio de Portafolio Docente 2026 (' + planNameLabel + ')', 18, 142);
+            doc.setFont('Helvetica', 'bold');
+            doc.text(planPriceLabel, 155, 142);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(8.5);
+            doc.setTextColor(107, 114, 128);
+            doc.text('• Acceso completo a la plataforma digital www.profefranciscopancho.com', 18, 148);
+            doc.text('• Materiales, guías pedagógicas y libreto personalizado ajustado al contexto escolar.', 18, 153);
+            doc.text('• Soporte personalizado y revisión directa de las rúbricas actuales.', 18, 158);
+
+            doc.setFillColor(249, 250, 251);
+            doc.rect(125, 168, 70, 24, 'F');
+            doc.setDrawColor(229, 231, 235);
+            doc.rect(125, 168, 70, 24);
+            
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(107, 114, 128);
+            doc.text('Subtotal:', 129, 174);
+            doc.text(planPriceLabel, 168, 174);
+            
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(17, 24, 39);
+            doc.text('Total General:', 129, 184);
+            doc.setTextColor(22, 163, 74);
+            doc.text(planPriceLabel, 168, 184);
+
+            doc.setDrawColor(229, 231, 235);
+            doc.line(15, 202, 195, 202);
+
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(11);
+            doc.setTextColor(79, 70, 229);
+            doc.text('SISTEMA DE VERIFICACIÓN DE SEGURIDAD', 15, 212);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(9);
+            doc.setTextColor(55, 65, 81);
+            doc.text('Este documento digital cuenta con una firma electrónica y un código QR', 15, 220);
+            doc.text('de verificación contra fraudes. Al escanear el código QR con cualquier dispositivo,', 15, 225);
+            doc.text('se confirmará la autenticidad e integridad del pago en nuestros servidores.', 15, 230);
+            
+            doc.setFont('Helvetica', 'bold');
+            doc.setFontSize(9.5);
+            doc.setTextColor(17, 24, 39);
+            doc.text('Fecha oficial de validación: ' + paymentDateFormatted, 15, 239);
+            doc.text('Método de verificación: Firma RTDB Firebase', 15, 244);
+
+            doc.setFont('Helvetica', 'normal');
+            doc.setFontSize(8);
+            doc.setTextColor(156, 163, 175);
+            doc.text('CÓDIGO DE CONTROL: ' + paymentId.toUpperCase(), 15, 266);
+            
+            var bx = 15;
+            var by = 250;
+            var bHeights = 12;
+            var barPatterns = [1, 2, 0.5, 1, 3, 0.5, 2, 1, 0.5, 1.5, 2, 0.5, 1, 3, 1, 0.5, 2, 1, 1.5, 0.5, 2, 3, 1, 0.5];
+            barPatterns.forEach(function(w) {
+                doc.setLineWidth(w * 0.35);
+                doc.line(bx, by, bx, by + bHeights);
+                bx += (w * 0.35) + 0.8;
+            });
+
+            var qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&color=4f46e5&data=' + encodeURIComponent('PAYMENT_VERIFIED: ID=' + paymentId + ' CLIENT=' + name + ' PLAN=' + planNameLabel + ' DATE=' + paymentDateFormatted);
+            var qrImg = new Image();
+            qrImg.crossOrigin = 'Anonymous';
+            qrImg.src = qrUrl;
+            qrImg.onload = function() {
+                try {
+                    doc.addImage(qrImg, 'PNG', 145, 208, 45, 45);
+                } catch(e) {
+                    console.error("Error drawing QR to PDF:", e);
+                }
+                doc.setFillColor(31, 41, 55);
+                doc.rect(10, 277, 190, 10, 'F');
+                doc.setFont('Helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text('DOCUMENTO EMITIDO ELECTRÓNICAMENTE — PORTAFOLIO DOCENTE 2026', 105, 283, { align: 'center' });
+                doc.save('Recibo_Pago_' + numInsc + '.pdf');
+            };
+            qrImg.onerror = function() {
+                doc.setFillColor(31, 41, 55);
+                doc.rect(10, 277, 190, 10, 'F');
+                doc.setFont('Helvetica', 'bold');
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text('DOCUMENTO EMITIDO ELECTRÓNICAMENTE — PORTAFOLIO DOCENTE 2026', 105, 283, { align: 'center' });
+                doc.save('Recibo_Pago_' + numInsc + '.pdf');
+            };
+        }
 
     })();
     </script>

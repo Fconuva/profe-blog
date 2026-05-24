@@ -63,6 +63,12 @@ async function handleCreateUser(req, res) {
       creadoPorAdmin: true
     });
 
+    await db.ref('portafolios/' + uid).set({
+      plan: 'pre-inscripcion',
+      paymentStatus: 'pre-inscrito',
+      createdAt: new Date().toISOString()
+    });
+
     return res.status(200).json({
       success: true,
       uid: uid,

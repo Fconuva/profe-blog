@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>3°ATP Mecánica Industrial | El Arte de la Precisión</title>
+  <meta name="description" content="Plataforma interactiva de la Clase 1 de Mecánica Industrial en articulación con Lengua y Literatura. Centro Educativo Salesianos Talca.">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/estudiantes/assets/logo-cest.png">
+
+  <style>
+    :root {
+      --bg-base: #0a0f1d;
+      --panel-bg: rgba(16, 22, 42, 0.7);
+      --border-color: rgba(56, 189, 248, 0.15);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      /* Theme Steel Blue Colors */
+      --primary: #38bdf8; /* Ice / Sky Blue (High Tech / Engineering Blue) */
+      --primary-hover: #0ea5e9;
+      --primary-glow: rgba(56, 189, 248, 0.15);
+      --success: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-base);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* Ambient Background Blobs and Rotating Gears */
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      z-index: 0;
+      filter: blur(130px);
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    body::before {
+      top: -10%;
+      left: -5%;
+      background: radial-gradient(circle, #0284c7, transparent 70%); /* Steel Blue */
+    }
+
+    body::after {
+      bottom: -10%;
+      right: -5%;
+      background: radial-gradient(circle, #1e3a8a, transparent 70%); /* Deep Blue */
+    }
+
+    /* Rotating Gear Background Icon */
+    .bg-gear {
+      position: absolute;
+      top: 15%;
+      right: -100px;
+      font-size: 280px;
+      opacity: 0.02;
+      color: var(--text-main);
+      z-index: 0;
+      pointer-events: none;
+      animation: rotateGear 40s linear infinite;
+    }
+
+    .bg-gear-2 {
+      position: absolute;
+      bottom: 10%;
+      left: -150px;
+      font-size: 320px;
+      opacity: 0.015;
+      color: var(--text-main);
+      z-index: 0;
+      pointer-events: none;
+      animation: rotateGearAnti 50s linear infinite;
+    }
+
+    @keyframes rotateGear {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes rotateGearAnti {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(-360deg); }
+    }
+
+    /* Page Container */
+    .container {
+      width: 100%;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 30px 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Top bar Back Button */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .btn-back {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.02);
+      transition: all 0.3s ease;
+    }
+
+    .btn-back:hover {
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(-4px);
+    }
+
+    .connection-status {
+      font-size: 12px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 99px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: var(--text-muted);
+    }
+    
+    .status-dot.online {
+      background-color: var(--success);
+      box-shadow: 0 0 10px var(--success);
+    }
+
+    .status-dot.offline {
+      background-color: var(--danger);
+      box-shadow: 0 0 10px var(--danger);
+    }
+
+    /* Membrete Header */
+    header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeInDown 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .brand-logos {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 12px 28px;
+      border-radius: 100px;
+      border: 1px solid var(--border-color);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+      margin-bottom: 24px;
+    }
+
+    .logo-img {
+      height: 52px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+    }
+
+    .logo-divider {
+      width: 1px;
+      height: 36px;
+      background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 8px 16px;
+      border-radius: 99px;
+      background: rgba(56, 189, 248, 0.08);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    header h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 800;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #7dd3fc 80%, #0284c7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    header .subtitle {
+      font-size: clamp(15px, 2vw, 18px);
+      color: var(--text-muted);
+      max-width: 800px;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    /* Teachers Metadata Grid */
+    .teachers-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      max-width: 700px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .teacher-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      padding: 12px 20px;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      font-size: 13px;
+    }
+
+    .teacher-card span {
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+
+    .teacher-card strong {
+      color: #ffffff;
+      font-weight: 600;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.8fr);
+      gap: 32px;
+      margin-bottom: 60px;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+
+    /* Glassmorphic Panel Wrapper */
+    .panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: var(--shadow);
+    }
+
+    .panel-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #ffffff;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .panel-title span.badge {
+      font-size: 11px;
+      background: rgba(56, 189, 248, 0.12);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      color: var(--primary);
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Interactive Timeline Style */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      position: relative;
+      padding-left: 20px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 6px;
+      top: 10px;
+      bottom: 10px;
+      width: 2px;
+      background-color: var(--border-color);
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 16px;
+    }
+
+    .timeline-node {
+      position: absolute;
+      left: -20px;
+      top: 6px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background-color: var(--bg-base);
+      border: 2px solid var(--text-muted);
+      transition: all 0.3s ease;
+      z-index: 2;
+    }
+
+    .timeline-item.active .timeline-node {
+      border-color: var(--primary);
+      background-color: var(--primary);
+      box-shadow: 0 0 12px var(--primary);
+    }
+
+    .timeline-item.completed .timeline-node {
+      border-color: var(--success);
+      background-color: var(--success);
+    }
+
+    .timeline-content {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .timeline-time {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .timeline-item.active .timeline-time {
+      color: var(--primary);
+    }
+
+    .timeline-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .timeline-desc {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Class presentation box */
+    .intro-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .intro-box p {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+    }
+
+    .intro-box p strong {
+      color: #ffffff;
+    }
+
+    .objective-list {
+      margin-top: 12px;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .objective-list li {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Roster and Group workspace styles */
+    .form-group-select {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    select, input, textarea {
+      width: 100%;
+      background-color: rgba(0, 0, 0, 0.25);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-family: inherit;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      outline: none;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    select {
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 16px center;
+      background-size: 16px;
+      padding-right: 40px;
+    }
+
+    /* Roster Member List Grid */
+    .roster-box {
+      background: rgba(255, 255, 255, 0.015);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+
+    .roster-title {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 6px;
+    }
+
+    .roster-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .roster-member {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .roster-member .number {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .roster-member .name {
+      color: #ffffff;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Roster Exception badges */
+    .special-roster-box {
+      margin-top: 16px;
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .badge-special {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.02);
+      border: 1px solid var(--border-color);
+    }
+
+    .badge-special.retired {
+      border-color: rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.04);
+    }
+
+    .badge-special.medical {
+      border-color: rgba(245, 158, 11, 0.2);
+      color: var(--warning);
+      background: rgba(245, 158, 11, 0.04);
+    }
+
+    /* Security Auth Card */
+    .security-box {
+      background: rgba(56, 189, 248, 0.02);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 28px;
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.02);
+    }
+
+    .security-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .security-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 6px 12px;
+      border-radius: 8px;
+    }
+
+    .security-badge.locked {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+    }
+
+    .security-badge.unlocked {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
+    }
+
+    .rut-input-wrapper {
+      position: relative;
+    }
+
+    .rut-input-wrapper input {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      padding-right: 120px;
+    }
+
+    .rut-hint {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 11px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+
+    .security-tip {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      margin-top: 10px;
+    }
+
+    /* Worksheet Form */
+    .worksheet-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-field textarea {
+      height: 100px;
+      resize: none;
+      line-height: 1.5;
+    }
+
+    .form-field textarea[disabled], 
+    .form-field input[disabled],
+    .form-field select[disabled] {
+      background-color: rgba(255, 255, 255, 0.01);
+      border-color: rgba(255, 255, 255, 0.04);
+      color: rgba(255, 255, 255, 0.25);
+      cursor: not-allowed;
+    }
+
+    /* Locked overlay styling helper */
+    .worksheet-form.form-locked {
+      opacity: 0.7;
+    }
+
+    /* Action Buttons */
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #0a0f1d;
+      border: none;
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 15px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-submit:hover:not([disabled]) {
+      background: var(--primary-hover);
+      box-shadow: 0 10px 25px rgba(56, 189, 248, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-submit:active:not([disabled]) {
+      transform: translateY(0);
+    }
+
+    .btn-submit[disabled] {
+      background-color: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.15);
+      border: 1px solid var(--border-color);
+      cursor: not-allowed;
+    }
+
+    /* Notification Banner */
+    .notification-banner {
+      display: none;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      font-weight: 600;
+      line-height: 1.4;
+      margin-bottom: 20px;
+      animation: fadeInUp 0.4s ease;
+    }
+
+    .notification-banner.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: var(--success);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .notification-banner.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Footer Credits */
+    footer {
+      text-align: center;
+      padding: 30px 24px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid rgba(255, 255, 255, 0.03);
+      background: rgba(0, 0, 0, 0.15);
+      position: relative;
+      z-index: 10;
+      margin-top: auto;
+    }
+
+    footer p {
+      margin-bottom: 6px;
+    }
+
+    footer strong {
+      color: #ffffff;
+    }
+
+    /* Animations */
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 960px) {
+      .dashboard-layout {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+      .panel {
+        padding: 24px;
+      }
+      .teachers-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Rotating Gear Icons for Aesthetic Premium Feel -->
+  <div class="bg-gear">⚙️</div>
+  <div class="bg-gear-2">⚙️</div>
+
+  <div class="container">
+    
+    <!-- Top Backbar and DB Sync Badge -->
+    <div class="topbar">
+      <a href="/" class="btn-back">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Volver al Portal
+      </a>
+      <div class="connection-status" id="dbStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Conectando...</span>
+      </div>
+    </div>
+
+    <!-- Official Header (Membrete) -->
+    <header>
+      <div class="brand-logos">
+        <img class="logo-img" src="/assets/logo-profe-francisco-nuevo.svg" alt="Logo Francisco Pancho">
+        <div class="logo-divider"></div>
+        <img class="logo-img" src="/assets/logo-mecanica-industrial-tuerca.svg" alt="Logo Mecánica Industrial">
+        <div class="logo-divider"></div>
+        <img class="logo-img" src="/estudiantes/assets/logo-cest.png" alt="Logo CEST">
+      </div>
+      <div class="header-badge">Especialidad Mecánica Industrial</div>
+      <h1>El Arte de la Precisión</h1>
+      <p class="subtitle">Proyecto de Articulación Interdisciplinar: Registro e Informe Técnico de Mantenimiento de Sistemas Mecánicos. Conexión interactiva entre el Taller de Máquinas y Lengua y Literatura.</p>
+      
+      <!-- Teachers Metadata Info -->
+      <div class="teachers-grid">
+        <div class="teacher-card">
+          <span>Docente Coordinador Mecánica</span>
+          <strong>Ricardo E. Jaque Cerpa</strong>
+          <span style="font-size:10px; margin-top:2px; font-weight:normal; text-transform:none;">Jefe de Esp. Mecánica Industrial</span>
+        </div>
+        <div class="teacher-card">
+          <span>Docente Lengua y Literatura</span>
+          <strong>Prof. Francisco Núñez Valenzuela</strong>
+          <span style="font-size:10px; margin-top:2px; font-weight:normal; text-transform:none;">Estructuración Discursiva y Redacción</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <div class="dashboard-layout">
+      
+      <!-- Left Column: Class Presentation and Project Timeline -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>🧭 Ruta del Proyecto</span>
+          <span class="badge">6 Clases</span>
+        </div>
+        
+        <!-- Presentation Intro -->
+        <div class="intro-box">
+          <p><strong>Clase 1: Identificación, Investigación Inicial y Planificación de Desarme.</strong></p>
+          <p style="margin-top: 8px;">En esta sesión de 10 horas pedagógicas, cada equipo identificará su conjunto mecánico real, investigará la máquina o sistema donde trabaja, su función dentro de la transmisión o soporte del movimiento y las fallas más probables del mecanismo. Con esa base, planificarán el desarme seguro, el levantamiento de evidencias y la ruta técnica que servirá de base para el informe final de mantenimiento.</p>
+          <ul class="objective-list">
+            <li>Reconocer el conjunto, la máquina y el subsistema donde opera cada componente asignado.</li>
+            <li>Investigar fabricante, principio de funcionamiento, uso industrial y fallas comunes del sistema intervenido.</li>
+            <li>Distribuir roles de seguridad, registro técnico, fotografía, medición e investigación documental.</li>
+            <li>Planificar la secuencia de desarme, las herramientas y el criterio de orden e inventario de piezas.</li>
+            <li>Detectar riesgos operativos, EPP obligatorios y controles preventivos antes de intervenir el conjunto.</li>
+          </ul>
+        </div>
+
+        <!-- Project Timeline -->
+        <div class="timeline">
+          
+          <div class="timeline-item active">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 1 · En Taller</span>
+              <span class="timeline-title">Planificación de Desarme y Seguridad</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Definición del conjunto mecánico a intervenir (rodamientos, chavetas, pernos, seguros, poleas, engranajes, ejes, acoplamientos, lubricación) y reconocimiento de la máquina o sistema donde trabaja. Los estudiantes forman los equipos, distribuyen roles (Líder de Seguridad, Registrador Técnico, Operadores, Investigador de Máquina), inspeccionan placa, referencias, croquis y contexto de uso del conjunto, e identifican riesgos críticos del taller (atrapamiento, cortes, golpes) declarando EPP, orden de puesto y protocolo de intervención segura. (Sesión Actual)</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Introducción a la escritura técnica y al Aprendizaje Basado en Proyectos (ABP). Cada equipo abre su carpeta de investigación y registra nombre del conjunto, máquina asociada, función general del sistema, preguntas técnicas a responder y primeras fuentes de consulta (observación directa, catálogos, manuales, fichas, croquis del taller). Se normalizan objetivos de comunicación formal, criterios de registro confiable y estructura base de la bitácora que sostendrá el informe final.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 2 · En Taller</span>
+              <span class="timeline-title">Ejecución, Inventario y Despiece</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Ejecución del desarme real del conjunto asignado bajo estricto control de seguridad. Los equipos catalogan, limpian y ordenan cada pieza; registran secuencia de retiro, posición de montaje, estado superficial, desgaste, holguras visibles y posibles anomalías. Además, levantan evidencia fotográfica de alta resolución, comparan el despiece con la función del sistema y comienzan a relacionar cada componente con la tarea mecánica que cumple dentro de la máquina investigada.</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Registro formal de evidencias del taller. Los estudiantes redactan la secuencia de desmontaje paso a paso en una bitácora técnica, clasifican léxicamente las piezas intervenidas, incorporan croquis, tablas simples y descripciones objetivas, y consignan qué información nueva descubrieron sobre la máquina, el mecanismo de transmisión o el componente que están estudiando. La meta es evitar términos informales y pasar a un registro técnico claro, preciso y verificable.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 3 · En Aula</span>
+              <span class="timeline-title">Análisis de Referentes de Ingeniería</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Recopilación y validación de pautas de inspección, tolerancias y datos de fabricante. Los equipos usan instrumentos de precisión (pie de metro, micrómetro, galgas) para medir componentes y contrastar el estado real del conjunto con referencias técnicas. Paralelamente, investigan cómo funciona la máquina completa, qué tipo de transmisión emplea, cuáles son sus esfuerzos principales y qué fallas comunes se reportan para ese tipo de sistema.</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Modelado discursivo técnico usando como referente de alta gama el <em>Estudio de Mecánica de Suelos de la SE Schwager</em>. Los estudiantes analizan la superestructura formal del documento para aprender a construir portada, control de cambios, glosario, tablas y anexos. También convierten la investigación de la máquina y del mecanismo en una sección de contextualización técnica: qué equipo es, para qué sirve, cómo opera y por qué su mantenimiento resulta relevante.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 4 · En Aula</span>
+              <span class="timeline-title">Redacción de Base y Control de Cambios</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Supervisión técnica de mediciones, croquis y datos de inspección por el Jefe de Especialidad. Los alumnos contrastan desgaste, holguras, asientos, chaveteros, roscas o dientes con pautas teóricas y referencias del fabricante, y comienzan a justificar técnicamente si el estado del conjunto permite reutilización, ajuste, sustitución o mantenimiento preventivo. La investigación previa sobre la máquina se usa aquí para interpretar mejor la función y criticidad de cada pieza.</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Redacción cooperativa y edición del borrador inicial del Informe Técnico. Los estudiantes aplican control de versiones, redactan la justificación formal del mantenimiento, la introducción del proyecto, la caracterización de la máquina investigada y la metodología de inspección. Además, cargan datos de holgura, medidas y observaciones en tablas normalizadas, vinculando cada hallazgo con evidencia fotográfica y con la función mecánica del componente analizado.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 5 · En Aula</span>
+              <span class="timeline-title">Glosario e Informe de Fallas Comunes</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Diagnóstico de fallas reales y formulación del plan de acción preventivo o correctivo. Los alumnos examinan desperfectos del conjunto (fatiga, falta de lubricación, desalineación, holgura, desgaste, deformación), definen causas probables de raíz y contrastan lo observado con fallas típicas investigadas en manuales, catálogos o referentes técnicos. El foco no es solo describir la avería, sino justificar qué evidencia permite sostener el diagnóstico y qué acción de mantenimiento conviene recomendar.</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Redacción técnica del glosario y del reporte de hallazgos. Los estudiantes elaboran definiciones formales de la terminología mecánica usada en el informe, escriben la sección de diagnóstico y vinculan cada componente con su función, estado, evidencia visual y recomendación técnica. El anexo fotográfico deja de ser decorativo y pasa a respaldar afirmaciones precisas sobre desgaste, falla, riesgo o necesidad de mantenimiento.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-item">
+            <div class="timeline-node"></div>
+            <div class="timeline-content">
+              <span class="timeline-time">Clase 6 · Aula / Taller</span>
+              <span class="timeline-title">Devolución, Coevaluación y Entrega</span>
+              <div class="timeline-desc">
+                <div style="margin-bottom: 6px;"><strong>⚙️ En Taller (Mecánica Industrial):</strong> Armado final del conjunto, reensamblaje operativo, limpieza de estaciones de trabajo y simulación de puesta en marcha. Los equipos deben demostrar que comprenden el orden del montaje, la función de cada pieza, el sentido de la transmisión y la lógica del mantenimiento aplicado. La actividad culmina con una devolución técnica donde justifican decisiones de intervención, piezas críticas y observaciones levantadas durante su investigación.</div>
+                <div><strong>✍️ En Lenguaje (Lengua y Literatura):</strong> Coevaluación, revisión ortotipográfica cruzada y entrega final impresa y digital del Informe de Mantenimiento. Luego preparan la Defensa Técnica Oral ante la comisión evaluadora, organizando diapositivas, secuencia argumentativa y selección de evidencias. Cada grupo debe ser capaz de explicar qué máquina investigó, cómo funciona, qué fallas detectó o proyectó, por qué su diagnóstico es consistente y qué mantenimiento recomienda con base en datos técnicos y observación directa.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Right Column: Interactive Group Workspace -->
+      <div class="panel">
+        <div class="panel-title">
+          <span>🛠️ Espacio de Trabajo del Grupo</span>
+        </div>
+
+        <!-- Notification Bar for successes and failures -->
+        <div class="notification-banner" id="notifyBanner"></div>
+
+        <!-- 1. Dropdown Selector for Group -->
+        <div class="form-group-select">
+          <label for="groupSelect">Seleccionar Grupo de Trabajo</label>
+          <select id="groupSelect" onchange="handleGroupChange()">
+            <option value="" disabled selected>-- Selecciona un equipo --</option>
+            <option value="1">Grupo 1 - Rodamientos (Rodamientos)</option>
+            <option value="2">Grupo 2 - Chavetas (Chavetas y Chaveteros)</option>
+            <option value="3">Grupo 3 - Pernos (Elementos de Fijación)</option>
+            <option value="4">Grupo 4 - Seguros (Anillos de Retención)</option>
+            <option value="5">Grupo 5 - Poleas (Poleas y Correas)</option>
+            <option value="6">Grupo 6 - Engranajes (Ruedas Dentadas)</option>
+            <option value="7">Grupo 7 - Ejes (Árboles de Transmisión)</option>
+            <option value="8">Grupo 8 - Acoplamientos (Juntas y Acoples)</option>
+            <option value="9">Grupo 9 - Lubricación (Sistemas de Engrase)</option>
+          </select>
+        </div>
+
+        <!-- 2. Dynamic Team Roster Box -->
+        <div class="roster-box" id="rosterBox" style="display: none;">
+          <div class="roster-title" id="rosterTitle">Integrantes del Equipo</div>
+          <div class="roster-grid" id="rosterGrid">
+            <!-- Dynamic elements will be injected here -->
+          </div>
+        </div>
+
+        <!-- 3. RUT Verification Box -->
+        <div class="security-box" id="securityBox" style="display: none;">
+          <div class="security-header">
+            <label for="rutInput">Validación de Integridad & Seguridad</label>
+            <span class="security-badge locked" id="securityBadge">🔒 Bloqueado</span>
+          </div>
+          <div class="rut-input-wrapper">
+            <input type="text" id="rutInput" placeholder="12345678-K" oninput="validateRUT()" disabled>
+            <span class="rut-hint" id="rutHint">Ingresar RUT</span>
+          </div>
+          <p class="security-tip">Para desbloquear la edición de este informe grupal, debes ingresar el RUT de <strong>cualquier integrante activo</strong> del grupo seleccionado. Si el RUT no pertenece al grupo, los campos estarán bloqueados para evitar alteraciones externas.</p>
+        </div>
+
+        <!-- 4. Interactive Worksheet Form -->
+        <form class="worksheet-form form-locked" id="worksheetForm" onsubmit="saveData(event)">
+          
+          <div class="form-field">
+            <label for="pieceName">1. Nombre del Conjunto Mecánico / Máquina Investigada</label>
+            <input type="text" id="pieceName" placeholder="Ej: Caja de cambios de torno Pinacho, reductor sinfín-corona, sistema de poleas de transmisión. Si es posible, agrega máquina, equipo o subsistema donde trabaja." disabled required>
+          </div>
+
+          <div class="form-field">
+            <label for="topicFunction">2. Función Técnica del Componente Asignado (<span id="topicLabel" style="text-transform: none; color: var(--primary);">Componente</span>) dentro de la máquina</label>
+            <textarea id="topicFunction" placeholder="Explica para qué sirve este elemento dentro de la máquina investigada, cómo transmite fuerza, movimiento o ajuste, con qué piezas se relaciona, qué ocurriría si falla y qué información técnica encontraron sobre su funcionamiento..." disabled required></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="desarmeSequence">3. Propuesta de Secuencia de Desarme, Herramientas y Fuentes Técnicas</label>
+            <textarea id="desarmeSequence" placeholder="Indica paso a paso cómo desarmarán el conjunto, qué herramientas usarán, qué piezas deben marcar o fotografiar, qué mediciones tomarán y qué fuentes revisaron para preparar la intervención (placa, manual, croquis, catálogo, observación directa, referencia del docente)..." disabled required></textarea>
+          </div>
+
+          <div class="form-field">
+            <label for="safetyMeasures">4. Riesgos Críticos, Fallas Probables y Medidas Preventivas</label>
+            <textarea id="safetyMeasures" placeholder="Declara riesgos del taller asociados a esta tarea práctica, EPP obligatorios y medidas preventivas; agrega además las fallas probables investigadas u observadas en el sistema (desalineación, falta de lubricación, fatiga, holgura, desgaste) y cómo las verificarán técnicamente..." disabled required></textarea>
+          </div>
+
+          <!-- Submit Action -->
+          <button type="submit" class="btn-submit" id="btnSubmit" disabled>
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+            Guardar y Enviar Actividad 1
+          </button>
+
+        </form>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <p><strong>Centro Educativo Salesianos Talca</strong> · Lengua y Literatura / Mecánica Industrial 2026</p>
+    <p>Plataforma EstudiaCEST · Desarrollada en conjunto con Ricardo E. Jaque y Prof. Francisco Núñez Valenzuela</p>
+  </footer>
+
+  <!-- Firebase compatibility libraries -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <script>
+    // Hardcoded active students directory from carga_3A_TP.txt (RUTs included)
+    const ROSTER_GROUPS = {
+      1: {
+        topic: "Rodamientos",
+        members: [
+          { name: "AMARO HERRERA MICHAELL ANDRES", rut: "23021756-4" },
+          { name: "CANALES MORALES BRANDON MANUEL", rut: "23272908-2" },
+          { name: "CORDERO VILCHES CRISTOBAL ANDRES", rut: "23276718-9" },
+          { name: "DIAZ DIAZ FRANCO AGUSTIN EMILIO", rut: "23302280-2" },
+          { name: "FUENTES NAVARRETE FRANCO ANTONIO", rut: "23237521-3" }
+        ]
+      },
+      2: {
+        topic: "Chavetas",
+        members: [
+          { name: "ARAYA PEÑA FRANCO JAVIER", rut: "23264921-6" },
+          { name: "AYALA MORA OMAR FRANCISCO", rut: "22911590-1" },
+          { name: "DIAZ GUAJARDO ALEJANDRO JOSE", rut: "23151316-7" },
+          { name: "GAETE MALDONADO SALVADOR FERNANDO", rut: "23097416-0" },
+          { name: "MERCADO MENDEZ FREDERIC ALEJANDRO", rut: "22415426-7" }
+        ]
+      },
+      3: {
+        topic: "Pernos",
+        members: [
+          { name: "ALFARO VERGARA DIEGO IGNACIO", rut: "23132082-2" },
+          { name: "DORADOR OLAVE FREDDY EMILIANO", rut: "23175501-2" },
+          { name: "DURAN LANDABUR SEBASTIAN IGNACIO", rut: "23091159-2" },
+          { name: "JARA LANDERO PABLO ANTONIO", rut: "23355218-6" },
+          { name: "MELGAREJO QUIJON ROBERTO JOSE", rut: "23117651-9" }
+        ]
+      },
+      4: {
+        topic: "Seguros",
+        members: [
+          { name: "BARRIOS SAAVEDRA JOAQUIN ALONSO", rut: "23210361-2" },
+          { name: "BASCUR LAGOS PABLO ANDRES", rut: "23216795-5" },
+          { name: "CHAMORRO ROJAS ALEJANDRO MAXIMILIANO", rut: "23045650-K" },
+          { name: "HERNANDEZ AGUILERA MATIAS IGNACIO", rut: "23269242-1" },
+          { name: "HERRERA MUÑOZ ERICK GABRIEL", rut: "23067164-8" },
+          { name: "MARTINEZ JARA KEVIN ALEJANDRO", rut: "23141290-5" }
+        ]
+      },
+      5: {
+        topic: "Poleas",
+        members: [
+          { name: "MONDACA SEGUEL MATIAS ALEJANDRO", rut: "23264587-3" },
+          { name: "NAVARRO AMARO THOMAS SEBASTIAN", rut: "23361994-9" },
+          { name: "PARADA AVILA AUGUSTO JOAQUIN", rut: "23033338-6" },
+          { name: "PULGAR SAAVEDRA BENJAMIN IGNACIO", rut: "23152335-9" },
+          { name: "PURCHES VALENZUELA LUCAS VICENTE", rut: "23167738-0" }
+        ]
+      },
+      6: {
+        topic: "Engranajes",
+        members: [
+          { name: "QUINTEROS TORRES MAHIKOL JESUS NEHEMIAS", rut: "23149788-9" },
+          { name: "RETAMAL MENA DIEGO IGNACIO", rut: "23062519-0" },
+          { name: "RODRIGUEZ CASTRO EMILIO PEDRO", rut: "23319109-4" },
+          { name: "RUIZ MEJIAS MAXIMO ETEEN SANTHY", rut: "23336811-3" },
+          { name: "RUIZ SALINAS VICENTE ALEJANDRO", rut: "23229117-6" }
+        ]
+      },
+      7: {
+        topic: "Ejes",
+        members: [
+          { name: "SAAVEDRA RETAMAL BASTIAN ISRAEL", rut: "23095557-3" },
+          { name: "SALAS CHAPARRO RICARDO ANTONIO", rut: "23269181-6" },
+          { name: "SAN MARTIN VALENZUELA AGUSTIN LEON IGNACIO", rut: "23287895-9" },
+          { name: "SANCHEZ RODRIGUEZ VICENTE BASTIAN", rut: "23250786-1" },
+          { name: "SANHUEZA ARACIBIA MARTIN JAVIER", rut: "23295917-7" }
+        ]
+      },
+      8: {
+        topic: "Acoplamientos",
+        members: [
+          { name: "SEPULVEDA GONZALEZ TOMAS LUCIANO", rut: "23083369-9" },
+          { name: "TORRES CASTILLO DAMIAN EMILIO", rut: "23318252-4" },
+          { name: "TORRES QUIROZ DARWIN ANTONIO", rut: "23206060-3" },
+          { name: "VALDES CHANDIA JUAN PABLO ENRIQUE", rut: "23098107-8" }
+        ]
+      },
+      9: {
+        topic: "Lubricación",
+        members: [
+          { name: "VALENZUELA ROJAS TOMAS IGNACIO", rut: "23028495-4" },
+          { name: "VALLE GONZALEZ MAXIMILIANO JUAN ALONSO", rut: "23128840-6" },
+          { name: "VERDUGO RUIZ BENJAMIN ARIEL", rut: "23018806-8" },
+          { name: "YEVENES NOVOA VICENTE ALEXANDER", rut: "23170557-0" }
+        ]
+      }
+    };
+
+    // Firebase Configurations
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+      authDomain: "estudiacest.firebaseapp.com",
+      databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+      projectId: "estudiacest",
+      storageBucket: "estudiacest.firebasestorage.app",
+      messagingSenderId: "999002169815",
+      appId: "1:999002169815:web:51203237bc77c2e74deb92"
+    };
+
+    // Initialize Firebase
+    let db = null;
+    try {
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.database();
+      setupConnectionStatus();
+    } catch (err) {
+      console.error("Firebase init failed:", err);
+      updateDBStatus(false, "Desconectado (Error de Config)");
+    }
+
+    // Set up real-time connection status listener
+    function setupConnectionStatus() {
+      if (!db) return;
+      const statusDot = document.getElementById("statusDot");
+      const statusText = document.getElementById("statusText");
+      const connectedRef = firebase.database().ref(".info/connected");
+      
+      connectedRef.on("value", (snap) => {
+        if (snap.val() === true) {
+          updateDBStatus(true, "Base de Datos Online");
+        } else {
+          updateDBStatus(false, "Sincronizando Local...");
+        }
+      });
+    }
+
+    function updateDBStatus(online, text) {
+      const dot = document.getElementById("statusDot");
+      const label = document.getElementById("statusText");
+      if (online) {
+        dot.className = "status-dot online";
+        label.innerText = text;
+      } else {
+        dot.className = "status-dot offline";
+        label.innerText = text;
+      }
+    }
+
+    // Normalizes RUT by removing dots, dashes, spaces, and converting to uppercase
+    function cleanRUT(rut) {
+      if (!rut) return "";
+      return rut.toString().replace(/[^0-9kK]/g, "").toUpperCase();
+    }
+
+    // Banner notifications
+    function showNotification(type, message) {
+      const banner = document.getElementById("notifyBanner");
+      banner.style.display = "flex";
+      banner.className = "notification-banner " + type;
+      
+      if (type === "success") {
+        banner.innerHTML = `🟢 <strong>Operación Exitosa:</strong> ${message}`;
+      } else {
+        banner.innerHTML = `🔴 <strong>Error de Operación:</strong> ${message}`;
+      }
+      
+      // Auto scroll to banner
+      banner.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      
+      // Hide after 5 seconds
+      setTimeout(() => {
+        banner.style.display = "none";
+      }, 5000);
+    }
+
+    // Active Group data loaded state
+    let activeGroupId = null;
+    let isAuthorized = false;
+
+    // Handles the change event on the group select dropdown
+    function handleGroupChange() {
+      const select = document.getElementById("groupSelect");
+      const groupId = select.value;
+      if (!groupId) return;
+
+      activeGroupId = groupId;
+      isAuthorized = false;
+
+      // Clean inputs
+      document.getElementById("rutInput").value = "";
+      document.getElementById("pieceName").value = "";
+      document.getElementById("topicFunction").value = "";
+      document.getElementById("desarmeSequence").value = "";
+      document.getElementById("safetyMeasures").value = "";
+
+      // Hide banner
+      document.getElementById("notifyBanner").style.display = "none";
+
+      // Enable RUT input, display Roster and Security blocks
+      document.getElementById("rutInput").disabled = false;
+      document.getElementById("rosterBox").style.display = "block";
+      document.getElementById("securityBox").style.display = "block";
+      
+      // Update Topic Labels
+      const groupData = ROSTER_GROUPS[groupId];
+      document.getElementById("topicLabel").innerText = groupData.topic;
+      document.getElementById("rosterTitle").innerText = `Integrantes del Equipo: ${groupData.topic}`;
+
+      // Reset Security locks
+      updateSecurityLock(false);
+
+      // Render Roster Members
+      renderRoster(groupData.members);
+
+      // Fetch saved data from Firebase
+      loadGroupDataFromFirebase(groupId);
+    }
+
+    // Render roster elements
+    function renderRoster(members) {
+      const grid = document.getElementById("rosterGrid");
+      grid.innerHTML = "";
+      
+      members.forEach((member, index) => {
+        const item = document.createElement("div");
+        item.className = "roster-member";
+        item.innerHTML = `
+          <span class="number">${index + 1}</span>
+          <span class="name" title="${member.name}">${member.name}</span>
+        `;
+        grid.appendChild(item);
+      });
+    }
+
+    // Validates RUT real-time input
+    function validateRUT() {
+      if (!activeGroupId) return;
+      
+      const input = document.getElementById("rutInput");
+      const typed = cleanRUT(input.value);
+      const groupData = ROSTER_GROUPS[activeGroupId];
+      
+      // Search for any active member matching the RUT
+      const matchedMember = groupData.members.find(m => cleanRUT(m.rut) === typed);
+      
+      if (matchedMember) {
+        // Unlock editing!
+        isAuthorized = true;
+        updateSecurityLock(true, matchedMember.name);
+      } else {
+        // Keep/lock editing
+        isAuthorized = false;
+        updateSecurityLock(false);
+      }
+    }
+
+    // Locks or unlocks worksheet inputs and styles
+    function updateSecurityLock(unlocked, authorizedName) {
+      const badge = document.getElementById("securityBadge");
+      const form = document.getElementById("worksheetForm");
+      
+      // Form fields
+      const pName = document.getElementById("pieceName");
+      const tFunc = document.getElementById("topicFunction");
+      const dSeq = document.getElementById("desarmeSequence");
+      const sMeasures = document.getElementById("safetyMeasures");
+      const btn = document.getElementById("btnSubmit");
+
+      if (unlocked) {
+        badge.className = "security-badge unlocked";
+        badge.innerHTML = `🟢 Desbloqueado (${authorizedName})`;
+        form.className = "worksheet-form";
+        
+        pName.disabled = false;
+        tFunc.disabled = false;
+        dSeq.disabled = false;
+        sMeasures.disabled = false;
+        btn.disabled = false;
+      } else {
+        badge.className = "security-badge locked";
+        badge.innerHTML = `🔒 Solo Lectura`;
+        form.className = "worksheet-form form-locked";
+        
+        pName.disabled = true;
+        tFunc.disabled = true;
+        dSeq.disabled = true;
+        sMeasures.disabled = true;
+        btn.disabled = true;
+      }
+    }
+
+    // Load existing group answers from Firebase
+    function loadGroupDataFromFirebase(groupId) {
+      if (!db) return;
+      
+      const path = `plataforma_estudiantes/3atp_clase1/grupo_${groupId}`;
+      db.ref(path).once("value")
+        .then((snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            document.getElementById("pieceName").value = data.pieceName || "";
+            document.getElementById("topicFunction").value = data.topicFunction || "";
+            document.getElementById("desarmeSequence").value = data.desarmeSequence || "";
+            document.getElementById("safetyMeasures").value = data.safetyMeasures || "";
+            console.log(`Successfully fetched data for Group ${groupId}`);
+          }
+        })
+        .catch((err) => {
+          console.error("Firebase read error:", err);
+        });
+    }
+
+    // Save worksheet answers to Firebase
+    function saveData(event) {
+      event.preventDefault();
+      
+      if (!activeGroupId) {
+        showNotification("error", "No has seleccionado ningún grupo.");
+        return;
+      }
+      if (!isAuthorized) {
+        showNotification("error", "No tienes permisos de edición. Debes ingresar el RUT de un integrante.");
+        return;
+      }
+      if (!db) {
+        showNotification("error", "La base de datos no está disponible. Guarda una copia local de tus textos.");
+        return;
+      }
+
+      // Collect data
+      const pieceName = document.getElementById("pieceName").value.trim();
+      const topicFunction = document.getElementById("topicFunction").value.trim();
+      const desarmeSequence = document.getElementById("desarmeSequence").value.trim();
+      const safetyMeasures = document.getElementById("safetyMeasures").value.trim();
+
+      if (!pieceName || !topicFunction || !desarmeSequence || !safetyMeasures) {
+        showNotification("error", "Por favor completa todos los campos del formulario antes de enviar.");
+        return;
+      }
+
+      const payload = {
+        groupId: activeGroupId,
+        topic: ROSTER_GROUPS[activeGroupId].topic,
+        pieceName: pieceName,
+        topicFunction: topicFunction,
+        desarmeSequence: desarmeSequence,
+        safetyMeasures: safetyMeasures,
+        lastUpdatedByRut: cleanRUT(document.getElementById("rutInput").value),
+        timestamp: firebase.database.ServerValue.TIMESTAMP
+      };
+
+      const path = `plataforma_estudiantes/3atp_clase1/grupo_${activeGroupId}`;
+      
+      // Write to Firebase Realtime Database
+      db.ref(path).set(payload)
+        .then(() => {
+          showNotification("success", "La Actividad 1 ha sido guardada y sincronizada correctamente en EstudiaCEST.");
+        })
+        .catch((err) => {
+          console.error("Firebase write error:", err);
+          showNotification("error", `Error al guardar: ${err.message}. Inténtalo nuevamente.`);
+        });
+    }
+  </script>
+
+</body>
+</html>

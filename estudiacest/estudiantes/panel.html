@@ -535,6 +535,118 @@
             color: var(--text-muted);
             font-size: 14px;
         }
+        .simce-result-card {
+            display: none;
+        }
+        .simce-section-head {
+            align-items: flex-start;
+        }
+        .simce-session-chip {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            border: 1px solid rgba(245, 158, 11, 0.22);
+            white-space: nowrap;
+        }
+        .simce-result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+        .simce-result-metric {
+            display: grid;
+            gap: 8px;
+            padding: 18px;
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .simce-result-primary {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.16) 0%, rgba(15, 23, 42, 0.32) 100%);
+            border-color: rgba(245, 158, 11, 0.22);
+            box-shadow: 0 16px 32px rgba(0, 0, 0, 0.18);
+        }
+        .simce-metric-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .simce-result-metric strong {
+            font-family: 'Outfit', sans-serif;
+            font-size: 30px;
+            line-height: 1;
+            color: #ffffff;
+            font-weight: 800;
+        }
+        .simce-result-metric small {
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--text-muted);
+        }
+        .simce-level-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: fit-content;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: .05em;
+            text-transform: uppercase;
+            border: 1px solid transparent;
+        }
+        .simce-level-badge.level-adequado {
+            background: rgba(16, 185, 129, 0.14);
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.2);
+        }
+        .simce-level-badge.level-elemental {
+            background: rgba(245, 158, 11, 0.14);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.2);
+        }
+        .simce-level-badge.level-insuficiente {
+            background: rgba(239, 68, 68, 0.14);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.22);
+        }
+        .simce-progress-note,
+        .simce-pending-panel {
+            margin-top: 18px;
+            padding: 18px;
+            border-radius: 18px;
+            line-height: 1.65;
+        }
+        .simce-progress-note {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            color: #e2e8f0;
+            font-size: 14px;
+        }
+        .simce-pending-panel {
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.16);
+            color: #fde68a;
+            font-size: 14px;
+        }
+        .simce-footnote {
+            margin-top: 12px;
+            font-size: 12px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
         @media (max-width: 920px) {
             .hero {
                 grid-template-columns: 1fr;
@@ -626,6 +738,8 @@
                 <p id="welcomeText">Estamos preparando el acceso disponible para tu curso.</p>
             </section>
 
+            <section class="activities-card simce-result-card" id="simceResultCard"></section>
+
             <section class="activities-card">
                 <div class="section-head">
                     <div>
@@ -687,9 +801,37 @@
             '4D-TP': '4°D TP',
             '4E-TP': '4°E TP'
         };
+        const SIMCE_DIAGNOSTIC_SESSION_IDS = {
+            '2A-HC': ['ensayo-simce-miercoles-2a-hc-2026'],
+            '2B-HC': ['ensayo-simce-miercoles-2b-hc-2026']
+        };
+        const SIMCE_SCORE_ANCHORS = [
+            { pct: 0, score: 150 },
+            { pct: 21, score: 200 },
+            { pct: 24, score: 200 },
+            { pct: 36, score: 235 },
+            { pct: 39, score: 235 },
+            { pct: 48, score: 252 },
+            { pct: 52, score: 252 },
+            { pct: 58, score: 270 },
+            { pct: 61, score: 270 },
+            { pct: 67, score: 290 },
+            { pct: 70, score: 290 },
+            { pct: 73, score: 295 },
+            { pct: 76, score: 295 },
+            { pct: 82, score: 315 },
+            { pct: 85, score: 315 },
+            { pct: 91, score: 340 },
+            { pct: 94, score: 340 },
+            { pct: 100, score: 370 }
+        ];
 
         function normalizeCourse(value) {
             return String(value || '').trim().toUpperCase();
+        }
+
+        function clampNumber(value, min, max) {
+            return Math.min(max, Math.max(min, value));
         }
 
         function normalizeProgram(value) {
@@ -763,6 +905,186 @@
             const baseOrder = Number(session && session.orden);
             if (Number.isFinite(baseOrder) && baseOrder > 0) return baseOrder;
             return fallbackOrder;
+        }
+
+        function formatPanelDate(timestamp) {
+            const numericValue = Number(timestamp);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) return 'Sin fecha registrada';
+            return new Date(numericValue).toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+        }
+
+        function estimateSimceScore(porcentaje) {
+            const pct = clampNumber(Number(porcentaje) || 0, 0, 100);
+            let estimatedScore = SIMCE_SCORE_ANCHORS[SIMCE_SCORE_ANCHORS.length - 1].score;
+
+            for (let index = 0; index < SIMCE_SCORE_ANCHORS.length - 1; index++) {
+                const left = SIMCE_SCORE_ANCHORS[index];
+                const right = SIMCE_SCORE_ANCHORS[index + 1];
+                if (pct < left.pct || pct > right.pct) continue;
+
+                const pctSpan = right.pct - left.pct;
+                if (pctSpan <= 0) {
+                    estimatedScore = right.score;
+                    break;
+                }
+
+                const ratio = (pct - left.pct) / pctSpan;
+                estimatedScore = left.score + ((right.score - left.score) * ratio);
+                break;
+            }
+
+            const roundedScore = Math.round(estimatedScore);
+            const levelKey = roundedScore >= 295
+                ? 'adequado'
+                : roundedScore >= 252
+                    ? 'elemental'
+                    : 'insuficiente';
+
+            return {
+                pct,
+                score: roundedScore,
+                levelKey,
+                levelLabel: levelKey === 'adequado'
+                    ? 'Adecuado'
+                    : levelKey === 'elemental'
+                        ? 'Elemental'
+                        : 'Insuficiente',
+                levelClassName: 'level-' + (levelKey === 'adequado' ? 'adequado' : levelKey),
+                gapToElemental: Math.max(0, 252 - roundedScore),
+                gapToAdequado: Math.max(0, 295 - roundedScore)
+            };
+        }
+
+        function getSimceProgressCopy(estimate) {
+            if (estimate.levelKey === 'adequado') {
+                return 'Ya estás sobre el corte Adecuado. La tarea ahora es sostener este resultado y empujarlo hacia el tramo alto.';
+            }
+            if (estimate.levelKey === 'elemental') {
+                if (estimate.gapToAdequado > 0) {
+                    return 'Quedaste en nivel Elemental. Te faltan ' + estimate.gapToAdequado + ' puntos para entrar a Adecuado.';
+                }
+                return 'Quedaste en nivel Elemental y ya estás muy cerca del tramo Adecuado.';
+            }
+            if (estimate.gapToElemental > 0) {
+                return 'Hoy quedas bajo el corte Elemental. Te faltan ' + estimate.gapToElemental + ' puntos para llegar a ese umbral.';
+            }
+            return 'Hoy quedas bajo el corte Elemental y necesitas reforzar estrategias de lectura para acortar la brecha.';
+        }
+
+        function renderPanelSimceResult(bundle) {
+            const card = document.getElementById('simceResultCard');
+            if (!card) return;
+
+            if (!bundle || !bundle.session) {
+                card.innerHTML = '';
+                card.style.display = 'none';
+                return;
+            }
+
+            const sessionTitle = bundle.session.titulo || 'Ensayo SIMCE';
+
+            if (!bundle.result) {
+                card.innerHTML = `
+                    <div class="section-head simce-section-head">
+                        <div>
+                            <h3>Resultado SIMCE</h3>
+                            <p>Esta tarjeta está reservada para tu resultado personal. Cuando la corrección quede publicada, aquí verás tu puntaje SIMCE estimado.</p>
+                        </div>
+                        <div class="simce-session-chip">${sessionTitle}</div>
+                    </div>
+                    <div class="simce-pending-panel">Tu resultado del ensayo SIMCE todavía no aparece cargado en esta cuenta. En cuanto esté disponible, verás aquí la conversión referencial a puntaje SIMCE y tu nivel de aprendizaje.</div>
+                    <div class="simce-footnote">La estimación se muestra como referencia pedagógica y no reemplaza un resultado oficial de la Agencia de Calidad.</div>`;
+                card.style.display = '';
+                return;
+            }
+
+            const porcentaje = clampNumber(Number(bundle.result.porcentaje) || 0, 0, 100);
+            const estimate = estimateSimceScore(porcentaje);
+            const sessionDate = formatPanelDate(bundle.result.submitted_at);
+
+            card.innerHTML = `
+                <div class="section-head simce-section-head">
+                    <div>
+                        <h3>Resultado SIMCE</h3>
+                        <p>Este bloque muestra tu conversión referencial a puntaje SIMCE a partir del último ensayo cargado en tu cuenta.</p>
+                    </div>
+                    <div class="simce-session-chip">${sessionTitle}</div>
+                </div>
+                <div class="simce-result-grid">
+                    <article class="simce-result-metric simce-result-primary">
+                        <span class="simce-metric-label">Puntaje SIMCE estimado</span>
+                        <strong>${estimate.score} pts</strong>
+                        <small>Conversión referencial desde ${Math.round(porcentaje)}% de logro</small>
+                    </article>
+                    <article class="simce-result-metric">
+                        <span class="simce-metric-label">Nivel de aprendizaje</span>
+                        <div class="simce-level-badge ${estimate.levelClassName}">${estimate.levelLabel}</div>
+                        <small>Cortes oficiales: Elemental 252 · Adecuado 295</small>
+                    </article>
+                    <article class="simce-result-metric">
+                        <span class="simce-metric-label">Último registro</span>
+                        <strong>${sessionDate}</strong>
+                        <small>${sessionTitle}</small>
+                    </article>
+                </div>
+                <div class="simce-progress-note">${getSimceProgressCopy(estimate)}</div>
+                <div class="simce-footnote">Estimación referencial basada en la tabla docente de conversión y los cortes oficiales 252 / 295. El SIMCE oficial usa modelos IRT, por eso este puntaje no reemplaza un resultado oficial.</div>`;
+            card.style.display = '';
+        }
+
+        async function loadPanelSimceResult(uid, curso) {
+            const card = document.getElementById('simceResultCard');
+            if (!card) return;
+
+            card.innerHTML = '';
+            card.style.display = 'none';
+
+            if (!isNm2SimceCourse(curso)) return;
+
+            try {
+                const normalizedCourse = normalizeCourse(curso);
+                const knownIds = SIMCE_DIAGNOSTIC_SESSION_IDS[normalizedCourse] || [];
+                const courseSlug = normalizedCourse.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const sessionsSnap = await db.ref(BASE + '/sesiones').once('value');
+                if (!sessionsSnap.exists()) return;
+
+                const candidates = [];
+                sessionsSnap.forEach(child => {
+                    const session = { id: child.key, ...child.val() };
+                    const haystack = [session.id, session.titulo, session.descripcion]
+                        .map(value => String(value || '').toLowerCase())
+                        .join(' ');
+                    const isKnown = knownIds.includes(session.id);
+                    const isAssigned = isSessionAssignedToStudent(session, uid, normalizedCourse);
+                    const isSimceDiagnostic = haystack.includes('simce') && (haystack.includes('ensayo') || haystack.includes('diagnost'));
+                    const mentionsCourse = haystack.includes(courseSlug) || haystack.includes(normalizedCourse.toLowerCase());
+
+                    if (isKnown || (isAssigned && isSimceDiagnostic && (mentionsCourse || !knownIds.length))) {
+                        candidates.push(session);
+                    }
+                });
+
+                if (!candidates.length) return;
+
+                const bundles = await Promise.all(candidates.map(async (session) => {
+                    const resultSnap = await db.ref(BASE + '/resultados/' + session.id + '/' + uid).once('value');
+                    return {
+                        session,
+                        result: resultSnap.exists() ? resultSnap.val() : null
+                    };
+                }));
+
+                bundles.sort((left, right) => {
+                    const leftTime = Number(left.result && left.result.submitted_at) || 0;
+                    const rightTime = Number(right.result && right.result.submitted_at) || 0;
+                    return rightTime - leftTime;
+                });
+
+                const selected = bundles.find(bundle => bundle.result) || bundles[0];
+                renderPanelSimceResult(selected);
+            } catch (error) {
+                console.error('[panel-simce]', error);
+            }
         }
 
         function getPanelActivity(student) {
@@ -894,6 +1216,7 @@
                 setStudentHeader(student, panelActivity);
                 setWelcomeCopy(panelActivity);
                 renderActivities(panelActivity);
+                loadPanelSimceResult(user.uid, student.curso);
             } catch (error) {
                 console.error('[student-panel]', error);
                 document.getElementById('activityGrid').innerHTML = buildActivityCard({

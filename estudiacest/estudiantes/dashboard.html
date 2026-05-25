@@ -534,6 +534,53 @@
             return 'Tu resultado personal muestra que aún falta consolidar estrategias de lectura. Conviene revisar primero los errores marcados abajo y retomar esa habilidad paso a paso.';
         }
 
+        function estimateSimceScoreFromPercentage(porcentaje) {
+            const anchors = [
+                { pct: 0, score: 150 },
+                { pct: 21, score: 200 },
+                { pct: 24, score: 200 },
+                { pct: 36, score: 235 },
+                { pct: 39, score: 235 },
+                { pct: 48, score: 252 },
+                { pct: 52, score: 252 },
+                { pct: 58, score: 270 },
+                { pct: 61, score: 270 },
+                { pct: 67, score: 290 },
+                { pct: 70, score: 290 },
+                { pct: 73, score: 295 },
+                { pct: 76, score: 295 },
+                { pct: 82, score: 315 },
+                { pct: 85, score: 315 },
+                { pct: 91, score: 340 },
+                { pct: 94, score: 340 },
+                { pct: 100, score: 370 }
+            ];
+            const pct = Math.min(100, Math.max(0, Number(porcentaje) || 0));
+            let estimatedScore = anchors[anchors.length - 1].score;
+
+            for (let index = 0; index < anchors.length - 1; index++) {
+                const left = anchors[index];
+                const right = anchors[index + 1];
+                if (pct < left.pct || pct > right.pct) continue;
+
+                const pctSpan = right.pct - left.pct;
+                if (pctSpan <= 0) {
+                    estimatedScore = right.score;
+                    break;
+                }
+
+                const ratio = (pct - left.pct) / pctSpan;
+                estimatedScore = left.score + ((right.score - left.score) * ratio);
+                break;
+            }
+
+            const roundedScore = Math.round(estimatedScore);
+            return {
+                score: roundedScore,
+                levelLabel: roundedScore >= 295 ? 'Adecuado' : roundedScore >= 252 ? 'Elemental' : 'Insuficiente'
+            };
+        }
+
         function formatSimceDate(timestamp) {
             const numericValue = Number(timestamp);
             if (!Number.isFinite(numericValue) || numericValue <= 0) return 'Sin fecha registrada';
@@ -557,7 +604,7 @@
                             </div>
                             <div class="simce-session-chip">${sessionTitle}</div>
                         </div>
-                        <div class="simce-pending">Tu resultado SIMCE aún no aparece cargado para esta cuenta. En cuanto la corrección esté disponible, aquí verás tu porcentaje, tu nota y el detalle por habilidad.</div>
+                        <div class="simce-pending">Tu resultado SIMCE aún no aparece cargado para esta cuenta. En cuanto la corrección esté disponible, aquí verás tu puntaje SIMCE estimado, tu porcentaje y el detalle por habilidad.</div>
                     </section>`;
                 container.style.display = '';
                 return;
@@ -586,7 +633,7 @@
             const totalQuestions = Number(result.totales) || questionEntries.length;
             const correctAnswers = Number(result.correctas) || derivedCorrect;
             const porcentaje = Number(result.porcentaje) || 0;
-            const nota = Number(result.nota);
+            const simceEstimate = estimateSimceScoreFromPercentage(porcentaje);
             const skillRows = Object.entries(SIMCE_SKILL_META).map(([skillKey, meta]) => {
                 const stat = skillStats[skillKey];
                 if (!stat || !stat.total) return '';
@@ -616,7 +663,7 @@
                     <div class="simce-card-head">
                         <div>
                             <div class="section-title" style="margin-bottom:8px">📊 Mi resultado SIMCE</div>
-                            <p class="simce-card-copy">Aquí ves tu resultado personal del ensayo diagnóstico. Este bloque toma tus respuestas reales y muestra en qué habilidad quedaste más fuerte o más débil.</p>
+                            <p class="simce-card-copy">Aquí ves tu resultado personal del ensayo diagnóstico. Este bloque toma tus respuestas reales, estima tu puntaje SIMCE y muestra en qué habilidad quedaste más fuerte o más débil.</p>
                         </div>
                         <div class="simce-session-chip">${sessionTitle}</div>
                     </div>
@@ -627,9 +674,9 @@
                             <small>${correctAnswers}/${totalQuestions} correctas</small>
                         </div>
                         <div class="simce-highlight">
-                            <span>Nota</span>
-                            <strong>${Number.isFinite(nota) ? nota.toFixed(1) : '-'}</strong>
-                            <small>Resultado personal</small>
+                            <span>Puntaje SIMCE</span>
+                            <strong>${simceEstimate.score} pts</strong>
+                            <small>${simceEstimate.levelLabel} · Estimado</small>
                         </div>
                         <div class="simce-highlight">
                             <span>Rendido</span>

@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Avatar — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'Inter',system-ui,sans-serif; background:#0f172a; min-height:100vh; color:#fff; }
+        /* HEADER */
+        .top-bar {
+            display:flex; align-items:center; justify-content:space-between; padding:14px 20px;
+            background:rgba(15,23,42,.8); backdrop-filter:blur(10px); position:sticky; top:0; z-index:50;
+            border-bottom:1px solid rgba(255,255,255,.06);
+        }
+        .back-link { color:#94a3b8; text-decoration:none; font-size:14px; font-weight:600; display:flex; align-items:center; gap:6px; transition:color .2s; }
+        .back-link:hover { color:#fff; }
+        .top-title { font-size:14px; font-weight:700; color:#e2e8f0; }
+        /* HERO */
+        .hero {
+            text-align:center; padding:40px 20px 32px; position:relative;
+            background:linear-gradient(180deg,#1e3a5f 0%,#0f172a 100%);
+        }
+        .hero::before {
+            content:''; position:absolute; top:0; left:50%; width:400px; height:400px; transform:translateX(-50%);
+            background:radial-gradient(circle,rgba(59,130,246,.12) 0%,transparent 70%); pointer-events:none;
+        }
+        .hero-avatar-shell { width:128px; height:128px; margin:0 auto 16px; padding:6px; background:rgba(255,255,255,.08); border-radius:28px; border:3px solid rgba(59,130,246,.3); animation:float 3s ease-in-out infinite; }
+        .hero-avatar-render { width:100%; height:100%; display:flex; align-items:center; justify-content:center; }
+        @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+        .hero-level { font-size:12px; font-weight:700; letter-spacing:1px; color:#60a5fa; margin-bottom:4px; text-transform:uppercase; }
+        .hero-title { font-size:24px; font-weight:800; margin-bottom:4px; }
+        .hero-subtitle { font-size:13px; color:#94a3b8; margin-bottom:20px; }
+        /* XP BAR */
+        .xp-section { max-width:400px; margin:0 auto; }
+        .xp-bar-bg { background:rgba(255,255,255,.1); border-radius:10px; height:14px; overflow:hidden; }
+        .xp-bar-fill { height:100%; border-radius:10px; background:linear-gradient(90deg,#3b82f6,#8b5cf6); transition:width .8s ease; }
+        .xp-labels { display:flex; justify-content:space-between; font-size:11px; color:#64748b; margin-top:6px; }
+        /* MAIN CONTENT */
+        .main-content { max-width:540px; margin:0 auto; padding:0 20px 40px; }
+        .builder-card {
+            background:rgba(255,255,255,.05); border-radius:18px; padding:18px; margin:-10px 0 24px;
+            border:1px solid rgba(255,255,255,.08); box-shadow:0 12px 28px rgba(15,23,42,.18);
+        }
+        .builder-head { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; margin-bottom:16px; }
+        .builder-title { font-size:15px; font-weight:800; color:#fff; margin-bottom:4px; }
+        .builder-copy { font-size:12px; color:#94a3b8; line-height:1.5; }
+        .look-actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn-look {
+            background:linear-gradient(135deg,#2563eb,#4f46e5); color:#fff; border:none; padding:10px 16px;
+            border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; font-family:inherit;
+            transition:transform .15s, box-shadow .15s;
+        }
+        .btn-look:hover { transform:translateY(-1px); box-shadow:0 8px 18px rgba(59,130,246,.28); }
+        .btn-look:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+        .btn-look.secondary { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); }
+        .look-grid { display:grid; gap:14px; }
+        .look-category-card { background:rgba(15,23,42,.48); border-radius:14px; padding:14px; border:1px solid rgba(255,255,255,.06); }
+        .look-category-head { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px; }
+        .look-category-head h3 { font-size:12px; font-weight:800; color:#cbd5e1; text-transform:uppercase; letter-spacing:.7px; }
+        .look-options { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+        .look-option {
+            background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); border-radius:12px; min-height:52px;
+            padding:10px 12px; color:#fff; text-align:left; display:flex; align-items:center; gap:10px; cursor:pointer; font-family:inherit;
+            transition:border-color .15s, transform .15s, background .15s;
+        }
+        .look-option:hover { border-color:rgba(96,165,250,.5); transform:translateY(-1px); background:rgba(59,130,246,.08); }
+        .look-option.active { border-color:#60a5fa; background:rgba(59,130,246,.15); }
+        .look-option.locked { opacity:.48; cursor:not-allowed; }
+        .look-option.locked:hover { transform:none; border-color:rgba(255,255,255,.1); background:rgba(255,255,255,.05); }
+        .look-name { font-size:12px; font-weight:700; flex:1; }
+        .look-swatch, .look-chip {
+            width:24px; height:24px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center;
+            background:rgba(255,255,255,.08); font-size:10px; font-weight:800; color:#e2e8f0; border:1px solid rgba(255,255,255,.1);
+            flex-shrink:0;
+        }
+        .look-lock { font-size:10px; color:#93c5fd; font-weight:700; }
+        .look-hint { font-size:11px; color:#64748b; margin-top:12px; }
+        /* AVAILABLE POINTS */
+        .points-banner {
+            background:linear-gradient(135deg,#1e3a5f,#312e81); border-radius:14px; padding:20px;
+            text-align:center; margin-bottom:24px; border:1px solid rgba(99,102,241,.2);
+        }
+        .points-banner .pts-label { font-size:11px; color:#a5b4fc; text-transform:uppercase; letter-spacing:1px; font-weight:700; margin-bottom:4px; }
+        .points-banner .pts-value { font-size:42px; font-weight:800; color:#fff; }
+        .points-banner .pts-sub { font-size:12px; color:#94a3b8; margin-top:4px; }
+        /* STAT ROWS */
+        .stat-section-title { font-size:13px; font-weight:700; color:#94a3b8; text-transform:uppercase; letter-spacing:.5px; margin-bottom:14px; }
+        .stat-row {
+            background:rgba(255,255,255,.05); border-radius:14px; padding:18px 20px; margin-bottom:12px;
+            display:flex; align-items:center; gap:14px; border:1px solid rgba(255,255,255,.06);
+            transition:border-color .2s;
+        }
+        .stat-row:hover { border-color:rgba(59,130,246,.3); }
+        .stat-icon { font-size:28px; width:48px; height:48px; display:flex; align-items:center; justify-content:center; background:rgba(255,255,255,.06); border-radius:12px; flex-shrink:0; }
+        .stat-info { flex:1; min-width:0; }
+        .stat-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+        .stat-desc { font-size:11px; color:#64748b; line-height:1.4; }
+        .stat-bar-row { display:flex; align-items:center; gap:4px; margin-top:8px; }
+        .stat-bar-bg { flex:1; background:rgba(255,255,255,.08); border-radius:6px; height:8px; overflow:hidden; }
+        .stat-bar-fill { height:100%; border-radius:6px; transition:width .4s ease; }
+        .stat-bar-fill.comp { background:linear-gradient(90deg,#3b82f6,#60a5fa); }
+        .stat-bar-fill.const { background:linear-gradient(90deg,#22c55e,#4ade80); }
+        .stat-bar-fill.vel { background:linear-gradient(90deg,#f59e0b,#fbbf24); }
+        .stat-pts { font-size:13px; font-weight:800; min-width:24px; text-align:center; }
+        .stat-controls { display:flex; gap:4px; flex-shrink:0; align-items:center; }
+        .stat-btn {
+            width:36px; height:36px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
+            background:rgba(255,255,255,.06); color:#fff; font-size:18px; font-weight:700;
+            cursor:pointer; display:flex; align-items:center; justify-content:center;
+            transition:background .15s, transform .1s; font-family:inherit;
+        }
+        .stat-btn.small { width:28px; height:28px; font-size:11px; font-weight:800; border-radius:8px; }
+        .stat-btn:hover { background:rgba(59,130,246,.3); }
+        .stat-btn:active { transform:scale(.92); }
+        .stat-btn:disabled { opacity:.2; cursor:not-allowed; }
+        /* SAVE BTN */
+        .save-area { margin-top:20px; text-align:center; }
+        /* RADAR CHART */
+        .radar-wrap { text-align:center; margin-bottom:24px; }
+        .radar-wrap svg { max-width:320px; width:100%; height:auto; filter:drop-shadow(0 0 20px rgba(59,130,246,.15)); }
+        .btn-save {
+            background:linear-gradient(135deg,#3b82f6,#8b5cf6); color:#fff; border:none;
+            padding:14px 40px; border-radius:12px; font-size:15px; font-weight:700;
+            cursor:pointer; font-family:inherit; transition:transform .15s, box-shadow .15s;
+            letter-spacing:.3px;
+        }
+        .btn-save:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(59,130,246,.35); }
+        .btn-save:active { transform:translateY(0); }
+        .btn-save:disabled { opacity:.5; cursor:not-allowed; transform:none; box-shadow:none; }
+        .save-msg { font-size:12px; color:#4ade80; margin-top:8px; display:none; }
+        .btn-reset {
+            background:none; border:1px solid rgba(255,255,255,.15); color:#94a3b8; padding:10px 24px;
+            border-radius:10px; font-size:13px; font-weight:600; cursor:pointer; font-family:inherit;
+            margin-top:10px; transition:color .2s, border-color .2s;
+        }
+        .btn-reset:hover { color:#fff; border-color:rgba(255,255,255,.3); }
+        /* SHOP */
+        .shop-section { margin-top:32px; padding-top:24px; border-top:1px solid rgba(255,255,255,.08); }
+        .shop-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:12px; }
+        .shop-item {
+            background:rgba(255,255,255,.05); border-radius:14px; padding:16px 12px; text-align:center;
+            border:1px solid rgba(255,255,255,.08); transition:border-color .2s, transform .15s; position:relative;
+        }
+        .shop-item.locked { opacity:.45; }
+        .shop-item.unlocked { border-color:rgba(59,130,246,.3); }
+        .shop-item.owned { border-color:rgba(74,222,128,.3); }
+        .shop-item:not(.locked):hover { transform:translateY(-2px); border-color:rgba(59,130,246,.5); }
+        .shop-emoji { font-size:36px; margin-bottom:8px; }
+        .shop-name { font-size:12px; font-weight:700; margin-bottom:4px; }
+        .shop-cost { font-size:11px; color:#64748b; }
+        .shop-cost.free { color:#4ade80; }
+        .shop-badge {
+            position:absolute; top:8px; right:8px; font-size:9px; font-weight:700; padding:2px 8px;
+            border-radius:6px; letter-spacing:.3px;
+        }
+        .shop-badge.lock-badge { background:rgba(255,255,255,.1); color:#64748b; }
+        .shop-badge.owned-badge { background:rgba(74,222,128,.15); color:#4ade80; }
+        .shop-badge.new-badge { background:rgba(59,130,246,.2); color:#60a5fa; }
+        /* TOAST */
+        .toast {
+            position:fixed; bottom:30px; left:50%; transform:translateX(-50%) translateY(80px);
+            background:#1e293b; border:1px solid rgba(255,255,255,.1); color:#fff;
+            padding:12px 24px; border-radius:12px; font-size:13px; font-weight:600;
+            opacity:0; transition:transform .4s ease, opacity .3s; z-index:999; pointer-events:none;
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+        /* LOADING */
+        .loading-screen { display:flex; align-items:center; justify-content:center; min-height:60vh; }
+        .loading-screen .spinner { width:40px; height:40px; border:4px solid rgba(255,255,255,.1); border-top-color:#3b82f6; border-radius:50%; animation:spin .7s linear infinite; }
+        @keyframes spin { to { transform:rotate(360deg); } }
+        @media (max-width:480px) {
+            .hero { padding:28px 16px 24px; }
+            .hero-avatar-shell { width:112px; height:112px; border-radius:24px; }
+            .hero-title { font-size:20px; }
+            .builder-head { flex-direction:column; }
+            .look-options { grid-template-columns:1fr; }
+            .stat-row { padding:14px 16px; gap:10px; }
+            .stat-icon { width:40px; height:40px; font-size:22px; }
+        }
+    </style>
+
+    <!-- Sistema de Protección Anticopia y Seguridad -->
+    <script src="js/security-protection.js"></script>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <span class="top-title">Mi Avatar</span>
+        <span style="width:60px"></span>
+    </div>
+
+    <div id="loadingScreen" class="loading-screen"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="hero-avatar-shell"><div class="hero-avatar-render" id="heroAvatarRender"></div></div>
+            <div class="hero-level" id="heroLevel">NIVEL 1</div>
+            <div class="hero-title" id="heroTitle">Aprendiz</div>
+            <div class="hero-subtitle" id="heroSubtitle">0 XP totales</div>
+            <div class="xp-section">
+                <div class="xp-bar-bg"><div class="xp-bar-fill" id="xpFill" style="width:0%"></div></div>
+                <div class="xp-labels"><span id="xpLabelCurr">0 XP</span><span id="xpLabelNext">100 XP</span></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="builder-card">
+                <div class="builder-head">
+                    <div>
+                        <div class="builder-title">Taller de apariencia</div>
+                        <div class="builder-copy">Personaliza tu avatar por capas. Lo que equipes aqui se mostrara en tu perfil y en la arena.</div>
+                    </div>
+                    <div class="look-actions">
+                        <button class="btn-look secondary" type="button" onclick="randomizeLook()">Mezclar</button>
+                        <button class="btn-look" type="button" id="btnSaveLook" onclick="saveLook()" disabled>Guardar apariencia</button>
+                    </div>
+                </div>
+                <div class="look-grid" id="lookEditor"></div>
+                <div class="look-hint">Las opciones con requisito se desbloquean al subir tu XP. Tus stats siguen funcionando igual.</div>
+            </div>
+
+            <div class="points-banner">
+                <div class="pts-label">Puntos disponibles</div>
+                <div class="pts-value" id="ptsAvailable">0</div>
+                <div class="pts-sub" id="ptsSub">Gana más subiendo de nivel</div>
+            </div>
+
+            <div class="radar-wrap">
+                <svg id="radarChart" viewBox="0 0 300 280" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="radarGlow" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25"/>
+                            <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+                        </radialGradient>
+                    </defs>
+                    <!-- background glow -->
+                    <circle cx="150" cy="145" r="120" fill="url(#radarGlow)"/>
+                    <!-- grid rings -->
+                    <polygon class="radar-grid" id="rGrid4" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid3" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid2" fill="none" stroke="rgba(148,163,184,.12)" stroke-width="1"/>
+                    <polygon class="radar-grid" id="rGrid1" fill="none" stroke="rgba(148,163,184,.15)" stroke-width="1"/>
+                    <!-- axis lines -->
+                    <line id="rAxis0" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <line id="rAxis1" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <line id="rAxis2" stroke="rgba(148,163,184,.18)" stroke-width="1"/>
+                    <!-- data polygon -->
+                    <polygon id="radarPoly" fill="rgba(59,130,246,.22)" stroke="#3b82f6" stroke-width="2.5"/>
+                    <!-- data dots -->
+                    <circle id="rDot0" r="4" fill="#60a5fa"/>
+                    <circle id="rDot1" r="4" fill="#f97316"/>
+                    <circle id="rDot2" r="4" fill="#facc15"/>
+                    <!-- labels -->
+                    <text id="rLab0" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                    <text id="rLab1" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                    <text id="rLab2" text-anchor="middle" fill="#94a3b8" font-size="12" font-family="system-ui,sans-serif"></text>
+                </svg>
+            </div>
+
+            <div class="stat-section-title">Distribuye tus puntos</div>
+
+            <div class="stat-row" id="rowComp">
+                <div class="stat-icon">🧠</div>
+                <div class="stat-info">
+                    <div class="stat-name">Comprensión</div>
+                    <div class="stat-desc">Tu capacidad de analizar textos y extraer evidencia</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill comp" id="barComp" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsComp">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn small" onclick="addPoint('comprension',-10)">-10</button>
+                    <button class="stat-btn" onclick="addPoint('comprension',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('comprension',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('comprension',10)">+10</button>
+                </div>
+            </div>
+
+            <div class="stat-row" id="rowConst">
+                <div class="stat-icon">🔥</div>
+                <div class="stat-info">
+                    <div class="stat-name">Constancia</div>
+                    <div class="stat-desc">Tu disciplina para completar sesiones sin faltar</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill const" id="barConst" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsConst">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn small" onclick="addPoint('constancia',-10)">-10</button>
+                    <button class="stat-btn" onclick="addPoint('constancia',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('constancia',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('constancia',10)">+10</button>
+                </div>
+            </div>
+
+            <div class="stat-row" id="rowVel">
+                <div class="stat-icon">⚡</div>
+                <div class="stat-info">
+                    <div class="stat-name">Velocidad</div>
+                    <div class="stat-desc">Tu rapidez para resolver sin perder precisión</div>
+                    <div class="stat-bar-row">
+                        <div class="stat-bar-bg"><div class="stat-bar-fill vel" id="barVel" style="width:0%"></div></div>
+                        <div class="stat-pts" id="ptsVel">0</div>
+                    </div>
+                </div>
+                <div class="stat-controls">
+                    <button class="stat-btn small" onclick="addPoint('velocidad',-10)">-10</button>
+                    <button class="stat-btn" onclick="addPoint('velocidad',-1)">−</button>
+                    <button class="stat-btn" onclick="addPoint('velocidad',1)">+</button>
+                    <button class="stat-btn small" onclick="addPoint('velocidad',10)">+10</button>
+                </div>
+            </div>
+
+            <div class="save-area">
+                <button class="btn-save" id="btnSave" onclick="saveStats()">Guardar cambios</button>
+                <div class="save-msg" id="saveMsg">✓ Guardado correctamente</div>
+                <br>
+                <button class="btn-reset" onclick="resetStats()">Reiniciar puntos</button>
+            </div>
+
+            <!-- SHOP -->
+            <div class="shop-section">
+                <div class="stat-section-title">🛍️ Tienda de Logros</div>
+                <p style="font-size:12px;color:#64748b;margin-bottom:16px">Desbloquea recompensas al acumular experiencia. Los ítems se desbloquean automáticamente al alcanzar el XP requerido.</p>
+                <div class="shop-grid" id="shopGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="js/avatar-look.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        const FIREBASE_CONFIG = {
+            apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+            authDomain: "estudiacest.firebaseapp.com",
+            databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+            projectId: "estudiacest",
+            storageBucket: "estudiacest.firebasestorage.app",
+            messagingSenderId: "999002169815",
+            appId: "1:999002169815:web:51203237bc77c2e74deb92"
+        };
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        initStudentForcedRefresh({ auth, db, base: BASE });
+
+        // AVATAR_LEVELS now loaded from js/avatar-levels.js (AvatarSystem)
+        const MAX_PER_STAT = 200;
+        const POINTS_PER_LEVEL = 3;
+
+        // SHOP ITEMS — unlocked by XP thresholds (scaled for 200-level system)
+        const SHOP_ITEMS = [
+            { id:'titulo_novato',      emoji:'📚', name:'Título: Ratón de Biblioteca', xp:50,   type:'titulo' },
+            { id:'marco_bronce',       emoji:'🥉', name:'Marco Bronce',                xp:150,  type:'marco' },
+            { id:'efecto_chispas',     emoji:'✨',   name:'Efecto: Chispas',             xp:300,  type:'efecto' },
+            { id:'titulo_detective',   emoji:'🕵️', name:'Título: Detective Textual',  xp:500,  type:'titulo' },
+            { id:'marco_plata',        emoji:'🥈', name:'Marco Plata',                 xp:800,  type:'marco' },
+            { id:'efecto_fuego',       emoji:'🔥', name:'Efecto: Llamas',              xp:1200, type:'efecto' },
+            { id:'titulo_sabio',       emoji:'🧙', name:'Título: Sabio Lector',       xp:1800, type:'titulo' },
+            { id:'marco_oro',          emoji:'🥇', name:'Marco Oro',                   xp:2500, type:'marco' },
+            { id:'efecto_rayo',        emoji:'⚡',   name:'Efecto: Rayo',                xp:3500, type:'efecto' },
+            { id:'titulo_leyenda',     emoji:'🌟', name:'Título: Leyenda Lectora',   xp:5000, type:'titulo' },
+            { id:'marco_diamante',     emoji:'💎', name:'Marco Diamante',              xp:8000, type:'marco' },
+            { id:'corona_suprema',     emoji:'👑', name:'Corona Suprema',              xp:12000,type:'efecto' },
+        ];
+
+        let currentUID = null;
+        let stats = { comprension:0, constancia:0, velocidad:0 };
+        let savedStats = { comprension:0, constancia:0, velocidad:0 };
+        let totalPoints = 0;
+        let avatarDataCache = {};
+        let currentXPTotal = 0;
+        let currentLook = AvatarLookSystem.getDefaultLook();
+        let savedLook = AvatarLookSystem.getDefaultLook();
+
+        function getLevelInfo(totalXP) {
+            var info = AvatarSystem.getLevelInfo(totalXP);
+            return { current: info.current, next: info.next };
+        }
+
+        function usedPoints() { return stats.comprension + stats.constancia + stats.velocidad; }
+        function available() { return totalPoints - usedPoints(); }
+
+        function render() {
+            document.getElementById('ptsAvailable').textContent = available();
+            document.getElementById('ptsSub').textContent = 'Total: ' + totalPoints + ' pts (Nivel × ' + POINTS_PER_LEVEL + ')';
+
+            const fields = ['comprension','constancia','velocidad'];
+            const barIds = { comprension:'barComp', constancia:'barConst', velocidad:'barVel' };
+            const ptsIds = { comprension:'ptsComp', constancia:'ptsConst', velocidad:'ptsVel' };
+            fields.forEach(f => {
+                document.getElementById(ptsIds[f]).textContent = stats[f];
+                document.getElementById(barIds[f]).style.width = (stats[f] / MAX_PER_STAT * 100) + '%';
+            });
+
+            // Disable +/- buttons appropriately
+            const rows = document.querySelectorAll('.stat-row');
+            rows.forEach(row => {
+                const btns = row.querySelectorAll('.stat-btn');
+                const field = row.id === 'rowComp' ? 'comprension' : row.id === 'rowConst' ? 'constancia' : 'velocidad';
+                // Order: -10, -, +, +10
+                btns[0].disabled = stats[field] < 10;
+                btns[1].disabled = stats[field] <= 0;
+                btns[2].disabled = available() <= 0 || stats[field] >= MAX_PER_STAT;
+                btns[3].disabled = available() < 10 || stats[field] + 10 > MAX_PER_STAT;
+            });
+
+            // Show save button only if changed
+            const changed = stats.comprension !== savedStats.comprension || stats.constancia !== savedStats.constancia || stats.velocidad !== savedStats.velocidad;
+            document.getElementById('btnSave').disabled = !changed;
+            renderRadar();
+        }
+
+        /* ---- RADAR CHART ---- */
+        function renderRadar() {
+            const cx = 150, cy = 145, R = 110;
+            const labels = [
+                { key:'comprension', icon:'🧠 Comprensión' },
+                { key:'constancia',  icon:'🔥 Constancia' },
+                { key:'velocidad',   icon:'⚡ Velocidad' }
+            ];
+            // 3 axes: top, bottom-right, bottom-left (angles: -90°, 30°, 150°)
+            const angles = [-Math.PI/2, Math.PI*2/3 - Math.PI/2, Math.PI*4/3 - Math.PI/2];
+            function pt(angle, r) {
+                return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+            }
+            function polyStr(r) {
+                return angles.map(a => pt(a, r).join(',')).join(' ');
+            }
+            // grid rings at 25%, 50%, 75%, 100%
+            [4,3,2,1].forEach((n,i) => {
+                document.getElementById('rGrid'+(4-i)).setAttribute('points', polyStr(R * n/4));
+            });
+            // axis lines
+            angles.forEach((a, i) => {
+                var p = pt(a, R);
+                var el = document.getElementById('rAxis'+i);
+                el.setAttribute('x1', cx); el.setAttribute('y1', cy);
+                el.setAttribute('x2', p[0]); el.setAttribute('y2', p[1]);
+            });
+            // data polygon
+            var vals = labels.map(l => Math.max(stats[l.key] / MAX_PER_STAT, 0.04));
+            var dataPts = angles.map((a, i) => pt(a, R * vals[i]));
+            document.getElementById('radarPoly').setAttribute('points', dataPts.map(p => p.join(',')).join(' '));
+            // dots
+            dataPts.forEach((p, i) => {
+                var d = document.getElementById('rDot'+i);
+                d.setAttribute('cx', p[0]); d.setAttribute('cy', p[1]);
+            });
+            // labels
+            var labelOffsets = [
+                [0, -14],  // top: above
+                [14, 14],  // bottom-right: offset right-down
+                [-14, 14]  // bottom-left: offset left-down
+            ];
+            angles.forEach((a, i) => {
+                var p = pt(a, R + 18);
+                var el = document.getElementById('rLab'+i);
+                el.setAttribute('x', p[0] + labelOffsets[i][0]);
+                el.setAttribute('y', p[1] + labelOffsets[i][1]);
+                el.textContent = labels[i].icon;
+            });
+        }
+
+        function addPoint(stat, delta) {
+            let newVal = stats[stat] + delta;
+            if (newVal < 0) newVal = 0;
+            if (newVal > MAX_PER_STAT) newVal = MAX_PER_STAT;
+            const actualDelta = newVal - stats[stat];
+            if (actualDelta > 0 && available() < actualDelta) return;
+            stats[stat] = newVal;
+            render();
+        }
+
+        function resetStats() {
+            stats = { comprension:0, constancia:0, velocidad:0 };
+            render();
+        }
+
+        function lookChanged() {
+            return JSON.stringify(currentLook) !== JSON.stringify(savedLook);
+        }
+
+        function renderLookOption(categoryId, option) {
+            var classes = ['look-option'];
+            if (option.selected) classes.push('active');
+            if (option.locked) classes.push('locked');
+            var preview = option.swatch
+                ? '<span class="look-swatch" style="background:' + option.swatch + '"></span>'
+                : '<span class="look-chip">' + option.preview + '</span>';
+            var lockText = option.locked ? '<span class="look-lock">' + option.minXp + ' XP</span>' : '';
+            var action = option.locked ? 'disabled' : 'onclick="selectLookOption(\'' + categoryId + '\',\'' + option.id + '\')"';
+            return '<button type="button" class="' + classes.join(' ') + '" ' + action + '>' +
+                preview + '<span class="look-name">' + option.name + '</span>' + lockText + '</button>';
+        }
+
+        function renderLookPreview() {
+            AvatarLookSystem.render(document.getElementById('heroAvatarRender'), {
+                look: currentLook,
+                xpTotal: currentXPTotal,
+                avatarData: avatarDataCache,
+                size: 116,
+                shape: 'rounded'
+            });
+        }
+
+        function renderLookEditor() {
+            var categories = AvatarLookSystem.getEditorCategories({ xpTotal: currentXPTotal, avatarData: avatarDataCache }, currentLook);
+            document.getElementById('lookEditor').innerHTML = categories.map(function(category) {
+                return '<div class="look-category-card">' +
+                    '<div class="look-category-head"><h3>' + category.label + '</h3></div>' +
+                    '<div class="look-options">' + category.options.map(function(option) {
+                        return renderLookOption(category.id, option);
+                    }).join('') + '</div></div>';
+            }).join('');
+            renderLookPreview();
+            document.getElementById('btnSaveLook').disabled = !lookChanged();
+        }
+
+        function selectLookOption(categoryId, optionId) {
+            var option = AvatarLookSystem.getOptionMeta(categoryId, optionId, { xpTotal: currentXPTotal, avatarData: avatarDataCache });
+            if (!option || option.locked) {
+                showToast('Sube mas XP para usar esa pieza');
+                return;
+            }
+            currentLook[categoryId] = optionId;
+            renderLookEditor();
+        }
+
+        function randomizeLook() {
+            currentLook = AvatarLookSystem.randomizeLook({ xpTotal: currentXPTotal, avatarData: avatarDataCache });
+            renderLookEditor();
+        }
+
+        async function saveLook() {
+            var btn = document.getElementById('btnSaveLook');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+            try {
+                await db.ref(BASE + '/avatar/' + currentUID + '/look').set({
+                    skinTone: currentLook.skinTone,
+                    eyes: currentLook.eyes,
+                    mouth: currentLook.mouth,
+                    hairStyle: currentLook.hairStyle,
+                    hairColor: currentLook.hairColor,
+                    outfit: currentLook.outfit,
+                    accessory: currentLook.accessory,
+                    aura: currentLook.aura,
+                    updated: Date.now()
+                });
+                savedLook = Object.assign({}, currentLook);
+                avatarDataCache.look = Object.assign({}, currentLook);
+                btn.textContent = 'Guardar apariencia';
+                showToast('Apariencia guardada');
+                renderLookEditor();
+            } catch (e) {
+                console.error(e);
+                btn.textContent = 'Guardar apariencia';
+                btn.disabled = false;
+                showToast('Error al guardar apariencia');
+            }
+        }
+
+        async function saveStats() {
+            const btn = document.getElementById('btnSave');
+            btn.disabled = true;
+            btn.textContent = 'Guardando...';
+            try {
+                await db.ref(BASE + '/avatar/' + currentUID + '/stats').set({
+                    comprension: stats.comprension,
+                    constancia: stats.constancia,
+                    velocidad: stats.velocidad,
+                    updated: Date.now()
+                });
+                savedStats = { ...stats };
+                btn.textContent = 'Guardar cambios';
+                showToast('✓ Puntos guardados');
+                render();
+            } catch(e) {
+                console.error(e);
+                btn.textContent = 'Guardar cambios';
+                btn.disabled = false;
+                showToast('Error al guardar');
+            }
+        }
+
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2500);
+        }
+
+        function renderShop(xpTotal) {
+            const grid = document.getElementById('shopGrid');
+            let html = '';
+            SHOP_ITEMS.forEach(item => {
+                const unlocked = xpTotal >= item.xp;
+                const cls = unlocked ? 'unlocked' : 'locked';
+                const badge = unlocked
+                    ? '<span class="shop-badge owned-badge">✓ Desbloqueado</span>'
+                    : '<span class="shop-badge lock-badge">🔒 Bloqueado</span>';
+                const costText = unlocked
+                    ? '<span class="shop-cost free">✓ Obtenido</span>'
+                    : '<span class="shop-cost">' + item.xp + ' XP necesarios</span>';
+                html += '<div class="shop-item ' + cls + '">' + badge +
+                    '<div class="shop-emoji">' + item.emoji + '</div>' +
+                    '<div class="shop-name">' + item.name + '</div>' +
+                    costText + '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        // ============ RETROACTIVE XP SYNC ============
+        async function syncMissingXP(uid, avatarData) {
+            try {
+                const resultadosSnap = await db.ref(BASE + '/resultados').once('value');
+                const allRes = resultadosSnap.val() || {};
+                const existingSessions = (avatarData && avatarData.sesiones) || {};
+                let xpToAdd = 0;
+                const newSessions = {};
+
+                for (const [sesId, students] of Object.entries(allRes)) {
+                    if (students[uid] && !existingSessions[sesId]) {
+                        const r = students[uid];
+                        const xp = r.es_encuesta ? 50 : Math.round((r.porcentaje || 0) * 2);
+                        if (xp > 0) {
+                            newSessions[sesId] = { xp: xp, timestamp: r.submitted_at || Date.now(), synced: true };
+                            xpToAdd += xp;
+                        }
+                    }
+                }
+
+                if (xpToAdd > 0) {
+                    const currentTotal = (avatarData && avatarData.xp_total) || 0;
+                    const newTotal = currentTotal + xpToAdd;
+                    const lvl = getLevelInfo(newTotal).current;
+
+                    const updates = {};
+                    for (const [sesId, data] of Object.entries(newSessions)) {
+                        updates['sesiones/' + sesId] = data;
+                    }
+                    updates['xp_total'] = newTotal;
+                    updates['nivel'] = lvl.level;
+                    updates['titulo'] = lvl.title;
+                    updates['emoji'] = lvl.emoji;
+
+                    await db.ref(BASE + '/avatar/' + uid).update(updates);
+                    showToast('⭐ +' + xpToAdd + ' XP sincronizados de sesiones anteriores');
+                    return newTotal;
+                }
+                return null;
+            } catch(e) { console.error('XP sync error:', e); return null; }
+        }
+
+        // ============ AUTH + LOAD ============
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUID = user.uid;
+
+            try {
+                const [studentSnap, avatarSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/avatar/' + user.uid).once('value')
+                ]);
+                const student = studentSnap.val();
+                if (!student) { auth.signOut(); return; }
+
+                const av = avatarSnap.val() || {};
+                let xpTotal = av.xp_total || 0;
+
+                // Sync missing XP from past sessions
+                const syncedTotal = await syncMissingXP(user.uid, av);
+                if (syncedTotal !== null) xpTotal = syncedTotal;
+                currentXPTotal = xpTotal;
+                avatarDataCache = Object.assign({}, av, { xp_total: xpTotal });
+                currentLook = AvatarLookSystem.normalizeLook(av.look, { xpTotal: xpTotal, avatarData: avatarDataCache });
+                savedLook = Object.assign({}, currentLook);
+
+                const { current, next } = getLevelInfo(xpTotal);
+
+                // Render hero
+                document.getElementById('heroLevel').textContent = 'NIVEL ' + current.level;
+                document.getElementById('heroTitle').textContent = current.title;
+                document.getElementById('heroSubtitle').textContent = xpTotal + ' XP totales';
+
+                if (next) {
+                    const pct = Math.round(((xpTotal - current.xp) / (next.xp - current.xp)) * 100);
+                    document.getElementById('xpFill').style.width = pct + '%';
+                    document.getElementById('xpLabelCurr').textContent = xpTotal + ' XP';
+                    document.getElementById('xpLabelNext').textContent = next.xp + ' XP';
+                } else {
+                    document.getElementById('xpFill').style.width = '100%';
+                    document.getElementById('xpLabelCurr').textContent = xpTotal + ' XP';
+                    document.getElementById('xpLabelNext').textContent = '¡Máximo!';
+                }
+
+                // Points available based on level
+                totalPoints = current.level * POINTS_PER_LEVEL;
+
+                // Load saved stats
+                if (av.stats) {
+                    stats.comprension = Math.min(av.stats.comprension || 0, MAX_PER_STAT);
+                    stats.constancia = Math.min(av.stats.constancia || 0, MAX_PER_STAT);
+                    stats.velocidad = Math.min(av.stats.velocidad || 0, MAX_PER_STAT);
+                    // Clamp if student lost levels somehow
+                    while (usedPoints() > totalPoints) {
+                        if (stats.velocidad > 0) stats.velocidad--;
+                        else if (stats.constancia > 0) stats.constancia--;
+                        else stats.comprension--;
+                    }
+                }
+                savedStats = { ...stats };
+
+                render();
+                renderLookEditor();
+                renderShop(xpTotal);
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+
+            } catch(e) {
+                console.error(e);
+                showToast('Error al cargar avatar');
+            }
+        });
+    </script>
+</body>
+</html>

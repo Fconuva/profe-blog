@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ranking de Poder — Plataforma Estudiantes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Inter',system-ui,sans-serif;background:#0f172a;min-height:100vh;color:#e2e8f0}
+        /* TOP BAR */
+        .top-bar{display:flex;align-items:center;justify-content:space-between;padding:14px 20px;background:rgba(15,23,42,.92);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,.06)}
+        .back-link{color:#94a3b8;text-decoration:none;font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px}
+        .back-link:hover{color:#fff}
+        .top-title{font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px}
+        .top-right{display:flex;align-items:center;gap:8px}
+        .pill{padding:4px 12px;border-radius:16px;font-size:11px;font-weight:700}
+        .pill-rank{background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff}
+        /* HERO */
+        .hero{text-align:center;padding:28px 20px 20px;background:linear-gradient(180deg,rgba(245,158,11,.08) 0%,#0f172a 100%);position:relative}
+        .hero::before{content:'';position:absolute;top:0;left:50%;width:500px;height:300px;transform:translateX(-50%);background:radial-gradient(circle,rgba(245,158,11,.1) 0%,transparent 70%);pointer-events:none}
+        .my-rank{display:inline-flex;flex-direction:column;align-items:center;gap:6px;margin-bottom:12px}
+        .my-rank .emoji{font-size:48px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.4))}
+        .my-rank .level-badge{font-size:12px;font-weight:800;padding:4px 14px;border-radius:16px;color:#fff}
+        .my-rank .pos{font-size:28px;font-weight:900;color:#fbbf24}
+        .my-rank .pos-label{font-size:12px;color:#94a3b8}
+        /* COMPARISON */
+        .comparison{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:16px;padding:20px;margin:0 auto 16px;max-width:800px;text-align:center}
+        .comparison h3{font-size:14px;font-weight:800;color:#94a3b8;margin-bottom:14px}
+        .vs-row{display:flex;align-items:center;justify-content:center;gap:20px}
+        .vs-block{flex:1;max-width:200px}
+        .vs-block .vs-name{font-size:13px;font-weight:700;margin-bottom:4px}
+        .vs-block .vs-val{font-size:32px;font-weight:900;line-height:1}
+        .vs-block .vs-sub{font-size:11px;color:#64748b;margin-top:2px}
+        .vs-block.a .vs-name,.vs-block.a .vs-val{color:#3b82f6}
+        .vs-block.b .vs-name,.vs-block.b .vs-val{color:#8b5cf6}
+        .vs-badge{width:40px;height:40px;background:rgba(255,255,255,.04);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#475569;flex-shrink:0}
+        .winner-line{margin-top:12px;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;display:inline-block}
+        .winner-line.a{background:rgba(59,130,246,.1);color:#60a5fa}
+        .winner-line.b{background:rgba(139,92,246,.1);color:#a78bfa}
+        .winner-line.tie{background:rgba(255,255,255,.04);color:#64748b}
+        /* TABS */
+        .tabs{display:flex;gap:6px;overflow-x:auto;padding:8px 20px;max-width:800px;margin:0 auto}
+        .tabs::-webkit-scrollbar{display:none}
+        .tab{padding:8px 16px;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer;background:rgba(255,255,255,.04);color:#64748b;border:1px solid rgba(255,255,255,.06);white-space:nowrap;transition:all .2s;flex-shrink:0;font-family:inherit}
+        .tab:hover{color:#e2e8f0}
+        .tab.active{background:rgba(245,158,11,.12);color:#fbbf24;border-color:rgba(245,158,11,.3)}
+        /* MAIN */
+        .main{max-width:800px;margin:0 auto;padding:16px 20px 60px}
+        /* TOP 3 PODIUM */
+        .podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;margin-bottom:24px;padding:0 10px}
+        .podium-slot{display:flex;flex-direction:column;align-items:center;transition:transform .3s}
+        .podium-slot:hover{transform:translateY(-4px)}
+        .podium-slot.p1{order:2;width:130px}
+        .podium-slot.p2{order:1;width:110px}
+        .podium-slot.p3{order:3;width:110px}
+        .podium-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;margin-bottom:6px;border:3px solid rgba(255,255,255,.15);position:relative}
+        .p1 .podium-avatar{width:80px;height:80px;font-size:38px;border-width:4px}
+        .podium-medal{position:absolute;top:-8px;right:-8px;font-size:20px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.4))}
+        .podium-name{font-size:12px;font-weight:700;text-align:center;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:2px}
+        .podium-level{font-size:10px;font-weight:800;padding:2px 8px;border-radius:10px;color:#fff;margin-bottom:4px}
+        .podium-xp{font-size:10px;color:#64748b}
+        .podium-base{width:100%;padding:12px 8px;border-radius:12px;text-align:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06)}
+        .p1 .podium-base{background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.2);padding:16px 8px}
+        /* RANKING LIST */
+        .rank-card{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:14px;margin-bottom:6px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);transition:all .25s}
+        .rank-card:hover{background:rgba(255,255,255,.05);border-color:rgba(255,255,255,.08)}
+        .rank-card.me{background:rgba(59,130,246,.06);border-color:rgba(59,130,246,.2)}
+        .rank-pos{width:36px;text-align:center;font-size:15px;font-weight:900;color:#475569;flex-shrink:0}
+        .rank-pos.top{color:#fbbf24}
+        .rank-ava{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;border:2px solid rgba(255,255,255,.08)}
+        .rank-info{flex:1;min-width:0}
+        .rank-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .rank-sub{font-size:11px;color:#64748b;margin-top:1px}
+        .rank-right{text-align:right;flex-shrink:0}
+        .rank-level{font-size:12px;font-weight:800;padding:3px 10px;border-radius:10px;color:#fff;display:inline-block}
+        .rank-xp{font-size:10px;color:#475569;margin-top:3px}
+        .rank-curso{font-size:10px;color:#64748b;padding:2px 8px;border-radius:8px;background:rgba(255,255,255,.04)}
+        /* POWER BAR */
+        .power-bar{display:flex;align-items:center;gap:6px;margin-top:4px}
+        .pb-bg{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.06);max-width:100px;overflow:hidden}
+        .pb-fill{height:100%;border-radius:3px;transition:width .4s}
+        .pb-text{font-size:10px;font-weight:700;color:#64748b;min-width:30px}
+        /* SEPARATOR */
+        .sep{text-align:center;padding:12px;font-size:11px;color:#475569;font-weight:600}
+        /* LOADING */
+        .loading{display:flex;align-items:center;justify-content:center;min-height:60vh}
+        .spinner{width:40px;height:40px;border:4px solid rgba(255,255,255,.1);border-top-color:#f59e0b;border-radius:50%;animation:spin .7s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        /* EMPTY */
+        .empty{text-align:center;padding:60px 20px;color:#475569}
+        @media(max-width:480px){
+            .podium{gap:8px}
+            .podium-slot.p1{width:110px}
+            .podium-slot.p2,.podium-slot.p3{width:90px}
+            .podium-avatar{width:52px;height:52px;font-size:24px}
+            .p1 .podium-avatar{width:64px;height:64px;font-size:30px}
+            .rank-card{padding:10px 12px;gap:8px}
+            .vs-row{flex-direction:column;gap:10px}
+        }
+    </style>
+
+    <!-- Sistema de Protección Anticopia y Seguridad -->
+    <script src="js/security-protection.js"></script>
+</head>
+<body>
+    <div class="top-bar">
+        <a href="dashboard.html" class="back-link">← Volver</a>
+        <div class="top-title">⚔️ Ranking de Poder</div>
+        <div class="top-right"><span class="pill pill-rank" id="myPosPill">-</span></div>
+    </div>
+
+    <div id="loadingScreen" class="loading"><div class="spinner"></div></div>
+
+    <div id="mainView" style="display:none">
+        <div class="hero">
+            <div class="my-rank" id="myRank"></div>
+        </div>
+
+        <!-- Course Comparison (avatar-power based) -->
+        <div class="comparison" id="comparison" style="display:none">
+            <h3>⚡ Poder Promedio — Curso vs Curso</h3>
+            <div class="vs-row">
+                <div class="vs-block a">
+                    <div class="vs-name" id="nameA">-</div>
+                    <div class="vs-val" id="globalA">-</div>
+                    <div class="vs-sub">nivel promedio</div>
+                </div>
+                <div class="vs-badge">VS</div>
+                <div class="vs-block b">
+                    <div class="vs-name" id="nameB">-</div>
+                    <div class="vs-val" id="globalB">-</div>
+                    <div class="vs-sub">nivel promedio</div>
+                </div>
+            </div>
+            <div id="winnerBanner"></div>
+        </div>
+
+        <div class="tabs" id="tabsContainer"></div>
+
+        <div class="main">
+            <div id="podium" class="podium"></div>
+            <div id="rankList"></div>
+        </div>
+    </div>
+
+    <script src="js/avatar-levels.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script src="js/forced-refresh.js"></script>
+    <script>
+        firebase.initializeApp({
+            apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",
+            databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",
+            storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",
+            appId:"1:999002169815:web:51203237bc77c2e74deb92"
+        });
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+        const BASE = 'plataforma_estudiantes';
+        initStudentForcedRefresh({ auth, db, base: BASE });
+        const ADMIN_EMAIL = '111111111@est.estudiacest.com';
+
+        const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC'};
+        const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC','2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
+        const RANKING_PAIRS = {
+            '1A-HC':['1A-HC','1B-HC'],'1B-HC':['1A-HC','1B-HC'],
+            '2A-HC':['2A-HC','2B-HC'],'2B-HC':['2A-HC','2B-HC'],
+            '2A-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2B-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2C-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2D-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],'2E-TP':['2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'],
+            '3A-HC':['3A-HC','3B-HC'],'3B-HC':['3A-HC','3B-HC'],
+            '4A-HC':['4A-HC','4B-HC'],'4B-HC':['4A-HC','4B-HC']
+        };
+
+        let currentUid = null;
+        let currentCurso = null;
+        let currentEmail = null;
+        let allStudents = [];
+        let arenaRecords = {};
+        let activeTab = 'programa';
+        let myPair = [];
+
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) { window.location.href = 'index.html'; return; }
+            currentUid = user.uid;
+            currentEmail = user.email;
+
+            try {
+                const [studentSnap, allEstSnap, avatarSnap, arenaRecSnap] = await Promise.all([
+                    db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
+                    db.ref(BASE + '/estudiantes').once('value'),
+                    db.ref(BASE + '/avatar').once('value'),
+                    db.ref(BASE + '/arena/records').once('value')
+                ]);
+                arenaRecords = arenaRecSnap.val() || {};
+
+                const me = studentSnap.val();
+                if (!me) { auth.signOut(); return; }
+                currentCurso = me.curso;
+                const programa = me.programa || (currentCurso.match(/^(1|2)/) ? 'simce' : 'paes');
+                const myCursos = PROGRAMA_CURSOS[programa] || [currentCurso];
+                myPair = RANKING_PAIRS[currentCurso] || [currentCurso];
+
+                const avatars = avatarSnap.val() || {};
+                const allEst = allEstSnap.val() || {};
+
+                // Build student list with XP/level data (exclude admin demo account)
+                allStudents = [];
+                for (const [uid, est] of Object.entries(allEst)) {
+                    // Skip admin/demo account from ranking
+                    if (est.email === ADMIN_EMAIL) continue;
+                    const av = avatars[uid] || {};
+                    const xp = av.xp_total || 0;
+                    const lvlInfo = AvatarSystem.getLevelInfo(xp);
+                    const arec = arenaRecords[uid] || {};
+                    allStudents.push({
+                        uid, nombre: est.nombre || 'Estudiante',
+                        curso: est.curso || '?',
+                        programa: est.programa || (est.curso && est.curso.match(/^(1|2)/) ? 'simce' : 'paes'),
+                        xp, level: lvlInfo.current.level, tier: lvlInfo.current.tier,
+                        tierIdx: lvlInfo.current.tierIdx, emoji: lvlInfo.current.emoji,
+                        title: lvlInfo.current.title, color: lvlInfo.current.color,
+                        bg: lvlInfo.current.bg, power: AvatarSystem.getPower(xp),
+                        progress: lvlInfo.progress,
+                        arenaWins: arec.wins || 0,
+                        arenaLosses: arec.losses || 0,
+                        arenaStreak: arec.streak || 0,
+                        arenaBattles: (arec.wins || 0) + (arec.losses || 0)
+                    });
+                }
+                // Also exclude self if admin viewing
+                if (currentEmail === ADMIN_EMAIL) {
+                    allStudents = allStudents.filter(s => s.uid !== currentUid);
+                }
+
+                // Build tabs
+                let tabsHtml = '<button class="tab active" onclick="setTab(\'programa\',this)">🏫 Mi Programa</button>';
+                myCursos.forEach(c => {
+                    tabsHtml += '<button class="tab" onclick="setTab(\'' + c + '\',this)">' + (CURSO_LABELS[c] || c) + '</button>';
+                });
+                tabsHtml += '<button class="tab" onclick="setTab(\'global\',this)">🌐 Global</button>';
+                tabsHtml += '<button class="tab" onclick="setTab(\'arena\',this)">⚔️ Arena</button>';
+                document.getElementById('tabsContainer').innerHTML = tabsHtml;
+
+                renderComparison();
+                renderRanking();
+
+                document.getElementById('loadingScreen').style.display = 'none';
+                document.getElementById('mainView').style.display = '';
+            } catch(e) {
+                console.error('Ranking load error:', e);
+                let msg = 'Error al cargar ranking';
+                if (e.code === 'PERMISSION_DENIED' || (e.message && e.message.includes('permission'))) {
+                    msg = 'No tienes permisos para ver el ranking. Cierra sesión y vuelve a ingresar.';
+                }
+                document.getElementById('loadingScreen').innerHTML = '<div class="empty">' + msg + '<br><br><button onclick="location.reload()" style="padding:8px 20px;border-radius:8px;background:#f59e0b;color:#0f172a;border:none;font-weight:700;cursor:pointer;font-family:inherit">🔄 Reintentar</button></div>';
+            }
+        });
+
+        function setTab(tab, btn) {
+            activeTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            renderRanking();
+        }
+
+        function renderComparison() {
+            const courseA = myPair[0], courseB = myPair[1];
+            if (!courseA || !courseB || courseA === courseB) return;
+
+            const studA = allStudents.filter(s => s.curso === courseA);
+            const studB = allStudents.filter(s => s.curso === courseB);
+            const avgA = studA.length ? Math.round(studA.reduce((s, x) => s + x.level, 0) / studA.length) : 0;
+            const avgB = studB.length ? Math.round(studB.reduce((s, x) => s + x.level, 0) / studB.length) : 0;
+
+            document.getElementById('nameA').textContent = CURSO_LABELS[courseA] || courseA;
+            document.getElementById('nameB').textContent = CURSO_LABELS[courseB] || courseB;
+            document.getElementById('globalA').textContent = 'Nv. ' + avgA;
+            document.getElementById('globalB').textContent = 'Nv. ' + avgB;
+
+            const labelA = CURSO_LABELS[courseA], labelB = CURSO_LABELS[courseB];
+            const banner = document.getElementById('winnerBanner');
+            if (avgA > avgB && avgA > 0) {
+                banner.innerHTML = '<div class="winner-line a">⚡ ' + labelA + ' lidera con ' + (avgA - avgB) + ' niveles de ventaja</div>';
+            } else if (avgB > avgA && avgB > 0) {
+                banner.innerHTML = '<div class="winner-line b">⚡ ' + labelB + ' lidera con ' + (avgB - avgA) + ' niveles de ventaja</div>';
+            } else if (avgA > 0) {
+                banner.innerHTML = '<div class="winner-line tie">🤝 ¡Empate técnico!</div>';
+            }
+            document.getElementById('comparison').style.display = '';
+        }
+
+        function renderRanking() {
+            const isArena = activeTab === 'arena';
+            let filtered;
+            if (activeTab === 'global' || isArena) {
+                filtered = [...allStudents];
+            } else if (activeTab === 'programa') {
+                const myProg = allStudents.find(s => s.uid === currentUid);
+                const prog = myProg ? myProg.programa : 'simce';
+                const cursos = PROGRAMA_CURSOS[prog] || [];
+                filtered = allStudents.filter(s => cursos.includes(s.curso));
+            } else {
+                filtered = allStudents.filter(s => s.curso === activeTab);
+            }
+
+            if (isArena) {
+                // Arena: only students who have battled, sort by wins desc then winRate
+                filtered = filtered.filter(s => s.arenaBattles > 0);
+                filtered.sort((a, b) => {
+                    if (b.arenaWins !== a.arenaWins) return b.arenaWins - a.arenaWins;
+                    const rateA = a.arenaBattles > 0 ? a.arenaWins / a.arenaBattles : 0;
+                    const rateB = b.arenaBattles > 0 ? b.arenaWins / b.arenaBattles : 0;
+                    if (rateB !== rateA) return rateB - rateA;
+                    return b.arenaStreak - a.arenaStreak;
+                });
+                renderArenaRanking(filtered);
+                return;
+            }
+
+            // Sort by power descending, then alphabetical for ties
+            filtered.sort((a, b) => b.power - a.power || a.nombre.localeCompare(b.nombre));
+
+            if (filtered.length === 0) {
+                document.getElementById('podium').innerHTML = '';
+                document.getElementById('rankList').innerHTML = '<div class="empty">Sin estudiantes en esta categoría</div>';
+                document.getElementById('myPosPill').textContent = '-';
+                return;
+            }
+
+            // My position
+            const myIdx = filtered.findIndex(s => s.uid === currentUid);
+            const myPos = myIdx >= 0 ? myIdx + 1 : '-';
+            const me = myIdx >= 0 ? filtered[myIdx] : null;
+            document.getElementById('myPosPill').textContent = '#' + myPos + ' de ' + filtered.length;
+
+            // Hero section
+            if (me) {
+                document.getElementById('myRank').innerHTML =
+                    '<div class="emoji">' + me.emoji + '</div>' +
+                    '<div class="level-badge" style="background:' + me.bg + '">' + me.title + '</div>' +
+                    '<div class="pos">#' + myPos + '</div>' +
+                    '<div class="pos-label">' + me.xp.toLocaleString() + ' XP · Nivel ' + me.level + '</div>';
+            }
+
+            // TOP 3 PODIUM
+            const top3 = filtered.slice(0, Math.min(3, filtered.length));
+            const hasPodium = top3.length >= 3;
+            let podiumHtml = '';
+
+            if (hasPodium) {
+                [1, 0, 2].forEach(idx => {
+                    const s = top3[idx];
+                    const pos = idx + 1;
+                    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+                    podiumHtml +=
+                        '<div class="podium-slot p' + pos + '">' +
+                        '<div class="podium-base">' +
+                        '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
+                        s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
+                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-level" style="background:' + s.bg + '">Nv. ' + s.level + '</div>' +
+                        '<div class="podium-xp">' + s.xp.toLocaleString() + ' XP</div>' +
+                        '</div></div>';
+                });
+            }
+            document.getElementById('podium').innerHTML = podiumHtml;
+
+            // FULL LIST (skip first 3 if podium shown)
+            let listHtml = '';
+            const startIdx = hasPodium ? 3 : 0;
+            if (filtered.length > 3 && hasPodium) {
+                listHtml += '<div class="sep">── Ranking Completo ──</div>';
+            }
+
+            for (let i = startIdx; i < filtered.length; i++) {
+                const s = filtered[i];
+                const pos = i + 1;
+                const isMe = s.uid === currentUid;
+                const cursoLabel = CURSO_LABELS[s.curso] || s.curso;
+
+                listHtml +=
+                    '<div class="rank-card' + (isMe ? ' me' : '') + '">' +
+                    '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
+                    '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
+                    '<div class="rank-info">' +
+                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-sub">' + s.title + ' · ' + s.xp.toLocaleString() + ' XP</div>' +
+                    '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + s.progress + '%;background:' + s.color + '"></div></div>' +
+                    '<span class="pb-text">Nv. ' + s.level + '</span></div>' +
+                    '</div>' +
+                    '<div class="rank-right">' +
+                    '<div class="rank-level" style="background:' + s.bg + '">Nv. ' + s.level + '</div>' +
+                    '<div class="rank-xp"><span class="rank-curso">' + cursoLabel + '</span></div>' +
+                    '</div></div>';
+            }
+
+            document.getElementById('rankList').innerHTML = listHtml;
+        }
+
+        function renderArenaRanking(filtered) {
+            document.getElementById('comparison').style.display = 'none';
+
+            if (filtered.length === 0) {
+                document.getElementById('podium').innerHTML = '';
+                document.getElementById('rankList').innerHTML = '<div class="empty">Nadie ha peleado aún en la Arena ⚔️</div>';
+                document.getElementById('myPosPill').textContent = '-';
+                document.getElementById('myRank').innerHTML = '<div class="emoji">⚔️</div><div style="font-size:14px;color:#94a3b8;margin-top:8px">Ranking de Arena</div>';
+                return;
+            }
+
+            const myIdx = filtered.findIndex(s => s.uid === currentUid);
+            const myPos = myIdx >= 0 ? myIdx + 1 : '-';
+            const me = myIdx >= 0 ? filtered[myIdx] : null;
+            document.getElementById('myPosPill').textContent = myPos !== '-' ? '#' + myPos + ' de ' + filtered.length : '-';
+
+            if (me) {
+                const wr = me.arenaBattles > 0 ? Math.round(me.arenaWins / me.arenaBattles * 100) : 0;
+                document.getElementById('myRank').innerHTML =
+                    '<div class="emoji">⚔️</div>' +
+                    '<div class="level-badge" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">Gladiador</div>' +
+                    '<div class="pos">#' + myPos + '</div>' +
+                    '<div class="pos-label">' + me.arenaWins + 'W / ' + me.arenaLosses + 'L · ' + wr + '% winrate</div>';
+            } else {
+                document.getElementById('myRank').innerHTML = '<div class="emoji">⚔️</div><div style="font-size:14px;color:#94a3b8;margin-top:8px">Ranking de Arena</div>';
+            }
+
+            // TOP 3 arena podium
+            const top3 = filtered.slice(0, Math.min(3, filtered.length));
+            const hasPodium = top3.length >= 3;
+            let podiumHtml = '';
+            if (hasPodium) {
+                [1, 0, 2].forEach(idx => {
+                    const s = top3[idx];
+                    const pos = idx + 1;
+                    const medal = pos === 1 ? '🥇' : pos === 2 ? '🥈' : '🥉';
+                    const wr = s.arenaBattles > 0 ? Math.round(s.arenaWins / s.arenaBattles * 100) : 0;
+                    podiumHtml +=
+                        '<div class="podium-slot p' + pos + '">' +
+                        '<div class="podium-base">' +
+                        '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
+                        s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
+                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-level" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">' + s.arenaWins + 'W</div>' +
+                        '<div class="podium-xp">' + wr + '% · racha ' + s.arenaStreak + '</div>' +
+                        '</div></div>';
+                });
+            }
+            document.getElementById('podium').innerHTML = podiumHtml;
+
+            // Full arena list
+            let listHtml = '';
+            const startIdx = hasPodium ? 3 : 0;
+            if (filtered.length > 3 && hasPodium) {
+                listHtml += '<div class="sep">── Ranking Arena Completo ──</div>';
+            }
+            for (let i = startIdx; i < filtered.length; i++) {
+                const s = filtered[i];
+                const pos = i + 1;
+                const isMe = s.uid === currentUid;
+                const cursoLabel = CURSO_LABELS[s.curso] || s.curso;
+                const wr = s.arenaBattles > 0 ? Math.round(s.arenaWins / s.arenaBattles * 100) : 0;
+                listHtml +=
+                    '<div class="rank-card' + (isMe ? ' me' : '') + '">' +
+                    '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
+                    '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
+                    '<div class="rank-info">' +
+                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-sub">' + s.arenaWins + 'W / ' + s.arenaLosses + 'L · ' + wr + '% winrate</div>' +
+                    '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + wr + '%;background:linear-gradient(90deg,#ef4444,#f59e0b)"></div></div>' +
+                    '<span class="pb-text">🔥 ' + s.arenaStreak + '</span></div>' +
+                    '</div>' +
+                    '<div class="rank-right">' +
+                    '<div class="rank-level" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">' + s.arenaWins + 'W</div>' +
+                    '<div class="rank-xp"><span class="rank-curso">' + cursoLabel + '</span></div>' +
+                    '</div></div>';
+            }
+            document.getElementById('rankList').innerHTML = listHtml;
+        }
+    </script>
+</body>
+</html>

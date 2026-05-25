@@ -1,0 +1,1863 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gato Online | Estudia CEST</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #07111f;
+            --bg-soft: rgba(10, 22, 39, 0.82);
+            --surface: rgba(11, 26, 46, 0.82);
+            --surface-strong: rgba(11, 26, 46, 0.94);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #e7edf6;
+            --muted: #8ea0b9;
+            --accent: #84cc16;
+            --accent-2: #38bdf8;
+            --warm: #f59e0b;
+            --danger: #ef4444;
+            --shadow: 0 24px 64px rgba(3, 7, 18, 0.42);
+            --radius-lg: 28px;
+            --radius-md: 20px;
+            --radius-sm: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+            background:
+                radial-gradient(circle at top left, rgba(132, 204, 22, 0.14), transparent 26%),
+                radial-gradient(circle at top right, rgba(56, 189, 248, 0.14), transparent 28%),
+                linear-gradient(180deg, #06101d 0%, #07111f 48%, #0a1627 100%);
+            color: var(--text);
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(148, 163, 184, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(148, 163, 184, 0.05) 1px, transparent 1px);
+            background-size: 28px 28px;
+            mask-image: radial-gradient(circle at center, black 48%, transparent 92%);
+            pointer-events: none;
+        }
+
+        a { color: inherit; }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 24px 20px 72px;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 22px;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.92), rgba(56, 189, 248, 0.92));
+            color: #04111d;
+            font-size: 22px;
+            font-weight: 700;
+            box-shadow: var(--shadow);
+        }
+
+        .brand-copy small,
+        .muted,
+        .subcopy,
+        .panel-copy,
+        .summary-copy,
+        .player-meta,
+        .challenge-meta,
+        .history-meta,
+        .board-copy {
+            color: var(--muted);
+        }
+
+        .brand-copy strong {
+            display: block;
+            font-size: 16px;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .brand-copy small {
+            display: block;
+            margin-top: 2px;
+            font-size: 12px;
+        }
+
+        .session-chip {
+            min-height: 48px;
+            padding: 10px 14px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .session-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--warm);
+            box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.12);
+        }
+
+        .session-chip.online .session-dot {
+            background: var(--accent);
+            box-shadow: 0 0 0 6px rgba(132, 204, 22, 0.12);
+        }
+
+        .hero {
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .hero-panel,
+        .join-panel,
+        .summary-card,
+        .panel,
+        .board-panel,
+        .history-panel {
+            border: 1px solid var(--line);
+            background: var(--surface);
+            backdrop-filter: blur(16px);
+            box-shadow: var(--shadow);
+        }
+
+        .hero-panel {
+            padding: 28px;
+            border-radius: var(--radius-lg);
+            background:
+                radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 34%),
+                radial-gradient(circle at bottom left, rgba(132, 204, 22, 0.12), transparent 30%),
+                var(--surface-strong);
+        }
+
+        .eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: #d6ebff;
+        }
+
+        .hero-panel h1 {
+            margin: 0 0 12px;
+            font-size: clamp(36px, 7vw, 64px);
+            line-height: 0.96;
+            letter-spacing: -0.06em;
+        }
+
+        .hero-panel p {
+            max-width: 720px;
+            margin: 0;
+            font-size: 15px;
+            line-height: 1.72;
+            color: #c3d0e1;
+        }
+
+        .hero-ribbon {
+            display: inline-block;
+            margin-top: 18px;
+            padding: 9px 14px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, rgba(132, 204, 22, 0.16), rgba(56, 189, 248, 0.16));
+            color: #dff6ff;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .join-panel {
+            padding: 24px;
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 18px;
+        }
+
+        .join-panel h2,
+        .panel-title,
+        .board-title,
+        .history-title {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: -0.03em;
+        }
+
+        .join-panel p {
+            margin: 0;
+            font-size: 13px;
+            line-height: 1.65;
+            color: #bfcbdd;
+        }
+
+        .join-form {
+            display: grid;
+            gap: 12px;
+        }
+
+        .field-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #c8d8eb;
+        }
+
+        .join-input,
+        .search-input {
+            width: 100%;
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 18px;
+            background: rgba(4, 14, 26, 0.9);
+            color: var(--text);
+            padding: 15px 16px;
+            font: inherit;
+            font-size: 15px;
+        }
+
+        .join-input:focus,
+        .search-input:focus {
+            outline: none;
+            border-color: rgba(56, 189, 248, 0.8);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+        }
+
+        .btn {
+            appearance: none;
+            border: none;
+            border-radius: 999px;
+            padding: 12px 18px;
+            font: inherit;
+            font-size: 13px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.16s ease, opacity 0.16s ease, box-shadow 0.16s ease;
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 22px rgba(3, 7, 18, 0.24);
+        }
+
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.52;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #84cc16, #38bdf8);
+            color: #04111d;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f97316, #ef4444);
+            color: white;
+        }
+
+        .btn-accent {
+            background: linear-gradient(135deg, #38bdf8, #22c55e);
+            color: #04111d;
+        }
+
+        .summary-grid,
+        .main-grid {
+            display: grid;
+            gap: 18px;
+        }
+
+        .summary-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-bottom: 18px;
+        }
+
+        .summary-card {
+            border-radius: 24px;
+            padding: 18px 20px;
+        }
+
+        .summary-label {
+            margin-bottom: 12px;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.14em;
+            color: #b7c7da;
+        }
+
+        .summary-value {
+            font-size: clamp(28px, 5vw, 42px);
+            line-height: 1;
+            letter-spacing: -0.06em;
+            font-weight: 700;
+        }
+
+        .summary-copy {
+            margin-top: 10px;
+            font-size: 13px;
+            line-height: 1.65;
+        }
+
+        .main-grid {
+            grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+            align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 18px;
+        }
+
+        .panel,
+        .board-panel,
+        .history-panel {
+            border-radius: 26px;
+            padding: 20px;
+        }
+
+        .panel-head,
+        .board-head,
+        .history-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .panel-copy,
+        .board-copy,
+        .history-copy {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .search-wrap {
+            margin-bottom: 16px;
+        }
+
+        .players-list,
+        .challenge-list,
+        .history-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .player-card,
+        .challenge-card,
+        .history-card {
+            border: 1px solid rgba(148, 163, 184, 0.14);
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 16px;
+        }
+
+        .player-row,
+        .challenge-row,
+        .history-row {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .player-name,
+        .challenge-name,
+        .history-title-line {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .player-meta,
+        .challenge-meta,
+        .history-meta {
+            margin-top: 6px;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .player-actions,
+        .challenge-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .badge-online { background: rgba(132, 204, 22, 0.14); color: #d9f99d; }
+        .badge-busy { background: rgba(245, 158, 11, 0.14); color: #fde68a; }
+        .badge-game { background: rgba(56, 189, 248, 0.14); color: #bae6fd; }
+        .badge-muted { background: rgba(148, 163, 184, 0.14); color: #d1d9e5; }
+        .badge-danger { background: rgba(239, 68, 68, 0.14); color: #fecaca; }
+
+        .board-panel {
+            margin-top: 18px;
+            background:
+                radial-gradient(circle at top right, rgba(56, 189, 248, 0.12), transparent 34%),
+                radial-gradient(circle at bottom left, rgba(132, 204, 22, 0.12), transparent 30%),
+                var(--surface-strong);
+        }
+
+        .duel-line {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .duel-chip,
+        .turn-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 42px;
+            padding: 0 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .turn-chip { color: #ddf4ff; }
+
+        .board-layout {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 260px;
+            gap: 18px;
+            align-items: start;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            border: none;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(148, 163, 184, 0.06));
+            color: white;
+            font: inherit;
+            font-size: clamp(40px, 8vw, 74px);
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+            transition: transform 0.14s ease, box-shadow 0.14s ease, opacity 0.14s ease;
+        }
+
+        .cell:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: inset 0 0 0 1px rgba(132, 204, 22, 0.32), 0 18px 30px rgba(3, 7, 18, 0.24);
+        }
+
+        .cell:disabled {
+            cursor: not-allowed;
+            opacity: 0.82;
+        }
+
+        .cell.x {
+            color: #bff5ff;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.26), rgba(14, 116, 144, 0.18));
+        }
+
+        .cell.o {
+            color: #fff0bf;
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.26), rgba(180, 83, 9, 0.18));
+        }
+
+        .board-side {
+            display: grid;
+            gap: 12px;
+        }
+
+        .meta-block {
+            padding: 16px;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        .meta-label {
+            margin-bottom: 8px;
+            font-size: 11px;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #d3e2f3;
+        }
+
+        .meta-value {
+            font-size: 18px;
+            line-height: 1.5;
+            font-weight: 700;
+        }
+
+        .meta-note {
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.7;
+            color: #c6d4e5;
+        }
+
+        .empty-state {
+            padding: 24px 16px;
+            border-radius: 18px;
+            border: 1px dashed rgba(148, 163, 184, 0.18);
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.7;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .locked {
+            display: none;
+        }
+
+        .locked.show {
+            display: block;
+            margin-top: 18px;
+        }
+
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 22px;
+            transform: translateX(-50%) translateY(80px);
+            min-width: 220px;
+            max-width: 90vw;
+            padding: 12px 18px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: 700;
+            color: white;
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.24s ease, opacity 0.24s ease;
+            z-index: 30;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.ok { background: #166534; }
+        .toast.err { background: #b91c1c; }
+
+        @media (max-width: 1024px) {
+            .hero,
+            .main-grid,
+            .board-layout,
+            .summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .shell { padding-inline: 14px; }
+            .topbar,
+            .player-row,
+            .challenge-row,
+            .history-row,
+            .panel-head,
+            .board-head,
+            .history-head {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            .session-chip { width: 100%; }
+            .hero-panel,
+            .join-panel,
+            .panel,
+            .board-panel,
+            .history-panel,
+            .summary-card {
+                padding: 18px;
+                border-radius: 22px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="shell">
+        <header class="topbar">
+            <div class="brand">
+                <div class="brand-mark">#</div>
+                <div class="brand-copy">
+                    <strong>Estudia CEST / Gato</strong>
+                    <small>Desafios directos en tiempo real</small>
+                </div>
+            </div>
+            <div class="session-chip" id="sessionChip">
+                <span class="session-dot"></span>
+                <span id="sessionChipText">Escribe tu nombre para entrar a la sala</span>
+            </div>
+        </header>
+
+        <section class="hero">
+            <div class="hero-panel">
+                <div class="eyebrow">estudiacest.com/gato</div>
+                <h1>Busca rivales, desafia y juega en vivo.</h1>
+                <p>Esta sala mueve el gato fuera del flujo de estudiantes y lo deja listo para dos personas en tiempo real. Entras con un nombre, ves quienes estan disponibles, filtras por buscador y lanzas el desafio en el momento.</p>
+                <div class="hero-ribbon">Rivales visibles solo mientras sigan conectados a la sala</div>
+            </div>
+            <div class="join-panel">
+                <div>
+                    <h2>Entrar a la sala</h2>
+                    <p>Si ya estabas conectado, esta pagina puede retomar tu sesion y tu historial del dia. Si vienes por primera vez, basta con un nombre publico.</p>
+                </div>
+                <form class="join-form" id="joinForm">
+                    <div>
+                        <label class="field-label" for="playerName">Nombre visible</label>
+                        <input class="join-input" id="playerName" name="playerName" type="text" maxlength="24" autocomplete="nickname" placeholder="Ejemplo: Vale, Mateo, Profe Fran">
+                    </div>
+                    <button class="btn btn-primary" id="joinButton" type="submit">Entrar al lobby</button>
+                    <div class="subcopy" id="joinHint">Tus desafios y partidas se sincronizan en tiempo real.</div>
+                </form>
+            </div>
+        </section>
+
+        <section class="summary-grid">
+            <article class="summary-card">
+                <div class="summary-label">Jugadores online</div>
+                <div class="summary-value" id="onlineCount">0</div>
+                <div class="summary-copy">Solo se listan jugadores con presencia activa en la sala.</div>
+            </article>
+            <article class="summary-card">
+                <div class="summary-label">Tu estado</div>
+                <div class="summary-value" id="myState">Esperando</div>
+                <div class="summary-copy" id="myStateCopy">Entra con tu nombre para abrir la lista de disponibles.</div>
+            </article>
+            <article class="summary-card">
+                <div class="summary-label">Partidas hoy</div>
+                <div class="summary-value" id="gamesToday">0</div>
+                <div class="summary-copy">Contador del dia actual. No hay limite diario.</div>
+            </article>
+        </section>
+
+        <div class="locked show" id="lockedBanner">
+            <div class="empty-state">Entra con tu nombre para ver jugadores conectados, recibir desafios y abrir el tablero en tiempo real.</div>
+        </div>
+
+        <section class="main-grid" id="lobbyShell" hidden>
+            <div class="stack">
+                <article class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2 class="panel-title">Jugadores disponibles</h2>
+                            <div class="panel-copy">Busca por nombre y desafia a quien este libre en este momento.</div>
+                        </div>
+                    </div>
+                    <div class="search-wrap">
+                        <input class="search-input" id="playerSearch" type="search" placeholder="Buscar jugador por nombre...">
+                    </div>
+                    <div class="players-list" id="playersList">
+                        <div class="empty-state">Aun no hay jugadores visibles en la sala.</div>
+                    </div>
+                </article>
+
+                <article class="board-panel" id="boardPanel">
+                    <div class="board-head">
+                        <div>
+                            <h2 class="board-title">Tablero en vivo</h2>
+                            <div class="board-copy">Si una partida esta activa, el tablero se actualiza sin recargar.</div>
+                        </div>
+                        <div class="turn-chip" id="turnChip">Sin partida</div>
+                    </div>
+                    <div class="duel-line">
+                        <div class="duel-chip" id="playerX">X: esperando</div>
+                        <div class="duel-chip" id="playerO">O: esperando</div>
+                    </div>
+                    <div class="board-layout">
+                        <div class="board" id="board">
+                            <button class="cell" type="button" data-index="0"></button>
+                            <button class="cell" type="button" data-index="1"></button>
+                            <button class="cell" type="button" data-index="2"></button>
+                            <button class="cell" type="button" data-index="3"></button>
+                            <button class="cell" type="button" data-index="4"></button>
+                            <button class="cell" type="button" data-index="5"></button>
+                            <button class="cell" type="button" data-index="6"></button>
+                            <button class="cell" type="button" data-index="7"></button>
+                            <button class="cell" type="button" data-index="8"></button>
+                        </div>
+                        <div class="board-side">
+                            <div class="meta-block">
+                                <div class="meta-label">Tu marca</div>
+                                <div class="meta-value" id="myMark">-</div>
+                            </div>
+                            <div class="meta-block">
+                                <div class="meta-label">Resultado</div>
+                                <div class="meta-value" id="gameResult">Sin partida</div>
+                            </div>
+                            <div class="meta-block">
+                                <div class="meta-label">Resumen</div>
+                                <div class="meta-value" id="gameSummary">Acepta un desafio o envia uno nuevo para empezar.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="meta-note" id="boardNote">Tu tablero queda vinculado a tu sesion actual. Si ya tenias una partida abierta, esta vista la recupera.</div>
+                </article>
+            </div>
+
+            <div class="stack">
+                <article class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2 class="panel-title">Desafios para ti</h2>
+                            <div class="panel-copy">Acepta, rechaza o abre la partida si ya fue confirmada.</div>
+                        </div>
+                    </div>
+                    <div class="challenge-list" id="incomingList">
+                        <div class="empty-state">No tienes desafios pendientes.</div>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <div class="panel-head">
+                        <div>
+                            <h2 class="panel-title">Tus desafios enviados</h2>
+                            <div class="panel-copy">Sigue el estado de las invitaciones que ya salieron de tu lado.</div>
+                        </div>
+                    </div>
+                    <div class="challenge-list" id="outgoingList">
+                        <div class="empty-state">Todavia no envias desafios.</div>
+                    </div>
+                </article>
+
+                <article class="history-panel">
+                    <div class="history-head">
+                        <div>
+                            <h2 class="history-title">Historial reciente</h2>
+                            <div class="history-copy">Ultimas partidas cerradas con esta sesion.</div>
+                        </div>
+                    </div>
+                    <div class="history-list" id="historyList">
+                        <div class="empty-state">Cuando cierres partidas, apareceran aqui.</div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+    <script>
+        'use strict';
+
+        const FIREBASE_CONFIG = {
+            apiKey: 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',
+            authDomain: 'estudiacest.firebaseapp.com',
+            databaseURL: 'https://estudiacest-default-rtdb.firebaseio.com',
+            projectId: 'estudiacest',
+            storageBucket: 'estudiacest.firebasestorage.app',
+            messagingSenderId: '999002169815',
+            appId: '1:999002169815:web:51203237bc77c2e74deb92'
+        };
+
+        firebase.initializeApp(FIREBASE_CONFIG);
+        const auth = firebase.auth();
+        auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        const db = firebase.database();
+
+        const BASE = 'plataforma_estudiantes';
+        const PRESENCE_ROOT = BASE + '/arena/records';
+        const PRESENCE_KEY = 'gatoLobby';
+        const NAME_STORAGE_KEY = 'estudiacest:gato:name';
+        const GUEST_STORAGE_KEY = 'estudiacest:gato:guest';
+        const PRESENCE_STALE_MS = 120000;
+        const HEARTBEAT_MS = 45000;
+
+        const dom = {
+            joinForm: document.getElementById('joinForm'),
+            playerName: document.getElementById('playerName'),
+            joinButton: document.getElementById('joinButton'),
+            joinHint: document.getElementById('joinHint'),
+            lockedBanner: document.getElementById('lockedBanner'),
+            lobbyShell: document.getElementById('lobbyShell'),
+            sessionChip: document.getElementById('sessionChip'),
+            sessionChipText: document.getElementById('sessionChipText'),
+            onlineCount: document.getElementById('onlineCount'),
+            myState: document.getElementById('myState'),
+            myStateCopy: document.getElementById('myStateCopy'),
+            gamesToday: document.getElementById('gamesToday'),
+            playerSearch: document.getElementById('playerSearch'),
+            playersList: document.getElementById('playersList'),
+            incomingList: document.getElementById('incomingList'),
+            outgoingList: document.getElementById('outgoingList'),
+            historyList: document.getElementById('historyList'),
+            turnChip: document.getElementById('turnChip'),
+            playerX: document.getElementById('playerX'),
+            playerO: document.getElementById('playerO'),
+            myMark: document.getElementById('myMark'),
+            gameResult: document.getElementById('gameResult'),
+            gameSummary: document.getElementById('gameSummary'),
+            boardNote: document.getElementById('boardNote'),
+            toast: document.getElementById('toast'),
+            boardCells: Array.from(document.querySelectorAll('.cell'))
+        };
+
+        let currentUser = null;
+        let currentUid = '';
+        let currentAlias = '';
+        let sessionBootstrapped = false;
+        let joinInProgress = false;
+        let presenceJoinedAt = 0;
+        let availablePlayers = [];
+        let incomingChallenges = [];
+        let outgoingChallenges = [];
+        let currentGameId = '';
+        let currentGameData = null;
+        let isMutating = false;
+
+        let presenceSelfRef = null;
+        let presenceListRef = null;
+        let incomingRef = null;
+        let outgoingRef = null;
+        let gameRef = null;
+        let historyRef = null;
+        let dailyRef = null;
+        let connectedRef = null;
+        let heartbeatTimer = null;
+
+        function esc(value) {
+            const node = document.createElement('div');
+            node.textContent = value == null ? '' : String(value);
+            return node.innerHTML;
+        }
+
+        function normalizeName(raw) {
+            let name = String(raw || '').trim().replace(/\s+/g, ' ');
+            name = name.replace(/[^\p{L}\p{N} ._-]/gu, '').trim().replace(/\s+/g, ' ');
+            if (name.length < 2 || name.length > 24) return '';
+            return name;
+        }
+
+        function isGuestUid(uid) {
+            return /^gato_guest_/i.test(String(uid || ''));
+        }
+
+        function getStoredName() {
+            try {
+                return window.localStorage.getItem(NAME_STORAGE_KEY) || '';
+            } catch (error) {
+                return '';
+            }
+        }
+
+        function setStoredName(name) {
+            try {
+                window.localStorage.setItem(NAME_STORAGE_KEY, name);
+            } catch (error) {}
+        }
+
+        function getStoredGuestUid() {
+            try {
+                const raw = window.localStorage.getItem(GUEST_STORAGE_KEY);
+                if (!raw) return '';
+                const parsed = JSON.parse(raw);
+                return parsed && parsed.uid ? parsed.uid : '';
+            } catch (error) {
+                return '';
+            }
+        }
+
+        function setStoredGuestUid(uid) {
+            try {
+                window.localStorage.setItem(GUEST_STORAGE_KEY, JSON.stringify({ uid: uid }));
+            } catch (error) {}
+        }
+
+        function timeAgo(ts) {
+            if (!ts) return 'recien';
+            const diff = Math.max(0, Math.floor((Date.now() - ts) / 1000));
+            if (diff < 60) return 'ahora';
+            if (diff < 3600) return Math.floor(diff / 60) + ' min';
+            if (diff < 86400) return Math.floor(diff / 3600) + ' h';
+            return Math.floor(diff / 86400) + ' d';
+        }
+
+        function todayKeyFromTimestamp(ts) {
+            const date = new Date(ts || Date.now());
+            return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0') + '-' + String(date.getDate()).padStart(2, '0');
+        }
+
+        function normalizeBoard(board) {
+            const normalized = Array.isArray(board) ? board.slice(0, 9) : [];
+            while (normalized.length < 9) normalized.push('');
+            return normalized.map(function (value) {
+                return value === 'X' || value === 'O' ? value : '';
+            });
+        }
+
+        function calculateWinner(board) {
+            const lines = [
+                [0, 1, 2], [3, 4, 5], [6, 7, 8],
+                [0, 3, 6], [1, 4, 7], [2, 5, 8],
+                [0, 4, 8], [2, 4, 6]
+            ];
+            for (let index = 0; index < lines.length; index += 1) {
+                const line = lines[index];
+                const first = board[line[0]];
+                if (first && first === board[line[1]] && first === board[line[2]]) return first;
+            }
+            return '';
+        }
+
+        function sortByFreshness(items) {
+            items.sort(function (left, right) {
+                const leftScore = left.updatedAt || left.respondedAt || left.createdAt || left.endedAt || 0;
+                const rightScore = right.updatedAt || right.respondedAt || right.createdAt || right.endedAt || 0;
+                return rightScore - leftScore;
+            });
+            return items;
+        }
+
+        function statusMeta(status) {
+            if (status === 'pending') return { label: 'Pendiente', className: 'badge-busy' };
+            if (status === 'accepted' || status === 'active') return { label: 'Activa', className: 'badge-game' };
+            if (status === 'finished') return { label: 'Cerrada', className: 'badge-online' };
+            if (status === 'cancelled') return { label: 'Cancelada', className: 'badge-danger' };
+            return { label: 'Rechazada', className: 'badge-danger' };
+        }
+
+        function presenceMeta(state) {
+            if (state === 'playing') return { label: 'En partida', className: 'badge-game' };
+            if (state === 'challenging') return { label: 'Con desafios', className: 'badge-busy' };
+            return { label: 'Disponible', className: 'badge-online' };
+        }
+
+        function updateSessionChip(online) {
+            if (online) {
+                dom.sessionChip.classList.add('online');
+                dom.sessionChipText.textContent = 'Conectado como ' + currentAlias;
+            } else {
+                dom.sessionChip.classList.remove('online');
+                dom.sessionChipText.textContent = 'Escribe tu nombre para entrar a la sala';
+            }
+        }
+
+        function toast(message, type) {
+            dom.toast.textContent = message;
+            dom.toast.className = 'toast show ' + (type === 'err' ? 'err' : 'ok');
+            clearTimeout(toast._timer);
+            toast._timer = setTimeout(function () {
+                dom.toast.className = 'toast';
+            }, 3200);
+        }
+
+        function setLobbyVisible(visible) {
+            dom.lobbyShell.hidden = !visible;
+            dom.lockedBanner.classList.toggle('show', !visible);
+            updateSessionChip(visible && !!currentAlias);
+        }
+
+        function updateMyStateCard() {
+            if (!sessionBootstrapped) {
+                dom.myState.textContent = 'Esperando';
+                dom.myStateCopy.textContent = 'Entra con tu nombre para abrir la lista de disponibles.';
+                return;
+            }
+
+            if (currentGameData && currentGameData.status === 'active') {
+                dom.myState.textContent = 'Jugando';
+                dom.myStateCopy.textContent = 'Tu tablero esta abierto y cada movimiento se sincroniza al instante.';
+                return;
+            }
+
+            const hasPending = incomingChallenges.some(function (challenge) { return challenge.status === 'pending'; })
+                || outgoingChallenges.some(function (challenge) { return challenge.status === 'pending'; });
+            if (hasPending) {
+                dom.myState.textContent = 'Con desafios';
+                dom.myStateCopy.textContent = 'Tienes invitaciones pendientes. Puedes aceptar, rechazar o esperar respuesta.';
+                return;
+            }
+
+            dom.myState.textContent = 'Disponible';
+            dom.myStateCopy.textContent = 'Apareces como libre y cualquiera online puede retarte desde la sala.';
+        }
+
+        function getPresenceState() {
+            if (currentGameData && currentGameData.status === 'active') return 'playing';
+            if (incomingChallenges.some(function (challenge) { return challenge.status === 'pending'; })
+                || outgoingChallenges.some(function (challenge) { return challenge.status === 'pending'; })) {
+                return 'challenging';
+            }
+            return 'available';
+        }
+
+        function buildPresencePayload() {
+            return {
+                uid: currentUid,
+                name: currentAlias,
+                nameLower: currentAlias.toLowerCase(),
+                state: getPresenceState(),
+                gameId: currentGameId || '',
+                joinedAt: presenceJoinedAt || Date.now(),
+                updatedAt: firebase.database.ServerValue.TIMESTAMP
+            };
+        }
+
+        async function refreshPresence() {
+            if (!presenceSelfRef || !sessionBootstrapped || !currentAlias) return;
+            await presenceSelfRef.update(buildPresencePayload());
+            updateMyStateCard();
+        }
+
+        function clearRealtimeBindings() {
+            if (presenceListRef) presenceListRef.off();
+            if (incomingRef) incomingRef.off();
+            if (outgoingRef) outgoingRef.off();
+            if (gameRef) gameRef.off();
+            if (historyRef) historyRef.off();
+            if (dailyRef) dailyRef.off();
+            if (connectedRef) connectedRef.off();
+            if (heartbeatTimer) window.clearInterval(heartbeatTimer);
+
+            presenceListRef = null;
+            incomingRef = null;
+            outgoingRef = null;
+            gameRef = null;
+            historyRef = null;
+            dailyRef = null;
+            connectedRef = null;
+            heartbeatTimer = null;
+        }
+
+        function renderPlayers() {
+            const query = String(dom.playerSearch.value || '').trim().toLowerCase();
+            const filtered = availablePlayers.filter(function (player) {
+                return !query || player.nameLower.indexOf(query) !== -1;
+            });
+
+            if (!filtered.length) {
+                dom.playersList.innerHTML = '<div class="empty-state">No hay jugadores que coincidan con tu busqueda ahora mismo.</div>';
+                return;
+            }
+
+            dom.playersList.innerHTML = filtered.map(function (player) {
+                const availability = presenceMeta(player.state);
+                const linkedChallenge = findChallengeWithPlayer(player.uid);
+                let actionHtml = '<button class="btn btn-accent" type="button" data-action="challenge" data-uid="' + esc(player.uid) + '">Desafiar</button>';
+
+                if (linkedChallenge) {
+                    const linked = statusMeta(linkedChallenge.status === 'active' ? 'accepted' : linkedChallenge.status);
+                    actionHtml = '<span class="badge ' + linked.className + '">' + linked.label + '</span>';
+                } else if (player.state !== 'available') {
+                    actionHtml = '<span class="badge ' + availability.className + '">' + availability.label + '</span>';
+                } else if (currentGameData && currentGameData.status === 'active') {
+                    actionHtml = '<span class="badge badge-muted">Tu partida sigue activa</span>';
+                }
+
+                return '<article class="player-card">'
+                    + '<div class="player-row"><div>'
+                    + '<div class="player-name">' + esc(player.name) + '</div>'
+                    + '<div class="player-meta">Conectado hace ' + esc(timeAgo(player.updatedAt)) + '</div>'
+                    + '</div><span class="badge ' + availability.className + '">' + availability.label + '</span></div>'
+                    + '<div class="player-actions">' + actionHtml + '</div>'
+                    + '</article>';
+            }).join('');
+
+            Array.from(dom.playersList.querySelectorAll('[data-action="challenge"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    sendChallenge(button.getAttribute('data-uid'));
+                });
+            });
+        }
+
+        function renderIncomingChallenges() {
+            if (!incomingChallenges.length) {
+                dom.incomingList.innerHTML = '<div class="empty-state">No tienes desafios pendientes.</div>';
+                return;
+            }
+
+            dom.incomingList.innerHTML = incomingChallenges.map(function (challenge) {
+                const meta = statusMeta(challenge.status);
+                let actions = '';
+                if (challenge.status === 'pending') {
+                    actions = '<button class="btn btn-primary" type="button" data-action="accept" data-id="' + esc(challenge.id) + '">Aceptar</button>'
+                        + '<button class="btn btn-danger" type="button" data-action="reject" data-id="' + esc(challenge.id) + '">Rechazar</button>';
+                } else if (challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1) {
+                    actions = '<button class="btn btn-secondary" type="button" data-action="open" data-game-id="' + esc(challenge.gameId) + '">Abrir partida</button>';
+                }
+
+                return '<article class="challenge-card">'
+                    + '<div class="challenge-row"><div>'
+                    + '<div class="challenge-name">' + esc(challenge.challengerName || 'Jugador') + '</div>'
+                    + '<div class="challenge-meta">Llego hace ' + esc(timeAgo(challenge.createdAt)) + '</div>'
+                    + '</div><span class="badge ' + meta.className + '">' + meta.label + '</span></div>'
+                    + '<div class="challenge-actions">' + actions + '</div>'
+                    + '</article>';
+            }).join('');
+
+            Array.from(dom.incomingList.querySelectorAll('[data-action="accept"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    acceptChallenge(button.getAttribute('data-id'));
+                });
+            });
+            Array.from(dom.incomingList.querySelectorAll('[data-action="reject"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    rejectChallenge(button.getAttribute('data-id'));
+                });
+            });
+            Array.from(dom.incomingList.querySelectorAll('[data-action="open"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    openGame(button.getAttribute('data-game-id'));
+                });
+            });
+        }
+
+        function renderOutgoingChallenges() {
+            if (!outgoingChallenges.length) {
+                dom.outgoingList.innerHTML = '<div class="empty-state">Todavia no envias desafios.</div>';
+                return;
+            }
+
+            dom.outgoingList.innerHTML = outgoingChallenges.map(function (challenge) {
+                const meta = statusMeta(challenge.status);
+                let actions = '';
+                if (challenge.status === 'pending') {
+                    actions = '<button class="btn btn-secondary" type="button" data-action="cancel" data-id="' + esc(challenge.id) + '">Cancelar</button>';
+                } else if (challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1) {
+                    actions = '<button class="btn btn-secondary" type="button" data-action="open" data-game-id="' + esc(challenge.gameId) + '">Abrir partida</button>';
+                }
+
+                return '<article class="challenge-card">'
+                    + '<div class="challenge-row"><div>'
+                    + '<div class="challenge-name">' + esc(challenge.targetName || 'Jugador') + '</div>'
+                    + '<div class="challenge-meta">Enviado hace ' + esc(timeAgo(challenge.createdAt)) + '</div>'
+                    + '</div><span class="badge ' + meta.className + '">' + meta.label + '</span></div>'
+                    + '<div class="challenge-actions">' + actions + '</div>'
+                    + '</article>';
+            }).join('');
+
+            Array.from(dom.outgoingList.querySelectorAll('[data-action="cancel"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    cancelOutgoingChallenge(button.getAttribute('data-id'));
+                });
+            });
+            Array.from(dom.outgoingList.querySelectorAll('[data-action="open"]')).forEach(function (button) {
+                button.addEventListener('click', function () {
+                    openGame(button.getAttribute('data-game-id'));
+                });
+            });
+        }
+
+        function renderHistory(items) {
+            if (!items.length) {
+                dom.historyList.innerHTML = '<div class="empty-state">Cuando cierres partidas, apareceran aqui.</div>';
+                return;
+            }
+
+            dom.historyList.innerHTML = items.slice(0, 12).map(function (item) {
+                const label = item.result === 'win' ? 'Victoria' : (item.result === 'draw' ? 'Empate' : 'Derrota');
+                const badgeClass = item.result === 'win' ? 'badge-online' : (item.result === 'draw' ? 'badge-game' : 'badge-danger');
+                return '<article class="history-card">'
+                    + '<div class="history-row"><div>'
+                    + '<div class="history-title-line">' + label + ' vs ' + esc(item.opponentName || 'Jugador') + '</div>'
+                    + '<div class="history-meta">Jugaste con ' + esc(item.mark || '-') + ' · hace ' + esc(timeAgo(item.endedAt)) + '</div>'
+                    + '</div><span class="badge ' + badgeClass + '">' + label + '</span></div>'
+                    + '</article>';
+            }).join('');
+        }
+
+        function getMyMark(game) {
+            if (!game) return '';
+            if (game.xUid === currentUid) return 'X';
+            if (game.oUid === currentUid) return 'O';
+            return '';
+        }
+
+        function renderGame(game) {
+            const board = normalizeBoard(game && game.board);
+            const myMark = getMyMark(game);
+
+            if (!game) {
+                dom.playerX.textContent = 'X: esperando';
+                dom.playerO.textContent = 'O: esperando';
+                dom.turnChip.textContent = 'Sin partida';
+                dom.myMark.textContent = '-';
+                dom.gameResult.textContent = 'Sin partida';
+                dom.gameSummary.textContent = 'Acepta un desafio o envia uno nuevo para empezar.';
+                dom.boardNote.textContent = 'Tu tablero queda vinculado a tu sesion actual. Si ya tenias una partida abierta, esta vista la recupera.';
+            } else {
+                dom.playerX.textContent = 'X: ' + (game.xName || 'Jugador X');
+                dom.playerO.textContent = 'O: ' + (game.oName || 'Jugador O');
+                dom.myMark.textContent = myMark || '-';
+
+                if (game.status === 'active') {
+                    const turnName = game.currentTurn === 'X' ? (game.xName || 'Jugador X') : (game.oName || 'Jugador O');
+                    const isMyTurn = myMark && game.currentTurn === myMark;
+                    dom.turnChip.textContent = isMyTurn ? 'Tu turno' : 'Turno de ' + turnName;
+                    dom.gameResult.textContent = 'En juego';
+                    dom.gameSummary.textContent = isMyTurn ? 'Marca una casilla libre para jugar.' : 'Espera la jugada del rival.';
+                    dom.boardNote.textContent = 'Cuando cierres la partida, el historial y el contador del dia se actualizan solos.';
+                } else {
+                    const winnerLabel = game.winner === 'draw'
+                        ? 'Empate'
+                        : ((game.winner === 'X' ? game.xName : game.oName) || 'Jugador') + ' gano';
+                    dom.turnChip.textContent = 'Partida cerrada';
+                    dom.gameResult.textContent = winnerLabel;
+                    dom.gameSummary.textContent = game.winner === 'draw'
+                        ? 'La partida termino en empate. Puedes abrir otro duelo.'
+                        : winnerLabel + '. Puedes buscar otro rival cuando quieras.';
+                    dom.boardNote.textContent = 'El tablero queda como registro hasta que abras otra partida.';
+                }
+            }
+
+            dom.boardCells.forEach(function (cell, index) {
+                const mark = board[index];
+                const canPlay = !!(game && game.status === 'active' && myMark && game.currentTurn === myMark && !mark);
+                cell.textContent = mark;
+                cell.className = 'cell' + (mark ? ' ' + mark.toLowerCase() : '');
+                cell.disabled = !canPlay;
+            });
+        }
+
+        function parseChallengeSnapshot(snapshot) {
+            const items = [];
+            snapshot.forEach(function (child) {
+                const value = child.val() || {};
+                value.id = child.key;
+                items.push(value);
+            });
+            return sortByFreshness(items);
+        }
+
+        function findChallengeWithPlayer(uid) {
+            const matches = [];
+            incomingChallenges.forEach(function (challenge) {
+                if (challenge.challengerUid === uid && ['pending', 'accepted', 'active'].indexOf(challenge.status) !== -1) matches.push(challenge);
+            });
+            outgoingChallenges.forEach(function (challenge) {
+                if (challenge.targetUid === uid && ['pending', 'accepted', 'active'].indexOf(challenge.status) !== -1) matches.push(challenge);
+            });
+            sortByFreshness(matches);
+            return matches[0] || null;
+        }
+
+        function openGame(gameId) {
+            if (!gameId) return;
+            attachGameListener(gameId);
+            document.getElementById('boardPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        async function sendChallenge(targetUid) {
+            if (isMutating || !sessionBootstrapped) return;
+            const target = availablePlayers.find(function (player) { return player.uid === targetUid; });
+            if (!target) {
+                toast('Ese jugador ya no aparece disponible.', 'err');
+                return;
+            }
+            if (target.state !== 'available') {
+                toast('Ese jugador ya no esta libre.', 'err');
+                return;
+            }
+            if (currentGameData && currentGameData.status === 'active') {
+                toast('Termina tu partida actual antes de desafiar a otro jugador.', 'err');
+                return;
+            }
+            if (findChallengeWithPlayer(targetUid)) {
+                toast('Ya tienes un desafio pendiente o activo con este jugador.', 'err');
+                return;
+            }
+
+            isMutating = true;
+            try {
+                const challengeId = db.ref().push().key;
+                const timestamp = firebase.database.ServerValue.TIMESTAMP;
+                const payload = {
+                    challengeId: challengeId,
+                    challengerUid: currentUid,
+                    challengerName: currentAlias,
+                    targetUid: target.uid,
+                    targetName: target.name,
+                    status: 'pending',
+                    createdAt: timestamp,
+                    updatedAt: timestamp
+                };
+                const updates = {};
+                updates[BASE + '/arena/gato/incoming/' + target.uid + '/' + challengeId] = payload;
+                updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId] = payload;
+                await db.ref().update(updates);
+                await refreshPresence();
+                toast('Desafio enviado a ' + target.name + '.', 'ok');
+            } catch (error) {
+                console.error('Send challenge error:', error);
+                toast('No se pudo enviar el desafio.', 'err');
+            } finally {
+                isMutating = false;
+            }
+        }
+
+        async function acceptChallenge(challengeId) {
+            if (isMutating || !sessionBootstrapped) return;
+            const challenge = incomingChallenges.find(function (item) { return item.id === challengeId; });
+            if (!challenge || challenge.status !== 'pending') {
+                toast('Ese desafio ya no esta disponible.', 'err');
+                return;
+            }
+            if (currentGameData && currentGameData.status === 'active') {
+                toast('Ya tienes una partida en curso.', 'err');
+                return;
+            }
+
+            isMutating = true;
+            try {
+                const gameId = db.ref().push().key;
+                const timestamp = firebase.database.ServerValue.TIMESTAMP;
+                const updates = {};
+                updates[BASE + '/arena/gato/games/' + gameId] = {
+                    challengeId: challengeId,
+                    xUid: challenge.challengerUid,
+                    xName: challenge.challengerName || 'Jugador X',
+                    oUid: currentUid,
+                    oName: currentAlias,
+                    status: 'active',
+                    board: ['', '', '', '', '', '', '', '', ''],
+                    currentTurn: 'X',
+                    winner: '',
+                    moves: 0,
+                    createdAt: timestamp,
+                    updatedAt: timestamp
+                };
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/status'] = 'accepted';
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/gameId'] = gameId;
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/respondedAt'] = timestamp;
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/status'] = 'accepted';
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/gameId'] = gameId;
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/respondedAt'] = timestamp;
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                await db.ref().update(updates);
+                openGame(gameId);
+                toast('Desafio aceptado. El rival juega con X.', 'ok');
+                await refreshPresence();
+            } catch (error) {
+                console.error('Accept challenge error:', error);
+                toast('No se pudo aceptar el desafio.', 'err');
+            } finally {
+                isMutating = false;
+            }
+        }
+
+        async function rejectChallenge(challengeId) {
+            if (isMutating) return;
+            const challenge = incomingChallenges.find(function (item) { return item.id === challengeId; });
+            if (!challenge) return;
+
+            isMutating = true;
+            try {
+                const timestamp = firebase.database.ServerValue.TIMESTAMP;
+                const updates = {};
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/status'] = 'rejected';
+                updates[BASE + '/arena/gato/incoming/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/status'] = 'rejected';
+                updates[BASE + '/arena/gato/outgoing/' + challenge.challengerUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                await db.ref().update(updates);
+                await refreshPresence();
+                toast('Desafio rechazado.', 'ok');
+            } catch (error) {
+                console.error('Reject challenge error:', error);
+                toast('No se pudo rechazar el desafio.', 'err');
+            } finally {
+                isMutating = false;
+            }
+        }
+
+        async function cancelOutgoingChallenge(challengeId) {
+            if (isMutating) return;
+            const challenge = outgoingChallenges.find(function (item) { return item.id === challengeId; });
+            if (!challenge || challenge.status !== 'pending') return;
+
+            isMutating = true;
+            try {
+                const timestamp = firebase.database.ServerValue.TIMESTAMP;
+                const updates = {};
+                updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId + '/status'] = 'cancelled';
+                updates[BASE + '/arena/gato/outgoing/' + currentUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                updates[BASE + '/arena/gato/incoming/' + challenge.targetUid + '/' + challengeId + '/status'] = 'cancelled';
+                updates[BASE + '/arena/gato/incoming/' + challenge.targetUid + '/' + challengeId + '/updatedAt'] = timestamp;
+                await db.ref().update(updates);
+                await refreshPresence();
+                toast('Desafio cancelado.', 'ok');
+            } catch (error) {
+                console.error('Cancel challenge error:', error);
+                toast('No se pudo cancelar el desafio.', 'err');
+            } finally {
+                isMutating = false;
+            }
+        }
+
+        async function makeMove(index) {
+            if (isMutating || !currentGameId || !currentGameData) return;
+            const myMark = getMyMark(currentGameData);
+            if (!myMark || currentGameData.status !== 'active') {
+                toast('La partida ya termino.', 'err');
+                return;
+            }
+            if (currentGameData.currentTurn !== myMark) {
+                toast('Todavia no es tu turno.', 'err');
+                return;
+            }
+
+            isMutating = true;
+            try {
+                const gamePath = BASE + '/arena/gato/games/' + currentGameId;
+                const result = await db.ref(gamePath).transaction(function (game) {
+                    if (!game || game.status !== 'active') return game;
+                    const actor = game.xUid === currentUid ? 'X' : (game.oUid === currentUid ? 'O' : '');
+                    if (!actor || game.currentTurn !== actor) return;
+                    const board = normalizeBoard(game.board);
+                    if (board[index]) return;
+
+                    board[index] = actor;
+                    const moves = (game.moves || 0) + 1;
+                    const winner = calculateWinner(board);
+
+                    game.board = board;
+                    game.moves = moves;
+                    game.updatedAt = Date.now();
+
+                    if (winner) {
+                        game.status = 'finished';
+                        game.winner = winner;
+                        game.currentTurn = '';
+                        game.endedAt = Date.now();
+                    } else if (moves >= 9) {
+                        game.status = 'finished';
+                        game.winner = 'draw';
+                        game.currentTurn = '';
+                        game.endedAt = Date.now();
+                    } else {
+                        game.currentTurn = actor === 'X' ? 'O' : 'X';
+                    }
+                    return game;
+                });
+
+                if (!result.committed) {
+                    toast('La jugada ya no es valida.', 'err');
+                    return;
+                }
+
+                if (result.snapshot.exists()) {
+                    const data = result.snapshot.val() || {};
+                    data.id = currentGameId;
+                    if (data.status === 'finished') {
+                        await handleFinishedGame(data);
+                    }
+                }
+            } catch (error) {
+                console.error('Move error:', error);
+                toast('No se pudo registrar la jugada.', 'err');
+            } finally {
+                isMutating = false;
+            }
+        }
+
+        async function handleFinishedGame(game) {
+            if (!game || game.status !== 'finished') return;
+            if (game.summarySyncedAt) {
+                await refreshPresence();
+                return;
+            }
+
+            const lockRef = db.ref(BASE + '/arena/gato/games/' + game.id + '/summaryLock');
+            const lockTxn = await lockRef.transaction(function (current) {
+                if (current) return;
+                return { by: currentUid, at: Date.now() };
+            });
+
+            if (!lockTxn.committed) {
+                await refreshPresence();
+                return;
+            }
+
+            const endedAt = game.endedAt || Date.now();
+            const dayKey = todayKeyFromTimestamp(endedAt);
+            const xResult = game.winner === 'draw' ? 'draw' : (game.winner === 'X' ? 'win' : 'loss');
+            const oResult = game.winner === 'draw' ? 'draw' : (game.winner === 'O' ? 'win' : 'loss');
+            const updates = {};
+
+            updates[BASE + '/arena/gato/history/' + game.xUid + '/' + game.id] = {
+                opponentUid: game.oUid,
+                opponentName: game.oName,
+                result: xResult,
+                winnerMark: game.winner,
+                mark: 'X',
+                endedAt: endedAt,
+                moves: game.moves || 0
+            };
+            updates[BASE + '/arena/gato/history/' + game.oUid + '/' + game.id] = {
+                opponentUid: game.xUid,
+                opponentName: game.xName,
+                result: oResult,
+                winnerMark: game.winner,
+                mark: 'O',
+                endedAt: endedAt,
+                moves: game.moves || 0
+            };
+            updates[BASE + '/arena/gato/daily/' + game.xUid + '/' + dayKey + '/' + game.id] = {
+                participantUid: game.xUid,
+                result: xResult,
+                createdAt: endedAt
+            };
+            updates[BASE + '/arena/gato/daily/' + game.oUid + '/' + dayKey + '/' + game.id] = {
+                participantUid: game.oUid,
+                result: oResult,
+                createdAt: endedAt
+            };
+            updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/status'] = 'finished';
+            updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/winnerMark'] = game.winner;
+            updates[BASE + '/arena/gato/outgoing/' + game.xUid + '/' + game.challengeId + '/endedAt'] = endedAt;
+            updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/status'] = 'finished';
+            updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/winnerMark'] = game.winner;
+            updates[BASE + '/arena/gato/incoming/' + game.oUid + '/' + game.challengeId + '/endedAt'] = endedAt;
+            updates[BASE + '/arena/gato/games/' + game.id + '/summarySyncedAt'] = endedAt;
+
+            try {
+                await db.ref().update(updates);
+                toast(game.winner === 'draw' ? 'La partida termino en empate.' : 'Partida finalizada.', 'ok');
+            } catch (error) {
+                await lockRef.remove();
+                throw error;
+            }
+
+            await refreshPresence();
+        }
+
+        function attachGameListener(gameId) {
+            if (!gameId) return;
+            if (gameRef) gameRef.off();
+            currentGameId = gameId;
+            gameRef = db.ref(BASE + '/arena/gato/games/' + gameId);
+            gameRef.on('value', function (snapshot) {
+                if (!snapshot.exists()) {
+                    currentGameData = null;
+                    currentGameId = '';
+                    renderGame(null);
+                    refreshPresence().catch(function () {});
+                    return;
+                }
+
+                currentGameData = snapshot.val() || {};
+                currentGameData.id = gameId;
+                renderGame(currentGameData);
+                refreshPresence().catch(function () {});
+                if (currentGameData.status === 'finished') {
+                    handleFinishedGame(currentGameData).catch(function (error) {
+                        console.error('Finish sync error:', error);
+                    });
+                }
+            });
+        }
+
+        function syncCurrentGameFromChallenges() {
+            const candidates = incomingChallenges.concat(outgoingChallenges).filter(function (challenge) {
+                return !!challenge.gameId && ['accepted', 'active', 'finished'].indexOf(challenge.status) !== -1;
+            });
+            sortByFreshness(candidates);
+
+            if (!candidates.length) {
+                if (!currentGameData || currentGameData.status !== 'active') {
+                    currentGameId = '';
+                    currentGameData = null;
+                    renderGame(null);
+                }
+                return;
+            }
+
+            const latest = candidates[0];
+            if (latest.gameId && latest.gameId !== currentGameId) {
+                attachGameListener(latest.gameId);
+            }
+        }
+
+        function subscribePresenceList() {
+            presenceListRef = db.ref(PRESENCE_ROOT);
+            presenceListRef.on('value', function (snapshot) {
+                const items = [];
+                snapshot.forEach(function (child) {
+                    const rootValue = child.val() || {};
+                    const value = rootValue[PRESENCE_KEY] || {};
+                    const uid = child.key;
+                    if (!value.name || uid === currentUid) return;
+                    const updatedAt = Number(value.updatedAt || 0);
+                    if (!updatedAt || updatedAt < Date.now() - PRESENCE_STALE_MS) return;
+                    items.push({
+                        uid: uid,
+                        name: value.name,
+                        nameLower: String(value.nameLower || value.name || '').toLowerCase(),
+                        state: value.state || 'available',
+                        updatedAt: updatedAt
+                    });
+                });
+
+                items.sort(function (left, right) {
+                    const stateOrder = { available: 0, challenging: 1, playing: 2 };
+                    const leftRank = stateOrder[left.state] != null ? stateOrder[left.state] : 3;
+                    const rightRank = stateOrder[right.state] != null ? stateOrder[right.state] : 3;
+                    if (leftRank !== rightRank) return leftRank - rightRank;
+                    return left.name.localeCompare(right.name, 'es');
+                });
+
+                availablePlayers = items;
+                dom.onlineCount.textContent = String(items.length);
+                renderPlayers();
+            });
+        }
+
+        function subscribeChallenges() {
+            incomingRef = db.ref(BASE + '/arena/gato/incoming/' + currentUid);
+            outgoingRef = db.ref(BASE + '/arena/gato/outgoing/' + currentUid);
+
+            incomingRef.on('value', function (snapshot) {
+                incomingChallenges = parseChallengeSnapshot(snapshot);
+                renderIncomingChallenges();
+                renderPlayers();
+                syncCurrentGameFromChallenges();
+                refreshPresence().catch(function () {});
+            });
+
+            outgoingRef.on('value', function (snapshot) {
+                outgoingChallenges = parseChallengeSnapshot(snapshot);
+                renderOutgoingChallenges();
+                renderPlayers();
+                syncCurrentGameFromChallenges();
+                refreshPresence().catch(function () {});
+            });
+        }
+
+        function subscribeHistory() {
+            historyRef = db.ref(BASE + '/arena/gato/history/' + currentUid).limitToLast(20);
+            historyRef.on('value', function (snapshot) {
+                const items = [];
+                snapshot.forEach(function (child) {
+                    const value = child.val() || {};
+                    value.id = child.key;
+                    items.push(value);
+                });
+                renderHistory(sortByFreshness(items));
+            });
+
+            dailyRef = db.ref(BASE + '/arena/gato/daily/' + currentUid + '/' + todayKeyFromTimestamp());
+            dailyRef.on('value', function (snapshot) {
+                const data = snapshot.val() || {};
+                dom.gamesToday.textContent = String(Object.keys(data).length);
+            });
+        }
+
+        function bindPresenceLifecycle() {
+            presenceSelfRef = db.ref(PRESENCE_ROOT + '/' + currentUid + '/' + PRESENCE_KEY);
+            connectedRef = db.ref('.info/connected');
+            connectedRef.on('value', function (snapshot) {
+                if (snapshot.val() !== true) return;
+                presenceSelfRef.onDisconnect().remove();
+                refreshPresence().catch(function () {});
+            });
+
+            heartbeatTimer = window.setInterval(function () {
+                refreshPresence().catch(function () {});
+            }, HEARTBEAT_MS);
+        }
+
+        async function signInGuest(name) {
+            const response = await fetch('/api/gato?action=guest-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name, uidHint: getStoredGuestUid() })
+            });
+            const data = await response.json().catch(function () { return {}; });
+            if (!response.ok) {
+                throw new Error(data.error || 'No se pudo abrir la sesion temporal.');
+            }
+            if (data.uid) setStoredGuestUid(data.uid);
+            await auth.signInWithCustomToken(data.token);
+        }
+
+        async function bootSession(name) {
+            const normalized = normalizeName(name);
+            if (!normalized) {
+                throw new Error('Usa un nombre valido entre 2 y 24 caracteres.');
+            }
+            if (!auth.currentUser) {
+                throw new Error('No hay sesion de Firebase disponible.');
+            }
+
+            currentUser = auth.currentUser;
+            currentUid = auth.currentUser.uid;
+            currentAlias = normalized;
+            presenceJoinedAt = presenceJoinedAt || Date.now();
+            setStoredName(normalized);
+
+            if (sessionBootstrapped) {
+                await refreshPresence();
+                setLobbyVisible(true);
+                renderPlayers();
+                return;
+            }
+
+            clearRealtimeBindings();
+            sessionBootstrapped = true;
+            availablePlayers = [];
+            incomingChallenges = [];
+            outgoingChallenges = [];
+            currentGameId = '';
+            currentGameData = null;
+
+            setLobbyVisible(true);
+            renderGame(null);
+            renderIncomingChallenges();
+            renderOutgoingChallenges();
+            renderHistory([]);
+            updateMyStateCard();
+
+            bindPresenceLifecycle();
+            subscribePresenceList();
+            subscribeChallenges();
+            subscribeHistory();
+            await refreshPresence();
+        }
+
+        dom.joinForm.addEventListener('submit', async function (event) {
+            event.preventDefault();
+            if (joinInProgress) return;
+
+            const normalized = normalizeName(dom.playerName.value);
+            if (!normalized) {
+                toast('Escribe un nombre valido entre 2 y 24 caracteres.', 'err');
+                return;
+            }
+
+            joinInProgress = true;
+            dom.joinButton.disabled = true;
+            dom.joinButton.textContent = 'Entrando...';
+
+            try {
+                if (!auth.currentUser) {
+                    await signInGuest(normalized);
+                }
+                await bootSession(normalized);
+                dom.joinHint.textContent = 'Conectado como ' + normalized + '. El lobby ya esta escuchando desafios.';
+            } catch (error) {
+                console.error('Join error:', error);
+                toast(error.message || 'No se pudo entrar al lobby.', 'err');
+            } finally {
+                joinInProgress = false;
+                dom.joinButton.disabled = false;
+                dom.joinButton.textContent = 'Entrar al lobby';
+            }
+        });
+
+        dom.playerSearch.addEventListener('input', renderPlayers);
+
+        dom.boardCells.forEach(function (cell) {
+            cell.addEventListener('click', function () {
+                makeMove(Number(cell.getAttribute('data-index')));
+            });
+        });
+
+        auth.onAuthStateChanged(function (user) {
+            currentUser = user;
+            currentUid = user ? user.uid : '';
+
+            if (!user) {
+                if (sessionBootstrapped) {
+                    clearRealtimeBindings();
+                    sessionBootstrapped = false;
+                    currentAlias = '';
+                    currentGameId = '';
+                    currentGameData = null;
+                    setLobbyVisible(false);
+                    renderGame(null);
+                    updateMyStateCard();
+                    dom.onlineCount.textContent = '0';
+                    dom.gamesToday.textContent = '0';
+                }
+                return;
+            }
+
+            const savedName = normalizeName(getStoredName());
+            if (savedName && !sessionBootstrapped && !joinInProgress) {
+                bootSession(savedName).catch(function (error) {
+                    console.error('Auto boot error:', error);
+                });
+            }
+        });
+
+        window.addEventListener('beforeunload', function () {
+            if (presenceSelfRef) {
+                try { presenceSelfRef.remove(); } catch (error) {}
+            }
+        });
+
+        dom.playerName.value = getStoredName();
+        renderGame(null);
+        updateMyStateCard();
+        setLobbyVisible(false);
+    </script>
+</body>
+</html>

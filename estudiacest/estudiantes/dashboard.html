@@ -53,6 +53,59 @@
         .stat-card.purple { border-left-color:#7c3aed; }
         .stat-card.green { border-left-color:#16a34a; }
         .stat-card.amber { border-left-color:#f59e0b; }
+        .simce-card {
+            background:linear-gradient(135deg,#ffffff,#eff6ff 58%,#f8fafc); border:1px solid #bfdbfe;
+            border-radius:18px; padding:22px; margin-bottom:28px; box-shadow:0 8px 24px rgba(30,64,175,.08);
+        }
+        .simce-card-head {
+            display:flex; justify-content:space-between; align-items:flex-start; gap:14px; margin-bottom:18px;
+        }
+        .simce-card-copy { font-size:13px; color:#475569; line-height:1.5; max-width:620px; }
+        .simce-session-chip {
+            display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
+            background:#dbeafe; color:#1d4ed8; font-size:11px; font-weight:800; text-align:center;
+        }
+        .simce-highlight-grid {
+            display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:18px;
+        }
+        .simce-highlight {
+            background:rgba(255,255,255,.82); border:1px solid #dbeafe; border-radius:14px; padding:14px 16px;
+        }
+        .simce-highlight span { display:block; font-size:11px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.45px; }
+        .simce-highlight strong { display:block; font-size:29px; font-weight:800; color:#0f172a; margin-top:6px; }
+        .simce-highlight small { display:block; font-size:12px; color:#64748b; margin-top:4px; }
+        .simce-skills { display:flex; flex-direction:column; gap:10px; margin-bottom:18px; }
+        .simce-skill-row {
+            background:rgba(255,255,255,.78); border:1px solid #e2e8f0; border-radius:14px; padding:12px 14px;
+        }
+        .simce-skill-head {
+            display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px;
+            font-size:13px; color:#0f172a; font-weight:700;
+        }
+        .simce-skill-head span:last-child { color:#475569; font-weight:800; }
+        .simce-progress {
+            width:100%; height:10px; background:#dbeafe; border-radius:999px; overflow:hidden;
+        }
+        .simce-progress-fill {
+            height:100%; border-radius:999px; transition:width .35s ease;
+        }
+        .simce-question-grid {
+            display:flex; flex-wrap:wrap; gap:8px; margin-bottom:18px;
+        }
+        .simce-question-pill {
+            display:inline-flex; align-items:center; gap:6px; padding:8px 10px; border-radius:999px;
+            font-size:11px; font-weight:800; border:1px solid transparent;
+        }
+        .simce-question-pill.ok { background:#dcfce7; color:#166534; border-color:#86efac; }
+        .simce-question-pill.bad { background:#fef2f2; color:#b91c1c; border-color:#fca5a5; }
+        .simce-feedback {
+            font-size:13px; line-height:1.6; color:#334155; background:rgba(255,255,255,.72);
+            border:1px solid #dbeafe; border-radius:14px; padding:14px 16px;
+        }
+        .simce-pending {
+            background:rgba(255,255,255,.72); border:1px dashed #93c5fd; border-radius:14px; padding:16px;
+            color:#334155; font-size:13px; line-height:1.55;
+        }
         /* SECTION */
         .section-title { font-size:18px; font-weight:800; color:#0f172a; margin-bottom:14px; display:flex; align-items:center; gap:8px; }
         /* SESSION CARDS */
@@ -227,6 +280,8 @@
             .stats-grid { grid-template-columns:1fr 1fr; }
             .session-card { flex-wrap:wrap; padding:16px; }
             .session-status { width:100%; text-align:left; margin-top:4px; }
+            .simce-card { padding:18px 16px; }
+            .simce-card-head { flex-direction:column; }
         }
     </style>
 
@@ -295,6 +350,8 @@
                 <div class="stat-sub">días consecutivos</div>
             </div>
         </div>
+
+        <div id="simceDiagnosticContainer" style="display:none"></div>
 
         <!-- Sessions -->
         <div class="section-title">📖 Mis Sesiones</div>
@@ -418,6 +475,225 @@
             u2: { title:'🚀 Unidad 2', copy:'Nuevas misiones del bloque argumentativo que comienza ahora.' },
             current: { title:'🧭 Ruta actual', copy:'Misiones complementarias disponibles para tu curso.' }
         };
+        const SIMCE_DIAGNOSTIC_SESSION_IDS = {
+            '2A-HC': ['ensayo-simce-miercoles-2a-hc-2026'],
+            '2B-HC': ['ensayo-simce-miercoles-2b-hc-2026']
+        };
+        const SIMCE_SKILL_META = {
+            LOCALIZAR: { label:'Localizar', color:'#2563eb' },
+            INTERPRETAR: { label:'Interpretar', color:'#7c3aed' },
+            REFLEXIONAR: { label:'Reflexionar', color:'#059669' }
+        };
+
+        function normalizeCourseKey(value) {
+            return String(value || '').trim().toUpperCase();
+        }
+
+        function normalizeQuestionKey(value) {
+            const raw = String(value || '').trim().toLowerCase();
+            if (!raw) return '';
+            const match = raw.match(/^q?(\d+)$/);
+            return match ? 'q' + match[1] : raw;
+        }
+
+        function normalizeSimceSkill(value) {
+            const raw = String(value || '').trim().toUpperCase();
+            if (!raw) return '';
+            if (raw.includes('LOCALIZ')) return 'LOCALIZAR';
+            if (raw.includes('INTERPRET')) return 'INTERPRETAR';
+            if (raw.includes('EVALU')) return 'REFLEXIONAR';
+            if (raw.includes('REFLEX')) return 'REFLEXIONAR';
+            return raw;
+        }
+
+        function sortSimceQuestionKeys(left, right) {
+            const leftMatch = normalizeQuestionKey(left).match(/\d+/);
+            const rightMatch = normalizeQuestionKey(right).match(/\d+/);
+            const leftNumber = leftMatch ? Number(leftMatch[0]) : 0;
+            const rightNumber = rightMatch ? Number(rightMatch[0]) : 0;
+            return leftNumber - rightNumber;
+        }
+
+        function buildSimceSkillMap(session) {
+            const skillMap = {};
+            const preguntas = session && session.contenido && Array.isArray(session.contenido.preguntas)
+                ? session.contenido.preguntas
+                : [];
+            preguntas.forEach((pregunta, index) => {
+                const skillKey = normalizeSimceSkill(pregunta && pregunta.habilidad);
+                if (!skillKey) return;
+                const questionId = normalizeQuestionKey(pregunta && (pregunta.id || ('q' + (index + 1))));
+                if (questionId) skillMap[questionId] = skillKey;
+            });
+            return skillMap;
+        }
+
+        function getSimceFeedback(porcentaje) {
+            if (porcentaje >= 80) return 'Tu resultado personal muestra una base sólida. La clave ahora es sostener ese nivel y afinar las preguntas donde todavía aparecen errores.';
+            if (porcentaje >= 60) return 'Tu resultado personal está en una zona intermedia: ya tienes una base, pero conviene reforzar la habilidad donde tu barra quedó más baja.';
+            return 'Tu resultado personal muestra que aún falta consolidar estrategias de lectura. Conviene revisar primero los errores marcados abajo y retomar esa habilidad paso a paso.';
+        }
+
+        function formatSimceDate(timestamp) {
+            const numericValue = Number(timestamp);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) return 'Sin fecha registrada';
+            return new Date(numericValue).toLocaleDateString('es-CL', { day:'2-digit', month:'short', year:'numeric' });
+        }
+
+        function renderSimceDiagnosticCard(session, result) {
+            const container = document.getElementById('simceDiagnosticContainer');
+            if (!container || !session) return;
+
+            const sessionTitle = session.titulo || 'Ensayo SIMCE';
+            const sessionDate = formatSimceDate(result && result.submitted_at);
+
+            if (!result) {
+                container.innerHTML = `
+                    <section class="simce-card">
+                        <div class="simce-card-head">
+                            <div>
+                                <div class="section-title" style="margin-bottom:8px">📊 Mi resultado SIMCE</div>
+                                <p class="simce-card-copy">Esta sección está reservada para tu resultado personal del ensayo diagnóstico. No muestra el promedio del curso ni un resultado general.</p>
+                            </div>
+                            <div class="simce-session-chip">${sessionTitle}</div>
+                        </div>
+                        <div class="simce-pending">Tu resultado SIMCE aún no aparece cargado para esta cuenta. En cuanto la corrección esté disponible, aquí verás tu porcentaje, tu nota y el detalle por habilidad.</div>
+                    </section>`;
+                container.style.display = '';
+                return;
+            }
+
+            const detail = result.detalle || {};
+            const questionEntries = Object.entries(detail).sort((left, right) => sortSimceQuestionKeys(left[0], right[0]));
+            const skillMap = buildSimceSkillMap(session);
+            const skillStats = {};
+            Object.keys(SIMCE_SKILL_META).forEach(skillKey => {
+                skillStats[skillKey] = { correct: 0, total: 0 };
+            });
+
+            let derivedCorrect = 0;
+            questionEntries.forEach(([questionKey, item]) => {
+                const normalizedQuestion = normalizeQuestionKey(questionKey);
+                const skillKey = skillMap[normalizedQuestion];
+                const isCorrect = item && (item.esCorrecta === true || String(item.respuesta || '') === String(item.correcta || ''));
+                if (isCorrect) derivedCorrect++;
+                if (skillKey && skillStats[skillKey]) {
+                    skillStats[skillKey].total++;
+                    if (isCorrect) skillStats[skillKey].correct++;
+                }
+            });
+
+            const totalQuestions = Number(result.totales) || questionEntries.length;
+            const correctAnswers = Number(result.correctas) || derivedCorrect;
+            const porcentaje = Number(result.porcentaje) || 0;
+            const nota = Number(result.nota);
+            const skillRows = Object.entries(SIMCE_SKILL_META).map(([skillKey, meta]) => {
+                const stat = skillStats[skillKey];
+                if (!stat || !stat.total) return '';
+                const skillPct = Math.round((stat.correct / stat.total) * 100);
+                return `
+                    <div class="simce-skill-row">
+                        <div class="simce-skill-head">
+                            <span>${meta.label}</span>
+                            <span>${skillPct}% · ${stat.correct}/${stat.total}</span>
+                        </div>
+                        <div class="simce-progress"><div class="simce-progress-fill" style="width:${skillPct}%; background:${meta.color}"></div></div>
+                    </div>`;
+            }).join('');
+
+            const questionPills = questionEntries.map(([questionKey, item]) => {
+                const normalizedQuestion = normalizeQuestionKey(questionKey).toUpperCase();
+                const isCorrect = item && (item.esCorrecta === true || String(item.respuesta || '') === String(item.correcta || ''));
+                const skillKey = skillMap[normalizeQuestionKey(questionKey)];
+                const skillLabel = skillKey && SIMCE_SKILL_META[skillKey] ? SIMCE_SKILL_META[skillKey].label : 'Pregunta';
+                const userAnswer = item && item.respuesta ? item.respuesta : '—';
+                const rightAnswer = item && item.correcta ? item.correcta : '—';
+                return `<div class="simce-question-pill ${isCorrect ? 'ok' : 'bad'}" title="${skillLabel} · Respondida: ${userAnswer} · Correcta: ${rightAnswer}">${normalizedQuestion} ${isCorrect ? '✓' : '✕'}</div>`;
+            }).join('');
+
+            container.innerHTML = `
+                <section class="simce-card">
+                    <div class="simce-card-head">
+                        <div>
+                            <div class="section-title" style="margin-bottom:8px">📊 Mi resultado SIMCE</div>
+                            <p class="simce-card-copy">Aquí ves tu resultado personal del ensayo diagnóstico. Este bloque toma tus respuestas reales y muestra en qué habilidad quedaste más fuerte o más débil.</p>
+                        </div>
+                        <div class="simce-session-chip">${sessionTitle}</div>
+                    </div>
+                    <div class="simce-highlight-grid">
+                        <div class="simce-highlight">
+                            <span>Logro total</span>
+                            <strong>${Math.round(porcentaje)}%</strong>
+                            <small>${correctAnswers}/${totalQuestions} correctas</small>
+                        </div>
+                        <div class="simce-highlight">
+                            <span>Nota</span>
+                            <strong>${Number.isFinite(nota) ? nota.toFixed(1) : '-'}</strong>
+                            <small>Resultado personal</small>
+                        </div>
+                        <div class="simce-highlight">
+                            <span>Rendido</span>
+                            <strong>${sessionDate}</strong>
+                            <small>Último envío registrado</small>
+                        </div>
+                    </div>
+                    ${skillRows ? '<div class="simce-skills">' + skillRows + '</div>' : ''}
+                    ${questionPills ? '<div class="simce-question-grid">' + questionPills + '</div>' : ''}
+                    <div class="simce-feedback">${getSimceFeedback(porcentaje)}</div>
+                </section>`;
+            container.style.display = '';
+        }
+
+        async function loadPersonalSimceDiagnostic(uid, curso) {
+            const container = document.getElementById('simceDiagnosticContainer');
+            if (!container) return;
+            container.style.display = 'none';
+            container.innerHTML = '';
+
+            try {
+                const normalizedCourse = normalizeCourseKey(curso);
+                const knownIds = SIMCE_DIAGNOSTIC_SESSION_IDS[normalizedCourse] || [];
+                const courseSlug = normalizedCourse.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+                const sessionsSnap = await db.ref(BASE + '/sesiones').once('value');
+                if (!sessionsSnap.exists()) return;
+
+                const candidates = [];
+                sessionsSnap.forEach(child => {
+                    const session = { id: child.key, ...child.val() };
+                    const haystack = [session.id, session.titulo, session.descripcion]
+                        .map(value => String(value || '').toLowerCase())
+                        .join(' ');
+                    const isKnown = knownIds.includes(session.id);
+                    const isAssigned = isSessionAssignedToStudent(session, '', normalizedCourse);
+                    const isSimceDiagnostic = haystack.includes('simce') && (haystack.includes('ensayo') || haystack.includes('diagnost'));
+                    const mentionsCourse = haystack.includes(courseSlug) || haystack.includes(normalizedCourse.toLowerCase());
+                    if (isKnown || (isAssigned && isSimceDiagnostic && mentionsCourse)) {
+                        candidates.push(session);
+                    }
+                });
+
+                if (!candidates.length) return;
+
+                const bundles = await Promise.all(candidates.map(async (session) => {
+                    const resultSnap = await db.ref(BASE + '/resultados/' + session.id + '/' + uid).once('value');
+                    return {
+                        session,
+                        result: resultSnap.exists() ? resultSnap.val() : null
+                    };
+                }));
+
+                bundles.sort((left, right) => {
+                    const leftTime = Number(left.result && left.result.submitted_at) || 0;
+                    const rightTime = Number(right.result && right.result.submitted_at) || 0;
+                    return rightTime - leftTime;
+                });
+
+                const selected = bundles.find(bundle => bundle.result) || bundles[0];
+                renderSimceDiagnosticCard(selected.session, selected.result);
+            } catch (error) {
+                console.error('SIMCE diagnostic load error:', error);
+            }
+        }
 
         function formatCountdown(ms) {
             const totalSeconds = Math.max(0, Math.floor(ms / 1000));
@@ -469,7 +745,10 @@
                 document.getElementById('studentCurso').textContent = CURSO_LABELS[student.curso] || student.curso;
 
                 const programa = student.programa || 'simce';
-                await loadDashboard(user.uid, student.curso, programa);
+                await Promise.all([
+                    loadDashboard(user.uid, student.curso, programa),
+                    loadPersonalSimceDiagnostic(user.uid, student.curso)
+                ]);
                 loadAvatar(user.uid, student.nombre);
                 renderSideMissions(user.uid, student.curso);
                 loadLogrosPreview(user.uid);

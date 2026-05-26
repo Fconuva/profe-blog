@@ -2057,29 +2057,43 @@
             doc.setFontSize(22);
             doc.text('COMPROBANTE DE PAGO', 15, 32);
 
-            doc.setFontSize(11);
+            doc.setFontSize(10.5);
             doc.setFont('Helvetica', 'normal');
             doc.setTextColor(107, 114, 128); // gray-500
-            doc.text('Servicios de Asesoría de Portafolio Docente 2026', 15, 39);
-            doc.text('Prof. Francisco Javier Núñez Valenzuela', 15, 44);
-            doc.text('www.profefranciscopancho.com', 15, 49);
+            doc.text('Asesorías Pedagógicas y Preparación de Portafolio Docente', 15, 38);
+            doc.setFont('Helvetica', 'bold');
+            doc.text('Prof. Francisco Javier Núñez Valenzuela', 15, 43);
+            doc.setFont('Helvetica', 'normal');
+            doc.text('R.U.T.: 14.882.119-K (Prestación de Servicios Exenta de IVA)', 15, 48);
+            doc.text('www.profefranciscopancho.com', 15, 53);
 
             // Recibo Metadata (box in top right)
             doc.setFillColor(243, 244, 246); // light gray fill
-            doc.roundedRect(140, 23, 50, 28, 3, 3, 'F');
+            doc.roundedRect(140, 20, 50, 34, 3, 3, 'F');
             doc.setFont('Helvetica', 'bold');
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             doc.setTextColor(79, 70, 229); // indigo
-            doc.text('N° DE COMPROBANTE', 145, 29);
+            doc.text('N° DE COMPROBANTE', 145, 25);
             doc.setFont('Helvetica', 'bold');
-            doc.setFontSize(12);
+            doc.setFontSize(11);
             doc.setTextColor(17, 24, 39);
-            doc.text('#' + paymentId.substring(0, 12), 145, 35);
+            doc.text('#' + paymentId.toUpperCase(), 145, 31);
             doc.setFont('Helvetica', 'normal');
             doc.setFontSize(8);
             doc.setTextColor(107, 114, 128);
-            doc.text('Fecha: ' + new Date(paymentDateRaw).toLocaleDateString('es-CL'), 145, 41);
-            doc.text('Estado: APROBADO', 145, 45);
+            doc.text('Fecha: ' + new Date(paymentDateRaw).toLocaleDateString('es-CL'), 145, 37);
+            
+            // Highlight Estado in green
+            doc.setFont('Helvetica', 'bold');
+            doc.setTextColor(22, 163, 74); // green-600
+            doc.text('Estado: APROBADO', 145, 42);
+            
+            // Payment Method dynamically
+            doc.setFont('Helvetica', 'normal');
+            doc.setTextColor(107, 114, 128);
+            var isManual = paymentId.startsWith('MP-M') || paymentId.includes('MANUAL');
+            doc.text('Medio: ' + (isManual ? 'Transferencia' : 'MercadoPago'), 145, 47);
+            doc.text('Tipo: Doc. Electrónico Exento', 145, 51);
 
             // 4. Section: Client Details
             doc.setFont('Helvetica', 'bold');
@@ -2146,22 +2160,30 @@
 
             // Summary box
             doc.setFillColor(249, 250, 251);
-            doc.rect(125, 168, 70, 24, 'F');
+            doc.rect(125, 168, 70, 28, 'F');
             doc.setDrawColor(229, 231, 235);
-            doc.rect(125, 168, 70, 24);
+            doc.rect(125, 168, 70, 28);
             
             doc.setFont('Helvetica', 'normal');
-            doc.setFontSize(9);
+            doc.setFontSize(8.5);
             doc.setTextColor(107, 114, 128);
-            doc.text('Subtotal:', 129, 174);
-            doc.text(planPriceLabel, 168, 174);
+            doc.text('Monto Neto:', 129, 173);
+            doc.text(planPriceLabel, 168, 173);
+            
+            doc.text('IVA (19% Exento):', 129, 178);
+            doc.text('$0', 168, 178);
             
             doc.setFont('Helvetica', 'bold');
-            doc.setFontSize(11);
+            doc.setFontSize(10.5);
             doc.setTextColor(17, 24, 39);
-            doc.text('Total General:', 129, 184);
-            doc.setTextColor(22, 163, 74); // green color
-            doc.text(planPriceLabel, 168, 184);
+            doc.text('Total General:', 129, 185);
+            doc.setTextColor(22, 163, 74); // green
+            doc.text(planPriceLabel, 168, 185);
+            
+            doc.setFont('Helvetica', 'italic');
+            doc.setFontSize(7.5);
+            doc.setTextColor(107, 114, 128);
+            doc.text('Servicio Exento de Impuestos', 129, 191);
 
             // 6. Verification and Security Section (Watermarked QR + Barcode simulation)
             doc.setDrawColor(229, 231, 235);

@@ -69,8 +69,9 @@ module.exports = async (req, res) => {
       return res.json({ verified: false, reason: 'El pago no está aprobado. Estado actual: ' + payment.status });
     }
 
-    // 3. Check amount matches plan
-    if (payment.transaction_amount < expectedAmount) {
+    // 3. Check amount matches plan (allow up to 10,000 CLP tolerance for slight pricing variations/discounts)
+    const tolerance = 10000;
+    if (payment.transaction_amount < (expectedAmount - tolerance)) {
       return res.json({ verified: false, reason: 'El monto ($' + payment.transaction_amount.toLocaleString() + ') no coincide con el plan ($' + expectedAmount.toLocaleString() + ')' });
     }
 

@@ -20,6 +20,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("_site");
   eleventyConfig.ignores.add("node_modules");
   eleventyConfig.ignores.add("api/**");
+  eleventyConfig.ignores.add("HEAD/**");
   eleventyConfig.ignores.add("_backup_old_site/**");
   eleventyConfig.ignores.add("*.py");
   eleventyConfig.ignores.add("*.ps1");

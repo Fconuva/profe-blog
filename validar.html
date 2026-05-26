@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificación de Comprobante — Portafolios Docentes 2026</title>
+    <link rel="icon" href="/imagenes/logo-profe-francisco-nuevo.svg" type="image/svg+xml">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/tw.css">
+    <link rel="stylesheet" href="/css/app.css">
+    <style>
+        /* Custom animations for verified check */
+        @keyframes pulseCheck {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(34, 197, 94, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+        }
+        .pulse-green {
+            animation: pulseCheck 2s infinite ease-in-out;
+        }
+        @keyframes pulseError {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { transform: scale(1); box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .pulse-red {
+            animation: pulseError 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-gray-50 font-body antialiased min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-gray-200">
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <a href="/" class="flex items-center gap-3">
+                <img src="/imagenes/logo-profe-francisco-nuevo.svg" alt="Logo" class="h-10 w-auto">
+                <span class="text-lg font-bold font-heading text-gray-900 hidden sm:inline">Portafolios Docentes</span>
+            </a>
+            <a href="/cuenta/login.html" class="text-sm font-medium text-primary-600 hover:text-primary-700">Ingresar a la Plataforma</a>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex items-center justify-center py-12 px-4">
+        <div class="w-full max-w-lg">
+            
+            <!-- Verification Card -->
+            <div class="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+                
+                <!-- Card Header Decoration -->
+                <div class="h-2 bg-gradient-to-r from-primary-500 to-indigo-600"></div>
+                
+                <div class="p-8 sm:p-10">
+                    
+                    <!-- Loading State -->
+                    <div id="state-loading" class="text-center py-10">
+                        <div class="inline-block w-12 h-12 border-4 border-primary-500 border-t-transparent rounded-full animate-spin mb-6"></div>
+                        <h2 class="text-xl font-heading font-bold text-gray-900 mb-2">Verificando Autenticidad</h2>
+                        <p class="text-gray-500">Consultando registros oficiales del servidor seguro...</p>
+                    </div>
+
+                    <!-- Verified State (Hidden by default) -->
+                    <div id="state-verified" class="hidden text-center space-y-6">
+                        
+                        <!-- Pulsing Checkmark -->
+                        <div class="flex justify-center">
+                            <div class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center pulse-green">
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 uppercase tracking-wider">
+                                Comprobante Válido
+                            </span>
+                            <h2 class="text-2xl font-heading font-bold text-gray-900">Pago Auténtico Verificado</h2>
+                            <p class="text-gray-500 text-sm">Este documento ha sido emitido de manera oficial por el sistema Profe Francisco Pancho.</p>
+                        </div>
+
+                        <!-- Payment Details Box -->
+                        <div class="bg-indigo-50 border border-indigo-100 rounded-2xl p-6 text-left space-y-4 shadow-inner">
+                            <div class="border-b border-indigo-200 pb-3 flex justify-between items-center">
+                                <span class="text-xs font-semibold text-indigo-700 uppercase">Detalles del Comprobante</span>
+                                <span class="text-xs font-mono font-bold text-indigo-600" id="receipt-id">—</span>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-y-3 text-sm">
+                                <div class="text-gray-500 font-medium col-span-1">Docente:</div>
+                                <div class="text-gray-900 font-bold col-span-2" id="client-name">—</div>
+
+                                <div class="text-gray-500 font-medium col-span-1">Plan Adquirido:</div>
+                                <div class="text-gray-900 font-bold col-span-2" id="plan-name">—</div>
+
+                                <div class="text-gray-500 font-medium col-span-1">Monto Cobrado:</div>
+                                <div class="text-gray-900 font-bold col-span-2 text-green-700 font-mono text-base" id="amount-paid">—</div>
+
+                                <div class="text-gray-500 font-medium col-span-1">Fecha Oficial:</div>
+                                <div class="text-gray-900 font-bold col-span-2" id="verified-date">—</div>
+                            </div>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100 text-xs text-gray-400 font-medium flex items-center justify-center gap-2">
+                            <svg class="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M2.166 11.37a8 8 0 1111.46 7.747 1 1 0 00-1.186-.918A6 6 0 105.145 5.555a1 1 0 00-1.996-.283 8 8 0 01-.983 6.098zM18 10a1 1 0 01-1 1h-3a1 1 0 110-2h3a1 1 0 011 1z" clip-rule="evenodd"/>
+                            </svg>
+                            Firma digital verificada en Realtime Database Firebase
+                        </div>
+                    </div>
+
+                    <!-- Error/Invalid State (Hidden by default) -->
+                    <div id="state-error" class="hidden text-center space-y-6">
+                        
+                        <!-- Pulsing Red X -->
+                        <div class="flex justify-center">
+                            <div class="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center pulse-red">
+                                <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800 uppercase tracking-wider">
+                                Error de Validación
+                            </span>
+                            <h2 class="text-2xl font-heading font-bold text-gray-900">Comprobante No Válido</h2>
+                            <p class="text-gray-500 text-sm" id="error-reason">El número de transacción ingresado no corresponde a un pago aprobado en nuestros registros.</p>
+                        </div>
+
+                        <div class="bg-red-50 border border-red-100 rounded-2xl p-5 text-sm text-red-800 text-left">
+                            <p class="font-bold mb-1">¿Qué significa esto?</p>
+                            <ul class="list-disc pl-5 space-y-1 text-xs text-red-700">
+                                <li>El ID de comprobante fue ingresado manualmente de forma incorrecta.</li>
+                                <li>El pago aún está en proceso de verificación por MercadoPago.</li>
+                                <li>El comprobante ha sido cancelado, reembolsado o no pertenece al sistema oficial.</li>
+                            </ul>
+                        </div>
+
+                        <div class="pt-4 border-t border-gray-100">
+                            <a href="https://wa.me/56988138929" target="_blank" class="inline-flex items-center gap-2 text-sm font-semibold text-primary-600 hover:text-primary-700">
+                                Contactar con Soporte por WhatsApp
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 py-6 text-center text-xs text-gray-400 font-medium">
+        &copy; 2026 Profe Francisco Pancho. Todos los derechos reservados.
+    </footer>
+
+    <script>
+        (function() {
+            var params = new URLSearchParams(window.location.search);
+            var id = (params.get('id') || '').trim();
+
+            var loadingEl = document.getElementById('state-loading');
+            var verifiedEl = document.getElementById('state-verified');
+            var errorEl = document.getElementById('state-error');
+
+            function showState(state) {
+                loadingEl.classList.add('hidden');
+                verifiedEl.classList.add('hidden');
+                errorEl.classList.add('hidden');
+
+                if (state === 'verified') verifiedEl.classList.remove('hidden');
+                else if (state === 'error') errorEl.classList.remove('hidden');
+                else loadingEl.classList.remove('hidden');
+            }
+
+            if (!id) {
+                document.getElementById('error-reason').textContent = 'No se proporcionó un ID de comprobante para verificar.';
+                showState('error');
+                return;
+            }
+
+            // Call serverless API to validate
+            fetch('/api/mercadopago/validate-payment?id=' + encodeURIComponent(id))
+                .then(function(res) {
+                    if (!res.ok) throw new Error('Network response not ok');
+                    return res.json();
+                })
+                .then(function(data) {
+                    if (data.valid) {
+                        var p = data.payment;
+                        
+                        // Fill elements
+                        document.getElementById('receipt-id').textContent = '#' + p.id;
+                        document.getElementById('client-name').textContent = p.clientName;
+                        document.getElementById('plan-name').textContent = p.plan;
+                        
+                        // Format amount CLP
+                        var formattedAmount = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP' }).format(p.amount);
+                        document.getElementById('amount-paid').textContent = formattedAmount;
+                        
+                        // Format date
+                        var dateObj = new Date(p.verifiedAt);
+                        var formattedDate = dateObj.toLocaleDateString('es-CL', {
+                            day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                        }) + ' hrs';
+                        document.getElementById('verified-date').textContent = formattedDate;
+
+                        showState('verified');
+                    } else {
+                        document.getElementById('error-reason').textContent = data.reason || 'El número de comprobante no pudo ser verificado.';
+                        showState('error');
+                    }
+                })
+                .catch(function(err) {
+                    console.error('Validation error:', err);
+                    document.getElementById('error-reason').textContent = 'Error temporal de conexión con el servidor de seguridad.';
+                    showState('error');
+                });
+        })();
+    </script>
+</body>
+</html>

@@ -353,7 +353,6 @@
                     <button type="button" id="btn-reset-pass" class="px-3 py-2 text-xs font-medium rounded-lg bg-amber-600 text-white hover:bg-amber-700 transition-colors">🔑 Cambiar Contraseña</button>
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
                     <button type="button" id="btn-gdrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0F9D58">📁 Carpeta Google Drive</button>
-                    <button type="button" id="btn-block-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-black text-white hover:bg-zinc-800 transition-colors">🚫 Bloquear Usuario</button>
                     <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
@@ -363,7 +362,6 @@
                     <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Estado de Pago</h4>
                     <div class="flex items-center gap-3">
                         <select id="edit-payment" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
-                            <option value="pre-inscrito">Pre-Inscrito</option>
                             <option value="pendiente">Pendiente</option>
                             <option value="pendiente_verificacion">Por Verificar (Manual)</option>
                             <option value="approved">Aprobado</option>
@@ -419,24 +417,6 @@
                             <div><span class="text-gray-500 text-xs">Características del curso (legacy)</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-desc">—</p></div>
                             <div><span class="text-gray-500 text-xs">Conocimientos previos</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-previos">—</p></div>
                             <div><span class="text-gray-500 text-xs">Lista de alumnos</span><pre class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100 whitespace-pre-wrap max-h-32 overflow-y-auto" id="edit-dp-lista">—</pre></div>
-                        </div>
-                        <div class="mt-4 pt-4 border-t border-indigo-200">
-                            <h5 class="text-xs font-bold text-indigo-800 uppercase mb-3">Ajuste Rápido PIE / NEE</h5>
-                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                                <div>
-                                    <label class="text-gray-500 text-xs block mb-1">N° PIE / NEE</label>
-                                    <input type="number" id="edit-dp-num-pie-input" min="0" max="50" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ej: 7">
-                                </div>
-                                <div>
-                                    <label class="text-gray-500 text-xs block mb-1">Tipos NEE</label>
-                                    <input type="text" id="edit-dp-tipo-nee-input" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ej: DEA (4), TEA (2), TDA (1)">
-                                </div>
-                                <div>
-                                    <label class="text-gray-500 text-xs block mb-1">Co-docente PIE</label>
-                                    <input type="text" id="edit-dp-codocente-input" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Nombre o dejar vacío">
-                                </div>
-                            </div>
-                            <p class="text-xs text-indigo-700 mt-2">Se guarda junto con el botón "Guardar Cambios".</p>
                         </div>
                     </div>
                 </div>
@@ -741,12 +721,6 @@
             if (!iso) return '—';
             var d = new Date(iso);
             return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
-        }
-
-        function getModuleDefaults(plan, moduleKey) {
-            if (plan === 'completo') return { estado: 'pendiente', contratado: true };
-            if (plan === moduleKey) return { estado: 'pendiente', contratado: true };
-            return { estado: 'no-contratado', contratado: false };
         }
 
         function getClientUids() {
@@ -1199,14 +1173,8 @@
                 document.getElementById('edit-dp-intereses-videojuegos').textContent = dp.interesesVideojuegos || '—';
                 document.getElementById('edit-dp-intereses-deporte').textContent = dp.interesesDeporte || '—';
                 document.getElementById('edit-dp-intereses').textContent = dp.intereses || '—';
-                document.getElementById('edit-dp-num-pie-input').value = dp.numPIE || 0;
-                document.getElementById('edit-dp-tipo-nee-input').value = dp.tipoNEE || '';
-                document.getElementById('edit-dp-codocente-input').value = dp.codocentePIE || '';
             } else {
                 dpSection.classList.add('hidden');
-                document.getElementById('edit-dp-num-pie-input').value = '';
-                document.getElementById('edit-dp-tipo-nee-input').value = '';
-                document.getElementById('edit-dp-codocente-input').value = '';
             }
 
             // Cuestionario Pre-inscripción
@@ -1270,8 +1238,7 @@
                 cqSection.classList.add('hidden');
             }
 
-            var paymentValue = p.paymentStatus || ((p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') ? 'pre-inscrito' : 'pendiente');
-            document.getElementById('edit-payment').value = paymentValue;
+            document.getElementById('edit-payment').value = p.paymentStatus || 'pendiente';
             var price = getPlanPrice(p.plan);
             var montoText = '—';
             if (price) {
@@ -1282,26 +1249,23 @@
             document.getElementById('edit-monto').textContent = montoText;
 
             // Modules
-            var m1Defaults = getModuleDefaults(p.plan, 'modulo1');
-            var m1 = p.modulo1 || m1Defaults;
-            document.getElementById('edit-m1-estado').value = m1.estado || m1Defaults.estado;
+            var m1 = p.modulo1 || {};
+            document.getElementById('edit-m1-estado').value = m1.estado || 'pendiente';
             document.getElementById('edit-m1-planificacion').checked = !!m1.planificacion;
             document.getElementById('edit-m1-material').checked = !!m1.material;
             document.getElementById('edit-m1-archivo').value = m1.archivoUrl || '';
             document.getElementById('edit-m1-notas').value = m1.notas || '';
 
-            var m2Defaults = getModuleDefaults(p.plan, 'modulo2');
-            var m2 = p.modulo2 || m2Defaults;
-            document.getElementById('edit-m2-estado').value = m2.estado || m2Defaults.estado;
+            var m2 = p.modulo2 || {};
+            document.getElementById('edit-m2-estado').value = m2.estado || 'pendiente';
             document.getElementById('edit-m2-libreto').checked = !!m2.libreto;
             document.getElementById('edit-m2-presentacion').checked = !!m2.presentacion;
             document.getElementById('edit-m2-guia').checked = !!m2.guia;
             document.getElementById('edit-m2-archivo').value = m2.archivoUrl || '';
             document.getElementById('edit-m2-notas').value = m2.notas || '';
 
-            var m3Defaults = getModuleDefaults(p.plan, 'modulo3');
-            var m3 = p.modulo3 || m3Defaults;
-            document.getElementById('edit-m3-estado').value = m3.estado || m3Defaults.estado;
+            var m3 = p.modulo3 || {};
+            document.getElementById('edit-m3-estado').value = m3.estado || 'pendiente';
             document.getElementById('edit-m3-obligatorio').checked = !!m3.obligatorio;
             document.getElementById('edit-m3-voluntario').checked = !!m3.voluntario;
             document.getElementById('edit-m3-archivo').value = m3.archivoUrl || '';
@@ -1772,44 +1736,11 @@
             });
         });
 
-        // Block user
-        document.getElementById('btn-block-user').addEventListener('click', function() {
-            if (!currentEditUid) return;
-            var c = allClients[currentEditUid] || {};
-            var nombre = c.nombre || c.email || currentEditUid;
-            if (!confirm('¿BLOQUEAR definitivamente a "' + nombre + '"?\n\nAl bloquearlo:\n- Se agregará su correo y teléfono a la lista negra (bloqueados)\n- No podrá volver a pre-inscribirse o registrarse con este correo/teléfono\n- Su cuenta de autenticación activa se eliminará definitivamente\n- Sus datos se archivarán en el registro remoto\n\n¿Deseas continuar?')) return;
-            if (!confirm('¿Estás absolutamente SEGURO de querer bloquear permanentemente a este usuario?')) return;
-            var btn = this;
-            btn.disabled = true;
-            btn.textContent = 'Bloqueando...';
-            fetch('/api/admin', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'block-user', uid: currentEditUid, callerUid: auth.currentUser.uid })
-            }).then(function(r) { return r.json(); }).then(function(data) {
-                btn.disabled = false;
-                btn.textContent = '🚫 Bloquear Usuario';
-                if (data.success) {
-                    showActionMsg('🚫 ✅ Usuario bloqueado y archivado exitosamente.', 'success');
-                    setTimeout(closeModal, 1500);
-                } else {
-                    showActionMsg('Error: ' + (data.error || 'No se pudo bloquear'), 'error');
-                }
-            }).catch(function(err) {
-                btn.disabled = false;
-                btn.textContent = '🚫 Bloquear Usuario';
-                showActionMsg('Error de red: ' + err.message, 'error');
-            });
-        });
-
         // ===== SAVE CHANGES =====
         document.getElementById('edit-form').addEventListener('submit', function(e) {
             e.preventDefault();
             var uid = document.getElementById('edit-uid').value;
             if (!uid) return;
-            var submitBtn = this.querySelector('button[type="submit"]');
-            submitBtn.disabled = true;
-            submitBtn.textContent = 'Guardando...';
 
             var updates = {};
 
@@ -1820,12 +1751,6 @@
             if (newNombre) updates['users/' + uid + '/nombre'] = newNombre;
             if (newTelefono !== undefined) updates['users/' + uid + '/telefono'] = newTelefono;
             if (newRut !== undefined) updates['users/' + uid + '/rut'] = newRut;
-
-            if (!document.getElementById('edit-datos-section').classList.contains('hidden')) {
-                updates['portafolios/' + uid + '/datosPortafolio/numPIE'] = parseInt(document.getElementById('edit-dp-num-pie-input').value, 10) || 0;
-                updates['portafolios/' + uid + '/datosPortafolio/tipoNEE'] = document.getElementById('edit-dp-tipo-nee-input').value.trim();
-                updates['portafolios/' + uid + '/datosPortafolio/codocentePIE'] = document.getElementById('edit-dp-codocente-input').value.trim();
-            }
 
             updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
 
@@ -1865,12 +1790,6 @@
             db.ref().update(updates).then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
-                showActionMsg('✅ Cambios guardados correctamente.', 'success');
-            }).catch(function(err) {
-                showActionMsg('Error al guardar: ' + err.message, 'error');
-            }).finally(function() {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '💾 Guardar Cambios';
             });
         });
 

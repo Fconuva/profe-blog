@@ -295,6 +295,9 @@
                     <button type="submit" id="pre-datos-submit" class="w-full py-3 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm disabled:opacity-50">
                         Guardar y Continuar →
                     </button>
+                    <button type="button" id="btn-cancelar-pre-datos" class="hidden w-full py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all mt-2">
+                        Volver a la pantalla de Pago (Sin guardar)
+                    </button>
                     <p id="pre-datos-autosave" class="text-center text-xs text-gray-400 mt-2 hidden"></p>
                 </form>
             </div>
@@ -755,6 +758,26 @@
                 <button id="pay-reopen" class="w-full mt-2 py-2 text-sm hover:underline" style="color:#009ee3">Abrir MercadoPago de nuevo</button>
             </div>
         </div>
+
+        <!-- Editar datos durante el proceso de pago -->
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 mb-4 flex items-center justify-between gap-3 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gray-200 text-gray-600 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                </div>
+                <div>
+                    <h4 class="font-heading font-bold text-gray-900 text-sm">¿Quieres corregir o mejorar tus datos de curso y alumnos?</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Puedes perfeccionar tu información escolar mientras realizas o esperas la confirmación de tu pago.</p>
+                </div>
+            </div>
+            <button id="btn-editar-datos-pago" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold rounded-xl text-xs transition-all shadow-sm flex items-center gap-1.5 whitespace-nowrap transform hover:-translate-y-0.5 active:translate-y-0">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                Corregir Datos
+            </button>
+        </div>
+
         <button onclick="changePlan()" class="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors">← Cambiar de plan</button>
     </main>
 
@@ -1626,6 +1649,13 @@
         function reopenPreDatos() {
             showPreSubStep('datos');
             prefillPreDatos();
+            
+            // Show cancel button if they already completed modules
+            var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
+            if (preCancelBtn && portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
+                preCancelBtn.textContent = 'Volver al Resumen (Sin guardar)';
+                preCancelBtn.classList.remove('hidden');
+            }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -2133,8 +2163,17 @@
             // Save datos + create basic portfolio structure
             var updates = {};
             updates['portafolios/' + currentUser.uid + '/datosPortafolio'] = datos;
-            updates['portafolios/' + currentUser.uid + '/plan'] = 'pre-inscripcion';
-            updates['portafolios/' + currentUser.uid + '/paymentStatus'] = 'pre-inscrito';
+            
+            // Only set plan and paymentStatus to pre-inscripcion if they don't have an active plan/payment status yet
+            var existingPlan = portData ? portData.plan : null;
+            var existingStatus = portData ? portData.paymentStatus : null;
+            if (!existingPlan || existingPlan === 'pre-inscripcion') {
+                updates['portafolios/' + currentUser.uid + '/plan'] = 'pre-inscripcion';
+            }
+            if (!existingStatus || existingStatus === 'pre-inscrito') {
+                updates['portafolios/' + currentUser.uid + '/paymentStatus'] = 'pre-inscrito';
+            }
+            
             updates['portafolios/' + currentUser.uid + '/createdAt'] = new Date().toISOString();
             updates['users/' + currentUser.uid + '/asignatura'] = datos.asignatura;
             updates['users/' + currentUser.uid + '/nivel'] = datos.nivel;
@@ -2142,7 +2181,20 @@
             db.ref().update(updates).then(function() {
                 btn.disabled = false;
                 btn.textContent = 'Guardar y Continuar →';
-                showPreSubStep('modulos');
+                
+                var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
+                if (preCancelBtn) preCancelBtn.classList.add('hidden');
+                
+                // If they have an active plan selected, return them to the payment step directly!
+                if (portData && portData.plan && portData.plan !== 'pre-inscripcion') {
+                    hideAll();
+                    document.getElementById('step-payment').classList.remove('hidden');
+                } else if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
+                    showPreSubStep('listo');
+                    fillResumen();
+                } else {
+                    showPreSubStep('modulos');
+                }
             }).catch(function(err) {
                 btn.disabled = false;
                 btn.textContent = 'Guardar y Continuar →';
@@ -2155,6 +2207,51 @@
         document.getElementById('pre-modulos-back').addEventListener('click', reopenPreDatos);
         document.getElementById('pre-edit-datos').addEventListener('click', reopenPreDatos);
         document.getElementById('pre-edit-modulos').addEventListener('click', reopenPreModulos);
+
+        // Cancel pre-datos and return to payment or summary
+        var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
+        if (preCancelBtn) {
+            preCancelBtn.addEventListener('click', function() {
+                if (portData && portData.plan && portData.plan !== 'pre-inscripcion') {
+                    hideAll();
+                    document.getElementById('step-payment').classList.remove('hidden');
+                } else if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
+                    showPreSubStep('listo');
+                    fillResumen();
+                } else {
+                    showPreSubStep('datos');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+
+        // Edit context data from payment screen
+        var editBtnPago = document.getElementById('btn-editar-datos-pago');
+        if (editBtnPago) {
+            editBtnPago.addEventListener('click', function() {
+                var isPreInscrito = userData && userData.status === 'pre-inscrito';
+                if (isPreInscrito) {
+                    // Show pre-inscription datos step
+                    hideAll();
+                    document.getElementById('step-preinscripcion').classList.remove('hidden');
+                    showPreSubStep('datos');
+                    prefillPreDatos();
+                    
+                    // Show cancel button to go back to payment
+                    var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
+                    if (preCancelBtn) {
+                        preCancelBtn.textContent = 'Volver al Pago (Sin guardar)';
+                        preCancelBtn.classList.remove('hidden');
+                    }
+                } else {
+                    // Paid/Regular user
+                    hideAll();
+                    document.getElementById('step-datos').classList.remove('hidden');
+                    prefillDatos();
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
 
         // ---- PRE-INSCRIPTION: M3 experience toggle ----
         document.querySelectorAll('input[name="m3-tiene-experiencia"]').forEach(function(radio) {

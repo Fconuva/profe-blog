@@ -359,21 +359,33 @@
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
 
                 <!-- Section 3: Payment -->
-                <div>
-                    <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Estado de Pago</h4>
-                    <div class="flex items-center gap-3">
-                        <select id="edit-payment" class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
-                            <option value="pre-inscrito">Pre-Inscrito</option>
-                            <option value="pendiente">Pendiente</option>
-                            <option value="pendiente_verificacion">Por Verificar (Manual)</option>
-                            <option value="approved">Aprobado</option>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Plan Contratado</h4>
+                        <select id="edit-plan" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                            <option value="pre-inscripcion">Pre-Inscrito / Sin Plan</option>
+                            <option value="completo">Portafolio Completo</option>
+                            <option value="modulo1">Módulo 1 — Planificación</option>
+                            <option value="modulo2">Módulo 2 — Clase Grabada</option>
+                            <option value="modulo3">Módulo 3 — Reflexión</option>
                         </select>
-                        <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
-                        <button type="button" id="btn-admin-descargar-recibo" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm flex items-center gap-1">
-                            📄 Descargar Recibo PDF
-                        </button>
                     </div>
-                    <div id="edit-comprobante-info" class="hidden mt-2 text-xs text-gray-500 bg-amber-50 p-2 rounded-lg"></div>
+                    <div>
+                        <h4 class="text-xs font-bold text-gray-500 uppercase mb-2">Estado de Pago</h4>
+                        <div class="flex items-center gap-3">
+                            <select id="edit-payment" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm outline-none bg-white">
+                                <option value="pre-inscrito">Pre-Inscrito</option>
+                                <option value="pendiente">Pendiente</option>
+                                <option value="pendiente_verificacion">Por Verificar (Manual)</option>
+                                <option value="approved">Aprobado</option>
+                            </select>
+                            <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
+                            <button type="button" id="btn-admin-descargar-recibo" class="hidden text-xs font-semibold px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors shadow-sm flex items-center gap-1">
+                                📄 Descargar Recibo PDF
+                            </button>
+                        </div>
+                    </div>
+                    <div id="edit-comprobante-info" class="hidden col-span-full mt-1 text-xs text-gray-500 bg-amber-50 p-2 rounded-lg"></div>
                 </div>
 
                 <!-- Section 4: Datos Portafolio (read-only) -->
@@ -1296,6 +1308,7 @@
                 cqSection.classList.add('hidden');
             }
 
+            document.getElementById('edit-plan').value = p.plan || 'pre-inscripcion';
             var paymentValue = p.paymentStatus || ((p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') ? 'pre-inscrito' : 'pendiente');
             document.getElementById('edit-payment').value = paymentValue;
             var price = getPlanPrice(p.plan);
@@ -1759,6 +1772,45 @@
             });
         });
 
+        // Event listener for changes to edit-plan to dynamically update prices and default module states
+        document.getElementById('edit-plan').addEventListener('change', function() {
+            var chosenPlan = this.value;
+            var price = getPlanPrice(chosenPlan);
+            var montoText = '—';
+            if (price) {
+                montoText = (planNames[chosenPlan] || chosenPlan) + ' · ' + formatCLP(price);
+            } else if (chosenPlan === 'pre-inscripcion') {
+                montoText = 'Pre-Inscrito · Gratis ($0)';
+            }
+            document.getElementById('edit-monto').textContent = montoText;
+
+            // Adjust default module state automatically to save clicks
+            var m1Def = getModuleDefaults(chosenPlan, 'modulo1');
+            var m2Def = getModuleDefaults(chosenPlan, 'modulo2');
+            var m3Def = getModuleDefaults(chosenPlan, 'modulo3');
+
+            document.getElementById('edit-m1-estado').value = m1Def.estado;
+            document.getElementById('edit-m1-planificacion').checked = m1Def.contratado;
+            document.getElementById('edit-m1-material').checked = m1Def.contratado;
+
+            document.getElementById('edit-m2-estado').value = m2Def.estado;
+            document.getElementById('edit-m2-libreto').checked = m2Def.contratado;
+            document.getElementById('edit-m2-presentacion').checked = m2Def.contratado;
+            document.getElementById('edit-m2-guia').checked = m2Def.contratado;
+
+            document.getElementById('edit-m3-estado').value = m3Def.estado;
+            document.getElementById('edit-m3-obligatorio').checked = m3Def.contratado;
+            document.getElementById('edit-m3-voluntario').checked = m3Def.contratado;
+
+            // Automatically sync payment status option
+            var currentPayment = document.getElementById('edit-payment').value;
+            if (chosenPlan === 'pre-inscripcion') {
+                document.getElementById('edit-payment').value = 'pre-inscrito';
+            } else if (currentPayment === 'pre-inscrito') {
+                document.getElementById('edit-payment').value = 'pendiente';
+            }
+        });
+
         // Google Drive Folder — create or open
         document.getElementById('btn-gdrive-folder').addEventListener('click', function() {
             if (!currentEditUid) return;
@@ -1909,7 +1961,17 @@
                 updates['portafolios/' + uid + '/datosPortafolio/codocentePIE'] = document.getElementById('edit-dp-codocente-input').value.trim();
             }
 
-            updates['portafolios/' + uid + '/paymentStatus'] = document.getElementById('edit-payment').value;
+            var newPlan = document.getElementById('edit-plan').value;
+            var newPaymentStatus = document.getElementById('edit-payment').value;
+            
+            updates['portafolios/' + uid + '/plan'] = newPlan;
+            updates['portafolios/' + uid + '/paymentStatus'] = newPaymentStatus;
+
+            if (newPaymentStatus === 'pre-inscrito') {
+                updates['users/' + uid + '/status'] = 'pre-inscrito';
+            } else if (newPaymentStatus === 'approved') {
+                updates['users/' + uid + '/status'] = 'active';
+            }
 
             // M1
             updates['portafolios/' + uid + '/modulo1/estado'] = document.getElementById('edit-m1-estado').value;

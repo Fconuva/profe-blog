@@ -1181,19 +1181,22 @@
             completo: 'Portafolio Completo',
             modulo1: 'Módulo 1 — Planificación',
             modulo2: 'Módulo 2 — Clase Grabada',
-            modulo3: 'Módulo 3 — Reflexión'
+            modulo3: 'Módulo 3 — Reflexión',
+            'pre-inscripcion': 'Pre-Inscrito'
         };
         var planPrices = {
             completo: '$199.990',
             modulo1: '$79.990',
             modulo2: '$99.990',
-            modulo3: '$79.990'
+            modulo3: '$79.990',
+            'pre-inscripcion': 'Gratis'
         };
         var statusLabels = {
             'pendiente': { text: 'Pendiente', cls: 'bg-gray-100 text-gray-600' },
             'en-progreso': { text: 'En Progreso', cls: 'bg-blue-100 text-blue-700' },
             'en-revision': { text: 'En Revisión', cls: 'bg-amber-100 text-amber-700' },
             'completado': { text: 'Completado', cls: 'bg-green-100 text-green-700' },
+            'pre-inscrito': { text: 'Pre-Inscrito', cls: 'bg-amber-100 text-amber-700' },
             'no-contratado': { text: 'No Contratado', cls: 'bg-gray-50 text-gray-400' }
         };
 
@@ -1647,14 +1650,31 @@
         }
 
         function reopenPreDatos() {
-            showPreSubStep('datos');
-            prefillPreDatos();
+            // Show full step-datos editing capability so pre-inscritos can fill students list and all fields
+            hideAll();
+            document.getElementById('step-datos').classList.remove('hidden');
+            prefillDatos();
             
-            // Show cancel button if they already completed modules
-            var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
-            if (preCancelBtn && portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
-                preCancelBtn.textContent = 'Volver al Resumen (Sin guardar)';
-                preCancelBtn.classList.remove('hidden');
+            // Customize the form header dynamically for edit mode
+            var titleEl = document.getElementById('datos-title');
+            var subtitleEl = document.getElementById('datos-subtitle');
+            var iconWrapEl = document.getElementById('datos-icon-wrap');
+            var submitBtn = document.getElementById('datos-submit');
+            var backBtn = document.getElementById('btn-cancelar-datos');
+            
+            if (titleEl) titleEl.textContent = 'Editar y Completar Datos de Contexto';
+            if (subtitleEl) subtitleEl.textContent = 'Por favor completa todos tus datos y la lista de tus estudiantes para personalizar tu portafolio al 100%.';
+            if (iconWrapEl) {
+                iconWrapEl.className = 'w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4';
+                iconWrapEl.innerHTML = '<svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+            }
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Guardar Cambios';
+            }
+            if (backBtn) {
+                backBtn.textContent = 'Volver al Resumen (Sin guardar)';
+                backBtn.classList.remove('hidden');
             }
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -2014,7 +2034,7 @@
         // Cancel edit context data
         document.getElementById('btn-cancelar-datos').addEventListener('click', function() {
             hideAll();
-            showProgress();
+            renderDashboard();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         });
 
@@ -2229,25 +2249,31 @@
         var editBtnPago = document.getElementById('btn-editar-datos-pago');
         if (editBtnPago) {
             editBtnPago.addEventListener('click', function() {
-                var isPreInscrito = userData && userData.status === 'pre-inscrito';
-                if (isPreInscrito) {
-                    // Show pre-inscription datos step
-                    hideAll();
-                    document.getElementById('step-preinscripcion').classList.remove('hidden');
-                    showPreSubStep('datos');
-                    prefillPreDatos();
-                    
-                    // Show cancel button to go back to payment
-                    var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
-                    if (preCancelBtn) {
-                        preCancelBtn.textContent = 'Volver al Pago (Sin guardar)';
-                        preCancelBtn.classList.remove('hidden');
-                    }
-                } else {
-                    // Paid/Regular user
-                    hideAll();
-                    document.getElementById('step-datos').classList.remove('hidden');
-                    prefillDatos();
+                // Show full step-datos editing capability so pre-inscritos can fill students list and all fields
+                hideAll();
+                document.getElementById('step-datos').classList.remove('hidden');
+                prefillDatos();
+                
+                // Customize the form header dynamically for edit mode
+                var titleEl = document.getElementById('datos-title');
+                var subtitleEl = document.getElementById('datos-subtitle');
+                var iconWrapEl = document.getElementById('datos-icon-wrap');
+                var submitBtn = document.getElementById('datos-submit');
+                var backBtn = document.getElementById('btn-cancelar-datos');
+                
+                if (titleEl) titleEl.textContent = 'Editar y Completar Datos de Contexto';
+                if (subtitleEl) subtitleEl.textContent = 'Por favor completa todos tus datos y la lista de tus estudiantes para personalizar tu portafolio al 100%.';
+                if (iconWrapEl) {
+                    iconWrapEl.className = 'w-16 h-16 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4';
+                    iconWrapEl.innerHTML = '<svg class="w-8 h-8 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>';
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Guardar Cambios';
+                }
+                if (backBtn) {
+                    backBtn.textContent = 'Volver al Pago (Sin guardar)';
+                    backBtn.classList.remove('hidden');
                 }
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             });

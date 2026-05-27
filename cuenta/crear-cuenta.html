@@ -220,10 +220,26 @@
             submitBtn.textContent = 'Registrando...';
             isRegistering = true;
 
-            auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL)
-              .then(function() {
-                return auth.createUserWithEmailAndPassword(email, password);
-              })
+            // Check blacklist before registration (graceful fallback if rules deny access)
+            var safeEmailKey = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
+            var safePhoneKey = telefono.replace(/[^0-9]/g, '');
+            var noSnap = { exists: function() { return false; } };
+
+            var emailBlacklistPromise = db.ref('blacklist/emails/' + safeEmailKey).once('value').catch(function() { return noSnap; });
+            var phoneBlacklistPromise = safePhoneKey ? db.ref('blacklist/telefonos/' + safePhoneKey).once('value').catch(function() { return noSnap; }) : Promise.resolve(noSnap);
+
+            Promise.all([emailBlacklistPromise, phoneBlacklistPromise])
+                .then(function(snaps) {
+                    var emailSnap = snaps[0];
+                    var phoneSnap = snaps[1];
+                    if (emailSnap.exists() || phoneSnap.exists()) {
+                        throw { code: 'blacklisted', message: 'Lo sentimos, este correo o teléfono electrónico está restringido para registros.' };
+                    }
+                    return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                })
+                .then(function() {
+                    return auth.createUserWithEmailAndPassword(email, password);
+                })
                 .then(function(userCredential) {
                     var uid = userCredential.user.uid;
                     // Generate inscription number via atomic counter (with fallback)
@@ -236,7 +252,7 @@
                         // Fallback: timestamp-based number if counter fails
                         return 'PRE-2026-T' + Date.now().toString(36).toUpperCase();
                     }).then(function(inscripcionNum) {
-                        return db.ref('users/' + uid).set({
+                        var p1 = db.ref('users/' + uid).set({
                             nombre: nombre,
                             rut: rut,
                             email: email,
@@ -246,6 +262,12 @@
                             inscripcionNum: inscripcionNum,
                             createdAt: new Date().toISOString()
                         });
+                        var p2 = db.ref('portafolios/' + uid).set({
+                            plan: 'pre-inscripcion',
+                            paymentStatus: 'pre-inscrito',
+                            createdAt: new Date().toISOString()
+                        });
+                        return Promise.all([p1, p2]);
                     });
                 })
                 .then(function() {
@@ -256,7 +278,9 @@
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Pre-Inscribirme Gratis';
                     errorMsg.classList.remove('hidden');
-                    if (error.code === 'auth/email-already-in-use') {
+                    if (error.code === 'blacklisted') {
+                        errorMsg.textContent = error.message;
+                    } else if (error.code === 'auth/email-already-in-use') {
                         errorMsg.textContent = 'Este correo ya está registrado. ¿Quieres ingresar en su lugar?';
                     } else if (error.code === 'auth/weak-password') {
                         errorMsg.textContent = 'La contraseña debe tener al menos 6 caracteres.';

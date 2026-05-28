@@ -48,6 +48,7 @@ const db = admin.database();
 const auth = admin.auth();
 const BASE = 'plataforma_estudiantes';
 const FIREBASE_OP_TIMEOUT_MS = 15000;
+const handlePreloadSesion3 = require('../server/preload-sesion3');
 
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + '@est.profefranciscopancho.com'; }
@@ -296,7 +297,8 @@ module.exports = async (req, res) => {
             case 'bulk-create': return await handleBulkCreate(req, res, decoded);
             case 'login-token': return await handleLoginToken(req, res);
             case 'change-rut': return await handleChangeRut(req, res, decoded);
-            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, create, reset-password, bulk-create, login-token, change-rut' });
+            case 'preload-sesion3': return await handlePreloadSesion3(req, res);
+            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, create, reset-password, bulk-create, login-token, change-rut, preload-sesion3' });
         }
     } catch (error) {
         console.error('Error:', error);

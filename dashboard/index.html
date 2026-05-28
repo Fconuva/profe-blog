@@ -1921,21 +1921,23 @@
         // Set the MP link when step-payment is shown
         function setupPaymentStep() {
             var link = mpLinks[portData.plan] || '';
-            document.getElementById('pay-link').href = link;
+            var payLink = document.getElementById('pay-link');
+            var payReopen = document.getElementById('pay-reopen');
+            payLink.href = link;
             document.getElementById('pay-before').classList.remove('hidden');
             document.getElementById('pay-after').classList.add('hidden');
 
-            document.getElementById('pay-link').addEventListener('click', function() {
+            payLink.onclick = function() {
                 // After clicking, show confirmation UI
                 setTimeout(function() {
                     document.getElementById('pay-before').classList.add('hidden');
                     document.getElementById('pay-after').classList.remove('hidden');
                 }, 500);
-            });
+            };
 
-            document.getElementById('pay-reopen').addEventListener('click', function() {
+            payReopen.onclick = function() {
                 window.open(link, '_blank');
-            });
+            };
         }
 
         document.getElementById('pay-confirm-btn').addEventListener('click', function() {
@@ -2283,6 +2285,65 @@
             };
         }
 
+        function setModuloFieldError(id, hasError) {
+            var el = document.getElementById(id);
+            if (!el) return;
+            el.classList.toggle('border-red-400', hasError);
+            el.classList.toggle('ring-2', hasError);
+            el.classList.toggle('ring-red-100', hasError);
+            if (hasError) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
+        }
+
+        function clearModuloValidation() {
+            ['m2-duracion', 'm2-restricciones', 'm2-tipo-otro', 'm3-descripcion', 'm3-colaborador'].forEach(function(id) {
+                setModuloFieldError(id, false);
+            });
+            var errEl = document.getElementById('pre-modulos-error');
+            if (errEl) errEl.classList.add('hidden');
+        }
+
+        function validateModulosFields(cuestionario) {
+            clearModuloValidation();
+            var errors = [];
+            var firstInvalidId = '';
+
+            function addError(id, message) {
+                errors.push(message);
+                if (!firstInvalidId) firstInvalidId = id;
+                setModuloFieldError(id, true);
+            }
+
+            if (!cuestionario.modulo2.duracionBloque || cuestionario.modulo2.duracionBloque < 30) {
+                addError('m2-duracion', 'Módulo 2: indica la duración real del bloque de clase, en minutos.');
+            }
+            if (!cuestionario.modulo2.restricciones || cuestionario.modulo2.restricciones.length < 20) {
+                addError('m2-restricciones', 'Módulo 2: describe la sala o condiciones de grabación con un poco más de detalle.');
+            }
+            if (cuestionario.modulo2.tipoClase === 'otro') {
+                addError('m2-tipo-otro', 'Módulo 2: si eliges “Otro”, escribe qué dinámica de clase prefieres.');
+            }
+            if (cuestionario.modulo3.tieneExperiencia === 'si' && (!cuestionario.modulo3.descripcionExperiencia || cuestionario.modulo3.descripcionExperiencia.length < 20)) {
+                addError('m3-descripcion', 'Módulo 3: describe brevemente la experiencia colaborativa real que quieres usar.');
+            }
+            if (!cuestionario.modulo3.colaborador || cuestionario.modulo3.colaborador.length < 5) {
+                addError('m3-colaborador', 'Módulo 3: indica el nombre y cargo del colaborador o posible colaborador.');
+            }
+
+            if (!errors.length) return true;
+
+            var errEl = document.getElementById('pre-modulos-error');
+            if (errEl) {
+                errEl.innerHTML = '<p class="font-semibold mb-2">Antes de finalizar, completa estos datos clave:</p><ul class="list-disc pl-5 space-y-1"><li>' + errors.join('</li><li>') + '</li></ul>';
+                errEl.classList.remove('hidden');
+            }
+            var firstInvalid = document.getElementById(firstInvalidId);
+            if (firstInvalid) {
+                firstInvalid.focus();
+                firstInvalid.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            return false;
+        }
+
         // Debounced auto-save
         var _datosTimer = null;
         var _modulosTimer = null;
@@ -2474,10 +2535,11 @@
         document.getElementById('pre-modulos-submit').addEventListener('click', function() {
             clearTimeout(_modulosTimer); // Cancel any pending auto-save
             var btn = this;
+            var cuestionario = collectModulosFields();
+            if (!validateModulosFields(cuestionario)) return;
+
             btn.disabled = true;
             btn.textContent = 'Guardando...';
-
-            var cuestionario = collectModulosFields();
             cuestionario.completadoEn = new Date().toISOString();
 
             db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {

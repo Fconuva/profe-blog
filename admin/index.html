@@ -439,6 +439,7 @@
                             <div><span class="text-gray-500 text-xs">Características del curso (legacy)</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-desc">—</p></div>
                             <div><span class="text-gray-500 text-xs">Conocimientos previos</span><p class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100" id="edit-dp-previos">—</p></div>
                             <div><span class="text-gray-500 text-xs">Lista de alumnos</span><pre class="font-medium text-gray-900 text-xs bg-white p-2 rounded-lg mt-1 border border-indigo-100 whitespace-pre-wrap max-h-32 overflow-y-auto" id="edit-dp-lista">—</pre></div>
+                            <div id="edit-dp-lista-archivo" class="hidden"></div>
                         </div>
                         <div class="mt-4 pt-4 border-t border-indigo-200">
                             <h5 class="text-xs font-bold text-indigo-800 uppercase mb-3">Ajuste Rápido PIE / NEE</h5>
@@ -1236,6 +1237,14 @@
                 document.getElementById('edit-dp-desc').textContent = dp.descripcion || '—';
                 document.getElementById('edit-dp-previos').textContent = dp.conocimientosPrevios || '—';
                 document.getElementById('edit-dp-lista').textContent = dp.listaAlumnos || '—';
+                var listaArchivoEl = document.getElementById('edit-dp-lista-archivo');
+                if (dp.listaArchivo && dp.listaArchivo.downloadUrl) {
+                    listaArchivoEl.innerHTML = '<span class="text-gray-500 text-xs">Archivo de lista adjunto</span><br><a href="' + escapeHtml(dp.listaArchivo.downloadUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center gap-1 mt-1 px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700 transition-colors">Descargar ' + escapeHtml(dp.listaArchivo.name || 'lista') + '</a>';
+                    listaArchivoEl.classList.remove('hidden');
+                } else {
+                    listaArchivoEl.classList.add('hidden');
+                    listaArchivoEl.innerHTML = '';
+                }
                 
                 // Nuevos campos de contexto pre-inscripción
                 document.getElementById('edit-dp-fortalezas').textContent = dp.fortalezas || '—';
@@ -1250,6 +1259,11 @@
                 document.getElementById('edit-dp-codocente-input').value = dp.codocentePIE || '';
             } else {
                 dpSection.classList.add('hidden');
+                var listaArchivoEmptyEl = document.getElementById('edit-dp-lista-archivo');
+                if (listaArchivoEmptyEl) {
+                    listaArchivoEmptyEl.classList.add('hidden');
+                    listaArchivoEmptyEl.innerHTML = '';
+                }
                 document.getElementById('edit-dp-num-pie-input').value = '';
                 document.getElementById('edit-dp-tipo-nee-input').value = '';
                 document.getElementById('edit-dp-codocente-input').value = '';

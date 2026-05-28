@@ -22,12 +22,14 @@
             </a>
             <div class="flex items-center gap-4">
                 <span id="user-name" class="text-sm text-gray-600 hidden sm:inline"></span>
+                <button id="send-reset-email-btn" class="text-sm font-medium text-indigo-700 hover:text-indigo-800 px-3 py-1.5 rounded-lg hover:bg-indigo-50 transition-colors">Cambiar contraseña</button>
                 <button id="logout-btn" class="text-sm font-medium text-red-600 hover:text-red-700 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors">
                     Cerrar Sesión
                 </button>
             </div>
         </nav>
     </header>
+    <p id="account-status" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs font-medium"></p>
 
     <!-- Loading -->
     <div id="loading" class="flex items-center justify-center py-32">
@@ -290,6 +292,23 @@
                             <label for="pdp-recursos" class="block text-sm font-medium text-gray-700 mb-1">Recursos disponibles en el aula</label>
                             <input type="text" id="pdp-recursos" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none" placeholder="Ej: Proyector, smartboard, parlantes de audio funcionales, biblioteca de aula">
                         </div>
+                    </div>
+
+                    <!-- Sección 5: Lista de estudiantes flexible -->
+                    <div class="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 space-y-4">
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                            <div>
+                                <h3 class="text-sm font-heading font-bold text-indigo-800 flex items-center gap-2">📋 5. Lista de estudiantes</h3>
+                                <p class="text-xs text-indigo-900/70 mt-1">Puedes pegar la nómina completa o adjuntar el archivo/foto que tengas a mano.</p>
+                            </div>
+                            <div>
+                                <input type="file" id="pdp-lista-alumnos-file" accept=".txt,.csv,.xlsx,.xls,.doc,.docx,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" class="hidden" onchange="importPreStudentList(this)">
+                                <button type="button" onclick="document.getElementById('pdp-lista-alumnos-file').click()" class="inline-flex items-center justify-center gap-1.5 px-4 py-2 bg-white border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors text-xs font-bold rounded-lg shadow-sm w-full sm:w-auto">Subir archivo o foto</button>
+                            </div>
+                        </div>
+                        <textarea id="pdp-lista-alumnos" rows="7" class="w-full px-4 py-3 border border-indigo-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-y font-mono text-sm bg-white" placeholder="Pega aquí la lista completa, aunque venga desde WhatsApp, Excel, Word o PDF. Ejemplo:&#10;1. Juan Pérez González&#10;2. María López Soto&#10;3. Pedro Martínez Díaz"></textarea>
+                        <p id="pdp-lista-alumnos-status" class="hidden text-xs font-medium"></p>
+                        <p class="text-xs text-indigo-900/70">Acepta texto pegado, .TXT, .CSV, Excel, Word, PDF o foto. Si el archivo no se puede convertir a texto, quedará adjunto para revisión del equipo.</p>
                     </div>
                 <div id="pre-datos-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm"></div>
                     <button type="submit" id="pre-datos-submit" class="w-full py-3 px-4 bg-primary-600 text-white font-semibold rounded-xl hover:bg-primary-700 transition-all shadow-sm disabled:opacity-50">
@@ -977,7 +996,7 @@
                     <div class="flex justify-between items-center mb-1 flex-wrap gap-2">
                         <label for="dp-lista-alumnos" class="block text-sm font-medium text-gray-700">Lista de Alumnos (uno por línea)</label>
                         <div>
-                            <input type="file" id="dp-lista-alumnos-file" accept=".txt,.csv" class="hidden" onchange="importStudentList(this)">
+                            <input type="file" id="dp-lista-alumnos-file" accept=".txt,.csv,.xlsx,.xls,.doc,.docx,.pdf,.jpg,.jpeg,.png,.webp,.heic,.heif" class="hidden" onchange="importStudentList(this)">
                             <button type="button" onclick="document.getElementById('dp-lista-alumnos-file').click()" class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100 transition-colors text-xs font-semibold rounded-lg shadow-sm">
                                 📎 Importar desde .TXT / .CSV
                             </button>
@@ -985,6 +1004,8 @@
                     </div>
                     <textarea id="dp-lista-alumnos" rows="6" class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-y font-mono text-sm" placeholder="1. Juan Pérez González&#10;2. María López Soto&#10;3. Pedro Martínez Díaz&#10;..."></textarea>
                     <p class="text-xs text-gray-400 mt-1">💡 <b>Consejo:</b> Puedes copiar y pegar tu lista directamente desde Excel, Word o PDF (simplemente copia la columna de nombres y pégala aquí).</p>
+                    <p id="dp-lista-alumnos-status" class="hidden text-xs font-medium mt-1"></p>
+                    <p class="text-xs text-gray-400 mt-1">También puedes subir Excel, Word, PDF o una foto de la nómina; si no se convierte a texto, queda adjunta para revisión.</p>
                 </div>
 
                 <div id="datos-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm"></div>
@@ -1180,6 +1201,7 @@
     var portData = null;
     var _suppressRender = false;
     var _paymentVerificationStarted = false;
+    var _listaArchivoMeta = null;
 
     (function() {
         firebase.initializeApp(FIREBASE_CONFIG);
@@ -1210,9 +1232,39 @@
         };
 
         // Logout
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            auth.signOut().then(function() { window.location.href = '/cuenta/login.html'; });
-        });
+        var logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', function() {
+                auth.signOut().then(function() { window.location.href = '/cuenta/login.html'; });
+            });
+        }
+
+        var resetEmailBtn = document.getElementById('send-reset-email-btn');
+        if (resetEmailBtn) {
+            resetEmailBtn.addEventListener('click', function() {
+                var statusEl = document.getElementById('account-status');
+                if (!currentUser || !currentUser.email) return;
+                resetEmailBtn.disabled = true;
+                resetEmailBtn.textContent = 'Enviando...';
+                auth.sendPasswordResetEmail(currentUser.email)
+                    .then(function() {
+                        if (statusEl) {
+                            statusEl.textContent = 'Te enviamos un correo para cambiar tu contraseña. Revisa también spam o promociones.';
+                            statusEl.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs font-medium text-green-700';
+                        }
+                    })
+                    .catch(function(error) {
+                        if (statusEl) {
+                            statusEl.textContent = error && error.code === 'auth/too-many-requests' ? 'Hay demasiados intentos. Espera unos minutos y vuelve a probar.' : 'No pudimos enviar el correo ahora. Intenta nuevamente o escríbenos por WhatsApp.';
+                            statusEl.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 text-xs font-medium text-red-700';
+                        }
+                    })
+                    .finally(function() {
+                        resetEmailBtn.disabled = false;
+                        resetEmailBtn.textContent = 'Cambiar contraseña';
+                    });
+            });
+        }
 
         // Auth state
         auth.onAuthStateChanged(function(user) {
@@ -1451,12 +1503,14 @@
                 'pdp-intereses-deporte': d.interesesDeporte,
                 'pdp-intereses': d.intereses, 'pdp-recursos': d.recursos,
                 'pdp-genero-colegio': d.generoColegio, 'pdp-modalidad-colegio': d.modalidadColegio,
-                'pdp-asignatura': d.asignatura
+                'pdp-asignatura': d.asignatura, 'pdp-lista-alumnos': d.listaAlumnos
             };
             Object.keys(fields).forEach(function(id) {
                 var el = document.getElementById(id);
                 if (el && fields[id] !== undefined && fields[id] !== null && fields[id] !== '') el.value = fields[id];
             });
+            _listaArchivoMeta = d.listaArchivo || null;
+            renderStudentListFileStatus('pdp-lista-alumnos-status', _listaArchivoMeta);
             // Tipo colegio (may be "Otro")
             if (d.tipoColegio) {
                 var tipoEl = document.getElementById('pdp-tipo-colegio');
@@ -1592,27 +1646,119 @@
                 var dpTipoColegio = document.getElementById('dp-tipo-colegio');
                 if (dpTipoColegio) dpTipoColegio.dispatchEvent(evt2);
             }
+            _listaArchivoMeta = d.listaArchivo || null;
+            renderStudentListFileStatus('dp-lista-alumnos-status', _listaArchivoMeta);
+        }
+
+        function setStudentListStatus(statusId, text, tone) {
+            var el = document.getElementById(statusId);
+            if (!el) return;
+            el.textContent = text || '';
+            el.className = 'text-xs font-medium mt-1 ' + (tone === 'error' ? 'text-red-600' : tone === 'success' ? 'text-green-700' : 'text-indigo-700');
+            el.classList.toggle('hidden', !text);
+        }
+
+        function renderStudentListFileStatus(statusId, meta) {
+            var el = document.getElementById(statusId);
+            if (!el) return;
+            if (!meta || !meta.name) {
+                el.textContent = '';
+                el.className = 'hidden text-xs font-medium mt-1';
+                return;
+            }
+            var link = meta.downloadUrl ? ' · Archivo guardado para revisión' : '';
+            el.textContent = 'Archivo adjunto: ' + meta.name + link;
+            el.className = 'text-xs font-medium mt-1 text-green-700';
+        }
+
+        function normalizeStudentListText(text) {
+            return (text || '').split(/\r?\n/).map(function(line) {
+                return line.trim();
+            }).filter(function(line) {
+                return line.length > 0;
+            }).join('\n');
+        }
+
+        function looksTextListFile(file) {
+            var name = (file.name || '').toLowerCase();
+            return /\.(txt|csv)$/i.test(name) || (file.type || '').indexOf('text/') === 0;
+        }
+
+        function readTextIntoTextarea(file, textareaId, statusId) {
+            return new Promise(function(resolve) {
+                if (!looksTextListFile(file)) return resolve(false);
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    var textarea = document.getElementById(textareaId);
+                    if (textarea) {
+                        textarea.value = normalizeStudentListText(e.target.result);
+                        textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        setStudentListStatus(statusId, 'Lista pegada desde el archivo. También estamos dejando el archivo adjunto por respaldo.', 'success');
+                    }
+                    resolve(true);
+                };
+                reader.onerror = function() { resolve(false); };
+                reader.readAsText(file);
+            });
+        }
+
+        function readFileAsDataUrl(file) {
+            return new Promise(function(resolve, reject) {
+                var reader = new FileReader();
+                reader.onload = function(e) { resolve(e.target.result); };
+                reader.onerror = function() { reject(new Error('No se pudo leer el archivo.')); };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function uploadStudentListFile(file, statusId) {
+            var maxBytes = 3 * 1024 * 1024;
+            if (file.size > maxBytes) {
+                setStudentListStatus(statusId, 'El archivo pesa más de 3 MB. Pega la lista en el recuadro o envía una versión más liviana.', 'error');
+                return Promise.resolve(null);
+            }
+            if (!currentUser) {
+                setStudentListStatus(statusId, 'Debes iniciar sesión para subir el archivo.', 'error');
+                return Promise.resolve(null);
+            }
+            setStudentListStatus(statusId, 'Subiendo archivo para revisión...', 'info');
+            return readFileAsDataUrl(file)
+                .then(function(dataUrl) { return currentUser.getIdToken().then(function(token) { return { dataUrl: dataUrl, token: token }; }); })
+                .then(function(payload) {
+                    return fetch('/api/portafolio-lista-upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + payload.token },
+                        body: JSON.stringify({ uid: currentUser.uid, file: { name: file.name, type: file.type || 'application/octet-stream', size: file.size, dataUrl: payload.dataUrl } })
+                    });
+                })
+                .then(function(response) {
+                    return response.json().catch(function() { return {}; }).then(function(data) {
+                        if (!response.ok) throw new Error(data.error || 'No se pudo subir el archivo.');
+                        _listaArchivoMeta = data.file;
+                        if (portData) portData.datosPortafolio = Object.assign({}, portData.datosPortafolio || {}, { listaArchivo: data.file });
+                        renderStudentListFileStatus('pdp-lista-alumnos-status', data.file);
+                        renderStudentListFileStatus('dp-lista-alumnos-status', data.file);
+                        return data.file;
+                    });
+                })
+                .catch(function(error) {
+                    setStudentListStatus(statusId, error.message || 'No se pudo subir el archivo.', 'error');
+                    return null;
+                });
+        }
+
+        function handleStudentListFile(input, textareaId, statusId) {
+            var file = input.files && input.files[0];
+            if (!file) return;
+            readTextIntoTextarea(file, textareaId, statusId).then(function() { return uploadStudentListFile(file, statusId); }).finally(function() { input.value = ''; });
         }
 
         window.importStudentList = function(input) {
-            var file = input.files[0];
-            if (!file) return;
-            var reader = new FileReader();
-            reader.onload = function(e) {
-                var text = e.target.result;
-                var lines = text.split(/\r?\n/).map(function(line) {
-                    return line.trim();
-                }).filter(function(line) {
-                    return line.length > 0;
-                });
-                
-                var textarea = document.getElementById('dp-lista-alumnos');
-                if (textarea) {
-                    textarea.value = lines.join('\n');
-                    input.value = '';
-                }
-            };
-            reader.readAsText(file);
+            handleStudentListFile(input, 'dp-lista-alumnos', 'dp-lista-alumnos-status');
+        };
+
+        window.importPreStudentList = function(input) {
+            handleStudentListFile(input, 'pdp-lista-alumnos', 'pdp-lista-alumnos-status');
         };
 
         // Pre-fill module questionnaire if already saved (draft)
@@ -1850,6 +1996,7 @@
 
             var nivelVal = document.getElementById('dp-nivel').value;
             if (nivelVal === 'Otro') nivelVal = document.getElementById('dp-nivel-otro').value.trim() || 'Otro';
+            var now = new Date().toISOString();
 
             var datos = {
                 asignatura: document.getElementById('dp-asignatura').value.trim(),
@@ -1876,7 +2023,9 @@
                 intereses: document.getElementById('dp-intereses').value.trim(),
                 descripcion: document.getElementById('dp-descripcion').value.trim(),
                 listaAlumnos: document.getElementById('dp-lista-alumnos').value.trim(),
-                completadoEn: new Date().toISOString()
+                listaArchivo: _listaArchivoMeta || ((portData && portData.datosPortafolio) || {}).listaArchivo || null,
+                listaActualizadaEn: _listaArchivoMeta ? (_listaArchivoMeta.uploadedAt || now) : (((portData && portData.datosPortafolio) || {}).listaActualizadaEn || null),
+                completadoEn: now
             };
 
             db.ref('portafolios/' + currentUser.uid + '/datosPortafolio').set(datos)
@@ -2098,7 +2247,10 @@
                 interesesVideojuegos: document.getElementById('pdp-intereses-videojuegos').value.trim(),
                 interesesDeporte: document.getElementById('pdp-intereses-deporte').value.trim(),
                 intereses: document.getElementById('pdp-intereses').value.trim(),
-                recursos: document.getElementById('pdp-recursos').value.trim()
+                recursos: document.getElementById('pdp-recursos').value.trim(),
+                listaAlumnos: document.getElementById('pdp-lista-alumnos').value.trim(),
+                listaArchivo: _listaArchivoMeta || ((portData && portData.datosPortafolio) || {}).listaArchivo || null,
+                listaActualizadaEn: _listaArchivoMeta ? (_listaArchivoMeta.uploadedAt || new Date().toISOString()) : (((portData && portData.datosPortafolio) || {}).listaActualizadaEn || null)
             };
         }
 

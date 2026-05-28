@@ -31,6 +31,32 @@ const PLANS = {
   modulo3: 79990
 };
 
+async function approvePortfolioPayment(db, uid, payment, plan) {
+  const verifiedAt = new Date().toISOString();
+  await db.ref('verified_payments/' + String(payment.id)).update({
+    paymentId: String(payment.id),
+    uid: uid,
+    amount: payment.transaction_amount,
+    currency: payment.currency_id || 'CLP',
+    payerEmail: (payment.payer && payment.payer.email) || '',
+    status: 'approved',
+    verifiedAt: verifiedAt,
+    plan: plan
+  });
+
+  await db.ref('portafolios/' + uid).update({
+    paymentStatus: 'approved',
+    comprobantePago: String(payment.id),
+    paidAt: verifiedAt,
+    paymentVerifiedAt: verifiedAt,
+    paymentConfirmedAt: verifiedAt,
+    paymentAmount: payment.transaction_amount,
+    plan: plan
+  });
+
+  return verifiedAt;
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -79,28 +105,13 @@ module.exports = async (req, res) => {
     const adminSdk = initFirebase();
     const db = adminSdk.database();
     const usedSnap = await db.ref('verified_payments/' + String(payment.id)).once('value');
-    if (usedSnap.val()) {
+    const usedPayment = usedSnap.val();
+    if (usedPayment && usedPayment.uid && usedPayment.uid !== uid) {
       return res.json({ verified: false, reason: 'Este comprobante ya fue utilizado por otra cuenta' });
     }
 
     // 5. All valid — register and auto-approve
-    await db.ref('verified_payments/' + String(payment.id)).set({
-      paymentId: String(payment.id),
-      uid: uid,
-      amount: payment.transaction_amount,
-      currency: payment.currency_id || 'CLP',
-      payerEmail: (payment.payer && payment.payer.email) || '',
-      status: 'approved',
-      verifiedAt: new Date().toISOString(),
-      plan: plan
-    });
-
-    await db.ref('portafolios/' + uid).update({
-      paymentStatus: 'approved',
-      comprobantePago: String(payment.id),
-      paymentVerifiedAt: new Date().toISOString(),
-      paymentAmount: payment.transaction_amount
-    });
+    await approvePortfolioPayment(db, uid, payment, plan);
 
     console.log('Payment auto-verified:', { paymentId: payment.id, uid, plan, amount: payment.transaction_amount });
 

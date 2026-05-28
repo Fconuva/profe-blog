@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel Admin — Portafolios Docentes 2026</title>
+    <meta name="theme-color" content="#111827">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Admin Portafolios">
+    <link rel="manifest" href="/admin/manifest.webmanifest">
+    <link rel="apple-touch-icon" href="/imagenes/logo-profe-francisco-nuevo.png">
     <link rel="icon" href="/imagenes/logo-profe-francisco-nuevo.svg" type="image/svg+xml">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,6 +26,8 @@
                 <span class="text-sm font-bold font-heading">ADMIN — Portafolios 2026 v1.2</span>
             </div>
             <div class="flex items-center gap-4">
+                <button id="install-app-btn" class="hidden text-xs font-medium text-amber-300 hover:text-amber-200 transition-colors">Instalar app</button>
+                <button id="notify-btn" class="text-xs font-medium text-emerald-300 hover:text-emerald-200 transition-colors">Activar avisos</button>
                 <a href="/" class="text-xs text-gray-400 hover:text-white transition-colors">Ver Sitio</a>
                 <button id="logout-btn" class="text-xs font-medium text-red-400 hover:text-red-300 transition-colors">Salir</button>
             </div>
@@ -644,12 +651,161 @@
         var allClients = {};
         var allPortafolios = {};
         var currentFilter = 'all';
+        var usersLoaded = false;
+        var portafoliosLoaded = false;
+        var notificationBaselineReady = false;
+        var lastClientsSnapshot = {};
+        var lastPortafoliosSnapshot = {};
+        var deferredInstallPrompt = null;
 
         var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión', 'pre-inscripcion': 'Pre-Inscrito' };
         var planPrices = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990, 'pre-inscripcion': 0 };
 
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
+
+        setupAdminApp();
+
+        function setupAdminApp() {
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/admin/sw.js', { scope: '/admin/' }).catch(function(err) {
+                    console.warn('No se pudo registrar la app instalable:', err);
+                });
+            }
+
+            window.addEventListener('beforeinstallprompt', function(event) {
+                event.preventDefault();
+                deferredInstallPrompt = event;
+                updateInstallButton();
+            });
+
+            window.addEventListener('appinstalled', function() {
+                deferredInstallPrompt = null;
+                updateInstallButton();
+            });
+
+            var installBtn = document.getElementById('install-app-btn');
+            if (installBtn) {
+                installBtn.addEventListener('click', function() {
+                    if (!deferredInstallPrompt) return;
+                    deferredInstallPrompt.prompt();
+                    deferredInstallPrompt.userChoice.finally(function() {
+                        deferredInstallPrompt = null;
+                        updateInstallButton();
+                    });
+                });
+            }
+
+            var notifyBtn = document.getElementById('notify-btn');
+            if (notifyBtn) {
+                notifyBtn.addEventListener('click', function() {
+                    if (!('Notification' in window)) {
+                        alert('Este navegador no soporta notificaciones.');
+                        return;
+                    }
+                    Notification.requestPermission().then(function(permission) {
+                        updateNotificationButton();
+                        if (permission === 'granted') {
+                            showAdminNotification('Avisos activados', 'Te avisaré cuando haya nuevos inscritos o pagos.', '/admin/');
+                        }
+                    });
+                });
+                updateNotificationButton();
+            }
+        }
+
+        function updateInstallButton() {
+            var installBtn = document.getElementById('install-app-btn');
+            if (!installBtn) return;
+            installBtn.classList.toggle('hidden', !deferredInstallPrompt);
+        }
+
+        function updateNotificationButton() {
+            var notifyBtn = document.getElementById('notify-btn');
+            if (!notifyBtn) return;
+            if (!('Notification' in window)) {
+                notifyBtn.textContent = 'Avisos no disponibles';
+                notifyBtn.disabled = true;
+                notifyBtn.classList.add('text-gray-500');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                notifyBtn.textContent = 'Avisos activos';
+                notifyBtn.classList.remove('text-emerald-300', 'hover:text-emerald-200');
+                notifyBtn.classList.add('text-green-300');
+            } else if (Notification.permission === 'denied') {
+                notifyBtn.textContent = 'Avisos bloqueados';
+                notifyBtn.classList.remove('text-emerald-300', 'hover:text-emerald-200');
+                notifyBtn.classList.add('text-gray-400');
+            } else {
+                notifyBtn.textContent = 'Activar avisos';
+            }
+        }
+
+        function cloneData(value) {
+            return JSON.parse(JSON.stringify(value || {}));
+        }
+
+        function isApprovedStatus(status) {
+            return status === 'approved' || status === 'aprobado';
+        }
+
+        function clientLabel(uid, clients) {
+            var c = (clients || {})[uid] || {};
+            return c.nombre || c.email || 'Nuevo docente';
+        }
+
+        function showAdminNotification(title, body, url) {
+            if (!('Notification' in window) || Notification.permission !== 'granted') return;
+            var payload = {
+                body: body,
+                icon: '/imagenes/logo-profe-francisco-nuevo.png',
+                badge: '/imagenes/logo-profe-francisco-nuevo.png',
+                tag: title + ':' + body,
+                data: { url: url || '/admin/' }
+            };
+            if (navigator.serviceWorker && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(function(registration) {
+                    registration.showNotification(title, payload);
+                }).catch(function() { new Notification(title, payload); });
+            } else {
+                new Notification(title, payload);
+            }
+        }
+
+        function detectAdminChanges(nextClients, nextPortafolios) {
+            if (!usersLoaded || !portafoliosLoaded) return;
+            if (!notificationBaselineReady) {
+                lastClientsSnapshot = cloneData(nextClients);
+                lastPortafoliosSnapshot = cloneData(nextPortafolios);
+                notificationBaselineReady = true;
+                return;
+            }
+
+            Object.keys(nextClients || {}).forEach(function(uid) {
+                var current = nextClients[uid] || {};
+                if (!lastClientsSnapshot[uid] && current.role !== 'admin') {
+                    showAdminNotification('Nuevo inscrito', clientLabel(uid, nextClients), '/admin/');
+                }
+            });
+
+            Object.keys(nextPortafolios || {}).forEach(function(uid) {
+                var previous = lastPortafoliosSnapshot[uid] || {};
+                var current = nextPortafolios[uid] || {};
+                var name = clientLabel(uid, nextClients);
+
+                if (!isApprovedStatus(previous.paymentStatus) && isApprovedStatus(current.paymentStatus)) {
+                    showAdminNotification('Pago aprobado', name + ' · ' + formatCLP(current.paymentAmount || getPlanPrice(current.plan)), '/admin/');
+                }
+
+                if (previous.paymentStatus !== 'pendiente_verificacion' && current.paymentStatus === 'pendiente_verificacion') {
+                    showAdminNotification('Pago por revisar', name + ' informó comprobante ' + (current.comprobantePago || ''), '/admin/');
+                }
+            });
+
+            lastClientsSnapshot = cloneData(nextClients);
+            lastPortafoliosSnapshot = cloneData(nextPortafolios);
+        }
 
         // ===== AUTH =====
         document.getElementById('logout-btn').addEventListener('click', function() {
@@ -705,11 +861,17 @@
         // ===== LOAD DATA =====
         function loadData() {
             db.ref('users').on('value', function(snap) {
-                allClients = snap.val() || {};
+                var nextClients = snap.val() || {};
+                usersLoaded = true;
+                detectAdminChanges(nextClients, allPortafolios);
+                allClients = nextClients;
                 renderAll();
             });
             db.ref('portafolios').on('value', function(snap) {
-                allPortafolios = snap.val() || {};
+                var nextPortafolios = snap.val() || {};
+                portafoliosLoaded = true;
+                detectAdminChanges(allClients, nextPortafolios);
+                allPortafolios = nextPortafolios;
                 renderAll();
             });
         }

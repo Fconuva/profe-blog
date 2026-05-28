@@ -34,6 +34,33 @@ function initFirebase() {
   return admin;
 }
 
+function getUidFromExternalReference(externalReference) {
+  const value = String(externalReference || '').trim();
+  const match = value.match(/^(.+)_\d{10,}$/);
+  return match ? match[1] : '';
+}
+
+async function findUidByEmail(db, email) {
+  if (!email) return '';
+  const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+  const users = snap.val() || {};
+  return Object.keys(users)[0] || '';
+}
+
+async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) {
+  if (!uid) return false;
+  await db.ref('portafolios/' + uid).update({
+    paymentStatus: 'approved',
+    comprobantePago: String(payment.id),
+    paidAt: approvedAt,
+    paymentVerifiedAt: approvedAt,
+    paymentConfirmedAt: approvedAt,
+    paymentAmount: payment.transaction_amount,
+    plan: plan || 'completo'
+  });
+  return true;
+}
+
 module.exports = async (req, res) => {
   // Mercado Pago sends different kinds of notifications. We'll handle payment notifications.
   try {
@@ -97,12 +124,16 @@ module.exports = async (req, res) => {
         (payment.payer && payment.payer.first_name) ||
         '';
 
-      const payerUid = metadata.user_uid || null;
+      let payerUid = metadata.user_uid || metadata.userUid || getUidFromExternalReference(payment.external_reference) || '';
       const payerPlan = metadata.plan || 'completo';
 
-      if (!payerEmail) {
-        console.error('No payer email found in payment');
-        return res.status(200).send('no_email');
+      if (!payerUid && payerEmail) {
+        payerUid = await findUidByEmail(db, payerEmail);
+      }
+
+      if (!payerEmail && !payerUid) {
+        console.error('No payer identity found in payment');
+        return res.status(200).send('no_identity');
       }
 
       // Store payment verification
@@ -112,6 +143,7 @@ module.exports = async (req, res) => {
         email: payerEmail,
         name: payerName,
         uid: payerUid,
+        externalReference: payment.external_reference || '',
         registrationType: isCourseRegistration ? 'curso' : 'portafolio',
         course: metadata.course || '',
         registrationId: metadata.registration_id || '',
@@ -141,8 +173,7 @@ module.exports = async (req, res) => {
 
       // Update user's portfolio payment status if uid available
       if (!isCourseRegistration && payerUid) {
-        await db.ref('portafolios/' + payerUid + '/paymentStatus').set('approved');
-        await db.ref('portafolios/' + payerUid + '/paidAt').set(paymentApprovedAt);
+        await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
       }
 
       console.log('Payment verified and stored:', {

@@ -2516,29 +2516,48 @@
 
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 
-            auth.currentUser.getIdToken().then(function(idToken) {
-                return fetch('/api/admin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        action: 'update-user-profile',
-                        uid: uid,
-                        callerUid: auth.currentUser.uid,
-                        idToken: idToken,
-                        nombre: newNombre,
-                        email: newEmail,
-                        telefono: newTelefono,
-                        rut: newRut
-                    })
-                });
-            }).then(function(res) {
-                return res.json().then(function(data) {
-                    if (!res.ok || !data.success) throw new Error(data.error || 'No se pudo actualizar el perfil del usuario.');
-                    return data;
-                });
-            }).then(function() {
-                return db.ref().update(updates);
-            }).then(function() {
+            // Perfil (nombre/telefono/rut) se escribe directo a users/ (el admin tiene permiso por reglas).
+            // La API update-user-profile solo se usa cuando cambia el EMAIL (requiere sincronizar Firebase Auth).
+            updates['users/' + uid + '/nombre'] = newNombre;
+            updates['users/' + uid + '/telefono'] = newTelefono;
+            updates['users/' + uid + '/rut'] = newRut;
+            updates['users/' + uid + '/updatedAt'] = new Date().toISOString();
+
+            var oldEmail = (((allClients[uid] || {}).email) || '').trim().toLowerCase();
+            var emailChanged = newEmail !== oldEmail;
+
+            function applyDbUpdates() { return db.ref().update(updates); }
+
+            var saveChain;
+            if (emailChanged) {
+                // El cambio de correo requiere sincronizar Firebase Auth -> pasa por la API admin.
+                saveChain = auth.currentUser.getIdToken().then(function(idToken) {
+                    return fetch('/api/admin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'update-user-profile',
+                            uid: uid,
+                            callerUid: auth.currentUser.uid,
+                            idToken: idToken,
+                            nombre: newNombre,
+                            email: newEmail,
+                            telefono: newTelefono,
+                            rut: newRut
+                        })
+                    });
+                }).then(function(res) {
+                    return res.json().then(function(data) {
+                        if (!res.ok || !data.success) throw new Error(data.error || 'No se pudo actualizar el correo del usuario.');
+                        return data;
+                    });
+                }).then(applyDbUpdates);
+            } else {
+                // Sin cambio de correo: nombre/telefono/rut y todo lo demas va directo a la base (sin API).
+                saveChain = applyDbUpdates();
+            }
+
+            saveChain.then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
                 showActionMsg('✅ Cambios guardados correctamente.', 'success');

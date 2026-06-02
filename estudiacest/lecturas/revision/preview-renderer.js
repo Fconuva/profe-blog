@@ -205,12 +205,40 @@
       renderSummary(normalized.materials, normalized.items, summary, data.meta || {});
       renderSidebar(normalized.materials, normalized.items, sidebar);
 
-      let html = '';
+      const materialsById = {};
       normalized.materials.forEach(function(material) {
-        html += renderMaterial(material);
+        if (material && material.id) materialsById[material.id] = material;
       });
-      normalized.items.forEach(function(item, index) {
-        html += renderItem(item, index);
+
+      // Agrupar ítems por su material (texto → sus preguntas → siguiente texto → sus preguntas)
+      const sections = [];
+      const sectionByRef = {};
+      normalized.items.forEach(function(item) {
+        const ref = item.materialRef || '__sin_material__';
+        if (!sectionByRef[ref]) {
+          sectionByRef[ref] = { material: materialsById[ref] || null, items: [] };
+          sections.push(sectionByRef[ref]);
+        }
+        sectionByRef[ref].items.push(item);
+      });
+
+      // Materiales sin ítems asociados: mostrarlos igual, en su orden
+      normalized.materials.forEach(function(material) {
+        if (material && material.id && !sectionByRef[material.id]) {
+          const section = { material: material, items: [] };
+          sectionByRef[material.id] = section;
+          sections.push(section);
+        }
+      });
+
+      let html = '';
+      let itemCounter = 0;
+      sections.forEach(function(section) {
+        if (section.material) html += renderMaterial(section.material);
+        section.items.forEach(function(item) {
+          html += renderItem(item, itemCounter);
+          itemCounter += 1;
+        });
       });
       shell.innerHTML = html;
     } catch (error) {

@@ -144,6 +144,7 @@
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="unpaid">Sin Pago</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="inprogress">En Progreso</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="preinscrito">Pre-Inscritos</button>
+                            <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="archivados">📦 Archivados</button>
                         </div>
                         <input type="text" id="search-input" placeholder="Buscar nombre, email, RUT..."
                                class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
@@ -381,6 +382,7 @@
                     <button type="button" id="btn-set-preinscrito" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#d97706">📋 Marcar Pre-Inscrito</button>
                     <button type="button" id="btn-gdrive-folder" class="px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors" style="background-color:#0F9D58">📁 Carpeta Google Drive</button>
                     <button type="button" id="btn-block-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-black text-white hover:bg-zinc-800 transition-colors">🚫 Bloquear Usuario</button>
+                    <button type="button" id="btn-archivar" class="px-3 py-2 text-xs font-medium rounded-lg bg-slate-600 text-white hover:bg-slate-700 transition-colors">📦 Archivar</button>
                     <button type="button" id="btn-delete-user" class="px-3 py-2 text-xs font-medium rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors">🗑️ Eliminar Usuario</button>
                 </div>
                 <div id="action-msg" class="hidden px-4 py-2 rounded-xl text-sm"></div>
@@ -1190,6 +1192,10 @@
                     var haystack = ((c.nombre || '') + ' ' + (c.email || '') + ' ' + (c.rut || '') + ' ' + (c.telefono || '')).toLowerCase();
                     if (!haystack.includes(search)) return false;
                 }
+                // Archivados: vista propia; en las demas vistas se ocultan
+                var archivado = !!(p && p.archivado);
+                if (currentFilter === 'archivados') return archivado;
+                if (archivado) return false;
                 // Filter
                 if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
                 if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado';
@@ -1521,6 +1527,7 @@
             document.getElementById('edit-telefono').value = c.telefono || '';
             document.getElementById('edit-fecha-registro').textContent = formatDate(c.createdAt);
             document.getElementById('edit-inscripcion-num').textContent = c.inscripcionNum || '—';
+            if (typeof updateArchivarBtn === 'function') updateArchivarBtn();
 
             // Comprobante info
             var compInfo = document.getElementById('edit-comprobante-info');
@@ -2361,6 +2368,41 @@
                 btn.disabled = false;
                 btn.textContent = '🗑️ Eliminar Usuario';
                 showActionMsg('Error de red: ' + err.message, 'error');
+            });
+        });
+
+        // Archivar / Desarchivar (reversible; no borra nada)
+        function updateArchivarBtn() {
+            var btn = document.getElementById('btn-archivar');
+            if (!btn || !currentEditUid) return;
+            var p = allPortafolios[currentEditUid] || {};
+            if (p.archivado) {
+                btn.textContent = '📤 Desarchivar';
+                btn.className = 'px-3 py-2 text-xs font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors';
+            } else {
+                btn.textContent = '📦 Archivar';
+                btn.className = 'px-3 py-2 text-xs font-medium rounded-lg bg-slate-600 text-white hover:bg-slate-700 transition-colors';
+            }
+        }
+        document.getElementById('btn-archivar').addEventListener('click', function() {
+            if (!currentEditUid) return;
+            var c = allClients[currentEditUid] || {};
+            var p = allPortafolios[currentEditUid] || {};
+            var nombre = c.nombre || c.email || currentEditUid;
+            var estaArchivado = !!p.archivado;
+            if (!confirm('¿' + (estaArchivado ? 'Desarchivar' : 'Archivar') + ' a "' + nombre + '"?\n\n' + (estaArchivado ? 'Volverá a aparecer en la nómina principal.' : 'Se ocultará de la nómina principal y quedará en la pestaña "Archivados". No se borra nada; puedes revertirlo cuando quieras.'))) return;
+            var btn = this;
+            btn.disabled = true;
+            db.ref('portafolios/' + currentEditUid + '/archivado').set(!estaArchivado).then(function() {
+                btn.disabled = false;
+                if (!allPortafolios[currentEditUid]) allPortafolios[currentEditUid] = {};
+                allPortafolios[currentEditUid].archivado = !estaArchivado;
+                updateArchivarBtn();
+                showActionMsg(estaArchivado ? '📤 Usuario desarchivado.' : '📦 Usuario archivado (oculto de la nómina principal).', 'success');
+                renderClients();
+            }).catch(function(err) {
+                btn.disabled = false;
+                showActionMsg('Error: ' + err.message, 'error');
             });
         });
 

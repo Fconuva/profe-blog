@@ -103,7 +103,7 @@
                     <p class="text-xs text-gray-400" id="stat-total-revenue-count">0 planes</p>
                 </div>
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
-                    <p class="text-xs text-gray-500 mb-1">✅ Recaudado (pagados)</p>
+                    <p class="text-xs text-gray-500 mb-1">✅ Neto recibido (pagados)</p>
                     <p class="text-2xl font-heading font-bold text-green-600" id="stat-paid-revenue">$0</p>
                     <p class="text-xs text-gray-400" id="stat-paid-revenue-count">0 pagos</p>
                 </div>
@@ -147,16 +147,24 @@
                         </div>
                         <input type="text" id="search-input" placeholder="Buscar nombre, email, RUT..."
                                class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none w-64">
+                        <select id="sort-select" class="px-3 py-1.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white" title="Ordenar nómina">
+                            <option value="pago-antiguo">Orden de proceso (pago más antiguo primero)</option>
+                            <option value="pago-reciente">Pago más reciente primero</option>
+                            <option value="progreso">Menos avanzado primero</option>
+                            <option value="nombre">Nombre (A–Z)</option>
+                            <option value="registro">Registro más reciente</option>
+                        </select>
                     </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 text-left">
                             <tr>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase" title="Número de orden de procesamiento en la vista actual">#</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Nombre</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Teléfono</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Plan</th>
-                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Monto</th>
+                                <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Neto / bruto</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Pago</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Progreso</th>
                                 <th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Drive</th>
@@ -304,7 +312,7 @@
                         </div>
                         <div>
                             <label class="text-gray-500 text-xs block mb-1">Email</label>
-                            <p class="font-medium text-gray-900 py-1.5" id="edit-email">—</p>
+                            <input type="email" id="edit-email" class="w-full px-2 py-1.5 border border-gray-300 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="correo@ejemplo.com">
                         </div>
                         <div>
                             <label class="text-gray-500 text-xs block mb-1">RUT</label>
@@ -334,6 +342,10 @@
                             📲 WhatsApp <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
                         <div id="wsp-dropdown-menu" class="hidden absolute left-0 top-full mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-200 z-50 py-1">
+                            <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 transition-colors flex items-center gap-2 border-b border-gray-100" data-msg="requerimientos_2026">
+                                <span class="text-base">🆕</span>
+                                <div><p class="font-medium text-gray-900">Requerimientos Manual 2026</p><p class="text-xs text-gray-500">Completar info + inicio 08 jun + pago</p></div>
+                            </button>
                             <button type="button" class="wsp-msg-btn w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 transition-colors flex items-center gap-2" data-msg="reserva">
                                 <span class="text-base">📋</span>
                                 <div><p class="font-medium text-gray-900">Reserva / Inscripción</p><p class="text-xs text-gray-500">Datos + link para ingresar</p></div>
@@ -650,7 +662,9 @@
 
         var allClients = {};
         var allPortafolios = {};
+        var allVerifiedPayments = {};
         var currentFilter = 'all';
+        var currentSort = 'pago-antiguo';
         var usersLoaded = false;
         var portafoliosLoaded = false;
         var notificationBaselineReady = false;
@@ -660,6 +674,8 @@
 
         var planNames = { completo: 'Completo', modulo1: 'M1 — Planif.', modulo2: 'M2 — Clase', modulo3: 'M3 — Reflexión', 'pre-inscripcion': 'Pre-Inscrito' };
         var planPrices = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990, 'pre-inscripcion': 0 };
+        var mercadoPagoBaseFeeRate = 7562 / 199000;
+        var mercadoPagoInstallmentsFeeRate = 6945 / 199000;
 
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
@@ -807,6 +823,76 @@
             lastPortafoliosSnapshot = cloneData(nextPortafolios);
         }
 
+        function moneyValue(value) {
+            var num = Number(value);
+            return isFinite(num) ? Math.round(num) : 0;
+        }
+
+        function getVerifiedPaymentForPortafolio(p, uid) {
+            var paymentId = p && (p.comprobantePago || p.paymentId || p.mercadoPagoPaymentId);
+            if (paymentId && allVerifiedPayments[paymentId]) return allVerifiedPayments[paymentId];
+            if (!uid) return {};
+
+            var latest = null;
+            Object.keys(allVerifiedPayments).forEach(function(key) {
+                var payment = allVerifiedPayments[key] || {};
+                if (String(payment.uid || '') !== String(uid)) return;
+                if (payment.registrationType === 'curso') return;
+                if (payment.status && payment.status !== 'approved') return;
+                if (!latest || String(payment.verifiedAt || '').localeCompare(String(latest.verifiedAt || '')) > 0) latest = payment;
+            });
+            return latest || {};
+        }
+
+        function isMercadoPagoPayment(p, verifiedPayment) {
+            var paymentId = String((p && (p.comprobantePago || p.paymentId || p.mercadoPagoPaymentId)) || (verifiedPayment && verifiedPayment.paymentId) || '');
+            if (!paymentId) return false;
+            return !paymentId.startsWith('MP-M') && !paymentId.includes('MANUAL') && ((p && p.paymentMethod) !== 'transferencia');
+        }
+
+        function paymentInstallments(p, verifiedPayment) {
+            return moneyValue((p && (p.paymentInstallments || p.installments || p.mercadoPagoInstallments)) || (verifiedPayment && verifiedPayment.installments) || 1) || 1;
+        }
+
+        function paymentBreakdown(p, fallbackPrice, uid) {
+            p = p || {};
+            var verifiedPayment = getVerifiedPaymentForPortafolio(p, uid);
+            var gross = moneyValue(
+                p.paymentGrossAmount ||
+                p.paymentAmount ||
+                p.amount ||
+                verifiedPayment.grossAmount ||
+                verifiedPayment.amount ||
+                fallbackPrice
+            );
+            if (!gross) {
+                return { gross: 0, net: 0, baseFee: 0, installmentsFee: 0, totalFee: 0, installments: 1, estimated: false };
+            }
+
+            var savedNet = moneyValue(p.paymentNetAmount || p.netReceivedAmount || p.netAmount || verifiedPayment.netReceivedAmount || verifiedPayment.netAmount);
+            var baseFee = moneyValue(p.mercadoPagoFee || p.mpFee || verifiedPayment.mercadoPagoFee || verifiedPayment.mpFee);
+            var installmentsFee = moneyValue(p.installmentsFee || p.noInterestInstallmentsFee || p.financingFee || verifiedPayment.installmentsFee || verifiedPayment.noInterestInstallmentsFee || verifiedPayment.financingFee);
+            var totalFee = moneyValue(p.paymentTotalFee || p.totalFee || p.mpTotalFee || verifiedPayment.totalFee || verifiedPayment.paymentTotalFee || verifiedPayment.mpTotalFee);
+            var installments = paymentInstallments(p, verifiedPayment);
+
+            if (!totalFee && (baseFee || installmentsFee)) totalFee = baseFee + installmentsFee;
+            if ((savedNet || totalFee) && isMercadoPagoPayment(p, verifiedPayment)) {
+                if (!totalFee) totalFee = Math.max(0, gross - savedNet);
+                if (!savedNet) savedNet = Math.max(0, gross - totalFee);
+                if (!baseFee && totalFee) baseFee = Math.max(0, totalFee - installmentsFee);
+                return { gross: gross, net: savedNet, baseFee: baseFee, installmentsFee: installmentsFee, totalFee: totalFee, installments: installments, estimated: false };
+            }
+
+            if (!isMercadoPagoPayment(p, verifiedPayment)) {
+                return { gross: gross, net: gross, baseFee: 0, installmentsFee: 0, totalFee: 0, installments: installments, estimated: false };
+            }
+
+            baseFee = Math.round(gross * mercadoPagoBaseFeeRate);
+            installmentsFee = installments > 1 ? Math.round(gross * mercadoPagoInstallmentsFeeRate) : 0;
+            totalFee = baseFee + installmentsFee;
+            return { gross: gross, net: Math.max(0, gross - totalFee), baseFee: baseFee, installmentsFee: installmentsFee, totalFee: totalFee, installments: installments, estimated: true };
+        }
+
         // ===== AUTH =====
         document.getElementById('logout-btn').addEventListener('click', function() {
             auth.signOut().then(function() { window.location.href = '/cuenta/login.html'; });
@@ -872,6 +958,10 @@
                 portafoliosLoaded = true;
                 detectAdminChanges(allClients, nextPortafolios);
                 allPortafolios = nextPortafolios;
+                renderAll();
+            });
+            db.ref('verified_payments').on('value', function(snap) {
+                allVerifiedPayments = snap.val() || {};
                 renderAll();
             });
         }
@@ -975,7 +1065,7 @@
         function renderDashboard() {
             var uids = getClientUids();
             var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0;
-            var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
+            var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0, paidGrossRevenue = 0, paidFees = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
             var recentList = [];
@@ -991,8 +1081,11 @@
                     totalWithPlan++;
                 }
                 if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
+                    var breakdown = paymentBreakdown(p, price, uid);
                     paid++;
-                    paidRevenue += price;
+                    paidRevenue += breakdown.net;
+                    paidGrossRevenue += breakdown.gross;
+                    paidFees += breakdown.totalFee;
                     paidCount++;
                 } else if (p.plan) {
                     pendingRevenue += price;
@@ -1021,7 +1114,7 @@
             document.getElementById('stat-total-revenue').textContent = formatCLP(totalRevenue);
             document.getElementById('stat-total-revenue-count').textContent = totalWithPlan + ' planes';
             document.getElementById('stat-paid-revenue').textContent = formatCLP(paidRevenue);
-            document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos';
+            document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos · bruto ' + formatCLP(paidGrossRevenue) + ' · desc. ' + formatCLP(paidFees);
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
 
@@ -1105,11 +1198,47 @@
                 return true;
             });
 
-            uids.forEach(function(uid) {
+            // ===== Ordenar la nómina =====
+            function payDate(uid) {
+                var p = allPortafolios[uid] || {};
+                return p.paidAt || p.paymentVerifiedAt || p.paymentConfirmedAt || '';
+            }
+            function isPaid(uid) {
+                var p = allPortafolios[uid] || {};
+                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
+            }
+            uids.sort(function(a, b) {
+                if (currentSort === 'nombre') {
+                    return ((allClients[a].nombre || '').toLowerCase()).localeCompare((allClients[b].nombre || '').toLowerCase());
+                }
+                if (currentSort === 'progreso') {
+                    return calcProgress(allPortafolios[a] || {}) - calcProgress(allPortafolios[b] || {});
+                }
+                if (currentSort === 'registro') {
+                    return ((allClients[b].createdAt || '')).localeCompare(allClients[a].createdAt || '');
+                }
+                if (currentSort === 'pago-reciente') {
+                    return (payDate(b) || '').localeCompare(payDate(a) || '');
+                }
+                // pago-antiguo (orden de proceso): pagados primero, por fecha de pago ascendente; luego el resto por registro
+                var pa = isPaid(a), pb = isPaid(b);
+                if (pa !== pb) return pa ? -1 : 1;
+                if (pa && pb) {
+                    var da = payDate(a), dbb = payDate(b);
+                    if (da && dbb) return da.localeCompare(dbb);
+                    if (da) return -1;
+                    if (dbb) return 1;
+                }
+                return ((allClients[a].createdAt || '')).localeCompare(allClients[b].createdAt || '');
+            });
+
+            uids.forEach(function(uid, idx) {
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 var progress = calcProgress(p);
                 var price = getPlanPrice(p.plan);
+                var orden = idx + 1;
+                var msg2026 = p.seguimiento && p.seguimiento.requerimientos2026Enviado && p.seguimiento.requerimientos2026Enviado.enviado;
 
                 var planText = planNames[p.plan] || p.plan;
                 if (!planText && c.status === 'pre-inscrito') {
@@ -1126,8 +1255,13 @@
 
                 var tr = document.createElement('tr');
                 tr.className = 'hover:bg-gray-50 transition-colors';
+                var ordenBadge = isPaid(uid)
+                    ? '<span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-primary-600 text-white text-xs font-bold" title="Orden de procesamiento">' + orden + '</span>'
+                    : '<span class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-gray-100 text-gray-400 text-xs font-medium">' + orden + '</span>';
+                var msg2026Badge = msg2026 ? ' <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-700 align-middle" title="Mensaje Requerimientos 2026 enviado">✅ 2026</span>' : '';
                 tr.innerHTML =
-                    '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
+                    '<td class="px-4 py-3">' + ordenBadge + '</td>' +
+                    '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + msg2026Badge + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
                     '<td class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
                     '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + escapeHtml(planText) + '</span></td>' +
                     '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + escapeHtml(priceText) + '</td>' +
@@ -1150,6 +1284,10 @@
         }
 
         document.getElementById('search-input').addEventListener('input', renderClients);
+        document.getElementById('sort-select').addEventListener('change', function() {
+            currentSort = this.value;
+            renderClients();
+        });
 
         // ===== RENDER PAYMENTS TAB =====
         function renderPayments() {
@@ -1196,11 +1334,25 @@
                             updates['portafolios/' + uid + '/comprobantePago'] = paymentId;
                             updates['portafolios/' + uid + '/paymentVerifiedAt'] = verifiedDate;
                             updates['portafolios/' + uid + '/paymentAmount'] = expectedAmount;
+                            updates['portafolios/' + uid + '/paymentGrossAmount'] = expectedAmount;
+                            updates['portafolios/' + uid + '/paymentNetAmount'] = expectedAmount;
+                            updates['portafolios/' + uid + '/paymentTotalFee'] = 0;
+                            updates['portafolios/' + uid + '/mercadoPagoFee'] = 0;
+                            updates['portafolios/' + uid + '/installmentsFee'] = 0;
+                            updates['portafolios/' + uid + '/paymentInstallments'] = 1;
+                            updates['portafolios/' + uid + '/paymentMethod'] = 'transferencia';
 
                             updates['verified_payments/' + paymentId] = {
                                 paymentId: paymentId,
                                 uid: uid,
                                 amount: expectedAmount,
+                                grossAmount: expectedAmount,
+                                netReceivedAmount: expectedAmount,
+                                totalFee: 0,
+                                mercadoPagoFee: 0,
+                                installmentsFee: 0,
+                                installments: 1,
+                                paymentMethod: 'transferencia',
                                 currency: 'CLP',
                                 payerEmail: c.email || '',
                                 status: 'approved',
@@ -1242,6 +1394,11 @@
                     var c = allClients[uid] || {};
                     var p = allPortafolios[uid] || {};
                     var price = getPlanPrice(p.plan);
+                    var breakdown = paymentBreakdown(p, price, uid);
+                    var feeLabel = breakdown.totalFee ? 'Bruto ' + formatCLP(breakdown.gross) + ' · desc. ' + formatCLP(breakdown.totalFee) : 'Bruto ' + formatCLP(breakdown.gross);
+                    if (breakdown.installments > 1) feeLabel += ' · ' + breakdown.installments + ' cuotas';
+                    else if (breakdown.installmentsFee) feeLabel += ' · cuotas';
+                    if (breakdown.estimated) feeLabel += ' est.';
                     var date = p.paidAt || p.paymentVerifiedAt || p.updatedAt || '';
 
                     var tr = document.createElement('tr');
@@ -1250,7 +1407,7 @@
                     tr.innerHTML =
                         '<td class="px-4 py-3"><div class="font-medium text-gray-900 text-sm">' + escapeHtml(c.nombre || '—') + '</div><div class="text-xs text-gray-500">' + escapeHtml(c.email || '') + '</div></td>' +
                         '<td class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + (planNames[p.plan] || p.plan || '—') + '</span></td>' +
-                        '<td class="px-4 py-3 text-sm font-medium text-gray-900">' + (price ? formatCLP(price) : '—') + '</td>' +
+                        '<td class="px-4 py-3"><div class="text-sm font-semibold text-green-700">' + (breakdown.net ? formatCLP(breakdown.net) : '—') + '</div><div class="text-xs text-gray-400">' + escapeHtml(feeLabel) + '</div></td>' +
                         '<td class="px-4 py-3 text-sm font-mono text-gray-600">' + escapeHtml(p.comprobantePago || 'MP Manual') + '</td>' +
                         '<td class="px-4 py-3 text-xs text-gray-400">' + (date ? formatDate(date) : '—') + '</td>';
                     approvedTbody.appendChild(tr);
@@ -1359,7 +1516,7 @@
             document.getElementById('edit-uid').value = uid;
             document.getElementById('modal-title').textContent = (c.nombre || 'Cliente');
             document.getElementById('edit-nombre').value = c.nombre || '';
-            document.getElementById('edit-email').textContent = c.email || '—';
+            document.getElementById('edit-email').value = c.email || '';
             document.getElementById('edit-rut').value = c.rut || '';
             document.getElementById('edit-telefono').value = c.telefono || '';
             document.getElementById('edit-fecha-registro').textContent = formatDate(c.createdAt);
@@ -1608,11 +1765,25 @@
                 updates['portafolios/' + uid + '/comprobantePago'] = paymentId;
                 updates['portafolios/' + uid + '/paymentVerifiedAt'] = verifiedDate;
                 updates['portafolios/' + uid + '/paymentAmount'] = expectedAmount;
+                updates['portafolios/' + uid + '/paymentGrossAmount'] = expectedAmount;
+                updates['portafolios/' + uid + '/paymentNetAmount'] = expectedAmount;
+                updates['portafolios/' + uid + '/paymentTotalFee'] = 0;
+                updates['portafolios/' + uid + '/mercadoPagoFee'] = 0;
+                updates['portafolios/' + uid + '/installmentsFee'] = 0;
+                updates['portafolios/' + uid + '/paymentInstallments'] = 1;
+                updates['portafolios/' + uid + '/paymentMethod'] = 'transferencia';
 
                 updates['verified_payments/' + paymentId] = {
                     paymentId: paymentId,
                     uid: uid,
                     amount: expectedAmount,
+                    grossAmount: expectedAmount,
+                    netReceivedAmount: expectedAmount,
+                    totalFee: 0,
+                    mercadoPagoFee: 0,
+                    installmentsFee: 0,
+                    installments: 1,
+                    paymentMethod: 'transferencia',
                     currency: 'CLP',
                     payerEmail: c.email || '',
                     status: 'approved',
@@ -1639,6 +1810,13 @@
                         p.comprobantePago = paymentId;
                         p.paymentVerifiedAt = verifiedDate;
                         p.paymentAmount = expectedAmount;
+                        p.paymentGrossAmount = expectedAmount;
+                        p.paymentNetAmount = expectedAmount;
+                        p.paymentTotalFee = 0;
+                        p.mercadoPagoFee = 0;
+                        p.installmentsFee = 0;
+                        p.paymentInstallments = 1;
+                        p.paymentMethod = 'transferencia';
                         p.plan = plan;
                         p.paymentStatus = 'approved';
 
@@ -1943,6 +2121,33 @@
             return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
         }
 
+        function buildWspRequerimientos2026(c, p) {
+            var lines = [
+                'Hola ' + (c.nombre || '') + ' 👋 Espero que te encuentres muy bien.',
+                '',
+                'Te escribo porque los *manuales y rúbricas oficiales 2026* ya están publicados y traen *nuevos requerimientos* que antes no se pedían. Para que tu portafolio cumpla al 100%, necesitamos que completes la información que falta 📝.',
+                '',
+                '🆕 *Entra a tu cuenta y completa la nueva sección "Manual 2026"* (al final de tus preferencias de módulos):',
+                'https://www.profefranciscopancho.com/cuenta/login.html',
+                '',
+                'Ahí te pediremos lo nuevo: respaldo del trabajo colaborativo (acta/correo/asistencia), una evidencia del problema, el año de tu experiencia (2025 o 2026) y quién coordinará tu grabación.',
+                '',
+                '🗓️ *Comenzamos a construir los portafolios desde el lunes 08 de junio.* Iremos avanzando por orden, así que mientras antes completes tus datos, antes partimos con el tuyo.',
+                '',
+                '📹 *Importante:* entregarte el portafolio *no significa que terminamos*. Tu *clase grabada deberás practicarla*, y la iremos *ajustando juntos* las veces que haga falta. La meta es llegar a *agosto* (inicio de las grabaciones) con tu clase ya ensayada y lista.',
+                '',
+                '💳 *Sobre el pago:* en la medida de lo posible, te pedimos ir abonando tu plan. Eso es lo que nos permite entregar y seguir avanzando en tu portafolio.',
+                p.plan && planNames[p.plan] ? '• Tu plan: *' + planNames[p.plan] + '*' + (getPlanPrice(p.plan) ? ' (' + formatCLP(getPlanPrice(p.plan)) + ')' : '') : '',
+                '',
+                'Cualquier duda, escríbeme por aquí y avanzamos juntos. 💪',
+                '',
+                'Saludos cordiales,',
+                '*Prof. Francisco Núñez Valenzuela*',
+                'www.profefranciscopancho.com'
+            ];
+            return lines.filter(function(l) { return l !== false && l !== ''; }).join('\n');
+        }
+
         document.querySelectorAll('.wsp-msg-btn').forEach(function(btn) {
             btn.addEventListener('click', function() {
                 wspMenu.classList.add('hidden');
@@ -1965,8 +2170,19 @@
                 else if (msgType === 'abierto_pago') text = buildWspAbiertoPago(c, p);
                 else if (msgType === 'explicar_servicio') text = buildWspExplicarServicio(c, p);
                 else if (msgType === 'recordatorio_preinscrito') text = buildWspRecordatorioPreinscrito(c, p);
+                else if (msgType === 'requerimientos_2026') text = buildWspRequerimientos2026(c, p);
 
                 window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(text), '_blank');
+
+                // Marcar checklist: registrar envío del mensaje de requerimientos 2026
+                if (msgType === 'requerimientos_2026' && typeof db !== 'undefined') {
+                    db.ref('portafolios/' + currentEditUid + '/seguimiento/requerimientos2026Enviado').set({
+                        enviado: true,
+                        fecha: new Date().toISOString()
+                    }).then(function() {
+                        showActionMsg('✅ Mensaje 2026 enviado y marcado en el seguimiento.', 'success');
+                    }).catch(function() {});
+                }
             });
         });
 
@@ -2189,13 +2405,23 @@
 
             var updates = {};
 
-            // Save user info changes (nombre, telefono, rut)
+            // Save user profile through backend so Firebase Auth stays in sync.
             var newNombre = document.getElementById('edit-nombre').value.trim();
+            var newEmail = document.getElementById('edit-email').value.trim().toLowerCase();
             var newTelefono = document.getElementById('edit-telefono').value.trim();
             var newRut = document.getElementById('edit-rut').value.trim();
-            if (newNombre) updates['users/' + uid + '/nombre'] = newNombre;
-            if (newTelefono !== undefined) updates['users/' + uid + '/telefono'] = newTelefono;
-            if (newRut !== undefined) updates['users/' + uid + '/rut'] = newRut;
+            if (!newNombre) {
+                showActionMsg('El nombre no puede quedar vacío.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Guardar Cambios';
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                showActionMsg('Ingresa un correo válido antes de guardar.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '💾 Guardar Cambios';
+                return;
+            }
 
             if (!document.getElementById('edit-datos-section').classList.contains('hidden')) {
                 updates['portafolios/' + uid + '/datosPortafolio/numPIE'] = parseInt(document.getElementById('edit-dp-num-pie-input').value, 10) || 0;
@@ -2248,7 +2474,29 @@
 
             updates['portafolios/' + uid + '/updatedAt'] = new Date().toISOString();
 
-            db.ref().update(updates).then(function() {
+            auth.currentUser.getIdToken().then(function(idToken) {
+                return fetch('/api/admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'update-user-profile',
+                        uid: uid,
+                        callerUid: auth.currentUser.uid,
+                        idToken: idToken,
+                        nombre: newNombre,
+                        email: newEmail,
+                        telefono: newTelefono,
+                        rut: newRut
+                    })
+                });
+            }).then(function(res) {
+                return res.json().then(function(data) {
+                    if (!res.ok || !data.success) throw new Error(data.error || 'No se pudo actualizar el perfil del usuario.');
+                    return data;
+                });
+            }).then(function() {
+                return db.ref().update(updates);
+            }).then(function() {
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
                 showActionMsg('✅ Cambios guardados correctamente.', 'success');
@@ -2390,8 +2638,8 @@
             doc.setFont('Helvetica', 'bold');
             doc.text('Prof. Francisco Javier Núñez Valenzuela', 15, 43);
             doc.setFont('Helvetica', 'normal');
-            doc.text('R.U.T.: 17.853.891-8 (Prestación de Servicios Exenta de IVA)', 15, 48);
-            doc.text('www.profefranciscopancho.com', 15, 53);
+            doc.text('R.U.T.: 17.853.891-8 · Giro: Servicios profesionales de educación', 15, 48);
+            doc.text('www.profefranciscopancho.com (Prestación de Servicios Exenta de IVA)', 15, 53);
 
             // Recibo Metadata
             doc.setFillColor(243, 244, 246);

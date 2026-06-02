@@ -138,6 +138,7 @@
                     <h2 class="font-heading font-bold text-gray-900">Clientes</h2>
                     <div class="flex items-center gap-3">
                         <button id="btn-crear-usuario" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1">➕ Crear Usuario</button>
+                        <button id="btn-recuperar-inscripcion" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-1">♻️ Recuperar Inscripción</button>
                         <div class="flex gap-1">
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-900 text-white" data-filter="all">Todos</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
@@ -253,12 +254,17 @@
     <div id="create-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-md">
             <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-                <h3 class="font-heading font-bold text-gray-900">➕ Crear Usuario Manual</h3>
+                <h3 id="create-modal-title" class="font-heading font-bold text-gray-900">➕ Crear Usuario Manual</h3>
                 <button id="create-modal-close" class="p-2 rounded-lg hover:bg-gray-100 transition-colors">
                     <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
             <form id="create-user-form" class="p-6 space-y-4">
+                <div id="recover-paste-wrap" class="hidden bg-indigo-50 border border-indigo-200 rounded-xl p-3">
+                    <label class="block text-sm font-medium text-indigo-900 mb-1">Pegar mensaje de confirmación <span class="text-indigo-400 font-normal">(opcional, autocompleta los campos)</span></label>
+                    <textarea id="recover-paste" rows="3" class="w-full px-3 py-2 border border-indigo-200 rounded-lg text-xs outline-none focus:ring-2 focus:ring-indigo-500 resize-none" placeholder="Pega aquí el mensaje 'Tu inscripción... N° Inscripción: PRE-2026-XXXX, Nombre, Email, RUT' y presiona Autocompletar."></textarea>
+                    <button type="button" id="recover-parse-btn" class="mt-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors">✨ Autocompletar campos</button>
+                </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
                     <input type="text" id="create-nombre" required class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Ej: César Chang">
@@ -274,6 +280,10 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">RUT</label>
                     <input type="text" id="create-rut" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="12.345.678-9">
+                </div>
+                <div id="create-inscripcion-wrap">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">N° de inscripción <span class="text-gray-400 font-normal">(opcional · para recuperar una existente, ej: PRE-2026-0056)</span></label>
+                    <input type="text" id="create-inscripcion" class="w-full px-3 py-2 border border-gray-300 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary-500" placeholder="Dejar vacío para asignar uno nuevo">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Contraseña <span class="text-gray-400 font-normal">(se genera una si se deja vacío)</span></label>
@@ -2572,10 +2582,36 @@
         // ===== CREATE USER MODAL =====
         var createModal = document.getElementById('create-modal');
 
-        document.getElementById('btn-crear-usuario').addEventListener('click', function() {
+        function openCreateModal(mode) {
             createModal.classList.remove('hidden');
             document.getElementById('create-user-form').reset();
             document.getElementById('create-result').classList.add('hidden');
+            var isRecover = mode === 'recover';
+            document.getElementById('create-modal-title').textContent = isRecover ? '♻️ Recuperar Inscripción' : '➕ Crear Usuario Manual';
+            document.getElementById('recover-paste-wrap').classList.toggle('hidden', !isRecover);
+            document.getElementById('create-submit-btn').textContent = isRecover ? '♻️ Recuperar y Pre-Inscribir' : '➕ Crear Usuario y Pre-Inscribir';
+            if (isRecover) setTimeout(function() { document.getElementById('recover-paste').focus(); }, 50);
+        }
+
+        document.getElementById('btn-crear-usuario').addEventListener('click', function() {
+            openCreateModal('create');
+        });
+        document.getElementById('btn-recuperar-inscripcion').addEventListener('click', function() {
+            openCreateModal('recover');
+        });
+
+        // Autocompletar desde el mensaje de confirmación pegado
+        document.getElementById('recover-parse-btn').addEventListener('click', function() {
+            var t = document.getElementById('recover-paste').value || '';
+            var mNum = t.match(/PRE-\d{4}-\d{3,}/i);
+            var mEmail = t.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+            var mRut = t.match(/\b\d{1,2}\.?\d{3}\.?\d{3}-[\dkK]\b/);
+            var mNombre = t.match(/Nombre:\s*([^\n*]+)/i);
+            if (mNum) document.getElementById('create-inscripcion').value = mNum[0].toUpperCase();
+            if (mEmail) document.getElementById('create-email').value = mEmail[0];
+            if (mRut) document.getElementById('create-rut').value = mRut[0];
+            if (mNombre) document.getElementById('create-nombre').value = mNombre[1].trim();
+            showActionMsg('Campos autocompletados desde el mensaje. Revisa y presiona Recuperar.', 'success');
         });
 
         document.getElementById('create-modal-close').addEventListener('click', function() {
@@ -2596,6 +2632,7 @@
             var email = document.getElementById('create-email').value.trim();
             var telefono = document.getElementById('create-telefono').value.trim();
             var rut = document.getElementById('create-rut').value.trim();
+            var inscripcionNum = document.getElementById('create-inscripcion').value.trim();
             var password = document.getElementById('create-password').value || (Math.random().toString(36).slice(-8));
 
             auth.currentUser.getIdToken().then(function(token) {
@@ -2609,6 +2646,7 @@
                         email: email,
                         telefono: telefono,
                         rut: rut,
+                        inscripcionNum: inscripcionNum,
                         password: password
                     })
                 });
@@ -2619,11 +2657,17 @@
                 if (data.success) {
                     var resultDiv = document.getElementById('create-result');
                     resultDiv.classList.remove('hidden');
+                    var titulo = data.reattached
+                        ? '♻️ Inscripción re-vinculada a la cuenta existente'
+                        : (inscripcionNum ? '♻️ Inscripción recuperada exitosamente' : '✅ Usuario creado exitosamente');
+                    var passLine = data.password
+                        ? '<p class="text-sm">Contraseña: <b>' + data.password + '</b></p>'
+                        : '<p class="text-sm text-gray-500">Contraseña: <i>se conservó la actual del usuario</i></p>';
                     resultDiv.innerHTML = '<div class="bg-green-50 border border-green-300 rounded-lg p-4">' +
-                        '<p class="font-semibold text-green-800">✅ Usuario creado exitosamente</p>' +
+                        '<p class="font-semibold text-green-800">' + titulo + '</p>' +
                         '<p class="text-sm mt-1">Nombre: <b>' + nombre + '</b></p>' +
                         '<p class="text-sm">Email: <b>' + email + '</b></p>' +
-                        '<p class="text-sm">Contraseña: <b>' + (data.password || password) + '</b></p>' +
+                        passLine +
                         '<p class="text-sm">N° Inscripción: <b>' + (data.inscripcionNum || '-') + '</b></p>' +
                         (telefono ? '<p class="text-sm mt-2"><a href="https://api.whatsapp.com/send?phone=' + telefono.replace(/[^0-9]/g,'').replace(/^9/,'569') + '&text=' + encodeURIComponent('Hola ' + nombre + ', te informamos que tu inscripción ha sido registrada.\n\nN° Inscripción: ' + (data.inscripcionNum || '') + '\nEmail: ' + email + '\nContraseña: ' + (data.password || password) + '\n\nIngresa en: https://www.profefranciscopancho.com/cuenta/login.html\n\nProf. Francisco Núñez') + '" target="_blank" class="inline-flex items-center text-green-700 hover:underline">📱 Enviar datos por WhatsApp</a></p>' : '') +
                         '</div>';

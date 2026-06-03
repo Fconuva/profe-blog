@@ -34,6 +34,32 @@
         <p id="account-status" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 text-xs font-medium"></p>
     </header>
 
+    <!-- ===== POST-IT: envío de archivos por correo ===== -->
+    <div id="postit-archivos-wrap" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <div style="position:relative;background:#fef9c3;border:1px solid #fde047;border-left:6px solid #facc15;border-radius:10px;box-shadow:0 6px 16px rgba(0,0,0,0.12);transform:rotate(-0.6deg);padding:16px 18px">
+            <div class="flex items-start gap-3">
+                <span style="font-size:26px;line-height:1">📌</span>
+                <div class="flex-1">
+                    <p class="font-heading font-bold text-gray-900" style="font-size:15px;margin:0 0 4px">¿Necesitas enviar un archivo?</p>
+                    <p class="text-gray-800" style="font-size:14px;margin:0 0 10px">
+                        Envíalo a mi correo
+                        <a href="mailto:franciscojavier1991@gmail.com" class="font-bold text-indigo-700 hover:text-indigo-800" style="text-decoration:underline">franciscojavier1991@gmail.com</a>.
+                        Usa la plantilla para que pueda identificarlo y usarlo apenas llegue.
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="btn-abrir-correo-archivo" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors" style="font-size:13px">
+                            ✉️ Abrir correo con la plantilla
+                        </button>
+                        <button type="button" id="btn-copiar-plantilla-archivo" class="inline-flex items-center gap-1.5 px-3.5 py-2 bg-white text-gray-800 font-semibold rounded-lg border border-gray-300 hover:bg-gray-50 transition-colors" style="font-size:13px">
+                            📋 Copiar plantilla
+                        </button>
+                        <span id="plantilla-archivo-msg" class="hidden inline-flex items-center text-green-700 font-medium" style="font-size:13px"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ===== PRE-INSCRIPTION WELCOME ===== -->
     <main id="step-preinscripcion" class="hidden max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <div class="rounded-2xl p-8 text-white mb-8 relative overflow-hidden" style="background:linear-gradient(to right,#4f46e5,#4338ca)">
@@ -592,7 +618,7 @@
                         <!-- Adjuntos del trabajo colaborativo (hasta 3 archivos) -->
                         <div class="bg-amber-50/60 border border-amber-200 rounded-2xl p-4">
                             <div class="flex justify-between items-center mb-1 flex-wrap gap-2">
-                                <label class="block text-sm font-semibold text-gray-800">Adjuntar archivos del trabajo colaborativo <span class="text-amber-600 font-semibold">(hasta 3)</span></label>
+                                <label class="block text-sm font-semibold text-gray-800">Adjuntar archivos <span class="text-amber-600 font-semibold">(hasta 3)</span></label>
                                 <div>
                                     <input type="file" id="adj-m3-file" multiple accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp,.heic,.heif" class="hidden" onchange="handleAdjuntosM3Files(this)">
                                     <button type="button" id="adj-m3-btn" onclick="document.getElementById('adj-m3-file').click()" class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 border border-amber-300 text-amber-800 hover:bg-amber-200 transition-colors text-xs font-semibold rounded-lg shadow-sm">
@@ -600,7 +626,7 @@
                                     </button>
                                 </div>
                             </div>
-                            <p class="text-xs text-gray-500">Sube aquí el <strong>medio de verificación</strong> (acta, minuta, correo o registro de asistencia) y la <strong>evidencia del problema</strong>. Formatos: PDF, Word, PNG o JPG. Máximo <strong>3 archivos</strong> y <strong>20 MB</strong> cada uno. Sin rostros de estudiantes.</p>
+                            <p class="text-xs text-gray-500">Sube <strong>cualquier documento que consideres pertinente</strong> para tu portafolio (por ejemplo: acta o medio de verificación, evidencia del problema, respaldos u otro material de apoyo). Formatos: PDF, Word, PNG o JPG. Máximo <strong>3 archivos</strong> y <strong>20 MB</strong> cada uno. Sin rostros de estudiantes.</p>
                             <div id="adj-m3-list" class="mt-2 space-y-2"></div>
                             <p id="adj-m3-status" class="hidden text-xs font-medium mt-1"></p>
                         </div>
@@ -1267,28 +1293,74 @@
         if (resetEmailBtn) {
             resetEmailBtn.addEventListener('click', function() {
                 var statusEl = document.getElementById('account-status');
-                if (!currentUser || !currentUser.email) return;
-                resetEmailBtn.disabled = true;
-                resetEmailBtn.textContent = 'Enviando...';
-                auth.sendPasswordResetEmail(currentUser.email)
-                    .then(function() {
-                        if (statusEl) {
-                            statusEl.textContent = 'Te enviamos un correo para cambiar tu contraseña. Revisa también spam o promociones.';
-                            statusEl.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 text-xs font-medium text-green-700';
-                        }
-                    })
-                    .catch(function(error) {
-                        if (statusEl) {
-                            statusEl.textContent = error && error.code === 'auth/too-many-requests'
-                                ? 'Hay demasiados intentos. Espera unos minutos y vuelve a probar.'
-                                : 'No pudimos enviar el correo ahora. Intenta nuevamente o escríbenos por WhatsApp.';
-                            statusEl.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 text-xs font-medium text-red-700';
-                        }
-                    })
-                    .finally(function() {
-                        resetEmailBtn.disabled = false;
-                        resetEmailBtn.textContent = 'Cambiar contraseña';
+                // El cambio de contraseña lo hace el profe manualmente: abrimos WhatsApp con el mensaje listo.
+                var correo = (currentUser && currentUser.email) ? currentUser.email : '____';
+                var msg = 'Hola Profe Francisco 👋 Necesito cambiar mi contraseña de la plataforma del Portafolio Docente. Mi correo de acceso es: ' + correo;
+                window.open('https://wa.me/56988138929?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+                if (statusEl) {
+                    statusEl.textContent = 'Te abrimos WhatsApp con tu solicitud lista. Envíala y el profe te cambiará la contraseña.';
+                    statusEl.className = 'max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3 text-xs font-medium text-green-700';
+                }
+            });
+        }
+
+        // ===== Plantilla para enviar archivos por correo =====
+        function buildArchivoTemplate() {
+            var nombre = (userData && userData.nombre) ? userData.nombre : '';
+            var correo = (currentUser && currentUser.email) ? currentUser.email : '';
+            var asignatura = (userData && userData.asignatura) ? userData.asignatura : '';
+            var nivel = (userData && userData.nivel) ? userData.nivel : '';
+            var asigNivel = [asignatura, nivel].filter(Boolean).join(' / ');
+            var lineas = [
+                'Hola Profe Francisco,',
+                '',
+                'Te envío un archivo para mi portafolio. Estos son mis datos:',
+                '',
+                '• Nombre completo: ' + nombre,
+                '• Correo de acceso a la plataforma: ' + correo,
+                '• Asignatura / Nivel: ' + asigNivel,
+                '• Tipo de archivo que adjunto: (PDF / Word / Excel / Imagen) ____',
+                '• ¿A qué módulo o tarea corresponde?: ____',
+                '• Comentario (opcional): ____',
+                '',
+                '*** IMPORTANTE: recuerda ADJUNTAR el archivo antes de enviar el correo. ***',
+                '',
+                'Gracias.'
+            ];
+            return lineas.join('\n');
+        }
+        function buildArchivoSubject() {
+            var nombre = (userData && userData.nombre) ? userData.nombre : 'Docente';
+            return 'Archivo Portafolio Docente 2026 - ' + nombre;
+        }
+        function showPlantillaMsg(texto) {
+            var el = document.getElementById('plantilla-archivo-msg');
+            if (!el) return;
+            el.textContent = texto;
+            el.classList.remove('hidden');
+            setTimeout(function() { el.classList.add('hidden'); }, 4000);
+        }
+        var btnAbrirCorreo = document.getElementById('btn-abrir-correo-archivo');
+        if (btnAbrirCorreo) {
+            btnAbrirCorreo.addEventListener('click', function() {
+                var url = 'mailto:franciscojavier1991@gmail.com'
+                    + '?subject=' + encodeURIComponent(buildArchivoSubject())
+                    + '&body=' + encodeURIComponent(buildArchivoTemplate());
+                window.location.href = url;
+            });
+        }
+        var btnCopiarPlantilla = document.getElementById('btn-copiar-plantilla-archivo');
+        if (btnCopiarPlantilla) {
+            btnCopiarPlantilla.addEventListener('click', function() {
+                var texto = 'Para: franciscojavier1991@gmail.com\nAsunto: ' + buildArchivoSubject() + '\n\n' + buildArchivoTemplate();
+                function ok() { showPlantillaMsg('✅ Plantilla copiada. Pégala en tu correo y adjunta el archivo.'); }
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(texto).then(ok).catch(function() {
+                        window.prompt('Copia este texto (Ctrl+C) y pégalo en tu correo:', texto);
                     });
+                } else {
+                    window.prompt('Copia este texto (Ctrl+C) y pégalo en tu correo:', texto);
+                }
             });
         }
 
@@ -1299,6 +1371,8 @@
             var accountBar = document.getElementById('account-bar');
             var userEmailEl = document.getElementById('user-email');
             if (accountBar) accountBar.classList.remove('hidden');
+            var postitWrap = document.getElementById('postit-archivos-wrap');
+            if (postitWrap) postitWrap.classList.remove('hidden');
             if (userEmailEl) userEmailEl.textContent = user.email ? '· ' + user.email : '';
 
             // Load user data FIRST, then listen to portfolio

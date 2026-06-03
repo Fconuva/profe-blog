@@ -57,7 +57,7 @@
 
                 <div class="mt-4 text-center">
                     <p class="text-sm text-gray-500">¿Olvidaste tu contraseña?</p>
-                    <button type="button" id="reset-password-btn" class="mt-1 text-sm text-primary-600 hover:text-primary-700 font-semibold">Enviar enlace de recuperación al correo</button>
+                    <button type="button" id="reset-password-btn" class="mt-1 text-sm text-primary-600 hover:text-primary-700 font-semibold">Solicitar cambio de contraseña por WhatsApp</button>
                     <p id="reset-msg" class="hidden text-xs mt-2 font-medium"></p>
                 </div>
             </div>
@@ -148,39 +148,22 @@
         document.getElementById('reset-password-btn').addEventListener('click', function() {
             var email = document.getElementById('email').value.trim();
             var resetMsg = document.getElementById('reset-msg');
-            var btn = this;
 
             resetMsg.classList.remove('hidden', 'text-red-600', 'text-green-700');
-            if (!email) {
-                resetMsg.textContent = 'Escribe primero tu correo en el campo de arriba.';
-                resetMsg.classList.add('text-red-600');
-                document.getElementById('email').focus();
-                return;
-            }
 
-            btn.disabled = true;
-            btn.textContent = 'Enviando...';
-            auth.sendPasswordResetEmail(email)
-                .then(function() {
-                    resetMsg.textContent = 'Listo. Te enviamos un correo para cambiar tu contraseña. Revisa también spam o promociones.';
-                    resetMsg.classList.add('text-green-700');
-                })
-                .catch(function(error) {
-                    if (error.code === 'auth/invalid-email') {
-                        resetMsg.textContent = 'El correo no parece válido.';
-                    } else if (error.code === 'auth/user-not-found') {
-                        resetMsg.textContent = 'No encontramos una cuenta con ese correo.';
-                    } else if (error.code === 'auth/too-many-requests') {
-                        resetMsg.textContent = 'Hay demasiados intentos. Espera unos minutos y vuelve a probar.';
-                    } else {
-                        resetMsg.textContent = 'No pudimos enviar el correo ahora. Intenta nuevamente o escríbenos por WhatsApp.';
-                    }
-                    resetMsg.classList.add('text-red-600');
-                })
-                .finally(function() {
-                    btn.disabled = false;
-                    btn.textContent = 'Enviar enlace de recuperación al correo';
-                });
+            // El cambio de contraseña lo hace el profe manualmente: abrimos WhatsApp con el mensaje listo.
+            var msg = 'Hola Profe Francisco 👋 Necesito cambiar mi contraseña de la plataforma del Portafolio Docente.';
+            if (email) {
+                msg += ' Mi correo de acceso es: ' + email;
+            } else {
+                msg += ' (mi correo de acceso es: ____ )';
+            }
+            window.open('https://wa.me/56988138929?text=' + encodeURIComponent(msg), '_blank', 'noopener');
+
+            resetMsg.textContent = email
+                ? 'Te abrimos WhatsApp con tu solicitud lista. Envíala y el profe te cambiará la contraseña.'
+                : 'Te abrimos WhatsApp. Escribe tu correo de acceso en el mensaje y el profe te cambiará la contraseña.';
+            resetMsg.classList.add('text-green-700');
         });
 
 

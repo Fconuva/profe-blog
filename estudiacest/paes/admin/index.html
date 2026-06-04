@@ -929,17 +929,30 @@
         <div class="card-header">
           <div>
             <h3>Respuestas de Guías Interactivas</h3>
-            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Revisa las respuestas en línea de la Guía N°10, califícalas manualmente (nota + retroalimentación) y restablécelas si el alumno debe rehacerla.</p>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Elige la guía y el curso. Revisa respuestas, mira el logro por habilidad, califica manualmente (nota + retro) y restablece.</p>
           </div>
           <div class="filters-bar">
+            <select class="select-filter" id="selectGuia" title="Guía"></select>
             <input type="text" class="search-input" id="searchGuiaInt" placeholder="Buscar por nombre o RUT...">
+            <select class="select-filter" id="filterCourseGuiaInt" title="Curso">
+              <option value="">Todos los cursos</option>
+              <option value="3°A HC">3°A HC</option>
+              <option value="3°B HC">3°B HC</option>
+              <option value="4°A HC">4°A HC</option>
+              <option value="4°B HC">4°B HC</option>
+              <option value="4°D TP">4°D TP</option>
+              <option value="4°E TP">4°E TP</option>
+            </select>
             <select class="select-filter" id="filterGuiaInt">
               <option value="">Todas</option>
+              <option value="sent">Enviadas</option>
+              <option value="draft">Borradores (en curso)</option>
               <option value="graded">Calificadas</option>
               <option value="ungraded">Sin calificar</option>
             </select>
           </div>
         </div>
+        <div id="guiaHabSummary" style="display:none; flex-wrap:wrap; gap:10px; margin-bottom:16px;"></div>
 
         <div class="table-container">
           <table class="datatable" id="guiaIntTable">
@@ -1208,29 +1221,67 @@
     }
 
     // ============ GUÍA INTERACTIVA N°10 (clave + etiquetas de desarrollo) ============
-    const GUIA_ID = '10';
-    const GUIA10_KEY = { 1:'A', 2:'D', 3:'B', 4:'C', 5:'D', 6:'C', 7:'B', 8:'B', 9:'A' };
-    const GUIA10_DEV_ORDER = ['a1_d1','a1_d2','a1_d3','a1_d4','a2_a','frag1','frag2','frag3','frag4','frag5','pf1_a','pf1_b','pf2_a','pf2_b','pf3_a','pf3_b','pf4_a','pf4_b'];
-    const GUIA10_DEV_LABELS = {
-      a1_d1: 'Bitácora · Detención 1 — Hipótesis del relato',
-      a1_d2: 'Bitácora · Detención 2 — Pista que la sostiene',
-      a1_d3: 'Bitácora · Detención 3 — Relación entre los textos',
-      a1_d4: 'Bitácora · Detención 4 — Afirmación menos sólida del Texto 2',
-      a2_a:  'Actividad 2 a) — Hipótesis + tesis + tipo de relación',
-      frag1: 'Fragmento 1 — Hipótesis (Marta y el tejido)',
-      frag2: 'Fragmento 2 — Hipótesis (la final perdida)',
-      frag3: 'Fragmento 3 — Hipótesis (el cuento del padre)',
-      frag4: 'Fragmento 4 — Hipótesis (el reloj detenido)',
-      frag5: 'Fragmento 5 — Hipótesis (la planta)',
-      pf1_a: 'Foco 1 · Hipótesis del relato — ejercicio 1',
-      pf1_b: 'Foco 1 · Hipótesis del relato — ejercicio 2',
-      pf2_a: 'Foco 2 · Relaciones entre textos — ejercicio 1',
-      pf2_b: 'Foco 2 · Relaciones entre textos — ejercicio 2',
-      pf3_a: 'Foco 3 · Consistencia de la información — ejercicio 1',
-      pf3_b: 'Foco 3 · Consistencia de la información — ejercicio 2',
-      pf4_a: 'Foco 4 · Posicionamiento ideológico — ejercicio 1',
-      pf4_b: 'Foco 4 · Posicionamiento ideológico — ejercicio 2'
+    // ====== REGISTRO DE GUÍAS INTERACTIVAS (extensible: agrega aquí las nuevas) ======
+    const GUIAS = {
+      '10': {
+        titulo: 'Guía 10 — Hipótesis del relato y relaciones',
+        total: 9,
+        key:   { 1:'A', 2:'D', 3:'B', 4:'C', 5:'D', 6:'C', 7:'B', 8:'B', 9:'A' },
+        skill: { 1:'LOCALIZAR', 2:'EVALUAR', 3:'INTERPRETAR', 4:'EVALUAR', 5:'LOCALIZAR', 6:'EVALUAR', 7:'EVALUAR', 8:'EVALUAR', 9:'EVALUAR' },
+        devOrder: ['a1_d1','a1_d2','a1_d3','a1_d4','a2_a','frag1','frag2','frag3','frag4','frag5','pf1_a','pf1_b','pf2_a','pf2_b','pf3_a','pf3_b','pf4_a','pf4_b'],
+        devLabels: {
+          a1_d1:'Bitácora · Detención 1 — Hipótesis del relato', a1_d2:'Bitácora · Detención 2 — Pista que la sostiene',
+          a1_d3:'Bitácora · Detención 3 — Relación entre los textos', a1_d4:'Bitácora · Detención 4 — Afirmación menos sólida del Texto 2',
+          a2_a:'Actividad 2 a) — Hipótesis + tesis + tipo de relación',
+          frag1:'Fragmento 1 — Hipótesis (Marta y el tejido)', frag2:'Fragmento 2 — Hipótesis (la final perdida)',
+          frag3:'Fragmento 3 — Hipótesis (el cuento del padre)', frag4:'Fragmento 4 — Hipótesis (el reloj detenido)', frag5:'Fragmento 5 — Hipótesis (la planta)',
+          pf1_a:'Foco 1 · Hipótesis — ej. 1', pf1_b:'Foco 1 · Hipótesis — ej. 2', pf2_a:'Foco 2 · Relaciones — ej. 1', pf2_b:'Foco 2 · Relaciones — ej. 2',
+          pf3_a:'Foco 3 · Consistencia — ej. 1', pf3_b:'Foco 3 · Consistencia — ej. 2', pf4_a:'Foco 4 · Posicionamiento — ej. 1', pf4_b:'Foco 4 · Posicionamiento — ej. 2'
+        }
+      },
+      '11': {
+        titulo: 'Guía 11 — 3 textos tipo PAES',
+        total: 18,
+        key:   { 1:'C',2:'B',3:'A',4:'D',5:'B',6:'C',7:'A',8:'C',9:'B',10:'C',11:'A',12:'D',13:'B',14:'A',15:'C',16:'B',17:'D',18:'A' },
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'INTERPRETAR',5:'EVALUAR',6:'EVALUAR',7:'LOCALIZAR',8:'INTERPRETAR',9:'INTERPRETAR',10:'INTERPRETAR',11:'EVALUAR',12:'EVALUAR',13:'INTERPRETAR',14:'INTERPRETAR',15:'INTERPRETAR',16:'EVALUAR',17:'EVALUAR',18:'EVALUAR' },
+        devOrder: ['meta_cierre'],
+        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+      },
+      '12': {
+        titulo: 'Guía 12 — Leo para aprender (Localizar)',
+        total: 15,
+        key:   { 1:'B',2:'C',3:'A',4:'D',5:'C',6:'A',7:'D',8:'B',9:'A',10:'C',11:'B',12:'D',13:'A',14:'C',15:'B' },
+        skill: { 1:'LOCALIZAR',2:'LOCALIZAR',3:'LOCALIZAR',4:'INTERPRETAR',5:'INTERPRETAR',6:'LOCALIZAR',7:'LOCALIZAR',8:'LOCALIZAR',9:'INTERPRETAR',10:'EVALUAR',11:'LOCALIZAR',12:'LOCALIZAR',13:'LOCALIZAR',14:'INTERPRETAR',15:'EVALUAR' },
+        devOrder: ['meta_cierre'],
+        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+      },
+      '13': {
+        titulo: 'Guía 13 — Leo para mí (Interpretar)',
+        total: 18,
+        key:   { 1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',7:'B',8:'D',9:'A',10:'C',11:'B',12:'D',13:'A',14:'C',15:'B',16:'D',17:'A',18:'C' },
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'INTERPRETAR',5:'EVALUAR',6:'EVALUAR',7:'LOCALIZAR',8:'INTERPRETAR',9:'INTERPRETAR',10:'EVALUAR',11:'INTERPRETAR',12:'EVALUAR',13:'LOCALIZAR',14:'INTERPRETAR',15:'INTERPRETAR',16:'INTERPRETAR',17:'EVALUAR',18:'EVALUAR' },
+        devOrder: ['meta_cierre'],
+        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+      },
+      '14': {
+        titulo: 'Guía 14 — Evaluar I (ensayo · biográfico · columna)',
+        total: 18,
+        key:   { 1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',7:'D',8:'B',9:'C',10:'A',11:'D',12:'B',13:'A',14:'C',15:'D',16:'B',17:'C',18:'A' },
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'EVALUAR',5:'EVALUAR',6:'EVALUAR',7:'LOCALIZAR',8:'INTERPRETAR',9:'EVALUAR',10:'EVALUAR',11:'EVALUAR',12:'INTERPRETAR',13:'LOCALIZAR',14:'INTERPRETAR',15:'EVALUAR',16:'EVALUAR',17:'EVALUAR',18:'EVALUAR' },
+        devOrder: ['meta_cierre'],
+        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+      },
+      '15': {
+        titulo: 'Guía 15 — Textos discontinuos (infografía · folleto · instructivo)',
+        total: 15,
+        key:   { 1:'B',2:'D',3:'C',4:'A',5:'D',6:'C',7:'A',8:'B',9:'D',10:'C',11:'A',12:'B',13:'C',14:'D',15:'A' },
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'EVALUAR',4:'EVALUAR',5:'EVALUAR',6:'LOCALIZAR',7:'INTERPRETAR',8:'EVALUAR',9:'EVALUAR',10:'EVALUAR',11:'LOCALIZAR',12:'INTERPRETAR',13:'EVALUAR',14:'EVALUAR',15:'EVALUAR' },
+        devOrder: ['meta_cierre'],
+        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+      }
     };
+    let currentGuia = '10';
+    function cfg() { return GUIAS[currentGuia]; }
     function gmEscape(s){ return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     let gmRut = null;
 
@@ -1592,41 +1643,51 @@
       document.getElementById('detailModal').classList.add('active');
     }
 
-    // ============ RENDER TAB VIEW 3: GUÍAS INTERACTIVAS ============
+    // ============ RENDER TAB VIEW 3: GUÍAS INTERACTIVAS (multi-guía + curso) ============
     function renderGuiaIntTable() {
       const search = (document.getElementById('searchGuiaInt').value || '').toLowerCase().trim();
       const filter = document.getElementById('filterGuiaInt').value;
+      const course = document.getElementById('filterCourseGuiaInt').value;
       const tbody = document.getElementById('guiaIntTableBody');
       tbody.innerHTML = '';
-
-      const respByRut = (databaseData.guiaResp && databaseData.guiaResp[GUIA_ID]) || {};
+      const C = cfg();
+      const respByRut = (databaseData.guiaResp && databaseData.guiaResp[currentGuia]) || {};
       const searchRut = search.replace(/[.\-\s]/g, '');
 
       let rows = Object.values(respByRut).filter(r => {
         const matchesSearch = (r.nombre || '').toLowerCase().includes(search) || (r.rut || '').includes(searchRut);
+        const matchesCourse = course === '' || r.curso === course;
         const graded = !!(r.grade && r.grade.nota);
+        const isDraft = r.status === 'draft';
         let matchesFilter = true;
         if (filter === 'graded') matchesFilter = graded;
         else if (filter === 'ungraded') matchesFilter = !graded;
-        return matchesSearch && matchesFilter;
+        else if (filter === 'sent') matchesFilter = !isDraft;       // legacy sin status = enviado
+        else if (filter === 'draft') matchesFilter = isDraft;
+        return matchesSearch && matchesCourse && matchesFilter;
       });
-
       rows.sort((a, b) => (a.nombre || '').localeCompare(b.nombre || ''));
 
+      renderGuiaHabSummary(rows, C);
+
       if (rows.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Aún no hay respuestas enviadas para esta guía interactiva.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-muted); padding: 30px;">Sin respuestas para esta guía/curso todavía.</td></tr>`;
         return;
       }
 
       rows.forEach(r => {
-        const score = `${r.correct || 0}/${r.total || 9}`;
+        const score = `${r.correct || 0}/${r.total || C.total}`;
+        const isDraft = r.status === 'draft';
+        const statusPill = isDraft
+          ? `<span class="status-pill pending" title="Aún no la envía: avance autoguardado">⏳ Borrador</span>`
+          : `<span class="status-pill completed" title="El alumno la envió">✓ Enviado</span>`;
         const gradeCell = (r.grade && r.grade.nota)
           ? `<span class="status-pill completed">${r.grade.nota}</span>`
           : `<span class="status-pill pending">Sin calificar</span>`;
         const safeName = (r.nombre || '').replace(/'/g, '’');
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td style="font-weight: 600; color: #fff;">${r.nombre || '—'}</td>
+          <td style="font-weight: 600; color: #fff;">${r.nombre || '—'} &nbsp; ${statusPill}</td>
           <td><span style="font-size: 12px; font-weight: 700; color: var(--paes-color-light);">${r.curso || '—'}</span></td>
           <td><span class="status-pill completed">${score} correctas</span></td>
           <td>${gradeCell}</td>
@@ -1640,22 +1701,58 @@
       });
     }
 
+    // Logro por habilidad del grupo filtrado (diagnóstico)
+    function perHabilidad(rows, C) {
+      const agg = { LOCALIZAR:{ok:0,tot:0}, INTERPRETAR:{ok:0,tot:0}, EVALUAR:{ok:0,tot:0} };
+      rows.forEach(r => {
+        const ans = r.answers || {};
+        for (let q = 1; q <= C.total; q++) {
+          const sk = C.skill && C.skill[q]; if (!sk || !agg[sk]) continue;
+          agg[sk].tot++;
+          if (ans[q] === C.key[q]) agg[sk].ok++;
+        }
+      });
+      return agg;
+    }
+    function renderGuiaHabSummary(rows, C) {
+      const box = document.getElementById('guiaHabSummary');
+      if (!rows.length || !C.skill) { box.style.display = 'none'; return; }
+      const agg = perHabilidad(rows, C);
+      const nice = { LOCALIZAR:'Localizar', INTERPRETAR:'Interpretar', EVALUAR:'Evaluar' };
+      const col = { LOCALIZAR:'#3b82f6', INTERPRETAR:'#a855f7', EVALUAR:'#10b981' };
+      box.style.display = 'flex';
+      box.innerHTML = `<div style="align-self:center; font-size:12px; font-weight:700; color:var(--text-muted);">Logro por habilidad · ${rows.length} alumno(s):</div>` +
+        Object.keys(nice).map(k => {
+          const pct = agg[k].tot ? Math.round(agg[k].ok / agg[k].tot * 100) : 0;
+          return `<div class="metric-card" style="padding:12px 16px; flex-direction:row; align-items:center; gap:10px;">
+            <span style="width:10px; height:10px; border-radius:50%; background:${col[k]};"></span>
+            <div><div style="font-size:11px; color:var(--text-muted); font-weight:700;">${nice[k]}</div>
+            <div style="font-size:18px; font-weight:800; color:#fff; font-family:'Outfit',sans-serif;">${pct}%</div></div></div>`;
+        }).join('');
+    }
+
     // ============ GUÍA INTERACTIVA: MODAL DE REVISIÓN + CALIFICACIÓN ============
     function openGuiaModal(rut) {
-      const r = ((databaseData.guiaResp && databaseData.guiaResp[GUIA_ID]) || {})[rut];
+      const C = cfg();
+      const r = ((databaseData.guiaResp && databaseData.guiaResp[currentGuia]) || {})[rut];
       if (!r) return;
       gmRut = rut;
 
+      const ans0 = r.answers || {};
+      // logro por habilidad del alumno
+      const sk = { LOCALIZAR:{ok:0,tot:0}, INTERPRETAR:{ok:0,tot:0}, EVALUAR:{ok:0,tot:0} };
+      for (let q=1; q<=C.total; q++){ const s = C.skill && C.skill[q]; if (s && sk[s]) { sk[s].tot++; if (ans0[q] === C.key[q]) sk[s].ok++; } }
+      const skStr = ['LOCALIZAR','INTERPRETAR','EVALUAR'].filter(k=>sk[k].tot).map(k=>`${k.slice(0,3)} ${sk[k].ok}/${sk[k].tot}`).join(' · ');
+
       document.getElementById('gmName').textContent = r.nombre || 'Estudiante';
-      document.getElementById('gmMeta').textContent = `${r.curso || ''} · Guía N°10 · ${r.correct || 0}/${r.total || 9} en selección`;
+      document.getElementById('gmMeta').textContent = `${r.curso || ''} · ${C.titulo} · ${r.correct || 0}/${r.total || C.total}${skStr ? ' · ' + skStr : ''}`;
 
       // Selección
       const grid = document.getElementById('gmSelGrid');
       grid.innerHTML = '';
-      const answers = r.answers || {};
-      for (let q = 1; q <= 9; q++) {
-        const ans = answers[q];
-        const key = GUIA10_KEY[q];
+      for (let q = 1; q <= C.total; q++) {
+        const ans = ans0[q];
+        const key = C.key[q];
         const ok = ans === key;
         const cell = document.createElement('div');
         cell.className = `q-cell ${ans ? (ok ? 'correct' : 'incorrect') : ''}`;
@@ -1664,7 +1761,8 @@
           <div class="q-cell-ans">
             <span class="student-ans">${ans || '—'}</span>
             ${ans && !ok ? `<span class="correct-ans">${key}</span>` : ''}
-          </div>`;
+          </div>
+          ${C.skill && C.skill[q] ? `<div style="font-size:8px; color:var(--text-muted); font-weight:800; text-transform:uppercase; margin-top:2px;">${C.skill[q].slice(0,3)}</div>` : ''}`;
         grid.appendChild(cell);
       }
 
@@ -1672,12 +1770,12 @@
       const dev = r.dev || {};
       const list = document.getElementById('gmDevList');
       list.innerHTML = '';
-      GUIA10_DEV_ORDER.forEach(k => {
+      (C.devOrder || []).forEach(k => {
         const val = (dev[k] || '').trim();
         const block = document.createElement('div');
         block.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;';
         block.innerHTML = `
-          <div style="font-size: 11.5px; font-weight: 800; color: var(--paes-color-light); margin-bottom: 4px;">${GUIA10_DEV_LABELS[k] || k}</div>
+          <div style="font-size: 11.5px; font-weight: 800; color: var(--paes-color-light); margin-bottom: 4px;">${(C.devLabels && C.devLabels[k]) || k}</div>
           <div style="font-size: 13px; line-height: 1.55; color: ${val ? '#e2e8f0' : 'var(--text-muted)'}; white-space: pre-wrap;">${val ? gmEscape(val) : '(sin responder)'}</div>`;
         list.appendChild(block);
       });
@@ -1704,7 +1802,7 @@
         const resp = await fetch('/api/paes?action=admin-grade-guia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body: JSON.stringify({ studentRut: gmRut, guiaId: GUIA_ID, nota, feedback })
+          body: JSON.stringify({ studentRut: gmRut, guiaId: currentGuia, nota, feedback })
         });
         if (!resp.ok) throw new Error('API Grade Error');
         const data = await resp.json();
@@ -1719,12 +1817,12 @@
     }
 
     async function resetGuiaResp(rut, name) {
-      if (!confirm(`⚠️ ¿Restablecer las respuestas de la Guía N°10 de "${name}"?\n\nSe borrarán sus respuestas, su autoevaluación y la calificación. El alumno podrá rehacerla. Esta acción no se puede deshacer.`)) return;
+      if (!confirm(`⚠️ ¿Restablecer las respuestas de la ${cfg().titulo} de "${name}"?\n\nSe borrarán sus respuestas, su autoevaluación y la calificación. El alumno podrá rehacerla. Esta acción no se puede deshacer.`)) return;
       try {
         const resp = await fetch('/api/paes?action=admin-reset-guia', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-          body: JSON.stringify({ studentRut: rut, guiaId: GUIA_ID })
+          body: JSON.stringify({ studentRut: rut, guiaId: currentGuia })
         });
         if (!resp.ok) throw new Error('API Reset Guia Error');
         const data = await resp.json();
@@ -1914,8 +2012,16 @@
     document.getElementById('filterCourseGuides').addEventListener('change', renderGuidesTable);
 
     // Guías interactivas: filtros + modal
+    // Poblar selector de guía desde el registro GUIAS
+    (function initSelectGuia() {
+      const sel = document.getElementById('selectGuia');
+      sel.innerHTML = Object.keys(GUIAS).map(id => `<option value="${id}">${GUIAS[id].titulo}</option>`).join('');
+      sel.value = currentGuia;
+      sel.addEventListener('change', function() { currentGuia = this.value; renderGuiaIntTable(); });
+    })();
     document.getElementById('searchGuiaInt').addEventListener('input', renderGuiaIntTable);
     document.getElementById('filterGuiaInt').addEventListener('change', renderGuiaIntTable);
+    document.getElementById('filterCourseGuiaInt').addEventListener('change', renderGuiaIntTable);
     document.getElementById('gmClose').addEventListener('click', () => document.getElementById('guiaModal').classList.remove('active'));
     document.getElementById('guiaModal').addEventListener('click', (e) => {
       if (e.target.id === 'guiaModal') document.getElementById('guiaModal').classList.remove('active');

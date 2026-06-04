@@ -814,6 +814,7 @@
       renderQuestions();
       loadProgress();
       updateAnsweredInfo();
+      loadCloudDraft();
     }
 
     // Auto-resume if logged in
@@ -870,7 +871,7 @@
     function getState() {
       try { return JSON.parse(localStorage.getItem(SKEY)) || {}; } catch(e) { return {}; }
     }
-    function setState(st) { localStorage.setItem(SKEY, JSON.stringify(st)); flashSaved(); }
+    function setState(st) { localStorage.setItem(SKEY, JSON.stringify(st)); flashSaved(); scheduleDraftSave(); }
 
     function saveAnswer(qn, ans) {
       const st = getState();
@@ -987,6 +988,50 @@
         console.error('[submitGuia]', e);
         setSendStatus('⚠️ No se pudo enviar (sin conexión). Tus respuestas siguen guardadas en este dispositivo.', '#fcd9a3');
       }
+    }
+
+    /* ============ AUTOGUARDADO EN LA NUBE (borrador por alumno) ============ */
+    let draftTimer = null;
+    function scheduleDraftSave() {
+      if (!student) return;
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(saveDraftCloud, 2000);
+    }
+    async function saveDraftCloud() {
+      if (!student) return;
+      const st = getState();
+      const answers = st.answers || {};
+      const dev = st.dev || {};
+      const tot = QUESTIONS.length;
+      let correct = 0;
+      QUESTIONS.forEach(q => { if (answers[q.n] === q.correct) correct++; });
+      const score = Math.round((correct / tot) * 100);
+      try {
+        await fetch('/api/paes?action=submit-guia', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rut: student.rut, nombre: student.nombre, curso: student.curso, guiaId: '10', answers, dev, correct, total: tot, score, draft: true })
+        });
+      } catch (e) { /* el respaldo local queda intacto */ }
+    }
+    async function loadCloudDraft() {
+      if (!student) return;
+      try {
+        const resp = await fetch('/api/paes?action=get-guia-draft&guiaId=10&rut=' + encodeURIComponent(student.rut));
+        if (!resp.ok) return;
+        const data = await resp.json();
+        if (!data.success || !data.draft) return;
+        const d = data.draft;
+        const hasAns = d.answers && Object.keys(d.answers).length;
+        const hasDev = d.dev && Object.keys(d.dev).length;
+        if (!hasAns && !hasDev) return;
+        const st = getState();
+        st.answers = Object.assign({}, st.answers || {}, d.answers || {});
+        st.dev = Object.assign({}, st.dev || {}, d.dev || {});
+        localStorage.setItem(SKEY, JSON.stringify(st)); // sin setState: evita re-subir de inmediato
+        loadProgress();
+        updateAnsweredInfo();
+        if (typeof setSendStatus === 'function') setSendStatus('✓ Recuperamos tu avance guardado. Puedes continuar desde donde quedaste.', '#22c55e');
+      } catch (e) { /* usa solo el respaldo local */ }
     }
 
     document.getElementById('btnSend').addEventListener('click', submitGuia);

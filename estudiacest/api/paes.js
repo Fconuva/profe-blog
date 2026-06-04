@@ -1,6 +1,6 @@
 // api/paes.js
 // Unified Vercel Serverless Function for PAES module management
-// Routes: ?action=submit | ?action=submit-guia | ?action=track-download | ?action=get-student-status | ?action=get-nomina-extra
+// Routes: ?action=submit | ?action=submit-guia | ?action=track-download | ?action=get-student-status | ?action=get-nomina-extra | ?action=get-guia-draft
 //         | ?action=admin-get-results | ?action=admin-reset-result | ?action=admin-grade-guia | ?action=admin-reset-guia
 //         | ?action=admin-save-student | ?action=admin-delete-student
 
@@ -107,7 +107,7 @@ async function handleSubmit(req, res) {
 }
 
 async function handleSubmitGuia(req, res) {
-    const { rut, nombre, curso, guiaId, answers, dev, correct, total, score } = req.body;
+    const { rut, nombre, curso, guiaId, answers, dev, correct, total, score, draft } = req.body;
     if (!rut || !nombre || !curso || !guiaId) {
         return res.status(400).json({ error: 'Campos requeridos: rut, nombre, curso, guiaId' });
     }
@@ -116,7 +116,8 @@ async function handleSubmitGuia(req, res) {
     const ref = db.ref(`${BASE}/guia_respuestas/${guiaId}/${rutLimpio}`);
 
     // .update() preserva una eventual calificación del docente (nodo 'grade')
-    await ref.update({
+    // draft=true => autoguardado silencioso (no marca submittedAt, status 'draft')
+    const payload = {
         rut: rutLimpio,
         nombre: nombre.trim(),
         curso: curso.trim(),
@@ -126,10 +127,33 @@ async function handleSubmitGuia(req, res) {
         correct: parseInt(correct, 10) || 0,
         total: parseInt(total, 10) || 0,
         score: parseInt(score, 10) || 0,
-        submittedAt: Date.now()
-    });
+        lastSavedAt: Date.now(),
+        status: draft ? 'draft' : 'sent'
+    };
+    if (!draft) payload.submittedAt = Date.now();
 
+    await ref.update(payload);
     return res.status(200).json({ success: true });
+}
+
+async function handleGetGuiaDraft(req, res) {
+    const guiaId = req.query.guiaId || req.body.guiaId;
+    const rut = req.query.rut || req.body.rut;
+    if (!guiaId || !rut) {
+        return res.status(400).json({ error: 'guiaId y rut requeridos' });
+    }
+    const snap = await db.ref(`${BASE}/guia_respuestas/${guiaId}/${cleanRut(rut)}`).once('value');
+    const v = snap.exists() ? snap.val() : null;
+    return res.status(200).json({
+        success: true,
+        draft: v ? {
+            answers: v.answers || {},
+            dev: v.dev || {},
+            status: v.status || null,
+            score: typeof v.score === 'number' ? v.score : null,
+            lastSavedAt: v.lastSavedAt || v.submittedAt || null
+        } : null
+    });
 }
 
 async function handleTrackDownload(req, res) {
@@ -293,6 +317,7 @@ module.exports = async (req, res) => {
         if (action === 'track-download') return await handleTrackDownload(req, res);
         if (action === 'get-student-status') return await handleGetStudentStatus(req, res);
         if (action === 'get-nomina-extra') return await handleGetNominaExtra(req, res);
+        if (action === 'get-guia-draft') return await handleGetGuiaDraft(req, res);
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);

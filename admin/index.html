@@ -416,6 +416,7 @@
                                 <option value="pre-inscrito">Pre-Inscrito</option>
                                 <option value="pendiente">Pendiente</option>
                                 <option value="pendiente_verificacion">Por Verificar (Manual)</option>
+                                <option value="abono">Abono — Cuota 1 de 2 ($100.000)</option>
                                 <option value="approved">Aprobado</option>
                             </select>
                             <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
@@ -1008,6 +1009,11 @@
             if (status === 'approved' || status === 'aprobado') {
                 var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado ✓</span>';
                 if (comprobante) s += '<div class="text-xs text-green-600 mt-0.5 font-mono">MP #' + escapeHtml(comprobante) + '</div>';
+                return s;
+            }
+            if (status === 'abono') {
+                var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">Abono 1/2 ✓</span>';
+                s += '<div class="text-xs text-indigo-600 mt-0.5">$100.000 · saldo 2ª cuota</div>';
                 return s;
             }
             if (status === 'pendiente_verificacion') {
@@ -1671,7 +1677,10 @@
             document.getElementById('edit-payment').value = paymentValue;
             var price = getPlanPrice(p.plan);
             var montoText = '—';
-            if (price) {
+            if (paymentValue === 'abono' || p.esAbono) {
+                var saldoAb = (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : Math.max(0, price - 100000);
+                montoText = 'Abono 1/2: ' + formatCLP(100000) + ' · Saldo: ' + formatCLP(saldoAb);
+            } else if (price) {
                 montoText = (planNames[p.plan] || p.plan) + ' · ' + formatCLP(price);
             } else if (p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') {
                 montoText = 'Pre-Inscrito · Gratis ($0)';
@@ -1724,7 +1733,7 @@
             // Recibo button visibility and binding
             var btnAdminRecibo = document.getElementById('btn-admin-descargar-recibo');
             if (btnAdminRecibo) {
-                var isApproved = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
+                var isApproved = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono;
                 if (isApproved) {
                     btnAdminRecibo.classList.remove('hidden');
                     // Clone to remove previous event listeners
@@ -2483,14 +2492,29 @@
 
             var newPlan = document.getElementById('edit-plan').value;
             var newPaymentStatus = document.getElementById('edit-payment').value;
-            
+            var ABONO_MONTO = 100000;
+            var curPort = allPortafolios[uid] || {};
+
             updates['portafolios/' + uid + '/plan'] = newPlan;
             updates['portafolios/' + uid + '/paymentStatus'] = newPaymentStatus;
 
-            if (newPaymentStatus === 'pre-inscrito') {
-                updates['users/' + uid + '/status'] = 'pre-inscrito';
-            } else if (newPaymentStatus === 'approved') {
+            if (newPaymentStatus === 'abono') {
+                // Abono parcial: 1ª cuota de 2. Activa acceso y registra el saldo pendiente.
+                updates['portafolios/' + uid + '/esAbono'] = true;
+                updates['portafolios/' + uid + '/paymentAmount'] = ABONO_MONTO;
+                updates['portafolios/' + uid + '/saldoPendiente'] = Math.max(0, getPlanPrice(newPlan) - ABONO_MONTO);
+                updates['portafolios/' + uid + '/paidAt'] = curPort.paidAt || new Date().toISOString();
                 updates['users/' + uid + '/status'] = 'active';
+            } else {
+                // Otros estados: limpia las marcas de abono
+                updates['portafolios/' + uid + '/esAbono'] = null;
+                updates['portafolios/' + uid + '/saldoPendiente'] = null;
+                updates['portafolios/' + uid + '/paymentAmount'] = null;
+                if (newPaymentStatus === 'pre-inscrito') {
+                    updates['users/' + uid + '/status'] = 'pre-inscrito';
+                } else if (newPaymentStatus === 'approved') {
+                    updates['users/' + uid + '/status'] = 'active';
+                }
             }
 
             // M1
@@ -2702,6 +2726,15 @@
             var planId = port.plan || 'completo';
             var planNameLabel = planNamesLocal[planId] || planId;
             var planPriceLabel = planPricesLocal[planId] || '$199.990';
+            // Abono parcial (1ª cuota de 2)
+            var fmtCLP = function(n){ return '$' + (n || 0).toLocaleString('es-CL'); };
+            var planPriceNumLocal = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+            var esAbono = !!(port.esAbono || port.paymentStatus === 'abono');
+            var abonoMonto = port.paymentAmount || 100000;
+            var saldoNum = (typeof port.saldoPendiente === 'number') ? port.saldoPendiente : Math.max(0, (planPriceNumLocal[planId] || 199990) - abonoMonto);
+            var cobradoLabel = esAbono ? fmtCLP(abonoMonto) : planPriceLabel;
+            var saldoLabel = fmtCLP(saldoNum);
+            var conceptoLabel = 'Servicio de Portafolio Docente 2026 (' + planNameLabel + ')' + (esAbono ? ' - ABONO 1a cuota de 2' : '');
             var paymentId = port.comprobantePago || 'MP-MANUAL-' + Math.random().toString(36).substring(2, 8).toUpperCase();
             var paymentDateRaw = port.paidAt || port.paymentVerifiedAt || port.updatedAt || new Date().toISOString();
             var paymentDateFormatted = new Date(paymentDateRaw).toLocaleDateString('es-CL', {
@@ -2764,7 +2797,7 @@
             // Highlight Estado in green
             doc.setFont('Helvetica', 'bold');
             doc.setTextColor(22, 163, 74); // green-600
-            doc.text('Estado: APROBADO', 145, 42);
+            doc.text(esAbono ? 'Estado: ABONO 1/2' : 'Estado: APROBADO', 145, 42);
             
             // Payment Method dynamically
             doc.setFont('Helvetica', 'normal');
@@ -2822,9 +2855,9 @@
             doc.setFont('Helvetica', 'normal');
             doc.setFontSize(10);
             doc.setTextColor(17, 24, 39);
-            doc.text('Servicio de Portafolio Docente 2026 (' + planNameLabel + ')', 18, 142);
+            doc.text(conceptoLabel, 18, 142);
             doc.setFont('Helvetica', 'bold');
-            doc.text(planPriceLabel, 155, 142);
+            doc.text(cobradoLabel, 155, 142);
 
             doc.setFont('Helvetica', 'normal');
             doc.setFontSize(8.5);
@@ -2832,6 +2865,13 @@
             doc.text('• Acceso completo a la plataforma digital www.profefranciscopancho.com', 18, 148);
             doc.text('• Materiales, guías pedagógicas y libreto personalizado ajustado al contexto escolar.', 18, 153);
             doc.text('• Soporte personalizado y revisión directa de las rúbricas actuales.', 18, 158);
+
+            if (esAbono) {
+                doc.setFont('Helvetica', 'bold');
+                doc.setFontSize(9);
+                doc.setTextColor(180, 83, 9); // amber-700
+                doc.text('ABONO - Cuota 1 de 2. Saldo pendiente (2a cuota): ' + saldoLabel, 18, 163);
+            }
 
             // Summary box
             doc.setFillColor(249, 250, 251);
@@ -2843,17 +2883,17 @@
             doc.setFontSize(8.5);
             doc.setTextColor(107, 114, 128);
             doc.text('Monto Neto:', 129, 173);
-            doc.text(planPriceLabel, 168, 173);
-            
+            doc.text(cobradoLabel, 168, 173);
+
             doc.text('IVA (19% Exento):', 129, 178);
             doc.text('$0', 168, 178);
-            
+
             doc.setFont('Helvetica', 'bold');
             doc.setFontSize(10.5);
             doc.setTextColor(17, 24, 39);
-            doc.text('Total General:', 129, 185);
+            doc.text(esAbono ? 'Total Abonado:' : 'Total General:', 129, 185);
             doc.setTextColor(22, 163, 74); // green
-            doc.text(planPriceLabel, 168, 185);
+            doc.text(cobradoLabel, 168, 185);
             
             doc.setFont('Helvetica', 'italic');
             doc.setFontSize(7.5);

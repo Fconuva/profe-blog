@@ -139,6 +139,8 @@
                     <div class="flex items-center gap-3">
                         <button id="btn-crear-usuario" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors flex items-center gap-1">➕ Crear Usuario</button>
                         <button id="btn-recuperar-inscripcion" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 transition-colors flex items-center gap-1">♻️ Recuperar Inscripción</button>
+                        <button onclick="exportarPortafolios('json')" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1" title="Descargar un JSON con todos los datos cargados por los docentes (para construir los portafolios)">⬇️ Exportar JSON</button>
+                        <button onclick="exportarPortafolios('pdf')" class="px-4 py-1.5 text-xs font-medium rounded-lg bg-gray-700 text-white hover:bg-gray-800 transition-colors flex items-center gap-1" title="Generar un PDF legible con todos los datos">🖨️ PDF</button>
                         <div class="flex gap-1">
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-900 text-white" data-filter="all">Todos</button>
                             <button class="filter-btn px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-filter="paid">Pagados</button>
@@ -693,6 +695,66 @@
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
 
+        // ===== Exportar datos de portafolios (JSON para construir / PDF legible) =====
+        function _escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+        function _descargarBlob(blob, nombre) {
+            var url = URL.createObjectURL(blob);
+            var a = document.createElement('a');
+            a.href = url; a.download = nombre;
+            document.body.appendChild(a); a.click();
+            setTimeout(function() { document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+        }
+        function exportarPortafolios(formato) {
+            if (!portafoliosLoaded) { alert('Los datos aún se están cargando. Espera un momento e intenta de nuevo.'); return; }
+            var data = {};
+            Object.keys(allPortafolios || {}).forEach(function(uid) {
+                var p = allPortafolios[uid] || {};
+                var c = (allClients && allClients[uid]) || {};
+                var dp = p.datosPortafolio || {};
+                var adjM3 = Array.isArray(dp.adjuntosM3) ? dp.adjuntosM3 : [];
+                var _links = [];
+                try { JSON.stringify(p, function(k, v) { if ((k === 'downloadUrl' || k === 'url') && typeof v === 'string' && v.indexOf('http') === 0) _links.push(v); return v; }); } catch (e) {}
+                // Vuelca el objeto COMPLETO del portafolio (p) + campos de conveniencia y resumen de adjuntos.
+                data[uid] = Object.assign({}, p, {
+                    uid: uid,
+                    nombre: c.nombre || dp.nombre || '',
+                    email: c.email || '',
+                    rut: c.rut || dp.rut || '',
+                    telefono: c.telefono || '',
+                    plan: p.plan || '',
+                    paymentStatus: p.paymentStatus || '',
+                    archivado: p.archivado || false,
+                    _adjuntosM3: adjM3.map(function(a) { return { name: a.name, size: a.size, contentType: a.contentType, downloadUrl: a.downloadUrl, storagePath: a.storagePath, uploadedAt: a.uploadedAt }; }),
+                    _archivosEncontrados: _links
+                });
+            });
+            var fecha = new Date().toISOString().slice(0, 10);
+            var total = Object.keys(data).length;
+            if (formato === 'json') {
+                var blob = new Blob([JSON.stringify({ exportado: new Date().toISOString(), totalDocentes: total, docentes: data }, null, 2)], { type: 'application/json' });
+                _descargarBlob(blob, 'portafolios_export_' + fecha + '.local.json');
+                return;
+            }
+            // PDF legible: ventana imprimible (el usuario guarda como PDF)
+            var win = window.open('', '_blank');
+            if (!win) { alert('Permite las ventanas emergentes para generar el PDF.'); return; }
+            var html = '<html><head><meta charset="utf-8"><title>Portafolios export ' + fecha + '</title>' +
+                '<style>body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#111;padding:24px}' +
+                'h1{font-size:18px;margin:0 0 16px}h2{font-size:14px;margin:22px 0 6px;border-bottom:1px solid #ccc;padding-bottom:4px}' +
+                'pre{white-space:pre-wrap;word-break:break-word;background:#f6f7f9;padding:10px;border-radius:6px;font-size:11px;border:1px solid #e5e7eb}' +
+                '.doc{page-break-inside:avoid;margin-bottom:18px}</style></head><body>';
+            html += '<h1>Datos de portafolios — ' + fecha + ' (' + total + ' docentes)</h1>';
+            Object.keys(data).forEach(function(uid) {
+                var d = data[uid];
+                html += '<div class="doc"><h2>' + _escHtml(d.nombre || '(sin nombre)') + ' &middot; ' + _escHtml(d.email) + ' &middot; plan: ' + _escHtml(d.plan) + '</h2>';
+                html += '<pre>' + _escHtml(JSON.stringify({ rut: d.rut, telefono: d.telefono, paymentStatus: d.paymentStatus, datosPortafolio: d.datosPortafolio, cuestionarioModulos: d.cuestionarioModulos, manual2026: d.manual2026 }, null, 2)) + '</pre></div>';
+            });
+            html += '</body></html>';
+            win.document.write(html); win.document.close();
+            setTimeout(function() { win.focus(); win.print(); }, 500);
+        }
+        window.exportarPortafolios = exportarPortafolios;
+
         setupAdminApp();
 
         function setupAdminApp() {
@@ -1105,6 +1167,17 @@
                     paidGrossRevenue += breakdown.gross;
                     paidFees += breakdown.totalFee;
                     paidCount++;
+                } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
+                    // Abono (1a cuota de 2): cuenta como pagado por el monto realmente recibido
+                    // (paymentAmount ~ $100.000); el saldo de la 2a cuota queda en pendiente.
+                    var breakdownAb = paymentBreakdown(p, p.paymentAmount || 100000, uid);
+                    paid++;
+                    paidRevenue += breakdownAb.net;
+                    paidGrossRevenue += breakdownAb.gross;
+                    paidFees += breakdownAb.totalFee;
+                    paidCount++;
+                    var saldoAb = (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : Math.max(0, price - (p.paymentAmount || 100000));
+                    if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
                 } else if (p.plan) {
                     pendingRevenue += price;
                     pendingRevenueCount++;
@@ -1213,8 +1286,8 @@
                 if (currentFilter === 'archivados') return archivado;
                 if (archivado) return false;
                 // Filter
-                if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
-                if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado';
+                if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
+                if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' && p.paymentStatus !== 'abono' && p.esAbono !== true;
                 if (currentFilter === 'inprogress') return ['modulo1','modulo2','modulo3'].some(function(m) { return p[m] && (p[m].estado === 'en-progreso' || p[m].estado === 'en-revision'); });
                 if (currentFilter === 'preinscrito') return c.status === 'pre-inscrito' && (p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado');
                 return true;
@@ -1227,7 +1300,7 @@
             }
             function isPaid(uid) {
                 var p = allPortafolios[uid] || {};
-                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado';
+                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
             }
             uids.sort(function(a, b) {
                 if (currentSort === 'nombre') {

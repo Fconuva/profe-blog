@@ -2,18 +2,31 @@
   "rules": {
 
     "users": {
-      ".read": "auth != null",
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".indexOn": ["username", "email"],
       "$uid": {
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "role": {
+          ".validate": "newData.val() === 'cliente' || root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        }
       }
     },
 
     "portafolios": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$uid": {
-        ".read": "auth != null && auth.uid === $uid",
-        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')"
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
+        "paymentStatus": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin' || newData.val() === 'pre-inscrito' || newData.val() === 'pendiente' || newData.val() === 'pendiente_verificacion'"
+        },
+        "paymentAmount":     { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "esAbono":           { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "esRegalo":          { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "saldoPendiente":    { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "paidAt":            { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
+        "paymentVerifiedAt": { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" }
       }
     },
 

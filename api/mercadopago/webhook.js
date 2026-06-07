@@ -47,6 +47,8 @@ async function findUidByEmail(db, email) {
   return Object.keys(users)[0] || '';
 }
 
+const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+
 async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) {
   if (!uid) return false;
   await db.ref('portafolios/' + uid).update({
@@ -56,7 +58,29 @@ async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) 
     paymentVerifiedAt: approvedAt,
     paymentConfirmedAt: approvedAt,
     paymentAmount: payment.transaction_amount,
+    esAbono: null,
+    saldoPendiente: null,
     plan: plan || 'completo'
+  });
+  return true;
+}
+
+// Marca un abono (1ª cuota): da acceso, registra el monto y el saldo pendiente.
+async function markPortfolioAbono(db, uid, payment, plan, approvedAt) {
+  if (!uid) return false;
+  const planKey = plan || 'completo';
+  const amount = payment.transaction_amount || 100000;
+  const saldo = Math.max(0, (PLAN_PRICES[planKey] || 199990) - amount);
+  await db.ref('portafolios/' + uid).update({
+    paymentStatus: 'abono',
+    esAbono: true,
+    comprobantePago: String(payment.id),
+    paidAt: approvedAt,
+    paymentVerifiedAt: approvedAt,
+    paymentConfirmedAt: approvedAt,
+    paymentAmount: amount,
+    saldoPendiente: saldo,
+    plan: planKey
   });
   return true;
 }
@@ -208,7 +232,11 @@ module.exports = async (req, res) => {
 
       // Update user's portfolio payment status if uid available
       if (!isCourseRegistration && payerUid) {
-        await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        if (metadata.tipo === 'abono') {
+          await markPortfolioAbono(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        } else {
+          await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        }
       }
 
       console.log('Payment verified and stored:', {

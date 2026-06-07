@@ -843,6 +843,8 @@
                 <p id="pay-error" class="hidden text-red-600 text-xs text-center mt-2">Debes ingresar el número de operación.</p>
                 <button id="pay-reopen" class="w-full mt-2 py-2 text-sm hover:underline" style="color:#009ee3">Abrir MercadoPago de nuevo</button>
             </div>
+            <!-- Estado: pago informado, esperando verificación del profesor -->
+            <div id="pay-informed" class="hidden"></div>
         </div>
 
         <!-- Editar datos durante el proceso de pago -->
@@ -1505,12 +1507,7 @@
                     document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
                     document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
                     if (portData.paymentStatus === 'pendiente_verificacion') {
-                        document.getElementById('pay-before').classList.add('hidden');
-                        document.getElementById('pay-after').classList.add('hidden');
-                        var afterEl = document.getElementById('pay-after');
-                        var compInfo = portData.comprobantePago ? '<p class="text-green-700 text-sm mt-2 font-mono">N° operación: ' + portData.comprobantePago + '</p>' : '';
-                        afterEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center"><p class="text-green-800 font-medium">✅ Pago informado</p><p class="text-green-700 text-sm mt-1">El profesor Francisco verificará tu pago pronto. Recibirás acceso una vez confirmado.</p>' + compInfo + '</div>';
-                        afterEl.classList.remove('hidden');
+                        showPaymentInformed(portData.comprobantePago);
                     } else {
                         setupPaymentStep();
                     }
@@ -1554,12 +1551,7 @@
                 document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
                 document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
                 if (portData.paymentStatus === 'pendiente_verificacion') {
-                    document.getElementById('pay-before').classList.add('hidden');
-                    document.getElementById('pay-after').classList.add('hidden');
-                    var afterEl = document.getElementById('pay-after');
-                    var compInfo = portData.comprobantePago ? '<p class="text-green-700 text-sm mt-2 font-mono">N° operación: ' + portData.comprobantePago + '</p>' : '';
-                    afterEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center"><p class="text-green-800 font-medium">✅ Pago informado</p><p class="text-green-700 text-sm mt-1">El profesor Francisco verificará tu pago pronto. Recibirás acceso una vez confirmado.</p>' + compInfo + '</div>';
-                    afterEl.classList.remove('hidden');
+                    showPaymentInformed(portData.comprobantePago);
                 } else {
                     setupPaymentStep();
                 }
@@ -2282,6 +2274,20 @@
         };
 
         // Set the MP link when step-payment is shown
+        // Muestra el estado "pago informado" en un contenedor propio, sin destruir
+        // el formulario de comprobante (#pay-after), para que el flujo de pago siga
+        // funcionando si el estado vuelve a cambiar.
+        function showPaymentInformed(comprobante) {
+            document.getElementById('pay-before').classList.add('hidden');
+            document.getElementById('pay-after').classList.add('hidden');
+            var cuotasEl = document.getElementById('pay-after-cuotas');
+            if (cuotasEl) cuotasEl.classList.add('hidden');
+            var infEl = document.getElementById('pay-informed');
+            var compInfo = comprobante ? '<p class="text-green-700 text-sm mt-2 font-mono">N° operación: ' + comprobante + '</p>' : '';
+            infEl.innerHTML = '<div class="bg-green-50 border border-green-200 rounded-xl p-4 text-center"><p class="text-green-800 font-medium">✅ Pago informado</p><p class="text-green-700 text-sm mt-1">El profesor Francisco verificará tu pago pronto. Recibirás acceso una vez confirmado.</p>' + compInfo + '</div>';
+            infEl.classList.remove('hidden');
+        }
+
         function setupPaymentStep() {
             var link = mpLinks[portData.plan] || '';
             var payLink = document.getElementById('pay-link');
@@ -2290,6 +2296,8 @@
             document.getElementById('pay-before').classList.remove('hidden');
             document.getElementById('pay-after').classList.add('hidden');
             document.getElementById('pay-after-cuotas').classList.add('hidden');
+            var infEl0 = document.getElementById('pay-informed');
+            if (infEl0) infEl0.classList.add('hidden');
 
             payLink.onclick = function() {
                 // After clicking, show confirmation UI

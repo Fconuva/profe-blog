@@ -7,8 +7,10 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    const { name, email, plan, uid } = req.body;
+    const { name, email, plan, uid, tipo } = req.body;
     if (!email || !plan) return res.status(400).json({ error: 'Missing email or plan' });
+
+    const esAbono = tipo === 'abono';
 
     // Portafolio Docente 2026 plans
     const plans = {
@@ -18,7 +20,10 @@ module.exports = async (req, res) => {
       'modulo3':   { title: 'Módulo 3 — Reflexión', price: 79990 }
     };
 
-    const chosen = plans[plan] || plans['basic'];
+    // Abono = 1ª cuota fija de $100.000 hacia el plan elegido (por defecto, completo)
+    const chosen = esAbono
+      ? { title: 'Abono 1ª cuota de 2 — Portafolio Docente 2026', price: 100000 }
+      : (plans[plan] || plans['completo']);
 
     const host = process.env.BASE_URL || `https://${req.headers.host}`;
     const notification_url = `${host}/api/mercadopago/webhook`;
@@ -61,6 +66,7 @@ module.exports = async (req, res) => {
         user_name: name || '',
         user_uid: uid || '',
         plan: plan,
+        tipo: esAbono ? 'abono' : 'completo',
         payment_timestamp: timestamp
       },
       payment_methods: {

@@ -315,6 +315,16 @@
             <form id="edit-form" class="p-6 space-y-6">
                 <input type="hidden" id="edit-uid">
 
+                <!-- Autoguardado / respaldo local -->
+                <div id="autosave-draft-banner" class="hidden bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2 rounded-xl text-sm flex items-center justify-between gap-3">
+                    <span id="autosave-draft-text">Tienes un borrador local sin guardar.</span>
+                    <span class="flex gap-2 flex-shrink-0">
+                        <button type="button" id="autosave-restore-btn" class="px-3 py-1 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700">Restaurar</button>
+                        <button type="button" id="autosave-discard-btn" class="px-3 py-1 bg-white border border-amber-300 text-amber-700 rounded-lg text-xs font-semibold hover:bg-amber-100">Descartar</button>
+                    </span>
+                </div>
+                <div id="autosave-indicator" class="hidden text-xs text-gray-400 text-right"></div>
+
                 <!-- Section 1: Client Info (Editable) -->
                 <div class="bg-gray-50 rounded-xl p-4">
                     <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente <span class="text-gray-400 font-normal">(editable)</span></h4>
@@ -1376,7 +1386,6 @@
                 tbody.appendChild(tr);
             });
 
-            document.getElementById('no-clients')[uids.length === 0 ? 'classList' : 'classList'].remove('hidden');
             if (uids.length > 0) document.getElementById('no-clients').classList.add('hidden');
             else document.getElementById('no-clients').classList.remove('hidden');
 
@@ -1832,6 +1841,7 @@
 
             document.getElementById('save-success').classList.add('hidden');
             document.getElementById('action-msg').classList.add('hidden');
+            if (window.autosaveCheckDraft) window.autosaveCheckDraft(uid);
             modal.classList.remove('hidden');
         }
 
@@ -1839,6 +1849,70 @@
             modal.classList.add('hidden');
             currentEditUid = null;
         }
+
+        // ===== AUTOGUARDADO (respaldo local del formulario de edición) =====
+        (function setupAutosave() {
+            var DRAFT_PREFIX = 'admin_edit_draft_';
+            var form = document.getElementById('edit-form');
+            if (!form) return;
+            var saveTimer = null;
+            function draftKey(uid) { return DRAFT_PREFIX + uid; }
+            function collectFields() {
+                var data = {};
+                form.querySelectorAll('input, select, textarea').forEach(function(el) {
+                    if (!el.id || el.id === 'edit-uid' || el.type === 'file' || el.type === 'hidden') return;
+                    if (el.type === 'checkbox') data[el.id] = { c: el.checked };
+                    else data[el.id] = { v: el.value };
+                });
+                return data;
+            }
+            window.autosaveSave = function() {
+                var uid = document.getElementById('edit-uid').value;
+                if (!uid || modal.classList.contains('hidden')) return;
+                try {
+                    localStorage.setItem(draftKey(uid), JSON.stringify({ savedAt: new Date().toISOString(), fields: collectFields() }));
+                    var ind = document.getElementById('autosave-indicator');
+                    if (ind) { ind.classList.remove('hidden'); ind.textContent = '💾 Borrador guardado localmente · ' + new Date().toLocaleTimeString('es-CL'); }
+                } catch (e) {}
+            };
+            window.autosaveClear = function(uid) {
+                try { if (uid) localStorage.removeItem(draftKey(uid)); } catch (e) {}
+                var b = document.getElementById('autosave-draft-banner'); if (b) b.classList.add('hidden');
+                var ind = document.getElementById('autosave-indicator'); if (ind) ind.classList.add('hidden');
+            };
+            window.autosaveCheckDraft = function(uid) {
+                var ind = document.getElementById('autosave-indicator'); if (ind) ind.classList.add('hidden');
+                var banner = document.getElementById('autosave-draft-banner'); if (!banner) return;
+                banner.classList.add('hidden');
+                var raw; try { raw = localStorage.getItem(draftKey(uid)); } catch (e) { return; }
+                if (!raw) return;
+                var draft; try { draft = JSON.parse(raw); } catch (e) { return; }
+                if (!draft || !draft.fields) return;
+                var when = draft.savedAt ? new Date(draft.savedAt).toLocaleString('es-CL') : '';
+                document.getElementById('autosave-draft-text').textContent = 'Tienes un borrador local sin guardar' + (when ? ' (' + when + ')' : '') + '. ¿Restaurar?';
+                banner.classList.remove('hidden');
+            };
+            function applyDraft(uid) {
+                var raw; try { raw = localStorage.getItem(draftKey(uid)); } catch (e) { return; }
+                if (!raw) return;
+                var draft; try { draft = JSON.parse(raw); } catch (e) { return; }
+                if (!draft || !draft.fields) return;
+                Object.keys(draft.fields).forEach(function(id) {
+                    var el = document.getElementById(id); if (!el) return;
+                    var f = draft.fields[id];
+                    if (f && typeof f.c !== 'undefined') el.checked = f.c;
+                    else if (f && typeof f.v !== 'undefined') el.value = f.v;
+                    try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) {}
+                });
+                var b = document.getElementById('autosave-draft-banner'); if (b) b.classList.add('hidden');
+            }
+            var rb = document.getElementById('autosave-restore-btn');
+            var db2 = document.getElementById('autosave-discard-btn');
+            if (rb) rb.addEventListener('click', function() { var uid = document.getElementById('edit-uid').value; if (uid) applyDraft(uid); });
+            if (db2) db2.addEventListener('click', function() { var uid = document.getElementById('edit-uid').value; if (uid) window.autosaveClear(uid); });
+            form.addEventListener('input', function() { if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(window.autosaveSave, 700); });
+            form.addEventListener('change', function() { if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(window.autosaveSave, 400); });
+        })();
 
         document.getElementById('modal-close').addEventListener('click', closeModal);
         document.getElementById('modal-cancel').addEventListener('click', closeModal);
@@ -2685,6 +2759,7 @@
             }
 
             saveChain.then(function() {
+                if (window.autosaveClear) window.autosaveClear(uid);
                 document.getElementById('save-success').classList.remove('hidden');
                 setTimeout(function() { document.getElementById('save-success').classList.add('hidden'); }, 3000);
                 showActionMsg('✅ Cambios guardados correctamente.', 'success');
@@ -2802,6 +2877,7 @@
         function descargarReciboPDFAdmin(client, port) {
             if (!client || !port) return;
 
+            if (!window.jspdf || !window.jspdf.jsPDF) { alert('No se pudo cargar el generador de PDF. Revisa tu conexión e inténtalo de nuevo.'); return; }
             var { jsPDF } = window.jspdf;
             var doc = new jsPDF({
                 orientation: 'portrait',

@@ -1,5 +1,10 @@
 # Profefconuva Workspace Guidelines
 
+## ⚠️ Carpeta de trabajo y deploy (CRÍTICO)
+
+- Trabaja SIEMPRE en el clon local `C:\dev\profe-blog`. NO uses la copia dentro de OneDrive: OneDrive corrompe el `.git` (errores `mmap`, commits fantasma, divergencias entre PCs). Ver `CLAUDE.md`.
+- Deploy del sitio: `git push origin HEAD:main` (Vercel auto-despliega). Reglas de Firebase: `npx firebase deploy --only database --project profe-blog`.
+
 ## Scope
 
 - The active production student site for this migration is `profefconuva/estudiacest`.

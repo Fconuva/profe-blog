@@ -47,6 +47,8 @@ async function findUidByEmail(db, email) {
   return Object.keys(users)[0] || '';
 }
 
+const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+
 async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) {
   if (!uid) return false;
   await db.ref('portafolios/' + uid).update({
@@ -56,22 +58,79 @@ async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) 
     paymentVerifiedAt: approvedAt,
     paymentConfirmedAt: approvedAt,
     paymentAmount: payment.transaction_amount,
+    esAbono: null,
+    saldoPendiente: null,
     plan: plan || 'completo'
   });
   return true;
 }
 
+// Marca un abono (1ª cuota): da acceso, registra el monto y el saldo pendiente.
+async function markPortfolioAbono(db, uid, payment, plan, approvedAt) {
+  if (!uid) return false;
+  const planKey = plan || 'completo';
+  const amount = payment.transaction_amount || 100000;
+  const saldo = Math.max(0, (PLAN_PRICES[planKey] || 199990) - amount);
+  await db.ref('portafolios/' + uid).update({
+    paymentStatus: 'abono',
+    esAbono: true,
+    comprobantePago: String(payment.id),
+    paidAt: approvedAt,
+    paymentVerifiedAt: approvedAt,
+    paymentConfirmedAt: approvedAt,
+    paymentAmount: amount,
+    saldoPendiente: saldo,
+    plan: planKey
+  });
+  return true;
+}
+
+// Valida la firma del webhook de Mercado Pago (header x-signature).
+// Algoritmo oficial: manifest = "id:<data.id>;request-id:<x-request-id>;ts:<ts>;"
+// y HMAC-SHA256(manifest, secret) debe coincidir con v1.
+function isValidSignature(req, secret) {
+  try {
+    const xSignature = req.headers['x-signature'];
+    const xRequestId = req.headers['x-request-id'];
+    if (!xSignature) return false;
+    let ts = '', v1 = '';
+    String(xSignature).split(',').forEach(function (part) {
+      const idx = part.indexOf('=');
+      if (idx === -1) return;
+      const key = part.slice(0, idx).trim();
+      const value = part.slice(idx + 1).trim();
+      if (key === 'ts') ts = value;
+      else if (key === 'v1') v1 = value;
+    });
+    if (!ts || !v1) return false;
+    let dataId = req.query['data.id'] || req.query.id || (req.body && req.body.data && req.body.data.id) || '';
+    dataId = String(dataId);
+    if (/[a-zA-Z]/.test(dataId)) dataId = dataId.toLowerCase();
+    let manifest = 'id:' + dataId + ';';
+    if (xRequestId) manifest += 'request-id:' + xRequestId + ';';
+    manifest += 'ts:' + ts + ';';
+    const computed = crypto.createHmac('sha256', secret).update(manifest).digest('hex');
+    const a = Buffer.from(computed, 'hex');
+    const b = Buffer.from(v1, 'hex');
+    if (a.length !== b.length) return false;
+    return crypto.timingSafeEqual(a, b);
+  } catch (e) {
+    return false;
+  }
+}
+
 module.exports = async (req, res) => {
   // Mercado Pago sends different kinds of notifications. We'll handle payment notifications.
   try {
-    // Optional: Validate webhook signature (x-signature header)
+    // Seguridad: validar la firma del webhook (rechaza notificaciones falsas).
     const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET;
     if (secret) {
-      const xSignature = req.headers['x-signature'];
-      const xRequestId = req.headers['x-request-id'];
-      // Note: MP signature validation is complex, skip for now if header not present
-      // In production, implement full HMAC validation
-      console.log('Webhook received', { xSignature, xRequestId });
+      if (!isValidSignature(req, secret)) {
+        console.warn('MP webhook: firma invalida o ausente, rechazado', {
+          xRequestId: req.headers['x-request-id'] || null
+        });
+        return res.status(401).send('invalid signature');
+      }
     }
 
     // For MP, the notification can be sent as query params or body depending on integration
@@ -173,7 +232,11 @@ module.exports = async (req, res) => {
 
       // Update user's portfolio payment status if uid available
       if (!isCourseRegistration && payerUid) {
-        await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        if (metadata.tipo === 'abono') {
+          await markPortfolioAbono(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        } else {
+          await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
+        }
       }
 
       console.log('Payment verified and stored:', {

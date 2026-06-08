@@ -1,43 +1,182 @@
-require('dotenv').config({ path: '.env.local' });
-
 const fs = require('fs');
 const path = require('path');
 const puppeteer = require('puppeteer');
 
+function loadDotEnvFallback(filePath) {
+  if (!fs.existsSync(filePath)) return;
+
+  const text = fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/, '');
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+
+    const eqIndex = line.indexOf('=');
+    if (eqIndex <= 0) continue;
+
+    const key = line.slice(0, eqIndex).trim();
+    if (!key || Object.prototype.hasOwnProperty.call(process.env, key)) continue;
+
+    let value = line.slice(eqIndex + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    process.env[key] = value;
+  }
+}
+
+try {
+  require('dotenv').config({ path: '.env.local' });
+} catch (error) {
+  loadDotEnvFallback(path.join(__dirname, '.env.local'));
+}
+
 const ROOT = __dirname;
+
+function normalizePresetKey(value) {
+  return String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function aliasPresetKey(value) {
+  const normalized = normalizePresetKey(value);
+  const aliases = {
+    pedro: 'pedro-paramo',
+    'pedro-paramo': 'pedro-paramo',
+    'pedro-paramo-u1': 'pedro-paramo',
+    metro: 'metro',
+    maus: 'maus',
+    proceso: 'proceso-u1',
+    'proceso-u1': 'proceso-u1',
+    'nota-proceso-u1': 'proceso-u1',
+    prueba: 'prueba-u1',
+    'prueba-u1': 'prueba-u1',
+    'nota-prueba-u1': 'prueba-u1',
+    'u1-nm4': 'prueba-u1'
+  };
+  return aliases[normalized] || normalized;
+}
 
 const COURSE_PRESETS = {
   '3A': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258055&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3A_TP_2026.csv')
+    defaultPreset: 'pedro-paramo',
+    presets: {
+      'pedro-paramo': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3A_TP_2026.csv')
+      }
+    }
   },
   '3B': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258057&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3B_TP_2026.csv')
+    defaultPreset: 'pedro-paramo',
+    presets: {
+      'pedro-paramo': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3B_TP_2026.csv')
+      }
+    }
   },
   '3D': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258072&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3D_TP_2026.csv')
+    defaultPreset: 'pedro-paramo',
+    presets: {
+      'pedro-paramo': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Pedro_Paramo_3D_TP_2026.csv')
+      }
+    }
   },
   '4A': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258082&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4A_TP_2026.csv')
+    presets: {
+      maus: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4A_TP_2026.csv'),
+        targetColumn: 'N2'
+      },
+      'proceso-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Nota_Proceso_U1_4A_TP_2026.csv'),
+        targetColumn: 'N3'
+      },
+      'prueba-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_U1_NM4_4A_TP_2026.csv'),
+        targetColumn: 'N4'
+      }
+    }
   },
   '4B': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258098&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4B_TP_2026.csv')
+    presets: {
+      maus: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4B_TP_2026.csv'),
+        targetColumn: 'N2'
+      },
+      'proceso-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Nota_Proceso_U1_4B_TP_2026.csv'),
+        targetColumn: 'N3'
+      },
+      'prueba-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_U1_NM4_4B_TP_2026.csv'),
+        targetColumn: 'N4'
+      }
+    }
   },
   '4C': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258086&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4C_TP_2026.csv')
+    presets: {
+      metro: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Plan_Lector_Metro_2033_4C_TP_2026.csv'),
+        targetColumn: 'N1'
+      },
+      maus: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4C_TP_2026.csv'),
+        targetColumn: 'N2'
+      },
+      'proceso-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Nota_Proceso_U1_4C_TP_2026.csv'),
+        targetColumn: 'N3'
+      },
+      'prueba-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_U1_NM4_4C_TP_2026.csv'),
+        targetColumn: 'N4'
+      }
+    }
   },
   '4D': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258087&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4D_TP_2026.csv')
+    presets: {
+      maus: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4D_TP_2026.csv'),
+        targetColumn: 'N2'
+      },
+      'proceso-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Nota_Proceso_U1_4D_TP_2026.csv'),
+        targetColumn: 'N3'
+      },
+      'prueba-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_U1_NM4_4D_TP_2026.csv'),
+        targetColumn: 'N4'
+      }
+    }
   },
   '4E': {
     url: 'https://libro.lirmi.com/?curso_aula_id=258091&periodo_id=1',
-    csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4E_TP_2026.csv')
+    presets: {
+      maus: {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Planilla_Maus_4E_TP_2026.csv'),
+        targetColumn: 'N2'
+      },
+      'proceso-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_Nota_Proceso_U1_4E_TP_2026.csv'),
+        targetColumn: 'N3'
+      },
+      'prueba-u1': {
+        csvPath: path.join(ROOT, 'lecturas', 'adminprofe', 'reportes', 'Plantilla_Lirmi_U1_NM4_4E_TP_2026.csv'),
+        targetColumn: 'N4'
+      }
+    }
   }
 };
 
@@ -45,8 +184,10 @@ function parseArgs(argv) {
   const options = {
     headless: true,
     dryRun: false,
+    auditOnly: false,
     clearMissing: true,
     targetColumn: null,
+    preset: null,
     course: null,
     url: null,
     csvPath: null,
@@ -57,12 +198,14 @@ function parseArgs(argv) {
   for (let index = 0; index < argv.length; index += 1) {
     const arg = argv[index];
     if (arg === '--course') options.course = String(argv[index + 1] || '').toUpperCase(), index += 1;
+    else if (arg === '--preset') options.preset = argv[index + 1], index += 1;
     else if (arg === '--url') options.url = argv[index + 1], index += 1;
     else if (arg === '--csv') options.csvPath = argv[index + 1], index += 1;
     else if (arg === '--email') options.email = argv[index + 1], index += 1;
     else if (arg === '--password') options.password = argv[index + 1], index += 1;
     else if (arg === '--target-column') options.targetColumn = argv[index + 1], index += 1;
     else if (arg === '--dry-run') options.dryRun = true;
+    else if (arg === '--audit-only') options.auditOnly = true;
     else if (arg === '--show-browser') options.headless = false;
     else if (arg === '--keep-missing') options.clearMissing = false;
   }
@@ -132,6 +275,12 @@ function noteToLirmi(value) {
   const parsed = Number(raw.replace(',', '.'));
   if (!Number.isFinite(parsed)) return '';
   return parsed.toFixed(1).replace('.', ',');
+}
+
+function normalizeGridNote(value) {
+  const raw = String(value || '').trim();
+  if (!raw || raw === '—' || raw === '-') return '';
+  return noteToLirmi(raw) || raw.replace(/\s+/g, ' ');
 }
 
 function shouldUseRow(row) {
@@ -271,25 +420,59 @@ function pickTargetHeader(headers, targetColumn) {
 function buildAssignments(gridRows, gradeSource, headerIndex, clearMissing) {
   const assignments = [];
   const used = new Set();
-  const report = { exact: 0, fuzzy: 0, blank: 0, missing: [], ambiguous: [] };
+  const report = {
+    exact: 0,
+    fuzzy: 0,
+    blank: 0,
+    unchanged: 0,
+    changed: 0,
+    filled: 0,
+    updated: 0,
+    cleared: 0,
+    missing: [],
+    ambiguous: [],
+    differences: []
+  };
 
   for (const row of gridRows) {
     const targetCell = row['cell_' + headerIndex];
     if (!targetCell || !targetCell.inputId) continue;
     const matched = matchEntry(row.name, gradeSource.exactMap, gradeSource.entries);
+    let desiredNote = null;
+
     if (matched.entry) {
-      assignments.push({ inputId: targetCell.inputId, name: row.name, note: matched.entry.note });
+      desiredNote = matched.entry.note;
+      assignments.push({ inputId: targetCell.inputId, name: row.name, note: desiredNote });
       used.add(matched.entry.matchKey);
       report[matched.mode] += 1;
-      continue;
+    } else {
+      if (matched.mode === 'ambiguous') report.ambiguous.push(row.name);
+      else report.missing.push(row.name);
+
+      if (clearMissing) {
+        desiredNote = '';
+        assignments.push({ inputId: targetCell.inputId, name: row.name, note: desiredNote });
+        report.blank += 1;
+      }
     }
 
-    if (matched.mode === 'ambiguous') report.ambiguous.push(row.name);
-    else report.missing.push(row.name);
-
-    if (clearMissing) {
-      assignments.push({ inputId: targetCell.inputId, name: row.name, note: '' });
-      report.blank += 1;
+    if (desiredNote !== null) {
+      const currentNote = normalizeGridNote(targetCell.current);
+      const nextNote = normalizeGridNote(desiredNote);
+      if (currentNote === nextNote) {
+        report.unchanged += 1;
+      } else {
+        report.changed += 1;
+        if (!currentNote && nextNote) report.filled += 1;
+        else if (currentNote && !nextNote) report.cleared += 1;
+        else report.updated += 1;
+        report.differences.push({
+          name: row.name,
+          current: currentNote || '∅',
+          desired: nextNote || '∅',
+          mode: matched.entry ? matched.mode : matched.mode
+        });
+      }
     }
   }
 
@@ -341,14 +524,38 @@ async function saveChanges(page) {
 
 function resolveConfig(options) {
   if (options.course && COURSE_PRESETS[options.course]) {
+    const courseConfig = COURSE_PRESETS[options.course];
+    const availablePresets = Object.keys(courseConfig.presets || {});
+    let presetKey = null;
+
+    if (options.preset) {
+      presetKey = aliasPresetKey(options.preset);
+      if (!courseConfig.presets || !courseConfig.presets[presetKey]) {
+        throw new Error('El preset ' + options.preset + ' no existe para ' + options.course + '. Disponibles: ' + availablePresets.join(', '));
+      }
+    } else if (courseConfig.defaultPreset) {
+      presetKey = courseConfig.defaultPreset;
+    } else if (!(options.csvPath && options.targetColumn)) {
+      throw new Error('El curso ' + options.course + ' requiere --preset (' + availablePresets.join(', ') + ') o usar --csv y --target-column de forma explicita.');
+    }
+
+    const presetConfig = presetKey ? courseConfig.presets[presetKey] : null;
     return {
       course: options.course,
-      url: options.url || COURSE_PRESETS[options.course].url,
-      csvPath: options.csvPath || COURSE_PRESETS[options.course].csvPath
+      preset: presetKey,
+      url: options.url || courseConfig.url,
+      csvPath: options.csvPath || (presetConfig ? presetConfig.csvPath : null),
+      targetColumn: options.targetColumn || (presetConfig ? presetConfig.targetColumn : null)
     };
   }
-  if (!options.url || !options.csvPath) throw new Error('Usa --course <3A|3B|3D|4A|4B|4C|4D|4E> o entrega --url y --csv.');
-  return { course: options.course || 'CUSTOM', url: options.url, csvPath: options.csvPath };
+  if (!options.url || !options.csvPath) throw new Error('Usa --course <3A|3B|3D|4A|4B|4C|4D|4E> con --preset cuando aplique, o entrega --url y --csv.');
+  return {
+    course: options.course || 'CUSTOM',
+    preset: options.preset ? aliasPresetKey(options.preset) : null,
+    url: options.url,
+    csvPath: options.csvPath,
+    targetColumn: options.targetColumn || null
+  };
 }
 
 async function main() {
@@ -372,19 +579,31 @@ async function main() {
     await waitForGradebook(page);
 
     const grid = await inspectGrid(page);
-    const targetHeader = pickTargetHeader(grid.headers, options.targetColumn);
+    const targetHeader = pickTargetHeader(grid.headers, config.targetColumn);
     const plan = buildAssignments(grid.rows, gradeSource, targetHeader.index, options.clearMissing);
 
     console.log('[course]', config.course);
+    if (config.preset) console.log('[preset]', config.preset);
     console.log('[url]', config.url);
     console.log('[csv]', config.csvPath);
     console.log('[target]', targetHeader.text, '(column index ' + targetHeader.index + ')');
     console.log('[rows]', grid.rows.length, '| source grades', gradeSource.entries.length);
     console.log('[match]', 'exact=' + plan.report.exact, 'fuzzy=' + plan.report.fuzzy, 'blank=' + plan.report.blank);
+    console.log('[diff]', 'unchanged=' + plan.report.unchanged, 'changed=' + plan.report.changed, 'filled=' + plan.report.filled, 'updated=' + plan.report.updated, 'cleared=' + plan.report.cleared);
 
     if (plan.report.ambiguous.length) console.log('[ambiguous]', plan.report.ambiguous.join(' | '));
     if (plan.report.missing.length) console.log('[missing]', plan.report.missing.join(' | '));
     if (plan.unused.length) console.log('[unused-source]', plan.unused.join(' | '));
+    if (plan.report.differences.length) {
+      for (const diff of plan.report.differences) {
+        console.log('[change]', diff.name, '| current=' + diff.current, '| desired=' + diff.desired, '| mode=' + diff.mode);
+      }
+    }
+
+    if (options.auditOnly) {
+      console.log('[audit-only] Comparacion completada sin escribir cambios en la grilla.');
+      return;
+    }
 
     await applyAssignments(page, plan.assignments);
 

@@ -187,20 +187,10 @@
             submitBtn.textContent = 'Registrando...';
             isRegistering = true;
 
-            // Check blacklist before registration (graceful fallback if rules deny access)
-            var safeEmailKey = email.toLowerCase().replace(/[^a-z0-9]/g, '_');
-            var safePhoneKey = telefono.replace(/[^0-9]/g, '');
-            var noSnap = { exists: function() { return false; } };
-
-            var emailBlacklistPromise = db.ref('blacklist/emails/' + safeEmailKey).once('value').catch(function() { return noSnap; });
-            var phoneBlacklistPromise = safePhoneKey ? db.ref('blacklist/telefonos/' + safePhoneKey).once('value').catch(function() { return noSnap; }) : Promise.resolve(noSnap);
-
-            Promise.all([emailBlacklistPromise, phoneBlacklistPromise])
-                .then(function(snaps) {
-                    var emailSnap = snaps[0];
-                    var phoneSnap = snaps[1];
-                    if (emailSnap.exists() || phoneSnap.exists()) {
-                        throw { code: 'blacklisted', message: 'Lo sentimos, este correo o teléfono electrónico está restringido para registros.' };
+            checkBlacklist(email, telefono)
+                .then(function(result) {
+                    if (result && result.blocked) {
+                        throw { code: 'blacklisted', message: result.message || 'Lo sentimos, este correo o teléfono está restringido para registros.' };
                     }
                     return auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
                 })
@@ -256,6 +246,32 @@
                     }
                 });
         });
+
+        function checkBlacklist(email, telefono) {
+            var controller = window.AbortController ? new AbortController() : null;
+            var timeoutId = controller ? setTimeout(function() { controller.abort(); }, 5000) : null;
+
+            return fetch('/api/admin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'check-blacklist', email: email, telefono: telefono }),
+                signal: controller ? controller.signal : undefined
+            }).then(function(response) {
+                if (timeoutId) clearTimeout(timeoutId);
+                return response.json().catch(function() { return {}; }).then(function(data) {
+                    if (response.status === 403) {
+                        return { blocked: true, message: data.error };
+                    }
+                    if (!response.ok) {
+                        return { blocked: false };
+                    }
+                    return { blocked: data.blocked === true, message: data.error };
+                });
+            }).catch(function() {
+                if (timeoutId) clearTimeout(timeoutId);
+                return { blocked: false };
+            });
+        }
     })();
     </script>
 </body>

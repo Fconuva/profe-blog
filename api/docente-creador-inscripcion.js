@@ -133,6 +133,24 @@ module.exports = async (req, res) => {
   try {
     const adminSdk = initFirebase();
     const db = adminSdk.database();
+
+    // Check blacklist
+    const safeEmailKey = email.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+    const emailBlacklistedSnap = await db.ref(`blacklist/emails/${safeEmailKey}`).once('value');
+    if (emailBlacklistedSnap.exists()) {
+      return res.status(403).json({ ok: false, error: 'Este correo electrónico está restringido para registros.' });
+    }
+
+    if (telefono) {
+      const safePhoneKey = telefono.trim().replace(/[^0-9]/g, '');
+      if (safePhoneKey) {
+        const phoneBlacklistedSnap = await db.ref(`blacklist/telefonos/${safePhoneKey}`).once('value');
+        if (phoneBlacklistedSnap.exists()) {
+          return res.status(403).json({ ok: false, error: 'Este número de teléfono está restringido para registros.' });
+        }
+      }
+    }
+
     const baseRef = db.ref('course_registrations/' + COURSE_KEY);
     const nowMs = Date.now();
     const nowIso = new Date(nowMs).toISOString();

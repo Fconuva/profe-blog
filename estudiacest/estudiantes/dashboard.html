@@ -464,6 +464,9 @@
         const CURSO_LABELS = {'1A-HC':'1°A HC','1B-HC':'1°B HC','2A-HC':'2°A HC','2B-HC':'2°B HC','2A-TP':'2°A TP','2B-TP':'2°B TP','2C-TP':'2°C TP','2D-TP':'2°D TP','2E-TP':'2°E TP','3A-HC':'3°A HC','3B-HC':'3°B HC','4A-HC':'4°A HC','4B-HC':'4°B HC','4A-TP':'4°A TP','4B-TP':'4°B TP','4C-TP':'4°C TP','4D-TP':'4°D TP','4E-TP':'4°E TP'};
         const PROGRAMA_CURSOS = {simce:['1A-HC','1B-HC','2A-HC','2B-HC','2A-TP','2B-TP','2C-TP','2D-TP','2E-TP'], paes:['3A-HC','3B-HC','4A-HC','4B-HC']};
         const CURRENT_PANEL_UNIT = 'u2';
+        // === TEMPORAL: reabrir Unidad 1 ===
+        // Pon en false (o borra este bloque y su uso más abajo) para volver a archivar la Unidad 1.
+        const FORCE_SHOW_UNIT1 = true;
         const PANEL_SECTIONS = {
             plan: { title:'📘 Plan SIMCE', copy:'Ruta principal de clases y trabajo progresivo.', prefix:'' },
             ensayo: { title:'📝 Ensayos', copy:'Evaluaciones separadas del tramo principal.', prefix:'E' },
@@ -1054,6 +1057,15 @@
                 currentContainer.innerHTML = rendered.current.html || '<div style="text-align:center;padding:12px 0;color:#475569;">Aún no hay clases activas nuevas para Unidad 2.</div>';
                 archiveContainer.innerHTML = rendered.archive.html || '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones archivadas aún.</div>';
                 syncUnitShell(rendered.current.totalCount > 0);
+                // TEMPORAL: fuerza la Unidad 1 visible/expandida (ver FORCE_SHOW_UNIT1 arriba)
+                if (FORCE_SHOW_UNIT1) {
+                    const acc = document.getElementById('unit1Accordion');
+                    if (acc) {
+                        acc.open = true;
+                        const chip = acc.querySelector('.unit-chip');
+                        if (chip) chip.textContent = 'Disponible por tiempo limitado';
+                    }
+                }
 
                 const primaryUnit = rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
                 const trackedSesiones = primaryUnit.plan.length

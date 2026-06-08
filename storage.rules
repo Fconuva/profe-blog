@@ -1,0 +1,30 @@
+rules_version = '2';
+
+// Reglas de Firebase Storage para profe-blog.
+// Objetivo: cada docente autenticado sube/lee SOLO sus propios archivos.
+// Las subidas del servidor (Admin SDK) ignoran estas reglas; los enlaces de
+// descarga con token (getDownloadURL) tambien funcionan para el equipo.
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Adjuntos del portafolio (medio de verificacion, evidencia, etc.)
+    // Subida directa desde el dashboard del docente: hasta 20 MB por archivo.
+    // El tipo/extension se valida en el dashboard; aqui protegemos por dueno y tamano.
+    match /portafolio-adjuntos/{uid}/{fileName} {
+      allow read: if request.auth != null && request.auth.uid == uid;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.resource.size < 20 * 1024 * 1024;
+      allow delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Lista de estudiantes (compatibilidad: hoy se sube via servidor, pero
+    // dejamos al duenno leer/gestionar su propio archivo).
+    match /portafolio-listas/{uid}/{fileName} {
+      allow read, write, delete: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Todo lo demas: denegado por defecto (el acceso de descarga publico usa token).
+  }
+}

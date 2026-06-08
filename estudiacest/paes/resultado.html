@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Resultado Ensayo | Estudia CEST</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base: #060813;
+      --panel-bg: rgba(13, 17, 34, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      --paes-color: #8b5cf6;
+      --paes-color-light: #a78bfa;
+      --paes-glow: rgba(139, 92, 246, 0.15);
+      --paes-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+      
+      --success: #10b981;
+      --success-glow: rgba(16, 185, 129, 0.15);
+      --error: #ef4444;
+      --error-glow: rgba(239, 68, 68, 0.15);
+      
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-base);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      z-index: 0;
+      filter: blur(130px);
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    body::before {
+      top: -10%;
+      left: -5%;
+      background: radial-gradient(circle, #4f46e5, transparent 70%);
+    }
+
+    body::after {
+      bottom: -10%;
+      right: -5%;
+      background: radial-gradient(circle, #7c3aed, transparent 70%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 35px;
+      animation: fadeInDown 0.6s ease both;
+    }
+
+    .student-info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--paes-color-light);
+    }
+
+    .btn-dashboard {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--paes-color);
+      background: rgba(139, 92, 246, 0.05);
+      transition: all 0.3s ease;
+    }
+
+    .btn-dashboard:hover {
+      background: var(--paes-gradient);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 0 20px var(--paes-glow);
+    }
+
+    /* === RESULTS OVERVIEW ROW === */
+    .overview-section {
+      display: grid;
+      grid-template-columns: 1.2fr 1.8fr;
+      gap: 24px;
+      margin-bottom: 30px;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .metric-card-score {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(13, 17, 34, 0.6) 100%);
+      border: 1.5px solid rgba(139, 92, 246, 0.25);
+      border-radius: 24px;
+      padding: 36px 30px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 25px var(--paes-glow);
+    }
+
+    .metric-card-score span {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--paes-color-light);
+      margin-bottom: 8px;
+    }
+
+    .metric-card-score h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 58px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .metric-card-score p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .metrics-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 30px;
+      backdrop-filter: blur(16px);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    .metric-subcard {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      padding: 20px;
+    }
+
+    .metric-subcard span {
+      display: block;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .metric-subcard strong {
+      font-family: 'Outfit', sans-serif;
+      font-size: 26px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .metric-subcard p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .metric-subcard strong.success { color: var(--success); }
+
+    /* === SKILLS BREAKDOWN === */
+    .skills-section {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 30px;
+      margin-bottom: 30px;
+      backdrop-filter: blur(16px);
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .skills-section h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .skill-row {
+      margin-bottom: 18px;
+    }
+
+    .skill-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .skill-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .skill-name {
+      font-weight: 700;
+      color: #cbd5e1;
+    }
+
+    .skill-name span {
+      font-weight: 400;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    .skill-stats {
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .skill-stats span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 12px;
+    }
+
+    .skill-bar-bg {
+      width: 100%;
+      height: 8px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .skill-bar-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .skill-bar-fill.loc { background: #3b82f6; }
+    .skill-bar-fill.int { background: #8b5cf6; }
+    .skill-bar-fill.eva { background: #10b981; }
+
+    /* === QUESTION TABLE === */
+    .sheet-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 24px;
+      padding: 36px;
+      box-shadow: var(--shadow);
+      margin-bottom: 40px;
+      backdrop-filter: blur(16px);
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .sheet-header {
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sheet-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 13.5px;
+    }
+
+    th {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    td {
+      padding: 10px 16px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      vertical-align: middle;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .td-q {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .td-ans-val {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .skill-badge {
+      display: inline-flex;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .skill-badge.loc { background: rgba(59, 130, 246, 0.08); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.15); }
+    .skill-badge.int { background: rgba(139, 92, 246, 0.08); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.15); }
+    .skill-badge.eva { background: rgba(16, 185, 129, 0.08); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.15); }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 99px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .status-badge.correct {
+      background: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.15);
+    }
+
+    .status-badge.incorrect {
+      background: rgba(239, 68, 68, 0.1);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .status-badge.omitted {
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-muted);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    /* Style Row Highlights */
+    tr.row-correct {
+      background: rgba(16, 185, 129, 0.015);
+    }
+    
+    tr.row-incorrect {
+      background: rgba(239, 68, 68, 0.015);
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 760px) {
+      .overview-section {
+        grid-template-columns: 1fr;
+      }
+      .metrics-panel {
+        grid-template-columns: 1fr;
+        padding: 24px;
+      }
+      .sheet-card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Bar -->
+    <header>
+      <div class="student-info-row">
+        <span class="student-badge" id="studentCourseBadge">Curso</span>
+        <span class="student-badge" id="studentNameBadge">Estudiante</span>
+      </div>
+      <a href="index.html" class="btn-dashboard">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Volver al panel
+      </a>
+    </header>
+
+    <!-- Overview Section -->
+    <section class="overview-section">
+      
+      <!-- Primary PAES Score Card -->
+      <article class="metric-card-score">
+        <span>Puntaje PAES Estimado</span>
+        <h2 id="paesScoreVal">...</h2>
+        <p>Conversión oficial referencial de Competencia Lectora</p>
+      </article>
+
+      <!-- Submetrics Panel -->
+      <div class="metrics-panel">
+        
+        <article class="metric-subcard">
+          <span>Correctas</span>
+          <strong class="success" id="correctVal">0 / 40</strong>
+          <p>Preguntas acertadas</p>
+        </article>
+
+        <article class="metric-subcard">
+          <span>Logro</span>
+          <strong id="achievementVal">0%</strong>
+          <p>Porcentaje de aciertos</p>
+        </article>
+
+        <article class="metric-subcard">
+          <span>Tiempo Empleado</span>
+          <strong id="timeSpentVal">--:--</strong>
+          <p>Duración de resolución</p>
+        </article>
+
+        <article class="metric-subcard">
+          <span>Ensayo</span>
+          <strong id="ensayoBadge">N°--</strong>
+          <p>Evaluación respondida</p>
+        </article>
+
+      </div>
+    </section>
+
+    <!-- Skills Breakdown Section -->
+    <section class="skills-section">
+      <h3>📈 Rendimiento por Habilidad</h3>
+      
+      <!-- LOC Bar -->
+      <div class="skill-row">
+        <div class="skill-meta">
+          <div class="skill-name">Localizar <span>(Identificar, Extraer)</span></div>
+          <div class="skill-stats" id="skillStatsLoc">0 / 0 <span>(0%)</span></div>
+        </div>
+        <div class="skill-bar-bg">
+          <div class="skill-bar-fill loc" id="skillBarLoc" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- INT Bar -->
+      <div class="skill-row">
+        <div class="skill-meta">
+          <div class="skill-name">Interpretar y Relacionar <span>(Sintetizar, Inferir)</span></div>
+          <div class="skill-stats" id="skillStatsInt">0 / 0 <span>(0%)</span></div>
+        </div>
+        <div class="skill-bar-bg">
+          <div class="skill-bar-fill int" id="skillBarInt" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- EVA Bar -->
+      <div class="skill-row">
+        <div class="skill-meta">
+          <div class="skill-name">Evaluar y Reflexionar <span>(Valorar, Juzgar)</span></div>
+          <div class="skill-stats" id="skillStatsEva">0 / 0 <span>(0%)</span></div>
+        </div>
+        <div class="skill-bar-bg">
+          <div class="skill-bar-fill eva" id="skillBarEva" style="width: 0%"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Question Table Card -->
+    <main class="sheet-card">
+      <div class="sheet-header">
+        <h3>Pauta Detallada de Corrección</h3>
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 10%;">Pregunta</th>
+              <th style="width: 20%;">Tu Respuesta</th>
+              <th style="width: 20%;">Clave Correcta</th>
+              <th style="width: 25%;">Habilidad</th>
+              <th style="width: 25%; text-align: right;">Estado</th>
+            </tr>
+          </thead>
+          <tbody id="pautaTableBody">
+            <!-- Dynamically populated by JS -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+
+  </div>
+
+  <script>
+    // ============ SKILL LABELS ============
+    const SKILL_NAMES = {
+      "LOC": "Localizar",
+      "INT": "Interpretar y Relacionar",
+      "EVA": "Evaluar y Reflexionar"
+    };
+
+    // ============ PARSE URL PARAMS ============
+    const params = new URLSearchParams(window.location.search);
+    const ensayoId = parseInt(params.get('id'), 10) || 1;
+
+    // ============ SESSION CHECK ============
+    let student = null;
+    const stored = sessionStorage.getItem('paes_student');
+    if (!stored) {
+      window.location.replace('index.html');
+    } else {
+      try {
+        student = JSON.parse(stored);
+        document.getElementById('studentNameBadge').textContent = student.nombre;
+        document.getElementById('studentCourseBadge').textContent = student.curso;
+      } catch(e) {
+        sessionStorage.removeItem('paes_student');
+        window.location.replace('index.html');
+      }
+    }
+
+    // ============ LOAD DATA ============
+    const resultKey = `paes_r_${ensayoId}_${student.rut}`;
+    const resultDataRaw = localStorage.getItem(resultKey);
+
+    if (!resultDataRaw) {
+      // If no result is found, redirect back to dashboard
+      window.location.replace('index.html');
+    }
+
+    const res = JSON.parse(resultDataRaw);
+
+    // ============ ESTIMATE PAES SCORE ============
+    // Scales linearly: 0 correct = 100 pts, 40 correct = 1000 pts
+    // PAES = 100 + (correct / 40) * 900
+    const correctCount = res.correct || 0;
+    const paesScore = 100 + Math.round((correctCount / 40) * 900);
+    const pct = Math.round((correctCount / 40) * 100);
+
+    // Render Metrics
+    document.getElementById('paesScoreVal').textContent = `${paesScore} pts`;
+    document.getElementById('correctVal').textContent = `${correctCount} / 40`;
+    document.getElementById('achievementVal').textContent = `${pct}%`;
+    document.getElementById('ensayoBadge').textContent = `N°${ensayoId}`;
+
+    // Format Time Spent
+    const totalSeconds = res.timeSpentSeconds || 0;
+    const minSpent = Math.floor(totalSeconds / 60);
+    const secSpent = totalSeconds % 60;
+    document.getElementById('timeSpentVal').textContent = `${minSpent}m ${secSpent}s`;
+
+    // ============ SKILLS BREAKDOWN CALCULATION ============
+    const skillCounts = {
+      "LOC": { total: 0, correct: 0 },
+      "INT": { total: 0, correct: 0 },
+      "EVA": { total: 0, correct: 0 }
+    };
+
+    const tableBody = document.getElementById('pautaTableBody');
+    
+    // Iterate through details to populate table & compile stats
+    for (let q = 1; q <= 40; q++) {
+      const d = res.detail[q];
+      const skill = d.skill || "LOC";
+      
+      skillCounts[skill].total++;
+      if (d.isCorrect) {
+        skillCounts[skill].correct++;
+      }
+
+      // Add to table
+      const tr = document.createElement('tr');
+      tr.className = d.isCorrect ? 'row-correct' : (d.ans ? 'row-incorrect' : '');
+      
+      const skillClass = skill.toLowerCase();
+      const skillLabel = SKILL_NAMES[skill] || skill;
+      
+      let statusBadgeHtml = "";
+      if (d.isCorrect) {
+        statusBadgeHtml = `<span class="status-badge correct">✓ Correcto</span>`;
+      } else if (d.ans) {
+        statusBadgeHtml = `<span class="status-badge incorrect">✗ Incorrecto</span>`;
+      } else {
+        statusBadgeHtml = `<span class="status-badge omitted">○ Omitida</span>`;
+      }
+
+      tr.innerHTML = `
+        <td class="td-q">${q.toString().padStart(2, '0')}</td>
+        <td class="td-ans-val" style="color: ${d.isCorrect ? '#34d399' : (d.ans ? '#f87171' : varTextMuted())};">${d.ans || "Omitida"}</td>
+        <td class="td-ans-val" style="color: #34d399;">${d.correct}</td>
+        <td><span class="skill-badge ${skillClass}">${skillLabel}</span></td>
+        <td style="text-align: right;">${statusBadgeHtml}</td>`;
+      
+      tableBody.appendChild(tr);
+    }
+
+    function varTextMuted() { return "#94a3b8"; }
+
+    // Render Skill Bars
+    renderSkillBar("Loc", skillCounts["LOC"]);
+    renderSkillBar("Int", skillCounts["INT"]);
+    renderSkillBar("Eva", skillCounts["EVA"]);
+
+    function renderSkillBar(prefix, counts) {
+      const total = counts.total || 0;
+      const correct = counts.correct || 0;
+      const pct = total > 0 ? Math.round((correct / total) * 100) : 0;
+      
+      document.getElementById(`skillStats${prefix}`).innerHTML = `${correct} / ${total} <span>(${pct}%)</span>`;
+      document.getElementById(`skillBar${prefix}`).style.width = `${pct}%`;
+    }
+  </script>
+
+</body>
+</html>

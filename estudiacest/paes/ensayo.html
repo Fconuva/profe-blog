@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Responder Ensayo | Estudia CEST</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg-base: #060813;
+      --panel-bg: rgba(13, 17, 34, 0.7);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --text-main: #f1f5f9;
+      --text-muted: #94a3b8;
+      
+      --paes-color: #8b5cf6;
+      --paes-color-light: #a78bfa;
+      --paes-glow: rgba(139, 92, 246, 0.15);
+      --paes-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+      
+      --bubble-hover: rgba(139, 92, 246, 0.1);
+      --bubble-active: #8b5cf6;
+      
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-base);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    body::before,
+    body::after {
+      content: '';
+      position: absolute;
+      width: 450px;
+      height: 450px;
+      border-radius: 50%;
+      z-index: 0;
+      filter: blur(130px);
+      pointer-events: none;
+      opacity: 0.35;
+    }
+
+    body::before {
+      top: -10%;
+      left: -5%;
+      background: radial-gradient(circle, #4f46e5, transparent 70%);
+    }
+
+    body::after {
+      bottom: -10%;
+      right: -5%;
+      background: radial-gradient(circle, #7c3aed, transparent 70%);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      z-index: 10;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      animation: fadeInDown 0.6s ease both;
+    }
+
+    .student-info-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .student-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 6px 12px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--paes-color-light);
+    }
+
+    .btn-quit {
+      text-decoration: none;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 10px 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .btn-quit:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.05);
+      border-color: rgba(239, 68, 68, 0.2);
+    }
+
+    /* === STICKY HEADS-UP DISPLAY === */
+    .hud-panel {
+      position: sticky;
+      top: 20px;
+      background: rgba(13, 17, 34, 0.85);
+      border: 1px solid rgba(139, 92, 246, 0.25);
+      border-radius: 20px;
+      padding: 20px 28px;
+      margin-bottom: 35px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(139, 92, 246, 0.05);
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      animation: fadeInUp 0.6s ease 0.1s both;
+    }
+
+    .hud-left h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .hud-left p {
+      font-size: 12.5px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .hud-metrics {
+      display: flex;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .hud-metric {
+      text-align: right;
+    }
+
+    .hud-metric-label {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+
+    .hud-metric-value {
+      font-family: 'Outfit', sans-serif;
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1;
+    }
+
+    .hud-metric-value.timer {
+      color: var(--paes-color-light);
+    }
+
+    /* === PROGRESS BAR === */
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.04);
+      border-radius: 100px;
+      margin-top: 15px;
+      overflow: hidden;
+      grid-column: 1 / -1;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--paes-gradient);
+      border-radius: 100px;
+      transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* === BUBBLE SHEET GRID === */
+    .sheet-card {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 40px;
+      box-shadow: var(--shadow);
+      margin-bottom: 40px;
+      animation: fadeInUp 0.6s ease 0.2s both;
+    }
+
+    .sheet-header {
+      margin-bottom: 30px;
+      text-align: center;
+    }
+
+    .sheet-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .sheet-header p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .bubble-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      column-gap: 50px;
+      row-gap: 14px;
+    }
+
+    .bubble-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.01);
+      border: 1px solid rgba(255, 255, 255, 0.02);
+      transition: all 0.2s ease;
+    }
+
+    .bubble-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+      border-color: rgba(255, 255, 255, 0.05);
+    }
+
+    .bubble-row.answered {
+      background: rgba(139, 92, 246, 0.03);
+      border-color: rgba(139, 92, 246, 0.08);
+    }
+
+    .question-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 15px;
+      font-weight: 800;
+      color: var(--text-muted);
+      width: 32px;
+    }
+
+    .bubble-row.answered .question-num {
+      color: var(--paes-color-light);
+    }
+
+    .bubbles-container {
+      display: flex;
+      gap: 14px;
+    }
+
+    .bubble-option {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      background: rgba(0, 0, 0, 0.2);
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+    }
+
+    .bubble-option:hover {
+      border-color: var(--paes-color-light);
+      background: var(--bubble-hover);
+      color: #fff;
+    }
+
+    .bubble-option.selected {
+      border-color: var(--bubble-active);
+      background: var(--bubble-active);
+      color: #000;
+      font-weight: 800;
+      box-shadow: 0 0 15px rgba(139, 92, 246, 0.4);
+    }
+
+    /* === FOOTER ACTION PANEL === */
+    .submit-panel {
+      text-align: center;
+      margin-bottom: 40px;
+      animation: fadeInUp 0.6s ease 0.3s both;
+    }
+
+    .btn-submit-exam {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 18px 36px;
+      border: none;
+      border-radius: 16px;
+      font-size: 16px;
+      font-weight: 800;
+      color: #000;
+      background: #fff;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 10px 30px rgba(255, 255, 255, 0.05);
+    }
+
+    .btn-submit-exam:hover {
+      background: var(--paes-color-light);
+      box-shadow: 0 12px 28px rgba(139, 92, 246, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .btn-submit-exam:disabled {
+      background: rgba(255, 255, 255, 0.08);
+      color: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* === CONFIRMATION MODAL === */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(4, 5, 12, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 440px;
+      background: #0d1122;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+      padding: 36px;
+      box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+      text-align: center;
+      animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+
+    .modal-icon {
+      font-size: 40px;
+      margin-bottom: 20px;
+    }
+
+    .modal-card h4 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 22px;
+      font-weight: 800;
+      color: #fff;
+      margin-bottom: 12px;
+    }
+
+    .modal-card p {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 28px;
+    }
+
+    .modal-buttons {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+
+    .btn-modal {
+      padding: 14px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-modal-cancel {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+    }
+
+    .btn-modal-cancel:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .btn-modal-confirm {
+      background: var(--paes-gradient);
+      color: #000;
+      border: none;
+      font-weight: 800;
+    }
+
+    .btn-modal-confirm:hover {
+      filter: brightness(1.1);
+    }
+
+    /* === ANIMATIONS === */
+    @keyframes zoomIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* === SPLIT LAYOUT === */
+    .split-layout {
+      display: grid;
+      grid-template-columns: 1.25fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+      align-items: start;
+    }
+
+    .viewer-panel {
+      background: var(--panel-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 28px;
+      padding: 0;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      height: 78vh;
+      position: sticky;
+      top: 150px;
+    }
+
+    .viewer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(0, 0, 0, 0.2);
+    }
+
+    .viewer-header h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .btn-newtab {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-newtab:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--paes-color-light);
+    }
+
+    .viewer-iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+      background: #ffffff;
+      border-radius: 0 0 28px 28px;
+    }
+
+    .bubble-panel {
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* === RESPONSIVE === */
+    @media (max-width: 1150px) {
+      .split-layout {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      .viewer-panel {
+        height: 60vh;
+        position: relative;
+        top: 0;
+      }
+    }
+
+    @media (max-width: 760px) {
+      .bubble-grid {
+        grid-template-columns: 1fr;
+      }
+      .hud-panel {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+      }
+      .hud-metrics {
+        width: 100%;
+        justify-content: space-between;
+      }
+      .sheet-card {
+        padding: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <!-- Top Bar -->
+    <header>
+      <div class="student-info-row">
+        <span class="student-badge" id="studentCourseBadge">Curso</span>
+        <span class="student-badge" id="studentNameBadge">Estudiante</span>
+      </div>
+      <a href="index.html" class="btn-quit" id="btnQuit">
+        Abandonar ensayo
+      </a>
+    </header>
+
+    <!-- HUD Sticky Panel -->
+    <div class="hud-panel">
+      <div class="hud-left">
+        <h2 id="ensayoTitle">Cargando Ensayo...</h2>
+        <p>Marca tu alternativa para cada pregunta en la hoja digital.</p>
+      </div>
+      <div class="hud-metrics">
+        <div class="hud-metric">
+          <div class="hud-metric-label">Progreso</div>
+          <div class="hud-metric-value" id="progressVal">0 / 40</div>
+        </div>
+        <div class="hud-metric">
+          <div class="hud-metric-label">Tiempo sugerido</div>
+          <div class="hud-metric-value timer" id="timerVal">90:00</div>
+        </div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
+      </div>
+    </div>
+
+    <!-- Main Split Layout -->
+    <div class="split-layout">
+      <!-- Left Column: Test Text and Questions Viewer -->
+      <div class="viewer-panel">
+        <div class="viewer-header">
+          <h3>Texto y Preguntas del Ensayo</h3>
+          <button type="button" class="btn-newtab" id="btnNewTab">
+            Abrir en pestaña nueva ↗
+          </button>
+        </div>
+        <iframe class="viewer-iframe" id="viewerIframe" src="about:blank"></iframe>
+      </div>
+
+      <!-- Right Column: Bubble Sheet & Actions -->
+      <div class="bubble-panel">
+        <!-- Bubble Sheet Card -->
+        <main class="sheet-card">
+          <div class="sheet-header">
+            <h3>Hoja Digital de Respuestas</h3>
+            <p>Las respuestas se guardan automáticamente en tu navegador a medida que avanzas.</p>
+          </div>
+
+          <!-- Bubble Grid -->
+          <div class="bubble-grid" id="bubbleGrid">
+            <!-- 40 rows are generated by JavaScript -->
+          </div>
+        </main>
+
+        <!-- Submission Panel -->
+        <div class="submit-panel">
+          <button type="button" class="btn-submit-exam" id="btnSubmitExam" disabled>
+            Finalizar y entregar ensayo
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modal Overlay -->
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal-card">
+      <div class="modal-icon">📨</div>
+      <h4>¿Confirmas tu entrega?</h4>
+      <p id="modalDescription">Estás a punto de enviar tu hoja de respuestas. Una vez completado, verás tu puntaje y no podrás modificar tus selecciones.</p>
+      <div class="modal-buttons">
+        <button type="button" class="btn-modal btn-modal-cancel" id="btnModalCancel">Seguir revisando</button>
+        <button type="button" class="btn-modal btn-modal-confirm" id="btnModalConfirm">Confirmar y enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Script Engine -->
+  <script>
+    // ============ CONSTANTS & DATA ============
+    const ANSWERS_PAES = {
+      // Correct keys provided by user
+      1: ["A","C","B","D","A","A","C","D","A","B","D","C","A","B","C","D","B","C","D","D","C","B","D","B","D","C","B","D","A","C","A","B","C","D","B","C","A","A","B","A"],
+      2: ["C","A","D","B","A","D","B","C","A","D","B","A","C","D","B","C","A","D","B","C","D","A","B","C","A","D","B","A","C","B","D","C","A","B","D","A","C","B","D","C"]
+    };
+
+    const HABILIDADES_PAES = {
+      // Skills provided by user
+      1: ["LOC","INT","INT","EVA","LOC","INT","INT","EVA","LOC","INT","INT","INT","EVA","EVA","INT","EVA","EVA","LOC","INT","LOC","INT","EVA","INT","EVA","LOC","INT","INT","INT","INT","EVA","EVA","INT","EVA","INT","INT","INT","INT","EVA","EVA","EVA"],
+      2: ["INT","INT","INT","INT","EVA","EVA","EVA","LOC","INT","INT","EVA","LOC","INT","INT","EVA","LOC","INT","INT","INT","EVA","EVA","INT","EVA","EVA","LOC","INT","LOC","INT","EVA","INT","EVA","LOC","INT","INT","INT","INT","EVA","EVA","INT","EVA"]
+    };
+
+    // ============ SESSION CHECK ============
+    let student = null;
+    const stored = sessionStorage.getItem('paes_student');
+    if (!stored) {
+      // Redirect to login if no student is active
+      window.location.replace('index.html');
+    } else {
+      try {
+        student = JSON.parse(stored);
+        document.getElementById('studentNameBadge').textContent = student.nombre;
+        document.getElementById('studentCourseBadge').textContent = student.curso;
+      } catch(e) {
+        sessionStorage.removeItem('paes_student');
+        window.location.replace('index.html');
+      }
+    }
+
+    // ============ PARSE URL PARAMS ============
+    const params = new URLSearchParams(window.location.search);
+    const ensayoId = parseInt(params.get('id'), 10) || 1;
+    if (ensayoId !== 1 && ensayoId !== 2) {
+      window.location.replace('index.html');
+    }
+
+    document.getElementById('ensayoTitle').textContent = `Ensayo PAES N°${ensayoId} Oficial`;
+
+    // Set dynamic text viewer source with cache busting to bypass cached X-Frame-Options headers
+    const textUrl = `ensayo_${ensayoId}_texto.html?v=1.0.3`;
+    const iframe = document.getElementById('viewerIframe');
+    iframe.src = textUrl;
+
+    const btnNewTab = document.getElementById('btnNewTab');
+    btnNewTab.addEventListener('click', function() {
+      window.open(`ensayo_${ensayoId}_texto.html`, '_blank');
+    });
+
+    // LocalStorage Keys
+    const answersKey = `paes_answers_${ensayoId}_${student.rut}`;
+    const resultKey = `paes_r_${ensayoId}_${student.rut}`;
+
+    // Redirect to results if already answered
+    if (localStorage.getItem(resultKey)) {
+      window.location.replace(`resultado.html?id=${ensayoId}`);
+    }
+
+    // ============ TIMER LOGIC ============
+    let timeRemaining = 90 * 60; // 90 minutes in seconds
+    const timerVal = document.getElementById('timerVal');
+    
+    const countdown = setInterval(function() {
+      if (timeRemaining <= 0) {
+        clearInterval(countdown);
+        timerVal.textContent = "00:00";
+        timerVal.style.color = "#ef4444";
+        // Auto-submit on expiration
+        autoSubmitExam();
+      } else {
+        timeRemaining--;
+        const min = Math.floor(timeRemaining / 60);
+        const sec = timeRemaining % 60;
+        timerVal.textContent = `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining < 10 * 60) {
+          timerVal.style.color = "#f87171"; // warning red
+        }
+      }
+    }, 1000);
+
+    // ============ RENDER GRID ============
+    const bubbleGrid = document.getElementById('bubbleGrid');
+    let studentAnswers = {};
+
+    // Load saved progress if any
+    const saved = localStorage.getItem(answersKey);
+    if (saved) {
+      try {
+        studentAnswers = JSON.parse(saved);
+      } catch(e) {
+        studentAnswers = {};
+      }
+    }
+
+    // Generate 40 rows (20 per column)
+    for (let q = 1; q <= 40; q++) {
+      const savedAns = studentAnswers[q] || "";
+      const row = document.createElement('div');
+      row.className = `bubble-row ${savedAns ? 'answered' : ''}`;
+      row.id = `row-q-${q}`;
+
+      row.innerHTML = `
+        <span class="question-num">${q.toString().padStart(2, '0')}</span>
+        <div class="bubbles-container">
+          <div class="bubble-option ${savedAns === 'A' ? 'selected' : ''}" data-q="${q}" data-ans="A">A</div>
+          <div class="bubble-option ${savedAns === 'B' ? 'selected' : ''}" data-q="${q}" data-ans="B">B</div>
+          <div class="bubble-option ${savedAns === 'C' ? 'selected' : ''}" data-q="${q}" data-ans="C">C</div>
+          <div class="bubble-option ${savedAns === 'D' ? 'selected' : ''}" data-q="${q}" data-ans="D">D</div>
+        </div>`;
+      
+      bubbleGrid.appendChild(row);
+    }
+
+    // Add click event listeners
+    bubbleGrid.addEventListener('click', function(e) {
+      if (e.target.classList.contains('bubble-option')) {
+        const q = parseInt(e.target.getAttribute('data-q'), 10);
+        const ans = e.target.getAttribute('data-ans');
+
+        const row = document.getElementById(`row-q-${q}`);
+        const siblings = row.querySelectorAll('.bubble-option');
+        
+        if (e.target.classList.contains('selected')) {
+          // Deselect
+          e.target.classList.remove('selected');
+          delete studentAnswers[q];
+          row.classList.remove('answered');
+        } else {
+          // Select
+          siblings.forEach(sib => sib.classList.remove('selected'));
+          e.target.classList.add('selected');
+          studentAnswers[q] = ans;
+          row.classList.add('answered');
+        }
+
+        // Auto-save to LocalStorage
+        localStorage.setItem(answersKey, JSON.stringify(studentAnswers));
+        updateHUD();
+      }
+    });
+
+    // ============ UPDATE HUD & PROGRESS ============
+    function updateHUD() {
+      const answeredCount = Object.keys(studentAnswers).length;
+      document.getElementById('progressVal').textContent = `${answeredCount} / 40`;
+      
+      const pct = (answeredCount / 40) * 100;
+      document.getElementById('progressBarFill').style.width = `${pct}%`;
+
+      const submitBtn = document.getElementById('btnSubmitExam');
+      // Enable submit button if at least one question is answered
+      submitBtn.disabled = answeredCount === 0;
+    }
+
+    updateHUD();
+
+    // ============ CONFIRM SUBMISSION ============
+    const submitBtn = document.getElementById('btnSubmitExam');
+    const modal = document.getElementById('modalOverlay');
+    const cancelBtn = document.getElementById('btnModalCancel');
+    const confirmBtn = document.getElementById('btnModalConfirm');
+
+    submitBtn.addEventListener('click', function() {
+      const answeredCount = Object.keys(studentAnswers).length;
+      const desc = document.getElementById('modalDescription');
+      if (answeredCount < 40) {
+        const pending = 40 - answeredCount;
+        desc.innerHTML = `⚠️ <strong>¡Cuidado!</strong> Tienes <strong>${pending} preguntas sin responder</strong> de las 40 totales.<br><br>¿Estás seguro de que quieres entregar el ensayo ahora?`;
+      } else {
+        desc.innerHTML = `Has respondido las 40 preguntas del ensayo.<br><br>¿Confirmas que deseas finalizar y realizar la entrega oficial?`;
+      }
+      modal.classList.add('active');
+    });
+
+    cancelBtn.addEventListener('click', function() {
+      modal.classList.remove('active');
+    });
+
+    confirmBtn.addEventListener('click', function() {
+      clearInterval(countdown);
+      submitExam();
+    });
+
+    // ============ SUBMIT EXAM LOGIC ============
+    async function submitExam() {
+      confirmBtn.disabled = true;
+      confirmBtn.textContent = "Enviando...";
+
+      // Calculate results
+      const correctKeys = ANSWERS_PAES[ensayoId];
+      const skillKeys = HABILIDADES_PAES[ensayoId];
+      
+      let correct = 0;
+      const detail = {};
+
+      for (let q = 1; q <= 40; q++) {
+        const correctAns = correctKeys[q - 1];
+        const studentAns = studentAnswers[q] || "";
+        const isCorrect = studentAns === correctAns;
+        
+        if (isCorrect) correct++;
+        
+        detail[q] = {
+          ans: studentAns,
+          correct: correctAns,
+          isCorrect: isCorrect,
+          skill: skillKeys[q - 1]
+        };
+      }
+
+      // Linear PAES score calculation (100 - 1000)
+      const score = Math.round(100 + (correct / 40) * 900);
+
+      // Save submission data
+      const resultData = {
+        ensayoId: ensayoId,
+        student: {
+          rut: student.rut,
+          nombre: student.nombre,
+          curso: student.curso
+        },
+        correct: correct,
+        total: 40,
+        score: score,
+        submittedAt: Date.now(),
+        timeSpentSeconds: (90 * 60) - timeRemaining,
+        answers: studentAnswers,
+        detail: detail
+      };
+
+      // Save locally as backup
+      localStorage.setItem(resultKey, JSON.stringify(resultData));
+
+      try {
+        const response = await fetch('/api/paes?action=submit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            rut: student.rut,
+            nombre: student.nombre,
+            curso: student.curso,
+            ensayoId: ensayoId,
+            answers: studentAnswers,
+            correct: correct,
+            total: 40,
+            score: score,
+            timeSpentSeconds: (90 * 60) - timeRemaining,
+            detail: detail
+          })
+        });
+        if (!response.ok) throw new Error('API Error');
+      } catch (error) {
+        console.error('[PAES DB Submission Error]', error);
+        alert("Tu ensayo se guardó de forma local debido a un micro-corte de red. Tu nota está a salvo.");
+      }
+      
+      // Clear draft draft draft
+      localStorage.removeItem(answersKey);
+
+      // Redirect to results
+      window.location.replace(`resultado.html?id=${ensayoId}`);
+    }
+
+    function autoSubmitExam() {
+      alert("¡El tiempo se ha agotado! Tu ensayo será entregado automáticamente con las respuestas marcadas hasta ahora.");
+      submitExam();
+    }
+  </script>
+
+</body>
+</html>

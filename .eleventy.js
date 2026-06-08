@@ -7,7 +7,8 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("site.webmanifest");
 
   // App pages (standalone HTML - not processed by Eleventy)
-  eleventyConfig.addPassthroughCopy("cuenta");
+  eleventyConfig.addPassthroughCopy({ "cuenta/crear-cuenta.html": "cuenta/crear-cuenta.html" });
+  eleventyConfig.addPassthroughCopy({ "cuenta/login.html": "cuenta/login.html" });
   eleventyConfig.addPassthroughCopy("dashboard");
   eleventyConfig.addPassthroughCopy("admin");
   eleventyConfig.addPassthroughCopy("estudiantes");

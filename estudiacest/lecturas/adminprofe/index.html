@@ -1497,6 +1497,20 @@ function selectLecStudent(uid) {
   document.getElementById('lecReviewDetail').scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
+function formatLecClave(item){
+  const c=item.correcta;
+  if(c===null||typeof c==='undefined') return '';
+  if(typeof c==='string'){
+    if(Array.isArray(item.opciones)){
+      const op=item.opciones.find(o=>o.letra===c);
+      if(op) return c+') '+op.texto;
+    }
+    return c;
+  }
+  if(Array.isArray(c)) return 'Orden correcto: '+c.join(' → ');
+  if(typeof c==='object') return Object.entries(c).map(function(e){return e[0]+' → '+e[1];}).join(' · ');
+  return String(c);
+}
 function renderLecReviewDetail() {
   const detail=document.getElementById('lecReviewDetail');
   if(!selectedLecSession||!selectedLecStudent){
@@ -1517,11 +1531,21 @@ function renderLecReviewDetail() {
     const sc=d.autoEvaluable===false||d.esCorrecta===null||typeof d.esCorrecta==='undefined'?'manual':(d.esCorrecta?'correct':'incorrect');
     const sl=sc==='manual'?'Revisión manual':(sc==='correct'?'Correcta':'Incorrecta');
     const preview=answer===null||typeof answer==='undefined'||answer===''?'Sin respuesta':(typeof answer==='object'?JSON.stringify(answer,null,2):String(answer));
+    const claveTxt=formatLecClave(item);
+    let claveHtml='';
+    if(claveTxt||item.explicacion){
+      claveHtml='<div class="answer-evidence" style="margin-top:8px;padding:8px 10px;border-left:3px solid #0f766e;background:#f0fdfa;border-radius:6px">'
+        +(claveTxt?'<div><strong>Clave:</strong> '+htmlEsc(claveTxt)+'</div>':'')
+        +(item.explicacion?'<div style="margin-top:4px"><strong>Evidencia:</strong> '+htmlEsc(item.explicacion)+'</div>':'')
+        +'</div>';
+    }
     return '<div class="answer-row">'
       +'<div class="answer-meta"><div><strong>Pregunta '+(i+1)+'</strong><div class="muted">'+htmlEsc(item.habilidad||getType(item))+'</div></div>'
       +'<div><span class="status-chip '+sc+'">'+sl+'</span> <span class="badge badge-gray">'+htmlEsc(fmtPts(d.puntajeObtenido??0))+' / '+htmlEsc(fmtPts(getItemPoints(item)))+'</span></div></div>'
       +'<div class="muted">'+htmlEsc(item.enunciado||'Ítem sin enunciado')+'</div>'
-      +'<div class="answer-preview">'+htmlEsc(preview)+'</div></div>';
+      +'<div class="answer-preview">'+htmlEsc(preview)+'</div>'
+      +claveHtml
+      +'</div>';
   }).join('');
 
   const statusLabel=getLecStatusLabel(row);

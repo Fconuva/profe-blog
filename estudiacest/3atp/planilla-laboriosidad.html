@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Planilla de Laboriosidad 3°A · Mecánica Industrial</title>
+<style>
+  :root{
+    --navy:#15306b;
+    --navy-soft:#22397a;
+    --gold:#f5c23a;
+    --line:#9aa3b2;
+    --line-strong:#3a4763;
+    --ink:#1a2233;
+    --muted:#5b6577;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:Arial, "Segoe UI", system-ui, sans-serif;
+    color:var(--ink);
+    background:#e9edf3;
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  /* ---------- Barra de herramientas (no se imprime) ---------- */
+  .toolbar{
+    position:sticky; top:0; z-index:50;
+    background:var(--navy); color:#fff;
+    display:flex; flex-wrap:wrap; align-items:center; gap:14px;
+    padding:12px 18px;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .toolbar strong{font-size:14px;}
+  .toolbar .hint{font-size:12px; color:#cdd7ef;}
+  .toolbar input{
+    border:none; border-radius:6px; padding:6px 10px; font-size:13px;
+    font-family:inherit;
+  }
+  .toolbar label{font-size:12px; color:#cdd7ef; display:inline-flex; align-items:center; gap:6px;}
+  .btn-print{
+    margin-left:auto;
+    background:var(--gold); color:#1a1300; border:none;
+    font-weight:800; font-size:13px; padding:9px 18px; border-radius:8px; cursor:pointer;
+    text-transform:uppercase; letter-spacing:.03em;
+  }
+  .btn-print:hover{filter:brightness(1.05);}
+
+  /* ---------- Hoja ---------- */
+  .sheet{
+    background:#fff;
+    width:272mm;            /* carta horizontal con margen */
+    max-width:100%;
+    margin:18px auto;
+    padding:14mm 12mm;
+    box-shadow:0 6px 24px rgba(0,0,0,.18);
+  }
+  .sheet + .sheet{margin-top:26px;}
+
+  /* Membrete */
+  .header{
+    display:flex; align-items:center; gap:16px;
+    border-bottom:3px solid var(--navy);
+    padding-bottom:10px; margin-bottom:12px;
+  }
+  .header img{height:58px; width:auto;}
+  .header .titles{flex:1; text-align:center;}
+  .header .titles .school{font-size:13px; font-weight:700; color:var(--navy); letter-spacing:.02em;}
+  .header .titles h1{margin:2px 0 0; font-size:19px; color:var(--ink); letter-spacing:-.01em;}
+  .header .titles .sub{font-size:12px; color:var(--muted); margin-top:2px;}
+
+  .meta{
+    display:flex; flex-wrap:wrap; gap:8px 22px; align-items:center;
+    font-size:12.5px; margin-bottom:10px;
+  }
+  .meta .field{display:inline-flex; align-items:baseline; gap:6px;}
+  .meta .field b{color:var(--navy);}
+  .meta .blank{
+    display:inline-block; min-width:120px; border-bottom:1px solid var(--line-strong);
+    font-weight:700;
+  }
+  .meta .blank.sm{min-width:70px;}
+
+  .legend{
+    border:1px solid var(--line); border-left:4px solid var(--gold);
+    background:#fbfaf5; border-radius:4px;
+    padding:7px 12px; font-size:11.5px; margin-bottom:12px; color:#3a4252;
+  }
+  .legend b{color:var(--navy);}
+
+  /* Tablas */
+  table{border-collapse:collapse; width:100%; margin-bottom:6px;}
+  th,td{border:1px solid var(--line); padding:4px 6px; vertical-align:middle;}
+  thead th{
+    background:var(--navy); color:#fff; font-size:11px; font-weight:700;
+    text-align:center; line-height:1.15;
+  }
+  .group-block{break-inside:avoid; page-break-inside:avoid; margin-bottom:14px;}
+  .group-title{
+    background:var(--navy-soft); color:#fff;
+    font-size:12.5px; font-weight:800; padding:6px 10px;
+    border:1px solid var(--line-strong); border-bottom:none;
+    display:flex; justify-content:space-between; align-items:center;
+  }
+  .group-title .machine{font-weight:600; color:var(--gold);}
+  .group-title .count{font-weight:600; font-size:11px; color:#cdd7ef;}
+
+  td.num{width:26px; text-align:center; color:var(--muted); font-weight:700;}
+  td.name{font-weight:600; white-space:nowrap;}
+  th.ind, td.ind{width:74px; text-align:center;}
+  th.nota, td.nota{width:54px; text-align:center; background:#f3f6ff;}
+  th.obs, td.obs{width:150px;}
+  tbody tr{height:30px;}
+  tbody tr:nth-child(even){background:#f7f9fc;}
+  .name.pending{color:#a23b3b; font-style:italic;}
+
+  /* Consolidado */
+  th.clase, td.clase{width:46px; text-align:center;}
+  th.notafinal, td.notafinal{width:64px; text-align:center; background:#f3f6ff; font-weight:700;}
+
+  .footer-sign{
+    display:flex; justify-content:space-between; gap:40px;
+    margin-top:26px; font-size:12px;
+  }
+  .footer-sign .sign{flex:1; text-align:center;}
+  .footer-sign .line{border-top:1px solid var(--line-strong); margin-top:34px; padding-top:4px; color:var(--muted);}
+
+  .doc-note{font-size:10.5px; color:var(--muted); margin-top:6px;}
+
+  /* ---------- Impresión ---------- */
+  @page{ size:Letter landscape; margin:10mm; }
+  @media print{
+    body{background:#fff; font-size:11px;}
+    .toolbar{display:none;}
+    .sheet{box-shadow:none; margin:0; width:auto; padding:0;}
+    .sheet + .sheet{margin-top:0;}
+    .page-break{page-break-before:always;}
+    tbody tr:nth-child(even){background:#f2f2f2 !important; -webkit-print-color-adjust:exact; print-color-adjust:exact;}
+    thead th, .group-title{-webkit-print-color-adjust:exact; print-color-adjust:exact;}
+  }
+</style>
+</head>
+<body>
+
+  <!-- Barra (solo pantalla) -->
+  <div class="toolbar">
+    <strong>📋 Planilla de Laboriosidad — 3°A</strong>
+    <span class="hint">Rellena Clase y Fecha si quieres, luego imprime. Imprime una hoja por clase.</span>
+    <label>Clase N° <input id="claseInput" type="text" size="3" placeholder="1"></label>
+    <label>Fecha <input id="fechaInput" type="text" size="10" placeholder="dd/mm/2026"></label>
+    <button class="btn-print" onclick="syncHeader();window.print();">🖨️ Imprimir</button>
+  </div>
+
+  <!-- ================= HOJA 1: REGISTRO POR CLASE ================= -->
+  <div class="sheet" id="sheetClase">
+    <div class="header">
+      <img src="https://www.estudiacest.com/estudiantes/assets/logo-cest.png" alt="CEST">
+      <div class="titles">
+        <div class="school">Centro Educativo Salesianos Talca · Especialidad Mecánica Industrial</div>
+        <h1>Planilla de Laboriosidad y Trabajo en Taller</h1>
+        <div class="sub">Proyecto «El Arte de la Precisión» · 3°A · Articulación Mecánica Industrial + Lengua y Literatura</div>
+      </div>
+      <img src="https://www.estudiacest.com/assets/logo-mecanica-industrial-tuerca.svg" alt="Mecánica Industrial">
+    </div>
+
+    <div class="meta">
+      <span class="field"><b>Clase N°:</b> <span class="blank sm" id="claseOut">&nbsp;</span></span>
+      <span class="field"><b>Fecha:</b> <span class="blank" id="fechaOut">&nbsp;</span></span>
+      <span class="field"><b>Docentes:</b> <span class="blank" style="min-width:230px;">R. Jaque Cerpa &nbsp;/&nbsp; F. Núñez Valenzuela</span></span>
+    </div>
+
+    <div class="legend">
+      <b>Escala:</b> L = Logrado &nbsp;·&nbsp; ML = Medianamente logrado &nbsp;·&nbsp; NL = No logrado &nbsp;·&nbsp; A = Ausente.<br>
+      <b>Laboriosidad = nivel de avance en la tarea de la clase:</b> &nbsp;L = trabajo total o casi total &nbsp;·&nbsp; ML = la mitad o cercano a la mitad &nbsp;·&nbsp; NL = menos de la mitad o casi nada.<br>
+      <b>Nota:</b> promedio de los indicadores convertido a escala 1,0 – 7,0.
+    </div>
+
+    <div id="claseTables"><!-- generado por JS --></div>
+
+    <div class="footer-sign">
+      <div class="sign"><div class="line">Firma docente Mecánica Industrial</div></div>
+      <div class="sign"><div class="line">Firma docente Lengua y Literatura</div></div>
+    </div>
+    <div class="doc-note">Indicadores: Laboriosidad · Orden y limpieza · Puntualidad · Trabajo en equipo · Uso pedagógico adecuado del celular.</div>
+  </div>
+
+  <!-- ================= HOJA 2: CONSOLIDADO CLASE A CLASE ================= -->
+  <div class="sheet page-break" id="sheetConsolidado">
+    <div class="header">
+      <img src="https://www.estudiacest.com/estudiantes/assets/logo-cest.png" alt="CEST">
+      <div class="titles">
+        <div class="school">Centro Educativo Salesianos Talca · Especialidad Mecánica Industrial</div>
+        <h1>Consolidado de Laboriosidad — Clase a Clase</h1>
+        <div class="sub">Nota de laboriosidad por clase · 3°A · Proyecto «El Arte de la Precisión»</div>
+      </div>
+      <img src="https://www.estudiacest.com/assets/logo-mecanica-industrial-tuerca.svg" alt="Mecánica Industrial">
+    </div>
+
+    <div class="legend">
+      Registre en cada columna la <b>nota de laboriosidad (1,0 – 7,0)</b> obtenida por el estudiante en esa clase.
+      La <b>Nota final</b> es el promedio del proceso. Esta es la misma estructura que tendrá la planilla digital en estudiacest.com/admin.
+    </div>
+
+    <div id="consolidadoTables"><!-- generado por JS --></div>
+
+    <div class="footer-sign">
+      <div class="sign"><div class="line">Firma docente</div></div>
+      <div class="sign"><div class="line">Fecha de cierre</div></div>
+    </div>
+  </div>
+
+<script>
+  // ---- Datos: 8 grupos por máquina (3°A, 18 may 2026) ----
+  const GRUPOS = [
+    { n:1, maquina:"Máquina de alineación de correa", alumnos:[
+      "SÁNCHEZ RODRÍGUEZ VICENTE BASTIÁN","RUIZ MEJÍAS MÁXIMO ETEEN SANTHY","VERDUGO RUIZ BENJAMÍN ARIEL",
+      "TORRES QUIROZ DARWIN ANTONIO","YÉVENES NOVOA VICENTE ALEXANDER","SALAS CHAPARRO RICARDO ANTONIO" ] },
+    { n:2, maquina:"Husillo de rectificadora de piezas cilíndricas", alumnos:[
+      "AYALA MORA OMAR FRANCISCO","DÍAZ GUAJARDO ALEJANDRO JOSÉ","GAETE MALDONADO SALVADOR FERNANDO",
+      "ARAYA PEÑA FRANCO JAVIER" ] },
+    { n:3, maquina:"Caja de velocidades (armar y desarmar)", alumnos:[
+      "NAVARRO AMARO THOMAS SEBASTIÁN","TORRES CASTILLO DAMIÁN EMILIO","RUIZ SALINAS VICENTE ALEJANDRO",
+      "SEPÚLVEDA GONZÁLEZ TOMÁS LUCIANO","VALDÉS CHANDÍA JUAN PABLO ENRIQUE" ] },
+    { n:4, maquina:"Carro transversal de rectificadora de superficies cilíndricas", alumnos:[
+      "DÍAZ DÍAZ FRANCO AGUSTÍN EMILIO","FUENTES NAVARRETE FRANCO ANTONIO","AMARO HERRERA MICHAELL ANDRÉS",
+      "CORDERO VILCHES CRISTÓBAL ANDRÉS","CANALES MORALES BRANDON MANUEL","DAMIÁN CASTRO" ] },
+    { n:5, maquina:"Caja de velocidades de rectificadora de ejes", alumnos:[
+      "SAAVEDRA RETAMAL BASTIÁN ISRAEL","RODRÍGUEZ CASTRO EMILIO PEDRO","PURCHES VALENZUELA LUCAS VICENTE",
+      "RETAMAL MENA DIEGO IGNACIO","PULGAR SAAVEDRA BENJAMÍN IGNACIO" ] },
+    { n:6, maquina:"Bomba centrífuga", alumnos:[
+      "JARA LANDERO PABLO ANTONIO","ALFARO VERGARA DIEGO IGNACIO","DORADOR OLAVE FREDDY EMILIANO",
+      "MELGAREJO QUIJÓN ROBERTO JOSÉ","DURÁN LANDABUR SEBASTIÁN IGNACIO" ] },
+    { n:7, maquina:"Bomba centrífuga multietapa", alumnos:[
+      "BASCUR LAGOS PABLO ANDRÉS","MARTÍNEZ JARA KEVIN ALEJANDRO","BARRIOS SAAVEDRA JOAQUÍN ALONSO",
+      "HERRERA MUÑOZ ERICK GABRIEL","HERNÁNDEZ AGUILERA MATÍAS IGNACIO","CHAMORRO ROJAS ALEJANDRO MAXIMILIANO" ] },
+    { n:8, maquina:"Bomba centrífuga de eje horizontal", alumnos:[
+      "VALLE GONZÁLEZ MAXIMILIANO JUAN ALONSO","VALENZUELA ROJAS TOMÁS IGNACIO","QUINTEROS TORRES MAHIKOL JESÚS NEHEMÍAS",
+      "SANHUEZA ARACIBIA MARTÍN JAVIER","SAN MARTÍN VALENZUELA AGUSTÍN LEÓN IGNACIO" ] },
+  ];
+  // Aún sin grupo asignado (confirmar)
+  const SIN_GRUPO = ["MERCADO MÉNDEZ FREDERIC ALEJANDRO","MONDACA SEGUEL MATÍAS ALEJANDRO","PARADA ÁVILA AUGUSTO JOAQUÍN"];
+
+  const INDICADORES = ["Laboriosidad","Orden y limpieza","Puntualidad","Trabajo en equipo","Uso del celular"];
+  const N_CLASES = 6;
+
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+
+  // -------- Hoja 1: registro por clase (5 indicadores) --------
+  function buildClase(){
+    let html = "";
+    const render = (titulo, maquina, alumnos, pending) => {
+      html += '<div class="group-block">';
+      html += '<div class="group-title"><span>'+esc(titulo)+
+              (maquina?' <span class="machine">— '+esc(maquina)+'</span>':'')+
+              '</span><span class="count">'+alumnos.length+' alumnos</span></div>';
+      html += '<table><thead><tr>';
+      html += '<th class="num">N°</th><th style="text-align:left;">Estudiante</th>';
+      INDICADORES.forEach(i=> html += '<th class="ind">'+esc(i)+'</th>');
+      html += '<th class="nota">Nota</th><th class="obs">Observaciones</th>';
+      html += '</tr></thead><tbody>';
+      alumnos.forEach((a,idx)=>{
+        html += '<tr><td class="num">'+(idx+1)+'</td>'+
+                '<td class="name'+(pending?' pending':'')+'">'+esc(a)+'</td>'+
+                '<td class="ind"></td>'.repeat(INDICADORES.length)+
+                '<td class="nota"></td><td class="obs"></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    };
+    GRUPOS.forEach(g=> render("Grupo "+g.n, g.maquina, g.alumnos, false));
+    if(SIN_GRUPO.length) render("Sin grupo asignado (por confirmar)", "", SIN_GRUPO, true);
+    document.getElementById("claseTables").innerHTML = html;
+  }
+
+  // -------- Hoja 2: consolidado clase a clase --------
+  function buildConsolidado(){
+    let html = "";
+    const render = (titulo, maquina, alumnos, pending) => {
+      html += '<div class="group-block">';
+      html += '<div class="group-title"><span>'+esc(titulo)+
+              (maquina?' <span class="machine">— '+esc(maquina)+'</span>':'')+
+              '</span></div>';
+      html += '<table><thead><tr>';
+      html += '<th class="num">N°</th><th style="text-align:left;">Estudiante</th>';
+      for(let c=1;c<=N_CLASES;c++) html += '<th class="clase">Clase '+c+'</th>';
+      html += '<th class="notafinal">Nota final</th>';
+      html += '</tr></thead><tbody>';
+      alumnos.forEach((a,idx)=>{
+        html += '<tr><td class="num">'+(idx+1)+'</td>'+
+                '<td class="name'+(pending?' pending':'')+'">'+esc(a)+'</td>'+
+                '<td class="clase"></td>'.repeat(N_CLASES)+
+                '<td class="notafinal"></td></tr>';
+      });
+      html += '</tbody></table></div>';
+    };
+    GRUPOS.forEach(g=> render("Grupo "+g.n, g.maquina, g.alumnos, false));
+    if(SIN_GRUPO.length) render("Sin grupo asignado (por confirmar)", "", SIN_GRUPO, true);
+    document.getElementById("consolidadoTables").innerHTML = html;
+  }
+
+  function syncHeader(){
+    document.getElementById("claseOut").textContent = document.getElementById("claseInput").value || " ";
+    document.getElementById("fechaOut").textContent = document.getElementById("fechaInput").value || " ";
+  }
+  document.getElementById("claseInput").addEventListener("input", syncHeader);
+  document.getElementById("fechaInput").addEventListener("input", syncHeader);
+
+  buildClase();
+  buildConsolidado();
+</script>
+</body>
+</html>

@@ -419,6 +419,7 @@
                                 <option value="pendiente">Pendiente</option>
                                 <option value="pendiente_verificacion">Por Verificar (Manual)</option>
                                 <option value="abono">Abono — Cuota 1 de 2 ($100.000)</option>
+                                <option value="gratis">🎁 Gratis / Regalado (no cobra)</option>
                                 <option value="approved">Aprobado</option>
                             </select>
                             <span id="edit-monto" class="text-sm font-heading font-bold text-gray-900"></span>
@@ -1078,6 +1079,9 @@
                 s += '<div class="text-xs text-indigo-600 mt-0.5">$100.000 · saldo 2ª cuota</div>';
                 return s;
             }
+            if (status === 'gratis') {
+                return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-pink-100 text-pink-700">🎁 Gratis / Regalo</span>';
+            }
             if (status === 'pendiente_verificacion') {
                 var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700">Por Verificar</span>';
                 if (confirmedAt) {
@@ -1156,11 +1160,15 @@
                 total++;
                 if (c.status === 'pre-inscrito' && (!p.plan || p.plan === 'pre-inscripcion')) preInscrito++;
                 var price = getPlanPrice(p.plan);
-                if (p.plan) {
+                if (p.plan && p.paymentStatus !== 'gratis') {
                     totalRevenue += price;
                     totalWithPlan++;
                 }
-                if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
+                if (p.paymentStatus === 'gratis') {
+                    // Portafolio regalado: cuenta como pagado/activo pero NO suma al monto.
+                    paid++;
+                    paidCount++;
+                } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
                     var breakdown = paymentBreakdown(p, price, uid);
                     paid++;
                     paidRevenue += breakdown.net;
@@ -1286,8 +1294,8 @@
                 if (currentFilter === 'archivados') return archivado;
                 if (archivado) return false;
                 // Filter
-                if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
-                if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' && p.paymentStatus !== 'abono' && p.esAbono !== true;
+                if (currentFilter === 'paid') return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true || p.paymentStatus === 'gratis';
+                if (currentFilter === 'unpaid') return p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' && p.paymentStatus !== 'abono' && p.esAbono !== true && p.paymentStatus !== 'gratis';
                 if (currentFilter === 'inprogress') return ['modulo1','modulo2','modulo3'].some(function(m) { return p[m] && (p[m].estado === 'en-progreso' || p[m].estado === 'en-revision'); });
                 if (currentFilter === 'preinscrito') return c.status === 'pre-inscrito' && (p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado');
                 return true;
@@ -1300,7 +1308,7 @@
             }
             function isPaid(uid) {
                 var p = allPortafolios[uid] || {};
-                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
+                return p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true || p.paymentStatus === 'gratis';
             }
             uids.sort(function(a, b) {
                 if (currentSort === 'nombre') {
@@ -1750,7 +1758,9 @@
             document.getElementById('edit-payment').value = paymentValue;
             var price = getPlanPrice(p.plan);
             var montoText = '—';
-            if (paymentValue === 'abono' || p.esAbono) {
+            if (paymentValue === 'gratis' || p.esRegalo) {
+                montoText = '🎁 Regalado · No cobra ($0)';
+            } else if (paymentValue === 'abono' || p.esAbono) {
                 var saldoAb = (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : Math.max(0, price - 100000);
                 montoText = 'Abono 1/2: ' + formatCLP(100000) + ' · Saldo: ' + formatCLP(saldoAb);
             } else if (price) {
@@ -2577,12 +2587,22 @@
                 updates['portafolios/' + uid + '/paymentAmount'] = ABONO_MONTO;
                 updates['portafolios/' + uid + '/saldoPendiente'] = Math.max(0, getPlanPrice(newPlan) - ABONO_MONTO);
                 updates['portafolios/' + uid + '/paidAt'] = curPort.paidAt || new Date().toISOString();
+                updates['portafolios/' + uid + '/esRegalo'] = null;
+                updates['users/' + uid + '/status'] = 'active';
+            } else if (newPaymentStatus === 'gratis') {
+                // Portafolio regalado: acceso completo, $0, no suma al monto.
+                updates['portafolios/' + uid + '/esRegalo'] = true;
+                updates['portafolios/' + uid + '/paymentAmount'] = 0;
+                updates['portafolios/' + uid + '/esAbono'] = null;
+                updates['portafolios/' + uid + '/saldoPendiente'] = null;
+                updates['portafolios/' + uid + '/paidAt'] = curPort.paidAt || new Date().toISOString();
                 updates['users/' + uid + '/status'] = 'active';
             } else {
-                // Otros estados: limpia las marcas de abono
+                // Otros estados: limpia las marcas de abono y regalo
                 updates['portafolios/' + uid + '/esAbono'] = null;
                 updates['portafolios/' + uid + '/saldoPendiente'] = null;
                 updates['portafolios/' + uid + '/paymentAmount'] = null;
+                updates['portafolios/' + uid + '/esRegalo'] = null;
                 if (newPaymentStatus === 'pre-inscrito') {
                     updates['users/' + uid + '/status'] = 'pre-inscrito';
                 } else if (newPaymentStatus === 'approved') {

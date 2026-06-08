@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informe Técnico · Plantilla guiada | 3°ATP Mecánica Industrial</title>
+  <meta name="description" content="Plantilla guiada página por página para redactar el Informe Técnico de Mantenimiento. 3°ATP Mecánica Industrial — CEST.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/png" href="/estudiantes/assets/logo-cest.png">
+  <style>
+    :root {
+      --bg-base: #0a1130;
+      --panel-bg: rgba(18, 26, 64, 0.66);
+      --border-color: rgba(245, 194, 53, 0.16);
+      --text-main: #f3f5fb;
+      --text-muted: #9aa4cc;
+      --primary: #f5c23a;
+      --primary-hover: #e0a82a;
+      --primary-glow: rgba(245, 194, 53, 0.20);
+      --accent: #f97316;
+      --navy-deep: #161f52;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --shadow: 0 20px 48px rgba(0, 0, 0, 0.5);
+      /* Documento (hoja) */
+      --paper: #ffffff;
+      --paper-ink: #1f2430;
+      --paper-muted: #5b6478;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      font-family: 'Inter', system-ui, sans-serif;
+      color: var(--text-main);
+      background-color: var(--bg-base);
+      overflow-x: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .container { width: 100%; max-width: 1180px; margin: 0 auto; padding: 28px 20px 60px; flex-grow: 1; }
+
+    /* Topbar */
+    .topbar { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px; flex-wrap: wrap; }
+    .btn-back {
+      display: inline-flex; align-items: center; gap: 8px; color: var(--text-muted); text-decoration: none;
+      font-size: 13px; font-weight: 700; padding: 8px 16px; border-radius: 12px;
+      border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); transition: all .3s ease;
+    }
+    .btn-back:hover { color: #fff; border-color: rgba(255,255,255,.2); background: rgba(255,255,255,.05); }
+    .connection-status { font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 99px; background: rgba(255,255,255,.02); border: 1px solid var(--border-color); }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted); }
+    .status-dot.online { background: var(--success); box-shadow: 0 0 10px var(--success); }
+    .status-dot.offline { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+
+    /* Header */
+    header { text-align: center; margin-bottom: 26px; }
+    .brand-logos { display: inline-flex; align-items: center; gap: 18px; background: rgba(255,255,255,.02); padding: 10px 24px; border-radius: 100px; border: 1px solid var(--border-color); margin-bottom: 18px; }
+    .logo-img { height: 46px; width: auto; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,.3)); }
+    .logo-divider { width: 1px; height: 32px; background: rgba(255,255,255,.15); }
+    .header-badge { display: inline-flex; align-items: center; padding: 7px 15px; border-radius: 99px; background: rgba(245,194,53,.08); border: 1px solid rgba(245,194,53,.2); color: var(--primary); font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px; }
+    header h1 { font-family: 'Outfit', sans-serif; font-size: clamp(26px, 4.5vw, 44px); font-weight: 800; line-height: 1.1; margin-bottom: 10px; letter-spacing: -.02em; background: linear-gradient(135deg, #fff 35%, #ffe08a 70%, #f5c23a 92%, #f97316 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    header .subtitle { font-size: clamp(14px, 2vw, 17px); color: var(--text-muted); max-width: 760px; margin: 0 auto; line-height: 1.55; }
+
+    /* Panel de control */
+    .panel { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 22px; padding: 26px; backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow); margin-bottom: 30px; }
+    .panel-title { font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; color: #fff; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+    label { font-size: 12.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); }
+    select, input, textarea { width: 100%; background: rgba(0,0,0,.25); border: 1px solid var(--border-color); border-radius: 12px; padding: 11px 15px; color: #fff; font-family: inherit; font-size: 14px; transition: all .3s ease; outline: none; }
+    select:focus, input:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--primary-glow); }
+    select { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; background-size: 16px; padding-right: 38px; }
+    .form-group-select { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+
+    .roster-box { background: rgba(255,255,255,.015); border: 1px solid var(--border-color); border-radius: 14px; padding: 16px; margin-bottom: 18px; }
+    .roster-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.05); padding-bottom: 6px; }
+    .roster-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .roster-member { display: flex; align-items: center; gap: 8px; font-size: 12px; padding: 7px 11px; border-radius: 8px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.03); }
+    .roster-member .number { font-family: 'JetBrains Mono', monospace; color: var(--primary); font-weight: 700; }
+    .roster-member .name { color: #fff; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .security-box { background: rgba(245,194,53,.02); border: 1px solid rgba(245,194,53,.15); border-radius: 14px; padding: 18px; margin-bottom: 16px; }
+    .security-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; gap: 10px; }
+    .security-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: 6px 12px; border-radius: 8px; }
+    .security-badge.locked { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: var(--danger); }
+    .security-badge.unlocked { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2); color: var(--success); box-shadow: 0 0 12px rgba(16,185,129,.15); }
+    .rut-input-wrapper { position: relative; }
+    .rut-input-wrapper input { font-family: 'JetBrains Mono', monospace; font-weight: 600; letter-spacing: .05em; }
+    .security-tip { font-size: 11.5px; color: var(--text-muted); line-height: 1.4; margin-top: 10px; }
+
+    .control-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px; }
+    .autosave-status { font-size: 12px; font-weight: 800; white-space: nowrap; margin-right: auto; }
+    .autosave-status.pending { color: var(--warning); }
+    .autosave-status.saving { color: var(--text-muted); }
+    .autosave-status.saved { color: var(--success); }
+    .autosave-status.error { color: var(--danger); }
+    .btn-print { display: inline-flex; align-items: center; gap: 8px; background: rgba(245,194,53,.12); border: 1px solid rgba(245,194,53,.4); color: var(--primary); font-family: inherit; font-weight: 800; font-size: 13px; padding: 11px 18px; border-radius: 12px; cursor: pointer; transition: all .25s ease; }
+    .btn-print:hover { background: var(--primary); color: #0a0f1d; }
+
+    .notification-banner { display: none; padding: 14px; border-radius: 12px; font-size: 13.5px; font-weight: 600; line-height: 1.4; margin-bottom: 16px; }
+    .notification-banner.success { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.2); color: var(--success); display: flex; gap: 8px; }
+    .notification-banner.error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.2); color: var(--danger); display: flex; gap: 8px; }
+
+    /* ===================== DOCUMENTO: HOJAS A4 ===================== */
+    .doc-hint-top {
+      background: linear-gradient(145deg, rgba(245,194,53,.10), rgba(18,26,64,.35));
+      border: 1px solid rgba(245,194,53,.25); border-radius: 16px; padding: 16px 20px; margin-bottom: 22px;
+      font-size: 13px; color: #ffe9b0; line-height: 1.5;
+    }
+    .doc-hint-top strong { color: var(--primary); }
+
+    .doc { display: flex; flex-direction: column; gap: 34px; }
+
+    .doc-page {
+      position: relative;
+      background: var(--paper);
+      color: var(--paper-ink);
+      width: 100%;
+      max-width: 820px;
+      margin: 0 auto;
+      min-height: 1000px;
+      padding: 56px 60px 64px;
+      border-radius: 6px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+    .page-tab {
+      position: absolute; top: -14px; left: 28px;
+      background: var(--primary); color: #0a0f1d;
+      font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em;
+      padding: 6px 14px; border-radius: 8px; box-shadow: 0 6px 14px rgba(0,0,0,.3);
+    }
+    .page-num { position: absolute; bottom: 22px; right: 28px; font-size: 11px; color: var(--paper-muted); font-family: 'JetBrains Mono', monospace; }
+
+    /* Guía de maquetado (qué va y dónde) — se oculta al imprimir */
+    .page-guide {
+      background: #fff8e6; border: 1px dashed #e6b800; border-radius: 10px;
+      padding: 11px 14px; margin-bottom: 24px; font-size: 12px; color: #7a5c00; line-height: 1.5;
+    }
+    .page-guide b { color: #5c4500; }
+    .page-guide .g-pos { display: inline-block; background: #ffefb8; border-radius: 5px; padding: 1px 7px; margin: 2px 4px 2px 0; font-weight: 700; color: #6b5200; font-size: 11px; }
+
+    .doc-page h2 { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #14305c; margin-bottom: 6px; }
+    .doc-page h3 { font-family: 'Outfit', sans-serif; font-size: 16px; font-weight: 700; color: #1f4a8a; margin: 18px 0 6px; }
+    .doc-page .sec-help { font-size: 12px; color: var(--paper-muted); margin-bottom: 10px; line-height: 1.5; }
+    .doc-line { height: 2px; background: linear-gradient(90deg, #f5c23a, #f97316); border-radius: 2px; width: 80px; margin-bottom: 18px; }
+
+    /* Campos editables dentro de la hoja */
+    .doc-page input.doc-edit, .doc-page textarea.doc-edit {
+      width: 100%; background: #f7f9fc; border: 1px solid #dde3ee; border-radius: 8px;
+      color: var(--paper-ink); font-family: inherit; font-size: 14px; line-height: 1.6; padding: 11px 13px;
+    }
+    .doc-page input.doc-edit { font-size: 15px; }
+    .doc-page textarea.doc-edit { resize: vertical; min-height: 120px; }
+    .doc-page .doc-edit:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-glow); outline: none; background: #fff; }
+    .doc-page .doc-edit[disabled] { background: #f0f2f6; color: #9aa1b0; cursor: not-allowed; }
+    .doc-field { margin-bottom: 16px; }
+    .doc-field > label { display: block; color: #34466b; font-size: 12px; font-weight: 800; text-transform: none; letter-spacing: 0; margin-bottom: 6px; }
+
+    /* Portada */
+    .cover { display: flex; flex-direction: column; align-items: center; text-align: center; min-height: 880px; }
+    .cover-logo { display: flex; align-items: center; gap: 18px; margin-top: 10px; margin-bottom: auto; }
+    .cover-logo img { height: 60px; }
+    .cover-logo .logo-divider { background: #d8deea; height: 40px; }
+    .cover-center { width: 100%; max-width: 560px; }
+    .cover-kicker { font-size: 12px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; color: #c08a00; margin-bottom: 14px; }
+    .cover-title input { text-align: center; font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: #14305c; background: #f7f9fc; }
+    .cover-machine { font-size: 17px; font-weight: 700; color: #1f4a8a; margin-top: 14px; }
+    .cover-data { margin-top: auto; width: 100%; max-width: 520px; border-top: 1px solid #e3e8f2; padding-top: 18px; font-size: 13px; color: #34466b; line-height: 1.7; }
+    .cover-data .row { display: flex; justify-content: space-between; gap: 10px; }
+    .cover-data .row span:first-child { color: var(--paper-muted); font-weight: 600; }
+    .cover-members { margin-top: 10px; font-size: 12.5px; color: #34466b; }
+    .cover-foot { margin-top: 14px; font-size: 12px; color: var(--paper-muted); }
+
+    /* Índice */
+    .toc { list-style: none; margin-top: 8px; }
+    .toc li { display: flex; align-items: baseline; gap: 8px; padding: 9px 0; border-bottom: 1px dotted #d7dded; font-size: 14px; color: #25324d; }
+    .toc li .t-name { font-weight: 600; }
+    .toc li .t-dots { flex: 1; border-bottom: 1px dotted #c2cadb; transform: translateY(-3px); }
+    .toc li .t-page { font-family: 'JetBrains Mono', monospace; color: #1f4a8a; font-weight: 700; }
+
+    /* Anexos: banco visual read-only */
+    .anexo-fotos { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 8px; }
+    .anexo-foto { border: 1px solid #e3e8f2; border-radius: 10px; overflow: hidden; background: #f7f9fc; }
+    .anexo-foto img { width: 100%; height: 120px; object-fit: cover; display: block; }
+    .anexo-foto .cap { font-size: 11.5px; color: #34466b; padding: 7px 9px; border-top: 1px solid #e3e8f2; line-height: 1.35; }
+    .anexo-empty { font-size: 12.5px; color: var(--paper-muted); font-style: italic; }
+
+    footer { text-align: center; padding: 26px 20px; color: var(--text-muted); font-size: 13px; border-top: 1px solid rgba(255,255,255,.03); background: rgba(0,0,0,.15); margin-top: auto; }
+    footer strong { color: #fff; }
+
+    @media (max-width: 720px) {
+      .roster-grid { grid-template-columns: 1fr; }
+      .doc-page { padding: 40px 26px 50px; min-height: auto; }
+      .cover { min-height: auto; }
+      .cover-logo, .cover-data, .cover-foot { margin: 16px 0; }
+    }
+
+    /* ===================== IMPRESIÓN / EXPORTAR A PDF ===================== */
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      body { background: #fff; color: #000; }
+      .no-print { display: none !important; }
+      .container { padding: 0; max-width: none; }
+      .doc { gap: 0; }
+      .doc-page { box-shadow: none; border-radius: 0; margin: 0; max-width: none; width: 100%; min-height: auto; padding: 0 0 10mm; page-break-after: always; }
+      .page-tab, .page-num, .page-guide { display: none !important; }
+      .doc-page input.doc-edit, .doc-page textarea.doc-edit { border: none; background: #fff; padding: 0; color: #000; }
+      .doc-page textarea.doc-edit { min-height: 0; height: auto; resize: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Topbar -->
+    <div class="topbar no-print">
+      <a href="/3atp/" class="btn-back">
+        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Volver a la Carpeta Técnica
+      </a>
+      <div class="connection-status" id="dbStatus">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Conectando...</span>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="no-print">
+      <div class="brand-logos">
+        <img class="logo-img" src="/assets/logo-profe-francisco-nuevo.svg" alt="Logo Francisco Pancho">
+        <div class="logo-divider"></div>
+        <img class="logo-img" src="/assets/logo-mecanica-industrial-tuerca.svg" alt="Logo Mecánica Industrial">
+        <div class="logo-divider"></div>
+        <img class="logo-img" src="/estudiantes/assets/logo-cest.png" alt="Logo CEST">
+      </div>
+      <div class="header-badge">Plantilla guiada · Lengua y Literatura / Mecánica Industrial</div>
+      <h1>Informe Técnico, página por página</h1>
+      <p class="subtitle">Cada hoja te indica <strong>qué va y dónde</strong> (logo, título, índice, introducción, objetivos, desarrollo, conclusiones, anexos). Redacten ustedes el contenido: se guarda solo en EstudiaCEST y luego lo disertan. Pueden imprimir o exportar a PDF al final.</p>
+    </header>
+
+    <!-- Panel de control -->
+    <div class="panel no-print">
+      <div class="panel-title"><span>🛠️ Selecciona tu grupo para empezar</span></div>
+      <div class="notification-banner" id="notifyBanner"></div>
+
+      <div class="form-group-select">
+        <label for="groupSelect">Grupo de trabajo</label>
+        <select id="groupSelect" onchange="handleGroupChange()">
+          <option value="" disabled selected>-- Selecciona un equipo --</option>
+          <option value="1">Grupo 1 — Máquina de alineación de correa</option>
+          <option value="2">Grupo 2 — Husillo de rectificadora de piezas cilíndricas</option>
+          <option value="3">Grupo 3 — Caja de velocidades (armar y desarmar)</option>
+          <option value="4">Grupo 4 — Carro transversal de rectificadora de superficies cilíndricas</option>
+          <option value="5">Grupo 5 — Caja de velocidades de rectificadora de ejes</option>
+          <option value="6">Grupo 6 — Bomba centrífuga</option>
+          <option value="7">Grupo 7 — Bomba centrífuga multietapa</option>
+          <option value="8">Grupo 8 — Bomba centrífuga de eje horizontal</option>
+        </select>
+      </div>
+
+      <div class="roster-box" id="rosterBox" style="display:none;">
+        <div class="roster-title" id="rosterTitle">Integrantes del Equipo</div>
+        <div class="roster-grid" id="rosterGrid"></div>
+      </div>
+
+      <div class="security-box" id="securityBox" style="display:none;">
+        <div class="security-header">
+          <label for="rutInput">Validación de Integridad & Seguridad</label>
+          <span class="security-badge locked" id="securityBadge">🔒 Bloqueado</span>
+        </div>
+        <div class="rut-input-wrapper">
+          <input type="text" id="rutInput" placeholder="12345678-K" oninput="validateRUT()" disabled>
+        </div>
+        <p class="security-tip">Ingresa el RUT de <strong>cualquier integrante activo</strong> del grupo para desbloquear la edición del informe.</p>
+      </div>
+
+      <div class="control-actions">
+        <span class="autosave-status" id="autosaveStatus"></span>
+        <button type="button" class="btn-print" onclick="window.print()">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+          Imprimir / Exportar PDF
+        </button>
+      </div>
+    </div>
+
+    <!-- Aviso de maquetado -->
+    <div class="doc-hint-top no-print" id="docHint" style="display:none;">
+      📐 <strong>Cómo usar esta plantilla:</strong> baja por las hojas en orden. La franja amarilla de cada hoja te dice <strong>qué contenido va y en qué posición</strong>. Escribe en los recuadros: todo se guarda automáticamente. Al terminar, usa <strong>Imprimir / Exportar PDF</strong> (las ayudas amarillas no se imprimen).
+    </div>
+
+    <!-- ===================== DOCUMENTO ===================== -->
+    <div class="doc" id="doc" style="display:none;">
+
+      <!-- HOJA 1 · PORTADA -->
+      <section class="doc-page" id="page-portada">
+        <span class="page-tab">Hoja 1 · Portada</span>
+        <div class="page-guide">
+          <b>Qué va en esta hoja y dónde:</b>
+          <span class="g-pos">Logo arriba y centrado</span>
+          <span class="g-pos">Título al centro</span>
+          <span class="g-pos">Nombre de la máquina bajo el título</span>
+          <span class="g-pos">Datos del equipo abajo</span>
+          <span class="g-pos">Establecimiento y fecha al pie</span>
+        </div>
+        <div class="cover">
+          <div class="cover-logo">
+            <img src="/estudiantes/assets/logo-cest.png" alt="CEST">
+            <div class="logo-divider"></div>
+            <img src="/assets/logo-mecanica-industrial-tuerca.svg" alt="Mecánica Industrial">
+          </div>
+          <div class="cover-center">
+            <div class="cover-kicker">Centro Educativo Salesianos Talca · Mecánica Industrial</div>
+            <div class="doc-field cover-title">
+              <input type="text" id="titulo" class="doc-edit" placeholder="Informe Técnico de Mantenimiento de Sistemas Mecánicos" disabled>
+            </div>
+            <div class="cover-machine" id="coverMachine">— Máquina del grupo —</div>
+          </div>
+          <div class="cover-data">
+            <div class="row"><span>Equipo</span><span id="coverGroup">—</span></div>
+            <div class="row"><span>Especialidad</span><span>3°A · Mecánica Industrial</span></div>
+            <div class="row"><span>Asignaturas</span><span>Mecánica Industrial · Lengua y Literatura</span></div>
+            <div class="cover-members" id="coverMembers"></div>
+          </div>
+          <div class="cover-foot">
+            <div>Docentes: Ricardo E. Jaque Cerpa (Mecánica) · Prof. Francisco Núñez Valenzuela (Lengua y Literatura)</div>
+            <div style="margin-top:8px; max-width:260px; margin-left:auto; margin-right:auto;">
+              <label style="color:var(--paper-muted); font-size:11px; font-weight:700;">Fecha de entrega</label>
+              <input type="text" id="fecha" class="doc-edit" placeholder="Ej: Talca, octubre de 2026" disabled style="text-align:center; font-size:13px; margin-top:4px;">
+            </div>
+          </div>
+        </div>
+        <span class="page-num">1</span>
+      </section>
+
+      <!-- HOJA 2 · ÍNDICE -->
+      <section class="doc-page" id="page-indice">
+        <span class="page-tab">Hoja 2 · Índice</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> la lista de secciones del informe con el número de página donde empieza cada una. <b>Se genera solo</b> (no necesitas escribirlo); revísalo al final por si cambian las páginas.
+        </div>
+        <h2>Índice</h2>
+        <div class="doc-line"></div>
+        <ul class="toc" id="toc"></ul>
+        <span class="page-num">2</span>
+      </section>
+
+      <!-- HOJA 3 · INTRODUCCIÓN -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 3 · Introducción</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> presenten el informe en 1–2 párrafos. Quién es el equipo, qué máquina/conjunto trabajaron, por qué es importante su mantenimiento y qué encontrará el lector en el informe. <b>No</b> pongan resultados todavía.
+        </div>
+        <h2>1. Introducción</h2>
+        <div class="doc-line"></div>
+        <p class="sec-help">Contexto general + presentación del trabajo. Redacción formal, en tercera persona.</p>
+        <textarea id="intro" class="doc-edit" placeholder="El presente informe da cuenta del trabajo de mantenimiento realizado por el equipo… sobre… Su mantenimiento es relevante porque… A lo largo del informe se presentará…" disabled style="min-height:280px;"></textarea>
+        <span class="page-num">3</span>
+      </section>
+
+      <!-- HOJA 4 · OBJETIVOS -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 4 · Objetivos</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> un <b>objetivo general</b> (la meta del trabajo, con verbo en infinitivo: «Realizar…», «Diagnosticar…») y varios <b>objetivos específicos</b> (los pasos concretos para lograrlo).
+        </div>
+        <h2>2. Objetivos</h2>
+        <div class="doc-line"></div>
+        <div class="doc-field">
+          <label for="obj_general">2.1 Objetivo general</label>
+          <textarea id="obj_general" class="doc-edit" placeholder="Realizar el mantenimiento y diagnóstico de… aplicando procedimientos seguros de desarme e inspección." disabled style="min-height:90px;"></textarea>
+        </div>
+        <div class="doc-field">
+          <label for="obj_especificos">2.2 Objetivos específicos (uno por línea)</label>
+          <textarea id="obj_especificos" class="doc-edit" placeholder="• Identificar el conjunto y su ficha técnica.&#10;• Describir la función del componente asignado.&#10;• Ejecutar el desarme aplicando EPP y medidas de seguridad.&#10;• Diagnosticar las fallas y sus causas.&#10;• Proponer recomendaciones de mantenimiento." disabled style="min-height:170px;"></textarea>
+        </div>
+        <span class="page-num">4</span>
+      </section>
+
+      <!-- HOJA 5 · DESARROLLO I -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 5 · Desarrollo I</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> identificación del equipo y su <b>ficha técnica</b> redactada en prosa (no solo una tabla): fabricante, modelo, año, datos de placa y dónde los obtuvieron (fuentes).
+        </div>
+        <h2>3. Desarrollo</h2>
+        <div class="doc-line"></div>
+        <h3>3.1 Identificación y ficha técnica del equipo</h3>
+        <p class="sec-help">Usen los datos que ya levantaron en la Carpeta Técnica (bloques A y B).</p>
+        <textarea id="des_identificacion" class="doc-edit" placeholder="El conjunto corresponde a… fabricado por… modelo… año… Según su placa de identificación, sus características son… Estos datos se obtuvieron de…" disabled style="min-height:340px;"></textarea>
+        <span class="page-num">5</span>
+      </section>
+
+      <!-- HOJA 6 · DESARROLLO II -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 6 · Desarrollo II</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> la <b>descripción técnica</b> del componente asignado: qué es, sus partes principales y <b>cómo funciona</b>. Usen vocabulario técnico (lo definirán en el glosario de anexos).
+        </div>
+        <h3>3.2 Descripción técnica y funcionamiento</h3>
+        <p class="sec-help">Expliquen con sus palabras, de forma clara y precisa.</p>
+        <textarea id="des_descripcion" class="doc-edit" placeholder="El componente está compuesto por… Su función dentro de la máquina es… Funciona de la siguiente manera:…" disabled style="min-height:360px;"></textarea>
+        <span class="page-num">6</span>
+      </section>
+
+      <!-- HOJA 7 · DESARROLLO III -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 7 · Desarrollo III</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> el <b>procedimiento de desarme</b> paso a paso, las herramientas usadas y, muy importante, las <b>medidas de seguridad y EPP</b> aplicadas.
+        </div>
+        <h3>3.3 Procedimiento de desarme y seguridad</h3>
+        <p class="sec-help">Redacten la secuencia en orden y numerada.</p>
+        <textarea id="des_desarme" class="doc-edit" placeholder="Antes de iniciar se verificó… El desarme se realizó así: 1)… 2)… 3)… Las herramientas utilizadas fueron… Las medidas de seguridad y EPP aplicadas fueron…" disabled style="min-height:360px;"></textarea>
+        <span class="page-num">7</span>
+      </section>
+
+      <!-- HOJA 8 · DESARROLLO IV -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 8 · Desarrollo IV</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> el <b>diagnóstico de fallas</b> (hallazgos + causa raíz, citando la foto que lo prueba) y las <b>mediciones</b> realizadas comparadas con la tolerancia del fabricante.
+        </div>
+        <h3>3.4 Diagnóstico de fallas</h3>
+        <p class="sec-help">Cada falla: qué encontraron, por qué ocurre y en qué foto se ve (ej: «ver Anexo, foto 2»).</p>
+        <textarea id="des_diagnostico" class="doc-edit" placeholder="Se detectó… cuya causa probable es… evidenciado en la foto… " disabled style="min-height:190px;"></textarea>
+        <h3>3.5 Mediciones y análisis de resultados</h3>
+        <p class="sec-help">Valor medido vs. valor del fabricante → ¿dentro de tolerancia?</p>
+        <textarea id="des_resultados" class="doc-edit" placeholder="Se midió… obteniendo… La tolerancia indicada por el fabricante es… por lo tanto el componente se encuentra…" disabled style="min-height:170px;"></textarea>
+        <span class="page-num">8</span>
+      </section>
+
+      <!-- HOJA 9 · CIERRE Y CONCLUSIONES -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 9 · Cierre y conclusiones</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> el <b>cierre</b>. Conclusiones que respondan a los objetivos del inicio + <b>recomendaciones</b> de mantenimiento. Sin información nueva: se cierra lo ya expuesto.
+        </div>
+        <h2>4. Conclusiones y recomendaciones</h2>
+        <div class="doc-line"></div>
+        <div class="doc-field">
+          <label for="conclusiones">4.1 Conclusiones</label>
+          <textarea id="conclusiones" class="doc-edit" placeholder="Se concluye que el estado del conjunto es… Se cumplieron los objetivos planteados ya que… El hallazgo más relevante fue…" disabled style="min-height:200px;"></textarea>
+        </div>
+        <div class="doc-field">
+          <label for="recomendaciones">4.2 Recomendaciones de mantenimiento</label>
+          <textarea id="recomendaciones" class="doc-edit" placeholder="Se recomienda… (cambio de pieza, lubricación, periodicidad de inspección, ajuste de holguras…) para asegurar el correcto funcionamiento del equipo." disabled style="min-height:160px;"></textarea>
+        </div>
+        <span class="page-num">9</span>
+      </section>
+
+      <!-- HOJA 10 · ANEXOS -->
+      <section class="doc-page">
+        <span class="page-tab">Hoja 10 · Anexos</span>
+        <div class="page-guide">
+          <b>Qué va aquí:</b> el <b>glosario técnico</b>, las <b>fuentes/bibliografía</b> y el <b>banco visual</b> (fotos del taller). Las fotos se traen automáticamente de su Carpeta Técnica.
+        </div>
+        <h2>5. Anexos</h2>
+        <div class="doc-line"></div>
+        <div class="doc-field">
+          <label for="glosario">5.1 Glosario técnico (mínimo 5 términos)</label>
+          <textarea id="glosario" class="doc-edit" placeholder="• Runout: … • Holgura: … • Tolerancia: … • Impulsor: … • EPP: …" disabled style="min-height:150px;"></textarea>
+        </div>
+        <div class="doc-field">
+          <label for="fuentes">5.2 Fuentes / bibliografía</label>
+          <textarea id="fuentes" class="doc-edit" placeholder="1. Manual del fabricante… 2. Catálogo… 3. Placa del equipo… 4. Observación directa en el taller…" disabled style="min-height:130px;"></textarea>
+        </div>
+        <div class="doc-field">
+          <label>5.3 Banco visual (desde su Carpeta Técnica)</label>
+          <div class="anexo-fotos" id="anexoFotos"></div>
+        </div>
+        <div class="doc-field">
+          <label for="anexos_notas">5.4 Notas de los anexos (opcional)</label>
+          <textarea id="anexos_notas" class="doc-edit" placeholder="Expliquen qué muestra cada foto y cómo respalda el informe." disabled style="min-height:90px;"></textarea>
+        </div>
+        <span class="page-num">10</span>
+      </section>
+
+    </div>
+
+    <p class="doc-hint-top no-print" id="docEmpty" style="text-align:center;">
+      👆 Selecciona tu grupo e ingresa el RUT de un integrante para ver y completar la plantilla del informe.
+    </p>
+
+  </div>
+
+  <footer class="no-print">
+    <p><strong>Centro Educativo Salesianos Talca</strong> · Lengua y Literatura / Mecánica Industrial 2026</p>
+    <p>Plataforma EstudiaCEST · Informe Técnico guiado — Ricardo E. Jaque y Prof. Francisco Núñez Valenzuela</p>
+  </footer>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script>
+    // Mismo roster oficial 3°A que la Carpeta Técnica (/3atp/)
+    const ROSTER_GROUPS = {
+      1: { topic: "Máquina de alineación de correa", members: [
+        { name: "SANCHEZ RODRIGUEZ VICENTE BASTIAN", rut: "23250786-1" },
+        { name: "RUIZ MEJIAS MAXIMO ETEEN SANTHY", rut: "23336811-3" },
+        { name: "VERDUGO RUIZ BENJAMIN ARIEL", rut: "23018806-8" },
+        { name: "TORRES QUIROZ DARWIN ANTONIO", rut: "23206060-3" },
+        { name: "YEVENES NOVOA VICENTE ALEXANDER", rut: "23170557-0" },
+        { name: "SALAS CHAPARRO RICARDO ANTONIO", rut: "23269181-6" } ] },
+      2: { topic: "Husillo de rectificadora de piezas cilíndricas", members: [
+        { name: "AYALA MORA OMAR FRANCISCO", rut: "22911590-1" },
+        { name: "DIAZ GUAJARDO ALEJANDRO JOSE", rut: "23151316-7" },
+        { name: "GAETE MALDONADO SALVADOR FERNANDO", rut: "23097416-0" },
+        { name: "ARAYA PEÑA FRANCO JAVIER", rut: "23264921-6" } ] },
+      3: { topic: "Caja de velocidades (armar y desarmar)", members: [
+        { name: "NAVARRO AMARO THOMAS SEBASTIAN", rut: "23361994-9" },
+        { name: "TORRES CASTILLO DAMIAN EMILIO", rut: "23318252-4" },
+        { name: "RUIZ SALINAS VICENTE ALEJANDRO", rut: "23229117-6" },
+        { name: "SEPULVEDA GONZALEZ TOMAS LUCIANO", rut: "23083369-9" },
+        { name: "VALDES CHANDIA JUAN PABLO ENRIQUE", rut: "23098107-8" } ] },
+      4: { topic: "Carro transversal de rectificadora de superficies cilíndricas", members: [
+        { name: "DIAZ DIAZ FRANCO AGUSTIN EMILIO", rut: "23302280-2" },
+        { name: "FUENTES NAVARRETE FRANCO ANTONIO", rut: "23237521-3" },
+        { name: "AMARO HERRERA MICHAELL ANDRES", rut: "23021756-4" },
+        { name: "CORDERO VILCHES CRISTOBAL ANDRES", rut: "23276718-9" },
+        { name: "CANALES MORALES BRANDON MANUEL", rut: "23272908-2" },
+        { name: "DAMIAN CASTRO", rut: "23118382-5" } ] },
+      5: { topic: "Caja de velocidades de rectificadora de ejes", members: [
+        { name: "SAAVEDRA RETAMAL BASTIAN ISRAEL", rut: "23095557-3" },
+        { name: "RODRIGUEZ CASTRO EMILIO PEDRO", rut: "23319109-4" },
+        { name: "PURCHES VALENZUELA LUCAS VICENTE", rut: "23167738-0" },
+        { name: "RETAMAL MENA DIEGO IGNACIO", rut: "23062519-0" },
+        { name: "PULGAR SAAVEDRA BENJAMIN IGNACIO", rut: "23152335-9" } ] },
+      6: { topic: "Bomba centrífuga", members: [
+        { name: "JARA LANDERO PABLO ANTONIO", rut: "23355218-6" },
+        { name: "ALFARO VERGARA DIEGO IGNACIO", rut: "23132082-2" },
+        { name: "DORADOR OLAVE FREDDY EMILIANO", rut: "23175501-2" },
+        { name: "MELGAREJO QUIJON ROBERTO JOSE", rut: "23117651-9" },
+        { name: "DURAN LANDABUR SEBASTIAN IGNACIO", rut: "23091159-2" } ] },
+      7: { topic: "Bomba centrífuga multietapa", members: [
+        { name: "BASCUR LAGOS PABLO ANDRES", rut: "23216795-5" },
+        { name: "MARTINEZ JARA KEVIN ALEJANDRO", rut: "23141290-5" },
+        { name: "BARRIOS SAAVEDRA JOAQUIN ALONSO", rut: "23210361-2" },
+        { name: "HERRERA MUÑOZ ERICK GABRIEL", rut: "23067164-8" },
+        { name: "HERNANDEZ AGUILERA MATIAS IGNACIO", rut: "23269242-1" },
+        { name: "CHAMORRO ROJAS ALEJANDRO MAXIMILIANO", rut: "23045650-K" } ] },
+      8: { topic: "Bomba centrífuga de eje horizontal", members: [
+        { name: "VALLE GONZALEZ MAXIMILIANO JUAN ALONSO", rut: "23128840-6" },
+        { name: "VALENZUELA ROJAS TOMAS IGNACIO", rut: "23028495-4" },
+        { name: "QUINTEROS TORRES MAHIKOL JESUS NEHEMIAS", rut: "23149788-9" },
+        { name: "SANHUEZA ARACIBIA MARTIN JAVIER", rut: "23295917-7" },
+        { name: "SAN MARTIN VALENZUELA AGUSTIN LEON IGNACIO", rut: "23287895-9" } ] }
+    };
+
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+      authDomain: "estudiacest.firebaseapp.com",
+      databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+      projectId: "estudiacest",
+      storageBucket: "estudiacest.firebasestorage.app",
+      messagingSenderId: "999002169815",
+      appId: "1:999002169815:web:51203237bc77c2e74deb92"
+    };
+
+    let db = null;
+    try { firebase.initializeApp(FIREBASE_CONFIG); db = firebase.database(); setupConnectionStatus(); }
+    catch (err) { console.error("Firebase init failed:", err); updateDBStatus(false, "Desconectado (Error de Config)"); }
+
+    function setupConnectionStatus() {
+      if (!db) return;
+      firebase.database().ref(".info/connected").on("value", (snap) => {
+        if (snap.val() === true) updateDBStatus(true, "Base de Datos Online");
+        else updateDBStatus(false, "Sincronizando Local...");
+      });
+    }
+    function updateDBStatus(online, text) {
+      const dot = document.getElementById("statusDot");
+      const label = document.getElementById("statusText");
+      dot.className = "status-dot " + (online ? "online" : "offline");
+      label.innerText = text;
+    }
+
+    function cleanRUT(rut) { return rut ? rut.toString().replace(/[^0-9kK]/g, "").toUpperCase() : ""; }
+
+    function showNotification(type, message) {
+      const banner = document.getElementById("notifyBanner");
+      banner.style.display = "flex";
+      banner.className = "notification-banner " + type;
+      banner.innerHTML = (type === "success" ? "🟢 " : "🔴 ") + message;
+      banner.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      setTimeout(() => { banner.style.display = "none"; }, 5000);
+    }
+
+    function escapeHtml(s) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
+
+    // Campos editables del informe (= claves en Firebase)
+    const INF_FIELDS = [
+      "titulo", "fecha", "intro", "obj_general", "obj_especificos",
+      "des_identificacion", "des_descripcion", "des_desarme", "des_diagnostico", "des_resultados",
+      "conclusiones", "recomendaciones", "glosario", "fuentes", "anexos_notas"
+    ];
+
+    // Índice (nombre visible + página)
+    const TOC = [
+      ["Portada", 1], ["Índice", 2], ["1. Introducción", 3], ["2. Objetivos", 4],
+      ["3. Desarrollo", 5], ["4. Conclusiones y recomendaciones", 9], ["5. Anexos", 10]
+    ];
+
+    let activeGroupId = null;
+    let isAuthorized = false;
+
+    function handleGroupChange() {
+      const groupId = document.getElementById("groupSelect").value;
+      if (!groupId) return;
+      activeGroupId = groupId;
+      isAuthorized = false;
+
+      document.getElementById("rutInput").value = "";
+      INF_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("notifyBanner").style.display = "none";
+
+      document.getElementById("rutInput").disabled = false;
+      document.getElementById("rosterBox").style.display = "block";
+      document.getElementById("securityBox").style.display = "block";
+      document.getElementById("doc").style.display = "flex";
+      document.getElementById("docHint").style.display = "block";
+      document.getElementById("docEmpty").style.display = "none";
+
+      const g = ROSTER_GROUPS[groupId];
+      document.getElementById("rosterTitle").innerText = `Integrantes del Equipo: ${g.topic}`;
+      renderRoster(g.members);
+      renderPortada(groupId, g);
+      renderTOC();
+      updateSecurityLock(false);
+      loadInforme(groupId);
+      loadBancoVisual(groupId);
+    }
+
+    function renderRoster(members) {
+      const grid = document.getElementById("rosterGrid");
+      grid.innerHTML = "";
+      members.forEach((m, i) => {
+        const item = document.createElement("div");
+        item.className = "roster-member";
+        item.innerHTML = `<span class="number">${i + 1}</span><span class="name" title="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>`;
+        grid.appendChild(item);
+      });
+    }
+
+    function renderPortada(groupId, g) {
+      document.getElementById("coverMachine").innerText = g.topic;
+      document.getElementById("coverGroup").innerText = `Grupo ${groupId}`;
+      const names = g.members.map(m => m.name).join(" · ");
+      document.getElementById("coverMembers").innerHTML = `<strong>Integrantes:</strong> ${escapeHtml(names)}`;
+    }
+
+    function renderTOC() {
+      const ul = document.getElementById("toc");
+      ul.innerHTML = "";
+      TOC.forEach(([name, page]) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="t-name">${escapeHtml(name)}</span><span class="t-dots"></span><span class="t-page">${page}</span>`;
+        ul.appendChild(li);
+      });
+    }
+
+    function validateRUT() {
+      if (!activeGroupId) return;
+      const typed = cleanRUT(document.getElementById("rutInput").value);
+      const matched = ROSTER_GROUPS[activeGroupId].members.find(m => cleanRUT(m.rut) === typed);
+      if (matched) updateSecurityLock(true, matched.name);
+      else updateSecurityLock(false);
+    }
+
+    function updateSecurityLock(unlocked, authorizedName) {
+      isAuthorized = !!unlocked;
+      const badge = document.getElementById("securityBadge");
+      document.querySelectorAll(".doc-edit").forEach(el => { el.disabled = !unlocked; });
+      if (unlocked) {
+        badge.className = "security-badge unlocked";
+        badge.innerHTML = `🟢 Desbloqueado (${escapeHtml((authorizedName || "").split(" ").slice(0,2).join(" "))})`;
+      } else {
+        badge.className = "security-badge locked";
+        badge.innerHTML = "🔒 Solo Lectura";
+        cancelAutosave();
+      }
+    }
+
+    // ---------- Carga / guardado ----------
+    function infPath(id) { return `plataforma_estudiantes/3atp_informe/grupo_${id}`; }
+
+    function loadInforme(groupId) {
+      if (!db) return;
+      db.ref(infPath(groupId)).once("value").then(snap => {
+        const data = snap.val() || {};
+        INF_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.value = data[id] || ""; });
+      }).catch(err => console.error("load informe:", err));
+    }
+
+    // Trae el banco visual (fotos) desde la Carpeta Técnica (nodo clase1), solo lectura
+    function loadBancoVisual(groupId) {
+      const cont = document.getElementById("anexoFotos");
+      cont.innerHTML = '<div class="anexo-empty">Cargando fotos…</div>';
+      if (!db) { cont.innerHTML = '<div class="anexo-empty">Sin conexión.</div>'; return; }
+      db.ref(`plataforma_estudiantes/3atp_clase1/grupo_${groupId}`).once("value").then(snap => {
+        const data = snap.val() || {};
+        let imgs = [];
+        const raw = data.images;
+        if (Array.isArray(raw)) raw.forEach(im => { if (im && im.dataUrl) imgs.push(im); });
+        else if (raw && typeof raw === "object") Object.keys(raw).forEach(k => { if (raw[k] && raw[k].dataUrl) imgs.push(raw[k]); });
+        if (!imgs.length) { cont.innerHTML = '<div class="anexo-empty">Aún no hay fotos en la Carpeta Técnica del grupo. Súbanlas en /3atp/ (Banco Visual) y aparecerán aquí.</div>'; return; }
+        cont.innerHTML = "";
+        imgs.forEach((im, i) => {
+          const card = document.createElement("div");
+          card.className = "anexo-foto";
+          card.innerHTML = `<img src="${im.dataUrl}" alt="Foto ${i + 1}"><div class="cap">Foto ${i + 1}${im.caption ? ": " + escapeHtml(im.caption) : ""}</div>`;
+          cont.appendChild(card);
+        });
+      }).catch(err => { console.error("banco visual:", err); cont.innerHTML = '<div class="anexo-empty">No se pudieron cargar las fotos.</div>'; });
+    }
+
+    // ---------- Autoguardado ----------
+    let autosaveTimer = null;
+    function setAutosaveStatus(state) {
+      const el = document.getElementById("autosaveStatus");
+      const map = { pending: ["✎ Cambios sin guardar…", "pending"], saving: ["⏳ Guardando…", "saving"], saved: ["✓ Guardado automáticamente", "saved"], error: ["⚠ No se pudo guardar (reintenta)", "error"], idle: ["", ""] };
+      const v = map[state] || map.idle;
+      el.textContent = v[0]; el.className = "autosave-status " + v[1];
+    }
+    function autosaveInforme() {
+      if (!isAuthorized || !db || !activeGroupId) return;
+      const values = {};
+      INF_FIELDS.forEach(id => { const el = document.getElementById(id); values[id] = el ? el.value.trim() : ""; });
+      values.groupId = activeGroupId;
+      values.topic = ROSTER_GROUPS[activeGroupId].topic;
+      values.lastUpdatedByRut = cleanRUT(document.getElementById("rutInput").value);
+      values.timestamp = firebase.database.ServerValue.TIMESTAMP;
+      setAutosaveStatus("saving");
+      db.ref(infPath(activeGroupId)).update(values)
+        .then(() => setAutosaveStatus("saved"))
+        .catch(err => { console.error("autosave informe:", err); setAutosaveStatus("error"); });
+    }
+    function scheduleAutosave() {
+      if (!isAuthorized) return;
+      setAutosaveStatus("pending");
+      clearTimeout(autosaveTimer);
+      autosaveTimer = setTimeout(autosaveInforme, 1500);
+    }
+    function cancelAutosave() { clearTimeout(autosaveTimer); setAutosaveStatus("idle"); }
+
+    (function setupAutosave() {
+      INF_FIELDS.forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener("input", scheduleAutosave); });
+    })();
+  </script>
+</body>
+</html>

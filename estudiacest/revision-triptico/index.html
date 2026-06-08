@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revisión de Trípticos · NM3 / NM4 · CEST</title>
+    <link rel="preconnect" href="https://estudiacest-default-rtdb.firebaseio.com" crossorigin>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --azul: #1a3a6b;
+            --azul2: #1e40af;
+            --bg: #eef2f7;
+            --line: #e2e8f0;
+            --muted: #64748b;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            color: #1a1a2e;
+            background: var(--bg);
+            line-height: 1.5;
+            -webkit-text-size-adjust: 100%;
+        }
+
+        /* ===== Login ===== */
+        #loginScreen {
+            position: fixed; inset: 0; display: none;
+            align-items: center; justify-content: center;
+            background: linear-gradient(160deg, #1a3a6b 0%, #0f213f 100%);
+            padding: 20px; z-index: 50;
+        }
+        .login-box {
+            background: #fff; border-radius: 16px; padding: 30px 26px;
+            width: 100%; max-width: 360px; box-shadow: 0 20px 50px rgba(0,0,0,.3);
+        }
+        .login-box h1 { font-size: 18px; color: var(--azul); margin-bottom: 4px; }
+        .login-box p { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+        .login-box label { font-size: 12px; font-weight: 700; color: #334155; display: block; margin: 10px 0 4px; }
+        .login-box input {
+            width: 100%; padding: 11px 12px; border: 1px solid var(--line);
+            border-radius: 9px; font-size: 14px; font-family: inherit;
+        }
+        .login-box button {
+            width: 100%; margin-top: 18px; padding: 12px; background: var(--azul2);
+            color: #fff; border: none; border-radius: 9px; font-size: 14px;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .login-err { color: #dc2626; font-size: 12px; margin-top: 10px; display: none; }
+
+        /* ===== App shell ===== */
+        #app { display: none; }
+        .topbar {
+            background: var(--azul); color: #fff; padding: 10px 16px;
+            display: flex; align-items: center; justify-content: space-between;
+            position: sticky; top: 0; z-index: 30; gap: 10px;
+        }
+        .topbar .brand { font-size: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+        .topbar .brand small { font-weight: 500; opacity: .8; font-size: 11px; }
+        .topbar .who { font-size: 11px; opacity: .85; }
+        .topbar button {
+            background: rgba(255,255,255,.16); color: #fff; border: none;
+            padding: 6px 12px; border-radius: 7px; font-size: 12px; cursor: pointer; font-family: inherit;
+        }
+
+        .wrap { max-width: 1100px; margin: 0 auto; padding: 16px; }
+        .grid { display: grid; grid-template-columns: 1fr 380px; gap: 16px; align-items: start; }
+        @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: #fff; border: 1px solid var(--line); border-radius: 14px;
+            padding: 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(15,30,60,.04);
+        }
+        .card h2 { font-size: 13px; color: var(--azul); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 12px; }
+        .card h2 .step { background: var(--azul); color: #fff; border-radius: 999px; padding: 1px 9px; font-size: 11px; margin-right: 7px; }
+
+        /* Course picker */
+        .nivel-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .nivel-tab {
+            flex: 1; padding: 9px; border: 2px solid var(--line); background: #f8fafc;
+            border-radius: 10px; font-weight: 800; font-size: 13px; color: #475569;
+            cursor: pointer; font-family: inherit; text-align: center;
+        }
+        .nivel-tab.active { border-color: var(--azul2); background: #eff4ff; color: var(--azul2); }
+        .curso-row { display: flex; flex-wrap: wrap; gap: 7px; }
+        .curso-chip {
+            padding: 7px 14px; border: 1.5px solid var(--line); background: #fff;
+            border-radius: 999px; font-weight: 700; font-size: 13px; color: #475569;
+            cursor: pointer; font-family: inherit;
+        }
+        .curso-chip.active { border-color: var(--azul); background: var(--azul); color: #fff; }
+        .obra-note { font-size: 12px; color: var(--muted); margin-top: 10px; }
+        .obra-note b { color: var(--azul); }
+
+        /* Rubric */
+        .rubric { display: flex; flex-direction: column; gap: 10px; }
+        .crit { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+        .crit-head {
+            background: #f8fafc; padding: 8px 12px; font-weight: 700; font-size: 12.5px;
+            color: var(--azul); display: flex; justify-content: space-between; align-items: center;
+        }
+        .crit-head .crit-pts { font-size: 12px; color: var(--muted); font-weight: 600; }
+        .levels { display: grid; grid-template-columns: repeat(4, 1fr); }
+        @media (max-width: 560px) { .levels { grid-template-columns: 1fr 1fr; } }
+        .level {
+            border-top: 1px solid var(--line); border-left: 1px solid var(--line);
+            padding: 8px 9px; cursor: pointer; font-size: 11px; color: #475569;
+            transition: background .12s; user-select: none;
+        }
+        .level:first-child { border-left: none; }
+        @media (max-width: 560px) { .level:nth-child(3) { border-left: none; } }
+        .level:hover { background: #f1f5f9; }
+        .level .lvl-top { display: flex; justify-content: space-between; font-weight: 800; margin-bottom: 3px; }
+        .level .lvl-lbl { color: var(--azul); }
+        .level .lvl-pts {
+            background: #e2e8f0; color: #475569; border-radius: 999px;
+            padding: 0 7px; font-size: 10px; line-height: 16px;
+        }
+        .level.sel { background: var(--azul); color: #fff; }
+        .level.sel .lvl-lbl, .level.sel .lvl-pts { color: #fff; }
+        .level.sel .lvl-pts { background: rgba(255,255,255,.22); }
+        .level.sel-0 { background: #b91c1c; }
+
+        /* Score box */
+        .score-box {
+            margin-top: 14px; display: flex; align-items: center; justify-content: space-between;
+            background: #f8fafc; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; gap: 12px;
+        }
+        .score-box .pts-big { font-size: 13px; color: var(--muted); }
+        .score-box .pts-big b { font-size: 20px; color: var(--azul); }
+        .nota-pill {
+            font-size: 30px; font-weight: 800; color: #fff; background: var(--azul);
+            border-radius: 12px; padding: 6px 18px; min-width: 86px; text-align: center;
+        }
+        .nota-pill.rojo { background: #b91c1c; }
+        .nota-pill.verde { background: #15803d; }
+        .override { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin-top: 8px; }
+        .override input { width: 64px; padding: 5px 8px; border: 1px solid var(--line); border-radius: 7px; font-family: inherit; font-size: 13px; text-align: center; }
+
+        /* Students */
+        .stu-search { position: relative; }
+        .stu-search input {
+            width: 100%; padding: 10px 12px; border: 1px solid var(--line);
+            border-radius: 9px; font-size: 13px; font-family: inherit;
+        }
+        .stu-results {
+            position: absolute; left: 0; right: 0; top: calc(100% + 4px); background: #fff;
+            border: 1px solid var(--line); border-radius: 10px; max-height: 260px; overflow-y: auto;
+            box-shadow: 0 10px 28px rgba(15,30,60,.14); z-index: 10; display: none;
+        }
+        .stu-results.open { display: block; }
+        .stu-opt { padding: 9px 12px; font-size: 12.5px; cursor: pointer; border-bottom: 1px solid #f1f5f9; }
+        .stu-opt:hover { background: #eff4ff; }
+        .stu-opt small { color: var(--muted); }
+        .stu-opt.dis { opacity: .4; cursor: not-allowed; }
+        .chips { display: flex; flex-direction: column; gap: 7px; margin-top: 12px; }
+        .chip {
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+            background: #eff4ff; border: 1px solid #c7d7f5; border-radius: 9px; padding: 8px 10px;
+        }
+        .chip .nm { font-size: 12.5px; font-weight: 600; color: var(--azul); }
+        .chip .rt { font-size: 11px; color: var(--muted); }
+        .chip button { background: none; border: none; color: #dc2626; font-size: 16px; cursor: pointer; line-height: 1; }
+        .hint { font-size: 11.5px; color: var(--muted); margin-top: 8px; }
+
+        .actions { display: flex; gap: 9px; margin-top: 4px; }
+        .btn {
+            flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 14px;
+            font-weight: 700; cursor: pointer; font-family: inherit;
+        }
+        .btn-primary { background: var(--azul2); color: #fff; }
+        .btn-primary:disabled { background: #94a3b8; cursor: not-allowed; }
+        .btn-ghost { background: #f1f5f9; color: #475569; flex: 0 0 auto; padding: 12px 16px; }
+
+        /* Saved list */
+        .saved-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .saved-head h2 { margin: 0; }
+        .saved-head .tools { display: flex; gap: 7px; }
+        .saved-head .tools button {
+            background: #f1f5f9; border: 1px solid var(--line); color: #334155;
+            padding: 6px 11px; border-radius: 8px; font-size: 11.5px; cursor: pointer; font-family: inherit; font-weight: 600;
+        }
+        .saved-empty { font-size: 12.5px; color: var(--muted); text-align: center; padding: 18px 0; }
+        .eval {
+            border: 1px solid var(--line); border-radius: 11px; padding: 11px 12px; margin-bottom: 10px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .eval.editing { border-color: var(--azul2); background: #f7faff; box-shadow: 0 0 0 2px #dbe6fb inset; }
+        .eval .eval-nota {
+            flex: 0 0 auto; width: 50px; height: 50px; border-radius: 11px; background: var(--azul);
+            color: #fff; font-weight: 800; font-size: 18px; display: flex; align-items: center; justify-content: center;
+        }
+        .eval .eval-nota.rojo { background: #b91c1c; }
+        .eval .eval-nota.verde { background: #15803d; }
+        .eval .eval-body { flex: 1; min-width: 0; }
+        .eval .eval-names { font-size: 12.5px; font-weight: 600; color: #1e293b; }
+        .eval .eval-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+        .eval .eval-acts { display: flex; flex-direction: column; gap: 5px; }
+        .eval .eval-acts button {
+            background: none; border: 1px solid var(--line); border-radius: 7px; padding: 4px 9px;
+            font-size: 11px; cursor: pointer; font-family: inherit; color: #475569;
+        }
+        .eval .eval-acts .del { color: #dc2626; border-color: #f3c4c4; }
+
+        .summary-line { font-size: 12px; color: var(--muted); margin-top: 10px; }
+        .summary-line b { color: var(--azul); }
+
+        /* Toast */
+        #toast {
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(80px);
+            background: #1e293b; color: #fff; padding: 11px 20px; border-radius: 10px; font-size: 13px;
+            font-weight: 600; z-index: 60; transition: transform .25s; box-shadow: 0 10px 30px rgba(0,0,0,.25); max-width: 92vw;
+        }
+        #toast.show { transform: translateX(-50%) translateY(0); }
+        #toast.err { background: #b91c1c; }
+        #toast.ok { background: #15803d; }
+
+        .blocked { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+    </style>
+</head>
+
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginScreen">
+    <div class="login-box">
+        <h1>Revisión de Trípticos</h1>
+        <p>Acceso docente · CEST · NM3 / NM4</p>
+        <form onsubmit="event.preventDefault();doLogin()">
+            <label>Correo</label>
+            <input type="email" id="email" autocomplete="username" placeholder="correo@ejemplo.com">
+            <label>Contraseña</label>
+            <input type="password" id="pass" autocomplete="current-password" placeholder="••••••••">
+            <button type="submit">Entrar</button>
+        </form>
+        <div class="login-err" id="loginErr"></div>
+    </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+    <div class="topbar">
+        <div class="brand">📑 Revisión de Trípticos <small>NM3 / NM4 · CEST</small></div>
+        <div style="display:flex;align-items:center;gap:10px">
+            <span class="who" id="who"></span>
+            <button onclick="logout()">Salir</button>
+        </div>
+    </div>
+
+    <div class="wrap">
+        <div class="grid">
+            <!-- LEFT: form -->
+            <div>
+                <div class="card">
+                    <h2><span class="step">1</span>Curso</h2>
+                    <div class="nivel-tabs">
+                        <button class="nivel-tab" data-nivel="NM3" onclick="pickNivel('NM3')">NM3 · 3° medio</button>
+                        <button class="nivel-tab" data-nivel="NM4" onclick="pickNivel('NM4')">NM4 · 4° medio</button>
+                    </div>
+                    <div class="curso-row" id="cursoRow"></div>
+                    <div class="obra-note" id="obraNote" style="display:none"></div>
+                </div>
+
+                <div class="card" id="rubricCard" style="display:none">
+                    <h2><span class="step">2</span>Rúbrica del tríptico (24 pts)</h2>
+                    <div class="rubric" id="rubric"></div>
+                    <div class="score-box">
+                        <div class="pts-big">Puntaje: <b id="ptsNow">0</b> / 24 &nbsp;·&nbsp; <span id="exigNote">60% exigencia</span></div>
+                        <div class="nota-pill" id="notaPill">1.0</div>
+                    </div>
+                    <div class="override">
+                        <input type="checkbox" id="ovChk" onchange="toggleOverride()">
+                        <label for="ovChk">Ajustar nota manualmente</label>
+                        <input type="text" id="ovVal" inputmode="decimal" placeholder="6.5" disabled oninput="renderScore()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: students + save + list -->
+            <div>
+                <div class="card" id="stuCard" style="display:none">
+                    <h2><span class="step">3</span>Integrantes (1 a 4)</h2>
+                    <div class="stu-search">
+                        <input type="text" id="stuInput" placeholder="Buscar alumno por apellido…"
+                               oninput="searchStu()" onfocus="searchStu()" autocomplete="off">
+                        <div class="stu-results" id="stuResults"></div>
+                    </div>
+                    <div class="chips" id="chips"></div>
+                    <div class="hint" id="stuHint">Agrega entre 1 y 4 integrantes. Todos reciben la misma nota.</div>
+                </div>
+
+                <div class="card" id="saveCard" style="display:none">
+                    <div class="actions">
+                        <button class="btn btn-primary" id="saveBtn" onclick="saveEval()">💾 Guardar evaluación</button>
+                        <button class="btn btn-ghost" id="clearBtn" onclick="resetForm()">Limpiar</button>
+                    </div>
+                    <div class="hint" id="editHint" style="display:none;margin-top:10px"></div>
+                </div>
+
+                <div class="card" id="listCard" style="display:none">
+                    <div class="saved-head">
+                        <h2 id="listTitle">Guardadas</h2>
+                        <div class="tools">
+                            <button onclick="exportLirmi()" title="Descargar CSV para Lirmi">⬇ Lirmi</button>
+                            <button onclick="copyResumen()" title="Copiar resumen para el profe / IA">📋 Resumen</button>
+                        </div>
+                    </div>
+                    <div id="evalList"></div>
+                    <div class="summary-line" id="summaryLine"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="blocked" id="blockedMsg" style="display:none">
+            Selecciona un curso para comenzar a revisar.
+        </div>
+    </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+/* ====================== Firebase ====================== */
+const FIREBASE_CONFIG = {apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
+firebase.initializeApp(FIREBASE_CONFIG);
+const auth = firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db = firebase.database();
+const BASE = 'plataforma_estudiantes';
+const NODE = BASE + '/triptico_revisiones';
+
+/* ====================== Datos ====================== */
+const CURSOS = {
+    '3A-TP': { label: '3°A TP', nivel: 'NM3' },
+    '3B-TP': { label: '3°B TP', nivel: 'NM3' },
+    '3D-TP': { label: '3°D TP', nivel: 'NM3' },
+    '4A-TP': { label: '4°A TP', nivel: 'NM4' },
+    '4B-TP': { label: '4°B TP', nivel: 'NM4' },
+    '4C-TP': { label: '4°C TP', nivel: 'NM4' },
+    '4D-TP': { label: '4°D TP', nivel: 'NM4' },
+    '4E-TP': { label: '4°E TP', nivel: 'NM4' }
+};
+
+const OBRA = {
+    NM3: { titulo: 'Un mundo feliz', autor: 'Aldous Huxley' },
+    NM4: { titulo: '¿Sueñan los androides con ovejas eléctricas?', autor: 'Philip K. Dick' }
+};
+
+// Rúbrica compartida NM3/NM4 — 6 criterios, niveles 4/3/2/0 = 24 pts
+const NIVELES = [
+    { lbl: 'Destacado', pts: 4 },
+    { lbl: 'Adecuado', pts: 3 },
+    { lbl: 'Básico', pts: 2 },
+    { lbl: 'Inicial', pts: 0 }
+];
+const RUBRICA = [
+    { n: '1. Cumplimiento de la pauta', d: [
+        'Las 6 caras están completas y cada una cumple la función pedida.',
+        'La mayoría de las caras cumple la pauta con 1 detalle faltante.',
+        'Hay caras incompletas o con función poco clara.',
+        'Faltan varias caras o no sigue la pauta entregada.'] },
+    { n: '2. Comprensión de la obra', d: [
+        'Demuestra lectura real y manejo seguro de personajes, conflictos, temas y mundo narrativo.',
+        'Demuestra comprensión suficiente con pocas imprecisiones.',
+        'Comprensión parcial; confunde elementos importantes o generaliza demasiado.',
+        'Errores graves o trabajo que no evidencia lectura de la novela.'] },
+    { n: '3. Tesis interpretativa', d: [
+        'La tesis es clara, pertinente y propone una lectura de la novela, no solo un tema general.',
+        'La tesis se entiende y orienta el trabajo, aunque podría ser más precisa.',
+        'Hay idea central, pero es vaga, descriptiva o poco interpretativa.',
+        'No hay tesis visible o solo hay resumen del argumento.'] },
+    { n: '4. Evidencia y comentario', d: [
+        'Usa al menos dos escenas, citas o detalles bien elegidos y los comenta con sentido interpretativo.',
+        'Usa evidencia pertinente, pero con comentario breve o desigual.',
+        'La evidencia aparece poco explicada o sin relación clara con la tesis.',
+        'No hay evidencia concreta o solo hay afirmaciones sin apoyo.'] },
+    { n: '5. Organización visual', d: [
+        'El tríptico se lee con facilidad, tiene buena distribución y el contenido está jerarquizado.',
+        'La organización es clara en general, aunque con algunas zonas recargadas o desiguales.',
+        'La lectura se dificulta por desorden, exceso de texto o falta de jerarquía.',
+        'Presentación muy desordenada o difícil de leer.'] },
+    { n: '6. Redacción y presentación', d: [
+        'Texto legible, redacción clara y trabajo prolijo. Se nota preparación y cuidado.',
+        'Redacción comprensible y presentación adecuada con detalles menores.',
+        'Redacción poco clara o presentación descuidada en varias partes.',
+        'Trabajo muy descuidado, ilegible o incompleto.'] }
+];
+const MAX_PTS = 24, EXIGENCIA = 0.6;
+
+// Nómina por curso: "APELLIDOS NOMBRES|RUT"
+const ROSTERS = {
+'3A-TP': ['ALFARO VERGARA DIEGO IGNACIO|23132082-2','AMARO HERRERA MICHAELL ANDRES|23021756-4','ARAYA PEÑA FRANCO JAVIER|23264921-6','AYALA MORA OMAR FRANCISCO|22911590-1','BARRIOS SAAVEDRA JOAQUIN ALONSO|23210361-2','BASCUR LAGOS PABLO ANDRES|23216795-5','CANALES MORALES BRANDON MANUEL|23272908-2','CASTRO PARRA DAMIAN EDUARDO|23118382-5','CHAMORRO ROJAS ALEJANDRO MAXIMILIANO|23045650-K','CORDERO VILCHES CRISTOBAL ANDRES|23276718-9','DIAZ DIAZ FRANCO AGUSTIN EMILIO|23302280-2','DIAZ GUAJARDO ALEJANDRO JOSE|23151316-7','DORADOR OLAVE FREDDY EMILIANO|23175501-2','DURAN LANDABUR SEBASTIAN IGNACIO|23091159-2','FUENTES NAVARRETE FRANCO ANTONIO|23237521-3','GAETE MALDONADO SALVADOR FERNANDO|23097416-0','HERNANDEZ AGUILERA MATIAS IGNACIO|23269242-1','HERRERA MUÑOZ ERICK GABRIEL|23067164-8','JARA LANDERO PABLO ANTONIO|23355218-6','LOPEZ GUTIERREZ AMARO LEON|22578340-3','MARTINEZ JARA KEVIN ALEJANDRO|23141290-5','MELGAREJO QUIJON ROBERTO JOSE|23117651-9','MERCADO MENDEZ FREDERIC ALEJANDRO|22415426-7','MONDACA SEGUEL MATIAS ALEJANDRO|23264587-3','NAVARRO AMARO THOMAS SEBASTIAN|23361994-9','PARADA AVILA AUGUSTO JOAQUIN|23033338-6','PULGAR SAAVEDRA BENJAMIN IGNACIO|23152335-9','PURCHES VALENZUELA LUCAS VICENTE|23167738-0','QUINTEROS TORRES MAHIKOL JESUS NEHEMIAS|23149788-9','RETAMAL MENA DIEGO IGNACIO|23062519-0','RODRIGUEZ CASTRO EMILIO PEDRO|23319109-4','RUIZ MEJIAS MAXIMO ETEEN SANTHY|23336811-3','RUIZ SALINAS VICENTE ALEJANDRO|23229117-6','SAAVEDRA RETAMAL BASTIAN ISRAEL|23095557-3','SALAS CHAPARRO RICARDO ANTONIO|23269181-6','SAN MARTIN VALENZUELA AGUSTIN LEON IGNACIO|23287895-9','SANCHEZ RODRIGUEZ VICENTE BASTIAN|23250786-1','SANHUEZA ARACIBIA MARTIN JAVIER|23295917-7','SEPULVEDA GONZALEZ TOMAS LUCIANO|23083369-9','TORRES CASTILLO DAMIAN EMILIO|23318252-4','TORRES QUIROZ DARWIN ANTONIO|23206060-3','VALDES CHANDIA JUAN PABLO ENRIQUE|23098107-8','VALENZUELA ROJAS TOMAS IGNACIO|23028495-4','VALLE GONZALEZ MAXIMILIANO JUAN ALONSO|23128840-6','VERDUGO RUIZ BENJAMIN ARIEL|23018806-8','YEVENES NOVOA VICENTE ALEXANDER|23170557-0'],
+'3B-TP': ['ALBORNOZ GAJARDO PABLO ANTONIO|23106146-0','AMIGO SEPULVEDA NICOLAS JESUS|23165119-5','ARAYA NUÑEZ LUCIANO RODRIGO|23083689-2','ARREDONDO VALDES MATIAS JESUS|23261455-2','AVACA CANDIA MATIAS IGNACIO|23119538-6','BARRIOS GONZALEZ NELSON MARTIN|23093570-K','BARRUETO ABARZUA BENJAMIN ALEJANDRO|23200397-9','BRAVO CESPEDES NICOLAS FRANCISCO|23133619-2','CABELLO PARRA VICENTE JESUS|23148897-9','CACERES ESPINOZA ANTONIO AURELIO|23010145-0','CARRENO CARRENO DAMIAN ALONSO|23126828-6','CASTRO ARAVENA GIANFRANCO BENJAMIN IGNACIO|22940031-2','CERDA BRIONES CRISTOBAL EDUARDO|23212181-5','DIAZ NUNEZ MISAEL ALEJANDRO|23241809-5','DIAZ VALENZUELA AGUSTIN VICENTE|23094512-8','DOTE MUNOZ MATIAS ARMANDO|23189310-5','DUMONT ORELLANA NICOLAS ANDRES|23222214-K','ESPINOSA MINO MAGDIEL DE CIRENE|23150066-9','FUENTES NUNEZ FELIPE ANTONIO|23197877-1','FUENTES SANCHEZ CRISTOBAL ALONSO|23135733-5','GAETE IBARRA JOAQUIN ALONSO|23094928-K','GARRIDO RETAMAL SEBASTIAN JESUS|23116212-7','GIRALDO RIVAS OSCAR IVAN|27522331-K','GONZALEZ CARRENO FRANCO ALONSO|23160762-5','GONZALEZ CASTILLO NICOLAS BENJAMIN|22759818-2','GUTIERREZ RODRIGUEZ FRANCISCO IGNACIO|23095199-3','LABRA YANEZ DIEGO AGUSTIN|23137392-6','LOPEZ REBECO DANTE IGNACIO|23207117-6','MEJIAS RAMIREZ DANIEL ISAIAS|23231121-5','MUNOZ CARRENO AGUSTIN ANDRES ERNAN|23153628-0','MUNOZ LOPEZ JOAQUIN IGNACIO ANTONIO|23227425-5','NAVARRETE NUNEZ FERNANDO ALONSO|23076779-3','OVIEDO RODRIGUEZ FRANCISCO GABRIEL|23095163-2','PEREZ VELOSO MARTIN ALEXIS|23166754-7','PINCHEIRA OPAZO MAXIMILIANO IGNACIO|23108368-5','QUIROZ DIAZ TOMAS MAURICIO|23092275-6','REYES SANCHEZ GABRIEL ENRIQUE|23186433-4','ROJAS ABDALA SAID KAMIL MAURICIO|23302556-9','ROJAS HERRERA JOAQUIN IGNACIO|22697756-2','SAAVEDRA TORRES RENATO ALONSO|23021529-4','SAZO MUNOZ LUIS GONZALO|23082048-1','TEJOS LOBOS GUILIAN ANDRES|23022715-2','TEJOS LOBOS KEVIN ANTONIO|23022741-1','TOLEDO LLANOS CESAR ALEXIS|23179557-K','VALDERRAMA LARA BENJAMIN JESUS|23078183-4','VERA BASTIDAS EDUARDO ESTEBAN|23049362-6','YANEZ JARA THOMAS ESTEBAN|23134922-7','YEVENES PARADA CRISTOPHER ALEXSANDER|23196337-5'],
+'3D-TP': ['ANDRAES MARDONES IANFRANCO YOVANY|23257630-8','ARIAS DIAZ DYLAN VICENTE|23358712-5','ARMIJO HERMOSILLA PABLO ALONSO|23074886-1','ASCENCIO ROZAS MAXIMO MARIANO|22882550-6','BECERRA PIZARRO BASTIAN IGNACIO|23256610-8','BUSTOS DIAZ MARTIN ALFONSO|23113841-2','CABRERA SAN MARTIN JOSE VICENTE|23233347-2','CANCINO VELIZ JOAQUIN ANTONIO|23092740-5','CARRASCO JORQUERA HALAN FRANCISCO|22833590-8','COBA ECHEVERRIA ADRIAN ALEJANDRO|100407967-8','COFRE GONZALEZ RENATO AGUSTIN|23136749-7','ESPINOZA DONOSO YAN NICOLAS|22730628-9','FARIAS ESPINOZA MARTIN IGNACIO|23119135-6','FLORES ALBORNOZ PABLO ANDRES|22757342-2','FUENTES SAN MARTIN DIEGO IGNACIO|23011917-1','GAJARDO NUÑEZ MARTIN ANDRES|22486235-0','GARRIDO URBINA JOAQUIN IGNACIO|23332501-5','GATICA RIQUELME BENJAMIN ANTONIO|23107087-7','GOMEZ MORA VALENTIN MAXIMILIANO|22815898-4','GONZALEZ ACEVEDO MICHAEL MAURICIO|23066838-8','GONZALEZ SAAVEDRA JOAQUIN ANDRES|23036159-2','GONZALEZ SAZO BENJAMIN ARNOLDO|23177592-7','GONZALEZ VALENZUELA JAVIER IGNACIO|23086399-7','GUTIERREZ CESPEDES MAXIMILIANO ANDRES|23224502-6','MARABOLI BAEZA PATRICK ALONSO|23253333-1','MOYA ORELLANA ARIEL IGNACIO|23309994-5','MUÑOZ MEZA AGUSTIN EDUARDO|23213928-5','MUÑOZ MORALES MARCO ANTONIO|22834133-9','POBLETE MUÑOZ JOAQUIN ALEXIS|23178677-5','RAMIREZ ARANCIBIA BENJAMIN IGNACIO|23126780-8','RAMIREZ TORRES CRISTOBAL IGNACIO|22821466-3','RAMOS VARGAS CRISTOBAL GABRIEL|23177793-8','REYES IMAS CRISTOBAL ANTONIO|22703415-7','RIVAS IBARRA DAMIAN ALONSO|22804484-9','ROJAS BERNAL MARCELO IGNACIO|23188111-5','SANCHEZ RODRIGUEZ SIMON ALEXIS|23356641-1','TEJOS ESPINA SERGIO ABEL|23313697-2','UNDA MORAN MARCOS VICENTE|23196189-5','VALENZUELA ESCOBAR SEBASTIAN ANTONIO|23285563-0','VELOZ CONTRERAS LUIS DAVID|23287723-5'],
+'4A-TP': ['ABARCA TOLEDO BENJAMIN IGNACIO|22912832-9','ALEGRIA CONTRERAS MARTIN ALONSO|22909170-0','ARAVENA MORALES RAUL IGNACIO|22876590-2','BERRIOS ASTUDILLO EDUARDO ABRAHAM|22827228-0','BRAVO QUEZADA JORDAN ARMANDO|22982978-5','BUSTAMANTE REYES LUCIANO ANDRES|22896678-9','CANALES ZUÑIGA MARTIN LUIS BENJAMIN|23059531-3','CANCINO BRAVO CRISTOBAL MAXIMILIANO|22497232-6','CARO TRONCOSO SEBASTIAN ALONSO|23048490-2','CARRERA LUZARDO CARLOS DANIEL|28339361-5','CERPA CERDA FABIAN MATIAS|22948151-7','CONTARDO GONZALEZ BASTIAN IGNACIO|23020271-0','CONTRERAS GONZALEZ JOSE FRANCISCO|22903352-2','DE LA JARA FAUNDEZ VALENTIN IGNACIO ANTONIO|22909015-1','DENIZ RAMIREZ CARLOS DANIEL|26299792-8','GARCIA QUIÑONES MARTIN TOMAS|22982195-4','GARRIDO GONZALEZ CAMILO ALONSO|22944271-6','GARRIDO MEDEL LEONARDO ESTEBAN|22649931-8','GONZALEZ ABARCA IGNACIO ANDRES|22494179-K','GUAJARDO VILLAR IAN MAXIMILIANO|22771695-9','HENRIQUEZ CACERES JAIME JAEL ALEJANDRO|22924513-9','HERNANDEZ LINCOÑIR DEIVID ANTONIO|22929213-7','HERRERA RETAMAL MARTIN EDUARDO|22994529-7','HERRERA ROJAS HAROLD ALEXIS|22883293-6','ITURRA RETAMAL CHRISTIAN ALEXANDER|22905272-1','MOLINA SEPULVEDA MARTIN IGNACIO|22747730-K','MORA ASTUDILLO SEBASTIAN IGNACIO|22945268-1','MORALES HERNANDEZ RICHARD ALEXI|22694881-3','MORALES MUÑOZ CRISTOFER JESUS|22937425-7','MUÑOZ FLORES RUBEN ALONSO|22954779-8','PAREDES AGUILERA THOMAS ANDRES|23047271-8','RAMIREZ GONZALEZ CRISTOPHER DAVID|22679001-2','RAMIREZ MORALEZ TOMAS AGUSTIN|22785257-7','ROCO BARRIENTOS FELIPE BENJAMIN|22713350-3','RODRIGUEZ CASTRO ALEJANDRO DOMINGO|22769350-9','ROJAS OLIVA DIEGO EDUARDO|22329212-7','ROJAS SEPULVEDA CLAUDIO ALEXIS|22988968-0','SANTANA CACERES MARTIN VICENTE|22857635-2','SEPULVEDA DIAZ ALEXIS ALEJANDRO|22736028-3','VALENZUELA ARRIAGADA PATRICIO AGUSTIN|22927706-5','VALENZUELA VASQUEZ WOLFGANG MAXIMO|22395027-2','VALENZUELA ZAPATA CRISTHOBAL ALEJANDRO|22736396-7','VERGARA LOPEZ ALAN ANDRES|22884876-K','VERGARA TORO JOAQUIN EDUARDO ANDRES|22914042-6','VERGARA VALENZUELA TOMAS EMILIO|22824025-7'],
+'4B-TP': ['ARAVENA GONZALEZ BASTIAN ENRIQUE|22827332-5','ARCE MERIÑO JESUS VALENTIN|22903856-7','AYALA HERRERA JOSEEDUARDO MIGUEL|22873141-2','BERMUDEZ BALZA LUIS SANTIAGO|26146412-8','CACERES MUÑOZ BENJAMIN MARTIN|22831002-6','CALDERON ACUÑA JOSE TOMAS|22991044-2','CAMPOS HERNANDEZ DAVID JESUS|22785683-1','CASTILLO ALARCON DAMIAN ALEXIS|22838833-5','CORDERO GUERRERO SEBASTIAN ANDRES|22907231-5','CURIÑANCO PINILLA ALVARO ROMAN|22822734-K','DIAZ GARRIDO MATIAS ALEXIS|23029772-K','ESPINOZA AVENDAÑO CRISTIAN SEBASTIAN|23015654-9','ESPINOZA TAPIA BENJAMIN ALONSO|22775798-1','FAUNDEZ MUÑOZ MAXIMILIANO GABRIEL|22766242-5','FUENTES PARADA VICENTE ANDRES|22894965-5','FUENTES RIQUELME MATIAS RODRIGO|22718904-5','GAJARDO DOTE CLAUDIO ANDRES|22738540-5','GARRIDO MATURANA FRANCO ANTONIO|22809009-3','GONZALEZ ACEITUNO GASPAR AGUSTIN|22903762-5','GONZALEZ JARA DIEGO ANTONIO|22933875-7','GONZALEZ ROJAS LUIS AMHARO NATANAELL|23008229-4','GUTIERREZ PAEZ DIEGO ESTEBAN|22957149-4','HERNANDEZ SOLAR LEANDRO IGNACIO ANDRES|22727389-5','LAGOS VELIZ MATHIAS JOHAN|22845024-3','LEON QUEREIGUA SAMUEL FRANCISCO|27051187-2','MALDONADO ARAVENA GUILLERMO IGNACIO|22940444-K','MONDACA CARVAJAL LEON ALEJANDRO|22844097-3','MUÑOZ MORA DIEGO ALFONSO|22769686-9','ORMEÑO FERNANDOY FRANCISCO ANDRES|22701621-3','RIQUELME CARREÑO MAGDIEL BENJAMIN|22850005-4','ROJAS VALENZUELA RODOLFO ESTEBAN|22940752-K','SALAS HERNANDEZ MATIAS IVAN|23012193-1','SANTOS RIOFRIO ALEXANDER IGNACIO|22972956-K','URRUTIA CACERES CRISTOBAL ANDRES|22879348-5','VALENZUELA TAPIA BASTIAN MANUEL|22816174-8','VERDEJO FILIPPI AMARO LUCCIANO|22472709-7'],
+'4C-TP': ['ABARCA ROJAS JAVIER IGNACIO|22903073-6','ABARZA DIAZ AGUSTIN IGNACIO|22968310-1','AGUILERA BRAVO MATHEO IGNACIO|22992343-9','ARAVENA VERDUGO MATIAS MAXIMILIANO|22926072-3','AVACA MEDEL NICOLAS ANTONIO|23011384-K','CALDERON CACERES CARLOS ANDRES|23032383-6','CALLOFA SEPULVEDA MARTIN BAUTISTA|22941533-6','CASTRO CORTES BASTIAN NICOLAS|22952227-2','CASTRO MONSALVE JAVIER IGNACIO|23055556-7','CAÑETE GARRIDO VICENTE IGNACIO|22835233-0','CONTRERAS SALAS FRANCO MARTIN|22852856-0','DOMINGUEZ ARAVENA JAVIER EDUARDO|22771608-8','DURAN ARAVENA MARTIN IGNACIO|22838879-3','FARIAS EYZAGUIRRE YTAN LUCIAN|22918619-1','FIGUEROA DIAZ GERMAN NICOLAS|22740906-1','FUENTES ROMERO ANGEL PATRICIO|22920995-7','GAJARDO LLANOS DANTE DANIEL|23049783-4','GONZALEZ PAREDES BRAYANN ALEJANDRO|22779339-2','GONZALEZ ROJAS RODRIGO ANDRES|22933575-8','GUZMAN REYES FRANCO CRISTOBAL|22826671-K','HENRIQUEZ DIAZ MARTIN IGNACIO|22925844-3','HORMAZABAL VARGAS MAXIMO VALENTE|22727017-9','INOSTROZA ROJAS OSCAR ALEJANDRO|22908682-0','LARA SEPULVEDA LUCAS FABIAN UZIEL|22941900-5','LECARO NÚÑEZ JOSEPH ANTOANNE|22968101-K','LIZANA MUÑOZ SEBASTIAN ANDRES|22975947-7','MATAMALA RIQUELME ROBERTO ESTEBAN|22830023-3','MILLAQUEO ARAVENA DANIEL EDUARDO|22839921-3','MORA ESCOBAR MAXIMILIANO ENRIQUE|22689487-K','MORALES CANDIA ALEJANDRO IGNACIO|22822517-7','OLAVE SEPULVEDA ANGEL OMAR|23030804-7','OSSES GONZALEZ BENJAMIN ALEJANDRO|22429401-8','OSSES NÚÑEZ MARTHIN IGNACIO|22808756-4','PACHECO ALVARADO MOISES ANTONIO|22910916-2','PEREZ RODRIGUEZ SERGIO MAURICIO|22863047-0','REBOLLEDO FUENTEALBA JOHN CRISTHOPHER|22725846-2','ROJAS MEZA GASPAR GUILLERMO|22828941-8','ROJAS VALENZUELA THOMAS ANIBAL|22940787-2','TORRES MONTECINO LUIS HUMBERTO|22706596-6','VALDES CASTRO CRISTOPHER ANTONIO|22874621-5','VALDES VALENZUELA FELIX FRANCISCO SEGUNDO|22904799-K','VASQUEZ ESCOBAR FABIAN ARMANDO|22990089-7','VASQUEZ LARA MARTIN LEANDRO|22950872-5','VILCHES VILCHES CRISTOBAL SEBASTIAN|22850904-3','VILLAMAN GUZMAN NICOLAS IGNACIO|22973140-8'],
+'4D-TP': ['ALVAREZ MEJIAS BENJAMIN DYLAN|22713854-8','BECERRA SALAZAR FELIPE IGNACIO|22875123-5','BERNAL MATUS IVAN PATRICIO|22944716-5','ESTAY QUILIÑAN BASTIAN BENJAMIN ANTONIO|22889531-8','GONZALEZ CAMPOS BENJAMIN ALONSO|22530875-6','GONZALEZ ZURA JOAQUIN ANTONIO|22762985-1','GUTIERREZ BARRIENTOS NICOLAS IGNACIO|22885022-5','HERNANDEZ RETAMAL BENJAMIN ALEJANDRO|22488343-9','HORMAZABAL POBLETE FRANCISCO ALEJANDRO|22810151-6','IBAÑEZ FARIAS BENJAMIN CRISTOBAL|22964184-0','LAGOS CIFUENTES JAVIER NICOLAS|22512163-K','MARABOLI MORALES VALENTIN EDUARDO|22929619-1','MEDINA AGUILERA JOSETHOMAS SEBASTIAN|22796622-K','MUÑOZ REBOLLEDO MICHAEL ALEJANDRO|22492026-1','NAVARRO ROMERO TOMAS MARCELO|22987308-3','PEREZ ARAYA CESAR FERNANDO|23009563-9','QUEZADA ARAYA CRHISTIAN JAVIER DE JESUS|22766191-7','RIOS ARAYA BENJAMIN YASSEF OREL|22847750-8','SAAVEDRA GONZALEZ FIDEL ALEXIS|22370473-5','SALAS TORRES BRAYAN JAIRO BECKAM|22963083-0','SALAZAR MORALES VICENTE JAVIER|22670572-4','SILVA LEIVA JOAQUIN MATEO|22844975-K','VALENZUELA TOLOZA MARTIN ALEXIS|23003285-8','VIRGUEZ LARA JAVIER ALEXANDER|100588006-4'],
+'4E-TP': ['ARAVENA ULLOA IGNACIO ALEJANDRO|22891163-1','ASTABURUAGA ROJAS HERNAN ANDRES|22744295-6','BAEZA ALCAPIO JOAQUIN ALONSO|22890248-9','BRAVO ARELLANO MOISES ALBERTO|22776248-9','CABRERA ORELLANA FERNANDO JAVIER|22752663-7','CANCINO ROJAS RENATO AGUSTIN|22885218-K','CANTO ARAYA RONALD BASTIAN|22930658-8','CASTRO MARQUEZ GIAN FRANCO|26706461-K','CONCHA BARRIOS SEBASTIAN ANDRES|22703365-7','CONTRERAS LASTRA BRAYAN ALEXANDER|22748871-9','CORTEZ RAMIREZ RICARDO ANDRES|22743393-0','DIAZ DOMINGUEZ MATIAS FELIPE|22901943-0','ESPINOSA CANCINO JOAQUIN ALEJANDRO|22991485-5','FLORES HERRERA DAVID IGNACIO|22793752-1','GAJARDO ARAVENA JORGE ANDRES|22923491-9','GAJARDO ORELLANA MATIAS EDUARDO|23023735-2','GONZALEZ YAÑEZ DAVID ANTONIO|23023635-6','HERRERA MARQUEZ MATIN ALEXSANDER|22998382-2','MANCILLA CARO DOSON ALEXANDERS|22585504-8','MARTINEZ CARILLO BENJAMIN ISAAC|22827574-3','MARTINEZ ROJAS CARLOS VICENTE|22920290-1','MARTINEZ TRONCOSO BENJAMIN EDUARDO|22287102-6','MIRANDA TORRES SIMON MATEO|22925397-2','MORALES CAMPOS ALONSO ESTEBAN|22865862-6','MOYANO FLORES RICARDO ALFONSO|22689862-K','MUÑOZ DIAZ CRISTOFER ANDRES|22787187-3','NAVAS RIQUELME AGUSTIN EDUARDO|22827311-2','OLGUIN SANHUEZA MAXIMO ERIQUE|22990298-9','PALMA ILABACA LORENZO ENRIQUE|22810845-6','PONCE TORRES MAXIMILIANO ALEXIS|22534240-7','QUINTERO MACIAS LUIS JOSE|26729447-K','ROCO VALENZUELA BRYAN FELIPE|22903209-7','ROJAS RAMIREZ THOMAS ALEJANDRO|22795270-9','SAN MARTIN RUDOLPH FELIPE ALDOLFO|22980132-5','SOTO RETAMAL MARTIN VICENTE IGNACIO|22982261-6','TORRES ZUÑIGA CRISTOBAL ALONSO|22956749-7','VALDERRAMA CASTILLO NICOLAS MARTIN|22931876-4','VALDES ROJAS ANTONIO JESUS|22768146-2','VASQUEZ SOTO MARTIN ALONSO|22898736-0']
+};
+
+/* ====================== Estado ====================== */
+let curUid = null, curEmail = null;
+let curNivel = null, curCurso = null;
+let roster = [];                 // [{nombre, rut}]
+let criterios = [null,null,null,null,null,null];
+let integrantes = [];            // [{nombre, rut}]
+let editingId = null;
+let evals = {};                  // id -> data (curso actual)
+let evalsRef = null;
+
+/* ====================== Util ====================== */
+function esc(s){ if(s==null) return ''; const d=document.createElement('div'); d.textContent=String(s); return d.innerHTML; }
+function toast(msg, type){ const t=document.getElementById('toast'); t.textContent=msg; t.className=''; if(type)t.classList.add(type); t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),2600); }
+function cap(s){ return s.toLowerCase().replace(/\b([a-záéíóúñ])/g, c=>c.toUpperCase()); }
+
+// Nota 1.0–7.0, 60% exigencia, lineal en dos tramos
+function calcNota(pts){
+    const corte = MAX_PTS * EXIGENCIA;
+    let n;
+    if(pts >= corte) n = 4.0 + (pts - corte) / (MAX_PTS - corte) * 3.0;
+    else n = 1.0 + (pts / corte) * 3.0;
+    return Math.round(n * 10) / 10;
+}
+function notaClass(n){ return n < 4.0 ? 'rojo' : (n >= 6.0 ? 'verde' : ''); }
+
+/* ====================== Auth ====================== */
+function doLogin(){
+    const email=document.getElementById('email').value.trim();
+    const pass=document.getElementById('pass').value;
+    const err=document.getElementById('loginErr');
+    err.style.display='none';
+    if(!email||!pass){ err.textContent='Completa ambos campos'; err.style.display='block'; return; }
+    auth.signInWithEmailAndPassword(email,pass).catch(e=>{
+        err.textContent = (e.code==='auth/wrong-password'||e.code==='auth/invalid-credential') ? 'Contraseña incorrecta'
+            : e.code==='auth/user-not-found' ? 'Usuario no encontrado' : 'Error: '+e.message;
+        err.style.display='block';
+    });
+}
+function logout(){ auth.signOut(); }
+
+auth.onAuthStateChanged(async user=>{
+    if(!user){
+        document.getElementById('loginScreen').style.display='flex';
+        document.getElementById('app').style.display='none';
+        return;
+    }
+    try{ await user.getIdToken(true); }catch(e){}
+    let isAdmin=false;
+    try{ const snap=await db.ref(BASE+'/admins/'+user.uid).once('value'); isAdmin=snap.val()===true; }
+    catch(e){ isAdmin=false; }
+    if(!isAdmin){
+        toast('No tienes permisos de docente','err');
+        setTimeout(()=>auth.signOut(), 1800);
+        return;
+    }
+    curUid=user.uid; curEmail=user.email;
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('who').textContent=user.email;
+    buildCursoRow();
+    buildRubric();
+    document.getElementById('blockedMsg').style.display='block';
+});
+
+/* ====================== Curso ====================== */
+function buildCursoRow(){
+    document.querySelectorAll('.nivel-tab').forEach(b=>b.classList.toggle('active', b.dataset.nivel===curNivel));
+    const row=document.getElementById('cursoRow');
+    if(!curNivel){ row.innerHTML='<div class="hint">Elige primero el nivel.</div>'; return; }
+    row.innerHTML = Object.keys(CURSOS).filter(k=>CURSOS[k].nivel===curNivel)
+        .map(k=>`<button class="curso-chip${k===curCurso?' active':''}" onclick="pickCurso('${k}')">${CURSOS[k].label}</button>`).join('');
+}
+function pickNivel(n){
+    if(curNivel===n) return;
+    curNivel=n; curCurso=null; roster=[];
+    detachEvals();
+    buildCursoRow();
+    document.getElementById('rubricCard').style.display='none';
+    document.getElementById('stuCard').style.display='none';
+    document.getElementById('saveCard').style.display='none';
+    document.getElementById('listCard').style.display='none';
+    document.getElementById('blockedMsg').style.display='block';
+    const o=OBRA[n];
+    const note=document.getElementById('obraNote');
+    note.style.display='block';
+    note.innerHTML=`Rúbrica de <b>${esc(o.titulo)}</b> · ${esc(o.autor)}`;
+}
+function pickCurso(k){
+    curCurso=k; curNivel=CURSOS[k].nivel;
+    roster = (ROSTERS[k]||[]).map(s=>{ const [nombre,rut]=s.split('|'); return {nombre, rut}; });
+    buildCursoRow();
+    resetForm();
+    document.getElementById('rubricCard').style.display='block';
+    document.getElementById('stuCard').style.display='block';
+    document.getElementById('saveCard').style.display='block';
+    document.getElementById('listCard').style.display='block';
+    document.getElementById('blockedMsg').style.display='none';
+    document.getElementById('listTitle').textContent='Guardadas · '+CURSOS[k].label;
+    attachEvals();
+}
+
+/* ====================== Rúbrica ====================== */
+function buildRubric(){
+    document.getElementById('rubric').innerHTML = RUBRICA.map((c,ci)=>`
+        <div class="crit">
+            <div class="crit-head"><span>${esc(c.n)}</span><span class="crit-pts" id="critPts${ci}">—</span></div>
+            <div class="levels">
+                ${NIVELES.map((lv,li)=>`
+                    <div class="level" id="lvl${ci}_${li}" onclick="pickLevel(${ci},${li})">
+                        <div class="lvl-top"><span class="lvl-lbl">${lv.lbl}</span><span class="lvl-pts">${lv.pts}</span></div>
+                        <div>${esc(c.d[li])}</div>
+                    </div>`).join('')}
+            </div>
+        </div>`).join('');
+}
+function pickLevel(ci, li){
+    const pts = NIVELES[li].pts;
+    criterios[ci] = pts;
+    for(let l=0;l<NIVELES.length;l++){
+        const el=document.getElementById(`lvl${ci}_${l}`);
+        el.classList.remove('sel','sel-0');
+        if(l===li) el.classList.add(NIVELES[l].pts===0?'sel-0':'sel');
+    }
+    document.getElementById('critPts'+ci).textContent = pts+' pts';
+    renderScore();
+}
+function renderScore(){
+    const done = criterios.filter(c=>c!==null).length;
+    const pts = criterios.reduce((a,c)=>a+(c||0),0);
+    document.getElementById('ptsNow').textContent = pts;
+    let nota = calcNota(pts);
+    const ov = document.getElementById('ovChk').checked;
+    if(ov){
+        const v = parseFloat((document.getElementById('ovVal').value||'').replace(',','.'));
+        if(!isNaN(v)) nota = Math.round(Math.min(7,Math.max(1,v))*10)/10;
+    }
+    const pill=document.getElementById('notaPill');
+    pill.textContent = nota.toFixed(1);
+    pill.className = 'nota-pill '+notaClass(nota);
+    document.getElementById('exigNote').textContent = done<6 ? (done+'/6 criterios') : '60% exigencia';
+    updateSaveBtn();
+    return {pts, nota, done};
+}
+function toggleOverride(){
+    const on=document.getElementById('ovChk').checked;
+    const inp=document.getElementById('ovVal');
+    inp.disabled=!on;
+    if(on){ if(!inp.value){ inp.value=calcNota(criterios.reduce((a,c)=>a+(c||0),0)).toFixed(1); } inp.focus(); }
+    renderScore();
+}
+
+/* ====================== Integrantes ====================== */
+function searchStu(){
+    const q=document.getElementById('stuInput').value.trim().toLowerCase();
+    const box=document.getElementById('stuResults');
+    if(!roster.length){ box.classList.remove('open'); return; }
+    const taken=new Set(integrantes.map(i=>i.rut));
+    let list=roster.filter(s=>!q || s.nombre.toLowerCase().includes(q));
+    list=list.slice(0,40);
+    box.innerHTML = list.map(s=>{
+        const dis=taken.has(s.rut);
+        return `<div class="stu-opt${dis?' dis':''}" ${dis?'':`onclick="addStu('${esc(s.rut)}')"`}>
+            ${esc(cap(s.nombre))} <small>· ${esc(s.rut)}${dis?' · ya agregado':''}</small></div>`;
+    }).join('') || '<div class="stu-opt dis">Sin coincidencias</div>';
+    box.classList.add('open');
+}
+function addStu(rut){
+    if(integrantes.length>=4){ toast('Máximo 4 integrantes','err'); return; }
+    const s=roster.find(r=>r.rut===rut);
+    if(!s || integrantes.some(i=>i.rut===rut)) return;
+    integrantes.push({nombre:s.nombre, rut:s.rut});
+    document.getElementById('stuInput').value='';
+    document.getElementById('stuResults').classList.remove('open');
+    renderChips();
+}
+function removeStu(rut){ integrantes=integrantes.filter(i=>i.rut!==rut); renderChips(); }
+function renderChips(){
+    document.getElementById('chips').innerHTML = integrantes.map(i=>`
+        <div class="chip">
+            <div><div class="nm">${esc(cap(i.nombre))}</div><div class="rt">${esc(i.rut)}</div></div>
+            <button onclick="removeStu('${esc(i.rut)}')" title="Quitar">×</button>
+        </div>`).join('');
+    const h=document.getElementById('stuHint');
+    h.textContent = integrantes.length===0 ? 'Agrega entre 1 y 4 integrantes. Todos reciben la misma nota.'
+        : integrantes.length+' integrante'+(integrantes.length>1?'s':'')+' · todos reciben la misma nota.';
+    updateSaveBtn();
+}
+document.addEventListener('click',e=>{
+    if(!e.target.closest('.stu-search')) document.getElementById('stuResults').classList.remove('open');
+});
+
+/* ====================== Guardar ====================== */
+function updateSaveBtn(){
+    const done = criterios.filter(c=>c!==null).length===6;
+    const ok = done && integrantes.length>=1 && integrantes.length<=4 && curCurso;
+    document.getElementById('saveBtn').disabled=!ok;
+}
+function saveEval(){
+    const done = criterios.filter(c=>c!==null).length===6;
+    if(!done){ toast('Marca los 6 criterios','err'); return; }
+    if(integrantes.length<1){ toast('Agrega al menos 1 integrante','err'); return; }
+    const {pts, nota} = renderScore();
+    const data = {
+        curso: curCurso, nivel: curNivel,
+        criterios: criterios.slice(),
+        puntaje: pts,
+        nota: nota,
+        override: document.getElementById('ovChk').checked,
+        integrantes: integrantes.map(i=>({nombre:i.nombre, rut:i.rut})),
+        docente: curEmail,
+        actualizado: firebase.database.ServerValue.TIMESTAMP
+    };
+    const btn=document.getElementById('saveBtn'); btn.disabled=true;
+    let p;
+    if(editingId){ p = db.ref(NODE+'/'+editingId).update(data); }
+    else { data.creado = firebase.database.ServerValue.TIMESTAMP; p = db.ref(NODE).push(data); }
+    p.then(()=>{ toast(editingId?'Evaluación actualizada':'Evaluación guardada','ok'); resetForm(); })
+     .catch(e=>{ toast('Error al guardar: '+e.message,'err'); btn.disabled=false; });
+}
+function resetForm(){
+    criterios=[null,null,null,null,null,null];
+    integrantes=[];
+    editingId=null;
+    document.querySelectorAll('.level').forEach(el=>el.classList.remove('sel','sel-0'));
+    for(let i=0;i<6;i++){ const e=document.getElementById('critPts'+i); if(e)e.textContent='—'; }
+    document.getElementById('ovChk').checked=false;
+    document.getElementById('ovVal').value=''; document.getElementById('ovVal').disabled=true;
+    document.getElementById('stuInput').value='';
+    document.getElementById('editHint').style.display='none';
+    document.getElementById('saveBtn').textContent='💾 Guardar evaluación';
+    renderChips(); renderScore();
+}
+
+/* ====================== Lista guardadas ====================== */
+function detachEvals(){ if(evalsRef){ evalsRef.off(); evalsRef=null; } evals={}; }
+function attachEvals(){
+    detachEvals();
+    evalsRef = db.ref(NODE).orderByChild('curso').equalTo(curCurso);
+    evalsRef.on('value', snap=>{ evals = snap.val()||{}; renderEvals(); });
+}
+function renderEvals(){
+    const cont=document.getElementById('evalList');
+    const ids=Object.keys(evals).sort((a,b)=>(evals[b].creado||0)-(evals[a].creado||0));
+    if(!ids.length){ cont.innerHTML='<div class="saved-empty">Aún no hay evaluaciones guardadas para este curso.</div>'; document.getElementById('summaryLine').textContent=''; return; }
+    cont.innerHTML = ids.map(id=>{
+        const e=evals[id];
+        const names=(e.integrantes||[]).map(i=>cap(i.nombre)).join(' · ');
+        return `<div class="eval${id===editingId?' editing':''}">
+            <div class="eval-nota ${notaClass(e.nota)}">${Number(e.nota).toFixed(1)}</div>
+            <div class="eval-body">
+                <div class="eval-names">${esc(names)}</div>
+                <div class="eval-meta">${e.puntaje}/24 pts${e.override?' · nota ajustada':''} · ${(e.integrantes||[]).length} integrante(s)</div>
+            </div>
+            <div class="eval-acts">
+                <button onclick="editEval('${id}')">✎ Editar</button>
+                <button class="del" onclick="delEval('${id}')">🗑 Borrar</button>
+            </div>
+        </div>`;
+    }).join('');
+    // resumen
+    const totalEvals=ids.length;
+    const totalStu=ids.reduce((a,id)=>a+(evals[id].integrantes||[]).length,0);
+    const notas=ids.map(id=>evals[id].nota);
+    const prom=notas.length?(notas.reduce((a,n)=>a+n,0)/notas.length):0;
+    const rojos=notas.filter(n=>n<4.0).length;
+    document.getElementById('summaryLine').innerHTML=
+        `<b>${totalEvals}</b> trípticos · <b>${totalStu}</b> alumnos calificados · promedio <b>${prom.toFixed(1)}</b> · <b>${rojos}</b> rojos`;
+}
+function editEval(id){
+    const e=evals[id]; if(!e) return;
+    editingId=id;
+    criterios = (e.criterios||[]).slice();
+    while(criterios.length<6) criterios.push(null);
+    integrantes = (e.integrantes||[]).map(i=>({nombre:i.nombre, rut:i.rut}));
+    // pintar niveles
+    document.querySelectorAll('.level').forEach(el=>el.classList.remove('sel','sel-0'));
+    criterios.forEach((pts,ci)=>{
+        if(pts===null) return;
+        const li=NIVELES.findIndex(l=>l.pts===pts);
+        if(li>=0){ const el=document.getElementById(`lvl${ci}_${li}`); if(el) el.classList.add(pts===0?'sel-0':'sel'); }
+        const pe=document.getElementById('critPts'+ci); if(pe) pe.textContent=pts+' pts';
+    });
+    document.getElementById('ovChk').checked=!!e.override;
+    document.getElementById('ovVal').disabled=!e.override;
+    document.getElementById('ovVal').value=e.override?Number(e.nota).toFixed(1):'';
+    document.getElementById('saveBtn').textContent='💾 Actualizar';
+    const eh=document.getElementById('editHint'); eh.style.display='block';
+    eh.textContent='Editando evaluación de: '+integrantes.map(i=>cap(i.nombre)).join(', ');
+    renderChips(); renderScore(); renderEvals();
+    document.getElementById('rubricCard').scrollIntoView({behavior:'smooth', block:'start'});
+}
+function delEval(id){
+    const e=evals[id]; if(!e) return;
+    const names=(e.integrantes||[]).map(i=>cap(i.nombre)).join(', ');
+    if(!confirm('¿Borrar la evaluación de '+names+'?')) return;
+    db.ref(NODE+'/'+id).remove()
+        .then(()=>{ toast('Evaluación borrada','ok'); if(editingId===id) resetForm(); })
+        .catch(e=>toast('Error al borrar: '+e.message,'err'));
+}
+
+/* ====================== Exportar ====================== */
+function exportRows(){
+    // Una fila por alumno, con la nota de su tríptico. Orden de la nómina.
+    const byRut={};
+    Object.keys(evals).forEach(id=>{
+        (evals[id].integrantes||[]).forEach(i=>{ byRut[i.rut]={nota:evals[id].nota}; });
+    });
+    return roster.map((s,idx)=>({
+        n: idx+1, rut: s.rut, nombre: s.nombre,
+        nota: byRut[s.rut] ? Number(byRut[s.rut].nota).toFixed(1).replace('.',',') : ''
+    }));
+}
+function exportLirmi(){
+    if(!curCurso){ return; }
+    const rows=exportRows();
+    let csv='﻿N°;RUN;Estudiante;Nota\r\n';
+    csv += rows.map(r=>`${r.n};${r.rut};${r.nombre};${r.nota}`).join('\r\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=`Triptico_${curCurso}_Lirmi.csv`;
+    a.click();
+    const sinNota=rows.filter(r=>!r.nota).length;
+    toast('CSV descargado · '+(rows.length-sinNota)+'/'+rows.length+' con nota','ok');
+}
+function copyResumen(){
+    if(!curCurso){ return; }
+    const rows=exportRows();
+    const o=OBRA[curNivel];
+    let txt=`Notas Tríptico Plan Lector — ${CURSOS[curCurso].label} (${curNivel} · ${o.titulo})\n`;
+    txt+=`Escala 1.0–7.0, 60% exigencia, 24 pts. Formato Lirmi: N°;RUN;Estudiante;Nota\n\n`;
+    rows.forEach(r=>{ txt+=`${r.n}. ${r.nombre} — ${r.rut} — ${r.nota||'(sin nota)'}\n`; });
+    const sinNota=rows.filter(r=>!r.nota).length;
+    txt+=`\nTotal: ${rows.length} alumnos · ${rows.length-sinNota} con nota · ${sinNota} pendientes.`;
+    navigator.clipboard.writeText(txt)
+        .then(()=>toast('Resumen copiado al portapapeles','ok'))
+        .catch(()=>{ prompt('Copia manualmente:', txt); });
+}
+</script>
+</body>
+</html>

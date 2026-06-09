@@ -161,6 +161,60 @@ async function handleCreateFolder(req, res) {
   }
 }
 
+// Find a subfolder by name inside a parent (or create it)
+async function findOrCreateSubfolder(token, parentId, name) {
+  const q = "'" + parentId + "' in parents and name = '" + String(name).replace(/'/g, "\\'") + "' and mimeType = 'application/vnd.google-apps.folder' and trashed = false";
+  const resp = await fetch('https://www.googleapis.com/drive/v3/files?q=' + encodeURIComponent(q) + '&fields=files(id,name)', {
+    headers: { 'Authorization': 'Bearer ' + token }
+  });
+  if (resp.ok) {
+    const data = await resp.json();
+    if (data.files && data.files.length) return data.files[0].id;
+  }
+  const created = await createFolder(token, name, parentId);
+  return created.id;
+}
+
+// Upload a single file (base64) into a folder (optionally into a named subfolder)
+async function uploadFile(token, parentId, fileName, mimeType, dataBase64) {
+  const buffer = Buffer.from(dataBase64, 'base64');
+  const boundary = 'pfp' + Date.now() + Math.floor(Math.random() * 1e6);
+  const meta = JSON.stringify({ name: fileName, parents: [parentId] });
+  const pre = '--' + boundary + '\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n' + meta +
+    '\r\n--' + boundary + '\r\nContent-Type: ' + (mimeType || 'application/octet-stream') + '\r\n\r\n';
+  const post = '\r\n--' + boundary + '--';
+  const body = Buffer.concat([Buffer.from(pre, 'utf8'), buffer, Buffer.from(post, 'utf8')]);
+  const resp = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name', {
+    method: 'POST',
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'multipart/related; boundary=' + boundary },
+    body
+  });
+  if (!resp.ok) {
+    const err = await resp.text();
+    throw new Error('Error subiendo archivo: ' + err);
+  }
+  return await resp.json();
+}
+
+// ACTION: upload-file  (sube un archivo a la carpeta del docente)
+async function handleUploadFile(req, res) {
+  const { callerUid, folderId, subfolder, fileName, mimeType, dataBase64 } = req.body || {};
+  if (callerUid !== ADMIN_UID) return res.status(403).json({ error: 'No autorizado' });
+  if (!folderId || !fileName || !dataBase64) {
+    return res.status(400).json({ error: 'Faltan datos (folderId, fileName, dataBase64)' });
+  }
+  try {
+    const token = await getAccessToken();
+    let targetId = folderId;
+    if (subfolder) targetId = await findOrCreateSubfolder(token, folderId, subfolder);
+    const result = await uploadFile(token, targetId, fileName, mimeType, dataBase64);
+    return res.status(200).json({ success: true, fileId: result.id, name: result.name });
+  } catch (err) {
+    console.error('gdrive upload-file error:', err);
+    return res.status(500).json({ error: err.message || 'Error interno' });
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
@@ -169,7 +223,9 @@ module.exports = async (req, res) => {
   switch (action) {
     case 'create-folder':
       return handleCreateFolder(req, res);
+    case 'upload-file':
+      return handleUploadFile(req, res);
     default:
-      return res.status(400).json({ error: 'Acción no válida. Use action: "create-folder"' });
+      return res.status(400).json({ error: 'Acción no válida. Use action: "create-folder" o "upload-file"' });
   }
 };

@@ -97,7 +97,7 @@
                 </div>
             </div>
             <!-- Revenue stats -->
-            <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-xs text-gray-500 mb-1">💰 Posible total</p>
                     <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total-revenue">$0</p>
@@ -112,6 +112,11 @@
                     <p class="text-xs text-gray-500 mb-1">⏳ Dinero por cobrar</p>
                     <p class="text-2xl font-heading font-bold text-amber-600" id="stat-pending-revenue">$0</p>
                     <p class="text-xs text-gray-400" id="stat-pending-revenue-count">0 por cobrar</p>
+                </div>
+                <div class="bg-indigo-50 rounded-xl border border-indigo-200 p-4">
+                    <p class="text-xs text-indigo-500 mb-1">🎯 Potencial (si todos toman Completo)</p>
+                    <p class="text-2xl font-heading font-bold text-indigo-700" id="stat-potencial">$0</p>
+                    <p class="text-xs text-indigo-400" id="stat-potencial-count">0 clientes</p>
                 </div>
             </div>
             <p class="text-xs text-gray-400 -mt-6 mb-8">Montos en bruto (lo que paga el docente). <strong>Posible total = recaudado + por cobrar.</strong> Solo cuenta planes reales (no pre-inscritos). MercadoPago descuenta su comisión por separado (varía según las cuotas), revísala en tu panel de MercadoPago.</p>
@@ -1335,6 +1340,13 @@
             document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos confirmados';
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
+            // POTENCIAL: si los pre-inscritos también contrataran (proyectado en plan Completo).
+            var potencial = totalRevenue + preInscrito * 199990;
+            var statPot = document.getElementById('stat-potencial');
+            if (statPot) {
+                statPot.textContent = formatCLP(potencial);
+                document.getElementById('stat-potencial-count').textContent = (totalWithPlan + preInscrito) + ' clientes · faltan ' + formatCLP(Math.max(0, potencial - paidRevenue));
+            }
 
             // Pagos badge
             var badge = document.getElementById('pagos-badge');

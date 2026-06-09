@@ -225,8 +225,9 @@
         <div id="tab-entregados" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <div class="mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">📦 Portafolios entregados (borradores)</h2>
-                <p class="text-sm text-gray-500 mt-1">Borradores ya armados en la carpeta de Drive de cada docente. Envía el aviso por WhatsApp con el link de su carpeta para que revise y vaya subiendo. Si tiene saldo pendiente, el mensaje incluye el recordatorio de pago. Quedamos a la espera de su clase grabada.</p>
+                <p class="text-sm text-gray-500 mt-1">Solo docentes que <b>pagaron</b> y ya tienen carpeta de Drive. Agrégalos "de a poco" con los botones de abajo; a cada uno le envías el aviso por WhatsApp con el link de su carpeta (revisar + subir + esperamos la clase grabada; si hay saldo pendiente, incluye el recordatorio de pago).</p>
             </div>
+            <div id="entregados-candidatos" class="mb-4"></div>
             <div id="entregados-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
         </div>
 
@@ -1082,7 +1083,11 @@
             m += '\n¡Un abrazo y gracias por confiar! 💪';
             return m;
         }
-        function enviarBorrador(uid) {
+        function haPagado(p) {
+            var s = String((p && p.paymentStatus) || '').toLowerCase();
+            return s === 'approved' || s === 'aprobado' || s === 'abono' || s === 'pagado' || (p && p.esAbono === true);
+        }
+        window.enviarBorrador = function (uid) {
             var p = (allPortafolios || {})[uid] || {};
             var u = (allClients || {})[uid] || {};
             var gd = p.googleDrive || {};
@@ -1092,18 +1097,22 @@
             var msg = buildBorradorMsg(u.nombre || '', gd.shareUrl, Number(p.saldoPendiente) || 0);
             window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
             db.ref('portafolios/' + uid + '/seguimiento/borradorEnviado').set({ at: new Date().toISOString(), by: 'admin' });
-        }
+        };
+        window.marcarListo = function (uid) { db.ref('portafolios/' + uid + '/seguimiento/borradorListo').set({ at: new Date().toISOString(), by: 'admin' }); };
+        window.quitarListo = function (uid) { if (confirm('¿Quitar a este docente de la lista de entregados?')) db.ref('portafolios/' + uid + '/seguimiento/borradorListo').remove(); };
         function renderEntregados() {
             var cont = document.getElementById('entregados-list');
+            var addCont = document.getElementById('entregados-candidatos');
             if (!cont) return;
-            var rows = [];
+            var listos = [], candidatos = [];
             Object.keys(allPortafolios || {}).forEach(function(uid) {
                 var p = allPortafolios[uid] || {};
                 var gd = p.googleDrive || {};
-                if (!gd.shareUrl) return;
+                if (!gd.shareUrl) return;       // necesita carpeta de Drive
+                if (!haPagado(p)) return;       // SOLO los que han pagado
                 var u = (allClients || {})[uid] || {};
                 var dp = p.datosPortafolio || {};
-                rows.push({
+                var row = {
                     uid: uid,
                     nombre: u.nombre || dp.nombre || '(sin nombre)',
                     email: u.email || '',
@@ -1113,14 +1122,22 @@
                     shareUrl: gd.shareUrl,
                     saldo: Number(p.saldoPendiente) || 0,
                     enviado: (p.seguimiento && p.seguimiento.borradorEnviado) ? p.seguimiento.borradorEnviado.at : null
-                });
+                };
+                if (p.seguimiento && p.seguimiento.borradorListo) listos.push(row); else candidatos.push(row);
             });
-            rows.sort(function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); });
+            var byName = function(a, b) { return (a.nombre || '').localeCompare(b.nombre || ''); };
+            listos.sort(byName); candidatos.sort(byName);
             var countEl = document.getElementById('entregados-count');
-            if (countEl) countEl.textContent = rows.length;
-            if (!rows.length) { cont.innerHTML = '<p class="text-gray-500 text-sm col-span-full">Aún no hay portafolios con carpeta de Drive creada.</p>'; return; }
+            if (countEl) countEl.textContent = listos.length;
+            if (addCont) {
+                addCont.innerHTML = candidatos.length
+                    ? '<p class="text-xs font-medium text-gray-500 mb-2">➕ Agregar a la lista (docentes que pagaron y ya tienen carpeta de Drive):</p>' +
+                      candidatos.map(function(r) { return '<button onclick="marcarListo(\'' + r.uid + '\')" class="inline-flex items-center mr-2 mb-2 px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-emerald-100 hover:text-emerald-700">➕ ' + escapeHtml(r.nombre) + '</button>'; }).join('')
+                    : '';
+            }
+            if (!listos.length) { cont.innerHTML = '<p class="text-gray-500 text-sm col-span-full">Aún no agregas docentes a la lista. Usa los botones de arriba para ir sumándolos de a poco.</p>'; return; }
             var html = '';
-            rows.forEach(function(r) {
+            listos.forEach(function(r) {
                 var phone = normWaPhone(r.telefono);
                 var pago = r.saldo > 0
                     ? '<span class="px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-700 whitespace-nowrap">Saldo ' + fmtCLP(r.saldo) + '</span>'
@@ -1138,6 +1155,7 @@
                         (phone
                             ? '<button onclick="enviarBorrador(\'' + r.uid + '\')" class="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-green-600 text-white hover:bg-green-700">📱 Enviar borrador</button>'
                             : '<span class="inline-flex items-center text-xs text-amber-600">⚠️ falta teléfono</span>') +
+                        '<button onclick="quitarListo(\'' + r.uid + '\')" class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs text-gray-400 hover:text-red-500" title="Quitar de la lista">✕</button>' +
                     '</div></div>';
             });
             cont.innerHTML = html;

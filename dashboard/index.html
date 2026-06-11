@@ -505,20 +505,34 @@
 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">¿Cuál es tu situación respecto al Trabajo Colaborativo?</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">¿Cuál es tu situación respecto al Trabajo Colaborativo? <span class="text-xs text-amber-600 font-normal">(el manual 2026 exige que la experiencia se ejecute de verdad, con acta firmada + evidencias adjuntas)</span></label>
                         <div class="space-y-3">
                             <label class="flex items-start gap-2.5 cursor-pointer">
                                 <input type="radio" name="m3-tiene-experiencia" value="si" class="text-emerald-600 mt-1" id="m3-exp-si">
                                 <div class="text-sm text-gray-700">
-                                    <span class="font-medium text-gray-900">Sí, he realizado un proyecto colaborativo real desde 2023</span>
-                                    <p class="text-xs text-gray-500 mt-0.5">Nosotros redactaremos la reflexión técnica y análisis de impacto basados en tu experiencia.</p>
+                                    <span class="font-medium text-gray-900">Ya tengo una experiencia colaborativa hecha (2025 o 2026): ajústenla a las rúbricas</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Redactamos la reflexión técnica con TU experiencia real y te ayudamos a ordenar el acta y las evidencias que ya tienes.</p>
                                 </div>
                             </label>
                             <label class="flex items-start gap-2.5 cursor-pointer">
-                                <input type="radio" name="m3-tiene-experiencia" value="no" checked class="text-emerald-600 mt-1" id="m3-exp-no">
+                                <input type="radio" name="m3-tiene-experiencia" value="programa" class="text-emerald-600 mt-1" id="m3-exp-programa">
                                 <div class="text-sm text-gray-700">
-                                    <span class="font-medium text-gray-900">No he realizado un proyecto aún (Planifiquemos uno para este año)</span>
-                                    <p class="text-xs text-gray-500 mt-0.5">Te diseñaremos un proyecto colaborativo (ABP) sencillo, de alto nivel pedagógico, para que lo implementes con un colega o equipo PIE este año.</p>
+                                    <span class="font-medium text-gray-900">Participo en un programa formal: ADECO, Fundación Luksic, red comunal u otro</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Perfecto: esos programas son trabajo colaborativo válido y suelen traer sus propias actas y evidencias. Lo encuadramos a las rúbricas.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="radio" name="m3-tiene-experiencia" value="ejecutar" checked class="text-emerald-600 mt-1" id="m3-exp-ejecutar">
+                                <div class="text-sm text-gray-700">
+                                    <span class="font-medium text-gray-900">No tengo nada aún: prepárenme algo sencillo para ejecutarlo este año</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Te diseñamos un proyecto corto (2–3 semanas, pocos participantes: un colega, la educadora diferencial PIE o un inspector), con planificación, actas y materiales listos para implementar y firmar.</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-2.5 cursor-pointer">
+                                <input type="radio" name="m3-tiene-experiencia" value="todo-listo" class="text-emerald-600 mt-1" id="m3-exp-todolisto">
+                                <div class="text-sm text-gray-700">
+                                    <span class="font-medium text-gray-900">Entréguenme todo redactado y listo: yo me encargo de conseguir las firmas</span>
+                                    <p class="text-xs text-gray-500 mt-0.5">Te entregamos la redacción + planificación del proyecto + acta y evidencias con espacio de firmas. <b>Importante:</b> la experiencia debe ocurrir de verdad — tu director/a da cuenta de su veracidad. Recomendamos sumar el <b>timbre de Dirección o UTP</b> a las actas.</p>
                                 </div>
                             </label>
                         </div>
@@ -2842,7 +2856,7 @@
             if (cuestionario.modulo2.tipoClase === 'otro') {
                 addError('m2-tipo-otro', 'Módulo 2: si eliges “Otro”, escribe qué dinámica de clase prefieres.');
             }
-            if (cuestionario.modulo3.tieneExperiencia === 'si' && (!cuestionario.modulo3.descripcionExperiencia || cuestionario.modulo3.descripcionExperiencia.length < 20)) {
+            if ((cuestionario.modulo3.tieneExperiencia === 'si' || cuestionario.modulo3.tieneExperiencia === 'programa') && (!cuestionario.modulo3.descripcionExperiencia || cuestionario.modulo3.descripcionExperiencia.length < 20)) {
                 addError('m3-descripcion', 'Módulo 3: describe brevemente la experiencia colaborativa real que quieres usar.');
             }
             if (!cuestionario.modulo3.colaborador || cuestionario.modulo3.colaborador.length < 5) {
@@ -3147,8 +3161,13 @@
         // ---- PRE-INSCRIPTION: M3 experience toggle ----
         document.querySelectorAll('input[name="m3-tiene-experiencia"]').forEach(function(radio) {
             radio.addEventListener('change', function() {
-                var haExp = this.value === 'si';
-                document.getElementById('m3-experiencia-detalle').classList.toggle('hidden', !haExp);
+                var haExp = this.value === 'si' || this.value === 'programa';
+                var det = document.getElementById('m3-experiencia-detalle');
+                det.classList.toggle('hidden', !haExp);
+                var lbl = det.querySelector('label');
+                if (lbl) lbl.textContent = this.value === 'programa'
+                    ? 'Cuéntanos de tu programa (ADECO, Luksic, red, etc.): nombre, en qué consiste y con quiénes:'
+                    : 'Describe brevemente de qué se trató tu experiencia colaborativa previa:';
                 document.getElementById('m3-sin-experiencia').classList.toggle('hidden', haExp);
             });
         });

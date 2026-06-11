@@ -234,7 +234,7 @@
                 <p class="text-sm text-gray-500 mt-1">Solo docentes que <b>pagaron</b> y ya tienen carpeta de Drive. Agrégalos "de a poco" con los botones de abajo; a cada uno le envías el aviso por WhatsApp con el link de su carpeta (revisar + subir + esperamos la clase grabada; si hay saldo pendiente, incluye el recordatorio de pago).</p>
             </div>
             <div id="entregados-candidatos" class="mb-4"></div>
-            <div id="entregados-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            <div id="entregados-list" class="space-y-3"></div>
         </div>
 
         <div id="tab-preinscritos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1150,6 +1150,15 @@
         };
         window.marcarListo = function (uid) { db.ref('portafolios/' + uid + '/seguimiento/borradorListo').set({ at: new Date().toISOString(), by: 'admin' }); };
         window.quitarListo = function (uid) { if (confirm('¿Quitar a este docente de la lista de entregados?')) db.ref('portafolios/' + uid + '/seguimiento/borradorListo').remove(); };
+        // Estado de los grupos colapsables (se recuerda entre re-render). Por defecto: los "ya hechos" colapsados.
+        var entregadosCollapsed = { notif: true, m1env: true };
+        window.toggleGrp = function (key) {
+            entregadosCollapsed[key] = !entregadosCollapsed[key];
+            var body = document.getElementById('body-' + key);
+            var arr = document.getElementById('arr-' + key);
+            if (body) body.style.display = entregadosCollapsed[key] ? 'none' : '';
+            if (arr) arr.textContent = entregadosCollapsed[key] ? '▸' : '▾';
+        };
         function renderEntregados() {
             var cont = document.getElementById('entregados-list');
             var addCont = document.getElementById('entregados-candidatos');
@@ -1213,12 +1222,21 @@
                         '<button onclick="quitarListo(\'' + r.uid + '\')" class="inline-flex items-center px-2 py-1.5 rounded-lg text-xs text-gray-400 hover:text-red-500" title="Quitar de la lista">✕</button>' +
                     '</div></div>';
             }
+            function grp(key, label, color, count, body) {
+                var col = entregadosCollapsed[key];
+                return '<div class="bg-gray-50 rounded-xl border border-gray-200 overflow-hidden">' +
+                    '<button onclick="toggleGrp(\'' + key + '\')" class="w-full flex items-center justify-between px-4 py-2.5 text-sm font-semibold ' + color + ' hover:bg-gray-100">' +
+                        '<span>' + label + ' (' + count + ')</span>' +
+                        '<span id="arr-' + key + '" class="text-gray-400 text-base">' + (col ? '▸' : '▾') + '</span>' +
+                    '</button>' +
+                    '<div id="body-' + key + '" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 pt-1"' + (col ? ' style="display:none"' : '') + '>' + body + '</div>' +
+                '</div>';
+            }
+            var empty = '<p class="text-xs text-gray-400 col-span-full">— ninguno —</p>';
             var html = '';
-            if (!listos.length) html += '<p class="text-gray-500 text-sm col-span-full">Aún no agregas docentes pagados a la lista. Usa los botones de arriba para ir sumándolos de a poco.</p>';
-            html += '<div class="col-span-full text-sm font-semibold text-amber-700 mt-1">⏳ Pendientes de notificar (' + pendientes.length + ')</div>';
-            html += pendientes.length ? pendientes.map(cardHtml).join('') : '<p class="col-span-full text-xs text-gray-400">— ninguno —</p>';
-            html += '<div class="col-span-full text-sm font-semibold text-green-700 mt-4">📤 Ya notificados (' + notificados.length + ')</div>';
-            html += notificados.length ? notificados.map(cardHtml).join('') : '<p class="col-span-full text-xs text-gray-400">— ninguno —</p>';
+            if (!listos.length) html += '<p class="text-gray-500 text-sm">Aún no agregas docentes pagados a la lista. Usa los botones de arriba para ir sumándolos de a poco.</p>';
+            html += grp('pend', '⏳ Pendientes de notificar', 'text-amber-700', pendientes.length, pendientes.length ? pendientes.map(cardHtml).join('') : empty);
+            html += grp('notif', '📤 Ya notificados', 'text-green-700', notificados.length, notificados.length ? notificados.map(cardHtml).join('') : empty);
             // --- Módulo 1 de regalo (sin pago aún): listos para enviar ---
             var m1Rows = [];
             M1_GANCHO_UIDS.forEach(function(uid) {
@@ -1261,11 +1279,8 @@
                             : '<span class="inline-flex items-center text-xs text-amber-600">⚠️ falta teléfono</span>') +
                     '</div></div>';
             }
-            html += '<div class="col-span-full text-sm font-semibold text-indigo-700 mt-6 border-t pt-4">🎁 Módulo 1 listo — gancho de venta, sin pago aún (' + m1Env.length + '/' + m1Rows.length + ' enviados)</div>';
-            html += '<div class="col-span-full text-xs font-medium text-amber-700">⏳ Por enviar (' + m1Pend.length + ')</div>';
-            html += m1Pend.length ? m1Pend.map(m1CardHtml).join('') : '<p class="col-span-full text-xs text-gray-400">— ninguno —</p>';
-            html += '<div class="col-span-full text-xs font-medium text-green-700 mt-2">📤 Ya enviados (' + m1Env.length + ')</div>';
-            html += m1Env.length ? m1Env.map(m1CardHtml).join('') : '<p class="col-span-full text-xs text-gray-400">— ninguno —</p>';
+            html += grp('m1pend', '🎁 Módulo 1 listo — por enviar (gancho, sin pago)', 'text-indigo-700', m1Pend.length, m1Pend.length ? m1Pend.map(m1CardHtml).join('') : empty);
+            html += grp('m1env', '🎁 Módulo 1 — ya enviados (gancho, sin pago)', 'text-green-700', m1Env.length, m1Env.length ? m1Env.map(m1CardHtml).join('') : empty);
             cont.innerHTML = html;
         }
 

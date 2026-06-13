@@ -3,8 +3,58 @@ layout: layout.njk
 title: Inicio
 ---
 
-<!-- Barra de progreso de lectura (línea guía) -->
+<!-- Barra de progreso de lectura + WISP (la luz que baja iluminando) -->
 <div id="scroll-progress" class="fixed top-0 left-0 h-1 bg-accent-400 z-[100]" style="width:0%"></div>
+<div id="guide-rail" aria-hidden="true"></div>
+<div id="guide-wisp" aria-hidden="true"></div>
+
+<style>
+  /* ===== WISP: luz que desciende con el scroll, guiando la lectura ===== */
+  #guide-rail{position:fixed;left:20px;top:14vh;height:74vh;width:2px;border-radius:2px;
+    background:linear-gradient(to bottom, transparent, rgba(129,140,248,.20) 10%, rgba(129,140,248,.20) 90%, transparent);
+    z-index:40;pointer-events:none;}
+  #guide-wisp{position:fixed;left:12px;top:14vh;width:18px;height:18px;border-radius:50%;
+    background:radial-gradient(circle,#fff7d6 0%,#fcd34d 40%,rgba(245,158,11,0) 72%);
+    box-shadow:0 0 18px 7px rgba(251,191,36,.55), 0 0 46px 18px rgba(245,158,11,.22);
+    z-index:41;pointer-events:none;transition:top .12s linear;will-change:top;}
+  #guide-wisp::after{content:"";position:absolute;left:50%;top:50%;width:8px;height:8px;border-radius:50%;
+    transform:translate(-50%,-50%);background:#fffdf5;box-shadow:0 0 8px 2px #fff;}
+
+  /* ===== Reveals enriquecidos ===== */
+  .reveal{opacity:0;transform:translateY(34px);transition:opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1);}
+  .reveal.visible{opacity:1;transform:none;}
+  .reveal-left{opacity:0;transform:translateX(-46px);transition:opacity .7s ease, transform .7s ease;}
+  .reveal-left.visible{opacity:1;transform:none;}
+  .reveal-right{opacity:0;transform:translateX(46px);transition:opacity .7s ease, transform .7s ease;}
+  .reveal-right.visible{opacity:1;transform:none;}
+
+  /* Cascada: cada hijo entra en secuencia (tablas/tarjetas dinámicas) */
+  .reveal-group > *{opacity:0;transform:translateY(30px) scale(.97);transition:opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1);}
+  .reveal-group.visible > *{opacity:1;transform:none;}
+  .reveal-group.visible > *:nth-child(1){transition-delay:.05s}
+  .reveal-group.visible > *:nth-child(2){transition-delay:.12s}
+  .reveal-group.visible > *:nth-child(3){transition-delay:.19s}
+  .reveal-group.visible > *:nth-child(4){transition-delay:.26s}
+  .reveal-group.visible > *:nth-child(5){transition-delay:.33s}
+  .reveal-group.visible > *:nth-child(6){transition-delay:.40s}
+  .reveal-group.visible > *:nth-child(7){transition-delay:.47s}
+  .reveal-group.visible > *:nth-child(8){transition-delay:.54s}
+  .reveal-group.visible > *:nth-child(9){transition-delay:.61s}
+  .reveal-group.visible > *:nth-child(10){transition-delay:.68s}
+  .reveal-group.visible > *:nth-child(11){transition-delay:.75s}
+  .reveal-group.visible > *:nth-child(12){transition-delay:.82s}
+  .reveal-group.visible > *:nth-child(13){transition-delay:.89s}
+  .reveal-group.visible > *:nth-child(14){transition-delay:.96s}
+
+  /* Destello breve cuando la sección entra (la "luz" que la muestra) */
+  @keyframes wispFlash{0%{box-shadow:0 0 0 0 rgba(251,191,36,0)}30%{box-shadow:0 -6px 40px 0 rgba(251,191,36,.18)}100%{box-shadow:0 0 0 0 rgba(251,191,36,0)}}
+  .reveal-group.visible{animation:wispFlash 1.1s ease-out;}
+
+  @media (max-width:768px){ #guide-rail, #guide-wisp{display:none;}}
+  @media (prefers-reduced-motion:reduce){ #guide-wisp, #guide-rail{display:none;}
+    .reveal,.reveal-left,.reveal-right,.reveal-group>*{transition:none;opacity:1;transform:none;}
+    .reveal-group.visible{animation:none;}}
+</style>
 
 <!-- ===================== HERO ===================== -->
 <section class="hero-gradient relative overflow-hidden min-h-[80vh] flex items-center">
@@ -77,7 +127,7 @@ title: Inicio
 <section class="py-16 bg-white" id="por-que-confiar">
   <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="grid md:grid-cols-2 gap-10 items-center">
-      <div class="reveal text-center md:text-left">
+      <div class="reveal-left text-center md:text-left">
         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-800 mb-3">
           <svg class="w-3.5 h-3.5 mr-1 text-amber-600" fill="currentColor" viewBox="0 0 20 20"><path d="M10 1l2.39 4.84L17.7 6.6l-3.85 3.75.91 5.3L10 13.15l-4.76 2.5.91-5.3L2.3 6.6l5.31-.76L10 1z"/></svg>
           Para tu Evaluación Docente · Credencial verificable
@@ -94,7 +144,7 @@ title: Inicio
           Ver el certificado completo (PDF)
         </a>
       </div>
-      <div class="reveal flex justify-center">
+      <div class="reveal-right flex justify-center">
         <figure class="w-full max-w-md">
           <a href="/imagenes/certificado-tramo-experto-muestra.pdf" target="_blank" rel="noopener" title="Abrir el certificado en grande (PDF)">
             <img src="/imagenes/certificado-tramo-experto-muestra.png" alt="Certificado de tramo EXPERTO I — CPEIP, Ministerio de Educación (muestra)" loading="lazy"
@@ -177,7 +227,7 @@ title: Inicio
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">Cada módulo es preparado con dedicación, siguiendo al pie de la letra los requerimientos del manual DocenteMás 2026.</p>
     </div>
 
-    <div class="grid md:grid-cols-3 gap-8">
+    <div class="grid md:grid-cols-3 gap-8 reveal-group">
       <!-- Módulo 1 -->
       <div class="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 card-hover reveal">
         <div class="module-icon bg-blue-100 text-blue-600 mb-6">
@@ -678,7 +728,7 @@ title: Inicio
           <div class="bg-white rounded-2xl border-2 border-indigo-100 shadow-sm p-6">
             <h3 class="font-heading font-bold text-gray-900 text-lg mb-1">🤖 Recién ahí entra la IA: 14 agentes revisan tu borrador</h3>
             <p class="text-sm text-gray-600 mb-4">No es "preguntarle a un chatbot". Son <strong>14 agentes especializados mediante LLM</strong> (modelos de lenguaje de gran escala), cada uno entrenado para auditar una cosa distinta de tu portafolio:</p>
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 text-[11px] sm:text-xs">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 reveal-group text-[11px] sm:text-xs">
               <div class="bg-indigo-50 rounded-lg p-2.5"><strong class="text-indigo-800 block">1 · Ortografía</strong><span class="text-gray-600">tildes, gramática y puntuación impecables</span></div>
               <div class="bg-indigo-50 rounded-lg p-2.5"><strong class="text-indigo-800 block">2 · Rúbrica Módulo 1</strong><span class="text-gray-600">contrasta cada respuesta con la rúbrica de planificación</span></div>
               <div class="bg-indigo-50 rounded-lg p-2.5"><strong class="text-indigo-800 block">3 · Rúbrica Módulo 2</strong><span class="text-gray-600">audita la ficha y la preparación de tu clase grabada</span></div>
@@ -741,7 +791,7 @@ title: Inicio
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">Conoce nuestras opciones de servicio. Al pre-inscribirte aseguras tu cupo y orden de atención. <strong>El portafolio se elabora una vez realizado el pago</strong> (puedes abonar el monto que prefieras).</p>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-12 reveal-group">
 
       <!-- Módulo 1 -->
       <div class="bg-white rounded-2xl p-6 border border-gray-200 card-hover reveal">
@@ -856,7 +906,7 @@ title: Inicio
       <p class="text-lg text-gray-600 max-w-2xl mx-auto">Un proceso simple y transparente, de principio a fin.</p>
     </div>
 
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 reveal-group">
       <div class="text-center reveal">
         <div class="w-16 h-16 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl font-heading font-bold">1</div>
         <h3 class="font-heading font-bold text-gray-900 mb-2">Crea tu Cuenta</h3>
@@ -1011,16 +1061,18 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }, { threshold: 0.1 });
 
-  document.querySelectorAll('.reveal').forEach(function(el) {
+  document.querySelectorAll('.reveal, .reveal-left, .reveal-right, .reveal-group').forEach(function(el) {
     observer.observe(el);
   });
 
-  // Barra de progreso de lectura (línea guía)
+  // Barra de progreso + WISP (la luz que baja con el scroll)
   var _sp = document.getElementById('scroll-progress');
+  var _wisp = document.getElementById('guide-wisp');
   function _updateProgress() {
-    if (!_sp) return;
     var h = document.documentElement.scrollHeight - window.innerHeight;
-    _sp.style.width = (h > 0 ? Math.min(100, (window.scrollY / h) * 100) : 0) + '%';
+    var p = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+    if (_sp) _sp.style.width = (p * 100) + '%';
+    if (_wisp) _wisp.style.top = (14 + p * 74) + 'vh';
   }
   window.addEventListener('scroll', _updateProgress, { passive: true });
   window.addEventListener('resize', _updateProgress);

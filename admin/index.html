@@ -64,6 +64,7 @@
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pagos">💰 Pagos <span id="pagos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-red-500 text-white">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="preinscritos">📋 Pre-Inscritos <span id="preinscritos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-amber-500 text-white">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="entregados">📦 Portafolios entregados <span id="entregados-count" class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">0</span></button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="detalle">🗓️ Detalle / Avance</button>
                 </nav>
             </div>
         </div>
@@ -240,6 +241,15 @@
                 <p class="text-sm text-gray-500 mt-1">Inscritos que <b>no han llenado (casi) nada</b>. Pregúntales si van a querer el servicio o necesitan más tiempo, para <b>liberar el cupo</b>. El botón abre WhatsApp con el mensaje listo.</p>
             </div>
             <div id="sindatos-list"></div>
+        </div>
+
+        <div id="tab-detalle" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold text-gray-800">🗓️ Detalle de inscritos — fechas y avance</h2>
+                <p class="text-sm text-gray-500 mt-1">Todos los inscritos: cuándo se inscribieron, cuándo pagaron, cuándo dejaron sus datos y cuánto del formulario llevan completo. Haz clic en un encabezado para ordenar.</p>
+            </div>
+            <div id="detalle-resumen" class="flex flex-wrap gap-3 mb-4"></div>
+            <div id="detalle-list"></div>
         </div>
 
         <div id="tab-preinscritos" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1080,6 +1090,50 @@
             renderPayments();
             renderPreinscritos();
             renderEntregados();
+            renderDetalle();
+        }
+
+        // ===== DETALLE / AVANCE DE INSCRITOS =====
+        var _detalleSort = { key: 'insc', dir: -1 };
+        var DETALLE_CAMPOS = ['asignatura','curso','colegio','comuna','region','numAlumnos','nivel','tipoColegio','generoColegio','ive','sellos','codocentePIE','tipoNEE','conocimientos','conocimientosPrevios','fortalezas','dificultades','unidad','ejeCurricular','objetivoAprendizaje','recursos','intereses','listaAlumnos','descripcion'];
+        function _lleno(v){ var s=(v===undefined||v===null)?'':String(v).trim(); return s!==''&&s!=='0'; }
+        function _ts(d){ if(!d) return 0; var x=new Date(d); return isNaN(x)?0:x.getTime(); }
+        function _fc(ts){ return ts ? fechaCorta(new Date(ts).toISOString()) : '\u2014'; }
+        window.sortDetalle = function(k){ if(_detalleSort.key===k) _detalleSort.dir*=-1; else { _detalleSort.key=k; _detalleSort.dir=(k==='nombre'?1:-1); } renderDetalle(); };
+        function renderDetalle(){
+            var cont=document.getElementById('detalle-list'); if(!cont) return;
+            var rows=[];
+            Object.keys(allClients||{}).forEach(function(uid){
+                var u=allClients[uid]||{}; if((u.role||'')==='admin') return;
+                var p=(allPortafolios||{})[uid]||{}; var d=p.datosPortafolio||{};
+                var fill=DETALLE_CAMPOS.filter(function(k){return _lleno(d[k]);}).length;
+                var pct=Math.round(100*fill/DETALLE_CAMPOS.length);
+                rows.push({ uid:uid, nombre:u.nombre||'(sin nombre)', insc:_ts(u.createdAt)||_ts(p.createdAt), pag:_ts(p.paidAt), dat:Math.max(_ts(d.completadoEn),_ts(d.actualizadoEn)), pct:pct, pagado:haPagado(p), gancho:(typeof M1_GANCHO_UIDS!=='undefined'&&M1_GANCHO_UIDS.indexOf(uid)>=0) });
+            });
+            var nPag=rows.filter(function(r){return r.pagado;}).length;
+            var nDatos=rows.filter(function(r){return r.dat>0;}).length;
+            var prom=rows.length?Math.round(rows.reduce(function(a,r){return a+r.pct;},0)/rows.length):0;
+            var n0=rows.filter(function(r){return r.pct===0;}).length;
+            function chip(lbl,val,cls){ return '<div class="bg-white rounded-xl border border-gray-200 px-4 py-2"><div class="text-xs text-gray-500">'+lbl+'</div><div class="text-lg font-bold '+(cls||'text-gray-800')+'">'+val+'</div></div>'; }
+            var res=document.getElementById('detalle-resumen'); if(res) res.innerHTML = chip('Inscritos',rows.length)+chip('Pagaron',nPag,'text-emerald-600')+chip('Con datos',nDatos,'text-indigo-600')+chip('Avance promedio',prom+'%','text-amber-600')+chip('Sin datos (0%)',n0,'text-rose-600');
+            var k=_detalleSort.key, dir=_detalleSort.dir;
+            rows.sort(function(a,b){ var av=k==='nombre'?a.nombre.toLowerCase():a[k]; var bv=k==='nombre'?b.nombre.toLowerCase():b[k]; if(av<bv)return -dir; if(av>bv)return dir; return 0; });
+            function arrow(key){ return _detalleSort.key===key ? (_detalleSort.dir<0?' \u25be':' \u25b4') : ''; }
+            function th(key,lbl){ return '<th onclick="sortDetalle(\''+key+'\')" class="px-3 py-2.5 cursor-pointer select-none hover:text-primary-600">'+lbl+arrow(key)+'</th>'; }
+            function pbar(p){ var col=p>=70?'bg-emerald-500':p>=30?'bg-amber-500':'bg-rose-500'; var tc=p>=70?'text-emerald-700':p>=30?'text-amber-700':'text-rose-700'; return '<div class="flex items-center gap-2"><div class="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden"><div class="h-full '+col+'" style="width:'+p+'%"></div></div><span class="text-xs font-semibold '+tc+'">'+p+'%</span></div>'; }
+            var h='<div class="overflow-x-auto bg-white rounded-xl border border-gray-200"><table class="w-full text-sm"><thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase">'
+                + th('nombre','Docente') + th('insc','Inscrito') + th('pag','Pag\u00f3') + th('dat','Dej\u00f3 datos') + th('pct','Avance') + '<th class="px-3 py-2.5">Estado</th></tr></thead><tbody>';
+            rows.forEach(function(r){
+                var est = r.pagado ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pag\u00f3</span>'
+                    : r.gancho ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">M1 gancho</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">Pre-inscrito</span>';
+                h += '<tr class="border-t border-gray-100"><td class="px-3 py-2.5 font-medium text-gray-800">'+r.nombre+'</td>'
+                    + '<td class="px-3 py-2.5 text-gray-600">'+_fc(r.insc)+'</td>'
+                    + '<td class="px-3 py-2.5 text-gray-600">'+(r.pag?_fc(r.pag):'<span class="text-gray-300">\u2014</span>')+'</td>'
+                    + '<td class="px-3 py-2.5 text-gray-600">'+(r.dat?_fc(r.dat):'<span class="text-gray-300">\u2014</span>')+'</td>'
+                    + '<td class="px-3 py-2.5">'+pbar(r.pct)+'</td><td class="px-3 py-2.5">'+est+'</td></tr>';
+            });
+            cont.innerHTML = h + '</tbody></table></div>';
         }
 
         // ===== PORTAFOLIOS ENTREGADOS (borradores) =====

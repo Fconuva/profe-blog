@@ -1510,9 +1510,12 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 total++;
-                if (c.status === 'pre-inscrito' && (!p.plan || p.plan === 'pre-inscripcion')) preInscrito++;
                 var price = getPlanPrice(p.plan);
-                var esPlanReal = p.plan && p.plan !== 'pre-inscripcion' && price > 0;
+                var pagoReal = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
+                if (c.status === 'pre-inscrito' && (!p.plan || p.plan === 'pre-inscripcion') && !pagoReal) preInscrito++;
+                // Plan real: plan de pago contratado, O ya pagó algo aunque su 'plan' haya quedado como 'pre-inscripcion'.
+                var esPlanReal = (p.plan && p.plan !== 'pre-inscripcion' && price > 0) || pagoReal;
+                if (esPlanReal && !(price > 0)) price = 199990;
                 if (p.paymentStatus === 'gratis') {
                     // Portafolio regalado: cuenta como cliente activo pero NO suma dinero.
                     paid++;
@@ -1529,7 +1532,7 @@
                         var abono = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 100000;
                         paidRevenue += abono;
                         paid++; paidCount++;
-                        var saldoAb = (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : Math.max(0, price - abono);
+                        var saldoAb = (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0) ? p.saldoPendiente : Math.max(0, price - abono);
                         if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
                     } else {
                         // POR COBRAR: plan contratado, aún sin pagar.

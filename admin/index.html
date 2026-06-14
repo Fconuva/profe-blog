@@ -1107,7 +1107,7 @@
             var rows=[];
             Object.keys(allClients||{}).forEach(function(uid){
                 var u=allClients[uid]||{}; if((u.role||'')==='admin') return;
-                var p=(allPortafolios||{})[uid]||{}; var d=p.datosPortafolio||{};
+                var p=(allPortafolios||{})[uid]||{}; if(p.archivado||u.archivado) return; var d=p.datosPortafolio||{};
                 var fill=DETALLE_CAMPOS.filter(function(k){return _lleno(d[k]);}).length;
                 var pct=Math.round(100*fill/DETALLE_CAMPOS.length);
                 rows.push({ uid:uid, nombre:u.nombre||'(sin nombre)', insc:_ts(u.createdAt)||_ts(p.createdAt), pag:_ts(p.paidAt)||_ts(p.paymentConfirmedAt)||_ts(p.paymentVerifiedAt), dat:Math.max(_ts(d.completadoEn),_ts(d.actualizadoEn)), pct:pct, pagado:haPagado(p), gancho:(typeof M1_GANCHO_UIDS!=='undefined'&&M1_GANCHO_UIDS.indexOf(uid)>=0) });
@@ -1458,7 +1458,10 @@
 
         function getClientUids() {
             return Object.keys(allClients).filter(function(uid) {
-                return allClients[uid].role !== 'admin';
+                if (allClients[uid].role === 'admin') return false;
+                var _p = allPortafolios[uid];
+                if ((_p && _p.archivado) || allClients[uid].archivado) return false; // archivados no cuentan en stats
+                return true;
             }).sort(function(a, b) {
                 var cA = allClients[a];
                 var cB = allClients[b];

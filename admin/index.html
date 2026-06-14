@@ -1089,12 +1089,10 @@
         }
 
         function renderAll() {
-            renderDashboard();
-            renderClients();
-            renderPayments();
-            renderPreinscritos();
-            renderEntregados();
-            renderDetalle();
+            // Cada renderer aislado: si uno lanza error, no bloquea a los demás (en especial a renderDetalle, que va último).
+            [renderDashboard, renderClients, renderPayments, renderPreinscritos, renderEntregados, renderDetalle].forEach(function(fn) {
+                try { fn(); } catch (e) { console.error('renderAll · error en ' + (fn.name || 'render') + ':', e); }
+            });
         }
 
         // ===== DETALLE / AVANCE DE INSCRITOS =====
@@ -1112,7 +1110,7 @@
                 var p=(allPortafolios||{})[uid]||{}; var d=p.datosPortafolio||{};
                 var fill=DETALLE_CAMPOS.filter(function(k){return _lleno(d[k]);}).length;
                 var pct=Math.round(100*fill/DETALLE_CAMPOS.length);
-                rows.push({ uid:uid, nombre:u.nombre||'(sin nombre)', insc:_ts(u.createdAt)||_ts(p.createdAt), pag:_ts(p.paidAt), dat:Math.max(_ts(d.completadoEn),_ts(d.actualizadoEn)), pct:pct, pagado:haPagado(p), gancho:(typeof M1_GANCHO_UIDS!=='undefined'&&M1_GANCHO_UIDS.indexOf(uid)>=0) });
+                rows.push({ uid:uid, nombre:u.nombre||'(sin nombre)', insc:_ts(u.createdAt)||_ts(p.createdAt), pag:_ts(p.paidAt)||_ts(p.paymentConfirmedAt)||_ts(p.paymentVerifiedAt), dat:Math.max(_ts(d.completadoEn),_ts(d.actualizadoEn)), pct:pct, pagado:haPagado(p), gancho:(typeof M1_GANCHO_UIDS!=='undefined'&&M1_GANCHO_UIDS.indexOf(uid)>=0) });
             });
             var nPag=rows.filter(function(r){return r.pagado;}).length;
             var nDatos=rows.filter(function(r){return r.dat>0;}).length;

@@ -27,6 +27,10 @@
                 <p class="text-sm font-bold text-gray-900"><span id="user-name">Docente</span> <span id="user-email" class="font-normal text-gray-500"></span></p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+                <a id="mi-drive-btn" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-bold rounded-lg text-white hover:opacity-90 transition-colors inline-flex items-center gap-1.5" style="background-color:#0F9D58">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M4.433 22l2.327-4H22l-2.333 4H4.433zm4.032-5l-4.727-8h7.088L18 17H8.465zM13.2 2l4.726 8H10.84L6.116 2H13.2z"/></svg>
+                    Mi carpeta Drive
+                </a>
                 <button type="button" id="send-reset-email-btn" class="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition-colors">Cambiar contraseña</button>
                 <button type="button" id="logout-btn" class="px-3 py-2 text-xs font-semibold rounded-lg bg-gray-100 text-gray-700 border border-gray-200 hover:bg-gray-200 transition-colors">Cerrar sesión</button>
             </div>
@@ -1412,6 +1416,14 @@
                 // Now listen to portfolio data (userData is guaranteed loaded)
                 db.ref('portafolios/' + user.uid).on('value', function(pSnap) {
                     portData = pSnap.val() || {};
+                    // Botón "Mi carpeta Drive" en la barra superior — visible en todos los pasos, no solo en progreso.
+                    var _miDrive = document.getElementById('mi-drive-btn');
+                    if (_miDrive) {
+                        var _gd = (portData && portData.googleDrive) || {};
+                        var _dUrl = _gd.shareUrl || (_gd.folderId ? 'https://drive.google.com/drive/folders/' + _gd.folderId : '');
+                        if (_dUrl) { _miDrive.href = _dUrl; _miDrive.classList.remove('hidden'); }
+                        else { _miDrive.classList.add('hidden'); }
+                    }
                     // Mantener adjuntos M3 sincronizados con la base (incluso durante auto-save)
                     var _dp = (portData && portData.datosPortafolio) || {};
                     _adjuntosM3 = Array.isArray(_dp.adjuntosM3) ? _dp.adjuntosM3 : [];

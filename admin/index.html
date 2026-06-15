@@ -360,6 +360,18 @@
                 </div>
                 <div id="autosave-indicator" class="hidden text-xs text-gray-400 text-right"></div>
 
+                <!-- Avance de datos del docente (lo que escribió) -->
+                <div id="edit-completitud-wrap" class="hidden rounded-xl border p-4">
+                    <div class="flex items-center justify-between gap-3 mb-2">
+                        <h4 class="text-sm font-heading font-bold text-gray-800">📝 Avance del docente — datos completados</h4>
+                        <span id="edit-completitud-pct" class="text-xl font-heading font-bold">0%</span>
+                    </div>
+                    <div class="w-full h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div id="edit-completitud-bar" class="h-full rounded-full transition-all duration-500" style="width:0%"></div>
+                    </div>
+                    <p id="edit-completitud-detalle" class="text-xs text-gray-500 mt-2"></p>
+                </div>
+
                 <!-- Section 1: Client Info (Editable) -->
                 <div class="bg-gray-50 rounded-xl p-4">
                     <h4 class="text-xs font-bold text-gray-500 uppercase mb-3">Información del Cliente <span class="text-gray-400 font-normal">(editable)</span></h4>
@@ -591,6 +603,12 @@
                     </div>
                 </div>
 
+                <!-- Section 5-7: Gestión interna (solo admin) — plegado por defecto -->
+                <details id="edit-gestion-interna" class="rounded-xl border border-gray-200 bg-gray-50">
+                    <summary class="cursor-pointer select-none px-4 py-3 font-heading font-semibold text-sm text-gray-700 hover:bg-gray-100 rounded-xl flex items-center gap-2">
+                        ⚙️ Gestión interna del avance <span class="font-normal text-gray-400 text-xs">(estado de módulos, notas y carpeta — solo admin)</span>
+                    </summary>
+                    <div class="p-4 pt-0 space-y-6">
                 <!-- Section 5: Module Editors -->
                 <!-- Module 1 -->
                 <div class="bg-blue-50 rounded-xl p-4">
@@ -695,6 +713,8 @@
                         <a id="edit-gdrive-open" href="#" target="_blank" rel="noopener" class="hidden px-3 py-2 text-xs font-medium rounded-lg text-white transition-colors flex items-center gap-1" style="background-color:#0F9D58">Abrir</a>
                     </div>
                 </div>
+                    </div>
+                </details>
 
                 <!-- Save -->
                 <div class="flex gap-3 pt-2 sticky bottom-0 bg-white py-4 border-t border-gray-200 -mx-6 px-6">
@@ -1421,6 +1441,37 @@
             return total === 0 ? 0 : Math.round((done / total) * 100);
         }
 
+        // Completitud del FORMULARIO (cuánta info declaró el docente, lo que escribió)
+        function calcFormCompletitud(p) {
+            var dp = (p && p.datosPortafolio) || null;
+            var cq = (p && p.cuestionarioModulos) || {};
+            var q1 = cq.modulo1 || {};
+            if (!dp && !cq.modulo1) return { pct: 0, done: 0, total: 16, faltan: ['Aún no completa sus datos'] };
+            dp = dp || {};
+            var campos = [
+                ['Manual', dp.nivel],
+                ['Asignatura / referente', dp.asignatura],
+                ['Colegio', dp.colegio],
+                ['Comuna', dp.comuna],
+                ['Región', dp.region],
+                ['Curso', dp.curso],
+                ['N° de alumnos', dp.numAlumnos],
+                ['Objetivo de Aprendizaje', dp.objetivoAprendizaje || q1.oa],
+                ['Unidad / eje', dp.unidad || dp.ejeCurricular || q1.unidad],
+                ['Conocimientos previos', dp.conocimientosPrevios],
+                ['Fortalezas del curso', dp.fortalezas],
+                ['Dificultades del curso', dp.dificultades],
+                ['Lista de alumnos', dp.listaAlumnos || (dp.listaArchivo && dp.listaArchivo.downloadUrl)],
+                ['Recursos en el aula', dp.recursos],
+                ['Intereses del curso', dp.intereses || dp.interesesMusica || dp.interesesDeporte || dp.interesesVideojuegos],
+                ['Sellos / PEI', dp.sellos]
+            ];
+            function filled(v) { return v !== undefined && v !== null && String(v).trim() !== ''; }
+            var done = campos.filter(function(c) { return filled(c[1]); });
+            var faltan = campos.filter(function(c) { return !filled(c[1]); }).map(function(c) { return c[0]; });
+            return { pct: Math.round(done.length / campos.length * 100), done: done.length, total: campos.length, faltan: faltan };
+        }
+
         function paymentBadge(status, confirmedAt, comprobante) {
             if (status === 'approved' || status === 'aprobado') {
                 var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-700">Aprobado ✓</span>';
@@ -1975,6 +2026,25 @@
             currentEditUid = uid;
             var c = allClients[uid] || {};
             var p = allPortafolios[uid] || {};
+
+            // Avance del docente — % de datos que escribió en su formulario
+            (function() {
+                var comp = calcFormCompletitud(p);
+                var wrap = document.getElementById('edit-completitud-wrap');
+                var col = comp.pct >= 70 ? '#10b981' : comp.pct >= 30 ? '#f59e0b' : '#f43f5e';
+                wrap.classList.remove('hidden');
+                wrap.style.borderColor = comp.pct >= 70 ? '#a7f3d0' : comp.pct >= 30 ? '#fde68a' : '#fecdd3';
+                wrap.style.backgroundColor = comp.pct >= 70 ? '#ecfdf5' : comp.pct >= 30 ? '#fffbeb' : '#fff1f2';
+                var pctEl = document.getElementById('edit-completitud-pct');
+                pctEl.textContent = comp.pct + '%';
+                pctEl.style.color = col;
+                var bar = document.getElementById('edit-completitud-bar');
+                bar.style.width = comp.pct + '%';
+                bar.style.backgroundColor = col;
+                document.getElementById('edit-completitud-detalle').textContent =
+                    comp.done + ' de ' + comp.total + ' datos clave' +
+                    (comp.faltan.length ? ' · Falta: ' + comp.faltan.join(', ') : ' · ¡Datos completos!');
+            })();
 
             document.getElementById('edit-uid').value = uid;
             document.getElementById('modal-title').textContent = (c.nombre || 'Cliente');

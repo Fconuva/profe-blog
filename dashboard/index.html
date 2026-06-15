@@ -205,6 +205,8 @@
                             </div>
                         </div>
                         <div id="tip-manual" class="hidden mt-4"></div>
+                        <!-- Bloque adaptativo por manual: datos clave + preguntas de rúbrica + OA oficial -->
+                        <div id="manual-adaptive" class="hidden mt-4 space-y-4"></div>
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mt-4">
                             <div>
                                 <label for="pdp-curso" class="block text-sm font-medium text-gray-700 mb-1">Curso a evaluar <span class="ml-1.5 inline-block px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 align-middle">Obligatorio</span></label>
@@ -1268,6 +1270,9 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
+    <!-- OA oficiales (Bases Curriculares) + spec por manual para adaptar el formulario a cada rúbrica -->
+    <script src="/js/oa-data.js"></script>
+    <script src="/js/manual-spec.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
@@ -2716,12 +2721,157 @@
                 '</div>';
         }
 
-        // Toggle pdp-nivel-otro if pdp-nivel is "Otro" + tips por manual
+        // ===== MOTOR ADAPTATIVO POR MANUAL (mirando el manual: datos clave + preguntas de rúbrica + OA oficial) =====
+        function msEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];}); }
+        function _manualSpecKey(s){
+            s=(s||'').toLowerCase();
+            if(s.indexOf('parvular')>=0) return 'parvularia';
+            if(s.indexOf('técnico')>=0||s.indexOf('tecnico')>=0||s.indexOf('profesional')>=0) return 'tp';
+            if(s.indexOf('encierro')>=0) return 'encierro';
+            if(s.indexOf('jóvenes')>=0||s.indexOf('jovenes')>=0||s.indexOf('adultas')>=0||s.indexOf('epja')>=0) return 'epja';
+            if(s.indexOf('generalista')>=0) return 'generalista';
+            if(s.indexOf('especial')>=0&&s.indexOf('regular')>=0) return 'especial_regular';
+            if(s.indexOf('especial')>=0) return 'especial_especial';
+            if(s.indexOf('7')>=0||s.indexOf('media')>=0||s.indexOf('8')>=0) return 'asignaturas_media';
+            if(s.indexOf('asignatura')>=0||s.indexOf('básica')>=0||s.indexOf('basica')>=0) return 'asignaturas_basica';
+            return null;
+        }
+        function _oaAsigKey(name){
+            var s=(name||'').toLowerCase();
+            if(typeof OA_DATA==='undefined') return null;
+            if(s.indexOf('literatura')>=0 && OA_DATA.lengua_literatura) return 'lengua_literatura';
+            if((s.indexOf('lengua')>=0||s.indexOf('lenguaje')>=0) && OA_DATA.lenguaje) return 'lenguaje';
+            if(s.indexOf('matem')>=0 && OA_DATA.matematica) return 'matematica';
+            if(s.indexOf('historia')>=0 && OA_DATA.historia) return 'historia';
+            if((s.indexOf('ciencias nat')>=0||s.indexOf('biolog')>=0||s.indexOf('físic')>=0||s.indexOf('fisic')>=0||s.indexOf('quím')>=0||s.indexOf('quim')>=0) && OA_DATA.ciencias) return 'ciencias';
+            if((s.indexOf('inglés')>=0||s.indexOf('ingles')>=0) && OA_DATA.ingles) return 'ingles';
+            return null;
+        }
+        function _oaCursoLabel(c){ return /M$/.test(c) ? c.replace('M','° medio') : c.replace('B','° básico'); }
+        function buildOAPicker(targetId, asigKey){
+            if(typeof OA_DATA==='undefined' || !OA_DATA[asigKey]) return '';
+            var data=OA_DATA[asigKey];
+            var opts=Object.keys(data.cursos).map(function(c){ return '<option value="'+c+'">'+msEsc(_oaCursoLabel(c))+'</option>'; }).join('');
+            return '<div class="mt-2 rounded-xl border border-indigo-200 bg-indigo-50 p-3" data-oapicker="'+targetId+'" data-asig="'+asigKey+'">'+
+                '<p class="text-xs font-semibold text-indigo-800 mb-2">🔎 Elige tu OA oficial ('+msEsc(data.label)+') y se copia arriba — así no lo escribes a mano</p>'+
+                '<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">'+
+                '<select class="oap-curso px-3 py-2 border border-indigo-200 rounded-lg text-sm bg-white"><option value="">Curso…</option>'+opts+'</select>'+
+                '<select class="oap-oa px-3 py-2 border border-indigo-200 rounded-lg text-sm bg-white"><option value="">Primero elige el curso…</option></select>'+
+                '</div></div>';
+        }
+        function _wireOAPickers(scope){
+            (scope||document).querySelectorAll('[data-oapicker]').forEach(function(p){
+                if(p._wired) return; p._wired=true;
+                var asig=p.getAttribute('data-asig'), target=p.getAttribute('data-oapicker');
+                var cur=p.querySelector('.oap-curso'), oa=p.querySelector('.oap-oa');
+                cur.addEventListener('change', function(){
+                    var list=(OA_DATA[asig]&&OA_DATA[asig].cursos[cur.value])||[];
+                    oa.innerHTML='<option value="">'+(list.length?'Elige tu OA…':'(elige curso)')+'</option>'+list.map(function(o,i){ var lbl=o.c+' — '+o.t; return '<option value="'+i+'">'+msEsc(lbl.length>120?lbl.slice(0,120)+'…':lbl)+'</option>'; }).join('');
+                });
+                oa.addEventListener('change', function(){
+                    var list=(OA_DATA[asig]&&OA_DATA[asig].cursos[cur.value])||[]; var o=list[parseInt(oa.value)];
+                    if(o){ var t=document.getElementById(target); if(t){ t.value=o.c+' — '+o.t; t.dispatchEvent(new Event('input',{bubbles:true})); } }
+                });
+            });
+        }
+        function _mountAsigOAPicker(asigName){
+            var slot=document.querySelector('#manual-adaptive [data-oaslot="me-oa"]'); if(!slot) return;
+            var key=_oaAsigKey(asigName);
+            slot.innerHTML = key ? buildOAPicker('me-oa', key) : '';
+            if(key) _wireOAPickers(slot);
+        }
+        function _renderCampo(prefix, c, spec){
+            var id=prefix+'-'+c.id;
+            var req=c.obligatorio?' <span class="text-rose-600">*</span>':'';
+            var lab='<label class="block text-sm font-medium text-gray-700 mb-1" for="'+id+'">'+msEsc(c.label)+req+'</label>';
+            var ayuda=c.ayuda?'<p class="text-xs text-gray-500 mb-1">ⓘ '+msEsc(c.ayuda)+'</p>':'';
+            var ej=c.ejemplo?'<p class="text-xs text-indigo-600 mt-1">Ejemplo: <span class="italic">'+msEsc(c.ejemplo)+'</span></p>':'';
+            var base='w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none';
+            var ph=c.ejemplo?('Ej: '+c.ejemplo):'';
+            var attrs='id="'+id+'" data-'+prefix+'="'+c.id+'" data-label="'+msEsc(c.label)+'"'+(c.obligatorio?' data-req="1"':'');
+            var field;
+            if(c.tipo==='select'){
+                field='<select '+attrs+' class="'+base+' bg-white"><option value="">Selecciona…</option>'+(c.opciones||[]).map(function(o){return '<option>'+msEsc(o)+'</option>';}).join('')+'</select>';
+            } else if(c.tipo==='number'){
+                field='<input type="number" '+attrs+' class="'+base+'" placeholder="'+msEsc(ph)+'">';
+            } else if(c.tipo==='textarea'){
+                field='<textarea '+attrs+' rows="2" class="'+base+' resize-y" placeholder="'+msEsc(ph)+'"></textarea>';
+            } else {
+                field='<input type="text" '+attrs+' class="'+base+'" placeholder="'+msEsc(ph)+'">';
+            }
+            var picker='';
+            var oaFieldIds=['oa','oaLenguaje','oaMatematica'];
+            if(spec.oaPicker && spec.oaPicker.modo!=='libre' && oaFieldIds.indexOf(c.id)>=0){
+                if(spec.oaPicker.modo==='fijo'){
+                    var k=c.id==='oaMatematica'?spec.oaPicker.m2:spec.oaPicker.m1;
+                    picker=buildOAPicker(id,k);
+                } else { picker='<div data-oaslot="'+id+'"></div>'; }
+            }
+            return '<div>'+lab+ayuda+field+picker+ej+'</div>';
+        }
+        function _applyEjemplosComunes(ej){
+            var map={ 'pdp-conocimientos':'conocimientosPrevios','pdp-fortalezas':'fortalezas','pdp-dificultades':'dificultades' };
+            Object.keys(map).forEach(function(fid){ var el=document.getElementById(fid); if(el && ej && ej[map[fid]]) el.setAttribute('placeholder','Ej: '+ej[map[fid]]); });
+        }
+        function _restoreManualExtra(){
+            var dp=(typeof portData!=='undefined' && portData && portData.datosPortafolio)||{};
+            var cm=dp.camposManual||{}, pm=dp.preguntasManual||{};
+            Object.keys(cm).forEach(function(k){ var el=document.getElementById('me-'+k); if(el) el.value=(cm[k]&&cm[k].valor!=null?cm[k].valor:cm[k])||''; });
+            Object.keys(pm).forEach(function(k){ var el=document.getElementById('mq-'+k); if(el) el.value=(pm[k]&&pm[k].valor!=null?pm[k].valor:pm[k])||''; });
+            var asig=document.getElementById('me-asignatura'); if(asig && asig.value) _mountAsigOAPicker(asig.value);
+        }
+        function applyManualSpec(manualStr){
+            var box=document.getElementById('manual-adaptive'); if(!box) return;
+            if(typeof MANUAL_SPEC==='undefined'){ box.classList.add('hidden'); return; }
+            var key=_manualSpecKey(manualStr);
+            var spec=key && MANUAL_SPEC[key];
+            if(!spec){ box.classList.add('hidden'); box.innerHTML=''; _applyEjemplosComunes(null); return; }
+            var html='';
+            html+='<div class="rounded-2xl p-4" style="background:#fffbeb;border:2px solid #f59e0b">'+
+                '<p class="text-xs font-bold uppercase tracking-wide" style="color:#b45309">📋 Cómo pide la información tu manual — '+msEsc(spec.label)+'</p>'+
+                '<p class="text-sm mt-1" style="color:#78350f">'+msEsc(spec.aviso)+'</p>'+
+                '<div class="flex flex-wrap gap-2 mt-2 text-xs">'+
+                '<span class="px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800">⏱️ Clases M1: '+msEsc(spec.duracionM1)+'</span>'+
+                '<span class="px-2 py-1 rounded-lg bg-white border border-amber-200 text-amber-800">📹 Grabada: '+msEsc(spec.duracionGrabada)+'</span>'+
+                '</div></div>';
+            html+='<div class="rounded-2xl border border-indigo-200 p-4" style="background:#f5f7ff"><p class="font-heading font-bold text-indigo-900 mb-1">📝 Datos clave de tu manual</p>'+
+                '<p class="text-xs text-gray-500 mb-3">Referente: '+msEsc(spec.referente)+'</p><div class="space-y-3">';
+            spec.camposEspeciales.forEach(function(c){ html+=_renderCampo('me',c,spec); });
+            html+='</div></div>';
+            if(spec.preguntasRubrica && spec.preguntasRubrica.length){
+                html+='<div class="rounded-2xl border border-emerald-200 p-4" style="background:#ecfdf5"><p class="font-heading font-bold text-emerald-900 mb-1">🎯 Preguntas que apuntan a tu rúbrica</p>'+
+                    '<p class="text-xs text-gray-500 mb-3">Responde breve y concreto: con esto tu portafolio queda único y alineado a lo que evalúan (Competente/Destacado).</p><div class="space-y-3">';
+                spec.preguntasRubrica.forEach(function(q){ html+=_renderCampo('mq',q,spec); });
+                html+='</div></div>';
+            }
+            box.innerHTML=html;
+            box.classList.remove('hidden');
+            _wireOAPickers(box);
+            var asigSel=document.getElementById('me-asignatura');
+            if(asigSel && spec.oaPicker && spec.oaPicker.modo==='asignatura'){ asigSel.addEventListener('change', function(){ _mountAsigOAPicker(this.value); }); }
+            _applyEjemplosComunes(spec.ejemplosCampoComun);
+            _restoreManualExtra();
+            if (typeof updateCompletitud === 'function') updateCompletitud();
+        }
+        function collectManualExtra(){
+            var campos={}, preguntas={};
+            document.querySelectorAll('#manual-adaptive [data-me]').forEach(function(el){ var v=(el.value||'').trim(); if(v) campos[el.getAttribute('data-me')]={label:el.getAttribute('data-label'),valor:v}; });
+            document.querySelectorAll('#manual-adaptive [data-mq]').forEach(function(el){ var v=(el.value||'').trim(); if(v) preguntas[el.getAttribute('data-mq')]={label:el.getAttribute('data-label'),valor:v}; });
+            return { campos:campos, preguntas:preguntas };
+        }
+        function manualPrimaryOA(){
+            var ids=['me-oa','me-oaLenguaje','me-ambitoOA','me-oaOf','me-objetivoCurricular','me-ambitoAreaOA','me-unidadPedagogica','me-oaAEcriterios'];
+            for(var i=0;i<ids.length;i++){ var el=document.getElementById(ids[i]); if(el && el.value.trim()) return el.value.trim(); }
+            return '';
+        }
+
+        // Toggle pdp-nivel-otro if pdp-nivel is "Otro" + tips + bloque adaptativo por manual
         document.getElementById('pdp-nivel').addEventListener('change', function() {
             document.getElementById('pdp-nivel-otro').classList.toggle('hidden', this.value !== 'Otro');
-            renderTipManual(this.value === 'Otro' ? document.getElementById('pdp-nivel-otro').value : this.value);
+            var mstr = this.value === 'Otro' ? document.getElementById('pdp-nivel-otro').value : this.value;
+            renderTipManual(mstr); applyManualSpec(mstr);
         });
-        document.getElementById('pdp-nivel-otro').addEventListener('input', function() { renderTipManual(this.value); });
+        document.getElementById('pdp-nivel-otro').addEventListener('input', function() { renderTipManual(this.value); applyManualSpec(this.value); });
 
         // "Otro" handler for tipo colegio
         document.getElementById('pdp-tipo-colegio').addEventListener('change', function() {
@@ -2768,8 +2918,13 @@
             var asigVal = document.getElementById('pdp-asignatura').value.trim();
             var tipoColegioVal = document.getElementById('pdp-tipo-colegio').value;
             if (tipoColegioVal === 'Otro') tipoColegioVal = document.getElementById('pdp-tipo-colegio-otro').value.trim() || 'Otro';
+            var _meX = (typeof collectManualExtra === 'function') ? collectManualExtra() : { campos: {}, preguntas: {} };
+            var _prevDp = (portData && portData.datosPortafolio) || {};
             return {
                 nivel: nivelVal,
+                camposManual: _meX.campos,
+                preguntasManual: _meX.preguntas,
+                objetivoAprendizaje: (typeof manualPrimaryOA === 'function' ? manualPrimaryOA() : '') || _prevDp.objetivoAprendizaje || '',
                 asignatura: asigVal,
                 colegio: document.getElementById('pdp-colegio').value.trim(),
                 tipoColegio: tipoColegioVal,
@@ -2953,17 +3108,24 @@
             function val(id){ var el=document.getElementById(id); return el ? String(el.value||'').trim() : ''; }
             var faltanHard = hard.filter(function(f){ return !val(f[0]); });
             var faltanClave = clave.filter(function(f){ return !val(f[0]); });
-            var okHard = hard.length - faltanHard.length;
-            var pct = Math.round((okHard / hard.length) * 100);
-            if (faltanHard.length === 0 && faltanClave.length === 0) {
+            // Campos OBLIGATORIOS del manual (bloque adaptativo)
+            var manualReq = document.querySelectorAll('#manual-adaptive [data-req="1"]');
+            var faltanManual = [];
+            manualReq.forEach(function(el){ if(!String(el.value||'').trim()) faltanManual.push(el.getAttribute('data-label')||'dato del manual'); });
+            var totalHard = hard.length + manualReq.length;
+            var faltanHardTotal = faltanHard.length + faltanManual.length;
+            var okHard = totalHard - faltanHardTotal;
+            var pct = Math.round((okHard / totalHard) * 100);
+            if (faltanHardTotal === 0 && faltanClave.length === 0) {
                 panel.className = 'rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800';
                 panel.innerHTML = '<strong>\u2705 \u00a1Tu portafolio va a quedar excelente!</strong> Completaste todos los datos clave. Puedes continuar con confianza.';
                 return;
             }
             panel.className = 'rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900';
-            var h = '<div class="flex items-center justify-between mb-1.5"><strong>Datos obligatorios: ' + okHard + ' de ' + hard.length + '</strong><span class="text-xs font-semibold">' + pct + '%</span></div>'
+            var h = '<div class="flex items-center justify-between mb-1.5"><strong>Datos obligatorios: ' + okHard + ' de ' + totalHard + '</strong><span class="text-xs font-semibold">' + pct + '%</span></div>'
                 + '<div class="w-full h-1.5 bg-amber-200 rounded-full overflow-hidden mb-2"><div class="h-full bg-amber-500 transition-all" style="width:' + pct + '%"></div></div>';
-            if (faltanHard.length) h += '<p>\u26a0\ufe0f <strong>Te falta (obligatorio):</strong> ' + faltanHard.map(function(f){return f[1];}).join(', ') + '.</p>';
+            var faltanObl = faltanHard.map(function(f){return f[1];}).concat(faltanManual);
+            if (faltanObl.length) h += '<p>\u26a0\ufe0f <strong>Te falta (obligatorio):</strong> ' + faltanObl.join(', ') + '.</p>';
             if (faltanClave.length) h += '<p class="text-indigo-800 mt-1">\ud83d\udca1 Para un portafolio a\u00fan mejor, agrega: ' + faltanClave.map(function(f){return f[1];}).join(', ') + '.</p>';
             panel.innerHTML = h;
         }

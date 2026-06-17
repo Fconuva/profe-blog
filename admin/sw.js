@@ -1,4 +1,4 @@
-const ADMIN_CACHE = 'admin-portafolios-v1';
+const ADMIN_CACHE = 'admin-portafolios-v2';
 const ADMIN_ASSETS = [
   '/admin/',
   '/admin/index.html',
@@ -30,8 +30,11 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+  // HTML/navegaciones: SIEMPRE fresco de la red (sin caché HTTP), para que los cambios se vean al instante.
+  const isHTML = request.mode === 'navigate' || (request.headers.get('accept') || '').includes('text/html');
+  const net = isHTML ? fetch(request.url, { cache: 'no-store' }) : fetch(request);
   event.respondWith(
-    fetch(request)
+    net
       .then((response) => {
         const copy = response.clone();
         caches.open(ADMIN_CACHE).then((cache) => cache.put(request, copy));

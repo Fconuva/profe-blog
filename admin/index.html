@@ -1275,10 +1275,12 @@
                 var _creado = p.createdAt || u.createdAt || u.fechaRegistro || null; // solo molestar a los inscritos hace ≥11 días
                 if (_creado && (Date.now() - new Date(_creado).getTime()) < 11 * 86400000) return;
                 var dp = p.datosPortafolio || {};
+                var q1 = (p.cuestionarioModulos && p.cuestionarioModulos.modulo1) || {};
+                var hasOA = lleno(dp.objetivoAprendizaje) || lleno(q1.oa);
                 var c = CRIT.filter(function(k){ return lleno(dp[k]); }).length;
                 var i = IMP.filter(function(k){ return lleno(dp[k]); }).length;
-                if (c >= 6 && i > 2) return; // datos suficientes
-                rows.push({ uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '', c: c, i: i,
+                if (c >= 6 && i > 2 && hasOA) return; // datos suficientes Y con OA -> no se le molesta
+                rows.push({ uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '', c: c, i: i, faltaOA: !hasOA,
                     preguntado: p.seguimiento && p.seguimiento.interesPreguntado ? p.seguimiento.interesPreguntado.at : null });
             });
             rows.sort(function(a,b){ return (a.c + a.i) - (b.c + b.i); });
@@ -1291,7 +1293,7 @@
                 h += '<tr class="border-t border-gray-100">' +
                     '<td class="px-4 py-2.5 font-medium text-gray-800">' + r.nombre + '</td>' +
                     '<td class="px-4 py-2.5 text-gray-500">' + (r.tel || '—') + '</td>' +
-                    '<td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + (pct === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700') + '">' + (pct === 0 ? 'vacío total' : 'casi vacío (' + pct + '/16)') + '</span></td>' +
+                    '<td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + (pct === 0 ? 'bg-red-100 text-red-700' : (r.faltaOA ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700')) + '">' + (pct === 0 ? 'vacío total' : (r.faltaOA ? 'falta OA (' + pct + '/16)' : 'casi vacío (' + pct + '/16)')) + '</span></td>' +
                     '<td class="px-4 py-2.5 text-xs text-gray-400">' + (r.preguntado ? '✅ ' + fechaCorta(r.preguntado) : 'aún no') + '</td>' +
                     '<td class="px-4 py-2.5 text-right"><button onclick="preguntarInteres(\'' + r.uid + '\')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg">💬 Preguntar</button></td></tr>';
             });
@@ -1382,6 +1384,8 @@
                 var p = (allPortafolios || {})[uid] || {};
                 if (haPagado(p)) return; // si paga, pasa al flujo normal de entregados
                 var u = (allClients || {})[uid] || {};
+                var _cr = p.createdAt || u.createdAt || null; // no notificar el M1 a recién inscritos (<11 días): se asustan, no parece artesanal
+                if (_cr && (Date.now() - new Date(_cr).getTime()) < 11 * 86400000) return;
                 var dp = p.datosPortafolio || {};
                 var gd = p.googleDrive || {};
                 m1Rows.push({

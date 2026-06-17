@@ -244,6 +244,11 @@
                 <p class="text-sm text-gray-500 mt-1">Inscritos que <b>no han llenado (casi) nada</b>. Pregúntales si van a querer el servicio o necesitan más tiempo, para <b>liberar el cupo</b>. El botón abre WhatsApp con el mensaje listo.</p>
             </div>
             <div id="sindatos-list"></div>
+            <div class="mt-10 mb-4 border-t pt-6">
+                <h2 class="text-lg font-semibold text-gray-800">📝 Falta solo el OA — pedir el objetivo para armarles el Módulo 1</h2>
+                <p class="text-sm text-gray-500 mt-1">Inscritos hace ≥11 días que <b>llenaron sus datos pero NO declararon el Objetivo de Aprendizaje (OA)</b>. Es lo único que falta para construirles el M1. El botón abre WhatsApp pidiéndoles el OA (o la asignatura, curso y tema, y nosotros buscamos el OA oficial).</p>
+            </div>
+            <div id="faltaoa-list"></div>
         </div>
 
         <div id="tab-detalle" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1257,13 +1262,26 @@
             window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
             db.ref('portafolios/' + uid + '/seguimiento/interesPreguntado').set({ at: new Date().toISOString(), by: 'admin' });
         };
+        // ── Tienen datos pero falta el OA: pedir el objetivo para armar el M1 ──
+        window.preguntarOA = function (uid) {
+            var u = (allClients || {})[uid] || {};
+            var phone = normWaPhone(u.telefono);
+            if (!phone) { alert('Este docente no tiene teléfono registrado.'); return; }
+            var nombre = (u.nombre || '').split(' ')[0] || 'colega';
+            var msg = 'Hola ' + nombre + ' 👋 Te escribe el equipo del profe Francisco Núñez. ¡Gracias por dejar tus datos! 🙌\n\n' +
+                'Para armarte tu *Módulo 1* nos falta un solo dato clave: el *Objetivo de Aprendizaje (OA)* que vas a trabajar. 📘\n\n' +
+                'Si no lo tienes a mano, cuéntanos tu *asignatura, curso y el tema o unidad* que vas a enseñar, y nosotros buscamos el OA oficial por ti.\n\n' +
+                'Con eso te dejamos lista tu planificación. ¡Quedamos atentos! 💪';
+            window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
+            db.ref('portafolios/' + uid + '/seguimiento/oaPreguntado').set({ at: new Date().toISOString(), by: 'admin' });
+        };
         function renderSinDatos() {
             var cont = document.getElementById('sindatos-list');
             if (!cont) return;
             var CRIT = ['asignatura','curso','colegio','comuna','numAlumnos','nivel'];
             var IMP = ['descripcion','tipoNEE','unidad','objetivoAprendizaje','recursos','intereses','fortalezas','dificultades','listaAlumnos','sellos'];
             function lleno(v){ var s = (v === undefined || v === null) ? '' : String(v).trim(); return s !== '' && s !== '0'; }
-            var rows = [];
+            var vacios = [], faltaoa = [];
             Object.keys(allClients || {}).forEach(function(uid) {
                 var u = allClients[uid] || {};
                 if ((u.role || '') === 'admin') return;
@@ -1280,24 +1298,37 @@
                 var c = CRIT.filter(function(k){ return lleno(dp[k]); }).length;
                 var i = IMP.filter(function(k){ return lleno(dp[k]); }).length;
                 if (c >= 6 && i > 2 && hasOA) return; // datos suficientes Y con OA -> no se le molesta
-                rows.push({ uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '', c: c, i: i, faltaOA: !hasOA,
-                    preguntado: p.seguimiento && p.seguimiento.interesPreguntado ? p.seguimiento.interesPreguntado.at : null });
+                var sg = p.seguimiento || {};
+                if (c >= 6 && i > 2 && !hasOA) { // tiene datos, solo le falta el OA -> sección aparte
+                    faltaoa.push({ uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '', c: c, i: i, faltaOA: true,
+                        preguntado: sg.oaPreguntado ? sg.oaPreguntado.at : null });
+                } else { // formulario (casi) vacío -> confirmar interés
+                    vacios.push({ uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '', c: c, i: i, faltaOA: false,
+                        preguntado: sg.interesPreguntado ? sg.interesPreguntado.at : null });
+                }
             });
-            rows.sort(function(a,b){ return (a.c + a.i) - (b.c + b.i); });
-            if (!rows.length) { cont.innerHTML = '<p class="text-sm text-gray-400">— nadie pendiente de confirmar interés —</p>'; return; }
-            var h = '<div class="overflow-x-auto bg-white rounded-xl border border-gray-200"><table class="w-full text-sm">' +
-                '<thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase">' +
-                '<th class="px-4 py-2.5">Docente</th><th class="px-4 py-2.5">Teléfono</th><th class="px-4 py-2.5">Formulario</th><th class="px-4 py-2.5">Preguntado</th><th class="px-4 py-2.5"></th></tr></thead><tbody>';
-            rows.forEach(function(r) {
-                var pct = r.c + r.i;
-                h += '<tr class="border-t border-gray-100">' +
-                    '<td class="px-4 py-2.5 font-medium text-gray-800">' + r.nombre + '</td>' +
-                    '<td class="px-4 py-2.5 text-gray-500">' + (r.tel || '—') + '</td>' +
-                    '<td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + (pct === 0 ? 'bg-red-100 text-red-700' : (r.faltaOA ? 'bg-orange-100 text-orange-700' : 'bg-amber-100 text-amber-700')) + '">' + (pct === 0 ? 'vacío total' : (r.faltaOA ? 'falta OA (' + pct + '/16)' : 'casi vacío (' + pct + '/16)')) + '</span></td>' +
-                    '<td class="px-4 py-2.5 text-xs text-gray-400">' + (r.preguntado ? '✅ ' + fechaCorta(r.preguntado) : 'aún no') + '</td>' +
-                    '<td class="px-4 py-2.5 text-right"><button onclick="preguntarInteres(\'' + r.uid + '\')" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg">💬 Preguntar</button></td></tr>';
-            });
-            cont.innerHTML = h + '</tbody></table></div>';
+            function tablaSinDatos(rows, accion, btnTxt, btnColor) {
+                rows.sort(function(a,b){ return (a.c + a.i) - (b.c + b.i); });
+                if (!rows.length) return '<p class="text-sm text-gray-400">— nadie por ahora —</p>';
+                var h = '<div class="overflow-x-auto bg-white rounded-xl border border-gray-200"><table class="w-full text-sm">' +
+                    '<thead><tr class="bg-gray-50 text-left text-xs text-gray-500 uppercase">' +
+                    '<th class="px-4 py-2.5">Docente</th><th class="px-4 py-2.5">Teléfono</th><th class="px-4 py-2.5">Formulario</th><th class="px-4 py-2.5">Notificado</th><th class="px-4 py-2.5"></th></tr></thead><tbody>';
+                rows.forEach(function(r) {
+                    var pct = r.c + r.i;
+                    var badge = r.faltaOA ? ('falta OA (' + pct + '/16)') : (pct === 0 ? 'vacío total' : 'casi vacío (' + pct + '/16)');
+                    var bcolor = r.faltaOA ? 'bg-orange-100 text-orange-700' : (pct === 0 ? 'bg-red-100 text-red-700' : 'bg-amber-100 text-amber-700');
+                    h += '<tr class="border-t border-gray-100">' +
+                        '<td class="px-4 py-2.5 font-medium text-gray-800">' + r.nombre + '</td>' +
+                        '<td class="px-4 py-2.5 text-gray-500">' + (r.tel || '—') + '</td>' +
+                        '<td class="px-4 py-2.5"><span class="px-2 py-0.5 rounded-full text-xs font-semibold ' + bcolor + '">' + badge + '</span></td>' +
+                        '<td class="px-4 py-2.5 text-xs text-gray-400">' + (r.preguntado ? '✅ ' + fechaCorta(r.preguntado) : 'aún no') + '</td>' +
+                        '<td class="px-4 py-2.5 text-right"><button onclick="' + accion + '(\'' + r.uid + '\')" class="px-3 py-1.5 ' + btnColor + ' text-white text-xs font-bold rounded-lg">' + btnTxt + '</button></td></tr>';
+                });
+                return h + '</tbody></table></div>';
+            }
+            cont.innerHTML = tablaSinDatos(vacios, 'preguntarInteres', '💬 Preguntar', 'bg-emerald-600 hover:bg-emerald-700');
+            var contOA = document.getElementById('faltaoa-list');
+            if (contOA) contOA.innerHTML = tablaSinDatos(faltaoa, 'preguntarOA', '📝 Pedir OA', 'bg-orange-600 hover:bg-orange-700');
         }
         function renderEntregados() {
             renderSinDatos();

@@ -159,7 +159,7 @@ window.OA_DATA = {
         {
           "c": "OA 5",
           "e": "Lectura",
-          "t": "Demostrar comprensión de las narraciones leídas: extrayendo información explícita e implícita; reconstruyendo la secuencia de las acciones en la historia; identificando y describiendo las características físicas y los sentimientos de los distintos personajes; recreando, por medio de distintas expresiones (dibujos, modelos tridimensionales u…"
+          "t": "Demostrar comprensión de las narraciones leídas: extrayendo información explícita e implícita; reconstruyendo la secuencia de las acciones en la historia; identificando y describiendo las características físicas y los sentimientos de los distintos personajes; recreando, por medio de distintas expresiones (dibujos, modelos tridimensionales u otras), el ambiente en el que ocurre la acción; estableciendo relaciones entre el texto y sus propias experiencias; emitiendo una opinión sobre un aspecto de la lectura."
         },
         {
           "c": "OA 6",
@@ -306,7 +306,7 @@ window.OA_DATA = {
         {
           "c": "OA 4",
           "e": "Lectura",
-          "t": "Profundizar su comprensión de las narraciones leídas: extrayendo información explícita e implícita; reconstruyendo la secuencia de las acciones en la historia; describiendo a los personajes; describiendo el ambiente en que ocurre la acción; expresando opiniones fundamentadas sobre hechos y situaciones del texto; emitiendo una opinión sobre los…"
+          "t": "Profundizar su comprensión de las narraciones leídas: extrayendo información explícita e implícita; reconstruyendo la secuencia de las acciones en la historia; describiendo a los personajes; describiendo el ambiente en que ocurre la acción; expresando opiniones fundamentadas sobre hechos y situaciones del texto; emitiendo una opinión sobre los personajes."
         },
         {
           "c": "OA 5",

@@ -1288,7 +1288,9 @@
                 var p = (allPortafolios || {})[uid] || {};
                 var seg = (p.seguimiento && p.seguimiento.avisoM1M3) || null;
                 return { uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '',
-                    insc: _ts(u.createdAt) || _ts(p.createdAt), pagado: haPagado(p),
+                    insc: _ts(u.createdAt) || _ts(p.createdAt),
+                    pagoEstado: !haPagado(p) ? 'sin' : ((p.esAbono || p.paymentStatus === 'abono' || (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0)) ? 'abono' : 'total'),
+                    saldo: (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : 0,
                     enviado: !!seg, enviadoAt: seg ? seg.at : null };
             });
             all.sort(function (a, b) { return (a.insc || 0) - (b.insc || 0); }); // más viejo → más nuevo
@@ -1301,9 +1303,11 @@
             if (!all.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con avance aún.</p>'; return; }
             function row(r, sentMode) {
                 var tel = normWaPhone(r.tel);
-                var pag = r.pagado
-                    ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pagó</span>'
-                    : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Sin pago</span>';
+                var pag = r.pagoEstado === 'total'
+                    ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pago total</span>'
+                    : r.pagoEstado === 'abono'
+                        ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Abono' + (r.saldo > 0 ? ' · debe $' + r.saldo.toLocaleString('es-CL') : '') + '</span>'
+                        : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Sin pago</span>';
                 var meta = '📅 ' + _fc(r.insc) + ' · ' + escapeHtml(r.tel || 'sin teléfono') + (sentMode && r.enviadoAt ? ' · <span class="text-emerald-600 font-semibold">✓ enviado ' + _fc(_ts(r.enviadoAt)) + '</span>' : '');
                 var btn = sentMode
                     ? '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">↻ Reenviar</button>'

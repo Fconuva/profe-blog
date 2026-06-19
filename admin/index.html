@@ -1278,25 +1278,37 @@
             var cont = document.getElementById('avisom1-list'); if (!cont) return;
             var prev = document.getElementById('avisom1-preview');
             if (prev) prev.textContent = buildAvisoM1M3Msg('[nombre]', '[link de tu carpeta de Drive]');
-            var uids = getClientUids().filter(function (uid) {
+            var rows = getClientUids().filter(function (uid) {
                 var p = (allPortafolios || {})[uid] || {};
-                return (M1_GANCHO_UIDS.indexOf(uid) >= 0) || !!((p.googleDrive || {}).shareUrl);
-            });
-            uids.sort(function (a, b) { return String((allClients[a] || {}).nombre || '').localeCompare(String((allClients[b] || {}).nombre || '')); });
-            var badge = document.getElementById('avisom1-badge');
-            if (badge) { badge.textContent = uids.length; badge.classList.toggle('hidden', uids.length === 0); }
-            var cnt = document.getElementById('avisom1-count'); if (cnt) cnt.textContent = uids.length;
-            if (!uids.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con M1 hecho aún.</p>'; return; }
-            cont.innerHTML = uids.map(function (uid) {
+                var d = p.datosPortafolio || {};
+                // M1 hecho / con info: en el gancho O con OA declarado. Sin OA (sin info para M1) → se omite.
+                return (M1_GANCHO_UIDS.indexOf(uid) >= 0) || _lleno(d.objetivoAprendizaje);
+            }).map(function (uid) {
                 var u = (allClients || {})[uid] || {};
                 var p = (allPortafolios || {})[uid] || {};
-                var enviado = p.seguimiento && p.seguimiento.avisoM1M3;
-                var tel = normWaPhone(u.telefono);
-                return '<div class="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-2.5">'
-                    + '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escapeHtml(u.nombre || '(sin nombre)') + (enviado ? ' <span class="ml-1 text-xs text-emerald-600">✓ enviado</span>' : '') + '</p>'
-                    + '<p class="text-xs text-gray-400">' + escapeHtml(u.telefono || 'sin teléfono') + '</p></div>'
-                    + '<button onclick="enviarAvisoM1(\'' + uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="shrink-0 px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📲 Enviar</button>'
-                    + '</div>';
+                return { uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '',
+                    insc: _ts(u.createdAt) || _ts(p.createdAt), pagado: haPagado(p),
+                    enviado: !!(p.seguimiento && p.seguimiento.avisoM1M3) };
+            });
+            rows.sort(function (a, b) { return (a.insc || 0) - (b.insc || 0); }); // más viejo → más nuevo (los primeros arriba)
+            var badge = document.getElementById('avisom1-badge');
+            if (badge) { badge.textContent = rows.length; badge.classList.toggle('hidden', rows.length === 0); }
+            var cnt = document.getElementById('avisom1-count'); if (cnt) cnt.textContent = rows.length;
+            if (!rows.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con M1 hecho aún.</p>'; return; }
+            cont.innerHTML = rows.map(function (r, i) {
+                var tel = normWaPhone(r.tel);
+                var pag = r.pagado
+                    ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pagó</span>'
+                    : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Sin pago</span>';
+                return '<div class="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-2.5 gap-3">'
+                    + '<div class="flex items-center gap-3 min-w-0">'
+                    + '<span class="text-xs font-bold text-gray-400 w-6 text-right shrink-0">' + (i + 1) + '</span>'
+                    + '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escapeHtml(r.nombre) + (r.enviado ? ' <span class="ml-1 text-xs text-emerald-600">✓ enviado</span>' : '') + '</p>'
+                    + '<p class="text-xs text-gray-400">📅 ' + _fc(r.insc) + ' · ' + escapeHtml(r.tel || 'sin teléfono') + '</p></div>'
+                    + '</div>'
+                    + '<div class="flex items-center gap-2 shrink-0">' + pag
+                    + '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📲 Enviar</button>'
+                    + '</div></div>';
             }).join('');
         }
         window.enviarBorrador = function (uid) {

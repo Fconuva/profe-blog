@@ -63,11 +63,29 @@
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="preinscritos">📋 Inscritos <span id="preinscritos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-amber-500 text-white">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="entregados">📦 Portafolios entregados <span id="entregados-count" class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="detalle">🗓️ Detalle / Avance</button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="avisom1">📣 Aviso M1+M3 <span id="avisom1-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-emerald-500 text-white">0</span></button>
                 </nav>
             </div>
         </div>
 
         <!-- ===== TAB: DASHBOARD ===== -->
+        <!-- TAB: AVISO M1 + opciones M3 (campaña temporal) -->
+        <div id="tab-avisom1" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="text-lg font-semibold text-gray-800">📣 Aviso M1 + opciones M3</h2>
+                <span class="text-sm text-gray-500"><span id="avisom1-count">0</span> docentes con M1 hecho</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Mensaje único para <b>todos</b> los que ya tienen su Módulo 1: avisamos que hay un <b>borrador para revisar</b> (la última palabra es del profe) + las <b>3 opciones de Módulo 3</b>. Cada botón abre WhatsApp con el mensaje y el link de su Drive ya cargados.</p>
+            <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold text-amber-700 uppercase tracking-wide">Vista previa del mensaje</span>
+                    <button onclick="copiarAvisoM1()" class="px-2.5 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors">Copiar texto</button>
+                </div>
+                <pre id="avisom1-preview" class="text-xs text-gray-700 whitespace-pre-wrap font-body leading-relaxed m-0"></pre>
+            </div>
+            <div id="avisom1-list" class="space-y-2"></div>
+        </div>
+
         <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <!-- ===== PERSONAS ===== -->
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">👥 Personas</h2>
@@ -1121,7 +1139,7 @@
             requestAnimationFrame(function() {
                 _renderPending = false;
                 // Cada renderer aislado: si uno lanza error, no bloquea a los demás (en especial a renderDetalle, que va último).
-                [renderDashboard, renderClients, renderPayments, renderPreinscritos, renderEntregados, renderDetalle].forEach(function(fn) {
+                [renderDashboard, renderClients, renderPayments, renderPreinscritos, renderEntregados, renderDetalle, renderAvisoM1].forEach(function(fn) {
                     try { fn(); } catch (e) { console.error('renderAll · error en ' + (fn.name || 'render') + ':', e); }
                 });
             });
@@ -1230,6 +1248,57 @@
             window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
             db.ref('portafolios/' + uid + '/seguimiento/m1Enviado').set({ at: new Date().toISOString(), by: 'admin' });
         };
+        // ===== CAMPAÑA: Aviso M1 (borrador a revisar) + 3 opciones de M3 — mismo mensaje para todos los M1 hechos =====
+        function buildAvisoM1M3Msg(nombre, shareUrl) {
+            var primer = String(nombre || '').trim().split(/\s+/)[0] || '';
+            var m = 'Hola ' + primer + ' 👋 Te escribo del equipo del profe Francisco Núñez.\n\n';
+            m += '📘 *Avanzamos con tu Módulo 1:* ya tienes un *borrador listo* para que lo revises y nos digas qué quieres ajustar. Es una base de trabajo — *la última palabra siempre es tuya*, así que cualquier modificación que necesites, la hacemos.';
+            m += shareUrl ? (' Lo encuentras en tu carpeta de Drive:\n' + shareUrl + '\n\n') : '\n\n';
+            m += '🤝 Y para tu *Módulo 3 (trabajo colaborativo)* te ofrecemos *3 caminos*, según lo que ya tengas:\n\n';
+            m += '1️⃣ *Si aún no tienes nada:* te planificamos el colaborativo y te dejamos un solo PDF con la planificación + el correo de aviso a tu jefatura + una foto de los estudiantes o del material + un acta con acuerdos, registros y firmas (de los docentes y/o V°B° y timbre de UTP o Dirección).\n\n';
+            m += '2️⃣ *Si ya tienes algo:* te lo ajustamos a las rúbricas y al manual, y te entregamos el formato para que juntes la evidencia y las firmas.\n\n';
+            m += '3️⃣ *Si quieres que te lo dejemos listo:* armamos todo y tú solo consigues las firmas (siempre que tu UTP o Dirección no tenga problema en firmar).\n\n';
+            m += 'Así seguimos avanzando 💪 Cuéntame cuál te acomoda.';
+            return m;
+        }
+        window.enviarAvisoM1 = function (uid) {
+            var p = (allPortafolios || {})[uid] || {};
+            var u = (allClients || {})[uid] || {};
+            var phone = normWaPhone(u.telefono);
+            if (!phone) { alert('Este docente no tiene teléfono registrado en su ficha.'); return; }
+            var msg = buildAvisoM1M3Msg(u.nombre || '', (p.googleDrive || {}).shareUrl);
+            window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
+            db.ref('portafolios/' + uid + '/seguimiento/avisoM1M3').set({ at: new Date().toISOString(), by: 'admin' });
+        };
+        window.copiarAvisoM1 = function () {
+            var t = (document.getElementById('avisom1-preview') || {}).textContent || '';
+            if (navigator.clipboard) navigator.clipboard.writeText(t);
+        };
+        function renderAvisoM1() {
+            var cont = document.getElementById('avisom1-list'); if (!cont) return;
+            var prev = document.getElementById('avisom1-preview');
+            if (prev) prev.textContent = buildAvisoM1M3Msg('[nombre]', '[link de tu carpeta de Drive]');
+            var uids = getClientUids().filter(function (uid) {
+                var p = (allPortafolios || {})[uid] || {};
+                return (M1_GANCHO_UIDS.indexOf(uid) >= 0) || !!((p.googleDrive || {}).shareUrl);
+            });
+            uids.sort(function (a, b) { return String((allClients[a] || {}).nombre || '').localeCompare(String((allClients[b] || {}).nombre || '')); });
+            var badge = document.getElementById('avisom1-badge');
+            if (badge) { badge.textContent = uids.length; badge.classList.toggle('hidden', uids.length === 0); }
+            var cnt = document.getElementById('avisom1-count'); if (cnt) cnt.textContent = uids.length;
+            if (!uids.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con M1 hecho aún.</p>'; return; }
+            cont.innerHTML = uids.map(function (uid) {
+                var u = (allClients || {})[uid] || {};
+                var p = (allPortafolios || {})[uid] || {};
+                var enviado = p.seguimiento && p.seguimiento.avisoM1M3;
+                var tel = normWaPhone(u.telefono);
+                return '<div class="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-2.5">'
+                    + '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escapeHtml(u.nombre || '(sin nombre)') + (enviado ? ' <span class="ml-1 text-xs text-emerald-600">✓ enviado</span>' : '') + '</p>'
+                    + '<p class="text-xs text-gray-400">' + escapeHtml(u.telefono || 'sin teléfono') + '</p></div>'
+                    + '<button onclick="enviarAvisoM1(\'' + uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="shrink-0 px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📲 Enviar</button>'
+                    + '</div>';
+            }).join('');
+        }
         window.enviarBorrador = function (uid) {
             var p = (allPortafolios || {})[uid] || {};
             var u = (allClients || {})[uid] || {};

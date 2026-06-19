@@ -1278,38 +1278,51 @@
             var cont = document.getElementById('avisom1-list'); if (!cont) return;
             var prev = document.getElementById('avisom1-preview');
             if (prev) prev.textContent = buildAvisoM1M3Msg('[nombre]', '[link de tu carpeta de Drive]');
-            var rows = getClientUids().filter(function (uid) {
+            var all = getClientUids().filter(function (uid) {
                 var p = (allPortafolios || {})[uid] || {};
                 var d = p.datosPortafolio || {};
-                // M1 hecho / con info: en el gancho O con OA declarado. Sin OA (sin info para M1) → se omite.
+                // Con avance / con info: en el gancho O con OA declarado. Sin OA (sin info) → se omite.
                 return (M1_GANCHO_UIDS.indexOf(uid) >= 0) || _lleno(d.objetivoAprendizaje);
             }).map(function (uid) {
                 var u = (allClients || {})[uid] || {};
                 var p = (allPortafolios || {})[uid] || {};
+                var seg = (p.seguimiento && p.seguimiento.avisoM1M3) || null;
                 return { uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '',
                     insc: _ts(u.createdAt) || _ts(p.createdAt), pagado: haPagado(p),
-                    enviado: !!(p.seguimiento && p.seguimiento.avisoM1M3) };
+                    enviado: !!seg, enviadoAt: seg ? seg.at : null };
             });
-            rows.sort(function (a, b) { return (a.insc || 0) - (b.insc || 0); }); // más viejo → más nuevo (los primeros arriba)
-            var badge = document.getElementById('avisom1-badge');
-            if (badge) { badge.textContent = rows.length; badge.classList.toggle('hidden', rows.length === 0); }
-            var cnt = document.getElementById('avisom1-count'); if (cnt) cnt.textContent = rows.length;
-            if (!rows.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con M1 hecho aún.</p>'; return; }
-            cont.innerHTML = rows.map(function (r, i) {
+            all.sort(function (a, b) { return (a.insc || 0) - (b.insc || 0); }); // más viejo → más nuevo
+            all.forEach(function (r, i) { r.n = i + 1; }); // n° de orden global por inscripción (estable)
+            var pend = all.filter(function (r) { return !r.enviado; });
+            var sent = all.filter(function (r) { return r.enviado; });
+            var badge = document.getElementById('avisom1-badge'); // el badge del tab = los que faltan por enviar
+            if (badge) { badge.textContent = pend.length; badge.classList.toggle('hidden', pend.length === 0); }
+            var cnt = document.getElementById('avisom1-count'); if (cnt) cnt.textContent = all.length + ' · ' + pend.length + ' por enviar · ' + sent.length + ' enviados';
+            if (!all.length) { cont.innerHTML = '<p class="text-sm text-gray-400">No hay docentes con avance aún.</p>'; return; }
+            function row(r, sentMode) {
                 var tel = normWaPhone(r.tel);
                 var pag = r.pagado
                     ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pagó</span>'
                     : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Sin pago</span>';
-                return '<div class="flex items-center justify-between bg-white rounded-xl border border-gray-200 px-4 py-2.5 gap-3">'
+                var meta = '📅 ' + _fc(r.insc) + ' · ' + escapeHtml(r.tel || 'sin teléfono') + (sentMode && r.enviadoAt ? ' · <span class="text-emerald-600 font-semibold">✓ enviado ' + _fc(_ts(r.enviadoAt)) + '</span>' : '');
+                var btn = sentMode
+                    ? '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">↻ Reenviar</button>'
+                    : '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📲 Enviar</button>';
+                return '<div class="flex items-center justify-between rounded-xl border px-4 py-2.5 gap-3 ' + (sentMode ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200') + '">'
                     + '<div class="flex items-center gap-3 min-w-0">'
-                    + '<span class="text-xs font-bold text-gray-400 w-6 text-right shrink-0">' + (i + 1) + '</span>'
-                    + '<div class="min-w-0"><p class="text-sm font-medium text-gray-800 truncate">' + escapeHtml(r.nombre) + (r.enviado ? ' <span class="ml-1 text-xs text-emerald-600">✓ enviado</span>' : '') + '</p>'
-                    + '<p class="text-xs text-gray-400">📅 ' + _fc(r.insc) + ' · ' + escapeHtml(r.tel || 'sin teléfono') + '</p></div>'
+                    + '<span class="text-xs font-bold text-gray-400 w-6 text-right shrink-0">' + r.n + '</span>'
+                    + '<div class="min-w-0"><p class="text-sm font-medium ' + (sentMode ? 'text-gray-500' : 'text-gray-800') + ' truncate">' + escapeHtml(r.nombre) + '</p>'
+                    + '<p class="text-xs text-gray-400">' + meta + '</p></div>'
                     + '</div>'
-                    + '<div class="flex items-center gap-2 shrink-0">' + pag
-                    + '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📲 Enviar</button>'
-                    + '</div></div>';
-            }).join('');
+                    + '<div class="flex items-center gap-2 shrink-0">' + pag + btn + '</div></div>';
+            }
+            var html = '<div class="flex items-center gap-2 mb-2"><span class="text-sm font-semibold text-gray-700">⏳ Por enviar</span><span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-bold">' + pend.length + '</span></div>';
+            html += pend.length ? ('<div class="space-y-2 mb-6">' + pend.map(function (r) { return row(r, false); }).join('') + '</div>') : '<p class="text-sm text-gray-400 mb-6">¡Todos enviados! 🎉</p>';
+            if (sent.length) {
+                html += '<div class="flex items-center gap-2 mb-2"><span class="text-sm font-semibold text-gray-500">✓ Ya enviados</span><span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 font-bold">' + sent.length + '</span></div>';
+                html += '<div class="space-y-2">' + sent.map(function (r) { return row(r, true); }).join('') + '</div>';
+            }
+            cont.innerHTML = html;
         }
         window.enviarBorrador = function (uid) {
             var p = (allPortafolios || {})[uid] || {};

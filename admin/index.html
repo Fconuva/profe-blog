@@ -64,6 +64,7 @@
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="entregados">📦 Portafolios entregados <span id="entregados-count" class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-gray-200 text-gray-700">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="detalle">🗓️ Detalle / Avance</button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="avisom1">📣 Aviso de avance <span id="avisom1-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-emerald-500 text-white">0</span></button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="pediroa">📩 Falta su OA <span id="pediroa-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-orange-500 text-white">0</span></button>
                 </nav>
             </div>
         </div>
@@ -84,6 +85,16 @@
                 <pre id="avisom1-preview" class="text-xs text-gray-700 whitespace-pre-wrap font-body leading-relaxed m-0"></pre>
             </div>
             <div id="avisom1-list" class="space-y-2"></div>
+        </div>
+
+        <!-- TAB: FALTA SU OA (sin M1 → pedir OA) -->
+        <div id="tab-pediroa" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex items-center justify-between mb-1">
+                <h2 class="text-lg font-semibold text-gray-800">📩 Falta su OA (para construir el M1)</h2>
+                <span class="text-sm text-gray-500" id="pediroa-count">0</span>
+            </div>
+            <p class="text-sm text-gray-500 mb-4">Docentes <b>sin M1</b>: no han declarado su Objetivo de Aprendizaje. El botón abre WhatsApp pidiéndoles el OA (o asignatura/curso/tema para buscarlo). Ordenados del más viejo al más nuevo, con su estado de pago.</p>
+            <div id="pediroa-list" class="space-y-2"></div>
         </div>
 
         <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -1139,7 +1150,7 @@
             requestAnimationFrame(function() {
                 _renderPending = false;
                 // Cada renderer aislado: si uno lanza error, no bloquea a los demás (en especial a renderDetalle, que va último).
-                [renderDashboard, renderClients, renderPayments, renderPreinscritos, renderEntregados, renderDetalle, renderAvisoM1].forEach(function(fn) {
+                [renderDashboard, renderClients, renderPayments, renderPreinscritos, renderEntregados, renderDetalle, renderAvisoM1, renderPedirOA].forEach(function(fn) {
                     try { fn(); } catch (e) { console.error('renderAll · error en ' + (fn.name || 'render') + ':', e); }
                 });
             });
@@ -1325,6 +1336,58 @@
             if (sent.length) {
                 html += '<div class="flex items-center gap-2 mb-2"><span class="text-sm font-semibold text-gray-500">✓ Ya enviados</span><span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 font-bold">' + sent.length + '</span></div>';
                 html += '<div class="space-y-2">' + sent.map(function (r) { return row(r, true); }).join('') + '</div>';
+            }
+            cont.innerHTML = html;
+        }
+        // ===== FALTA SU OA — docentes SIN M1 (no declararon OA), para pedírselo por WhatsApp =====
+        function renderPedirOA() {
+            var cont = document.getElementById('pediroa-list'); if (!cont) return;
+            var all = getClientUids().filter(function (uid) {
+                var p = (allPortafolios || {})[uid] || {};
+                var d = p.datosPortafolio || {};
+                return (M1_GANCHO_UIDS.indexOf(uid) < 0) && !_lleno(d.objetivoAprendizaje);  // sin gancho y sin OA
+            }).map(function (uid) {
+                var u = (allClients || {})[uid] || {};
+                var p = (allPortafolios || {})[uid] || {};
+                var seg = (p.seguimiento && p.seguimiento.oaPreguntado) || null;
+                return { uid: uid, nombre: u.nombre || '(sin nombre)', tel: u.telefono || '',
+                    insc: _ts(u.createdAt) || _ts(p.createdAt),
+                    pagoEstado: !haPagado(p) ? 'sin' : ((p.esAbono || p.paymentStatus === 'abono' || (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0)) ? 'abono' : 'total'),
+                    saldo: (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : 0,
+                    contactado: !!seg, contactadoAt: seg ? seg.at : null };
+            });
+            all.sort(function (a, b) { return (a.insc || 0) - (b.insc || 0); });
+            all.forEach(function (r, i) { r.n = i + 1; });
+            var pend = all.filter(function (r) { return !r.contactado; });
+            var done = all.filter(function (r) { return r.contactado; });
+            var badge = document.getElementById('pediroa-badge');
+            if (badge) { badge.textContent = pend.length; badge.classList.toggle('hidden', pend.length === 0); }
+            var cnt = document.getElementById('pediroa-count'); if (cnt) cnt.textContent = all.length + ' · ' + pend.length + ' por contactar · ' + done.length + ' contactados';
+            if (!all.length) { cont.innerHTML = '<p class="text-sm text-gray-400">¡Todos los inscritos tienen su M1 o su OA! 🎉</p>'; return; }
+            function row(r, doneMode) {
+                var tel = normWaPhone(r.tel);
+                var pag = r.pagoEstado === 'total'
+                    ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Pago total</span>'
+                    : r.pagoEstado === 'abono'
+                        ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Abono' + (r.saldo > 0 ? ' · debe $' + r.saldo.toLocaleString('es-CL') : '') + '</span>'
+                        : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">Sin pago</span>';
+                var meta = '📅 ' + _fc(r.insc) + ' · ' + escapeHtml(r.tel || 'sin teléfono') + (doneMode && r.contactadoAt ? ' · <span class="text-emerald-600 font-semibold">✓ pedido ' + _fc(_ts(r.contactadoAt)) + '</span>' : '');
+                var btn = doneMode
+                    ? '<button onclick="preguntarOA(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors">↻ Reenviar</button>'
+                    : '<button onclick="preguntarOA(\'' + r.uid + '\')" ' + (tel ? '' : 'disabled ') + 'class="px-3 py-2 text-xs font-medium rounded-lg text-white ' + (tel ? '' : 'opacity-40 cursor-not-allowed ') + 'transition-colors" style="background-color:#25D366">📝 Pedir OA</button>';
+                return '<div class="flex items-center justify-between rounded-xl border px-4 py-2.5 gap-3 ' + (doneMode ? 'bg-gray-50 border-gray-100' : 'bg-white border-gray-200') + '">'
+                    + '<div class="flex items-center gap-3 min-w-0">'
+                    + '<span class="text-xs font-bold text-gray-400 w-6 text-right shrink-0">' + r.n + '</span>'
+                    + '<div class="min-w-0"><p class="text-sm font-medium ' + (doneMode ? 'text-gray-500' : 'text-gray-800') + ' truncate">' + escapeHtml(r.nombre) + '</p>'
+                    + '<p class="text-xs text-gray-400">' + meta + '</p></div>'
+                    + '</div>'
+                    + '<div class="flex items-center gap-2 shrink-0">' + pag + btn + '</div></div>';
+            }
+            var html = '<div class="flex items-center gap-2 mb-2"><span class="text-sm font-semibold text-gray-700">⏳ Por contactar</span><span class="text-xs bg-amber-100 text-amber-700 rounded-full px-2 py-0.5 font-bold">' + pend.length + '</span></div>';
+            html += pend.length ? ('<div class="space-y-2 mb-6">' + pend.map(function (r) { return row(r, false); }).join('') + '</div>') : '<p class="text-sm text-gray-400 mb-6">¡Todos contactados! 🎉</p>';
+            if (done.length) {
+                html += '<div class="flex items-center gap-2 mb-2"><span class="text-sm font-semibold text-gray-500">✓ Ya contactados</span><span class="text-xs bg-emerald-100 text-emerald-700 rounded-full px-2 py-0.5 font-bold">' + done.length + '</span></div>';
+                html += '<div class="space-y-2">' + done.map(function (r) { return row(r, true); }).join('') + '</div>';
             }
             cont.innerHTML = html;
         }

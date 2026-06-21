@@ -145,6 +145,31 @@
                 </div>
             </div>
 
+            <!-- ===== AVANCE DE PORTAFOLIOS ===== -->
+            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">📦 Avance de portafolios</h2>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-2xl font-heading font-bold text-gray-900" id="stat-con-drive">0</p>
+                    <p class="text-xs font-semibold text-gray-700 mt-1">Con material en Drive</p>
+                    <p class="text-[11px] text-gray-400 leading-tight">tienen carpeta con contenido subido</p>
+                </div>
+                <div class="bg-white rounded-xl border border-emerald-200 p-4">
+                    <p class="text-2xl font-heading font-bold text-emerald-600" id="stat-borrador-listo">0</p>
+                    <p class="text-xs font-semibold text-gray-700 mt-1">Borrador listo</p>
+                    <p class="text-[11px] text-gray-400 leading-tight">M1 listo para que el docente revise</p>
+                </div>
+                <div class="bg-white rounded-xl border border-gray-200 p-4">
+                    <p class="text-2xl font-heading font-bold text-gray-900" id="stat-con-oa">0</p>
+                    <p class="text-xs font-semibold text-gray-700 mt-1">Con OA declarado</p>
+                    <p class="text-[11px] text-gray-400 leading-tight">definieron su Objetivo de Aprendizaje</p>
+                </div>
+                <div class="bg-white rounded-xl border border-rose-200 p-4">
+                    <p class="text-2xl font-heading font-bold text-rose-600" id="stat-falta-oa">0</p>
+                    <p class="text-xs font-semibold text-gray-700 mt-1">Falta su OA</p>
+                    <p class="text-[11px] text-gray-400 leading-tight">con plan/contenido pero sin OA aún</p>
+                </div>
+            </div>
+
             <!-- ===== DINERO ===== -->
             <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">💰 Dinero <span class="font-normal normal-case text-gray-400">· montos brutos, antes de la comisión de MercadoPago</span></h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -1781,6 +1806,7 @@
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
             var recentList = [];
+            var conDrive = 0, conOA = 0, faltaOA = 0, borradorListo = 0;
 
             uids.forEach(function(uid) {
                 var c = allClients[uid];
@@ -1825,6 +1851,14 @@
                 var allDone = ['modulo1', 'modulo2', 'modulo3'].every(function(m) { return !p[m] || p[m].estado === 'completado' || p[m].estado === 'no-contratado'; });
                 var hasCont = ['modulo1', 'modulo2', 'modulo3'].some(function(m) { return p[m] && p[m].contratado; });
                 if (allDone && hasCont) completed++;
+                // operativas (avance de portafolios)
+                var _dp = p.datosPortafolio || {};
+                var _conDrive = !!(p.googleDrive && p.googleDrive.shareUrl);
+                var _conOA = !!(_dp.objetivoAprendizaje && String(_dp.objetivoAprendizaje).trim());
+                if (_conDrive) conDrive++;
+                if (_conOA) conOA++;
+                if (p.seguimiento && p.seguimiento.borradorListo) borradorListo++;
+                if ((_conDrive || esPlanReal) && !_conOA) faltaOA++;
                 recentList.push({ uid: uid, client: c, date: c.createdAt || '' });
             });
 
@@ -1834,6 +1868,13 @@
             var _spr = document.getElementById('stat-progress'); if (_spr) _spr.textContent = inProg;
             var _scp = document.getElementById('stat-completed'); if (_scp) _scp.textContent = completed;
             document.getElementById('stat-pending-pay').textContent = pendingPay;
+
+            // Avance de portafolios (operativas)
+            var _setOp = function (id, v) { var e = document.getElementById(id); if (e) e.textContent = v; };
+            _setOp('stat-con-drive', conDrive);
+            _setOp('stat-con-oa', conOA);
+            _setOp('stat-falta-oa', faltaOA);
+            _setOp('stat-borrador-listo', borradorListo);
 
             // Revenue stats
             document.getElementById('stat-total-revenue').textContent = formatCLP(totalRevenue);

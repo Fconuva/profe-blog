@@ -1212,11 +1212,12 @@
                     : '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">En progreso</span>';
                 var oa = r.conOA ? '<span class="text-emerald-600 font-semibold text-xs">✓ Declarado</span>' : '<span class="text-rose-600 font-semibold text-xs">✗ Falta</span>';
                 var tel = normWaPhone(r.tel);
-                var aviso = r.avisoEnviado ? '<span class="text-xs text-gray-400">✅ enviado</span>'
+                var aviso = recienInscrito(r.uid) ? '<span class="text-xs font-semibold text-amber-600" title="Inscrito hace menos de 5 días — no enviar aún">⏳ &lt;5 días</span>'
+                    : r.avisoEnviado ? '<span class="text-xs text-gray-400">✅ enviado</span>'
                     : (tel ? '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">📣 Enviar</button>' : '<span class="text-xs text-gray-300">sin tel.</span>');
                 var drive = r.shareUrl ? '<a href="' + escapeHtml(r.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-white text-xs" style="background-color:#0F9D58" title="Abrir carpeta de Drive">📁</a>' : '';
                 var pedirOA = (r.faltaOA && tel) ? '<button onclick="preguntarOA(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700">📝 Pedir OA</button>' : '';
-                var msgWsp = (window.MENSAJES_WSP && MENSAJES_WSP[r.uid]) ? '<button onclick="enviarMsgWsp(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="Enviar mensaje personalizado (completar datos + pago en cuotas)">📲 Msg</button><button onclick="copiarMsgWsp(\'' + r.uid + '\')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Copiar el mensaje">📋</button>' : '';
+                var msgWsp = (window.MENSAJES_WSP && MENSAJES_WSP[r.uid] && !recienInscrito(r.uid)) ? '<button onclick="enviarMsgWsp(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="Enviar mensaje personalizado (completar datos + pago en cuotas)">📲 Msg</button><button onclick="copiarMsgWsp(\'' + r.uid + '\')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Copiar el mensaje">📋</button>' : '';
                 h += '<tr class="hover:bg-gray-50">' +
                     '<td data-label="Docente" class="px-4 py-3"><div class="font-medium text-gray-900">' + escapeHtml(r.nombre) + '</div><div class="text-xs text-gray-500">' + escapeHtml(r.email) + '</div></td>' +
                     '<td data-label="Avance" class="px-4 py-3">' + pfBar(r.pct) + '</td>' +
@@ -1421,12 +1422,20 @@
             m += 'Si algo está malo o lo quieres ajustar, me dices y lo corregimos al tiro. *La última palabra siempre es tuya* 🙌';
             return m;
         }
+        // <5 días desde la inscripción (createdAt): no se les envía mensaje todavía
+        window.recienInscrito = function (uid) {
+            var p = (allPortafolios || {})[uid] || {}; var u = (allClients || {})[uid] || {};
+            var ca = p.createdAt || u.createdAt; if (!ca) return false;
+            return (Date.now() - new Date(ca).getTime()) < 5 * 24 * 3600 * 1000;
+        };
         window.enviarAvisoM1 = function (uid) {
             var p = (allPortafolios || {})[uid] || {};
             var u = (allClients || {})[uid] || {};
+            if (recienInscrito(uid)) { alert('⏳ Inscrito hace menos de 5 días — todavía no le enviamos mensajes.'); return; }
             var phone = normWaPhone(u.telefono);
             if (!phone) { alert('Este docente no tiene teléfono registrado en su ficha.'); return; }
-            var msg = buildAvisoM1M3Msg(u.nombre || '', (p.googleDrive || {}).shareUrl);
+            var entry = (window.MENSAJES_WSP || {})[uid];   // usa el mensaje PERSONALIZADO si existe; si no, el genérico
+            var msg = (entry && entry.msg) ? entry.msg : buildAvisoM1M3Msg(u.nombre || '', (p.googleDrive || {}).shareUrl);
             window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
             db.ref('portafolios/' + uid + '/seguimiento/avisoM1M3').set({ at: new Date().toISOString(), by: 'admin' });
         };
@@ -1435,6 +1444,7 @@
             var u = (allClients || {})[uid] || {};
             var entry = (window.MENSAJES_WSP || {})[uid];
             if (!entry || !entry.msg) { alert('Aún no hay mensaje personalizado generado para este docente.'); return; }
+            if (recienInscrito(uid)) { alert('⏳ Inscrito hace menos de 5 días — todavía no le enviamos mensajes.'); return; }
             var phone = normWaPhone(u.telefono);
             if (!phone) {
                 if (navigator.clipboard) { navigator.clipboard.writeText(entry.msg); alert('Sin teléfono en su ficha. Copié el mensaje al portapapeles para que lo pegues por WhatsApp.'); }

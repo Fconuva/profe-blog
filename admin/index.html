@@ -832,6 +832,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <script src="/js/firebase-config.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="mensajes_wsp.js"></script>
 
     <script>
     (function() {
@@ -1215,6 +1216,7 @@
                     : (tel ? '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">📣 Enviar</button>' : '<span class="text-xs text-gray-300">sin tel.</span>');
                 var drive = r.shareUrl ? '<a href="' + escapeHtml(r.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-white text-xs" style="background-color:#0F9D58" title="Abrir carpeta de Drive">📁</a>' : '';
                 var pedirOA = (r.faltaOA && tel) ? '<button onclick="preguntarOA(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700">📝 Pedir OA</button>' : '';
+                var msgWsp = (window.MENSAJES_WSP && MENSAJES_WSP[r.uid]) ? '<button onclick="enviarMsgWsp(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="Enviar mensaje personalizado (completar datos + pago en cuotas)">📲 Msg</button><button onclick="copiarMsgWsp(\'' + r.uid + '\')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Copiar el mensaje">📋</button>' : '';
                 h += '<tr class="hover:bg-gray-50">' +
                     '<td data-label="Docente" class="px-4 py-3"><div class="font-medium text-gray-900">' + escapeHtml(r.nombre) + '</div><div class="text-xs text-gray-500">' + escapeHtml(r.email) + '</div></td>' +
                     '<td data-label="Avance" class="px-4 py-3">' + pfBar(r.pct) + '</td>' +
@@ -1223,7 +1225,7 @@
                     '<td data-label="Aviso" class="px-4 py-3">' + aviso + '</td>' +
                     '<td data-label="Acciones" class="px-4 py-3"><div class="flex items-center gap-2 flex-wrap">' +
                         '<button class="text-primary-600 hover:text-primary-700 text-sm font-medium pf-edit" data-uid="' + r.uid + '">Ver</button>' +
-                        drive + pedirOA + '</div></td></tr>';
+                        drive + pedirOA + msgWsp + '</div></td></tr>';
             });
             cont.innerHTML = h + '</tbody></table></div>';
             cont.querySelectorAll('.pf-edit').forEach(function (b) { b.addEventListener('click', function () { openModal(this.getAttribute('data-uid')); }); });
@@ -1427,6 +1429,26 @@
             var msg = buildAvisoM1M3Msg(u.nombre || '', (p.googleDrive || {}).shareUrl);
             window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(msg), '_blank');
             db.ref('portafolios/' + uid + '/seguimiento/avisoM1M3').set({ at: new Date().toISOString(), by: 'admin' });
+        };
+        // ===== Mensaje personalizado por docente (completar datos + pago en cuotas). Texto en mensajes_wsp.js =====
+        window.enviarMsgWsp = function (uid) {
+            var u = (allClients || {})[uid] || {};
+            var entry = (window.MENSAJES_WSP || {})[uid];
+            if (!entry || !entry.msg) { alert('Aún no hay mensaje personalizado generado para este docente.'); return; }
+            var phone = normWaPhone(u.telefono);
+            if (!phone) {
+                if (navigator.clipboard) { navigator.clipboard.writeText(entry.msg); alert('Sin teléfono en su ficha. Copié el mensaje al portapapeles para que lo pegues por WhatsApp.'); }
+                else { alert('Sin teléfono en su ficha.\n\n' + entry.msg); }
+                return;
+            }
+            window.open('https://api.whatsapp.com/send?phone=' + phone + '&text=' + encodeURIComponent(entry.msg), '_blank');
+            db.ref('portafolios/' + uid + '/seguimiento/msgPersonalizado').set({ at: new Date().toISOString(), by: 'admin' });
+        };
+        window.copiarMsgWsp = function (uid) {
+            var entry = (window.MENSAJES_WSP || {})[uid];
+            if (!entry || !entry.msg) { alert('Aún no hay mensaje para este docente.'); return; }
+            if (navigator.clipboard) { navigator.clipboard.writeText(entry.msg); alert('Mensaje copiado ✅'); }
+            else { window.prompt('Copia el mensaje:', entry.msg); }
         };
         window.copiarAvisoM1 = function () {
             var t = (document.getElementById('avisom1-preview') || {}).textContent || '';

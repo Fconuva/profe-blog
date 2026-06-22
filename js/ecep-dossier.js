@@ -6,10 +6,53 @@
 (function () {
   'use strict';
 
+  // ---- Botón "Índice del dossier" en la barra sticky (siempre visible en cada dominio) ----
+  var _toc = document.querySelector('.ec-toc .ec-wrap');
+  if (_toc && !_toc.querySelector('.ec-toc-back')) {
+    var _back = document.createElement('a');
+    _back.className = 'ec-toc-back';
+    _back.href = '/evaluaciones/educacion-basica/estudio/educacion-generalista/';
+    _back.innerHTML = '<i class="bi bi-grid-1x2-fill"></i> Índice';
+    _toc.insertBefore(_back, _toc.firstChild);
+  }
+
   // ---- Auto-chequeos: revelar respuesta ----
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.ec-check button.reveal, .ec-caso button.reveal');
     if (btn) { var box = btn.closest('.ec-check, .ec-caso'); if (box) box.classList.add('open'); }
+  });
+
+  // ---- Preguntas tipo CASO: responder tocando una alternativa → veredicto + retroalimentación ----
+  [].slice.call(document.querySelectorAll('.ec-caso')).forEach(function (caso) {
+    var aBlock = caso.querySelector('.a');
+    var correct = null;
+    if (aBlock) { var m = aBlock.textContent.match(/[Cc]orrecta:?\s*\(?([A-D])\)?/); if (m) correct = m[1].toUpperCase(); }
+    var opts = [].slice.call(caso.querySelectorAll('ol > li'));
+    if (!correct || !opts.length) return; // sin letra correcta detectable → queda el botón "ver respuesta"
+    function letterOf(li) { var b = li.querySelector('b'); return b ? (b.textContent.trim().charAt(0) || '').toUpperCase() : ''; }
+    var ol = caso.querySelector('ol');
+    if (ol) {
+      var hint = document.createElement('div'); hint.className = 'ec-caso-hint';
+      hint.innerHTML = '<i class="bi bi-hand-index-fill"></i> Toca la alternativa que elijas para responder.';
+      ol.parentNode.insertBefore(hint, ol);
+    }
+    opts.forEach(function (li) {
+      li.classList.add('opt');
+      li.addEventListener('click', function () {
+        if (caso.classList.contains('answered')) return;
+        caso.classList.add('answered', 'open');
+        var chosen = letterOf(li), bien = chosen === correct;
+        opts.forEach(function (o) { if (letterOf(o) === correct) o.classList.add('correcta'); });
+        li.classList.add(bien ? 'elegida-bien' : 'elegida-mal');
+        var v = document.createElement('div');
+        v.className = 'veredicto ' + (bien ? 'ok' : 'no');
+        v.innerHTML = bien
+          ? '<i class="bi bi-check-circle-fill"></i> ¡Correcto! Esta es la mejor opción. Mira por qué:'
+          : '<i class="bi bi-x-circle-fill"></i> Esa no es la mejor opción. La correcta es <strong>' + correct + '</strong>. Mira por qué:';
+        if (aBlock) aBlock.parentNode.insertBefore(v, aBlock);
+        var revealBtn = caso.querySelector('button.reveal'); if (revealBtn) revealBtn.style.display = 'none';
+      });
+    });
   });
 
   // ---- Progreso "estudiado" ----

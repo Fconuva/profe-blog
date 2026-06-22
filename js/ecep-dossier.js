@@ -8,8 +8,8 @@
 
   // ---- Auto-chequeos: revelar respuesta ----
   document.addEventListener('click', function (e) {
-    var btn = e.target.closest('.ec-check button.reveal');
-    if (btn) { btn.closest('.ec-check').classList.add('open'); }
+    var btn = e.target.closest('.ec-check button.reveal, .ec-caso button.reveal');
+    if (btn) { var box = btn.closest('.ec-check, .ec-caso'); if (box) box.classList.add('open'); }
   });
 
   // ---- Progreso "estudiado" ----

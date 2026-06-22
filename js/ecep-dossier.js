@@ -6,6 +6,16 @@
 (function () {
   'use strict';
 
+  // ---- Botón "Índice del dossier" en la barra sticky (siempre visible en cada dominio) ----
+  var _toc = document.querySelector('.ec-toc .ec-wrap');
+  if (_toc && !_toc.querySelector('.ec-toc-back')) {
+    var _back = document.createElement('a');
+    _back.className = 'ec-toc-back';
+    _back.href = '/evaluaciones/educacion-basica/estudio/educacion-generalista/';
+    _back.innerHTML = '<i class="bi bi-grid-1x2-fill"></i> Índice';
+    _toc.insertBefore(_back, _toc.firstChild);
+  }
+
   // ---- Auto-chequeos: revelar respuesta ----
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.ec-check button.reveal, .ec-caso button.reveal');

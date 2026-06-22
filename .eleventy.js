@@ -26,7 +26,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.ignores.add("*.py");
   eleventyConfig.ignores.add("*.ps1");
   eleventyConfig.ignores.add("*.md");
-  eleventyConfig.ignores.add("evaluaciones/**");
+  // evaluaciones/: páginas .njk procesadas (dossiers de estudio ECEP). Imágenes via /imagenes (passthrough).
   eleventyConfig.ignores.add("comprar/**");
   eleventyConfig.ignores.add("privado/**");
   eleventyConfig.ignores.add("Temporales/**");

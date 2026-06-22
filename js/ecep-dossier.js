@@ -11,7 +11,7 @@
   if (_toc && !_toc.querySelector('.ec-toc-back')) {
     var _back = document.createElement('a');
     _back.className = 'ec-toc-back';
-    _back.href = '/evaluaciones/educacion-basica/estudio/educacion-generalista/';
+    _back.href = location.pathname.replace(/[^/]+\/?$/, '') || '/evaluaciones/';
     _back.innerHTML = '<i class="bi bi-grid-1x2-fill"></i> Índice';
     _toc.insertBefore(_back, _toc.firstChild);
   }

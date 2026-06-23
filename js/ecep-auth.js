@@ -13,7 +13,7 @@
 
   var LOGIN = '/evaluaciones/acceso/';
   var HOME = '/evaluaciones/';
-  var ADMIN_EMAILS = ['fconuva@gmail.com'];
+  var ADMIN_EMAILS = ['fconuva@gmail.com', 'portafolio.admin@profefranciscopancho.com'];
   var PAY_LINK = 'https://mpago.la/1wxtybe';
   var PRECIO = '$20.000';
   var WSP = '56988138929';

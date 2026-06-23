@@ -1,0 +1,114 @@
+---
+layout: layout-evaluaciones.njk
+title: "Admin · Accesos ECEP"
+head: '<link rel="stylesheet" href="/css/ecep-portal.css?v=8"><style>html.ecg body{visibility:hidden}</style><script>document.documentElement.classList.add("ecg");window.ECEP_PAGE="admin";</script>'
+scripts: '<script src="/js/ecep-auth.js?v=8"></script>'
+---
+<div class="ecp ecp-dash">
+  <header class="ecp-topbar">
+    <div class="in">
+      <a class="ecp-logo" href="/evaluaciones/"><span class="mark"><i class="bi bi-shield-lock-fill"></i></span> <span>Admin <b>ECEP</b></span></a>
+      <div class="ecp-user">
+        <div class="who"><b data-user-name>Admin</b><small data-user-email></small></div>
+        <div class="ecp-ava" data-user-initial>·</div>
+        <button class="ecp-logout" onclick="ecepLogout()"><i class="bi bi-box-arrow-right"></i> Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="ecp-main">
+    <div class="ecp-head">
+      <h1 class="ecp-hello">Accesos por dossier</h1>
+      <p class="ecp-lede">Activa el acceso de cada docente al dossier que pagó. El cambio es inmediato (el docente solo debe recargar).</p>
+    </div>
+
+    <div style="margin:0 0 16px"><input id="adm-q" type="search" placeholder="Buscar por correo o nombre…" style="width:100%;max-width:420px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:11px;font-size:14px"></div>
+
+    <div id="adm-status" style="color:#64748b;font-size:14px;margin-bottom:12px">Cargando usuarios…</div>
+    <div style="overflow-x:auto">
+      <table id="adm-tabla" style="width:100%;border-collapse:collapse;font-size:14px;display:none">
+        <thead><tr style="text-align:left;color:#475569;border-bottom:2px solid #e2e8f0">
+          <th style="padding:10px 8px">Docente</th>
+          <th style="padding:10px 6px;text-align:center">Generalista</th>
+          <th style="padding:10px 6px;text-align:center">Lenguaje</th>
+          <th style="padding:10px 6px;text-align:center">Matemática</th>
+          <th style="padding:10px 6px;text-align:center">Historia</th>
+          <th style="padding:10px 6px;text-align:center">Parvularia</th>
+        </tr></thead>
+        <tbody id="adm-body"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+window.ecepAdminInit = function (firebase) {
+  var DB = firebase.database();
+  var DOSSIERS = [['generalista','Generalista'],['lenguaje','Lenguaje'],['matematica','Matemática'],['historia','Historia'],['parvularia','Parvularia']];
+  var statusEl = document.getElementById('adm-status');
+  var tabla = document.getElementById('adm-tabla');
+  var body = document.getElementById('adm-body');
+  var usuarios = {}, accesos = {};
+
+  function toggle(uid, did, on, btn) {
+    var ref = DB.ref('ecep_accesos/' + uid + '/' + did);
+    btn.disabled = true;
+    (on ? ref.set(true) : ref.remove()).then(function () {
+      accesos[uid] = accesos[uid] || {};
+      if (on) accesos[uid][did] = true; else delete accesos[uid][did];
+      btn.disabled = false; paintBtn(btn, on);
+    }).catch(function (e) { btn.disabled = false; alert('Error: ' + (e && e.message)); });
+  }
+  function paintBtn(btn, on) {
+    btn.textContent = on ? '✓ Activo' : 'Dar acceso';
+    btn.style.background = on ? '#dcfce7' : '#f1f5f9';
+    btn.style.color = on ? '#15803d' : '#334155';
+    btn.style.fontWeight = on ? '700' : '500';
+    btn.dataset.on = on ? '1' : '0';
+  }
+  function render() {
+    var q = (document.getElementById('adm-q').value || '').toLowerCase();
+    var uids = Object.keys(usuarios).sort(function (a, b) {
+      return (usuarios[a].email || '').localeCompare(usuarios[b].email || '');
+    });
+    body.innerHTML = '';
+    var shown = 0;
+    uids.forEach(function (uid) {
+      var u = usuarios[uid];
+      var hay = ((u.email || '') + ' ' + (u.nombre || '')).toLowerCase();
+      if (q && hay.indexOf(q) < 0) return;
+      shown++;
+      var tr = document.createElement('tr');
+      tr.style.borderBottom = '1px solid #f1f5f9';
+      var td = document.createElement('td');
+      td.style.padding = '10px 8px';
+      td.innerHTML = '<b>' + (u.nombre || '—') + '</b><br><small style="color:#64748b">' + (u.email || uid) + '</small>';
+      tr.appendChild(td);
+      DOSSIERS.forEach(function (d) {
+        var cell = document.createElement('td');
+        cell.style.cssText = 'padding:8px 6px;text-align:center';
+        var on = !!(accesos[uid] && accesos[uid][d[0]] === true);
+        var btn = document.createElement('button');
+        btn.style.cssText = 'border:0;border-radius:9px;padding:7px 10px;font-size:12.5px;cursor:pointer';
+        paintBtn(btn, on);
+        btn.onclick = function () { toggle(uid, d[0], btn.dataset.on !== '1', btn); };
+        cell.appendChild(btn); tr.appendChild(cell);
+      });
+      body.appendChild(tr);
+    });
+    statusEl.textContent = shown + ' docente(s).';
+    tabla.style.display = '';
+  }
+
+  Promise.all([
+    DB.ref('ecep_usuarios').once('value'),
+    DB.ref('ecep_accesos').once('value')
+  ]).then(function (snaps) {
+    usuarios = snaps[0].val() || {};
+    accesos = snaps[1].val() || {};
+    if (!Object.keys(usuarios).length) { statusEl.textContent = 'Aún no hay docentes registrados (ingresan al iniciar sesión con Google).'; return; }
+    render();
+    document.getElementById('adm-q').addEventListener('input', render);
+  }).catch(function (e) { statusEl.textContent = 'Error al cargar: ' + (e && e.message); });
+};
+</script>

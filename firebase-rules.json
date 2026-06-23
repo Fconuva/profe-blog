@@ -1,9 +1,11 @@
 {
   "rules": {
-
     "users": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
-      ".indexOn": ["username", "email"],
+      ".indexOn": [
+        "username",
+        "email"
+      ],
       "$uid": {
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'admin')",
@@ -12,7 +14,6 @@
         }
       }
     },
-
     "portafolios": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       "$uid": {
@@ -21,38 +22,57 @@
         "paymentStatus": {
           ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin' || newData.val() === 'pre-inscrito' || newData.val() === 'pendiente' || newData.val() === 'pendiente_verificacion'"
         },
-        "paymentAmount":     { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
-        "esAbono":           { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
-        "esRegalo":          { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
-        "saldoPendiente":    { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
-        "paidAt":            { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" },
-        "paymentVerifiedAt": { ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'" }
+        "paymentAmount": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        },
+        "esAbono": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        },
+        "esRegalo": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        },
+        "saldoPendiente": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        },
+        "paidAt": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        },
+        "paymentVerifiedAt": {
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'admin'"
+        }
       }
     },
-
     "verified_payments": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".write": false,
-      ".indexOn": ["email", "paymentId", "uid"]
+      ".indexOn": [
+        "email",
+        "paymentId",
+        "uid"
+      ]
     },
-
     "courses": {
       ".read": "auth != null",
       ".write": "auth != null",
-      ".indexOn": ["userId", "courseName", "period"]
+      ".indexOn": [
+        "userId",
+        "courseName",
+        "period"
+      ]
     },
-
     "counters": {
       ".read": "auth != null",
       ".write": "auth != null"
     },
-
     "logs": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".write": "auth != null",
-      ".indexOn": ["timestamp", "userId", "action"]
+      ".indexOn": [
+        "timestamp",
+        "userId",
+        "action"
+      ]
     },
-
     "plataforma_estudiantes": {
       "admins": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
@@ -70,7 +90,9 @@
       },
       "estudiantes": {
         ".read": "auth != null",
-        ".indexOn": ["curso"],
+        ".indexOn": [
+          "curso"
+        ],
         "$uid": {
           ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
         }
@@ -120,7 +142,12 @@
       "tareas": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         "$tareaId": {
-          ".indexOn": ["curso", "completada", "submitted_at", "last_save"],
+          ".indexOn": [
+            "curso",
+            "completada",
+            "submitted_at",
+            "last_save"
+          ],
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
             ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
@@ -169,7 +196,6 @@
         }
       }
     },
-
     "plataforma_lecturas": {
       ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
       ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
@@ -205,7 +231,6 @@
         }
       }
     },
-
     "plataforma_np": {
       "access": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
@@ -233,7 +258,6 @@
         }
       }
     },
-
     "blacklist": {
       "emails": {
         "$email_key": {
@@ -248,13 +272,25 @@
         }
       }
     },
-
     "archived_users": {
       ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'",
       ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'admin'"
     },
-
     ".read": false,
-    ".write": false
+    ".write": false,
+    "ecep_usuarios": {
+      ".read": "auth != null && auth.token.email === 'fconuva@gmail.com'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'fconuva@gmail.com')",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "ecep_accesos": {
+      ".read": "auth != null && auth.token.email === 'fconuva@gmail.com'",
+      "$uid": {
+        ".read": "auth != null && (auth.uid === $uid || auth.token.email === 'fconuva@gmail.com')",
+        ".write": "auth != null && auth.token.email === 'fconuva@gmail.com'"
+      }
+    }
   }
 }

@@ -32,7 +32,7 @@
   function dossierFromPath() {
     var p = location.pathname;
     if (p.indexOf('/educacion-parvularia/') >= 0) return 'parvularia';
-    var m = p.match(/\/estudio\/([^\/]+)\//);
+    var m = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//);
     if (!m) return null;
     var seg = m[1];
     if (seg === 'educacion-generalista') return 'generalista';

@@ -23,7 +23,12 @@
     lenguaje: 'Educación Básica · Lenguaje',
     matematica: 'Educación Básica · Matemática',
     historia: 'Educación Básica · Historia y Geografía',
-    parvularia: 'Educación Parvularia'
+    ciencias: 'Educación Básica · Ciencias Naturales',
+    parvularia: 'Educación Parvularia',
+    'especial-dea': 'Educación Especial · Dificultades del Aprendizaje (DEA)',
+    'especial-di': 'Educación Especial · Discapacidad Intelectual',
+    'especial-tea': 'Educación Especial · Trastorno del Espectro Autista',
+    'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
@@ -32,6 +37,7 @@
   function dossierFromPath() {
     var p = location.pathname;
     if (p.indexOf('/educacion-parvularia/') >= 0) return 'parvularia';
+    if (p.indexOf('/educacion-especial/') >= 0) { var me = p.match(/\/estudio\/([^\/]+)\//); return me ? 'especial-' + me[1] : null; }
     var m = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//);
     if (!m) return null;
     var seg = m[1];
@@ -39,6 +45,7 @@
     if (seg === 'lenguaje-comunicacion') return 'lenguaje';
     if (seg === 'matematica') return 'matematica';
     if (seg === 'historia-geografia') return 'historia';
+    if (seg === 'ciencias-naturales') return 'ciencias';
     return null;
   }
 

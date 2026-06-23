@@ -132,5 +132,11 @@
     window.scrollTo(0, 0);
   }
 
+  // crédito de autoría (persistente, en todas las pantallas)
+  var cred = document.createElement('p');
+  cred.className = 'ecq-credit';
+  cred.innerHTML = 'Examen oficial de la <b>Evaluación Docente (ECEP)</b>, elaborado por el <b>CPEIP · Ministerio de Educación de Chile</b>. Material de uso libre; se reproduce aquí solo con fines de estudio. No es elaboración propia.';
+  if (mount.parentNode) mount.parentNode.appendChild(cred);
+
   intro();
 })();

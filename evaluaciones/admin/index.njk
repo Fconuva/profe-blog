@@ -22,6 +22,24 @@ scripts: '<script src="/js/ecep-auth.js?v=8"></script>'
       <p class="ecp-lede">Activa el acceso de cada docente al dossier que pagó. El cambio es inmediato (el docente solo debe recargar).</p>
     </div>
 
+    <div id="adm-stats" style="display:none;margin:0 0 22px">
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:12px">
+        <div class="adm-kpi" style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px">
+          <div style="font-size:12px;color:#64748b;font-weight:600">Docentes registrados</div>
+          <div id="kpi-users" style="font:800 26px Poppins,sans-serif;color:#0f172a">—</div>
+        </div>
+        <div class="adm-kpi" style="flex:1;min-width:150px;background:#fff;border:1px solid #e2e8f0;border-radius:14px;padding:14px 16px">
+          <div style="font-size:12px;color:#64748b;font-weight:600">Accesos pagados</div>
+          <div id="kpi-accesos" style="font:800 26px Poppins,sans-serif;color:#0f172a">—</div>
+        </div>
+        <div class="adm-kpi" style="flex:1;min-width:150px;background:#ecfdf5;border:1px solid #a7f3d0;border-radius:14px;padding:14px 16px">
+          <div style="font-size:12px;color:#047857;font-weight:600">Ingreso estimado</div>
+          <div id="kpi-ingreso" style="font:800 26px Poppins,sans-serif;color:#065f46">—</div>
+        </div>
+      </div>
+      <div id="kpi-pordossier" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+    </div>
+
     <div style="margin:0 0 16px"><input id="adm-q" type="search" placeholder="Buscar por correo o nombre…" style="width:100%;max-width:420px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:11px;font-size:14px"></div>
 
     <div id="adm-status" style="color:#64748b;font-size:14px;margin-bottom:12px">Cargando usuarios…</div>
@@ -56,7 +74,7 @@ window.ecepAdminInit = function (firebase) {
     (on ? ref.set(true) : ref.remove()).then(function () {
       accesos[uid] = accesos[uid] || {};
       if (on) accesos[uid][did] = true; else delete accesos[uid][did];
-      btn.disabled = false; paintBtn(btn, on);
+      btn.disabled = false; paintBtn(btn, on); renderStats();
     }).catch(function (e) { btn.disabled = false; alert('Error: ' + (e && e.message)); });
   }
   function paintBtn(btn, on) {
@@ -65,6 +83,21 @@ window.ecepAdminInit = function (firebase) {
     btn.style.color = on ? '#15803d' : '#334155';
     btn.style.fontWeight = on ? '700' : '500';
     btn.dataset.on = on ? '1' : '0';
+  }
+  function renderStats() {
+    var nUsers = Object.keys(usuarios).length;
+    var perD = {}, total = 0;
+    DOSSIERS.forEach(function (d) { perD[d[0]] = 0; });
+    Object.keys(accesos).forEach(function (uid) {
+      DOSSIERS.forEach(function (d) { if (accesos[uid] && accesos[uid][d[0]] === true) { perD[d[0]]++; total++; } });
+    });
+    document.getElementById('kpi-users').textContent = nUsers;
+    document.getElementById('kpi-accesos').textContent = total;
+    document.getElementById('kpi-ingreso').textContent = '$' + (total * 20000).toLocaleString('es-CL');
+    document.getElementById('kpi-pordossier').innerHTML = DOSSIERS.map(function (d) {
+      return '<span style="background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:13px;color:#334155"><b>' + perD[d[0]] + '</b> · ' + d[1] + '</span>';
+    }).join('');
+    document.getElementById('adm-stats').style.display = '';
   }
   function render() {
     var q = (document.getElementById('adm-q').value || '').toLowerCase();
@@ -106,6 +139,7 @@ window.ecepAdminInit = function (firebase) {
   ]).then(function (snaps) {
     usuarios = snaps[0].val() || {};
     accesos = snaps[1].val() || {};
+    renderStats();
     if (!Object.keys(usuarios).length) { statusEl.textContent = 'Aún no hay docentes registrados (ingresan al iniciar sesión con Google).'; return; }
     render();
     document.getElementById('adm-q').addEventListener('input', render);

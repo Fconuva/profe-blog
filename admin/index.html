@@ -128,6 +128,12 @@
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="entregados">📦 Entregados</button>
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="faltaoa">📩 Falta OA</button>
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="sinaviso">📣 Sin aviso</button>
+                        <span class="w-px h-5 bg-gray-200 mx-1"></span>
+                        <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="completos">🟢 Completos</button>
+                        <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="avance">🟡 En avance</button>
+                        <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="firmam3">🖊️ Falta firmar M3</button>
+                        <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="faltam3">🔴 Falta M3</button>
+                        <button id="pf-sort-cumpl" class="px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Ordenar por cumplitud (menos completo primero)">↕ Cumplitud</button>
                     </div>
                 </div>
                 <div id="portafolios-resumen" class="px-6 py-3 border-b border-gray-100 grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
@@ -1154,6 +1160,7 @@
 
         // ===== PORTAFOLIOS (vista unificada: entregados + avance + OA + aviso) =====
         var _pfFilter = 'all';
+        var _pfSort = 'fecha'; // 'fecha' | 'cumpl'
         function pfChip(lbl, val, cls) { return '<div class="bg-gray-50 rounded-lg px-3 py-2"><div class="text-[11px] text-gray-500">' + lbl + '</div><div class="text-lg font-bold ' + (cls || 'text-gray-800') + '">' + val + '</div></div>'; }
         function pfBar(p) { var col = p >= 70 ? 'bg-emerald-500' : p >= 30 ? 'bg-amber-500' : 'bg-rose-500'; var tc = p >= 70 ? 'text-emerald-700' : p >= 30 ? 'text-amber-700' : 'text-rose-700'; return '<div class="flex items-center gap-2"><div class="w-20 h-1.5 bg-gray-200 rounded-full overflow-hidden"><div class="h-full ' + col + '" style="width:' + p + '%"></div></div><span class="text-xs font-semibold ' + tc + '">' + p + '%</span></div>'; }
         // Semáforo de módulos: completado=verde, en progreso/revisión=amarillo, pendiente=rojo (solo orientaciones), no-contratado=gris
@@ -1174,6 +1181,36 @@
             var msg='Hola '+nom+' 👋 Te dejé tu avance en tu carpeta de Drive:\n'+url+'\n\nRevísalo con calma cuando puedas (es un borrador, la última palabra es tuya) y me cuentas qué ajustamos. 🙌';
             window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
             db.ref('portafolios/'+uid+'/seguimiento/revisarDrive').set({at:new Date().toISOString(),by:'admin'});
+        };
+        // Cumplitud: puntaje por módulo (completado=2, en progreso/revisión=1, resto=0) → 0..6
+        function cumpM(e){ return e==='completado'?2:(e==='en-revision'||e==='en-progreso')?1:0; }
+        // WhatsApp: confirmar el OA propuesto
+        window.confirmarOA = function(uid){
+            var u=(allClients||{})[uid]||{}; var phone=normWaPhone(u.telefono);
+            if(!phone){ alert('Este docente no tiene teléfono registrado.'); return; }
+            var nom=(u.nombre||'').split(' ')[0]||'colega';
+            var msg='Hola '+nom+' 👋 Te escribe el equipo del profe Francisco Núñez. Para tu *Módulo 1* propusimos un *Objetivo de Aprendizaje (OA)* a partir de tu asignatura y curso. 📘\n\n¿Nos confirmas que ese OA es el que vas a trabajar? Si prefieres otro, dinos cuál y lo ajustamos. ¡Quedamos atentos! 🙌';
+            window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
+            db.ref('portafolios/'+uid+'/seguimiento/oaConfirmarPedido').set({at:new Date().toISOString(),by:'admin'});
+        };
+        // WhatsApp: pedir la experiencia colaborativa (para construir el M3)
+        window.pedirExperienciaM3 = function(uid){
+            var u=(allClients||{})[uid]||{}; var phone=normWaPhone(u.telefono);
+            if(!phone){ alert('Este docente no tiene teléfono registrado.'); return; }
+            var nom=(u.nombre||'').split(' ')[0]||'colega';
+            var msg='Hola '+nom+' 👋 Para construir tu *Módulo 3 (trabajo colaborativo)* necesitamos que nos cuentes la *experiencia colaborativa* que hiciste con otro/a docente: 🤝\n\n• ¿Qué hicieron juntos/as y con quién? (nombre y RUT del colega)\n• ¿En qué fechas y cuántas sesiones?\n• ¿Qué evidencia tienes? (fotos, actas, registros)\n\nCon eso te dejamos armado el M3. ¡Gracias! 🙌';
+            window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
+            db.ref('portafolios/'+uid+'/seguimiento/m3ExperienciaPedida').set({at:new Date().toISOString(),by:'admin'});
+        };
+        // WhatsApp: pedir firmas + evidencia para cerrar el M3 ya construido
+        window.pedirFirmasM3 = function(uid){
+            var u=(allClients||{})[uid]||{}, p=(allPortafolios||{})[uid]||{}, gd=p.googleDrive||{};
+            var phone=normWaPhone(u.telefono);
+            if(!phone){ alert('Este docente no tiene teléfono registrado.'); return; }
+            var nom=(u.nombre||'').split(' ')[0]||'colega'; var url=gd.shareUrl||'';
+            var msg='Hola '+nom+' 👋 ¡Tu *Módulo 3* ya está en tu carpeta de Drive! '+(url?('\n'+url+'\n'):'')+'\nPara cerrarlo queda lo último, que es tuyo:\n• *Firmar el acta* del trabajo colaborativo (tú y tu colega) + *timbre de Dirección*.\n• Completar los datos marcados *(completar)* (RUTs y fechas).\n• Adjuntar la *evidencia 5.1* (fotos o registros de la experiencia).\n\nApenas lo tengas, queda al 100%. ¡Gracias! 🙌';
+            window.open('https://api.whatsapp.com/send?phone='+phone+'&text='+encodeURIComponent(msg),'_blank');
+            db.ref('portafolios/'+uid+'/seguimiento/m3FirmasPedidas').set({at:new Date().toISOString(),by:'admin'});
         };
         function renderPortafolios() {
             var cont = document.getElementById('portafolios-list'); if (!cont) return;
@@ -1201,10 +1238,14 @@
                     insc: _ts(u.createdAt) || _ts(p.createdAt), pct: pct, pagado: pagado, conDrive: conDrive, shareUrl: gd.shareUrl || '',
                     conOA: conOA, gancho: gancho, borradorListo: borradorListo, avisoEnviado: avisoEnviado, entregado: entregado,
                     m1e: (p.modulo1 || {}).estado || '', m2e: (p.modulo2 || {}).estado || '', m3e: (p.modulo3 || {}).estado || '',
+                    cumpl: cumpM((p.modulo1 || {}).estado || '') + cumpM((p.modulo2 || {}).estado || '') + cumpM((p.modulo3 || {}).estado || ''),
                     oaProp: (!conOA && (borradorListo || gancho)),               // M1 hecho con OA propuesto, falta confirmarlo
                     faltaOA: (relevante && !conOA && !(borradorListo || gancho)) }); // de verdad sin OA (ni M1)
             });
-            rows.sort(function (a, b) { return (b.insc || 0) - (a.insc || 0); });
+            rows.sort(function (a, b) {
+                if (_pfSort === 'cumpl') return (a.cumpl - b.cumpl) || ((b.insc || 0) - (a.insc || 0)); // menos completo primero (los que necesitan trabajo)
+                return (b.insc || 0) - (a.insc || 0);
+            });
             var nEnt = rows.filter(function (r) { return r.entregado; }).length;
             var nFaltaOA = rows.filter(function (r) { return r.faltaOA; }).length;
             var nOaProp = rows.filter(function (r) { return r.oaProp; }).length;
@@ -1217,6 +1258,10 @@
                 if (_pfFilter === 'entregados') return r.entregado;
                 if (_pfFilter === 'faltaoa') return r.faltaOA;
                 if (_pfFilter === 'sinaviso') return !r.avisoEnviado;
+                if (_pfFilter === 'completos') return r.cumpl >= 6;
+                if (_pfFilter === 'avance') return r.cumpl >= 2 && r.cumpl < 6;
+                if (_pfFilter === 'firmam3') return r.m3e === 'en-revision';
+                if (_pfFilter === 'faltam3') return r.m3e !== 'completado' && r.m3e !== 'en-revision';
                 return true;
             });
             if (!fr.length) { cont.innerHTML = '<p class="px-6 py-10 text-sm text-gray-400">— nadie en este filtro —</p>'; return; }
@@ -1246,6 +1291,9 @@
                 var msgWsp = (window.MENSAJES_WSP && MENSAJES_WSP[r.uid] && !recienInscrito(r.uid)) ? '<button onclick="enviarMsgWsp(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="Enviar mensaje personalizado (completar datos + pago en cuotas)">📲 Msg</button><button onclick="copiarMsgWsp(\'' + r.uid + '\')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Copiar el mensaje">📋</button>' : '';
                 var alerta = r.pct < 70 ? '<span class="ml-1 align-middle" title="Falta información del docente (' + r.pct + '%) — conviene pedirle que complete sus datos">⚠️</span>' : '';
                 var revBtn = (r.shareUrl && tel) ? '<button onclick="revisarDrive(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="WhatsApp: pedir que revise su avance en el Drive">📲 Revisar Drive</button>' : '';
+                var confOA = (r.oaProp && tel) ? '<button onclick="confirmarOA(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-indigo-600 text-white hover:bg-indigo-700" title="WhatsApp: confirmar el OA propuesto">✓ OA</button>' : '';
+                var firmaM3 = (r.m3e === 'en-revision' && tel) ? '<button onclick="pedirFirmasM3(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-700 text-white hover:bg-emerald-800" title="WhatsApp: pedir firmas + evidencia para cerrar el M3">🖊️ M3</button>' : '';
+                var expM3 = (r.m1e === 'completado' && r.m3e !== 'completado' && r.m3e !== 'en-revision' && tel) ? '<button onclick="pedirExperienciaM3(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-teal-600 text-white hover:bg-teal-700" title="WhatsApp: pedir la experiencia colaborativa para el M3">🤝 M3</button>' : '';
                 h += '<tr class="hover:bg-gray-50">' +
                     '<td data-label="Docente" class="px-4 py-3"><div class="font-medium text-gray-900">' + escapeHtml(r.nombre) + alerta + '</div><div class="text-xs text-gray-500">' + escapeHtml(r.email) + '</div></td>' +
                     '<td data-label="Avance" class="px-4 py-3">' + pfBar(r.pct) + '</td>' +
@@ -1255,7 +1303,7 @@
                     '<td data-label="Aviso" class="px-4 py-3">' + aviso + '</td>' +
                     '<td data-label="Acciones" class="px-4 py-3"><div class="flex items-center gap-2 flex-wrap">' +
                         '<button class="text-primary-600 hover:text-primary-700 text-sm font-medium pf-edit" data-uid="' + r.uid + '">Ver</button>' +
-                        drive + revBtn + pedirOA + msgWsp + '</div></td></tr>';
+                        drive + revBtn + confOA + firmaM3 + expM3 + pedirOA + msgWsp + '</div></td></tr>';
             });
             cont.innerHTML = h + '</tbody></table></div>';
             cont.querySelectorAll('.pf-edit').forEach(function (b) { b.addEventListener('click', function () { openModal(this.getAttribute('data-uid')); }); });
@@ -1268,6 +1316,9 @@
                 renderPortafolios();
             });
         });
+
+        var _sb = document.getElementById('pf-sort-cumpl');
+        if (_sb) _sb.addEventListener('click', function(){ _pfSort = (_pfSort === 'cumpl' ? 'fecha' : 'cumpl'); var on = _pfSort === 'cumpl'; this.classList.toggle('bg-gray-900', on); this.classList.toggle('text-white', on); this.classList.toggle('bg-gray-100', !on); this.classList.toggle('text-gray-600', !on); renderPortafolios(); });
 
         // ===== TABS =====
         document.querySelectorAll('.tab-btn').forEach(function(btn) {

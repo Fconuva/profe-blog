@@ -84,8 +84,39 @@
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="clientes">👥 Clientes</button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="preinscritos">📋 Inscritos <span id="preinscritos-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-amber-500 text-white">0</span></button>
                     <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="portafolios">📦 Portafolios <span id="portafolios-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full bg-orange-500 text-white">0</span></button>
+                    <button class="tab-btn px-4 py-3 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700 transition-colors" data-tab="dossiers">🎓 Dossiers <span id="dossiers-badge" class="hidden ml-1 px-1.5 py-0.5 text-xs rounded-full text-white" style="background:#7c3aed">0</span></button>
                 </nav>
             </div>
+        </div>
+
+        <!-- ===== TAB: DOSSIERS (Plataforma de estudio ECEP) ===== -->
+        <div id="tab-dossiers" class="tab-content hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-1">
+                <h2 class="text-lg font-semibold text-gray-800">🎓 Dossiers de estudio · ECEP</h2>
+                <div class="flex gap-2">
+                    <a href="/evaluaciones/" target="_blank" class="px-3 py-2 text-sm font-medium rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200">Ver plataforma ↗</a>
+                    <a href="/evaluaciones/admin/" target="_blank" class="px-3 py-2 text-sm font-medium rounded-lg text-white" style="background:#7c3aed">Gestionar accesos por docente →</a>
+                </div>
+            </div>
+            <p class="text-sm text-gray-500 mb-5">Catálogo de dossiers, ventas (accesos pagados) e ingreso. Cada dossier vale $20.000. El acceso se activa por docente en <span class="font-medium">«Gestionar accesos por docente»</span>.</p>
+
+            <div class="mb-6" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px">
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-xs font-semibold text-gray-500">Docentes registrados en ECEP</div>
+                    <div id="ecep-kpi-users" class="text-2xl font-bold text-gray-900 mt-1">—</div>
+                </div>
+                <div class="bg-white border border-gray-200 rounded-xl p-4">
+                    <div class="text-xs font-semibold text-gray-500">Accesos pagados (vendidos)</div>
+                    <div id="ecep-kpi-accesos" class="text-2xl font-bold text-gray-900 mt-1">—</div>
+                </div>
+                <div class="rounded-xl p-4" style="background:#f5f3ff;border:1px solid #ddd6fe">
+                    <div class="text-xs font-semibold" style="color:#6d28d9">Ingreso estimado</div>
+                    <div id="ecep-kpi-ingreso" class="text-2xl font-bold mt-1" style="color:#5b21b6">—</div>
+                </div>
+            </div>
+
+            <div id="ecep-status" class="text-sm text-gray-500 mb-3">Cargando dossiers…</div>
+            <div id="ecep-dossier-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px"></div>
         </div>
 
         <!-- ===== TAB: DASHBOARD ===== -->
@@ -4078,6 +4109,92 @@
             };
         }
 
+    })();
+    </script>
+
+    <!-- ===== DOSSIERS ECEP: ventas y catálogo ===== -->
+    <script>
+    (function () {
+        var DOSSIERS = [
+            { id: 'generalista',  nombre: 'Generalista',            url: '/evaluaciones/educacion-basica/estudio/educacion-generalista/', grupo: 'Básica' },
+            { id: 'lenguaje',     nombre: 'Lenguaje',               url: '/evaluaciones/educacion-basica/estudio/lenguaje-comunicacion/', grupo: 'Básica' },
+            { id: 'matematica',   nombre: 'Matemática',             url: '/evaluaciones/educacion-basica/estudio/matematica/',           grupo: 'Básica' },
+            { id: 'historia',     nombre: 'Historia y Geografía',   url: '/evaluaciones/educacion-basica/estudio/historia-geografia/',    grupo: 'Básica' },
+            { id: 'ciencias',     nombre: 'Ciencias Naturales',     url: '/evaluaciones/educacion-basica/estudio/ciencias-naturales/',    grupo: 'Básica' },
+            { id: 'parvularia',   nombre: 'Parvularia',             url: '/evaluaciones/educacion-parvularia/estudio/',                  grupo: 'Parvularia' },
+            { id: 'especial-dea', nombre: 'Especial · DEA',         url: '/evaluaciones/educacion-especial/estudio/dea/',                grupo: 'Diferencial' },
+            { id: 'especial-di',  nombre: 'Especial · DI',          url: '/evaluaciones/educacion-especial/estudio/di/',                 grupo: 'Diferencial' },
+            { id: 'especial-tea', nombre: 'Especial · TEA',         url: '/evaluaciones/educacion-especial/estudio/tea/',                grupo: 'Diferencial' },
+            { id: 'especial-tel', nombre: 'Especial · TEL',         url: '/evaluaciones/educacion-especial/estudio/tel/',                grupo: 'Diferencial' }
+        ];
+        var PRECIO = 20000;
+        var loaded = false;
+
+        function grupoStyle(g) {
+            if (g === 'Diferencial') return 'background:#ede9fe;color:#6d28d9';
+            if (g === 'Parvularia') return 'background:#fce7f3;color:#be185d';
+            return 'background:#e0f2fe;color:#0369a1';
+        }
+
+        function render(usuarios, accesos) {
+            var nUsers = Object.keys(usuarios || {}).length;
+            var perD = {}; DOSSIERS.forEach(function (d) { perD[d.id] = 0; });
+            var total = 0;
+            Object.keys(accesos || {}).forEach(function (uid) {
+                var a = accesos[uid] || {};
+                DOSSIERS.forEach(function (d) { if (a[d.id] === true) { perD[d.id]++; total++; } });
+            });
+            document.getElementById('ecep-kpi-users').textContent = nUsers;
+            document.getElementById('ecep-kpi-accesos').textContent = total;
+            document.getElementById('ecep-kpi-ingreso').textContent = '$' + (total * PRECIO).toLocaleString('es-CL');
+            var badge = document.getElementById('dossiers-badge');
+            if (badge && total > 0) { badge.textContent = total; badge.classList.remove('hidden'); }
+
+            var grid = document.getElementById('ecep-dossier-grid');
+            grid.innerHTML = DOSSIERS.map(function (d) {
+                var n = perD[d.id];
+                return '' +
+                  '<div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2">' +
+                    '<div class="flex items-center justify-between gap-2">' +
+                      '<span class="text-xs font-semibold px-2 py-0.5 rounded-full" style="' + grupoStyle(d.grupo) + '">' + d.grupo + '</span>' +
+                      '<span class="text-xs text-gray-400">$' + PRECIO.toLocaleString('es-CL') + '</span>' +
+                    '</div>' +
+                    '<div class="font-semibold text-gray-800 leading-tight">' + d.nombre + '</div>' +
+                    '<div class="flex items-end justify-between mt-1">' +
+                      '<div><span class="text-2xl font-bold text-gray-900">' + n + '</span> <span class="text-xs text-gray-500">acceso' + (n === 1 ? '' : 's') + '</span></div>' +
+                      '<a href="' + d.url + '" target="_blank" class="text-sm font-medium" style="color:#7c3aed">Ver ↗</a>' +
+                    '</div>' +
+                  '</div>';
+            }).join('');
+            document.getElementById('ecep-status').textContent =
+                'Catálogo: ' + DOSSIERS.length + ' dossiers · ' + total + ' acceso(s) pagado(s) · ' + nUsers + ' docente(s) registrado(s).';
+        }
+
+        function load() {
+            if (loaded || typeof firebase === 'undefined' || !firebase.database) return;
+            loaded = true;
+            var db = firebase.database();
+            Promise.all([
+                db.ref('ecep_usuarios').once('value'),
+                db.ref('ecep_accesos').once('value')
+            ]).then(function (snaps) {
+                render(snaps[0].val() || {}, snaps[1].val() || {});
+            }).catch(function (e) {
+                document.getElementById('ecep-status').textContent =
+                    'No se pudieron leer los accesos ECEP (' + ((e && e.message) || 'permiso') + '). Verifica que ingresaste con la cuenta de admin ECEP.';
+                render({}, {});
+            });
+        }
+
+        // Carga perezosa: al abrir la pestaña Dossiers (cuando el admin ya está autenticado).
+        document.addEventListener('click', function (e) {
+            var btn = e.target.closest && e.target.closest('.tab-btn');
+            if (btn && btn.getAttribute('data-tab') === 'dossiers') load();
+        });
+        // Si firebase ya tiene sesión, precargar para que el badge aparezca sin abrir la pestaña.
+        if (typeof firebase !== 'undefined' && firebase.auth) {
+            firebase.auth().onAuthStateChanged(function (user) { if (user) load(); });
+        }
     })();
     </script>
 </body>

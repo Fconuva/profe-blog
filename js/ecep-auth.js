@@ -29,7 +29,8 @@
     'especial-di': 'Educación Especial · Discapacidad Intelectual',
     'especial-tea': 'Educación Especial · Trastorno del Espectro Autista',
     'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)',
-    'media-lengua': 'Educación Media · Lengua y Literatura'
+    'media-lengua': 'Educación Media · Lengua y Literatura',
+    'media-matematica': 'Educación Media · Matemática'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }

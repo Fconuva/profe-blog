@@ -28,7 +28,8 @@
     'especial-dea': 'Educación Especial · Dificultades del Aprendizaje (DEA)',
     'especial-di': 'Educación Especial · Discapacidad Intelectual',
     'especial-tea': 'Educación Especial · Trastorno del Espectro Autista',
-    'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)'
+    'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)',
+    'media-lengua': 'Educación Media · Lengua y Literatura'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
@@ -38,6 +39,7 @@
     var p = location.pathname;
     if (p.indexOf('/educacion-parvularia/') >= 0) return 'parvularia';
     if (p.indexOf('/educacion-especial/') >= 0) { var me = p.match(/\/estudio\/([^\/]+)\//); return me ? 'especial-' + me[1] : null; }
+    if (p.indexOf('/educacion-media/') >= 0) { var mm = p.match(/\/estudio\/([^\/]+)\//); if (!mm) return null; return mm[1] === 'lengua-y-literatura' ? 'media-lengua' : 'media-' + mm[1]; }
     var m = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//);
     if (!m) return null;
     var seg = m[1];

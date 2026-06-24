@@ -1316,6 +1316,9 @@
     var portData = null;
     var _suppressRender = false;
     var _paymentVerificationStarted = false;
+    // Intención de pago de ESTA sesión: solo entonces se muestra la pantalla de pago
+    // a un pre-inscrito. En una carga normal cae siempre en su panel de pre-inscripción.
+    var _payIntent = false;
     var _listaArchivoMeta = null;
     var _adjuntosM3 = [];
 
@@ -1466,6 +1469,8 @@
                     renderAdjuntosM3();
                     if (_suppressRender) return; // Don't re-render during auto-save
                     
+                    // Volver desde MercadoPago es una intención de pago explícita de esta sesión.
+                    if (_paymentReturn === 'success') { _payIntent = true; }
                     // Secure payment verification if query parameters are present
                     if (_paymentReturn === 'success' && portData && portData.paymentStatus !== 'approved') {
                         // Check if we have an actual payment ID from Mercado Pago
@@ -1569,8 +1574,12 @@
             var paid = portData && (portData.paymentStatus === 'approved' || portData.paymentStatus === 'aprobado' || portData.paymentStatus === 'abono' || portData.paymentStatus === 'gratis');
 
             if (isPreInscrito && !paid) {
-                // If the pre-inscrito has chosen a paid plan to pay, redirect to payment!
-                if (portData && portData.plan && portData.plan !== 'pre-inscripcion') {
+                // Solo saltamos al pago si el docente lo pidió en esta sesión (eligió plan o
+                // volvió de MercadoPago), o si tiene un pago informado esperando verificación.
+                // En una carga normal cae siempre en su panel de pre-inscripción, con
+                // "Completar mi pago" como una opción más.
+                var _pagoEnCurso = _payIntent || portData.paymentStatus === 'pendiente_verificacion';
+                if (_pagoEnCurso && portData && portData.plan && portData.plan !== 'pre-inscripcion') {
                     document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
                     document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
                     if (portData.paymentStatus === 'pendiente_verificacion') {
@@ -2286,6 +2295,8 @@
         // ---- STEP 1: Select Plan ----
         window.selectPlan = function(plan) {
             if (!currentUser) return;
+            // El docente eligió un plan para pagar: habilita el paso de pago en esta sesión.
+            _payIntent = true;
             var planModules = {
                 completo: { modulo1: true, modulo2: true, modulo3: true },
                 modulo1: { modulo1: true, modulo2: false, modulo3: false },
@@ -3383,7 +3394,7 @@
                 if (preCancelBtn) preCancelBtn.classList.add('hidden');
                 
                 // If they have an active plan selected, return them to the payment step directly!
-                if (portData && portData.plan && portData.plan !== 'pre-inscripcion') {
+                if (_payIntent && portData && portData.plan && portData.plan !== 'pre-inscripcion') {
                     hideAll();
                     document.getElementById('step-payment').classList.remove('hidden');
                 } else if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
@@ -3423,7 +3434,7 @@
         var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
         if (preCancelBtn) {
             preCancelBtn.addEventListener('click', function() {
-                if (portData && portData.plan && portData.plan !== 'pre-inscripcion') {
+                if (_payIntent && portData && portData.plan && portData.plan !== 'pre-inscripcion') {
                     hideAll();
                     document.getElementById('step-payment').classList.remove('hidden');
                 } else if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {

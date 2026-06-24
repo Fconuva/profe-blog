@@ -31,7 +31,8 @@
     'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)',
     'media-lengua': 'Educación Media · Lengua y Literatura',
     'media-matematica': 'Educación Media · Matemática',
-    'media-biologia': 'Educación Media · Biología'
+    'media-biologia': 'Educación Media · Biología',
+    'media-historia': 'Educación Media · Historia y Geografía'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }

@@ -32,7 +32,8 @@
     'media-lengua': 'Educación Media · Lengua y Literatura',
     'media-matematica': 'Educación Media · Matemática',
     'media-biologia': 'Educación Media · Biología',
-    'media-historia': 'Educación Media · Historia y Geografía'
+    'media-historia': 'Educación Media · Historia y Geografía',
+    'media-fisica': 'Educación Media · Física'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }

@@ -36,7 +36,14 @@
     'media-fisica': 'Educación Media · Física',
     'media-quimica': 'Educación Media · Química',
     'ingles': 'Educación Básica · Inglés',
-    'media-ingles': 'Educación Media · Inglés'
+    'media-ingles': 'Educación Media · Inglés',
+    'ef-basica': 'Educación Básica · Educación Física y Salud',
+    'tecnologia': 'Educación Básica · Tecnología',
+    'religion': 'Educación Básica · Religión Católica',
+    'media-musica': 'Educación Media · Música',
+    'media-artes-visuales': 'Educación Media · Artes Visuales',
+    'media-educacion-fisica': 'Educación Media · Educación Física y Salud',
+    'media-filosofia': 'Educación Media · Filosofía'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
@@ -56,6 +63,9 @@
     if (seg === 'historia-geografia') return 'historia';
     if (seg === 'ciencias-naturales') return 'ciencias';
     if (seg === 'ingles') return 'ingles';
+    if (seg === 'educacion-fisica') return 'ef-basica';
+    if (seg === 'tecnologia') return 'tecnologia';
+    if (seg === 'religion') return 'religion';
     return null;
   }
 

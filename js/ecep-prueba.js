@@ -63,6 +63,8 @@
     if (q.textoBase) html += '<div class="ecq-texto"><span class="tt"><i class="bi bi-card-text"></i> Texto base</span><div>' + esc(q.textoBase).replace(/\n/g, '<br>') + '</div></div>';
     html += '<div class="ecq-enun">' + esc(q.enunciado).replace(/\n/g, '<br>') + '</div>';
     if (q.imagen) html += '<figure class="ecq-img"><img src="' + q.imagen + '" alt="Figura de la pregunta ' + q.n + ' (examen original)" loading="lazy"><figcaption>Figura de la pregunta en el examen original (lee las alternativas en la imagen si es necesario).</figcaption></figure>';
+    if (q.audio) html += '<figure class="ecq-img"><audio controls preload="none" style="width:100%;display:block;border-radius:10px"><source src="' + q.audio + '" type="audio/mpeg">Tu navegador no soporta el audio.</audio><figcaption>Audio del examen ECEP 2024 (CPEIP). Escúchalo las veces que necesites para responder.</figcaption></figure>';
+    if (q.nota) html += '<div class="ecq-nota"><i class="bi bi-info-circle"></i> ' + esc(q.nota) + '</div>';
     html += '<div class="ecq-alts">';
     LET.forEach(function (L, k) {
       var txt = q.alternativas && q.alternativas[k] ? q.alternativas[k] : '';

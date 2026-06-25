@@ -164,6 +164,7 @@
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="avance">🟡 En avance</button>
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="firmam3">🖊️ Falta firmar M3</button>
                         <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="faltam3">🔴 Falta M3</button>
+                        <button class="pf-filter px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" data-pf="sindatos" title="Inscritos hace más de 5 días que aún no tienen nada escrito (formulario vacío)">🚨 Sin datos +5d</button>
                         <button id="pf-sort-cumpl" class="px-3 py-1 text-xs font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Ordenar por cumplitud (menos completo primero)">↕ Cumplitud</button>
                     </div>
                 </div>
@@ -1264,8 +1265,11 @@
                 var avisoEnviado = !!seg.avisoM1M3;
                 var entregado = conDrive && pagado;
                 var relevante = gancho || conOA || conDrive || borradorListo || pagado || pct > 0;
-                if (!relevante) return; // los inscritos vacíos viven en Clientes / Inscritos
+                var diasInsc = (function () { var t = _ts(u.createdAt) || _ts(p.createdAt); return t ? Math.floor((Date.now() - t) / 86400000) : 0; })();
+                var sinDatos5d = (pct === 0 && !conOA && !borradorListo && !pagado && diasInsc > 5);
+                if (!relevante && !sinDatos5d) return; // inscritos vacíos: solo se muestran si llevan +5 días sin datos
                 rows.push({ uid: uid, nombre: u.nombre || '(sin nombre)', email: u.email || '', tel: u.telefono || '',
+                    diasInsc: diasInsc, sinDatos5d: sinDatos5d,
                     insc: _ts(u.createdAt) || _ts(p.createdAt), pct: pct, pagado: pagado, conDrive: conDrive, shareUrl: gd.shareUrl || '',
                     conOA: conOA, gancho: gancho, borradorListo: borradorListo, avisoEnviado: avisoEnviado, entregado: entregado,
                     m1e: (p.modulo1 || {}).estado || '', m2e: (p.modulo2 || {}).estado || '', m3e: (p.modulo3 || {}).estado || '',
@@ -1281,8 +1285,9 @@
             var nFaltaOA = rows.filter(function (r) { return r.faltaOA; }).length;
             var nOaProp = rows.filter(function (r) { return r.oaProp; }).length;
             var nSinAviso = rows.filter(function (r) { return !r.avisoEnviado; }).length;
+            var nSinDatos = rows.filter(function (r) { return r.sinDatos5d; }).length;
             var res = document.getElementById('portafolios-resumen');
-            if (res) res.innerHTML = pfChip('Con avance', rows.length) + pfChip('Entregados', nEnt, 'text-emerald-600') + pfChip('OA propuesto', nOaProp, 'text-indigo-600') + pfChip('Falta OA', nFaltaOA, 'text-rose-600') + pfChip('Sin aviso', nSinAviso, 'text-amber-600');
+            if (res) res.innerHTML = pfChip('Con avance', rows.length - nSinDatos) + pfChip('Entregados', nEnt, 'text-emerald-600') + pfChip('OA propuesto', nOaProp, 'text-indigo-600') + pfChip('Falta OA', nFaltaOA, 'text-rose-600') + pfChip('Sin aviso', nSinAviso, 'text-amber-600') + pfChip('Sin datos +5d', nSinDatos, 'text-rose-700');
             var badge = document.getElementById('portafolios-badge');
             if (badge) { badge.textContent = nFaltaOA; badge.classList.toggle('hidden', nFaltaOA === 0); }
             var fr = rows.filter(function (r) {
@@ -1293,6 +1298,7 @@
                 if (_pfFilter === 'avance') return r.cumpl >= 2 && r.cumpl < 6;
                 if (_pfFilter === 'firmam3') return r.m3e === 'en-revision';
                 if (_pfFilter === 'faltam3') return r.m3e !== 'completado' && r.m3e !== 'en-revision';
+                if (_pfFilter === 'sindatos') return r.sinDatos5d;
                 return true;
             });
             if (!fr.length) { cont.innerHTML = '<p class="px-6 py-10 text-sm text-gray-400">— nadie en este filtro —</p>'; return; }
@@ -1305,7 +1311,8 @@
                 '<th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Aviso</th>' +
                 '<th class="px-4 py-3 text-xs font-medium text-gray-500 uppercase">Acciones</th></tr></thead><tbody class="divide-y divide-gray-100">';
             fr.forEach(function (r) {
-                var estado = r.entregado ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Entregado</span>'
+                var estado = r.sinDatos5d ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700" title="Inscrito hace ' + r.diasInsc + ' días y el formulario sigue vacío — pedirle sus datos">🚨 Sin datos · ' + r.diasInsc + 'd</span>'
+                    : r.entregado ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Entregado</span>'
                     : r.borradorListo ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-indigo-100 text-indigo-700">Borrador listo</span>'
                     : r.gancho ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-purple-100 text-purple-700">M1 gancho</span>'
                     : r.pagado ? '<span class="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700">Pagó</span>'
@@ -1318,7 +1325,7 @@
                     : r.avisoEnviado ? '<span class="text-xs text-gray-400">✅ enviado</span>'
                     : (tel ? '<button onclick="enviarAvisoM1(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">📣 Enviar</button>' : '<span class="text-xs text-gray-300">sin tel.</span>');
                 var drive = r.shareUrl ? '<a href="' + escapeHtml(r.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-7 h-7 rounded-lg text-white text-xs" style="background-color:#0F9D58" title="Abrir carpeta de Drive">📁</a>' : '';
-                var pedirOA = (r.faltaOA && tel) ? '<button onclick="preguntarOA(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700">📝 Pedir OA</button>' : '';
+                var pedirOA = ((r.faltaOA || r.sinDatos5d) && tel) ? '<button onclick="preguntarOA(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg bg-orange-600 text-white hover:bg-orange-700">📝 ' + (r.sinDatos5d ? 'Pedir datos' : 'Pedir OA') + '</button>' : '';
                 var msgWsp = (window.MENSAJES_WSP && MENSAJES_WSP[r.uid] && !recienInscrito(r.uid)) ? '<button onclick="enviarMsgWsp(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="Enviar mensaje personalizado (completar datos + pago en cuotas)">📲 Msg</button><button onclick="copiarMsgWsp(\'' + r.uid + '\')" class="px-2 py-1 text-xs font-semibold rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200" title="Copiar el mensaje">📋</button>' : '';
                 var alerta = r.pct < 70 ? '<span class="ml-1 align-middle" title="Falta información del docente (' + r.pct + '%) — conviene pedirle que complete sus datos">⚠️</span>' : '';
                 var revBtn = (r.shareUrl && tel) ? '<button onclick="revisarDrive(\'' + r.uid + '\')" class="px-2.5 py-1 text-xs font-semibold rounded-lg text-white" style="background-color:#25D366" title="WhatsApp: pedir que revise su avance en el Drive">📲 Revisar Drive</button>' : '';

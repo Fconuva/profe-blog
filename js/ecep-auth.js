@@ -34,7 +34,9 @@
     'media-biologia': 'Educación Media · Biología',
     'media-historia': 'Educación Media · Historia y Geografía',
     'media-fisica': 'Educación Media · Física',
-    'media-quimica': 'Educación Media · Química'
+    'media-quimica': 'Educación Media · Química',
+    'ingles': 'Educación Básica · Inglés',
+    'media-ingles': 'Educación Media · Inglés'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
@@ -53,6 +55,7 @@
     if (seg === 'matematica') return 'matematica';
     if (seg === 'historia-geografia') return 'historia';
     if (seg === 'ciencias-naturales') return 'ciencias';
+    if (seg === 'ingles') return 'ingles';
     return null;
   }
 

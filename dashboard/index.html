@@ -2374,6 +2374,18 @@
             var orig = btn.innerHTML;
             btn.style.pointerEvents = 'none';
             btn.innerHTML = '⏳ Generando pago seguro...';
+            // En conexiones lentas (móvil) el fetch puede colgarse sin resolver ni fallar y el botón
+            // quedaba pegado en "Generando…". Con timeout + AbortController, si no responde a tiempo
+            // se aborta y se cae al link de Mercado Pago estático para que SIEMPRE pueda pagar.
+            var done = false;
+            var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+            function recuperar() {
+                if (done) return; done = true;
+                if (ctrl) { try { ctrl.abort(); } catch (e) {} }
+                if (fallbackUrl) { window.location.href = fallbackUrl; }
+                else { btn.style.pointerEvents = ''; btn.innerHTML = orig; }
+            }
+            var to = setTimeout(recuperar, 15000);
             fetch('/api/mercadopago/create_preference', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2383,17 +2395,21 @@
                     name: (userData && userData.nombre) || '',
                     plan: (portData && portData.plan && portData.plan !== 'pre-inscripcion') ? portData.plan : 'completo',
                     tipo: tipo || ''
-                })
+                }),
+                signal: ctrl ? ctrl.signal : undefined
             })
             .then(function(r){ return r.json(); })
             .then(function(data){
+                if (done) return;
                 var url = data && data.preference && (data.preference.init_point || data.preference.sandbox_init_point);
                 if (!url) throw new Error('sin init_point');
+                done = true; clearTimeout(to);
                 window.location.href = url;
             })
             .catch(function(){
-                if (fallbackUrl) { window.location.href = fallbackUrl; }
-                else { btn.style.pointerEvents = ''; btn.innerHTML = orig; }
+                if (done) return;
+                clearTimeout(to);
+                recuperar();
             });
         }
 

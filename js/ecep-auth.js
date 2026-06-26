@@ -205,9 +205,9 @@
       var orig = payBtn.innerHTML;
       payBtn.disabled = true;
       payBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando pago seguro…';
-      fetch('/api/mercadopago/ecep_preference', {
+      fetch('/api/mercadopago/create_preference', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
+        body: JSON.stringify({ tipo: 'ecep', uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
       }).then(function (r) { return r.json(); }).then(function (d) {
         if (d && d.init_point) { window.location.href = d.init_point; }
         else { throw new Error((d && d.details) || 'sin init_point'); }

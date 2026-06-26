@@ -113,4 +113,12 @@
     }, { rootMargin: '-45% 0px -50% 0px' });
     targets.forEach(function (t) { io.observe(t); });
   }
+
+  // ---- Ocultar figuras cuya imagen no carga (ej. ilustración aún no generada) ----
+  // Mantiene la referencia en el HTML: cuando la imagen exista, aparece sola.
+  [].slice.call(document.querySelectorAll('figure.ec-fig img, img')).forEach(function (img) {
+    function hide() { var fig = img.closest('figure') || img; if (fig) fig.style.display = 'none'; }
+    if (img.complete && img.naturalWidth === 0) hide();
+    img.addEventListener('error', hide);
+  });
 })();

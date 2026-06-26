@@ -171,6 +171,35 @@ module.exports = async (req, res) => {
       const paymentApprovedAt = new Date().toISOString();
       const paymentApprovedAtMs = Date.now();
 
+      // ===== ECEP: acceso automático a un dossier de estudio =====
+      if (metadata.ecep_dossier || metadata.tipo === 'ecep') {
+        let ecepUid = metadata.ecep_uid || metadata.user_uid || '';
+        let ecepDossier = metadata.ecep_dossier || '';
+        if ((!ecepUid || !ecepDossier) && payment.external_reference) {
+          const m = String(payment.external_reference).match(/^ecep_(.+)_([^_]+)_\d{10,}$/);
+          if (m) { ecepUid = ecepUid || m[1]; ecepDossier = ecepDossier || m[2]; }
+        }
+        if (ecepUid && ecepDossier) {
+          await db.ref('ecep_accesos/' + ecepUid + '/' + ecepDossier).set(true);
+          await db.ref('verified_payments/' + String(payment.id)).set({
+            paymentId: String(payment.id),
+            tipo: 'ecep',
+            uid: ecepUid,
+            dossier: ecepDossier,
+            email: (metadata.user_email || (payment.payer && payment.payer.email) || ''),
+            externalReference: payment.external_reference || '',
+            status: 'approved',
+            amount: payment.transaction_amount,
+            currency: payment.currency_id,
+            verifiedAt: paymentApprovedAt
+          });
+          console.log('ECEP acceso otorgado:', { uid: ecepUid, dossier: ecepDossier, paymentId: String(payment.id) });
+          return res.status(200).send('ecep_ok');
+        }
+        console.error('ECEP payment sin uid/dossier', { ext: payment.external_reference, metadata: metadata });
+        return res.status(200).send('ecep_no_identity');
+      }
+
       // Get email from metadata first, then payer
       const payerEmail = 
         (metadata.user_email) ||

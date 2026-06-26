@@ -47,6 +47,19 @@
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
+
+  function showVerifying() {
+    reveal();
+    if (document.getElementById('ecep-verify')) return;
+    var v = document.createElement('div');
+    v.id = 'ecep-verify';
+    v.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.97);text-align:center;padding:24px';
+    v.innerHTML = '<div><div style="font-size:34px;color:#0e7d8a"><i class="bi bi-hourglass-split"></i></div>' +
+      '<h2 style="font:700 20px Poppins,system-ui,sans-serif;color:#0f172a;margin:14px 0 6px">Verificando tu pago…</h2>' +
+      '<p style="color:#64748b;font-size:14px;max-width:360px;margin:0 auto;line-height:1.5">Estamos confirmando tu pago con Mercado Pago para activar tu acceso. Esto toma unos segundos.</p></div>';
+    document.body.appendChild(v);
+  }
+  function hideVerifying() { var v = document.getElementById('ecep-verify'); if (v && v.parentNode) v.parentNode.removeChild(v); }
   function isAdmin(u) { return !!(u && u.email && ADMIN_EMAILS.indexOf(u.email.toLowerCase()) >= 0); }
 
   function dossierFromPath() {
@@ -180,13 +193,29 @@
         '<h1>' + nombre + '</h1>' +
         '<p class="ecep-pw-sub">Este dossier es de acceso pagado. Adquiérelo una vez y estudia el temario completo, con casos tipo ECEP, imágenes y autoevaluación.</p>' +
         '<div class="ecep-pw-price"><b>' + PRECIO + '</b><span>pago único · este dossier</span></div>' +
-        '<a class="ecep-pw-buy" href="' + PAY_LINK + '" target="_blank" rel="noopener"><i class="bi bi-credit-card-2-front-fill"></i> Pagar con Mercado Pago</a>' +
-        '<a class="ecep-pw-wsp" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ya pagué · enviar comprobante</a>' +
+        '<button class="ecep-pw-buy" id="ecep-pw-pay"><i class="bi bi-credit-card-2-front-fill"></i> Pagar ' + PRECIO + ' con Mercado Pago</button>' +
+        '<a class="ecep-pw-wsp" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> ¿Pagaste por transferencia? Envía el comprobante</a>' +
         '<button class="ecep-pw-refresh" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Ya tengo acceso · actualizar</button>' +
-        '<p class="ecep-pw-note">Tu acceso se activa apenas confirmemos el pago. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
+        '<p class="ecep-pw-note">Al pagar con Mercado Pago tu acceso se <b>activa solo</b> en unos segundos. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
         '<button class="ecep-pw-logout" onclick="ecepLogout()">Cambiar de cuenta</button>' +
       '</div>';
     document.body.appendChild(ov);
+    var payBtn = document.getElementById('ecep-pw-pay');
+    if (payBtn) payBtn.onclick = function () {
+      var orig = payBtn.innerHTML;
+      payBtn.disabled = true;
+      payBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando pago seguro…';
+      fetch('/api/mercadopago/ecep_preference', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
+      }).then(function (r) { return r.json(); }).then(function (d) {
+        if (d && d.init_point) { window.location.href = d.init_point; }
+        else { throw new Error((d && d.details) || 'sin init_point'); }
+      }).catch(function (e) {
+        payBtn.disabled = false; payBtn.innerHTML = orig;
+        alert('No se pudo iniciar el pago en línea. Inténtalo de nuevo, o paga por transferencia y envíanos el comprobante por WhatsApp.\n\n(' + ((e && e.message) || '') + ')');
+      });
+    };
     reveal();
   }
 
@@ -217,12 +246,18 @@
       var did = dossierFromPath();
       if (!did) { reveal(); return; }            // panel/dashboard u otra página sin dossier
       if (isAdmin(user)) { reveal(); enableProtection(user); return; }  // admin ve todo
-      firebase.database().ref('ecep_accesos/' + user.uid + '/' + did).once('value')
-        .then(function (snap) {
-          if (snap.val() === true) { reveal(); enableProtection(user); }
-          else { showPaywall(did, user); }
-        })
-        .catch(function () { showPaywall(did, user); });
+      // Si vuelve de pagar (?pago=ok), espera a que el webhook escriba el acceso (unos segundos).
+      var pagoReturn = /[?&]pago=ok/.test(location.search);
+      if (pagoReturn) showVerifying();
+      (function check(tries) {
+        firebase.database().ref('ecep_accesos/' + user.uid + '/' + did).once('value')
+          .then(function (snap) {
+            if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
+            else if (tries > 1) { setTimeout(function () { check(tries - 1); }, 1600); }
+            else { hideVerifying(); showPaywall(did, user); }
+          })
+          .catch(function () { hideVerifying(); showPaywall(did, user); });
+      })(pagoReturn ? 7 : 1);
       return;
     }
 

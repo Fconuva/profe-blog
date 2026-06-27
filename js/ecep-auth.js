@@ -17,6 +17,7 @@
   var PAY_LINK = 'https://mpago.la/1wxtybe';
   var PRECIO = '$20.000';
   var WSP = '56988138929';
+  var TRIAL_MS = 30 * 60 * 1000; // prueba gratis: 30 minutos desde la creación de la cuenta
 
   var DOSSIERS = {
     generalista: 'Educación Básica Generalista',
@@ -132,11 +133,16 @@
 
   function registrar(user) {
     try {
-      firebase.database().ref('ecep_usuarios/' + user.uid).update({
+      var uref = firebase.database().ref('ecep_usuarios/' + user.uid);
+      uref.update({
         email: user.email || '',
         nombre: user.displayName || '',
         ultimo_ingreso: firebase.database.ServerValue.TIMESTAMP
       });
+      // Inicia la prueba gratis UNA sola vez (al crear la cuenta / primer ingreso)
+      uref.child('trial_inicio').once('value').then(function (s) {
+        if (s.val() == null) uref.child('trial_inicio').set(firebase.database.ServerValue.TIMESTAMP);
+      }).catch(function () {});
     } catch (e) { /* no bloquea el acceso */ }
   }
 
@@ -178,6 +184,64 @@
     }, true);
   }
 
+  // ============ PAGO (Mercado Pago) ============
+  function iniciarPago(did, user, btn) {
+    var nombre = DOSSIERS[did] || 'este dossier';
+    var orig = btn ? btn.innerHTML : '';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando pago seguro…'; }
+    fetch('/api/mercadopago/create_preference', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tipo: 'ecep', uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d && d.init_point) { window.location.href = d.init_point; }
+      else { throw new Error((d && d.details) || 'sin init_point'); }
+    }).catch(function (e) {
+      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
+      alert('No se pudo iniciar el pago en línea. Inténtalo de nuevo, o paga por transferencia y envíanos el comprobante por WhatsApp.\n\n(' + ((e && e.message) || '') + ')');
+    });
+  }
+
+  // ============ PRUEBA GRATIS (30 min) ============
+  // Antes del paywall: si la cuenta está dentro de su ventana de prueba, se da acceso
+  // con un cronómetro. Al expirar, aparece el paywall. El tiempo se mide con la hora
+  // del SERVIDOR (serverTimeOffset) para que no se pueda burlar cambiando el reloj.
+  function checkTrial(did, user) {
+    firebase.database().ref('.info/serverTimeOffset').once('value').then(function (o) {
+      var off = o.val() || 0;
+      var tref = firebase.database().ref('ecep_usuarios/' + user.uid + '/trial_inicio');
+      tref.once('value').then(function (s) {
+        var inicio = s.val();
+        if (inicio == null) { tref.set(firebase.database.ServerValue.TIMESTAMP); inicio = Date.now() + off; }
+        var left = TRIAL_MS - ((Date.now() + off) - inicio);
+        hideVerifying();
+        if (left > 0) { reveal(); enableProtection(user); showTrialBanner(left, did, user); }
+        else { showPaywall(did, user); }
+      }).catch(function () { hideVerifying(); showPaywall(did, user); });
+    }).catch(function () { hideVerifying(); showPaywall(did, user); });
+  }
+
+  function showTrialBanner(msLeft, did, user) {
+    if (document.getElementById('ecep-trial')) return;
+    var bar = document.createElement('div');
+    bar.id = 'ecep-trial';
+    bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:99998;background:#0f766e;color:#fff;padding:10px 16px;display:flex;align-items:center;justify-content:center;gap:12px 18px;flex-wrap:wrap;font:600 14px Inter,system-ui,sans-serif;box-shadow:0 -6px 22px rgba(0,0,0,.28)';
+    bar.innerHTML =
+      '<span><i class="bi bi-stopwatch"></i> Prueba gratis · te queda <b id="ecep-trial-clock" style="font-variant-numeric:tabular-nums">--:--</b></span>' +
+      '<button id="ecep-trial-pay" style="background:#fff;color:#0f766e;border:0;border-radius:9px;padding:8px 15px;font-weight:800;cursor:pointer"><i class="bi bi-unlock-fill"></i> Desbloquear este dossier · ' + PRECIO + '</button>';
+    document.body.appendChild(bar);
+    var pb = document.getElementById('ecep-trial-pay');
+    pb.onclick = function () { iniciarPago(did, user, pb); };
+    var end = Date.now() + msLeft, clk = document.getElementById('ecep-trial-clock'), iv;
+    function tick() {
+      var rem = end - Date.now();
+      if (rem <= 0) { clearInterval(iv); if (bar.parentNode) bar.parentNode.removeChild(bar); showPaywall(did, user); return; }
+      var m = Math.floor(rem / 60000), sec = Math.floor((rem % 60000) / 1000);
+      clk.textContent = (m < 10 ? '0' : '') + m + ':' + (sec < 10 ? '0' : '') + sec;
+      if (rem < 300000) bar.style.background = '#b45309'; // últimos 5 min: ámbar
+    }
+    tick(); iv = setInterval(tick, 1000);
+  }
+
   // ============ PAYWALL ============
   function showPaywall(did, user) {
     var nombre = DOSSIERS[did] || 'este dossier';
@@ -201,21 +265,7 @@
       '</div>';
     document.body.appendChild(ov);
     var payBtn = document.getElementById('ecep-pw-pay');
-    if (payBtn) payBtn.onclick = function () {
-      var orig = payBtn.innerHTML;
-      payBtn.disabled = true;
-      payBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando pago seguro…';
-      fetch('/api/mercadopago/create_preference', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tipo: 'ecep', uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
-      }).then(function (r) { return r.json(); }).then(function (d) {
-        if (d && d.init_point) { window.location.href = d.init_point; }
-        else { throw new Error((d && d.details) || 'sin init_point'); }
-      }).catch(function (e) {
-        payBtn.disabled = false; payBtn.innerHTML = orig;
-        alert('No se pudo iniciar el pago en línea. Inténtalo de nuevo, o paga por transferencia y envíanos el comprobante por WhatsApp.\n\n(' + ((e && e.message) || '') + ')');
-      });
-    };
+    if (payBtn) payBtn.onclick = function () { iniciarPago(did, user, payBtn); };
     reveal();
   }
 
@@ -254,9 +304,9 @@
           .then(function (snap) {
             if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
             else if (tries > 1) { setTimeout(function () { check(tries - 1); }, 1600); }
-            else { hideVerifying(); showPaywall(did, user); }
+            else { checkTrial(did, user); }   // sin pago: ver si está en su prueba gratis de 30 min
           })
-          .catch(function () { hideVerifying(); showPaywall(did, user); });
+          .catch(function () { checkTrial(did, user); });
       })(pagoReturn ? 7 : 1);
       return;
     }

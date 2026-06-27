@@ -89,29 +89,68 @@
     return p;
   }
 
+  // Detección de entorno (para elegir popup vs redirect y avisar de navegadores internos)
+  function isMobileDevice() {
+    var ua = navigator.userAgent || '';
+    if (/Android|iPhone|iPad|iPod|IEMobile|Opera Mini|Mobile|Tablet|Silk|Kindle|PlayBook|BlackBerry/i.test(ua)) return true;
+    if (/Macintosh/.test(ua) && navigator.maxTouchPoints && navigator.maxTouchPoints > 1) return true; // iPad iOS 13+
+    return false;
+  }
+  function isInAppBrowser() {
+    var ua = navigator.userAgent || '';
+    return /FBAN|FBAV|FB_IAB|Instagram|Line\/|MicroMessenger|WhatsApp|GSA\/|; wv\)|; wv;|TikTok|Snapchat/i.test(ua);
+  }
+  function showAuthError(err, e) {
+    if (!err) return;
+    var code = e && e.code;
+    if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+      err.textContent = 'Se cerró la ventana de Google antes de terminar. Inténtalo otra vez.';
+    } else if (code === 'auth/unauthorized-domain') {
+      err.textContent = 'Este dominio no está autorizado en Firebase todavía.';
+    } else if (code === 'auth/operation-not-allowed') {
+      err.textContent = 'El acceso con Google no está habilitado en Firebase todavía.';
+    } else if (code === 'auth/network-request-failed') {
+      err.textContent = 'Problema de conexión. Revisa tu internet e inténtalo de nuevo.';
+    } else {
+      err.textContent = 'No se pudo iniciar sesión. ' + ((e && e.message) || '');
+    }
+    err.style.display = 'block';
+  }
+  function showOpenInBrowser(err) {
+    if (!err) return;
+    err.innerHTML = 'Estás abriendo la página <b>dentro de otra app</b> (WhatsApp, Instagram, etc.) y Google no permite iniciar sesión ahí. <b>Ábrela en Chrome o Safari</b>: toca el menú (⋮ o ⋯) arriba a la derecha y elige <b>“Abrir en el navegador”</b>, o copia la dirección y pégala en Chrome/Safari.';
+    err.style.display = 'block';
+  }
+
   // --- acciones de botones ---
   window.ecepLoginGoogle = function () {
     var btn = document.getElementById('btn-google');
     var err = document.getElementById('login-error');
     if (err) err.style.display = 'none';
+    if (isInAppBrowser()) { showOpenInBrowser(err); return; } // WhatsApp/IG: Google bloquea OAuth aquí
     if (btn) { btn.disabled = true; btn.classList.add('loading'); }
-    firebase.auth().signInWithPopup(googleProvider())
+    var prov = googleProvider();
+    // Móvil/tablet: el popup es poco fiable -> redirect (vuelve y onAuthStateChanged lleva al panel)
+    if (isMobileDevice()) {
+      firebase.auth().signInWithRedirect(prov).catch(function (e) {
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+        showAuthError(err, e);
+      });
+      return;
+    }
+    firebase.auth().signInWithPopup(prov)
       .then(function () { window.location.href = HOME; })
       .catch(function (e) {
-        if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
-        if (err) {
-          var code = e && e.code;
-          if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
-            err.textContent = 'Cerraste la ventana de Google antes de terminar. Inténtalo otra vez.';
-          } else if (code === 'auth/unauthorized-domain') {
-            err.textContent = 'Este dominio no está autorizado en Firebase todavía.';
-          } else if (code === 'auth/operation-not-allowed') {
-            err.textContent = 'El acceso con Google no está habilitado en Firebase todavía.';
-          } else {
-            err.textContent = 'No se pudo iniciar sesión. ' + ((e && e.message) || '');
-          }
-          err.style.display = 'block';
+        var code = e && e.code;
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/cancelled-popup-request') {
+          firebase.auth().signInWithRedirect(prov).catch(function (e2) { // popup bloqueado -> redirect
+            if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+            showAuthError(err, e2);
+          });
+          return;
         }
+        if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+        showAuthError(err, e);
       });
   };
 
@@ -271,6 +310,14 @@
 
   // --- guardia de acceso ---
   if (typeof firebase === 'undefined' || !firebase.auth) { reveal(); return; }
+
+  // Si volvió de un login por redirect (móvil/tablet), el éxito lo maneja onAuthStateChanged;
+  // aquí solo capturamos errores para mostrarlos en la página de acceso.
+  try {
+    firebase.auth().getRedirectResult().catch(function (e) {
+      if (e && e.code) showAuthError(document.getElementById('login-error'), e);
+    });
+  } catch (e) {}
 
   firebase.auth().onAuthStateChanged(function (user) {
     var mode = window.ECEP_PAGE;

@@ -44,7 +44,9 @@
     'media-musica': 'Educación Media · Música',
     'media-artes-visuales': 'Educación Media · Artes Visuales',
     'media-educacion-fisica': 'Educación Media · Educación Física y Salud',
-    'media-filosofia': 'Educación Media · Filosofía'
+    'media-filosofia': 'Educación Media · Filosofía',
+    'musica-basica': 'Educación Básica · Música',
+    'artes-basica': 'Educación Básica · Artes Visuales'
   };
 
   function reveal() { document.documentElement.classList.remove('ecg'); }
@@ -80,6 +82,8 @@
     if (seg === 'educacion-fisica') return 'ef-basica';
     if (seg === 'tecnologia') return 'tecnologia';
     if (seg === 'religion') return 'religion';
+    if (seg === 'musica') return 'musica-basica';
+    if (seg === 'artes-visuales') return 'artes-basica';
     return null;
   }
 

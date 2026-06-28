@@ -130,20 +130,24 @@
     if (isInAppBrowser()) { showOpenInBrowser(err); return; } // WhatsApp/IG: Google bloquea OAuth aquí
     if (btn) { btn.disabled = true; btn.classList.add('loading'); }
     var prov = googleProvider();
-    // Móvil/tablet: el popup es poco fiable -> redirect (vuelve y onAuthStateChanged lleva al panel)
-    if (isMobileDevice()) {
-      firebase.auth().signInWithRedirect(prov).catch(function (e) {
-        if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
-        showAuthError(err, e);
-      });
-      return;
-    }
+    // POPUP en TODOS los dispositivos (incluido móvil/tablet). El resultado vuelve por
+    // postMessage, que NO depende del almacenamiento de terceros. En cambio signInWithRedirect
+    // se ROMPE en Safari iOS / Chrome con partición de almacenamiento cuando el authDomain
+    // (profe-blog.firebaseapp.com) es distinto del dominio del sitio (profefranciscopancho.com):
+    // al volver de Google se pierde la credencial y el usuario queda atascado en el login.
+    // Es la recomendación oficial de Firebase para apps en dominio propio.
     firebase.auth().signInWithPopup(prov)
       .then(function () { window.location.href = HOME; })
       .catch(function (e) {
         var code = e && e.code;
-        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment' || code === 'auth/cancelled-popup-request') {
-          firebase.auth().signInWithRedirect(prov).catch(function (e2) { // popup bloqueado -> redirect
+        if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+          if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
+          showAuthError(err, e);
+          return;
+        }
+        // Popup realmente bloqueado / no soportado -> último recurso: redirect
+        if (code === 'auth/popup-blocked' || code === 'auth/operation-not-supported-in-this-environment') {
+          firebase.auth().signInWithRedirect(prov).catch(function (e2) {
             if (btn) { btn.disabled = false; btn.classList.remove('loading'); }
             showAuthError(err, e2);
           });

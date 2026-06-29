@@ -36,6 +36,10 @@ scripts: '<script src="/js/ecep-auth.js?v=36"></script>'
           <div style="font-size:12px;color:#047857;font-weight:600">Ingreso estimado</div>
           <div id="kpi-ingreso" style="font:800 26px Poppins,sans-serif;color:#065f46">—</div>
         </div>
+        <div class="adm-kpi" style="flex:1;min-width:150px;background:#fffbeb;border:1px solid #fde68a;border-radius:14px;padding:14px 16px">
+          <div style="font-size:12px;color:#b45309;font-weight:600">Regalados (no son venta)</div>
+          <div id="kpi-regalados" style="font:800 26px Poppins,sans-serif;color:#92400e">—</div>
+        </div>
       </div>
       <div id="kpi-pordossier" style="display:flex;flex-wrap:wrap;gap:8px"></div>
     </div>
@@ -83,7 +87,7 @@ window.ecepAdminInit = function (firebase) {
   var GRUPOS = ['Básica','Parvularia','Especial','Media'];
   var statusEl = document.getElementById('adm-status');
   var lista = document.getElementById('adm-list');
-  var usuarios = {}, accesos = {};
+  var usuarios = {}, accesos = {}, regalos = {};
 
   function toggle(uid, did, on, btn) {
     var ref = DB.ref('ecep_accesos/' + uid + '/' + did);
@@ -112,14 +116,20 @@ window.ecepAdminInit = function (firebase) {
   }
   function renderStats() {
     var nUsers = Object.keys(usuarios).length;
-    var perD = {}, total = 0;
+    var perD = {}, total = 0, regalados = 0;   // total = solo PAGADOS (los regalos no son venta)
     DOSSIERS.forEach(function (d) { perD[d[0]] = 0; });
     Object.keys(accesos).forEach(function (uid) {
-      DOSSIERS.forEach(function (d) { if (accesos[uid] && accesos[uid][d[0]] === true) { perD[d[0]]++; total++; } });
+      var esRegalo = !!regalos[uid];           // usuario marcado en ecep_regalos = acceso de cortesía
+      DOSSIERS.forEach(function (d) {
+        if (accesos[uid] && accesos[uid][d[0]] === true) {
+          if (esRegalo) { regalados++; } else { perD[d[0]]++; total++; }
+        }
+      });
     });
     document.getElementById('kpi-users').textContent = nUsers;
     document.getElementById('kpi-accesos').textContent = total;
     document.getElementById('kpi-ingreso').textContent = '$' + (total * 20000).toLocaleString('es-CL');
+    var kr = document.getElementById('kpi-regalados'); if (kr) kr.textContent = regalados;
     document.getElementById('kpi-pordossier').innerHTML = DOSSIERS.map(function (d) {
       return '<span style="background:#fff;border:1px solid #e2e8f0;border-radius:999px;padding:6px 12px;font-size:13px;color:#334155"><b>' + perD[d[0]] + '</b> · ' + d[1] + '</span>';
     }).join('');
@@ -157,6 +167,7 @@ window.ecepAdminInit = function (firebase) {
       head.innerHTML =
         '<div style="flex:1;min-width:150px">' +
           '<b style="font-size:15px">' + (u.nombre || '—') + '</b>' +
+          (regalos[uid] ? ' <span style="display:inline-block;background:#fffbeb;border:1px solid #fde68a;color:#b45309;border-radius:999px;padding:2px 9px;font-size:11px;font-weight:700;vertical-align:middle">🎁 Regalo</span>' : '') +
           '<div style="font-size:12.5px;color:#64748b">' + (u.email || uid) + '</div>' +
         '</div>' +
         '<span id="cnt-' + uid + '" style="font-size:13px;font-weight:700;white-space:nowrap;color:' + (n ? '#15803d' : '#94a3b8') + '">' + n + (n === 1 ? ' acceso' : ' accesos') + '</span>';
@@ -209,10 +220,12 @@ window.ecepAdminInit = function (firebase) {
 
   Promise.all([
     DB.ref('ecep_usuarios').once('value'),
-    DB.ref('ecep_accesos').once('value')
+    DB.ref('ecep_accesos').once('value'),
+    DB.ref('ecep_regalos').once('value')
   ]).then(function (snaps) {
     usuarios = snaps[0].val() || {};
     accesos = snaps[1].val() || {};
+    regalos = snaps[2].val() || {};
     renderStats();
     if (!Object.keys(usuarios).length) { statusEl.textContent = 'Aún no hay docentes registrados (ingresan al iniciar sesión con Google).'; return; }
     render();

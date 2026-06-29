@@ -113,6 +113,10 @@
                     <div class="text-xs font-semibold" style="color:#6d28d9">Ingreso estimado</div>
                     <div id="ecep-kpi-ingreso" class="text-2xl font-bold mt-1" style="color:#5b21b6">—</div>
                 </div>
+                <div class="rounded-xl p-4" style="background:#fffbeb;border:1px solid #fde68a">
+                    <div class="text-xs font-semibold" style="color:#b45309">Regalados (no son venta)</div>
+                    <div id="ecep-kpi-regalados" class="text-2xl font-bold mt-1" style="color:#92400e">—</div>
+                </div>
             </div>
 
             <div id="ecep-status" class="text-sm text-gray-500 mb-3">Cargando dossiers…</div>
@@ -4210,6 +4214,9 @@
             { id: 'ingles',       nombre: 'Inglés',                 url: '/evaluaciones/educacion-basica/estudio/ingles/',               grupo: 'Básica' },
             { id: 'ef-basica',    nombre: 'Educación Física',       url: '/evaluaciones/educacion-basica/estudio/educacion-fisica/',      grupo: 'Básica' },
             { id: 'religion',     nombre: 'Religión Católica',      url: '/evaluaciones/educacion-basica/estudio/religion/',             grupo: 'Básica' },
+            { id: 'tecnologia',   nombre: 'Tecnología',             url: '/evaluaciones/educacion-basica/estudio/tecnologia/',           grupo: 'Básica' },
+            { id: 'musica-basica',nombre: 'Música',                 url: '/evaluaciones/educacion-basica/estudio/musica/',               grupo: 'Básica' },
+            { id: 'artes-basica', nombre: 'Artes Visuales',         url: '/evaluaciones/educacion-basica/estudio/artes-visuales/',       grupo: 'Básica' },
             { id: 'parvularia',   nombre: 'Parvularia',             url: '/evaluaciones/educacion-parvularia/estudio/',                  grupo: 'Parvularia' },
             { id: 'especial-dea', nombre: 'Especial · DEA',         url: '/evaluaciones/educacion-especial/estudio/dea/',                grupo: 'Diferencial' },
             { id: 'especial-di',  nombre: 'Especial · DI',          url: '/evaluaciones/educacion-especial/estudio/di/',                 grupo: 'Diferencial' },
@@ -4237,23 +4244,31 @@
             return 'background:#e0f2fe;color:#0369a1';
         }
 
-        function render(usuarios, accesos) {
+        function render(usuarios, accesos, regalos) {
+            regalos = regalos || {};
             var nUsers = Object.keys(usuarios || {}).length;
-            var perD = {}; DOSSIERS.forEach(function (d) { perD[d.id] = 0; });
-            var total = 0;
+            var perD = {}, perG = {}; DOSSIERS.forEach(function (d) { perD[d.id] = 0; perG[d.id] = 0; });
+            var total = 0, regalados = 0;   // total = solo VENTAS (los regalos no cuentan)
             Object.keys(accesos || {}).forEach(function (uid) {
                 var a = accesos[uid] || {};
-                DOSSIERS.forEach(function (d) { if (a[d.id] === true) { perD[d.id]++; total++; } });
+                var esRegalo = !!regalos[uid];   // usuario en ecep_regalos = acceso de cortesía
+                DOSSIERS.forEach(function (d) {
+                    if (a[d.id] === true) {
+                        if (esRegalo) { perG[d.id]++; regalados++; }
+                        else { perD[d.id]++; total++; }
+                    }
+                });
             });
             document.getElementById('ecep-kpi-users').textContent = nUsers;
             document.getElementById('ecep-kpi-accesos').textContent = total;
             document.getElementById('ecep-kpi-ingreso').textContent = '$' + (total * PRECIO).toLocaleString('es-CL');
+            var kr = document.getElementById('ecep-kpi-regalados'); if (kr) kr.textContent = regalados;
             var badge = document.getElementById('dossiers-badge');
             if (badge && total > 0) { badge.textContent = total; badge.classList.remove('hidden'); }
 
             var grid = document.getElementById('ecep-dossier-grid');
             grid.innerHTML = DOSSIERS.map(function (d) {
-                var n = perD[d.id];
+                var n = perD[d.id], g = perG[d.id];
                 return '' +
                   '<div class="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2">' +
                     '<div class="flex items-center justify-between gap-2">' +
@@ -4262,13 +4277,13 @@
                     '</div>' +
                     '<div class="font-semibold text-gray-800 leading-tight">' + d.nombre + '</div>' +
                     '<div class="flex items-end justify-between mt-1">' +
-                      '<div><span class="text-2xl font-bold text-gray-900">' + n + '</span> <span class="text-xs text-gray-500">acceso' + (n === 1 ? '' : 's') + '</span></div>' +
+                      '<div><span class="text-2xl font-bold text-gray-900">' + n + '</span> <span class="text-xs text-gray-500">vendido' + (n === 1 ? '' : 's') + '</span>' + (g ? ' <span class="text-xs" style="color:#b45309">· ' + g + ' regalo</span>' : '') + '</div>' +
                       '<a href="' + d.url + '" target="_blank" class="text-sm font-medium" style="color:#7c3aed">Ver ↗</a>' +
                     '</div>' +
                   '</div>';
             }).join('');
             document.getElementById('ecep-status').textContent =
-                'Catálogo: ' + DOSSIERS.length + ' dossiers · ' + total + ' acceso(s) pagado(s) · ' + nUsers + ' docente(s) registrado(s).';
+                'Catálogo: ' + DOSSIERS.length + ' dossiers · ' + total + ' venta(s) · ' + regalados + ' regalado(s) · ' + nUsers + ' docente(s) registrado(s).';
         }
 
         function load() {
@@ -4277,9 +4292,10 @@
             var db = firebase.database();
             Promise.all([
                 db.ref('ecep_usuarios').once('value'),
-                db.ref('ecep_accesos').once('value')
+                db.ref('ecep_accesos').once('value'),
+                db.ref('ecep_regalos').once('value')
             ]).then(function (snaps) {
-                render(snaps[0].val() || {}, snaps[1].val() || {});
+                render(snaps[0].val() || {}, snaps[1].val() || {}, snaps[2].val() || {});
             }).catch(function (e) {
                 document.getElementById('ecep-status').textContent =
                     'No se pudieron leer los accesos ECEP (' + ((e && e.message) || 'permiso') + '). Verifica que ingresaste con la cuenta de admin ECEP.';

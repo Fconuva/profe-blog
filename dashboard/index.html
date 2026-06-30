@@ -1158,6 +1158,32 @@
             <p class="text-gray-600">Revisa el estado de avance de tu portafolio.</p>
         </div>
 
+        <!-- Banner: saldo pendiente (2ª cuota) — solo para abono con saldo>0 -->
+        <div id="saldo-banner" class="hidden mb-8 bg-gradient-to-r from-amber-500 to-orange-500 rounded-2xl p-6 text-white shadow-md sm:flex sm:items-center sm:justify-between gap-6">
+            <div class="flex items-start gap-4 mb-4 sm:mb-0">
+                <span class="flex-shrink-0 w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center text-2xl">💳</span>
+                <div>
+                    <p class="font-heading font-bold text-lg">Te queda tu 2ª y última cuota</p>
+                    <p class="text-sm" style="color:#fff7ed">Tu 1ª cuota ya está registrada ✓. Paga el saldo de <strong id="saldo-monto">$0</strong> para quedar al día; el profesor Francisco emite tu recibo final.</p>
+                </div>
+            </div>
+            <div class="flex-shrink-0 flex flex-col gap-2 w-full sm:w-auto">
+                <a id="saldo-pay-mp" href="https://mpago.la/2ujXDMz" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-orange-700 font-bold rounded-xl hover:bg-gray-100 transition-colors whitespace-nowrap">Pagar 2ª cuota con MercadoPago</a>
+                <button type="button" onclick="document.getElementById('saldo-transfer-box').classList.toggle('hidden')" class="inline-flex items-center justify-center gap-2 px-6 py-2 bg-white/15 border border-white/40 text-white text-sm font-semibold rounded-xl hover:bg-white/25 transition-colors whitespace-nowrap">🏦 o pagar por transferencia</button>
+            </div>
+        </div>
+        <div id="saldo-transfer-box" class="hidden mb-8 bg-white rounded-2xl border border-amber-200 p-5 shadow-sm">
+            <p class="text-sm font-semibold text-gray-700 mb-3">Datos para transferir tu 2ª cuota</p>
+            <dl class="space-y-2 text-sm">
+                <div class="flex items-center justify-between gap-3"><dt class="text-gray-500">Nombre</dt><dd class="font-medium text-gray-800 text-right">Francisco Javier Núñez Valenzuela</dd></div>
+                <div class="flex items-center justify-between gap-3"><dt class="text-gray-500">RUT</dt><dd class="font-medium text-gray-800 text-right">17.853.891-8</dd></div>
+                <div class="flex items-center justify-between gap-3"><dt class="text-gray-500">Banco / Entidad</dt><dd class="font-medium text-gray-800 text-right">Mercado Pago · Cuenta Vista</dd></div>
+                <div class="flex items-center justify-between gap-3"><dt class="text-gray-500">N° de cuenta</dt><dd class="flex items-center gap-2"><span class="font-mono font-medium text-gray-800">1090804215</span><button type="button" class="pay-copy text-xs text-primary-600 hover:text-primary-800 font-semibold" data-copy="1090804215">Copiar</button></dd></div>
+                <div class="flex items-center justify-between gap-3"><dt class="text-gray-500">E-mail</dt><dd class="flex items-center gap-2"><span class="font-medium text-gray-800">fconuva@gmail.com</span><button type="button" class="pay-copy text-xs text-primary-600 hover:text-primary-800 font-semibold" data-copy="fconuva@gmail.com">Copiar</button></dd></div>
+            </dl>
+            <p class="text-xs text-gray-500 mt-3">Transfiere el saldo indicado arriba y avísale al profesor Francisco por WhatsApp; él verifica y te emite el recibo final.</p>
+        </div>
+
         <!-- Plan Info -->
         <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-8 shadow-sm">
             <div class="flex flex-wrap items-center justify-between gap-4">
@@ -2652,6 +2678,28 @@
                 } else {
                     payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-700';
                     payBadge.textContent = 'Pendiente';
+                }
+            }
+
+            // Banner de saldo pendiente (abono con saldo > 0): permite pagar la 2ª cuota
+            var saldoBanner = document.getElementById('saldo-banner');
+            if (saldoBanner) {
+                var _saldo = Number(portData.saldoPendiente || 0);
+                var _stb = document.getElementById('saldo-transfer-box');
+                if (portData.paymentStatus === 'abono' && _saldo > 0) {
+                    document.getElementById('saldo-monto').textContent = '$' + _saldo.toLocaleString('es-CL');
+                    saldoBanner.classList.remove('hidden');
+                    Array.prototype.forEach.call(document.querySelectorAll('#saldo-transfer-box .pay-copy'), function(b) {
+                        b.onclick = function() {
+                            var txt = b.getAttribute('data-copy') || '';
+                            var done = function() { var o = b.textContent; b.textContent = '¡Copiado!'; setTimeout(function(){ b.textContent = o; }, 1500); };
+                            if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(txt).then(done).catch(function(){}); }
+                            else { var ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); done(); } catch (e) {} document.body.removeChild(ta); }
+                        };
+                    });
+                } else {
+                    saldoBanner.classList.add('hidden');
+                    if (_stb) _stb.classList.add('hidden');
                 }
             }
 

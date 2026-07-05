@@ -241,7 +241,7 @@
                     <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">🟡 Te falta cobrar</p>
                     <p class="text-3xl font-heading font-bold text-amber-700 my-1 tabular-nums" id="stat-pending-revenue">$0</p>
                     <p class="text-xs text-amber-600 font-semibold" id="stat-pending-revenue-count">0 por cobrar</p>
-                    <p class="text-[11px] text-gray-500 mt-1 leading-tight">segundas cuotas + completos que aún no pagan</p>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-tight">segundas cuotas de quienes ya abonaron (plata comprometida)</p>
                 </div>
                 <div class="bg-slate-800 rounded-xl border border-slate-800 p-5">
                     <p class="text-xs font-bold text-slate-300 uppercase tracking-wide">📊 Total con plan</p>
@@ -2060,7 +2060,7 @@
         // ===== RENDER DASHBOARD =====
         function renderDashboard() {
             var uids = getClientUids();
-            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0;
+            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0;
             var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
@@ -2080,26 +2080,24 @@
                 if (p.paymentStatus === 'gratis') {
                     // Portafolio regalado: cuenta como cliente activo pero NO suma dinero.
                     paid++;
-                } else if (esPlanReal) {
-                    // POSIBLE TOTAL = todo lo contratado (planes reales).
-                    totalRevenue += price;
-                    totalWithPlan++;
-                    if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
-                        // RECAUDADO: pago completo confirmado (bruto = precio del plan).
-                        paidRevenue += price;
-                        paid++; paidCount++;
-                    } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
-                        // RECAUDADO: 1a cuota recibida (~$100.000); el saldo queda POR COBRAR.
-                        var abono = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 100000;
-                        paidRevenue += abono;
-                        paid++; paidCount++;
-                        var saldoAb = (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0) ? p.saldoPendiente : Math.max(0, price - abono);
-                        if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
-                    } else {
-                        // POR COBRAR: plan contratado, aún sin pagar.
-                        pendingRevenue += price;
-                        pendingRevenueCount++;
-                    }
+                } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
+                    // COMPROMETIDO + RECAUDADO: pago completo confirmado (bruto = precio del plan).
+                    totalRevenue += price; totalWithPlan++;
+                    paidRevenue += price;
+                    paid++; paidCount++;
+                } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
+                    // COMPROMETIDO: 1a cuota recibida (~$100.000); el saldo (2a cuota) queda POR COBRAR (firme).
+                    var abono = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 100000;
+                    var saldoAb = (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0) ? p.saldoPendiente : Math.max(0, price - abono);
+                    totalRevenue += abono + saldoAb; totalWithPlan++;
+                    paidRevenue += abono;
+                    paid++; paidCount++;
+                    if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
+                } else if (p.paymentStatus === 'pendiente_verificacion') {
+                    // Se contabiliza más abajo como "pago por revisar" (no es sin-pagar ni comprometido aún).
+                } else {
+                    // INSCRITO SIN PAGAR (lead o pre-inscrito): NO es plata comprometida; va al escenario optimista.
+                    sinPagar++;
                 }
                 if (p.paymentStatus === 'pendiente_verificacion') {
                     pendingPay++;
@@ -2122,7 +2120,7 @@
             });
 
             document.getElementById('stat-total').textContent = total;
-            document.getElementById('stat-preinscrito').textContent = preInscrito;
+            document.getElementById('stat-preinscrito').textContent = sinPagar; // "Sin pagar aún": todos los inscritos que aún no pagan
             document.getElementById('stat-paid').textContent = paidCount; // solo quienes pusieron plata (sin el regalo)
             var _spr = document.getElementById('stat-progress'); if (_spr) _spr.textContent = inProg;
             var _scp = document.getElementById('stat-completed'); if (_scp) _scp.textContent = completed;
@@ -2142,12 +2140,12 @@
             document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos confirmados';
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
-            // POTENCIAL: si los pre-inscritos también contrataran (proyectado en plan Completo).
-            var potencial = totalRevenue + preInscrito * 199990;
+            // POTENCIAL: si además los inscritos sin pagar tomaran el plan completo (proyectado en $199.990).
+            var potencial = totalRevenue + sinPagar * 199990;
             var statPot = document.getElementById('stat-potencial');
             if (statPot) {
                 statPot.textContent = formatCLP(potencial);
-                document.getElementById('stat-potencial-count').textContent = (totalWithPlan + preInscrito) + ' clientes · faltan ' + formatCLP(Math.max(0, potencial - paidRevenue));
+                document.getElementById('stat-potencial-count').textContent = (totalWithPlan + sinPagar) + ' clientes · faltan ' + formatCLP(Math.max(0, potencial - paidRevenue));
             }
 
             // Pagos badge

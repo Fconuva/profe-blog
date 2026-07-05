@@ -237,7 +237,7 @@
                     <p class="text-xs text-emerald-600 font-semibold" id="stat-paid-revenue-count">0 pagos</p>
                     <p class="text-[11px] text-gray-500 mt-1 leading-tight">lo que ya recibiste (pagos completos + abonos)</p>
                     <p class="text-sm font-bold text-emerald-800 mt-2 tabular-nums" id="stat-paid-net">$0</p>
-                    <p class="text-[10px] text-gray-400 leading-tight">≈ neto tras comisión MercadoPago (las transferencias no pagan; tu neto real es un poco más)</p>
+                    <p class="text-[10px] text-gray-400 leading-tight">≈ neto (comisión MercadoPago solo en pagos con tarjeta; las transferencias no pagan)</p>
                 </div>
                 <div class="bg-amber-50 rounded-xl border border-amber-200 p-5">
                     <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">🟡 Te falta cobrar</p>
@@ -2074,7 +2074,7 @@
         // ===== RENDER DASHBOARD =====
         function renderDashboard() {
             var uids = getClientUids();
-            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0;
+            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0, mpGross = 0;
             var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
@@ -2098,6 +2098,7 @@
                     // COMPROMETIDO + RECAUDADO: pago completo confirmado (bruto = precio del plan).
                     totalRevenue += price; totalWithPlan++;
                     paidRevenue += price;
+                    if (p.comprobantePago) mpGross += price; // pago por MercadoPago (tiene ID); las transferencias no
                     paid++; paidCount++;
                 } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
                     // COMPROMETIDO: 1a cuota recibida (~$100.000); el saldo (2a cuota) queda POR COBRAR (firme).
@@ -2105,6 +2106,7 @@
                     var saldoAb = (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0) ? p.saldoPendiente : Math.max(0, price - abono);
                     totalRevenue += abono + saldoAb; totalWithPlan++;
                     paidRevenue += abono;
+                    if (p.comprobantePago) mpGross += abono; // abono por MercadoPago (tiene ID)
                     paid++; paidCount++;
                     if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
                 } else if (p.paymentStatus === 'pendiente_verificacion') {
@@ -2154,8 +2156,8 @@
             document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos confirmados';
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
-            // NETO tras comisión MercadoPago (estimado; las transferencias no pagan comisión, así el neto real es algo mayor).
-            var netPaid = Math.round(paidRevenue * (1 - mercadoPagoBaseFeeRate));
+            // NETO: comisión MercadoPago SOLO sobre pagos con tarjeta (los que tienen comprobantePago/ID); las transferencias no pagan comisión.
+            var netPaid = paidRevenue - Math.round(mpGross * mercadoPagoBaseFeeRate);
             var _spn = document.getElementById('stat-paid-net'); if (_spn) _spn.textContent = formatCLP(netPaid) + ' neto';
             // ESCENARIO META: si TODOS los inscritos pagan el plan completo (leads proyectados a $199.990).
             var potencial = totalRevenue + sinPagar * 199990;

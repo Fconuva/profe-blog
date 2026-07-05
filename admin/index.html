@@ -236,6 +236,8 @@
                     <p class="text-3xl font-heading font-bold text-emerald-700 my-1 tabular-nums" id="stat-paid-revenue">$0</p>
                     <p class="text-xs text-emerald-600 font-semibold" id="stat-paid-revenue-count">0 pagos</p>
                     <p class="text-[11px] text-gray-500 mt-1 leading-tight">lo que ya recibiste (pagos completos + abonos)</p>
+                    <p class="text-sm font-bold text-emerald-800 mt-2 tabular-nums" id="stat-paid-net">$0</p>
+                    <p class="text-[10px] text-gray-400 leading-tight">≈ neto tras comisión MercadoPago (las transferencias no pagan; tu neto real es un poco más)</p>
                 </div>
                 <div class="bg-amber-50 rounded-xl border border-amber-200 p-5">
                     <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">🟡 Te falta cobrar</p>
@@ -250,11 +252,23 @@
                     <p class="text-[11px] text-slate-400 mt-1 leading-tight">= lo recaudado + lo que falta cobrar</p>
                 </div>
             </div>
-            <div class="bg-indigo-50 rounded-xl border border-indigo-200 px-4 py-3 mb-8">
-                <span class="text-sm text-indigo-700">🎯 <b>Escenario optimista:</b> si además los inscritos sin pagar tomaran el plan completo, llegarías a </span>
-                <span class="text-xl font-heading font-bold text-indigo-700 align-middle tabular-nums" id="stat-potencial">$0</span>
-                <span class="text-xs text-indigo-500" id="stat-potencial-count">0 clientes</span>
-                <span class="block text-[11px] text-indigo-400 mt-1">Es un techo posible, todavía NO es plata comprometida.</span>
+            <div class="bg-indigo-50 rounded-xl border border-indigo-200 p-5 mb-8">
+                <p class="text-sm font-bold text-indigo-800 mb-3">🎯 Si TODOS los inscritos pagan el plan completo <span class="font-normal text-indigo-500">(la meta: asegurar los <span id="stat-opt-n">0</span>)</span></p>
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-white/60 rounded-lg py-2">
+                        <p class="text-lg md:text-xl font-heading font-bold text-indigo-700 tabular-nums" id="stat-potencial">$0</p>
+                        <p class="text-[11px] text-indigo-500 mt-0.5">total meta (<span id="stat-potencial-count">0</span>)</p>
+                    </div>
+                    <div class="bg-white/60 rounded-lg py-2">
+                        <p class="text-lg md:text-xl font-heading font-bold text-emerald-600 tabular-nums" id="stat-opt-pagado">$0</p>
+                        <p class="text-[11px] text-indigo-500 mt-0.5">ya te pagaron</p>
+                    </div>
+                    <div class="bg-white/60 rounded-lg py-2">
+                        <p class="text-lg md:text-xl font-heading font-bold text-amber-600 tabular-nums" id="stat-opt-falta">$0</p>
+                        <p class="text-[11px] text-indigo-500 mt-0.5">te falta si pagan todos</p>
+                    </div>
+                </div>
+                <p class="text-[11px] text-indigo-400 mt-3">Es la meta si aseguras el pago completo de todos los inscritos. Los que aún no pagan todavía NO son plata comprometida.</p>
             </div>
 
             <!-- Recent Activity -->
@@ -2140,13 +2154,19 @@
             document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos confirmados';
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
-            // POTENCIAL: si además los inscritos sin pagar tomaran el plan completo (proyectado en $199.990).
+            // NETO tras comisión MercadoPago (estimado; las transferencias no pagan comisión, así el neto real es algo mayor).
+            var netPaid = Math.round(paidRevenue * (1 - mercadoPagoBaseFeeRate));
+            var _spn = document.getElementById('stat-paid-net'); if (_spn) _spn.textContent = formatCLP(netPaid) + ' neto';
+            // ESCENARIO META: si TODOS los inscritos pagan el plan completo (leads proyectados a $199.990).
             var potencial = totalRevenue + sinPagar * 199990;
-            var statPot = document.getElementById('stat-potencial');
-            if (statPot) {
-                statPot.textContent = formatCLP(potencial);
-                document.getElementById('stat-potencial-count').textContent = (totalWithPlan + sinPagar) + ' clientes · faltan ' + formatCLP(Math.max(0, potencial - paidRevenue));
-            }
+            var faltaTotal = Math.max(0, potencial - paidRevenue);
+            var nMeta = totalWithPlan + sinPagar;
+            var _setD = function(id, v){ var e = document.getElementById(id); if (e) e.textContent = v; };
+            _setD('stat-potencial', formatCLP(potencial));
+            _setD('stat-potencial-count', nMeta + ' inscritos');
+            _setD('stat-opt-n', nMeta);
+            _setD('stat-opt-pagado', formatCLP(paidRevenue));
+            _setD('stat-opt-falta', formatCLP(faltaTotal));
 
             // Pagos badge
             var badge = document.getElementById('pagos-badge');

@@ -2017,6 +2017,16 @@
             return '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600">Pendiente</span>';
         }
 
+        // Chip de comprobante: verde si ya tiene comprobante (enviado o con ID de MP), ámbar si pagó pero aún no.
+        function comprobanteChip(p) {
+            var isPaid = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
+            if (!isPaid) return '';
+            var has = p.comprobanteEnviado || p.comprobantePago;
+            return has
+                ? '<div class="text-[10px] font-medium text-green-700 mt-0.5">✓ comprobante</div>'
+                : '<div class="text-[10px] font-medium text-amber-700 mt-0.5">⚠ sin comprobante</div>';
+        }
+
         function formatDate(iso) {
             if (!iso) return '—';
             var d = new Date(iso);
@@ -2321,7 +2331,7 @@
                     '<td data-label="Teléfono" class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
                     '<td data-label="Plan" class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + escapeHtml(planText) + '</span></td>' +
                     '<td data-label="Precio" class="px-4 py-3 text-sm font-medium text-gray-900">' + escapeHtml(priceText) + '</td>' +
-                    '<td data-label="Pago" class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + '</td>' +
+                    '<td data-label="Pago" class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + comprobanteChip(p) + '</td>' +
                     '<td data-label="Avance" class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
                     '<td data-label="Drive" class="px-4 py-3 text-center">' + (p.googleDrive && p.googleDrive.shareUrl ? '<a href="' + escapeHtml(p.googleDrive.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm" style="background-color:#0F9D58" title="Abrir carpeta Google Drive">📁</a>' : '<span class="text-gray-300 text-sm">—</span>') + '</td>' +
                     '<td data-label="Inscrito" class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
@@ -4207,6 +4217,8 @@
                 doc.setTextColor(255, 255, 255);
                 doc.text('DOCUMENTO EMITIDO ELECTRÓNICAMENTE — PORTAFOLIO DOCENTE 2026', 105, 283, { align: 'center' });
                 doc.save('Recibo_Pago_' + numInsc + '.pdf');
+                // Marca en Firebase que este docente ya tiene su comprobante emitido/enviado.
+                try { var _cu = (document.getElementById('edit-uid') || {}).value; if (_cu && window.db) db.ref('portafolios/' + _cu).update({ comprobanteEnviado: true, comprobanteEnviadoAt: new Date().toISOString() }); } catch (e) {}
             };
             qrImg.onerror = function() {
                 doc.setFillColor(31, 41, 55);
@@ -4216,6 +4228,8 @@
                 doc.setTextColor(255, 255, 255);
                 doc.text('DOCUMENTO EMITIDO ELECTRÓNICAMENTE — PORTAFOLIO DOCENTE 2026', 105, 283, { align: 'center' });
                 doc.save('Recibo_Pago_' + numInsc + '.pdf');
+                // Marca en Firebase que este docente ya tiene su comprobante emitido/enviado.
+                try { var _cu = (document.getElementById('edit-uid') || {}).value; if (_cu && window.db) db.ref('portafolios/' + _cu).update({ comprobanteEnviado: true, comprobanteEnviadoAt: new Date().toISOString() }); } catch (e) {}
             };
         }
 

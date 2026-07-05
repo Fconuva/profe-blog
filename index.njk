@@ -694,13 +694,16 @@ document.addEventListener('DOMContentLoaded', function () {
       var panels = gsap.utils.toArray('.sm-panel');
       if (track && panels.length > 1) {
         gsap.to(track, {
-          /* el track mide panels×100vw: para llegar al último panel se desplaza (n-1)/n de su ancho */
-          xPercent: -100 * (panels.length - 1) / panels.length,
+          /* distancia real (scrollWidth - viewport): el M3 SIEMPRE llega completo, sin drift de scrollbar */
+          x: function () { return -(track.scrollWidth - window.innerWidth); },
           ease: 'none',
           scrollTrigger: {
             trigger: '#modulos', start: 'top top',
-            end: function () { return '+=' + (window.innerWidth * (panels.length - 1)); },
-            pin: true, scrub: 1, invalidateOnRefresh: true, anticipatePin: 1
+            /* menos recorrido de cursor por panel + snap: asienta suave en cada módulo */
+            end: function () { return '+=' + Math.round(window.innerWidth * 0.75 * (panels.length - 1)); },
+            pin: true, scrub: 0.5,
+            snap: { snapTo: 1 / (panels.length - 1), duration: 0.4, delay: 0.05, ease: 'power1.inOut' },
+            invalidateOnRefresh: true, anticipatePin: 1
           }
         });
       }

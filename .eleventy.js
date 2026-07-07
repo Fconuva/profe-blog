@@ -17,6 +17,7 @@ module.exports = function(eleventyConfig) {
   eleventyConfig.addPassthroughCopy("nm4");
   eleventyConfig.addPassthroughCopy("publicaciones");
   eleventyConfig.addPassthroughCopy("trivia");
+  eleventyConfig.addPassthroughCopy("testimonios");
 
   // Ignore old/irrelevant files
   eleventyConfig.ignores.add("_site");

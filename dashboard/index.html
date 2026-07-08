@@ -1460,6 +1460,36 @@
         }
 
         // Auth state
+        // Modal obligatorio para capturar el teléfono cuando el registro no lo trae (Google).
+        function showPhoneGate(uid) {
+            if (document.getElementById('phone-gate')) return;
+            var ov = document.createElement('div');
+            ov.id = 'phone-gate';
+            ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(8,12,26,.78);display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(3px)';
+            ov.innerHTML = '<div style="background:#fff;border-radius:16px;max-width:400px;width:100%;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.45);font-family:inherit">'
+              + '<h3 style="font-size:19px;font-weight:700;color:#0f172a;margin:0 0 6px">Un último dato 📱</h3>'
+              + '<p style="font-size:14px;color:#475569;line-height:1.5;margin:0 0 16px">Déjanos tu <b>teléfono de contacto (WhatsApp)</b>. Lo necesitamos para enviarte los avances de tu portafolio y coordinar tu trabajo — sin él no podemos contactarte.</p>'
+              + '<input id="pg-tel" type="tel" inputmode="tel" placeholder="+56 9 1234 5678" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;padding:11px 13px;font-size:16px;margin-bottom:8px;outline:none;box-sizing:border-box">'
+              + '<p id="pg-err" style="display:none;font-size:12px;color:#dc2626;margin:0 0 8px">Ingresa un teléfono válido (al menos 8 dígitos).</p>'
+              + '<button id="pg-btn" style="width:100%;background:#4f46e5;color:#fff;font-weight:600;font-size:15px;border:0;border-radius:10px;padding:12px;cursor:pointer">Guardar y continuar</button></div>';
+            document.body.appendChild(ov);
+            var input = document.getElementById('pg-tel');
+            var err = document.getElementById('pg-err');
+            var btn = document.getElementById('pg-btn');
+            input.focus();
+            function save() {
+                var v = input.value.trim();
+                if (v.replace(/[^0-9]/g, '').length < 8) { err.textContent = 'Ingresa un teléfono válido (al menos 8 dígitos).'; err.style.display = 'block'; return; }
+                btn.disabled = true; btn.textContent = 'Guardando...';
+                db.ref('users/' + uid + '/telefono').set(v).then(function () {
+                    if (userData) userData.telefono = v;
+                    if (ov.parentNode) ov.parentNode.removeChild(ov);
+                }).catch(function () { btn.disabled = false; btn.textContent = 'Guardar y continuar'; err.textContent = 'No se pudo guardar, reintenta.'; err.style.display = 'block'; });
+            }
+            btn.addEventListener('click', save);
+            input.addEventListener('keydown', function (e) { if (e.key === 'Enter') save(); });
+        }
+
         auth.onAuthStateChanged(function(user) {
             if (!user) { window.location.href = '/cuenta/login.html'; return; }
             currentUser = user;
@@ -1476,6 +1506,12 @@
                 var userNameEl = document.getElementById('user-name');
                 if (userNameEl) {
                     userNameEl.textContent = userData.nombre || '';
+                }
+
+                // Gate: exigir teléfono si falta (p. ej. registros por Google que no lo pidieron).
+                // Sin teléfono no podemos enviar los temas ni contactar al docente por WhatsApp.
+                if (!userData.telefono || String(userData.telefono).trim() === '') {
+                    showPhoneGate(user.uid);
                 }
 
                 // Now listen to portfolio data (userData is guaranteed loaded)

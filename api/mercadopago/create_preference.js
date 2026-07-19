@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   try {
-    // ===== ECEP: preferencia para comprar UN dossier de estudio ($20.000) =====
+    // ===== ECEP: preferencia para comprar UN dossier de estudio ($10.000) =====
     // El acceso se otorga solo cuando el webhook recibe el pago aprobado (metadata.ecep_dossier).
     if (req.body && (req.body.tipo === 'ecep' || req.body.dossier)) {
       const { uid, email, dossier, dossierName, returnPath } = req.body;
@@ -19,7 +19,7 @@ module.exports = async (req, res) => {
       const preference = new Preference(client);
       const ts = Date.now();
       const result = await preference.create({ body: {
-        items: [{ title: 'Dossier de estudio ECEP — ' + (dossierName || dossier), quantity: 1, currency_id: 'CLP', unit_price: 20000 }],
+        items: [{ title: 'Dossier de estudio ECEP — ' + (dossierName || dossier), quantity: 1, currency_id: 'CLP', unit_price: 10000 }],
         payer: email ? { email: email } : undefined,
         back_urls: {
           success: `${host}${back}${sep}pago=ok`,

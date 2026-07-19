@@ -14,8 +14,8 @@
   var LOGIN = '/evaluaciones/acceso/';
   var HOME = '/evaluaciones/';
   var ADMIN_EMAILS = ['fconuva@gmail.com', 'portafolio.admin@profefranciscopancho.com'];
-  var PAY_LINK = 'https://mpago.la/1wxtybe';
-  var PRECIO = '$20.000';
+  var PAY_LINK = 'https://mpago.la/2hAQHvF';
+  var PRECIO = '$10.000';
   var WSP = '56988138929';
   var TRIAL_MS = 30 * 60 * 1000; // prueba gratis: 30 minutos desde la creación de la cuenta
 

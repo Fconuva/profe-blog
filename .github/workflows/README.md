@@ -2,17 +2,34 @@
 
 This folder already contains disabled deploy automation. The operational workflow for the current student site is manual and should be followed consistently.
 
+## Mandatory Multi-Agent Sync Before Push or Deploy
+
+Every agent must continue from the latest `origin/main` so changes from NM3, NM4, PAES, SIMCE, and other sections remain intact.
+
+At the beginning of publishable work and again immediately before every push or deployment:
+
+1. Run `git fetch origin main` and read `git log --oneline --decorate -10 origin/main`.
+2. Inspect the difference between the local branch and the remote. If `origin/main` advanced, use `git rebase origin/main` or an equivalent non-destructive integration.
+3. Resolve conflicts by preserving both scopes. Never replace the current remote state with an older local copy.
+4. Check `git status --short` and `git diff --name-status origin/main...HEAD`.
+5. Stage only explicit files from the assigned task; do not use `git add .` in the shared workflow.
+6. Fetch once more immediately before pushing. If the remote advanced, integrate it and repeat the scope check.
+7. Push or deploy only from a clean branch that contains the latest remote changes and is not behind `origin/main`.
+
+Force pushes, hard resets, stale deployments, and deletion or rollback of another agent's files are prohibited. If preserving both sets of changes is uncertain, stop and inspect the conflict rather than discarding work.
+
 ## Change Workflow
 
-1. Work in `profefconuva/estudiacest` unless the task explicitly targets the legacy site.
-2. If routing changes, confirm the current course map before editing.
-3. Apply the smallest patch possible.
-4. Run focused validation on touched files.
-5. Test browser behavior on the real route.
-6. If the change touches auth or API, validate on production or a real app server.
-7. Deploy with Vercel.
-8. Re-check the live site and at least one real user flow.
-9. Update `AGENTS.md` and `.github/skills/estudiacest-platform/SKILL.md` when behavior changes.
+1. Complete the mandatory multi-agent sync and read the latest remote changes.
+2. Work in `profefconuva/estudiacest` unless the task explicitly targets the legacy site.
+3. If routing changes, confirm the current course map before editing.
+4. Apply the smallest patch possible.
+5. Run focused validation on touched files.
+6. Test browser behavior on the real route.
+7. If the change touches auth or API, validate on production or a real app server.
+8. Repeat the sync gate and deploy with Vercel.
+9. Re-check the live site and at least one real user flow.
+10. Update `AGENTS.md` and `.github/skills/estudiacest-platform/SKILL.md` when behavior changes.
 
 ## Session Grading Workflow
 

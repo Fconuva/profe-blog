@@ -5,6 +5,22 @@
 - Trabaja SIEMPRE en el clon local `C:\dev\profe-blog`. NO uses la copia dentro de OneDrive: OneDrive corrompe el `.git` (errores `mmap`, commits fantasma, divergencias entre PCs). Ver `CLAUDE.md`.
 - Deploy del sitio: `git push origin HEAD:main` (Vercel auto-despliega). Reglas de Firebase: `npx firebase deploy --only database --project profe-blog`.
 
+## Regla obligatoria de sincronización multiagente (CRÍTICO)
+
+Este repositorio puede recibir cambios simultáneos de varios agentes. Cada agente debe continuar desde el último estado publicado y preservar íntegramente el trabajo ajeno.
+
+Antes de comenzar una tarea que pueda terminar en un `push` o despliegue, y nuevamente justo antes de publicarla:
+
+1. Ejecutar `git fetch origin main`.
+2. Leer los últimos cambios con `git log --oneline --decorate -10 origin/main` y revisar qué archivos cambiaron respecto del trabajo local.
+3. Si `origin/main` avanzó, integrar esos cambios con `git rebase origin/main` o un mecanismo equivalente que conserve ambos trabajos. Ante un conflicto, mantener los cambios de todas las secciones; si no es posible determinarlo con seguridad, detenerse y revisar antes de continuar.
+4. Comprobar `git status --short` y `git diff --name-status origin/main...HEAD`. El commit debe contener únicamente archivos de la tarea o sección asignada.
+5. Agregar archivos por rutas explícitas. En trabajo multiagente está prohibido usar `git add .` o incluir cambios incidentales.
+6. Inmediatamente antes del `push`, repetir `git fetch origin main`; si el remoto volvió a avanzar, rebasar y repetir la revisión de alcance.
+7. Publicar o desplegar solo desde un árbol limpio, basado en el `origin/main` más reciente y que no esté detrás del remoto.
+
+Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones antiguas, borrar archivos de otras secciones o desplegar desde una copia desactualizada. La presencia de cambios de otro agente nunca autoriza a revertirlos: se conservan y el nuevo trabajo se construye sobre ellos.
+
 ## Scope
 
 - The active production student site for this migration is `profefconuva/estudiacest`.

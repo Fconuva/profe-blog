@@ -25,6 +25,21 @@ user-invocable: true
 - Lecturas admin: `estudiacest/lecturas/adminprofe/index.html`
 - Owner admin email: `portafolio.admin@estudiacest.com`
 
+## Mandatory Multi-Agent Publish Gate
+
+Several agents can update different parts of Estudia CEST at the same time. Every agent must preserve the latest published state and build its own change on top of it.
+
+Complete this gate at the start of any task that may be pushed or deployed, and repeat it immediately before publication:
+
+1. Run `git fetch origin main`.
+2. Read the latest remote work with `git log --oneline --decorate -10 origin/main` and inspect the files changed between the local branch and `origin/main`.
+3. If the remote advanced, integrate it with `git rebase origin/main` or an equivalent non-destructive method. Conflict resolution must preserve all unrelated sections and both agents' intended changes.
+4. Review `git status --short` and `git diff --name-status origin/main...HEAD`. Stage only explicit paths that belong to the current task; do not use `git add .` in a shared multi-agent workflow.
+5. Fetch `origin/main` again immediately before pushing. If it advanced again, rebase and repeat the scope review.
+6. Push or deploy only from a clean worktree that is based on the newest `origin/main` and is not behind it.
+
+Never force-push, hard-reset, restore an older copy over current work, delete another section's files, or deploy a stale branch. If a conflict cannot be resolved confidently while preserving both scopes, stop and inspect it instead of discarding another agent's work.
+
 ## Current Routing Rules
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP` -> `/lecturas/dashboard`
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/nm4/`
@@ -33,12 +48,13 @@ user-invocable: true
 - Incomplete profile: `/estudiantes/perfil.html?next=...`
 
 ## Procedure
-1. Start from the active surface in `profefconuva/estudiacest`.
-2. If the task changes routing or access, update both behavior and documentation in the same turn.
-3. Run focused file validation immediately after edits.
-4. For UI changes, verify rendered behavior with browser tools.
-5. For API or auth behavior, test on deployed production or a real app server, not only a static file server.
-6. If you deploy, verify the live route and at least one real login path.
+1. Complete the mandatory multi-agent publish gate and read the latest `origin/main` changes.
+2. Start from the active surface in `profefconuva/estudiacest`.
+3. If the task changes routing or access, update both behavior and documentation in the same turn.
+4. Run focused file validation immediately after edits.
+5. For UI changes, verify rendered behavior with browser tools.
+6. For API or auth behavior, test on deployed production or a real app server, not only a static file server.
+7. Repeat the publish gate immediately before pushing or deploying, then verify the live route and at least one real login path after deployment.
 
 ## Session Grading Workflow
 - Ask whether the final grade is alternatives only or alternatives plus writing, and confirm the exact weighting before touching data.

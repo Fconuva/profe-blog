@@ -99,6 +99,15 @@
             </div>
         </div>
 
+        <!-- Banner "continúa donde quedaste": aparece cuando la docente ya tiene avance guardado -->
+        <div id="pre-resume-banner" class="hidden mb-6 rounded-2xl border-2 border-indigo-300 bg-indigo-50 px-5 py-4 flex items-start gap-3 shadow-sm">
+            <span class="text-2xl leading-none">💾</span>
+            <div class="flex-1">
+                <p class="font-heading font-bold text-indigo-900">Continúa donde quedaste</p>
+                <p class="text-sm text-indigo-800 mt-0.5" id="pre-resume-msg">Tu avance quedó guardado automáticamente. Sigue completando desde aquí, no tienes que empezar de nuevo.</p>
+            </div>
+        </div>
+
         <!-- Sub-step: Datos (reuse existing form) -->
         <div id="pre-step-datos" class="hidden">
             <div class="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
@@ -1601,6 +1610,24 @@
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById('pre-step-' + step).classList.remove('hidden');
+            // Banner "continúa donde quedaste": si ya hay avance guardado, decir dónde está parada
+            try {
+                var _rb = document.getElementById('pre-resume-banner');
+                var _rbMsg = document.getElementById('pre-resume-msg');
+                var _dp = (portData && portData.datosPortafolio) || null;
+                var _hasDatos = _dp && (_dp.completadoEn || _dp.actualizadoEn || _dp.colegio || _dp.asignatura);
+                if (_rb) {
+                    if (step === 'datos' && _hasDatos) {
+                        _rbMsg.textContent = 'Tu avance quedó guardado. Estás en el Paso 2 (Tus Datos): revisa lo que falta y continúa, no tienes que empezar de nuevo.';
+                        _rb.classList.remove('hidden');
+                    } else if (step === 'modulos') {
+                        _rbMsg.textContent = 'Tus datos ya quedaron guardados. Ahora estás en el Paso 3 (Preferencias de los módulos): continúa desde aquí.';
+                        _rb.classList.remove('hidden');
+                    } else {
+                        _rb.classList.add('hidden');
+                    }
+                }
+            } catch (e) {}
             // Update progress steps visual
             var steps = [
                 { circle: 'step-circle-2', line: 'step-line-1', label: 'step-label-2' },
@@ -3246,8 +3273,11 @@
         // Debounced auto-save
         var _datosTimer = null;
         var _modulosTimer = null;
+        var _datosDirty = false;
+        var _modulosDirty = false;
 
         function autoSaveDatos() {
+            _datosDirty = false;
             var indicator = document.getElementById('pre-datos-autosave');
             indicator.textContent = '💾 Guardando borrador...';
             indicator.classList.remove('hidden');
@@ -3276,6 +3306,7 @@
         }
 
         function autoSaveModulos() {
+            _modulosDirty = false;
             var indicator = document.getElementById('pre-modulos-autosave');
             indicator.textContent = '💾 Guardando borrador...';
             indicator.classList.remove('hidden');
@@ -3326,21 +3357,40 @@
 
         // Attach auto-save listeners to datos form
         document.getElementById('pre-datos-form').addEventListener('input', function() {
+            _datosDirty = true;
             clearTimeout(_datosTimer);
-            _datosTimer = setTimeout(autoSaveDatos, 3000); updateCompletitud();
+            _datosTimer = setTimeout(autoSaveDatos, 1200); updateCompletitud();
         });
         document.getElementById('pre-datos-form').addEventListener('change', function() {
+            _datosDirty = true;
             clearTimeout(_datosTimer);
-            _datosTimer = setTimeout(autoSaveDatos, 1500); updateCompletitud();
+            _datosTimer = setTimeout(autoSaveDatos, 800); updateCompletitud();
+        });
+        // Guardar de inmediato al salir de un campo (blur), para no perder nada al cerrar
+        document.getElementById('pre-datos-form').addEventListener('focusout', function() {
+            if (_datosDirty) { clearTimeout(_datosTimer); autoSaveDatos(); }
         });
         // Attach auto-save listeners to modulos section
         document.getElementById('pre-step-modulos').addEventListener('input', function() {
+            _modulosDirty = true;
             clearTimeout(_modulosTimer);
-            _modulosTimer = setTimeout(autoSaveModulos, 3000);
+            _modulosTimer = setTimeout(autoSaveModulos, 1200);
         });
         document.getElementById('pre-step-modulos').addEventListener('change', function() {
+            _modulosDirty = true;
             clearTimeout(_modulosTimer);
-            _modulosTimer = setTimeout(autoSaveModulos, 1500);
+            _modulosTimer = setTimeout(autoSaveModulos, 800);
+        });
+        document.getElementById('pre-step-modulos').addEventListener('focusout', function() {
+            if (_modulosDirty) { clearTimeout(_modulosTimer); autoSaveModulos(); }
+        });
+        // Aviso antes de salir si quedan cambios sin guardar
+        window.addEventListener('beforeunload', function(e) {
+            if (_datosDirty || _modulosDirty) {
+                e.preventDefault();
+                e.returnValue = 'Tienes cambios sin guardar en tu portafolio. ¿Seguro que quieres salir?';
+                return e.returnValue;
+            }
         });
 
         // ===== Auto-guardado del formulario de PAGADOS (datos-form) + red de seguridad local =====

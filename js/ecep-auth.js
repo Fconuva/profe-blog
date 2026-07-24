@@ -316,6 +316,27 @@
     reveal();
   }
 
+  // Auto-reparación: si el acceso no aparece en este UID, quizá el docente pagó con una
+  // cuenta cuyo UID cambió (se borró su Auth y volvió a entrar). Con su ID token, el
+  // servidor migra al UID actual los accesos de cualquier UID con el MISMO correo. Se
+  // llama UNA vez antes del paywall; si tras el reclamo tiene este dossier, se revela.
+  function reclaimThenCheck(did, user) {
+    user.getIdToken().then(function (idToken) {
+      return fetch('/api/mercadopago/create_preference', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tipo: 'reclaim', idToken: idToken })
+      });
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data && data.reclaimed > 0) {
+        firebase.database().ref('ecep_accesos/' + user.uid + '/' + did).once('value').then(function (snap) {
+          if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
+          else { checkTrial(did, user); }
+        }).catch(function () { checkTrial(did, user); });
+      } else { checkTrial(did, user); }
+    }).catch(function () { checkTrial(did, user); });
+  }
+
   // --- guardia de acceso ---
   if (typeof firebase === 'undefined' || !firebase.auth) { reveal(); return; }
 
@@ -359,7 +380,7 @@
           .then(function (snap) {
             if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
             else if (tries > 1) { setTimeout(function () { check(tries - 1); }, 1600); }
-            else { checkTrial(did, user); }   // sin pago: ver si está en su prueba gratis de 30 min
+            else { reclaimThenCheck(did, user); }   // sin pago: ver si está en su prueba gratis de 30 min
           })
           .catch(function () { checkTrial(did, user); });
       })(pagoReturn ? 7 : 1);

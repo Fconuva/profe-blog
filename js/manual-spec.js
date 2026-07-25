@@ -253,6 +253,36 @@ window.MANUAL_SPEC = {
     }
   },
 
+  /* ===================== 10. PEDAGOGIA HOSPITALARIA ===================== */
+  "hospitalaria": {
+    "label": "Pedagogía Hospitalaria (aula y escuela hospitalaria)",
+    "referente": "OA priorizados del nivel de cada estudiante + continuidad con su escuela de origen",
+    "oaPicker": { "modo": "libre" },
+    "aviso": "Cuéntanos cómo es tu atención, porque en aula hospitalaria cambia todo: no es lo mismo una hospitalización breve que una condición crónica, ni atender en el hospital que en el domicilio. El referente son los OA priorizados del nivel de cada estudiante, para que al reincorporarse a su escuela de origen la trayectoria tenga continuidad. Al inscribirte revisamos contigo el manual exacto que te corresponde este año antes de construir tu Módulo 1.",
+    "duracionM1": "90 min por experiencia (se ajusta si tu atención es por tramos más cortos)",
+    "duracionGrabada": "~40 min (cierre opcional)",
+    "camposEspeciales": [
+      { "id": "tipoAtencion", "label": "Tipo de atención que realizas", "tipo": "select", "obligatorio": true, "ayuda": "Define la duración, la frecuencia y el lugar, que son los que reorientan toda la respuesta educativa.", "ejemplo": "Aula hospitalaria", "opciones": ["Aula hospitalaria","Atención domiciliaria","Atención ambulatoria","Mixta (hospitalaria y domiciliaria)"] },
+      { "id": "nivelEstudiantes", "label": "Nivel o niveles de los estudiantes que atiendes", "tipo": "text", "obligatorio": true, "ayuda": "En aula hospitalaria es habitual atender varios niveles a la vez; escríbelos todos.", "ejemplo": "3° a 6° básico, en grupos que cambian según las altas" },
+      { "id": "nEstudiantes", "label": "N° de estudiantes que atiendes habitualmente", "tipo": "number", "obligatorio": true, "ayuda": "Sirve para dimensionar la experiencia y la ficha de la clase grabada.", "ejemplo": "6" },
+      { "id": "oa", "label": "OA priorizado(s) con que trabajarás (transcrito)", "tipo": "textarea", "obligatorio": true, "ayuda": "Se copia tal cual desde las Bases del nivel del estudiante; sobre ese OA se monitorea y analiza en la Tarea 2.", "ejemplo": "OA 04 (Lenguaje 4°): profundizar su comprensión de las narraciones leídas, extrayendo información explícita e implícita." },
+      { "id": "vinculoEscuela", "label": "¿Cómo coordinas con la escuela de origen?", "tipo": "textarea", "obligatorio": true, "ayuda": "El vínculo con la escuela de origen es lo que da continuidad a la trayectoria y suele ser lo que mejor distingue esta práctica.", "ejemplo": "Contacto a la profesora jefe al ingreso, acuerdo qué OA priorizar y le envío un reporte al alta para que la reincorporación sea continua." }
+    ],
+    "preguntasRubrica": [
+      { "id": "diversidadHosp", "label": "¿Qué características de tus estudiantes consideraste al planificar?", "ayuda": "Incluye el estado de salud y su impacto emocional y familiar, además de lo pedagógico: la enfermedad condiciona cómo el estudiante aprende y se relaciona.", "ejemplo": "Trabajo con estudiantes en tratamiento prolongado que se cansan rápido, así que planifico tramos cortos con logros visibles en cada sesión.", "tipo": "textarea" },
+      { "id": "continuidadOA", "label": "¿Cómo aseguras la continuidad curricular pese a las interrupciones?", "ayuda": "Es el nudo propio de esta modalidad: las altas, los tratamientos y las recaídas cortan la secuencia.", "ejemplo": "Priorizo los OA nucleares y dejo cada sesión cerrada en sí misma, de modo que una inasistencia no rompa la siguiente.", "tipo": "textarea" },
+      { "id": "monitoreoHosp", "label": "¿Cómo monitoreas el aprendizaje en este contexto?", "ayuda": "Cierra el ciclo de la Tarea 2: qué evidencia recoges y qué ajuste hiciste con ella.", "ejemplo": "Uso una pauta breve por sesión porque no siempre vuelvo a ver al mismo estudiante; con eso decido si retomo o avanzo.", "tipo": "textarea" },
+      { "id": "generoGrabada", "label": "En la clase grabada, ¿qué hiciste para desnaturalizar sesgos o estereotipos de género?", "ayuda": "Campo directo de equidad de género en la ficha de la clase grabada.", "ejemplo": "Reparto los turnos y las tareas de responsabilidad por igual, y cuido que los ejemplos no asocien capacidades a un género.", "tipo": "textarea" }
+    ],
+    "ejemplosCampoComun": {
+      "conocimientosPrevios": "Traen aprendizajes dispares según cuánto tiempo llevan fuera de su escuela; varios manejan el contenido pero perdieron continuidad.",
+      "fortalezas": "Se comprometen mucho cuando la actividad tiene sentido y les devuelve rutina y control sobre algo propio.",
+      "dificultades": "La fatiga, los tratamientos y las altas interrumpen la secuencia; la asistencia es irregular por razones de salud.",
+      "oa": "OA priorizados del nivel de cada estudiante, transcritos desde las Bases Curriculares.",
+      "unidad": "Unidad breve con OA priorizados y sesiones que cierran en sí mismas."
+    }
+  },
+
   /* ===================== 9. CONTEXTOS DE ENCIERRO ===================== */
   "encierro": {
     "label": "Ed. en Contextos de Encierro",

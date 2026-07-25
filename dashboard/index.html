@@ -680,30 +680,38 @@
 
         <!-- Sub-step: Done -->
         <div id="pre-step-listo" class="hidden">
-            <div class="bg-white rounded-2xl border border-green-200 p-8 shadow-sm text-center">
-                <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                </div>
-                <h2 class="text-2xl font-heading font-bold text-gray-900 mb-2">¡Solicitud enviada!</h2>
-                <p class="text-gray-600 mb-6 max-w-md mx-auto">Tus datos y preferencias quedaron guardados. Comenzamos a preparar tu <b>Módulo 1</b> y te contactaremos para que veas nuestro trabajo; recién ahí decides tu pago, como más te acomode.</p>
-                <div class="bg-gray-50 rounded-xl p-6 mb-6 text-left max-w-sm mx-auto">
-                    <p class="text-sm text-gray-500 mb-3 font-medium">📋 Resumen:</p>
-                    <div class="space-y-2 text-sm">
-                        <div class="flex justify-between"><span class="text-gray-500">N° Inscripción</span><span class="font-medium text-gray-900" id="resumen-num">—</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Nivel</span><span class="font-medium text-gray-900" id="resumen-nivel">—</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Asignatura</span><span class="font-medium text-gray-900" id="resumen-asig">—</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Colegio</span><span class="font-medium text-gray-900" id="resumen-colegio">—</span></div>
-                        <div class="flex justify-between"><span class="text-gray-500">Estado</span><span class="font-medium text-green-600">Solicitud recibida ✓</span></div>
+            <div class="bg-white rounded-2xl border border-green-200 p-5 sm:p-6 shadow-sm">
+                <!-- Cabecera compacta: antes ocupaba media pantalla y empujaba los botones fuera de foco -->
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center flex-none">
+                        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="min-w-0">
+                        <h2 class="text-lg sm:text-xl font-heading font-bold text-gray-900 leading-tight">Listo, quedaste inscrito</h2>
+                        <p class="text-sm text-gray-500 leading-snug">Lo que escribas se guarda solo. No pagas nada hasta ver tu Módulo 1.</p>
                     </div>
                 </div>
-                <!-- Acciones -->
-                <p class="text-sm font-medium text-gray-500 mb-3">¿Qué quieres hacer ahora?</p>
+
+                <!-- Resumen en una linea, no en una tarjeta de 5 filas -->
+                <p class="text-xs text-gray-500 mb-4 pb-3 border-b border-gray-100">
+                    <span class="font-semibold text-gray-700" id="resumen-num">—</span>
+                    <span class="mx-1.5">·</span><span id="resumen-nivel">—</span>
+                    <span class="mx-1.5">·</span><span id="resumen-asig">—</span>
+                    <span class="mx-1.5">·</span><span id="resumen-colegio">—</span>
+                </p>
+
+                <!-- Hilo conductor: donde quedaste y que te falta -->
+                <div id="hilo-conductor" class="mb-4"></div>
+
+                <p class="text-sm font-medium text-gray-500 mb-3">O si prefieres:</p>
                 <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 items-stretch text-left">
                     <!-- Pagar -->
-                    <button type="button" id="pre-ir-pago" class="flex flex-col gap-2 p-4 rounded-2xl bg-gradient-to-br from-primary-600 to-indigo-600 text-white shadow-md hover:shadow-xl transition-all">
-                        <span class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-2xl">💳</span>
-                        <span class="font-heading font-bold text-sm">Completar mi pago</span>
-                        <span class="text-xs" style="color:#e0e7ff">Tu portafolio en pocos días · pago en 2 cuotas</span>
+                    <!-- Pagar: visible pero sin presionar. Antes era el boton principal, en degradado
+                         indigo, y el docente entraba a completar sus datos y se sentia empujado a pagar. -->
+                    <button type="button" id="pre-ir-pago" class="flex flex-col gap-2 p-4 rounded-2xl bg-white border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all">
+                        <span class="w-11 h-11 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center text-xl">💳</span>
+                        <span class="font-heading font-bold text-gray-900 text-sm">Pagar cuando quieras</span>
+                        <span class="text-xs text-gray-500">Sin apuro. Completo o en 2 cuotas.</span>
                     </button>
                     <!-- Datos -->
                     <button type="button" id="pre-edit-todo" class="flex flex-col gap-2 p-4 rounded-2xl bg-white border border-gray-200 hover:border-primary-300 hover:bg-primary-50 transition-all">
@@ -2261,6 +2269,59 @@
             }
         }
 
+        // ===== HILO CONDUCTOR =====
+        // El docente entra, escribe un poco, se va y vuelve. Al volver tiene que saber
+        // exactamente donde quedo, con los campos nombrados y no con un porcentaje mudo.
+        var _CAMPOS_HILO = [
+            { k: 'nivel',        nombre: 'tu manual de portafolio' },
+            { k: 'asignatura',   nombre: 'tu asignatura' },
+            { k: 'curso',        nombre: 'tu curso' },
+            { k: 'colegio',      nombre: 'tu establecimiento' },
+            { k: 'numAlumnos',   nombre: 'cuántos estudiantes tienes' },
+            { k: 'objetivoAprendizaje', nombre: 'el OA con el que trabajarás' },
+            { k: 'listaAlumnos', nombre: 'tu lista de estudiantes' },
+            { k: 'conocimientosPrevios', nombre: 'qué saben ya tus estudiantes' },
+            { k: 'fortalezas',   nombre: 'las fortalezas de tu curso' },
+            { k: 'dificultades', nombre: 'las dificultades de tu curso' }
+        ];
+        function _hiloFaltantes() {
+            var d = (portData && portData.datosPortafolio) || {};
+            var faltan = [];
+            _CAMPOS_HILO.forEach(function(c) {
+                var v = d[c.k];
+                if (v === undefined || v === null || String(v).trim() === '' || String(v) === '0') faltan.push(c.nombre);
+            });
+            return { faltan: faltan, total: _CAMPOS_HILO.length, listos: _CAMPOS_HILO.length - faltan.length };
+        }
+        function _hiloTexto(f) {
+            if (!f.faltan.length) return 'Tienes todo completo. Si quieres cambiar algo, entra cuando gustes.';
+            if (f.faltan.length === 1) return 'Te falta una sola cosa: <b>' + f.faltan[0] + '</b>.';
+            if (f.faltan.length <= 3) return 'Te faltan <b>' + f.faltan.length + '</b> cosas: ' + f.faltan.map(function(x){return '<b>'+x+'</b>';}).join(', ') + '.';
+            return 'Te faltan <b>' + f.faltan.length + '</b> cosas. Las próximas son: ' + f.faltan.slice(0,3).map(function(x){return '<b>'+x+'</b>';}).join(', ') + '.';
+        }
+        function pintarHiloConductor() {
+            var box = document.getElementById('hilo-conductor');
+            if (!box) return;
+            var f = _hiloFaltantes();
+            var pct = Math.round(f.listos / f.total * 100);
+            var completo = f.faltan.length === 0;
+            box.innerHTML =
+                '<div class="rounded-2xl p-4 sm:p-5" style="background:' + (completo ? '#ecfdf5' : '#f5f7ff') + ';border:2px solid ' + (completo ? '#6ee7b7' : '#c7d2fe') + '">' +
+                  '<div class="flex items-center justify-between gap-3 mb-2">' +
+                    '<p class="font-heading font-bold text-sm sm:text-base" style="color:' + (completo ? '#065f46' : '#3730a3') + '">' +
+                      (completo ? '✅ Tus datos están completos' : '📝 Vas en el ' + pct + '%') + '</p>' +
+                    '<span class="text-xs font-semibold" style="color:#6b7280">' + f.listos + ' de ' + f.total + '</span>' +
+                  '</div>' +
+                  '<div style="height:8px;background:#e5e7eb;border-radius:99px;overflow:hidden">' +
+                    '<div style="height:8px;width:' + pct + '%;background:' + (completo ? '#10b981' : '#6366f1') + ';border-radius:99px;transition:width .4s"></div>' +
+                  '</div>' +
+                  '<p class="text-sm mt-2.5" style="color:#374151">' + _hiloTexto(f) + '</p>' +
+                  (completo ? '' :
+                    '<button type="button" onclick="openUnifiedPortfolioEdit()" class="mt-3 w-full sm:w-auto px-5 py-2.5 rounded-xl font-bold text-white text-sm" style="background:#4f46e5">Seguir donde quedé</button>' +
+                    '<p class="text-xs mt-2" style="color:#6b7280">Puedes dejarlo a medias y volver cuando quieras. Lo que escribes queda guardado.</p>') +
+                '</div>';
+        }
+
         function fillResumen() {
             var d = portData.datosPortafolio || {};
             document.getElementById('resumen-num').textContent = userData.inscripcionNum || '—';
@@ -2285,6 +2346,7 @@
             document.getElementById('step-preinscripcion').classList.remove('hidden');
             showPreSubStep('listo');
             fillResumen();
+            pintarHiloConductor();
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 

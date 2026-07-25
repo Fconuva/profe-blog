@@ -3041,12 +3041,48 @@
             Object.keys(pm).forEach(function(k){ var el=document.getElementById('mq-'+k); if(el) el.value=(pm[k]&&pm[k].valor!=null?pm[k].valor:pm[k])||''; });
             var asig=document.getElementById('me-asignatura'); if(asig && asig.value) _mountAsigOAPicker(asig.value);
         }
+        // Respaldo para manuales sin spec propia. Antes el bloque se ocultaba en silencio:
+        // el docente elegia su manual, no aparecia ningun campo y concluia que su area no
+        // estaba disponible (caso Karen Arriola, Pedagogia Hospitalaria, 24-jul-2026).
+        // Ahora nadie queda bloqueado: pedimos los datos comunes a todos los portafolios y
+        // decimos de frente que el manual lo revisamos con ella.
+        function _specGenerico(manualStr){
+            return {
+                "label": (manualStr && manualStr !== 'Otro') ? manualStr : 'Tu manual',
+                "referente": "OA de las Bases Curriculares del nivel que atiendes",
+                "oaPicker": { "modo": "libre" },
+                "aviso": "Déjanos aquí tus datos y el OA con el que quieres trabajar. El detalle exacto de tu manual lo revisamos contigo antes de construir tu Módulo 1, así que no te preocupes si no estás segura de algún campo: escribe lo que sepas y nosotros lo afinamos.",
+                "duracionM1": "90 min (1 bloque / 2 horas pedagógicas) por experiencia",
+                "duracionGrabada": "~40 min (cierre opcional)",
+                "camposEspeciales": [
+                    { "id": "cursoLetra", "label": "Curso, nivel o grupo que atiendes", "tipo": "text", "obligatorio": true, "ayuda": "Identifica el grupo con el que harás las experiencias.", "ejemplo": "5° básico B" },
+                    { "id": "nEstudiantes", "label": "N° de estudiantes", "tipo": "number", "obligatorio": true, "ayuda": "Sirve para dimensionar la diversidad del grupo y la ficha de la clase grabada.", "ejemplo": "28" },
+                    { "id": "oa", "label": "OA u objetivo curricular con el que trabajarás (transcrito)", "tipo": "textarea", "obligatorio": true, "ayuda": "Cópialo tal cual desde las Bases o el programa de tu nivel; sobre él se monitorea y analiza en la Tarea 2.", "ejemplo": "OA 04: profundizar su comprensión de las narraciones leídas, extrayendo información explícita e implícita." },
+                    { "id": "contextoModalidad", "label": "Cuéntanos cómo es tu contexto de trabajo", "tipo": "textarea", "obligatorio": true, "ayuda": "Lo que haga distinta tu realidad: dónde atiendes, con qué frecuencia, con qué apoyos y qué te condiciona la planificación.", "ejemplo": "Atiendo en dos sedes rurales, con grupos que cambian cada semana y sin proyector." }
+                ],
+                "preguntasRubrica": [
+                    { "id": "diversidad2tipos", "label": "¿Qué características de tu grupo consideraste al planificar?", "ayuda": "La fundamentación pide al menos dos tipos: de aprendizaje, de contexto sociocultural, o de experiencias e intereses.", "ejemplo": "De aprendizaje: seis aún no consolidan la lectura comprensiva. De intereses: la mayoría sigue fútbol, y con eso contextualizo los textos.", "tipo": "textarea" },
+                    { "id": "monitoreoGenerico", "label": "¿Cómo vas a monitorear el aprendizaje?", "ayuda": "Qué evidencia recoges durante la clase y con qué instrumento la registras.", "ejemplo": "Recorro los puestos con una escala de apreciación y cierro con un ticket de salida individual.", "tipo": "textarea" },
+                    { "id": "generoGrabada", "label": "En la clase grabada, ¿qué harás para desnaturalizar sesgos o estereotipos de género?", "ayuda": "Campo directo de equidad de género en la ficha de la clase grabada.", "ejemplo": "Reparto los turnos por igual y cuido que los ejemplos no asocien capacidades a un género.", "tipo": "textarea" }
+                ],
+                "ejemplosCampoComun": {
+                    "conocimientosPrevios": "Manejan lo básico del contenido anterior, pero con niveles muy dispares dentro del grupo.",
+                    "fortalezas": "Grupo participativo, se enganchan cuando la actividad tiene sentido para ellos.",
+                    "dificultades": "A varios les cuesta sostener la atención en tareas largas y trabajar de forma autónoma.",
+                    "oa": "OA u objetivo curricular del nivel que atiendes, transcrito literal.",
+                    "unidad": "Nombre de la unidad en la que se enmarcan las tres experiencias."
+                }
+            };
+        }
         function applyManualSpec(manualStr){
             var box=document.getElementById('manual-adaptive'); if(!box) return;
             if(typeof MANUAL_SPEC==='undefined'){ box.classList.add('hidden'); return; }
             var key=_manualSpecKey(manualStr);
             var spec=key && MANUAL_SPEC[key];
-            if(!spec){ box.classList.add('hidden'); box.innerHTML=''; _applyEjemplosComunes(null); return; }
+            // Sin manual elegido todavia: no hay nada que mostrar.
+            if(!spec && !String(manualStr||'').trim()){ box.classList.add('hidden'); box.innerHTML=''; _applyEjemplosComunes(null); return; }
+            // Manual elegido pero sin spec propia: respaldo generico, NUNCA pantalla vacia.
+            if(!spec){ spec=_specGenerico(manualStr); try{ console.warn('[inscripcion] manual sin spec propia, usando respaldo generico:', manualStr); }catch(e){} }
             var html='';
             html+='<div class="rounded-2xl p-4" style="background:#fffbeb;border:2px solid #f59e0b">'+
                 '<p class="text-xs font-bold uppercase tracking-wide" style="color:#b45309">📋 Cómo pide la información tu manual — '+msEsc(spec.label)+'</p>'+

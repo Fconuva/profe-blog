@@ -5760,6 +5760,110 @@ window.OA_DATA_EXTRA_A = {
      "e": "Responsabilidad personal y social en el deporte y la actividad física",
      "t": "Participar, liderar y promover una variedad de actividades físicas y/o deportivas de su interés y que se desarrollen en su comunidad escolar y/o en su entorno; por ejemplo: Sugerir estrategias grupales para organizar actividades físicas y/o deportivas. ; Demostrar distintos estilos de liderazgo en la promoción de una vida activa. ; Proponer y…"
     }
+   ],
+   "3M": [
+    {
+     "c": "OA 1",
+     "e": "Educación Física y Salud 1",
+     "t": "Aplicar individual y colectivamente las habilidades motrices especializadas de manera creativa y segura, en una variedad de actividades físicas que sean de su interés y en diferentes entornos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Educación Física y Salud 1",
+     "t": "Evaluar el impacto de las estrategias y tácticas individuales y colectivas utilizadas para la resolución de problemas en el juego, el deporte y la recreación, asumiendo distintos roles y tareas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Educación Física y Salud 1",
+     "t": "Diseñar y aplicar un plan de entrenamiento para mejorar su rendimiento físico, considerando sus características personales y funcionales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Educación Física y Salud 1",
+     "t": "Promover el bienestar, el autocuidado, la vida activa y la alimentación saludable en su comunidad, valorando la diversidad de las personas a través de la aplicación de programas y proyectos deportivos, recreativos y socioculturales."
+    },
+    {
+     "c": "OA 5",
+     "e": "Educación Física y Salud 1",
+     "t": "Analizar, por medio de la práctica regular de actividad física, cómo los factores sociales, culturales, económicos y tecnológicos favorecen el desarrollo de oportunidades para la adquisición de un estilo de vida activo y saludable a nivel local, regional y global."
+    },
+    {
+     "c": "OA 1",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar individual y colectivamente las habilidades motrices especializadas utilizadas en una variedad de actividades físicas que sean de su interés y en diferentes entornos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Educación Física y Salud 2",
+     "t": "Organizar y aplicar individual y colectivamente estrategias y tácticas para desarrollar un juego inteligente, asumiendo distintos roles y tareas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Educación Física y Salud 2",
+     "t": "Aplicar responsablemente un plan de entrenamiento para mejorar su rendimiento físico, considerando sus características personales y funcionales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar el impacto de variados programas y proyectos deportivos, recreativos y socioculturales que promuevan de manera colectiva el bienestar, el autocuidado, la vida activa y la alimentación saludable en su comunidad, considerando la diversidad de las personas."
+    },
+    {
+     "c": "OA 5",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar, por medio de la práctica regular de actividad física, cómo los factores sociales, culturales, económicos y tecnológicos favorecen el desarrollo de oportunidades para la adquisición de un estilo de vida activo y saludable a nivel local, regional y global."
+    }
+   ],
+   "4M": [
+    {
+     "c": "OA 1",
+     "e": "Educación Física y Salud 1",
+     "t": "Aplicar individual y colectivamente las habilidades motrices especializadas de manera creativa y segura, en una variedad de actividades físicas que sean de su interés y en diferentes entornos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Educación Física y Salud 1",
+     "t": "Evaluar el impacto de las estrategias y tácticas individuales y colectivas utilizadas para la resolución de problemas en el juego, el deporte y la recreación, asumiendo distintos roles y tareas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Educación Física y Salud 1",
+     "t": "Diseñar y aplicar un plan de entrenamiento para mejorar su rendimiento físico, considerando sus características personales y funcionales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Educación Física y Salud 1",
+     "t": "Promover el bienestar, el autocuidado, la vida activa y la alimentación saludable en su comunidad, valorando la diversidad de las personas a través de la aplicación de programas y proyectos deportivos, recreativos y socioculturales."
+    },
+    {
+     "c": "OA 5",
+     "e": "Educación Física y Salud 1",
+     "t": "Analizar, por medio de la práctica regular de actividad física, cómo los factores sociales, culturales, económicos y tecnológicos favorecen el desarrollo de oportunidades para la adquisición de un estilo de vida activo y saludable a nivel local, regional y global."
+    },
+    {
+     "c": "OA 1",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar individual y colectivamente las habilidades motrices especializadas utilizadas en una variedad de actividades físicas que sean de su interés y en diferentes entornos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Educación Física y Salud 2",
+     "t": "Organizar y aplicar individual y colectivamente estrategias y tácticas para desarrollar un juego inteligente, asumiendo distintos roles y tareas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Educación Física y Salud 2",
+     "t": "Aplicar responsablemente un plan de entrenamiento para mejorar su rendimiento físico, considerando sus características personales y funcionales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar el impacto de variados programas y proyectos deportivos, recreativos y socioculturales que promuevan de manera colectiva el bienestar, el autocuidado, la vida activa y la alimentación saludable en su comunidad, considerando la diversidad de las personas."
+    },
+    {
+     "c": "OA 5",
+     "e": "Educación Física y Salud 2",
+     "t": "Evaluar, por medio de la práctica regular de actividad física, cómo los factores sociales, culturales, económicos y tecnológicos favorecen el desarrollo de oportunidades para la adquisición de un estilo de vida activo y saludable a nivel local, regional y global."
+    }
    ]
   }
  },

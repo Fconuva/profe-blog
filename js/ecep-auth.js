@@ -46,6 +46,7 @@
     'media-artes-visuales': 'Educación Media · Artes Visuales',
     'media-educacion-fisica': 'Educación Media · Educación Física y Salud',
     'media-filosofia': 'Educación Media · Filosofía',
+    'media-tecnologia': 'Educación Media · Tecnología',
     'musica-basica': 'Educación Básica · Música',
     'artes-basica': 'Educación Básica · Artes Visuales'
   };

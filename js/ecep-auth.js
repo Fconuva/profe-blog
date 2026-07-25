@@ -47,6 +47,7 @@
     'media-educacion-fisica': 'Educación Media · Educación Física y Salud',
     'media-filosofia': 'Educación Media · Filosofía',
     'media-tecnologia': 'Educación Media · Tecnología',
+    'media-religion': 'Educación Media · Religión Católica',
     'musica-basica': 'Educación Básica · Música',
     'artes-basica': 'Educación Básica · Artes Visuales'
   };

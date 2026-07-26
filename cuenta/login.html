@@ -221,13 +221,42 @@
                     submitBtn.disabled = false;
                     submitBtn.textContent = 'Ingresar';
                     errorMsg.classList.remove('hidden');
-                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-                        errorMsg.textContent = 'Correo o contraseña incorrectos.';
-                    } else if (error.code === 'auth/too-many-requests') {
+
+                    if (error.code === 'auth/too-many-requests') {
                         errorMsg.textContent = 'Demasiados intentos. Espera unos minutos e intenta de nuevo.';
-                    } else {
-                        errorMsg.textContent = 'Error al ingresar. Intenta nuevamente.';
+                        return;
                     }
+                    if (error.code !== 'auth/user-not-found' && error.code !== 'auth/wrong-password' && error.code !== 'auth/invalid-credential') {
+                        errorMsg.textContent = 'Error al ingresar. Intenta nuevamente.';
+                        return;
+                    }
+
+                    // Firebase devuelve el mismo 'auth/invalid-credential' para casos muy distintos,
+                    // y antes los colapsabamos todos en "Correo o contraseña incorrectos". El caso que
+                    // mas nos costo: la cuenta se creo con Google, o sea NO tiene contraseña, y la
+                    // docente cambiaba la clave una y otra vez sin poder entrar nunca. Cuatro docentes
+                    // reportaron esto entre el 10 y el 25 de julio. Preguntamos por el proveedor real.
+                    errorMsg.textContent = 'Revisando tu cuenta...';
+                    auth.fetchSignInMethodsForEmail(email)
+                        .then(function(metodos) {
+                            if (metodos && metodos.indexOf('google.com') >= 0 && metodos.indexOf('password') < 0) {
+                                errorMsg.innerHTML = '<b>Tu cuenta está creada con Google.</b> No tiene contraseña, por eso no te deja entrar. Usa el botón <b>Continuar con Google</b> que está más abajo, con este mismo correo.';
+                                var gb = document.getElementById('google-signin-btn');
+                                if (gb) {
+                                    gb.style.boxShadow = '0 0 0 3px #6366f1';
+                                    gb.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                }
+                            } else if (metodos && metodos.length === 0) {
+                                errorMsg.innerHTML = 'No encontramos una cuenta con ese correo. Revisa si lo escribiste bien, o si te inscribiste con otro correo. Si no estás segura, escríbenos por WhatsApp y lo vemos.';
+                            } else {
+                                errorMsg.innerHTML = 'La contraseña no coincide. Si no la recuerdas, usa <b>Solicitar cambio de contraseña por WhatsApp</b> aquí abajo y te la cambiamos al tiro.';
+                            }
+                        })
+                        .catch(function() {
+                            // Con la proteccion de enumeracion de correos activada, Firebase no responde
+                            // que proveedor es. Damos las dos salidas en vez de dejarla adivinando.
+                            errorMsg.innerHTML = 'No pudimos entrar con ese correo y contraseña. Dos cosas que suelen pasar: que tu cuenta esté creada con <b>Google</b> (entonces usa el botón de más abajo) o que la contraseña no sea esa (pídenos el cambio por WhatsApp).';
+                        });
                 });
         });
 

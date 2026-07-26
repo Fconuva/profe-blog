@@ -48,6 +48,7 @@
     'media-filosofia': 'Educación Media · Filosofía',
     'media-tecnologia': 'Educación Media · Tecnología',
     'media-religion': 'Educación Media · Religión Católica',
+    'media-contabilidad': 'Media TP · Contabilidad',
     'musica-basica': 'Educación Básica · Música',
     'artes-basica': 'Educación Básica · Artes Visuales'
   };

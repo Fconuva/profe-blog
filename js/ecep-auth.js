@@ -31,6 +31,7 @@
     'especial-tea': 'Educación Especial · Trastorno del Espectro Autista',
     'especial-tel': 'Educación Especial · Trastorno del Lenguaje (TEL)',
     'especial-pedagogia-hospitalaria': 'Educación Especial · Pedagogía Hospitalaria',
+    'especial-neep': 'Educación Especial · Escuela Especial (NEEP)',
     'media-lengua': 'Educación Media · Lengua y Literatura',
     'media-matematica': 'Educación Media · Matemática',
     'media-biologia': 'Educación Media · Biología',

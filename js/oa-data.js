@@ -4258,7 +4258,51 @@ window.OA_DATA = {
           "e": "Expresión escrita",
           "t": "Demostrar conocimiento y uso del lenguaje en sus textos escritos por medio de las siguientes funciones: Expresar cantidades, contar y enumerar; por ejemplo: there are a few/few girls; there is little sugar left.; Describir frecuencia, tiempo, grado de acciones; por ejemplo: I usually /often call her in the morning; he is rather shy; Susan will be…"
         }
-      ]
+      ],
+   "3M": [
+    {
+     "c": "OA 1",
+     "e": "Comunicación",
+     "t": "Comprender información central de textos orales y escritos en contextos relacionados con sus intereses e inquietudes, con el fin de conocer las maneras en que otras culturas abordan dichos contextos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Comunicación",
+     "t": "Producir textos orales y escritos breves y claros en contextos relacionados con sus intereses e inquietudes, con el fin de expresar una postura personal crítica que respeta otras posturas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Comunicación",
+     "t": "Utilizar su conocimiento del inglés en la comprensión y producción de textos orales y escritos breves y claros, con el fin de construir una postura personal crítica en contextos relacionados con sus intereses e inquietudes."
+    },
+    {
+     "c": "OA 4",
+     "e": "Comunicación",
+     "t": "Producir y comprender con fluidez textos orales y escritos breves y claros en situaciones comunicativas que involucren otras visiones de mundo y la propia, con el fin de interactuar y tomar conciencia de su propia identidad."
+    }
+   ],
+   "4M": [
+    {
+     "c": "OA 1",
+     "e": "Comunicación",
+     "t": "Comprender información relevante para un propósito específico en textos orales y escritos en contextos relacionados con sus intereses e inquietudes, con el fin de conocer las maneras en que otras culturas abordan dichos contextos."
+    },
+    {
+     "c": "OA 2",
+     "e": "Comunicación",
+     "t": "Producir textos orales y escritos claros en contextos relacionados con sus intereses e inquietudes, con el fin de expresar una postura personal crítica que respeta otras posturas."
+    },
+    {
+     "c": "OA 3",
+     "e": "Comunicación",
+     "t": "Utilizar su conocimiento del inglés en la comprensión y producción de textos orales y escritos claros, con el fin de construir una postura personal crítica en contextos relacionados con sus intereses e inquietudes."
+    },
+    {
+     "c": "OA 4",
+     "e": "Comunicación",
+     "t": "Producir y comprender con fluidez textos orales y escritos claros en situaciones comunicativas que involucren otras visiones de mundo y la propia, con el fin de interactuar y tomar conciencia de su propia identidad."
+    }
+   ]
     }
   },
   "lengua_literatura": {
@@ -6159,6 +6203,80 @@ window.OA_DATA_EXTRA_A = {
      "e": "Difundir y comunicar",
      "t": "Implementar propuestas de difusión hacia la comunidad de trabajos y proyectos de arte, en el contexto escolar o local, de forma directa o virtual, contemplando las manifestaciones visuales a exponer, el espacio, el montaje, el público y el aporte a la comunidad, entre otros."
     }
+   ],
+   "3M": [
+    {
+     "c": "OA 1",
+     "e": "Expresar y crear",
+     "t": "Experimentar con diversidad de soportes, procedimientos y materiales utilizados en la ilustración, las artes audiovisuales y multimediales."
+    },
+    {
+     "c": "OA 2",
+     "e": "Expresar y crear",
+     "t": "Crear obras y proyectos de ilustración, audiovisuales y multimediales, para expresar sensaciones, emociones e ideas, tomando riesgos creativos al seleccionar temas, materiales, soportes y procedimientos."
+    },
+    {
+     "c": "OA 3",
+     "e": "Expresar y crear",
+     "t": "Crear obras y proyectos de ilustración, audiovisuales o multimediales, a partir de la apreciación de distintos referentes artísticos y culturales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Apreciar y responder",
+     "t": "Analizar e interpretar propósitos expresivos de obras visuales, audiovisuales y multimediales contemporáneas, a partir de criterios estéticos (lenguaje visual, materiales, procedimientos, emociones, sensaciones e ideas que genera, entre otros), utilizando conceptos disciplinarios."
+    },
+    {
+     "c": "OA 5",
+     "e": "Apreciar y responder",
+     "t": "Argumentar juicios estéticos acerca de obras visuales, audiovisuales y multimediales contemporáneas, considerando propósitos expresivos, criterios estéticos, elementos simbólicos y aspectos contextuales."
+    },
+    {
+     "c": "OA 6",
+     "e": "Apreciar y responder",
+     "t": "Evaluar críticamente procesos y resultados de obras y proyectos visuales, audiovisuales y multimediales personales y de sus pares, considerando criterios estéticos y propósitos expresivos, y dando cuenta de una postura personal fundada y respetuosa."
+    },
+    {
+     "c": "OA 7",
+     "e": "Comunicar y difundir",
+     "t": "Diseñar y gestionar colaborativamente proyectos de difusión de obras visuales, audiovisuales y multimediales propios, empleando diversidad de medios o TIC."
+    }
+   ],
+   "4M": [
+    {
+     "c": "OA 1",
+     "e": "Expresar y crear",
+     "t": "Experimentar con diversidad de soportes, procedimientos y materiales utilizados en la ilustración, las artes audiovisuales y multimediales."
+    },
+    {
+     "c": "OA 2",
+     "e": "Expresar y crear",
+     "t": "Crear obras y proyectos de ilustración, audiovisuales y multimediales, para expresar sensaciones, emociones e ideas, tomando riesgos creativos al seleccionar temas, materiales, soportes y procedimientos."
+    },
+    {
+     "c": "OA 3",
+     "e": "Expresar y crear",
+     "t": "Crear obras y proyectos de ilustración, audiovisuales o multimediales, a partir de la apreciación de distintos referentes artísticos y culturales."
+    },
+    {
+     "c": "OA 4",
+     "e": "Apreciar y responder",
+     "t": "Analizar e interpretar propósitos expresivos de obras visuales, audiovisuales y multimediales contemporáneas, a partir de criterios estéticos (lenguaje visual, materiales, procedimientos, emociones, sensaciones e ideas que genera, entre otros), utilizando conceptos disciplinarios."
+    },
+    {
+     "c": "OA 5",
+     "e": "Apreciar y responder",
+     "t": "Argumentar juicios estéticos acerca de obras visuales, audiovisuales y multimediales contemporáneas, considerando propósitos expresivos, criterios estéticos, elementos simbólicos y aspectos contextuales."
+    },
+    {
+     "c": "OA 6",
+     "e": "Apreciar y responder",
+     "t": "Evaluar críticamente procesos y resultados de obras y proyectos visuales, audiovisuales y multimediales personales y de sus pares, considerando criterios estéticos y propósitos expresivos, y dando cuenta de una postura personal fundada y respetuosa."
+    },
+    {
+     "c": "OA 7",
+     "e": "Comunicar y difundir",
+     "t": "Diseñar y gestionar colaborativamente proyectos de difusión de obras visuales, audiovisuales y multimediales propios, empleando diversidad de medios o TIC."
+    }
    ]
   }
  },
@@ -6553,6 +6671,80 @@ window.OA_DATA_EXTRA_A = {
      "c": "OA 7",
      "e": "Reflexionar y relacionar",
      "t": "Valorar críticamente el rol de los medios de registro y transmisión en la evolución de la música en diferentes periodos y espacios históricos."
+    }
+   ],
+   "3M": [
+    {
+     "c": "OA 1",
+     "e": "Expresar y crear",
+     "t": "Experimentar con diversos estilos musicales contemporáneos, utilizando diferentes recursos de producción musical (voz, objetos sonoros, instrumentos musicales y tecnologías)."
+    },
+    {
+     "c": "OA 2",
+     "e": "Expresar y crear",
+     "t": "Crear música para expresar emociones e ideas, tomando riesgos creativos al seleccionar recursos de producción y al aplicar elementos del lenguaje musical (ritmo, armonía, duración, tono, entre otros)."
+    },
+    {
+     "c": "OA 3",
+     "e": "Expresar y crear",
+     "t": "Interpretar repertorio personal y de músicos de diferentes estilos, en forma individual o en conjunto, considerando elementos característicos del estilo y un trabajo técnico coherente con los propósitos expresivos."
+    },
+    {
+     "c": "OA 4",
+     "e": "Apreciar y responder",
+     "t": "Analizar propósitos expresivos de obras musicales de diferentes estilos a partir de criterios estéticos (lenguaje musical, aspectos técnicos, emociones, sensaciones e ideas que genera, entre otros), utilizando conceptos disciplinarios."
+    },
+    {
+     "c": "OA 5",
+     "e": "Apreciar y responder",
+     "t": "Argumentar juicios estéticos de obras musicales de diferentes estilos, considerando criterios estéticos, propósitos expresivos y aspectos contextuales."
+    },
+    {
+     "c": "OA 6",
+     "e": "Apreciar y responder",
+     "t": "Evaluar críticamente procesos y resultados de obras musicales, personales y de sus pares, considerando criterios estéticos, aspectos técnicos y propósitos expresivos, y dando cuenta de una postura personal fundada y respetuosa."
+    },
+    {
+     "c": "OA 7",
+     "e": "Comunicar y difundir",
+     "t": "Diseñar y gestionar colaborativamente proyectos de difusión de obras e interpretaciones musicales propias, empleando diversidad de medios o TIC."
+    }
+   ],
+   "4M": [
+    {
+     "c": "OA 1",
+     "e": "Expresar y crear",
+     "t": "Experimentar con diversos estilos musicales contemporáneos, utilizando diferentes recursos de producción musical (voz, objetos sonoros, instrumentos musicales y tecnologías)."
+    },
+    {
+     "c": "OA 2",
+     "e": "Expresar y crear",
+     "t": "Crear música para expresar emociones e ideas, tomando riesgos creativos al seleccionar recursos de producción y al aplicar elementos del lenguaje musical (ritmo, armonía, duración, tono, entre otros)."
+    },
+    {
+     "c": "OA 3",
+     "e": "Expresar y crear",
+     "t": "Interpretar repertorio personal y de músicos de diferentes estilos, en forma individual o en conjunto, considerando elementos característicos del estilo y un trabajo técnico coherente con los propósitos expresivos."
+    },
+    {
+     "c": "OA 4",
+     "e": "Apreciar y responder",
+     "t": "Analizar propósitos expresivos de obras musicales de diferentes estilos a partir de criterios estéticos (lenguaje musical, aspectos técnicos, emociones, sensaciones e ideas que genera, entre otros), utilizando conceptos disciplinarios."
+    },
+    {
+     "c": "OA 5",
+     "e": "Apreciar y responder",
+     "t": "Argumentar juicios estéticos de obras musicales de diferentes estilos, considerando criterios estéticos, propósitos expresivos y aspectos contextuales."
+    },
+    {
+     "c": "OA 6",
+     "e": "Apreciar y responder",
+     "t": "Evaluar críticamente procesos y resultados de obras musicales, personales y de sus pares, considerando criterios estéticos, aspectos técnicos y propósitos expresivos, y dando cuenta de una postura personal fundada y respetuosa."
+    },
+    {
+     "c": "OA 7",
+     "e": "Comunicar y difundir",
+     "t": "Diseñar y gestionar colaborativamente proyectos de difusión de obras e interpretaciones musicales propias, empleando diversidad de medios o TIC."
     }
    ]
   }

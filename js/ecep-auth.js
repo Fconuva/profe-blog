@@ -336,8 +336,9 @@
       });
     }).then(function (r) { return r.json(); }).then(function (data) {
       if (data && data.reclaimed > 0) {
-        firebase.database().ref('ecep_accesos/' + user.uid + '/' + did).once('value').then(function (snap) {
-          if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
+        firebase.database().ref('ecep_accesos/' + user.uid).once('value').then(function (snap) {
+          var acc = snap.val() || {};
+          if (acc[did] === true || acc.todos === true) { hideVerifying(); reveal(); enableProtection(user); }
           else { checkTrial(did, user); }
         }).catch(function () { checkTrial(did, user); });
       } else { checkTrial(did, user); }
@@ -383,9 +384,11 @@
       var pagoReturn = /[?&]pago=ok/.test(location.search);
       if (pagoReturn) showVerifying();
       (function check(tries) {
-        firebase.database().ref('ecep_accesos/' + user.uid + '/' + did).once('value')
+        firebase.database().ref('ecep_accesos/' + user.uid).once('value')
           .then(function (snap) {
-            if (snap.val() === true) { hideVerifying(); reveal(); enableProtection(user); }
+            var acc = snap.val() || {};
+            // "todos" = acceso total permanente (cubre dossiers actuales y futuros)
+            if (acc[did] === true || acc.todos === true) { hideVerifying(); reveal(); enableProtection(user); }
             else if (tries > 1) { setTimeout(function () { check(tries - 1); }, 1600); }
             else { reclaimThenCheck(did, user); }   // sin pago: ver si está en su prueba gratis de 30 min
           })

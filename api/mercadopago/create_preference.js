@@ -40,7 +40,6 @@ module.exports = async (req, res) => {
       const otherUids = Object.keys(usuarios).filter(function (u) {
         return u !== rUid && String((usuarios[u] || {}).email || '').toLowerCase().trim() === rEmail;
       });
-      if (!otherUids.length) return res.status(200).json({ reclaimed: 0 });
       const merged = {};
       for (const ou of otherUids) {
         const acc = (await db.ref('ecep_accesos/' + ou).once('value')).val() || {};
@@ -53,6 +52,27 @@ module.exports = async (req, res) => {
       Object.keys(merged).forEach(function (did) {
         if (cur[did] !== true) { updates['ecep_accesos/' + rUid + '/' + did] = true; reclaimed++; }
       });
+      // Rescate anti-webhook: busca pagos ECEP aprobados de esta persona directamente en la
+      // API de Mercado Pago y otorga lo comprado aunque la notificación del webhook se haya
+      // perdido (firma inválida, caída, etc.). Solo otorga pagos cuyo metadata/payer coincide
+      // con el correo o UID verificados del token.
+      try {
+        const tok = process.env.MERCADOPAGO_ACCESS_TOKEN;
+        if (tok) {
+          const resp = await fetch('https://api.mercadopago.com/v1/payments/search?sort=date_created&criteria=desc&limit=100', { headers: { Authorization: 'Bearer ' + tok } });
+          const data = await resp.json();
+          const uidSet = {}; uidSet[rUid] = true; otherUids.forEach(function (u) { uidSet[u] = true; });
+          (data.results || []).forEach(function (p) {
+            const m = p.metadata || {};
+            if (p.status !== 'approved' || m.tipo !== 'ecep' || !m.ecep_dossier) return;
+            const pe = String((p.payer || {}).email || '').toLowerCase().trim();
+            const me = String(m.user_email || '').toLowerCase().trim();
+            if (!(uidSet[m.ecep_uid] || me === rEmail || pe === rEmail)) return;
+            const did = String(m.ecep_dossier);
+            if (cur[did] !== true && merged[did] !== true) { updates['ecep_accesos/' + rUid + '/' + did] = true; merged[did] = true; reclaimed++; }
+          });
+        }
+      } catch (e) { /* mejor-esfuerzo: no bloquea el reclamo por UID */ }
       if (!usuarios[rUid]) { updates['ecep_usuarios/' + rUid + '/email'] = rEmail; }
       // si algún UID viejo era regalo, conservar la marca en el UID actual (para el KPI del admin)
       if (otherUids.some(function (ou) { return !!regalos[ou]; }) && !regalos[rUid]) {

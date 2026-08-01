@@ -190,6 +190,7 @@
                     <p class="text-2xl font-heading font-bold text-emerald-600" id="stat-paid">0</p>
                     <p class="text-xs font-semibold text-gray-700 mt-1">Ya pagaron</p>
                     <p class="text-[11px] text-gray-400 leading-tight">pagaron el total o un abono</p>
+                    <p class="text-[11px] text-emerald-700 font-semibold leading-tight mt-1" id="stat-paid-detail"></p>
                 </div>
                 <div class="bg-white rounded-xl border border-amber-300 p-4">
                     <p class="text-2xl font-heading font-bold text-amber-600" id="stat-preinscrito">0</p>
@@ -235,7 +236,7 @@
                     <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide">💚 Ya está en tu cuenta</p>
                     <p class="text-3xl font-heading font-bold text-emerald-700 my-1 tabular-nums" id="stat-paid-revenue">$0</p>
                     <p class="text-xs text-emerald-600 font-semibold" id="stat-paid-revenue-count">0 pagos</p>
-                    <p class="text-[11px] text-gray-500 mt-1 leading-tight">lo que ya recibiste (pagos completos + abonos)</p>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-tight" id="stat-paid-split">lo que ya recibiste (pagos completos + abonos)</p>
                     <p class="text-sm font-bold text-emerald-800 mt-2 tabular-nums" id="stat-paid-net">$0</p>
                     <p class="text-[10px] text-gray-400 leading-tight">≈ neto (comisión MercadoPago solo en pagos con tarjeta; las transferencias no pagan)</p>
                 </div>
@@ -244,6 +245,7 @@
                     <p class="text-3xl font-heading font-bold text-amber-700 my-1 tabular-nums" id="stat-pending-revenue">$0</p>
                     <p class="text-xs text-amber-600 font-semibold" id="stat-pending-revenue-count">0 por cobrar</p>
                     <p class="text-[11px] text-gray-500 mt-1 leading-tight">segundas cuotas de quienes ya abonaron (plata comprometida)</p>
+                    <p class="text-[11px] text-amber-700 font-semibold leading-tight mt-1" id="stat-cobranza-aging"></p>
                 </div>
                 <div class="bg-slate-800 rounded-xl border border-slate-800 p-5">
                     <p class="text-xs font-bold text-slate-300 uppercase tracking-wide">📊 Total con plan</p>
@@ -268,7 +270,35 @@
                         <p class="text-[11px] text-indigo-500 mt-0.5">te falta si pagan todos</p>
                     </div>
                 </div>
-                <p class="text-[11px] text-indigo-400 mt-3">Es la meta si aseguras el pago completo de todos los inscritos. Los que aún no pagan todavía NO son plata comprometida.</p>
+                <p class="text-[11px] text-indigo-400 mt-3" id="stat-meta-explica">Es la meta si aseguras el pago completo de todos los inscritos. Los que aún no pagan todavía NO son plata comprometida.</p>
+            </div>
+
+            <!-- ===== COBRANZA: quiénes deben la 2a cuota ===== -->
+            <div class="bg-white rounded-2xl border border-amber-200 p-6 mb-6">
+                <h3 class="font-heading font-bold text-gray-900 mb-1">🧾 Cobranza · ¿quiénes te deben la 2ª cuota?</h3>
+                <p class="text-[11px] text-gray-400 mb-3">Calculado de los abonos reales registrados: saldo pendiente por docente y hace cuántos días abonó. Ordenado del más antiguo al más nuevo.</p>
+                <div id="cobranza-table" style="max-height:300px;overflow-y:auto"><p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p></div>
+            </div>
+
+            <!-- ===== PENDIENTES OPERATIVOS ===== -->
+            <div class="bg-white rounded-2xl border border-rose-200 p-6 mb-6">
+                <h3 class="font-heading font-bold text-gray-900 mb-1">🔴 Pendientes operativos <span class="text-sm font-normal text-gray-400">(<span id="pendientes-count">0</span> abiertos)</span></h3>
+                <p class="text-[11px] text-gray-400 mb-3">Toda nota 🔴 en las fichas de los docentes (adminNotas) que aún no se marca ✅. Es la cola de trabajo comprometida con clientes.</p>
+                <div id="pendientes-admin" style="max-height:340px;overflow-y:auto"><p class="text-sm text-gray-400">Sin pendientes abiertos. 🎉</p></div>
+            </div>
+
+            <!-- ===== FOCO OPERATIVO: sin OA ===== -->
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h3 class="font-heading font-bold text-gray-900 mb-1">⛔ Pagaron y aún sin OA <span class="text-sm font-normal text-gray-400">(<span id="paid-no-oa-count">0</span>)</span></h3>
+                    <p class="text-[11px] text-gray-400 mb-3">Prioridad máxima: pusieron plata y no podemos construir su M1 sin su Objetivo de Aprendizaje. Hay que pedírselo.</p>
+                    <div id="paid-no-oa-list" style="max-height:220px;overflow-y:auto"><p class="text-sm text-gray-400">Nadie. 🎉</p></div>
+                </div>
+                <div class="bg-white rounded-2xl border border-gray-200 p-6">
+                    <h3 class="font-heading font-bold text-gray-900 mb-1">📚 Avance por módulo</h3>
+                    <p class="text-[11px] text-gray-400 mb-3">Estados registrados en cada ficha (contratado / en progreso / completado).</p>
+                    <div id="modulos-stats" class="space-y-2 text-sm text-gray-700"><p class="text-sm text-gray-400">Sin datos de módulos.</p></div>
+                </div>
             </div>
 
             <!-- Recent Activity -->
@@ -2090,6 +2120,19 @@
             var pendingPayList = [];
             var recentList = [];
             var conDrive = 0, conOA = 0, faltaOA = 0, borradorListo = 0;
+            // detalle nuevo: desglose de pagos, cobranza, pendientes 🔴, sin-OA pagados, módulos
+            var fullPayN = 0, fullPayMonto = 0, abonoN = 0, abonoMonto = 0, regalosN = 0;
+            var cobranzaList = [], pendientesList = [], paidNoOAList = [];
+            var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
+            var HOY = Date.now();
+            function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
+            function notasA(p) { // adminNotas puede ser string u objeto {ts: nota}
+                var n = p.adminNotas; if (!n) return [];
+                if (typeof n === 'string') return n.split('\n');
+                if (Array.isArray(n)) return n.map(String);
+                if (typeof n === 'object') return Object.keys(n).map(function (k) { return String(n[k]); });
+                return [];
+            }
 
             uids.forEach(function(uid) {
                 var c = allClients[uid];
@@ -2103,13 +2146,13 @@
                 if (esPlanReal && !(price > 0)) price = 199990;
                 if (p.paymentStatus === 'gratis') {
                     // Portafolio regalado: cuenta como cliente activo pero NO suma dinero.
-                    paid++;
+                    paid++; regalosN++;
                 } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
                     // COMPROMETIDO + RECAUDADO: pago completo confirmado (bruto = precio del plan).
                     totalRevenue += price; totalWithPlan++;
                     paidRevenue += price;
                     if (p.comprobantePago) mpGross += price; // pago por MercadoPago (tiene ID); las transferencias no
-                    paid++; paidCount++;
+                    paid++; paidCount++; fullPayN++; fullPayMonto += price;
                 } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
                     // COMPROMETIDO: 1a cuota recibida (~$100.000); el saldo (2a cuota) queda POR COBRAR (firme).
                     var abono = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 100000;
@@ -2117,8 +2160,13 @@
                     totalRevenue += abono + saldoAb; totalWithPlan++;
                     paidRevenue += abono;
                     if (p.comprobantePago) mpGross += abono; // abono por MercadoPago (tiene ID)
-                    paid++; paidCount++;
-                    if (saldoAb > 0) { pendingRevenue += saldoAb; pendingRevenueCount++; }
+                    paid++; paidCount++; abonoN++; abonoMonto += abono;
+                    if (saldoAb > 0) {
+                        pendingRevenue += saldoAb; pendingRevenueCount++;
+                        var fAb = p.paidAt || p.paymentConfirmedAt || '';
+                        var dias = fAb ? Math.max(0, Math.round((HOY - new Date(fAb).getTime()) / 86400000)) : null;
+                        cobranzaList.push({ uid: uid, nombre: nombreDe(uid), saldo: saldoAb, fecha: fAb, dias: dias });
+                    }
                 } else if (p.paymentStatus === 'pendiente_verificacion') {
                     // Se contabiliza más abajo como "pago por revisar" (no es sin-pagar ni comprometido aún).
                 } else {
@@ -2142,6 +2190,21 @@
                 if (_conOA) conOA++;
                 if (p.seguimiento && p.seguimiento.borradorListo) borradorListo++;
                 if ((_conDrive || esPlanReal) && !_conOA) faltaOA++;
+                if (pagoReal && p.paymentStatus !== 'gratis' && !_conOA) paidNoOAList.push({ nombre: nombreDe(uid), abono: p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' });
+                // pendientes 🔴 de adminNotas (cola de trabajo comprometida)
+                notasA(p).forEach(function (linea) {
+                    if (linea.indexOf('🔴') >= 0) {
+                        var mFecha = linea.match(/(\d{1,2})[-\/](\d{1,2}|[a-z]{3})[-\/]?(\d{2,4})?/i);
+                        pendientesList.push({ nombre: nombreDe(uid), texto: linea.replace(/^[-•\s]+/, '').trim(), fecha: mFecha ? mFecha[0] : '' });
+                    }
+                });
+                // módulos: contratado / en progreso / completado
+                ['modulo1', 'modulo2', 'modulo3'].forEach(function (m) {
+                    var mo = p[m]; if (!mo) return;
+                    if (mo.contratado) modStats[m].cont++;
+                    if (mo.estado === 'en-progreso') modStats[m].prog++;
+                    if (mo.estado === 'completado') modStats[m].done++;
+                });
                 recentList.push({ uid: uid, client: c, date: c.createdAt || '' });
             });
 
@@ -2179,6 +2242,65 @@
             _setD('stat-opt-n', nMeta);
             _setD('stat-opt-pagado', formatCLP(paidRevenue));
             _setD('stat-opt-falta', formatCLP(faltaTotal));
+
+            // ===== detalle nuevo: desglose, cobranza, pendientes, sin-OA, módulos =====
+            _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (regalosN ? ' · ' + regalosN + ' regalo' + (regalosN > 1 ? 's' : '') : ''));
+            _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos');
+            _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' inscritos = ' + totalWithPlan + ' que ya pusieron plata + ' + sinPagar + ' sin pagar (proyectados a $199.990 c/u).' + (regalosN ? ' Los ' + regalosN + ' regalos no suman a la meta.' : '') + ' Los que aún no pagan NO son plata comprometida.');
+            // cobranza: aging + tabla
+            var mas30 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 30; }).length;
+            var mas60 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 60; }).length;
+            _setD('stat-cobranza-aging', (mas30 ? mas30 + ' llevan más de 30 días' + (mas60 ? ' (' + mas60 + ' más de 60)' : '') + ' desde su abono' : ''));
+            var cobEl = document.getElementById('cobranza-table');
+            if (cobEl) {
+                if (!cobranzaList.length) { cobEl.innerHTML = '<p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p>'; }
+                else {
+                    cobranzaList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
+                    var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó el</th><th class="py-1 pr-2">Días</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
+                    cobranzaList.forEach(function (x) {
+                        var alerta = (x.dias !== null && x.dias > 30);
+                        h += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
+                             '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
+                             '<td class="py-1.5 pr-2 ' + (alerta ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
+                             '<td class="py-1.5 text-right tabular-nums font-semibold text-amber-700">' + formatCLP(x.saldo) + '</td></tr>';
+                    });
+                    h += '</tbody></table>';
+                    cobEl.innerHTML = h;
+                }
+            }
+            // pendientes 🔴
+            _setD('pendientes-count', pendientesList.length);
+            var penEl = document.getElementById('pendientes-admin');
+            if (penEl) {
+                if (!pendientesList.length) { penEl.innerHTML = '<p class="text-sm text-gray-400">Sin pendientes abiertos. 🎉</p>'; }
+                else {
+                    penEl.innerHTML = pendientesList.map(function (x) {
+                        var t = x.texto.length > 220 ? x.texto.slice(0, 220) + '…' : x.texto;
+                        return '<div class="border-t border-gray-100 py-2"><span class="text-xs font-bold text-gray-800">' + escapeHtml(x.nombre) + '</span> <span class="text-xs text-gray-600">' + escapeHtml(t) + '</span></div>';
+                    }).join('');
+                }
+            }
+            // pagaron y sin OA
+            _setD('paid-no-oa-count', paidNoOAList.length);
+            var pnoEl = document.getElementById('paid-no-oa-list');
+            if (pnoEl) {
+                if (!paidNoOAList.length) { pnoEl.innerHTML = '<p class="text-sm text-gray-400">Nadie. 🎉</p>'; }
+                else {
+                    pnoEl.innerHTML = paidNoOAList.map(function (x) {
+                        return '<div class="border-t border-gray-100 py-1.5 text-sm text-gray-800">' + escapeHtml(x.nombre) + ' <span class="text-[11px] text-gray-400">(' + (x.abono ? 'abonó' : 'pagó completo') + ')</span></div>';
+                    }).join('');
+                }
+            }
+            // módulos
+            var modEl = document.getElementById('modulos-stats');
+            if (modEl) {
+                var nombresMod = { modulo1: 'Módulo 1 · Planificación', modulo2: 'Módulo 2 · Clase grabada', modulo3: 'Módulo 3 · Colaborativo' };
+                var hayDatos = ['modulo1', 'modulo2', 'modulo3'].some(function (m) { return modStats[m].cont + modStats[m].prog + modStats[m].done > 0; });
+                modEl.innerHTML = hayDatos ? ['modulo1', 'modulo2', 'modulo3'].map(function (m) {
+                    var s = modStats[m];
+                    return '<div class="flex items-center justify-between border-t border-gray-100 py-1.5"><span class="font-medium">' + nombresMod[m] + '</span><span class="text-[12px] text-gray-500">' + s.cont + ' contratados · <span class="text-amber-600 font-semibold">' + s.prog + ' en progreso</span> · <span class="text-emerald-600 font-semibold">' + s.done + ' completados</span></span></div>';
+                }).join('') : '<p class="text-sm text-gray-400">Las fichas aún no registran estados por módulo.</p>';
+            }
 
             // Pagos badge
             var badge = document.getElementById('pagos-badge');

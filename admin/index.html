@@ -274,11 +274,36 @@
                 <p class="text-[11px] text-indigo-400 mt-3" id="stat-meta-explica">Es la meta si aseguras el pago completo de todos los inscritos. Los que aún no pagan todavía NO son plata comprometida.</p>
             </div>
 
-            <!-- ===== COBRANZA: quiénes deben la 2a cuota ===== -->
-            <div class="bg-white rounded-2xl border border-amber-200 p-6 mb-6">
-                <h3 class="font-heading font-bold text-gray-900 mb-1">🧾 Cobranza · ¿quiénes te deben la 2ª cuota?</h3>
-                <p class="text-[11px] text-gray-400 mb-3">Calculado de los abonos reales registrados: saldo pendiente por docente y hace cuántos días abonó. Ordenado del más antiguo al más nuevo.</p>
-                <div id="cobranza-table" style="max-height:300px;overflow-y:auto"><p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p></div>
+            <!-- ===== LAS DOS PLATAS QUE FALTAN, UNA AL LADO DE LA OTRA =====
+                 Izquierda: lo COMPROMETIDO (2as cuotas de quienes ya abonaron). Llega casi seguro.
+                 Derecha:   lo POTENCIAL (inscritos que no han pagado nada). Todavía no existe.
+                 Las dos tablas se arman en cada renderDashboard, así que se actualizan solas. -->
+            <div class="grid lg:grid-cols-2 gap-6 mb-6">
+
+                <div class="bg-white rounded-2xl border-2 border-amber-300 p-6">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-heading font-bold text-gray-900">🧾 Comprometido · te deben la 2ª cuota</h3>
+                        <span class="text-right shrink-0">
+                            <span class="block text-lg font-heading font-bold text-amber-700 tabular-nums" id="tbl-comprometido-monto">$0</span>
+                            <span class="block text-[11px] text-amber-600"><span id="tbl-comprometido-n">0</span> docentes</span>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mb-3">Ya pusieron su primera cuota y están recibiendo su portafolio. Esta plata llega casi segura, solo hay que cobrarla. Del que más lleva esperando al que menos.</p>
+                    <div id="cobranza-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p></div>
+                </div>
+
+                <div class="bg-white rounded-2xl border-2 border-indigo-200 p-6">
+                    <div class="flex items-start justify-between gap-3 mb-1">
+                        <h3 class="font-heading font-bold text-gray-900">🎯 Potencial · inscritos que no han pagado</h3>
+                        <span class="text-right shrink-0">
+                            <span class="block text-lg font-heading font-bold text-indigo-700 tabular-nums" id="tbl-potencial-monto">$0</span>
+                            <span class="block text-[11px] text-indigo-500"><span id="tbl-potencial-n">0</span> docentes</span>
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-gray-400 mb-3">Esta plata <b>no existe todavía</b>: es lo que entraría si los convirtieras a todos, a $199.990 cada uno. La columna <b>OA</b> dice si ya podemos construirle el Módulo 1 o si primero hay que pedírselo.</p>
+                    <div id="potencial-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Todos los inscritos han pagado. 🎉</p></div>
+                </div>
+
             </div>
 
             <!-- ===== PENDIENTES OPERATIVOS ===== -->
@@ -2091,8 +2116,20 @@
             return Object.keys(_u).filter(function(uid) {
                 var c = allClients[uid];
                 var _p = allPortafolios[uid];
-                if (c && c.role === 'admin') return false;
+                // La cuenta del propio Francisco venía colándose como cliente potencial: el filtro
+                // miraba `role` y en /users el campo es `status`. Se revisan los dos.
+                if (c && (c.role === 'admin' || c.status === 'admin')) return false;
                 if ((_p && (_p.archivado || _p.liberado)) || (c && c.archivado)) return false; // archivados y bajas no cuentan
+                // Bajas y duplicados: no son cartera. Antes solo se excluían por `liberado`.
+                if (_p && (_p.paymentStatus === 'baja' || _p.paymentStatus === 'duplicado')) return false;
+                // Ficha huérfana sin ninguna identidad ni plata: es basura de la base, no un lead.
+                // Se conserva si tiene algún pago, porque ahí sí hay que ir a mirarla.
+                if (!c) {
+                    var _dpx = (_p && _p.datosPortafolio) || {};
+                    var _hayId = !!(_dpx.nombre || _dpx.email || _dpx.telefono || (_p && _p.telefono));
+                    var _hayPlata = montoPagadoReal(_p) > 0 || (_p && _p.paymentStatus === 'gratis');
+                    if (!_hayId && !_hayPlata) return false;
+                }
                 if (!c) { var _dp = (_p && _p.datosPortafolio) || {}; allClients[uid] = { nombre: _dp.nombre || '', email: _dp.email || '', status: 'solo-ficha' }; }
                 return true;
             }).sort(function(a, b) {
@@ -2142,7 +2179,7 @@
             var conDrive = 0, conOA = 0, faltaOA = 0, borradorListo = 0;
             // detalle nuevo: desglose de pagos, cobranza, pendientes 🔴, sin-OA pagados, módulos
             var fullPayN = 0, fullPayMonto = 0, abonoN = 0, abonoMonto = 0, regalosN = 0;
-            var cobranzaList = [], pendientesList = [], paidNoOAList = [];
+            var cobranzaList = [], pendientesList = [], paidNoOAList = [], sinPagarList = [];
             var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
             var HOY = Date.now();
             function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
@@ -2202,6 +2239,17 @@
                 } else {
                     // INSCRITO SIN PAGAR (lead o pre-inscrito): NO es plata comprometida; va al escenario optimista.
                     sinPagar++;
+                    var fIns = (c && c.createdAt) || p.createdAt || '';
+                    var diasIns = fIns ? Math.max(0, Math.round((HOY - new Date(fIns).getTime()) / 86400000)) : null;
+                    var _dpSP = p.datosPortafolio || {};
+                    sinPagarList.push({
+                        uid: uid, nombre: nombreDe(uid),
+                        fecha: fIns ? String(fIns).slice(0, 10) : '',
+                        dias: diasIns,
+                        // si ya declaró su OA podemos construirle el M1; si no, primero hay que pedírselo
+                        conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
+                        conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
+                    });
                 }
                 if (p.paymentStatus === 'pendiente_verificacion') {
                     pendingPay++;
@@ -2298,6 +2346,32 @@
                     });
                     h += '</tbody></table>';
                     cobEl.innerHTML = h;
+                }
+            }
+            // Encabezados de las dos tablas: el monto y el conteo salen del mismo calculo que
+            // los recuadros de arriba, para que nunca digan cosas distintas.
+            _setD('tbl-comprometido-monto', formatCLP(pendingRevenue));
+            _setD('tbl-comprometido-n', cobranzaList.length);
+            _setD('tbl-potencial-monto', formatCLP(sinPagar * 199990));
+            _setD('tbl-potencial-n', sinPagar);
+            // Potencial: los inscritos que no han pagado nada. Ordenados por antiguedad, porque
+            // el que lleva mas tiempo inscrito sin pagar es al que hay que mirar primero.
+            var potEl = document.getElementById('potencial-table');
+            if (potEl) {
+                if (!sinPagarList.length) { potEl.innerHTML = '<p class="text-sm text-gray-400">Todos los inscritos han pagado. 🎉</p>'; }
+                else {
+                    sinPagarList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
+                    var hp = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Inscrito</th><th class="py-1 pr-2">Días</th><th class="py-1 pr-2">OA</th><th class="py-1 text-right">Vale</th></tr></thead><tbody>';
+                    sinPagarList.forEach(function (x) {
+                        var viejo = (x.dias !== null && x.dias > 21);
+                        hp += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
+                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
+                              '<td class="py-1.5 pr-2 ' + (viejo ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
+                              '<td class="py-1.5 pr-2">' + (x.conOA ? '<span class="text-emerald-600 font-semibold">sí</span>' : '<span class="text-gray-400">falta</span>') + '</td>' +
+                              '<td class="py-1.5 text-right tabular-nums text-indigo-700">' + formatCLP(199990) + '</td></tr>';
+                    });
+                    hp += '</tbody></table>';
+                    potEl.innerHTML = hp;
                 }
             }
             // pendientes 🔴

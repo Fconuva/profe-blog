@@ -29,7 +29,7 @@ window.MANUAL_SPEC = {
     "duracionM1": "90 min (1 bloque / 2 horas pedagógicas) por experiencia",
     "duracionGrabada": "~40 min (cierre opcional)",
     "camposEspeciales": [
-      { "id": "asignatura", "label": "Asignatura de inscripción", "tipo": "select", "obligatorio": true, "ayuda": "Define el referente curricular (OA) de todo el Módulo 1 y de la clase grabada.", "ejemplo": "Matemática", "opciones": ["Artes Visuales","Ciencias Naturales","Educación Física y Salud","Francés","Historia, Geografía y Ciencias Sociales","Inglés","Lenguaje y Comunicación","Matemática","Música","Religión Católica","Religión Evangélica","Tecnología"] },
+      { "id": "asignatura", "label": "Asignatura de inscripción (Módulo 1)", "tipo": "select", "obligatorio": true, "ayuda": "Define el referente curricular (OA) del Módulo 1. La clase grabada se declara APARTE, más abajo: si la tuya es en otra asignatura, ahí nos lo cuentas.", "ejemplo": "Matemática", "opciones": ["Artes Visuales","Ciencias Naturales","Educación Física y Salud","Francés","Historia, Geografía y Ciencias Sociales","Inglés","Lenguaje y Comunicación","Matemática","Música","Religión Católica","Religión Evangélica","Tecnología"] },
       { "id": "cursoLetra", "label": "Curso y letra", "tipo": "text", "obligatorio": true, "ayuda": "Identifica el grupo de las experiencias (multigrado = 'MG').", "ejemplo": "5° básico B" },
       { "id": "oa", "label": "OA seleccionado(s) (transcrito de las Bases)", "tipo": "textarea", "obligatorio": true, "ayuda": "Se copia tal cual; sobre este OA se monitorea y analiza en la Tarea 2. En Francés es un OF/CMO; en Religión Evangélica, un OA del Programa.", "ejemplo": "OA 09 (Matemática 5°): Demostrar que comprenden las fracciones propias..." },
       { "id": "nEstudiantes", "label": "N° de estudiantes del curso", "tipo": "number", "obligatorio": true, "ayuda": "Permite dimensionar la diversidad del grupo y la ficha de la clase grabada (4.2.b).", "ejemplo": "32" }
@@ -58,7 +58,7 @@ window.MANUAL_SPEC = {
     "duracionM1": "90 min (1 bloque / 2 horas pedagógicas) por experiencia",
     "duracionGrabada": "~40 min (cierre opcional)",
     "camposEspeciales": [
-      { "id": "asignatura", "label": "Asignatura de inscripción", "tipo": "select", "obligatorio": true, "ayuda": "Define el OA de referencia del Módulo 1 y de la clase grabada.", "ejemplo": "Lengua y Literatura", "opciones": ["Artes Visuales","Ciencias Naturales (Biología)","Ciencias Naturales (Física)","Ciencias Naturales (Química)","Ciencias para la Ciudadanía","Educación Ciudadana","Educación Física y Salud","Filosofía","Francés","Historia, Geografía y Ciencias Sociales","Inglés","Lengua y Literatura","Matemática","Música","Religión Católica","Religión Evangélica","Tecnología"] },
+      { "id": "asignatura", "label": "Asignatura de inscripción (Módulo 1)", "tipo": "select", "obligatorio": true, "ayuda": "Define el OA de referencia del Módulo 1. La clase grabada se declara APARTE, más abajo: si la tuya es en otra asignatura, ahí nos lo cuentas.", "ejemplo": "Lengua y Literatura", "opciones": ["Artes Visuales","Ciencias Naturales (Biología)","Ciencias Naturales (Física)","Ciencias Naturales (Química)","Ciencias para la Ciudadanía","Educación Ciudadana","Educación Física y Salud","Filosofía","Francés","Historia, Geografía y Ciencias Sociales","Inglés","Lengua y Literatura","Matemática","Música","Religión Católica","Religión Evangélica","Tecnología"] },
       { "id": "cursoNivel", "label": "Curso y nivel", "tipo": "text", "obligatorio": true, "ayuda": "Identifica el grupo (7° básico a 4° medio).", "ejemplo": "2° medio A" },
       { "id": "oa", "label": "OA seleccionado(s) (transcrito de las Bases)", "tipo": "textarea", "obligatorio": true, "ayuda": "La Tarea 2 (monitoreo y análisis) trabaja sobre ESTE mismo OA (punto b de 1.1).", "ejemplo": "OA 8 (Lengua y Literatura 2° medio): Formular una interpretación de los textos literarios..." },
       { "id": "nEstudiantes", "label": "N° de estudiantes del curso", "tipo": "number", "obligatorio": true, "ayuda": "Dimensiona el grupo y completa la ficha 4.2.b de la clase grabada.", "ejemplo": "38" }
@@ -314,4 +314,28 @@ window.MANUAL_SPEC = {
     }
   }
 
+};
+
+/*
+ * M2_CAMPOS — La clase grabada se declara APARTE del Módulo 1 (regla del negocio:
+ * "lo que pedimos = lo que necesitan = lo que necesitamos"; el M2 es aparte).
+ * Motivo: pasa mucho que el portafolio es en una asignatura y la grabada en otra
+ * (caso real: M1 Lenguaje, grabada Matemática), o con otro OA/curso/fecha, y eso
+ * antes quedaba perdido en "observaciones" o había que perseguirlo por WhatsApp.
+ */
+window.M2_CAMPOS = function (key) {
+  if (key === 'generalista') return [
+    { "id": "m2Curso", "label": "M2 · Curso de la clase grabada de MATEMÁTICA", "tipo": "text", "obligatorio": true, "ayuda": "Puede ser el mismo curso del Módulo 1 u otro curso del Primer Ciclo.", "ejemplo": "2° básico B" },
+    { "id": "m2Fecha", "label": "M2 · Fecha (real o estimada) de tu grabación", "tipo": "text", "obligatorio": true, "ayuda": "Si aún no está agendada, escribe el mes estimado. Con esto dejamos tu libreto listo con tiempo para ensayarlo tranquila.", "ejemplo": "Primera semana de septiembre" },
+    { "id": "m2Contexto", "label": "M2 · Algo que debamos saber para esa clase", "tipo": "textarea", "obligatorio": false, "ayuda": "Cuántos estudiantes suelen asistir, estudiantes PIE presentes ese bloque, cómo es la sala, si tienes proyector.", "ejemplo": "Asisten unos 26 de 30; tengo proyector; 3 estudiantes PIE en ese bloque." }
+  ];
+  if (key === 'hospitalaria') return [
+    { "id": "m2Fecha", "label": "M2 · Fecha (real o estimada) de tu registro de AUDIO", "tipo": "text", "obligatorio": true, "ayuda": "Recuerda que tu Módulo 2 es un registro de audio de 20 a 45 minutos, no un video, y no necesitas incluir el cierre.", "ejemplo": "Última semana de agosto" }
+  ];
+  return [
+    { "id": "m2Asignatura", "label": "M2 · Asignatura y curso de tu CLASE GRABADA", "tipo": "text", "obligatorio": true, "ayuda": "OJO: puede ser DISTINTA a la del Módulo 1 (pasa mucho: portafolio en Lenguaje y clase grabada en Matemática). Si es la misma, escribe \"La misma\".", "ejemplo": "Matemática, 5° básico B (o \"La misma\")" },
+    { "id": "m2Oa", "label": "M2 · OA de la clase grabada (transcrito, solo si es distinto al del Módulo 1)", "tipo": "textarea", "obligatorio": false, "ayuda": "Si tu grabada usa otra asignatura u otro OA, cópialo aquí tal cual desde las Bases. Si es el mismo del Módulo 1, déjalo en blanco.", "ejemplo": "OA 19 (Matemática 2°): determinar la longitud de objetos, usando unidades de medida estandarizadas (cm y m)." },
+    { "id": "m2Fecha", "label": "M2 · Fecha (real o estimada) de tu grabación", "tipo": "text", "obligatorio": true, "ayuda": "Si aún no está agendada, escribe el mes estimado. Con esto dejamos tu libreto listo con tiempo para ensayarlo tranquilo/a.", "ejemplo": "18 de agosto (agendada), o \"septiembre, sin fecha aún\"" },
+    { "id": "m2Contexto", "label": "M2 · Algo que debamos saber para esa clase", "tipo": "textarea", "obligatorio": false, "ayuda": "Cuántos suelen asistir ese día, estudiantes PIE presentes, cómo es la sala, si entra co-docente o educadora PIE en ese bloque.", "ejemplo": "Asisten unos 13 de 15; sala estrecha; la educadora PIE entra en ese bloque." }
+  ];
 };

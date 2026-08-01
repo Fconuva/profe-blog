@@ -1357,7 +1357,7 @@
     <script src="/js/firebase-config.js"></script>
     <!-- OA oficiales (Bases Curriculares) + spec por manual para adaptar el formulario a cada rúbrica -->
     <script src="/js/oa-data.js"></script>
-    <script src="/js/manual-spec.js"></script>
+    <script src="/js/manual-spec.js?v=2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
     <script>
@@ -3172,6 +3172,16 @@
                 html+='<div class="rounded-2xl border border-emerald-200 p-4" style="background:#ecfdf5"><p class="font-heading font-bold text-emerald-900 mb-1">🎯 Preguntas que apuntan a tu rúbrica</p>'+
                     '<p class="text-xs text-gray-500 mb-3">Responde breve y concreto: con esto tu portafolio queda único y alineado a lo que evalúan (Competente/Destacado).</p><div class="space-y-3">';
                 spec.preguntasRubrica.forEach(function(q){ html+=_renderCampo('mq',q,spec); });
+                html+='</div></div>';
+            }
+            // La clase grabada (M2) se declara APARTE del Módulo 1: asignatura, OA, fecha y
+            // contexto propios. Evita el caso "portafolio en Lenguaje, grabada en Matemática"
+            // perdido en observaciones y perseguido después por WhatsApp.
+            var m2c=(typeof window.M2_CAMPOS==='function')?window.M2_CAMPOS(key||''):[];
+            if(m2c.length){
+                html+='<div class="rounded-2xl border p-4" style="background:#faf5ff;border-color:#d8b4fe"><p class="font-heading font-bold mb-1" style="color:#6b21a8">🎥 Módulo 2 · Tu clase grabada se declara APARTE</p>'+
+                    '<p class="text-xs text-gray-500 mb-3">El Módulo 1 y la clase grabada son cosas distintas: puede cambiar la asignatura, el OA, el curso y la fecha. Duración de tu grabada: '+msEsc(spec.duracionGrabada)+'.</p><div class="space-y-3">';
+                m2c.forEach(function(c){ html+=_renderCampo('me',c,spec); });
                 html+='</div></div>';
             }
             box.innerHTML=html;

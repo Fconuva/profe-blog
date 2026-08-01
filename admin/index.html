@@ -1539,6 +1539,19 @@
             var s = String((p && p.paymentStatus) || '').toLowerCase();
             return s === 'approved' || s === 'aprobado' || s === 'abono' || s === 'pagado' || (p && p.esAbono === true);
         }
+        // Lo que un docente pagó de verdad. El monto vive en DOS lugares y ninguno es el único
+        // correcto: `abonos` es el arreglo de cuotas que se registra a mano, y `paymentAmount`
+        // es el acumulado del campo antiguo de la plataforma. Hay 16 fichas con el pago solo en
+        // `paymentAmount` y 9 con el pago solo en `abonos`, así que mirar uno solo deja plata
+        // fuera del panel. Se toma el mayor de los dos.
+        function montoPagadoReal(p) {
+            if (!p) return 0;
+            var ab = 0;
+            var arr = p.abonos ? (Array.isArray(p.abonos) ? p.abonos : Object.values(p.abonos)) : [];
+            arr.forEach(function(a) { if (a && typeof a.monto === 'number') ab += a.monto; });
+            var pa = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 0;
+            return Math.max(ab, pa);
+        }
         // ===== MÓDULO 1 DE REGALO (gancho de venta: M1 construido sin pago previo) =====
         // M1 construido + SIN pago aún (actualizado 17-jun-2026; los que pagaron pasaron al flujo de pagados/entregados).
         var M1_GANCHO_UIDS = [
@@ -2152,18 +2165,28 @@
                 var esPlanReal = (p.plan && p.plan !== 'pre-inscripcion' && price > 0) || pagoReal;
                 if (esPlanReal && !(price > 0)) price = 199990;
                 if (p.paymentStatus === 'gratis') {
-                    // Portafolio regalado: cuenta como cliente activo pero NO suma dinero.
+                    // Portafolio regalado: cuenta como cliente activo pero NO suma dinero, aunque
+                    // tenga un monto registrado. Un 'gratis' con plata suele ser un campo que
+                    // quedó de antes, y darlo por recaudado inventaría ingresos.
                     paid++; regalosN++;
-                } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado') {
-                    // COMPROMETIDO + RECAUDADO: pago completo confirmado (bruto = precio del plan).
-                    totalRevenue += price; totalWithPlan++;
-                    paidRevenue += price;
-                    if (p.comprobantePago) mpGross += price; // pago por MercadoPago (tiene ID); las transferencias no
-                    paid++; paidCount++; fullPayN++; fullPayMonto += price;
+                } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'pagado') {
+                    // COMPROMETIDO + RECAUDADO: pago completo confirmado.
+                    // 'pagado' estaba fuera de esta rama y caía en "inscrito sin pagar": eran 30
+                    // docentes y $5.657.820 que el panel no mostraba (auditado el 1-ago-2026).
+                    // Se usa lo que la persona pagó de verdad y no el precio de lista, porque hay
+                    // planes de módulo suelto ($79.990) y transferencias de $200.000 redondos.
+                    var montoFull = montoPagadoReal(p) || price;
+                    totalRevenue += montoFull; totalWithPlan++;
+                    paidRevenue += montoFull;
+                    if (p.comprobantePago) mpGross += montoFull; // pago por MercadoPago (tiene ID); las transferencias no
+                    paid++; paidCount++; fullPayN++; fullPayMonto += montoFull;
                 } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
-                    // COMPROMETIDO: 1a cuota recibida (~$100.000); el saldo (2a cuota) queda POR COBRAR (firme).
-                    var abono = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 100000;
+                    // COMPROMETIDO: 1a cuota recibida; el saldo (2a cuota) queda POR COBRAR (firme).
+                    // El respaldo fijo de $100.000 sobrestimaba a quienes abonaron $50.000 y tienen
+                    // su pago solo en el arreglo `abonos`.
+                    var abono = montoPagadoReal(p) || 100000;
                     var saldoAb = (typeof p.saldoPendiente === 'number' && p.saldoPendiente > 0) ? p.saldoPendiente : Math.max(0, price - abono);
+                    if (saldoAb > 0 && abono >= price) saldoAb = 0; // saldo obsoleto: ya pagó todo
                     totalRevenue += abono + saldoAb; totalWithPlan++;
                     paidRevenue += abono;
                     if (p.comprobantePago) mpGross += abono; // abono por MercadoPago (tiene ID)

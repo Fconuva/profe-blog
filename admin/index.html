@@ -270,6 +270,7 @@
                         <p class="text-[11px] text-indigo-500 mt-0.5">te falta si pagan todos</p>
                     </div>
                 </div>
+                <div class="bg-white/60 rounded-lg py-2 px-3 mt-3 text-[12px] text-indigo-700 leading-relaxed" id="stat-opt-falta-desglose"></div>
                 <p class="text-[11px] text-indigo-400 mt-3" id="stat-meta-explica">Es la meta si aseguras el pago completo de todos los inscritos. Los que aún no pagan todavía NO son plata comprometida.</p>
             </div>
 
@@ -2070,10 +2071,16 @@
         }
 
         function getClientUids() {
-            return Object.keys(allClients).filter(function(uid) {
-                if (allClients[uid].role === 'admin') return false;
+            // UNIÓN users ∪ portafolios: los docentes inscritos a mano (ficha sin cuenta /users) también cuentan.
+            var _u = {};
+            Object.keys(allClients).forEach(function (k) { _u[k] = 1; });
+            Object.keys(allPortafolios).forEach(function (k) { _u[k] = 1; });
+            return Object.keys(_u).filter(function(uid) {
+                var c = allClients[uid];
                 var _p = allPortafolios[uid];
-                if ((_p && _p.archivado) || allClients[uid].archivado) return false; // archivados no cuentan en stats
+                if (c && c.role === 'admin') return false;
+                if ((_p && (_p.archivado || _p.liberado)) || (c && c.archivado)) return false; // archivados y bajas no cuentan
+                if (!c) { var _dp = (_p && _p.datosPortafolio) || {}; allClients[uid] = { nombre: _dp.nombre || '', email: _dp.email || '', status: 'solo-ficha' }; }
                 return true;
             }).sort(function(a, b) {
                 var cA = allClients[a];
@@ -2247,6 +2254,8 @@
             _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (regalosN ? ' · ' + regalosN + ' regalo' + (regalosN > 1 ? 's' : '') : ''));
             _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos');
             _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' inscritos = ' + totalWithPlan + ' que ya pusieron plata + ' + sinPagar + ' sin pagar (proyectados a $199.990 c/u).' + (regalosN ? ' Los ' + regalosN + ' regalos no suman a la meta.' : '') + ' Los que aún no pagan NO son plata comprometida.');
+            var potNoPagan = sinPagar * 199990;
+            _setD('stat-opt-falta-desglose', 'Ese "te falta" se compone de DOS platas distintas: ' + formatCLP(pendingRevenue) + ' ya COMPROMETIDOS (las 2ª cuotas de los ' + pendingRevenueCount + ' que abonaron: esa plata llega casi segura, solo hay que cobrarla) + ' + formatCLP(potNoPagan) + ' POTENCIALES (los ' + sinPagar + ' inscritos que aún no pagan nada × $199.990: esa plata NO existe todavía, depende de convertirlos).');
             // cobranza: aging + tabla
             var mas30 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 30; }).length;
             var mas60 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 60; }).length;

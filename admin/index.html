@@ -2252,7 +2252,17 @@
                         pendingRevenue += saldoAb; pendingRevenueCount++;
                         var fAb = p.paidAt || p.paymentConfirmedAt || '';
                         var dias = fAb ? Math.max(0, Math.round((HOY - new Date(fAb).getTime()) / 86400000)) : null;
-                        cobranzaList.push({ uid: uid, nombre: nombreDe(uid), saldo: saldoAb, fecha: fAb, dias: dias });
+                        // ultimoCobro lo escribe herramientas/marcar_cobro_enviado.py leyendo nuestro
+                        // registro de envios. Sin esta columna el panel muestra quien debe pero no si ya
+                        // se le pidio, y se termina cobrando dos veces a la misma persona en tres dias.
+                        var _uc = p.ultimoCobro || null;
+                        var _diasCobro = null;
+                        if (_uc && _uc.fecha) {
+                            _diasCobro = Math.max(0, Math.round((HOY - new Date(String(_uc.fecha).replace(' ', 'T')).getTime()) / 86400000));
+                        }
+                        cobranzaList.push({ uid: uid, nombre: nombreDe(uid), saldo: saldoAb, fecha: fAb, dias: dias,
+                                            cobradoEl: _uc && _uc.fecha ? String(_uc.fecha).slice(0, 10) : '',
+                                            diasCobro: _diasCobro });
                     }
                 } else if (p.paymentStatus === 'pendiente_verificacion') {
                     // Se contabiliza más abajo como "pago por revisar" (no es sin-pagar ni comprometido aún).
@@ -2365,12 +2375,14 @@
                 if (!cobranzaList.length) { cobEl.innerHTML = '<p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p>'; }
                 else {
                     cobranzaList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
-                    var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó el</th><th class="py-1 pr-2">Días</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
+                    var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó el</th><th class="py-1 pr-2">Días</th><th class="py-1 pr-2">Se le cobró</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
                     cobranzaList.forEach(function (x) {
                         var alerta = (x.dias !== null && x.dias > 30);
                         h += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
                              '<td class="py-1.5 pr-2 ' + (alerta ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
+                             '<td class="py-1.5 pr-2 text-xs " + (x.diasCobro !== null && x.diasCobro >= 5 ? "text-rose-600 font-semibold" : "text-gray-500") + "">' +
+                             (x.cobradoEl ? escapeHtml(x.cobradoEl) + (x.diasCobro !== null ? ' · hace ' + x.diasCobro + 'd' : '') : '<span class="text-gray-300">todavía no</span>') + '</td>' +
                              '<td class="py-1.5 text-right tabular-nums font-semibold text-amber-700">' + formatCLP(x.saldo) + '</td></tr>';
                     });
                     h += '</tbody></table>';

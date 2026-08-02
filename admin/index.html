@@ -306,6 +306,29 @@
 
             </div>
 
+            <!-- ===== SEGUIMIENTO DE COBROS =====
+                 Todos los que tienen un cobro encima y siguen debiendo, con lo que dijo cada uno.
+                 Lo llena herramientas/seguimiento_cobros.py, que lee el chat y clasifica.
+                 Existe porque hacen falta dos cosas distintas: saber a quien hay que ZANJAR
+                 (no dijo nada) y saber a quien NO hay que volver a escribirle (prometio fecha). -->
+            <div class="bg-white rounded-2xl border-2 border-slate-300 p-6 mb-6" id="seg-cobro-card" style="display:none">
+                <div class="flex items-start justify-between gap-3 mb-1">
+                    <h3 class="font-heading font-bold text-gray-900">📌 Cobros en seguimiento · qué respondió cada uno</h3>
+                    <span class="text-right shrink-0">
+                        <span class="block text-lg font-heading font-bold text-slate-700 tabular-nums" id="tbl-seg-monto">$0</span>
+                        <span class="block text-[11px] text-slate-500"><span id="tbl-seg-n">0</span> docentes</span>
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-400 mb-3">Todos los que recibieron un cobro y siguen debiendo. <b class="text-rose-600">Sin responder</b> son los que hay que zanjar: no sabemos si lo vieron o se arrepintieron. <b class="text-emerald-600">Prometió</b> son los que ya dieron fecha o forma de pago, y a esos <b>no se les vuelve a escribir</b>: se espera lo que ellos mismos dijeron.</p>
+                <div class="flex gap-2 mb-3 text-[11px]">
+                    <button type="button" data-segf="" class="segf px-2 py-1 rounded border border-slate-300 bg-slate-800 text-white">Todos</button>
+                    <button type="button" data-segf="SIN RESPONDER" class="segf px-2 py-1 rounded border border-rose-300 text-rose-700">Sin responder</button>
+                    <button type="button" data-segf="RESPONDIO" class="segf px-2 py-1 rounded border border-slate-300 text-slate-600">Respondió</button>
+                    <button type="button" data-segf="PROMETIO" class="segf px-2 py-1 rounded border border-emerald-300 text-emerald-700">Prometió</button>
+                </div>
+                <div id="seg-cobro-table" style="max-height:460px;overflow-y:auto"></div>
+            </div>
+
             <!-- ===== SILENCIO DESPUES DEL COBRO =====
                  No es lo mismo que deber plata. Aca esta quien recibio los datos de pago y no
                  respondio NADA, ni un "ya". La marca la deja
@@ -2200,6 +2223,11 @@
             // en el campo alertaCobro. Se muestra aparte porque no se atiende como una deuda comun:
             // a esta gente NO se le reenvia el mismo mensaje.
             var alertaList = [];
+            // Seguimiento de TODOS los cobros con saldo abierto, no solo del silencio.
+            // Lo escribe herramientas/seguimiento_cobros.py, que ademas lee el chat y
+            // clasifica en que quedo cada uno: SIN RESPONDER, RESPONDIO o PROMETIO.
+            // Francisco: "es necesario zanjar para no seguir trabajando gratis".
+            var seguimientoList = [];
             var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
             var HOY = Date.now();
             function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
@@ -2279,6 +2307,16 @@
                         // si ya declaró su OA podemos construirle el M1; si no, primero hay que pedírselo
                         conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
                         conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
+                    });
+                }
+                if (p.seguimientoCobro && p.seguimientoCobro.desde) {
+                    var _sg = p.seguimientoCobro;
+                    var _dS = Math.max(0, Math.round((HOY - new Date(String(_sg.desde).replace(' ', 'T')).getTime()) / 86400000));
+                    seguimientoList.push({
+                        uid: uid, nombre: nombreDe(uid),
+                        desde: String(_sg.desde).slice(0, 10),
+                        dias: isNaN(_dS) ? (_sg.dias || 0) : _dS,
+                        saldo: _sg.saldo || 0, estado: _sg.estado || '', dijo: _sg.dijo || ''
                     });
                 }
                 if (p.alertaCobro && p.alertaCobro.desde) {
@@ -2413,6 +2451,18 @@
                     });
                     hp += '</tbody></table>';
                     potEl.innerHTML = hp;
+                }
+            }
+            // seguimiento de cobros
+            window._segList = seguimientoList;
+            var segCard = document.getElementById('seg-cobro-card');
+            if (segCard) {
+                if (!seguimientoList.length) { segCard.style.display = 'none'; }
+                else {
+                    segCard.style.display = '';
+                    _setD('tbl-seg-monto', formatCLP(seguimientoList.reduce(function (t, x) { return t + (x.saldo || 0); }, 0)));
+                    _setD('tbl-seg-n', seguimientoList.length);
+                    pintarSeguimiento('');
                 }
             }
             // silencio despues del cobro
@@ -3835,6 +3885,41 @@
                 btn.textContent = '🔑 Cambiar Contraseña';
                 showActionMsg('Error de red: ' + err.message, 'error');
             });
+        });
+
+
+        // Pinta la tabla de seguimiento. Se saca de renderDashboard para que los botones de
+        // filtro puedan repintarla sin recalcular todo el panel.
+        function pintarSeguimiento(filtro) {
+            var el = document.getElementById('seg-cobro-table');
+            if (!el) return;
+            var lista = (window._segList || []).filter(function (x) { return !filtro || x.estado === filtro; });
+            var orden = { 'SIN RESPONDER': 0, 'RESPONDIO': 1, 'PROMETIO': 2 };
+            lista.sort(function (a, b) { return (orden[a.estado] - orden[b.estado]) || (b.dias - a.dias); });
+            if (!lista.length) { el.innerHTML = '<p class="text-sm text-gray-400">Nadie en esta categoría.</p>'; return; }
+            var COLOR = { 'SIN RESPONDER': 'bg-rose-100 text-rose-700', 'RESPONDIO': 'bg-slate-100 text-slate-600', 'PROMETIO': 'bg-emerald-100 text-emerald-700' };
+            var ROT = { 'SIN RESPONDER': 'sin responder', 'RESPONDIO': 'respondió', 'PROMETIO': 'prometió' };
+            var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Cobrado</th><th class="py-1 pr-2">Días</th><th class="py-1 pr-2">Estado</th><th class="py-1 pr-2">Lo último que dijo</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
+            lista.forEach(function (x) {
+                var grave = x.estado === 'SIN RESPONDER' && x.dias >= 3;
+                h += '<tr class="border-t border-gray-100">' +
+                     '<td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
+                     '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.desde) + '</td>' +
+                     '<td class="py-1.5 pr-2 ' + (grave ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + x.dias + '</td>' +
+                     '<td class="py-1.5 pr-2"><span class="px-1.5 py-0.5 rounded text-[10px] font-semibold ' + (COLOR[x.estado] || '') + '">' + (ROT[x.estado] || '') + '</span></td>' +
+                     '<td class="py-1.5 pr-2 text-gray-500 text-[11px]">' + escapeHtml(x.dijo || '—') + '</td>' +
+                     '<td class="py-1.5 text-right tabular-nums font-semibold text-slate-700">' + formatCLP(x.saldo) + '</td></tr>';
+            });
+            el.innerHTML = h + '</tbody></table>';
+        }
+        document.addEventListener('click', function (ev) {
+            var b = ev.target.closest && ev.target.closest('.segf');
+            if (!b) return;
+            document.querySelectorAll('.segf').forEach(function (o) {
+                o.classList.remove('bg-slate-800', 'text-white');
+            });
+            b.classList.add('bg-slate-800', 'text-white');
+            pintarSeguimiento(b.getAttribute('data-segf') || '');
         });
 
         // Delete user

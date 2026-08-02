@@ -306,6 +306,22 @@
 
             </div>
 
+            <!-- ===== SILENCIO DESPUES DEL COBRO =====
+                 No es lo mismo que deber plata. Aca esta quien recibio los datos de pago y no
+                 respondio NADA, ni un "ya". La marca la deja
+                 herramientas/alerta_sin_respuesta_al_cobro.py en el campo alertaCobro. -->
+            <div class="bg-white rounded-2xl border-2 border-rose-300 p-6 mb-6" id="alerta-cobro-card" style="display:none">
+                <div class="flex items-start justify-between gap-3 mb-1">
+                    <h3 class="font-heading font-bold text-gray-900">🔇 En alerta · recibieron el cobro y no contestaron nada</h3>
+                    <span class="text-right shrink-0">
+                        <span class="block text-lg font-heading font-bold text-rose-700 tabular-nums" id="tbl-alerta-monto">$0</span>
+                        <span class="block text-[11px] text-rose-500"><span id="tbl-alerta-n">0</span> docentes</span>
+                    </span>
+                </div>
+                <p class="text-[11px] text-gray-400 mb-3">Ni una palabra desde que se les mandaron los datos de pago. No es lo mismo que discutir el monto o pedir plazo: acá no sabemos si lo vieron, si les incomodó o si se arrepintieron. <b>No reenviar el mismo mensaje</b>, porque repetirlo solo confirma que es un cobro automático. Se retoma desde el próximo hito suyo, o le escribe Francisco.</p>
+                <div id="alerta-cobro-table" style="max-height:360px;overflow-y:auto"></div>
+            </div>
+
             <!-- ===== PENDIENTES OPERATIVOS ===== -->
             <div class="bg-white rounded-2xl border border-rose-200 p-6 mb-6">
                 <h3 class="font-heading font-bold text-gray-900 mb-1">🔴 Pendientes operativos <span class="text-sm font-normal text-gray-400">(<span id="pendientes-count">0</span> abiertos)</span></h3>
@@ -2180,6 +2196,10 @@
             // detalle nuevo: desglose de pagos, cobranza, pendientes 🔴, sin-OA pagados, módulos
             var fullPayN = 0, fullPayMonto = 0, abonoN = 0, abonoMonto = 0, regalosN = 0;
             var cobranzaList = [], pendientesList = [], paidNoOAList = [], sinPagarList = [];
+            // Silencio despues del cobro: la marca la pone herramientas/alerta_sin_respuesta_al_cobro.py
+            // en el campo alertaCobro. Se muestra aparte porque no se atiende como una deuda comun:
+            // a esta gente NO se le reenvia el mismo mensaje.
+            var alertaList = [];
             var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
             var HOY = Date.now();
             function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
@@ -2249,6 +2269,15 @@
                         // si ya declaró su OA podemos construirle el M1; si no, primero hay que pedírselo
                         conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
                         conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
+                    });
+                }
+                if (p.alertaCobro && p.alertaCobro.desde) {
+                    var _dA = Math.max(0, Math.round((HOY - new Date(String(p.alertaCobro.desde).replace(' ', 'T')).getTime()) / 86400000));
+                    alertaList.push({
+                        uid: uid, nombre: nombreDe(uid),
+                        desde: String(p.alertaCobro.desde).slice(0, 10),
+                        dias: isNaN(_dA) ? (p.alertaCobro.dias || 0) : _dA,
+                        saldo: p.alertaCobro.saldo || 0
                     });
                 }
                 if (p.paymentStatus === 'pendiente_verificacion') {
@@ -2372,6 +2401,27 @@
                     });
                     hp += '</tbody></table>';
                     potEl.innerHTML = hp;
+                }
+            }
+            // silencio despues del cobro
+            var alEl = document.getElementById('alerta-cobro-table');
+            var alCard = document.getElementById('alerta-cobro-card');
+            if (alEl && alCard) {
+                if (!alertaList.length) { alCard.style.display = 'none'; }
+                else {
+                    alCard.style.display = '';
+                    alertaList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
+                    _setD('tbl-alerta-monto', formatCLP(alertaList.reduce(function (t, x) { return t + (x.saldo || 0); }, 0)));
+                    _setD('tbl-alerta-n', alertaList.length);
+                    var ha = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Se le cobró</th><th class="py-1 pr-2">Días callado</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
+                    alertaList.forEach(function (x) {
+                        var grave = (x.dias || 0) >= 7;
+                        ha += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
+                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.desde || '¿?') + '</td>' +
+                              '<td class="py-1.5 pr-2 ' + (grave ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias || 0) + '</td>' +
+                              '<td class="py-1.5 text-right tabular-nums font-semibold text-rose-700">' + formatCLP(x.saldo) + '</td></tr>';
+                    });
+                    alEl.innerHTML = ha + '</tbody></table>';
                 }
             }
             // pendientes 🔴

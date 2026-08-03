@@ -88,8 +88,9 @@ async function handleCheckBlacklist(req, res) {
 async function handleCreateUser(req, res) {
   const { callerUid, nombre, email, telefono, rut, password } = req.body || {};
   const requestedInscripcion = String((req.body && req.body.inscripcionNum) || '').trim();
+  const normalizedName = String(nombre || '').trim().replace(/\s+/g, ' ');
 
-  if (!callerUid || !nombre || !email) {
+  if (!callerUid || normalizedName.length < 3 || !email) {
     return res.status(400).json({ error: 'Faltan datos obligatorios (nombre, email)' });
   }
 
@@ -128,7 +129,7 @@ async function handleCreateUser(req, res) {
       const userRecord = await fb.auth().createUser({
         email: email,
         password: userPassword,
-        displayName: nombre
+        displayName: normalizedName
       });
       uid = userRecord.uid;
     } catch (createErr) {
@@ -136,10 +137,10 @@ async function handleCreateUser(req, res) {
         const existing = await fb.auth().getUserByEmail(email);
         uid = existing.uid;
         reattached = true;
-        // Si se entregó contraseña, la actualizamos; si no, se conserva la actual.
-        if (password) {
-          await fb.auth().updateUser(uid, { password: userPassword, displayName: nombre });
-        }
+        // El nombre siempre se sincroniza. La contraseña solo cambia si se entregó una nueva.
+        const authUpdate = { displayName: normalizedName };
+        if (password) authUpdate.password = userPassword;
+        await fb.auth().updateUser(uid, authUpdate);
       } else {
         throw createErr;
       }
@@ -171,7 +172,7 @@ async function handleCreateUser(req, res) {
     const prevUser = prevUserSnap.val() || {};
 
     await db.ref('users/' + uid).update({
-      nombre: nombre,
+      nombre: normalizedName,
       email: email,
       telefono: telefono || prevUser.telefono || '',
       rut: rut || prevUser.rut || '',
@@ -268,8 +269,9 @@ async function handleChangePassword(req, res) {
 async function handleUpdateUserProfile(req, res) {
   const { uid, nombre, telefono, rut } = req.body || {};
   const email = normalizeEmail(req.body && req.body.email);
+  const normalizedName = String(nombre || '').trim().replace(/\s+/g, ' ');
 
-  if (!uid || !nombre || !email) {
+  if (!uid || normalizedName.length < 3 || !email) {
     return res.status(400).json({ error: 'Faltan datos obligatorios (uid, nombre, email)' });
   }
 
@@ -301,13 +303,13 @@ async function handleUpdateUserProfile(req, res) {
 
     const authUpdate = {
       email: email,
-      displayName: String(nombre || '').trim()
+      displayName: normalizedName
     };
     await fb.auth().updateUser(uid, authUpdate);
 
     const timestamp = new Date().toISOString();
     const updates = {
-      nombre: String(nombre || '').trim(),
+      nombre: normalizedName,
       email: email,
       telefono: String(telefono || '').trim(),
       rut: String(rut || '').trim(),

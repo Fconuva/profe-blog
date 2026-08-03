@@ -69,3 +69,9 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 
 - Audits must check browser behavior and console output, not only code inspection.
 - For admin audits, verify login gate, section navigation, create/edit flows, direct-access link generation, review actions, and report/export actions.
+
+## Portfolio Registration Safeguards
+
+- A portfolio account requires a non-blank normalized name in both the public form and the admin API. HTML `required` alone is insufficient because whitespace passes browser validation.
+- When an archived pre-registration changes to a contracted plan, the admin save clears only its portfolio archive fields. It must not unarchive cancellations, blocked users, or already contracted portfolios that were archived intentionally.
+- Reattaching an existing authentication account through the admin create flow also clears stale portfolio archive fields and synchronizes the normalized name in Firebase Auth and `/users`.

@@ -80,6 +80,8 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - `sesion-u2-1` is not writing-only through generic `notes`: `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` stores writing in `ticket` and `thesisContexts`.
 - The extra `2A-HC` block inside `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` is course-gated but should read as two extra opinion columns only.
 - Keep the hidden rule in docs and code: Text 2 checks posture + support, Text 3 checks objection + response. Do not expose activation or scoring language in student-facing copy.
+- Portfolio registration names must be validated after trimming on both the public form and the admin API. A `required` input still accepts whitespace.
+- Activating a contracted plan from an archived pre-registration must clear the portfolio archive fields. Do not generalize this to blocked users, cancellations, or contracted records archived intentionally.
 
 ## Deploy Command
 - From `profefconuva/estudiacest`: `npx vercel deploy --prod --yes --scope fconuvas-projects`

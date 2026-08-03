@@ -4060,6 +4060,14 @@
             updates['portafolios/' + uid + '/plan'] = newPlan;
             updates['portafolios/' + uid + '/paymentStatus'] = newPaymentStatus;
 
+            // Una preinscripción archivada que pasa a un plan contratado vuelve a la nómina.
+            // No se aplica a bajas ni a portafolios ya contratados que se archivaron a propósito.
+            if (curPort.archivado === true && (curPort.plan || 'pre-inscripcion') === 'pre-inscripcion' && newPlan !== 'pre-inscripcion') {
+                updates['portafolios/' + uid + '/archivado'] = null;
+                updates['portafolios/' + uid + '/archivadoAt'] = null;
+                updates['portafolios/' + uid + '/archivadoMotivo'] = null;
+            }
+
             if (newPaymentStatus === 'abono') {
                 // Abono parcial: 1ª cuota de 2. Activa acceso y registra el saldo pendiente.
                 updates['portafolios/' + uid + '/esAbono'] = true;

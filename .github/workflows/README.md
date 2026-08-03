@@ -58,6 +58,13 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 5. Test create, edit, and bulk flows only with reversible or controlled data.
 6. Record findings with page, action, console evidence, and impact.
 
+## Portfolio Registration Check
+
+1. Verify the public registration form rejects an empty or whitespace-only name before creating the authentication account.
+2. Verify the admin create and profile-update API normalizes the name and rejects fewer than three visible characters.
+3. Verify changing an archived pre-registration to a contracted plan removes the portfolio archive fields.
+4. Verify the same save does not unarchive a cancellation, blocked user, or already contracted record archived intentionally.
+
 ## Deploy Command
 
 - `npx vercel deploy --prod --yes --scope fconuvas-projects`

@@ -59,6 +59,7 @@ test('portfolio payment endpoints require the authenticated Firebase session', (
   assert.match(verifySource, /decoded\.uid\s*!==\s*uid/);
   assert.match(verifySource, /!linkedUid\s*&&\s*!linkedEmail/);
   assert.match(preferenceSource, /verifyIdToken\(idToken\)/);
+  assert.doesNotMatch(preferenceSource, /json\(\{\s*error:\s*'internal_error',[^}]*stack:/);
 });
 
 test('course and ECEP webhooks require their exact CLP price', () => {

@@ -223,6 +223,6 @@ module.exports = async (req, res) => {
       cause: err.cause,
       status: err.status
     });
-    return res.status(500).json({ error: 'internal_error', details: err.message, stack: err.stack });
+    return res.status(500).json({ error: 'internal_error' });
   }
 };

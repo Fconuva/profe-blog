@@ -116,10 +116,17 @@ module.exports = async (req, res) => {
       return res.status(200).json({ init_point: result.init_point, id: result.id });
     }
 
-    const { name, email, plan, uid, tipo } = req.body;
-    if (!email || !plan) return res.status(400).json({ error: 'Missing email or plan' });
-
-    const esAbono = tipo === 'abono';
+    const { name, plan: requestedPlan, tipo, idToken } = req.body || {};
+    if (!idToken) return res.status(401).json({ error: 'Missing idToken' });
+    const portfolioAdmin = initFirebase();
+    let decoded;
+    try { decoded = await portfolioAdmin.auth().verifyIdToken(idToken); }
+    catch (e) { return res.status(401).json({ error: 'invalid_token' }); }
+    const uid = decoded.uid;
+    const email = String(decoded.email || '').trim().toLowerCase();
+    if (!email) return res.status(400).json({ error: 'Authenticated account has no email' });
+    const portfolioDb = portfolioAdmin.database();
+    const portfolio = (await portfolioDb.ref('portafolios/' + uid).once('value')).val() || {};
 
     // Portafolio Docente 2026 plans
     const plans = {
@@ -129,10 +136,20 @@ module.exports = async (req, res) => {
       'modulo3':   { title: 'Módulo 3 — Reflexión', price: 79990 }
     };
 
+    const plan = plans[portfolio.plan] ? portfolio.plan : (plans[requestedPlan] ? requestedPlan : 'completo');
+    const esAbono = tipo === 'abono' && plan === 'completo';
+    const esSaldo = tipo === 'saldo';
+
     // Abono = 1ª cuota fija de $100.000 hacia el plan elegido (por defecto, completo)
-    const chosen = esAbono
-      ? { title: 'Abono 1ª cuota de 2 — Portafolio Docente 2026', price: 100000 }
-      : (plans[plan] || plans['completo']);
+    const saldo = Number(portfolio.saldoPendiente) || 0;
+    if (esSaldo && (portfolio.paymentStatus !== 'abono' || saldo <= 0)) {
+      return res.status(400).json({ error: 'No hay un saldo pendiente asociado a esta cuenta' });
+    }
+    const chosen = esSaldo
+      ? { title: 'Saldo final Portafolio Docente 2026', price: saldo }
+      : (esAbono
+        ? { title: 'Abono 1ª cuota de 2 — Portafolio Docente 2026', price: 100000 }
+        : plans[plan]);
 
     const host = process.env.BASE_URL || `https://${req.headers.host}`;
     const notification_url = `${host}/api/mercadopago/webhook`;
@@ -175,7 +192,7 @@ module.exports = async (req, res) => {
         user_name: name || '',
         user_uid: uid || '',
         plan: plan,
-        tipo: esAbono ? 'abono' : 'completo',
+        tipo: esSaldo ? 'saldo' : (esAbono ? 'abono' : 'completo'),
         payment_timestamp: timestamp
       },
       payment_methods: {

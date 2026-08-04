@@ -42,45 +42,123 @@ function getUidFromExternalReference(externalReference) {
 
 async function findUidByEmail(db, email) {
   if (!email) return '';
-  const snap = await db.ref('users').orderByChild('email').equalTo(email).once('value');
+  const normalizedEmail = String(email).trim().toLowerCase();
+  let snap = await db.ref('users').orderByChild('email').equalTo(normalizedEmail).once('value');
   const users = snap.val() || {};
-  return Object.keys(users)[0] || '';
+  if (Object.keys(users)[0]) return Object.keys(users)[0];
+
+  // Older accounts were not guaranteed to store normalized email addresses.
+  snap = await db.ref('users').once('value');
+  const allUsers = snap.val() || {};
+  return Object.keys(allUsers).find(function(uid) {
+    return String((allUsers[uid] && allUsers[uid].email) || '').trim().toLowerCase() === normalizedEmail;
+  }) || '';
 }
 
 const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
 
-async function markPortfolioPaymentApproved(db, uid, payment, plan, approvedAt) {
-  if (!uid) return false;
-  await db.ref('portafolios/' + uid).update({
-    paymentStatus: 'approved',
-    comprobantePago: String(payment.id),
-    paidAt: approvedAt,
-    paymentVerifiedAt: approvedAt,
-    paymentConfirmedAt: approvedAt,
-    paymentAmount: payment.transaction_amount,
-    esAbono: null,
-    saldoPendiente: null,
-    plan: plan || 'completo'
-  });
-  return true;
+function isExpectedMoney(payment, expectedAmount) {
+  return String((payment && payment.currency_id) || '').toUpperCase() === 'CLP'
+    && Number(payment && payment.transaction_amount) === expectedAmount;
 }
 
-// Marca un abono (1ª cuota): da acceso, registra el monto y el saldo pendiente.
-async function markPortfolioAbono(db, uid, payment, plan, approvedAt) {
+function matchesPendingBalance(portfolio, payment) {
+  const pending = Number(portfolio && portfolio.saldoPendiente) || 0;
+  const amount = Number(payment && payment.transaction_amount) || 0;
+  return Boolean(portfolio)
+    && portfolio.paymentStatus === 'abono'
+    && pending > 0
+    && Math.abs(amount - pending) <= 10000;
+}
+
+function getNotificationId(req) {
+  const query = (req && req.query) || {};
+  const body = (req && req.body) || {};
+  return query['data.id'] || (body.data && body.data.id) || query.id || body.payment_id || body.id || '';
+}
+
+function classifyPortfolioPayment(payment, metadata, plan) {
+  const amount = Number(payment && payment.transaction_amount) || 0;
+  const currency = String((payment && payment.currency_id) || '').toUpperCase();
+  const planKey = PLAN_PRICES[plan] ? plan : 'completo';
+  const expected = PLAN_PRICES[planKey];
+  if (currency !== 'CLP') return { valid: false, reason: 'currency', plan: planKey };
+  if (amount > expected + 10000) return { valid: false, reason: 'amount', plan: planKey };
+  if (metadata && metadata.tipo === 'saldo') {
+    return amount > 0 && amount <= expected
+      ? { valid: true, type: 'saldo', plan: planKey }
+      : { valid: false, reason: 'amount', plan: planKey };
+  }
+  if (metadata && metadata.tipo === 'abono') {
+    return planKey === 'completo' && amount >= 90000 && amount <= 110000
+      ? { valid: true, type: 'abono', plan: planKey }
+      : { valid: false, reason: 'amount', plan: planKey };
+  }
+  if (amount >= expected - 10000 && amount <= expected + 10000) {
+    return { valid: true, type: 'completo', plan: planKey };
+  }
+  // Rescue old static-link deposits that had no metadata but match the known first instalment.
+  if (planKey === 'completo' && amount >= 90000 && amount <= 110000) {
+    return { valid: true, type: 'abono', plan: planKey };
+  }
+  return { valid: false, reason: 'amount', plan: planKey };
+}
+
+async function applyPortfolioPayment(db, uid, payment, plan, paymentType, approvedAt) {
   if (!uid) return false;
-  const planKey = plan || 'completo';
-  const amount = payment.transaction_amount || 100000;
-  const saldo = Math.max(0, (PLAN_PRICES[planKey] || 199990) - amount);
-  await db.ref('portafolios/' + uid).update({
-    paymentStatus: 'abono',
-    esAbono: true,
-    comprobantePago: String(payment.id),
-    paidAt: approvedAt,
-    paymentVerifiedAt: approvedAt,
-    paymentConfirmedAt: approvedAt,
-    paymentAmount: amount,
-    saldoPendiente: saldo,
-    plan: planKey
+  const planKey = PLAN_PRICES[plan] ? plan : 'completo';
+  const price = PLAN_PRICES[planKey];
+  const amount = Number(payment.transaction_amount) || 0;
+  const paymentId = String(payment.id);
+  await db.ref('portafolios/' + uid).transaction(function(current) {
+    current = current || {};
+    if (current.paymentStatus === 'approved' || current.paymentStatus === 'aprobado' || current.paymentStatus === 'pagado') {
+      return current;
+    }
+    const existingAbonos = Array.isArray(current.abonos) ? current.abonos.slice() : [];
+    const alreadyApplied = String(current.comprobantePago || '') === paymentId
+      || existingAbonos.some(function(item) { return String((item && (item.paymentId || item.id || item.op)) || '') === paymentId; });
+    if (alreadyApplied) return current;
+
+    if (paymentType === 'completo') {
+      return Object.assign({}, current, {
+        paymentStatus: 'approved',
+        comprobantePago: paymentId,
+        paidAt: approvedAt,
+        paymentVerifiedAt: approvedAt,
+        paymentConfirmedAt: approvedAt,
+        paymentAmount: amount,
+        esAbono: null,
+        saldoPendiente: null,
+        plan: planKey
+      });
+    }
+
+    const sumAbonos = existingAbonos.reduce(function(total, item) {
+      return total + (Number(item && item.monto) || 0);
+    }, 0);
+    const previous = Math.max(Number(current.abonoAcumulado) || 0, Number(current.paymentAmount) || 0, sumAbonos);
+    const total = previous + amount;
+    existingAbonos.push({
+      paymentId: paymentId,
+      monto: amount,
+      fecha: String(approvedAt).slice(0, 10),
+      medio: 'Mercado Pago'
+    });
+    const complete = total >= price - 10000;
+    return Object.assign({}, current, {
+      paymentStatus: complete ? 'approved' : 'abono',
+      comprobantePago: paymentId,
+      paidAt: approvedAt,
+      paymentVerifiedAt: approvedAt,
+      paymentConfirmedAt: approvedAt,
+      paymentAmount: total,
+      abonoAcumulado: total,
+      abonos: existingAbonos,
+      esAbono: complete ? null : true,
+      saldoPendiente: complete ? null : Math.max(0, price - total),
+      plan: planKey
+    });
   });
   return true;
 }
@@ -103,7 +181,7 @@ function isValidSignature(req, secret) {
       else if (key === 'v1') v1 = value;
     });
     if (!ts || !v1) return false;
-    let dataId = req.query['data.id'] || req.query.id || (req.body && req.body.data && req.body.data.id) || '';
+    let dataId = getNotificationId(req);
     dataId = String(dataId);
     if (/[a-zA-Z]/.test(dataId)) dataId = dataId.toLowerCase();
     let manifest = 'id:' + dataId + ';';
@@ -135,7 +213,7 @@ module.exports = async (req, res) => {
 
     // For MP, the notification can be sent as query params or body depending on integration
     const topic = req.query.topic || req.body.type || req.query.type;
-    const id = req.query.id || req.body.id || req.body.data && req.body.data.id;
+    const id = getNotificationId(req);
 
     if (!id) {
       // Could be IPN with payment_id in body
@@ -160,8 +238,9 @@ module.exports = async (req, res) => {
     console.log('MP payment fetched:', {
       id: payment.id,
       status: payment.status,
-      payer: payment.payer,
-      metadata: metadata
+      hasPayerEmail: Boolean(payment.payer && payment.payer.email),
+      hasMetadataUid: Boolean(metadata.user_uid || metadata.userUid),
+      type: metadata.tipo || ''
     });
 
     if (payment.status === 'approved') {
@@ -173,6 +252,10 @@ module.exports = async (req, res) => {
 
       // ===== ECEP: acceso automático a un dossier de estudio =====
       if (metadata.ecep_dossier || metadata.tipo === 'ecep') {
+        if (!isExpectedMoney(payment, 10000)) {
+          console.error('ECEP payment amount or currency mismatch', { paymentId: payment.id });
+          return res.status(200).send('ecep_invalid_amount');
+        }
         let ecepUid = metadata.ecep_uid || metadata.user_uid || '';
         let ecepDossier = metadata.ecep_dossier || '';
         if ((!ecepUid || !ecepDossier) && payment.external_reference) {
@@ -213,19 +296,99 @@ module.exports = async (req, res) => {
         '';
 
       let payerUid = metadata.user_uid || metadata.userUid || getUidFromExternalReference(payment.external_reference) || '';
-      const payerPlan = metadata.plan || 'completo';
+      let payerPlan = PLAN_PRICES[metadata.plan] ? metadata.plan : '';
+      let currentPortfolio = {};
 
+      if (payerUid) {
+        const userSnap = await db.ref('users/' + payerUid).once('value');
+        if (!userSnap.exists()) payerUid = '';
+      }
       if (!payerUid && payerEmail) {
         payerUid = await findUidByEmail(db, payerEmail);
       }
+      if (!isCourseRegistration && payerUid) {
+        currentPortfolio = (await db.ref('portafolios/' + payerUid).once('value')).val() || {};
+        if (!payerPlan && PLAN_PRICES[currentPortfolio.plan]) payerPlan = currentPortfolio.plan;
+      }
+      if (!payerPlan) payerPlan = 'completo';
+      const portfolioClassification = isCourseRegistration ? null : classifyPortfolioPayment(payment, metadata, payerPlan);
 
-      if (!payerEmail && !payerUid) {
-        console.error('No payer identity found in payment');
-        return res.status(200).send('no_identity');
+      if (isCourseRegistration && !isExpectedMoney(payment, 30000)) {
+        console.error('Course payment amount or currency mismatch', { paymentId: payment.id });
+        return res.status(200).send('course_invalid_amount');
+      }
+
+      if (!isCourseRegistration && !payerUid) {
+        console.error('Portfolio payment has no matching uid', { paymentId: payment.id, hasEmail: Boolean(payerEmail) });
+        await db.ref('unmatched_payments/' + String(payment.id)).set({
+          paymentId: String(payment.id),
+          email: payerEmail || '',
+          externalReference: payment.external_reference || '',
+          status: 'approved_unmatched',
+          amount: payment.transaction_amount,
+          currency: payment.currency_id || '',
+          plan: payerPlan,
+          detectedAt: paymentApprovedAt,
+          reason: 'uid_not_found'
+        });
+        return res.status(200).send('unmatched_identity');
+      }
+
+      if (portfolioClassification && !portfolioClassification.valid) {
+        console.error('Portfolio payment amount or currency mismatch', {
+          paymentId: payment.id,
+          reason: portfolioClassification.reason,
+          amount: payment.transaction_amount,
+          currency: payment.currency_id,
+          plan: payerPlan
+        });
+        await db.ref('unmatched_payments/' + String(payment.id)).set({
+          paymentId: String(payment.id),
+          uid: payerUid,
+          email: payerEmail || '',
+          externalReference: payment.external_reference || '',
+          status: 'approved_invalid_amount',
+          amount: payment.transaction_amount,
+          currency: payment.currency_id || '',
+          plan: payerPlan,
+          detectedAt: paymentApprovedAt,
+          reason: portfolioClassification.reason
+        });
+        return res.status(200).send('invalid_portfolio_payment');
+      }
+      if (portfolioClassification && portfolioClassification.type === 'saldo') {
+        const amount = Number(payment.transaction_amount) || 0;
+        if (!matchesPendingBalance(currentPortfolio, payment)) {
+          await db.ref('unmatched_payments/' + String(payment.id)).set({
+            paymentId: String(payment.id),
+            uid: payerUid,
+            status: 'approved_invalid_balance',
+            amount: amount,
+            currency: payment.currency_id || '',
+            plan: payerPlan,
+            detectedAt: paymentApprovedAt,
+            reason: 'saldo_mismatch'
+          });
+          return res.status(200).send('invalid_portfolio_balance');
+        }
       }
 
       // Store payment verification
       const paymentsRef = db.ref('verified_payments/' + String(payment.id));
+      const existingPayment = (await paymentsRef.once('value')).val();
+      if (!isCourseRegistration && existingPayment && existingPayment.uid && existingPayment.uid !== payerUid) {
+        await db.ref('unmatched_payments/' + String(payment.id)).set({
+          paymentId: String(payment.id),
+          uid: payerUid,
+          status: 'approved_identity_conflict',
+          amount: payment.transaction_amount,
+          currency: payment.currency_id || '',
+          plan: payerPlan,
+          detectedAt: paymentApprovedAt,
+          reason: 'payment_already_claimed'
+        });
+        return res.status(200).send('payment_identity_conflict');
+      }
       await paymentsRef.set({
         paymentId: String(payment.id),
         email: payerEmail,
@@ -241,7 +404,8 @@ module.exports = async (req, res) => {
         amount: payment.transaction_amount,
         currency: payment.currency_id,
         verifiedAt: paymentApprovedAt,
-        plan: payerPlan
+        plan: payerPlan,
+        paymentType: portfolioClassification ? portfolioClassification.type : 'curso'
       });
 
       if (isCourseRegistration) {
@@ -261,11 +425,14 @@ module.exports = async (req, res) => {
 
       // Update user's portfolio payment status if uid available
       if (!isCourseRegistration && payerUid) {
-        if (metadata.tipo === 'abono') {
-          await markPortfolioAbono(db, payerUid, payment, payerPlan, paymentApprovedAt);
-        } else {
-          await markPortfolioPaymentApproved(db, payerUid, payment, payerPlan, paymentApprovedAt);
-        }
+        await applyPortfolioPayment(
+          db,
+          payerUid,
+          payment,
+          portfolioClassification.plan,
+          portfolioClassification.type,
+          paymentApprovedAt
+        );
       }
 
       console.log('Payment verified and stored:', {
@@ -285,4 +452,12 @@ module.exports = async (req, res) => {
     console.error('webhook error', err);
     return res.status(500).send('error');
   }
+};
+
+module.exports._test = {
+  getNotificationId,
+  classifyPortfolioPayment,
+  getUidFromExternalReference,
+  isExpectedMoney,
+  matchesPendingBalance
 };

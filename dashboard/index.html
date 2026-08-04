@@ -334,7 +334,7 @@
                         Guardar y Continuar →
                     </button>
                     <button type="button" id="btn-cancelar-pre-datos" class="hidden w-full py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all mt-2">
-                        Volver a la pantalla de Pago (Sin guardar)
+                        Volver y conservar el borrador
                     </button>
                     <p id="pre-datos-autosave" class="text-center text-xs text-gray-400 mt-2 hidden"></p>
                 </form>
@@ -822,7 +822,7 @@
                     <p class="text-sm" style="color:#e0e7ff">Abona ahora tu primera cuota; el profesor Francisco registra el abono y emite tu recibo, quedando 1 cuota de 2 pendiente.</p>
                 </div>
             </div>
-            <a id="select-abono-link" href="https://mpago.la/2ujXDMz" target="_blank" rel="noopener" class="flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-gray-100 transition-colors whitespace-nowrap w-full sm:w-auto">
+            <a id="select-abono-link" href="#" class="flex-shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-primary-700 font-bold rounded-xl hover:bg-gray-100 transition-colors whitespace-nowrap w-full sm:w-auto">
                 Abonar $100.000
             </a>
         </div>
@@ -1020,6 +1020,15 @@
                         </select>
                     </div>
                 </div>
+                <div>
+                    <label for="dp-genero-colegio" class="block text-sm font-medium text-gray-700 mb-1">Género del Establecimiento</label>
+                    <select id="dp-genero-colegio" required class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white">
+                        <option value="">Selecciona género</option>
+                        <option value="Mixto">Colegio Mixto</option>
+                        <option value="Hombres">Solo de Hombres</option>
+                        <option value="Mujeres">Solo de Mujeres</option>
+                    </select>
+                </div>
                 <!-- Comuna / Región -->
                 <div class="grid sm:grid-cols-2 gap-5">
                     <div>
@@ -1184,7 +1193,7 @@
                     Guardar Datos y Continuar
                 </button>
                 <button type="button" id="btn-cancelar-datos" class="hidden w-full py-3 px-4 bg-gray-200 text-gray-700 font-semibold rounded-xl hover:bg-gray-300 transition-all mt-2">
-                    Volver al Dashboard (Sin guardar)
+                    Volver y conservar el borrador
                 </button>
             </form>
         </div>
@@ -1206,7 +1215,7 @@
                 </div>
             </div>
             <div class="flex-shrink-0 flex flex-col gap-2 w-full sm:w-auto">
-                <a id="saldo-pay-mp" href="https://mpago.la/2ujXDMz" target="_blank" rel="noopener" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-orange-700 font-bold rounded-xl hover:bg-gray-100 transition-colors whitespace-nowrap">Pagar 2ª cuota con MercadoPago</a>
+                <a id="saldo-pay-mp" href="#" class="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-orange-700 font-bold rounded-xl hover:bg-gray-100 transition-colors whitespace-nowrap">Pagar 2ª cuota con MercadoPago</a>
                 <button type="button" onclick="document.getElementById('saldo-transfer-box').classList.toggle('hidden')" class="inline-flex items-center justify-center gap-2 px-6 py-2 bg-white/15 border border-white/40 text-white text-sm font-semibold rounded-xl hover:bg-white/25 transition-colors whitespace-nowrap">🏦 o pagar por transferencia</button>
             </div>
         </div>
@@ -1379,6 +1388,10 @@
     var userData = null;
     var portData = null;
     var _suppressRender = false;
+    // Firebase emits a local "value" event before the server confirms a write.
+    // Critical saves keep navigation frozen until the server acknowledges them.
+    var _criticalSaveInFlight = false;
+    var _criticalSaveFailed = false;
     var _paymentVerificationStarted = false;
     // Intención de pago de ESTA sesión: solo entonces se muestra la pantalla de pago
     // a un pre-inscrito. En una carga normal cae siempre en su panel de pre-inscripción.
@@ -1390,6 +1403,75 @@
         firebase.initializeApp(FIREBASE_CONFIG);
         var auth = firebase.auth();
         var db = firebase.database();
+
+        function beginCriticalSave() {
+            _criticalSaveInFlight = true;
+            _criticalSaveFailed = false;
+            _suppressRender = true;
+        }
+
+        function endCriticalSave(ok) {
+            _criticalSaveInFlight = false;
+            _criticalSaveFailed = !ok;
+            _suppressRender = false;
+        }
+
+        function verifyCompletedSave(path, expectedCompletedAt) {
+            return db.ref(path).once('value').then(function(snap) {
+                var saved = snap.val();
+                if (!saved || !saved.completadoEn || saved.completadoEn !== expectedCompletedAt) {
+                    throw new Error('No se pudo confirmar que la ficha quedara guardada.');
+                }
+                return saved;
+            });
+        }
+
+        function confirmedSaveError(err) {
+            console.error('Guardado no confirmado:', err);
+            return 'No pudimos confirmar el guardado. Tus datos siguen en pantalla. Revisa tu conexión y presiona Guardar nuevamente.';
+        }
+
+        function withSaveTimeout(promise, timeoutMs) {
+            return new Promise(function(resolve, reject) {
+                var settled = false;
+                var timer = setTimeout(function() {
+                    if (settled) return;
+                    settled = true;
+                    reject(new Error('Tiempo de espera agotado al guardar.'));
+                }, timeoutMs || 20000);
+                Promise.resolve(promise).then(function(value) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    resolve(value);
+                }, function(error) {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timer);
+                    reject(error);
+                });
+            });
+        }
+
+        function waitForAutosave(promise) {
+            return withSaveTimeout(Promise.resolve(promise), 4000).catch(function() {});
+        }
+
+        function setFormControlsSaving(containerId, saving) {
+            var container = document.getElementById(containerId);
+            if (!container) return;
+            Array.prototype.forEach.call(container.querySelectorAll('input, select, textarea, button'), function(el) {
+                if (saving) {
+                    if (!el.hasAttribute('data-save-was-disabled')) {
+                        el.setAttribute('data-save-was-disabled', el.disabled ? '1' : '0');
+                    }
+                    el.disabled = true;
+                } else if (el.hasAttribute('data-save-was-disabled')) {
+                    el.disabled = el.getAttribute('data-save-was-disabled') === '1';
+                    el.removeAttribute('data-save-was-disabled');
+                }
+            });
+        }
 
         var planNames = {
             completo: 'Portafolio Completo',
@@ -1567,7 +1649,7 @@
                     var _dp = (portData && portData.datosPortafolio) || {};
                     _adjuntosM3 = Array.isArray(_dp.adjuntosM3) ? _dp.adjuntosM3 : [];
                     renderAdjuntosM3();
-                    if (_suppressRender) return; // Don't re-render during auto-save
+                    if (_suppressRender || _criticalSaveInFlight || _datosAutosaveInFlight || _modulosAutosaveInFlight || _paidAutosaveInFlight) return; // Wait for server confirmation before navigating
                     
                     // Volver desde MercadoPago es una intención de pago explícita de esta sesión.
                     if (_paymentReturn === 'success') { _payIntent = true; }
@@ -1588,6 +1670,22 @@
             });
         });
 
+        function requestPaymentVerification(paymentId, uid, plan) {
+            if (!currentUser) return Promise.reject(new Error('Debes volver a iniciar sesión.'));
+            return currentUser.getIdToken().then(function(idToken) {
+                return fetch('/api/mercadopago/verify-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentId: paymentId,
+                        uid: uid,
+                        plan: plan,
+                        idToken: idToken
+                    })
+                });
+            }).then(function(r) { return r.json(); });
+        }
+
         function verifyPaymentIDOnlyOnce(paymentId, uid, plan) {
             if (_paymentVerificationStarted) return;
             _paymentVerificationStarted = true;
@@ -1599,16 +1697,7 @@
                 errorEl.classList.add('text-primary-600', 'font-medium');
             }
             
-            fetch('/api/mercadopago/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    paymentId: paymentId,
-                    uid: uid,
-                    plan: plan
-                })
-            })
-            .then(function(r) { return r.json(); })
+            requestPaymentVerification(paymentId, uid, plan)
             .then(function(data) {
                 if (data.verified) {
                     var cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
@@ -1729,6 +1818,7 @@
                     // Needs to fill datos first (may have draft data)
                     showPreSubStep('datos');
                     prefillPreDatos();
+                    restorePreDraftIfNewer();
                 }
                 return;
             }
@@ -1753,7 +1843,7 @@
                 return;
             }
             // State 3: Paid but no datosPortafolio
-            if (!portData.datosPortafolio) {
+            if (!portData.datosPortafolio || !portData.datosPortafolio.completadoEn) {
                 openUnifiedPortfolioEdit('initial');
                 return;
             }
@@ -1875,7 +1965,8 @@
                 'dp-intereses': d.intereses,
                 'dp-descripcion': d.descripcion,
                 'dp-lista-alumnos': d.listaAlumnos,
-                'dp-asignatura': d.asignatura
+                'dp-asignatura': d.asignatura,
+                'dp-genero-colegio': d.generoColegio
             };
             
             Object.keys(fields).forEach(function(id) {
@@ -2224,8 +2315,7 @@
 
         // Pre-fill module questionnaire if already saved (draft)
         function prefillPreModulos() {
-            if (!portData || !portData.cuestionarioModulos) return;
-            var c = portData.cuestionarioModulos;
+            var c = (portData && portData.cuestionarioModulos) || {};
             // M1
             if (c.modulo1) {
                 if (c.modulo1.oa) document.getElementById('m1-oa').value = c.modulo1.oa;
@@ -2288,6 +2378,7 @@
                 if (n.m3Coautores) document.getElementById('n26-m3-coautores').value = n.m3Coautores;
                 document.getElementById('n26-m2-practica').checked = !!n.m2PracticaOk;
             }
+            restorePreModulesDraftIfNewer();
         }
 
         // ===== HILO CONDUCTOR =====
@@ -2440,13 +2531,15 @@
                 if (isInitial) {
                     backBtn.classList.add('hidden');
                 } else {
-                    backBtn.textContent = origin === 'payment' ? 'Volver al Pago (Sin guardar)' : origin === 'resumen' ? 'Volver al Resumen (Sin guardar)' : 'Volver al Dashboard (Sin guardar)';
+                    backBtn.textContent = origin === 'payment' ? 'Volver al Pago y conservar borrador' : origin === 'resumen' ? 'Volver al Resumen y conservar borrador' : 'Volver al Dashboard y conservar borrador';
                     backBtn.classList.remove('hidden');
                 }
             }
         }
 
         function openUnifiedPortfolioEdit(origin) {
+            _suspendPaidAutosave = false;
+            _suspendModulesAutosave = false;
             hideAll();
             document.getElementById('step-datos').classList.remove('hidden');
             prefillDatos();
@@ -2543,28 +2636,45 @@
 
         // Crea una preferencia de pago ASOCIADA al usuario (su uid va en external_reference
         // y metadata), redirige a MercadoPago, y el webhook vincula/marca el pago solo.
-        // Si la API falla, usa el link estático como respaldo para no bloquear el pago.
+        // Si la API falla, muestra un error y permite reintentar. Un link estático
+        // no identifica al docente y puede dejar un pago aprobado sin ficha asociada.
         function iniciarPagoMP(tipo, btn, fallbackUrl) {
-            if (!currentUser) { if (fallbackUrl) window.location.href = fallbackUrl; return; }
+            var errorEl = document.getElementById('pay-error');
+            if (!currentUser) {
+                if (errorEl) {
+                    errorEl.textContent = 'Tu sesión no está lista. Vuelve a ingresar antes de pagar para asociar correctamente el pago.';
+                    errorEl.classList.remove('hidden');
+                }
+                return;
+            }
             var orig = btn.innerHTML;
             btn.style.pointerEvents = 'none';
             btn.innerHTML = '⏳ Generando pago seguro...';
             // En conexiones lentas (móvil) el fetch puede colgarse sin resolver ni fallar y el botón
             // quedaba pegado en "Generando…". Con timeout + AbortController, si no responde a tiempo
-            // se aborta y se cae al link de Mercado Pago estático para que SIEMPRE pueda pagar.
+            // se aborta con un aviso recuperable, sin enviarlo a un cobro no asociado.
             var done = false;
             var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
-            function recuperar() {
+            function recuperar(message) {
                 if (done) return; done = true;
                 if (ctrl) { try { ctrl.abort(); } catch (e) {} }
-                if (fallbackUrl) { window.location.href = fallbackUrl; }
-                else { btn.style.pointerEvents = ''; btn.innerHTML = orig; }
+                btn.style.pointerEvents = '';
+                btn.innerHTML = orig;
+                if (errorEl) {
+                    errorEl.textContent = message || 'No pudimos generar el pago asociado a tu ficha. Revisa tu conexión e inténtalo nuevamente.';
+                    errorEl.classList.remove('hidden');
+                }
             }
-            var to = setTimeout(recuperar, 15000);
-            fetch('/api/mercadopago/create_preference', {
+            if (errorEl) errorEl.classList.add('hidden');
+            var to = setTimeout(function() {
+                recuperar('La conexión demoró demasiado. No se realizó ningún cobro. Intenta nuevamente.');
+            }, 15000);
+            currentUser.getIdToken().then(function(idToken) {
+                return fetch('/api/mercadopago/create_preference', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    idToken: idToken,
                     uid: currentUser.uid,
                     email: currentUser.email,
                     name: (userData && userData.nombre) || '',
@@ -2572,8 +2682,14 @@
                     tipo: tipo || ''
                 }),
                 signal: ctrl ? ctrl.signal : undefined
+                });
             })
-            .then(function(r){ return r.json(); })
+            .then(function(r){
+                return r.json().catch(function(){ return {}; }).then(function(data) {
+                    if (!r.ok) throw new Error(data.error || 'No se pudo crear el pago.');
+                    return data;
+                });
+            })
             .then(function(data){
                 if (done) return;
                 var url = data && data.preference && (data.preference.init_point || data.preference.sandbox_init_point);
@@ -2581,10 +2697,10 @@
                 done = true; clearTimeout(to);
                 window.location.href = url;
             })
-            .catch(function(){
+            .catch(function(err){
                 if (done) return;
                 clearTimeout(to);
-                recuperar();
+                recuperar(err && err.message ? err.message : 'No pudimos generar el pago asociado a tu ficha. Intenta nuevamente.');
             });
         }
 
@@ -2593,7 +2709,7 @@
             var cuotasLink = 'https://mpago.la/2ujXDMz';
             var payLink = document.getElementById('pay-link');
             var payReopen = document.getElementById('pay-reopen');
-            payLink.href = link;
+            payLink.href = '#';
             document.getElementById('pay-before').classList.remove('hidden');
             document.getElementById('pay-after').classList.add('hidden');
             document.getElementById('pay-after-cuotas').classList.add('hidden');
@@ -2604,7 +2720,10 @@
                 e.preventDefault();
                 iniciarPagoMP('', payLink, link);
             };
-            payReopen.onclick = function() { window.open(link, '_blank'); };
+            payReopen.onclick = function(e) {
+                if (e) e.preventDefault();
+                iniciarPagoMP('', payReopen, link);
+            };
 
             var payLinkCuotas = document.getElementById('pay-link-cuotas');
             var payCuotasReopen = document.getElementById('pay-cuotas-reopen');
@@ -2612,7 +2731,10 @@
                 e.preventDefault();
                 iniciarPagoMP('abono', payLinkCuotas, cuotasLink);
             };
-            if (payCuotasReopen) payCuotasReopen.onclick = function() { window.open(cuotasLink, '_blank'); };
+            if (payCuotasReopen) payCuotasReopen.onclick = function(e) {
+                if (e) e.preventDefault();
+                iniciarPagoMP('abono', payCuotasReopen, cuotasLink);
+            };
 
             // ---- Transferencia bancaria ----
             var transferToggle = document.getElementById('pay-transfer-toggle');
@@ -2673,16 +2795,7 @@
             btn.disabled = true;
             btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg> Verificando con MercadoPago...';
 
-            fetch('/api/mercadopago/verify-payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    paymentId: comprobante,
-                    uid: currentUser.uid,
-                    plan: portData.plan
-                })
-            })
-            .then(function(r) { return r.json(); })
+            requestPaymentVerification(comprobante, currentUser.uid, portData.plan)
             .then(function(data) {
                 if (data.verified) {
                     // Auto-approved! Firebase listener will refresh the dashboard
@@ -2715,6 +2828,7 @@
             var defaultLabel = btn.getAttribute('data-default-label') || 'Guardar Datos y Continuar';
             var errEl = document.getElementById('datos-error');
             clearTimeout(_modulosTimer);
+            clearTimeout(_datosPaidTimer);
             btn.disabled = true;
             btn.textContent = 'Guardando...';
             errEl.classList.add('hidden');
@@ -2728,6 +2842,7 @@
                 nivel: nivelVal,
                 colegio: document.getElementById('dp-colegio').value.trim(),
                 tipoColegio: document.getElementById('dp-tipo-colegio').value,
+                generoColegio: document.getElementById('dp-genero-colegio').value,
                 comuna: document.getElementById('dp-comuna').value.trim(),
                 region: document.getElementById('dp-region').value,
                 curso: document.getElementById('dp-curso').value.trim(),
@@ -2774,15 +2889,33 @@
                 updates['portafolios/' + currentUser.uid + '/cuestionarioModulos'] = cuestionario;
             }
 
-            db.ref().update(updates)
+            beginCriticalSave();
+            setFormControlsSaving('datos-form', true);
+            Promise.all([
+                waitForAutosave(_paidAutosavePromise),
+                waitForAutosave(_modulosAutosavePromise)
+            ]).then(function() {
+                return withSaveTimeout(db.ref().update(updates), 20000);
+            }).then(function() {
+                var checks = [verifyCompletedSave('portafolios/' + currentUser.uid + '/datosPortafolio', now)];
+                if (cuestionario) {
+                    checks.push(verifyCompletedSave('portafolios/' + currentUser.uid + '/cuestionarioModulos', cuestionario.completadoEn));
+                }
+                return withSaveTimeout(Promise.all(checks), 10000);
+            })
                 .then(function() {
-                    _suppressRender = false;
+                    endCriticalSave(true);
+                    setFormControlsSaving('datos-form', false);
+                    _paidDirty = false;
+                    _modulosDirty = false;
                     portData = Object.assign({}, portData || {});
                     portData.datosPortafolio = datos;
                     if (cuestionario) portData.cuestionarioModulos = cuestionario;
                     userData = Object.assign({}, userData || {});
                     userData.asignatura = datos.asignatura;
                     userData.nivel = datos.nivel;
+                    try { localStorage.removeItem(_paidDraftKey()); } catch (e) {}
+                    try { localStorage.removeItem(_preModulesDraftKey()); } catch (e) {}
 
                     btn.disabled = false;
                     btn.textContent = 'Guardado ✓';
@@ -2793,10 +2926,15 @@
                     }, 300);
                 })
                 .catch(function(err) {
+                    endCriticalSave(false);
+                    setFormControlsSaving('datos-form', false);
+                    _paidDirty = true;
+                    if (shouldSaveModules) _modulosDirty = true;
                     btn.disabled = false;
                     btn.textContent = defaultLabel;
-                    errEl.textContent = err.message || 'Error al guardar.';
+                    errEl.textContent = confirmedSaveError(err);
                     errEl.classList.remove('hidden');
+                    errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 });
         });
 
@@ -2837,6 +2975,11 @@
                 var _stb = document.getElementById('saldo-transfer-box');
                 if (portData.paymentStatus === 'abono' && _saldo > 0) {
                     document.getElementById('saldo-monto').textContent = '$' + _saldo.toLocaleString('es-CL');
+                    var saldoPay = document.getElementById('saldo-pay-mp');
+                    if (saldoPay) saldoPay.onclick = function(e) {
+                        e.preventDefault();
+                        iniciarPagoMP('saldo', saldoPay, '');
+                    };
                     saldoBanner.classList.remove('hidden');
                     Array.prototype.forEach.call(document.querySelectorAll('#saldo-transfer-box .pay-copy'), function(b) {
                         b.onclick = function() {
@@ -3257,6 +3400,12 @@
         });
 
         // Cancel edit context data
+        document.getElementById('btn-cancelar-datos').addEventListener('pointerdown', function() {
+            _suspendPaidAutosave = true;
+            _suspendModulesAutosave = true;
+            clearTimeout(_datosPaidTimer);
+            clearTimeout(_modulosTimer);
+        });
         document.getElementById('btn-cancelar-datos').addEventListener('click', function() {
             restoreModuleQuestionnaireHome();
             hideAll();
@@ -3353,6 +3502,63 @@
             if (hasError) el.setAttribute('aria-invalid', 'true'); else el.removeAttribute('aria-invalid');
         }
 
+        function installVisibleFormValidation(formId, errorId) {
+            var form = document.getElementById(formId);
+            var errorEl = document.getElementById(errorId);
+            if (!form || !errorEl) return;
+            var scheduled = false;
+            form.addEventListener('invalid', function(event) {
+                event.preventDefault();
+                if (scheduled) return;
+                scheduled = true;
+                setTimeout(function() {
+                    scheduled = false;
+                    var invalid = Array.prototype.slice.call(form.querySelectorAll(':invalid'));
+                    if (!invalid.length) return;
+                    var names = invalid.slice(0, 5).map(function(el) {
+                        var label = el.getAttribute('data-label') || '';
+                        if (!label && el.id) {
+                            var labelEl = form.querySelector('label[for="' + el.id + '"]');
+                            label = labelEl ? labelEl.textContent : '';
+                        }
+                        return String(label || 'un campo obligatorio').replace(/\s+/g, ' ').trim();
+                    });
+                    errorEl.textContent = 'Antes de guardar, completa: ' + names.join(', ') + '.';
+                    errorEl.classList.remove('hidden');
+                    invalid[0].focus();
+                    invalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 0);
+            }, true);
+        }
+
+        function validateManualRequired(errorEl) {
+            var box = document.getElementById('manual-adaptive');
+            if (!box || box.classList.contains('hidden')) return true;
+            var missing = [];
+            Array.prototype.forEach.call(box.querySelectorAll('[data-req="1"]'), function(el) {
+                var empty = !String(el.value || '').trim();
+                el.classList.toggle('border-red-400', empty);
+                if (empty) {
+                    el.setAttribute('aria-invalid', 'true');
+                    missing.push(el);
+                } else {
+                    el.removeAttribute('aria-invalid');
+                }
+            });
+            if (!missing.length) return true;
+            var names = missing.slice(0, 5).map(function(el) {
+                return el.getAttribute('data-label') || 'dato obligatorio del manual';
+            });
+            errorEl.textContent = 'Antes de guardar, completa: ' + names.join(', ') + '.';
+            errorEl.classList.remove('hidden');
+            missing[0].focus();
+            missing[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            return false;
+        }
+
+        installVisibleFormValidation('pre-datos-form', 'pre-datos-error');
+        installVisibleFormValidation('datos-form', 'datos-error');
+
         function clearModuloValidation() {
             ['m2-duracion', 'm2-restricciones', 'm2-tipo-otro', 'm3-descripcion', 'm3-colaborador'].forEach(function(id) {
                 setModuloFieldError(id, false);
@@ -3408,15 +3614,139 @@
         var _modulosTimer = null;
         var _datosDirty = false;
         var _modulosDirty = false;
+        var _paidDirty = false;
+        var _datosChangeVersion = 0;
+        var _modulosChangeVersion = 0;
+        var _paidChangeVersion = 0;
+        var _datosAutosaveInFlight = 0;
+        var _modulosAutosaveInFlight = 0;
+        var _paidAutosaveInFlight = 0;
+        var _suspendPreAutosave = false;
+        var _suspendPaidAutosave = false;
+        var _suspendModulesAutosave = false;
+        var _datosAutosavePromise = Promise.resolve();
+        var _modulosAutosavePromise = Promise.resolve();
+
+        function _preDraftKey() { return 'pf_draft_pre_datos_' + ((currentUser && currentUser.uid) || 'anon'); }
+        function snapshotFormFields(formId) {
+            var form = document.getElementById(formId); var snap = {};
+            if (!form) return snap;
+            Array.prototype.forEach.call(form.querySelectorAll('input, select, textarea'), function(el) {
+                if (el.type === 'password' || el.type === 'file') return;
+                var key = el.id ? 'id:' + el.id : (el.name ? 'choice:' + el.name + ':' + el.value : '');
+                if (!key) return;
+                if (el.type === 'checkbox' || el.type === 'radio') snap[key] = { c: el.checked };
+                else snap[key] = { v: el.value };
+            });
+            return snap;
+        }
+        function snapshotElement(containerId, key) {
+            if (key.indexOf('id:') === 0) return document.getElementById(key.slice(3));
+            if (key.indexOf('choice:') === 0) {
+                var container = document.getElementById(containerId);
+                var parts = key.slice(7).split(':');
+                var name = parts.shift();
+                var value = parts.join(':');
+                var found = null;
+                if (container) Array.prototype.some.call(container.querySelectorAll('input[name]'), function(el) {
+                    if (el.name === name && String(el.value) === value) { found = el; return true; }
+                    return false;
+                });
+                return found;
+            }
+            return document.getElementById(key); // compatibility with drafts saved before this fix
+        }
+        function restoreSnapshotFields(containerId, fields) {
+            var changed = false;
+            Object.keys(fields || {}).forEach(function(key) {
+                var el = snapshotElement(containerId, key); if (!el) return;
+                var field = fields[key];
+                if (field.c !== undefined) { if (el.checked !== field.c) { el.checked = field.c; changed = true; } }
+                else if (field.v !== undefined && el.value !== field.v) { el.value = field.v; changed = true; }
+            });
+            return changed;
+        }
+        function syncRestoredConditionalUI(containerId) {
+            var ids = containerId === 'pre-datos-form'
+                ? ['pdp-nivel', 'pdp-tipo-colegio', 'pdp-tiene-codocente']
+                : (containerId === 'datos-form'
+                    ? ['dp-nivel', 'dp-tipo-colegio', 'dp-tiene-codocente']
+                    : []);
+            ids.forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.dispatchEvent(new Event('change'));
+            });
+            if (containerId === 'pre-step-modulos') {
+                ['m2-tipo', 'm3-tiene-experiencia'].forEach(function(name) {
+                    var selected = document.querySelector('input[name="' + name + '"]:checked');
+                    if (selected) selected.dispatchEvent(new Event('change'));
+                });
+            }
+        }
+        function persistPreDraftLocal() {
+            try { localStorage.setItem(_preDraftKey(), JSON.stringify({ fields: snapshotFormFields('pre-datos-form'), ts: Date.now() })); } catch (e) {}
+        }
+        function restorePreDraftIfNewer() {
+            try {
+                var raw = localStorage.getItem(_preDraftKey());
+                if (!raw) return;
+                var draft = JSON.parse(raw);
+                if (!draft || !draft.fields) return;
+                var saved = (portData && portData.datosPortafolio) || {};
+                var savedTs = Date.parse(saved.actualizadoEn || saved.completadoEn || 0) || 0;
+                if (!(draft.ts > savedTs)) return;
+                var changed = restoreSnapshotFields('pre-datos-form', draft.fields);
+                syncRestoredConditionalUI('pre-datos-form');
+                changed = restoreSnapshotFields('pre-datos-form', draft.fields) || changed;
+                if (changed) {
+                    _datosDirty = true;
+                    var indicator = document.getElementById('pre-datos-autosave');
+                    if (indicator) {
+                        indicator.textContent = 'Recuperamos los datos que no alcanzaron a guardarse. Revisa y vuelve a guardar.';
+                        indicator.classList.remove('hidden');
+                    }
+                    updateCompletitud();
+                }
+            } catch (e) {}
+        }
+        function _preModulesDraftKey() { return 'pf_draft_pre_modulos_' + ((currentUser && currentUser.uid) || 'anon'); }
+        function persistPreModulesDraftLocal() {
+            try { localStorage.setItem(_preModulesDraftKey(), JSON.stringify({ fields: snapshotFormFields('pre-step-modulos'), ts: Date.now() })); } catch (e) {}
+        }
+        function restorePreModulesDraftIfNewer() {
+            try {
+                var raw = localStorage.getItem(_preModulesDraftKey());
+                if (!raw) return;
+                var draft = JSON.parse(raw);
+                if (!draft || !draft.fields) return;
+                var saved = (portData && portData.cuestionarioModulos) || {};
+                var savedTs = Date.parse(saved.actualizadoEn || saved.completadoEn || 0) || 0;
+                if (!(draft.ts > savedTs)) return;
+                var changed = restoreSnapshotFields('pre-step-modulos', draft.fields);
+                syncRestoredConditionalUI('pre-step-modulos');
+                changed = restoreSnapshotFields('pre-step-modulos', draft.fields) || changed;
+                if (changed) {
+                    _modulosDirty = true;
+                    var indicator = document.getElementById('pre-modulos-autosave');
+                    if (indicator) {
+                        indicator.textContent = 'Recuperamos tus preferencias pendientes. Revisa y vuelve a guardar.';
+                        indicator.classList.remove('hidden');
+                    }
+                }
+            } catch (e) {}
+        }
 
         function autoSaveDatos() {
-            _datosDirty = false;
+            if (_suspendPreAutosave) return;
+            var saveVersion = _datosChangeVersion;
+            _datosAutosaveInFlight++;
             var indicator = document.getElementById('pre-datos-autosave');
             indicator.textContent = '💾 Guardando borrador...';
             indicator.classList.remove('hidden');
             _suppressRender = true;
             var datos = collectDatosFields();
-            db.ref('portafolios/' + currentUser.uid + '/datosPortafolio').set(datos).then(function() {
+            datos.actualizadoEn = new Date().toISOString();
+            var savePromise = db.ref('portafolios/' + currentUser.uid + '/datosPortafolio').set(datos).then(function() {
                 // Also ensure plan structure exists for drafts
                 return db.ref('portafolios/' + currentUser.uid + '/plan').once('value').then(function(snap) {
                     if (!snap.val()) {
@@ -3428,32 +3758,50 @@
                     }
                 });
             }).then(function() {
+                if (_datosChangeVersion === saveVersion) _datosDirty = false;
                 indicator.textContent = '✅ Borrador guardado';
                 setTimeout(function() { _suppressRender = false; }, 500);
                 setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
             }).catch(function() {
                 indicator.textContent = '⚠️ Error al guardar borrador';
+                _datosDirty = true;
                 _suppressRender = false;
                 setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            }).then(function() {
+                _datosAutosaveInFlight = Math.max(0, _datosAutosaveInFlight - 1);
             });
+            _datosAutosavePromise = savePromise;
+            return savePromise;
         }
 
         function autoSaveModulos() {
-            _modulosDirty = false;
+            if (_suspendModulesAutosave) return;
+            var saveVersion = _modulosChangeVersion;
+            _modulosAutosaveInFlight++;
             var indicator = document.getElementById('pre-modulos-autosave');
             indicator.textContent = '💾 Guardando borrador...';
             indicator.classList.remove('hidden');
             _suppressRender = true;
             var cuestionario = collectModulosFields();
-            db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {
+            cuestionario.actualizadoEn = new Date().toISOString();
+            if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) {
+                cuestionario.completadoEn = portData.cuestionarioModulos.completadoEn;
+            }
+            var savePromise = db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {
+                if (_modulosChangeVersion === saveVersion) _modulosDirty = false;
                 indicator.textContent = '✅ Borrador guardado';
                 setTimeout(function() { _suppressRender = false; }, 500);
                 setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
             }).catch(function() {
                 indicator.textContent = '⚠️ Error al guardar borrador';
+                _modulosDirty = true;
                 _suppressRender = false;
                 setTimeout(function() { indicator.classList.add('hidden'); }, 3000);
+            }).then(function() {
+                _modulosAutosaveInFlight = Math.max(0, _modulosAutosaveInFlight - 1);
             });
+            _modulosAutosavePromise = savePromise;
+            return savePromise;
         }
 
         // ── Indicador de completitud en vivo ("te falta esto") — solo lee campos, no toca el guardado ──
@@ -3461,6 +3809,7 @@
             var panel = document.getElementById('pre-datos-completitud');
             if (!panel) return;
             var hard = [['pdp-colegio','el colegio'],['pdp-comuna','la comuna'],['pdp-region','la región'],['pdp-nivel','tu Manual'],['pdp-asignatura','la asignatura'],['pdp-curso','el curso'],['pdp-num-alumnos','el N° de alumnos']];
+            hard.splice(1, 0, ['pdp-tipo-colegio','el tipo de establecimiento'], ['pdp-genero-colegio','el género del establecimiento']);
             var clave = [['pdp-conocimientos','conocimientos previos'],['pdp-fortalezas','fortalezas del curso'],['pdp-dificultades','dificultades del curso']];
             function val(id){ var el=document.getElementById(id); return el ? String(el.value||'').trim() : ''; }
             var faltanHard = hard.filter(function(f){ return !val(f[0]); });
@@ -3490,12 +3839,18 @@
 
         // Attach auto-save listeners to datos form
         document.getElementById('pre-datos-form').addEventListener('input', function() {
+            _suspendPreAutosave = false;
             _datosDirty = true;
+            _datosChangeVersion++;
+            persistPreDraftLocal();
             clearTimeout(_datosTimer);
             _datosTimer = setTimeout(autoSaveDatos, 1200); updateCompletitud();
         });
         document.getElementById('pre-datos-form').addEventListener('change', function() {
+            _suspendPreAutosave = false;
             _datosDirty = true;
+            _datosChangeVersion++;
+            persistPreDraftLocal();
             clearTimeout(_datosTimer);
             _datosTimer = setTimeout(autoSaveDatos, 800); updateCompletitud();
         });
@@ -3505,12 +3860,18 @@
         });
         // Attach auto-save listeners to modulos section
         document.getElementById('pre-step-modulos').addEventListener('input', function() {
+            _suspendModulesAutosave = false;
             _modulosDirty = true;
+            _modulosChangeVersion++;
+            persistPreModulesDraftLocal();
             clearTimeout(_modulosTimer);
             _modulosTimer = setTimeout(autoSaveModulos, 1200);
         });
         document.getElementById('pre-step-modulos').addEventListener('change', function() {
+            _suspendModulesAutosave = false;
             _modulosDirty = true;
+            _modulosChangeVersion++;
+            persistPreModulesDraftLocal();
             clearTimeout(_modulosTimer);
             _modulosTimer = setTimeout(autoSaveModulos, 800);
         });
@@ -3519,7 +3880,7 @@
         });
         // Aviso antes de salir si quedan cambios sin guardar
         window.addEventListener('beforeunload', function(e) {
-            if (_datosDirty || _modulosDirty) {
+            if (_datosDirty || _modulosDirty || _paidDirty || _datosAutosaveInFlight || _modulosAutosaveInFlight || _paidAutosaveInFlight || _criticalSaveInFlight || _criticalSaveFailed) {
                 e.preventDefault();
                 e.returnValue = 'Tienes cambios sin guardar en tu portafolio. ¿Seguro que quieres salir?';
                 return e.returnValue;
@@ -3530,6 +3891,7 @@
         // Antes el form de pagados solo guardaba con el boton. Esto guarda solo mientras escriben
         // (Firebase) y ademas deja un respaldo en localStorage que se restaura si algo no alcanzo a subir.
         var _datosPaidTimer = null;
+        var _paidAutosavePromise = Promise.resolve();
         function _paidDraftKey() { return 'pf_draft_datos_' + ((currentUser && currentUser.uid) || 'anon'); }
         function _paidIndicator() {
             var ind = document.getElementById('datos-autosave');
@@ -3552,6 +3914,7 @@
             return Object.assign({}, existing, {
                 asignatura: v('dp-asignatura'), nivel: nivelVal, colegio: v('dp-colegio'),
                 tipoColegio: (document.getElementById('dp-tipo-colegio') || {}).value || '',
+                generoColegio: (document.getElementById('dp-genero-colegio') || {}).value || '',
                 comuna: v('dp-comuna'), region: (document.getElementById('dp-region') || {}).value || '',
                 curso: v('dp-curso'), numAlumnos: num('dp-num-alumnos'), numPIE: num('dp-num-pie'),
                 tipoNEE: v('dp-tipo-nee'),
@@ -3567,22 +3930,20 @@
             });
         }
         function _snapshotPaidFields() {
-            var form = document.getElementById('datos-form'); var snap = {};
-            if (!form) return snap;
-            Array.prototype.forEach.call(form.querySelectorAll('input, select, textarea'), function(el) {
-                if (!el.id || el.type === 'password' || el.type === 'file') return;
-                if (el.type === 'checkbox' || el.type === 'radio') snap[el.id] = { c: el.checked };
-                else snap[el.id] = { v: el.value };
-            });
-            return snap;
+            return snapshotFormFields('datos-form');
+        }
+        function persistPaidDraftLocal() {
+            try { localStorage.setItem(_paidDraftKey(), JSON.stringify({ fields: _snapshotPaidFields(), ts: Date.now() })); } catch (e) {}
         }
         function autoSaveDatosPaid() {
-            if (!currentUser) return;
+            if (!currentUser || _criticalSaveInFlight || _suspendPaidAutosave) return;
+            var saveVersion = _paidChangeVersion;
+            _paidAutosaveInFlight++;
             var ind = _paidIndicator();
             var now = new Date().toISOString();
             var datos = collectDatosFieldsPaid();
             datos.actualizadoEn = now;
-            try { localStorage.setItem(_paidDraftKey(), JSON.stringify({ fields: _snapshotPaidFields(), ts: Date.now() })); } catch (e) {}
+            persistPaidDraftLocal();
             ind.textContent = '💾 Guardando...'; ind.classList.remove('hidden');
             _suppressRender = true;
             var updates = {};
@@ -3594,16 +3955,23 @@
                 if (portData && portData.cuestionarioModulos && portData.cuestionarioModulos.completadoEn) cuest.completadoEn = portData.cuestionarioModulos.completadoEn;
                 updates['portafolios/' + currentUser.uid + '/cuestionarioModulos'] = cuest;
             }
-            db.ref().update(updates).then(function() {
+            var savePromise = db.ref().update(updates).then(function() {
                 if (portData) portData.datosPortafolio = datos;
+                _criticalSaveFailed = false;
+                if (_paidChangeVersion === saveVersion) _paidDirty = false;
                 ind.textContent = '✅ Guardado automatico';
                 setTimeout(function() { _suppressRender = false; }, 500);
                 setTimeout(function() { ind.classList.add('hidden'); }, 2500);
             }).catch(function() {
                 ind.textContent = '⚠️ Sin conexion — tus cambios quedaron guardados en este equipo';
+                _paidDirty = true;
                 _suppressRender = false;
                 setTimeout(function() { ind.classList.add('hidden'); }, 5000);
+            }).then(function() {
+                _paidAutosaveInFlight = Math.max(0, _paidAutosaveInFlight - 1);
             });
+            _paidAutosavePromise = savePromise;
+            return savePromise;
         }
         function restorePaidDraftIfNewer() {
             try {
@@ -3613,15 +3981,12 @@
                 if (!draft || !draft.fields) return;
                 var d = (portData && portData.datosPortafolio) || {};
                 var savedTs = Date.parse(d.actualizadoEn || d.completadoEn || 0) || 0;
-                if (!(draft.ts > savedTs + 1500)) return;
-                var changed = false;
-                Object.keys(draft.fields).forEach(function(id) {
-                    var el = document.getElementById(id); if (!el) return;
-                    var f = draft.fields[id];
-                    if (f.c !== undefined) { if (el.checked !== f.c) { el.checked = f.c; changed = true; } }
-                    else if (f.v !== undefined && f.v !== '' && el.value !== f.v) { el.value = f.v; changed = true; }
-                });
+                if (!(draft.ts > savedTs)) return;
+                var changed = restoreSnapshotFields('datos-form', draft.fields);
+                syncRestoredConditionalUI('datos-form');
+                changed = restoreSnapshotFields('datos-form', draft.fields) || changed;
                 if (changed) {
+                    _paidDirty = true;
                     var banner = document.getElementById('datos-draft-banner');
                     if (!banner) {
                         banner = document.createElement('div');
@@ -3636,8 +4001,8 @@
         }
         var _datosFormEl = document.getElementById('datos-form');
         if (_datosFormEl) {
-            _datosFormEl.addEventListener('input', function() { clearTimeout(_datosPaidTimer); _datosPaidTimer = setTimeout(autoSaveDatosPaid, 2500); });
-            _datosFormEl.addEventListener('change', function() { clearTimeout(_datosPaidTimer); _datosPaidTimer = setTimeout(autoSaveDatosPaid, 1200); });
+            _datosFormEl.addEventListener('input', function() { _suspendPaidAutosave = false; _paidDirty = true; _paidChangeVersion++; persistPaidDraftLocal(); clearTimeout(_datosPaidTimer); _datosPaidTimer = setTimeout(autoSaveDatosPaid, 2500); });
+            _datosFormEl.addEventListener('change', function() { _suspendPaidAutosave = false; _paidDirty = true; _paidChangeVersion++; persistPaidDraftLocal(); clearTimeout(_datosPaidTimer); _datosPaidTimer = setTimeout(autoSaveDatosPaid, 1200); });
         }
 
         // ---- PRE-INSCRIPTION: Datos form submit ----
@@ -3645,11 +4010,15 @@
             e.preventDefault();
             clearTimeout(_datosTimer); // Cancel any pending auto-save
             var btn = document.getElementById('pre-datos-submit');
+            var errEl = document.getElementById('pre-datos-error');
+            errEl.classList.add('hidden');
+            if (!validateManualRequired(errEl)) return;
             btn.disabled = true;
             btn.textContent = 'Guardando...';
 
             var datos = collectDatosFields();
             datos.completadoEn = new Date().toISOString();
+            datos.actualizadoEn = datos.completadoEn;
 
             // Save datos + create basic portfolio structure
             var updates = {};
@@ -3669,7 +4038,19 @@
             updates['users/' + currentUser.uid + '/asignatura'] = datos.asignatura;
             updates['users/' + currentUser.uid + '/nivel'] = datos.nivel;
 
-            db.ref().update(updates).then(function() {
+            beginCriticalSave();
+            setFormControlsSaving('pre-datos-form', true);
+            waitForAutosave(_datosAutosavePromise).then(function() {
+                return withSaveTimeout(db.ref().update(updates), 20000);
+            }).then(function() {
+                return withSaveTimeout(verifyCompletedSave('portafolios/' + currentUser.uid + '/datosPortafolio', datos.completadoEn), 10000);
+            }).then(function() {
+                endCriticalSave(true);
+                setFormControlsSaving('pre-datos-form', false);
+                _datosDirty = false;
+                try { localStorage.removeItem(_preDraftKey()); } catch (e) {}
+                portData = Object.assign({}, portData || {});
+                portData.datosPortafolio = datos;
                 btn.disabled = false;
                 btn.textContent = 'Guardar y Continuar →';
                 
@@ -3687,11 +4068,14 @@
                     showPreSubStep('modulos');
                 }
             }).catch(function(err) {
+                endCriticalSave(false);
+                setFormControlsSaving('pre-datos-form', false);
+                _datosDirty = true;
                 btn.disabled = false;
                 btn.textContent = 'Guardar y Continuar →';
-                var errEl = document.getElementById('pre-datos-error');
-                errEl.textContent = err.message || 'Error al guardar.';
+                errEl.textContent = confirmedSaveError(err);
                 errEl.classList.remove('hidden');
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         });
 
@@ -3716,6 +4100,10 @@
         // Cancel pre-datos and return to payment or summary
         var preCancelBtn = document.getElementById('btn-cancelar-pre-datos');
         if (preCancelBtn) {
+            preCancelBtn.addEventListener('pointerdown', function() {
+                _suspendPreAutosave = true;
+                clearTimeout(_datosTimer);
+            });
             preCancelBtn.addEventListener('click', function() {
                 if (_payIntent && portData && portData.plan && portData.plan !== 'pre-inscripcion') {
                     hideAll();
@@ -3763,17 +4151,33 @@
             btn.textContent = 'Guardando...';
             cuestionario.completadoEn = new Date().toISOString();
 
-            db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario).then(function() {
+            beginCriticalSave();
+            setFormControlsSaving('pre-step-modulos', true);
+            waitForAutosave(_modulosAutosavePromise).then(function() {
+                return withSaveTimeout(db.ref('portafolios/' + currentUser.uid + '/cuestionarioModulos').set(cuestionario), 20000);
+            }).then(function() {
+                return withSaveTimeout(verifyCompletedSave('portafolios/' + currentUser.uid + '/cuestionarioModulos', cuestionario.completadoEn), 10000);
+            }).then(function() {
+                endCriticalSave(true);
+                setFormControlsSaving('pre-step-modulos', false);
+                _modulosDirty = false;
+                try { localStorage.removeItem(_preModulesDraftKey()); } catch (e) {}
+                portData = Object.assign({}, portData || {});
+                portData.cuestionarioModulos = cuestionario;
                 btn.disabled = false;
                 btn.textContent = 'Guardar Preferencias y Finalizar ✓';
                 showPreSubStep('listo');
                 fillResumen();
             }).catch(function(err) {
+                endCriticalSave(false);
+                setFormControlsSaving('pre-step-modulos', false);
+                _modulosDirty = true;
                 btn.disabled = false;
                 btn.textContent = 'Guardar Preferencias y Finalizar ✓';
                 var errEl = document.getElementById('pre-modulos-error');
-                errEl.textContent = err.message || 'Error al guardar.';
+                errEl.textContent = confirmedSaveError(err);
                 errEl.classList.remove('hidden');
+                errEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             });
         });
 

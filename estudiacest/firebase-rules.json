@@ -1,18 +1,6 @@
 {
   "rules": {
     "plataforma_estudiantes": {
-      "3atp_clase1": {
-        ".read": true,
-        ".write": true,
-        "$grupo": {
-          "images": {
-            "$i": {
-              "dataUrl": { ".validate": "newData.isString() && newData.val().length <= 2500000" },
-              "caption": { ".validate": "newData.isString() && newData.val().length <= 600" }
-            }
-          }
-        }
-      },
       "admins": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
@@ -29,10 +17,19 @@
       },
       "estudiantes": {
         ".read": "auth != null",
-        ".indexOn": ["curso"],
+        ".indexOn": [
+          "curso"
+        ],
         "$uid": {
           ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
         }
+      },
+      "triptico_revisiones": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".indexOn": [
+          "curso"
+        ]
       },
       "sesiones": {
         ".read": "auth != null",
@@ -79,7 +76,12 @@
       "tareas": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         "$tareaId": {
-          ".indexOn": ["curso", "completada", "submitted_at", "last_save"],
+          ".indexOn": [
+            "curso",
+            "completada",
+            "submitted_at",
+            "last_save"
+          ],
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
             ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
@@ -88,7 +90,9 @@
       },
       "mensajes": {
         ".read": "auth != null",
-        ".indexOn": ["timestamp"],
+        ".indexOn": [
+          "timestamp"
+        ],
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
       },
       "admin_refresh": {
@@ -113,7 +117,9 @@
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
             ".write": "auth != null && auth.uid === $uid",
-            ".indexOn": ["timestamp"]
+            ".indexOn": [
+              "timestamp"
+            ]
           }
         },
         "daily": {
@@ -168,6 +174,14 @@
                 }
               }
             }
+          }
+        }
+      },
+      "colab": {
+        "$sesionId": {
+          "$pairKey": {
+            ".read": "auth != null && ($pairKey.contains(auth.uid) || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
+            ".write": "auth != null && $pairKey.contains(auth.uid)"
           }
         }
       }

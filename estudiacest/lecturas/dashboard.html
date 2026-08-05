@@ -332,10 +332,70 @@
       background: linear-gradient(135deg, #475569, #334155);
       box-shadow: none;
     }
+    /* Orden visual 2026: resultado, acceso de clase y evaluaciones. */
+    body { background: #f5f7fa; color: #172033; }
+    .topbar { background: #14213d; }
+    .page { max-width: 1180px; }
+    .hero {
+      padding: 22px 24px;
+      border-radius: 8px;
+      background: #ffffff;
+      border-color: #dce3ec;
+    }
+    .hero h2 { font-size: 26px; }
+    .simce-card {
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid #cdd9e8;
+      border-top: 5px solid #2457a6;
+      box-shadow: 0 12px 28px rgba(20, 33, 61, 0.08);
+    }
+    .simce-chip { background: #e8f0fb; color: #174a8b; }
+    .simce-metric {
+      border-radius: 6px;
+      background: #f8fafc;
+      border-color: #dce3ec;
+    }
+    .simce-metric.primary { background: #eef5ff; border-color: #abc6ea; }
+    .simce-note { border-radius: 6px; background: #f8fafc; border-color: #dce3ec; }
+    .stat {
+      border-radius: 6px;
+      box-shadow: none;
+      border: 1px solid #dce3ec;
+      border-top: 3px solid #24746e;
+    }
+    .card, .empty { border-radius: 8px; }
+    .card .cta { border-radius: 6px; }
+    .section-block { margin-top: 24px; }
+    .section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 12px;
+    }
+    .section-heading p { color: #6b7280; font-size: 12px; line-height: 1.5; }
+    .guide-card { border-left: 5px solid #24746e; }
+    .simce-actions { margin-top: 16px; display: flex; justify-content: flex-end; }
+    .primary-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #2457a6;
+      border-radius: 6px;
+      padding: 12px 18px;
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff !important;
+      text-decoration: none;
+    }
     @media (max-width: 720px) {
       .card { grid-template-columns: 1fr; }
       .card .cta { width: 100%; }
       .topbar { align-items: flex-start; }
+      .simce-head, .section-heading { align-items: flex-start; flex-direction: column; }
+      .simce-chip { white-space: normal; }
+      .simce-actions .primary-link { width: 100%; }
     }
   </style>
 </head>
@@ -353,28 +413,23 @@
 
   <main class="page">
     <section class="hero">
-      <h2 id="heroTitle">Panel de Lecturas</h2>
-      <p id="heroDescription">Aquí aparecen las pruebas de Lengua y Literatura asignadas específicamente para ti y, cuando corresponda, actividades guiadas de trabajo en clase conectadas con esta misma cuenta.</p>
+      <h2 id="heroTitle">Panel SIMCE</h2>
+      <p id="heroDescription">Taller de Comprensión Lectora 2026</p>
     </section>
-
-    <div class="stats" id="statsRow">
-      <div class="stat"><div class="label">Asignadas</div><div class="value" id="statAssigned">0</div><div class="sub">pruebas visibles para ti</div></div>
-      <div class="stat"><div class="label">Completadas</div><div class="value" id="statDone">0</div><div class="sub">resueltas y enviadas</div></div>
-      <div class="stat"><div class="label">Pendientes</div><div class="value" id="statPending">0</div><div class="sub">listas para responder</div></div>
-    </div>
 
     <div class="redirect-box" id="redirectBox"></div>
     <section class="simce-card" id="simceResultBox"></section>
 
-    <h2 class="section-title" id="sessionsTitle">Tus pruebas</h2>
-    <section class="list" id="sessionList">
-      <div class="empty">Cargando asignaciones...</div>
-    </section>
-
-    <section id="guideSection" style="display:none;margin-top:24px;">
-      <h2 class="section-title">Actividades guiadas</h2>
-      <section class="list" id="guideList"></section>
-    </section>
+    <div hidden aria-hidden="true">
+      <section id="guideSection"><div id="guideList"></div></section>
+      <h2 id="sessionsTitle"></h2>
+      <div id="statsRow">
+        <span id="statAssigned"></span>
+        <span id="statDone"></span>
+        <span id="statPending"></span>
+      </div>
+      <div id="sessionList"></div>
+    </div>
   </main>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -409,7 +464,7 @@
         courses: ['2A-HC', '2B-HC']
       }
     ];
-    const SIMCE_DIAGNOSTIC_SESSION_IDS = {
+    const LEGACY_SIMCE_SESSION_IDS = {
       '2A-HC': 'ensayo-simce-miercoles-2a-hc-2026',
       '2B-HC': 'ensayo-simce-miercoles-2b-hc-2026'
     };
@@ -542,8 +597,8 @@
           + '<div class="simce-chip">' + sessionTitle + '</div>'
           + '</div>'
           + '<div class="simce-note">Todavía no aparece un resultado cargado en esta cuenta para ese ensayo. Apenas esté publicado, se mostrará aquí con la conversión referencial a puntaje SIMCE.</div>'
-          + '<div style="margin-top:16px;margin-bottom:12px;display:flex;justify-content:flex-end;">'
-          + '<a href="/estudiantes/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 10px 20px rgba(124,58,237,0.25);border:1px solid #ffffff;border-radius:14px;padding:12px 20px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#ffffff !important;text-decoration:none;letter-spacing:0.2px;">Ingresar a la Plataforma de Guías →</a>'
+          + '<div class="simce-actions">'
+          + '<a href="/estudiantes/dashboard.html" class="primary-link">Ingresar a la Plataforma de Guías →</a>'
           + '</div>'
           + '<div class="simce-footnote">La estimación es pedagógica y no reemplaza un resultado oficial de SIMCE.</div>';
         simceResultBox.classList.add('show');
@@ -564,8 +619,8 @@
         + '<article class="simce-metric"><span class="simce-label">Último registro</span><strong>' + sessionDate + '</strong><small>' + sessionTitle + '</small></article>'
         + '</div>'
         + '<div class="simce-note">' + getSimceProgressCopy(estimate) + '</div>'
-        + '<div style="margin-top:16px;margin-bottom:12px;display:flex;justify-content:flex-end;">'
-        + '<a href="/estudiantes/dashboard.html" style="display:inline-block;background:linear-gradient(135deg,#4f46e5,#7c3aed);box-shadow:0 10px 20px rgba(124,58,237,0.25);border:1px solid #ffffff;border-radius:14px;padding:12px 20px;font:inherit;font-size:14px;font-weight:800;cursor:pointer;color:#ffffff !important;text-decoration:none;letter-spacing:0.2px;">Ingresar a la Plataforma de Guías →</a>'
+        + '<div class="simce-actions">'
+        + '<a href="/estudiantes/dashboard.html" class="primary-link">Ingresar a la Plataforma de Guías →</a>'
         + '</div>'
         + '<div class="simce-footnote">Estimación referencial basada en la tabla docente y los cortes oficiales 252 / 295. El SIMCE oficial utiliza modelos IRT, por eso este puntaje no reemplaza un resultado oficial.</div>';
       simceResultBox.classList.add('show');
@@ -575,16 +630,38 @@
       hideSimceResult();
       if (!student || !isNm2SimceCourse(student.curso)) return;
 
-      const sessionId = SIMCE_DIAGNOSTIC_SESSION_IDS[normalizeCourse(student.curso)];
-      if (!sessionId) return;
-
       try {
-        const [sessionSnap, resultSnap] = await Promise.all([
-          db.ref(STUDENT_BASE + '/sesiones/' + sessionId).once('value'),
-          db.ref(STUDENT_BASE + '/resultados/' + sessionId + '/' + uid).once('value')
-        ]);
-        if (!sessionSnap.exists()) return;
-        renderSimceResult({ id: sessionId, ...sessionSnap.val() }, resultSnap.exists() ? resultSnap.val() : null);
+        const course = normalizeCourse(student.curso);
+        const sessionsSnap = await db.ref(STUDENT_BASE + '/sesiones').once('value');
+        const candidates = [];
+        sessionsSnap.forEach(child => {
+          const session = { id: child.key, ...child.val() };
+          const searchable = (session.id + ' ' + (session.titulo || '')).toLowerCase();
+          const assigned = !Array.isArray(session.asignados) || !session.asignados.length
+            || session.asignados.includes(course) || session.asignados.includes(uid);
+          if (assigned && session.resultados_visibles === true && searchable.includes('simce')) {
+            candidates.push(session);
+          }
+        });
+
+        const legacyId = LEGACY_SIMCE_SESSION_IDS[course];
+        if (legacyId && !candidates.some(session => session.id === legacyId)) {
+          const legacySnap = await db.ref(STUDENT_BASE + '/sesiones/' + legacyId).once('value');
+          if (legacySnap.exists()) candidates.push({ id: legacyId, ...legacySnap.val() });
+        }
+
+        const bundles = await Promise.all(candidates.map(async session => {
+          const resultSnap = await db.ref(STUDENT_BASE + '/resultados/' + session.id + '/' + uid).once('value');
+          return resultSnap.exists() ? { session, result: resultSnap.val() } : null;
+        }));
+        const available = bundles.filter(Boolean).sort((left, right) => {
+          const leftDate = Number(left.result.submitted_at || left.result.timestamp || left.session.createdAt || 0);
+          const rightDate = Number(right.result.submitted_at || right.result.timestamp || right.session.createdAt || 0);
+          return rightDate - leftDate;
+        });
+
+        if (available.length) renderSimceResult(available[0].session, available[0].result);
+        else hideSimceResult();
       } catch (error) {
         console.error('[lecturas/simce-result]', error);
       }
@@ -701,7 +778,7 @@
         ].join('');
         const buttonLabel = completed ? 'Revisar guía' : inProgress ? 'Continuar guía' : 'Abrir guía';
         const buttonClass = completed ? 'cta secondary' : 'cta';
-        cards.push('<article class="card">'
+        cards.push('<article class="card guide-card">'
           + '<div>'
           + '<h3>' + activity.title + '</h3>'
           + '<div class="meta">' + chips + '</div>'

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Salida PME al cine Muvix | Estudia CEST</title>
+  <style>
+    :root { --navy:#17345f; --blue:#2454a6; --ink:#172238; --muted:#5b6b83; --line:#d9e1ec; --soft:#f4f7fb; --green:#147a55; --red:#a53d3d; }
+    * { box-sizing:border-box; }
+    body { margin:0; min-height:100vh; background:#f4f7fb; color:var(--ink); font:16px/1.55 Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .wrap { width:min(920px, calc(100% - 32px)); margin:0 auto; padding:28px 0 48px; }
+    .top { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:22px; }
+    .back { color:var(--navy); font-weight:700; text-decoration:none; }
+    .brand { color:var(--muted); font-size:13px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; }
+    header { background:linear-gradient(135deg, #17345f, #2964b5); color:white; border-radius:14px; padding:30px 32px; box-shadow:0 15px 36px rgba(23,52,95,.18); }
+    .eyebrow { margin:0 0 8px; color:#d9e9ff; font-size:13px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; }
+    h1 { margin:0; font-size:clamp(27px, 4vw, 42px); line-height:1.1; letter-spacing:0; }
+    .lead { max-width:760px; margin:16px 0 0; color:#eaf2ff; font-size:17px; }
+    .event { display:grid; grid-template-columns:repeat(3, 1fr); gap:10px; margin-top:23px; }
+    .event div { border:1px solid rgba(255,255,255,.25); border-radius:9px; padding:11px 13px; background:rgba(255,255,255,.1); }
+    .event small { display:block; color:#c9dcf6; font-size:12px; font-weight:800; text-transform:uppercase; }
+    .event strong { display:block; margin-top:2px; font-size:15px; }
+    .notice { margin:20px 0; border:1px solid #f1d89c; border-left:5px solid #d89719; border-radius:10px; padding:15px 17px; background:#fffaf0; color:#604b18; }
+    .notice strong { color:#49370d; }
+    .activity-info { margin:20px 0; padding:24px 26px; border:1px solid #c8d8ec; border-radius:12px; background:#fff; box-shadow:0 8px 24px rgba(24,49,84,.05); }
+    .activity-info h2 { margin:0 0 5px; color:var(--navy); font-size:24px; }
+    .info-lead { margin:0 0 18px; color:var(--muted); }
+    .schedule-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin:0 0 20px; }
+    .schedule-item { padding:13px 15px; border:1px solid #d9e3ef; border-radius:9px; background:#f8fbff; }
+    .schedule-item small { display:block; color:var(--blue); font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase; }
+    .schedule-item strong { display:block; margin-top:3px; color:var(--ink); }
+    .info-columns { display:grid; grid-template-columns:1fr 1fr; gap:22px; }
+    .info-columns h3 { margin:0 0 7px; color:var(--navy); font-size:17px; }
+    .info-columns p { margin:0; color:var(--ink); }
+    .info-columns ul { margin:0; padding-left:19px; color:var(--ink); }
+    .info-columns li { margin:4px 0; }
+    .info-foot { margin:19px 0 0; padding-top:15px; border-top:1px solid #d9e3ef; color:var(--muted); font-size:13px; }
+    form, .result { background:white; border:1px solid var(--line); border-radius:12px; padding:26px 28px; box-shadow:0 8px 24px rgba(24,49,84,.05); }
+    .section { padding:0 0 25px; margin:0 0 25px; border-bottom:1px solid var(--line); }
+    .section:last-of-type { border-bottom:0; margin-bottom:0; padding-bottom:10px; }
+    h2 { margin:0 0 6px; color:var(--navy); font-size:22px; }
+    .section > p { margin:0 0 17px; color:var(--muted); }
+    label { display:block; margin:0 0 7px; font-weight:750; }
+    .field { margin-bottom:17px; }
+    input[type="text"], input[type="tel"], textarea { width:100%; border:1px solid #b9c6d8; border-radius:8px; padding:12px 13px; color:var(--ink); background:#fff; font:inherit; }
+    input:focus, textarea:focus { outline:3px solid rgba(36,84,166,.18); border-color:var(--blue); }
+    textarea { min-height:92px; resize:vertical; }
+    .rut-row { display:flex; gap:10px; }
+    .rut-row input { flex:1; }
+    button { border:0; border-radius:8px; padding:12px 18px; font:800 15px inherit; cursor:pointer; }
+    button.primary { background:var(--blue); color:#fff; box-shadow:0 6px 14px rgba(36,84,166,.2); }
+    button.secondary { background:#eaf0f8; color:var(--navy); }
+    button:disabled { cursor:wait; opacity:.62; }
+    .help { margin:6px 0 0; color:var(--muted); font-size:13px; }
+    .student-card { display:none; margin:14px 0 0; padding:13px 15px; border:1px solid #bcd3f2; border-radius:8px; background:#f3f8ff; }
+    .student-card.show { display:block; }
+    .student-card strong { color:var(--navy); }
+    .choices { display:grid; gap:10px; }
+    .choice { position:relative; display:flex; align-items:flex-start; gap:11px; padding:13px 14px; border:1px solid var(--line); border-radius:9px; background:#fff; cursor:pointer; }
+    .choice:hover { border-color:#90add5; background:#f8fbff; }
+    .choice input { width:18px; height:18px; margin:2px 0 0; accent-color:var(--blue); flex:0 0 auto; }
+    .choice b { display:block; color:var(--ink); }
+    .choice span { display:block; margin-top:2px; color:var(--muted); font-size:14px; }
+    .conditional { display:none; margin-top:18px; padding:17px; border:1px solid #cddcf0; border-radius:9px; background:#f8fbff; }
+    .conditional.show { display:block; }
+    .check { display:flex; align-items:flex-start; gap:10px; margin-top:15px; font-weight:600; }
+    .check input { width:18px; height:18px; margin-top:3px; accent-color:var(--blue); flex:0 0 auto; }
+    .actions { display:flex; justify-content:flex-end; gap:10px; align-items:center; flex-wrap:wrap; }
+    .status { min-height:24px; margin:16px 0 0; font-weight:700; }
+    .status.error { color:var(--red); }
+    .status.ok { color:var(--green); }
+    .hidden { display:none !important; }
+    footer { margin-top:19px; color:var(--muted); font-size:13px; text-align:center; }
+    .qr-launcher { position:fixed; right:18px; bottom:18px; z-index:20; display:flex; align-items:center; gap:9px; padding:8px 12px 8px 8px; border:1px solid #b9cbe5; border-radius:12px; background:#fff; color:var(--navy); box-shadow:0 10px 24px rgba(23,52,95,.18); }
+    .qr-launcher:hover { border-color:var(--blue); transform:translateY(-2px); }
+    .qr-mini { width:58px; height:58px; display:grid; place-items:center; overflow:hidden; border-radius:6px; background:#fff; }
+    .qr-mini img, .qr-mini canvas { display:block; width:52px !important; height:52px !important; }
+    .qr-launcher-label { font-size:13px; font-weight:800; }
+    .qr-modal { position:fixed; inset:0; z-index:40; display:none; align-items:center; justify-content:center; padding:18px; background:rgba(15,31,55,.72); }
+    .qr-modal.open { display:flex; }
+    .qr-dialog { position:relative; width:min(440px,100%); padding:28px; border-radius:16px; background:#fff; text-align:center; box-shadow:0 24px 70px rgba(0,0,0,.3); }
+    .qr-dialog h2 { margin:0; }
+    .qr-dialog p { margin:7px 0 18px; color:var(--muted); }
+    .qr-large { width:310px; height:310px; max-width:100%; margin:0 auto 16px; display:grid; place-items:center; }
+    .qr-large img, .qr-large canvas { display:block; width:310px !important; height:310px !important; max-width:100%; }
+    .qr-url { margin:0; color:var(--muted); font-size:12px; overflow-wrap:anywhere; }
+    .qr-close { position:absolute; top:12px; right:12px; width:36px; height:36px; padding:0; border:1px solid var(--line); border-radius:50%; background:#fff; color:var(--navy); font-size:22px; line-height:1; }
+    .qr-close:hover { background:var(--soft); }
+    @media (max-width:650px) { .wrap { width:min(100% - 20px, 920px); padding-top:15px; } header, form, .result, .activity-info { padding:21px 18px; } .event, .schedule-grid, .info-columns { grid-template-columns:1fr; } .top { align-items:flex-start; flex-direction:column; gap:7px; } .rut-row { flex-direction:column; } }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <div class="top"><a class="back" href="/nm3/">← Volver a NM3</a><span class="brand">Estudia CEST · PME</span></div>
+    <header>
+      <p class="eyebrow">Formulario de planificación familiar</p>
+      <h1>Salida pedagógica al cine Muvix</h1>
+      <p class="lead">Necesitamos saber cómo regresará cada estudiante después de la función para organizar con anticipación una alternativa segura cuando corresponda.</p>
+      <div class="event">
+        <div><small>Fecha</small><strong>Viernes 07 de agosto</strong></div>
+        <div><small>Actividad</small><strong>La Odisea (2026)</strong></div>
+        <div><small>Lugar</small><strong>Cine Muvix</strong></div>
+      </div>
+    </header>
+
+    <section class="activity-info" aria-labelledby="activityInfoTitle">
+      <h2 id="activityInfoTitle">Información de la actividad</h2>
+      <p class="info-lead">Esta ficha resume la comunicación impresa que se enviará a las familias. La autorización firmada en papel continúa siendo el respaldo formal de participación.</p>
+      <div class="schedule-grid">
+        <div class="schedule-item"><small>Fecha</small><strong>Viernes 07 de agosto de 2026</strong></div>
+        <div class="schedule-item"><small>Lugar</small><strong>Muvix Go Florida Talca, Avenida Colín N.° 0665, local 106</strong></div>
+        <div class="schedule-item"><small>Jornada inicial</small><strong>08:00 llegada al CEST Sede Sur y clases regulares durante el primer bloque</strong></div>
+        <div class="schedule-item"><small>Traslado de ida</small><strong>10:15 salida de los buses desde el CEST Sede Sur</strong></div>
+        <div class="schedule-item"><small>Función</small><strong>11:00 a 14:00 h aproximadamente · formato 2D doblado</strong></div>
+        <div class="schedule-item"><small>Regreso al hogar</small><strong>No está incluido: cada familia debe definir el retiro o traslado desde Muvix</strong></div>
+      </div>
+      <div class="info-columns">
+        <div>
+          <h3>¿Cuál es el objetivo?</h3>
+          <p>La actividad forma parte del trabajo de Lengua y Literatura de 3.° medio. A partir de <em>La Odisea</em>, los estudiantes relacionarán la tradición épica con el lenguaje audiovisual, analizarán personajes, conflictos, símbolos y relaciones intertextuales, y fundamentarán sus interpretaciones con evidencias.</p>
+        </div>
+        <div>
+          <h3>Indicaciones para la jornada</h3>
+          <ul>
+            <li>Asistir con uniforme institucional completo.</li>
+            <li>Mantenerse con el curso y el adulto responsable durante la actividad.</li>
+            <li>Respetar las normas del establecimiento, del transporte y del cine.</li>
+            <li>Informar al docente cualquier necesidad de apoyo relevante.</li>
+          </ul>
+        </div>
+      </div>
+      <p class="info-foot"><strong>Después de la función:</strong> la experiencia continuará en clases mediante una pauta de observación, conversación argumentativa y una producción breve sobre la película y los textos trabajados.</p>
+    </section>
+
+    <form id="form" novalidate>
+      <section class="section">
+        <h2>1. Identificación</h2>
+        <p>Ingresa tu RUT tal como aparece en el colegio. El nombre y el curso se cargarán desde la nómina oficial.</p>
+        <div class="field">
+          <label for="rut">RUT del estudiante</label>
+          <div class="rut-row"><input id="rut" name="rut" type="text" inputmode="text" autocomplete="off" placeholder="Ej.: 23.123.456-7" required><button class="secondary" id="loadBtn" type="button">Cargar mis datos</button></div>
+          <p class="help">Puedes escribirlo con puntos y guion o sin ellos.</p>
+        </div>
+        <div class="student-card" id="studentCard"><strong id="studentName"></strong><br><span id="studentCourse"></span></div>
+      </section>
+
+      <section class="section hidden" id="answersSection">
+        <h2>2. Asistencia</h2>
+        <p>Responde con tu apoderado o adulto responsable.</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="attendance" value="si"><div><b>Sí asistiré a la salida.</b><span>Continuaré con la pregunta sobre el regreso desde Muvix.</span></div></label>
+          <label class="choice"><input type="radio" name="attendance" value="no"><div><b>No asistiré.</b><span>Esta respuesta igualmente ayuda a organizar la actividad.</span></div></label>
+        </div>
+      </section>
+
+      <section class="section hidden" id="returnSection">
+        <h2>3. Regreso desde Muvix</h2>
+        <p>Selecciona la situación que corresponde a tu familia. No marques una opción solo por aproximación.</p>
+        <div class="choices">
+          <label class="choice"><input type="radio" name="returnPlan" value="adulto_retirara"><div><b>Me retirará un adulto responsable desde Muvix.</b><span>Mi apoderado organizará directamente el retiro.</span></div></label>
+          <label class="choice"><input type="radio" name="returnPlan" value="puede_regresar"><div><b>Puedo regresar desde Muvix a mi hogar.</b><span>Mi apoderado autoriza que me traslade por mis propios medios.</span></div></label>
+          <label class="choice"><input type="radio" name="returnPlan" value="necesita_alternativa"><div><b>No puedo retirarme desde ese sector.</b><span>Necesito que el colegio gestione una alternativa de regreso.</span></div></label>
+        </div>
+        <div class="conditional" id="guardianSection">
+          <div class="field"><label for="guardianName">Nombre del apoderado o adulto responsable</label><input id="guardianName" type="text" maxlength="120" autocomplete="name"></div>
+          <div class="field"><label for="guardianPhone">Teléfono de contacto</label><input id="guardianPhone" type="tel" maxlength="40" autocomplete="tel" placeholder="Ej.: +56 9 1234 5678"></div>
+          <label class="check"><input id="guardianConfirmed" type="checkbox"><span>Confirmo que esta respuesta fue revisada con mi apoderado o adulto responsable.</span></label>
+        </div>
+      </section>
+
+      <section class="section hidden" id="notesSection">
+        <h2>4. Información adicional</h2>
+        <p>Escribe solo información útil para planificar el regreso. No incluyas datos médicos ni contraseñas.</p>
+        <textarea id="notes" maxlength="500" placeholder="Por ejemplo: quién retirará al estudiante o qué dificultad de traslado debemos considerar."></textarea>
+      </section>
+
+      <div class="actions hidden" id="actions"><button class="secondary" type="button" id="clearBtn">Limpiar</button><button class="primary" type="submit" id="submitBtn">Guardar respuesta</button></div>
+      <p class="status" id="status" role="status" aria-live="polite"></p>
+    </form>
+    <footer>La respuesta puede actualizarse si cambia la situación familiar. Para dudas, comunícate con el docente antes de la fecha de la salida.</footer>
+  </main>
+  <button class="qr-launcher" id="qrOpen" type="button" aria-label="Ampliar código QR para abrir el formulario">
+    <span class="qr-mini" id="qrMini" aria-hidden="true"></span><span class="qr-launcher-label">Abrir QR</span>
+  </button>
+  <div class="qr-modal" id="qrModal" role="dialog" aria-modal="true" aria-labelledby="qrTitle">
+    <div class="qr-dialog">
+      <button class="qr-close" id="qrClose" type="button" aria-label="Cerrar código QR">×</button>
+      <h2 id="qrTitle">Formulario de salida Muvix</h2>
+      <p>Escanea este código con la cámara del teléfono.</p>
+      <div class="qr-large" id="qrLarge"></div>
+      <p class="qr-url" id="qrUrl"></p>
+    </div>
+  </div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script>
+    const $ = id => document.getElementById(id);
+    const state = { student: null };
+    const form = $('form');
+    const setStatus = (message, type = '') => { const el = $('status'); el.textContent = message; el.className = 'status ' + type; };
+    const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+    const selected = name => document.querySelector('input[name="' + name + '"]:checked')?.value || '';
+    function showForm(show) { ['answersSection','notesSection','actions'].forEach(id => $(id).classList.toggle('hidden', !show)); }
+    function updateReturn() {
+      const attending = selected('attendance') === 'si';
+      $('returnSection').classList.toggle('hidden', !attending);
+      $('guardianSection').classList.toggle('show', attending && Boolean(selected('returnPlan')));
+      if (!attending) document.querySelectorAll('input[name="returnPlan"]').forEach(input => { input.checked = false; });
+    }
+    async function loadStudent() {
+      const rut = cleanRut($('rut').value);
+      if (!rut) return setStatus('Ingresa el RUT del estudiante.', 'error');
+      $('loadBtn').disabled = true; setStatus('Buscando en la nómina oficial...');
+      try {
+        const response = await fetch('/api/salida-muvix?action=student&rut=' + encodeURIComponent(rut), { cache: 'no-store' });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se encontró el RUT.');
+        state.student = data.student;
+        $('studentName').textContent = data.student.name;
+        $('studentCourse').textContent = data.student.course + ' · RUT ' + data.student.rut;
+        $('studentCard').classList.add('show'); showForm(true); setStatus('Datos cargados. Completa el formulario con tu apoderado.', 'ok');
+        if (data.response) {
+          document.querySelector('input[name="attendance"][value="' + data.response.attendance + '"]')?.click();
+          if (data.response.returnPlan) document.querySelector('input[name="returnPlan"][value="' + data.response.returnPlan + '"]')?.click();
+          $('guardianName').value = data.response.guardianName || ''; $('guardianPhone').value = data.response.guardianPhone || '';
+          $('guardianConfirmed').checked = data.response.guardianConfirmed === true; $('notes').value = data.response.notes || '';
+          setStatus('Encontramos una respuesta anterior. Puedes revisarla y actualizarla.', 'ok');
+        }
+      } catch (error) { state.student = null; $('studentCard').classList.remove('show'); showForm(false); setStatus(error.message, 'error'); }
+      finally { $('loadBtn').disabled = false; }
+    }
+    function clearForm() { form.reset(); state.student = null; $('studentCard').classList.remove('show'); showForm(false); $('returnSection').classList.add('hidden'); $('guardianSection').classList.remove('show'); setStatus(''); }
+    $('loadBtn').addEventListener('click', loadStudent); $('rut').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); loadStudent(); } });
+    document.querySelectorAll('input[name="attendance"]').forEach(input => input.addEventListener('change', updateReturn));
+    document.querySelectorAll('input[name="returnPlan"]').forEach(input => input.addEventListener('change', updateReturn));
+    $('clearBtn').addEventListener('click', clearForm);
+    form.addEventListener('submit', async event => {
+      event.preventDefault(); if (!state.student) return setStatus('Primero carga tus datos con el RUT.', 'error');
+      const attendance = selected('attendance'); const returnPlan = selected('returnPlan');
+      if (!attendance) return setStatus('Selecciona una respuesta de asistencia.', 'error');
+      if (attendance === 'si' && !returnPlan) return setStatus('Selecciona cómo regresarías desde Muvix.', 'error');
+      if (attendance === 'si' && !$('guardianConfirmed').checked) return setStatus('La respuesta debe ser confirmada por tu apoderado.', 'error');
+      $('submitBtn').disabled = true; setStatus('Guardando respuesta...');
+      try {
+        const response = await fetch('/api/salida-muvix?action=submit', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ rut:state.student.rut, attendance, returnPlan, guardianConfirmed:$('guardianConfirmed').checked, guardianName:$('guardianName').value, guardianPhone:$('guardianPhone').value, notes:$('notes').value }) });
+        const data = await response.json(); if (!response.ok) throw new Error(data.error || 'No se pudo guardar la respuesta.'); setStatus(data.message, 'ok');
+      } catch (error) { setStatus(error.message, 'error'); } finally { $('submitBtn').disabled = false; }
+    });
+    const formUrl = window.location.origin + '/nm3/salida-muvix.html';
+    document.getElementById('qrUrl').textContent = formUrl;
+    new QRCode(document.getElementById('qrMini'), { text: formUrl, width: 52, height: 52, correctLevel: QRCode.CorrectLevel.H });
+    const qrModal = document.getElementById('qrModal');
+    let largeQrReady = false;
+    document.getElementById('qrOpen').addEventListener('click', () => {
+      qrModal.classList.add('open');
+      if (!largeQrReady) {
+        new QRCode(document.getElementById('qrLarge'), { text: formUrl, width: 310, height: 310, correctLevel: QRCode.CorrectLevel.H });
+        largeQrReady = true;
+      }
+      document.getElementById('qrClose').focus();
+    });
+    function closeQr() { qrModal.classList.remove('open'); }
+    document.getElementById('qrClose').addEventListener('click', closeQr);
+    qrModal.addEventListener('click', event => { if (event.target === qrModal) closeQr(); });
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') closeQr(); });
+  </script>
+</body>
+</html>

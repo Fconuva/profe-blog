@@ -1,8 +1,8 @@
 // api/paes.js
 // Unified Vercel Serverless Function for PAES module management
-// Routes: ?action=submit | ?action=submit-guia | ?action=track-download | ?action=get-student-status | ?action=get-nomina-extra | ?action=get-guia-draft
+// Routes: ?action=submit | ?action=submit-guia | ?action=track-download | ?action=get-student-status | ?action=get-nomina-extra | ?action=get-guia-draft | ?action=get-guias-config | ?action=get-mis-notas
 //         | ?action=admin-get-results | ?action=admin-reset-result | ?action=admin-grade-guia | ?action=admin-reset-guia
-//         | ?action=admin-save-student | ?action=admin-delete-student
+//         | ?action=admin-save-student | ?action=admin-delete-student | ?action=admin-set-guias-config | ?action=admin-save-nota
 
 const admin = require('firebase-admin');
 
@@ -55,6 +55,170 @@ const auth = admin.auth();
 function cleanRut(r) { 
     return (r || '').replace(/[.\s-]/g, '').toUpperCase(); 
 }
+
+const G15_KEY = {
+    q01:'B',q02:'D',q03:'A',q04:'C',q05:'B',q06:'A',
+    q07:'D',q08:'B',q09:'C',q10:'A',q11:'D',q12:'C',
+    q13:'B',q14:'A',q15:'D',q16:'B',q17:'C',q18:'A'
+};
+
+const G16_KEY = {
+    1:'B',2:'D',3:'C',4:'A',5:'D',
+    6:'C',7:'A',8:'B',9:'D',10:'C',
+    11:'A',12:'B',13:'C',14:'D',15:'A'
+};
+
+const INTERACTIVE_GUIDE_KEYS = {
+    '15': G15_KEY,
+    '16': G16_KEY
+};
+
+const G14_KEY = {
+    q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',
+    q11:'D',q12:'C',q13:'A',q14:'B',q15:'C',q16:'D',q17:'B',q18:'C',q19:'D',q20:'D',
+    q21:'C',q22:'B',q23:'D',q24:'B',q25:'D',q26:'C',q27:'B',q28:'D',q29:'A',q30:'C',
+    q31:'A',q32:'B',q33:'C',q34:'D',q35:'B',q36:'C',q37:'A',q38:'A',q39:'B',q40:'A',
+    q41:'B',q42:'C',q43:'B',q44:'B',q45:'A',q46:'B',q47:'A',q48:'C',q49:'A'
+};
+const G14_EXPERIMENTAL = new Set(['q08','q17','q30','q48']);
+const G14_VERSION = 'g14-2026-1';
+const G14_SKILL = {
+    q01:'LOCALIZAR',q02:'INTERPRETAR',q03:'LOCALIZAR',q04:'EVALUAR',q05:'LOCALIZAR',q06:'INTERPRETAR',q07:'INTERPRETAR',q08:'INTERPRETAR',q41:'INTERPRETAR',q42:'EVALUAR',
+    q09:'LOCALIZAR',q10:'INTERPRETAR',q11:'INTERPRETAR',q12:'LOCALIZAR',q13:'INTERPRETAR',q14:'EVALUAR',q15:'INTERPRETAR',q16:'INTERPRETAR',q17:'EVALUAR',q43:'EVALUAR',
+    q18:'LOCALIZAR',q19:'INTERPRETAR',q20:'LOCALIZAR',q21:'INTERPRETAR',q22:'INTERPRETAR',q23:'INTERPRETAR',q24:'EVALUAR',q44:'EVALUAR',q45:'EVALUAR',
+    q25:'LOCALIZAR',q26:'INTERPRETAR',q27:'INTERPRETAR',q28:'INTERPRETAR',q29:'INTERPRETAR',q30:'INTERPRETAR',q31:'INTERPRETAR',q32:'INTERPRETAR',q33:'INTERPRETAR',q46:'INTERPRETAR',
+    q34:'INTERPRETAR',q35:'INTERPRETAR',q36:'INTERPRETAR',q37:'INTERPRETAR',q38:'INTERPRETAR',q39:'INTERPRETAR',q40:'EVALUAR',q47:'INTERPRETAR',q48:'EVALUAR',q49:'EVALUAR'
+};
+const PAES_CL_2027 = [100,149,172,193,214,234,253,269,284,298,313,330,347,361,373,383,393,404,417,432,447,461,472,480,487,495,504,516,531,546,560,571,580,587,594,603,614,629,644,659,671,680,689,699,711,725,741,758,772,786,799,814,832,852,871,892,913,936,963,991,1000];
+function releaseKey(course) { return String(course || 'general').toLowerCase().replace(/[^a-z0-9]/g, '_'); }
+function releaseBase(guideId) { return `${BASE}/guia_config/${String(guideId)}/release_v2`; }
+
+async function isGuideReleased(guideId, course, rut) {
+    const base = releaseBase(guideId);
+    const [allSnap, courseSnap, studentSnap] = await Promise.all([
+        db.ref(`${base}/all`).once('value'),
+        db.ref(`${base}/courses/${releaseKey(course)}`).once('value'),
+        db.ref(`${base}/students/${cleanRut(rut)}`).once('value')
+    ]);
+    return !!(allSnap.val() || courseSnap.val() || studentSnap.val());
+}
+
+function isCurrentGuia14Record(value) {
+    if (!value || typeof value !== 'object') return false;
+    if (value.instrumentVersion === G14_VERSION) return true;
+    const answerIds = Object.keys(value.answers || {});
+    if (answerIds.some((id) => /^q(?:0[1-9]|[1-4]\d)$/.test(id))) return true;
+    return Array.isArray(value.form) &&
+        value.form.length === 5 &&
+        value.form.every((id) => ['1','2','3','4','5'].includes(String(id)));
+}
+
+function g14Hash(value) {
+    let h = 2166136261;
+    for (const c of String(value)) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+}
+function g14Rng(seed) {
+    return () => {
+        seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    };
+}
+function g14Shuffle(values, random) {
+    const copy = [...values];
+    for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+    }
+    return copy;
+}
+function validG14Schedule(letters) {
+    const joined = letters.join('');
+    if (/(A{3}|B{3}|C{3}|D{3})/.test(joined)) return false;
+    if (/(ABCD|BCDA|CDAB|DABC|DCBA|CBAD|BADC|ADCB)/.test(joined)) return false;
+    return true;
+}
+function createG14Form(rut) {
+    const random = g14Rng(g14Hash(`${cleanRut(rut)}|g14|forma-2026-1`));
+    const textOrder = g14Shuffle(['1','2','3','4','5'], random);
+    const pool = [...'AAAAAAAAAAAAA', ...'BBBBBBBBBBBB', ...'CCCCCCCCCCCC', ...'DDDDDDDDDDDD'];
+    let visibleKeys = pool;
+    for (let attempt = 0; attempt < 500; attempt++) {
+        const candidate = g14Shuffle(pool, random);
+        if (validG14Schedule(candidate)) { visibleKeys = candidate; break; }
+    }
+    const optionOrder = {};
+    Object.keys(G14_KEY).forEach((id, index) => {
+        const target = visibleKeys[index];
+        const wrong = g14Shuffle(['A','B','C','D'].filter(letter => letter !== G14_KEY[id]), random);
+        const order = [];
+        let wrongIndex = 0;
+        for (const position of ['A','B','C','D']) order.push(position === target ? G14_KEY[id] : wrong[wrongIndex++]);
+        optionOrder[id] = order;
+    });
+    return { version:G14_VERSION, textOrder, optionOrder };
+}
+
+function displayGuia14Answers(answers, rut) {
+    const form = createG14Form(rut);
+    const displayAnswers = {};
+    Object.keys(G14_KEY).forEach((id) => {
+        const selectedIndex = form.optionOrder[id].indexOf(answers && answers[id]);
+        if (selectedIndex >= 0) displayAnswers[id] = 'ABCD'[selectedIndex];
+    });
+    return displayAnswers;
+}
+
+function scoreGuia14(answers, rut) {
+    let correct = 0;
+    const skills = { LOCALIZAR:{correct:0,total:0}, INTERPRETAR:{correct:0,total:0}, EVALUAR:{correct:0,total:0} };
+    const itemCorrect = {}, displayAnswers = {}, displayKeys = {};
+    const form = createG14Form(rut);
+    Object.keys(G14_KEY).forEach(id => {
+        const order = form.optionOrder[id];
+        const selectedIndex = order.indexOf(answers && answers[id]);
+        displayAnswers[id] = selectedIndex >= 0 ? 'ABCD'[selectedIndex] : null;
+        displayKeys[id] = 'ABCD'[order.indexOf(G14_KEY[id])];
+        itemCorrect[id] = G14_EXPERIMENTAL.has(id) ? null : !!(answers && answers[id] === G14_KEY[id]);
+        if (G14_EXPERIMENTAL.has(id)) return;
+        const skill = G14_SKILL[id];
+        skills[skill].total++;
+        if (answers && answers[id] === G14_KEY[id]) { correct++; skills[skill].correct++; }
+    });
+    const equivalentCorrect = Math.max(0, Math.min(60, Math.round(correct / 45 * 60)));
+    return { correct, total:45, answered:Object.keys(answers || {}).length, equivalentCorrect, paesReferential:PAES_CL_2027[equivalentCorrect], skills, itemCorrect, displayAnswers, displayKeys };
+}
+
+function sanitizeGuia14ForAdmin(records) {
+    const sanitized = {};
+    Object.entries(records || {}).forEach(([rut, value]) => {
+        if (!isCurrentGuia14Record(value)) return;
+        const record = {
+            ...value,
+            instrumentVersion: value.instrumentVersion || G14_VERSION,
+            answered: Object.keys(value.answers || {}).filter((id) => Object.prototype.hasOwnProperty.call(G14_KEY, id)).length,
+            total: 45,
+            itemCount: 49,
+            displayAnswers: displayGuia14Answers(value.answers || {}, rut)
+        };
+        if (record.status !== 'sent') {
+            delete record.correct;
+            delete record.score;
+            delete record.equivalentCorrect;
+            delete record.paesReferential;
+            delete record.skills;
+            delete record.itemCorrect;
+            delete record.displayKeys;
+            delete record.grade;
+            delete record.submittedAt;
+        }
+        sanitized[rut] = record;
+    });
+    return sanitized;
+}
+
 
 function resolveAllowedOrigin(req) {
     const origin = (req.headers.origin || '').trim();
@@ -114,26 +278,65 @@ async function handleSubmitGuia(req, res) {
 
     const rutLimpio = cleanRut(rut);
     const ref = db.ref(`${BASE}/guia_respuestas/${guiaId}/${rutLimpio}`);
+    const guideId = String(guiaId);
+    let safeAnswers = answers || {};
+    let safeCorrect = parseInt(correct, 10) || 0;
+    let safeTotal = parseInt(total, 10) || 0;
+    let safeScore = parseInt(score, 10) || 0;
+    const serverKey = INTERACTIVE_GUIDE_KEYS[guideId];
+    if (serverKey) {
+        safeAnswers = {};
+        Object.keys(serverKey).forEach((id) => {
+            const answer = String((answers || {})[id] || '').toUpperCase();
+            if (['A','B','C','D'].includes(answer)) safeAnswers[id] = answer;
+        });
+        safeCorrect = Object.keys(serverKey).reduce((sum, id) => sum + (safeAnswers[id] === serverKey[id] ? 1 : 0), 0);
+        safeTotal = Object.keys(serverKey).length;
+        safeScore = Math.round((safeCorrect / safeTotal) * 100);
+    }
 
-    // .update() preserva una eventual calificación del docente (nodo 'grade')
-    // draft=true => autoguardado silencioso (no marca submittedAt, status 'draft')
+    if (!draft && serverKey && Object.keys(safeAnswers).length !== safeTotal) {
+        return res.status(400).json({ error: 'Debes responder todas las preguntas antes de entregar.' });
+    }
+
+    const now = Date.now();
     const payload = {
         rut: rutLimpio,
         nombre: nombre.trim(),
         curso: curso.trim(),
-        guiaId: String(guiaId),
-        answers: answers || {},
+        guiaId: guideId,
+        answers: safeAnswers,
         dev: dev || {},
-        correct: parseInt(correct, 10) || 0,
-        total: parseInt(total, 10) || 0,
-        score: parseInt(score, 10) || 0,
-        lastSavedAt: Date.now(),
-        status: draft ? 'draft' : 'sent'
+        correct: safeCorrect,
+        total: safeTotal,
+        score: safeScore,
+        lastSavedAt: now,
+        updatedAt: now,
+        status: draft ? 'draft' : 'sent',
+        submitted: !draft,
+        completada: !draft
     };
-    if (!draft) payload.submittedAt = Date.now();
+    if (!draft) {
+        payload.submittedAt = now;
+        payload.completadaAt = now;
+    }
 
-    await ref.update(payload);
-    return res.status(200).json({ success: true });
+    const tx = await ref.transaction((current) => {
+        if (current && (current.status === 'sent' || current.completada === true)) return;
+        return Object.assign({}, current || {}, payload);
+    });
+    if (!tx.committed) {
+        return res.status(409).json({ error: 'La guía ya fue enviada. El docente debe restablecerla para responder nuevamente.' });
+    }
+    const saved = tx.snapshot.val() || {};
+    return res.status(200).json({
+        success: true,
+        status: saved.status,
+        submitted: saved.submitted === true,
+        completada: saved.completada === true,
+        submittedAt: saved.submittedAt || null,
+        completadaAt: saved.completadaAt || null
+    });
 }
 
 async function handleGetGuiaDraft(req, res) {
@@ -150,11 +353,91 @@ async function handleGetGuiaDraft(req, res) {
             answers: v.answers || {},
             dev: v.dev || {},
             status: v.status || null,
-            score: typeof v.score === 'number' ? v.score : null,
+            submitted: v.submitted === true || v.status === 'sent',
+            completada: v.completada === true || v.status === 'sent',
+            submittedAt: v.submittedAt || null,
+            completadaAt: v.completadaAt || null,
             lastSavedAt: v.lastSavedAt || v.submittedAt || null
         } : null
     });
 }
+
+async function handleGetGuiaState(req, res) {
+    const guideId = String(req.query.guiaId || req.body.guiaId || '');
+    const rut = cleanRut(req.query.rut || req.body.rut);
+    if (!guideId || !rut) return res.status(400).json({ error: 'guiaId y rut requeridos' });
+
+    const snap = await db.ref(`${BASE}/guia_respuestas/${guideId}/${rut}`).once('value');
+    if (!snap.exists()) return res.status(200).json({ success: true, attempt: null, released: false });
+
+    const value = snap.val() || {};
+    const released = await isGuideReleased(guideId, value.curso, rut);
+    const attempt = {
+        answers: value.answers || {},
+        dev: value.dev || {},
+        status: value.status || 'draft',
+        submitted: value.submitted === true || value.status === 'sent',
+        completada: value.completada === true || value.status === 'sent',
+        submittedAt: value.submittedAt || null,
+        completadaAt: value.completadaAt || null,
+        lastSavedAt: value.lastSavedAt || null
+    };
+    if (released && attempt.completada) {
+        attempt.result = {
+            correct: Number(value.correct) || 0,
+            total: Number(value.total) || 0,
+            score: Number(value.score) || 0
+        };
+    }
+    return res.status(200).json({ success: true, attempt, released });
+}
+
+async function handleSubmitGuia14(req, res) {
+    const { rut, nombre, curso, answers, form, incidents, startedAt, final } = req.body;
+    if (!rut || !nombre || !curso) return res.status(400).json({ error:'rut, nombre y curso requeridos' });
+    const rutLimpio = cleanRut(rut);
+    const ref = db.ref(`${BASE}/guia_respuestas/14/${rutLimpio}`);
+    const previous = await ref.once('value');
+    if (previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent') {
+        return res.status(409).json({ error:'El ensayo ya fue enviado. El docente debe restablecerlo para responder nuevamente.' });
+    }
+    const safeAnswers = {};
+    Object.keys(G14_KEY).forEach(id => {
+        if (answers && ['A','B','C','D'].includes(answers[id])) safeAnswers[id] = answers[id];
+    });
+    if (final && Object.keys(safeAnswers).length === 0) {
+        return res.status(400).json({ error:'No se puede entregar un ensayo sin respuestas.' });
+    }
+    const payload = {
+        rut:rutLimpio, nombre:String(nombre).trim(), curso:String(curso).trim(), guiaId:'14',
+        instrumentVersion:G14_VERSION,
+        answers:safeAnswers, form:Array.isArray(form) ? form : [], incidents:Array.isArray(incidents) ? incidents.slice(-300) : [],
+        startedAt:Number(startedAt) || Date.now(), lastSavedAt:Date.now(), status:final ? 'sent' : 'draft'
+    };
+    if (final) { Object.assign(payload, scoreGuia14(payload.answers, rutLimpio)); payload.submittedAt=Date.now(); }
+    await ref.set(payload);
+    return res.status(200).json({ success:true, status:payload.status });
+}
+
+async function handleGetGuia14Form(req, res) {
+    const rut = cleanRut(req.query.rut || req.body.rut);
+    if (!rut) return res.status(400).json({error:'rut requerido'});
+    return res.status(200).json({success:true, form:createG14Form(rut)});
+}
+
+async function handleGetGuia14State(req, res) {
+    const rut=cleanRut(req.query.rut || req.body.rut);
+    if (!rut) return res.status(400).json({error:'rut requerido'});
+    const snap=await db.ref(`${BASE}/guia_respuestas/14/${rut}`).once('value');
+    if (!snap.exists()) return res.status(200).json({success:true,attempt:null,released:false});
+    const v=snap.val();
+    if (!isCurrentGuia14Record(v)) return res.status(200).json({success:true,attempt:null,released:false});
+    const released=await isGuideReleased('14',v.curso,rut);
+    const attempt={answers:v.answers||{},form:v.form||[],incidents:v.incidents||[],startedAt:v.startedAt||null,status:v.status||'draft'};
+    if(released && v.status==='sent') attempt.result={correct:v.correct,total:v.total,equivalentCorrect:v.equivalentCorrect,paesReferential:v.paesReferential,skills:v.skills,itemCorrect:v.itemCorrect||{},displayAnswers:v.displayAnswers||{},displayKeys:v.displayKeys||{}};
+    return res.status(200).json({success:true,attempt,released});
+}
+
 
 async function handleTrackDownload(req, res) {
     const { rut, nombre, curso, guiaId } = req.body;
@@ -184,6 +467,65 @@ async function handleGetNominaExtra(req, res) {
     const snap = await db.ref(`${BASE}/nomina_extra`).once('value');
     const val = snap.exists() ? snap.val() : {};
     return res.status(200).json({ success: true, nomina_extra: Object.values(val) });
+}
+
+// Lee la config de acceso de guías (qué guías están bloqueadas para los alumnos).
+// blocked = { id: true } -> solo las listadas están bloqueadas; ausente/false = habilitada.
+async function readGuiasConfig() {
+    const snap = await db.ref(`${BASE}/guias_config`).once('value');
+    const v = snap.exists() ? snap.val() : {};
+    return {
+        blocked: (v && v.blocked) || {},
+        exceptions: (v && v.exceptions) || {},
+        updatedAt: (v && v.updatedAt) || null,
+        updatedBy: (v && v.updatedBy) || null
+    };
+}
+
+// Acción pública: las páginas del alumno (guias.html y cada guiaN.html) consultan esto al cargar.
+async function handleGetGuiasConfig(req, res) {
+    const config = await readGuiasConfig();
+    const rut = cleanRut(req.query.rut || (req.body && req.body.rut) || '');
+    const allowed = {};
+    if (rut) {
+        Object.keys(config.exceptions || {}).forEach((guideId) => {
+            if (config.exceptions[guideId] && config.exceptions[guideId][rut] === true) allowed[guideId] = true;
+        });
+    }
+    return res.status(200).json({
+        success: true,
+        config: { blocked: config.blocked, allowed, updatedAt: config.updatedAt }
+    });
+}
+
+// ============ LIBRO DE NOTAS ============
+// libro_notas/{rut} = { nombre, curso, notas: { "3":"7.0", ..., "A" }, updatedAt }
+async function readLibroNotas() {
+    const snap = await db.ref(`${BASE}/libro_notas`).once('value');
+    return snap.exists() ? snap.val() : {};
+}
+
+// Acción pública: el alumno consulta sus propias notas en su panel.
+async function handleGetMisNotas(req, res) {
+    const rut = req.query.rut || req.body.rut;
+    if (!rut) return res.status(400).json({ error: 'RUT requerido' });
+    const snap = await db.ref(`${BASE}/libro_notas/${cleanRut(rut)}`).once('value');
+    return res.status(200).json({ success: true, libro: snap.exists() ? snap.val() : null });
+}
+
+// Admin: guarda (o borra si viene vacío) la nota de una sesión para un alumno.
+async function handleAdminSaveNota(req, res) {
+    const { rut, nombre, curso, sesion, nota } = req.body;
+    if (!rut || sesion === undefined || sesion === null || String(sesion).trim() === '') {
+        return res.status(400).json({ error: 'rut y sesion requeridos' });
+    }
+    const rutLimpio = cleanRut(rut);
+    const val = (nota === undefined || nota === null || String(nota).trim() === '') ? null : String(nota).trim();
+    const updates = { [`notas/${String(sesion).trim()}`]: val, updatedAt: Date.now() };
+    if (nombre) updates.nombre = String(nombre).trim();
+    if (curso) updates.curso = String(curso).trim();
+    await db.ref(`${BASE}/libro_notas/${rutLimpio}`).update(updates);
+    return res.status(200).json({ success: true });
 }
 
 async function handleGetStudentStatus(req, res) {
@@ -221,13 +563,51 @@ async function handleAdminGetResults(req, res) {
         db.ref(`${BASE}/nomina_extra`).once('value')
     ]);
 
+    const guiaRespuestas = guiaRespSnap.exists() ? guiaRespSnap.val() : {};
+    if (guiaRespuestas['14']) guiaRespuestas['14'] = sanitizeGuia14ForAdmin(guiaRespuestas['14']);
+
     return res.status(200).json({
         success: true,
         resultados: resultadosSnap.exists() ? resultadosSnap.val() : {},
         guias: guiasSnap.exists() ? guiasSnap.val() : {},
-        guia_respuestas: guiaRespSnap.exists() ? guiaRespSnap.val() : {},
-        nomina_extra: nominaExtraSnap.exists() ? Object.values(nominaExtraSnap.val()) : []
+        guia_respuestas: guiaRespuestas,
+        nomina_extra: nominaExtraSnap.exists() ? Object.values(nominaExtraSnap.val()) : [],
+        guias_config: await readGuiasConfig(),
+        libro_notas: await readLibroNotas()
     });
+}
+
+// Guarda qué guías quedan bloqueadas para los alumnos.
+// body.blocked = { id: true, ... } (ids ausentes = habilitadas).
+async function handleAdminSetGuiasConfig(req, res, decoded) {
+    const raw = (req.body && req.body.blocked) || {};
+    const blocked = {};
+    Object.keys(raw).forEach((id) => {
+        const key = String(id).trim();
+        if (key && raw[id]) blocked[key] = true;
+    });
+
+    await db.ref(`${BASE}/guias_config`).update({
+        blocked: Object.keys(blocked).length ? blocked : null,
+        updatedAt: Date.now(),
+        updatedBy: (decoded && decoded.email) ? decoded.email : 'docente'
+    });
+
+    return res.status(200).json({ success: true, config: await readGuiasConfig() });
+}
+
+async function handleAdminSetGuiaException(req, res, decoded) {
+    const guideId = String((req.body && req.body.guideId) || '').trim();
+    const rut = cleanRut((req.body && req.body.rut) || '');
+    const allowed = !!(req.body && req.body.allowed);
+    if (!guideId || !rut) return res.status(400).json({ error: 'guideId y rut requeridos' });
+
+    await db.ref(`${BASE}/guias_config/exceptions/${guideId}/${rut}`).set(allowed ? true : null);
+    await db.ref(`${BASE}/guias_config`).update({
+        updatedAt: Date.now(),
+        updatedBy: (decoded && decoded.email) ? decoded.email : 'docente'
+    });
+    return res.status(200).json({ success: true, config: await readGuiasConfig() });
 }
 
 async function handleAdminGradeGuia(req, res, decoded) {
@@ -298,6 +678,20 @@ async function handleAdminResetResult(req, res) {
     return res.status(200).json({ success: true });
 }
 
+async function handleAdminSetGuiaRelease(req, res, forcedGuideId) {
+    const { scope, value, released } = req.body;
+    const guideId = String(forcedGuideId || req.body.guiaId || '');
+    if (!guideId) return res.status(400).json({error:'guiaId requerido'});
+    if (!['all','course','student'].includes(scope)) return res.status(400).json({error:'scope inválido'});
+    const base=releaseBase(guideId);
+    let path=`${base}/all`;
+    if(scope==='course') path=`${base}/courses/${releaseKey(value)}`;
+    if(scope==='student') path=`${base}/students/${cleanRut(value)}`;
+    await db.ref(path).set(!!released);
+    return res.status(200).json({success:true,guiaId:guideId});
+}
+
+
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -318,6 +712,12 @@ module.exports = async (req, res) => {
         if (action === 'get-student-status') return await handleGetStudentStatus(req, res);
         if (action === 'get-nomina-extra') return await handleGetNominaExtra(req, res);
         if (action === 'get-guia-draft') return await handleGetGuiaDraft(req, res);
+        if (action === 'get-guia-state') return await handleGetGuiaState(req, res);
+        if (action === 'submit-guia14') return await handleSubmitGuia14(req, res);
+        if (action === 'get-guia14-state') return await handleGetGuia14State(req, res);
+        if (action === 'get-guia14-form') return await handleGetGuia14Form(req, res);
+        if (action === 'get-guias-config') return await handleGetGuiasConfig(req, res);
+        if (action === 'get-mis-notas') return await handleGetMisNotas(req, res);
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);
@@ -329,6 +729,11 @@ module.exports = async (req, res) => {
             case 'admin-reset-guia': return await handleAdminResetGuia(req, res);
             case 'admin-save-student': return await handleAdminSaveStudent(req, res);
             case 'admin-delete-student': return await handleAdminDeleteStudent(req, res);
+            case 'admin-set-guia14-release': return await handleAdminSetGuiaRelease(req, res, '14');
+            case 'admin-set-guia-release': return await handleAdminSetGuiaRelease(req, res);
+            case 'admin-set-guias-config': return await handleAdminSetGuiasConfig(req, res, decoded);
+            case 'admin-set-guia-exception': return await handleAdminSetGuiaException(req, res, decoded);
+            case 'admin-save-nota': return await handleAdminSaveNota(req, res);
             default: return res.status(400).json({ error: 'Acción no válida' });
         }
     } catch (error) {

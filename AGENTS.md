@@ -3,7 +3,7 @@
 ## ⚠️ Carpeta de trabajo y deploy (CRÍTICO)
 
 - Trabaja SIEMPRE en el clon local `C:\dev\profe-blog`. NO uses la copia dentro de OneDrive: OneDrive corrompe el `.git` (errores `mmap`, commits fantasma, divergencias entre PCs). Ver `CLAUDE.md`.
-- Deploy del sitio: `git push origin HEAD:main` (Vercel auto-despliega). Reglas de Firebase: `npx firebase deploy --only database --project profe-blog`.
+- Deploy de Estudia CEST: confirmar primero los cambios en Git y, desde `C:\dev\profe-blog\estudiacest`, ejecutar exclusivamente `npm run deploy:prod:safe`. Reglas de Firebase: `npx firebase deploy --only database --project estudiacest`.
 
 ## Regla obligatoria de sincronización multiagente (CRÍTICO)
 
@@ -40,8 +40,7 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 
 - `3A-TP`, `3B-TP`, `3D-TP` default to Lecturas.
 - `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` default to NM4.
-- `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` belong to the future PAES section and must not be treated as NM3 or NM4 defaults.
-- Until the PAES section exists, those HC PAES courses fall back to `estudiacest/estudiantes/dashboard.html`.
+- `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` use the active PAES section under `estudiacest/paes/` and must not be treated as NM3 or NM4 defaults.
 - If a student profile is incomplete, redirect through `estudiacest/estudiantes/perfil.html` with a `next` path.
 
 ## Validation And Deploy
@@ -49,7 +48,15 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 - After route or UI edits, run focused validation on the touched files.
 - For static-only checks, a local HTTP server is fine; local static servers will not serve `/api/*` and will return 501 for POST requests.
 - For login, admin, API, and console checks, validate against the deployed site.
-- Production deploy command from `profefconuva/estudiacest`: `npx vercel deploy --prod --yes --scope fconuvas-projects`.
+- Production deploy command from `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Direct `vercel deploy --prod` is prohibited because it bypasses the academic inventory gate.
+
+## PAES Interactive Sessions
+
+- The server computes scores for interactive PAES guides; never trust `correct`, `total`, or `score` sent by the browser.
+- A final submission stores `submitted: true`, `completada: true`, both timestamps, and becomes immutable until the teacher resets it.
+- Correct answers, feedback, and scores remain hidden until the teacher publishes results for the selected guide and course in `/paes/admin/`.
+- New PAES sessions must be registered in `estudiacest/scripts/class-submission-contract.json` and `estudiacest/scripts/academic-release-manifest.json`.
+- Visual assessment resources must preserve exactly the information used by the items. Inspect generated images at original resolution before publication.
 
 ## Session Grading
 

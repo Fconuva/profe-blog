@@ -10,7 +10,7 @@ user-invocable: true
 ## When To Use
 - Shared login changes in `estudiacest/lecturas/index.html`
 - Root entry and redirect changes in `estudiacest/index.html`
-- NM3, NM4, and future PAES route decisions by course
+- NM3, NM4, and active PAES route decisions by course
 - Lecturas admin panel maintenance and audits
 - Production console-error review
 - Vercel deploy and post-deploy validation for `estudiacest`
@@ -21,6 +21,7 @@ user-invocable: true
 - Common login: `estudiacest/lecturas/index.html`
 - Student dashboard and profile: `estudiacest/estudiantes/`
 - NM4 guided activity: `estudiacest/nm4/`
+- PAES HC portal and admin: `estudiacest/paes/`
 - Lecturas dashboard: `estudiacest/lecturas/dashboard.html`
 - Lecturas admin: `estudiacest/lecturas/adminprofe/index.html`
 - Owner admin email: `portafolio.admin@estudiacest.com`
@@ -43,7 +44,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 ## Current Routing Rules
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP` -> `/lecturas/dashboard`
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/nm4/`
-- PAES HC placeholder: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/estudiantes/dashboard.html`
+- PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/paes/`
 - Remaining students: `/estudiantes/dashboard.html`
 - Incomplete profile: `/estudiantes/perfil.html?next=...`
 
@@ -76,7 +77,8 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - `python -m http.server` or similar static servers will not serve `/api/lecturas-login`; POST checks there will fail with 501.
 - `fetch_webpage` can show cached or pre-redirect HTML; browser validation is the source of truth for the live route.
 - Some fixes in legacy/duplicate admin surfaces may need syncing between `profefconuva/estudiantes/adminprofe/index.html` and `profefconuva/estudiacest/estudiantes/adminprofe/index.html`.
-- The PAES HC section is planned but not built yet. Do not route those courses into NM3 or NM4 by default.
+- PAES final submissions are immutable until reset, are scored on the server, and hide keys, feedback, and scores until the teacher publishes results in `/paes/admin/`.
+- Register every new interactive class in `scripts/class-submission-contract.json` and every critical route or asset in `scripts/academic-release-manifest.json`.
 - `sesion-u2-1` is not writing-only through generic `notes`: `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` stores writing in `ticket` and `thesisContexts`.
 - The extra `2A-HC` block inside `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` is course-gated but should read as two extra opinion columns only.
 - Keep the hidden rule in docs and code: Text 2 checks posture + support, Text 3 checks objection + response. Do not expose activation or scoring language in student-facing copy.
@@ -84,4 +86,4 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - Activating a contracted plan from an archived pre-registration must clear the portfolio archive fields. Do not generalize this to blocked users, cancellations, or contracted records archived intentionally.
 
 ## Deploy Command
-- From `profefconuva/estudiacest`: `npx vercel deploy --prod --yes --scope fconuvas-projects`
+- From `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Do not invoke Vercel directly.

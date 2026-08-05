@@ -9,6 +9,7 @@ Proyecto aislado para mover las rutas `/estudiantes`, `/lecturas`, `/nm4` y `/np
 - `lecturas/index.html` incluye acceso `Administrador` hacia `/admin/`.
 - `admin/index.html` es el pre-admin docente para elegir entre el panel SIMCE/Estudiantes y el panel Lecturas.
 - El destino tras login se resuelve por curso, `target`, asignaciones Lecturas y perfil completo.
+- Si el perfil autenticado contiene una `ruta_personal` interna bajo `/estudiantes/`, esta tiene prioridad sobre los destinos por curso o sesion solicitada. La ruta se asigna al UID activo y no expone antecedentes sensibles.
 - Las sesiones de la plataforma estudiantes viven en `plataforma_estudiantes/sesiones/{sesionId}` y sus respuestas/resultados en `respuestas/{sesionId}/{uid}` y `resultados/{sesionId}/{uid}`.
 - NM4 es solo para cursos TP (`4A-TP` a `4E-TP`).
 - PAES actual (`3A-HC`, `3B-HC`, `4A-HC`, `4B-HC`) queda fuera de NM4 mientras la seccion PAES no exista.
@@ -16,6 +17,15 @@ Proyecto aislado para mover las rutas `/estudiantes`, `/lecturas`, `/nm4` y `/np
 ## Referencia operativa
 
 - Ver `../../00 - Workspace y Soporte/03 - Deploy y Referencia/ESTUDIACEST_WORKFLOW_OPERATIVO_2026.md` para flujo de auditoria, validacion y deploy.
+
+## Entrega de clases interactivas
+
+- El contrato obligatorio está en `CONTRATO_ENTREGA_CLASES.md`.
+- Toda página nueva o modificada que autoguarde y entregue debe registrarse en `scripts/class-submission-contract.json`.
+- La entrega final guarda `submitted: true` y `completada: true` juntas, después de esperar la cola de autoguardado.
+- El éxito se anuncia únicamente después de leer la confirmación desde Firebase; luego el dashboard debe mostrar `Completada`.
+- Verificación local: `npm run verify:class-submission`.
+- Las inconsistencias se auditan y reparan primero en modo de simulación; nunca se completa un borrador que no tenga toda la evidencia requerida.
 
 ## Calificacion de sesiones
 

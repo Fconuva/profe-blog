@@ -467,6 +467,10 @@
       return /^(3A|3B|4A|4B)-HC$/.test(normalizeCourse(curso));
     }
 
+    function isSimceCourse(curso) {
+      return /^(2A|2B)-HC$/.test(normalizeCourse(curso));
+    }
+
     function isAccessOnlyStudent(student) {
       return !!(student && (student.access_only === true || student.access_only === 'true' || student.access_only === 1));
     }
@@ -556,7 +560,17 @@
       return DEFAULT_LECTURAS_DASHBOARD;
     }
 
+    function getPersonalRoute(student) {
+      const route = String(student && student.ruta_personal || '').trim();
+      return route.startsWith('/estudiantes/') ? route : '';
+    }
+
     async function getDefaultRoute(uid, student) {
+      const personalRoute = getPersonalRoute(student);
+      if (personalRoute) return personalRoute;
+      if (student && isSimceCourse(student.curso)) {
+        return '/estudiantes/dashboard.html';
+      }
       return DEFAULT_LECTURAS_DASHBOARD;
     }
 
@@ -564,6 +578,9 @@
       if (isAccessOnlyStudent(student)) {
         return DEFAULT_LECTURAS_DASHBOARD;
       }
+
+      const personalRoute = getPersonalRoute(student);
+      if (personalRoute) return personalRoute;
 
       if (requestedNext) {
         return requestedNext;

@@ -116,6 +116,19 @@ async function readDatabaseValue(env, accessToken, dbPath) {
   return requestJson(url);
 }
 
+async function patchDatabaseValue(env, accessToken, dbPath, updates) {
+  const body = JSON.stringify(updates);
+  const url = env.databaseURL + '/' + dbPath + '.json?access_token=' + encodeURIComponent(accessToken);
+  return requestJson(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Content-Length': String(Buffer.byteLength(body))
+    },
+    body
+  });
+}
+
 function isSessionAssignedToStudent(session, uid, curso) {
   if (!session || !Array.isArray(session.asignados) || !session.asignados.length) return true;
   return session.asignados.includes(uid) || session.asignados.includes(curso);
@@ -134,6 +147,110 @@ async function main() {
     readDatabaseValue(env, accessToken, BASE + '/estudiantes'),
     readDatabaseValue(env, accessToken, BASE + '/sesiones')
   ]);
+
+  const repairArgIndex = process.argv.indexOf('--repair-session');
+  const repairSession = repairArgIndex >= 0 ? String(process.argv[repairArgIndex + 1] || '').trim() : '';
+  if (repairSession) {
+    const responses = await readDatabaseValue(env, accessToken, `${BASE}/respuestas/${repairSession}`) || {};
+    const baseKeys = ['C','A','D','B','D','A','B','D','A','C','B','D','A','C','B','A','C','B','B','C','A','D','B','C','A','D','B','C','D','A'];
+    const letterMaps = [
+      { A:'A', B:'B', C:'C', D:'D' },
+      { A:'B', B:'C', C:'D', D:'A' },
+      { A:'C', B:'D', C:'A', D:'B' },
+      { A:'D', B:'A', C:'B', D:'C' }
+    ];
+    const hashUid = uid => {
+      let hash = 0;
+      for (const character of uid) hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+      return hash;
+    };
+    const scoreResponse = (uid, response) => {
+      const letterMap = letterMaps[hashUid(uid) % letterMaps.length];
+      return baseKeys.reduce((score, key, index) => score + (response.answers && response.answers[`q${index + 1}`] === letterMap[key] ? 1 : 0), 0);
+    };
+    const isStructurallyComplete = response => {
+      const matching = response && response.concepts && response.concepts.matching;
+      const tf = response && response.concepts && response.concepts.tf;
+      const meta = (response && response.meta) || {};
+      return response
+        && Object.keys(response.answers || {}).length >= 30
+        && String(response.open || '').trim().length >= 40
+        && ['m1', 'm2', 'm3'].every(key => String(meta[key] || '').trim().length >= 12)
+        && Array.isArray(matching) && matching.length >= 6 && matching.every(value => String(value) !== '')
+        && Array.isArray(tf) && tf.length >= 6 && tf.every(value => value === '0' || value === '1');
+    };
+    const pending = Object.entries(responses).filter(([, response]) => response && response.completada !== true && (response.submitted === true || isStructurallyComplete(response)));
+    const missingScores = Object.entries(responses).filter(([, response]) => response && response.completada === true && isStructurallyComplete(response) && typeof response.score !== 'number');
+    const candidates = [...new Map([...pending, ...missingScores].map(entry => [entry[0], entry])).values()];
+    const updates = {};
+    candidates.forEach(([uid, response]) => {
+      updates[`${uid}/completada`] = true;
+      updates[`${uid}/completadaAt`] = response.submittedAt || response.updatedAt || Date.now();
+      updates[`${uid}/submitted`] = true;
+      updates[`${uid}/submittedAt`] = response.submittedAt || response.updatedAt || Date.now();
+      updates[`${uid}/score`] = typeof response.score === 'number' ? response.score : scoreResponse(uid, response);
+      updates[`${uid}/total`] = 30;
+    });
+    const apply = process.argv.includes('--apply');
+    if (apply && candidates.length) {
+      await patchDatabaseValue(env, accessToken, `${BASE}/respuestas/${repairSession}`, updates);
+    }
+    console.log(JSON.stringify({
+      session: repairSession,
+      detected: pending.length,
+      submittedWithoutCompletion: pending.filter(([, response]) => response.submitted === true).length,
+      completeDrafts: pending.filter(([, response]) => response.submitted !== true && isStructurallyComplete(response)).length,
+      missingScores: missingScores.length,
+      repaired: apply ? candidates.length : 0,
+      uids: candidates.map(([uid]) => uid)
+    }, null, 2));
+    return;
+  }
+
+  const courseArgIndex = process.argv.indexOf('--course');
+  const courseQuery = courseArgIndex >= 0 ? String(process.argv[courseArgIndex + 1] || '').trim().toUpperCase() : '';
+  if (courseQuery) {
+    const roster = Object.entries(students || {})
+      .map(([uid, student]) => ({ uid, ...student }))
+      .filter(student => String(student.curso || '').trim().toUpperCase() === courseQuery);
+    const activeSessions = Object.entries(sessions || {})
+      .filter(([, session]) => session && session.activa === true)
+      .map(([id, session]) => ({ id, ...session }));
+    const issues = roster.flatMap(student => {
+      const studentIssues = [];
+      if (!student.rut) studentIssues.push('sin RUT');
+      if (String(student.programa || 'simce').toLowerCase() !== 'simce') studentIssues.push('programa distinto de simce');
+      if (!student.perfil_completo) studentIssues.push('perfil incompleto');
+      if (!activeSessions.some(session => isSessionAssignedToStudent(session, student.uid, student.curso))) {
+        studentIssues.push('sin sesión activa visible');
+      }
+      return studentIssues.length ? [{ uid: student.uid, nombre: student.nombre, rut: student.rut, issues: studentIssues }] : [];
+    });
+    console.log(JSON.stringify({ course: courseQuery, total: roster.length, activeSessions: activeSessions.map(s => s.id), issues }, null, 2));
+    return;
+  }
+
+  const nameArgIndex = process.argv.indexOf('--name');
+  const nameQuery = nameArgIndex >= 0 ? String(process.argv[nameArgIndex + 1] || '').trim().toUpperCase() : '';
+  if (nameQuery) {
+    const matches = Object.entries(students || {})
+      .map(([uid, student]) => ({ uid, ...student }))
+      .filter(student => String(student.nombre || '').toUpperCase().includes(nameQuery));
+    const report = matches.map(student => ({
+      student,
+      visibleSessions: Object.entries(sessions || {})
+        .filter(([, session]) => isSessionAssignedToStudent(session, student.uid, student.curso))
+        .map(([id, session]) => ({
+          id,
+          titulo: session.titulo || session.title || '',
+          estado: session.estado || '',
+          activa: session.activa,
+          asignados: session.asignados || []
+        }))
+    }));
+    console.log(JSON.stringify(report, null, 2));
+    return;
+  }
 
   const targetSessions = TARGET_SESSION_IDS
     .map(id => ({ id, ...(sessions && sessions[id] ? sessions[id] : null) }))

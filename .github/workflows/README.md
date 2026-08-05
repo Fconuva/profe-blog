@@ -21,13 +21,13 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 ## Change Workflow
 
 1. Complete the mandatory multi-agent sync and read the latest remote changes.
-2. Work in `profefconuva/estudiacest` unless the task explicitly targets the legacy site.
+2. Work in `C:\dev\profe-blog\estudiacest` unless the task explicitly targets the legacy site.
 3. If routing changes, confirm the current course map before editing.
 4. Apply the smallest patch possible.
 5. Run focused validation on touched files.
 6. Test browser behavior on the real route.
 7. If the change touches auth or API, validate on production or a real app server.
-8. Repeat the sync gate and deploy with Vercel.
+8. Repeat the sync gate, commit the exact source state, and deploy with `npm run deploy:prod:safe`.
 9. Re-check the live site and at least one real user flow.
 10. Update `AGENTS.md` and `.github/skills/estudiacest-platform/SKILL.md` when behavior changes.
 
@@ -46,8 +46,8 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP`
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP`
-- PAES HC placeholder: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC`
-- Do not route PAES HC into Lecturas or NM4 until the PAES section exists.
+- PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` under `/paes/`.
+- PAES results remain hidden until the teacher publishes them for the selected guide and course.
 
 ## Audit Workflow
 
@@ -67,7 +67,7 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 
 ## Deploy Command
 
-- `npx vercel deploy --prod --yes --scope fconuvas-projects`
+- From `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Direct production deployment is prohibited.
 
 ## Local Testing Note
 

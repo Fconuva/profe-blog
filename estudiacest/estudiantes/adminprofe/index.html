@@ -141,7 +141,7 @@
             <label>Contraseña</label>
             <input type="password" id="adminPass" placeholder="••••••••" autocomplete="current-password">
         </div>
-        <button type="submit" class="login-btn">Ingresar</button>
+        <button type="submit" class="login-btn" id="adminLoginBtn">Ingresar</button>
         </form>
         <div class="login-error" id="loginError"></div>
     </div>
@@ -275,6 +275,8 @@
                 </select>
                 <select id="sessionUnitFilter" onchange="applySessionScopeFilters()">
                     <option value="">Todas las unidades</option>
+                    <option value="u4">Unidad 4</option>
+                    <option value="u3">Unidad 3</option>
                     <option value="u2">🚀 Unidad 2</option>
                     <option value="u1">📚 Unidad 1</option>
                     <option value="__legacy">🗂 Sin unidad / legado</option>
@@ -286,7 +288,7 @@
                 <span id="sessionScopeSummary" style="margin-left:auto;font-size:12px;color:#64748b"></span>
             </div>
             <div class="panel-table">
-                <table><thead><tr><th>Creada</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Retro</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
+                <table><thead><tr><th>Aplicación</th><th>Título</th><th>Textos</th><th>Preguntas</th><th>Activa</th><th>Resultados</th><th>Retro</th><th>🛡️ Anti-Copia</th><th>📝 Notas</th><th>📤 Parcial</th><th>Respuestas</th><th>⏱ Tiempo</th><th>Acciones</th></tr></thead>
                 <tbody id="sessionsBody"></tbody></table>
             </div>
         </div>
@@ -314,10 +316,10 @@
                 <button class="btn btn-danger" id="btnDetenerRes" onclick="toggleDetenerFromResults()" style="font-size:12px">⏸ Detener Respuestas</button>
                 <button class="btn btn-warn" onclick="forceSubmitPending()" style="font-size:12px">📤 Forzar Envío Pendientes</button>
                 <span id="detenerStatus" style="font-size:12px;color:#64748b;line-height:32px"></span>
-                <div id="unlockRow" style="display:none;flex-basis:100%;display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;padding:8px;background:#f5f3ff;border-radius:8px;border:1px solid #e9d5ff">
-                    <span style="font-size:12px;font-weight:700;color:#7c3aed">🔓 Abrir Individual:</span>
+                <div id="unlockRow" style="display:none;flex-basis:100%;gap:8px;align-items:center;flex-wrap:wrap;margin-top:4px;padding:8px;background:#f5f3ff;border-radius:8px;border:1px solid #e9d5ff">
+                    <span style="font-size:12px;font-weight:700;color:#7c3aed">🔓 Excepción por inasistencia:</span>
                     <select id="unlockStudentSel" style="font-size:12px;padding:4px 8px;border-radius:6px;border:1px solid #e2e8f0;max-width:250px"></select>
-                    <button class="btn" style="background:#7c3aed;color:#fff;font-size:12px;padding:4px 12px" onclick="abrirIndividual()">Abrir</button>
+                    <button class="btn" style="background:#7c3aed;color:#fff;font-size:12px;padding:4px 12px" onclick="abrirIndividual()">Habilitar solo a este estudiante</button>
                     <div id="unlockList" style="flex-basis:100%;margin-top:4px"></div>
                 </div>
             </div>
@@ -477,6 +479,16 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
     </div>
 </div>
 
+<!-- Individual Session Access -->
+<div class="modal-overlay" id="modal-studentAccess">
+    <div class="modal" style="max-width:760px;max-height:85vh;overflow-y:auto">
+        <h3 id="studentAccessName">Clases habilitadas</h3>
+        <p style="font-size:13px;color:#64748b;margin:4px 0 16px">Habilita una clase cerrada solo para este estudiante. No requiere que tenga respuestas previas y no modifica sus notas.</p>
+        <div id="studentAccessContent"></div>
+        <div class="modal-actions"><button class="btn btn-secondary" onclick="closeModal('studentAccess')">Cerrar</button></div>
+    </div>
+</div>
+
 <!-- View Session -->
 <div class="modal-overlay" id="modal-viewSession">
     <div class="modal" style="max-width:800px;max-height:85vh;overflow-y:auto">
@@ -509,7 +521,9 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 const FIREBASE_CONFIG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
 firebase.initializeApp(FIREBASE_CONFIG);
 const auth=firebase.auth();
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error=>{
+    console.warn('No se pudo confirmar la persistencia local de la sesión:',error);
+});
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
@@ -538,19 +552,51 @@ let allResults={};
 let allResponses={};
 let currentAdminUid=null;
 let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
+let autoLoginAttempted=false;
+let authStateResolved=false;
+let adminValidationRun=0;
 
 /* ============ AUTH ============ */
-function adminLogin(){
+async function adminLogin(){
     const email=document.getElementById('adminEmail').value.trim();
     const pass=document.getElementById('adminPass').value;
     const errEl=document.getElementById('loginError');
+    const btn=document.getElementById('adminLoginBtn');
     errEl.style.display='none';
     if(!email||!pass){errEl.textContent='Completa ambos campos';errEl.style.display='block';return}
-    auth.signInWithEmailAndPassword(email,pass).catch(e=>{
+    btn.disabled=true;
+    btn.textContent='Ingresando...';
+    try{
+        await authPersistenceReady;
+        await auth.signInWithEmailAndPassword(email,pass);
+    }catch(e){
         errEl.textContent=e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'Contraseña incorrecta':e.code==='auth/user-not-found'?'Usuario no encontrado':'Error: '+e.message;
         errEl.style.display='block';
-    });
+    }finally{
+        btn.disabled=false;
+        btn.textContent='Ingresar';
+    }
 }
+
+function tryAutoLoginFromSavedCredentials(){
+    if(!authStateResolved||autoLoginAttempted||auth.currentUser) return;
+    const email=document.getElementById('adminEmail');
+    const pass=document.getElementById('adminPass');
+    if(!email||!pass||!email.value.trim()||!pass.value) return;
+    autoLoginAttempted=true;
+    adminLogin();
+}
+
+// Chrome puede completar la contraseña unos instantes después de cargar la página.
+// Si existen credenciales guardadas, entra sin exigir un segundo clic.
+window.addEventListener('load',()=>{
+    let checks=0;
+    const autoLoginTimer=setInterval(()=>{
+        checks++;
+        tryAutoLoginFromSavedCredentials();
+        if(autoLoginAttempted||auth.currentUser||checks>=20) clearInterval(autoLoginTimer);
+    },250);
+});
 
 function isPermissionDeniedError(error){
     const code=String((error&&error.code)||'').toLowerCase();
@@ -563,7 +609,7 @@ async function readOnceWithRetry(path,attempts=4,delayMs=800){
     for(let attempt=0;attempt<attempts;attempt++){
         try{
             if(auth.currentUser&&attempt>0){
-                try{ await auth.currentUser.getIdToken(true); }catch(ignore){}
+                try{ await auth.currentUser.getIdToken(); }catch(ignore){}
             }
             return await db.ref(path).once('value');
         }catch(error){
@@ -576,21 +622,48 @@ async function readOnceWithRetry(path,attempts=4,delayMs=800){
 }
 
 auth.onAuthStateChanged(async user=>{
+    authStateResolved=true;
+    const validationRun=++adminValidationRun;
     if(!user){
         document.getElementById('loginScreen').style.display='flex';
         document.getElementById('adminPanel').style.display='none';
+        currentAdminUid=null;
+        currentDocente=null;
         return;
     }
-    try{ await user.getIdToken(true); }catch(ignore){}
+    const errEl=document.getElementById('loginError');
+    let snap;
+    try{
+        await authPersistenceReady;
+        await user.getIdToken();
+        snap=await readOnceWithRetry(BASE+'/admins/'+user.uid,5,1000);
+    }catch(error){
+        if(validationRun!==adminValidationRun) return;
+        if(currentAdminUid===user.uid){
+            document.getElementById('loginScreen').style.display='none';
+            document.getElementById('adminPanel').style.display='block';
+            toast('Conexión inestable. La sesión sigue activa; reintentando…','err');
+            setTimeout(()=>{if(auth.currentUser?.uid===user.uid) loadAllData().catch(console.error)},3000);
+        }else{
+            document.getElementById('loginScreen').style.display='flex';
+            document.getElementById('adminPanel').style.display='none';
+            errEl.textContent='La sesión sigue activa, pero no fue posible cargar los permisos. Revisa la conexión y vuelve a intentar.';
+            errEl.style.display='block';
+        }
+        console.error('Error al validar el acceso administrativo:',error);
+        return;
+    }
+    if(validationRun!==adminValidationRun||auth.currentUser?.uid!==user.uid) return;
     // Check admin role
-    const snap=await readOnceWithRetry(BASE+'/admins/'+user.uid,3,800);
     if(!snap.val()){
-        toast('No tienes permisos de administrador','err');
-        setTimeout(()=>{auth.signOut()},2000);
+        document.getElementById('loginScreen').style.display='flex';
+        document.getElementById('adminPanel').style.display='none';
+        errEl.textContent='La cuenta inició sesión, pero no se pudo confirmar el permiso administrativo. Intenta nuevamente en unos segundos.';
+        errEl.style.display='block';
         return;
     }
     // Load docente profile
-    const docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,3,800);
+    const docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,5,1000);
     const docData=docSnap.val();
     if(docData){
         currentDocente={
@@ -641,11 +714,19 @@ function isMiSesion(ses){
     return ses.docenteUid===currentAdminUid;
 }
 
-function getSessionAssignedCourses(ses){
+function getSessionAssignedTargets(ses){
     if(Array.isArray(ses?.asignados)) return ses.asignados.filter(Boolean);
     if(typeof ses?.asignados==='string') return [ses.asignados];
     if(ses?.asignados&&typeof ses.asignados==='object') return Object.keys(ses.asignados);
     return [];
+}
+
+function getSessionAssignedCourses(ses){
+    const courses=getSessionAssignedTargets(ses).map(target=>{
+        if(ALL_CURSOS[target]) return target;
+        return students[target]?.curso||'';
+    }).filter(Boolean);
+    return [...new Set(courses)];
 }
 
 function isSessionArchived(ses){
@@ -658,11 +739,22 @@ function normalizeSessionUnit(unit){
     const compact=raw.replace(/[^a-z0-9]/g,'');
     if(compact==='u1'||compact==='unidad1') return 'u1';
     if(compact==='u2'||compact==='unidad2') return 'u2';
+    if(compact==='u3'||compact==='unidad3') return 'u3';
+    if(compact==='u4'||compact==='unidad4') return 'u4';
     return raw;
 }
 
 function getSessionCreatedAt(ses){
     return Number(ses?.createdAt||ses?.created_at||ses?.timestamp||0)||0;
+}
+
+function getSessionAppliedAt(ses){
+    const raw=String(ses?.fecha||ses?.fecha_aplicacion||'').trim();
+    if(raw){
+        const parsed=Date.parse(/^\d{4}-\d{2}-\d{2}$/.test(raw)?raw+'T12:00:00':raw);
+        if(Number.isFinite(parsed)) return parsed;
+    }
+    return getSessionCreatedAt(ses);
 }
 
 function getSessionUnitRank(unit){
@@ -673,17 +765,17 @@ function getSessionUnitRank(unit){
 
 function getSessionUnitLabel(unit){
     const normalized=normalizeSessionUnit(unit);
-    if(normalized==='u1') return 'Unidad 1';
-    if(normalized==='u2') return 'Unidad 2';
+    const match=normalized.match(/^u(\d+)$/);
+    if(match) return 'Unidad '+match[1];
     if(!normalized) return 'Sin unidad';
     return String(unit||'Sin unidad');
 }
 
 function formatSessionCreatedAt(ses){
-    const createdAt=getSessionCreatedAt(ses);
-    if(!createdAt) return '—';
-    return new Date(createdAt).toLocaleString('es-CL',{
-        day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'
+    const appliedAt=getSessionAppliedAt(ses);
+    if(!appliedAt) return 'Sin fecha';
+    return new Date(appliedAt).toLocaleDateString('es-CL',{
+        day:'2-digit',month:'short',year:'numeric'
     });
 }
 
@@ -692,6 +784,8 @@ function getSessionSelectorLabel(ses){
     const unit=normalizeSessionUnit(ses.panel_unidad);
     const courses=getSessionAssignedCourses(ses);
     if(unit) parts.push(getSessionUnitLabel(unit));
+    const applicationDate=formatSessionCreatedAt(ses);
+    if(applicationDate!=='Sin fecha') parts.push(applicationDate);
     if(courses.length===1) parts.push(cShort(courses[0]));
     else if(courses.length>1) parts.push(courses.map(cShort).join('/'));
     const archivedPrefix=isSessionArchived(ses)?'🗄 ':'';
@@ -708,6 +802,22 @@ function populateSessionCourseFilter(){
         html+=`<option value="${curso}"${curso===current?' selected':''}>${cLabel(curso)}</option>`;
     }
     selectEl.innerHTML=html;
+}
+
+function populateSessionUnitFilter(){
+    const selectEl=document.getElementById('sessionUnitFilter');
+    if(!selectEl) return;
+    const current=selectEl.value;
+    const units=[...new Set(Object.values(sessions)
+        .filter(s=>isMiSesion(s))
+        .map(s=>normalizeSessionUnit(s.panel_unidad))
+        .filter(Boolean))]
+        .sort((a,b)=>getSessionUnitRank(b)-getSessionUnitRank(a));
+    // Keep the four curricular units visible even before they have responses.
+    for(const unit of ['u4','u3','u2','u1']) if(!units.includes(unit)) units.push(unit);
+    selectEl.innerHTML='<option value="">Todas las unidades</option>'
+        +units.map(unit=>`<option value="${unit}"${unit===current?' selected':''}>${getSessionUnitLabel(unit)}</option>`).join('')
+        +'<option value="__legacy"'+(current==='__legacy'?' selected':'')+'>Sin unidad / legado</option>';
 }
 
 function getSessionScopeState(){
@@ -741,6 +851,8 @@ function getVisibleSessionEntries(){
     }
 
     items.sort((a,b)=>{
+        const byApplied=getSessionAppliedAt(b)-getSessionAppliedAt(a);
+        if(byApplied!==0) return byApplied;
         const byCreated=getSessionCreatedAt(b)-getSessionCreatedAt(a);
         if(byCreated!==0) return byCreated;
         const byUnit=getSessionUnitRank(b.panel_unidad)-getSessionUnitRank(a.panel_unidad);
@@ -760,7 +872,7 @@ function renderSessionScopeSummary(items){
     const total=allItems.length;
     const archivedCount=allItems.filter(s=>isSessionArchived(s)).length;
     const {courseFilter,unitFilter,hideArchived}=getSessionScopeState();
-    const summary=['Mostrando '+items.length+' de '+total+' sesiones','mas nuevas primero'];
+    const summary=['Mostrando '+items.length+' de '+total+' sesiones','aplicación más reciente primero'];
     if(courseFilter==='__general') summary.push('Solo sin curso');
     else if(courseFilter) summary.push(cLabel(courseFilter));
     if(unitFilter==='__legacy') summary.push('Solo sin unidad');
@@ -806,6 +918,7 @@ function applyDocenteFilters(){
 
     // Session course filter
     populateSessionCourseFilter();
+    populateSessionUnitFilter();
 
     // New student curso select
     const newStudentCurso=document.getElementById('newStudentCurso');
@@ -844,6 +957,7 @@ async function loadAllData(){
     sessions=sesS.val()||{};
     allResults=resS.val()||{};
     allResponses=respS.val()||{};
+    populateSessionUnitFilter();
     renderOverview();
     renderStudents();
     renderSessions();
@@ -1015,7 +1129,10 @@ function renderLiveProgress(){
             answeredCount=Object.keys(ans).length;
             const nts=resp.notes||{};
             filledNotes=Object.values(nts).filter(n=>n&&n.trim()).length;
-            statusBadge=`<span class="badge badge-amber">⏳ Trabajando</span>`;
+            const blk=resp.bloqueado_por_strikes||resp.auto_submitted||resp.bloqueado_por_copia;
+            statusBadge = blk
+                ? `<span class="badge" style="background:#fee2e2;color:#b91c1c">🔒 Bloqueado${resp.strikes?(' · '+resp.strikes+' strikes'):' · strikes'}</span>`
+                : `<span class="badge badge-amber">⏳ Trabajando</span>`;
             lastAct=resp.last_save?new Date(resp.last_save).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
         } else {
             status='notstarted';notStarted++;
@@ -1038,7 +1155,8 @@ function renderLiveProgress(){
 
     document.getElementById('liveBody').innerHTML=rows.map(r=>{
         const prog=totalQ>0?`${r.answeredCount}/${totalQ} preg`+(totalNotes>0?` · ${r.filledNotes}/${totalNotes} notas`:''):'—';
-        const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button>`:'';
+        const safeNombre=(r.nombre||'').replace(/'/g,'');
+        const actionBtn=r.status!=='notstarted'?`<button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="viewStudentResponses('${r.uid}','${sesId}')">📝 Ver</button> <button class="btn btn-sm" style="background:#0ea5e9;color:#fff" title="Reabrir / desbloquear (mantiene respuestas)" onclick="softResetStudent('${r.uid}','${sesId}','${safeNombre}')">🔓 Reabrir</button>`:'';
         return `<tr>
             <td><strong>${r.nombre}</strong></td>
             <td><span class="badge ${cBadge(r.curso)}">${cShort(r.curso)}</span></td>
@@ -1083,6 +1201,7 @@ function renderStudents(){
                 <button class="btn btn-sm btn-warn" onclick="resetPassword('${s.uid}')">🔑</button>
                 <button class="btn btn-sm" style="background:#0ea5e9;color:#fff" onclick="forceRefreshStudent('${s.uid}')" title="Forzar recarga de página">🔄</button>
                 <button class="btn btn-sm" style="background:#8b5cf6;color:#fff" onclick="generateLoginLink('${s.uid}')" title="Generar link de acceso (bypass rate-limit)">🔗</button>
+                <button class="btn btn-sm" style="background:#0f766e;color:#fff" onclick="openStudentAccess('${s.uid}')" title="Habilitar clases cerradas para este estudiante">🔓 Clases</button>
                 <button class="btn btn-sm btn-primary" onclick="viewStudentDetail('${s.uid}')">👁</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteStudent('${s.uid}')">🗑</button>
             </td></tr>`;
@@ -1356,6 +1475,50 @@ function viewStudentDetail(uid){
     openModal('studentDetail');
 }
 
+function studentCanSeeSession(uid,est,ses){
+    const assigned=getSessionAssignedTargets(ses);
+    return isMiSesion(ses)&&(!assigned.length||assigned.includes(uid)||assigned.includes(est.curso));
+}
+
+function openStudentAccess(uid){
+    const est=students[uid];
+    if(!est)return;
+    document.getElementById('studentAccessName').textContent='Clases habilitadas · '+est.nombre;
+    const eligible=Object.entries(sessions)
+        .filter(([,ses])=>studentCanSeeSession(uid,est,ses))
+        .filter(([,ses])=>ses.activa===false||ses.respuestas_bloqueadas===true||ses.excepciones_desbloqueo?.[uid]===true)
+        .sort((a,b)=>(Number(b[1].orden)||0)-(Number(a[1].orden)||0));
+    const content=document.getElementById('studentAccessContent');
+    if(!eligible.length){
+        content.innerHTML='<div style="padding:18px;background:#f8fafc;border:1px solid #e2e8f0;color:#64748b">No hay clases cerradas o detenidas aplicables a este estudiante.</div>';
+    }else{
+        content.innerHTML=eligible.map(([sesId,ses])=>{
+            const allowed=ses.excepciones_desbloqueo?.[uid]===true;
+            const state=ses.activa===false?'Clase cerrada':'Respuestas detenidas';
+            return `<div style="display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px;border:1px solid #e2e8f0;background:#fff;margin-bottom:8px">
+                <div><strong>${esc(ses.titulo||sesId)}</strong><br><span style="font-size:11px;color:#64748b">${state} · ${allowed?'Excepción activa':'Sin acceso individual'}</span></div>
+                <button class="btn btn-sm ${allowed?'btn-danger':'btn-success'}" onclick="toggleStudentSessionAccess('${uid}','${sesId}',${!allowed})">${allowed?'Quitar acceso':'Habilitar'}</button>
+            </div>`;
+        }).join('');
+    }
+    openModal('studentAccess');
+}
+
+async function toggleStudentSessionAccess(uid,sesId,allowed){
+    const est=students[uid],ses=sessions[sesId];
+    if(!est||!ses)return;
+    const action=allowed?'habilitar':'quitar el acceso a';
+    if(!confirm('¿'+action+' \"'+(ses.titulo||sesId)+'\" para '+est.nombre+'?'))return;
+    try{
+        await db.ref(BASE+'/sesiones/'+sesId+'/excepciones_desbloqueo/'+uid).set(allowed?true:null);
+        if(!ses.excepciones_desbloqueo)ses.excepciones_desbloqueo={};
+        if(allowed)ses.excepciones_desbloqueo[uid]=true;
+        else delete ses.excepciones_desbloqueo[uid];
+        openStudentAccess(uid);
+        toast(allowed?'Clase habilitada solo para '+est.nombre:'Acceso individual retirado','ok');
+    }catch(e){toast('Error: '+e.message,'err')}
+}
+
 /* ============ SESSIONS ============ */
 function renderSessions(){
     const tbody=document.getElementById('sessionsBody');
@@ -1369,7 +1532,7 @@ function renderSessions(){
         const archived=isSessionArchived(s);
         const archivedBadge=archived?'<span class="badge badge-gray">🗄 Archivada</span>':'';
         const assignedCourses=getSessionAssignedCourses(s);
-        const asignadosCount=assignedCourses.length;
+        const asignadosCount=getSessionAssignedTargets(s).length;
         const asigBadge=asignadosCount?`<span class="badge badge-purple">👤 ${asignadosCount} asignado(s)</span>`:'';
         const meta=[];
         const unit=normalizeSessionUnit(s.panel_unidad);
@@ -1377,7 +1540,7 @@ function renderSessions(){
         if(assignedCourses.length) meta.push(assignedCourses.map(cLabel).join(', '));
         else meta.push('Sin curso / general');
         const createdLabel=formatSessionCreatedAt(s);
-        if(createdLabel!=='—') meta.push('Creada '+createdLabel);
+        if(createdLabel!=='Sin fecha') meta.push('Aplicación '+createdLabel);
         return `<tr>
             <td><strong>${createdLabel}</strong></td>
             <td>${s.titulo||'Sin título'} ${progBadge} ${archivedBadge} ${asigBadge}<br><span style="font-size:11px;color:#94a3b8">${meta.join(' · ')||'Sin metadatos'}${s.descripcion?' · '+(s.descripcion||'').substring(0,60):''}</span></td>
@@ -1405,6 +1568,7 @@ function renderSessions(){
             </td>
             <td>
                 <button class="btn btn-sm" style="background:#3b82f6;color:#fff" onclick="viewSession('${s.id}')">👁 Ver</button>
+                <button class="btn btn-sm" style="background:#0f766e;color:#fff" onclick="activateOnlySession('${s.id}')">⭐ Solo esta</button>
                 <button class="btn btn-sm" style="background:${archived?'#16a34a':'#64748b'};color:#fff" onclick="toggleSessionArchive('${s.id}',${!archived})">${archived?'📂 Desarchivar':'🗄 Archivar'}</button>
                 <button class="btn btn-sm btn-warn" onclick="resetSessionResults('${s.id}')">🔄 Reset</button>
                 <button class="btn btn-sm btn-danger" onclick="deleteSession('${s.id}')">🗑</button>
@@ -1426,6 +1590,27 @@ async function toggleSesField(sesId,field,val){
         };
         toast((labels[field]||field)+' actualizado','ok');
     }catch(e){toast('Error','err')}
+}
+
+async function activateOnlySession(sesId){
+    const target=sessions[sesId];
+    if(!target) return;
+    if(!confirm('¿Dejar activa SOLO \"'+(target.titulo||sesId)+'\" y desactivar las demás sesiones?\\n\\nNo se borrarán respuestas, resultados ni calificaciones.')) return;
+    try{
+        const patch={};
+        Object.entries(sessions).forEach(([id,s])=>{
+            if(isMiSesion(s)) patch[id+'/activa']=id===sesId;
+        });
+        await db.ref(BASE+'/sesiones').update(patch);
+        Object.entries(sessions).forEach(([id,s])=>{
+            if(isMiSesion(s)) s.activa=id===sesId;
+        });
+        renderSessions();
+        renderOverview();
+        toast('Solo esta sesión quedó activa','ok');
+    }catch(e){
+        toast('No se pudo actualizar: '+e.message,'err');
+    }
 }
 
 async function toggleSessionArchive(sesId,val){
@@ -2681,26 +2866,25 @@ async function resetSessionResults(sesId){
 }
 
 async function softResetStudent(uid,sesId,nombre){
-    if(!confirm('🔓 Desbloquear strikes de '+nombre+'?\n\nSe limpian strikes y bloqueos.\nSus respuestas se MANTIENEN (sigue donde quedó).'))return;
+    if(!confirm('🔓 Reabrir / desbloquear a '+nombre+'?\n\nSe limpian strikes, bloqueos y la marca de "entregada".\nSus respuestas se MANTIENEN (sigue donde quedó).'))return;
     try{
-        await Promise.all([
-            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/strikes').remove(),
-            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/bloqueado_por_copia').remove(),
-            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/completada').remove(),
-            db.ref(BASE+'/respuestas/'+sesId+'/'+uid+'/focus_log').remove()
-        ]);
+        // Limpia TODOS los flags de bloqueo/entrega (strikes nuevos y antiguos)
+        await db.ref(BASE+'/respuestas/'+sesId+'/'+uid).update({
+            strikes:null, bloqueado_por_copia:null, bloqueado_por_strikes:null,
+            auto_submitted:null, auto_submit_motivo:null, strike_motivo:null,
+            last_strike_at:null, completada:null, focus_log:null
+        });
         if(allResponses[sesId]&&allResponses[sesId][uid]){
-            delete allResponses[sesId][uid].strikes;
-            delete allResponses[sesId][uid].bloqueado_por_copia;
-            delete allResponses[sesId][uid].completada;
-            delete allResponses[sesId][uid].focus_log;
+            ['strikes','bloqueado_por_copia','bloqueado_por_strikes','auto_submitted','auto_submit_motivo','strike_motivo','last_strike_at','completada','focus_log']
+                .forEach(k=>delete allResponses[sesId][uid][k]);
         }
         const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove()];
         for(const c of Object.keys(ALL_CURSOS)){rankRemovals.push(db.ref(BASE+'/ranking/'+sesId+'/'+c+'/'+uid).remove())}
         await Promise.all(rankRemovals);
         if(allResults[sesId])delete allResults[sesId][uid];
         loadResults();
-        toast(nombre+': strikes limpiados, conserva sus respuestas','ok');
+        if(typeof renderLiveProgress==='function') renderLiveProgress();
+        toast(nombre+': reabierto/desbloqueado (conserva sus respuestas)','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
 
@@ -2713,6 +2897,7 @@ async function hardResetStudent(uid,sesId,nombre){
         if(allResults[sesId])delete allResults[sesId][uid];
         if(allResponses[sesId])delete allResponses[sesId][uid];
         loadResults();
+        if(typeof renderLiveProgress==='function') renderLiveProgress();
         toast(nombre+': reset completo, debe hacerla de nuevo','ok');
     }catch(e){toast('Error: '+e.message,'err')}
 }
@@ -2760,29 +2945,31 @@ async function forceSubmitPending(){
         const detalle={};
         let total=inferredTotal;
 
-        if(preguntas.length>0){
-            // Standard session — use contenido.preguntas
+        if(!isLinkGuia && preguntas.length>0){
+            // Standard session — use contenido.preguntas (traen 'correcta')
             preguntas.forEach(q=>{
-                const detailKey=isLinkGuia?(String(q.id).startsWith('q')?String(q.id):'q'+q.id):String(q.id);
+                const detailKey=String(q.id);
                 const userAns=answers[detailKey]||answers[q.id]||null;
-                const isCorrect=userAns===q.correcta;
+                const correcta=(q.correcta!==undefined&&q.correcta!==null)?q.correcta:null;
+                const isCorrect=correcta!==null&&userAns===correcta;
                 if(isCorrect)correct++;
-                detalle[detailKey]={respuesta:userAns,correcta:q.correcta,esCorrecta:isCorrect};
+                detalle[detailKey]={respuesta:(userAns!==undefined?userAns:null),correcta:correcta,esCorrecta:isCorrect};
             });
             total=preguntas.length;
         } else {
-            // link_guia session (S5 etc.) — use answers + correctas from first result's detalle
+            // link_guia session (guías u2/S5 etc.) — usar el detalle real de un alumno ya entregado
             const refResult=Object.values(resSes).find(r=>r.detalle);
-            if(refResult?.detalle){
+            if(refResult&&refResult.detalle){
                 for(const[qId,ref]of Object.entries(refResult.detalle)){
-                    const userAns=answers[qId]||null;
-                    const isCorrect=userAns===ref.correcta;
+                    const userAns=answers[qId]!==undefined?answers[qId]:null;
+                    const correcta=(ref&&ref.correcta!==undefined&&ref.correcta!==null)?ref.correcta:null;
+                    const isCorrect=correcta!==null&&userAns===correcta;
                     if(isCorrect)correct++;
-                    detalle[qId]={respuesta:userAns,correcta:ref.correcta,esCorrecta:isCorrect};
+                    detalle[qId]={respuesta:userAns,correcta:correcta,esCorrecta:isCorrect};
                 }
                 total=Object.keys(refResult.detalle).length;
             } else {
-                // No reference — count answered questions only
+                // Sin referencia (nadie entregó aún, o guía de solo escritura) — no se computan correctas
                 total=Object.keys(answers).length||1;
             }
         }
@@ -2855,6 +3042,43 @@ function viewStudentResponses(uid, sesId){
     if(!est||!ses)return;
 
     document.getElementById('respStudentName').textContent=est.nombre+' — '+(ses.titulo||sesId);
+
+    // ---- Render dedicado: clase de escritura argumentativa (SIMCE U2 C4; individual o en parejas) ----
+    if(ses.trabajo_en_parejas || ses.formato_panel==='argumentativo' || /argumentativo/.test((res&&res.tipo)||'') || /argumentativo/.test((resp&&resp.tipo)||'')){
+        const data=(res&&res.texto)||resp?.answers||{};
+        const pn=res?.pareja_nombre||resp?.pareja_nombre||'';
+        const pnum=res?.pareja_n||resp?.pareja_n||'';
+        const estado=res?'✅ Entregado':(resp?'⏳ Trabajando':'🔘 Sin iniciar');
+        const F=id=>esc(String(data[id]||'').trim()||'—');
+        const box=(t,v)=>`<div style="margin-bottom:10px"><div style="font-weight:700;font-size:12px;color:#0b4f9c">${t}</div><div style="font-size:13px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;white-space:pre-wrap">${v}</div></div>`;
+        let h='';
+        h+=`<div style="background:#eef2ff;border:1px solid #c7d2fe;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">`;
+        if(pn) h+=`<div><strong>👥 Pareja (trabajo antiguo):</strong> ${esc(pn)}${pnum?(' · Pareja '+pnum):''}</div>`;
+        h+=`<div><strong>Estado:</strong> ${estado}${res?.submitted_at?(' · '+new Date(res.submitted_at).toLocaleString('es-CL')):''}</div>`;
+        const nStrikes=Number(res?.strikes||resp?.strikes||0);
+        const autoSub=(res?.auto_submitted||resp?.auto_submitted)?' · ⛔ auto-enviado por strikes':'';
+        if(nStrikes>0||autoSub) h+=`<div style="color:#b91c1c"><strong>⚠️ Strikes:</strong> ${nStrikes}/5${autoSub}</div>`;
+        h+=`</div>`;
+        h+='<h4 style="font-size:14px;margin:6px 0 8px">1) Análisis estilo SIMCE</h4>';
+        h+=box('a) Tesis del texto',F('a_postura'));
+        h+=box('b) Hecho vs opinión',F('a_tema'));
+        h+=box('c) Función del dato',F('a_debatible'));
+        h+=box('d) Falla de argumentación',F('a_mejora'));
+        h+=box('e) Cómo responde el autor a la oposición',F('a_contra'));
+        h+='<h4 style="font-size:14px;margin:14px 0 8px">2) Planificación y tesis</h4>';
+        h+=box('Lluvia de ideas',F('lluvia'));
+        h+=box('Tesis propia',F('tesis_propia'));
+        h+='<h4 style="font-size:14px;margin:14px 0 8px">3) Argumentos (Base / Garantía / Respaldo)</h4>';
+        [1,2,3].forEach(n=>{ h+=`<div style="border:1px solid #e2e8f0;border-radius:8px;padding:8px;margin-bottom:8px"><div style="font-weight:700;font-size:12px;color:#334155">Argumento ${n}</div>`+box('🟡 Base',F('b'+n))+box('🔵 Garantía',F('g'+n))+box('🟢 Respaldo',F('r'+n))+`</div>`; });
+        h+='<h4 style="font-size:14px;margin:14px 0 8px">4) Contraargumento y refutación</h4>';
+        h+=box('Contraargumento',F('contraargumento'));
+        h+=box('Refutación',F('refutacion'));
+        h+='<h4 style="font-size:14px;margin:14px 0 8px">5) Conclusión</h4>';
+        h+=box('Conclusión',F('conclusion'));
+        document.getElementById('respStudentContent').innerHTML=h;
+        openModal('studentResponses');
+        return;
+    }
 
     const presentedOptionsMap=resp?.presented_options||res?.presented_options||{};
     function normalizePresentedOption(option,question){
@@ -3373,7 +3597,7 @@ async function abrirIndividual(){
     const uid=document.getElementById('unlockStudentSel').value;
     if(!sesId||!uid){toast('Selecciona sesión y estudiante','err');return}
     const est=students[uid];
-    if(!confirm('¿Abrir sesión "'+sessions[sesId]?.titulo+'" para '+est.nombre+'?\nPodrá realizar la evaluación aunque esté detenida.'))return;
+    if(!confirm('¿Habilitar "'+sessions[sesId]?.titulo+'" solo para '+est.nombre+'?\nPodrá ingresar aunque la clase esté cerrada o las respuestas estén detenidas.'))return;
     try{
         await db.ref(BASE+'/sesiones/'+sesId+'/excepciones_desbloqueo/'+uid).set(true);
         if(!sessions[sesId].excepciones_desbloqueo)sessions[sesId].excepciones_desbloqueo={};
@@ -3398,7 +3622,7 @@ function updateUnlockUI(sesId){
     const sel=document.getElementById('unlockStudentSel');
     const listEl=document.getElementById('unlockList');
     const unlockRow=document.getElementById('unlockRow');
-    if(!sesId||!sessions[sesId]?.respuestas_bloqueadas){
+    if(!sesId||(!sessions[sesId]?.respuestas_bloqueadas&&sessions[sesId]?.activa!==false)){
         unlockRow.style.display='none';
         return;
     }
@@ -3416,7 +3640,7 @@ function updateUnlockUI(sesId){
     sel.innerHTML=opts;
     const unlocked=Object.keys(excepciones).filter(uid=>excepciones[uid]&&students[uid]);
     if(unlocked.length>0){
-        listEl.innerHTML='<strong>🔓 Abierta para:</strong> '+
+        listEl.innerHTML='<strong>🔓 Excepción individual:</strong> '+
             unlocked.map(uid=>`<span style="display:inline-block;background:#ede9fe;color:#7c3aed;padding:2px 8px;border-radius:4px;margin:2px;font-size:11px">${students[uid].nombre} <a href="#" style="color:#dc2626;text-decoration:none;font-weight:700" onclick="event.preventDefault();cerrarIndividual('${uid}','${sesId}')">✕</a></span>`).join(' ');
     }else{
         listEl.innerHTML='';

@@ -500,6 +500,30 @@
       color: rgba(255, 255, 255, 0.1);
     }
 
+    /* === LIBRO DE NOTAS === */
+    .nota-input {
+      width: 48px;
+      text-align: center;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1.5px solid var(--border-color);
+      border-radius: 8px;
+      padding: 6px 4px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      transition: all 0.15s;
+    }
+    .nota-input:focus {
+      outline: none;
+      border-color: var(--paes-color-light);
+      background: rgba(0, 0, 0, 0.35);
+    }
+    .nota-input.is-A { color: #f87171; border-color: rgba(239,68,68,.25); }
+    .nota-input.is-low { color: #fbbf24; }
+    .nota-input.is-ok { color: #6ee7b7; }
+    .prom-cell { font-weight: 800; font-family: 'Outfit', sans-serif; }
+
     /* === DETAIL MODAL === */
     .modal-overlay {
       position: fixed;
@@ -773,6 +797,16 @@
           <span>👥</span> Estudiantes
         </button>
       </li>
+      <li>
+        <button class="nav-btn" data-tab="bloqueo">
+          <span>🔒</span> Bloqueo de Guías
+        </button>
+      </li>
+      <li>
+        <button class="nav-btn" data-tab="libro">
+          <span>📒</span> Libro de Notas
+        </button>
+      </li>
     </ul>
 
     <div class="sidebar-footer">
@@ -849,6 +883,8 @@
               <option value="both_completed">Ambos Completados</option>
               <option value="pending">Ambos Pendientes</option>
             </select>
+            <button class="btn-action-small" id="releaseGuiaCourse" title="Mostrar resultados de la guía seleccionada al curso filtrado">Publicar resultados</button>
+            <button class="btn-reset-small" id="hideGuiaCourse" title="Volver a ocultar los resultados de la guía seleccionada">Ocultar resultados</button>
           </div>
         </div>
 
@@ -1018,6 +1054,97 @@
       </div>
     </section>
 
+    <!-- ================= VIEW 5: BLOQUEO DE GUÍAS ================= -->
+    <section class="tab-view" id="viewBloqueo">
+      <div class="card-panel">
+
+        <div class="card-header">
+          <div>
+            <h3>Bloqueo de Guías</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Controla qué guías pueden abrir los estudiantes. Una guía bloqueada no se puede resolver en línea ni descargar desde el portal. Usa <strong>“⭐ Solo esta”</strong> para dejar habilitada únicamente la guía de hoy.</p>
+          </div>
+          <div class="filters-bar">
+            <button class="btn-action-small" id="btnEnableAll" style="background: rgba(16,185,129,.1); border-color: rgba(16,185,129,.3); color: #6ee7b7;">✅ Habilitar todas</button>
+            <button class="btn-reset-small" id="btnBlockAll">🔒 Bloquear todas</button>
+          </div>
+        </div>
+
+        <div id="bloqueoInfo" style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px;"></div>
+
+        <div style="border:1px solid var(--border-color);background:rgba(255,255,255,.02);padding:16px;margin-bottom:18px;">
+          <div style="font-weight:800;color:#fff;margin-bottom:4px;">Excepción individual por inasistencia justificada</div>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Permite que un estudiante abra una guía bloqueada sin habilitarla para el resto del curso. No borra respuestas ni modifica notas.</p>
+          <div class="filters-bar" style="justify-content:flex-start;flex-wrap:wrap;">
+            <select id="exceptionGuide" style="min-width:260px;"></select>
+            <select id="exceptionCourse" style="min-width:150px;" onchange="populateExceptionStudents()">
+              <option value="">Todos los cursos</option>
+            </select>
+            <select id="exceptionStudent" style="min-width:300px;">
+              <option value="">Seleccionar estudiante</option>
+            </select>
+            <button class="btn-action-small" onclick="saveGuiaException(true)">Habilitar solo a este estudiante</button>
+          </div>
+          <div id="exceptionList" style="margin-top:12px;font-size:12px;color:var(--text-muted);"></div>
+        </div>
+
+        <div class="table-container">
+          <table class="datatable" id="bloqueoTable">
+            <thead>
+              <tr>
+                <th style="width: 360px;">Guía</th>
+                <th style="width: 120px;">Tipo</th>
+                <th style="width: 130px;">Estado</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="bloqueoTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ================= VIEW 6: LIBRO DE NOTAS ================= -->
+    <section class="tab-view" id="viewLibro">
+      <div class="card-panel">
+
+        <div class="card-header">
+          <div>
+            <h3>Libro de Notas</h3>
+            <p style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Notas por guía del Taller PAES. Edita cualquier celda (número 1.0–7.0 o <strong>A</strong> = ausente) y se guarda al salir del campo. El promedio omite las ausencias y las celdas vacías. Escala: L=7 · ML=5 · PL=3 · NL=1.</p>
+          </div>
+          <div class="filters-bar">
+            <input type="text" class="search-input" id="searchLibro" placeholder="Buscar por nombre o RUT...">
+            <select class="select-filter" id="filterCourseLibro" title="Curso">
+              <option value="3°A HC">3°A HC</option>
+              <option value="3°B HC">3°B HC</option>
+              <option value="4°A HC">4°A HC</option>
+              <option value="4°B HC">4°B HC</option>
+              <option value="4°D TP">4°D TP</option>
+              <option value="4°E TP">4°E TP</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="table-container" style="max-height: 640px;">
+          <table class="datatable matrix-table" id="libroTable">
+            <thead>
+              <tr id="libroHead">
+                <th class="student-col" style="width: 240px; position: sticky; left: 0; background: #0b0e20; z-index: 10;">Estudiante</th>
+                <!-- columnas de sesión + promedio se generan dinámicamente -->
+              </tr>
+            </thead>
+            <tbody id="libroTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </section>
+
   </main>
 
   <!-- ================= DETAIL VIEW MODAL ================= -->
@@ -1083,13 +1210,13 @@
 
       <!-- Selección (9) -->
       <div style="display: grid; gap: 8px;">
-        <h5 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #fff;">Preguntas de selección (9)</h5>
+        <h5 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #fff;">Reactivos de selección</h5>
         <div class="questions-grid" id="gmSelGrid"></div>
       </div>
 
       <!-- Desarrollo -->
       <div style="display: grid; gap: 8px;">
-        <h5 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #fff;">Respuestas de desarrollo</h5>
+        <h5 style="font-family: 'Outfit', sans-serif; font-size: 15px; font-weight: 800; color: #fff;">Desarrollo y registro de aplicación</h5>
         <div id="gmDevList"></div>
       </div>
 
@@ -1181,7 +1308,34 @@
     const STUDENT_BASE = 'plataforma_estudiantes';
 
     // State Variables
-    let databaseData = { resultados: {}, guias: {}, guiaResp: {} };
+    let databaseData = { resultados: {}, guias: {}, guiaResp: {}, guiasConfig: { blocked: {}, exceptions: {} }, libroNotas: {} };
+
+    // Guías del Taller PAES que muestra el Libro de Notas.
+    const SESIONES_LIBRO = [3, 4, 5, 6, 7, 8, 9, 10, 11];
+
+    // ====== CATÁLOGO DE GUÍAS (ids compartidos con guias.html y guia-lock.js) ======
+    // El 'id' debe coincidir con data-guia-id en guias.html y window.GUIA_LOCK_ID en cada guiaN.html
+    const GUIAS_CATALOG = [
+      { id: 'g1',    n: 'Guía N°1 — Localizar e Interpretar',        tipo: 'PDF' },
+      { id: 'g2',    n: 'Guía N°2 — Comprensión Narrativa',          tipo: 'PDF' },
+      { id: 'g4',    n: 'Guía N°4 — Evaluar Textos Argumentativos',  tipo: 'PDF' },
+      { id: 'g6',    n: 'Guía N°6 — Identificar Falacias',           tipo: 'PDF' },
+      { id: 'g7',    n: 'Guía N°7 — Recursos Retóricos',             tipo: 'PDF' },
+      { id: 'g8',    n: 'Guía N°8 — Inferencias (Narrativa LA)',     tipo: 'PDF' },
+      { id: 'g9',    n: 'Guía N°9 — Sesgos y Postura del Emisor',    tipo: 'PDF' },
+      { id: 'g10',   n: 'Guía N°10 — Hipótesis del relato',          tipo: 'Interactiva' },
+      { id: 'g11',   n: 'Guía N°11 — Tres textos tipo PAES',         tipo: 'Interactiva' },
+      { id: 'g12',   n: 'Guía N°12 — Leo para aprender (Localizar)', tipo: 'Interactiva' },
+      { id: 'g13',   n: 'Guía N°13 — Leo para mí (Interpretar)',     tipo: 'Interactiva' },
+      { id: 'g14',   n: 'Guía N°14 — Miniensayo PAES (49 preguntas)', tipo: 'Miniensayo' },
+      { id: 'g15',   n: 'Guía N°15 — Evaluar sin opinar (C-E-J)',    tipo: 'Interactiva' },
+      { id: 'g16',   n: 'Guía N°16 — Textos discontinuos',           tipo: 'Interactiva' },
+      { id: 'g4pie', n: 'Guía N°4 (PIE) — Argumentativos',           tipo: 'PIE' },
+      { id: 'g6pie', n: 'Guía N°6 (PIE) — Falacias',                 tipo: 'PIE' },
+      { id: 'g7pie', n: 'Guía N°7 (PIE) — Recursos Retóricos',       tipo: 'PIE' },
+      { id: 'g8pie', n: 'Guía N°8 (PIE) — Inferencias',              tipo: 'PIE' },
+      { id: 'retro', n: 'Guía de Retroalimentación de Ensayos',      tipo: 'PDF' }
+    ];
     let idToken = null;
     const EXTRA_RUTS = new Set(); // RUTs agregados/editados desde el admin (en Firebase)
     const CURSOS_PAES = ['3°A HC', '3°B HC', '4°A HC', '4°B HC', '4°D TP', '4°E TP'];
@@ -1264,15 +1418,28 @@
         devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
       },
       '14': {
-        titulo: 'Guía 14 — Evaluar I (ensayo · biográfico · columna)',
-        total: 18,
-        key:   { 1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',7:'D',8:'B',9:'C',10:'A',11:'D',12:'B',13:'A',14:'C',15:'D',16:'B',17:'C',18:'A' },
-        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'EVALUAR',5:'EVALUAR',6:'EVALUAR',7:'LOCALIZAR',8:'INTERPRETAR',9:'EVALUAR',10:'EVALUAR',11:'EVALUAR',12:'INTERPRETAR',13:'LOCALIZAR',14:'INTERPRETAR',15:'EVALUAR',16:'EVALUAR',17:'EVALUAR',18:'EVALUAR' },
-        devOrder: ['meta_cierre'],
-        devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
+        titulo: 'Guía 14 — Miniensayo PAES (49 preguntas)',
+        total: 45, itemCount: 49,
+        key: {}, skill: {}, devOrder: [], devLabels: {}
       },
       '15': {
-        titulo: 'Guía 15 — Textos discontinuos (infografía · folleto · instructivo)',
+        titulo: 'Guía 15 — Evaluar sin opinar (Criterio · Evidencia · Juicio)',
+        total: 18,
+        key:   { 1:'B',2:'D',3:'A',4:'C',5:'B',6:'A',7:'D',8:'B',9:'C',10:'A',11:'D',12:'C',13:'B',14:'A',15:'D',16:'B',17:'C',18:'A' },
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'EVALUAR',4:'EVALUAR',5:'EVALUAR',6:'EVALUAR',7:'LOCALIZAR',8:'INTERPRETAR',9:'INTERPRETAR',10:'EVALUAR',11:'EVALUAR',12:'EVALUAR',13:'INTERPRETAR',14:'EVALUAR',15:'EVALUAR',16:'EVALUAR',17:'EVALUAR',18:'EVALUAR' },
+        devOrder: ['concepto_logro','concepto_intentos','meta_criterio','meta_evidencia','meta_distractor','meta_transferencia','meta_meta'],
+        devLabels: {
+          concepto_logro:'Actividad conceptual — logro',
+          concepto_intentos:'Actividad conceptual — intentos de comprobación',
+          meta_criterio:'Metacognición 1 — criterio que reconoce con mayor seguridad',
+          meta_evidencia:'Metacognición 2 — diferencia entre evidencia e impresión',
+          meta_distractor:'Metacognición 3 — análisis de un distractor',
+          meta_transferencia:'Metacognición 4 — transferencia de C-E-J',
+          meta_meta:'Metacognición 5 — paso por mejorar y acción'
+        }
+      },
+      '16': {
+        titulo: 'Guía 16 — Textos discontinuos (infografía · folleto · instructivo)',
         total: 15,
         key:   { 1:'B',2:'D',3:'C',4:'A',5:'D',6:'C',7:'A',8:'B',9:'D',10:'C',11:'A',12:'B',13:'C',14:'D',15:'A' },
         skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'EVALUAR',4:'EVALUAR',5:'EVALUAR',6:'LOCALIZAR',7:'INTERPRETAR',8:'EVALUAR',9:'EVALUAR',10:'EVALUAR',11:'LOCALIZAR',12:'INTERPRETAR',13:'EVALUAR',14:'EVALUAR',15:'EVALUAR' },
@@ -1280,7 +1447,7 @@
         devLabels: { meta_cierre:'Cierre — ¿qué habilidad te costó más y por qué?' }
       }
     };
-    let currentGuia = '10';
+    let currentGuia = '16';
     function cfg() { return GUIAS[currentGuia]; }
     function gmEscape(s){ return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     let gmRut = null;
@@ -1364,6 +1531,8 @@
           databaseData.resultados = data.resultados || {};
           databaseData.guias = data.guias || {};
           databaseData.guiaResp = data.guia_respuestas || {};
+          databaseData.guiasConfig = data.guias_config || { blocked: {} };
+          databaseData.libroNotas = data.libro_notas || {};
 
           mergeNominaExtra(data.nomina_extra || []);
 
@@ -1372,6 +1541,8 @@
           renderGuidesTable();
           renderGuiaIntTable();
           renderStudentsTable();
+          renderBloqueoTable();
+          renderLibroTable();
         }
       } catch (error) {
         console.error('[Fetch DB Error]', error);
@@ -1676,12 +1847,19 @@
       }
 
       rows.forEach(r => {
-        const score = `${r.correct || 0}/${r.total || C.total}`;
         const isDraft = r.status === 'draft';
+        const answered = currentGuia === '14'
+          ? Number.isFinite(Number(r.answered)) ? Number(r.answered) : Object.keys(r.answers || {}).filter(id => /^q\d{2}$/.test(id)).length
+          : 0;
+        const score = currentGuia === '14'
+          ? (isDraft ? `${answered}/${C.itemCount} respondidas` : `${r.correct || 0}/${C.total} correctas · ${answered}/${C.itemCount} respondidas`)
+          : `${r.correct || 0}/${r.total || C.total} correctas`;
         const statusPill = isDraft
           ? `<span class="status-pill pending" title="Aún no la envía: avance autoguardado">⏳ Borrador</span>`
           : `<span class="status-pill completed" title="El alumno la envió">✓ Enviado</span>`;
-        const gradeCell = (r.grade && r.grade.nota)
+        const gradeCell = isDraft
+          ? `<span class="status-pill pending">En curso</span>`
+          : (r.grade && r.grade.nota)
           ? `<span class="status-pill completed">${r.grade.nota}</span>`
           : `<span class="status-pill pending">Sin calificar</span>`;
         const safeName = (r.nombre || '').replace(/'/g, '’');
@@ -1689,7 +1867,7 @@
         tr.innerHTML = `
           <td style="font-weight: 600; color: #fff;">${r.nombre || '—'} &nbsp; ${statusPill}</td>
           <td><span style="font-size: 12px; font-weight: 700; color: var(--paes-color-light);">${r.curso || '—'}</span></td>
-          <td><span class="status-pill completed">${score} correctas</span></td>
+          <td><span class="status-pill ${isDraft ? 'pending' : 'completed'}">${score}</span></td>
           <td>${gradeCell}</td>
           <td>
             <div style="display: flex; gap: 6px;">
@@ -1705,23 +1883,31 @@
     function perHabilidad(rows, C) {
       const agg = { LOCALIZAR:{ok:0,tot:0}, INTERPRETAR:{ok:0,tot:0}, EVALUAR:{ok:0,tot:0} };
       rows.forEach(r => {
+        if (currentGuia === '14' && r.skills) {
+          Object.keys(agg).forEach(sk => { agg[sk].ok += Number(r.skills[sk]?.correct || 0); agg[sk].tot += Number(r.skills[sk]?.total || 0); });
+          return;
+        }
         const ans = r.answers || {};
         for (let q = 1; q <= C.total; q++) {
           const sk = C.skill && C.skill[q]; if (!sk || !agg[sk]) continue;
+          const response = ans[q] || ans[`q${String(q).padStart(2, '0')}`];
           agg[sk].tot++;
-          if (ans[q] === C.key[q]) agg[sk].ok++;
+          if (response === C.key[q]) agg[sk].ok++;
         }
       });
       return agg;
     }
     function renderGuiaHabSummary(rows, C) {
       const box = document.getElementById('guiaHabSummary');
-      if (!rows.length || !C.skill) { box.style.display = 'none'; return; }
-      const agg = perHabilidad(rows, C);
+      const summaryRows = currentGuia === '14'
+        ? rows.filter(r => r.status === 'sent' && r.skills)
+        : rows;
+      if (!summaryRows.length || (currentGuia !== '14' && !C.skill)) { box.style.display = 'none'; return; }
+      const agg = perHabilidad(summaryRows, C);
       const nice = { LOCALIZAR:'Localizar', INTERPRETAR:'Interpretar', EVALUAR:'Evaluar' };
       const col = { LOCALIZAR:'#3b82f6', INTERPRETAR:'#a855f7', EVALUAR:'#10b981' };
       box.style.display = 'flex';
-      box.innerHTML = `<div style="align-self:center; font-size:12px; font-weight:700; color:var(--text-muted);">Logro por habilidad · ${rows.length} alumno(s):</div>` +
+      box.innerHTML = `<div style="align-self:center; font-size:12px; font-weight:700; color:var(--text-muted);">Logro por habilidad · ${summaryRows.length} alumno(s) enviados:</div>` +
         Object.keys(nice).map(k => {
           const pct = agg[k].tot ? Math.round(agg[k].ok / agg[k].tot * 100) : 0;
           return `<div class="metric-card" style="padding:12px 16px; flex-direction:row; align-items:center; gap:10px;">
@@ -1739,28 +1925,47 @@
       gmRut = rut;
 
       const ans0 = r.answers || {};
+      const isDraft = r.status === 'draft';
+      const answered = currentGuia === '14'
+        ? Number.isFinite(Number(r.answered)) ? Number(r.answered) : Object.keys(ans0).filter(id => /^q\d{2}$/.test(id)).length
+        : 0;
       // logro por habilidad del alumno
       const sk = { LOCALIZAR:{ok:0,tot:0}, INTERPRETAR:{ok:0,tot:0}, EVALUAR:{ok:0,tot:0} };
-      for (let q=1; q<=C.total; q++){ const s = C.skill && C.skill[q]; if (s && sk[s]) { sk[s].tot++; if (ans0[q] === C.key[q]) sk[s].ok++; } }
+      if (currentGuia === '14' && r.skills) {
+        Object.keys(sk).forEach(k => { sk[k].ok = Number(r.skills[k]?.correct || 0); sk[k].tot = Number(r.skills[k]?.total || 0); });
+      } else {
+        for (let q=1; q<=C.total; q++){
+          const s = C.skill && C.skill[q];
+          const response = ans0[q] || ans0[`q${String(q).padStart(2, '0')}`];
+          if (s && sk[s]) { sk[s].tot++; if (response === C.key[q]) sk[s].ok++; }
+        }
+      }
       const skStr = ['LOCALIZAR','INTERPRETAR','EVALUAR'].filter(k=>sk[k].tot).map(k=>`${k.slice(0,3)} ${sk[k].ok}/${sk[k].tot}`).join(' · ');
 
       document.getElementById('gmName').textContent = r.nombre || 'Estudiante';
-      document.getElementById('gmMeta').textContent = `${r.curso || ''} · ${C.titulo} · ${r.correct || 0}/${r.total || C.total}${skStr ? ' · ' + skStr : ''}`;
+      const resultMeta = currentGuia === '14'
+        ? (isDraft ? `${answered}/${C.itemCount} respondidas · Borrador` : `${r.correct || 0}/${C.total} correctas · ${answered}/${C.itemCount} respondidas`)
+        : `${r.correct || 0}/${r.total || C.total}`;
+      document.getElementById('gmMeta').textContent = `${r.curso || ''} · ${C.titulo} · ${resultMeta}${skStr ? ' · ' + skStr : ''}`;
 
       // Selección
       const grid = document.getElementById('gmSelGrid');
       grid.innerHTML = '';
-      for (let q = 1; q <= C.total; q++) {
-        const ans = ans0[q];
-        const key = C.key[q];
-        const ok = ans === key;
+      for (let q = 1; q <= (C.itemCount || C.total); q++) {
+        const qid = `q${String(q).padStart(2, '0')}`;
+        const isG14 = currentGuia === '14';
+        const ans = isG14 ? (r.displayAnswers && r.displayAnswers[qid]) : (ans0[q] || ans0[qid]);
+        const key = isG14 ? (r.displayKeys && r.displayKeys[qid]) : C.key[q];
+        const experimental = isG14 && r.itemCorrect && r.itemCorrect[qid] === null;
+        const canEvaluate = !isG14 || !isDraft;
+        const ok = isG14 ? r.itemCorrect && r.itemCorrect[qid] === true : ans === key;
         const cell = document.createElement('div');
-        cell.className = `q-cell ${ans ? (ok ? 'correct' : 'incorrect') : ''}`;
+        cell.className = `q-cell ${experimental || !canEvaluate ? '' : (ans ? (ok ? 'correct' : 'incorrect') : '')}`;
         cell.innerHTML = `
           <div class="q-cell-num">${String(q).padStart(2, '0')}</div>
           <div class="q-cell-ans">
             <span class="student-ans">${ans || '—'}</span>
-            ${ans && !ok ? `<span class="correct-ans">${key}</span>` : ''}
+            ${experimental ? '<span class="correct-ans">EXP</span>' : (ans && !ok ? `<span class="correct-ans">${key}</span>` : '')}
           </div>
           ${C.skill && C.skill[q] ? `<div style="font-size:8px; color:var(--text-muted); font-weight:800; text-transform:uppercase; margin-top:2px;">${C.skill[q].slice(0,3)}</div>` : ''}`;
         grid.appendChild(cell);
@@ -1779,6 +1984,14 @@
           <div style="font-size: 13px; line-height: 1.55; color: ${val ? '#e2e8f0' : 'var(--text-muted)'}; white-space: pre-wrap;">${val ? gmEscape(val) : '(sin responder)'}</div>`;
         list.appendChild(block);
       });
+      if (currentGuia === '14') {
+        const incidents = Array.isArray(r.incidents) ? r.incidents : [];
+        const counts = incidents.reduce((acc, item) => { const k = item.type || 'otro'; acc[k] = (acc[k] || 0) + 1; return acc; }, {});
+        const block = document.createElement('div');
+        block.style.cssText = 'background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;';
+        block.innerHTML = `<div style="font-size:11.5px;font-weight:800;color:var(--paes-color-light);margin-bottom:4px;">Registro de aplicación</div><div style="font-size:13px;color:#e2e8f0;">${incidents.length ? Object.entries(counts).map(([k,v]) => `${gmEscape(k)}: ${v}`).join(' · ') : 'Sin incidentes registrados'}</div>`;
+        list.appendChild(block);
+      }
 
       // Calificación previa
       document.getElementById('gmNota').value = (r.grade && r.grade.nota) ? r.grade.nota : '';
@@ -1960,6 +2173,303 @@
       }
     }
 
+    // ============ BLOQUEO DE GUÍAS ============
+    function guiaBlocked(id) {
+      return !!(databaseData.guiasConfig && databaseData.guiasConfig.blocked && databaseData.guiasConfig.blocked[id]);
+    }
+
+    function renderExceptionControls() {
+      const guideEl = document.getElementById('exceptionGuide');
+      const courseEl = document.getElementById('exceptionCourse');
+      if (!guideEl || !courseEl) return;
+      const currentGuide = guideEl.value;
+      const currentCourse = courseEl.value;
+      guideEl.innerHTML = GUIAS_CATALOG.map(g => `<option value="${g.id}"${g.id === currentGuide ? ' selected' : ''}>${g.n}</option>`).join('');
+      guideEl.onchange = renderExceptionList;
+
+      const courses = [...new Set((NOMINAS_PAES || []).map(s => s.curso).filter(Boolean))].sort();
+      courseEl.innerHTML = '<option value="">Todos los cursos</option>' +
+        courses.map(c => `<option value="${c}"${c === currentCourse ? ' selected' : ''}>${c}</option>`).join('');
+      populateExceptionStudents();
+      renderExceptionList();
+    }
+
+    function populateExceptionStudents() {
+      const course = document.getElementById('exceptionCourse')?.value || '';
+      const studentEl = document.getElementById('exceptionStudent');
+      if (!studentEl) return;
+      const current = studentEl.value;
+      const rows = (NOMINAS_PAES || [])
+        .filter(s => !course || s.curso === course)
+        .sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
+      studentEl.innerHTML = '<option value="">Seleccionar estudiante</option>' +
+        rows.map(s => `<option value="${s.rut}"${s.rut === current ? ' selected' : ''}>${s.nombre} · ${s.curso}</option>`).join('');
+    }
+
+    function renderExceptionList() {
+      const guideId = document.getElementById('exceptionGuide')?.value || '';
+      const listEl = document.getElementById('exceptionList');
+      if (!listEl || !guideId) return;
+      const exceptions = (databaseData.guiasConfig && databaseData.guiasConfig.exceptions) || {};
+      const allowedRuts = Object.keys(exceptions[guideId] || {}).filter(rut => exceptions[guideId][rut] === true);
+      if (!allowedRuts.length) {
+        listEl.innerHTML = 'No hay estudiantes con acceso excepcional para esta guía.';
+        return;
+      }
+      listEl.innerHTML = '<strong style="color:#6ee7b7;">Acceso excepcional activo:</strong> ' +
+        allowedRuts.map(rut => {
+          const student = (NOMINAS_PAES || []).find(s => s.rut === rut);
+          const label = student ? `${student.nombre} (${student.curso})` : rut;
+          return `<span style="display:inline-block;margin:3px;padding:4px 8px;background:rgba(16,185,129,.1);color:#a7f3d0;border:1px solid rgba(16,185,129,.25);">${label} <button onclick="removeGuiaException('${guideId}','${rut}')" title="Quitar acceso" style="border:0;background:none;color:#f87171;font-weight:900;cursor:pointer;">×</button></span>`;
+        }).join(' ');
+    }
+
+    async function setGuiaException(guideId, rut, allowed) {
+      const resp = await fetch('/api/paes?action=admin-set-guia-exception', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+        body: JSON.stringify({ guideId, rut, allowed })
+      });
+      if (!resp.ok) throw new Error('No se pudo guardar la excepción');
+      const data = await resp.json();
+      databaseData.guiasConfig = data.config || databaseData.guiasConfig;
+      renderExceptionControls();
+    }
+
+    async function saveGuiaException(allowed) {
+      const guideId = document.getElementById('exceptionGuide')?.value || '';
+      const rut = document.getElementById('exceptionStudent')?.value || '';
+      if (!guideId || !rut) return alert('Selecciona una guía y un estudiante.');
+      try {
+        await setGuiaException(guideId, rut, allowed);
+      } catch (error) {
+        console.error('[Guia Exception]', error);
+        alert('No se pudo habilitar la guía para el estudiante.');
+      }
+    }
+
+    async function removeGuiaException(guideId, rut) {
+      if (!confirm('¿Quitar el acceso excepcional de este estudiante?')) return;
+      try {
+        await setGuiaException(guideId, rut, false);
+      } catch (error) {
+        console.error('[Remove Guia Exception]', error);
+        alert('No se pudo quitar el acceso.');
+      }
+    }
+
+    function renderBloqueoTable() {
+      const tbody = document.getElementById('bloqueoTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const blocked = (databaseData.guiasConfig && databaseData.guiasConfig.blocked) || {};
+      const nBlocked = GUIAS_CATALOG.filter(g => blocked[g.id]).length;
+      const nEnabled = GUIAS_CATALOG.length - nBlocked;
+
+      // Resumen + última edición
+      const info = document.getElementById('bloqueoInfo');
+      const cfg = databaseData.guiasConfig || {};
+      let infoStr = `<strong style="color:#6ee7b7;">${nEnabled} habilitada(s)</strong> · <strong style="color:#f87171;">${nBlocked} bloqueada(s)</strong>`;
+      if (cfg.updatedAt) {
+        const d = new Date(cfg.updatedAt).toLocaleString('es-CL', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+        infoStr += ` &nbsp;·&nbsp; Última actualización: ${d}${cfg.updatedBy ? ' · ' + cfg.updatedBy : ''}`;
+      }
+      info.innerHTML = infoStr;
+
+      const tipoColor = { 'PDF': 'var(--text-muted)', 'Interactiva': 'var(--paes-color-light)', 'Miniensayo': '#67e8f9', 'PIE': 'var(--warning)' };
+      renderExceptionControls();
+
+      GUIAS_CATALOG.forEach(g => {
+        const isBlocked = !!blocked[g.id];
+        const estado = isBlocked
+          ? `<span class="status-pill" style="background:rgba(239,68,68,.08); color:#f87171; border:1px solid rgba(239,68,68,.2);">🔒 Bloqueada</span>`
+          : `<span class="status-pill completed">✅ Habilitada</span>`;
+        const toggleBtn = isBlocked
+          ? `<button class="btn-action-small" onclick="toggleGuiaBlock('${g.id}')" style="background:rgba(16,185,129,.1); border-color:rgba(16,185,129,.3); color:#6ee7b7;">Habilitar</button>`
+          : `<button class="btn-reset-small" onclick="toggleGuiaBlock('${g.id}')">Bloquear</button>`;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td style="font-weight: 600; color: #fff;">${g.n}</td>
+          <td><span style="font-size: 12px; font-weight: 700; color: ${tipoColor[g.tipo] || 'var(--text-muted)'};">${g.tipo}</span></td>
+          <td>${estado}</td>
+          <td>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              <button class="btn-action-small" onclick="soloEstaGuia('${g.id}')" title="Bloquea todas las demás y deja habilitada solo esta">⭐ Solo esta</button>
+              ${toggleBtn}
+            </div>
+          </td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveGuiasConfig(blockedMap, okMsg) {
+      try {
+        const resp = await fetch('/api/paes?action=admin-set-guias-config', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify({ blocked: blockedMap })
+        });
+        if (!resp.ok) throw new Error('API Set Config Error');
+        const data = await resp.json();
+        if (data.success) {
+          databaseData.guiasConfig = data.config || { blocked: blockedMap };
+          renderBloqueoTable();
+        }
+      } catch (error) {
+        console.error('[Set Guias Config Error]', error);
+        alert('No se pudo guardar el bloqueo de guías. Intenta de nuevo.');
+      }
+    }
+
+    function currentBlockedMap() {
+      const src = (databaseData.guiasConfig && databaseData.guiasConfig.blocked) || {};
+      const out = {};
+      Object.keys(src).forEach(k => { if (src[k]) out[k] = true; });
+      return out;
+    }
+
+    function toggleGuiaBlock(id) {
+      const map = currentBlockedMap();
+      if (map[id]) delete map[id]; else map[id] = true;
+      saveGuiasConfig(map);
+    }
+
+    // Deja habilitada SOLO esta guía (bloquea todas las demás) — "la de hoy".
+    function soloEstaGuia(id) {
+      const g = GUIAS_CATALOG.find(x => x.id === id);
+      if (!confirm(`¿Dejar habilitada SOLO "${g ? g.n : id}" y bloquear todas las demás para los estudiantes?`)) return;
+      const map = {};
+      GUIAS_CATALOG.forEach(x => { if (x.id !== id) map[x.id] = true; });
+      saveGuiasConfig(map);
+    }
+
+    function habilitarTodasGuias() {
+      if (!confirm('¿Habilitar TODAS las guías para los estudiantes?')) return;
+      saveGuiasConfig({});
+    }
+
+    function bloquearTodasGuias() {
+      if (!confirm('¿Bloquear TODAS las guías? Los estudiantes no podrán abrir ninguna hasta que habilites al menos una.')) return;
+      const map = {};
+      GUIAS_CATALOG.forEach(x => { map[x.id] = true; });
+      saveGuiasConfig(map);
+    }
+
+    // ============ LIBRO DE NOTAS ============
+    function notasDe(rut) {
+      const rec = databaseData.libroNotas[rut];
+      return (rec && rec.notas) || {};
+    }
+    function promedioDe(notas) {
+      const nums = SESIONES_LIBRO
+        .map(s => notas[s])
+        .filter(v => v !== undefined && v !== null && String(v).trim() !== '' && String(v).trim().toUpperCase() !== 'A')
+        .map(v => parseFloat(String(v).replace(',', '.')))
+        .filter(v => !isNaN(v));
+      if (!nums.length) return null;
+      return (nums.reduce((a, b) => a + b, 0) / nums.length).toFixed(1);
+    }
+    function notaInputClass(v) {
+      const t = String(v || '').trim().toUpperCase();
+      if (!t) return '';
+      if (t === 'A') return 'is-A';
+      const n = parseFloat(t.replace(',', '.'));
+      if (isNaN(n)) return '';
+      return n < 4 ? 'is-low' : 'is-ok';
+    }
+
+    function renderLibroTable() {
+      const head = document.getElementById('libroHead');
+      const tbody = document.getElementById('libroTableBody');
+      if (!head || !tbody) return;
+      if (typeof NOMINAS_PAES === 'undefined') return;
+
+      // Encabezado: Estudiante + una columna por sesión + Promedio
+      head.innerHTML = `<th class="student-col" style="width: 240px; position: sticky; left: 0; background: #0b0e20; z-index: 10;">Estudiante</th>` +
+        SESIONES_LIBRO.map(s => `<th style="width: 58px;">G${s}</th>`).join('') +
+        `<th style="width: 70px; color: var(--paes-color-light);">Prom.</th>`;
+
+      const search = (document.getElementById('searchLibro').value || '').toLowerCase().trim();
+      const searchRut = search.replace(/[.\-\s]/g, '');
+      const course = document.getElementById('filterCourseLibro').value;
+
+      const filtered = NOMINAS_PAES.filter(s => {
+        const matchesSearch = s.nombre.toLowerCase().includes(search) || s.rut.includes(searchRut);
+        const matchesCourse = course === '' || s.curso === course;
+        return matchesSearch && matchesCourse;
+      });
+      filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="${SESIONES_LIBRO.length + 2}" style="text-align:center; color:var(--text-muted); padding:30px;">No se encontraron estudiantes.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(student => {
+        const notas = notasDe(student.rut);
+        const tr = document.createElement('tr');
+        let html = `<td style="font-weight:600; color:#fff; text-align:left; position:sticky; left:0; background:#0b0e20; border-right:1px solid var(--border-color); z-index:5;">${student.nombre}<br><span style="font-size:10px; font-weight:bold; color:var(--paes-color-light);">${student.curso}</span></td>`;
+        SESIONES_LIBRO.forEach(s => {
+          const v = notas[s] != null ? notas[s] : '';
+          html += `<td><input class="nota-input ${notaInputClass(v)}" value="${v}" maxlength="4"
+            data-rut="${student.rut}" data-ses="${s}"
+            onchange="saveNota(this)" onfocus="this.select()" title="${student.nombre} · Guía ${s}"></td>`;
+        });
+        const prom = promedioDe(notas);
+        html += `<td class="prom-cell" data-prom-rut="${student.rut}" style="color:${prom == null ? 'var(--text-muted)' : (parseFloat(prom) < 4 ? '#fbbf24' : '#6ee7b7')};">${prom == null ? '—' : prom}</td>`;
+        tr.innerHTML = html;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function saveNota(input) {
+      const rut = input.getAttribute('data-rut');
+      const sesion = input.getAttribute('data-ses');
+      let val = input.value.trim().toUpperCase();
+      // normaliza: vacío, A, o número 1.0-7.0
+      if (val && val !== 'A') {
+        const n = parseFloat(val.replace(',', '.'));
+        if (isNaN(n) || n < 1 || n > 7) {
+          alert('Ingresa una nota entre 1.0 y 7.0, o "A" para ausente (o deja vacío).');
+          input.value = (notasDe(rut)[sesion] != null ? notasDe(rut)[sesion] : '');
+          input.className = 'nota-input ' + notaInputClass(input.value);
+          return;
+        }
+        val = n.toFixed(1);
+      }
+      input.value = val;
+      input.className = 'nota-input ' + notaInputClass(val);
+
+      // estado local
+      const student = NOMINAS_PAES.find(s => s.rut === rut) || {};
+      if (!databaseData.libroNotas[rut]) databaseData.libroNotas[rut] = { nombre: student.nombre, curso: student.curso, notas: {} };
+      if (!databaseData.libroNotas[rut].notas) databaseData.libroNotas[rut].notas = {};
+      if (val === '') delete databaseData.libroNotas[rut].notas[sesion];
+      else databaseData.libroNotas[rut].notas[sesion] = val;
+
+      // recalcula el promedio de esa fila en vivo
+      const promCell = document.querySelector(`[data-prom-rut="${rut}"]`);
+      if (promCell) {
+        const prom = promedioDe(databaseData.libroNotas[rut].notas);
+        promCell.textContent = prom == null ? '—' : prom;
+        promCell.style.color = prom == null ? 'var(--text-muted)' : (parseFloat(prom) < 4 ? '#fbbf24' : '#6ee7b7');
+      }
+
+      try {
+        const resp = await fetch('/api/paes?action=admin-save-nota', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
+          body: JSON.stringify({ rut, nombre: student.nombre, curso: student.curso, sesion, nota: val })
+        });
+        if (!resp.ok) throw new Error('API Save Nota Error');
+      } catch (error) {
+        console.error('[Save Nota Error]', error);
+        alert('No se pudo guardar la nota. Revisa tu conexión e inténtalo de nuevo.');
+      }
+    }
+
     // ============ VIEW INTERACTION CONTROL ============
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', function() {
@@ -1987,6 +2497,16 @@
           document.getElementById('dashTitle').textContent = "Gestión de Estudiantes";
           document.getElementById('dashSubtitle').textContent = "Agrega o edita estudiantes de 3° y 4° Medio. Los cambios quedan disponibles al instante.";
           renderStudentsTable();
+        } else if (tab === 'bloqueo') {
+          document.getElementById('viewBloqueo').classList.add('active');
+          document.getElementById('dashTitle').textContent = "Bloqueo de Guías";
+          document.getElementById('dashSubtitle').textContent = "Habilita o bloquea guías para los estudiantes. Deja disponible solo la de hoy.";
+          renderBloqueoTable();
+        } else if (tab === 'libro') {
+          document.getElementById('viewLibro').classList.add('active');
+          document.getElementById('dashTitle').textContent = "Libro de Notas";
+          document.getElementById('dashSubtitle').textContent = "Notas por guía del Taller PAES. Edita una celda y se guarda automáticamente.";
+          renderLibroTable();
         }
       });
     });
@@ -2015,10 +2535,21 @@
     // Poblar selector de guía desde el registro GUIAS
     (function initSelectGuia() {
       const sel = document.getElementById('selectGuia');
-      sel.innerHTML = Object.keys(GUIAS).map(id => `<option value="${id}">${GUIAS[id].titulo}</option>`).join('');
+      sel.innerHTML = Object.keys(GUIAS).sort((a,b) => Number(b) - Number(a)).map(id => `<option value="${id}">${GUIAS[id].titulo}</option>`).join('');
       sel.value = currentGuia;
       sel.addEventListener('change', function() { currentGuia = this.value; renderGuiaIntTable(); });
     })();
+    async function setGuiaRelease(released) {
+      const course = document.getElementById('filterCourseGuiaInt').value;
+      if (!course) { alert('Selecciona primero un curso específico.'); return; }
+      if (!confirm(`${released ? 'Publicar' : 'Ocultar'} resultados de la ${cfg().titulo} para ${course}?`)) return;
+      const token = await auth.currentUser.getIdToken();
+      const resp = await fetch('/api/paes?action=admin-set-guia-release', { method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer '+token}, body:JSON.stringify({guiaId:currentGuia,scope:'course',value:course,released}) });
+      if (!resp.ok) { alert('No se pudo cambiar la visibilidad.'); return; }
+      alert(released ? 'Resultados publicados para el curso.' : 'Resultados ocultos para el curso.');
+    }
+    document.getElementById('releaseGuiaCourse').addEventListener('click',()=>setGuiaRelease(true));
+    document.getElementById('hideGuiaCourse').addEventListener('click',()=>setGuiaRelease(false));
     document.getElementById('searchGuiaInt').addEventListener('input', renderGuiaIntTable);
     document.getElementById('filterGuiaInt').addEventListener('change', renderGuiaIntTable);
     document.getElementById('filterCourseGuiaInt').addEventListener('change', renderGuiaIntTable);
@@ -2039,6 +2570,14 @@
     });
     document.getElementById('smSave').addEventListener('click', saveStudent);
     document.getElementById('smDelete').addEventListener('click', deleteStudent);
+
+    // Bloqueo de guías: acciones globales
+    document.getElementById('btnEnableAll').addEventListener('click', habilitarTodasGuias);
+    document.getElementById('btnBlockAll').addEventListener('click', bloquearTodasGuias);
+
+    // Libro de notas: filtros
+    document.getElementById('searchLibro').addEventListener('input', renderLibroTable);
+    document.getElementById('filterCourseLibro').addEventListener('change', renderLibroTable);
     document.getElementById('smRut').addEventListener('input', function() {
       if (this.disabled) return;
       const pos = this.selectionStart, before = this.value.length;

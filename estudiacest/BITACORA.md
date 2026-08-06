@@ -88,6 +88,23 @@ La guía quedó en **25 reactivos**, con 8 de nivel 3 contra los 4 que tenía. C
 
 Commit `3de7fd96`, desplegado y verificado. Las lecturas 1 a 4 y sus 20 preguntas quedaron intactas.
 
+### NM4 abre la Unidad 3 «Comunicación para el mundo laboral»
+
+El portal `/nm4/` se reorganizó. Arriba queda la Unidad 3, del 10 de agosto al 7 de septiembre, con la clase 1 abierta y las otras tres en gris, con solo el título y la fecha, sin enlace. Todo el material anterior de Capital Semilla y de la Unidad 2 quedó agrupado en una sección plegable llamada «Unidades anteriores». No se movió ningún archivo de disco y no se perdió ninguna URL: se comparó el conjunto de enlaces antes y después, y la única diferencia es la ruta nueva.
+
+La **clase del 10 de agosto** vive en `/nm4/u3-clase1-oferta-y-contrato/`. Tiene siete momentos que suman los 90 minutos: activación, objetivo, video, conceptos clave, dos actividades y plenario. Es material para proyectar e imprimir, sin login ni entrega digital, porque la evidencia es el cuaderno, que se revisa y se timbra al cierre.
+
+Las ofertas de empleo son **reales y verificables**: Sugal Group, PF Alimentos y Scania en Talca, más Antofagasta Minerals para el norte. El gancho de la activación es el programa **CAUCE 2026**, donde 24 estudiantes del propio colegio de Mecánica Industrial, Electricidad y Electrónica trabajan dentro de PF Alimentos junto a INACAP. El aviso y el contrato del caso de Camila sí son inventados, y la página lo declara.
+
+El video de motivación se hizo con **Veo 3.1** desde la API de Google AI Studio, y la narración en español con **Gemini TTS** (`gemini-2.5-flash-preview-tts`, voz Charon), con la misma key. Dura 28 segundos, pesa 10,5 MB y lleva subtítulos. Dos gotchas nuevos: Veo bloquea por filtro de audio los prompts con personas en primer plano, y se resuelve pidiendo escenas sin gente y agregando «silent scene, no dialogue, no voices»; y el guard de release exige que el archivo ya exista en producción, así que un recurso nuevo entra en dos pasos con `allowMissingInProduction: true` y después se protege.
+
+Commits `3ccaa74a`, `82095a4e`, `16ebbad4` y `c8a00b40`.
+
+### Dos datos que confirmó Francisco el 6-ago
+
+- **La prueba de plan lector de *El economista callejero* se tomó el 20 de julio.** Queda cerrado que la carpeta `02 - Pruebas y Evaluaciones/Unidad 3/` está rotulada por número de unidad, pero esa evaluación pertenece a la clase del 20 de julio y no a la apertura de la Unidad 3 del 10 de agosto. No volver a levantarlo como inconsistencia.
+- **Llegó un estudiante nuevo a 3°D.** El padrón de La Odisea ya lo tiene: 3°A 45, 3°B 48, 3°D 38, total **131**, y el auditor exige ese número. El gráfico de asientos del cine todavía muestra 130, con 3°D en 37, así que **falta un asiento**.
+
 ### Commits del 5 y 6 de agosto
 
 Todos en `main`, desplegados y verificados en vivo.

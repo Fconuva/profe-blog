@@ -235,8 +235,11 @@ async function verifyAdmin(req) {
   const token = String((req.headers && req.headers.authorization) || '').replace(/^Bearer\s+/i, '').trim();
   if (!token) throw new Error('Token requerido');
   const decoded = await admin.auth().verifyIdToken(token);
-  const snapshot = await admin.database().ref(`${ADMIN_BASE}/admins/${decoded.uid}`).once('value');
-  if (snapshot.val() !== true) throw new Error('No autorizado');
+  const [globalAccess, anuarioAccess] = await Promise.all([
+    admin.database().ref(`${ADMIN_BASE}/admins/${decoded.uid}`).once('value'),
+    admin.database().ref(`${ADMIN_BASE}/admin_scopes/anuario4dtp/${decoded.uid}`).once('value')
+  ]);
+  if (globalAccess.val() !== true && anuarioAccess.val() !== true) throw new Error('No autorizado');
   return decoded;
 }
 

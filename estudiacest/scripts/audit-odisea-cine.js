@@ -36,9 +36,12 @@ async function main() {
 
   ['Describe tres personajes', '¿Qué te impactó más?', 'Penélope y Telémaco', '¿Qué aparece en la película?']
     .forEach(text => assert(html.includes(text), `Falta la sección requerida: ${text}`));
+  assert(html.indexOf('Durante la película · Checklist') < html.indexOf('Después de la película'), 'El checklist durante la película debe aparecer antes del trabajo escrito posterior.');
+  assert(html.indexOf('Después de la película') < html.indexOf('Describe tres personajes'), 'Las respuestas escritas deben quedar bajo la sección Después de la película.');
   ['save-draft', 'submit', 'Entrega confirmada', 'localStorage']
     .forEach(text => assert(app.includes(text), `Falta el flujo de guardado/entrega: ${text}`));
   assert(nm3.includes('Bitácora de La Odisea'), 'La portada NM3 no enlaza la actividad actualizada.');
+  assert(nm3.includes('publicationDates') && nm3.includes("['/nm3/odisea-antes-del-cine/', '2026-08-06"), 'La portada NM3 no ordena la actividad más reciente primero.');
   assert(admin.includes('admin-list') && admin.includes('admin-reset'), 'El panel docente no permite listar y restablecer.');
 
   const eventBlock = app.match(/const events = \[([\s\S]*?)\n  \];/);

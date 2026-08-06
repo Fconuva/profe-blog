@@ -1,0 +1,31 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    match /anuario_2026/4dtp/{rut}/{category}/{fileId}/{fileName} {
+      function isOwner() {
+        return request.auth != null
+          && request.auth.token.anuario4dtp == true
+          && request.auth.uid == 'anuario_' + rut;
+      }
+
+      allow read, delete: if isOwner();
+      allow create: if isOwner()
+        && request.auth.token.uploadFileId == fileId
+        && request.auth.token.uploadCategory == category
+        && request.auth.token.uploadFileName == fileName
+        && request.auth.token.uploadMaxBytes is int
+        && request.resource.size > 0
+        && request.resource.size <= request.auth.token.uploadMaxBytes
+        && request.resource.size <= 100 * 1024 * 1024
+        && request.resource.metadata.ownerRut == rut
+        && request.resource.metadata.category == category
+        && request.resource.metadata.fileId == fileId;
+      allow update: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

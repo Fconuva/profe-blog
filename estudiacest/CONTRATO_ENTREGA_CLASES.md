@@ -104,6 +104,8 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - Publicar únicamente desde la fuente canónica con `npm run deploy:prod:safe`.
 - Nunca usar un snapshot parcial ni `vercel deploy --prod` directamente.
 - No eliminar ni reemplazar áreas vigentes de PAES, SIMCE, NM3, NM4 o 3ATP al publicar una clase.
+- El proyecto 3ATP Mecánica Industrial está archivado: se conserva íntegro, accesible en `/3atp/` y protegido por el manifiesto aunque deje de ser una sección activa de portada.
+- Toda sección nueva debe sumarse al portal y al administrador sin sustituir tarjetas, archivos, rutas, datos ni funciones existentes.
 - Toda página con entrega debe agregarse a `scripts/class-submission-contract.json`.
 - El build debe fallar si una página registrada incumple el contrato técnico.
 - Los cambios se confirman en Git antes del despliegue y se verifica la URL pública después.

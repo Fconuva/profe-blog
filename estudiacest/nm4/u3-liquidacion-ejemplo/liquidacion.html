@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Liquidación de sueldo · ejemplo de clase · NM4 Unidad 3</title>
+<meta name="description" content="Ejemplo de liquidación de sueldo en una hoja, para leer y analizar en clase. NM4, Unidad 3.">
+<style>
+  :root{ --gris:#d9d9d9; --linea:#111; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; padding:18px;
+    background:#e9edf2;
+    font-family:Arial, Helvetica, "Liberation Sans", sans-serif;
+    color:#000;
+  }
+  .barra{
+    max-width:820px; margin:0 auto 14px; display:flex; gap:10px; flex-wrap:wrap;
+    align-items:center; justify-content:space-between;
+    font-family:system-ui, sans-serif; font-size:13.4px; color:#33415a;
+  }
+  .barra a, .barra button{
+    font:inherit; font-weight:600; text-decoration:none; cursor:pointer;
+    border:1px solid #1d4f91; color:#1d4f91; background:#fff;
+    padding:8px 14px; border-radius:8px;
+  }
+  .barra .solid{ background:#1d4f91; color:#fff; }
+
+  /* ---------- LA HOJA ---------- */
+  .hoja{
+    width:820px; max-width:100%; margin:0 auto; background:#fff;
+    padding:26px 30px 22px;
+    box-shadow:0 14px 38px rgba(15,23,42,.20);
+    font-size:10.4px; line-height:1.42;
+  }
+
+  .enc{ display:flex; justify-content:space-between; align-items:flex-start; gap:18px; padding-bottom:8px; }
+  .logo{ display:flex; align-items:center; gap:9px; }
+  .logo .mk{ width:40px; height:40px; border:2px solid #999; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:8px; font-weight:700; color:#999; text-align:center; line-height:1.1; letter-spacing:.04em; }
+  .logo .nm{ font-size:13px; font-weight:700; color:#666; letter-spacing:.02em; line-height:1.15; }
+  .logo .nm small{ display:block; font-size:8.6px; font-weight:400; color:#8a8a8a; letter-spacing:.08em; text-transform:uppercase; margin-top:2px; }
+  .emisor{ text-align:right; font-size:9.2px; color:#333; line-height:1.4; }
+
+  hr.r{ border:0; border-top:1px solid var(--linea); margin:0; }
+
+  h1{ text-align:center; font-size:13px; font-weight:700; margin:9px 0 8px; }
+
+  .bloque{ padding:5px 0 6px; }
+  .g4{ display:grid; grid-template-columns:repeat(4,1fr); gap:2px 12px; }
+  .g2{ display:grid; grid-template-columns:3fr 1fr; gap:2px 12px; }
+  .f{ display:flex; gap:5px; align-items:baseline; }
+  .f .k{ font-weight:700; white-space:nowrap; }
+  .f .v{ }
+  .f.r{ justify-content:flex-end; }
+  .anon{ color:#9aa2ad; font-style:italic; letter-spacing:.04em; }
+
+  .cuerpo{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; margin-top:8px; min-height:340px; align-content:start; }
+  .col{ }
+  .th{ background:var(--gris); text-align:center; font-weight:700; letter-spacing:.05em; padding:2px 0; margin-bottom:4px; }
+  .l{ display:flex; justify-content:space-between; gap:10px; padding:.6px 2px; }
+  .l .d{ flex:1; }
+  .l .m{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .sb{ display:flex; justify-content:space-between; gap:10px; background:var(--gris); font-weight:700; padding:1.6px 6px; margin:3px 0; }
+  .sb .d{ flex:1; text-align:right; padding-right:8px; }
+  .sb .m{ font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .esp{ height:11px; }
+
+  .pies{ display:grid; grid-template-columns:1fr 1fr; gap:0 24px; margin-top:12px; }
+  .pies .caja{ border-top:1px solid var(--linea); padding-top:7px; }
+  .pies .lt{ display:flex; justify-content:flex-end; gap:12px; font-weight:700; padding:1px 0; }
+  .pies .lt .k{ }
+  .pies .lt .m{ font-variant-numeric:tabular-nums; min-width:86px; text-align:right; }
+
+  .liquido{ margin-top:11px; padding-top:8px; border-top:1px solid var(--linea); }
+  .liquido .fila{ display:flex; gap:14px; align-items:baseline; }
+  .liquido .k{ font-weight:700; }
+  .liquido .m{ font-weight:700; font-variant-numeric:tabular-nums; }
+  .liquido .letras{ color:#333; }
+  .decl{ margin:6px 0 0; font-size:9.2px; line-height:1.45; }
+
+  .firmas{ display:flex; gap:60px; margin-top:30px; }
+  .firmas div{ flex:1; text-align:center; font-size:9.2px; font-weight:700; }
+  .firmas .ln{ border-top:1px solid var(--linea); margin-bottom:4px; height:30px; }
+
+  .marca-uso{
+    margin-top:14px; border:1px dashed #1d4f91; color:#1d4f91;
+    font-size:8.8px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+    text-align:center; padding:5px 8px;
+  }
+
+  @media (max-width:880px){
+    body{ padding:10px; }
+    .hoja{ width:100%; padding:18px 16px; font-size:9.6px; }
+    .g4{ grid-template-columns:repeat(2,1fr); }
+    .cuerpo{ grid-template-columns:1fr; min-height:0; gap:14px; }
+    .pies{ grid-template-columns:1fr; gap:10px; }
+  }
+
+  @media print{
+    body{ background:#fff; padding:0; }
+    .barra{ display:none !important; }
+    .hoja{ width:100%; box-shadow:none; padding:0; font-size:8.9px; line-height:1.34; }
+    .logo .mk{ width:34px; height:34px; }
+    .logo .nm{ font-size:11.4px; }
+    h1{ font-size:11.4px; margin:7px 0 6px; }
+    .bloque{ padding:4px 0 4px; }
+    .cuerpo{ min-height:158px; margin-top:6px; }
+    .l{ padding:.3px 2px; }
+    .sb{ padding:1.2px 6px; margin:2px 0; }
+    .pies{ margin-top:9px; }
+    .liquido{ margin-top:8px; padding-top:6px; }
+    .firmas{ margin-top:20px; }
+    .firmas .ln{ height:22px; }
+    .decl{ font-size:8.2px; }
+    .marca-uso{ margin-top:9px; font-size:7.8px; padding:4px 6px; }
+    @page{ size:A4 portrait; margin:10mm 12mm; }
+    *{ -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  }
+</style>
+</head>
+<body>
+
+<div class="barra">
+  <a href="/nm4/u3-liquidacion-ejemplo/">‹ Volver a la explicación</a>
+  <div style="display:flex;gap:9px;flex-wrap:wrap;">
+    <button class="solid" type="button" onclick="window.print()">🖨 Imprimir en una hoja</button>
+    <a href="/nm4/u3-liquidacion-ejemplo/Liquidacion_Ejemplo_NM4_U3.pdf" target="_blank" rel="noopener">⬇ PDF</a>
+  </div>
+</div>
+
+<div class="hoja">
+
+  <div class="enc">
+    <div class="logo">
+      <div class="mk">LOGO</div>
+      <div class="nm">EMPLEADOR<small>nombre eliminado</small></div>
+    </div>
+    <div class="emisor">
+      ESTABLECIMIENTO EDUCACIONAL<br>
+      <span class="anon">razón social eliminada</span><br>
+      <span class="anon">R.U.T. eliminado</span>
+    </div>
+  </div>
+  <hr class="r">
+
+  <h1>Liquidación de Sueldo Marzo 2026</h1>
+  <hr class="r">
+
+  <div class="bloque">
+    <div class="g2">
+      <div class="f"><span class="k">Nombre :</span><span class="v anon">dato eliminado</span></div>
+      <div class="f r"><span class="k">Ficha :</span><span class="v anon">eliminada</span></div>
+    </div>
+    <div class="g4" style="margin-top:2px;">
+      <div class="f"><span class="k">Rut :</span><span class="v anon">eliminado</span></div>
+      <div class="f"><span class="k">Previsión :</span><span class="v">AFP</span></div>
+      <div class="f"><span class="k">Centro Costo :</span><span class="v">ACADÉMICO</span></div>
+      <div class="f"></div>
+    </div>
+    <div class="g4">
+      <div class="f"><span class="k">Fec. Ing. :</span><span class="v anon">eliminada</span></div>
+      <div class="f"><span class="k">Salud :</span><span class="v">FONASA</span></div>
+      <div class="f"><span class="k">Cargo :</span><span class="v">Docente Aula</span></div>
+      <div class="f"></div>
+    </div>
+    <div class="g4">
+      <div class="f"><span class="k">Fec. Tér. :</span><span class="v"></span></div>
+      <div class="f"><span class="k">Horas Contrato :</span><span class="v">44</span></div>
+      <div class="f"><span class="k">Área :</span><span class="v">Académico</span></div>
+      <div class="f"></div>
+    </div>
+  </div>
+  <hr class="r">
+
+  <div class="bloque">
+    <div class="g4">
+      <div class="f"><span class="k">Días Trabajados :</span><span class="v">30</span></div>
+      <div class="f"><span class="k">Minutos Atraso :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">Nivel de Evaluación :</span><span class="v">EXPERTO I</span></div>
+      <div class="f"><span class="k">H. con Goce :</span><span class="v">0,00</span></div>
+    </div>
+    <div class="g4">
+      <div class="f"><span class="k">Días Licencia :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">Días Permiso :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">Bienios :</span><span class="v">5</span></div>
+      <div class="f"><span class="k">H. sin Goce :</span><span class="v">0,00</span></div>
+    </div>
+    <div class="g4">
+      <div class="f"><span class="k">Días Ausencia :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">H. Extras 50% :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">Descuento por :</span><span class="v">$ 0</span></div>
+      <div class="f"><span class="k">H. Administrativas :</span><span class="v">0,00</span></div>
+    </div>
+    <div class="g4">
+      <div class="f"><span class="k">Días Admin. :</span><span class="v">0</span></div>
+      <div class="f"><span class="k">Valor Hora :</span><span class="v">$ 20.401</span></div>
+      <div class="f"><span class="k">H. Reemplazo Básica :</span><span class="v">0,00</span></div>
+      <div class="f"><span class="k">H. Reemplazo Media :</span><span class="v">0,00</span></div>
+    </div>
+  </div>
+  <hr class="r">
+
+  <div class="cuerpo">
+    <div class="col">
+      <div class="th">HABERES</div>
+      <div class="l"><span class="d">Sueldo Subvención General</span><span class="m">$ 836.441</span></div>
+      <div class="l"><span class="d">Sueldo Proyecto Integración (3,0 Hrs.)</span><span class="m">$ 61.203</span></div>
+      <div class="sb"><span class="d">Total Sueldo Base</span><span class="m">$ 897.644</span></div>
+      <div class="l"><span class="d">BRP por Título Ley 20.158</span><span class="m">$ 346.413</span></div>
+      <div class="l"><span class="d">BRP por Mención Ley 20.158</span><span class="m">$ 115.474</span></div>
+      <div class="l"><span class="d">Asig. Tramo Desarrollo Profesional</span><span class="m">$ 322.215</span></div>
+      <div class="l"><span class="d">Asig. Concentración Prioritarios</span><span class="m">$ 129.658</span></div>
+      <div class="l"><span class="d">Asignación Bienios (Contrato Colectivo)</span><span class="m">$ 53.464</span></div>
+      <div class="l"><span class="d">Bono Excelencia Académica Docentes</span><span class="m">$ 335.359</span></div>
+      <div class="l"><span class="d">Bono Excelencia Académica 10 %</span><span class="m">$ 679.328</span></div>
+      <div class="sb"><span class="d">Total Haberes Imponibles</span><span class="m">$ 1.981.911</span></div>
+      <div class="l"><span class="d">Bono Escolaridad y Adicional</span><span class="m">$ 44.582</span></div>
+      <div class="l"><span class="d">Asignación Colación Mensual</span><span class="m">$ 70.400</span></div>
+      <div class="l"><span class="d">Asignación Movilización Mensual</span><span class="m">$ 66.000</span></div>
+      <div class="sb"><span class="d">Total Haberes No Imponibles</span><span class="m">$ 180.982</span></div>
+    </div>
+
+    <div class="col">
+      <div class="th">DESCUENTOS</div>
+      <div class="esp"></div>
+      <div class="l"><span class="d">Fondo de Pensión (11,44%)</span><span class="m">$ 329.421</span></div>
+      <div class="l"><span class="d">Cotización de Salud</span><span class="m">$ 80.628</span></div>
+      <div class="l"><span class="d">Cotización CCAF (4,20%)</span><span class="m">$ 120.941</span></div>
+      <div class="l"><span class="d">Seguro de Cesantía (0,60%)</span><span class="m">$ 17.277</span></div>
+      <div class="sb"><span class="d">Total Descuentos</span><span class="m">548.267</span></div>
+      <div class="l"><span class="d">Impuesto Único</span><span class="m">$ 64.896</span></div>
+      <div class="l"><span class="d">Seguro Caja de Compensación</span><span class="m">$ 11.340</span></div>
+      <div class="l"><span class="d">Préstamo Caja de Compensación</span><span class="m">$ 345.267</span></div>
+      <div class="l"><span class="d">Cuota Sindicato</span><span class="m">$ 5.000</span></div>
+      <div class="l"><span class="d">Cuota Extraordinaria Sindicato</span><span class="m">$ 2.000</span></div>
+      <div class="sb"><span class="d">Total Otros Descuentos</span><span class="m">428.503</span></div>
+    </div>
+  </div>
+
+  <div class="pies">
+    <div class="caja">
+      <div class="lt"><span class="k">Base Tributable</span><span class="m">$2.331.288</span></div>
+      <div class="lt"><span class="k">Base Imponible</span><span class="m">$2.879.555</span></div>
+      <div class="lt"><span class="k">Total de Haberes</span><span class="m">$3.060.537</span></div>
+    </div>
+    <div class="caja">
+      <div class="lt" style="margin-top:26px;"><span class="k">Total de Descuentos</span><span class="m">$ 976.770</span></div>
+    </div>
+  </div>
+
+  <div class="liquido">
+    <div class="fila">
+      <span class="k">Total Líquido</span>
+      <span class="m">$ 2.083.767</span>
+      <span class="letras">dos millones ochenta y tres mil setecientos sesenta y siete .-</span>
+    </div>
+    <p class="decl">Declaro recibir a mi entera satisfacción los montos de la presente liquidación y no tengo reclamo posterior que formular en contra del empleador.</p>
+    <div class="firmas">
+      <div><div class="ln"></div>EMPLEADOR</div>
+      <div><div class="ln"></div><span style="font-weight:400;" class="anon">nombre del trabajador eliminado</span></div>
+    </div>
+  </div>
+
+  <div class="marca-uso">Ejemplo para trabajo en clase · NM4 Unidad 3 · datos de identificación eliminados · no es un documento válido</div>
+
+</div>
+
+</body>
+</html>

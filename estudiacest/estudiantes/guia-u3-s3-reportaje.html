@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 3 · Unidad 3 · Reportaje: función de sus partes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#153458;--blue:#1f5f99;--teal:#18756f;--ink:#172033;--muted:#526174;
+    --line:#d7dee7;--paper:#ffffff;--soft:#f3f6f9;--cream:#fbfaf6;
+    --green:#187249;--green-bg:#edf8f2;--red:#a93636;--red-bg:#fff2f1;
+    --amber:#925c12;--amber-bg:#fff8e7;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:#edf1f5;color:var(--ink);font-family:Inter,Arial,sans-serif;line-height:1.6}
+  button,select,textarea{font:inherit}
+  .hero{background:var(--navy);color:#fff;border-bottom:6px solid #d4b35f}
+  .hero-inner{max-width:980px;margin:0 auto;padding:28px 20px 24px}
+  .kicker{font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#dce9f8}
+  .hero h1{margin:5px 0 7px;font-size:clamp(1.55rem,3.5vw,2.2rem);line-height:1.2;letter-spacing:0}
+  .hero p{max-width:780px;margin:0;color:#edf4fb}
+  .progress-wrap{max-width:980px;margin:0 auto;padding:0 20px}
+  .progress{height:5px;background:#d7dee7}
+  .progress span{display:block;width:0;height:100%;background:#d4b35f;transition:width .2s}
+  .step-nav{position:sticky;top:0;z-index:20;background:#fff;border-bottom:1px solid var(--line)}
+  .step-nav-inner{max-width:980px;margin:auto;padding:10px 20px;display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+  .step-link{border:1px solid var(--line);background:#fff;color:var(--navy);padding:8px 6px;font-size:.78rem;font-weight:700;cursor:pointer;min-height:44px}
+  .step-link:hover,.step-link.active{background:#eef5fb;border-color:#6f9fc9}
+  .wrap{max-width:980px;margin:0 auto;padding:18px 20px 120px}
+  .section{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:24px;margin:0 0 18px;box-shadow:0 3px 12px rgba(23,32,51,.04)}
+  .section-title{display:flex;align-items:flex-start;gap:13px;margin-bottom:12px}
+  .step-no{flex:0 0 38px;height:38px;display:grid;place-items:center;background:var(--navy);color:#fff;font-weight:800}
+  h2{margin:0;color:var(--navy);font-size:1.35rem;line-height:1.25;letter-spacing:0}
+  h3{color:var(--navy);letter-spacing:0}
+  .lead{color:var(--muted);margin:4px 0 0}
+  .objective{border-left:5px solid var(--teal);padding:13px 16px;background:#eef8f7;margin:15px 0}
+  .instructions{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:15px}
+  .instruction{border-top:3px solid var(--blue);background:var(--soft);padding:13px}
+  .instruction b{display:block;color:var(--navy);margin-bottom:3px}
+  .video{background:#0c1724;border:1px solid #263d55;margin:15px 0 8px}
+  .video video{display:block;width:100%;aspect-ratio:16/9}
+  .concept-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}
+  .concept{border:1px solid var(--line);border-top:4px solid var(--teal);padding:13px;background:#fff}
+  .concept b{display:block;color:var(--navy);margin-bottom:4px}
+  .strategy{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+  .strategy div{padding:13px;background:#f4f7fb;border-left:4px solid var(--blue)}
+  .strategy strong{font-size:1.2rem;color:var(--blue)}
+  .activity{border:1px solid var(--line);padding:17px;margin-top:14px;background:#fff}
+  .activity h3{margin:0 0 5px}
+  .activity-note{color:var(--muted);font-size:.9rem;margin:0 0 12px}
+  .match-row{display:grid;grid-template-columns:minmax(120px,.55fr) minmax(210px,1.45fr);gap:12px;align-items:center;border-top:1px solid var(--line);padding:10px 0}
+  .match-row:first-of-type{border-top:0}
+  .match-row.correct select{border-color:#55a978;background:var(--green-bg)}
+  .match-row.incorrect select{border-color:#d8837b;background:var(--red-bg)}
+  select{width:100%;padding:9px;border:1px solid #b7c1cd;background:#fff;color:var(--ink)}
+  .vf-row{border-top:1px solid var(--line);padding:11px 0;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+  .vf-buttons{display:flex;gap:7px}
+  .small-btn{border:1px solid #a9b6c4;background:#fff;color:var(--navy);font-weight:800;padding:7px 12px;cursor:pointer;min-width:42px}
+  .small-btn.selected{background:var(--navy);border-color:var(--navy);color:#fff}
+  .check-concepts{background:var(--navy);color:#fff;border:0;padding:10px 15px;font-weight:800;cursor:pointer;margin-top:12px}
+  .concept-feedback{display:none;margin-top:12px;padding:11px 13px;background:var(--amber-bg);border:1px solid #e8cc8b;color:#62410d}
+  .concept-feedback.show{display:block}
+  .concept-feedback.success{background:var(--green-bg);border-color:#80bd99;color:#145b3b}
+  .word-search-wrap{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start}
+  .word-search{display:grid;grid-template-columns:repeat(12,29px);gap:2px;background:#d7dee7;padding:5px;width:max-content;user-select:none}
+  .word-cell{width:29px;height:29px;border:0;padding:0;display:grid;place-items:center;background:#fff;font-weight:800;color:#27364a;font-size:.82rem;cursor:pointer}
+  .word-cell:hover{background:#edf5fb;color:var(--blue)}
+  .word-cell.anchor{background:#fff0bd;outline:2px solid #b88418;position:relative;z-index:1}
+  .word-cell.found{background:var(--navy);color:#fff}
+  .word-list{display:grid;grid-template-columns:repeat(2,minmax(110px,1fr));gap:8px}
+  .word-item{border:1px solid var(--line);padding:8px;background:#fff;font-weight:700}
+  .word-item::before{content:"○";display:inline-block;width:1.4em;color:#738096}
+  .word-item.found{border-color:#80bd99;background:var(--green-bg);color:#145b3b}
+  .word-item.found::before{content:"✓";color:var(--green)}
+  .model{background:#f4f7fb;border-left:5px solid var(--blue);padding:15px;margin:15px 0}
+  .model p{margin:6px 0}
+  .reportage{background:var(--cream);border:1px solid #d9d2c3;padding:26px clamp(18px,5vw,45px);margin:16px 0;font-family:Lora,Georgia,serif;font-size:1.03rem;line-height:1.78}
+  .reportage .section-label{font:800 .76rem Inter,Arial,sans-serif;text-transform:uppercase;color:var(--teal);letter-spacing:.07em}
+  .reportage h3{font:700 1.75rem Lora,Georgia,serif;color:#182d45;margin:5px 0 4px;line-height:1.18}
+  .reportage .deck{font:500 1rem Inter,Arial,sans-serif;color:#4a5969;border-bottom:1px solid #d9d2c3;padding-bottom:14px;margin:0 0 15px}
+  .reportage .source{font:500 .78rem Inter,Arial,sans-serif;color:#697586}
+  .reportage p{margin:0 0 1em}
+  .reportage blockquote{margin:18px 15px;border-left:4px solid #b08a35;padding:4px 16px;font-style:italic;color:#33445a}
+  .data-box{font:500 .9rem Inter,Arial,sans-serif;border:1px solid #b7c7d6;background:#edf5fa;padding:12px 14px;margin:16px 0}
+  .question{border:1px solid var(--line);padding:17px;margin:13px 0;background:#fff;scroll-margin-top:80px}
+  .question-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+  .question-title{font-weight:750}
+  .skill{white-space:nowrap;font-size:.72rem;font-weight:800;text-transform:uppercase;border:1px solid #9db2c6;color:#274f76;padding:3px 7px}
+  .options{display:grid;gap:8px;margin-top:12px}
+  .option{display:grid;grid-template-columns:29px 1fr;gap:9px;align-items:start;text-align:left;border:1.5px solid #bbc6d1;background:#fff;color:var(--ink);padding:11px;cursor:pointer}
+  .option:hover{border-color:var(--blue);background:#f7fbff}
+  .option .letter{width:26px;height:26px;display:grid;place-items:center;background:#e9eef4;color:var(--navy);font-weight:800}
+  .option.selected{border-color:var(--blue);background:#edf5fb;box-shadow:0 0 0 2px rgba(31,95,153,.11)}
+  .option.correct{border-color:#55a978;background:var(--green-bg)}
+  .option.wrong{border-color:#d8837b;background:var(--red-bg)}
+  .option:disabled{cursor:default}
+  .feedback{display:none;margin-top:11px;padding:12px 14px;font-size:.91rem}
+  .feedback.show{display:block}
+  .feedback.ok{background:var(--green-bg);border-left:4px solid var(--green)}
+  .feedback.bad{background:var(--red-bg);border-left:4px solid var(--red)}
+  .feedback p{margin:5px 0}
+  .open-response textarea{width:100%;min-height:120px;padding:12px;border:1.5px solid #b7c1cd;resize:vertical}
+  .diagnostic{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+  .diagnostic div{border:1px solid var(--line);padding:12px;text-align:center}
+  .diagnostic b{display:block;font-size:1.35rem;color:var(--navy)}
+  .ladder{display:grid;gap:7px;margin-top:16px}
+  .rung{border-left:8px solid var(--blue);background:#f1f5f8;padding:12px 14px}
+  .rung:nth-child(2){margin-left:4%}.rung:nth-child(3){margin-left:8%}.rung:nth-child(4){margin-left:12%}.rung:nth-child(5){margin-left:16%;border-color:#b08a35}
+  .rung b{color:var(--navy)}
+  .rung textarea{width:100%;min-height:82px;margin-top:9px;padding:10px;border:1.5px solid #aebac7;background:#fff;resize:vertical}
+  .handwritten{border:2px solid #b08a35;background:#fffaf0;padding:14px;margin-top:15px}
+  .actionbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:#fff;border-top:1px solid var(--line);box-shadow:0 -5px 18px rgba(23,32,51,.09)}
+  .actionbar-inner{max-width:980px;margin:auto;padding:12px 20px;display:flex;gap:12px;align-items:center}
+  .save-status{flex:1;color:var(--muted);font-size:.86rem}
+  .submit{border:0;background:var(--green);color:#fff;font-weight:800;padding:12px 18px;cursor:pointer}
+  .submit:disabled{background:#99a5b1;cursor:not-allowed}
+  .done{display:none;background:var(--green-bg);border:1px solid #80bd99;color:#145b3b;padding:14px;margin-top:14px;font-weight:700}
+  .toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:50;background:#172033;color:#fff;padding:11px 16px;max-width:min(90vw,600px);text-align:center}
+  @media(max-width:760px){
+    .step-nav-inner{grid-template-columns:repeat(5,1fr);padding:7px 8px}.step-link{font-size:0}.step-link b{font-size:.78rem}
+    .instructions,.concept-grid,.strategy{grid-template-columns:1fr}
+    .word-search-wrap{grid-template-columns:1fr}.word-search{grid-template-columns:repeat(12,23px)}.word-cell{width:23px;height:23px;font-size:.7rem}
+    .diagnostic{grid-template-columns:1fr}.question-head{display:block}.skill{display:inline-block;margin-top:7px}
+    .section{padding:18px}.wrap{padding-left:10px;padding-right:10px}.reportage{padding:20px 16px}
+    .match-row,.vf-row{grid-template-columns:1fr}.rung:nth-child(n){margin-left:0}
+  }
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="hero-inner">
+    <div class="kicker">Unidad 3 · Clase 3 · Preparación SIMCE</div>
+    <h1>Reportaje: ¿qué función cumple cada parte?</h1>
+    <p>Aprende los conceptos, practícalos sin puntaje y luego aplícalos en dos textos completos. El avance se guarda automáticamente.</p>
+  </div>
+  <div class="progress-wrap"><div class="progress"><span id="progressBar"></span></div></div>
+</header>
+
+<nav class="step-nav" aria-label="Etapas de la clase">
+  <div class="step-nav-inner">
+    <button class="step-link" data-target="paso1"><b>1</b> Instrucciones</button>
+    <button class="step-link" data-target="paso2"><b>2</b> Video</button>
+    <button class="step-link" data-target="paso3"><b>3</b> Conceptos</button>
+    <button class="step-link" data-target="paso4"><b>4</b> Práctica</button>
+    <button class="step-link" data-target="paso5"><b>5</b> Cierre</button>
+  </div>
+</nav>
+
+<main class="wrap">
+  <section class="section" id="paso1">
+    <div class="section-title"><span class="step-no">1</span><div><h2>Instrucciones de la clase</h2><p class="lead">Sigue las etapas en orden. Duración estimada: 90 minutos.</p></div></div>
+    <div class="objective"><b>Objetivo:</b> interpretar la idea central de un reportaje y evaluar la función que cumplen sus testimonios, datos, fuentes y explicaciones.</div>
+    <div class="instructions">
+      <div class="instruction"><b>Primero comprende</b>Mira el video completo y revisa la estrategia F-I-N.</div>
+      <div class="instruction"><b>Luego entrena</b>Resuelve y comprueba los términos pareados, verdadero o falso y la sopa interactiva. Debes completarlos correctamente; no suman nota.</div>
+      <div class="instruction"><b>Después aplica</b>Lee dos reportajes y responde 10 preguntas SIMCE. Solo estas alternativas forman el puntaje.</div>
+      <div class="instruction"><b>Finalmente reflexiona</b>Responde a mano la escalera y transcribe tus cinco respuestas para que el profesor pueda revisarlas.</div>
+    </div>
+  </section>
+
+  <section class="section" id="paso2">
+    <div class="section-title"><span class="step-no">2</span><div><h2>Video explicativo</h2><p class="lead">Conceptos esenciales y estrategia para reconocer la función de cada recurso.</p></div></div>
+    <div class="video">
+      <video id="conceptVideo" controls preload="metadata" playsinline>
+        <source src="videos/video-u3-s3-reportaje.mp4" type="video/mp4">
+        Tu navegador no puede reproducir el video.
+      </video>
+    </div>
+    <div class="concept-grid">
+      <div class="concept"><b>Título y bajada</b>Presentan el tema y anticipan el enfoque específico.</div>
+      <div class="concept"><b>Entrada o lead</b>Introduce el asunto y busca orientar o interesar al lector.</div>
+      <div class="concept"><b>Cuerpo</b>Desarrolla el tema mediante hechos, explicaciones y voces.</div>
+      <div class="concept"><b>Dato</b>Precisa o dimensiona una afirmación con información verificable.</div>
+      <div class="concept"><b>Testimonio</b>Muestra una experiencia directa y aporta una perspectiva personal.</div>
+      <div class="concept"><b>Fuente experta</b>Explica o respalda una idea desde un conocimiento especializado.</div>
+    </div>
+    <div class="strategy">
+      <div><strong>F</strong><br><b>Focaliza</b><br>¿Qué recurso aparece?</div>
+      <div><strong>I</strong><br><b>Identifica su aporte</b><br>¿Qué agrega al texto?</div>
+      <div><strong>N</strong><br><b>Nombra la función</b><br>¿Informa, explica, ejemplifica, respalda o contrasta?</div>
+    </div>
+  </section>
+
+  <section class="section" id="paso3">
+    <div class="section-title"><span class="step-no">3</span><div><h2>Actividad exclusiva de conceptos</h2><p class="lead">Calibra tu comprensión antes de la práctica SIMCE. No suma ni resta puntaje.</p></div></div>
+
+    <div class="activity">
+      <h3>A. Términos pareados</h3>
+      <p class="activity-note">Selecciona una definición diferente para cada concepto. El orden de las definiciones está mezclado.</p>
+      <div id="matchingZone"></div>
+      <button class="check-concepts" id="checkMatching" type="button">Revisar términos</button>
+      <div class="concept-feedback" id="matchingFeedback"></div>
+    </div>
+
+    <div class="activity">
+      <h3>B. Verdadero o falso</h3>
+      <p class="activity-note">Decide si cada afirmación describe correctamente el reportaje.</p>
+      <div id="vfZone"></div>
+      <button class="check-concepts" id="checkVF" type="button">Revisar afirmaciones</button>
+      <div class="concept-feedback" id="vfFeedback"></div>
+    </div>
+
+    <div class="activity">
+      <h3>C. Sopa de conceptos</h3>
+      <p class="activity-note">Busca seis palabras en horizontal, vertical o diagonal. Selecciona la primera y la última letra de cada palabra; el sistema comprobará el trayecto completo.</p>
+      <div class="word-search-wrap">
+        <div class="word-search" id="wordSearch" aria-label="Sopa de letras"></div>
+        <div class="word-list" id="wordList"></div>
+      </div>
+      <button class="check-concepts" id="checkWords" type="button">Revisar sopa</button>
+      <div class="concept-feedback" id="wordFeedback"></div>
+    </div>
+  </section>
+
+  <section class="section" id="paso4">
+    <div class="section-title"><span class="step-no">4</span><div><h2>Práctica SIMCE</h2><p class="lead">Dos textos, 10 preguntas: Localizar, Interpretar y Reflexionar.</p></div></div>
+    <div class="model">
+      <h3>Ejemplo modelado</h3>
+      <p><b>Fragmento:</b> “Durante dos semanas, el equipo midió la temperatura del patio cada treinta minutos”.</p>
+      <p><b>Pregunta:</b> ¿Qué función cumple esta información?</p>
+      <p><b>Aplicación F-I-N:</b> Focalizo un procedimiento de medición. Identifico que aporta una forma concreta de obtener datos. Nombro su función: <b>explicar cómo se produjo la evidencia citada</b>, no demostrar por sí sola que todos los patios tienen el mismo problema.</p>
+    </div>
+
+    <article class="reportage">
+      <div class="section-label">Texto 1 · Reportaje</div>
+      <h3>El patio que aprendió a dar sombra</h3>
+      <p class="deck">Una comunidad escolar de Talca midió el calor de su patio y ensayó soluciones de bajo costo antes de transformar el espacio.</p>
+      <p class="source">Texto original elaborado para fines pedagógicos.</p>
+
+      <p>A las doce y media, el patio norte del Liceo Valle Central parecía vacío, aunque más de seiscientos estudiantes estaban en recreo. La mayoría se apretaba bajo un corredor techado de apenas cuarenta metros. A pocos pasos, las mesas de cemento permanecían desocupadas. “Sentarse ahí era como apoyar los brazos sobre una estufa”, recuerda Nicolás Soto, estudiante de segundo medio. Durante años, la escena se repitió cada primavera: abundaba el espacio, pero faltaban lugares donde permanecer sin recibir el sol directo.</p>
+
+      <p>En marzo, el centro de estudiantes propuso instalar una gran cubierta. La dirección estimó que la obra costaría más de lo disponible y pidió reunir evidencia antes de decidir. La profesora de Ciencias, Marcela Rojas, convirtió el problema en una investigación escolar. Veinticuatro estudiantes dividieron el patio en seis zonas y midieron la temperatura del aire y de las superficies cada treinta minutos, entre las diez de la mañana y las cuatro de la tarde. Repitieron el procedimiento durante diez jornadas comparables, sin lluvia y con nubosidad baja.</p>
+
+      <div class="data-box"><b>Resultados del diagnóstico:</b> a las 13:30, las superficies expuestas alcanzaron en promedio 43,7 °C; bajo el corredor techado marcaron 31,9 °C. En la zona con tres árboles jóvenes, la temperatura fue menor, pero la sombra solo cubría nueve asientos.</div>
+
+      <p>Los datos confirmaron algo que los estudiantes ya sentían, pero también corrigieron una suposición. El punto más caliente no era el centro del patio, sino el sector junto a un muro claro que reflejaba radiación durante la tarde. “La medición permitió pasar de ‘aquí hace mucho calor’ a saber dónde, cuándo y cuánto”, explica Rojas. Según la docente, esa precisión era necesaria para comparar soluciones y evitar gastar todo el presupuesto en una estructura ubicada en el lugar equivocado.</p>
+
+      <p>El equipo organizó entonces un experimento de cuatro semanas. En tres sectores similares instaló, respectivamente, una malla de sombra, dos toldos móviles y seis maceteros con plantas trepadoras sostenidas por una estructura liviana. Un cuarto sector quedó sin intervención para servir de referencia. Las mediciones se realizaron en los mismos horarios y con los mismos instrumentos del diagnóstico inicial. Además, cada viernes se contó cuántos estudiantes usaban las mesas durante el segundo recreo.</p>
+
+      <p>La malla redujo en promedio 5,1 °C la temperatura de las superficies y triplicó el uso de las mesas. Los toldos lograron una reducción parecida, pero debían cerrarse cuando aumentaba el viento. Las plantas todavía daban poca sombra y no produjeron una diferencia térmica importante durante el ensayo. Sin embargo, el equipo decidió conservarlas porque podrían mejorar el espacio a largo plazo. La comparación mostró que ninguna medida resolvía por sí sola todas las necesidades.</p>
+
+      <blockquote>“Antes queríamos una solución grande y rápida. Después entendimos que también había que pensar quién la mueve, quién la cuida y en qué horario sirve”, señala Vicente Muñoz, representante del centro de estudiantes.</blockquote>
+
+      <p>Con esos antecedentes, la comunidad eligió una combinación: malla fija en el sector de mayor uso, toldos en un área destinada a actividades y árboles nativos en el borde occidental. La municipalidad aportó asesoría para seleccionar especies y el centro de padres financió parte de los materiales. La instalación se realizó durante dos sábados con apoyo de familias y funcionarios.</p>
+
+      <p>La arquitecta Paula Henríquez, especialista en diseño bioclimático, advierte que la experiencia no puede copiarse de manera automática en cualquier colegio. La orientación del edificio, el viento, el tipo de suelo y los horarios de uso cambian de un lugar a otro. A su juicio, el mayor valor del proyecto fue haber observado primero el comportamiento real del espacio: “La sombra no es un objeto que se compra; es una condición que se diseña según cómo se mueve el sol y cómo viven las personas el lugar”.</p>
+
+      <p>Dos meses después, las mesas ya no están vacías al mediodía. Los estudiantes aún se concentran bajo el corredor en los días más calurosos, pero cuentan con otras zonas utilizables. Para Nicolás, el cambio principal no se reduce a la temperatura: “Ahora sentimos que el patio también se puede estudiar y mejorar”. El proyecto no eliminó el calor, pero transformó una queja repetida en una decisión respaldada por datos, prueba y colaboración.</p>
+    </article>
+    <div id="quizText1"></div>
+
+    <article class="reportage">
+      <div class="section-label">Texto 2 · Reportaje</div>
+      <h3>El taller donde los objetos reciben una segunda oportunidad</h3>
+      <p class="deck">Estudiantes de una especialidad técnica abrieron una jornada mensual de reparación y descubrieron que arreglar también exige explicar límites.</p>
+      <p class="source">Texto original elaborado para fines pedagógicos.</p>
+
+      <p>El primer objeto que llegó al taller comunitario fue una lámpara de escritorio que no encendía desde hacía tres años. Su dueña, Marta González, la había guardado porque perteneció a su padre. “Comprar otra era fácil; botar esta, no”, cuenta. Dos estudiantes revisaron el cable, limpiaron el interruptor y reemplazaron una pieza dañada. Veinte minutos después, la lámpara volvió a iluminar una mesa del gimnasio escolar. La reparación fue sencilla, pero el valor del objeto no estaba en su precio.</p>
+
+      <p>La escena ocurrió en abril, durante la primera jornada de “Repara y Aprende”, una iniciativa de tercero medio de la especialidad de Electricidad. El proyecto nació luego de que el curso analizara los residuos electrónicos reunidos en una campaña interna. En una semana aparecieron 86 aparatos pequeños: hervidores, radios, audífonos, ventiladores y cargadores. Algunos estaban quebrados; otros solo tenían cables cortados, contactos sucios o piezas mal ajustadas.</p>
+
+      <p>La profesora Verónica Silva propuso convertir el diagnóstico en un servicio mensual para el barrio. Cada objeto sería recibido con una ficha: falla informada, antigüedad aproximada, revisión realizada y decisión final. Los estudiantes trabajarían bajo supervisión y no intervendrían equipos de alto riesgo, como microondas o artefactos conectados a gas. Tampoco prometerían una reparación antes de examinar el daño.</p>
+
+      <div class="data-box"><b>Balance de tres jornadas:</b> se recibieron 112 objetos. Cuarenta y nueve fueron reparados, veintisiete quedaron en condiciones de ser reparados si se conseguía un repuesto, veintiuno fueron derivados a servicios especializados y quince no pudieron recuperarse de manera segura.</div>
+
+      <p>Al comienzo, varios estudiantes consideraron los objetos no reparados como fracasos. Esa idea cambió cuando debieron explicar sus decisiones a los propietarios. En un ventilador, por ejemplo, improvisar una unión habría permitido encenderlo, pero aumentaba el riesgo de recalentamiento. El equipo decidió no entregarlo funcionando. “Aprendimos que reparar no significa hacer que algo prenda a cualquier costo”, afirma Benjamín Lagos. “También es reconocer cuándo una solución rápida puede ser peligrosa”.</p>
+
+      <p>La iniciativa incorporó entonces una mesa de orientación. Allí se enseñaba a prolongar la vida útil de cables, limpiar contactos y almacenar baterías. Cuando un objeto no tenía arreglo, se separaban sus materiales y se indicaba un punto autorizado de reciclaje. Así, la jornada dejó de medirse solo por el número de equipos encendidos y comenzó a considerar cuántas decisiones seguras y útiles podía ofrecer.</p>
+
+      <p>Para la ingeniera ambiental Constanza Pérez, esa ampliación es importante. Explica que reparar puede disminuir residuos, pero no siempre es la opción con menor impacto: conseguir un repuesto lejano, mantener un aparato de consumo energético muy alto o intervenir un equipo inseguro puede anular parte del beneficio. “La reparación responsable necesita información. Debe comparar vida útil, seguridad, costo y disponibilidad de piezas”, sostiene.</p>
+
+      <blockquote>“Me fui sin la tostadora funcionando, pero con una explicación que entendí. Me mostraron por qué el daño era peligroso y dónde llevarla. Eso también fue una solución”, relata Óscar Méndez, vecino que asistió a la tercera jornada.</blockquote>
+
+      <p>Los testimonios llevaron al curso a modificar la ficha de atención. Ahora incluye un apartado donde se registra la explicación entregada y la alternativa sugerida: reparar más adelante, acudir a un especialista, reciclar o reemplazar por un equipo eficiente. También se incorporó una encuesta breve. De 74 personas consultadas, 68 señalaron que comprendieron la decisión técnica y 63 dijeron que intentarían mantener mejor sus aparatos.</p>
+
+      <p>“Repara y Aprende” continuará una vez al mes. El curso espera publicar un manual con fallas frecuentes, pero sabe que no todo puede resolverse con instrucciones generales. Cada objeto conserva una historia y presenta un riesgo distinto. La lámpara de Marta volvió a encenderse; otros equipos no lo hicieron. En ambos casos, el taller enseñó que una buena decisión técnica no se reconoce solo por el resultado visible, sino también por la evidencia y la responsabilidad que la sostienen.</p>
+    </article>
+    <div id="quizText2"></div>
+
+    <div class="activity open-response">
+      <h3>Respuesta breve</h3>
+      <p>¿Qué función cumplen los testimonios en ambos reportajes? Responde con una semejanza y una diferencia, usando una evidencia de cada texto.</p>
+      <textarea id="openResponse" placeholder="Escribe aquí tu respuesta. Esta respuesta quedará disponible para revisión docente."></textarea>
+    </div>
+
+    <div class="diagnostic">
+      <div><span>Localizar</span><b id="scoreL">—</b></div>
+      <div><span>Interpretar</span><b id="scoreI">—</b></div>
+      <div><span>Reflexionar</span><b id="scoreR">—</b></div>
+    </div>
+    <p id="focusMessage"></p>
+  </section>
+
+  <section class="section" id="paso5">
+    <div class="section-title"><span class="step-no">5</span><div><h2>Cierre a mano: escalera de metacognición</h2><p class="lead">Responde en el cuaderno y deja aquí el registro escrito de cada respuesta.</p></div></div>
+    <div class="handwritten"><b>Importante:</b> copia los cinco peldaños y contéstalos a mano con oraciones completas. Después transcribe cada respuesta en su campo. No podrás entregar con respuestas vacías o demasiado breves.</div>
+    <div class="ladder">
+      <div class="rung"><b>1. Reconozco</b><br>¿Qué concepto del reportaje puedo definir ahora con mis palabras?<textarea data-meta="reconozco" minlength="20" placeholder="Escribe una oración completa."></textarea></div>
+      <div class="rung"><b>2. Identifico</b><br>¿Qué pista textual me ayudó más a reconocer una función?<textarea data-meta="identifico" minlength="20" placeholder="Menciona la pista y explica cómo te ayudó."></textarea></div>
+      <div class="rung"><b>3. Analizo</b><br>¿Qué distractor me confundió y qué parte del texto lo descartó?<textarea data-meta="analizo" minlength="20" placeholder="Identifica el distractor y la evidencia que lo descarta."></textarea></div>
+      <div class="rung"><b>4. Transfiero</b><br>¿Qué paso de la estrategia F-I-N usaré en la próxima lectura?<textarea data-meta="transfiero" minlength="20" placeholder="Nombra el paso y explica cómo lo aplicarás."></textarea></div>
+      <div class="rung"><b>5. Me propongo</b><br>¿Qué habilidad SIMCE debo mejorar y qué acción concreta realizaré?<textarea data-meta="proposito" minlength="20" placeholder="Formula una acción concreta para la próxima lectura."></textarea></div>
+    </div>
+    <div class="done" id="doneBanner">Clase entregada. Tu resultado individual quedó guardado en el portal.</div>
+  </section>
+</main>
+
+<div class="actionbar">
+  <div class="actionbar-inner">
+    <span class="save-status" id="saveStatus">Conectando…</span>
+    <button class="submit" id="submitBtn" type="button">Entregar clase</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="js/forced-refresh.js"></script>
+<script>
+const FIREBASE_CONFIG={
+  apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+  authDomain:"estudiacest.firebaseapp.com",
+  databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",
+  projectId:"estudiacest",
+  storageBucket:"estudiacest.firebasestorage.app",
+  messagingSenderId:"999002169815",
+  appId:"1:999002169815:web:51203237bc77c2e74deb92"
+};
+if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+const auth=firebase.auth();
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+const db=firebase.database();
+const BASE="plataforma_estudiantes";
+const SESSION_ID="sesion-u3-3";
+const PAGE_PATH="/estudiantes/guia-u3-s3-reportaje.html";
+const SHARED_LOGIN_URL="/lecturas/?next="+encodeURIComponent(PAGE_PATH);
+const IS_LOCAL=window.location.protocol==="file:"||location.hostname==="localhost"||location.hostname==="127.0.0.1";
+if(typeof initStudentForcedRefresh==="function")initStudentForcedRefresh({auth,db,base:BASE});
+
+const MATCHING=[
+  {term:"Bajada",definition:"Anticipa el enfoque específico que desarrollará el texto."},
+  {term:"Entrada o lead",definition:"Introduce el asunto y busca orientar o interesar al lector."},
+  {term:"Dato",definition:"Precisa o dimensiona una afirmación con información verificable."},
+  {term:"Testimonio",definition:"Aporta una experiencia directa y una perspectiva personal."},
+  {term:"Fuente experta",definition:"Explica o respalda desde un conocimiento especializado."},
+  {term:"Cuerpo",definition:"Desarrolla el tema mediante antecedentes, voces y explicaciones."}
+];
+const MATCHING_ORDERS=[
+  [2,4,0,5,1,3],
+  [5,2,4,1,3,0],
+  [3,5,0,4,1,2],
+  [1,3,5,0,2,4]
+];
+const VF=[
+  {text:"Un testimonio demuestra por sí solo que una experiencia ocurre de la misma manera en todas las personas.",ok:false,why:"Un testimonio aporta un caso y una perspectiva; no permite generalizar a todas las personas."},
+  {text:"Un dato puede dimensionar el problema presentado en un reportaje.",ok:true,why:"Las cifras permiten precisar cuánto, cuándo o con qué frecuencia ocurre algo."},
+  {text:"La fuente experta siempre reemplaza la necesidad de presentar evidencia.",ok:false,why:"La voz experta interpreta o respalda; sus afirmaciones también deben ser pertinentes y comprobables."},
+  {text:"La bajada orienta al lector sobre el enfoque del reportaje.",ok:true,why:"Complementa el título y anticipa qué aspecto específico se desarrollará."},
+  {text:"La función de un experimento puede ser explicar cómo se obtuvieron determinados resultados.",ok:true,why:"El procedimiento permite comprender de dónde proviene la evidencia."},
+  {text:"La idea central corresponde al dato más llamativo del texto.",ok:false,why:"La idea central integra el sentido global; un dato particular solo contribuye a desarrollarla."}
+];
+const WORDS=["REPORTAJE","FUENTE","TESTIMONIO","ENTRADA","TITULO","DATO"];
+const WORD_SIZE=12;
+const WORD_PLACEMENTS=[
+  {word:"REPORTAJE",start:[0,0],dir:[1,1]},
+  {word:"FUENTE",start:[3,9],dir:[0,-1]},
+  {word:"TESTIMONIO",start:[10,11],dir:[-1,0]},
+  {word:"ENTRADA",start:[4,1],dir:[1,0]},
+  {word:"TITULO",start:[5,10],dir:[1,-1]},
+  {word:"DATO",start:[11,3],dir:[0,1]}
+];
+
+const BASE_QUESTIONS=[
+  {id:"q1",text:"t1",skill:"L",difficulty:"Elemental",prompt:"Según el reportaje, ¿cuánto disminuyó en promedio la temperatura de las superficies bajo la malla de sombra?",correct:"B",options:{
+    A:"Disminuyó 3,1 °C durante las jornadas de medición.",
+    B:"Disminuyó 5,1 °C durante las semanas del ensayo.",
+    C:"Disminuyó 9,0 °C en las mesas cercanas a los árboles.",
+    D:"Disminuyó 11,8 °C bajo el corredor techado del patio."
+  },why:{
+    A:"Dato alterado: esa disminución no aparece en los resultados.",
+    B:"Correcta: el texto señala que la malla redujo en promedio 5,1 °C.",
+    C:"Dato vecino: nueve corresponde al número de asientos cubiertos por árboles.",
+    D:"Cálculo ajeno: compara dos zonas del diagnóstico, no el efecto de la malla."
+  },evidence:"“La malla redujo en promedio 5,1 °C la temperatura de las superficies”."},
+  {id:"q2",text:"t1",skill:"I",difficulty:"Intermedio",prompt:"¿Cuál es la idea central del reportaje “El patio que aprendió a dar sombra”?",correct:"D",options:{
+    A:"Las plantas trepadoras son la solución más eficaz para enfriar cualquier patio escolar de Chile.",
+    B:"La municipalidad debe financiar todas las mejoras de infraestructura de los colegios.",
+    C:"Los estudiantes prefieren usar corredores techados durante los recreos de primavera.",
+    D:"Medir y probar alternativas permitió diseñar una mejora adecuada para ese patio escolar."
+  },why:{
+    A:"Generalización y contradicción: las plantas aún no produjeron una diferencia térmica importante.",
+    B:"Cambio de foco: la municipalidad solo aporta asesoría; el texto trata de un proceso comunitario.",
+    C:"Información parcial: describe la situación inicial, pero no integra el desarrollo ni el desenlace.",
+    D:"Correcta: sintetiza diagnóstico, experimento y decisión adaptada al espacio."
+  },evidence:"El proyecto transforma una queja “en una decisión respaldada por datos, prueba y colaboración”."},
+  {id:"q3",text:"t1",skill:"I",difficulty:"Intermedio",prompt:"¿Qué función cumple el testimonio de Vicente Muñoz en el desarrollo del reportaje?",correct:"A",options:{
+    A:"Mostrar que el experimento cambió la forma en que los estudiantes evaluaban las soluciones.",
+    B:"Comprobar que la malla de sombra redujo exactamente cinco grados en todos los sectores.",
+    C:"Explicar técnicamente cómo la orientación del edificio modifica la radiación solar.",
+    D:"Demostrar que los toldos móviles fueron descartados por no resistir ninguna condición de viento."
+  },why:{
+    A:"Correcta: su voz contrapone el deseo inicial de una solución grande con una evaluación más compleja.",
+    B:"Cambio de fuente: la cifra proviene de las mediciones, no del testimonio.",
+    C:"Cambio de voz: esa explicación especializada corresponde a la arquitecta.",
+    D:"Exageración: los toldos se conservaron para un área y solo debían cerrarse con viento."
+  },evidence:"“Antes queríamos una solución grande y rápida. Después entendimos que también había que pensar…”"},
+  {id:"q4",text:"t1",skill:"I",difficulty:"Intermedio",prompt:"¿Para qué se dejó un cuarto sector del patio sin intervención durante el experimento?",correct:"C",options:{
+    A:"Para reservar un espacio de recreo exclusivo para los estudiantes mayores.",
+    B:"Para esperar la llegada de los árboles financiados por el centro de padres del colegio.",
+    C:"Para comparar los sectores intervenidos con otro que mantuviera sus condiciones.",
+    D:"Para demostrar que la temperatura del patio no variaba durante la jornada."
+  },why:{
+    A:"Invención: el texto no asigna el sector a un grupo de estudiantes.",
+    B:"Confusión temporal: los árboles se incorporan después de analizar los resultados.",
+    C:"Correcta: un sector sin intervención funciona como referencia para evaluar los cambios.",
+    D:"Contrasentido: las mediciones muestran variaciones según lugar y horario."
+  },evidence:"“Un cuarto sector quedó sin intervención para servir de referencia”."},
+  {id:"q5",text:"t1",skill:"R",difficulty:"Adecuado",prompt:"¿Cuál de las siguientes afirmaciones evalúa mejor la consistencia de la conclusión del reportaje?",correct:"B",options:{
+    A:"Es inconsistente, porque el proyecto no logró eliminar por completo el calor del patio.",
+    B:"Es consistente, porque reconoce límites y relaciona la mejora con los datos obtenidos.",
+    C:"Es inconsistente, porque incorpora opiniones de estudiantes en lugar de cifras científicas.",
+    D:"Es consistente, porque permite asegurar que el mismo diseño funcionará en cualquier colegio."
+  },why:{
+    A:"Criterio excesivo: la conclusión nunca promete eliminar todo el calor.",
+    B:"Correcta: el cierre reconoce que persiste calor y explica qué cambió con evidencia.",
+    C:"Falsa oposición: el reportaje combina mediciones, testimonios y fuente experta.",
+    D:"Generalización: la arquitecta advierte expresamente que la experiencia no se copia de modo automático."
+  },evidence:"“El proyecto no eliminó el calor, pero transformó una queja repetida en una decisión respaldada…”"},
+  {id:"q6",text:"t2",skill:"L",difficulty:"Elemental",prompt:"Según el balance de las tres jornadas, ¿cuántos objetos fueron reparados?",correct:"A",options:{
+    A:"Fueron reparados cuarenta y nueve objetos.",
+    B:"Fueron reparados exactamente veintisiete objetos.",
+    C:"Fueron reparados veintiún objetos.",
+    D:"Fueron reparados quince objetos."
+  },why:{
+    A:"Correcta: el balance informa 49 objetos reparados.",
+    B:"Dato vecino: 27 podían repararse si se conseguía un repuesto.",
+    C:"Dato vecino: 21 se derivaron a servicios especializados.",
+    D:"Dato vecino: 15 no pudieron recuperarse de forma segura."
+  },evidence:"“Cuarenta y nueve fueron reparados…”"},
+  {id:"q7",text:"t2",skill:"I",difficulty:"Intermedio",prompt:"¿Por qué cambia la idea inicial de que un objeto no reparado representa un fracaso?",correct:"D",options:{
+    A:"Porque el curso decide ocultar a los vecinos los objetos que no logra reparar.",
+    B:"Porque todos los aparatos rechazados se transforman después en repuestos útiles.",
+    C:"Porque la profesora elimina los criterios de seguridad para aumentar los resultados registrados.",
+    D:"Porque orientar, derivar o reciclar también puede constituir una respuesta responsable."
+  },why:{
+    A:"Invención: el proceso registra y explica las decisiones a cada propietario.",
+    B:"Absoluto no sustentado: el texto no afirma que todos se conviertan en repuestos.",
+    C:"Inversión: los límites de seguridad se mantienen y se explican con mayor claridad.",
+    D:"Correcta: el proyecto amplía su criterio de éxito más allá de encender objetos."
+  },evidence:"La jornada comenzó a considerar “cuántas decisiones seguras y útiles podía ofrecer”."},
+  {id:"q8",text:"t2",skill:"I",difficulty:"Intermedio",prompt:"¿Qué aporta la explicación de la ingeniera ambiental Constanza Pérez?",correct:"C",options:{
+    A:"Una experiencia personal sobre el valor afectivo de conservar una lámpara antigua.",
+    B:"Una lista definitiva de aparatos que siempre deben repararse en talleres escolares locales.",
+    C:"Criterios especializados para evaluar cuándo una reparación es realmente responsable.",
+    D:"Una prueba de que reparar cualquier objeto produce necesariamente menos residuos."
+  },why:{
+    A:"Cambio de voz: esa experiencia pertenece a Marta González.",
+    B:"Absoluto: la especialista propone comparar factores, no entrega una lista universal.",
+    C:"Correcta: integra vida útil, seguridad, costo y disponibilidad de piezas.",
+    D:"Inversión: advierte que reparar no siempre es la opción de menor impacto."
+  },evidence:"“Debe comparar vida útil, seguridad, costo y disponibilidad de piezas”."},
+  {id:"q9",text:"t2",skill:"R",difficulty:"Adecuado",prompt:"¿Cuál es el propósito principal del reportaje “El taller donde los objetos reciben una segunda oportunidad”?",correct:"A",options:{
+    A:"Mostrar cómo un taller amplió la idea de reparar hacia decisiones seguras y explicadas.",
+    B:"Convencer a todos los vecinos de conservar indefinidamente sus aparatos antiguos.",
+    C:"Enseñar paso a paso a intervenir equipos eléctricos complejos sin supervisión técnica.",
+    D:"Denunciar que los servicios especializados rechazan la mayoría de los objetos del barrio."
+  },why:{
+    A:"Correcta: integra el origen, los cambios y el aprendizaje central del proyecto.",
+    B:"Generalización: algunos objetos deben reciclarse o reemplazarse.",
+    C:"Propósito ajeno y riesgoso: el texto enfatiza supervisión y límites.",
+    D:"Invención: no se formula esa denuncia ni se ofrecen datos sobre esos servicios."
+  },evidence:"El cierre afirma que una buena decisión depende de “la evidencia y la responsabilidad que la sostienen”."},
+  {id:"q10",text:"t2",skill:"R",difficulty:"Intermedio",prompt:"¿Qué evidencia respalda mejor que el proyecto también mejoró la comprensión de los asistentes?",correct:"B",options:{
+    A:"La campaña inicial reunió ochenta y seis aparatos pequeños en una semana.",
+    B:"Sesenta y ocho de setenta y cuatro encuestados comprendieron la decisión técnica.",
+    C:"Veintisiete objetos podrían repararse si se encontraban los repuestos necesarios.",
+    D:"La primera lámpara fue reparada mediante limpieza y reemplazo de una pieza."
+  },why:{
+    A:"Dato relacionado con residuos: no mide la comprensión de los asistentes.",
+    B:"Correcta: la encuesta pregunta directamente por comprensión de la decisión técnica.",
+    C:"Dato de reparabilidad: no informa qué entendieron las personas.",
+    D:"Caso particular: muestra una reparación, no comprensión general de los asistentes."
+  },evidence:"“De 74 personas consultadas, 68 señalaron que comprendieron la decisión técnica”."}
+];
+
+const SKILL_NAMES={L:"Localizar",I:"Interpretar",R:"Reflexionar"};
+let questions=[],answers={},currentUID=null,studentData=null,isSubmitted=false,saveTimer=null,rendered=false;
+let matchingDefinitions=[],matchingKey=[],wordGrid=[],wordPaths={},wordPathLookup={},wordStart=null,foundWords={};
+
+function hash(value){
+  let h=2166136261;
+  for(let i=0;i<value.length;i++){h^=value.charCodeAt(i);h=Math.imul(h,16777619)}
+  return h>>>0;
+}
+function prepareQuestions(uid){
+  const variants=[
+    {A:"A",B:"B",C:"C",D:"D"},
+    {A:"B",B:"C",C:"D",D:"A"},
+    {A:"C",B:"D",C:"A",D:"B"},
+    {A:"D",B:"A",C:"B",D:"C"}
+  ];
+  const map=variants[hash(uid||"preview")%variants.length];
+  questions=BASE_QUESTIONS.map(base=>{
+    const options=Object.keys(base.options).map(old=>({letter:map[old],text:base.options[old]})).sort((a,b)=>a.letter.localeCompare(b.letter));
+    const why={};Object.keys(base.why).forEach(old=>why[map[old]]=base.why[old]);
+    return {...base,options,why,correct:map[base.correct]};
+  });
+}
+function prepareConcepts(uid){
+  foundWords={};wordStart=null;
+  const order=MATCHING_ORDERS[hash(`${uid||"preview"}-matching`)%MATCHING_ORDERS.length];
+  matchingDefinitions=order.map((sourceIndex,position)=>({
+    id:String.fromCharCode(65+position),
+    sourceIndex,
+    text:MATCHING[sourceIndex].definition
+  }));
+  matchingKey=MATCHING.map((_,termIndex)=>matchingDefinitions.find(item=>item.sourceIndex===termIndex).id);
+
+  let seed=hash(`${uid||"preview"}-words`)||1;
+  const alphabet="ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
+  const nextLetter=()=>{
+    seed=(Math.imul(seed,1664525)+1013904223)>>>0;
+    return alphabet[seed%alphabet.length];
+  };
+  wordGrid=Array.from({length:WORD_SIZE},()=>Array.from({length:WORD_SIZE},nextLetter));
+  wordPaths={};wordPathLookup={};
+  WORD_PLACEMENTS.forEach(item=>{
+    const path=[];
+    [...item.word].forEach((letter,index)=>{
+      const row=item.start[0]+item.dir[0]*index;
+      const col=item.start[1]+item.dir[1]*index;
+      wordGrid[row][col]=letter;path.push({row,col});
+    });
+    wordPaths[item.word]=path;
+    wordPathLookup[canonicalPath(path)]=item.word;
+  });
+}
+function renderMatching(){
+  const zone=document.getElementById("matchingZone");
+  zone.innerHTML=MATCHING.map((m,i)=>`<div class="match-row"><b>${i+1}. ${m.term}</b><select data-match="${i}"><option value="">Selecciona una definición</option>${matchingDefinitions.map(d=>`<option value="${d.id}">${d.id}. ${d.text}</option>`).join("")}</select></div>`).join("");
+  zone.querySelectorAll("select").forEach(el=>el.addEventListener("change",()=>{syncMatchingOptions();el.closest(".match-row").classList.remove("correct","incorrect");scheduleSave()}));
+}
+function syncMatchingOptions(){
+  const selects=[...document.querySelectorAll("[data-match]")];
+  const selected=selects.map(el=>el.value).filter(Boolean);
+  selects.forEach(select=>select.querySelectorAll("option[value]").forEach(option=>{
+    option.disabled=!!option.value&&option.value!==select.value&&selected.includes(option.value);
+  }));
+}
+function renderVF(){
+  const zone=document.getElementById("vfZone");
+  zone.innerHTML=VF.map((item,i)=>`<div class="vf-row"><span>${i+1}. ${item.text}</span><div class="vf-buttons"><button class="small-btn" type="button" data-vf="${i}" data-value="true">V</button><button class="small-btn" type="button" data-vf="${i}" data-value="false">F</button></div></div>`).join("");
+  zone.querySelectorAll("[data-vf]").forEach(btn=>btn.addEventListener("click",()=>{
+    zone.querySelectorAll(`[data-vf="${btn.dataset.vf}"]`).forEach(b=>b.classList.remove("selected"));
+    btn.classList.add("selected");scheduleSave();
+  }));
+}
+function renderWords(){
+  document.getElementById("wordSearch").innerHTML=wordGrid.flatMap((row,rowIndex)=>row.map((letter,colIndex)=>`<button type="button" class="word-cell" data-row="${rowIndex}" data-col="${colIndex}" aria-label="Fila ${rowIndex+1}, columna ${colIndex+1}: ${letter}">${letter}</button>`)).join("");
+  document.getElementById("wordList").innerHTML=WORDS.map(word=>`<div class="word-item" data-word-item="${word}">${word}</div>`).join("");
+  document.querySelectorAll(".word-cell").forEach(cell=>cell.addEventListener("click",()=>selectWordCell(cell)));
+}
+function cellKey(cell){return `${cell.row},${cell.col}`}
+function canonicalPath(path){return path.map(cellKey).sort().join("|")}
+function pathBetween(start,end){
+  const rowDiff=end.row-start.row,colDiff=end.col-start.col;
+  if(rowDiff!==0&&colDiff!==0&&Math.abs(rowDiff)!==Math.abs(colDiff))return null;
+  const steps=Math.max(Math.abs(rowDiff),Math.abs(colDiff));
+  if(!steps)return null;
+  const rowStep=Math.sign(rowDiff),colStep=Math.sign(colDiff);
+  return Array.from({length:steps+1},(_,index)=>({row:start.row+rowStep*index,col:start.col+colStep*index}));
+}
+function clearWordStart(){
+  document.querySelectorAll(".word-cell.anchor").forEach(cell=>cell.classList.remove("anchor"));
+  wordStart=null;
+}
+function markWordFound(word){
+  foundWords[word]=true;
+  (wordPaths[word]||[]).forEach(({row,col})=>document.querySelector(`[data-row="${row}"][data-col="${col}"]`).classList.add("found"));
+  const item=document.querySelector(`[data-word-item="${word}"]`);
+  if(item)item.classList.add("found");
+}
+function selectWordCell(cell){
+  const point={row:Number(cell.dataset.row),col:Number(cell.dataset.col)};
+  const feedback=document.getElementById("wordFeedback");
+  if(!wordStart){
+    wordStart=point;cell.classList.add("anchor");
+    feedback.className="concept-feedback show";
+    feedback.textContent="Ahora selecciona la última letra de la palabra.";
+    return;
+  }
+  const path=pathBetween(wordStart,point);
+  clearWordStart();
+  const word=path?wordPathLookup[canonicalPath(path)]:null;
+  if(!word){
+    feedback.className="concept-feedback show";
+    feedback.textContent="Ese trayecto no forma una palabra de la lista. Intenta nuevamente.";
+    return;
+  }
+  if(foundWords[word]){
+    feedback.className="concept-feedback show";
+    feedback.textContent=`${word} ya estaba encontrada.`;
+    return;
+  }
+  markWordFound(word);scheduleSave();
+  const done=WORDS.filter(item=>foundWords[item]).length;
+  feedback.className=`concept-feedback show${done===WORDS.length?" success":""}`;
+  feedback.innerHTML=done===WORDS.length?`Sopa completada: <b>${done}/${WORDS.length}</b>.`:`Encontraste <b>${word}</b>. Llevas ${done}/${WORDS.length}.`;
+}
+function checkMatching(){
+  let ok=0,done=0;
+  document.querySelectorAll("[data-match]").forEach((el,i)=>{
+    const row=el.closest(".match-row");row.classList.remove("correct","incorrect");
+    if(el.value)done++;
+    if(el.value===matchingKey[i]){ok++;if(el.value)row.classList.add("correct")}
+    else if(el.value)row.classList.add("incorrect");
+  });
+  const out=document.getElementById("matchingFeedback");out.className="concept-feedback show";
+  if(done<MATCHING.length)out.innerHTML=`Responde los ${MATCHING.length} términos antes de revisar.`;
+  else{
+    out.classList.toggle("success",ok===MATCHING.length);
+    out.innerHTML=ok===MATCHING.length?`Pareados completados: <b>${ok}/${MATCHING.length}</b>.`:`Resultado conceptual: <b>${ok}/${MATCHING.length}</b>. Corrige las asociaciones marcadas y vuelve a revisar.`;
+  }
+}
+function checkVF(){
+  let ok=0,done=0,details=[];
+  VF.forEach((item,i)=>{const selected=document.querySelector(`[data-vf="${i}"].selected`);if(selected){done++;const value=selected.dataset.value==="true";if(value===item.ok)ok++;else details.push(`${i+1}. ${item.why}`)}});
+  const out=document.getElementById("vfFeedback");out.className="concept-feedback show";
+  if(done===VF.length&&ok===VF.length)out.classList.add("success");
+  out.innerHTML=done<VF.length?`Responde las ${VF.length} afirmaciones antes de revisar.`:`Resultado conceptual: <b>${ok}/${VF.length}</b>.${details.length?`<br>${details.join("<br>")}`:" Todas las decisiones están justificadas."}`;
+}
+function checkWords(){
+  const done=WORDS.filter(word=>foundWords[word]).length;
+  const out=document.getElementById("wordFeedback");
+  out.className=`concept-feedback show${done===WORDS.length?" success":""}`;
+  out.innerHTML=done===WORDS.length?`Sopa completada: <b>${done}/${WORDS.length}</b>.`:`Has encontrado <b>${done}/${WORDS.length}</b>. Debes seleccionar el inicio y el final de las palabras restantes.`;
+}
+function conceptCompletion(){
+  const matching=[...document.querySelectorAll("[data-match]")].every((el,index)=>el.value===matchingKey[index]);
+  const vf=VF.every((item,index)=>{
+    const selected=document.querySelector(`[data-vf="${index}"].selected`);
+    return selected&&((selected.dataset.value==="true")===item.ok);
+  });
+  const words=WORDS.every(word=>foundWords[word]);
+  return{matching,vf,words,complete:matching&&vf&&words};
+}
+function renderQuestions(){
+  const zones={t1:document.getElementById("quizText1"),t2:document.getElementById("quizText2")};
+  questions.forEach((q,index)=>{
+    const card=document.createElement("div");card.className="question";card.id=`card-${q.id}`;
+    card.innerHTML=`<div class="question-head"><div class="question-title">${index+1}. ${q.prompt}</div><span class="skill">${SKILL_NAMES[q.skill]}</span></div><div class="options">${q.options.map(o=>`<button type="button" class="option" data-q="${q.id}" data-letter="${o.letter}"><span class="letter">${o.letter}</span><span>${o.text}</span></button>`).join("")}</div><div class="feedback" id="feedback-${q.id}"></div>`;
+    zones[q.text].appendChild(card);
+    card.querySelectorAll(".option").forEach(btn=>btn.addEventListener("click",()=>pick(btn.dataset.q,btn.dataset.letter)));
+  });
+}
+function renderAll(uid){
+  if(rendered)return;rendered=true;prepareQuestions(uid);prepareConcepts(uid);renderMatching();renderVF();renderWords();renderQuestions();
+}
+function pick(qid,letter){
+  if(isSubmitted)return;
+  answers[qid]=letter;
+  document.querySelectorAll(`[data-q="${qid}"]`).forEach(btn=>{btn.classList.toggle("selected",btn.dataset.letter===letter);btn.classList.remove("correct","wrong")});
+  document.getElementById(`feedback-${qid}`).className="feedback";
+  updateScores(false);scheduleSave();
+}
+function stats(){
+  const s={L:{ok:0,n:0},I:{ok:0,n:0},R:{ok:0,n:0}};
+  questions.forEach(q=>{if(!answers[q.id])return;s[q.skill].n++;if(answers[q.id]===q.correct)s[q.skill].ok++});
+  return s;
+}
+function updateScores(force){
+  const s=stats();
+  const totals={L:0,I:0,R:0};
+  questions.forEach(q=>totals[q.skill]++);
+  [["L","scoreL"],["I","scoreI"],["R","scoreR"]].forEach(([skill,id])=>{
+    document.getElementById(id).textContent=force
+      ?`${s[skill].ok}/${totals[skill]} correctas`
+      :`${s[skill].n}/${totals[skill]} respondidas`;
+  });
+  if(force){
+    const ratio=k=>s[k].n?s[k].ok/s[k].n:1;
+    const focus=["L","I","R"].sort((a,b)=>ratio(a)-ratio(b))[0];
+    document.getElementById("focusMessage").innerHTML=`Tu foco de mejora es <b>${SKILL_NAMES[focus]}</b>. Revisa qué pista textual omitiste.`;
+  }else{
+    const answered=Object.keys(answers).length;
+    document.getElementById("focusMessage").textContent=answered===questions.length
+      ?"Todas las respuestas están registradas. Revisa el texto antes de entregar."
+      :`Llevas ${answered}/${questions.length} preguntas respondidas.`;
+  }
+}
+function revealFeedback(){
+  questions.forEach(q=>{
+    const selected=answers[q.id];if(!selected)return;
+    document.querySelectorAll(`[data-q="${q.id}"]`).forEach(btn=>{
+      btn.classList.remove("correct","wrong");
+      if(btn.dataset.letter===q.correct)btn.classList.add("correct");
+      else if(btn.dataset.letter===selected)btn.classList.add("wrong");
+    });
+    const ok=selected===q.correct;const out=document.getElementById(`feedback-${q.id}`);
+    out.className=`feedback show ${ok?"ok":"bad"}`;
+    out.innerHTML=`<b>${ok?"Respuesta correcta":`La respuesta correcta es ${q.correct}`}</b>${["A","B","C","D"].map(letter=>`<p><b>${letter}.</b> ${q.why[letter]}</p>`).join("")}<p><b>Evidencia:</b> ${q.evidence}</p>`;
+  });
+  updateScores(true);
+}
+function grade(){
+  let ok=0;questions.forEach(q=>{if(answers[q.id]===q.correct)ok++});
+  const pct=Math.round(ok/questions.length*100);
+  const nota=pct>=60?Math.round((4+3*(pct-60)/40)*10)/10:Math.round((1+3*pct/60)*10)/10;
+  return{ok,pct,nota};
+}
+function conceptPayload(){
+  const matching={};document.querySelectorAll("[data-match]").forEach(el=>matching[el.dataset.match]=el.value);
+  const vf={};VF.forEach((_,i)=>{const el=document.querySelector(`[data-vf="${i}"].selected`);if(el)vf[i]=el.dataset.value});
+  const words={};WORDS.forEach(word=>words[word]=!!foundWords[word]);
+  return{version:2,matching,vf,words};
+}
+function metacognitionPayload(){
+  const values={};
+  document.querySelectorAll("[data-meta]").forEach(el=>values[el.dataset.meta]=(el.value||"").trim());
+  return values;
+}
+function metacognitionComplete(values=metacognitionPayload()){
+  return Object.keys(values).length===5&&Object.values(values).every(value=>value.length>=20);
+}
+function lockSubmittedControls(){
+  document.querySelectorAll("#paso3 select,#paso3 button,#paso4 button,#paso4 textarea,#paso5 textarea").forEach(el=>el.disabled=true);
+}
+function payload(completed){
+  const metacognicion=metacognitionPayload();
+  return{
+    answers:{...answers},
+    concepto:conceptPayload(),
+    respuesta_abierta:(document.getElementById("openResponse").value||"").trim(),
+    metacognicion,
+    metacognicion_manuscrita:metacognitionComplete(metacognicion),
+    completada:!!completed,
+    nombre:studentData?(studentData.nombre||""):"",
+    curso:studentData?(studentData.curso||""):"",
+    version_alternativas:hash(currentUID||"preview")%4,
+    last_save:Date.now()
+  };
+}
+function localKey(){return currentUID?`draft_${SESSION_ID}_${currentUID}`:`draft_${SESSION_ID}_preview`}
+function setStatus(text){document.getElementById("saveStatus").textContent=text}
+function toast(text){const el=document.createElement("div");el.className="toast";el.textContent=text;document.body.appendChild(el);setTimeout(()=>el.remove(),2600)}
+function localBackup(){try{localStorage.setItem(localKey(),JSON.stringify(payload(false)))}catch(e){}}
+function scheduleSave(){localBackup();setStatus("Guardando…");clearTimeout(saveTimer);saveTimer=setTimeout(saveDraft,1200)}
+async function saveDraft(){
+  localBackup();if(IS_LOCAL||!currentUID||isSubmitted){if(IS_LOCAL)setStatus("Vista previa local.");return}
+  try{await db.ref(`${BASE}/respuestas/${SESSION_ID}/${currentUID}`).update(payload(false));setStatus("Avance guardado automáticamente.")}
+  catch(error){console.error(error);setStatus("Sin conexión: el avance quedó guardado en este dispositivo.")}
+}
+function hydrate(saved){
+  if(!saved)return;
+  if(saved.answers)Object.entries(saved.answers).forEach(([qid,letter])=>{if(questions.some(q=>q.id===qid))pick(qid,letter)});
+  if(saved.concepto){
+    if(saved.concepto.version===2)Object.entries(saved.concepto.matching||{}).forEach(([i,value])=>{const el=document.querySelector(`[data-match="${i}"]`);if(el)el.value=value});
+    Object.entries(saved.concepto.vf||{}).forEach(([i,value])=>{const el=document.querySelector(`[data-vf="${i}"][data-value="${value}"]`);if(el)el.classList.add("selected")});
+    if(saved.concepto.version===2)Object.entries(saved.concepto.words||{}).forEach(([word,value])=>{if(value&&WORDS.includes(word))markWordFound(word)});
+    syncMatchingOptions();
+  }
+  if(typeof saved.respuesta_abierta==="string")document.getElementById("openResponse").value=saved.respuesta_abierta;
+  Object.entries(saved.metacognicion||{}).forEach(([key,value])=>{const el=document.querySelector(`[data-meta="${key}"]`);if(el)el.value=value});
+  if(saved.completada){
+    isSubmitted=true;revealFeedback();document.getElementById("doneBanner").style.display="block";
+    document.getElementById("submitBtn").disabled=true;lockSubmittedControls();
+    setStatus("Clase ya entregada.");
+  }
+}
+async function submitGuide(){
+  if(IS_LOCAL){toast("Vista previa local: la entrega no se enviará.");return}
+  if(!currentUID||isSubmitted)return;
+  const concepts=conceptCompletion();
+  if(!concepts.complete){
+    checkMatching();checkVF();checkWords();
+    toast("Completa correctamente los tres ejercicios de conceptos antes de entregar.");
+    document.getElementById("paso3").scrollIntoView();return;
+  }
+  const answered=Object.keys(answers).length;
+  if(answered<questions.length){toast(`Faltan ${questions.length-answered} preguntas SIMCE por responder.`);document.getElementById(`card-${questions.find(q=>!answers[q.id]).id}`).scrollIntoView();return}
+  if(!metacognitionComplete()){toast("Escribe los cinco peldaños de la escalera con al menos 20 caracteres en cada respuesta.");document.getElementById("paso5").scrollIntoView();return}
+  if(!confirm("¿Entregar la clase? Después de entregar no podrás cambiar las alternativas."))return;
+  const button=document.getElementById("submitBtn");button.disabled=true;
+  const g=grade(),s=stats(),now=Date.now(),detail={};
+  questions.forEach(q=>detail[q.id]={respuesta:answers[q.id],correcta:q.correct,esCorrecta:answers[q.id]===q.correct,habilidad:SKILL_NAMES[q.skill].toUpperCase(),dificultad:q.difficulty});
+  try{
+    const data=payload(true);data.submitted_at=now;
+    await Promise.all([
+      db.ref(`${BASE}/respuestas/${SESSION_ID}/${currentUID}`).update(data),
+      db.ref(`${BASE}/resultados/${SESSION_ID}/${currentUID}`).set({
+        puntaje:g.ok,total:questions.length,porcentaje:g.pct,nota:g.nota,detalle:detail,
+        por_habilidad:s,respuesta_abierta:data.respuesta_abierta,metacognicion:data.metacognicion,
+        conceptos:{pareados:true,verdadero_falso:true,sopa:true,completos:true},nombre:data.nombre,curso:data.curso,
+        version_alternativas:data.version_alternativas,submitted_at:now,timestamp:now
+      })
+    ]);
+    if(studentData&&studentData.curso){
+      try{await db.ref(`${BASE}/ranking/${SESSION_ID}/${studentData.curso}/${currentUID}`).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct})}catch(e){}
+    }
+    isSubmitted=true;revealFeedback();document.getElementById("doneBanner").style.display="block";
+    lockSubmittedControls();
+    try{localStorage.removeItem(localKey())}catch(e){}
+    setStatus(`Entregada · ${g.ok}/${questions.length} (${g.pct}%)`);toast("Clase entregada correctamente.");
+  }catch(error){
+    console.error(error);button.disabled=false;localBackup();setStatus("No se pudo entregar. Tu avance permanece guardado.");toast("No se pudo enviar. Revisa la conexión y vuelve a intentar.");
+  }
+}
+function updateProgress(){
+  const max=document.documentElement.scrollHeight-window.innerHeight;
+  document.getElementById("progressBar").style.width=`${max>0?Math.min(100,Math.round(scrollY/max*100)):0}%`;
+  const sections=[...document.querySelectorAll("main section[id]")];let active=sections[0];
+  sections.forEach(section=>{if(section.getBoundingClientRect().top<170)active=section});
+  document.querySelectorAll(".step-link").forEach(btn=>btn.classList.toggle("active",btn.dataset.target===active.id));
+}
+document.querySelectorAll(".step-link").forEach(btn=>btn.addEventListener("click",()=>document.getElementById(btn.dataset.target).scrollIntoView()));
+document.getElementById("checkMatching").addEventListener("click",checkMatching);
+document.getElementById("checkVF").addEventListener("click",checkVF);
+document.getElementById("checkWords").addEventListener("click",checkWords);
+document.getElementById("openResponse").addEventListener("input",scheduleSave);
+document.querySelectorAll("[data-meta]").forEach(el=>el.addEventListener("input",scheduleSave));
+document.getElementById("submitBtn").addEventListener("click",submitGuide);
+const conceptVideo=document.getElementById("conceptVideo");
+conceptVideo.defaultPlaybackRate=1.5;
+conceptVideo.playbackRate=1.5;
+conceptVideo.addEventListener("loadedmetadata",()=>{
+  conceptVideo.defaultPlaybackRate=1.5;
+  conceptVideo.playbackRate=1.5;
+},{once:true});
+window.addEventListener("scroll",updateProgress,{passive:true});
+window.addEventListener("online",saveDraft);
+updateProgress();
+
+if(IS_LOCAL){
+  renderAll("preview");setStatus("Vista previa local.");
+}else{
+  auth.onAuthStateChanged(async user=>{
+    if(!user){location.href=SHARED_LOGIN_URL;return}
+    currentUID=user.uid;renderAll(user.uid);
+    try{
+      const [studentSnap,remoteSnap]=await Promise.all([
+        db.ref(`${BASE}/estudiantes/${user.uid}`).once("value"),
+        db.ref(`${BASE}/respuestas/${SESSION_ID}/${user.uid}`).once("value")
+      ]);
+      studentData=studentSnap.val();
+      if(!studentData){await auth.signOut();return}
+      const remote=remoteSnap.val();let local=null;
+      try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw)}catch(e){}
+      const useLocal=local&&!(remote&&remote.completada)&&(!remote||(local.last_save||0)>(remote.last_save||0));
+      hydrate(useLocal?local:remote);
+      if(useLocal){toast("Recuperamos el avance guardado en este dispositivo.");scheduleSave()}
+      if(!isSubmitted)setStatus("Tus respuestas se guardan automáticamente.");
+    }catch(error){console.error(error);toast("No se pudo cargar la clase. Actualiza la página.")}
+  });
+}
+</script>
+</body>
+</html>

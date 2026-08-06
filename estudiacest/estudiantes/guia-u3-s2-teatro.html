@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 2 · Unidad 3 · Teatro: leer una obra dramática</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--azul:#0b4f9c;--azul2:#1769d6;--verde:#15803d;--verde-bg:#e9f8ef;--amber:#b45309;
+    --tinta:#0f172a;--gris:#475569;--linea:#e2e8f0;--suave:#f8fafc;--rojo:#b91c1c;--rojo-bg:#fef2f2;
+    --morado:#6d28d9;--morado-bg:#f1e9fe;}
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',system-ui,sans-serif;margin:0;background:#eef2f7;color:var(--tinta);line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 130px;}
+  header.hero{position:relative;color:#fff;border-radius:0 0 22px 22px;overflow:hidden;box-shadow:0 8px 24px rgba(11,79,156,.25);
+    background:linear-gradient(135deg,#1f1147,#4c1d95 55%,#6d28d9);padding:30px 22px 26px;}
+  .hero .kicker{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.95;}
+  .hero h1{margin:6px 0 4px;font-size:1.55rem;font-weight:800;line-height:1.22;}
+  .hero p{margin:0;font-size:.94rem;opacity:.95;}
+  .card{background:#fff;border:1px solid var(--linea);border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  .step-tag{display:inline-flex;gap:8px;background:var(--azul);color:#fff;font-weight:700;font-size:.82rem;padding:5px 12px;border-radius:999px;margin-bottom:10px;}
+  .step-tag.alt{background:var(--morado);}
+  .card h2{margin:.1rem 0 .4rem;font-size:1.18rem;color:var(--azul);}
+  .muted{color:var(--gris);font-size:.92rem;}
+  .skillrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .skillrow span{border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:700;}
+  .sk-l{background:#e0f2fe;color:#075985;} .sk-i{background:#fef3c7;color:#92400e;} .sk-r{background:#fce7f3;color:#9d174d;}
+  .glosario{background:var(--suave);border-radius:14px;padding:14px 16px;margin:12px 0;}
+  .glosario p{margin:.4rem 0;font-size:.93rem;}
+  .mins{float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;}
+  .obra{background:#fffdf7;border:1px solid #f0e6cf;border-radius:14px;padding:22px 26px;font-size:1.02rem;}
+  .obra h3{margin:0 0 2px;font-family:'Inter',sans-serif;color:var(--morado);font-size:1.1rem;}
+  .obra .autor{font-size:.85rem;color:var(--gris);margin-bottom:6px;}
+  .obra .escenario{font-style:italic;color:var(--gris);font-size:.92rem;margin:0 0 14px;padding-bottom:12px;border-bottom:1px dashed var(--linea);}
+  .obra .linea{margin:.55rem 0;}
+  .obra .personaje{font-weight:800;color:var(--azul);}
+  .obra .acot{font-style:italic;color:#7c3aed;font-weight:500;}
+  .infogfx{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:8px;margin:12px 0;}
+  .q{border:1px solid var(--linea);border-radius:14px;padding:16px;margin:14px 0;background:#fcfdff;}
+  .q .enun{font-weight:700;margin-bottom:4px;}
+  .q .hab{float:right;font-size:.72rem;font-weight:800;border-radius:999px;padding:3px 10px;}
+  .opts{display:grid;gap:8px;margin-top:10px;}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;font-size:.95rem;transition:border-color .12s, background .12s;}
+  .opt:hover{border-color:var(--azul2);}
+  .opt .letra{font-weight:800;color:var(--azul);}
+  .opt.selected{background:#eff6ff;border-color:var(--azul2);box-shadow:0 0 0 2px rgba(23,105,214,.12);}
+  .opt.correct{background:var(--verde-bg);border-color:#4ade80;}
+  .opt.wrong{background:var(--rojo-bg);border-color:#fca5a5;}
+  .opt:disabled{cursor:default;opacity:.92;}
+  .retro{display:none;margin-top:10px;border-radius:12px;padding:12px 14px;font-size:.9rem;line-height:1.55;}
+  .retro.show{display:block;}
+  .retro.ok{background:var(--verde-bg);border:1px solid #86efac;}
+  .retro.bad{background:var(--rojo-bg);border:1px solid #fca5a5;}
+  .retro .why{margin-top:6px;} .retro .why div{margin:.3rem 0;}
+  .retro .cita{background:#fff;border-left:3px solid var(--morado);padding:6px 10px;margin-top:8px;font-style:italic;font-size:.88rem;}
+  .dev-rubrica{background:var(--suave);border:1px solid var(--linea);border-radius:12px;padding:12px 14px;font-size:.9rem;margin:10px 0;}
+  textarea{width:100%;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.96rem;min-height:110px;resize:vertical;}
+  textarea:focus{outline:none;border-color:var(--azul2);box-shadow:0 0 0 3px rgba(23,105,214,.12);}
+  .modelo{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:12px 14px;font-size:.9rem;margin-top:10px;}
+  .modelo.show{display:block;}
+  .btn{border:none;border-radius:12px;padding:11px 18px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;}
+  .btn.primary{background:var(--verde);color:#fff;} .btn.primary:disabled{background:#94a3b8;cursor:not-allowed;}
+  .btn.secondary{background:#eef2f7;color:var(--azul);border:1px solid var(--linea);}
+  .diag{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+  .diag .box{border-radius:12px;padding:12px;text-align:center;border:1px solid var(--linea);}
+  .diag .box b{display:block;font-size:1.4rem;}
+  .actionbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linea);box-shadow:0 -4px 18px rgba(15,23,42,.08);padding:12px 16px;z-index:40;}
+  .actionbar .inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .save-status{flex:1;min-width:150px;font-size:.85rem;color:var(--gris);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:80;}
+  .done-banner{background:var(--verde-bg);border:1px solid #86efac;color:#166534;border-radius:12px;padding:14px 16px;font-weight:600;margin-top:14px;display:none;}
+  /* AFICHE */
+  .afiche{background:linear-gradient(160deg,#1f1147,#4c1d95 60%,#6d28d9);color:#fff;border-radius:16px;padding:26px 22px;text-align:center;}
+  .afiche .funcion{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:5px 14px;font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-bottom:12px;}
+  .afiche h3{margin:0 0 6px;font-size:1.8rem;font-weight:800;letter-spacing:.02em;}
+  .afiche .bajada{font-style:italic;opacity:.92;font-size:.98rem;max-width:420px;margin:0 auto 18px;}
+  .afiche .datos{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:420px;margin:0 auto 16px;text-align:left;}
+  .afiche .datos .item{background:rgba(255,255,255,.1);border-radius:10px;padding:8px 12px;}
+  .afiche .datos .item .lab{font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;opacity:.75;}
+  .afiche .datos .item .val{font-weight:700;font-size:.92rem;}
+  .afiche .elenco{font-size:.82rem;opacity:.9;margin:10px 0;}
+  .afiche .resena{border-top:1px solid rgba(255,255,255,.25);margin-top:16px;padding-top:14px;font-size:.9rem;font-style:italic;}
+  .afiche .resena b{display:block;font-style:normal;font-size:.72rem;opacity:.75;margin-top:4px;}
+  .afiche .nota{font-size:.72rem;opacity:.7;margin-top:10px;}
+  @media(max-width:560px){.hero h1{font-size:1.25rem;}.diag{grid-template-columns:1fr;}.afiche .datos{grid-template-columns:1fr;}}
+  .video-explicativo{background:#0f172a;border-radius:14px;overflow:hidden;margin:14px 0;}
+  .video-explicativo video{width:100%;display:block;border-radius:14px;}
+  .video-cap{font-size:.82rem;color:var(--gris);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="kicker">Unidad 3 · Rumbo al SIMCE · Clase 2</div>
+  <h1>🎭 Teatro: leer una obra dramática</h1>
+  <p>Puedes cambiar tu respuesta las veces que quieras. Al responder todas, verás la corrección completa: por qué sí y por qué no.</p>
+</header>
+
+<div class="wrap">
+
+  <!-- EXPLICA -->
+  <section class="card">
+    <span class="step-tag">1️⃣ Aprende</span>
+    <h2>Las claves para leer un texto dramático en el SIMCE</h2>
+    <div class="video-explicativo">
+      <video controls preload="metadata" playsinline>
+        <source src="videos/video-u3-s2-teatro.mp4" type="video/mp4">
+        Tu navegador no soporta el video. <a href="videos/video-u3-s2-teatro.mp4">Descárgalo aquí</a>.
+      </video>
+    </div>
+    <p class="video-cap">🎬 Video (1:04 min): diálogo, acotación, conflicto y estructura — véelo antes de empezar.</p>
+    <div class="glosario">
+      <p><b>🎬 Diálogo:</b> lo que dicen los personajes, marcado con su nombre antes de cada línea. Es la base de la acción dramática: casi todo lo que pasa, pasa a través de lo que se dice.</p>
+      <p><b>📝 Acotación:</b> las indicaciones del autor, normalmente entre paréntesis o en cursiva. NO las dice ningún personaje: orientan el movimiento, el tono de voz, la escenografía o el estado emocional. En el SIMCE casi siempre preguntan qué <b>función</b> cumple una acotación.</p>
+      <p><b>⚡ Conflicto dramático:</b> la tensión que mueve la escena, algo que un personaje quiere o necesita y que encuentra un obstáculo. Sin conflicto no hay obra.</p>
+      <p><b>🏗️ Estructura:</b> planteamiento (se presenta el conflicto) → nudo (el conflicto se desarrolla) → desenlace (se resuelve, aunque no siempre del todo).</p>
+    </div>
+    <div class="skillrow"><span class="sk-l">🔎 Localizar</span><span class="sk-i">🧩 Interpretar y relacionar</span><span class="sk-r">🪞 Reflexionar</span></div>
+  </section>
+
+  <!-- CALENTAMIENTO -->
+  <section class="card">
+    <span class="step-tag">2️⃣ Calentamiento</span><span class="mins">~8 min</span>
+    <h2>Afina el ojo: ¿qué función cumple esta acotación?</h2>
+    <p class="muted">Antes de leer la obra completa, entrena con estas acotaciones sueltas. No dan puntaje: son para calibrar. Puedes cambiar tu elección; la corrección aparece cuando respondas las 5.</p>
+    <div id="warmupZone"></div>
+  </section>
+
+  <!-- TEXTO 1: FRAGMENTO 1 -->
+  <section class="card">
+    <span class="step-tag alt">3️⃣ Lee</span><span class="mins">~12 min</span>
+    <h2>Texto 1 · Fragmento dramático</h2>
+    <div class="obra">
+      <h3>Últimos ensayos</h3>
+      <div class="autor">Texto elaborado para esta clase.</div>
+      <div class="escenario">(Gimnasio del colegio. Sillas apiladas contra la pared. Una luz blanca cae sobre un escenario improvisado con cinta en el suelo. BEGOÑA revisa una carpeta llena de papeles. MATÍAS entra con la mochila puesta, se detiene en la puerta.)</div>
+      <p class="linea"><span class="personaje">MATÍAS:</span> No voy a salir mañana.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(sin levantar la vista)</span> Llegas tarde.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> Escuchaste lo que dije.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(cierra la carpeta de golpe)</span> Faltan dieciocho horas para el estreno, Matías. Dieciocho.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> Por eso mismo. Prefiero que busques a otro ahora, no mañana en el camarín.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(se acerca, más calmada)</span> ¿Qué pasó?</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> <span class="acot">(mira el suelo)</span> Anoche me paré frente al espejo a decir mi parlamento del segundo acto. El del padre. Y no me salió nada. Ni una palabra.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> Eso le pasa a todos.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> A ti no.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(silencio breve; se sienta en una de las sillas apiladas, que cruje)</span> El año pasado, cuando dirigí «La casa vacía», vomité detrás del telón cinco minutos antes de que se abriera. Cinco. Nadie lo supo.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> <span class="acot">(la mira, sorprendido)</span> Nunca me contaste eso.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> Porque no cambia nada que lo sepas. Lo que cambia es esto: <span class="acot">(le quita el texto de las manos, busca una página)</span> tu parlamento no es sobre saberte las palabras. Es sobre un padre que no sabe cómo despedirse de su hijo. Tú sabes lo que es eso.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> <span class="acot">(tenso)</span> No metas a mi papá en esto.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(con firmeza, pero sin dureza)</span> No lo estoy metiendo. Te estoy diciendo que ya tienes el parlamento adentro. Solo falta que confíes en que va a salir.</p>
+      <p class="linea acot" style="margin:.8rem 0;">(Silencio largo. MATÍAS se sienta lentamente junto a ella.)</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> ¿Y si no sale?</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> Entonces sale a medias, y sigue siendo mejor que el silencio de anoche.</p>
+      <p class="linea acot" style="margin:.8rem 0 0;">(MATÍAS toma el texto de las manos de BEGOÑA. Lo mira. No dice nada, pero no se va.)</p>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS TEXTO 1 -->
+  <section class="card">
+    <span class="step-tag">4️⃣ Responde</span><span class="mins">~15 min</span>
+    <h2>Preguntas 1 a 6 · sobre "Últimos ensayos"</h2>
+    <p class="muted">Elige una alternativa (puedes cambiarla cuando quieras). Al responder todas las preguntas de la guía verás la corrección completa: <b>por qué cada opción es correcta o trampa</b>. Cada pregunta indica su habilidad SIMCE.</p>
+    <div id="quizFrag1"></div>
+  </section>
+
+  <!-- TEXTO 2: FRAGMENTO 2 -->
+  <section class="card">
+    <span class="step-tag alt">5️⃣ Lee la continuación</span><span class="mins">~10 min</span>
+    <h2>Texto 2 · Fragmento dramático (después de la función)</h2>
+    <p class="muted">Este fragmento ocurre horas después del primero, ya terminada la función. Fíjate en los ecos: qué cambia y qué se repite respecto al gimnasio.</p>
+    <div class="obra">
+      <h3>Después del telón</h3>
+      <div class="autor">Texto elaborado para esta clase.</div>
+      <div class="escenario">(Camarín del colegio. Ropa de escena colgada en ganchos. MATÍAS se quita el maquillaje frente a un espejo con foco redondo. Se oyen aplausos lejanos, apagándose. BEGOÑA entra con dos botellas de agua.)</div>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(le lanza una botella)</span> Toma. Te lo ganaste.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> <span class="acot">(la atrapa, no bebe)</span> No me acuerdo de nada.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> ¿Cómo que no te acuerdas?</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> En serio. Entré al segundo acto y fue como... <span class="acot">(busca las palabras)</span> como si otra persona dijera mi parlamento. Yo solo estaba ahí, mirando.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(sonríe, se apoya en el marco de la puerta)</span> Esa otra persona hizo llorar a tres apoderados en la fila dos.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> <span class="acot">(se ríe, incrédulo)</span> Mentira.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> Pregúntale a tu mamá.</p>
+      <p class="linea acot" style="margin:.8rem 0;">(MATÍAS se queda callado un momento. Se mira las manos.)</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> Anoche pensé que si me equivocaba, arruinaba todo. La obra, el curso, tu trabajo de meses.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> Y no arruinaste nada.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> No. <span class="acot">(pausa)</span> Pero pude haberlo hecho. Y aun así salí.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(se sienta en el brazo del sillón del camarín)</span> Eso es lo que te dije en el gimnasio. No se trataba de que saliera perfecto.</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> Se trataba de que saliera a medias, y que fuera mejor que el silencio.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(asiente, sorprendida de que se acuerde)</span> Exacto.</p>
+      <p class="linea acot" style="margin:.8rem 0;">(MATÍAS finalmente abre la botella y bebe. Afuera, alguien grita su nombre entre risas. Él sonríe, por primera vez sin tensión en la cara.)</p>
+      <p class="linea"><span class="personaje">MATÍAS:</span> El año que viene, dirijo yo.</p>
+      <p class="linea"><span class="personaje">BEGOÑA:</span> <span class="acot">(riendo)</span> Eso ya lo veremos.</p>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS TEXTO 2 + COMPARACIÓN -->
+  <section class="card">
+    <span class="step-tag">6️⃣ Compara las dos escenas</span><span class="mins">~15 min</span>
+    <h2>Preguntas 7 a 12 · "Después del telón" y comparación</h2>
+    <p class="muted">Las últimas dos exigen relacionar ambos fragmentos: así se ve una pregunta de nivel Adecuado.</p>
+    <div id="quizFrag2"></div>
+  </section>
+
+  <!-- TEXTO 3: AFICHE -->
+  <section class="card">
+    <span class="step-tag alt">7️⃣ Lee un texto discontinuo</span><span class="mins">~8 min</span>
+    <h2>Texto 3 · Afiche de la obra</h2>
+    <p class="muted">El SIMCE también evalúa textos discontinuos: afiches, folletos, invitaciones. Se leen distinto: primero el título, luego lo destacado, después los datos y el pie.</p>
+    <div class="infogfx">
+      <div class="afiche">
+        <div class="funcion">Función única</div>
+        <h3>ÚLTIMOS ENSAYOS</h3>
+        <p class="bajada">Una obra sobre el miedo de salir al escenario... y de no salir nunca.</p>
+        <div class="datos">
+          <div class="item"><div class="lab">Fecha</div><div class="val">Viernes 17 de julio</div></div>
+          <div class="item"><div class="lab">Hora</div><div class="val">19:00 hrs</div></div>
+          <div class="item"><div class="lab">Lugar</div><div class="val">Gimnasio del Liceo</div></div>
+          <div class="item"><div class="lab">Duración</div><div class="val">45 minutos aprox.</div></div>
+        </div>
+        <div class="elenco">Obra creada íntegramente por estudiantes de 2° medio. Entrada liberada, cupos limitados.</div>
+        <div class="resena">«Una hora que se siente como un espejo»<b>— Diario Escolar</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS AFICHE -->
+  <section class="card">
+    <span class="step-tag">8️⃣ Responde</span>
+    <h2>Preguntas 13 a 18 · afiche e integración</h2>
+    <p class="muted">La pregunta 17 cruza el afiche con los fragmentos: integrar textos distintos también cae en el SIMCE.</p>
+    <div id="quizAfiche"></div>
+  </section>
+
+  <!-- DESAFÍO -->
+  <section class="card">
+    <span class="step-tag alt">⭐ Desafío nivel Adecuado</span><span class="mins">~8 min</span>
+    <h2>Preguntas 19 y 20 · para puntaje 295+</h2>
+    <p class="muted">Estas dos son del tipo que separa el nivel Elemental del Adecuado: hay que discriminar entre ideas que compiten y evaluar qué aporta leer varios textos juntos.</p>
+    <div id="quizDesafio"></div>
+  </section>
+
+  <!-- DESARROLLO 1 -->
+  <section class="card">
+    <span class="step-tag">9️⃣ Desarrollo (como en el SIMCE)</span><span class="mins">~12 min</span>
+    <h2>Desarrollo 1 · Escribe con cita textual</h2>
+    <p class="muted">Pregunta: ¿Qué conflicto enfrenta Matías y cómo se resuelve a lo largo de los dos fragmentos? Afirma tu idea, cita una línea de diálogo o una acotación entre comillas que la respalde, y explica cómo esa cita la demuestra.</p>
+    <div class="dev-rubrica">📋 Rúbrica (3 puntos): ① Afirmación clara del conflicto y su resolución (1 pt) · ② Cita textual pertinente ENTRE COMILLAS (1 pt) · ③ Explicación que conecta la cita con tu afirmación (1 pt). La prueba real trae 2 preguntas así: se responden siempre con el esquema Afirmación + Evidencia + Explicación.</div>
+    <textarea id="desarrollo" placeholder='Ej.: El conflicto de Matías es... Esto se ve cuando dice "..." (o en la acotación "..."), lo que demuestra que...'></textarea>
+    <button type="button" class="btn secondary" id="btnModelo" style="margin-top:10px;">Ver respuesta modelo (después de escribir la tuya)</button>
+    <div class="modelo" id="modeloBox">
+      <b>Respuesta modelo:</b> El conflicto de Matías es el miedo escénico que le impide confiar en su propio parlamento, al punto de querer abandonar la obra la noche antes del estreno. Esto se ve cuando dice: «Anoche me paré frente al espejo a decir mi parlamento del segundo acto... y no me salió nada», lo que demuestra que su miedo no es solo nervios, sino una duda profunda sobre si es capaz de sostener el papel. El conflicto se resuelve, aunque no del todo, cuando en el segundo fragmento admite: «Pude haberlo hecho [equivocarme]. Y aun así salí», lo que muestra que superó el miedo actuando pese a él, no eliminándolo.
+    </div>
+  </section>
+
+  <!-- DESARROLLO 2 -->
+  <section class="card">
+    <span class="step-tag">🔟 Desarrollo comparativo</span><span class="mins">~12 min</span>
+    <h2>Desarrollo 2 · Compara con citas de AMBOS fragmentos</h2>
+    <p class="muted">Pregunta: ¿Cuál de los dos personajes (Begoña o Matías) crees que muestra mayor valentía a lo largo de la obra? Afirma tu postura, cita una línea de CADA fragmento (entre comillas) y explica cómo cada cita apoya tu decisión.</p>
+    <div class="dev-rubrica">📋 Rúbrica (4 puntos): ① Postura clara (1 pt) · ② Cita textual del fragmento 1 entre comillas (1 pt) · ③ Cita textual del fragmento 2 entre comillas (1 pt) · ④ Explicación que conecta ambas citas con tu postura (1 pt). No hay respuesta "correcta": se evalúa cómo la defiendes con evidencia.</div>
+    <textarea id="desarrollo2" placeholder='Ej.: Para mí, quien muestra más valentía es... porque... Esto se ve en "..." (fragmento 1) y en "..." (fragmento 2), lo que demuestra que...'></textarea>
+    <button type="button" class="btn secondary" id="btnModelo2" style="margin-top:10px;">Ver respuesta modelo (después de escribir la tuya)</button>
+    <div class="modelo" id="modeloBox2">
+      <b>Respuesta modelo:</b> Para mí, quien muestra más valentía es Begoña, porque sostiene la responsabilidad de dirigir la obra mientras oculta su propio miedo para poder ayudar a otro. Esto se ve en «vomité detrás del telón cinco minutos antes de que se abriera. Cinco. Nadie lo supo» (fragmento 1), donde revela que ella también sintió pánico escénico y aun así siguió adelante sola. También se ve en «Eso es lo que te dije en el gimnasio. No se trataba de que saliera perfecto» (fragmento 2), donde demuestra que mantuvo esa entereza hasta el final, sosteniendo a Matías sin pedir nada a cambio. Ambas citas muestran que su valentía no es la ausencia de miedo, sino seguir cumpliendo su papel de líder a pesar de él.
+    </div>
+  </section>
+
+  <!-- DIAGNÓSTICO -->
+  <section class="card">
+    <h2>¿Cómo te fue por habilidad?</h2>
+    <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparece al responder las 20 preguntas:</p>
+    <div class="diag">
+      <div class="box"><span>🔎 Localizar</span><b id="dL">—</b></div>
+      <div class="box"><span>🧩 Interpretar</span><b id="dI">—</b></div>
+      <div class="box"><span>🪞 Reflexionar</span><b id="dR">—</b></div>
+    </div>
+    <p class="muted" id="diagCopy"></p>
+    <div class="done-banner" id="doneBanner">✅ ¡Clase entregada! Resultado guardado.</div>
+  </section>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <span class="save-status" id="saveStatus">Conectando…</span>
+    <button class="btn primary" id="submitBtn">Entregar clase</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="js/forced-refresh.js"></script>
+<script>
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",
+    authDomain: "estudiacest.firebaseapp.com",
+    databaseURL: "https://estudiacest-default-rtdb.firebaseio.com",
+    projectId: "estudiacest",
+    storageBucket: "estudiacest.firebasestorage.app",
+    messagingSenderId: "999002169815",
+    appId: "1:999002169815:web:51203237bc77c2e74deb92"
+  };
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE_CONFIG);
+  const auth = firebase.auth();
+  auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  const db = firebase.database();
+  const BASE = 'plataforma_estudiantes';
+  const SESSION_ID = 'sesion-u3-2';
+  const SHARED_LOGIN_URL = '/lecturas/?next=' + encodeURIComponent('/estudiantes/guia-u3-s2-teatro.html');
+  const IS_LOCAL = window.location.protocol === 'file:';
+  if (typeof initStudentForcedRefresh === 'function') initStudentForcedRefresh({ auth, db, base: BASE });
+
+  const QUESTIONS = [
+   // ===== TEXTO 1: "Últimos ensayos" (Q1-Q6) =====
+   {id:'q1',hab:'L',texto:'frag1',enun:'¿Cuánto tiempo falta para el estreno cuando comienza la escena, según Begoña?',ops:[
+     {l:'A',t:'Cinco minutos, el tiempo del vómito de Begoña.'},
+     {l:'B',t:'Dieciocho horas, según lo que dice Begoña.'},
+     {l:'C',t:'Un año, cuando Begoña dirigió su obra anterior.'},
+     {l:'D',t:'Cinco años, según lo que recuerda Matías.'}],
+    correcta:'B',
+    why:{A:'Trampa (dato de otra escena): los "cinco minutos" son el tiempo del vómito de Begoña el año anterior, no lo que falta ahora.',
+         B:'Correcta. Begoña lo dice explícitamente: "Faltan dieciocho horas para el estreno, Matías. Dieciocho."',
+         C:'Trampa (dato de otra escena): "el año pasado" es cuándo dirigió "La casa vacía", no el tiempo que falta para este estreno.',
+         D:'Trampa (invención): ese dato no aparece en el fragmento.'},
+    cita:'"Faltan dieciocho horas para el estreno, Matías. Dieciocho."'},
+   {id:'q2',hab:'I',texto:'frag1',enun:'¿Por qué Matías quiere abandonar la obra?',ops:[
+     {l:'A',t:'Prefiere que otro compañero tenga el papel principal de la obra.'},
+     {l:'B',t:'Siente que Begoña lo trata con dureza como directora.'},
+     {l:'C',t:'Olvidó por completo de qué trataba la obra completa.'},
+     {l:'D',t:'El miedo escénico le impidió recordar su parlamento anoche.'}],
+    correcta:'D',
+    why:{A:'Trampa (confunde acción con causa): "prefiero que busques a otro" es lo que propone hacer, no la razón de fondo; la causa real es el bloqueo frente al espejo que confiesa después.',
+         B:'Trampa (contrasentido): Begoña lo trata con firmeza pero también con calma y cuidado; no hay dureza real en el texto.',
+         C:'Trampa (sobregeneralización): no olvidó la obra completa, solo no pudo decir un parlamento específico.',
+         D:'Correcta. Él mismo lo explica: "Anoche me paré frente al espejo a decir mi parlamento... y no me salió nada."'},
+    cita:'"Anoche me paré frente al espejo a decir mi parlamento del segundo acto... y no me salió nada."'},
+   {id:'q3',hab:'I',texto:'frag1',enun:'¿Qué revela Begoña sobre sí misma para ayudar a Matías?',ops:[
+     {l:'A',t:'Que ella también sintió pánico extremo antes de dirigir.'},
+     {l:'B',t:'Que prefiere actuar en vez de dirigir cualquier obra de teatro.'},
+     {l:'C',t:'Que nunca en su vida ha sentido miedo escénico.'},
+     {l:'D',t:'Que tampoco quiere seguir adelante con esta obra.'}],
+    correcta:'A',
+    why:{A:'Correcta. Confiesa: "vomité detrás del telón cinco minutos antes de que se abriera... Nadie lo supo."',
+         B:'Trampa (invención): no dice nada sobre preferir actuar; asume su rol de directora con convicción.',
+         C:'Trampa (inversión): es exactamente lo opuesto a lo que confiesa.',
+         D:'Trampa (contrasentido): toda la escena la muestra decidida a sostener la obra y a Matías dentro de ella.'},
+    cita:'"vomité detrás del telón cinco minutos antes de que se abriera. Cinco. Nadie lo supo."'},
+   {id:'q4',hab:'R',texto:'frag1',enun:'¿Qué función cumple la acotación "(silencio breve; se sienta en una de las sillas apiladas, que cruje)"?',ops:[
+     {l:'A',t:'Indica que la silla está rota y debe repararse pronto.'},
+     {l:'B',t:'Muestra que Begoña está aburrida de la conversación.'},
+     {l:'C',t:'Marca una pausa que prepara la confesión íntima que viene después.'},
+     {l:'D',t:'Solo indica en qué lugar exacto se sienta Begoña, sin otra función real.'}],
+    correcta:'C',
+    why:{A:'Trampa (literalización): el crujido de la silla es un detalle sensorial, no una indicación técnica.',
+         B:'Trampa (contrasentido): justo después viene una confesión muy personal, lo opuesto al aburrimiento.',
+         C:'Correcta. El silencio y el gesto de sentarse anteceden y preparan la confesión del vómito antes del estreno.',
+         D:'Trampa (trivialización): en teatro las acotaciones rara vez son solo geográficas; aquí prepara un cambio de tono.'},
+    cita:'"(silencio breve; se sienta en una de las sillas apiladas, que cruje)"'},
+   {id:'q5',hab:'I',texto:'frag1',enun:'¿Qué relación establece Begoña entre el parlamento del personaje y la vida de Matías?',ops:[
+     {l:'A',t:'Le sugiere que cambie el parlamento para hacerlo menos personal.'},
+     {l:'B',t:'Le explica que el padre del parlamento es literalmente su padre.'},
+     {l:'C',t:'Le dice que el parlamento no tiene ninguna relación con su vida personal.'},
+     {l:'D',t:'Le hace ver que el parlamento conecta con algo que Matías vivió.'}],
+    correcta:'D',
+    why:{A:'Trampa (inversión): al contrario, quiere que use esa conexión personal, no que la evite.',
+         B:'Trampa (literalización): el padre del parlamento es un personaje de ficción; Begoña usa la experiencia de Matías como puente, no como identidad literal.',
+         C:'Trampa (contrasentido): es exactamente lo opuesto a lo que ella argumenta.',
+         D:'Correcta. Begoña dice: "Es sobre un padre que no sabe cómo despedirse de su hijo. Tú sabes lo que es eso."'},
+    cita:'"Es sobre un padre que no sabe cómo despedirse de su hijo. Tú sabes lo que es eso."'},
+   {id:'q6',hab:'R',texto:'frag1',enun:'"Entonces sale a medias, y sigue siendo mejor que el silencio de anoche." ¿Qué idea central defiende Begoña con esta frase?',ops:[
+     {l:'A',t:'Que actuar imperfectamente es preferible a no actuar por miedo.'},
+     {l:'B',t:'Que el silencio es una técnica actoral válida y recomendable.'},
+     {l:'C',t:'Que Matías debe abandonar la obra si no se siente completamente seguro.'},
+     {l:'D',t:'Que lo importante es memorizar el texto entero sin errores.'}],
+    correcta:'A',
+    why:{A:'Correcta. Contrasta "sale a medias" (imperfecto pero real) con "el silencio" (no actuar), y elige lo primero.',
+         B:'Trampa (invención): el "silencio de anoche" es presentado como el problema a superar, no como técnica válida.',
+         C:'Trampa (inversión): toda la escena busca convencerlo de quedarse, no de irse.',
+         D:'Trampa (cambio de foco): la memorización perfecta nunca se menciona como el objetivo.'},
+    cita:'"Entonces sale a medias, y sigue siendo mejor que el silencio de anoche."'},
+
+   // ===== TEXTO 2: "Después del telón" (Q7-Q12) =====
+   {id:'q7',hab:'L',texto:'frag2',enun:'Según el texto, ¿qué hicieron tres apoderados durante la función?',ops:[
+     {l:'A',t:'Se retiraron de la sala antes de que terminara.'},
+     {l:'B',t:'Lloraron durante la función, según cuenta Begoña.'},
+     {l:'C',t:'Aplaudieron de pie al final de la función.'},
+     {l:'D',t:'Se rieron bastante durante buena parte de toda la función.'}],
+    correcta:'B',
+    why:{A:'Trampa (invención): no hay ninguna mención a que alguien se retirara.',
+         B:'Correcta. Begoña se lo dice a Matías: "Esa otra persona hizo llorar a tres apoderados en la fila dos."',
+         C:'Trampa (invención plausible): suena a un final feliz típico, pero no es lo que dice el texto.',
+         D:'Trampa (invención): no se menciona risa del público durante la función.'},
+    cita:'"Esa otra persona hizo llorar a tres apoderados en la fila dos."'},
+   {id:'q8',hab:'I',texto:'frag2',enun:'¿Qué quiere decir Matías con "fue como si otra persona dijera mi parlamento"?',ops:[
+     {l:'A',t:'Que actuó tan concentrado que no fue consciente de sí mismo.'},
+     {l:'B',t:'Que olvidó por completo todas sus líneas del segundo acto de la obra.'},
+     {l:'C',t:'Que otro actor lo reemplazó de improviso en el escenario.'},
+     {l:'D',t:'Que se equivocó de parlamento durante la función completa.'}],
+    correcta:'A',
+    why:{A:'Correcta. Describe el estado de estar tan metido en el papel que perdió la conciencia de sí mismo actuando.',
+         B:'Trampa (literalización): al contrario, sí dijo el parlamento; lo que no recuerda es haberlo dicho.',
+         C:'Trampa (literalización): "otra persona" es una forma de hablar, no un reemplazo real de actor.',
+         D:'Trampa (invención): no hay ningún indicio de error; de hecho, el resultado fue muy bueno.'},
+    cita:'"fue como si otra persona dijera mi parlamento. Yo solo estaba ahí, mirando."'},
+   {id:'q9',hab:'R',texto:'frag2',enun:'¿Qué función cumple que Matías repita casi textualmente la frase de Begoña ("a medias, mejor que el silencio")?',ops:[
+     {l:'A',t:'Indica que Matías citó mal lo que Begoña le había dicho antes.'},
+     {l:'B',t:'Demuestra que Begoña le exige memorizar sus palabras exactas.'},
+     {l:'C',t:'Muestra que el consejo del gimnasio lo ayudó y quedó en él.'},
+     {l:'D',t:'No cumple ninguna función; es solo una coincidencia sin peso.'}],
+    correcta:'C',
+    why:{A:'Trampa (invención): la repite de forma correcta y consciente, no como un error.',
+         B:'Trampa (invención): no hay ninguna exigencia de memorización en la escena del camarín.',
+         C:'Correcta. Que recuerde y repita esa frase exacta muestra que el consejo se volvió parte de cómo Matías entiende lo que le pasó.',
+         D:'Trampa (trivialización): en un texto literario, una repetición textual casi nunca es azar.'},
+    cita:'"Se trataba de que saliera a medias, y que fuera mejor que el silencio."'},
+   {id:'q10',hab:'I',texto:'frag2',enun:'COMPARACIÓN · ¿Qué cambia en Matías entre el primer fragmento y el segundo?',ops:[
+     {l:'A',t:'No cambia nada; sigue exactamente igual de asustado que antes.'},
+     {l:'B',t:'Pasa de no querer actuar a decidir cambiarse de curso.'},
+     {l:'C',t:'Pasa de admirar a Begoña a sentir resentimiento hacia ella.'},
+     {l:'D',t:'Pasa de sentir un miedo paralizante a sentir que lo superó.'}],
+    correcta:'D',
+    why:{A:'Trampa (contrasentido): el cambio es central; del "no voy a salir" al "el año que viene, dirijo yo" hay transformación clara.',
+         B:'Trampa (invención): cambiarse de curso nunca se menciona.',
+         C:'Trampa (inversión): en el segundo fragmento hay más cercanía y gratitud hacia Begoña, no resentimiento.',
+         D:'Correcta. Pasa de "no me salió nada" y querer abandonar, a reconocer "pude haberlo hecho [equivocarme]. Y aun así salí."'},
+    cita:'Fragmento 1: "no me salió nada". Fragmento 2: "pude haberlo hecho. Y aun así salí."'},
+   {id:'q11',hab:'I',texto:'frag2',enun:'COMPARACIÓN · ¿Qué tienen en común las dos confesiones de vulnerabilidad de la obra (el vómito de Begoña y el silencio de Matías frente al espejo)?',ops:[
+     {l:'A',t:'Ambas ocurren exactamente frente al público, durante la función misma.'},
+     {l:'B',t:'Ambas muestran que el miedo escénico era un secreto no contado.'},
+     {l:'C',t:'Ninguna de las dos tiene relación con el miedo escénico.'},
+     {l:'D',t:'Ambas terminan con el personaje abandonando la obra.'}],
+    correcta:'B',
+    why:{A:'Trampa (literalización): ambas ocurren en privado, lejos del público.',
+         B:'Correcta. Begoña guardó su secreto un año entero ("nadie lo supo"); Matías recién puede contar el suyo cuando Begoña le pregunta "¿Qué pasó?": en ambos casos es la primera vez que lo verbalizan.',
+         C:'Trampa (contrasentido): ambas son directamente sobre el miedo escénico.',
+         D:'Trampa (invención): ninguno abandona finalmente la obra; ambos la sostienen hasta el final.'},
+    cita:'Begoña: "Nadie lo supo." Matías: recién lo cuenta cuando Begoña pregunta "¿Qué pasó?".'},
+   {id:'q12',hab:'R',texto:'frag2',enun:'"El año que viene, dirijo yo." ¿Qué anticipa esta línea final sobre el cambio en Matías?',ops:[
+     {l:'A',t:'Que no quiere volver a actuar en ningún escenario nunca más en su vida.'},
+     {l:'B',t:'Que quiere reemplazar a Begoña de una manera poco amistosa.'},
+     {l:'C',t:'Que ahora se siente capaz de asumir el riesgo que antes temía.'},
+     {l:'D',t:'Que se está burlando de Begoña sin ninguna intención real.'}],
+    correcta:'C',
+    why:{A:'Trampa (contrasentido): decir que quiere dirigir implica seguir ligado al teatro, no alejarse.',
+         B:'Trampa (invención): el tono de la escena es cómplice y agradecido, no de rivalidad.',
+         C:'Correcta. Querer dirigir es asumir voluntariamente el mismo tipo de exposición y responsabilidad que antes lo paralizaba.',
+         D:'Trampa (trivialización): aunque Begoña se ríe, la frase surge justo después de reconocer haber superado un miedo grande.'},
+    cita:'"El año que viene, dirijo yo."'},
+
+   // ===== TEXTO 3: AFICHE (Q13-Q18) =====
+   {id:'q13',hab:'L',texto:'afiche',enun:'Según el afiche, ¿a qué hora comienza la función?',ops:[
+     {l:'A',t:'17:00 hrs., el mismo número que aparece en la fecha.'},
+     {l:'B',t:'19:00 hrs., el horario indicado en el afiche.'},
+     {l:'C',t:'20:00 hrs., una hora distinta a la señalada.'},
+     {l:'D',t:'45 minutos, la cifra que aparece en otro dato del afiche.'}],
+    correcta:'B',
+    why:{A:'Trampa (dato vecino): "17" aparece en la fecha (viernes 17 de julio), no en la hora.',
+         B:'Correcta. El afiche indica claramente "Hora: 19:00 hrs."',
+         C:'Trampa (invención): ese dato no figura en el afiche.',
+         D:'Trampa (dato de otro campo): 45 minutos es la duración de la obra, no la hora de inicio.'},
+    cita:'"Hora: 19:00 hrs."'},
+   {id:'q14',hab:'L',texto:'afiche',enun:'Según el afiche, ¿en qué lugar se realiza la función?',ops:[
+     {l:'A',t:'En la sala de profesores del establecimiento.'},
+     {l:'B',t:'En el camarín, el lugar del segundo fragmento leído.'},
+     {l:'C',t:'En el gimnasio del Liceo, el lugar señalado en el afiche.'},
+     {l:'D',t:'En el patio central del establecimiento.'}],
+    correcta:'C',
+    why:{A:'Trampa (invención): ese lugar no aparece en el afiche.',
+         B:'Trampa (dato de otra escena): el camarín es el escenario del fragmento 2, no el lugar de la función según el afiche.',
+         C:'Correcta. El afiche indica "Lugar: Gimnasio del Liceo."',
+         D:'Trampa (invención): ese lugar no aparece en el afiche.'},
+    cita:'"Lugar: Gimnasio del Liceo."'},
+   {id:'q15',hab:'L',texto:'afiche',enun:'¿Cuánto dura aproximadamente la obra según el afiche?',ops:[
+     {l:'A',t:'19 minutos, el mismo número que aparece en la hora.'},
+     {l:'B',t:'17 minutos, el mismo número que aparece en la fecha.'},
+     {l:'C',t:'Toda la tarde, sin una cifra precisa.'},
+     {l:'D',t:'45 minutos aprox., la cifra señalada en el afiche.'}],
+    correcta:'D',
+    why:{A:'Trampa (dato vecino): 19 corresponde a la hora de inicio, no a la duración.',
+         B:'Trampa (dato vecino): 17 corresponde al día de la función, no a la duración.',
+         C:'Trampa (invención): el afiche da una duración precisa, no una idea vaga.',
+         D:'Correcta. El afiche indica "Duración: 45 minutos aprox."'},
+    cita:'"Duración: 45 minutos aprox."'},
+   {id:'q16',hab:'R',texto:'afiche',enun:'¿Qué función cumple la frase «Una hora que se siente como un espejo» en el afiche?',ops:[
+     {l:'A',t:'Es una cita de crítica que busca generar interés en el público.'},
+     {l:'B',t:'Indica cuánto dura literalmente la función completa.'},
+     {l:'C',t:'Es una instrucción técnica dirigida a los actores.'},
+     {l:'D',t:'Informa el horario exacto en que comienza la función esa noche.'}],
+    correcta:'A',
+    why:{A:'Correcta. Es una reseña atribuida a "Diario Escolar": su función es publicitaria, invitar comparando la experiencia con verse en un espejo.',
+         B:'Trampa (literalización): "una hora" es figurado; la duración real aparece en otro dato del afiche.',
+         C:'Trampa (cambio de foco): no está dirigida a los actores, sino al público que decide si ir.',
+         D:'Trampa (cambio de foco): el horario aparece en el bloque de datos, no en esta frase.'},
+    cita:'«Una hora que se siente como un espejo» — Diario Escolar'},
+   {id:'q17',hab:'I',texto:'afiche',enun:'La bajada del afiche dice "una obra sobre el miedo de salir al escenario... y de no salir nunca". ¿Qué parte de los fragmentos leídos ilustra MEJOR esa idea?',ops:[
+     {l:'A',t:'La descripción del camarín con la ropa colgada en ganchos.'},
+     {l:'B',t:'El grito de alguien llamando a Matías al final de la escena.'},
+     {l:'C',t:'La escena completa en que Begoña le reparte a Matías las botellas de agua.'},
+     {l:'D',t:'El momento en que Matías dice que no saldrá y luego decide quedarse.'}],
+    correcta:'D',
+    why:{A:'Trampa (cambio de foco): es solo un detalle de ambientación, sin relación directa con el conflicto del miedo.',
+         B:'Trampa (cambio de foco): es un detalle festivo del final, no ilustra el conflicto del miedo.',
+         C:'Trampa (cambio de foco): es un gesto de cuidado posterior, no representa el dilema de salir o no.',
+         D:'Correcta. La decisión inicial de Matías de no salir, y su cambio de postura, es exactamente el conflicto que anuncia la bajada del afiche.'},
+    cita:'"No voy a salir mañana." → "(MATÍAS toma el texto... No dice nada, pero no se va.)"'},
+   {id:'q18',hab:'R',texto:'afiche',enun:'¿Por qué crees que el afiche NO revela cómo termina la historia de Matías?',ops:[
+     {l:'A',t:'Porque la historia completa de la obra no tiene un final definido.'},
+     {l:'B',t:'Porque el diseñador olvidó incluir esa información.'},
+     {l:'C',t:'Porque busca generar interés sin arruinar el desenlace al público.'},
+     {l:'D',t:'Porque los afiches nunca revelan nada de los personajes.'}],
+    correcta:'C',
+    why:{A:'Trampa (invención): sí sabemos el final por los fragmentos leídos; el afiche simplemente no lo cuenta.',
+         B:'Trampa (invención): es una decisión de diseño publicitario, no un olvido.',
+         C:'Correcta. Es una estrategia habitual en publicidad de una obra: mostrar el conflicto, pero guardar la resolución para motivar la asistencia.',
+         D:'Trampa (absoluto): los afiches sí pueden dar información de personajes; este en particular elige no revelar el final.'},
+    cita:'"Una obra sobre el miedo de salir al escenario... y de no salir nunca."'},
+
+   // ===== DESAFÍO NIVEL ADECUADO (Q19-Q20) =====
+   {id:'q19',hab:'R',texto:'desafio',enun:'⭐ Un compañero sostiene: «Begoña es la verdadera protagonista, porque ella resuelve el problema de Matías». ¿Cuál es la MEJOR refutación basada en el texto?',ops:[
+     {l:'A',t:'Decir que Begoña aparece en más líneas que Matías, así que es protagonista.'},
+     {l:'B',t:'Señalar que es Matías quien enfrenta el conflicto central de la obra.'},
+     {l:'C',t:'Responder que toda obra tiene un único protagonista definido.'},
+     {l:'D',t:'Decir que ambos son protagonistas por aparecer igual de veces.'}],
+    correcta:'B',
+    why:{A:'Trampa (dato irrelevante): contar líneas no define quién sostiene el conflicto central.',
+         B:'Correcta. Refutar con evidencia = mostrar que el conflicto (el miedo, la decisión de salir, la transformación final) pertenece a Matías; Begoña lo acompaña, pero no lo vive.',
+         C:'Trampa (regla falsa): no es una regla real del teatro; muchas obras tienen protagonismo compartido.',
+         D:'Trampa (dato irrelevante): la cantidad de apariciones no determina el protagonismo dramático.'},
+    cita:'El arco de "no voy a salir" a "el año que viene, dirijo yo" pertenece completo a Matías.'},
+   {id:'q20',hab:'R',texto:'desafio',enun:'⭐ ¿Qué aporta leer los DOS fragmentos y el afiche juntos, que no se obtendría leyendo solo uno de los tres?',ops:[
+     {l:'A',t:'Ver el arco completo: el miedo, su superación y su resumen final.'},
+     {l:'B',t:'La comprobación de que los tres textos usan exactamente los mismos recursos.'},
+     {l:'C',t:'El nombre completo de todos los actores de la obra.'},
+     {l:'D',t:'La certeza absoluta de que la obra tuvo éxito de taquilla.'}],
+    correcta:'A',
+    why:{A:'Correcta. Cada texto aporta una pieza distinta: el planteamiento del miedo, su resolución, y cómo se comunica ese conflicto hacia afuera.',
+         B:'Trampa (absoluto): el diálogo, la acotación y el texto discontinuo del afiche usan recursos distintos.',
+         C:'Trampa (invención): el afiche no da nombres de actores, solo datos de la función.',
+         D:'Trampa (invención): "éxito de taquilla" no se menciona ni se puede inferir con certeza.'},
+    cita:'Fragmento 1 = miedo · Fragmento 2 = superación · Afiche = el mismo conflicto resumido para el público.'}
+  ];
+
+  const HABNAME={L:'Localizar',I:'Interpretar',R:'Reflexionar'};
+  const HABCLS={L:'sk-l',I:'sk-i',R:'sk-r'};
+  let answers={}, warmupAnswers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null;
+
+  function setStatus(t){document.getElementById('saveStatus').textContent=t;}
+  function showToast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+
+  const WARMUP=[
+   {frase:'(Se levanta de golpe, tirando la silla al suelo)',ops:['Furia','Alegría','Calma'],ok:0,why:'Un movimiento brusco que tira la silla comunica una emoción intensa y descontrolada: furia, no calma ni alegría.'},
+   {frase:'(En voz baja, casi sin que se note)',ops:['Un grito','Un susurro nervioso','Una orden militar'],ok:1,why:'"En voz baja, casi sin que se note" describe exactamente un susurro cargado de tensión, lo opuesto a un grito o una orden firme.'},
+   {frase:'(Se abrazan largamente, sin decir nada)',ops:['Distancia y frialdad','Un reencuentro emotivo','Una despedida indiferente'],ok:1,why:'Un abrazo largo y silencioso es un gesto de cercanía intensa: sugiere un reencuentro emotivo, no distancia ni indiferencia.'},
+   {frase:'MARÍA: (irónica) Qué bien que llegaste temprano.',ops:['Sincero','Sarcástico','Neutro'],ok:1,why:'La acotación "(irónica)" indica directamente que María dice lo contrario de lo que piensa: el tono es sarcástico.'},
+   {frase:'(Silencio. Las luces bajan lentamente.)',ops:['Anunciar el final de una escena o un momento clave','Indicar un corte de luz accidental','Mostrar que no hay nadie en el escenario'],ok:0,why:'Silencio + luces que bajan lentamente es un recurso típico para cerrar una escena o marcar un momento de quiebre, no un accidente técnico.'}
+  ];
+  function renderWarmup(){
+    const z=document.getElementById('warmupZone');
+    WARMUP.forEach((w,i)=>{
+      const d=document.createElement('div');d.className='q';
+      d.innerHTML=`<div class="enun">${w.frase}</div><div class="opts" style="grid-template-columns:repeat(3,1fr);">${w.ops.map((o,j)=>`<button type="button" class="opt" data-w="${i}" data-j="${j}" style="justify-content:center;"><span>${o}</span></button>`).join('')}</div><div class="retro" id="wretro-${i}"></div>`;
+      z.appendChild(d);
+      d.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+        const i2=+b.dataset.w,j=+b.dataset.j;
+        warmupAnswers[i2]=j;
+        d.querySelectorAll(`[data-w="${i2}"]`).forEach(x=>{x.classList.remove('selected','correct','wrong');});
+        b.classList.add('selected');
+        if(Object.keys(warmupAnswers).length===WARMUP.length)revealWarmupCorrections();
+        else{const r=document.getElementById('wretro-'+i2);r.className='retro';r.innerHTML='';}
+      }));
+    });
+  }
+  function revealWarmupCorrections(){
+    WARMUP.forEach((w,i)=>{
+      const j=warmupAnswers[i];if(j===undefined)return;
+      document.querySelectorAll(`[data-w="${i}"]`).forEach(x=>{
+        x.classList.remove('correct','wrong');
+        if(+x.dataset.j===w.ok)x.classList.add('correct');
+        else if(+x.dataset.j===j)x.classList.add('wrong');
+      });
+      const r=document.getElementById('wretro-'+i);
+      r.className='retro show '+(j===w.ok?'ok':'bad');
+      r.innerHTML=(j===w.ok?'✅ ':'❌ Era <b>'+w.ops[w.ok]+'</b>. ')+w.why;
+    });
+  }
+
+  function render(){
+    const zones={frag1:document.getElementById('quizFrag1'),frag2:document.getElementById('quizFrag2'),afiche:document.getElementById('quizAfiche'),desafio:document.getElementById('quizDesafio')};
+    QUESTIONS.forEach((q,idx)=>{
+      const d=document.createElement('div');d.className='q';d.id='card-'+q.id;
+      d.innerHTML=`<span class="hab ${HABCLS[q.hab]}">${HABNAME[q.hab]}</span><div class="enun">${idx+1}. ${q.enun}</div>
+        <div class="opts">${q.ops.map(o=>`<button type="button" class="opt" data-q="${q.id}" data-l="${o.l}"><span class="letra">${o.l})</span><span>${o.t}</span></button>`).join('')}</div>
+        <div class="retro" id="retro-${q.id}"></div>`;
+      zones[q.texto].appendChild(d);
+      d.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>pick(b.dataset.q,b.dataset.l)));
+    });
+  }
+
+  function pick(qid,letra){
+    if(!qid||isSubmitted)return;
+    answers[qid]=letra;
+    document.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(b=>{
+      b.classList.remove('selected','correct','wrong');
+      if(b.dataset.l===letra)b.classList.add('selected');
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      revealAllCorrections();
+    }else{
+      const r=document.getElementById('retro-'+qid);r.className='retro';r.innerHTML='';
+    }
+    updateDiag(); scheduleSave();
+  }
+
+  function revealAllCorrections(){
+    QUESTIONS.forEach(q=>{
+      const letra=answers[q.id];if(!letra)return;
+      const ok=letra===q.correcta;
+      document.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach(b=>{
+        b.classList.remove('correct','wrong');
+        if(b.dataset.l===q.correcta)b.classList.add('correct');
+        else if(b.dataset.l===letra)b.classList.add('wrong');
+      });
+      const r=document.getElementById('retro-'+q.id);
+      r.className='retro show '+(ok?'ok':'bad');
+      r.innerHTML=`<b>${ok?'✅ ¡Correcta!':'❌ La correcta era la '+q.correcta+')'}</b>
+        <div class="why">${['A','B','C','D'].map(L=>`<div><b>${L})</b> ${q.why[L]}</div>`).join('')}</div>
+        <div class="cita">📖 ${q.cita}</div>`;
+    });
+  }
+
+  function statsByHab(){
+    const s={L:{ok:0,n:0},I:{ok:0,n:0},R:{ok:0,n:0}};
+    QUESTIONS.forEach(q=>{const a=answers[q.id];if(!a)return;s[q.hab].n++;if(a===q.correcta)s[q.hab].ok++;});
+    return s;
+  }
+  function updateDiag(){
+    const s=statsByHab();
+    [['L','dL'],['I','dI'],['R','dR']].forEach(([h,id])=>{
+      const el=document.getElementById(id);
+      el.textContent=s[h].n? s[h].ok+'/'+s[h].n+' ('+Math.round(s[h].ok/s[h].n*100)+'%)':'—';
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      const pct=h=>s[h].n?s[h].ok/s[h].n:1;
+      const peor=['L','I','R'].sort((a,b)=>pct(a)-pct(b))[0];
+      document.getElementById('diagCopy').innerHTML='🎯 Tu foco de la semana: <b>'+HABNAME[peor]+'</b>. En las próximas clases practicaremos justo eso.';
+    }
+  }
+
+  function grade(){
+    let ok=0;QUESTIONS.forEach(q=>{if(answers[q.id]===q.correcta)ok++;});
+    const pct=Math.round(ok/QUESTIONS.length*100);
+    const nota=pct>=60?Math.round((4+3*(pct-60)/40)*10)/10:Math.round((1+3*pct/60)*10)/10;
+    return {ok,pct,nota};
+  }
+  function cleanAnswers(){
+    const clean={};
+    Object.keys(answers).forEach(k=>{
+      if(k&&k!=='undefined'&&answers[k]!==undefined&&QUESTIONS.some(q=>q.id===k))clean[k]=answers[k];
+    });
+    return clean;
+  }
+  function payload(completed){
+    return {answers:cleanAnswers(),desarrollo:(document.getElementById('desarrollo').value||'').trim(),desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+      completada:!!completed,nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+      last_save:Date.now()};
+  }
+  function localKey(){return currentUID?('draft_'+SESSION_ID+'_'+currentUID):null;}
+  function localBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.setItem(k,JSON.stringify(payload(false)));}catch(e){}
+  }
+  function clearLocalBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.removeItem(k);}catch(e){}
+  }
+  async function saveDraft(retry){
+    localBackup();
+    if(IS_LOCAL||!currentUID||isSubmitted)return;
+    try{
+      await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+      setStatus('✓ Avance guardado.');
+    }catch(e){
+      console.error(e);
+      if(!retry){setTimeout(()=>saveDraft(true),4000);return;}
+      setStatus('⚠️ Sin conexión: tu avance queda guardado en este dispositivo y se sube apenas vuelva internet.');
+      showToast('⚠️ No hay conexión. No cierres esta pestaña: tu avance quedó guardado en este dispositivo y se sube solo apenas vuelva internet.');
+      scheduleResync();
+    }
+  }
+  function scheduleSave(){localBackup();setStatus('Guardando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),1500);}
+
+  let resyncTimer=null;
+  function scheduleResync(){
+    clearTimeout(resyncTimer);
+    resyncTimer=setTimeout(async()=>{
+      if(IS_LOCAL||!currentUID||isSubmitted)return;
+      try{
+        await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+        setStatus('✓ Avance guardado (recuperado tras la caída de conexión).');
+      }catch(e){console.error(e);scheduleResync();}
+    },8000);
+  }
+  window.addEventListener('online',()=>{if(currentUID&&!isSubmitted)saveDraft(false);});
+
+  async function submitGuide(){
+    if(IS_LOCAL){showToast('Vista previa local.');return;}
+    if(!currentUID||isSubmitted)return;
+    const respondidas=Object.keys(answers).length;
+    const msg=respondidas<QUESTIONS.length
+      ? '¿Entregar la clase con '+respondidas+' de '+QUESTIONS.length+' preguntas respondidas? Tu resultado quedará registrado.'
+      : '¿Entregar la clase? Tu resultado quedará registrado.';
+    if(!confirm(msg))return;
+    document.getElementById('submitBtn').disabled=true;
+    revealAllCorrections();
+    const g=grade();const now=Date.now();const s=statsByHab();
+    const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
+    try{
+      const data=payload(true);data.submitted_at=now;
+      await Promise.all([
+        db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data),
+        db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
+          puntaje:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
+          por_habilidad:{L:s.L,I:s.I,R:s.R},
+          desarrollo:(document.getElementById('desarrollo').value||'').trim(),
+          desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+          nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+          submitted_at:now,timestamp:now})
+      ]);
+      if(studentData&&studentData.curso){
+        try{await db.ref(BASE+'/ranking/'+SESSION_ID+'/'+studentData.curso+'/'+currentUID).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct});}catch(e){}
+      }
+      isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      clearLocalBackup();
+      setStatus('✅ Entregada · '+g.ok+'/'+QUESTIONS.length+' ('+g.pct+'%)');showToast('✅ ¡Entregado!');
+    }catch(e){
+      console.error(e);
+      localBackup();
+      showToast('No se pudo entregar (sin conexión o error de red). Tu avance quedó guardado en este dispositivo: vuelve a intentar "Entregar" cuando tengas internet.');
+      document.getElementById('submitBtn').disabled=false;
+    }
+  }
+
+  function hydrate(saved){
+    if(!saved)return;
+    if(saved.answers){Object.entries(saved.answers).forEach(([qid,l])=>{
+      if(qid&&qid!=='undefined'&&l!==undefined&&QUESTIONS.some(q=>q.id===qid)&&!answers[qid])pick(qid,l);
+    });}
+    if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
+    if(typeof saved.desarrollo2==='string')document.getElementById('desarrollo2').value=saved.desarrollo2;
+    if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.getElementById('submitBtn').disabled=true;
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      setStatus('✅ Clase ya entregada.');}
+  }
+
+  renderWarmup();
+  render();
+  document.getElementById('submitBtn').addEventListener('click',submitGuide);
+  document.getElementById('desarrollo').addEventListener('input',scheduleSave);
+  document.getElementById('desarrollo2').addEventListener('input',scheduleSave);
+  document.getElementById('btnModelo2').addEventListener('click',()=>{
+    const t=(document.getElementById('desarrollo2').value||'').trim();
+    if(t.split(/\s+/).length<15){showToast('Primero escribe tu comparación (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox2').classList.add('show');
+  });
+  document.getElementById('btnModelo').addEventListener('click',()=>{
+    const txt=(document.getElementById('desarrollo').value||'').trim();
+    if(txt.split(/\s+/).length<15){showToast('Primero escribe tu respuesta (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox').classList.add('show');
+  });
+
+  if(!IS_LOCAL){
+    auth.onAuthStateChanged(async user=>{
+      if(!user){window.location.href=SHARED_LOGIN_URL;return;}
+      currentUID=user.uid;
+      try{
+        const [stuSnap,savedSnap]=await Promise.all([
+          db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
+          db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value')
+        ]);
+        studentData=stuSnap.val();
+        if(!studentData){auth.signOut();return;}
+        const remote=savedSnap.val();
+        let local=null;
+        try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
+        const useLocal=local && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
+        hydrate(useLocal?local:remote);
+        if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
+        if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
+      }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}
+    });
+  }else{setStatus('Vista previa local.');}
+</script>
+</body>
+</html>

@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 1 · Unidad 3 · Leer poesía: tono, hablante y sentido</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--azul:#0b4f9c;--azul2:#1769d6;--verde:#15803d;--verde-bg:#e9f8ef;--amber:#b45309;
+    --tinta:#0f172a;--gris:#475569;--linea:#e2e8f0;--suave:#f8fafc;--rojo:#b91c1c;--rojo-bg:#fef2f2;}
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',system-ui,sans-serif;margin:0;background:#eef2f7;color:var(--tinta);line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 130px;}
+  header.hero{position:relative;color:#fff;border-radius:0 0 22px 22px;overflow:hidden;box-shadow:0 8px 24px rgba(11,79,156,.25);}
+  .hero img{width:100%;height:290px;object-fit:cover;display:block;}
+  .hero .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,30,60,.15),rgba(7,30,60,.78));display:flex;flex-direction:column;justify-content:flex-end;padding:22px;}
+  .hero .kicker{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.95;}
+  .hero h1{margin:4px 0 2px;font-size:1.5rem;font-weight:800;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .hero p{margin:0;font-size:.92rem;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.4);}
+  .card{background:#fff;border:1px solid var(--linea);border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  .step-tag{display:inline-flex;gap:8px;background:var(--azul);color:#fff;font-weight:700;font-size:.82rem;padding:5px 12px;border-radius:999px;margin-bottom:10px;}
+  .card h2{margin:.1rem 0 .4rem;font-size:1.18rem;color:var(--azul);}
+  .muted{color:var(--gris);font-size:.92rem;}
+  .skillrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .skillrow span{border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:700;}
+  .sk-l{background:#e0f2fe;color:#075985;} .sk-i{background:#fef3c7;color:#92400e;} .sk-r{background:#fce7f3;color:#9d174d;}
+  .atencion{background:#fffbeb;border:2px solid #f59e0b;border-radius:14px;padding:14px 16px;margin:14px 0;}
+  .atencion .tit{font-weight:800;color:var(--amber);margin-bottom:6px;}
+  .atencion ol{margin:.3rem 0 .2rem 1.2rem;padding:0;} .atencion li{margin:.25rem 0;font-size:.93rem;}
+  .poema{background:#fffdf7;border:1px solid #f0e6cf;border-radius:14px;padding:22px 26px;font-family:'Lora',Georgia,serif;font-size:1.06rem;}
+  .poema h3{margin:0 0 4px;font-family:'Inter',sans-serif;color:var(--amber);font-size:1.15rem;}
+  .poema .autor{font-size:.85rem;color:var(--gris);font-family:'Inter',sans-serif;margin-bottom:14px;}
+  .poema p{margin:0 0 14px;white-space:pre-line;}
+  .verso-num{color:#b8a476;font-size:.72rem;user-select:none;}
+  .infogfx{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:8px;margin:12px 0;}
+  .q{border:1px solid var(--linea);border-radius:14px;padding:16px;margin:14px 0;background:#fcfdff;}
+  .q .enun{font-weight:700;margin-bottom:4px;}
+  .q .hab{float:right;font-size:.72rem;font-weight:800;border-radius:999px;padding:3px 10px;}
+  .opts{display:grid;gap:8px;margin-top:10px;}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;font-size:.95rem;transition:border-color .12s, background .12s;}
+  .opt:hover{border-color:var(--azul2);}
+  .opt .letra{font-weight:800;color:var(--azul);}
+  .opt.selected{background:#eff6ff;border-color:var(--azul2);box-shadow:0 0 0 2px rgba(23,105,214,.12);}
+  .opt.correct{background:var(--verde-bg);border-color:#4ade80;}
+  .opt.wrong{background:var(--rojo-bg);border-color:#fca5a5;}
+  .opt:disabled{cursor:default;opacity:.92;}
+  .retro{display:none;margin-top:10px;border-radius:12px;padding:12px 14px;font-size:.9rem;line-height:1.55;}
+  .retro.show{display:block;}
+  .retro.ok{background:var(--verde-bg);border:1px solid #86efac;}
+  .retro.bad{background:var(--rojo-bg);border:1px solid #fca5a5;}
+  .retro .why{margin-top:6px;} .retro .why div{margin:.3rem 0;}
+  .retro .cita{background:#fff;border-left:3px solid var(--amber);padding:6px 10px;margin-top:8px;font-style:italic;font-size:.88rem;}
+  .dev-rubrica{background:var(--suave);border:1px solid var(--linea);border-radius:12px;padding:12px 14px;font-size:.9rem;margin:10px 0;}
+  textarea{width:100%;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.96rem;min-height:110px;resize:vertical;}
+  textarea:focus{outline:none;border-color:var(--azul2);box-shadow:0 0 0 3px rgba(23,105,214,.12);}
+  .modelo{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:12px 14px;font-size:.9rem;margin-top:10px;}
+  .modelo.show{display:block;}
+  .btn{border:none;border-radius:12px;padding:11px 18px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;}
+  .btn.primary{background:var(--verde);color:#fff;} .btn.primary:disabled{background:#94a3b8;cursor:not-allowed;}
+  .btn.secondary{background:#eef2f7;color:var(--azul);border:1px solid var(--linea);}
+  .diag{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+  .diag .box{border-radius:12px;padding:12px;text-align:center;border:1px solid var(--linea);}
+  .diag .box b{display:block;font-size:1.4rem;}
+  .actionbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linea);box-shadow:0 -4px 18px rgba(15,23,42,.08);padding:12px 16px;z-index:40;}
+  .actionbar .inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .save-status{flex:1;min-width:150px;font-size:.85rem;color:var(--gris);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:80;}
+  .done-banner{background:var(--verde-bg);border:1px solid #86efac;color:#166534;border-radius:12px;padding:14px 16px;font-weight:600;margin-top:14px;display:none;}
+  @media(max-width:560px){.hero h1{font-size:1.15rem;}.hero img{height:210px;}.diag{grid-template-columns:1fr;}}
+  .video-explicativo{background:#0f172a;border-radius:14px;overflow:hidden;margin:14px 0;}
+  .video-explicativo video{width:100%;display:block;border-radius:14px;}
+  .video-cap{font-size:.82rem;color:var(--gris);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <img src="assets/u3/u3s1-estacion.png" alt="Ilustración: joven en un andén mira el tren al amanecer">
+  <div class="overlay">
+    <div class="kicker">Unidad 3 · Rumbo al SIMCE · Clase 1</div>
+    <h1>🎭 Leer poesía: tono, hablante y sentido</h1>
+    <p>Puedes cambiar tu respuesta las veces que quieras. Al responder todas, verás la corrección completa: por qué sí y por qué no.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- EXPLICA -->
+  <section class="card">
+    <span class="step-tag">1️⃣ Aprende</span>
+    <h2>Las 3 llaves para leer un poema en el SIMCE</h2>
+    <div class="video-explicativo">
+      <video controls preload="metadata" playsinline>
+        <source src="videos/video-u3-s1-lirica-tono.mp4" type="video/mp4">
+        Tu navegador no soporta el video. <a href="videos/video-u3-s1-lirica-tono.mp4">Descárgalo aquí</a>.
+      </video>
+    </div>
+    <p class="video-cap">🎬 Video (1:12 min): hablante lírico, tono, lenguaje figurado y el método de 4 pasos — véelo antes de empezar.</p>
+    <p><b>🔑 Hablante lírico:</b> la voz que habla dentro del poema (no es el autor). Pregúntate: ¿quién habla y en qué situación está?</p>
+    <p><b>🔑 Tono:</b> la emoción o actitud de esa voz (nostálgico, esperanzado, irónico, rabioso…). Se detecta en las palabras que elige, no en lo que a ti te provoca. Un poema puede mezclar tonos.</p>
+    <p><b>🔑 Lenguaje figurado:</b> lo que se dice "en clave": comparaciones, personificaciones, símbolos, repeticiones. En el SIMCE SIEMPRE te preguntarán qué significa o <b>qué función cumple</b> uno de estos recursos.</p>
+    <div class="skillrow"><span class="sk-l">🔎 Localizar</span><span class="sk-i">🧩 Interpretar y relacionar</span><span class="sk-r">🪞 Reflexionar</span></div>
+    <div class="atencion">
+      <div class="tit">⚡ ATENCIÓN — así se resuelve una pregunta de TONO (el ítem más fallado del último ensayo)</div>
+      <ol>
+        <li><b>Subraya las palabras con carga emocional</b> del poema (ej.: "niebla", "dejo", "esperanza", "no voy a mirar atrás").</li>
+        <li><b>Agrúpalas:</b> ¿tiran hacia la pena, la rabia, la alegría, la calma…? Si hay dos grupos, el tono es MIXTO.</li>
+        <li><b>Descarta las alternativas absolutas</b> ("pura tristeza", "solo alegría") cuando el texto tiene ambas caras.</li>
+        <li><b>Exige evidencia:</b> la alternativa correcta se puede defender citando un verso. Si no puedes citar, es trampa.</li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- CALENTAMIENTO -->
+  <section class="card">
+    <span class="step-tag">2️⃣ Calentamiento</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~8 min</span>
+    <h2>Afina el oído: ¿qué tono escuchas?</h2>
+    <p class="muted">Antes de leer los poemas, entrena con estos versos sueltos. No dan puntaje: son para calibrar. Puedes cambiar tu elección; la corrección aparece cuando respondas las 4.</p>
+    <div id="warmupZone"></div>
+  </section>
+
+  <!-- TEXTO 1: POEMA -->
+  <section class="card">
+    <span class="step-tag">3️⃣ Lee</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~10 min</span>
+    <h2>Texto 1 · Poema</h2>
+    <div class="poema">
+      <h3>El andén</h3>
+      <div class="autor">Texto elaborado para esta clase.</div>
+      <p><span class="verso-num">1</span>  La niebla dobla despacio los cerros,
+como quien guarda la ropa del invierno;
+el tren respira quieto en la vía
+y yo aprieto un boleto que pesa más que la mochila.</p>
+      <p><span class="verso-num">5</span>  Me voy, aunque me quedo:
+dejo mi nombre rayado en la reja,
+dejo la sombra fresca del avellano,
+dejo la voz de mi abuela en la cocina.</p>
+      <p><span class="verso-num">9</span>  Nadie me empuja: me llama
+una ciudad que todavía no conozco,
+una sala con libros que no he leído,
+un futuro con olor a papel nuevo.</p>
+      <p><span class="verso-num">13</span>  Cuando el tren arranque
+no voy a mirar atrás:
+voy a mirar dos veces hacia adelante,
+una por mí,
+otra por los que se quedan.</p>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS POEMA -->
+  <section class="card">
+    <span class="step-tag">4️⃣ Responde</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~15 min</span>
+    <h2>Preguntas 1 a 5 · sobre el poema</h2>
+    <p class="muted">Elige una alternativa (puedes cambiarla cuando quieras). Al responder todas las preguntas de la guía verás la corrección completa: <b>por qué cada opción es correcta o trampa</b>. Cada pregunta indica su habilidad SIMCE.</p>
+    <div id="quizPoema"></div>
+  </section>
+
+  <!-- TEXTO 2: POEMA RESPUESTA -->
+  <section class="card">
+    <span class="step-tag">5️⃣ Lee el poema que responde</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~10 min</span>
+    <h2>Texto 2 · Poema (la otra voz)</h2>
+    <p class="muted">Este poema <b>dialoga</b> con «El andén»: habla quien se queda en el pueblo. En el SIMCE de nivel alto te harán <b>comparar textos</b> — fíjate en los ecos (la niebla, los cerros, el andén) y en lo que cambia.</p>
+    <div class="poema">
+      <h3>La que se queda</h3>
+      <div class="autor">Texto elaborado para esta clase.</div>
+      <p><span class="verso-num">1</span>  Barro el andén con los ojos
+cuando el tren ya no se ve;
+la niebla vuelve a sentarse
+en la silla de los cerros.</p>
+      <p><span class="verso-num">5</span>  ¿Quién dijo que quedarse
+es quedarse quieta?
+Yo también viajo:
+viajo en cada carta que espero,
+viajo en la lista de tus logros
+que iré clavando en la pared.</p>
+      <p><span class="verso-num">11</span>  Guardo tu taza sin lavar
+—que el borde aún se acuerde de ti—,
+y aprendo a decir «allá»
+sin que se me quiebre la voz.</p>
+      <p><span class="verso-num">15</span>  Cuando vuelvas en verano
+no me traigas regalos:
+tráeme palabras nuevas,
+tráeme el mundo que yo no vi.</p>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS POEMA 2 + COMPARACIÓN -->
+  <section class="card">
+    <span class="step-tag">6️⃣ Compara las dos voces</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~15 min</span>
+    <h2>Preguntas 6 a 10 · segundo poema y comparación</h2>
+    <p class="muted">Las últimas dos exigen <b>relacionar ambos poemas</b>: así se ve una pregunta de nivel Adecuado.</p>
+    <div id="quizPoema2"></div>
+  </section>
+
+  <!-- TEXTO 3: INFOGRAFÍA -->
+  <section class="card">
+    <span class="step-tag">7️⃣ Lee un texto discontinuo</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~12 min</span>
+    <h2>Texto 3 · Infografía</h2>
+    <p class="muted">El SIMCE también evalúa <b>textos discontinuos</b>: infografías, gráficos y tablas. Se leen distinto: primero el título, luego el dato destacado, después las barras y la fuente.</p>
+    <div class="infogfx">
+      <svg viewBox="0 0 800 470" width="100%" role="img" aria-label="Infografía: Moverse para crecer">
+        <rect width="800" height="470" fill="#f8fafc"/>
+        <rect width="800" height="64" fill="#0b4f9c"/>
+        <text x="24" y="40" font-family="Inter,Arial" font-size="26" font-weight="800" fill="#ffffff">Moverse para crecer 🎒</text>
+        <text x="24" y="58" font-family="Inter,Arial" font-size="13" fill="#cfe3ff">Jóvenes chilenos que estudian lejos de casa</text>
+        <!-- dato destacado -->
+        <rect x="24" y="84" width="340" height="150" rx="14" fill="#fff7ed" stroke="#fdba74"/>
+        <text x="44" y="150" font-family="Inter,Arial" font-size="52" font-weight="800" fill="#b45309">1 de cada 4</text>
+        <text x="44" y="178" font-family="Inter,Arial" font-size="14" fill="#7c2d12">estudiantes de regiones cursa sus estudios</text>
+        <text x="44" y="196" font-family="Inter,Arial" font-size="14" fill="#7c2d12">fuera de su comuna de origen</text>
+        <!-- barras -->
+        <text x="400" y="104" font-family="Inter,Arial" font-size="15" font-weight="700" fill="#0f172a">¿Por qué se trasladan?</text>
+        <g font-family="Inter,Arial" font-size="13" fill="#0f172a">
+          <text x="400" y="132">Estudios</text><rect x="510" y="120" width="215" height="16" rx="8" fill="#1769d6"/><text x="733" y="133" font-weight="700">43%</text>
+          <text x="400" y="162">Trabajo familiar</text><rect x="510" y="150" width="135" height="16" rx="8" fill="#38bdf8"/><text x="653" y="163" font-weight="700">27%</text>
+          <text x="400" y="192">Otros motivos</text><rect x="510" y="180" width="90" height="16" rx="8" fill="#94a3b8"/><text x="608" y="193" font-weight="700">18%</text>
+          <text x="400" y="222">Salud</text><rect x="510" y="210" width="60" height="16" rx="8" fill="#fb923c"/><text x="578" y="223" font-weight="700">12%</text>
+        </g>
+        <!-- franja emocional -->
+        <rect x="24" y="258" width="752" height="120" rx="14" fill="#eef2ff" stroke="#c7d2fe"/>
+        <text x="44" y="292" font-family="Inter,Arial" font-size="15" font-weight="700" fill="#312e81">¿Y cómo se sienten los que parten?</text>
+        <g font-family="Inter,Arial" font-size="14" fill="#1e1b4b">
+          <text x="44" y="322">😢 El <tspan font-weight="800" font-size="18">68%</tspan> reconoce extrañar su hogar durante el primer semestre.</text>
+          <text x="44" y="352">💪 Aun así, el <tspan font-weight="800" font-size="18">81%</tspan> afirma que volvería a tomar la misma decisión.</text>
+        </g>
+        <text x="24" y="412" font-family="Inter,Arial" font-size="11" fill="#64748b">Fuente: Encuesta Juventud y Movilidad 2025 — datos referenciales elaborados para esta clase.</text>
+        <text x="24" y="446" font-family="Inter,Arial" font-size="12" font-style="italic" fill="#475569">💡 Fíjate: el dato en letras gigantes no está ahí por adorno. Pregúntate siempre: ¿para qué lo destacaron?</text>
+      </svg>
+    </div>
+  </section>
+
+  <!-- PREGUNTAS INFOGRAFÍA -->
+  <section class="card">
+    <span class="step-tag">8️⃣ Responde</span>
+    <h2>Preguntas 11 a 14 · infografía e integración</h2>
+    <p class="muted">La pregunta 14 cruza la infografía con los poemas: <b>integrar textos distintos</b> también cae en el SIMCE.</p>
+    <div id="quizInfo"></div>
+  </section>
+
+  <!-- DESAFÍO ADECUADO -->
+  <section class="card" style="border:2px solid #f59e0b;">
+    <span class="step-tag" style="background:#b45309;">⭐ Desafío nivel Adecuado</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#b45309;border-radius:999px;padding:3px 9px;">~8 min</span>
+    <h2>Preguntas 15 y 16 · para puntaje 295+</h2>
+    <p class="muted">Estas dos son del tipo que separa el nivel Elemental del Adecuado: hay que <b>discriminar entre ideas que compiten</b> y evaluar el sentido global. Tómate tu tiempo.</p>
+    <div id="quizDesafio"></div>
+  </section>
+
+  <!-- DESARROLLO -->
+  <section class="card">
+    <span class="step-tag">9️⃣ Desarrollo (como en el SIMCE)</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~12 min</span>
+    <h2>Desarrollo 1 · Escribe con cita textual</h2>
+    <p><b>Pregunta:</b> ¿Qué actitud tiene la hablante del poema frente a su partida? <b>Afirma</b> tu idea, <b>cita un verso</b> entre comillas que la respalde y <b>explica</b> cómo ese verso la demuestra.</p>
+    <div class="dev-rubrica">📋 <b>Rúbrica (3 puntos):</b> ① Afirmación clara de la actitud (1 pt) · ② Cita textual pertinente ENTRE COMILLAS (1 pt) · ③ Explicación que conecta la cita con tu afirmación (1 pt). <span class="muted">La prueba real trae 2 preguntas así: se responden siempre con el esquema Afirmación + Evidencia + Explicación.</span></div>
+    <textarea id="desarrollo" placeholder='Ej.: La hablante siente que... Esto se ve cuando dice "..." (verso X), lo que demuestra que...'></textarea>
+    <button class="btn secondary" id="btnModelo" style="margin-top:8px;">Ver respuesta modelo (después de escribir la tuya)</button>
+    <div class="modelo" id="modeloBox"><b>✍️ Respuesta modelo:</b> La hablante enfrenta su partida con una mezcla de pena y esperanza, pero decide quedarse con la esperanza. Esto se aprecia cuando dice <i>"voy a mirar dos veces hacia adelante, / una por mí, / otra por los que se quedan"</i> (versos 15-17): en lugar de quedarse en la nostalgia de todo lo que deja (la reja, el avellano, la abuela), convierte su viaje en una promesa doble, por ella y por su familia. La cita demuestra que su actitud final es de compromiso esperanzado, no de puro dolor.<br><span class="muted">Fíjate: tiene la Afirmación, la cita entre comillas con el verso, y la Explicación que las conecta.</span></div>
+  </section>
+
+  <!-- DESARROLLO 2: COMPARATIVO -->
+  <section class="card">
+    <span class="step-tag">🔟 Desarrollo comparativo</span><span class="mins" style="float:right;font-size:.75rem;font-weight:700;color:#fff;background:#64748b;border-radius:999px;padding:3px 9px;">~12 min</span>
+    <h2>Desarrollo 2 · Compara con citas de AMBOS poemas</h2>
+    <p><b>Pregunta:</b> ¿Cuál de los dos hablantes muestra, a tu juicio, mayor fortaleza frente a la separación? <b>Afirma</b> tu postura, <b>cita un verso de cada poema</b> (entre comillas) y <b>explica</b> cómo cada cita apoya tu decisión.</p>
+    <div class="dev-rubrica">📋 <b>Rúbrica (4 puntos):</b> ① Postura clara (1 pt) · ② Cita textual del poema 1 entre comillas (1 pt) · ③ Cita textual del poema 2 entre comillas (1 pt) · ④ Explicación que conecta ambas citas con tu postura (1 pt). <span class="muted">No hay respuesta "correcta": se evalúa cómo la defiendes con evidencia.</span></div>
+    <textarea id="desarrollo2" placeholder='Ej.: Para mí, quien muestra más fortaleza es… porque… Esto se ve en "…" (poema 1) y en "…" (poema 2), lo que demuestra que…'></textarea>
+    <button class="btn secondary" id="btnModelo2" style="margin-top:8px;">Ver respuesta modelo (después de escribir la tuya)</button>
+    <div class="modelo" id="modeloBox2"><b>✍️ Respuesta modelo:</b> A mi juicio, la hablante que se queda muestra mayor fortaleza. Quien parte reconoce que el boleto <i>"pesa más que la mochila"</i> (poema 1, v.4), es decir, carga su pena pero se la lleva hacia un futuro nuevo que la ayuda a resistir; en cambio, la que se queda transforma la espera misma en movimiento: <i>"¿Quién dijo que quedarse / es quedarse quieta?"</i> (poema 2, v.5-6). Su fortaleza es mayor porque no tiene un "futuro con olor a papel nuevo" que la empuje: debe fabricar su esperanza en el mismo lugar donde todo le recuerda al ausente.<br><span class="muted">Observa: postura + una cita de cada poema + explicación que las compara. También sería válida la postura contraria, bien defendida.</span></div>
+  </section>
+
+  <!-- CIERRE DIAGNÓSTICO -->
+  <section class="card">
+    <span class="step-tag">7️⃣ Tu diagnóstico</span>
+    <h2>¿Cómo te fue por habilidad?</h2>
+    <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparece al responder las 8 preguntas:</p>
+    <div class="diag">
+      <div class="box" style="background:#e0f2fe;"><span>🔎 Localizar</span><b id="dL">—</b></div>
+      <div class="box" style="background:#fef3c7;"><span>🧩 Interpretar</span><b id="dI">—</b></div>
+      <div class="box" style="background:#fce7f3;"><span>🪞 Reflexionar</span><b id="dR">—</b></div>
+    </div>
+    <p class="muted" id="diagCopy">La habilidad donde falles más es tu foco de práctica de la semana.</p>
+    <div class="done-banner" id="doneBanner">✅ ¡Clase entregada! Resultado guardado.</div>
+  </section>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <span class="save-status" id="saveStatus">Conectando…</span>
+    <button class="btn primary" id="submitBtn">Entregar clase</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="js/forced-refresh.js"></script>
+<script>
+  const FIREBASE_CONFIG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",
+    databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",
+    storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  const auth=firebase.auth();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  const db=firebase.database();const BASE='plataforma_estudiantes';const SESSION_ID='sesion-u3-1';
+  const SHARED_LOGIN_URL='/lecturas/?next='+encodeURIComponent('/estudiantes/guia-u3-s1-lirica-tono.html');
+  const IS_LOCAL=window.location.protocol==='file:';
+  if(typeof initStudentForcedRefresh==='function')initStudentForcedRefresh({auth,db,base:BASE});
+
+  // Preguntas. Claves balanceadas: B C A D C A D B (A2 B2 C2 D2). Largo de alternativas parejo.
+  const QUESTIONS=[
+   {id:'q1',hab:'I',texto:'poema',enun:'¿Cuál es el tono predominante del poema?',ops:[
+     {l:'A',t:'Rabia contenida contra la familia que la obliga a dejar el campo y partir.'},
+     {l:'B',t:'Mezcla de nostalgia por lo que deja y de esperanza por lo que viene.'},
+     {l:'C',t:'Indiferencia de quien ya no siente ningún apego por su lugar de origen y su gente.'},
+     {l:'D',t:'Miedo paralizante ante una ciudad que se le presenta hostil y peligrosa.'}],
+    correcta:'B',
+    why:{A:'Trampa (invención plausible): nadie la obliga; el poema dice justo lo contrario: "Nadie me empuja: me llama…" (v.9).',
+         B:'Correcta. Conviven la pena ("dejo… dejo… dejo…", v.6-8) y la esperanza ("un futuro con olor a papel nuevo", v.12): tono mixto nostálgico-esperanzado.',
+         C:'Trampa (contrasentido): quien "deja la voz de su abuela en la cocina" siente apego profundo, no indiferencia.',
+         D:'Trampa (sobregeneralización): la niebla del inicio da melancolía, pero la ciudad se describe con deseo ("me llama"), no con peligro.'},
+    cita:'"Me voy, aunque me quedo" (v.5) — la mezcla de tonos está condensada en esta paradoja.'},
+   {id:'q2',hab:'I',texto:'poema',enun:'¿Qué quiere decir la hablante con "un boleto que pesa más que la mochila" (v.4)?',ops:[
+     {l:'A',t:'Que compró un pasaje impreso en una cartulina demasiado gruesa y pesada.'},
+     {l:'B',t:'Que su mochila va casi vacía porque olvidó empacar la mitad de sus cosas.'},
+     {l:'C',t:'Que la decisión de partir le carga más emoción que todo su equipaje.'},
+     {l:'D',t:'Que el precio del pasaje resultó excesivo para el presupuesto de su familia.'}],
+    correcta:'C',
+    why:{A:'Trampa (literalización): toma el "peso" como peso físico del papel; es una hipérbole, no una descripción.',
+         B:'Trampa (cambio de foco): la mochila solo sirve de comparación; el poema no habla de lo que empacó.',
+         C:'Correcta. El boleto simboliza la decisión de irse: "pesa" porque concentra toda la carga emocional de la partida.',
+         D:'Trampa (invención plausible): suena realista, pero el poema jamás menciona dinero ni precios.'},
+    cita:'"…aprieto un boleto que pesa más que la mochila" (v.4): apretar el boleto muestra tensión emocional, no física.'},
+   {id:'q3',hab:'I',texto:'poema',enun:'En la segunda estrofa, ¿qué representan las cosas que la hablante "deja" (la reja, el avellano, la voz de la abuela)?',ops:[
+     {l:'A',t:'Sus raíces: los vínculos que la unen a su lugar de origen.'},
+     {l:'B',t:'Objetos viejos y gastados que ya no le prestan ninguna utilidad práctica.'},
+     {l:'C',t:'Las tareas domésticas pendientes que ahora deberán asumir sus hermanos.'},
+     {l:'D',t:'Los malos recuerdos de infancia que espera olvidar apenas llegue a la ciudad.'}],
+    correcta:'A',
+    why:{A:'Correcta. Son imágenes concretas de su historia: el nombre rayado (identidad), el árbol (infancia), la voz de la abuela (afecto familiar). Juntas simbolizan sus raíces.',
+         B:'Trampa (contrasentido): la enumeración es amorosa, no despectiva; nada indica que sean inútiles.',
+         C:'Trampa (invención plausible): las tareas domésticas nunca aparecen en el poema.',
+         D:'Trampa (inversión): son recuerdos queridos que le cuesta soltar, no malos recuerdos que quiera borrar.'},
+    cita:'"dejo la voz de mi abuela en la cocina" (v.8): se dejan afectos, no objetos inservibles.'},
+   {id:'q4',hab:'R',texto:'poema',enun:'¿Qué función cumple la repetición de "dejo" al inicio de tres versos seguidos (v.6-8)?',ops:[
+     {l:'A',t:'Ordenar cronológicamente los hechos desde el más antiguo hasta el más reciente.'},
+     {l:'B',t:'Demostrar que la hablante quiere deshacerse lo antes posible de su pasado.'},
+     {l:'C',t:'Producir una rima consonante entre los finales de los tres versos seguidos.'},
+     {l:'D',t:'Acumular una a una las pérdidas para que se sienta el peso de la despedida.'}],
+    correcta:'D',
+    why:{A:'Trampa (invención plausible): no hay orden temporal entre la reja, el árbol y la abuela; es una enumeración afectiva.',
+         B:'Trampa (inversión): la anáfora subraya el apego, no las ganas de deshacerse de algo.',
+         C:'Trampa (literalización formal): "reja", "avellano" y "cocina" no riman; el recurso es la repetición inicial (anáfora), no la rima.',
+         D:'Correcta. La anáfora "dejo… dejo… dejo…" suma pérdidas como quien apila cosas queridas: el lector siente cuánto cuesta partir. Esa es su FUNCIÓN — el tipo de pregunta más fallado del último ensayo.'},
+    cita:'"dejo mi nombre… / dejo la sombra… / dejo la voz…" (v.6-8).'},
+   {id:'q5',hab:'I',texto:'poema',enun:'¿Cuál enunciado resume mejor el sentido global del poema?',ops:[
+     {l:'A',t:'Una joven planifica unas vacaciones para conocer por fin la gran ciudad.'},
+     {l:'B',t:'Una abuela despide a su nieta y le hace prometer que no volverá al campo.'},
+     {l:'C',t:'Una joven parte a estudiar lejos y convierte la pena en promesa de futuro.'},
+     {l:'D',t:'Una estudiante arrepentida decide bajarse del tren un momento antes de partir.'}],
+    correcta:'C',
+    why:{A:'Trampa (cambio de foco): hay viaje, pero de proyecto de vida ("libros que no he leído", "futuro"), no de turismo.',
+         B:'Trampa (invención plausible): la abuela es un recuerdo que ella deja; nunca habla ni le encarga nada.',
+         C:'Correcta. Integra TODO el poema: la despedida (estrofas 1-2), el llamado del estudio (estrofa 3) y la promesa final "una por mí, / otra por los que se quedan".',
+         D:'Trampa (inversión): decide avanzar sin mirar atrás; jamás se baja del tren.'},
+    cita:'"voy a mirar dos veces hacia adelante" (v.15): el sentido global es avanzar cargando a los suyos.'},
+   {id:'q9',hab:'I',texto:'poema2',enun:'¿Qué actitud muestra la hablante de «La que se queda» frente a la partida?',ops:[
+     {l:'A',t:'Pena contenida que se transforma en orgullo y en una espera activa.'},
+     {l:'B',t:'Resentimiento silencioso contra quien la dejó sola en el pueblo natal.'},
+     {l:'C',t:'Alivio disimulado porque al fin recupera su espacio y su rutina propia.'},
+     {l:'D',t:'Desesperación que le impide retomar el ritmo de su vida cotidiana.'}],
+    correcta:'A',
+    why:{A:'Correcta. Hay pena ("sin que se me quiebre la voz") pero la convierte en acción: espera cartas, clava logros en la pared, pide que le traigan el mundo. Orgullo y espera activa.',
+         B:'Trampa (invención plausible): no hay ningún reproche; al contrario, celebra los logros del que partió.',
+         C:'Trampa (contrasentido): quien guarda "tu taza sin lavar" no siente alivio: cultiva la presencia del ausente.',
+         D:'Trampa (sobregeneralización): la voz casi se quiebra, pero aprende a decir "allá": sigue funcionando y esperando.'},
+    cita:'"viajo en la lista de tus logros / que iré clavando en la pared" (v.9-10): la espera se vuelve actividad y orgullo.'},
+   {id:'q10',hab:'I',texto:'poema2',enun:'¿Qué significa que guarde "tu taza sin lavar / —que el borde aún se acuerde de ti—" (v.11-12)?',ops:[
+     {l:'A',t:'Que el desorden de la casa aumentó desde que se quedó viviendo sola.'},
+     {l:'B',t:'Que piensa devolverle esa taza usada apenas regrese en el verano.'},
+     {l:'C',t:'Que lavar la loza le parece ahora una tarea completamente innecesaria.'},
+     {l:'D',t:'Que mantiene viva la presencia del ausente en los objetos de la casa.'}],
+    correcta:'D',
+    why:{A:'Trampa (literalización): lee la taza sucia como desorden real; es un gesto simbólico, no higiénico.',
+         B:'Trampa (invención plausible): el regalo del final va en la dirección contraria: pide palabras, no objetos.',
+         C:'Trampa (cambio de foco): no habla de las tareas de la casa, sino de UNA taza específica: la de él/ella.',
+         D:'Correcta. La taza intacta es un símbolo: conservar la huella ("que el borde aún se acuerde") es conservar a la persona en lo cotidiano.'},
+    cita:'La personificación "que el borde aún se acuerde de ti" delata que la taza vale por el recuerdo, no por el uso.'},
+   {id:'q11',hab:'R',texto:'poema2',enun:'¿Qué función cumple la pregunta retórica "¿Quién dijo que quedarse / es quedarse quieta?" (v.5-6)?',ops:[
+     {l:'A',t:'Pedir una información que la hablante realmente desconoce y necesita.'},
+     {l:'B',t:'Rebatir la idea de que quedarse es ser pasiva y reafirmar su papel activo.'},
+     {l:'C',t:'Introducir un cambio de tema hacia la descripción física del andén del pueblo.'},
+     {l:'D',t:'Acusar directamente a los vecinos que la critican por no haber viajado nunca.'}],
+    correcta:'B',
+    why:{A:'Trampa (literalización): una pregunta retórica no espera respuesta; es una afirmación disfrazada.',
+         B:'Correcta. La pregunta desafía un prejuicio ("quedarse = pasividad") y abre la estrofa donde demuestra lo contrario: "Yo también viajo". Esa es su FUNCIÓN argumentativa dentro del poema.',
+         C:'Trampa (cambio de foco): después de la pregunta no describe el andén: enumera sus formas de "viajar".',
+         D:'Trampa (invención plausible): los vecinos no existen en el poema; el prejuicio que rebate es general, sin destinatario.'},
+    cita:'"Yo también viajo: / viajo en cada carta que espero" (v.7-8): la respuesta que sigue confirma la función de la pregunta.'},
+   {id:'q12',hab:'I',texto:'poema2',enun:'COMPARACIÓN · ¿En qué COINCIDEN los hablantes de ambos poemas?',ops:[
+     {l:'A',t:'Ambos consideran que la partida fue un error que ya no tiene ningún remedio.'},
+     {l:'B',t:'Ambos evitan nombrar a la familia para no hacer más honda la tristeza.'},
+     {l:'C',t:'Ambos transforman la pena de la separación en una forma de esperanza.'},
+     {l:'D',t:'Ambos asumen que la distancia terminará por romper el vínculo que los une.'}],
+    correcta:'C',
+    why:{A:'Trampa (contrasentido): ninguno se arrepiente: uno "mira dos veces hacia adelante", la otra pide "el mundo que yo no vi".',
+         B:'Trampa (inversión): la familia está en el centro de ambos: la abuela en la cocina, la taza guardada.',
+         C:'Correcta. Es el punto de encuentro: él convierte la partida en promesa ("otra por los que se quedan"); ella convierte la espera en viaje propio. Pena → esperanza en los dos.',
+         D:'Trampa (invención): ambos poemas fortalecen el vínculo a la distancia (cartas, logros, regreso en verano).'},
+    cita:'Poema 1: "voy a mirar dos veces hacia adelante" · Poema 2: "Yo también viajo".'},
+   {id:'q13',hab:'I',texto:'poema2',enun:'COMPARACIÓN · ¿Cuál es la diferencia central entre las dos voces?',ops:[
+     {l:'A',t:'Quien parte proyecta su esperanza en el futuro; quien queda la construye en la espera.'},
+     {l:'B',t:'Quien parte siente pura alegría por el viaje; quien queda, una tristeza sin salida posible.'},
+     {l:'C',t:'Quien parte olvida pronto su origen; quien queda se lo recuerda carta por carta.'},
+     {l:'D',t:'Quien parte teme a la ciudad desconocida; quien queda teme a la soledad del campo.'}],
+    correcta:'A',
+    why:{A:'Correcta. Misma emoción, direcciones distintas: él avanza hacia "un futuro con olor a papel nuevo"; ella hace de la espera un viaje ("viajo en cada carta que espero").',
+         B:'Trampa (absolutos): "pura alegría" y "sin salida posible" borran la mezcla de tonos que AMBOS poemas tienen.',
+         C:'Trampa (invención): él promete mirar "por los que se quedan"; jamás olvida su origen.',
+         D:'Trampa (invención plausible): el miedo no organiza ninguno de los dos poemas; la ciudad "llama" y la espera se activa.'},
+    cita:'Contrasta v.10-12 del poema 1 con v.7-10 del poema 2: futuro nuevo vs. espera convertida en viaje.'},
+   {id:'q6',hab:'L',texto:'infografía',enun:'Según la infografía, ¿qué porcentaje de los jóvenes se traslada por motivos de salud?',ops:[
+     {l:'A',t:'12%'},{l:'B',t:'18%'},{l:'C',t:'27%'},{l:'D',t:'43%'}],
+    correcta:'A',
+    why:{A:'Correcta. La barra "Salud" marca 12%; es la más corta del gráfico.',
+         B:'Trampa (dato vecino): 18% corresponde a "Otros motivos", la barra que está justo arriba.',
+         C:'Trampa (dato vecino): 27% es "Trabajo familiar".',
+         D:'Trampa (dato llamativo): 43% es "Estudios", la barra más larga; el ojo se va ahí primero.'},
+    cita:'En textos discontinuos, Localizar = leer la etiqueta exacta de la barra, no la más llamativa.'},
+   {id:'q7',hab:'I',texto:'infografía',enun:'El 68% extraña su hogar, pero el 81% volvería a tomar la misma decisión. ¿Qué conclusión une correctamente ambos datos?',ops:[
+     {l:'A',t:'Los dos datos se contradicen entre sí, de modo que la encuesta pierde validez.'},
+     {l:'B',t:'Extrañar el hogar termina obligando a la gran mayoría a abandonar los estudios.'},
+     {l:'C',t:'La mayoría de los jóvenes se arrepiente de haberse ido a estudiar tan lejos.'},
+     {l:'D',t:'Aunque partir cuesta, la gran mayoría evalúa que la decisión valió la pena.'}],
+    correcta:'D',
+    why:{A:'Trampa (falsa contradicción + absoluto "toda"): sentir pena Y validar la decisión pueden ser verdad al mismo tiempo — como en el poema.',
+         B:'Trampa (invención): la infografía no menciona abandono de estudios en ninguna parte.',
+         C:'Trampa (inversión): es exactamente al revés: 81% VOLVERÍA a decidir lo mismo.',
+         D:'Correcta. Integrar dos datos = la habilidad Interpretar y RELACIONAR: pena (68%) y convicción (81%) conviven, igual que en "El andén".'},
+    cita:'Nota cómo la infografía y el poema dicen lo mismo con lenguajes distintos: eso también se pregunta en el SIMCE.'},
+   {id:'q8',hab:'R',texto:'infografía',enun:'¿Por qué la infografía presenta el dato "1 de cada 4" en un tamaño mucho mayor que el resto?',ops:[
+     {l:'A',t:'Porque es el único dato de toda la infografía que proviene de una fuente seria.'},
+     {l:'B',t:'Para que el lector dimensione de entrada que es un fenómeno masivo y frecuente.'},
+     {l:'C',t:'Para rellenar un espacio que habría quedado vacío junto a las barras de colores.'},
+     {l:'D',t:'Porque sus diseñadores creen que los gráficos de barras confunden al público.'}],
+    correcta:'B',
+    why:{A:'Trampa (invención): toda la infografía declara la misma fuente al pie; no hay jerarquía de confiabilidad.',
+         B:'Correcta. Es una decisión de DISEÑO con propósito: la cifra grande impacta primero y enmarca todo lo demás ("esto le pasa a muchos"). Evaluar la función de un recurso visual = Reflexionar.',
+         C:'Trampa (trivialización): en un texto bien diseñado nada está "de relleno"; siempre hay intención.',
+         D:'Trampa (cambio de foco): las barras están ahí mismo y se usan; nadie las descarta.'},
+    cita:'La propia infografía te lo sopló: "el dato en letras gigantes no está ahí por adorno".'},
+   {id:'q14',hab:'I',texto:'infografía',enun:'INTEGRACIÓN · Un profesor comenta: «la infografía dice con cifras lo que los poemas dicen con imágenes». ¿Qué pareja dato-verso lo demuestra MEJOR?',ops:[
+     {l:'A',t:'«43% se traslada por estudios» ↔ «la niebla dobla despacio los cerros».'},
+     {l:'B',t:'«1 de cada 4 estudia fuera de su comuna» ↔ «no me traigas regalos».'},
+     {l:'C',t:'«81% volvería a tomar la decisión» ↔ «Barro el andén con los ojos».'},
+     {l:'D',t:'«68% extraña su hogar» ↔ «sin que se me quiebre la voz».'}],
+    correcta:'D',
+    why:{A:'Trampa (pareja rota): el 43% habla del MOTIVO del viaje; la niebla es pura atmósfera, no estudia nada.',
+         B:'Trampa (pareja rota): la cifra mide frecuencia del fenómeno; el verso habla del tipo de regalo. No dicen lo mismo.',
+         C:'Trampa (pareja rota): el 81% expresa convicción positiva; barrer el andén con los ojos es pura pena del adiós.',
+         D:'Correcta. Ambos expresan EL MISMO contenido — el costo emocional de la distancia — uno en cifra (68% extraña) y otro en imagen (la voz que casi se quiebra). Eso es integrar textos.'},
+    cita:'Integrar = encontrar la idea común debajo de dos lenguajes distintos. Cae en el SIMCE y en la vida.'},
+   {id:'q15',hab:'R',texto:'desafio',enun:'⭐ Un compañero sostiene: «El poema 2 contradice al poema 1, porque la madre le reprocha al viajero haberse ido». ¿Cuál es la MEJOR refutación basada en el texto?',ops:[
+     {l:'A',t:'Decir que, al ser poemas de autores distintos, no pueden contradecirse entre ellos.'},
+     {l:'B',t:'Darle la razón: guardar la taza sin lavar esconde un resentimiento evidente.'},
+     {l:'C',t:'Citar «tráeme el mundo que yo no vi»: ella celebra el viaje, no lo reprocha.'},
+     {l:'D',t:'Responder que en poesía cada lector entiende lo que quiere y nada puede refutarse.'}],
+    correcta:'C',
+    why:{A:'Trampa (fuera del texto): la autoría no decide el sentido; la refutación debe salir de los versos mismos.',
+         B:'Trampa (concesión errónea): la taza guardada es ternura y memoria, no rencor: "que el borde aún se acuerde de ti".',
+         C:'Correcta. Refutar = mostrar evidencia textual incompatible con la tesis rival. Si ella pide que le traigan el mundo, VALIDA el viaje: no hay reproche posible. Así se gana una pregunta de nivel Adecuado.',
+         D:'Trampa (relativismo): el SIMCE (y la buena lectura) exige interpretaciones DEFENDIBLES con el texto, no cualquier lectura.'},
+    cita:'"tráeme el mundo que yo no vi" (v.18): la que se queda convierte el viaje ajeno en regalo propio.'},
+   {id:'q16',hab:'R',texto:'desafio',enun:'⭐ ¿Qué gana el lector al leer los DOS poemas juntos, que no obtendría leyendo solo uno?',ops:[
+     {l:'A',t:'La certeza de cuál de las dos experiencias es la verdadera y cuál está equivocada.'},
+     {l:'B',t:'Ver la separación desde ambos lados: partir y quedarse como caras de lo mismo.'},
+     {l:'C',t:'El desenlace de la historia: saber si la joven regresó finalmente al pueblo en verano.'},
+     {l:'D',t:'La comprobación de que ambos poemas usan los mismos recursos con idéntico propósito.'}],
+    correcta:'B',
+    why:{A:'Trampa (falsa competencia): los poemas no compiten por la verdad; se complementan. Ninguna voz "está equivocada".',
+         B:'Correcta. El montaje crea un sentido NUEVO: la separación vista desde ambos lados, con ecos cruzados (andén, niebla, cerros). Evaluar qué aporta la estructura = Reflexionar sobre el sentido global.',
+         C:'Trampa (invención): el regreso queda abierto; ningún poema cuenta el desenlace.',
+         D:'Trampa (absoluto): comparten ecos, pero difieren (pregunta retórica y anáfora "tráeme" solo en el 2; anáfora "dejo" solo en el 1).'},
+    cita:'Leer textos que dialogan entre sí es exactamente lo que la Forma P hace con sus textos pareados.'}
+  ];
+
+  const HABNAME={L:'Localizar',I:'Interpretar',R:'Reflexionar'};
+  const HABCLS={L:'sk-l',I:'sk-i',R:'sk-r'};
+  let answers={}, warmupAnswers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null;
+
+  function setStatus(t){document.getElementById('saveStatus').textContent=t;}
+  function showToast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+
+  const WARMUP=[
+   {frase:'«¡Otra vez lunes! Qué maravilla, dijo nadie nunca.»',ops:['Irónico','Solemne','Esperanzado'],ok:0,why:'Dice lo contrario de lo que siente y remata con "dijo nadie nunca": ironía pura.'},
+   {frase:'«Todavía guardo la entrada de ese concierto en mi billetera.»',ops:['Rabioso','Nostálgico','Indiferente'],ok:1,why:'Guardar un objeto del pasado por su valor emocional = nostalgia.'},
+   {frase:'«Mañana será distinto. Mañana empiezo de nuevo.»',ops:['Derrotado','Burlesco','Esperanzado'],ok:2,why:'La repetición de "mañana" y "empiezo de nuevo" proyectan confianza en el futuro.'},
+   {frase:'«Hagan lo que quieran. Da igual. Siempre da igual.»',ops:['Resignado','Entusiasta','Cariñoso'],ok:0,why:'"Da igual… siempre da igual": rendición y desgano; eso es resignación.'}
+  ];
+  function renderWarmup(){
+    const z=document.getElementById('warmupZone');
+    WARMUP.forEach((w,i)=>{
+      const d=document.createElement('div');d.className='q';
+      d.innerHTML=`<div class="enun">${w.frase}</div><div class="opts" style="grid-template-columns:repeat(3,1fr);">${w.ops.map((o,j)=>`<button type="button" class="opt" data-w="${i}" data-j="${j}" style="justify-content:center;"><span>${o}</span></button>`).join('')}</div><div class="retro" id="wretro-${i}"></div>`;
+      z.appendChild(d);
+    });
+    document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+      const i=+b.dataset.w,j=+b.dataset.j;
+      warmupAnswers[i]=j;
+      document.querySelectorAll(`[data-w="${i}"]`).forEach(x=>{x.classList.remove('selected','correct','wrong');});
+      b.classList.add('selected');
+      if(Object.keys(warmupAnswers).length===WARMUP.length)revealWarmupCorrections();
+      else{const r=document.getElementById('wretro-'+i);r.className='retro';r.innerHTML='';}
+    }));
+  }
+  function revealWarmupCorrections(){
+    WARMUP.forEach((w,i)=>{
+      const j=warmupAnswers[i];if(j===undefined)return;
+      document.querySelectorAll(`[data-w="${i}"]`).forEach(x=>{
+        x.classList.remove('correct','wrong');
+        if(+x.dataset.j===w.ok)x.classList.add('correct');
+        else if(+x.dataset.j===j)x.classList.add('wrong');
+      });
+      const r=document.getElementById('wretro-'+i);
+      r.className='retro show '+(j===w.ok?'ok':'bad');
+      r.innerHTML=(j===w.ok?'✅ ':'❌ Era <b>'+w.ops[w.ok]+'</b>. ')+w.why;
+    });
+  }
+
+  function render(){
+    const zones={poema:document.getElementById('quizPoema'),poema2:document.getElementById('quizPoema2'),infografía:document.getElementById('quizInfo'),desafio:document.getElementById('quizDesafio')};
+    QUESTIONS.forEach((q,idx)=>{
+      const d=document.createElement('div');d.className='q';d.id='card-'+q.id;
+      d.innerHTML=`<span class="hab ${HABCLS[q.hab]}">${HABNAME[q.hab]}</span><div class="enun">${idx+1}. ${q.enun}</div>
+        <div class="opts">${q.ops.map(o=>`<button type="button" class="opt" data-q="${q.id}" data-l="${o.l}"><span class="letra">${o.l})</span><span>${o.t}</span></button>`).join('')}</div>
+        <div class="retro" id="retro-${q.id}"></div>`;
+      zones[q.texto].appendChild(d);
+      d.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>pick(b.dataset.q,b.dataset.l)));
+    });
+  }
+
+  function pick(qid,letra){
+    if(!qid||isSubmitted)return;
+    answers[qid]=letra;
+    document.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(b=>{
+      b.classList.remove('selected','correct','wrong');
+      if(b.dataset.l===letra)b.classList.add('selected');
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      revealAllCorrections();
+    }else{
+      const r=document.getElementById('retro-'+qid);r.className='retro';r.innerHTML='';
+    }
+    updateDiag(); scheduleSave();
+  }
+
+  function revealAllCorrections(){
+    QUESTIONS.forEach(q=>{
+      const letra=answers[q.id];if(!letra)return;
+      const ok=letra===q.correcta;
+      document.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach(b=>{
+        b.classList.remove('correct','wrong');
+        if(b.dataset.l===q.correcta)b.classList.add('correct');
+        else if(b.dataset.l===letra)b.classList.add('wrong');
+      });
+      const r=document.getElementById('retro-'+q.id);
+      r.className='retro show '+(ok?'ok':'bad');
+      r.innerHTML=`<b>${ok?'✅ ¡Correcta!':'❌ La correcta era la '+q.correcta+')'}</b>
+        <div class="why">${['A','B','C','D'].map(L=>`<div><b>${L})</b> ${q.why[L]}</div>`).join('')}</div>
+        <div class="cita">📖 ${q.cita}</div>`;
+    });
+  }
+
+  function statsByHab(){
+    const s={L:{ok:0,n:0},I:{ok:0,n:0},R:{ok:0,n:0}};
+    QUESTIONS.forEach(q=>{const a=answers[q.id];if(!a)return;s[q.hab].n++;if(a===q.correcta)s[q.hab].ok++;});
+    return s;
+  }
+  function updateDiag(){
+    const s=statsByHab();
+    [['L','dL'],['I','dI'],['R','dR']].forEach(([h,id])=>{
+      const el=document.getElementById(id);
+      el.textContent=s[h].n? s[h].ok+'/'+s[h].n+' ('+Math.round(s[h].ok/s[h].n*100)+'%)':'—';
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      const pct=h=>s[h].n?s[h].ok/s[h].n:1;
+      const peor=['L','I','R'].sort((a,b)=>pct(a)-pct(b))[0];
+      document.getElementById('diagCopy').innerHTML='🎯 Tu foco de la semana: <b>'+HABNAME[peor]+'</b>. En las próximas clases practicaremos justo eso.';
+    }
+  }
+
+  function grade(){
+    let ok=0;QUESTIONS.forEach(q=>{if(answers[q.id]===q.correcta)ok++;});
+    const pct=Math.round(ok/QUESTIONS.length*100);
+    const nota=pct>=60?Math.round((4+3*(pct-60)/40)*10)/10:Math.round((1+3*pct/60)*10)/10;
+    return {ok,pct,nota};
+  }
+  function cleanAnswers(){
+    const clean={};
+    Object.keys(answers).forEach(k=>{
+      if(k&&k!=='undefined'&&answers[k]!==undefined&&QUESTIONS.some(q=>q.id===k))clean[k]=answers[k];
+    });
+    return clean;
+  }
+  function payload(completed){
+    return {answers:cleanAnswers(),desarrollo:(document.getElementById('desarrollo').value||'').trim(),desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+      completada:!!completed,nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+      last_save:Date.now()};
+  }
+  function localKey(){return currentUID?('draft_'+SESSION_ID+'_'+currentUID):null;}
+  function localBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.setItem(k,JSON.stringify(payload(false)));}catch(e){}
+  }
+  function clearLocalBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.removeItem(k);}catch(e){}
+  }
+  async function saveDraft(retry){
+    localBackup();
+    if(IS_LOCAL||!currentUID||isSubmitted)return;
+    try{
+      await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+      setStatus('✓ Avance guardado.');
+    }catch(e){
+      console.error(e);
+      if(!retry){setTimeout(()=>saveDraft(true),4000);return;}
+      setStatus('⚠️ Sin conexión: tu avance queda guardado en este dispositivo y se sube apenas vuelva internet.');
+      showToast('⚠️ No hay conexión. No cierres esta pestaña: tu avance quedó guardado en este dispositivo y se sube solo apenas vuelva internet.');
+      scheduleResync();
+    }
+  }
+  function scheduleSave(){localBackup();setStatus('Guardando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),1500);}
+
+  let resyncTimer=null;
+  function scheduleResync(){
+    clearTimeout(resyncTimer);
+    resyncTimer=setTimeout(async()=>{
+      if(IS_LOCAL||!currentUID||isSubmitted)return;
+      try{
+        await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+        setStatus('✓ Avance guardado (recuperado tras la caída de conexión).');
+      }catch(e){console.error(e);scheduleResync();}
+    },8000);
+  }
+  window.addEventListener('online',()=>{if(currentUID&&!isSubmitted)saveDraft(false);});
+
+  async function submitGuide(){
+    if(IS_LOCAL){showToast('Vista previa local.');return;}
+    if(!currentUID||isSubmitted)return;
+    const respondidas=Object.keys(answers).length;
+    const msg=respondidas<QUESTIONS.length
+      ? '¿Entregar la clase con '+respondidas+' de '+QUESTIONS.length+' preguntas respondidas? Tu resultado quedará registrado.'
+      : '¿Entregar la clase? Tu resultado quedará registrado.';
+    if(!confirm(msg))return;
+    document.getElementById('submitBtn').disabled=true;
+    revealAllCorrections();
+    const g=grade();const now=Date.now();const s=statsByHab();
+    const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
+    try{
+      const data=payload(true);data.submitted_at=now;
+      await Promise.all([
+        db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data),
+        db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
+          puntaje:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
+          por_habilidad:{L:s.L,I:s.I,R:s.R},
+          desarrollo:(document.getElementById('desarrollo').value||'').trim(),
+          desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+          nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+          submitted_at:now,timestamp:now})
+      ]);
+      if(studentData&&studentData.curso){
+        try{await db.ref(BASE+'/ranking/'+SESSION_ID+'/'+studentData.curso+'/'+currentUID).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct});}catch(e){}
+      }
+      isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      clearLocalBackup();
+      setStatus('✅ Entregada · '+g.ok+'/'+QUESTIONS.length+' ('+g.pct+'%)');showToast('✅ ¡Entregado!');
+    }catch(e){
+      console.error(e);
+      localBackup();
+      showToast('No se pudo entregar (sin conexión o error de red). Tu avance quedó guardado en este dispositivo: vuelve a intentar "Entregar" cuando tengas internet.');
+      document.getElementById('submitBtn').disabled=false;
+    }
+  }
+
+  function hydrate(saved){
+    if(!saved)return;
+    if(saved.answers){Object.entries(saved.answers).forEach(([qid,l])=>{
+      if(qid&&qid!=='undefined'&&l!==undefined&&QUESTIONS.some(q=>q.id===qid)&&!answers[qid])pick(qid,l);
+    });}
+    if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
+    if(typeof saved.desarrollo2==='string')document.getElementById('desarrollo2').value=saved.desarrollo2;
+    if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.getElementById('submitBtn').disabled=true;
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      setStatus('✅ Clase ya entregada.');}
+  }
+
+  renderWarmup();
+  render();
+  document.getElementById('submitBtn').addEventListener('click',submitGuide);
+  document.getElementById('desarrollo').addEventListener('input',scheduleSave);
+  document.getElementById('desarrollo2').addEventListener('input',scheduleSave);
+  document.getElementById('btnModelo2').addEventListener('click',()=>{
+    const t=(document.getElementById('desarrollo2').value||'').trim();
+    if(t.split(/s+/).length<15){showToast('Primero escribe tu comparación (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox2').classList.add('show');
+  });
+  document.getElementById('btnModelo').addEventListener('click',()=>{
+    const txt=(document.getElementById('desarrollo').value||'').trim();
+    if(txt.split(/\s+/).length<15){showToast('Primero escribe tu respuesta (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox').classList.add('show');
+  });
+
+  if(!IS_LOCAL){
+    auth.onAuthStateChanged(async user=>{
+      if(!user){window.location.href=SHARED_LOGIN_URL;return;}
+      currentUID=user.uid;
+      try{
+        const [stuSnap,savedSnap]=await Promise.all([
+          db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
+          db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value')
+        ]);
+        studentData=stuSnap.val();
+        if(!studentData){auth.signOut();return;}
+        const remote=savedSnap.val();
+        let local=null;
+        try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
+        const useLocal=local && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
+        hydrate(useLocal?local:remote);
+        if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
+        if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
+      }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}
+    });
+  }else{setStatus('Vista previa local.');}
+</script>
+</body>
+</html>

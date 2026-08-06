@@ -64,6 +64,30 @@ Se actualizaron en el mismo commit las tres piezas que dependen del total: la cl
 
 Commit `1e109cea`, desplegado y verificado en vivo. Las otras nueve rutas siguen respondiendo 200.
 
+### Quinta lectura de la Guía 16: gráfico de dispersión con cálculo
+
+Segunda ampliación del mismo día, a pedido de Francisco: un texto más, con dispersión, muestra sobre 2.000 estudiantes y preguntas que obliguen a calcular.
+
+La Lectura 5 cruza **horas de estudio semanal contra puntaje promedio del ensayo**. Cada punto es un curso. La muestra es de **2.220 estudiantes en 43 cursos**. Dos líneas de referencia, una vertical en 6 horas y otra horizontal en 700 puntos, parten el gráfico en cuatro cuadrantes, y una tabla entrega los estudiantes y los cursos de cada uno. Está dibujada en SVG dentro de la página, sin archivo de imagen, con `title` y `desc` para lectores de pantalla más su transcripción completa.
+
+Las cinco preguntas no se responden mirando: hay que operar.
+
+| Pregunta | Operación | Resultado |
+|---|---|---|
+| 21 | Suma de dos cuadrantes | 735 + 245 = 980 |
+| 22 | Porcentaje sobre el total | 812 / 2.220 = 36,6 % |
+| 23 | División exacta entre grupos | 735 / 245 = 3, un tercio |
+| 24 | Fracción más suma proyectada | 428 / 4 = 107, luego 980 + 107 = 1.087 |
+| 25 | Juicio sobre la evidencia | correlación no es causalidad |
+
+Los distractores son errores de procedimiento reales, no números al azar. En la 21, la alternativa C suma los cuadrantes I y IV, que es lo que pasa cuando se cruzan los ejes. En la 22, la C calcula sobre los 43 cursos en vez de sobre los 2.220 estudiantes, que es el error más caro de este gráfico y por eso la caja ATENCIÓN lo modela explícitamente.
+
+Se verificó por script que los 43 puntos dibujados en el SVG caen en los cuadrantes que declara la tabla: 15, 5, 15 y 8. Gráfico y tabla no pueden contradecirse.
+
+La guía quedó en **25 reactivos**, con 8 de nivel 3 contra los 4 que tenía. Claves A:6 B:7 C:6 D:6, dentro del margen que exige el auditor.
+
+Commit `3de7fd96`, desplegado y verificado. Las lecturas 1 a 4 y sus 20 preguntas quedaron intactas.
+
 ### Commits del 5 y 6 de agosto
 
 Todos en `main`, desplegados y verificados en vivo.

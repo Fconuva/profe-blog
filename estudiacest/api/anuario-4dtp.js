@@ -371,7 +371,10 @@ async function handleRegisterFile(req, res) {
   let replaced = null;
   const transaction = await ref.transaction(current => {
     replaced = null;
-    const record = studentRecord(student, current);
+    // RTDB can invoke the transaction once with an empty local cache before
+    // retrying against the server. Reuse the reservation we just validated so
+    // that this first pass does not abort a legitimate upload.
+    const record = studentRecord(student, current || before.val());
     const activeReservation = record.uploadReservations[fileId];
     if (!activeReservation || activeReservation.storagePath !== storagePath) return;
     if (fileRecord.category === 'interview_audio') {

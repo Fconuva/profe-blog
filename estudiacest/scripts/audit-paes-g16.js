@@ -25,7 +25,7 @@ if (!failures.length) {
   questions = sandbox.questions;
 }
 
-assert(questions.length === 20, `Se esperaban 20 reactivos y se encontraron ${questions.length}.`);
+assert(questions.length === 25, `Se esperaban 25 reactivos y se encontraron ${questions.length}.`);
 const keys = { A:0, B:0, C:0, D:0 };
 const skills = { LOCALIZAR:0, INTERPRETAR:0, EVALUAR:0 };
 const levels = { 1:0, 2:0, 3:0 };
@@ -48,8 +48,8 @@ questions.forEach((question, index) => {
 });
 
 assert(Math.max(...Object.values(keys)) - Math.min(...Object.values(keys)) <= 1, `Distribucion de claves desequilibrada: ${JSON.stringify(keys)}.`);
-assert(JSON.stringify(skills) === JSON.stringify({ LOCALIZAR:4, INTERPRETAR:5, EVALUAR:11 }), `Cobertura de habilidades inesperada: ${JSON.stringify(skills)}.`);
-assert(JSON.stringify(levels) === JSON.stringify({ 1:4, 2:12, 3:4 }), `Distribucion de dificultad inesperada: ${JSON.stringify(levels)}.`);
+assert(JSON.stringify(skills) === JSON.stringify({ LOCALIZAR:5, INTERPRETAR:7, EVALUAR:13 }), `Cobertura de habilidades inesperada: ${JSON.stringify(skills)}.`);
+assert(JSON.stringify(levels) === JSON.stringify({ 1:4, 2:13, 3:8 }), `Distribucion de dificultad inesperada: ${JSON.stringify(levels)}.`);
 for (let index = 2; index < questions.length; index++) {
   assert(!(questions[index].correct === questions[index - 1].correct && questions[index].correct === questions[index - 2].correct), `Hay tres claves consecutivas iguales en el reactivo ${index + 1}.`);
 }

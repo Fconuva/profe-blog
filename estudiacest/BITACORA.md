@@ -45,6 +45,25 @@ Francisco vinculó el plan Blaze y creó el bucket. Las reglas de `storage.rules
 
 El límite es de **100 MB por estudiante**, unos 2,9 GB para el curso completo. Ojo: en `api/anuario-4dtp.js` las constantes `MAX_FILE_SIZE` y `MAX_STUDENT_STORAGE` valen las dos 100 MB, así que **un solo archivo puede consumir la carpeta entera** de un estudiante. Está pendiente decidir si eso es lo que se quiere.
 
+### Ampliación de la Guía 16 de PAES (tarde del 6-ago)
+
+La guía estaba demasiado breve. Se agregó una **cuarta lectura** con cinco preguntas nuevas, unos 20 minutos más de trabajo. Nada de lo anterior se modificó: las tres lecturas originales y sus 15 preguntas quedaron intactas.
+
+La Lectura 4 es un **gráfico de barras junto a una tabla** sobre cómo llegan al liceo los estudiantes de 3° y 4° medio. Es el cuarto tipo de texto discontinuo que faltaba y se conecta con el instructivo de la TNE de la Lectura 3. Está construida en HTML y CSS dentro de la propia página, sin archivo de imagen nuevo, así que es accesible, responsiva y no agrega peso al deploy. Tiene su transcripción accesible y su caja ATENCIÓN, igual que las otras tres.
+
+Las cinco preguntas nuevas mantienen los invariantes del auditor: enunciado interrogativo, cuatro alternativas de extensión pareja, sin distractores globales, retroalimentación que nombra la clave y sin tres claves iguales seguidas. La guía quedó en **20 reactivos** con claves perfectamente balanceadas, cinco de cada letra.
+
+| Antes | Después |
+|---|---|
+| 15 reactivos | 20 reactivos |
+| Claves A:4 B:3 C:4 D:4 | Claves A:5 B:5 C:5 D:5 |
+| LOCALIZAR 3, INTERPRETAR 3, EVALUAR 9 | LOCALIZAR 4, INTERPRETAR 5, EVALUAR 11 |
+| Niveles 1:3, 2:9, 3:3 | Niveles 1:4, 2:12, 3:4 |
+
+Se actualizaron en el mismo commit las tres piezas que dependen del total: la clave del servidor `G16_KEY` en `api/paes.js`, las expectativas de `scripts/audit-paes-g16.js` y los contadores visibles de la página. El auditor no se debilitó, se movió al nuevo estado esperado y conserva todas sus reglas de calidad.
+
+Commit `1e109cea`, desplegado y verificado en vivo. Las otras nueve rutas siguen respondiendo 200.
+
 ### Commits del 5 y 6 de agosto
 
 Todos en `main`, desplegados y verificados en vivo.

@@ -1,9 +1,10 @@
 # CLAUDE.md — profe-blog (profefranciscopancho.com)
 
 ## ⚠️ Carpeta de trabajo (CRÍTICO — leer primero)
-- Trabaja **SIEMPRE** en este clon local: `C:\Users\franc\profe-blog-work`.
-- **NO** uses la copia dentro de OneDrive. OneDrive sincroniza la carpeta `.git` y la **CORROMPE**: provoca `fatal: mmap failed: Invalid argument`, commits fantasma y divergencias entre PCs (ya causó pérdida de trabajo). Si te invocan desde la carpeta de OneDrive, **detente** y haz el trabajo en `C:\Users\franc\profe-blog-work`.
-- **Antes de cualquier cambio: `git pull`.** Este repo mezcla VARIOS productos (sitio de portafolios + plataforma de estudio ECEP `/evaluaciones/` + estudiacest). Desplegar desde un clon desactualizado **ARRASTRA/regresa** lo de otro producto. Pull primero, commitea SOLO tus archivos, revisa el `git diff` antes de pushear.
+- **Clon canónico: `C:\dev\profe-blog`.** Ahí está el trabajo vigente y es el que exigen `AGENTS.md`, `.github/workflows/README.md` y `.github/skills/estudiacest-platform/SKILL.md`.
+- **Existe un SEGUNDO clon, `C:\Users\franc\profe-blog-work`, y suele estar atrasado.** El 6-ago-2026 estaba dos días detrás y su carpeta `estudiacest/` no tenía ni La Odisea ni el Anuario 4°D TP. Si lo usas, `git pull` primero. **Nunca despliegues estudiacest desde ahí**: publicar un árbol viejo borra secciones enteras de producción (ya pasó, commit `e544254e` del 3-ago).
+- **NO** uses la copia dentro de OneDrive. OneDrive sincroniza la carpeta `.git` y la **CORROMPE**: provoca `fatal: mmap failed: Invalid argument`, commits fantasma y divergencias entre PCs (ya causó pérdida de trabajo). Si te invocan desde la carpeta de OneDrive, **detente** y haz el trabajo en `C:\dev\profe-blog`.
+- **Antes de cualquier cambio: `git fetch origin main` y `git pull`.** Este repo mezcla VARIOS productos (sitio de portafolios + plataforma de estudio ECEP `/evaluaciones/` + estudiacest). Desplegar desde un clon desactualizado **ARRASTRA/regresa** lo de otro producto. Pull primero, commitea SOLO tus archivos (nunca `git add .`), revisa el `git diff` antes de pushear.
 - Commitea con identidad: `git config user.email fconuva@gmail.com`.
 
 ## Deploy

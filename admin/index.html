@@ -2278,7 +2278,15 @@
                     paid++; paidCount++; abonoN++; abonoMonto += abono;
                     if (saldoAb > 0) {
                         pendingRevenue += saldoAb; pendingRevenueCount++;
+                        // La fecha del abono tambien vive en el arreglo `abonos`, y para ~30 docentes
+                        // es el UNICO lugar donde esta: sin esto la columna decia "¿?" y no se podia
+                        // saber quien lleva mas esperando, que es justo para lo que sirve esta tabla.
                         var fAb = p.paidAt || p.paymentConfirmedAt || '';
+                        if (!fAb && Array.isArray(p.abonos) && p.abonos.length) {
+                            var _fechas = p.abonos.map(function (a) { return (a && a.fecha) || ''; })
+                                                  .filter(Boolean).sort();
+                            if (_fechas.length) fAb = _fechas[0];
+                        }
                         var dias = fAb ? Math.max(0, Math.round((HOY - new Date(fAb).getTime()) / 86400000)) : null;
                         // ultimoCobro lo escribe herramientas/marcar_cobro_enviado.py leyendo nuestro
                         // registro de envios. Sin esta columna el panel muestra quien debe pero no si ya
@@ -2312,21 +2320,36 @@
                 if (p.seguimientoCobro && p.seguimientoCobro.desde) {
                     var _sg = p.seguimientoCobro;
                     var _dS = Math.max(0, Math.round((HOY - new Date(String(_sg.desde).replace(' ', 'T')).getTime()) / 86400000));
-                    seguimientoList.push({
-                        uid: uid, nombre: nombreDe(uid),
-                        desde: String(_sg.desde).slice(0, 10),
-                        dias: isNaN(_dS) ? (_sg.dias || 0) : _dS,
-                        saldo: _sg.saldo || 0, estado: _sg.estado || '', dijo: _sg.dijo || ''
-                    });
+                    // El saldo guardado en `seguimientoCobro` es una FOTO del dia del cobro y nadie la
+                    // actualiza cuando la persona paga. Asi Carolina Walesca aparecia debiendo $99.990
+                    // el mismo dia que completo su pago. Se recalcula en vivo y quien ya no debe sale
+                    // de la lista: seguir mostrandolo hace que se le cobre a alguien que no debe nada.
+                    var _saldoVivo = Math.max(0, price - montoPagadoReal(p));
+                    if (p.paymentStatus === 'pagado' || p.paymentStatus === 'gratis') _saldoVivo = 0;
+                    if (_saldoVivo > 0) {
+                        seguimientoList.push({
+                            uid: uid, nombre: nombreDe(uid),
+                            desde: String(_sg.desde).slice(0, 10),
+                            dias: isNaN(_dS) ? (_sg.dias || 0) : _dS,
+                            saldo: _saldoVivo, estado: _sg.estado || '', dijo: _sg.dijo || ''
+                        });
+                    }
                 }
                 if (p.alertaCobro && p.alertaCobro.desde) {
                     var _dA = Math.max(0, Math.round((HOY - new Date(String(p.alertaCobro.desde).replace(' ', 'T')).getTime()) / 86400000));
-                    alertaList.push({
-                        uid: uid, nombre: nombreDe(uid),
-                        desde: String(p.alertaCobro.desde).slice(0, 10),
-                        dias: isNaN(_dA) ? (p.alertaCobro.dias || 0) : _dA,
-                        saldo: p.alertaCobro.saldo || 0
-                    });
+                    // Mismo caso que seguimiento: el saldo guardado es una foto. Y aca importa mas,
+                    // porque esta lista es la de "no contesto nada": alguien que pago y no dijo nada
+                    // no esta en silencio incomodo, esta pagado.
+                    var _saldoAlerta = Math.max(0, price - montoPagadoReal(p));
+                    if (p.paymentStatus === 'pagado' || p.paymentStatus === 'gratis') _saldoAlerta = 0;
+                    if (_saldoAlerta > 0) {
+                        alertaList.push({
+                            uid: uid, nombre: nombreDe(uid),
+                            desde: String(p.alertaCobro.desde).slice(0, 10),
+                            dias: isNaN(_dA) ? (p.alertaCobro.dias || 0) : _dA,
+                            saldo: _saldoAlerta
+                        });
+                    }
                 }
                 if (p.paymentStatus === 'pendiente_verificacion') {
                     pendingPay++;
@@ -2419,7 +2442,7 @@
                         h += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
                              '<td class="py-1.5 pr-2 ' + (alerta ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
-                             '<td class="py-1.5 pr-2 text-xs " + (x.diasCobro !== null && x.diasCobro >= 5 ? "text-rose-600 font-semibold" : "text-gray-500") + "">' +
+                             '<td class="py-1.5 pr-2 text-xs ' + (x.diasCobro !== null && x.diasCobro >= 5 ? 'text-rose-600 font-semibold' : 'text-gray-500') + '">' +
                              (x.cobradoEl ? escapeHtml(x.cobradoEl) + (x.diasCobro !== null ? ' · hace ' + x.diasCobro + 'd' : '') : '<span class="text-gray-300">todavía no</span>') + '</td>' +
                              '<td class="py-1.5 text-right tabular-nums font-semibold text-amber-700">' + formatCLP(x.saldo) + '</td></tr>';
                     });

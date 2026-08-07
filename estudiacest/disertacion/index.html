@@ -31,19 +31,10 @@
   </style>
 </head>
 <body>
-  <section class="login" id="loginView">
-    <form class="login-card" id="loginForm">
-      <h1>Rúbrica de disertación</h1>
-      <p>Panel docente · 3° ATP</p>
-      <div class="field"><label for="email">Correo administrativo</label><input id="email" type="email" autocomplete="username" required></div>
-      <div class="field"><label for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" required></div>
-      <button class="btn primary" style="width:100%" id="loginBtn">Ingresar</button>
-      <p id="loginError" style="color:var(--red);margin:12px 0 0"></p>
-    </form>
-  </section>
+  <p id="loginError" class="hidden" style="color:var(--red);padding:14px 18px;margin:0"></p>
 
-  <div id="app" class="hidden">
-    <header class="top"><div class="brand"><strong>Estudia CEST · Evaluación docente</strong><span id="adminEmail"></span></div><button class="btn ghost" id="logoutBtn">Cerrar sesión</button></header>
+  <div id="app">
+    <header class="top"><div class="brand"><strong>Estudia CEST · Evaluación docente</strong><span id="adminEmail"></span></div></header>
     <main class="wrap">
       <section class="hero"><div><h1>Disertación técnica · 3° ATP</h1><p>Rúbrica dinámica de 50 puntos · exigencia 60% · guardado en Firebase</p></div><div class="status" id="saveStatus">Sin cambios</div></section>
       <section class="toolbar">
@@ -85,11 +76,8 @@
     </main>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script>
-    firebase.initializeApp({apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",projectId:"estudiacest"});
-    const auth=firebase.auth(), API='/api/disertacion';
+    const API='/api/disertacion';
     const LIMITS={dominio:14,organizacion:7,visual:8,oral:8,presentacion:5,defensa:8};
     const LABELS={dominio:'Dominio técnico, precisión y evidencia',organizacion:'Organización y síntesis',visual:'Apoyo visual',oral:'Fluidez y comunicación oral',presentacion:'Presentación personal y postura',defensa:'Participación y defensa'};
     let groups={},currentId='',saveTimer=null,dirty=false;
@@ -97,7 +85,7 @@
     const esc=value=>String(value??'').replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
     function grade(points){if(points===null)return '—';const p=Math.max(0,Math.min(50,points));return (p<=30?1+3*p/30:4+3*(p-30)/20).toFixed(1).replace('.',',');}
     function value(input){return input.value===''?null:Math.max(0,Math.min(Number(input.max),Math.round(Number(input.value)||0)));}
-    async function request(options={}){const token=await auth.currentUser.getIdToken();const response=await fetch(API,{...options,headers:{'Content-Type':'application/json','Authorization':'Bearer '+token,...options.headers}});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Error de conexión.');return data}
+    async function request(options={}){const response=await fetch(API,{...options,headers:{'Content-Type':'application/json',...options.headers}});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Error de conexión.');return data}
     async function load(){setStatus('Cargando…','saving');const data=await request();groups=data.groups||{};renderSelect();if(currentId&&groups[currentId])render();setStatus('Datos actualizados','saved')}
     function renderSelect(){const selected=currentId;$('groupSelect').innerHTML='<option value="">Selecciona un grupo</option>'+Object.entries(groups).map(([id,g])=>`<option value="${id}">Grupo ${id} · ${esc(g.topic)}</option>`).join('');$('groupSelect').value=selected}
     function render(){
@@ -119,12 +107,12 @@
     function changed(){dirty=true;setStatus('Cambios pendientes','saving');updateSummary();clearTimeout(saveTimer);saveTimer=setTimeout(save,1200)}
     async function save(){if(!currentId||!dirty)return;clearTimeout(saveTimer);setStatus('Guardando…','saving');try{await request({method:'POST',body:JSON.stringify({groupId:Number(currentId),group:groups[currentId]})});dirty=false;setStatus('Guardado en Firebase','saved')}catch(e){setStatus(e.message,'error')}}
     function setStatus(text,type=''){$('saveStatus').textContent=text;$('saveStatus').className='status '+type}
-    $('loginForm').addEventListener('submit',async e=>{e.preventDefault();$('loginError').textContent='';$('loginBtn').disabled=true;try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('password').value)}catch(err){$('loginError').textContent='No fue posible ingresar. Revisa las credenciales.'}finally{$('loginBtn').disabled=false}});
-    auth.onAuthStateChanged(async user=>{if(!user){$('loginView').classList.remove('hidden');$('app').classList.add('hidden');return}try{$('adminEmail').textContent=user.email||'Docente';await load();$('loginView').classList.add('hidden');$('app').classList.remove('hidden')}catch(e){$('loginError').textContent=e.message;await auth.signOut()}});
+    // Acceso abierto: la página carga directo, sin credenciales.
+    (async()=>{try{$('adminEmail').textContent='Acceso abierto';await load()}catch(e){$('loginError').textContent=e.message;$('loginError').classList.remove('hidden')}})();
     $('groupSelect').addEventListener('change',async e=>{if(dirty)await save();currentId=e.target.value;currentId?render():$('workspace').classList.add('hidden')});
     $('groupNotes').addEventListener('input',e=>{groups[currentId].notes=e.target.value;changed()});
     $('addForm').addEventListener('submit',e=>{e.preventDefault();const name=$('newName').value.trim();if(!name)return;groups[currentId].members.push({id:'custom-'+Date.now(),name,present:true,added:true,scores:{oral:null,presentacion:null,defensa:null},notes:''});$('newName').value='';changed();render()});
-    $('saveBtn').addEventListener('click',()=>{dirty=true;save()});$('reloadBtn').addEventListener('click',load);$('logoutBtn').addEventListener('click',async()=>{if(dirty)await save();await auth.signOut()});window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}})
+    $('saveBtn').addEventListener('click',()=>{dirty=true;save()});$('reloadBtn').addEventListener('click',load);window.addEventListener('beforeunload',e=>{if(dirty){e.preventDefault();e.returnValue=''}})
   </script>
 </body>
 </html>

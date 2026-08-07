@@ -48,13 +48,18 @@ function defaults() {
   }]));
 }
 
-async function verifyAdmin(req) {
+// Acceso abierto por decisión del docente (7-ago-2026): /disertacion no pide credenciales.
+// Si alguna vez hay que volver a cerrarlo, se restituye la verificación de token de Firebase
+// más la comprobación de `plataforma_estudiantes/admins/{uid}`, y se repone el formulario de
+// ingreso en `disertacion/index.html`.
+async function identify(req) {
   const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
-  if (!token) throw Object.assign(new Error('Sesión administrativa requerida.'), { status: 401 });
-  const decoded = await auth.verifyIdToken(token);
-  const snap = await db.ref(`plataforma_estudiantes/admins/${decoded.uid}`).once('value');
-  if (!snap.exists()) throw Object.assign(new Error('No autorizado.'), { status: 403 });
-  return decoded;
+  if (!token) return null;
+  try {
+    return await auth.verifyIdToken(token);
+  } catch (error) {
+    return null;
+  }
 }
 
 function text(value, max = 1000) {
@@ -107,7 +112,7 @@ module.exports = async function handler(req, res) {
   cors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
   try {
-    const decoded = await verifyAdmin(req);
+    const decoded = await identify(req);
     if (req.method === 'GET') {
       const snap = await db.ref(`${BASE}/groups`).once('value');
       return res.status(200).json({ groups: { ...defaults(), ...(snap.val() || {}) } });
@@ -117,7 +122,7 @@ module.exports = async function handler(req, res) {
       if (!Number.isInteger(id) || id < 1 || id > 8) return res.status(400).json({ error: 'Grupo inválido.' });
       const group = sanitizeGroup(req.body?.group || {}, id);
       const savedAt = Date.now();
-      await db.ref(`${BASE}/groups/${id}`).set({ ...group, savedAt, savedBy: decoded.uid });
+      await db.ref(`${BASE}/groups/${id}`).set({ ...group, savedAt, savedBy: (decoded && decoded.uid) || 'acceso-abierto' });
       return res.status(200).json({ success: true, group, savedAt });
     }
     return res.status(405).json({ error: 'Método no permitido.' });

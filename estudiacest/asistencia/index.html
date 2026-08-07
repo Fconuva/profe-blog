@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Pasar lista · Salida NM3</title>
+<meta name="theme-color" content="#1d4f91">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#142033;--muted:#5f7087;--line:#dce4ee;--blue:#1d4f91;--verde:#0f766e;--verde-bg:#e7f7f4;--rojo:#b91c1c;}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{font-family:'Inter',system-ui,sans-serif;color:var(--ink);background:#eef2f7;
+       padding-bottom:calc(96px + env(safe-area-inset-bottom));}
+
+  header{position:sticky;top:0;z-index:20;background:var(--blue);color:#fff;
+         padding:calc(12px + env(safe-area-inset-top)) 16px 12px;box-shadow:0 4px 14px rgba(15,23,42,.18);}
+  header h1{margin:0;font-size:17px;font-weight:800;}
+  header .sub{font-size:12.6px;opacity:.86;margin-top:2px;}
+
+  .tabs{display:flex;gap:6px;margin-top:12px;}
+  .tab{flex:1;border:0;font:inherit;font-weight:700;font-size:14px;color:#fff;
+       background:rgba(255,255,255,.16);border-radius:10px;padding:10px 6px;cursor:pointer;line-height:1.2;}
+  .tab .n{display:block;font-size:11.4px;font-weight:600;opacity:.85;margin-top:2px;}
+  .tab[aria-selected="true"]{background:#fff;color:var(--blue);}
+
+  .resumen{display:flex;gap:8px;padding:12px 14px 4px;}
+  .kpi{flex:1;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 12px;text-align:center;}
+  .kpi .v{font-size:24px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums;}
+  .kpi .k{font-size:11.4px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);margin-top:1px;}
+  .kpi.ok .v{color:var(--verde);}
+  .kpi.falta .v{color:var(--rojo);}
+
+  .barra{display:flex;gap:8px;padding:10px 14px;align-items:center;}
+  .barra input{flex:1;font:inherit;font-size:16px;padding:11px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;}
+  .barra button{font:inherit;font-size:13.4px;font-weight:700;padding:11px 13px;border-radius:11px;
+                border:1px solid var(--blue);background:#fff;color:var(--blue);cursor:pointer;white-space:nowrap;}
+
+  ul{list-style:none;margin:0;padding:0 14px;}
+  li.alu{background:#fff;border:1px solid var(--line);border-radius:12px;margin-bottom:8px;
+         display:flex;align-items:center;gap:12px;padding:15px;cursor:pointer;user-select:none;}
+  li.alu .marca{flex:0 0 30px;width:30px;height:30px;border-radius:50%;border:2px solid #c3cfdd;
+                display:flex;align-items:center;justify-content:center;font-size:16px;color:transparent;font-weight:800;}
+  li.alu .nom{flex:1;font-size:15.4px;font-weight:600;line-height:1.3;}
+  li.alu.presente{background:var(--verde-bg);border-color:#8fd6c9;}
+  li.alu.presente .marca{background:var(--verde);border-color:var(--verde);color:#fff;}
+  li.alu.presente .nom{color:#0b4f47;}
+
+  .vacio{padding:26px 16px;text-align:center;color:var(--muted);font-size:14px;}
+
+  .pie{position:fixed;left:0;right:0;bottom:0;z-index:20;background:#fff;border-top:1px solid var(--line);
+       padding:10px 14px calc(10px + env(safe-area-inset-bottom));display:flex;gap:8px;align-items:center;
+       box-shadow:0 -6px 18px rgba(15,23,42,.10);}
+  .pie .estado{flex:1;font-size:12.6px;font-weight:600;color:var(--muted);line-height:1.3;}
+  .pie .estado.ok{color:var(--verde);}
+  .pie .estado.err{color:var(--rojo);}
+  .pie button{font:inherit;font-size:13.6px;font-weight:700;padding:12px 14px;border-radius:11px;cursor:pointer;border:1px solid var(--rojo);background:#fff;color:var(--rojo);}
+
+  dialog{border:0;border-radius:14px;padding:0;max-width:min(92vw,420px);width:100%;}
+  dialog::backdrop{background:rgba(15,23,42,.45);}
+  dialog .cab{padding:16px 18px 10px;border-bottom:1px solid var(--line);}
+  dialog h2{margin:0;font-size:16.5px;}
+  dialog .cuerpo{padding:14px 18px;max-height:52vh;overflow:auto;font-size:14.4px;}
+  dialog .cuerpo ol{margin:0 0 10px;padding-left:20px;}
+  dialog .cuerpo li{margin-bottom:5px;}
+  dialog .pie2{padding:12px 18px 16px;display:flex;justify-content:flex-end;}
+  dialog .pie2 button{font:inherit;font-weight:700;font-size:14px;padding:10px 18px;border-radius:10px;border:0;background:var(--blue);color:#fff;cursor:pointer;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Pasar lista · Salida NM3</h1>
+  <div class="sub" id="fecha">Cargando…</div>
+  <div class="tabs" id="tabs"></div>
+</header>
+
+<div class="resumen">
+  <div class="kpi ok"><div class="v" id="kPres">0</div><div class="k">Presentes</div></div>
+  <div class="kpi falta"><div class="v" id="kFalta">0</div><div class="k">Faltan</div></div>
+  <div class="kpi"><div class="v" id="kTotal">0</div><div class="k">Curso</div></div>
+</div>
+
+<div class="barra">
+  <input id="buscar" type="search" placeholder="Buscar apellido…" autocomplete="off" enterkeyhint="search">
+  <button type="button" id="btnTodos">Marcar curso</button>
+</div>
+
+<ul id="lista"></ul>
+<div class="vacio" id="vacio" hidden>Nadie coincide con esa búsqueda.</div>
+
+<div class="pie">
+  <div class="estado" id="estado">Toca un nombre para marcarlo presente.</div>
+  <button type="button" id="btnFaltan">Ver quién falta</button>
+</div>
+
+<dialog id="dlg">
+  <div class="cab"><h2 id="dlgTitulo">Faltan</h2></div>
+  <div class="cuerpo" id="dlgCuerpo"></div>
+  <div class="pie2"><button type="button" id="dlgCerrar">Cerrar</button></div>
+</dialog>
+
+<script>
+  const API = '/api/asistencia';
+  const $ = (id) => document.getElementById(id);
+
+  let roster = [], marcas = {}, fecha = '', curso = '3A', filtro = '';
+
+  const norm = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const presente = (id) => marcas[id] === true;
+  const delCurso = () => roster.filter((a) => a.curso === curso);
+  const rotulo = (c) => '3°' + c.slice(1);
+
+  function estado(txt, tipo = '') {
+    const el = $('estado');
+    el.textContent = txt;
+    el.className = 'estado ' + tipo;
+  }
+
+  function pintarTabs() {
+    $('tabs').innerHTML = ['3A', '3B', '3D'].map((c) => {
+      const t = roster.filter((a) => a.curso === c);
+      const p = t.filter((a) => presente(a.id)).length;
+      return '<button class="tab" role="tab" data-curso="' + c + '" aria-selected="' + (c === curso) + '">' +
+             rotulo(c) + '<span class="n">' + p + '/' + t.length + '</span></button>';
+    }).join('');
+  }
+
+  function pintarKpis() {
+    const l = delCurso(), p = l.filter((a) => presente(a.id)).length;
+    $('kPres').textContent = p;
+    $('kFalta').textContent = l.length - p;
+    $('kTotal').textContent = l.length;
+  }
+
+  function pintarLista() {
+    const q = norm(filtro.trim());
+    const items = delCurso().filter((a) => !q || norm(a.nombre).includes(q));
+    $('vacio').hidden = items.length > 0;
+    $('lista').innerHTML = items.map((a) =>
+      '<li class="alu ' + (presente(a.id) ? 'presente' : '') + '" data-id="' + a.id + '">' +
+      '<span class="marca">✓</span><span class="nom">' + a.nombre + '</span></li>').join('');
+  }
+
+  function pintar() { pintarTabs(); pintarKpis(); pintarLista(); }
+
+  async function cargar() {
+    try {
+      const r = await fetch(API);
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'error');
+      roster = d.roster || [];
+      marcas = d.marcas || {};
+      fecha = d.fecha;
+      const p = fecha.split('-');
+      $('fecha').textContent = p[2] + '-' + p[1] + '-' + p[0] + ' · ' + d.total + ' estudiantes en la nómina';
+      pintar();
+      estado('Toca un nombre para marcarlo presente.');
+    } catch (e) {
+      estado('No se pudo cargar la nómina. Revisa la conexión.', 'err');
+    }
+  }
+
+  async function alternar(id) {
+    const nuevo = !presente(id);
+    const previo = marcas[id];
+    marcas[id] = nuevo;
+    pintar();
+    estado(nuevo ? 'Marcado presente' : 'Desmarcado', 'ok');
+    try {
+      const r = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id, presente: nuevo, fecha: fecha })
+      });
+      if (!r.ok) throw new Error();
+    } catch (e) {
+      if (previo === undefined) delete marcas[id]; else marcas[id] = previo;
+      pintar();
+      estado('No se guardó, toca de nuevo.', 'err');
+    }
+  }
+
+  $('lista').addEventListener('click', (e) => {
+    const li = e.target.closest('li.alu');
+    if (li) alternar(li.dataset.id);
+  });
+
+  $('tabs').addEventListener('click', (e) => {
+    const b = e.target.closest('.tab');
+    if (!b) return;
+    curso = b.dataset.curso;
+    filtro = ''; $('buscar').value = '';
+    pintar();
+  });
+
+  $('buscar').addEventListener('input', (e) => { filtro = e.target.value; pintarLista(); });
+
+  $('btnTodos').addEventListener('click', async () => {
+    const l = delCurso();
+    if (!l.filter((a) => !presente(a.id)).length) return estado('Ese curso ya está completo.', 'ok');
+    if (!confirm('¿Marcar presentes a los ' + l.length + ' de ' + rotulo(curso) + '?')) return;
+    l.forEach((a) => { marcas[a.id] = true; });
+    pintar();
+    try {
+      const r = await fetch(API, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ curso: curso, presente: true, fecha: fecha })
+      });
+      if (!r.ok) throw new Error();
+      estado(rotulo(curso) + ' marcado completo.', 'ok');
+    } catch (e) {
+      estado('No se guardó el curso completo. Recarga.', 'err');
+    }
+  });
+
+  $('btnFaltan').addEventListener('click', () => {
+    const faltan = roster.filter((a) => !presente(a.id));
+    $('dlgTitulo').textContent = faltan.length ? 'Faltan ' + faltan.length : 'No falta nadie';
+    $('dlgCuerpo').innerHTML = faltan.length
+      ? ['3A', '3B', '3D'].map((c) => {
+          const f = faltan.filter((a) => a.curso === c);
+          return f.length
+            ? '<p><strong>' + rotulo(c) + ' · ' + f.length + '</strong></p><ol>' + f.map((a) => '<li>' + a.nombre + '</li>').join('') + '</ol>'
+            : '<p><strong>' + rotulo(c) + '</strong><br>completo</p>';
+        }).join('')
+      : '<p>Están todos marcados presentes. Pueden subir al bus.</p>';
+    $('dlg').showModal();
+  });
+  $('dlgCerrar').addEventListener('click', () => $('dlg').close());
+
+  cargar();
+</script>
+</body>
+</html>

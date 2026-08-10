@@ -2,6 +2,7 @@
   'use strict';
 
   const API = '/api/anuario-4dtp';
+  const API_TIMEOUT_MS = 20000;
   const MAX_FILE_SIZE = 100 * 1024 * 1024;
   const FIREBASE_CONFIG = { apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w', authDomain:'estudiacest.firebaseapp.com', databaseURL:'https://estudiacest-default-rtdb.firebaseio.com', projectId:'estudiacest', storageBucket:'estudiacest.firebasestorage.app', messagingSenderId:'999002169815', appId:'1:999002169815:web:51203237bc77c2e74deb92' };
   const kinds = ['Compañero 1', 'Compañero 2', 'Compañero 3', 'Docente 1', 'Docente 2'];
@@ -22,6 +23,7 @@
   let recordingSlot = 0;
   let recordingStartedAt = 0;
   let recordingTimer = null;
+  let loginPending = false;
 
   function cleanRut(value) { return String(value || '').replace(/[^0-9kK]/g, '').toUpperCase(); }
   function formatRut(value) { const clean=cleanRut(value);if(clean.length<2)return clean;return clean.slice(0,-1).replace(/\B(?=(\d{3})+(?!\d))/g,'.')+'-'+clean.slice(-1); }
@@ -30,12 +32,57 @@
   function formatDate(value) { return value ? new Intl.DateTimeFormat('es-CL',{dateStyle:'short',timeStyle:'short'}).format(new Date(value)) : '—'; }
   function setSave(message, status) { $('saveState').textContent=message;$('saveState').dataset.state=status||'';$('documentStatus').textContent=message; }
 
+  function friendlyError(error) {
+    const message = String(error && error.message || '');
+    const code = String(error && error.code || '');
+    if (!navigator.onLine || code === 'OFFLINE') return 'Sin conexión a internet. Revisa la red y vuelve a intentar.';
+    if (error && error.name === 'AbortError') return 'La conexión tardó demasiado. Vuelve a intentar.';
+    if (error instanceof TypeError || code === 'auth/network-request-failed' || /failed to fetch|network|load failed/i.test(message)) {
+      return 'No fue posible conectar con el anuario. Revisa la conexión y vuelve a intentar.';
+    }
+    return message || 'No se pudo completar la solicitud.';
+  }
+
+  function updateNetworkStatus() {
+    const error = $('loginError');
+    if (!navigator.onLine) {
+      if (!student) {
+        error.textContent = 'Sin conexión a internet. Revisa la red y vuelve a intentar.';
+        error.dataset.state = 'offline';
+      }
+      $('loginButton').disabled = true;
+      return;
+    }
+    $('loginButton').disabled = loginPending;
+    if (!student && error.dataset.state === 'offline') {
+      error.textContent = 'Conexión restablecida. Ya puedes ingresar.';
+      error.dataset.state = 'online';
+    }
+  }
+
   async function api(action, options, query) {
+    if (!navigator.onLine) {
+      const error = new Error('Sin conexión a internet.');
+      error.code = 'OFFLINE';
+      throw error;
+    }
     const params = new URLSearchParams({ action });
     Object.entries(query || {}).forEach(([key,value]) => params.set(key,value));
     const headers = { ...(options && options.headers || {}) };
     if (auth.currentUser) headers.Authorization = 'Bearer ' + await auth.currentUser.getIdToken();
-    const response = await fetch(API + '?' + params.toString(), { cache:'no-store', ...options, headers });
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+    let response;
+    try {
+      response = await fetch(API + '?' + params.toString(), { cache:'no-store', ...options, headers, signal:controller.signal });
+    } catch (error) {
+      const requestError = new Error(friendlyError(error));
+      requestError.code = error && error.code;
+      requestError.name = error && error.name || 'Error';
+      throw requestError;
+    } finally {
+      window.clearTimeout(timeout);
+    }
     const data = await response.json().catch(() => ({}));
     if (!response.ok) { const error=new Error(data.error||'No se pudo completar la solicitud.');error.status=response.status;throw error; }
     return data;
@@ -138,9 +185,12 @@
   }
 
   function showView(name){document.querySelectorAll('.app-view').forEach(view=>view.classList.add('hidden'));document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===name));$('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
-  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=error.message;}finally{$('loginButton').disabled=false;$('loginButton').textContent='Ingresar a mi carpeta';}}
-  async function logout(){window.clearTimeout(saveTimer);if(student)await saveNow().catch(()=>{});if(activeRecorder)activeRecorder.stop();await auth.signOut();student=null;state=null;$('workspace').classList.add('hidden');$('loginView').classList.remove('hidden');$('publicBar').classList.remove('hidden');$('rutInput').value='';window.scrollTo(0,0);}
+  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';$('loginError').dataset.state='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}if(!navigator.onLine){updateNetworkStatus();return;}loginPending=true;$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=friendlyError(error);$('loginError').dataset.state=navigator.onLine?'error':'offline';}finally{loginPending=false;$('loginButton').textContent='Ingresar a mi carpeta';updateNetworkStatus();}}
+  async function logout(){window.clearTimeout(saveTimer);if(student)await saveNow().catch(()=>{});if(activeRecorder)activeRecorder.stop();await auth.signOut();student=null;state=null;$('workspace').classList.add('hidden');$('loginView').classList.remove('hidden');$('publicBar').classList.remove('hidden');$('rutInput').value='';updateNetworkStatus();window.scrollTo(0,0);}
 
   $('loginForm').addEventListener('submit',login);$('rutInput').addEventListener('input',event=>{event.target.value=formatRut(event.target.value);});$('logoutButton').addEventListener('click',logout);$('saveNowButton').addEventListener('click',saveNow);$('submitActivityButton').addEventListener('click',submitActivity);$('generalUploadButton').addEventListener('click',()=>$('generalFileInput').click());$('generalFileInput').addEventListener('change',()=>{const file=$('generalFileInput').files&&$('generalFileInput').files[0];if(file)uploadFile(file,$('generalCategory').value,0);$('generalFileInput').value='';});$('closeUploadDialog').addEventListener('click',()=>$('uploadDialog').close());$('closeSuccessDialog').addEventListener('click',()=>$('successDialog').close());document.querySelectorAll('[data-view]').forEach(tab=>tab.addEventListener('click',()=>showView(tab.dataset.view)));document.querySelectorAll('[data-open-view]').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.openView)));
+  window.addEventListener('offline',updateNetworkStatus);
+  window.addEventListener('online',updateNetworkStatus);
+  updateNetworkStatus();
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&student){window.clearTimeout(saveTimer);saveNow();}});
 }());

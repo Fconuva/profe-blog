@@ -64,7 +64,34 @@
     $('saveState').dataset.state = state || '';
   }
 
-  function renderOptions() {
+  function eventSeed(rut) {
+    const value = cleanRut(rut) || 'ODISEA2026';
+    let hash = 2166136261;
+    for (let index = 0; index < value.length; index += 1) {
+      hash ^= value.charCodeAt(index);
+      hash = Math.imul(hash, 16777619);
+    }
+    return hash >>> 0;
+  }
+
+  function shuffledEvents(rut) {
+    const ordered = events.map((text, index) => ({ id: index + 1, text }));
+    let state = eventSeed(rut);
+    const random = () => {
+      state += 0x6D2B79F5;
+      let value = state;
+      value = Math.imul(value ^ (value >>> 15), value | 1);
+      value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+    };
+    for (let index = ordered.length - 1; index > 0; index -= 1) {
+      const target = Math.floor(random() * (index + 1));
+      [ordered[index], ordered[target]] = [ordered[target], ordered[index]];
+    }
+    return ordered;
+  }
+
+  function renderOptions(rut) {
     $('characterGrid').innerHTML = characters.map(character => `
       <article class="character-card" data-character-card="${character.id}">
         <label class="character-choice">
@@ -78,11 +105,11 @@
         </div>
       </article>`).join('');
 
-    $('eventGrid').innerHTML = events.map((event, index) => `
+    $('eventGrid').innerHTML = shuffledEvents(rut).map(event => `
       <label class="event-card">
-        <img src="assets/actividad-cine/evento-${String(index + 1).padStart(2, '0')}.webp" alt="Ilustración del acontecimiento ${index + 1}" loading="lazy">
-        <span class="event-copy">${escapeHtml(event)}</span>
-        <input type="checkbox" value="${index + 1}" aria-label="Marcar acontecimiento ${index + 1}">
+        <img src="assets/actividad-cine/evento-${String(event.id).padStart(2, '0')}.webp" alt="Ilustración del acontecimiento ${event.id}" loading="lazy">
+        <span class="event-copy">${escapeHtml(event.text)}</span>
+        <input type="checkbox" value="${event.id}" aria-label="Marcar acontecimiento ${event.id}">
       </label>`).join('');
   }
 
@@ -286,6 +313,7 @@
       const localDraft = loadLocalDraft();
       const useLocalDraft = localDraft && (!serverResponse || serverResponse.status !== 'submitted') && localDraft.updatedAt > Number(serverResponse && serverResponse.updatedAt || 0);
       const initialAnswers = useLocalDraft ? localDraft.answers : serverResponse && serverResponse.answers;
+      renderOptions(rut);
       applyAnswers(initialAnswers || {});
       $('loginView').classList.add('hidden');
       $('activityView').classList.remove('hidden');

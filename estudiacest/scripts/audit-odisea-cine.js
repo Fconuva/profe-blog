@@ -49,6 +49,10 @@ async function main() {
   const eventCount = (eventBlock[1].match(/^\s{4}'/gm) || []).length;
   assert(eventCount === 18, `Se esperaban 18 acontecimientos y se encontraron ${eventCount}.`);
   assert(!/correctEvents|respuestaCorrecta|answerKey/i.test(app), 'La clave de acontecimientos no debe quedar expuesta al navegador.');
+  assert(app.includes('function shuffledEvents(rut)'), 'El checklist no implementa mezcla por estudiante.');
+  assert(app.includes("shuffledEvents(rut).map(event =>"), 'El checklist no usa el orden mezclado al renderizar.');
+  assert(app.includes('value="${event.id}"'), 'La mezcla debe conservar el identificador original de cada acontecimiento.');
+  assert(app.indexOf('renderOptions(rut);') < app.indexOf('applyAnswers(initialAnswers || {});'), 'La mezcla debe aplicarse antes de recuperar las respuestas guardadas.');
 
   for (let index = 1; index <= 18; index += 1) {
     const file = path.join(activity, 'assets', 'actividad-cine', `evento-${String(index).padStart(2, '0')}.webp`);

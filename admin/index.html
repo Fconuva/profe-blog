@@ -1616,6 +1616,38 @@
             var pa = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 0;
             return Math.max(ab, pa);
         }
+
+        function detalleCuotasPago(p) {
+            p = p || {};
+            var arr = p.abonos ? (Array.isArray(p.abonos) ? p.abonos : Object.values(p.abonos)) : [];
+            var numero = arr.reduce(function(max, a) {
+                var n = Number(a && a.n);
+                return Number.isFinite(n) && n > max ? n : max;
+            }, arr.length);
+            if (!numero && montoPagadoReal(p) > 0) numero = 1;
+
+            var total = 0;
+            ['numeroCuotas', 'cuotasTotal', 'abonoTotal'].some(function(k) {
+                var n = Number(p[k]);
+                if (Number.isInteger(n) && n > 0) { total = n; return true; }
+                return false;
+            });
+            if (!total && p.planCuotas) {
+                var match = String(p.planCuotas).match(/(\d+)\s*(?:pagos?|cuotas?)/i);
+                if (match) total = Number(match[1]);
+            }
+            return { numero: numero, total: total };
+        }
+
+        function saldoPendienteReal(p) {
+            p = p || {};
+            var pagado = montoPagadoReal(p);
+            var precio = getPlanPrice(p.plan);
+            if (precio > 0 && pagado >= precio) return 0;
+            var guardado = Number(p.saldoPendiente);
+            if (Number.isFinite(guardado) && guardado >= 0) return guardado;
+            return precio > 0 ? Math.max(0, precio - pagado) : 0;
+        }
         // ===== MÓDULO 1 DE REGALO (gancho de venta: M1 construido sin pago previo) =====
         // M1 construido + SIN pago aún (actualizado 17-jun-2026; los que pagaron pasaron al flujo de pagados/entregados).
         var M1_GANCHO_UIDS = [
@@ -2099,15 +2131,23 @@
             return { pct: Math.round(done.length / campos.length * 100), done: done.length, total: campos.length, faltan: faltan };
         }
 
-        function paymentBadge(status, confirmedAt, comprobante) {
+        function paymentBadge(p) {
+            p = p || {};
+            var status = p.paymentStatus;
+            var confirmedAt = p.paymentConfirmedAt;
+            var comprobante = p.comprobantePago;
             if (status === 'approved' || status === 'aprobado') {
                 var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-700">Aprobado ✓</span>';
                 if (comprobante) s += '<div class="text-xs text-green-600 mt-0.5 font-mono">MP #' + escapeHtml(comprobante) + '</div>';
                 return s;
             }
             if (status === 'abono') {
-                var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">Abono 1/2 ✓</span>';
-                s += '<div class="text-xs text-indigo-600 mt-0.5">$100.000 · saldo 2ª cuota</div>';
+                var cuotas = detalleCuotasPago(p);
+                var etiqueta = cuotas.total
+                    ? 'Abono ' + cuotas.numero + '/' + cuotas.total + ' ✓'
+                    : (cuotas.numero ? 'Abono N° ' + cuotas.numero + ' ✓' : 'Abono recibido ✓');
+                var s = '<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-indigo-100 text-indigo-700">' + etiqueta + '</span>';
+                s += '<div class="text-xs text-indigo-600 mt-0.5">' + formatCLP(montoPagadoReal(p)) + ' pagado · saldo ' + formatCLP(saldoPendienteReal(p)) + '</div>';
                 return s;
             }
             if (status === 'gratis') {
@@ -2694,7 +2734,7 @@
                     '<td data-label="Teléfono" class="px-4 py-3 text-sm text-gray-600">' + escapeHtml(c.telefono || '—') + '</td>' +
                     '<td data-label="Plan" class="px-4 py-3"><span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-700">' + escapeHtml(planText) + '</span></td>' +
                     '<td data-label="Precio" class="px-4 py-3 text-sm font-medium text-gray-900">' + escapeHtml(priceText) + '</td>' +
-                    '<td data-label="Pago" class="px-4 py-3">' + paymentBadge(p.paymentStatus, p.paymentConfirmedAt, p.comprobantePago) + comprobanteChip(p) + '</td>' +
+                    '<td data-label="Pago" class="px-4 py-3">' + paymentBadge(p) + comprobanteChip(p) + '</td>' +
                     '<td data-label="Avance" class="px-4 py-3"><div class="flex items-center gap-2"><div class="w-16 bg-gray-100 rounded-full h-2 overflow-hidden"><div class="h-full bg-primary-500 rounded-full" style="width:' + progress + '%"></div></div><span class="text-xs text-gray-600">' + progress + '%</span></div></td>' +
                     '<td data-label="Drive" class="px-4 py-3 text-center">' + (p.googleDrive && p.googleDrive.shareUrl ? '<a href="' + escapeHtml(p.googleDrive.shareUrl) + '" target="_blank" rel="noopener" class="inline-flex items-center justify-center w-8 h-8 rounded-lg text-white text-sm" style="background-color:#0F9D58" title="Abrir carpeta Google Drive">📁</a>' : '<span class="text-gray-300 text-sm">—</span>') + '</td>' +
                     '<td data-label="Inscrito" class="px-4 py-3 text-xs text-gray-400">' + formatDate(c.createdAt) + '</td>' +
@@ -3127,8 +3167,9 @@
             if (paymentValue === 'gratis' || p.esRegalo) {
                 montoText = '🎁 Regalado · No cobra ($0)';
             } else if (paymentValue === 'abono' || p.esAbono) {
-                var saldoAb = (typeof p.saldoPendiente === 'number') ? p.saldoPendiente : Math.max(0, price - 100000);
-                montoText = 'Abono 1/2: ' + formatCLP(100000) + ' · Saldo: ' + formatCLP(saldoAb);
+                var cuotas = detalleCuotasPago(p);
+                var rotulo = cuotas.total ? 'Abono ' + cuotas.numero + '/' + cuotas.total : (cuotas.numero ? 'Abono N° ' + cuotas.numero : 'Abono');
+                montoText = rotulo + ': ' + formatCLP(montoPagadoReal(p)) + ' pagado · Saldo: ' + formatCLP(saldoPendienteReal(p));
             } else if (price) {
                 montoText = (planNames[p.plan] || p.plan) + ' · ' + formatCLP(price);
             } else if (p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') {

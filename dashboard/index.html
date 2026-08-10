@@ -2955,7 +2955,17 @@
                     payBadge.textContent = 'Aprobado ✓';
                 } else if (status === 'abono') {
                     payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-indigo-100 text-indigo-700';
-                    payBadge.textContent = 'Abono 1/2 ✓';
+                    var _abonos = portData.abonos ? (Array.isArray(portData.abonos) ? portData.abonos : Object.values(portData.abonos)) : [];
+                    var _abonoN = _abonos.reduce(function(max, a) {
+                        var n = Number(a && a.n);
+                        return Number.isFinite(n) && n > max ? n : max;
+                    }, _abonos.length || 1);
+                    var _cuotasTotal = 0;
+                    if (portData.planCuotas) {
+                        var _cuotasMatch = String(portData.planCuotas).match(/(\d+)\s*(?:pagos?|cuotas?)/i);
+                        if (_cuotasMatch) _cuotasTotal = Number(_cuotasMatch[1]);
+                    }
+                    payBadge.textContent = _cuotasTotal ? 'Abono ' + _abonoN + '/' + _cuotasTotal + ' ✓' : 'Abono N° ' + _abonoN + ' recibido ✓';
                 } else if (status === 'gratis') {
                     payBadge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-pink-100 text-pink-700';
                     payBadge.textContent = 'Cortesía ✓';

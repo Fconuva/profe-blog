@@ -5,6 +5,7 @@ const path = require('node:path');
 
 const root = path.resolve(__dirname, '..');
 const dashboard = fs.readFileSync(path.join(root, 'dashboard', 'index.html'), 'utf8');
+const admin = fs.readFileSync(path.join(root, 'admin', 'index.html'), 'utf8');
 const webhook = require(path.join(root, 'api', 'mercadopago', 'webhook.js'))._test;
 const verifySource = fs.readFileSync(path.join(root, 'api', 'mercadopago', 'verify-payment.js'), 'utf8');
 const preferenceSource = fs.readFileSync(path.join(root, 'api', 'mercadopago', 'create_preference.js'), 'utf8');
@@ -14,6 +15,20 @@ test('all inline dashboard scripts have valid JavaScript syntax', () => {
   const scripts = Array.from(dashboard.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi));
   assert.ok(scripts.length > 0);
   scripts.forEach((match) => new Function(match[1]));
+});
+
+test('all inline admin scripts have valid JavaScript syntax', () => {
+  const scripts = Array.from(admin.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi));
+  assert.ok(scripts.length > 0);
+  scripts.forEach((match) => new Function(match[1]));
+});
+
+test('instalment labels use recorded money and never invent two instalments', () => {
+  assert.doesNotMatch(admin, /Abono 1\/2|\$100\.000 · saldo 2ª cuota/);
+  assert.doesNotMatch(dashboard, /Abono 1\/2/);
+  assert.match(admin, /montoPagadoReal\(p\)/);
+  assert.match(admin, /saldoPendienteReal\(p\)/);
+  assert.match(admin, /planCuotas/);
 });
 
 test('paid drafts do not unlock the progress screen', () => {

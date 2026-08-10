@@ -31,6 +31,12 @@ test('instalment labels use recorded money and never invent two instalments', ()
   assert.match(admin, /planCuotas/);
 });
 
+test('inactive users are excluded even when the baja only exists in users', () => {
+  assert.match(admin, /function esClienteInactivo\(c, p\)/);
+  assert.match(admin, /\['baja', 'liberado', 'archivado', 'duplicado'\]/);
+  assert.match(admin, /if \(esClienteInactivo\(c, _p\)\) return false/);
+});
+
 test('paid drafts do not unlock the progress screen', () => {
   assert.match(
     dashboard,

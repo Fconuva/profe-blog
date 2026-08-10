@@ -2181,6 +2181,18 @@
             return d.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' });
         }
 
+        function esClienteInactivo(c, p) {
+            c = c || {};
+            p = p || {};
+            var estadoUsuario = String(c.status || '').trim().toLowerCase();
+            var estadoPago = String(p.paymentStatus || '').trim().toLowerCase();
+            return c.archivado === true
+                || p.archivado === true
+                || p.liberado === true
+                || ['baja', 'liberado', 'archivado', 'duplicado'].indexOf(estadoUsuario) >= 0
+                || ['baja', 'duplicado', 'devuelto'].indexOf(estadoPago) >= 0;
+        }
+
         function getModuleDefaults(plan, moduleKey) {
             if (plan === 'completo') return { estado: 'pendiente', contratado: true };
             if (plan === moduleKey) return { estado: 'pendiente', contratado: true };
@@ -2198,9 +2210,9 @@
                 // La cuenta del propio Francisco venía colándose como cliente potencial: el filtro
                 // miraba `role` y en /users el campo es `status`. Se revisan los dos.
                 if (c && (c.role === 'admin' || c.status === 'admin')) return false;
-                if ((_p && (_p.archivado || _p.liberado)) || (c && c.archivado)) return false; // archivados y bajas no cuentan
-                // Bajas y duplicados: no son cartera. Antes solo se excluían por `liberado`.
-                if (_p && (_p.paymentStatus === 'baja' || _p.paymentStatus === 'duplicado')) return false;
+                // La baja puede vivir en /users o /portafolios. Cualquiera de sus señales
+                // excluye a la persona de inscritos, cobranza y proyección financiera.
+                if (esClienteInactivo(c, _p)) return false;
                 // Ficha huérfana sin ninguna identidad ni plata: es basura de la base, no un lead.
                 // Se conserva si tiene algún pago, porque ahí sí hay que ir a mirarla.
                 if (!c) {

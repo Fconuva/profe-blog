@@ -37,6 +37,18 @@ test('inactive users are excluded even when the baja only exists in users', () =
   assert.match(admin, /if \(esClienteInactivo\(c, _p\)\) return false/);
 });
 
+test('collection agenda uses verified WhatsApp commitments and keeps undated balances separate', () => {
+  assert.match(admin, /p\.compromisoPago \|\| \{\}/);
+  assert.match(admin, /Ahora y próximos 10 días/);
+  assert.match(admin, /Sin fecha acordada/);
+  assert.match(admin, /Cobro pausado/);
+  assert.match(admin, /Las fechas de clase grabada fueron descartadas/);
+  assert.match(admin, /_cp\.estado === 'confirmado'/);
+  assert.match(admin, /_cp\.estado === 'pausado'/);
+  assert.match(admin, /_cp\.estado === 'fecha-incompleta'/);
+  assert.doesNotMatch(admin, /fechaGrabacion[^\n]{0,120}agenda/i);
+});
+
 test('paid drafts do not unlock the progress screen', () => {
   assert.match(
     dashboard,

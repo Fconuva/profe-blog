@@ -14,8 +14,67 @@
     <link rel="stylesheet" href="/css/tw.css">
     <link rel="stylesheet" href="/css/app.css">
     <style>
+      :root {
+        --admin-ink: #172033;
+        --admin-muted: #64748b;
+        --admin-line: #dbe3ec;
+        --admin-panel: #ffffff;
+        --admin-soft: #f4f7fb;
+        --admin-blue: #2563eb;
+      }
+      #tab-dashboard { color: var(--admin-ink); }
+      .dashboard-command {
+        background: linear-gradient(135deg, #172033 0%, #23324d 72%, #2b4165 100%);
+        border: 1px solid #324664;
+        border-radius: 16px;
+        color: #fff;
+        padding: 22px;
+        margin-bottom: 24px;
+        box-shadow: 0 18px 38px rgba(15, 23, 42, .14);
+      }
+      .dashboard-command__eyebrow { color: #93c5fd; font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+      .dashboard-command__legend { display: grid; gap: 8px; grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 18px; }
+      .dashboard-command__legend div { border-left: 2px solid rgba(147, 197, 253, .55); padding-left: 10px; }
+      .dashboard-command__legend strong { display: block; font-size: 12px; color: #fff; }
+      .dashboard-command__legend span { display: block; color: #cbd5e1; font-size: 11px; line-height: 1.35; margin-top: 2px; }
+      .agenda-shell { background: var(--admin-panel); border: 1px solid var(--admin-line); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+      .agenda-shell__head { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px 22px 14px; border-bottom: 1px solid #eef2f7; }
+      .agenda-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #e8edf3; }
+      .agenda-card { appearance: none; background: #fff; border: 0; border-right: 1px solid #e8edf3; cursor: pointer; min-height: 112px; padding: 15px 14px; text-align: left; transition: background-color .15s ease, box-shadow .15s ease; }
+      .agenda-card:last-child { border-right: 0; }
+      .agenda-card:hover, .agenda-card:focus-visible { background: #f8fafc; outline: none; box-shadow: inset 0 -3px 0 #94a3b8; }
+      .agenda-card.is-active { background: #eff6ff; box-shadow: inset 0 -3px 0 var(--admin-blue); }
+      .agenda-card__label { color: #475569; display: block; font-size: 10px; font-weight: 800; letter-spacing: .055em; line-height: 1.2; text-transform: uppercase; }
+      .agenda-card__count { color: #172033; display: block; font-size: 26px; font-weight: 800; line-height: 1; margin-top: 9px; }
+      .agenda-card__amount { color: #64748b; display: block; font-size: 12px; font-weight: 700; margin-top: 5px; }
+      .agenda-card[data-agenda-filter="ahora"] .agenda-card__count { color: #be123c; }
+      .agenda-card[data-agenda-filter="fin-agosto"] .agenda-card__count { color: #b45309; }
+      .agenda-card[data-agenda-filter="mitad-septiembre"] .agenda-card__count,
+      .agenda-card[data-agenda-filter="fin-septiembre"] .agenda-card__count { color: #1d4ed8; }
+      .agenda-card[data-agenda-filter="pausado"] .agenda-card__count { color: #7c3aed; }
+      .agenda-all-button { align-self: flex-start; appearance: none; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; color: #172033; cursor: pointer; padding: 8px 12px; text-align: left; }
+      .agenda-all-button:hover, .agenda-all-button:focus-visible { background: #f8fafc; border-color: #94a3b8; outline: none; }
+      .agenda-all-button.is-active { background: #eff6ff; border-color: #93c5fd; box-shadow: inset 0 -2px 0 var(--admin-blue); }
+      .agenda-table-wrap { max-height: 430px; overflow: auto; }
+      .agenda-table { border-collapse: collapse; width: 100%; }
+      .agenda-table th { background: #f8fafc; color: #64748b; font-size: 10px; font-weight: 800; letter-spacing: .05em; padding: 10px 12px; position: sticky; text-align: left; text-transform: uppercase; top: 0; z-index: 1; }
+      .agenda-table td { border-top: 1px solid #eef2f7; color: #334155; font-size: 12px; padding: 10px 12px; vertical-align: top; }
+      .agenda-table tbody tr:hover { background: #fbfdff; }
+      .agenda-status { border-radius: 999px; display: inline-flex; font-size: 10px; font-weight: 800; line-height: 1; padding: 5px 8px; white-space: nowrap; }
+      .agenda-status--confirmado { background: #dcfce7; color: #166534; }
+      .agenda-status--sin-fecha { background: #f1f5f9; color: #475569; }
+      .agenda-status--pausado { background: #f3e8ff; color: #6b21a8; }
+      .agenda-status--incompleto { background: #fef3c7; color: #92400e; }
+      .dashboard-section-title { align-items: center; display: flex; gap: 8px; margin-bottom: 9px; }
+      .dashboard-section-title::after { background: #dbe3ec; content: ""; flex: 1; height: 1px; }
       /* === Clientes: tabla -> tarjetas en móvil (adaptativo) === */
       @media (max-width: 768px) {
+        .dashboard-command__legend { grid-template-columns: 1fr; }
+        .agenda-shell__head { display: block; }
+        .agenda-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .agenda-card { border-bottom: 1px solid #e8edf3; min-height: 100px; }
+        .agenda-card:nth-child(2n) { border-right: 0; }
+        .agenda-table-wrap { max-height: 540px; }
         #tab-clientes .overflow-x-auto, #tab-portafolios .overflow-x-auto { overflow-x: visible; }
         #tab-clientes table, #tab-portafolios table { min-width: 0 !important; display: block; width: 100%; }
         #tab-clientes thead, #tab-portafolios thead { display: none; }
@@ -178,8 +237,27 @@
         </div>
 
         <div id="tab-dashboard" class="tab-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <section class="dashboard-command" aria-labelledby="dashboard-title">
+                <div class="flex flex-wrap items-start justify-between gap-4">
+                    <div class="max-w-3xl">
+                        <p class="dashboard-command__eyebrow">Control financiero y operativo</p>
+                        <h1 id="dashboard-title" class="text-2xl font-heading font-bold mt-1">Qué está pagado, qué falta y cuándo corresponde cobrar</h1>
+                        <p class="text-sm text-slate-300 mt-2 leading-relaxed">El saldo pendiente no significa automáticamente que haya que cobrar hoy. La agenda usa solo fechas confirmadas en WhatsApp; si no existe una fecha clara, la persona queda en “sin fecha acordada”.</p>
+                    </div>
+                    <div class="text-left md:text-right shrink-0">
+                        <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Último corte financiero</span>
+                        <span class="block text-sm font-semibold text-white mt-1" id="dashboard-corte">Datos en vivo de Firebase</span>
+                    </div>
+                </div>
+                <div class="dashboard-command__legend">
+                    <div><strong>Recaudado</strong><span>Dinero efectivamente recibido y registrado.</span></div>
+                    <div><strong>Saldo comprometido</strong><span>Lo que falta a quienes ya abonaron; puede tener una fecha futura.</span></div>
+                    <div><strong>Potencial</strong><span>Inscritos sin pago. No se cuenta como dinero comprometido.</span></div>
+                </div>
+            </section>
+
             <!-- ===== PERSONAS ===== -->
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">👥 Personas</h2>
+            <h2 class="dashboard-section-title text-xs font-bold text-gray-500 uppercase tracking-wider">👥 Personas</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-2xl font-heading font-bold text-gray-900" id="stat-total">0</p>
@@ -205,7 +283,7 @@
             </div>
 
             <!-- ===== AVANCE DE PORTAFOLIOS ===== -->
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">📦 Avance de portafolios</h2>
+            <h2 class="dashboard-section-title text-xs font-bold text-gray-500 uppercase tracking-wider">📦 Avance de portafolios</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div class="bg-white rounded-xl border border-gray-200 p-4">
                     <p class="text-2xl font-heading font-bold text-gray-900" id="stat-con-drive">0</p>
@@ -230,7 +308,7 @@
             </div>
 
             <!-- ===== DINERO ===== -->
-            <h2 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">💰 Dinero <span class="font-normal normal-case text-gray-400">· montos brutos, antes de la comisión de MercadoPago</span></h2>
+            <h2 class="dashboard-section-title text-xs font-bold text-gray-500 uppercase tracking-wider">💰 Dinero <span class="font-normal normal-case text-gray-400">· montos brutos, antes de la comisión de MercadoPago</span></h2>
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div class="bg-emerald-50 rounded-xl border border-emerald-200 p-5">
                     <p class="text-xs font-bold text-emerald-700 uppercase tracking-wide">💚 Ya está en tu cuenta</p>
@@ -254,6 +332,56 @@
                     <p class="text-[11px] text-slate-400 mt-1 leading-tight">= lo recaudado + lo que falta cobrar</p>
                 </div>
             </div>
+
+            <!-- ===== AGENDA DE COBROS VERIFICADA CONTRA WHATSAPP ===== -->
+            <section class="agenda-shell" aria-labelledby="agenda-cobros-title">
+                <div class="agenda-shell__head">
+                    <div>
+                        <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Agenda verificable</p>
+                        <h2 id="agenda-cobros-title" class="font-heading font-bold text-gray-900 mt-0.5">Cuándo debería entrar cada pago</h2>
+                        <p class="text-xs text-gray-500 mt-1 max-w-3xl">“Ahora” incluye compromisos vencidos y los próximos diez días. Un mismo docente puede aparecer en dos fechas si dividió su saldo. Las fechas de clase grabada fueron descartadas y no influyen en esta agenda.</p>
+                    </div>
+                    <button type="button" class="agenda-all-button is-active" data-agenda-filter="todos">
+                        <span class="agenda-card__label">Ver</span>
+                        <span class="text-xs font-bold text-slate-800">Todos los acuerdos</span>
+                    </button>
+                </div>
+                <div class="agenda-grid" role="group" aria-label="Filtros de agenda de cobros">
+                    <button type="button" class="agenda-card" data-agenda-filter="ahora">
+                        <span class="agenda-card__label">Ahora y próximos 10 días</span>
+                        <span class="agenda-card__count" id="agenda-ahora-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-ahora-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="fin-agosto">
+                        <span class="agenda-card__label">Fin de agosto</span>
+                        <span class="agenda-card__count" id="agenda-fin-agosto-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-fin-agosto-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="mitad-septiembre">
+                        <span class="agenda-card__label">1 al 15 de septiembre</span>
+                        <span class="agenda-card__count" id="agenda-mitad-septiembre-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-mitad-septiembre-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="fin-septiembre">
+                        <span class="agenda-card__label">16 al 30 de septiembre</span>
+                        <span class="agenda-card__count" id="agenda-fin-septiembre-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-fin-septiembre-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="sin-fecha">
+                        <span class="agenda-card__label">Sin fecha acordada</span>
+                        <span class="agenda-card__count" id="agenda-sin-fecha-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-sin-fecha-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="pausado">
+                        <span class="agenda-card__label">Cobro pausado</span>
+                        <span class="agenda-card__count" id="agenda-pausado-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-pausado-monto">$0</span>
+                    </button>
+                </div>
+                <div class="px-5 py-3 bg-slate-50 border-b border-slate-200 text-xs text-slate-600" id="agenda-cobros-explicacion">Selecciona una fecha para ver el detalle y la evidencia de WhatsApp.</div>
+                <div id="agenda-cobros-table" class="agenda-table-wrap"><p class="text-sm text-gray-400 p-5">Cargando agenda...</p></div>
+            </section>
+
             <div class="bg-indigo-50 rounded-xl border border-indigo-200 p-5 mb-8">
                 <p class="text-sm font-bold text-indigo-800 mb-3">🎯 Si TODOS los inscritos pagan el plan completo <span class="font-normal text-indigo-500">(la meta: asegurar los <span id="stat-opt-n">0</span>)</span></p>
                 <div class="grid grid-cols-3 gap-3 text-center">
@@ -288,7 +416,7 @@
                             <span class="block text-[11px] text-amber-600"><span id="tbl-comprometido-n">0</span> docentes</span>
                         </span>
                     </div>
-                    <p class="text-[11px] text-gray-400 mb-3">Ya pusieron su primera cuota y están recibiendo su portafolio. Esta plata llega casi segura, solo hay que cobrarla. Del que más lleva esperando al que menos.</p>
+                    <p class="text-[11px] text-gray-500 mb-3">Ya existe un abono, por eso este saldo es cartera comprometida. La fecha de cobro se lee desde el acuerdo de WhatsApp: un saldo sin fecha no se trata como vencido.</p>
                     <div id="cobranza-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p></div>
                 </div>
 
@@ -2280,8 +2408,12 @@
             // clasifica en que quedo cada uno: SIN RESPONDER, RESPONDIO o PROMETIO.
             // Francisco: "es necesario zanjar para no seguir trabajando gratis".
             var seguimientoList = [];
+            // Agenda financiera: fechas confirmadas por WhatsApp viven en compromisoPago.
+            // No se infieren fechas desde la antiguedad del abono ni desde la fecha de grabacion.
+            var agendaEventos = [], agendaSinFecha = [], agendaPausados = [];
             var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
             var HOY = Date.now();
+            var LIMITE_AHORA = HOY + (10 * 86400000);
             function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
             function notasA(p) { // adminNotas puede ser string u objeto {ts: nota}
                 var n = p.adminNotas; if (!n) return [];
@@ -2350,7 +2482,8 @@
                         }
                         cobranzaList.push({ uid: uid, nombre: nombreDe(uid), saldo: saldoAb, fecha: fAb, dias: dias,
                                             cobradoEl: _uc && _uc.fecha ? String(_uc.fecha).slice(0, 10) : '',
-                                            diasCobro: _diasCobro });
+                                            diasCobro: _diasCobro,
+                                            compromiso: p.compromisoPago || {} });
                     }
                 } else if (p.paymentStatus === 'pendiente_verificacion') {
                     // Se contabiliza más abajo como "pago por revisar" (no es sin-pagar ni comprometido aún).
@@ -2368,6 +2501,60 @@
                         conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
                         conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
                     });
+                }
+
+                // La agenda abarca todo saldo vivo, pero conserva la diferencia entre una fecha
+                // confirmada, una fecha incompleta, un cobro pausado y la ausencia de acuerdo.
+                var _estadoPagoAgenda = String(p.paymentStatus || '').toLowerCase();
+                var _saldoAgenda = 0;
+                if (['approved', 'aprobado', 'pagado', 'gratis'].indexOf(_estadoPagoAgenda) < 0 && _estadoPagoAgenda !== 'pendiente_verificacion') {
+                    if (typeof p.saldoPendiente === 'number') _saldoAgenda = Math.max(0, p.saldoPendiente);
+                    else _saldoAgenda = Math.max(0, (price > 0 ? price : 199990) - montoPagadoReal(p));
+                }
+                if (_saldoAgenda > 0) {
+                    var _cp = p.compromisoPago || {};
+                    var _baseAgenda = {
+                        uid: uid,
+                        nombre: nombreDe(uid),
+                        saldo: _saldoAgenda,
+                        evidencia: _cp.evidencia || '',
+                        fuente: _cp.fuente || '',
+                        estadoPago: _estadoPagoAgenda || 'pendiente'
+                    };
+                    if (_cp.estado === 'pausado') {
+                        agendaPausados.push(Object.assign({}, _baseAgenda, { bucket: 'pausado', fecha: '', monto: _saldoAgenda, ventana: _cp.ventana || '' }));
+                    } else if (_cp.estado === 'confirmado' && Array.isArray(_cp.pagos) && _cp.pagos.length) {
+                        var _restanteAgenda = _saldoAgenda;
+                        _cp.pagos.slice().sort(function(a, b) { return String(a.fecha || '').localeCompare(String(b.fecha || '')); }).forEach(function(_pagoAgenda) {
+                            if (_restanteAgenda <= 0) return;
+                            var _montoEvento = Math.min(_restanteAgenda, Math.max(0, Number(_pagoAgenda.monto) || 0));
+                            if (!_montoEvento) return;
+                            var _fechaEvento = String(_pagoAgenda.fecha || '');
+                            var _msEvento = new Date(_fechaEvento + 'T23:59:59-04:00').getTime();
+                            var _bucketEvento = 'otra-fecha';
+                            if (!isNaN(_msEvento) && _msEvento <= LIMITE_AHORA) _bucketEvento = 'ahora';
+                            else if (_fechaEvento >= '2026-08-21' && _fechaEvento <= '2026-08-31') _bucketEvento = 'fin-agosto';
+                            else if (_fechaEvento >= '2026-09-01' && _fechaEvento <= '2026-09-15') _bucketEvento = 'mitad-septiembre';
+                            else if (_fechaEvento >= '2026-09-16' && _fechaEvento <= '2026-09-30') _bucketEvento = 'fin-septiembre';
+                            agendaEventos.push(Object.assign({}, _baseAgenda, {
+                                bucket: _bucketEvento,
+                                fecha: _fechaEvento,
+                                etiqueta: _pagoAgenda.etiqueta || _fechaEvento,
+                                monto: _montoEvento,
+                                estado: 'confirmado'
+                            }));
+                            _restanteAgenda -= _montoEvento;
+                        });
+                        if (_restanteAgenda > 0) {
+                            agendaSinFecha.push(Object.assign({}, _baseAgenda, { bucket: 'sin-fecha', fecha: '', monto: _restanteAgenda, estado: 'sin-fecha' }));
+                        }
+                    } else {
+                        agendaSinFecha.push(Object.assign({}, _baseAgenda, {
+                            bucket: 'sin-fecha', fecha: '', monto: _saldoAgenda,
+                            estado: _cp.estado === 'fecha-incompleta' ? 'fecha-incompleta' : 'sin-fecha',
+                            ventana: _cp.ventana || ''
+                        }));
+                    }
                 }
                 if (p.seguimientoCobro && p.seguimientoCobro.desde) {
                     var _sg = p.seguimientoCobro;
@@ -2473,6 +2660,31 @@
             _setD('stat-opt-pagado', formatCLP(paidRevenue));
             _setD('stat-opt-falta', formatCLP(faltaTotal));
 
+            // Agenda de cobros: conteos por evento. Lilian, por ejemplo, aparece en dos
+            // ventanas porque dividio su mismo saldo en dos fechas distintas.
+            var _agendaPorBucket = {
+                'ahora': agendaEventos.filter(function(x) { return x.bucket === 'ahora'; }),
+                'fin-agosto': agendaEventos.filter(function(x) { return x.bucket === 'fin-agosto'; }),
+                'mitad-septiembre': agendaEventos.filter(function(x) { return x.bucket === 'mitad-septiembre'; }),
+                'fin-septiembre': agendaEventos.filter(function(x) { return x.bucket === 'fin-septiembre'; }),
+                'sin-fecha': agendaSinFecha,
+                'pausado': agendaPausados
+            };
+            function _agendaMonto(lista) { return lista.reduce(function(t, x) { return t + (Number(x.monto) || 0); }, 0); }
+            Object.keys(_agendaPorBucket).forEach(function(bucket) {
+                var lista = _agendaPorBucket[bucket];
+                _setD('agenda-' + bucket + '-n', lista.length);
+                _setD('agenda-' + bucket + '-monto', formatCLP(_agendaMonto(lista)));
+            });
+            window._agendaCobros = {
+                eventos: agendaEventos,
+                sinFecha: agendaSinFecha,
+                pausados: agendaPausados
+            };
+            var _corteAgenda = document.getElementById('dashboard-corte');
+            if (_corteAgenda) _corteAgenda.textContent = new Date().toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            pintarAgendaCobros('todos');
+
             // ===== detalle nuevo: desglose, cobranza, pendientes, sin-OA, módulos =====
             _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (regalosN ? ' · ' + regalosN + ' regalo' + (regalosN > 1 ? 's' : '') : ''));
             _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos');
@@ -2488,12 +2700,20 @@
                 if (!cobranzaList.length) { cobEl.innerHTML = '<p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p>'; }
                 else {
                     cobranzaList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
-                    var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó el</th><th class="py-1 pr-2">Días</th><th class="py-1 pr-2">Se le cobró</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
+                    var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó</th><th class="py-1 pr-2">Acuerdo</th><th class="py-1 pr-2">Último cobro</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
                     cobranzaList.forEach(function (x) {
                         var alerta = (x.dias !== null && x.dias > 30);
+                        var cp = x.compromiso || {};
+                        var acuerdo = '<span class="text-slate-400">sin fecha</span>';
+                        if (cp.estado === 'pausado') acuerdo = '<span class="text-purple-700 font-semibold">pausado</span>';
+                        else if (cp.estado === 'fecha-incompleta') acuerdo = '<span class="text-amber-700 font-semibold">' + escapeHtml(cp.ventana || 'fecha incompleta') + '</span>';
+                        else if (cp.estado === 'confirmado' && Array.isArray(cp.pagos) && cp.pagos.length) {
+                            var prox = cp.pagos.slice().sort(function(a, b) { return String(a.fecha || '').localeCompare(String(b.fecha || '')); })[0];
+                            acuerdo = '<span class="text-emerald-700 font-semibold">' + escapeHtml((prox && (prox.etiqueta || prox.fecha)) || 'confirmado') + '</span>';
+                        }
                         h += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
-                             '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
-                             '<td class="py-1.5 pr-2 ' + (alerta ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
+                             '<td class="py-1.5 pr-2 ' + (alerta ? 'text-rose-600 font-semibold' : 'text-gray-500') + '">' + escapeHtml(x.fecha ? String(x.fecha).slice(0, 10) : 'sin fecha') + (x.dias === null ? '' : ' · ' + x.dias + 'd') + '</td>' +
+                             '<td class="py-1.5 pr-2 text-xs">' + acuerdo + '</td>' +
                              '<td class="py-1.5 pr-2 text-xs ' + (x.diasCobro !== null && x.diasCobro >= 5 ? 'text-rose-600 font-semibold' : 'text-gray-500') + '">' +
                              (x.cobradoEl ? escapeHtml(x.cobradoEl) + (x.diasCobro !== null ? ' · hace ' + x.diasCobro + 'd' : '') : '<span class="text-gray-300">todavía no</span>') + '</td>' +
                              '<td class="py-1.5 text-right tabular-nums font-semibold text-amber-700">' + formatCLP(x.saldo) + '</td></tr>';
@@ -3963,6 +4183,77 @@
             });
         });
 
+
+        // Pinta la agenda de pagos verificada contra WhatsApp. La evidencia visible permite
+        // auditar por que una persona esta en una fecha y evita cobrar por una inferencia.
+        function pintarAgendaCobros(filtro) {
+            var el = document.getElementById('agenda-cobros-table');
+            if (!el) return;
+            var datos = window._agendaCobros || { eventos: [], sinFecha: [], pausados: [] };
+            var lista;
+            if (filtro === 'sin-fecha') lista = datos.sinFecha.slice();
+            else if (filtro === 'pausado') lista = datos.pausados.slice();
+            else if (filtro && filtro !== 'todos') lista = datos.eventos.filter(function(x) { return x.bucket === filtro; });
+            else lista = datos.eventos.concat(datos.sinFecha, datos.pausados);
+
+            var ordenEstado = { confirmado: 0, 'fecha-incompleta': 1, 'sin-fecha': 2, pausado: 3 };
+            lista.sort(function(a, b) {
+                var ea = a.estado || (a.bucket === 'pausado' ? 'pausado' : 'sin-fecha');
+                var eb = b.estado || (b.bucket === 'pausado' ? 'pausado' : 'sin-fecha');
+                return (ordenEstado[ea] - ordenEstado[eb]) || String(a.fecha || '9999').localeCompare(String(b.fecha || '9999')) || String(a.nombre).localeCompare(String(b.nombre));
+            });
+
+            var explicacion = document.getElementById('agenda-cobros-explicacion');
+            var total = lista.reduce(function(t, x) { return t + (Number(x.monto) || 0); }, 0);
+            if (explicacion) {
+                var rotulos = {
+                    'todos': 'Vista completa', 'ahora': 'Cobro inmediato y próximos diez días',
+                    'fin-agosto': 'Compromisos para el cierre de agosto',
+                    'mitad-septiembre': 'Compromisos del 1 al 15 de septiembre',
+                    'fin-septiembre': 'Compromisos del 16 al 30 de septiembre',
+                    'sin-fecha': 'Saldos sin fecha confirmada', 'pausado': 'Cobros detenidos por una razón documentada'
+                };
+                explicacion.textContent = (rotulos[filtro] || rotulos.todos) + ': ' + lista.length + ' registros por ' + formatCLP(total) + '. Los montos sin fecha no se suman a una ventana futura.';
+            }
+            if (!lista.length) {
+                el.innerHTML = '<p class="text-sm text-gray-500 p-5">No hay pagos en esta categoría.</p>';
+                return;
+            }
+
+            function fechaAgenda(x) {
+                if (!x.fecha) return x.ventana === 'septiembre' ? 'Septiembre, día pendiente' : 'Sin fecha';
+                try { return new Date(x.fecha + 'T12:00:00-04:00').toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }); }
+                catch (e) { return x.fecha; }
+            }
+            function estadoAgenda(x) {
+                if (x.bucket === 'pausado') return ['Pausado', 'agenda-status--pausado'];
+                if (x.estado === 'fecha-incompleta') return ['Falta día', 'agenda-status--incompleto'];
+                if (!x.fecha) return ['Sin acuerdo', 'agenda-status--sin-fecha'];
+                return ['Confirmado', 'agenda-status--confirmado'];
+            }
+
+            var html = '<table class="agenda-table"><thead><tr><th>Docente</th><th>Fecha</th><th>Estado</th><th>Base en WhatsApp</th><th>Situación</th><th class="text-right">Monto</th><th></th></tr></thead><tbody>';
+            lista.forEach(function(x) {
+                var est = estadoAgenda(x);
+                html += '<tr>' +
+                    '<td class="font-semibold text-slate-800">' + escapeHtml(x.nombre) + '</td>' +
+                    '<td class="whitespace-nowrap font-medium">' + escapeHtml(fechaAgenda(x)) + '</td>' +
+                    '<td><span class="agenda-status ' + est[1] + '">' + est[0] + '</span></td>' +
+                    '<td class="max-w-sm text-slate-500">' + escapeHtml(x.evidencia || 'No existe una fecha explícita registrada.') + '</td>' +
+                    '<td class="whitespace-nowrap text-slate-500">' + escapeHtml(x.estadoPago === 'abono' ? 'Abono' : 'Sin pago') + '</td>' +
+                    '<td class="text-right tabular-nums font-bold text-slate-800">' + formatCLP(x.monto) + '</td>' +
+                    '<td class="text-right"><button type="button" onclick="openModal(\'' + x.uid + '\')" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Abrir ficha</button></td>' +
+                    '</tr>';
+            });
+            el.innerHTML = html + '</tbody></table>';
+        }
+        document.addEventListener('click', function(ev) {
+            var botonAgenda = ev.target.closest && ev.target.closest('[data-agenda-filter]');
+            if (!botonAgenda) return;
+            document.querySelectorAll('[data-agenda-filter]').forEach(function(b) { b.classList.remove('is-active'); });
+            botonAgenda.classList.add('is-active');
+            pintarAgendaCobros(botonAgenda.getAttribute('data-agenda-filter') || 'todos');
+        });
 
         // Pinta la tabla de seguimiento. Se saca de renderDashboard para que los botones de
         // filtro puedan repintarla sin recalcular todo el panel.

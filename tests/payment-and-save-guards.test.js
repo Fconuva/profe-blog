@@ -191,6 +191,7 @@ test('payment classification distinguishes full payment, instalment and invalid 
 
 test('an individually agreed price overrides the generic plan in admin and payments', () => {
   assert.match(admin, /function getPortfolioPrice\(portfolio\)/);
+  assert.match(dashboard, /function portfolioPriceLabel\(portfolio\)/);
   assert.match(preferenceSource, /portfolio\.precioAcordado/);
   assert.deepEqual(
     webhook.classifyPortfolioPayment(

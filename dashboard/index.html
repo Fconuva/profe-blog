@@ -1487,6 +1487,11 @@
             modulo3: '$79.990',
             'pre-inscripcion': 'Gratis'
         };
+        function portfolioPriceLabel(portfolio) {
+            var agreed = Number(portfolio && portfolio.precioAcordado);
+            if (Number.isFinite(agreed) && agreed > 0) return '$' + agreed.toLocaleString('es-CL');
+            return planPrices[portfolio && portfolio.plan] || '';
+        }
         var statusLabels = {
             'pendiente': { text: 'Pendiente', cls: 'bg-gray-100 text-gray-600' },
             'en-progreso': { text: 'En Progreso', cls: 'bg-blue-100 text-blue-700' },
@@ -1788,7 +1793,7 @@
                 var _pagoEnCurso = _payIntent || portData.paymentStatus === 'pendiente_verificacion';
                 if (_pagoEnCurso && portData && portData.plan && portData.plan !== 'pre-inscripcion') {
                     document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
-                    document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
+                    document.getElementById('pay-plan-price').textContent = portfolioPriceLabel(portData);
                     if (portData.paymentStatus === 'pendiente_verificacion') {
                         showPaymentInformed(portData.comprobantePago);
                     } else {
@@ -1833,7 +1838,7 @@
             // State 2: Has plan but payment not approved
             if (!paid) {
                 document.getElementById('pay-plan-name').textContent = planNames[portData.plan] || portData.plan;
-                document.getElementById('pay-plan-price').textContent = planPrices[portData.plan] || '';
+                document.getElementById('pay-plan-price').textContent = portfolioPriceLabel(portData);
                 if (portData.paymentStatus === 'pendiente_verificacion') {
                     showPaymentInformed(portData.comprobantePago);
                 } else {

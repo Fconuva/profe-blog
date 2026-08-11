@@ -526,6 +526,16 @@ const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LO
 });
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
+const STATIC_SESSION_FALLBACKS={
+    'sesion-u3-5':{
+        titulo:'Unidad 3 · Clase 5 — Integrar evidencia y fundamentar',
+        descripcion:'Mini Forma P: cinco unidades de lectura, 32 alternativas y dos respuestas de desarrollo.',
+        orden:305,programa:'simce',activa:true,resultados_visibles:false,retroalimentacion_visible:false,
+        panel_unidad:'u3',panel_seccion:'plan',panel_orden:5,fecha_aplicacion:'2026-08-12',
+        link_guia:'/estudiantes/guia-u3-s5-integrar-evidencia.html',prefer_guia:true,
+        asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}
+    }
+};
 function esc(s){if(!s)return'';const d=document.createElement('div');d.textContent=String(s);return d.innerHTML;}
 const ALL_CURSOS={'1A-HC':{label:'1°A HC',short:'1°A',badge:'badge-cyan',prog:'simce'},'1B-HC':{label:'1°B HC',short:'1°B',badge:'badge-teal',prog:'simce'},'2A-HC':{label:'2°A HC',short:'2°A',badge:'badge-blue',prog:'simce'},'2B-HC':{label:'2°B HC',short:'2°B',badge:'badge-purple',prog:'simce'},'2A-TP':{label:'2°A TP',short:'2°A TP',badge:'badge-amber',prog:'simce'},'2B-TP':{label:'2°B TP',short:'2°B TP',badge:'badge-amber',prog:'simce'},'2C-TP':{label:'2°C TP',short:'2°C TP',badge:'badge-amber',prog:'simce'},'2D-TP':{label:'2°D TP',short:'2°D TP',badge:'badge-amber',prog:'simce'},'2E-TP':{label:'2°E TP',short:'2°E TP',badge:'badge-amber',prog:'simce'},'3A-HC':{label:'3°A HC',short:'3°A',badge:'badge-green',prog:'paes'},'3B-HC':{label:'3°B HC',short:'3°B',badge:'badge-amber',prog:'paes'},'4A-HC':{label:'4°A HC',short:'4°A',badge:'badge-blue',prog:'paes'},'4B-HC':{label:'4°B HC',short:'4°B',badge:'badge-purple',prog:'paes'}};
 function cLabel(c){return ALL_CURSOS[c]?.label||c}
@@ -954,7 +964,11 @@ async function loadAllData(){
         readOnceWithRetry(BASE+'/respuestas')
     ]);
     students=estS.val()||{};
-    sessions=sesS.val()||{};
+    const remoteSessions=sesS.val()||{};
+    sessions={...STATIC_SESSION_FALLBACKS};
+    Object.entries(remoteSessions).forEach(([id,value])=>{
+        sessions[id]={...(STATIC_SESSION_FALLBACKS[id]||{}),...value};
+    });
     allResults=resS.val()||{};
     allResponses=respS.val()||{};
     populateSessionUnitFilter();
@@ -3122,6 +3136,7 @@ function viewStudentResponses(uid, sesId){
         if(Number.isFinite(noteValue)) html+=`<div><strong>Nota:</strong> ${noteValue.toFixed(1)}</div>`;
         if(Number.isFinite(alternativasPts)&&Number.isFinite(totalAlternativas)&&totalAlternativas>0) html+=`<div><strong>Alternativas:</strong> ${alternativasPts}/${totalAlternativas}</div>`;
         if(Number.isFinite(desarrolloPts)&&Number.isFinite(totalDesarrollo)&&totalDesarrollo>0) html+=`<div><strong>Desarrollo:</strong> ${desarrolloPts}/${totalDesarrollo}</div>`;
+        if(res.desarrollo_pendiente===true) html+='<div style="color:#a16207;font-weight:800">Desarrollo pendiente de corrección</div>';
         if(res.notas_completadas) html+=`<div><strong>Notas:</strong> ${res.notas_completadas}</div>`;
         html+=`</div>`;
     }
@@ -3197,7 +3212,9 @@ function viewStudentResponses(uid, sesId){
             const bg=isCorrect?'#f0fdf4':'#fef2f2';
             const border=isCorrect?'#86efac':'#fca5a5';
             html+=`<div style="background:${bg};border:1px solid ${border};border-radius:8px;padding:10px 14px;margin-bottom:6px">`;
-            html+=`<div style="font-weight:700;font-size:12px">${icon} Pregunta ${qId}</div>`;
+            const questionNumber=String(qId).replace(/^q/i,'');
+            const questionLabel=d.enunciado?`Pregunta ${questionNumber}. ${esc(d.enunciado)}`:`Pregunta ${questionNumber}`;
+            html+=`<div style="font-weight:700;font-size:12px">${icon} ${questionLabel}</div>`;
             html+=`<div style="font-size:12px;margin-top:4px">Respuesta vista: <strong>${userAnsDisplay}</strong> | Correcta vista: <strong style="color:#16a34a">${correctaDisplay}</strong></div>`;
             presentedSet.forEach(o=>{
                 const isUser=o.originalLetter===userAns;
@@ -3301,8 +3318,57 @@ function viewStudentResponses(uid, sesId){
         html+='</div>';
     }
 
+    if(sesId==='sesion-u3-5'&&resp){
+        const openData=res?.openResponses||resp?.openResponses||{};
+        const q10Score=Number(developmentDetail?.q10?.earned)||0;
+        const q24Score=Number(developmentDetail?.q24?.earned)||0;
+        const teacherNote=res?.retroalimentacion_docente||'';
+        const scoreOptions=(max,current)=>Array.from({length:max+1},(_,value)=>`<option value="${value}"${value===current?' selected':''}>${value} de ${max}</option>`).join('');
+        html+='<h4 style="font-size:14px;margin:18px 0 8px">Corrección manual · Preguntas 10 y 24</h4>';
+        html+='<div style="background:#fffbeb;border:1px solid #f4cc68;border-radius:8px;padding:12px 14px">';
+        html+=`<div style="margin-bottom:14px"><strong>Pregunta 10 · Comparación de poemas</strong><div style="white-space:pre-wrap;background:#fff;border:1px solid #e5d59e;padding:9px;margin:6px 0">${esc(openData.q10||'Sin respuesta')}</div><label style="font-weight:700">Puntaje: <select id="u3s5Q10Score" style="padding:6px">${scoreOptions(3,q10Score)}</select></label><div style="font-size:11px;color:#785b17;margin-top:4px">Afirmación comparativa (1) · evidencia de ambos poemas (1) · explicación (1).</div></div>`;
+        html+=`<div style="margin-bottom:14px"><strong>Pregunta 24 · Consistencia del reportaje y gráfico</strong><div style="white-space:pre-wrap;background:#fff;border:1px solid #e5d59e;padding:9px;margin:6px 0">${esc(openData.q24||'Sin respuesta')}</div><label style="font-weight:700">Puntaje: <select id="u3s5Q24Score" style="padding:6px">${scoreOptions(4,q24Score)}</select></label><div style="font-size:11px;color:#785b17;margin-top:4px">Juicio (1) · dato del gráfico (1) · evidencia del reportaje (1) · explicación (1).</div></div>`;
+        html+=`<label style="display:block;font-weight:700;margin-bottom:4px">Observación breve para el estudiante</label><textarea id="u3s5TeacherNote" style="width:100%;min-height:72px;padding:8px;border:1px solid #bcae7e">${esc(teacherNote)}</textarea>`;
+        html+=`<button class="btn" style="background:#166534;color:#fff;margin-top:10px" onclick="saveU3S5Development('${uid}','${sesId}')">Guardar corrección</button>`;
+        html+='</div>';
+    }
+
     document.getElementById('respStudentContent').innerHTML=html;
     openModal('studentResponses');
+}
+
+async function saveU3S5Development(uid,sesId){
+    const q10=Math.max(0,Math.min(3,Number(document.getElementById('u3s5Q10Score')?.value)||0));
+    const q24=Math.max(0,Math.min(4,Number(document.getElementById('u3s5Q24Score')?.value)||0));
+    const note=document.getElementById('u3s5TeacherNote')?.value.trim()||'';
+    const current=allResults[sesId]?.[uid]||{};
+    const response=allResponses[sesId]?.[uid]||{};
+    const alternatives=Number(current.puntaje_alternativas ?? current.puntaje)||0;
+    const openData=current.openResponses||response.openResponses||{};
+    const development=q10+q24;
+    const total=39;
+    const patch={
+        puntaje_alternativas:alternatives,total_alternativas:32,
+        puntaje_desarrollo:development,total_desarrollo:7,
+        puntaje:alternatives+development,total,
+        porcentaje:Math.round((alternatives+development)/total*100),
+        desarrollo_pendiente:false,
+        detalle_desarrollo:{
+            q10:{label:'Pregunta 10 · Comparación de poemas',earned:q10,max:3,criterio:'Afirmación, evidencia de ambos poemas y explicación.',respuesta:openData.q10||''},
+            q24:{label:'Pregunta 24 · Consistencia de la información',earned:q24,max:4,criterio:'Juicio, dato del gráfico, evidencia del reportaje y explicación.',respuesta:openData.q24||''}
+        },
+        retroalimentacion_docente:note,
+        corregido_at:Date.now(),
+        corregido_por:currentDocente?.nombre||currentAdminUid||'Docente'
+    };
+    try{
+        await db.ref(BASE+'/resultados/'+sesId+'/'+uid).update(patch);
+        allResults[sesId]=allResults[sesId]||{};
+        allResults[sesId][uid]={...current,...patch};
+        toast('Corrección de desarrollo guardada','ok');
+        viewStudentResponses(uid,sesId);
+        loadResults();
+    }catch(error){toast('No se pudo guardar: '+error.message,'err')}
 }
 
 async function deleteSession(sesId){

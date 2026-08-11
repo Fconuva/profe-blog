@@ -519,6 +519,24 @@
             retro: { title:'📚 Retroalimentación', copy:'Se activa cuando ya tengas resultados o devolución de ensayo.', prefix:'R' },
             otro: { title:'🧩 Otros', copy:'Encuestas y apoyos complementarios.', prefix:'O' }
         };
+        const STATIC_SESSION_FALLBACKS = {
+            'sesion-u3-5': {
+                titulo:'Unidad 3 · Clase 5 — Integrar evidencia y fundamentar',
+                descripcion:'Mini Forma P: cinco unidades de lectura, 32 alternativas y dos respuestas de desarrollo.',
+                orden:305,
+                programa:'simce',
+                activa:true,
+                resultados_visibles:false,
+                retroalimentacion_visible:false,
+                panel_unidad:'u3',
+                panel_seccion:'plan',
+                panel_orden:5,
+                fecha_aplicacion:'2026-08-12',
+                link_guia:'/estudiantes/guia-u3-s5-integrar-evidencia.html',
+                prefer_guia:true,
+                asignados:['2A-HC','2B-HC']
+            }
+        };
         const SIDE_MISSION_GROUPS = {
             u1: { title:'📚 Unidad 1', copy:'Misiones del tramo ya trabajado para dejar visible el recorrido anterior.' },
             u2: { title:'🚀 Unidad 2', copy:'Nuevas misiones del bloque argumentativo que comienza ahora.' },
@@ -1097,13 +1115,14 @@
                     db.ref(BASE + '/ranking').once('value')
                 ]);
 
-                if (!sesSnap.exists()) {
-                    archiveContainer.innerHTML = '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones disponibles aún.</div>';
-                    return;
+                const sessionMap = new Map(Object.entries(STATIC_SESSION_FALLBACKS).map(([id,session]) => [id,{ id, ...session }]));
+                if (sesSnap.exists()) {
+                    sesSnap.forEach(s => {
+                        const fallback = STATIC_SESSION_FALLBACKS[s.key] || {};
+                        sessionMap.set(s.key,{ id:s.key, ...fallback, ...s.val() });
+                    });
                 }
-
-                const allSes = [];
-                sesSnap.forEach(s => { allSes.push({ id: s.key, ...s.val() }); });
+                const allSes = [...sessionMap.values()];
                 const sesiones = allSes.filter(s => {
                     if ((s.programa || 'simce') !== programa) return false;
                     if (!isSessionAssignedToStudent(s, uid, curso)) return false;

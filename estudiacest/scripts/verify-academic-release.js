@@ -244,6 +244,19 @@ async function validateGitState(manifest) {
 async function validateProduction(manifest) {
   const failures = [];
 
+  const gitRootResult = run("git", ["rev-parse", "--show-toplevel"]);
+  const gitRoot = gitRootResult.status === 0 ? gitRootResult.stdout.trim() : "";
+  const projectPrefix = gitRoot
+    ? path.relative(gitRoot, ROOT).replaceAll("\\", "/")
+    : path.basename(ROOT);
+
+  function isNewTrackedResource(relativePath) {
+    const gitPath = path.posix.join(projectPrefix, relativePath.replaceAll("\\", "/"));
+    const inHead = run("git", ["cat-file", "-e", `HEAD:${gitPath}`]).status === 0;
+    const inOrigin = run("git", ["cat-file", "-e", `origin/main:${gitPath}`]).status === 0;
+    return inHead && !inOrigin;
+  }
+
   for (const entry of manifest.criticalFiles) {
     const url = new URL(entry.url, manifest.project.productionOrigin);
     try {
@@ -256,7 +269,8 @@ async function validateProduction(manifest) {
         }
       });
 
-      if (!response.ok && !(entry.allowMissingInProduction && response.status === 404)) {
+      const firstDeployResource = response.status === 404 && isNewTrackedResource(entry.path);
+      if (!response.ok && !firstDeployResource && !(entry.allowMissingInProduction && response.status === 404)) {
         failures.push(`Produccion no responde para ${entry.url}: HTTP ${response.status}`);
       }
     } catch (error) {

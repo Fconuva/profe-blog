@@ -63,6 +63,11 @@ test('paused collections never leak into follow-up or no-response alerts', () =>
   assert.match(admin, /_cp\.estado !== 'pausado' && p\.alertaCobro/);
 });
 
+test('optional payment badges never abort dashboard rendering when absent', () => {
+  assert.match(admin, /var badge = document\.getElementById\('pagos-badge'\);\s*if \(badge\)/);
+  assert.match(admin, /var preBadge = document\.getElementById\('preinscritos-badge'\);\s*if \(preBadge\)/);
+});
+
 test('paid drafts do not unlock the progress screen', () => {
   assert.match(
     dashboard,

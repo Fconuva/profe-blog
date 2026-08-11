@@ -383,7 +383,7 @@
             </section>
 
             <div class="bg-indigo-50 rounded-xl border border-indigo-200 p-5 mb-8">
-                <p class="text-sm font-bold text-indigo-800 mb-3">🎯 Si TODOS los inscritos pagan el plan completo <span class="font-normal text-indigo-500">(la meta: asegurar los <span id="stat-opt-n">0</span>)</span></p>
+                <p class="text-sm font-bold text-indigo-800 mb-3">🎯 Si TODOS los inscritos pagan su plan registrado <span class="font-normal text-indigo-500">(la meta: asegurar los <span id="stat-opt-n">0</span>)</span></p>
                 <div class="grid grid-cols-3 gap-3 text-center">
                     <div class="bg-white/60 rounded-lg py-2">
                         <p class="text-lg md:text-xl font-heading font-bold text-indigo-700 tabular-nums" id="stat-potencial">$0</p>
@@ -428,7 +428,7 @@
                             <span class="block text-[11px] text-indigo-500"><span id="tbl-potencial-n">0</span> docentes</span>
                         </span>
                     </div>
-                    <p class="text-[11px] text-gray-400 mb-3">Esta plata <b>no existe todavía</b>: es lo que entraría si los convirtieras a todos, a $199.990 cada uno. La columna <b>OA</b> dice si ya podemos construirle el Módulo 1 o si primero hay que pedírselo.</p>
+                    <p class="text-[11px] text-gray-400 mb-3">Esta plata <b>no existe todavía</b>: es lo que entraría si los convirtieras, respetando el valor del plan de cada persona. La columna <b>OA</b> dice si ya podemos construirle el Módulo 1 o si primero hay que pedírselo.</p>
                     <div id="potencial-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Todos los inscritos han pagado. 🎉</p></div>
                 </div>
 
@@ -2499,6 +2499,7 @@
                         uid: uid, nombre: nombreDe(uid),
                         fecha: fIns ? String(fIns).slice(0, 10) : '',
                         dias: diasIns,
+                        valor: price > 0 ? price : 199990,
                         // si ya declaró su OA podemos construirle el M1; si no, primero hay que pedírselo
                         conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
                         conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
@@ -2509,12 +2510,12 @@
                 // confirmada, una fecha incompleta, un cobro pausado y la ausencia de acuerdo.
                 var _estadoPagoAgenda = String(p.paymentStatus || '').toLowerCase();
                 var _saldoAgenda = 0;
+                var _cp = p.compromisoPago || {};
                 if (['approved', 'aprobado', 'pagado', 'gratis'].indexOf(_estadoPagoAgenda) < 0 && _estadoPagoAgenda !== 'pendiente_verificacion') {
                     if (typeof p.saldoPendiente === 'number') _saldoAgenda = Math.max(0, p.saldoPendiente);
                     else _saldoAgenda = Math.max(0, (price > 0 ? price : 199990) - montoPagadoReal(p));
                 }
                 if (_saldoAgenda > 0) {
-                    var _cp = p.compromisoPago || {};
                     var _baseAgenda = {
                         uid: uid,
                         nombre: nombreDe(uid),
@@ -2558,7 +2559,7 @@
                         }));
                     }
                 }
-                if (p.seguimientoCobro && p.seguimientoCobro.desde) {
+                if (_cp.estado !== 'pausado' && p.seguimientoCobro && p.seguimientoCobro.desde) {
                     var _sg = p.seguimientoCobro;
                     var _dS = Math.max(0, Math.round((HOY - new Date(String(_sg.desde).replace(' ', 'T')).getTime()) / 86400000));
                     // El saldo guardado en `seguimientoCobro` es una FOTO del dia del cobro y nadie la
@@ -2576,7 +2577,7 @@
                         });
                     }
                 }
-                if (p.alertaCobro && p.alertaCobro.desde) {
+                if (_cp.estado !== 'pausado' && p.alertaCobro && p.alertaCobro.desde) {
                     var _dA = Math.max(0, Math.round((HOY - new Date(String(p.alertaCobro.desde).replace(' ', 'T')).getTime()) / 86400000));
                     // Mismo caso que seguimiento: el saldo guardado es una foto. Y aca importa mas,
                     // porque esta lista es la de "no contesto nada": alguien que pago y no dijo nada
@@ -2745,7 +2746,7 @@
                               '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
                               '<td class="py-1.5 pr-2 ' + (viejo ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
                               '<td class="py-1.5 pr-2">' + (x.conOA ? '<span class="text-emerald-600 font-semibold">sí</span>' : '<span class="text-gray-400">falta</span>') + '</td>' +
-                              '<td class="py-1.5 text-right tabular-nums text-indigo-700">' + formatCLP(199990) + '</td></tr>';
+                              '<td class="py-1.5 text-right tabular-nums text-indigo-700">' + formatCLP(x.valor) + '</td></tr>';
                     });
                     hp += '</tbody></table>';
                     potEl.innerHTML = hp;

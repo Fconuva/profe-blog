@@ -54,6 +54,13 @@ test('financial potential respects each registered plan instead of inflating mod
   assert.match(admin, /var potencial = totalRevenue \+ sinPagarMonto/);
   assert.doesNotMatch(admin, /sinPagar \* 199990/);
   assert.match(admin, /según el valor de su plan/);
+  assert.match(admin, /formatCLP\(x\.valor\)/);
+  assert.doesNotMatch(admin, /a \$199\.990 cada uno/);
+});
+
+test('paused collections never leak into follow-up or no-response alerts', () => {
+  assert.match(admin, /_cp\.estado !== 'pausado' && p\.seguimientoCobro/);
+  assert.match(admin, /_cp\.estado !== 'pausado' && p\.alertaCobro/);
 });
 
 test('paid drafts do not unlock the progress screen', () => {

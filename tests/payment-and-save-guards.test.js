@@ -49,6 +49,13 @@ test('collection agenda uses verified WhatsApp commitments and keeps undated bal
   assert.doesNotMatch(admin, /fechaGrabacion[^\n]{0,120}agenda/i);
 });
 
+test('financial potential respects each registered plan instead of inflating module-only clients', () => {
+  assert.match(admin, /sinPagarMonto \+= price > 0 \? price : 199990/);
+  assert.match(admin, /var potencial = totalRevenue \+ sinPagarMonto/);
+  assert.doesNotMatch(admin, /sinPagar \* 199990/);
+  assert.match(admin, /según el valor de su plan/);
+});
+
 test('paid drafts do not unlock the progress screen', () => {
   assert.match(
     dashboard,

@@ -2390,7 +2390,7 @@
         // ===== RENDER DASHBOARD =====
         function renderDashboard() {
             var uids = getClientUids();
-            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0, mpGross = 0;
+            var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0, sinPagarMonto = 0, mpGross = 0;
             var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
@@ -2491,6 +2491,7 @@
                 } else {
                     // INSCRITO SIN PAGAR (lead o pre-inscrito): NO es plata comprometida; va al escenario optimista.
                     sinPagar++;
+                    sinPagarMonto += price > 0 ? price : 199990;
                     var fIns = (c && c.createdAt) || p.createdAt || '';
                     var diasIns = fIns ? Math.max(0, Math.round((HOY - new Date(fIns).getTime()) / 86400000)) : null;
                     var _dpSP = p.datosPortafolio || {};
@@ -2650,8 +2651,9 @@
             // NETO: comisión MercadoPago SOLO sobre pagos con tarjeta (los que tienen comprobantePago/ID); las transferencias no pagan comisión.
             var netPaid = paidRevenue - Math.round(mpGross * mercadoPagoBaseFeeRate);
             var _spn = document.getElementById('stat-paid-net'); if (_spn) _spn.textContent = formatCLP(netPaid) + ' neto';
-            // ESCENARIO META: si TODOS los inscritos pagan el plan completo (leads proyectados a $199.990).
-            var potencial = totalRevenue + sinPagar * 199990;
+            // ESCENARIO META: si todos pagan el plan que realmente tienen registrado.
+            // No se infla un módulo suelto como si fuera un portafolio completo.
+            var potencial = totalRevenue + sinPagarMonto;
             var faltaTotal = Math.max(0, potencial - paidRevenue);
             var nMeta = totalWithPlan + sinPagar;
             var _setD = function(id, v){ var e = document.getElementById(id); if (e) e.textContent = v; };
@@ -2689,9 +2691,9 @@
             // ===== detalle nuevo: desglose, cobranza, pendientes, sin-OA, módulos =====
             _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (regalosN ? ' · ' + regalosN + ' regalo' + (regalosN > 1 ? 's' : '') : ''));
             _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos');
-            _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' inscritos = ' + totalWithPlan + ' que ya pusieron plata + ' + sinPagar + ' sin pagar (proyectados a $199.990 c/u).' + (regalosN ? ' Los ' + regalosN + ' regalos no suman a la meta.' : '') + ' Los que aún no pagan NO son plata comprometida.');
-            var potNoPagan = sinPagar * 199990;
-            _setD('stat-opt-falta-desglose', 'Ese "te falta" se compone de DOS platas distintas: ' + formatCLP(pendingRevenue) + ' ya COMPROMETIDOS (las 2ª cuotas de los ' + pendingRevenueCount + ' que abonaron: esa plata llega casi segura, solo hay que cobrarla) + ' + formatCLP(potNoPagan) + ' POTENCIALES (los ' + sinPagar + ' inscritos que aún no pagan nada × $199.990: esa plata NO existe todavía, depende de convertirlos).');
+            _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' inscritos = ' + totalWithPlan + ' que ya pusieron plata + ' + sinPagar + ' sin pagar, cada uno valorado según su plan registrado.' + (regalosN ? ' Los ' + regalosN + ' regalos no suman a la meta.' : '') + ' Los que aún no pagan NO son plata comprometida.');
+            var potNoPagan = sinPagarMonto;
+            _setD('stat-opt-falta-desglose', 'Ese "te falta" se compone de DOS platas distintas: ' + formatCLP(pendingRevenue) + ' ya COMPROMETIDOS (saldos de quienes abonaron) + ' + formatCLP(potNoPagan) + ' POTENCIALES (los ' + sinPagar + ' inscritos que aún no pagan nada, según el valor de su plan). La plata potencial todavía no existe: depende de convertirlos.');
             // cobranza: aging + tabla
             var mas30 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 30; }).length;
             var mas60 = cobranzaList.filter(function (x) { return x.dias !== null && x.dias > 60; }).length;
@@ -2727,7 +2729,7 @@
             // los recuadros de arriba, para que nunca digan cosas distintas.
             _setD('tbl-comprometido-monto', formatCLP(pendingRevenue));
             _setD('tbl-comprometido-n', cobranzaList.length);
-            _setD('tbl-potencial-monto', formatCLP(sinPagar * 199990));
+            _setD('tbl-potencial-monto', formatCLP(sinPagarMonto));
             _setD('tbl-potencial-n', sinPagar);
             // Potencial: los inscritos que no han pagado nada. Ordenados por antiguedad, porque
             // el que lleva mas tiempo inscrito sin pagar es al que hay que mirar primero.

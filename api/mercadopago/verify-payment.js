@@ -11,6 +11,12 @@ const PLANS = {
   modulo3: 79990
 };
 
+function portfolioPrice(portfolio, plan) {
+  const agreed = Number(portfolio && portfolio.precioAcordado);
+  if (Number.isFinite(agreed) && agreed > 0) return agreed;
+  return PLANS[PLANS[plan] ? plan : 'completo'];
+}
+
 function initFirebase() {
   if (admin.apps && admin.apps.length) return admin;
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64 || process.env.FIREBASE_SERVICE_ACCOUNT;
@@ -30,10 +36,10 @@ function getUidFromExternalReference(externalReference) {
   return match ? match[1] : '';
 }
 
-function classifyPortfolioPayment(payment, metadata, plan) {
+function classifyPortfolioPayment(payment, metadata, plan, portfolio) {
   const planKey = PLANS[plan] ? plan : '';
   if (!planKey) return { valid: false, reason: 'plan' };
-  const expected = PLANS[planKey];
+  const expected = portfolioPrice(portfolio, planKey);
   const amount = Number(payment && payment.transaction_amount) || 0;
   const currency = String((payment && payment.currency_id) || '').toUpperCase();
   if (currency !== 'CLP') return { valid: false, reason: 'currency', plan: planKey };
@@ -61,6 +67,7 @@ function classifyPortfolioPayment(payment, metadata, plan) {
 function nextPortfolioPaymentState(current, payment, plan, paymentType, verifiedAt) {
   current = current || {};
   const planKey = PLANS[plan] ? plan : 'completo';
+  const price = portfolioPrice(current, planKey);
   const paymentId = String(payment.id);
   const amount = Number(payment.transaction_amount) || 0;
   const existingAbonos = Array.isArray(current.abonos) ? current.abonos.slice() : [];
@@ -100,7 +107,7 @@ function nextPortfolioPaymentState(current, payment, plan, paymentType, verified
     fecha: String(verifiedAt).slice(0, 10),
     medio: 'Mercado Pago'
   });
-  const complete = total >= PLANS[planKey] - 10000;
+  const complete = total >= price - 10000;
   return Object.assign({}, current, {
     paymentStatus: complete ? 'approved' : 'abono',
     comprobantePago: paymentId,
@@ -111,7 +118,7 @@ function nextPortfolioPaymentState(current, payment, plan, paymentType, verified
     abonoAcumulado: total,
     abonos: existingAbonos,
     esAbono: complete ? null : true,
-    saldoPendiente: complete ? null : Math.max(0, PLANS[planKey] - total),
+    saldoPendiente: complete ? null : Math.max(0, price - total),
     plan: planKey
   });
 }
@@ -177,7 +184,7 @@ module.exports = async (req, res) => {
       return res.json({ verified: false, reason: 'El correo del pago pertenece a otra cuenta' });
     }
 
-    const classification = classifyPortfolioPayment(payment, metadata, plan);
+    const classification = classifyPortfolioPayment(payment, metadata, plan, currentPortfolio);
     if (!classification.valid) {
       const amount = Number(payment.transaction_amount) || 0;
       return res.json({

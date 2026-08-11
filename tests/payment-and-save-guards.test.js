@@ -189,6 +189,47 @@ test('payment classification distinguishes full payment, instalment and invalid 
   );
 });
 
+test('an individually agreed price overrides the generic plan in admin and payments', () => {
+  assert.match(admin, /function getPortfolioPrice\(portfolio\)/);
+  assert.match(preferenceSource, /portfolio\.precioAcordado/);
+  assert.deepEqual(
+    webhook.classifyPortfolioPayment(
+      { transaction_amount: 240000, currency_id: 'CLP' },
+      {},
+      'completo',
+      { precioAcordado: 240000 }
+    ),
+    { valid: true, type: 'completo', plan: 'completo' }
+  );
+  assert.equal(
+    webhook.classifyPortfolioPayment(
+      { transaction_amount: 199990, currency_id: 'CLP' },
+      {},
+      'completo',
+      { precioAcordado: 240000 }
+    ).valid,
+    false
+  );
+
+  const first = verifier.nextPortfolioPaymentState(
+    { plan: 'completo', precioAcordado: 240000, paymentStatus: 'pending' },
+    { id: 'especial-1', transaction_amount: 100000 },
+    'completo',
+    'abono',
+    '2026-08-10T12:00:00.000Z'
+  );
+  assert.equal(first.saldoPendiente, 140000);
+  const complete = verifier.nextPortfolioPaymentState(
+    first,
+    { id: 'especial-2', transaction_amount: 140000 },
+    'completo',
+    'saldo',
+    '2026-08-10T12:00:00.000Z'
+  );
+  assert.equal(complete.paymentStatus, 'approved');
+  assert.equal(complete.paymentAmount, 240000);
+});
+
 test('manual verification accumulates both instalments once and completes the portfolio', () => {
   const at = '2026-08-04T12:00:00.000Z';
   const first = verifier.nextPortfolioPaymentState(

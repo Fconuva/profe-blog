@@ -57,6 +57,12 @@ async function findUidByEmail(db, email) {
 
 const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
 
+function portfolioPrice(portfolio, plan) {
+  const agreed = Number(portfolio && portfolio.precioAcordado);
+  if (Number.isFinite(agreed) && agreed > 0) return agreed;
+  return PLAN_PRICES[PLAN_PRICES[plan] ? plan : 'completo'];
+}
+
 function isExpectedMoney(payment, expectedAmount) {
   return String((payment && payment.currency_id) || '').toUpperCase() === 'CLP'
     && Number(payment && payment.transaction_amount) === expectedAmount;
@@ -77,11 +83,11 @@ function getNotificationId(req) {
   return query['data.id'] || (body.data && body.data.id) || query.id || body.payment_id || body.id || '';
 }
 
-function classifyPortfolioPayment(payment, metadata, plan) {
+function classifyPortfolioPayment(payment, metadata, plan, portfolio) {
   const amount = Number(payment && payment.transaction_amount) || 0;
   const currency = String((payment && payment.currency_id) || '').toUpperCase();
   const planKey = PLAN_PRICES[plan] ? plan : 'completo';
-  const expected = PLAN_PRICES[planKey];
+  const expected = portfolioPrice(portfolio, planKey);
   if (currency !== 'CLP') return { valid: false, reason: 'currency', plan: planKey };
   if (amount > expected + 10000) return { valid: false, reason: 'amount', plan: planKey };
   if (metadata && metadata.tipo === 'saldo') {
@@ -107,11 +113,11 @@ function classifyPortfolioPayment(payment, metadata, plan) {
 async function applyPortfolioPayment(db, uid, payment, plan, paymentType, approvedAt) {
   if (!uid) return false;
   const planKey = PLAN_PRICES[plan] ? plan : 'completo';
-  const price = PLAN_PRICES[planKey];
   const amount = Number(payment.transaction_amount) || 0;
   const paymentId = String(payment.id);
   await db.ref('portafolios/' + uid).transaction(function(current) {
     current = current || {};
+    const price = portfolioPrice(current, planKey);
     if (current.paymentStatus === 'approved' || current.paymentStatus === 'aprobado' || current.paymentStatus === 'pagado') {
       return current;
     }
@@ -311,7 +317,7 @@ module.exports = async (req, res) => {
         if (!payerPlan && PLAN_PRICES[currentPortfolio.plan]) payerPlan = currentPortfolio.plan;
       }
       if (!payerPlan) payerPlan = 'completo';
-      const portfolioClassification = isCourseRegistration ? null : classifyPortfolioPayment(payment, metadata, payerPlan);
+      const portfolioClassification = isCourseRegistration ? null : classifyPortfolioPayment(payment, metadata, payerPlan, currentPortfolio);
 
       if (isCourseRegistration && !isExpectedMoney(payment, 30000)) {
         console.error('Course payment amount or currency mismatch', { paymentId: payment.id });

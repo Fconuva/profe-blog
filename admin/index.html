@@ -1141,6 +1141,11 @@
 
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
+        function getPortfolioPrice(portfolio) {
+            var agreed = Number(portfolio && portfolio.precioAcordado);
+            if (Number.isFinite(agreed) && agreed > 0) return agreed;
+            return getPlanPrice(portfolio && portfolio.plan);
+        }
 
         // ===== Exportar datos de portafolios (JSON para construir / PDF legible) =====
         function _escHtml(s) { return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -1333,7 +1338,7 @@
                 var name = clientLabel(uid, nextClients);
 
                 if (!isApprovedStatus(previous.paymentStatus) && isApprovedStatus(current.paymentStatus)) {
-                    showAdminNotification('Pago aprobado', name + ' · ' + formatCLP(current.paymentAmount || getPlanPrice(current.plan)), '/admin/');
+                    showAdminNotification('Pago aprobado', name + ' · ' + formatCLP(current.paymentAmount || getPortfolioPrice(current)), '/admin/');
                 }
 
                 if (previous.paymentStatus !== 'pendiente_verificacion' && current.paymentStatus === 'pendiente_verificacion') {
@@ -1770,7 +1775,7 @@
         function saldoPendienteReal(p) {
             p = p || {};
             var pagado = montoPagadoReal(p);
-            var precio = getPlanPrice(p.plan);
+            var precio = getPortfolioPrice(p);
             if (precio > 0 && pagado >= precio) return 0;
             var guardado = Number(p.saldoPendiente);
             if (Number.isFinite(guardado) && guardado >= 0) return guardado;
@@ -2428,7 +2433,7 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 total++;
-                var price = getPlanPrice(p.plan);
+                var price = getPortfolioPrice(p);
                 var pagoReal = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
                 if (c.status === 'pre-inscrito' && (!p.plan || p.plan === 'pre-inscripcion') && !pagoReal) preInscrito++;
                 // Plan real: plan de pago contratado, O ya pagó algo aunque su 'plan' haya quedado como 'pre-inscripcion'.
@@ -2945,7 +2950,7 @@
                 var c = allClients[uid];
                 var p = allPortafolios[uid] || {};
                 var progress = calcProgress(p);
-                var price = getPlanPrice(p.plan);
+                var price = getPortfolioPrice(p);
                 var orden = idx + 1;
                 var msg2026 = p.seguimiento && p.seguimiento.requerimientos2026Enviado && p.seguimiento.requerimientos2026Enviado.enviado;
 
@@ -3021,7 +3026,7 @@
                         '<div class="flex-1">' +
                             '<p class="font-medium text-gray-900">' + escapeHtml(c.nombre) + '</p>' +
                             '<p class="text-sm text-gray-500">' + escapeHtml(c.email) + ' · ' + escapeHtml(c.telefono || '') + '</p>' +
-                            '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · <strong>' + formatCLP(getPlanPrice(p.plan)) + '</strong> · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
+                            '<p class="text-xs text-gray-400 mt-1">Plan: ' + (planNames[p.plan] || p.plan) + ' · <strong>' + formatCLP(getPortfolioPrice(p)) + '</strong> · Comprobante: <span class="font-mono">' + escapeHtml(p.comprobantePago || '—') + '</span> · ' + formatDate(p.paymentConfirmedAt) + '</p>' +
                         '</div>' +
                         '<div class="flex gap-2">' +
                             '<button class="px-4 py-2 text-sm font-medium rounded-lg bg-primary-600 text-white hover:bg-primary-700 pay-approve" data-uid="' + uid + '">✅ Aprobar</button>' +
@@ -3038,7 +3043,7 @@
                         if (confirm('¿Aprobar pago para ' + (c.nombre || '') + '?')) {
                             var paymentId = 'MP-M' + Date.now().toString().substring(5);
                             var plan = p.plan || 'completo';
-                            var expectedAmount = planPrices[plan] || 199990;
+                            var expectedAmount = getPortfolioPrice(p) || 199990;
                             var verifiedDate = new Date().toISOString();
 
                             var updates = {};
@@ -3105,7 +3110,7 @@
                 approvedUids.forEach(function(uid) {
                     var c = allClients[uid] || {};
                     var p = allPortafolios[uid] || {};
-                    var price = getPlanPrice(p.plan);
+                    var price = getPortfolioPrice(p);
                     var breakdown = paymentBreakdown(p, price, uid);
                     var feeLabel = breakdown.totalFee ? 'Bruto ' + formatCLP(breakdown.gross) + ' · desc. ' + formatCLP(breakdown.totalFee) : 'Bruto ' + formatCLP(breakdown.gross);
                     if (breakdown.installments > 1) feeLabel += ' · ' + breakdown.installments + ' cuotas';
@@ -3402,7 +3407,7 @@
             document.getElementById('edit-plan').value = p.plan || 'pre-inscripcion';
             var paymentValue = p.paymentStatus || ((p.plan === 'pre-inscripcion' || c.status === 'pre-inscrito') ? 'pre-inscrito' : 'pendiente');
             document.getElementById('edit-payment').value = paymentValue;
-            var price = getPlanPrice(p.plan);
+            var price = getPortfolioPrice(p);
             var montoText = '—';
             if (paymentValue === 'gratis' || p.esRegalo) {
                 montoText = '🎁 Regalado · No cobra ($0)';
@@ -3480,7 +3485,7 @@
             // Comprobante por monto personalizado (abono) — disponible siempre que haya plan con precio
             var btnCompMonto = document.getElementById('btn-comprobante-monto');
             if (btnCompMonto) {
-                if (getPlanPrice(p.plan) > 0) { btnCompMonto.classList.remove('hidden'); } else { btnCompMonto.classList.add('hidden'); }
+                if (getPortfolioPrice(p) > 0) { btnCompMonto.classList.remove('hidden'); } else { btnCompMonto.classList.add('hidden'); }
                 var newCM = btnCompMonto.cloneNode(true);
                 btnCompMonto.parentNode.replaceChild(newCM, btnCompMonto);
                 newCM.addEventListener('click', function() { comprobantePersonalizadoFlow(c, p); });
@@ -3587,7 +3592,7 @@
             if (confirm('¿Aprobar pago manualmente? Se generará un comprobante automático de inmediato.')) {
                 var paymentId = 'MP-M' + Date.now().toString().substring(5);
                 var plan = p.plan || 'completo';
-                var expectedAmount = planPrices[plan] || 199990;
+                var expectedAmount = getPortfolioPrice(p) || 199990;
                 var verifiedDate = new Date().toISOString();
 
                 var updates = {};
@@ -3698,7 +3703,7 @@
                 '\u2022 Nombre: ' + (c.nombre || '—'),
                 '\u2022 Email: ' + (c.email || '—'),
                 c.rut ? '\u2022 RUT: ' + c.rut : '',
-                p.plan && planNames[p.plan] ? '\u2022 Plan: *' + planNames[p.plan] + '* (' + formatCLP(getPlanPrice(p.plan)) + ')' : '',
+                p.plan && planNames[p.plan] ? '\u2022 Plan: *' + planNames[p.plan] + '* (' + formatCLP(getPortfolioPrice(p)) + ')' : '',
                 '',
                 '\uD83D\uDD17 *Ingresa a tu cuenta para revisar o editar tus datos:*',
                 'https://www.profefranciscopancho.com/cuenta/login.html',
@@ -3993,7 +3998,7 @@
                 '📹 *Importante:* entregarte el portafolio *no significa que terminamos*. Tu *clase grabada deberás practicarla*, y la iremos *ajustando juntos* las veces que haga falta. La meta es llegar a *agosto* (inicio de las grabaciones) con tu clase ya ensayada y lista.',
                 '',
                 '💳 *Sobre el pago:* en la medida de lo posible, te pedimos ir abonando tu plan. Eso es lo que nos permite entregar y seguir avanzando en tu portafolio.',
-                p.plan && planNames[p.plan] ? '• Tu plan: *' + planNames[p.plan] + '*' + (getPlanPrice(p.plan) ? ' (' + formatCLP(getPlanPrice(p.plan)) + ')' : '') : '',
+                p.plan && planNames[p.plan] ? '• Tu plan: *' + planNames[p.plan] + '*' + (getPortfolioPrice(p) ? ' (' + formatCLP(getPortfolioPrice(p)) + ')' : '') : '',
                 '',
                 'Cualquier duda, escríbeme por aquí y avanzamos juntos. 💪',
                 '',
@@ -4667,7 +4672,7 @@
             if (!c || !p) return;
             var uid = document.getElementById('edit-uid').value;
             if (!uid) { alert('No se pudo identificar al docente.'); return; }
-            var total = getPlanPrice(p.plan || 'completo') || 199990;
+            var total = getPortfolioPrice(p) || 199990;
             var abonadoAntes = (typeof p.paymentAmount === 'number') ? p.paymentAmount : 0;
             var saldoAntes = Math.max(0, total - abonadoAntes);
             var raw = prompt(

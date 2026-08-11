@@ -139,6 +139,10 @@ module.exports = async (req, res) => {
     const plan = plans[portfolio.plan] ? portfolio.plan : (plans[requestedPlan] ? requestedPlan : 'completo');
     const esAbono = tipo === 'abono' && plan === 'completo';
     const esSaldo = tipo === 'saldo';
+    const precioAcordado = Number(portfolio.precioAcordado);
+    const planElegido = Number.isFinite(precioAcordado) && precioAcordado > 0
+      ? { title: plans[plan].title + ' · precio acordado', price: precioAcordado }
+      : plans[plan];
 
     // Abono = 1ª cuota fija de $100.000 hacia el plan elegido (por defecto, completo)
     const saldo = Number(portfolio.saldoPendiente) || 0;
@@ -149,7 +153,7 @@ module.exports = async (req, res) => {
       ? { title: 'Saldo final Portafolio Docente 2026', price: saldo }
       : (esAbono
         ? { title: 'Abono 1ª cuota de 2 — Portafolio Docente 2026', price: 100000 }
-        : plans[plan]);
+        : planElegido);
 
     const host = process.env.BASE_URL || `https://${req.headers.host}`;
     const notification_url = `${host}/api/mercadopago/webhook`;

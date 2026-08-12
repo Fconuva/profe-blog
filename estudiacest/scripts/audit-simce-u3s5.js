@@ -78,6 +78,7 @@ expect(!/missingConcept|missingQuestion|incompleteOpen|incompleteMeta/.test(subm
 expect(!/\.length\s*[<>]=?\s*\d+/.test(submitWork), 'La entrega no debe exigir una extensión mínima de respuesta.');
 expect(submitWork.includes("child('completada').once('value')"), 'La entrega debe releer completada en Firebase antes de confirmar.');
 expect(submitWork.includes('showConfirmation()'), 'La entrega debe mostrar la confirmación visible.');
+expect(page.includes('Trabajo enviado'), 'La confirmación debe indicar explícitamente que el trabajo fue enviado.');
 
 if (failures.length) {
   console.error('Auditoría SIMCE U3S5 incumplida:\n- ' + failures.join('\n- '));

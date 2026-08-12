@@ -72,6 +72,12 @@ expect((page.match(/assets\/u3s5\/afiche-/g) || []).length >= 6, 'No están inte
 expect(page.includes("SESSION='sesion-u3-5'"), 'La página no usa la sesión sesion-u3-5.');
 expect(page.includes('resultados/${SESSION}/${uid}'), 'La entrega no registra resultados en Firebase.');
 expect(page.includes('Las respuestas correctas, el puntaje y la retroalimentación siguen ocultos.'), 'Falta el mensaje de resultados ocultos.');
+const submitWork = page.match(/async function submitWork\(\)\{([\s\S]*?)\n\s*\}\n\s*\n\s*function installProtection/)?.[1] || '';
+expect(Boolean(submitWork), 'No se encontró la función de entrega.');
+expect(!/missingConcept|missingQuestion|incompleteOpen|incompleteMeta/.test(submitWork), 'La entrega no debe depender de respuestas completas.');
+expect(!/\.length\s*[<>]=?\s*\d+/.test(submitWork), 'La entrega no debe exigir una extensión mínima de respuesta.');
+expect(submitWork.includes("child('completada').once('value')"), 'La entrega debe releer completada en Firebase antes de confirmar.');
+expect(submitWork.includes('showConfirmation()'), 'La entrega debe mostrar la confirmación visible.');
 
 if (failures.length) {
   console.error('Auditoría SIMCE U3S5 incumplida:\n- ' + failures.join('\n- '));

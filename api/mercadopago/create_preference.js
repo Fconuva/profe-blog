@@ -133,7 +133,11 @@ module.exports = async (req, res) => {
       'completo':  { title: 'Portafolio Completo (3 Módulos)', price: 199990 },
       'modulo1':   { title: 'Módulo 1 — Planificación', price: 79990 },
       'modulo2':   { title: 'Módulo 2 — Clase Grabada', price: 99990 },
-      'modulo3':   { title: 'Módulo 3 — Reflexión', price: 79990 }
+      'modulo3':   { title: 'Módulo 3 — Reflexión', price: 79990 },
+      // Combos a la carta (docentes que ya hicieron/grabaron un módulo por su cuenta)
+      'm1m2':      { title: 'Módulos 1 + 2 — Planificación + Clase Grabada', price: 179980 },
+      'm1m3':      { title: 'Módulos 1 + 3 — Planificación + Reflexión', price: 159980 },
+      'm2m3':      { title: 'Módulos 2 + 3 — Clase Grabada + Reflexión', price: 179980 }
     };
 
     const plan = plans[portfolio.plan] ? portfolio.plan : (plans[requestedPlan] ? requestedPlan : 'completo');

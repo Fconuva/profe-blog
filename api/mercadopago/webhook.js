@@ -55,7 +55,7 @@ async function findUidByEmail(db, email) {
   }) || '';
 }
 
-const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990 };
+const PLAN_PRICES = { completo: 199990, modulo1: 79990, modulo2: 99990, modulo3: 79990, m1m2: 179980, m1m3: 159980, m2m3: 179980 };
 
 function portfolioPrice(portfolio, plan) {
   const agreed = Number(portfolio && portfolio.precioAcordado);

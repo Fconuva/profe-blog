@@ -55,6 +55,8 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 - The server computes scores for interactive PAES guides; never trust `correct`, `total`, or `score` sent by the browser.
 - A final submission stores `submitted: true`, `completada: true`, both timestamps, and becomes immutable until the teacher resets it.
 - Correct answers, feedback, and scores remain hidden until the teacher publishes results for the selected guide and course in `/paes/admin/`.
+- A guide may accept an incomplete final submission only when its ID is explicitly listed in the server allowlist. Guide 17 intentionally accepts 0 to 24 answers; this exception must not weaken completion rules for other PAES guides.
+- The API may return an interactive guide answer key only when the attempt is complete and the teacher release is active for that student or course.
 - New PAES sessions must be registered in `estudiacest/scripts/class-submission-contract.json` and `estudiacest/scripts/academic-release-manifest.json`.
 - Visual assessment resources must preserve exactly the information used by the items. Inspect generated images at original resolution before publication.
 

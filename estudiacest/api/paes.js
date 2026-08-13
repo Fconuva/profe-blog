@@ -70,10 +70,20 @@ const G16_KEY = {
     21:'B',22:'B',23:'A',24:'D',25:'C'
 };
 
+const G17_KEY = {
+    1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',
+    7:'B',8:'D',9:'A',10:'C',11:'B',12:'D',
+    13:'A',14:'C',15:'B',16:'D',17:'A',18:'C',
+    19:'D',20:'B',21:'C',22:'A',23:'D',24:'B'
+};
+
 const INTERACTIVE_GUIDE_KEYS = {
     '15': G15_KEY,
-    '16': G16_KEY
+    '16': G16_KEY,
+    '17': G17_KEY
 };
+
+const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17']);
 
 const G14_KEY = {
     q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',
@@ -297,7 +307,7 @@ async function handleSubmitGuia(req, res) {
         safeScore = Math.round((safeCorrect / safeTotal) * 100);
     }
 
-    if (!draft && serverKey && Object.keys(safeAnswers).length !== safeTotal) {
+    if (!draft && serverKey && !INCOMPLETE_SUBMISSION_GUIDES.has(guideId) && Object.keys(safeAnswers).length !== safeTotal) {
         return res.status(400).json({ error: 'Debes responder todas las preguntas antes de entregar.' });
     }
 
@@ -391,7 +401,10 @@ async function handleGetGuiaState(req, res) {
             score: Number(value.score) || 0
         };
     }
-    return res.status(200).json({ success: true, attempt, released });
+    const answerKey = released && attempt.completada && INTERACTIVE_GUIDE_KEYS[guideId]
+        ? INTERACTIVE_GUIDE_KEYS[guideId]
+        : null;
+    return res.status(200).json({ success: true, attempt, released, answerKey });
 }
 
 async function handleSubmitGuia14(req, res) {

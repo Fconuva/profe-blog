@@ -48,6 +48,7 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP`
 - PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` under `/paes/`.
 - PAES results remain hidden until the teacher publishes them for the selected guide and course.
+- PAES answer keys are server-only and may be returned only for completed attempts covered by a teacher release. Any incomplete-submission exception must be an explicit per-guide server allowlist entry; Guide 17 accepts 0 to 24 answers.
 
 ## Audit Workflow
 

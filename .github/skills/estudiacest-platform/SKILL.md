@@ -78,6 +78,8 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - `fetch_webpage` can show cached or pre-redirect HTML; browser validation is the source of truth for the live route.
 - Some fixes in legacy/duplicate admin surfaces may need syncing between `profefconuva/estudiantes/adminprofe/index.html` and `profefconuva/estudiacest/estudiantes/adminprofe/index.html`.
 - PAES final submissions are immutable until reset, are scored on the server, and hide keys, feedback, and scores until the teacher publishes results in `/paes/admin/`.
+- Keep incomplete PAES submission exceptions server-side and guide-specific. Guide 17 accepts 0 to 24 answers; all other guide requirements remain unchanged.
+- Return PAES answer keys only after both conditions are true: the attempt is complete and the teacher release applies to that course or student.
 - Register every new interactive class in `scripts/class-submission-contract.json` and every critical route or asset in `scripts/academic-release-manifest.json`.
 - `sesion-u2-1` is not writing-only through generic `notes`: `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` stores writing in `ticket` and `thesisContexts`.
 - The extra `2A-HC` block inside `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` is course-gated but should read as two extra opinion columns only.

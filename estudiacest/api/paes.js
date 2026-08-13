@@ -56,6 +56,17 @@ function cleanRut(r) {
     return (r || '').replace(/[.\s-]/g, '').toUpperCase(); 
 }
 
+function normalizeStoredAnswers(rawAnswers) {
+    const normalized = {};
+    Object.entries(rawAnswers || {}).forEach(([id, rawAnswer]) => {
+        const answer = String(rawAnswer || '').toUpperCase();
+        if (!['A', 'B', 'C', 'D'].includes(answer)) return;
+        if (!/^(?:\d+|q\d+)$/i.test(String(id))) return;
+        normalized[String(id)] = answer;
+    });
+    return normalized;
+}
+
 const G15_KEY = {
     q01:'B',q02:'D',q03:'A',q04:'C',q05:'B',q06:'A',
     q07:'D',q08:'B',q09:'C',q10:'A',q11:'D',q12:'C',
@@ -362,7 +373,7 @@ async function handleGetGuiaDraft(req, res) {
     return res.status(200).json({
         success: true,
         draft: v ? {
-            answers: v.answers || {},
+            answers: normalizeStoredAnswers(v.answers),
             dev: v.dev || {},
             status: v.status || null,
             submitted: v.submitted === true || v.status === 'sent',
@@ -385,7 +396,7 @@ async function handleGetGuiaState(req, res) {
     const value = snap.val() || {};
     const released = await isGuideReleased(guideId, value.curso, rut);
     const attempt = {
-        answers: value.answers || {},
+        answers: normalizeStoredAnswers(value.answers),
         dev: value.dev || {},
         status: value.status || 'draft',
         submitted: value.submitted === true || value.status === 'sent',
@@ -579,6 +590,11 @@ async function handleAdminGetResults(req, res) {
     ]);
 
     const guiaRespuestas = guiaRespSnap.exists() ? guiaRespSnap.val() : {};
+    Object.values(guiaRespuestas).forEach((guideRecords) => {
+        Object.values(guideRecords || {}).forEach((record) => {
+            if (record && typeof record === 'object') record.answers = normalizeStoredAnswers(record.answers);
+        });
+    });
     if (guiaRespuestas['14']) guiaRespuestas['14'] = sanitizeGuia14ForAdmin(guiaRespuestas['14']);
 
     return res.status(200).json({

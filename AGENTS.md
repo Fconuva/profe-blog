@@ -57,6 +57,7 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 - Correct answers, feedback, and scores remain hidden until the teacher publishes results for the selected guide and course in `/paes/admin/`.
 - A guide may accept an incomplete final submission only when its ID is explicitly listed in the server allowlist. Guide 17 intentionally accepts 0 to 24 answers; this exception must not weaken completion rules for other PAES guides.
 - The API may return an interactive guide answer key only when the attempt is complete and the teacher release is active for that student or course.
+- Normalize PAES answer collections read from Realtime Database before returning them. Numeric keys can be serialized by RTDB as sparse arrays; null array slots are not answers and must never affect progress counts or admin review.
 - New PAES sessions must be registered in `estudiacest/scripts/class-submission-contract.json` and `estudiacest/scripts/academic-release-manifest.json`.
 - Any audit script invoked by the production `build` command must also be explicitly included in `estudiacest/.vercelignore`; a local-only audit file will make the Vercel build fail.
 - Visual assessment resources must preserve exactly the information used by the items. Inspect generated images at original resolution before publication.

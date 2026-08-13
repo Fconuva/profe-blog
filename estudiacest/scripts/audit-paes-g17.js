@@ -86,6 +86,14 @@ assert(!/validateBeforeSubmit|Debes responder todas las preguntas antes de entre
 assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(\['17'\]\)/.test(api), 'La API no permite una entrega incompleta en G17.');
 assert(/released && attempt\.completada && INTERACTIVE_GUIDE_KEYS\[guideId\]/.test(api), 'La clave no está protegida por liberación docente.');
 assert(/'17': G17_KEY/.test(api), 'La API no corrige G17 con clave del servidor.');
+assert(/function normalizeStoredAnswers\(rawAnswers\)/.test(api), 'La API no normaliza arreglos de respuestas provenientes de RTDB.');
+assert((api.match(/answers: normalizeStoredAnswers\(/g) || []).length >= 2, 'La API no normaliza respuestas en borrador y estado final.');
+const normalizerMatch = api.match(/function normalizeStoredAnswers\(rawAnswers\) \{[\s\S]*?\n\}/);
+if (normalizerMatch) {
+  const normalizerSandbox = {};
+  vm.runInNewContext(`${normalizerMatch[0]}; normalized = normalizeStoredAnswers([null, 'C', 'D'])`, normalizerSandbox);
+  assert(JSON.stringify(normalizerSandbox.normalized) === JSON.stringify({ 1: 'C', 2: 'D' }), 'La normalización no elimina el índice nulo de un arreglo RTDB.');
+}
 assert(/'17': \{[\s\S]*?total: 24/.test(admin), 'El admin no registra la Guía 17.');
 assert(/id="cardGuia17"/.test(portal) && /href="guia17\.html"/.test(portal), 'El portal no publica la tarjeta de G17.');
 

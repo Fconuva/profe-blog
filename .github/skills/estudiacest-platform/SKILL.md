@@ -81,6 +81,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - Keep incomplete PAES submission exceptions server-side and guide-specific. Guide 17 accepts 0 to 24 answers; all other guide requirements remain unchanged.
 - Return PAES answer keys only after both conditions are true: the attempt is complete and the teacher release applies to that course or student.
 - Register every new interactive class in `scripts/class-submission-contract.json` and every critical route or asset in `scripts/academic-release-manifest.json`.
+- When `package.json` adds a build audit, unignore that script explicitly in `.vercelignore` and verify the remote build artifact, not only the local build.
 - `sesion-u2-1` is not writing-only through generic `notes`: `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` stores writing in `ticket` and `thesisContexts`.
 - The extra `2A-HC` block inside `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` is course-gated but should read as two extra opinion columns only.
 - Keep the hidden rule in docs and code: Text 2 checks posture + support, Text 3 checks objection + response. Do not expose activation or scoring language in student-facing copy.

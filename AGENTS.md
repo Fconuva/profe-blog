@@ -86,3 +86,11 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 - A portfolio account requires a non-blank normalized name in both the public form and the admin API. HTML `required` alone is insufficient because whitespace passes browser validation.
 - When an archived pre-registration changes to a contracted plan, the admin save clears only its portfolio archive fields. It must not unarchive cancellations, blocked users, or already contracted portfolios that were archived intentionally.
 - Reattaching an existing authentication account through the admin create flow also clears stale portfolio archive fields and synchronizes the normalized name in Firebase Auth and `/users`.
+
+## Portfolio Admin Financial Contract
+
+- Cash received is the greatest valid total among `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado`; mirrored migration fields must never be added together.
+- A later benefit or free status removes the plan from receivables, but any prior payment remains real cash received.
+- Collection timing comes from `portafolios/{uid}/cartera`: apply the 30-day rule after the last abono unless WhatsApp records a later agreement. A class-recording date is never a collection date.
+- `esperar_m1` is visible as work-dependent debt and must not enter “Cobrar ahora”. Display people as unique clients even when one balance has multiple agreed movements.
+- After changing these rules, verify the deployed admin against the live Firebase totals, filters, and browser console.

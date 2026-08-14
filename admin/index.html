@@ -39,7 +39,7 @@
       .dashboard-command__legend span { display: block; color: #cbd5e1; font-size: 11px; line-height: 1.35; margin-top: 2px; }
       .agenda-shell { background: var(--admin-panel); border: 1px solid var(--admin-line); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
       .agenda-shell__head { display: flex; align-items: start; justify-content: space-between; gap: 16px; padding: 20px 22px 14px; border-bottom: 1px solid #eef2f7; }
-      .agenda-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); border-bottom: 1px solid #e8edf3; }
+      .agenda-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid #e8edf3; }
       .agenda-card { appearance: none; background: #fff; border: 0; border-right: 1px solid #e8edf3; cursor: pointer; min-height: 112px; padding: 15px 14px; text-align: left; transition: background-color .15s ease, box-shadow .15s ease; }
       .agenda-card:last-child { border-right: 0; }
       .agenda-card:hover, .agenda-card:focus-visible { background: #f8fafc; outline: none; box-shadow: inset 0 -3px 0 #94a3b8; }
@@ -51,6 +51,8 @@
       .agenda-card[data-agenda-filter="fin-agosto"] .agenda-card__count { color: #b45309; }
       .agenda-card[data-agenda-filter="mitad-septiembre"] .agenda-card__count,
       .agenda-card[data-agenda-filter="fin-septiembre"] .agenda-card__count { color: #1d4ed8; }
+      .agenda-card[data-agenda-filter="esperar-m1"] .agenda-card__count { color: #0f766e; }
+      .agenda-card[data-agenda-filter="despues-septiembre"] .agenda-card__count { color: #475569; }
       .agenda-card[data-agenda-filter="pausado"] .agenda-card__count { color: #7c3aed; }
       .agenda-all-button { align-self: flex-start; appearance: none; background: #fff; border: 1px solid #cbd5e1; border-radius: 8px; color: #172033; cursor: pointer; padding: 8px 12px; text-align: left; }
       .agenda-all-button:hover, .agenda-all-button:focus-visible { background: #f8fafc; border-color: #94a3b8; outline: none; }
@@ -339,7 +341,7 @@
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-blue-600">Agenda verificable</p>
                         <h2 id="agenda-cobros-title" class="font-heading font-bold text-gray-900 mt-0.5">Cuándo debería entrar cada pago</h2>
-                        <p class="text-xs text-gray-500 mt-1 max-w-3xl">“Ahora” incluye compromisos vencidos y los próximos diez días. Un mismo docente puede aparecer en dos fechas si dividió su saldo. Las fechas de clase grabada fueron descartadas y no influyen en esta agenda.</p>
+                        <p class="text-xs text-gray-500 mt-1 max-w-3xl">La agenda cruza pagos, acuerdos de WhatsApp y la regla de 30 días desde el último abono. Una fecha acordada prevalece. Las fechas de clase grabada no influyen en la cobranza.</p>
                     </div>
                     <button type="button" class="agenda-all-button is-active" data-agenda-filter="todos">
                         <span class="agenda-card__label">Ver</span>
@@ -348,12 +350,12 @@
                 </div>
                 <div class="agenda-grid" role="group" aria-label="Filtros de agenda de cobros">
                     <button type="button" class="agenda-card" data-agenda-filter="ahora">
-                        <span class="agenda-card__label">Ahora y próximos 10 días</span>
+                        <span class="agenda-card__label">Cobrar ahora</span>
                         <span class="agenda-card__count" id="agenda-ahora-n">0</span>
                         <span class="agenda-card__amount" id="agenda-ahora-monto">$0</span>
                     </button>
                     <button type="button" class="agenda-card" data-agenda-filter="fin-agosto">
-                        <span class="agenda-card__label">Fin de agosto</span>
+                        <span class="agenda-card__label">15 al 31 de agosto</span>
                         <span class="agenda-card__count" id="agenda-fin-agosto-n">0</span>
                         <span class="agenda-card__amount" id="agenda-fin-agosto-monto">$0</span>
                     </button>
@@ -368,9 +370,19 @@
                         <span class="agenda-card__amount" id="agenda-fin-septiembre-monto">$0</span>
                     </button>
                     <button type="button" class="agenda-card" data-agenda-filter="sin-fecha">
-                        <span class="agenda-card__label">Sin fecha acordada</span>
+                        <span class="agenda-card__label">Sin día exacto</span>
                         <span class="agenda-card__count" id="agenda-sin-fecha-n">0</span>
                         <span class="agenda-card__amount" id="agenda-sin-fecha-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="esperar-m1">
+                        <span class="agenda-card__label">Esperar entrega M1</span>
+                        <span class="agenda-card__count" id="agenda-esperar-m1-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-esperar-m1-monto">$0</span>
+                    </button>
+                    <button type="button" class="agenda-card" data-agenda-filter="despues-septiembre">
+                        <span class="agenda-card__label">Después de septiembre</span>
+                        <span class="agenda-card__count" id="agenda-despues-septiembre-n">0</span>
+                        <span class="agenda-card__amount" id="agenda-despues-septiembre-monto">$0</span>
                     </button>
                     <button type="button" class="agenda-card" data-agenda-filter="pausado">
                         <span class="agenda-card__label">Cobro pausado</span>
@@ -452,7 +464,9 @@
                     <button type="button" data-segf="" class="segf px-2 py-1 rounded border border-slate-300 bg-slate-800 text-white">Todos</button>
                     <button type="button" data-segf="SIN RESPONDER" class="segf px-2 py-1 rounded border border-rose-300 text-rose-700">Sin responder</button>
                     <button type="button" data-segf="RESPONDIO" class="segf px-2 py-1 rounded border border-slate-300 text-slate-600">Respondió</button>
-                    <button type="button" data-segf="PROMETIO" class="segf px-2 py-1 rounded border border-emerald-300 text-emerald-700">Prometió</button>
+                    <button type="button" data-segf="PROMETIO" class="segf px-2 py-1 rounded border border-emerald-300 text-emerald-700">Prometió / pidió plazo</button>
+                    <button type="button" data-segf="CUBIERTO" class="segf px-2 py-1 rounded border border-blue-300 text-blue-700">Cubierto por abono</button>
+                    <button type="button" data-segf="SIN COBRO" class="segf px-2 py-1 rounded border border-gray-300 text-gray-600">Sin cobro registrado</button>
                 </div>
                 <div id="seg-cobro-table" style="max-height:460px;overflow-y:auto"></div>
             </div>
@@ -1736,18 +1750,22 @@
             var s = String((p && p.paymentStatus) || '').toLowerCase();
             return s === 'approved' || s === 'aprobado' || s === 'abono' || s === 'pagado' || (p && p.esAbono === true);
         }
-        // Lo que un docente pagó de verdad. El monto vive en DOS lugares y ninguno es el único
-        // correcto: `abonos` es el arreglo de cuotas que se registra a mano, y `paymentAmount`
-        // es el acumulado del campo antiguo de la plataforma. Hay 16 fichas con el pago solo en
-        // `paymentAmount` y 9 con el pago solo en `abonos`, así que mirar uno solo deja plata
-        // fuera del panel. Se toma el mayor de los dos.
+        // Lo que un docente pagó de verdad. La base histórica usa cuatro canales: arreglo de
+        // abonos, paymentAmount, abonoAcumulado y montoPagado. Se toma el mayor para no sumar
+        // dos veces una misma transferencia que quedó replicada durante una migración.
         function montoPagadoReal(p) {
             if (!p) return 0;
             var ab = 0;
             var arr = p.abonos ? (Array.isArray(p.abonos) ? p.abonos : Object.values(p.abonos)) : [];
-            arr.forEach(function(a) { if (a && typeof a.monto === 'number') ab += a.monto; });
-            var pa = (typeof p.paymentAmount === 'number' && p.paymentAmount > 0) ? p.paymentAmount : 0;
-            return Math.max(ab, pa);
+            arr.forEach(function(a) {
+                var monto = Number(a && a.monto);
+                if (Number.isFinite(monto) && monto > 0) ab += monto;
+            });
+            var canales = [ab, p.paymentAmount, p.abonoAcumulado, p.montoPagado].map(function(v) {
+                var monto = Number(v);
+                return Number.isFinite(monto) && monto > 0 ? monto : 0;
+            });
+            return Math.max.apply(Math, canales);
         }
 
         function detalleCuotasPago(p) {
@@ -2354,7 +2372,20 @@
                     var _hayPlata = montoPagadoReal(_p) > 0 || (_p && _p.paymentStatus === 'gratis');
                     if (!_hayId && !_hayPlata) return false;
                 }
-                if (!c) { var _dp = (_p && _p.datosPortafolio) || {}; allClients[uid] = { nombre: _dp.nombre || '', email: _dp.email || '', status: 'solo-ficha' }; }
+                // Un nodo /users con solo teléfono, sin ficha ni fecha de inscripción, no es una
+                // inscripción terminada. Evita que pruebas o cuentas abandonadas inflen personas,
+                // potencial y agenda. Si ya existe /portafolios, el contacto sigue contando.
+                if (c && !_p && !(c.nombre || c.email || c.createdAt || c.inscripcionNum)) return false;
+                if (!c) {
+                    var _dp = (_p && _p.datosPortafolio) || {};
+                    allClients[uid] = {
+                        nombre: _dp.nombre || '',
+                        email: _dp.email || '',
+                        telefono: _dp.telefono || (_p && _p.telefono) || '',
+                        createdAt: (_p && _p.createdAt) || '',
+                        status: 'solo-ficha'
+                    };
+                }
                 return true;
             }).sort(function(a, b) {
                 var cA = allClients[a];
@@ -2396,13 +2427,14 @@
         function renderDashboard() {
             var uids = getClientUids();
             var total = 0, paid = 0, inProg = 0, completed = 0, pendingPay = 0, preInscrito = 0, sinPagar = 0, sinPagarMonto = 0, mpGross = 0;
-            var totalRevenue = 0, paidRevenue = 0, pendingRevenue = 0;
+            var totalRevenue = 0, paidRevenue = 0, planPaidRevenue = 0, pendingRevenue = 0;
             var totalWithPlan = 0, paidCount = 0, pendingRevenueCount = 0;
             var pendingPayList = [];
             var recentList = [];
             var conDrive = 0, conOA = 0, faltaOA = 0, borradorListo = 0;
             // detalle nuevo: desglose de pagos, cobranza, pendientes 🔴, sin-OA pagados, módulos
             var fullPayN = 0, fullPayMonto = 0, abonoN = 0, abonoMonto = 0, regalosN = 0;
+            var beneficioPagadoN = 0, beneficioPagadoMonto = 0;
             var cobranzaList = [], pendientesList = [], paidNoOAList = [], sinPagarList = [];
             // Silencio despues del cobro: la marca la pone herramientas/alerta_sin_respuesta_al_cobro.py
             // en el campo alertaCobro. Se muestra aparte porque no se atiende como una deuda comun:
@@ -2415,12 +2447,20 @@
             var seguimientoList = [];
             // Agenda financiera: fechas confirmadas por WhatsApp viven en compromisoPago.
             // No se infieren fechas desde la antiguedad del abono ni desde la fecha de grabacion.
-            var agendaEventos = [], agendaSinFecha = [], agendaPausados = [];
+            var agendaEventos = [], agendaSinFecha = [], agendaPausados = [], agendaEsperarM1 = [];
+            var cortesCartera = [];
             var modStats = { modulo1: { cont: 0, prog: 0, done: 0 }, modulo2: { cont: 0, prog: 0, done: 0 }, modulo3: { cont: 0, prog: 0, done: 0 } };
             var HOY = Date.now();
             var _hoyAgenda = new Date(HOY);
-            var LIMITE_AHORA = new Date(_hoyAgenda.getFullYear(), _hoyAgenda.getMonth(), _hoyAgenda.getDate() + 10, 23, 59, 59, 999).getTime();
-            function nombreDe(uid) { var cc = allClients[uid] || {}; var dp = (allPortafolios[uid] || {}).datosPortafolio || {}; return cc.nombre || dp.nombre || cc.email || uid.slice(0, 8); }
+            function nombreDe(uid) {
+                var cc = allClients[uid] || {};
+                var pp = allPortafolios[uid] || {};
+                var dp = pp.datosPortafolio || {};
+                var telefono = cc.telefono || dp.telefono || pp.telefono || '';
+                var digitos = String(telefono).replace(/\D/g, '');
+                var rotuloTelefono = digitos.length >= 8 ? 'Contacto +' + digitos : '';
+                return cc.nombre || dp.nombre || cc.email || dp.email || rotuloTelefono || uid.slice(0, 8);
+            }
             function notasA(p) { // adminNotas puede ser string u objeto {ts: nota}
                 var n = p.adminNotas; if (!n) return [];
                 if (typeof n === 'string') return n.split('\n');
@@ -2434,16 +2474,23 @@
                 var p = allPortafolios[uid] || {};
                 total++;
                 var price = getPortfolioPrice(p);
-                var pagoReal = p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'abono' || p.esAbono === true;
+                var pagoRegistrado = montoPagadoReal(p);
+                var pagoReal = pagoRegistrado > 0 || ['approved', 'aprobado', 'abono', 'pagado'].indexOf(String(p.paymentStatus || '').toLowerCase()) >= 0 || p.esAbono === true;
                 if (c.status === 'pre-inscrito' && (!p.plan || p.plan === 'pre-inscripcion') && !pagoReal) preInscrito++;
                 // Plan real: plan de pago contratado, O ya pagó algo aunque su 'plan' haya quedado como 'pre-inscripcion'.
                 var esPlanReal = (p.plan && p.plan !== 'pre-inscripcion' && price > 0) || pagoReal;
                 if (esPlanReal && !(price > 0)) price = 199990;
                 if (p.paymentStatus === 'gratis') {
-                    // Portafolio regalado: cuenta como cliente activo pero NO suma dinero, aunque
-                    // tenga un monto registrado. Un 'gratis' con plata suele ser un campo que
-                    // quedó de antes, y darlo por recaudado inventaría ingresos.
+                    // El beneficio no genera saldo ni integra la meta de planes. Pero si hubo un
+                    // abono ANTES de concederlo, ese dinero sí entró y debe aparecer en recaudado.
                     paid++; regalosN++;
+                    if (pagoRegistrado > 0) {
+                        paidRevenue += pagoRegistrado;
+                        paidCount++;
+                        beneficioPagadoN++;
+                        beneficioPagadoMonto += pagoRegistrado;
+                        if (p.comprobantePago) mpGross += pagoRegistrado;
+                    }
                 } else if (p.paymentStatus === 'approved' || p.paymentStatus === 'aprobado' || p.paymentStatus === 'pagado') {
                     // COMPROMETIDO + RECAUDADO: pago completo confirmado.
                     // 'pagado' estaba fuera de esta rama y caía en "inscrito sin pagar": eran 30
@@ -2453,6 +2500,7 @@
                     var montoFull = montoPagadoReal(p) || price;
                     totalRevenue += montoFull; totalWithPlan++;
                     paidRevenue += montoFull;
+                    planPaidRevenue += montoFull;
                     if (p.comprobantePago) mpGross += montoFull; // pago por MercadoPago (tiene ID); las transferencias no
                     paid++; paidCount++; fullPayN++; fullPayMonto += montoFull;
                 } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
@@ -2464,6 +2512,7 @@
                     if (saldoAb > 0 && abono >= price) saldoAb = 0; // saldo obsoleto: ya pagó todo
                     totalRevenue += abono + saldoAb; totalWithPlan++;
                     paidRevenue += abono;
+                    planPaidRevenue += abono;
                     if (p.comprobantePago) mpGross += abono; // abono por MercadoPago (tiene ID)
                     paid++; paidCount++; abonoN++; abonoMonto += abono;
                     if (saldoAb > 0) {
@@ -2511,13 +2560,17 @@
                     });
                 }
 
-                // La agenda abarca todo saldo vivo, pero conserva la diferencia entre una fecha
-                // confirmada, una fecha incompleta, un cobro pausado y la ausencia de acuerdo.
+                // La agenda usa la cartera conciliada con WhatsApp. Esa capa aplica la regla de
+                // 30 días desde el último abono, respeta una fecha posterior acordada y separa a
+                // quienes todavía no deben ser cobrados porque falta entregarles el M1.
                 var _estadoPagoAgenda = String(p.paymentStatus || '').toLowerCase();
+                var _cartera = p.cartera && typeof p.cartera === 'object' ? p.cartera : {};
+                if (_cartera.actualizadoEn) cortesCartera.push(String(_cartera.actualizadoEn).slice(0, 10));
                 var _saldoAgenda = 0;
                 var _cp = p.compromisoPago || {};
                 if (['approved', 'aprobado', 'pagado', 'gratis'].indexOf(_estadoPagoAgenda) < 0 && _estadoPagoAgenda !== 'pendiente_verificacion') {
-                    if (typeof p.saldoPendiente === 'number') _saldoAgenda = Math.max(0, p.saldoPendiente);
+                    if (typeof _cartera.saldo === 'number') _saldoAgenda = Math.max(0, _cartera.saldo);
+                    else if (typeof p.saldoPendiente === 'number') _saldoAgenda = Math.max(0, p.saldoPendiente);
                     else _saldoAgenda = Math.max(0, (price > 0 ? price : 199990) - montoPagadoReal(p));
                 }
                 if (_saldoAgenda > 0) {
@@ -2525,11 +2578,11 @@
                         uid: uid,
                         nombre: nombreDe(uid),
                         saldo: _saldoAgenda,
-                        evidencia: _cp.evidencia || '',
-                        fuente: _cp.fuente || '',
-                        estadoPago: _estadoPagoAgenda || 'pendiente'
+                        evidencia: _cp.evidencia || _cartera.proximoCobroMotivo || '',
+                        fuente: _cp.fuente || (_cartera.actualizadoEn ? 'Cartera conciliada con WhatsApp' : ''),
+                        estadoPago: _cartera.estadoPago || _estadoPagoAgenda || 'pendiente'
                     };
-                    if (_cp.estado === 'pausado') {
+                    if (_cp.estado === 'pausado' || _cartera.tramoCobro === 'pausado') {
                         agendaPausados.push(Object.assign({}, _baseAgenda, { bucket: 'pausado', fecha: '', monto: _saldoAgenda, ventana: _cp.ventana || '' }));
                     } else if (_cp.estado === 'confirmado' && Array.isArray(_cp.pagos) && _cp.pagos.length) {
                         var _restanteAgenda = _saldoAgenda;
@@ -2539,9 +2592,9 @@
                             if (!_montoEvento) return;
                             var _fechaEvento = String(_pagoAgenda.fecha || '');
                             var _msEvento = new Date(_fechaEvento + 'T23:59:59-04:00').getTime();
-                            var _bucketEvento = 'otra-fecha';
-                            if (!isNaN(_msEvento) && _msEvento <= LIMITE_AHORA) _bucketEvento = 'ahora';
-                            else if (_fechaEvento >= '2026-08-21' && _fechaEvento <= '2026-08-31') _bucketEvento = 'fin-agosto';
+                            var _bucketEvento = 'despues-septiembre';
+                            if (!isNaN(_msEvento) && _msEvento <= new Date(_hoyAgenda.getFullYear(), _hoyAgenda.getMonth(), _hoyAgenda.getDate(), 23, 59, 59, 999).getTime()) _bucketEvento = 'ahora';
+                            else if (_fechaEvento >= '2026-08-15' && _fechaEvento <= '2026-08-31') _bucketEvento = 'fin-agosto';
                             else if (_fechaEvento >= '2026-09-01' && _fechaEvento <= '2026-09-15') _bucketEvento = 'mitad-septiembre';
                             else if (_fechaEvento >= '2026-09-16' && _fechaEvento <= '2026-09-30') _bucketEvento = 'fin-septiembre';
                             agendaEventos.push(Object.assign({}, _baseAgenda, {
@@ -2556,6 +2609,34 @@
                         if (_restanteAgenda > 0) {
                             agendaSinFecha.push(Object.assign({}, _baseAgenda, { bucket: 'sin-fecha', fecha: '', monto: _restanteAgenda, estado: 'sin-fecha' }));
                         }
+                    } else if (_cartera.tramoCobro === 'esperar_m1') {
+                        agendaEsperarM1.push(Object.assign({}, _baseAgenda, {
+                            bucket: 'esperar-m1', fecha: '', monto: _saldoAgenda,
+                            estado: 'esperar-m1', ventana: 'Hasta entregar el M1'
+                        }));
+                    } else if (_cartera.tramoCobro === 'plazo_sin_fecha' || _cartera.tramoCobro === 'sin_fecha') {
+                        agendaSinFecha.push(Object.assign({}, _baseAgenda, {
+                            bucket: 'sin-fecha', fecha: '', monto: _saldoAgenda,
+                            estado: 'fecha-incompleta', ventana: _cp.ventana || 'Sin día exacto'
+                        }));
+                    } else if (_cartera.tramoCobro) {
+                        var _mapaTramo = {
+                            'cobrar_ahora': 'ahora',
+                            'fin_agosto': 'fin-agosto',
+                            'mitad_septiembre': 'mitad-septiembre',
+                            'fin_septiembre': 'fin-septiembre',
+                            'despues_septiembre': 'despues-septiembre'
+                        };
+                        var _bucketCartera = _mapaTramo[_cartera.tramoCobro] || 'sin-fecha';
+                        var _fechaCartera = String(_cartera.proximoCobroFecha || '');
+                        var _eventoCartera = Object.assign({}, _baseAgenda, {
+                            bucket: _bucketCartera,
+                            fecha: _fechaCartera,
+                            monto: _saldoAgenda,
+                            estado: _cartera.compromisoEstructurado === 'CONFIRMADO' ? 'confirmado' : 'calculado'
+                        });
+                        if (_bucketCartera === 'sin-fecha') agendaSinFecha.push(_eventoCartera);
+                        else agendaEventos.push(_eventoCartera);
                     } else {
                         agendaSinFecha.push(Object.assign({}, _baseAgenda, {
                             bucket: 'sin-fecha', fecha: '', monto: _saldoAgenda,
@@ -2564,37 +2645,49 @@
                         }));
                     }
                 }
-                if (_cp.estado !== 'pausado' && p.seguimientoCobro && p.seguimientoCobro.desde) {
-                    var _sg = p.seguimientoCobro;
-                    var _dS = Math.max(0, Math.round((HOY - new Date(String(_sg.desde).replace(' ', 'T')).getTime()) / 86400000));
-                    // El saldo guardado en `seguimientoCobro` es una FOTO del dia del cobro y nadie la
-                    // actualiza cuando la persona paga. Asi Carolina Walesca aparecia debiendo $99.990
-                    // el mismo dia que completo su pago. Se recalcula en vivo y quien ya no debe sale
-                    // de la lista: seguir mostrandolo hace que se le cobre a alguien que no debe nada.
-                    var _saldoVivo = Math.max(0, price - montoPagadoReal(p));
+                if (_cp.estado !== 'pausado') {
+                    // La clasificación saneada distingue seis situaciones que antes se mezclaban:
+                    // silencio, respuesta sin fecha, promesa/plazo, cobro cubierto por un abono y
+                    // personas a quienes todavía no se les ha cobrado.
+                    var _saldoVivo = typeof _cartera.saldo === 'number'
+                        ? Math.max(0, _cartera.saldo)
+                        : Math.max(0, price - montoPagadoReal(p));
                     if (p.paymentStatus === 'pagado' || p.paymentStatus === 'gratis') _saldoVivo = 0;
-                    if (_saldoVivo > 0) {
+                    var _respuestaCartera = String(_cartera.respuestaCobro || '');
+                    var _estadoSeg = '';
+                    if (_respuestaCartera === 'NO_RESPONDIO') _estadoSeg = 'SIN RESPONDER';
+                    else if (_respuestaCartera.indexOf('PROMETIO') === 0 || _respuestaCartera.indexOf('PIDIO_PLAZO') === 0) _estadoSeg = 'PROMETIO';
+                    else if (_respuestaCartera === 'CUBIERTO_POR_ABONO') _estadoSeg = 'CUBIERTO';
+                    else if (_respuestaCartera === 'SIN_COBRO_REGISTRADO') _estadoSeg = 'SIN COBRO';
+                    else if (_respuestaCartera) _estadoSeg = 'RESPONDIO';
+
+                    var _sg = p.seguimientoCobro || {};
+                    var _desdeSeg = _cartera.ultimoCobroFecha || _sg.desde || '';
+                    var _dS = _desdeSeg ? Math.max(0, Math.round((HOY - new Date(String(_desdeSeg).replace(' ', 'T')).getTime()) / 86400000)) : 0;
+                    if (_saldoVivo > 0 && (_estadoSeg || _sg.desde)) {
                         seguimientoList.push({
                             uid: uid, nombre: nombreDe(uid),
-                            desde: String(_sg.desde).slice(0, 10),
+                            desde: _desdeSeg ? String(_desdeSeg).slice(0, 10) : 'todavía no',
                             dias: isNaN(_dS) ? (_sg.dias || 0) : _dS,
-                            saldo: _saldoVivo, estado: _sg.estado || '', dijo: _sg.dijo || ''
+                            saldo: _saldoVivo,
+                            estado: _estadoSeg || _sg.estado || 'RESPONDIO',
+                            dijo: _cartera.respuestaCobroTexto || _sg.dijo || _cartera.proximoCobroMotivo || ''
                         });
                     }
-                }
-                if (_cp.estado !== 'pausado' && p.alertaCobro && p.alertaCobro.desde) {
-                    var _dA = Math.max(0, Math.round((HOY - new Date(String(p.alertaCobro.desde).replace(' ', 'T')).getTime()) / 86400000));
-                    // Mismo caso que seguimiento: el saldo guardado es una foto. Y aca importa mas,
-                    // porque esta lista es la de "no contesto nada": alguien que pago y no dijo nada
-                    // no esta en silencio incomodo, esta pagado.
-                    var _saldoAlerta = Math.max(0, price - montoPagadoReal(p));
-                    if (p.paymentStatus === 'pagado' || p.paymentStatus === 'gratis') _saldoAlerta = 0;
-                    if (_saldoAlerta > 0) {
+                    if (_saldoVivo > 0 && _respuestaCartera === 'NO_RESPONDIO') {
+                        alertaList.push({
+                            uid: uid, nombre: nombreDe(uid),
+                            desde: _desdeSeg ? String(_desdeSeg).slice(0, 10) : 'sin fecha',
+                            dias: isNaN(_dS) ? 0 : _dS,
+                            saldo: _saldoVivo
+                        });
+                    } else if (_saldoVivo > 0 && !_respuestaCartera && p.alertaCobro && p.alertaCobro.desde) {
+                        var _dA = Math.max(0, Math.round((HOY - new Date(String(p.alertaCobro.desde).replace(' ', 'T')).getTime()) / 86400000));
                         alertaList.push({
                             uid: uid, nombre: nombreDe(uid),
                             desde: String(p.alertaCobro.desde).slice(0, 10),
                             dias: isNaN(_dA) ? (p.alertaCobro.dias || 0) : _dA,
-                            saldo: _saldoAlerta
+                            saldo: _saldoVivo
                         });
                     }
                 }
@@ -2615,7 +2708,7 @@
                 if (_conOA) conOA++;
                 if (p.seguimiento && p.seguimiento.borradorListo) borradorListo++;
                 if ((_conDrive || esPlanReal) && !_conOA) faltaOA++;
-                if (pagoReal && p.paymentStatus !== 'gratis' && !_conOA) paidNoOAList.push({ nombre: nombreDe(uid), abono: p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' });
+                if (pagoRegistrado > 0 && p.paymentStatus !== 'gratis' && !_conOA) paidNoOAList.push({ nombre: nombreDe(uid), abono: p.paymentStatus !== 'approved' && p.paymentStatus !== 'aprobado' && p.paymentStatus !== 'pagado' });
                 // pendientes 🔴 de adminNotas (cola de trabajo comprometida)
                 notasA(p).forEach(function (linea) {
                     if (linea.indexOf('🔴') >= 0) {
@@ -2630,12 +2723,12 @@
                     if (mo.estado === 'en-progreso') modStats[m].prog++;
                     if (mo.estado === 'completado') modStats[m].done++;
                 });
-                recentList.push({ uid: uid, client: c, date: c.createdAt || '' });
+                recentList.push({ uid: uid, client: c, date: c.createdAt || p.createdAt || '' });
             });
 
             document.getElementById('stat-total').textContent = total;
             document.getElementById('stat-preinscrito').textContent = sinPagar; // "Sin pagar aún": todos los inscritos que aún no pagan
-            document.getElementById('stat-paid').textContent = paidCount; // solo quienes pusieron plata (sin el regalo)
+            document.getElementById('stat-paid').textContent = paidCount; // personas con dinero efectivamente recibido, incluso si después recibieron un beneficio
             var _spr = document.getElementById('stat-progress'); if (_spr) _spr.textContent = inProg;
             var _scp = document.getElementById('stat-completed'); if (_scp) _scp.textContent = completed;
             document.getElementById('stat-pending-pay').textContent = pendingPay;
@@ -2651,7 +2744,7 @@
             document.getElementById('stat-total-revenue').textContent = formatCLP(totalRevenue);
             document.getElementById('stat-total-revenue-count').textContent = totalWithPlan + ' planes';
             document.getElementById('stat-paid-revenue').textContent = formatCLP(paidRevenue);
-            document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' pagos confirmados';
+            document.getElementById('stat-paid-revenue-count').textContent = paidCount + ' personas con ingreso registrado';
             document.getElementById('stat-pending-revenue').textContent = formatCLP(pendingRevenue);
             document.getElementById('stat-pending-revenue-count').textContent = pendingRevenueCount + ' por cobrar';
             // NETO: comisión MercadoPago SOLO sobre pagos con tarjeta (los que tienen comprobantePago/ID); las transferencias no pagan comisión.
@@ -2660,44 +2753,55 @@
             // ESCENARIO META: si todos pagan el plan que realmente tienen registrado.
             // No se infla un módulo suelto como si fuera un portafolio completo.
             var potencial = totalRevenue + sinPagarMonto;
-            var faltaTotal = Math.max(0, potencial - paidRevenue);
+            var faltaTotal = Math.max(0, potencial - planPaidRevenue);
             var nMeta = totalWithPlan + sinPagar;
             var _setD = function(id, v){ var e = document.getElementById(id); if (e) e.textContent = v; };
             _setD('stat-potencial', formatCLP(potencial));
             _setD('stat-potencial-count', nMeta + ' inscritos');
             _setD('stat-opt-n', nMeta);
-            _setD('stat-opt-pagado', formatCLP(paidRevenue));
+            _setD('stat-opt-pagado', formatCLP(planPaidRevenue));
             _setD('stat-opt-falta', formatCLP(faltaTotal));
 
-            // Agenda de cobros: conteos por evento. Lilian, por ejemplo, aparece en dos
-            // ventanas porque dividio su mismo saldo en dos fechas distintas.
+            // La tabla conserva cada movimiento pactado, pero las tarjetas cuentan personas
+            // únicas. Así una cuota dividida no infla el número de docentes por cobrar.
             var _agendaPorBucket = {
                 'ahora': agendaEventos.filter(function(x) { return x.bucket === 'ahora'; }),
                 'fin-agosto': agendaEventos.filter(function(x) { return x.bucket === 'fin-agosto'; }),
                 'mitad-septiembre': agendaEventos.filter(function(x) { return x.bucket === 'mitad-septiembre'; }),
                 'fin-septiembre': agendaEventos.filter(function(x) { return x.bucket === 'fin-septiembre'; }),
+                'despues-septiembre': agendaEventos.filter(function(x) { return x.bucket === 'despues-septiembre'; }),
                 'sin-fecha': agendaSinFecha,
+                'esperar-m1': agendaEsperarM1,
                 'pausado': agendaPausados
             };
             function _agendaMonto(lista) { return lista.reduce(function(t, x) { return t + (Number(x.monto) || 0); }, 0); }
+            function _agendaPersonas(lista) {
+                return new Set(lista.map(function(x) { return x.uid; })).size;
+            }
             Object.keys(_agendaPorBucket).forEach(function(bucket) {
                 var lista = _agendaPorBucket[bucket];
-                _setD('agenda-' + bucket + '-n', lista.length);
+                _setD('agenda-' + bucket + '-n', _agendaPersonas(lista));
                 _setD('agenda-' + bucket + '-monto', formatCLP(_agendaMonto(lista)));
             });
             window._agendaCobros = {
                 eventos: agendaEventos,
                 sinFecha: agendaSinFecha,
+                esperarM1: agendaEsperarM1,
                 pausados: agendaPausados
             };
             var _corteAgenda = document.getElementById('dashboard-corte');
-            if (_corteAgenda) _corteAgenda.textContent = new Date().toLocaleString('es-CL', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            if (_corteAgenda) {
+                var _ultimoCorte = cortesCartera.sort().pop() || '';
+                _corteAgenda.textContent = _ultimoCorte
+                    ? 'Cartera ' + new Date(_ultimoCorte + 'T12:00:00-04:00').toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }) + ' · Firebase en vivo'
+                    : 'Firebase en vivo · cartera sin conciliar';
+            }
             pintarAgendaCobros('todos');
 
             // ===== detalle nuevo: desglose, cobranza, pendientes, sin-OA, módulos =====
-            _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (regalosN ? ' · ' + regalosN + ' regalo' + (regalosN > 1 ? 's' : '') : ''));
-            _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos');
-            _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' inscritos = ' + totalWithPlan + ' que ya pusieron plata + ' + sinPagar + ' sin pagar, cada uno valorado según su plan registrado.' + (regalosN ? ' Los ' + regalosN + ' regalos no suman a la meta.' : '') + ' Los que aún no pagan NO son plata comprometida.');
+            _setD('stat-paid-detail', fullPayN + ' completos · ' + abonoN + ' abonos' + (beneficioPagadoN ? ' · ' + beneficioPagadoN + ' beneficio con pago previo' : '') + (regalosN ? ' · ' + regalosN + ' beneficios totales' : ''));
+            _setD('stat-paid-split', formatCLP(fullPayMonto) + ' en ' + fullPayN + ' pagos completos + ' + formatCLP(abonoMonto) + ' en ' + abonoN + ' abonos' + (beneficioPagadoMonto ? ' + ' + formatCLP(beneficioPagadoMonto) + ' recibido antes de un beneficio' : ''));
+            _setD('stat-meta-explica', 'La meta cuenta ' + nMeta + ' planes cobrables = ' + totalWithPlan + ' con pago o abono + ' + sinPagar + ' sin pagar, cada uno valorado según su plan registrado.' + (regalosN ? ' Los ' + regalosN + ' beneficios no suman a la meta; cualquier abono previo sí aparece en recaudado.' : '') + ' Los que aún no pagan NO son plata comprometida.');
             var potNoPagan = sinPagarMonto;
             _setD('stat-opt-falta-desglose', 'Ese "te falta" se compone de DOS platas distintas: ' + formatCLP(pendingRevenue) + ' ya COMPROMETIDOS (saldos de quienes abonaron) + ' + formatCLP(potNoPagan) + ' POTENCIALES (los ' + sinPagar + ' inscritos que aún no pagan nada, según el valor de su plan). La plata potencial todavía no existe: depende de convertirlos.');
             // cobranza: aging + tabla
@@ -4202,14 +4306,15 @@
         function pintarAgendaCobros(filtro) {
             var el = document.getElementById('agenda-cobros-table');
             if (!el) return;
-            var datos = window._agendaCobros || { eventos: [], sinFecha: [], pausados: [] };
+            var datos = window._agendaCobros || { eventos: [], sinFecha: [], esperarM1: [], pausados: [] };
             var lista;
             if (filtro === 'sin-fecha') lista = datos.sinFecha.slice();
+            else if (filtro === 'esperar-m1') lista = datos.esperarM1.slice();
             else if (filtro === 'pausado') lista = datos.pausados.slice();
             else if (filtro && filtro !== 'todos') lista = datos.eventos.filter(function(x) { return x.bucket === filtro; });
-            else lista = datos.eventos.concat(datos.sinFecha, datos.pausados);
+            else lista = datos.eventos.concat(datos.sinFecha, datos.esperarM1, datos.pausados);
 
-            var ordenEstado = { confirmado: 0, 'fecha-incompleta': 1, 'sin-fecha': 2, pausado: 3 };
+            var ordenEstado = { confirmado: 0, calculado: 1, 'fecha-incompleta': 2, 'sin-fecha': 3, 'esperar-m1': 4, pausado: 5 };
             lista.sort(function(a, b) {
                 var ea = a.estado || (a.bucket === 'pausado' ? 'pausado' : 'sin-fecha');
                 var eb = b.estado || (b.bucket === 'pausado' ? 'pausado' : 'sin-fecha');
@@ -4220,13 +4325,17 @@
             var total = lista.reduce(function(t, x) { return t + (Number(x.monto) || 0); }, 0);
             if (explicacion) {
                 var rotulos = {
-                    'todos': 'Vista completa', 'ahora': 'Cobro inmediato y próximos diez días',
-                    'fin-agosto': 'Compromisos para el cierre de agosto',
+                    'todos': 'Vista completa', 'ahora': 'Cobros que corresponden ahora',
+                    'fin-agosto': 'Cobros del 15 al 31 de agosto',
                     'mitad-septiembre': 'Compromisos del 1 al 15 de septiembre',
                     'fin-septiembre': 'Compromisos del 16 al 30 de septiembre',
-                    'sin-fecha': 'Saldos sin fecha confirmada', 'pausado': 'Cobros detenidos por una razón documentada'
+                    'despues-septiembre': 'Cobros posteriores a septiembre',
+                    'sin-fecha': 'Saldos sin un día exacto',
+                    'esperar-m1': 'Cobros que esperan la entrega del M1',
+                    'pausado': 'Cobros detenidos por una razón documentada'
                 };
-                explicacion.textContent = (rotulos[filtro] || rotulos.todos) + ': ' + lista.length + ' registros por ' + formatCLP(total) + '. Los montos sin fecha no se suman a una ventana futura.';
+                var personas = new Set(lista.map(function(x) { return x.uid; })).size;
+                explicacion.textContent = (rotulos[filtro] || rotulos.todos) + ': ' + personas + ' personas, ' + lista.length + ' movimientos por ' + formatCLP(total) + '. Los montos sin fecha no se suman a una ventana futura.';
             }
             if (!lista.length) {
                 el.innerHTML = '<p class="text-sm text-gray-500 p-5">No hay pagos en esta categoría.</p>';
@@ -4234,13 +4343,17 @@
             }
 
             function fechaAgenda(x) {
+                if (x.bucket === 'esperar-m1') return 'Esperar entrega M1';
+                if (x.bucket === 'pausado') return 'Cobro pausado';
                 if (!x.fecha) return x.ventana === 'septiembre' ? 'Septiembre, día pendiente' : 'Sin fecha';
                 try { return new Date(x.fecha + 'T12:00:00-04:00').toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }); }
                 catch (e) { return x.fecha; }
             }
             function estadoAgenda(x) {
                 if (x.bucket === 'pausado') return ['Pausado', 'agenda-status--pausado'];
+                if (x.bucket === 'esperar-m1') return ['Aún no cobrar', 'agenda-status--confirmado'];
                 if (x.estado === 'fecha-incompleta') return ['Falta día', 'agenda-status--incompleto'];
+                if (x.estado === 'calculado') return ['Calculado', 'agenda-status--confirmado'];
                 if (!x.fecha) return ['Sin acuerdo', 'agenda-status--sin-fecha'];
                 return ['Confirmado', 'agenda-status--confirmado'];
             }
@@ -4252,7 +4365,7 @@
                     '<td class="font-semibold text-slate-800">' + escapeHtml(x.nombre) + '</td>' +
                     '<td class="whitespace-nowrap font-medium">' + escapeHtml(fechaAgenda(x)) + '</td>' +
                     '<td><span class="agenda-status ' + est[1] + '">' + est[0] + '</span></td>' +
-                    '<td class="max-w-sm text-slate-500">' + escapeHtml(x.evidencia || 'No existe una fecha explícita registrada.') + '</td>' +
+                    '<td class="max-w-sm text-slate-500">' + escapeHtml(x.evidencia || x.ventana || 'No existe una fecha explícita registrada.') + '</td>' +
                     '<td class="whitespace-nowrap text-slate-500">' + escapeHtml(x.estadoPago === 'abono' ? 'Abono' : 'Sin pago') + '</td>' +
                     '<td class="text-right tabular-nums font-bold text-slate-800">' + formatCLP(x.monto) + '</td>' +
                     '<td class="text-right"><button type="button" onclick="openModal(\'' + x.uid + '\')" class="text-xs font-semibold text-blue-700 hover:text-blue-900">Abrir ficha</button></td>' +
@@ -4274,11 +4387,11 @@
             var el = document.getElementById('seg-cobro-table');
             if (!el) return;
             var lista = (window._segList || []).filter(function (x) { return !filtro || x.estado === filtro; });
-            var orden = { 'SIN RESPONDER': 0, 'RESPONDIO': 1, 'PROMETIO': 2 };
-            lista.sort(function (a, b) { return (orden[a.estado] - orden[b.estado]) || (b.dias - a.dias); });
+            var orden = { 'SIN RESPONDER': 0, 'PROMETIO': 1, 'RESPONDIO': 2, 'CUBIERTO': 3, 'SIN COBRO': 4 };
+            lista.sort(function (a, b) { return ((orden[a.estado] ?? 9) - (orden[b.estado] ?? 9)) || (b.dias - a.dias); });
             if (!lista.length) { el.innerHTML = '<p class="text-sm text-gray-400">Nadie en esta categoría.</p>'; return; }
-            var COLOR = { 'SIN RESPONDER': 'bg-rose-100 text-rose-700', 'RESPONDIO': 'bg-slate-100 text-slate-600', 'PROMETIO': 'bg-emerald-100 text-emerald-700' };
-            var ROT = { 'SIN RESPONDER': 'sin responder', 'RESPONDIO': 'respondió', 'PROMETIO': 'prometió' };
+            var COLOR = { 'SIN RESPONDER': 'bg-rose-100 text-rose-700', 'RESPONDIO': 'bg-slate-100 text-slate-600', 'PROMETIO': 'bg-emerald-100 text-emerald-700', 'CUBIERTO': 'bg-blue-100 text-blue-700', 'SIN COBRO': 'bg-gray-100 text-gray-600' };
+            var ROT = { 'SIN RESPONDER': 'sin responder', 'RESPONDIO': 'respondió', 'PROMETIO': 'prometió / plazo', 'CUBIERTO': 'cubierto por abono', 'SIN COBRO': 'sin cobro registrado' };
             var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Cobrado</th><th class="py-1 pr-2">Días</th><th class="py-1 pr-2">Estado</th><th class="py-1 pr-2">Lo último que dijo</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
             lista.forEach(function (x) {
                 var grave = x.estado === 'SIN RESPONDER' && x.dias >= 3;

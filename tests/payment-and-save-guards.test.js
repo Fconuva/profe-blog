@@ -27,6 +27,8 @@ test('instalment labels use recorded money and never invent two instalments', ()
   assert.doesNotMatch(admin, /Abono 1\/2|\$100\.000 · saldo 2ª cuota/);
   assert.doesNotMatch(dashboard, /Abono 1\/2/);
   assert.match(admin, /montoPagadoReal\(p\)/);
+  assert.match(admin, /p\.abonoAcumulado/);
+  assert.match(admin, /p\.montoPagado/);
   assert.match(admin, /saldoPendienteReal\(p\)/);
   assert.match(admin, /planCuotas/);
 });
@@ -37,21 +39,26 @@ test('inactive users are excluded even when the baja only exists in users', () =
   assert.match(admin, /if \(esClienteInactivo\(c, _p\)\) return false/);
 });
 
-test('collection agenda uses verified WhatsApp commitments and keeps undated balances separate', () => {
+test('collection agenda uses the reconciled portfolio ledger and keeps non-collectible balances separate', () => {
   assert.match(admin, /p\.compromisoPago \|\| \{\}/);
-  assert.match(admin, /Ahora y próximos 10 días/);
-  assert.match(admin, /Sin fecha acordada/);
+  assert.match(admin, /_cartera\.tramoCobro/);
+  assert.match(admin, /_cartera\.proximoCobroFecha/);
+  assert.match(admin, /Esperar entrega M1/);
+  assert.match(admin, /Cobrar ahora/);
   assert.match(admin, /Cobro pausado/);
-  assert.match(admin, /Las fechas de clase grabada fueron descartadas/);
+  assert.match(admin, /Las fechas de clase grabada no influyen/);
   assert.match(admin, /_cp\.estado === 'confirmado'/);
   assert.match(admin, /_cp\.estado === 'pausado'/);
   assert.match(admin, /_cp\.estado === 'fecha-incompleta'/);
+  assert.match(admin, /_cartera\.tramoCobro === 'esperar_m1'/);
+  assert.match(admin, /_agendaPersonas/);
   assert.doesNotMatch(admin, /fechaGrabacion[^\n]{0,120}agenda/i);
 });
 
 test('financial potential respects each registered plan instead of inflating module-only clients', () => {
   assert.match(admin, /sinPagarMonto \+= price > 0 \? price : 199990/);
   assert.match(admin, /var potencial = totalRevenue \+ sinPagarMonto/);
+  assert.match(admin, /potencial - planPaidRevenue/);
   assert.doesNotMatch(admin, /sinPagar \* 199990/);
   assert.match(admin, /según el valor de su plan/);
   assert.match(admin, /formatCLP\(x\.valor\)/);
@@ -59,8 +66,15 @@ test('financial potential respects each registered plan instead of inflating mod
 });
 
 test('paused collections never leak into follow-up or no-response alerts', () => {
-  assert.match(admin, /_cp\.estado !== 'pausado' && p\.seguimientoCobro/);
-  assert.match(admin, /_cp\.estado !== 'pausado' && p\.alertaCobro/);
+  assert.match(admin, /if \(_cp\.estado !== 'pausado'\)/);
+  assert.match(admin, /_respuestaCartera === 'NO_RESPONDIO'/);
+  assert.match(admin, /_respuestaCartera === 'CUBIERTO_POR_ABONO'/);
+  assert.match(admin, /_respuestaCartera === 'SIN_COBRO_REGISTRADO'/);
+});
+
+test('abandoned phone-only user nodes do not inflate the client census', () => {
+  assert.match(admin, /c && !_p && !\(c\.nombre \|\| c\.email \|\| c\.createdAt \|\| c\.inscripcionNum\)/);
+  assert.match(admin, /Contacto \+'/);
 });
 
 test('optional payment badges never abort dashboard rendering when absent', () => {

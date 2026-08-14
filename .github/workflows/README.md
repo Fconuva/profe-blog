@@ -69,6 +69,14 @@ Every audit script called by `npm run build` must be explicitly allowed through 
 3. Verify changing an archived pre-registration to a contracted plan removes the portfolio archive fields.
 4. Verify the same save does not unarchive a cancellation, blocked user, or already contracted record archived intentionally.
 
+## Portfolio Admin Financial Check
+
+1. Confirm cash uses the greatest accumulated value across `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado`, without double-counting mirrored fields.
+2. Confirm a benefit excludes its plan from receivables while preserving any payment received before the benefit.
+3. Confirm agenda cards read `portafolios/{uid}/cartera`, apply WhatsApp agreements before the 30-day fallback, and ignore class-recording dates.
+4. Confirm `esperar_m1`, undated, paused, and later balances remain separate; card counts represent unique people.
+5. After deployment, compare the production cards and filters with live Firebase and inspect browser console errors.
+
 ## Deploy Command
 
 - From `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Direct production deployment is prohibited.

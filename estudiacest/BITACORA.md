@@ -23,6 +23,32 @@ Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se h
 
 ---
 
+## 2026-08-16, Clase 2 de NM4 Unidad 3 rehecha
+
+La versión anterior de `/nm4/u3-clase2-derechos-y-seguridad/` abría pidiendo recordar la Actividad 2 de la Clase 1. Francisco avisó que en algunos cursos esa actividad se hizo y en otros no alcanzó el tiempo, así que la clase no puede depender de ella. Se rehízo entera para que funcione sola.
+
+**Video de apertura, `assets/video-rodrigo.mp4`.** Dura 2:02 y cuenta un caso ficticio: Rodrigo, 19 años, dos meses en su primer trabajo, pasa por las cinco situaciones que después se trabajan en las estaciones. Reemplaza la activación que dependía de la clase anterior. Sobre él se responden las tres preguntas en el cuaderno.
+
+Cómo se armó, por si hay que rehacerlo:
+
+- Siete clips de 8 s con Veo 3.1 (`veo-3.1-fast-generate-preview`), estirados a 10 s con `setpts=1.25*PTS`. Los prompts van sin personas en primer plano y con «Silent scene, no dialogue»: el filtro de audio de Veo rechaza lo demás.
+- Faltaron dos clips porque se agotaron los créditos de Google AI Studio a mitad de la generación. Se reemplazaron con las propias imágenes de las estaciones en zoom lento.
+- Narración con Gemini TTS, voz Charon, 121 s. Devuelve PCM de 24 kHz sin cabecera: hay que escribir el WAV a mano.
+- Los subtítulos de `video-rodrigo.vtt` salen de transcribir la narración con Whisper, no de estimar. Así calzan de verdad, y de paso se confirmó que el modelo no leyó en voz alta la instrucción de estilo del prompt.
+- **Trampa de ffmpeg que costó un ciclo completo:** en `-loop 1 -t 8 -i imagen.jpg`, el `-t` limita la entrada, no la salida, y `zoompan` emite `d` cuadros por cada cuadro que entra. Cada foto duró 1920 s en vez de 8. Se corta con `-frames:v`, no con `-t`.
+- El montaje se ajustó contra los tiempos reales de la transcripción para que cada imagen entre cuando la voz habla de esa situación.
+- Salida a 720p: a 1080p pesaba 71 MB y se proyecta en sala y se ve en tablet.
+
+**Las cinco estaciones** pasaron de un párrafo suelto a casos de 110 a 145 palabras, cada una con su imagen generada. Se quitó el recuadro «Dicho en simple», que adelantaba la conclusión que los estudiantes tienen que sacar solos.
+
+Tiempos por momento: 10 + 4 + 10 + 8 + 45 + 10 + 3 = 90 minutos.
+
+Commits `f279607d` y `bb2bf795`. Los ocho archivos nuevos entraron al manifiesto en dos pasos, como corresponde: primero con `allowMissingInProduction`, y después de verificar que responden 200 se les quitó la marca.
+
+**Queda pendiente:** tres imágenes de estación salieron fotorrealistas (`e3`, `e4`, `e5`) y dos como ilustración (`e1`, `e2`). Se intentó rehacerlas pidiendo fotografía documental explícita, pero los créditos estaban agotados. Cuando se repongan, rehacer `e1-horas.jpg` y `e2-liquidacion.jpg` con el prompt que ya está probado.
+
+---
+
 ## 2026-08-06, estado del día
 
 ### Lo que se construyó

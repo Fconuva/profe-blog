@@ -99,6 +99,32 @@ function sanitizeGroup(raw, id) {
   };
 }
 
+// Firebase no guarda claves con valor null: al grabar un grupo sin puntajes,
+// `groupScores` y `scores` desaparecen del nodo. Como el GET mezclaba los
+// defaults de forma superficial, el grupo ya grabado llegaba sin esas claves y
+// el navegador reventaba al escribir el primer puntaje. Aqui se repone la forma
+// completa antes de responder.
+function shape(stored, id) {
+  const base = defaults()[String(id)];
+  const raw = stored || {};
+  const members = Array.isArray(raw.members) && raw.members.length ? raw.members : (base ? base.members : []);
+  return {
+    id: Number(id),
+    topic: raw.topic || (base ? base.topic : ''),
+    groupScores: { dominio: null, organizacion: null, visual: null, ...(raw.groupScores || {}) },
+    notes: raw.notes || '',
+    members: members.map((member, index) => ({
+      id: member.id || `g${id}-m${index + 1}`,
+      name: member.name || '',
+      present: member.present !== false,
+      scores: { oral: null, presentacion: null, defensa: null, ...(member.scores || {}) },
+      notes: member.notes || '',
+      added: member.added === true
+    })),
+    savedAt: raw.savedAt || null
+  };
+}
+
 function cors(req, res) {
   const origin = String(req.headers.origin || '');
   const allowed = /^https:\/\/(www\.)?estudiacest\.com$/i.test(origin) || /^https:\/\/[\w-]+\.vercel\.app$/i.test(origin);
@@ -115,7 +141,11 @@ module.exports = async function handler(req, res) {
     const decoded = await identify(req);
     if (req.method === 'GET') {
       const snap = await db.ref(`${BASE}/groups`).once('value');
-      return res.status(200).json({ groups: { ...defaults(), ...(snap.val() || {}) } });
+      const stored = snap.val() || {};
+      const ids = new Set([...Object.keys(defaults()), ...Object.keys(stored)]);
+      const groups = {};
+      for (const id of ids) groups[id] = shape(stored[id], id);
+      return res.status(200).json({ groups });
     }
     if (req.method === 'POST') {
       const id = Number(req.body?.groupId);

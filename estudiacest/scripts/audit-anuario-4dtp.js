@@ -66,7 +66,11 @@ requireText(app, "API_TIMEOUT_MS", 'Cliente');
 requireText(app, "window.addEventListener('offline',updateNetworkStatus)", 'Cliente');
 requireText(app, "Sin conexión a internet", 'Cliente');
 requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
-requireText(page, 'Tres copias cosidas a fines de octubre', 'Página 4DTP');
+requireText(page, 'Tres copias cosidas para el 27 de octubre', 'Página 4DTP');
+// La entrega dejo de ser "fines de octubre": la fecha exacta es el martes 27.
+requireText(page, 'Martes 27 de octubre de 2026', 'Página 4DTP');
+// Las nueve secciones se anuncian en gris antes de abrir su formulario.
+requireText(page, 'Las secciones del anuario', 'Página 4DTP');
 requireText(admin, 'Calificación docente', 'Admin 4DTP');
 requireText(admin, 'Abrir carpeta', 'Admin 4DTP');
 requireText(admin, 'data-open-folder-file', 'Admin 4DTP');

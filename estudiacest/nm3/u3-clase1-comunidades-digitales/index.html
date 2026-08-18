@@ -188,6 +188,81 @@
     .nav .txt{display:none;}
     .volver{display:none;}
   }
+
+  /* ---------- decoracion ---------- */
+  /* Textura de fondo muy tenue: da profundidad sin competir con el texto. */
+  body::before{
+    content:''; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 620px at 12% -8%, rgba(29,79,145,.09), transparent 62%),
+      radial-gradient(900px 520px at 105% 108%, rgba(245,158,11,.07), transparent 60%);
+  }
+  .deck{z-index:1;}
+
+  /* Marco de la lamina: borde claro y sombra baja, sin glass ni bordes de color. */
+  .interior{
+    position:relative;
+    background:rgba(255,255,255,.62);
+    border:1px solid rgba(148,170,196,.30);
+    border-radius:20px;
+    padding:clamp(18px,2.4vw,32px) clamp(16px,2.6vw,36px);
+    box-shadow:0 1px 2px rgba(15,35,65,.05), 0 16px 40px -22px rgba(15,35,65,.28);
+  }
+  .slide.limpio .interior{background:none;border:0;box-shadow:none;padding:0;}
+
+  /* Filete superior que ancla la lamina al azul de la marca. */
+  .interior::before{
+    content:''; position:absolute; left:clamp(16px,2.6vw,36px); right:clamp(16px,2.6vw,36px); top:0; height:3px;
+    background:linear-gradient(90deg, var(--blue), rgba(29,79,145,.18));
+    border-radius:0 0 3px 3px;
+  }
+  .slide.limpio .interior::before{display:none;}
+
+  /* Entrada escalonada. Parte del estado final: si el JS no corre, se ve igual. */
+  @keyframes surge{ from{opacity:0; transform:translateY(14px);} to{opacity:1; transform:none;} }
+  @keyframes surgeLado{ from{opacity:0; transform:translateX(-12px);} to{opacity:1; transform:none;} }
+  .slide.on .cab{animation:surgeLado .5s cubic-bezier(.22,1,.36,1) both;}
+  .slide.on .interior > *:not(.cab){animation:surge .52s cubic-bezier(.22,1,.36,1) both;}
+  .slide.on .interior > *:nth-child(2){animation-delay:.05s;}
+  .slide.on .interior > *:nth-child(3){animation-delay:.11s;}
+  .slide.on .interior > *:nth-child(4){animation-delay:.17s;}
+  .slide.on .interior > *:nth-child(5){animation-delay:.23s;}
+  .slide.on .interior > *:nth-child(6){animation-delay:.29s;}
+  .slide.on .interior > *:nth-child(n+7){animation-delay:.34s;}
+
+  /* El paso de la cabecera late una sola vez al entrar: marca donde empieza. */
+  @keyframes pulso{ 0%{box-shadow:0 0 0 0 rgba(29,79,145,.34);} 100%{box-shadow:0 0 0 14px rgba(29,79,145,0);} }
+  .slide.on .paso{animation:surgeLado .5s cubic-bezier(.22,1,.36,1) both, pulso 1.1s ease-out .35s 1;}
+
+  /* Imagen de apoyo con marco propio. */
+  .figura{margin:clamp(12px,1.6vw,18px) 0 0; border-radius:14px; overflow:hidden;
+    border:1px solid rgba(148,170,196,.34); background:#0f172a;
+    box-shadow:0 12px 30px -16px rgba(15,35,65,.45);}
+  .figura img{width:100%; display:block; aspect-ratio:16/9; object-fit:cover;
+    /* Tope de alto para que la imagen no empuje el contenido fuera de la
+       pantalla al proyectar: la lamina tiene que caber sin scroll. */
+    max-height:min(30vh,260px);}
+  .figura figcaption{font-size:clamp(11.5px,1.15vw,13px); color:#6b7a8d; background:#f7fafd;
+    padding:8px 13px; border-top:1px solid rgba(148,170,196,.26);}
+
+  /* Imagen de fondo de la portada, detras del texto y con velo para el contraste. */
+  .portada-fondo{position:absolute; inset:0; overflow:hidden; border-radius:20px; z-index:0;}
+  .portada-fondo img{width:100%; height:100%; object-fit:cover; opacity:.5;}
+  .portada-fondo::after{content:''; position:absolute; inset:0;
+    background:linear-gradient(100deg, rgba(255,255,255,.97) 30%, rgba(255,255,255,.78) 60%, rgba(255,255,255,.42));}
+  .portada{position:relative; z-index:1;}
+
+  /* La barra inferior con un borde superior mas presente. */
+  .barra{border-top:1.5px solid rgba(148,170,196,.4); box-shadow:0 -8px 24px -18px rgba(15,35,65,.4);}
+
+  @media (prefers-reduced-motion: reduce){
+    .slide.on .cab, .slide.on .interior > *:not(.cab), .slide.on .paso{animation:none;}
+    .slide{transition:opacity .12s linear;}
+  }
+  @media (max-width:640px){
+    .interior{border-radius:15px; padding:15px 14px;}
+    .interior::before{left:14px; right:14px;}
+  }
 </style>
 </head>
 <body>
@@ -198,7 +273,8 @@
 
   <!-- 1 -->
   <section class="slide" data-tit="Portada">
-    <div class="interior portada">
+    <div class="portada-fondo"><img src="img/portada.jpg" alt=""></div>
+      <div class="interior portada">
       <div class="kick">NM3 · Unidad 3 · Análisis crítico de comunidades digitales</div>
       <h1>¿Qué es una<br>comunidad digital?</h1>
       <div class="raya"></div>
@@ -241,7 +317,11 @@
         <div class="norma no"><div class="ic">🚫</div><div><b>No se analizan cuentas de compañeros</b><span>Trabajamos con casos públicos. Nadie del colegio es material de análisis.</span></div></div>
         <div class="norma no"><div class="ic">💬</div><div><b>No se comenta ni se responde nada</b><span>Hoy se observa y se analiza. No se interactúa con las publicaciones que revisamos.</span></div></div>
       </div>
-    </div>
+            <figure class="figura">
+          <img src="img/normas.jpg" alt="Teléfono boca abajo sobre el banco" loading="lazy">
+          <figcaption>Así se trabaja hoy: el teléfono se usa cuando toca y se guarda cuando no.</figcaption>
+        </figure>
+      </div>
   </section>
 
   <!-- 4 -->
@@ -270,14 +350,18 @@
           </ol>
         </div>
       </div>
-    </div>
+            <figure class="figura">
+          <img src="img/comunidades.jpg" alt="Grupos de estudiantes en un patio, cada uno en lo suyo" loading="lazy">
+          <figcaption>Una comunidad no necesita internet para existir. Pero en internet deja rastro escrito.</figcaption>
+        </figure>
+      </div>
   </section>
 
   <!-- 5 -->
   <section class="slide" data-tit="Conceptos clave" data-min="10">
     <div class="interior">
       <div class="cab"><span class="paso">4</span><h2>Conceptos clave</h2></div>
-      <p class="lead">No se copia. Se leen en voz alta, por turnos, y quedan en la pantalla toda la clase.</p>
+      <p class="lead">Se copian en el cuaderno. Primero se leen en voz alta, por turnos, y después cada uno los pasa a su cuaderno. Quedan en la pantalla mientras escriben.</p>
       <div class="tabla-cont">
         <table class="conc">
           <tbody>
@@ -292,7 +376,7 @@
           </tbody>
         </table>
       </div>
-    </div>
+      </div>
   </section>
 
   <!-- 6 -->
@@ -314,7 +398,7 @@
         </div>
         <div class="pie">Fuente: diario La Vanguardia, España, 27 de marzo de 2019. Texto citado en el Programa de Estudio de Lengua y Literatura 3° Medio, Unidad 3, Ministerio de Educación, febrero de 2021.</div>
       </div>
-    </div>
+      </div>
   </section>
 
   <!-- 7 -->
@@ -341,7 +425,11 @@
           </div>
         </div>
       </div>
-    </div>
+            <figure class="figura">
+          <img src="img/reaccion.jpg" alt="Muro de globos de diálogo vacíos superpuestos" loading="lazy">
+          <figcaption>Miles de comentarios en horas. Ninguno pidió permiso para opinar.</figcaption>
+        </figure>
+      </div>
   </section>
 
   <!-- 8 -->
@@ -372,7 +460,11 @@
           </div>
         </div>
       </div>
-    </div>
+            <figure class="figura">
+          <img src="img/actividad.jpg" alt="Dos estudiantes trabajando sobre una tablet y un cuaderno" loading="lazy">
+          <figcaption>Se trabaja de a dos, pero cada uno escribe en su cuaderno.</figcaption>
+        </figure>
+      </div>
   </section>
 
   <!-- 9 -->
@@ -407,7 +499,11 @@
           </tbody>
         </table>
       </div>
-    </div>
+            <figure class="figura">
+          <img src="img/dimensiones.jpg" alt="Cuatro paneles de vidrio en fila, cada uno con distinta luz" loading="lazy">
+          <figcaption>Cuatro maneras de mirar el mismo caso. Ninguna sobra.</figcaption>
+        </figure>
+      </div>
   </section>
 
   <!-- 10 -->
@@ -431,7 +527,11 @@
       <p style="font-size:12.5px; color:var(--muted); margin-top:18px;">
         Unidad 3 · OA 4, OA 5 y OA 9 del Programa de Estudio de Lengua y Literatura 3° Medio, Ministerio de Educación, febrero de 2021. La noticia citada pertenece al diario La Vanguardia, 27 de marzo de 2019, y aparece en el mismo programa.
       </p>
-    </div>
+            <figure class="figura">
+          <img src="img/cierre.jpg" alt="Mano timbrando la página de un cuaderno" loading="lazy">
+          <figcaption>El timbre es parte de la evaluación de proceso de la unidad.</figcaption>
+        </figure>
+      </div>
   </section>
 
 </main>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clase 6 · Unidad 3 · Poesía II: el lenguaje figurado</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lora:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root{--azul:#0b4f9c;--azul2:#1769d6;--verde:#15803d;--verde-bg:#e9f8ef;--amber:#b45309;
+    --tinta:#0f172a;--gris:#475569;--linea:#e2e8f0;--suave:#f8fafc;--rojo:#b91c1c;--rojo-bg:#fef2f2;}
+  *{box-sizing:border-box;}
+  body{font-family:'Inter',system-ui,sans-serif;margin:0;background:#eef2f7;color:var(--tinta);line-height:1.6;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 16px 130px;}
+  header.hero{position:relative;color:#fff;border-radius:0 0 22px 22px;overflow:hidden;box-shadow:0 8px 24px rgba(11,79,156,.25);}
+  .hero img{width:100%;height:290px;object-fit:cover;display:block;}
+  .hero .overlay{position:absolute;inset:0;background:linear-gradient(180deg,rgba(7,30,60,.15),rgba(7,30,60,.78));display:flex;flex-direction:column;justify-content:flex-end;padding:22px;}
+  .hero .kicker{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.95;}
+  .hero h1{margin:4px 0 2px;font-size:1.5rem;font-weight:800;line-height:1.2;text-shadow:0 2px 8px rgba(0,0,0,.4);}
+  .hero p{margin:0;font-size:.92rem;opacity:.95;text-shadow:0 1px 6px rgba(0,0,0,.4);}
+  .card{background:#fff;border:1px solid var(--linea);border-radius:18px;padding:20px;margin-top:18px;box-shadow:0 2px 10px rgba(15,23,42,.05);}
+  .step-tag{display:inline-flex;gap:8px;background:var(--azul);color:#fff;font-weight:700;font-size:.82rem;padding:5px 12px;border-radius:999px;margin-bottom:10px;}
+  .card h2{margin:.1rem 0 .4rem;font-size:1.18rem;color:var(--azul);}
+  .muted{color:var(--gris);font-size:.92rem;}
+  .skillrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0;}
+  .skillrow span{border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:700;}
+  .sk-l{background:#e0f2fe;color:#075985;} .sk-i{background:#fef3c7;color:#92400e;} .sk-r{background:#fce7f3;color:#9d174d;}
+  .atencion{background:#fffbeb;border:2px solid #f59e0b;border-radius:14px;padding:14px 16px;margin:14px 0;}
+  .atencion .tit{font-weight:800;color:var(--amber);margin-bottom:6px;}
+  .atencion ol{margin:.3rem 0 .2rem 1.2rem;padding:0;} .atencion li{margin:.25rem 0;font-size:.93rem;}
+  .poema{background:#fffdf7;border:1px solid #f0e6cf;border-radius:14px;padding:22px 26px;font-family:'Lora',Georgia,serif;font-size:1.06rem;}
+  .poema h3{margin:0 0 4px;font-family:'Inter',sans-serif;color:var(--amber);font-size:1.15rem;}
+  .poema .autor{font-size:.85rem;color:var(--gris);font-family:'Inter',sans-serif;margin-bottom:14px;}
+  .poema p{margin:0 0 14px;white-space:pre-line;}
+  .verso-num{color:#b8a476;font-size:.72rem;user-select:none;}
+  .infogfx{background:#fff;border:1px solid var(--linea);border-radius:14px;padding:8px;margin:12px 0;}
+  .q{border:1px solid var(--linea);border-radius:14px;padding:16px;margin:14px 0;background:#fcfdff;}
+  .q .enun{font-weight:700;margin-bottom:4px;}
+  .q .hab{float:right;font-size:.72rem;font-weight:800;border-radius:999px;padding:3px 10px;}
+  .opts{display:grid;gap:8px;margin-top:10px;}
+  .opt{display:flex;gap:10px;align-items:flex-start;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;background:#fff;cursor:pointer;text-align:left;font-family:inherit;font-size:.95rem;transition:border-color .12s, background .12s;}
+  .opt:hover{border-color:var(--azul2);}
+  .opt .letra{font-weight:800;color:var(--azul);}
+  .opt.selected{background:#eff6ff;border-color:var(--azul2);box-shadow:0 0 0 2px rgba(23,105,214,.12);}
+  .opt.correct{background:var(--verde-bg);border-color:#4ade80;}
+  .opt.wrong{background:var(--rojo-bg);border-color:#fca5a5;}
+  .opt:disabled{cursor:default;opacity:.92;}
+  .retro{display:none;margin-top:10px;border-radius:12px;padding:12px 14px;font-size:.9rem;line-height:1.55;}
+  .retro.show{display:block;}
+  .retro.ok{background:var(--verde-bg);border:1px solid #86efac;}
+  .retro.bad{background:var(--rojo-bg);border:1px solid #fca5a5;}
+  .retro .why{margin-top:6px;} .retro .why div{margin:.3rem 0;}
+  .retro .cita{background:#fff;border-left:3px solid var(--amber);padding:6px 10px;margin-top:8px;font-style:italic;font-size:.88rem;}
+  .dev-rubrica{background:var(--suave);border:1px solid var(--linea);border-radius:12px;padding:12px 14px;font-size:.9rem;margin:10px 0;}
+  textarea{width:100%;border:1.5px solid var(--linea);border-radius:10px;padding:10px 12px;font-family:inherit;font-size:.96rem;min-height:110px;resize:vertical;}
+  textarea:focus{outline:none;border-color:var(--azul2);box-shadow:0 0 0 3px rgba(23,105,214,.12);}
+  .modelo{display:none;background:#eff6ff;border:1px solid #93c5fd;border-radius:12px;padding:12px 14px;font-size:.9rem;margin-top:10px;}
+  .modelo.show{display:block;}
+  .btn{border:none;border-radius:12px;padding:11px 18px;font-weight:700;font-size:.95rem;cursor:pointer;font-family:inherit;}
+  .btn.primary{background:var(--verde);color:#fff;} .btn.primary:disabled{background:#94a3b8;cursor:not-allowed;}
+  .btn.secondary{background:#eef2f7;color:var(--azul);border:1px solid var(--linea);}
+  .diag{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0;}
+  .diag .box{border-radius:12px;padding:12px;text-align:center;border:1px solid var(--linea);}
+  .diag .box b{display:block;font-size:1.4rem;}
+  .actionbar{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--linea);box-shadow:0 -4px 18px rgba(15,23,42,.08);padding:12px 16px;z-index:40;}
+  .actionbar .inner{max-width:860px;margin:0 auto;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .save-status{flex:1;min-width:150px;font-size:.85rem;color:var(--gris);}
+  .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:90px;background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-size:.9rem;z-index:80;}
+  .done-banner{background:var(--verde-bg);border:1px solid #86efac;color:#166534;border-radius:12px;padding:14px 16px;font-weight:600;margin-top:14px;display:none;}
+  @media(max-width:560px){.hero h1{font-size:1.15rem;}.hero img{height:210px;}.diag{grid-template-columns:1fr;}}
+  .video-explicativo{background:#0f172a;border-radius:14px;overflow:hidden;margin:14px 0;}
+  .video-explicativo video{width:100%;display:block;border-radius:14px;}
+  .video-cap{font-size:.82rem;color:var(--gris);margin-top:6px;text-align:center;}
+</style>
+</head>
+<body>
+<header class="hero">
+  <img src="assets/u3/u3s1-estacion.png" alt="Ilustración: joven en un andén mira el tren al amanecer">
+  <div class="overlay">
+    <div class="kicker">Unidad 3 · Rumbo al SIMCE · Clase 1</div>
+    <h1>✍️ Poesía II: el lenguaje figurado</h1>
+    <p>Puedes cambiar tu respuesta las veces que quieras. Al responder todas, verás la corrección completa: por qué sí y por qué no.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- EXPLICA -->
+  <section class="card">
+    <span class="step-tag">1️⃣ Concepto</span>
+    <h2>Una figura no es un adorno: es un atajo de sentido</h2>
+    <p class="muted">Cuando un poema dice algo raro, no está decorando. Está diciendo en dos palabras algo que en lenguaje normal costaría un párrafo. Tu trabajo en el SIMCE es <strong>traducir ese atajo</strong>.</p>
+    <table class="tabla-figuras">
+      <thead><tr><th>Figura</th><th>Cómo se reconoce</th><th>Ejemplo</th><th>Qué hay que responder</th></tr></thead>
+      <tbody>
+        <tr><td><b>Comparación</b></td><td>Aparece un nexo: <em>como, igual que, parece</em></td><td>«Barro hojas <b>como</b> quien pasa la mano por una espalda»</td><td>¿Qué rasgo se traslada de una cosa a la otra?</td></tr>
+        <tr><td><b>Metáfora</b></td><td>Se identifican dos cosas <em>sin</em> nexo: A <b>es</b> B</td><td>«La plaza <b>es</b> un animal dormido»</td><td>¿Qué le presta B a A?</td></tr>
+        <tr><td><b>Personificación</b></td><td>Un objeto hace algo que solo hacen las personas</td><td>«El torno <b>duerme</b>»</td><td>¿Qué gana el objeto al volverse casi humano?</td></tr>
+        <tr><td><b>Hipérbole</b></td><td>Exageración imposible de una cantidad</td><td>«Te lo dije <b>un millón</b> de veces»</td><td>¿Qué emoción justifica la exageración?</td></tr>
+      </tbody>
+    </table>
+    <div class="tip">
+      <b>La regla que decide casi todos los ítems</b>
+      Si ves <em>como</em> o <em>igual que</em>, es <b>comparación</b>. Si no hay nexo y aun así se identifican dos cosas, es <b>metáfora</b>. Si quien actúa es un objeto, es <b>personificación</b>.
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">2️⃣ Calentamiento</span>
+    <h2>Reconoce la figura</h2>
+    <p class="muted">Cuatro frases sueltas. Se corrigen solas apenas respondes.</p>
+    <div id="warmupZone"></div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">3️⃣ Texto 1</span>
+    <h2>Texto 1 · Poema</h2>
+    <p class="fuente">«Inventario del taller» · poema elaborado para fines pedagógicos.</p>
+    <div class="poema">
+        <p class="verso">Mi padre dejó el taller como quien deja</p>
+        <p class="verso">una carta a medio escribir.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">Las llaves cuelgan todavía en su orden,</p>
+        <p class="verso">soldados que esperan una guerra que no vendrá.</p>
+        <p class="verso">El torno duerme.</p>
+        <p class="verso">Sobre la mesa, un tornillo suelto</p>
+        <p class="verso">es el último punto de una frase.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">Yo no heredé sus manos:</p>
+        <p class="verso">heredé el ruido que hacían.</p>
+        <p class="verso">Cada vez que aprieto una tuerca</p>
+        <p class="verso">algo suyo se acomoda en mi muñeca.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">El taller no está vacío.</p>
+        <p class="verso">Está lleno de todo lo que él no dijo.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">4️⃣ Preguntas</span>
+    <h2>Preguntas 1 a 6 · sobre «Inventario del taller»</h2>
+    <div id="zone-p1"></div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">5️⃣ Texto 2</span>
+    <h2>Texto 2 · Poema (la otra voz)</h2>
+    <p class="fuente">«Turno de madrugada» · poema elaborado para fines pedagógicos.</p>
+    <div class="poema">
+        <p class="verso">A las seis la plaza es un animal dormido</p>
+        <p class="verso">y yo llego con mi escoba a despertarlo.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">Barro hojas como quien pasa la mano</p>
+        <p class="verso">por la espalda de alguien que tose.</p>
+        <p class="verso">Los bancos amanecen fríos,</p>
+        <p class="verso">con la noche pegada a la madera.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">La gente cruza y no me ve.</p>
+        <p class="verso">Soy el silencio que deja la ciudad limpia.</p>
+        <p class="verso">&nbsp;</p>
+        <p class="verso">Cuando termino, la plaza brilla</p>
+        <p class="verso">igual que un plato recién lavado</p>
+        <p class="verso">que nadie va a agradecer.</p>
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">6️⃣ Preguntas</span>
+    <h2>Preguntas 7 a 11 · sobre «Turno de madrugada»</h2>
+    <div id="zone-p2"></div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">7️⃣ Comparación</span>
+    <h2>Preguntas 12 a 14 · los dos poemas juntos</h2>
+    <p class="muted">El SIMCE siempre pregunta por dos textos que se cruzan. Aquí está esa parte.</p>
+    <div id="zone-ambos"></div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">8️⃣ Desarrollo</span>
+    <h2>Desarrollo · explica una figura con la cita</h2>
+    <p class="muted">Elige <strong>una</strong> figura de cualquiera de los dos poemas y explica qué sentido construye. Formato obligatorio, el mismo que se pide en la prueba:</p>
+    <ol class="pasos-dev">
+      <li><b>Afirmación:</b> qué figura es y dónde está.</li>
+      <li><b>Evidencia:</b> copia el verso entre comillas.</li>
+      <li><b>Explicación:</b> qué rasgo se traslada y qué gana el poema con eso.</li>
+    </ol>
+    <textarea id="dev1" rows="7" placeholder="Ejemplo de inicio: En el poema 1 hay una personificación cuando dice..."></textarea>
+    <div class="tip">
+      <b>Se evalúa así</b>
+      Sin cita textual no hay puntaje completo, aunque la idea sea correcta. La cita es la prueba.
+    </div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">9️⃣ Tu diagnóstico</span>
+    <h2>¿Cómo te fue por habilidad?</h2>
+    <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparece al responder las 14 preguntas:</p>
+    <div class="diag">
+      <div class="box" style="background:#e0f2fe;"><span>🔎 Localizar</span><b id="dL">—</b></div>
+      <div class="box" style="background:#fef3c7;"><span>🧩 Interpretar</span><b id="dI">—</b></div>
+      <div class="box" style="background:#fce7f3;"><span>🪞 Reflexionar</span><b id="dR">—</b></div>
+    </div>
+    <p class="muted" id="diagCopy">La habilidad donde falles más es tu foco de práctica de la semana.</p>
+    <div class="done-banner" id="doneBanner">✅ ¡Clase entregada! Resultado guardado.</div>
+  </section>
+</div>
+
+<div class="actionbar">
+  <div class="inner">
+    <span class="save-status" id="saveStatus">Conectando…</span>
+    <button class="btn primary" id="submitBtn">Entregar clase</button>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="js/forced-refresh.js"></script>
+<script>
+  const FIREBASE_CONFIG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",
+    databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",
+    storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
+  if(!firebase.apps.length)firebase.initializeApp(FIREBASE_CONFIG);
+  const auth=firebase.auth();auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  const db=firebase.database();const BASE='plataforma_estudiantes';const SESSION_ID='sesion-u3-6';
+  const SHARED_LOGIN_URL='/lecturas/?next='+encodeURIComponent('/estudiantes/guia-u3-s6-lirica-figuras.html');
+  const IS_LOCAL=window.location.protocol==='file:';
+  if(typeof initStudentForcedRefresh==='function')initStudentForcedRefresh({auth,db,base:BASE});
+
+  // Preguntas. 3 Localizar / 7 Interpretar / 4 Reflexionar. Claves repartidas A3 B3 C4 D4.
+  const QUESTIONS=[
+   {id:'q1',hab:'L',texto:'p1',enun:'Según el poema, ¿qué dejó el padre tal como estaba?',ops:[
+     {l:'A',t:'Una carta que alcanzó a terminar antes de irse del taller.'},
+     {l:'B',t:'Las llaves colgadas todavía en el orden en que él las usaba.'},
+     {l:'C',t:'Una lista escrita con las tareas pendientes del taller.'},
+     {l:'D',t:'El torno funciónando para que su hijo continuara el trabajo.'}],
+    correcta:'B',
+    why:{A:'Trampa (literalización): la carta no existe, es una comparación para explicar como quedó el taller.',
+         B:'Correcta. El verso lo dice directo: "Las llaves cuelgan todavía en su orden".',
+         C:'Trampa (invención plausible): ninguna lista aparece en el poema.',
+         D:'Trampa (contrasentido): el poema dice "El torno duerme", es decir, detenido.'},
+    cita:'"Las llaves cuelgan todavía en su orden" — dato explícito, no hay que interpretarlo.'},
+
+   {id:'q2',hab:'I',texto:'p1',enun:'¿Qué sugiere comparar el taller con "una carta a medio escribir"?',ops:[
+     {l:'A',t:'Que el padre era una persona dedicada a leer y escribir en su tiempo libre.'},
+     {l:'B',t:'Que el taller quedó sucio y desordenado después de que él se fuera.'},
+     {l:'C',t:'Que quedó algo interrumpido, con un sentido que nadie alcanzó a completar.'},
+     {l:'D',t:'Que el padre dejó instrucciones escritas para seguir con el trabajo.'}],
+    correcta:'C',
+    why:{A:'Trampa (literalización): toma la carta como un dato biográfico y no como imagen.',
+         B:'Trampa (cambio de foco): la imagen destaca lo inconcluso, no la suciedad. El poema insiste en el orden.',
+         C:'Correcta. Una carta a medio escribir está interrumpida: hay un sentido empezado que quedó sin cerrar.',
+         D:'Trampa (invención plausible): no hay instrucciones en ninguna parte del poema.'},
+    cita:'"como quien deja / una carta a medio escribir" — la comparación aporta la idea de algo suspendido.'},
+
+   {id:'q3',hab:'I',texto:'p1',enun:'"Las llaves... soldados que esperan una guerra que no vendrá". ¿Qué efecto produce llamarlas soldados?',ops:[
+     {l:'A',t:'Les da disciplina y disposición, pero para una tarea que ya no ocurrira.'},
+     {l:'B',t:'Indica que el padre fue militar antes de dedicarse al taller mecánico.'},
+     {l:'C',t:'Muestra que las herramientas están peligrosamente afiladas y hay que cuidarlas.'},
+     {l:'D',t:'Sugiere que el hablante se siente amenazado cada vez que entra al taller.'}],
+    correcta:'A',
+    why:{A:'Correcta. La metáfora traslada el orden y la espera del soldado a las llaves; el remate "que no vendrá" cancela el uso.',
+         B:'Trampa (literalización): convierte la metáfora en un dato de la vida del padre.',
+         C:'Trampa (cambio de foco): el rasgo trasladado es la formación en orden, no el filo.',
+         D:'Trampa (sobregeneralización): el poema no expresa miedo, sino ausencia.'},
+    cita:'"soldados que esperan una guerra que no vendrá" — el orden se mantiene, la función se perdió.'},
+
+   {id:'q4',hab:'I',texto:'p1',enun:'¿Qué figura hay en "El torno duerme" y que logra?',ops:[
+     {l:'A',t:'Una comparación: dice que el torno se parece bastante a una persona cansada.'},
+     {l:'B',t:'Una hipérbole: exagera muchísimo el tiempo que la máquina lleva sin usarse.'},
+     {l:'C',t:'Una personificación: le da una acción humana y vuelve la máquina un ser en pausa.'},
+     {l:'D',t:'Una anáfora: repite una misma palabra justo al inicio de varios versos del poema.'}],
+    correcta:'C',
+    why:{A:'Trampa (confusión técnica): no hay nexo comparativo (como, igual que); se afirma directamente la acción.',
+         B:'Trampa (confusión técnica): no hay exageración de cantidad ni de tiempo.',
+         C:'Correcta. Dormir es una acción humana atribuida a un objeto: eso es personificar. Deja la máquina en pausa, no muerta.',
+         D:'Trampa (confusión técnica): la anáfora es repetición al inicio del verso, y aquí no la hay.'},
+    cita:'"El torno duerme" — verbo humano aplicado a una máquina.'},
+
+   {id:'q5',hab:'I',texto:'p1',enun:'"Yo no heredé sus manos: heredé el ruido que hacían". ¿Qué quiere decir el hablante?',ops:[
+     {l:'A',t:'Que sus manos son físicamente distintas a las de su padre y le cuesta más.'},
+     {l:'B',t:'Que su padre le dejó una grabación con los sonidos del taller de antes.'},
+     {l:'C',t:'Que el ruido del taller le molesta mucho y quisiera dejar de escucharlo cada dia.'},
+     {l:'D',t:'Que no recibió la habilidad de su padre, pero sí su recuerdo y su modo de trabajar.'}],
+    correcta:'D',
+    why:{A:'Trampa (cambio de foco): se queda en lo físico y pierde el sentido de la herencia.',
+         B:'Trampa (literalización): toma "ruido" como un archivo de sonido real.',
+         C:'Trampa (contrasentido): el poema trata el ruido como herencia valiosa, no como molestia.',
+         D:'Correcta. Lo confirma el verso siguiente: al trabajar, "algo suyo se acomoda en mi muñeca". No hereda la destreza, hereda la presencia.'},
+    cita:'"Cada vez que aprieto una tuerca / algo suyo se acomoda en mi muñeca" — la herencia se activa al trabajar.'},
+
+   {id:'q6',hab:'R',texto:'p1',enun:'¿Cuál de estos versos concentra mejor el sentido total del poema?',ops:[
+     {l:'A',t:'"Las llaves cuelgan todavía en su orden".'},
+     {l:'B',t:'"Sobre la mesa, un tornillo suelto".'},
+     {l:'C',t:'"Cada vez que aprieto una tuerca".'},
+     {l:'D',t:'"Esta lleno de todo lo que él no dijo".'}],
+    correcta:'D',
+    why:{A:'Es un dato del inicio, pero no reúne la ausencia con la herencia.',
+         B:'Es una imagen parcial: describe un objeto, no el sentido del conjunto.',
+         C:'Introduce la herencia, pero el verso queda incompleto sin lo que sigue.',
+         D:'Correcta. Reúne las dos ideas del poema: la ausencia del padre y lo que quedó de el sin necesidad de palabras.'},
+    cita:'"El taller no esta vacío. / Esta lleno de todo lo que él no dijo" — cierre que resuelve el poema.'},
+
+   {id:'q7',hab:'L',texto:'p2',enun:'¿A que hora llega la hablante a la plaza?',ops:[
+     {l:'A',t:'A las seis de la mañana, antes de que la gente circule.'},
+     {l:'B',t:'Al mediodía, cuando la plaza está más concurrida.'},
+     {l:'C',t:'Al anochecer, cuando los bancos ya están mojados.'},
+     {l:'D',t:'De madrugada, después de que termina de llover.'}],
+    correcta:'A',
+    why:{A:'Correcta. El primer verso lo dice: "A las seis la plaza es un animal dormido".',
+         B:'Trampa (contrasentido): la plaza está dormida y nadie la ha cruzado aun.',
+         C:'Trampa (cambio de foco): los bancos amanecen fríos, lo que indica mañana, no anochecer.',
+         D:'Trampa (invención plausible): no se menciona lluvia en el poema.'},
+    cita:'"A las seis la plaza es un animal dormido" — dato explícito en el primer verso.'},
+
+   {id:'q8',hab:'I',texto:'p2',enun:'"La plaza es un animal dormido" y "llego con mi escoba a despertarlo". ¿Qué construyen juntas estas dos imagenes?',ops:[
+     {l:'A',t:'La idea de que la plaza es un lugar peligroso donde circulan animales sueltos.'},
+     {l:'B',t:'La idea de que barrer es la acción que devuelve la plaza a la vida cada dia.'},
+     {l:'C',t:'La idea de que la hablante trabaja con miedo porque está sola a esa hora.'},
+     {l:'D',t:'La idea de que la plaza necesita ser reparada por el municipio.'}],
+    correcta:'B',
+    why:{A:'Trampa (literalización): lee "animal" como un animal real y no como imagen de la plaza dormida.',
+         B:'Correcta. Si la plaza duerme y ella la despierta, su trabajo es lo que pone el lugar en funciónamiento.',
+         C:'Trampa (invención plausible): el poema nunca menciona miedo ni soledad amenazante.',
+         D:'Trampa (cambio de foco): no se habla de deterioro ni de reparaciones.'},
+    cita:'"y yo llego con mi escoba a despertarlo" — su oficio es el que activa el dia de la plaza.'},
+
+   {id:'q9',hab:'I',texto:'p2',enun:'¿Qué agrega la comparación "como quien pasa la mano / por la espalda de alguien que tose"?',ops:[
+     {l:'A',t:'Que barrer le provoca dolor de espalda después de trabajar varias horas.'},
+     {l:'B',t:'Que la hablante está enferma y aun así debe trabajar todos los días.'},
+     {l:'C',t:'Que realiza su trabajo con delicadeza, como un gesto de cuidado hacia otro.'},
+     {l:'D',t:'Que las hojas secas levantan polvo y la hacen toser mientras esta barriendo.'}],
+    correcta:'C',
+    why:{A:'Trampa (literalización): traslada la espalda de la comparación al cuerpo de la hablante.',
+         B:'Trampa (invención plausible): quien tose es el termino de comparación, no ella.',
+         C:'Correcta. Pasar la mano por la espalda de alguien que tose es un gesto de consuelo: la comparación vuelve el barrido un acto de cuidado.',
+         D:'Trampa (cambio de foco): el poema no habla de polvo; la tos pertenece a la imagen.'},
+    cita:'"Barro hojas como quien pasa la mano / por la espalda de alguien que tose" — el nexo "como" marca la comparación.'},
+
+   {id:'q10',hab:'I',texto:'p2',enun:'"Soy el silencio que deja la ciudad limpia". ¿Qué expresa la hablante sobre su trabajo?',ops:[
+     {l:'A',t:'Que su escoba no hace ruido y por eso nadie se despierta cuando pasa.'},
+     {l:'B',t:'Que prefiere trabajar en silencio porque no le gusta conversar con la gente.'},
+     {l:'C',t:'Que la ciudad entera está en silencio a la hora en que ella hace su turno.'},
+     {l:'D',t:'Que su trabajo produce un resultado visible mientras ella permanece invisible.'}],
+    correcta:'D',
+    why:{A:'Trampa (cambio de foco): el silencio no se refiere al sonido de la herramienta.',
+         B:'Trampa (invención plausible): no se dice nada sobre su gusto por conversar.',
+         C:'Trampa (literalización): entiende "silencio" como ausencia de ruido ambiental.',
+         D:'Correcta. Se identifica con el silencio: lo que se ve es la limpieza, no quien la hizo. Lo prepara el verso anterior.'},
+    cita:'"La gente cruza y no me ve. / Soy el silencio que deja la ciudad limpia" — el verso previo instala la invisibilidad.'},
+
+   {id:'q11',hab:'R',texto:'p2',enun:'El poema termina con "igual que un plato recien lavado / que nadie va a agradecer". ¿Qué logra ese cierre?',ops:[
+     {l:'A',t:'Aclara que la hablante también trabaja lavando platos en otro empleo.'},
+     {l:'B',t:'Compara su trabajo con una tarea doméstica que se repite y no se reconoce.'},
+     {l:'C',t:'Indica que la plaza quedó tan limpia que ahora parece de otro material.'},
+     {l:'D',t:'Muestra que la hablante está enojada y piensa renunciar a su trabajo.'}],
+    correcta:'B',
+    why:{A:'Trampa (literalización): el plato es termino de comparación, no otro empleo.',
+         B:'Correcta. La comparación traslada al oficio dos rasgos del trabajo domestico: se rehace cada dia y pasa inadvertido.',
+         C:'Trampa (cambio de foco): se queda en el brillo y descarta "que nadie va a agradecer", que es lo que da el tono.',
+         D:'Trampa (sobregeneralización): hay resignación lúcida, no ira ni anuncio de renuncia.'},
+    cita:'"que nadie va a agradecer" — el remate desplaza el sentido del brillo al reconocimiento ausente.'},
+
+   {id:'q12',hab:'R',texto:'ambos',enun:'¿Qué tienen en común los dos hablantes?',ops:[
+     {l:'A',t:'Los dos abandonaron el oficio que habían aprendido de sus familias.'},
+     {l:'B',t:'Los dos expresan rabia contra quienes no valoran su esfuerzo.'},
+     {l:'C',t:'Los dos trabajan de noche y descansan durante el dia.'},
+     {l:'D',t:'Los dos describen un trabajo que otros no alcanzan a ver del todo.'}],
+    correcta:'D',
+    why:{A:'Trampa (contrasentido): el primero continúa el oficio ("cada vez que aprieto una tuerca").',
+         B:'Trampa (sobregeneralización): ninguno expresa rabia; el tono es sereno.',
+         C:'Trampa (invención plausible): la segunda trabaja a las seis de la mañana y del primero no se indica horario.',
+         D:'Correcta. Uno hereda "lo que él no dijo" y la otra es "el silencio" que nadie ve: en ambos el trabajo deja huella sin ser visto.'},
+    cita:'"Esta lleno de todo lo que él no dijo" y "La gente cruza y no me ve" — lo no visible es el eje de ambos.'},
+
+   {id:'q13',hab:'R',texto:'ambos',enun:'¿En qué se diferencian los dos poemas respecto del tiempo?',ops:[
+     {l:'A',t:'El primero mira un pasado qué dejó ausencia; el segundo, una rutina de hoy.'},
+     {l:'B',t:'El primero transcurre en un solo dia; el segundo, a lo largo de varios años.'},
+     {l:'C',t:'Los dos recuerdan una infancia compartida que ya no volverá a repetirse.'},
+     {l:'D',t:'El primero imagina el futuro del taller; el segundo describe un hecho único.'}],
+    correcta:'A',
+    why:{A:'Correcta. En el primero el padre ya se fue y queda su huella; en el segundo, "cuando termino" marca una rutina presente.',
+         B:'Trampa (invención plausible): ninguno indica esa duración.',
+         C:'Trampa (sobregeneralización): la infancia no aparece en ninguno de los dos.',
+         D:'Trampa (contrasentido): el primero no proyecta futuro y el segundo describe algo repetido, no único.'},
+    cita:'"una guerra que no vendrá" (pasado clausurado) frente a "A las seis..., cuando termino" (rutina).'},
+
+   {id:'q14',hab:'L',texto:'ambos',enun:'¿Cuál de estas figuras aparece en AMBOS poemas?',ops:[
+     {l:'A',t:'La hipérbole, es decir, la exageración de una cantidad.'},
+     {l:'B',t:'La anáfora, es decir, la repetición al inicio de varios versos.'},
+     {l:'C',t:'La comparación introducida por "como" o "igual que".'},
+     {l:'D',t:'La pregunta retórica dirigida directamente al lector.'}],
+    correcta:'C',
+    why:{A:'No hay exageración de cantidad en ninguno de los dos.',
+         B:'No hay versos que empiecen repitiendo la misma palabra.',
+         C:'Correcta. El primero usa "como quien deja una carta" y el segundo "como quien pasa la mano" e "igual que un plato".',
+         D:'Ninguno de los dos formula preguntas.'},
+    cita:'"como quien deja / una carta a medio escribir" y "igual que un plato recien lavado".'}
+  ];
+
+  const HABNAME={L:'Localizar',I:'Interpretar',R:'Reflexionar'};
+  const HABCLS={L:'sk-l',I:'sk-i',R:'sk-r'};
+  let answers={}, warmupAnswers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null;
+
+  function setStatus(t){document.getElementById('saveStatus').textContent=t;}
+  function showToast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
+
+  const WARMUP=[
+   {frase:'"El torno duerme."',ops:['Personificación','Comparación','Hipérbole'],ok:0,why:'Dormir es una acción humana dada a una máquina. No hay "como": no es comparación.'},
+   {frase:'"Sus manos eran como dos herramientas gastadas."',ops:['Metáfora','Comparación','Personificación'],ok:1,why:'Aparece el nexo "como". Cuando el nexo esta, es comparación.'},
+   {frase:'"Te lo he dicho un millón de veces."',ops:['Comparación','Hipérbole','Personificación'],ok:1,why:'Exageracion evidente de la cantidad: eso es hipérbole.'},
+   {frase:'"Mi barrio es una radio que no se apaga."',ops:['Metáfora','Hipérbole','Comparación'],ok:0,why:'Identifica una cosa con otra sin nexo: el barrio ES una radio. Eso es metáfora.'}
+  ];
+  function renderWarmup(){
+    const z=document.getElementById('warmupZone');
+    WARMUP.forEach((w,i)=>{
+      const d=document.createElement('div');d.className='q';
+      d.innerHTML=`<div class="enun">${w.frase}</div><div class="opts" style="grid-template-columns:repeat(3,1fr);">${w.ops.map((o,j)=>`<button type="button" class="opt" data-w="${i}" data-j="${j}" style="justify-content:center;"><span>${o}</span></button>`).join('')}</div><div class="retro" id="wretro-${i}"></div>`;
+      z.appendChild(d);
+    });
+    document.querySelectorAll('[data-w]').forEach(b=>b.addEventListener('click',()=>{
+      const i=+b.dataset.w,j=+b.dataset.j;
+      warmupAnswers[i]=j;
+      document.querySelectorAll(`[data-w="${i}"]`).forEach(x=>{x.classList.remove('selected','correct','wrong');});
+      b.classList.add('selected');
+      if(Object.keys(warmupAnswers).length===WARMUP.length)revealWarmupCorrections();
+      else{const r=document.getElementById('wretro-'+i);r.className='retro';r.innerHTML='';}
+    }));
+  }
+  function revealWarmupCorrections(){
+    WARMUP.forEach((w,i)=>{
+      const j=warmupAnswers[i];if(j===undefined)return;
+      document.querySelectorAll(`[data-w="${i}"]`).forEach(x=>{
+        x.classList.remove('correct','wrong');
+        if(+x.dataset.j===w.ok)x.classList.add('correct');
+        else if(+x.dataset.j===j)x.classList.add('wrong');
+      });
+      const r=document.getElementById('wretro-'+i);
+      r.className='retro show '+(j===w.ok?'ok':'bad');
+      r.innerHTML=(j===w.ok?'✅ ':'❌ Era <b>'+w.ops[w.ok]+'</b>. ')+w.why;
+    });
+  }
+
+  function render(){
+    const zones={p1:document.getElementById('zone-p1'),p2:document.getElementById('zone-p2'),ambos:document.getElementById('zone-ambos')};
+    QUESTIONS.forEach((q,idx)=>{
+      const d=document.createElement('div');d.className='q';d.id='card-'+q.id;
+      d.innerHTML=`<span class="hab ${HABCLS[q.hab]}">${HABNAME[q.hab]}</span><div class="enun">${idx+1}. ${q.enun}</div>
+        <div class="opts">${q.ops.map(o=>`<button type="button" class="opt" data-q="${q.id}" data-l="${o.l}"><span class="letra">${o.l})</span><span>${o.t}</span></button>`).join('')}</div>
+        <div class="retro" id="retro-${q.id}"></div>`;
+      zones[q.texto].appendChild(d);
+      d.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>pick(b.dataset.q,b.dataset.l)));
+    });
+  }
+
+  function pick(qid,letra){
+    if(!qid||isSubmitted)return;
+    answers[qid]=letra;
+    document.querySelectorAll(`.opt[data-q="${qid}"]`).forEach(b=>{
+      b.classList.remove('selected','correct','wrong');
+      if(b.dataset.l===letra)b.classList.add('selected');
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      revealAllCorrections();
+    }else{
+      const r=document.getElementById('retro-'+qid);r.className='retro';r.innerHTML='';
+    }
+    updateDiag(); scheduleSave();
+  }
+
+  function revealAllCorrections(){
+    QUESTIONS.forEach(q=>{
+      const letra=answers[q.id];if(!letra)return;
+      const ok=letra===q.correcta;
+      document.querySelectorAll(`.opt[data-q="${q.id}"]`).forEach(b=>{
+        b.classList.remove('correct','wrong');
+        if(b.dataset.l===q.correcta)b.classList.add('correct');
+        else if(b.dataset.l===letra)b.classList.add('wrong');
+      });
+      const r=document.getElementById('retro-'+q.id);
+      r.className='retro show '+(ok?'ok':'bad');
+      r.innerHTML=`<b>${ok?'✅ ¡Correcta!':'❌ La correcta era la '+q.correcta+')'}</b>
+        <div class="why">${['A','B','C','D'].map(L=>`<div><b>${L})</b> ${q.why[L]}</div>`).join('')}</div>
+        <div class="cita">📖 ${q.cita}</div>`;
+    });
+  }
+
+  function statsByHab(){
+    const s={L:{ok:0,n:0},I:{ok:0,n:0},R:{ok:0,n:0}};
+    QUESTIONS.forEach(q=>{const a=answers[q.id];if(!a)return;s[q.hab].n++;if(a===q.correcta)s[q.hab].ok++;});
+    return s;
+  }
+  function updateDiag(){
+    const s=statsByHab();
+    [['L','dL'],['I','dI'],['R','dR']].forEach(([h,id])=>{
+      const el=document.getElementById(id);
+      el.textContent=s[h].n? s[h].ok+'/'+s[h].n+' ('+Math.round(s[h].ok/s[h].n*100)+'%)':'—';
+    });
+    if(Object.keys(answers).length===QUESTIONS.length){
+      const pct=h=>s[h].n?s[h].ok/s[h].n:1;
+      const peor=['L','I','R'].sort((a,b)=>pct(a)-pct(b))[0];
+      document.getElementById('diagCopy').innerHTML='🎯 Tu foco de la semana: <b>'+HABNAME[peor]+'</b>. En las próximas clases practicaremos justo eso.';
+    }
+  }
+
+  function grade(){
+    let ok=0;QUESTIONS.forEach(q=>{if(answers[q.id]===q.correcta)ok++;});
+    const pct=Math.round(ok/QUESTIONS.length*100);
+    const nota=pct>=60?Math.round((4+3*(pct-60)/40)*10)/10:Math.round((1+3*pct/60)*10)/10;
+    return {ok,pct,nota};
+  }
+  function cleanAnswers(){
+    const clean={};
+    Object.keys(answers).forEach(k=>{
+      if(k&&k!=='undefined'&&answers[k]!==undefined&&QUESTIONS.some(q=>q.id===k))clean[k]=answers[k];
+    });
+    return clean;
+  }
+  function payload(completed){
+    return {answers:cleanAnswers(),desarrollo:(document.getElementById('desarrollo').value||'').trim(),desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+      completada:!!completed,nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+      last_save:Date.now()};
+  }
+  function localKey(){return currentUID?('draft_'+SESSION_ID+'_'+currentUID):null;}
+  function localBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.setItem(k,JSON.stringify(payload(false)));}catch(e){}
+  }
+  function clearLocalBackup(){
+    const k=localKey();if(!k)return;
+    try{localStorage.removeItem(k);}catch(e){}
+  }
+  async function saveDraft(retry){
+    localBackup();
+    if(IS_LOCAL||!currentUID||isSubmitted)return;
+    try{
+      await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+      setStatus('✓ Avance guardado.');
+    }catch(e){
+      console.error(e);
+      if(!retry){setTimeout(()=>saveDraft(true),4000);return;}
+      setStatus('⚠️ Sin conexión: tu avance queda guardado en este dispositivo y se sube apenas vuelva internet.');
+      showToast('⚠️ No hay conexión. No cierres esta pestaña: tu avance quedó guardado en este dispositivo y se sube solo apenas vuelva internet.');
+      scheduleResync();
+    }
+  }
+  function scheduleSave(){localBackup();setStatus('Guardando…');clearTimeout(saveTimer);saveTimer=setTimeout(()=>saveDraft(false),1500);}
+
+  let resyncTimer=null;
+  function scheduleResync(){
+    clearTimeout(resyncTimer);
+    resyncTimer=setTimeout(async()=>{
+      if(IS_LOCAL||!currentUID||isSubmitted)return;
+      try{
+        await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(payload(false));
+        setStatus('✓ Avance guardado (recuperado tras la caída de conexión).');
+      }catch(e){console.error(e);scheduleResync();}
+    },8000);
+  }
+  window.addEventListener('online',()=>{if(currentUID&&!isSubmitted)saveDraft(false);});
+
+  async function submitGuide(){
+    if(IS_LOCAL){showToast('Vista previa local.');return;}
+    if(!currentUID||isSubmitted)return;
+    const respondidas=Object.keys(answers).length;
+    const msg=respondidas<QUESTIONS.length
+      ? '¿Entregar la clase con '+respondidas+' de '+QUESTIONS.length+' preguntas respondidas? Tu resultado quedará registrado.'
+      : '¿Entregar la clase? Tu resultado quedará registrado.';
+    if(!confirm(msg))return;
+    document.getElementById('submitBtn').disabled=true;
+    revealAllCorrections();
+    const g=grade();const now=Date.now();const s=statsByHab();
+    const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
+    try{
+      const data=payload(true);data.submitted_at=now;
+      await Promise.all([
+        db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data),
+        db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
+          puntaje:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
+          por_habilidad:{L:s.L,I:s.I,R:s.R},
+          desarrollo:(document.getElementById('desarrollo').value||'').trim(),
+          desarrollo2:(document.getElementById('desarrollo2').value||'').trim(),
+          nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+          submitted_at:now,timestamp:now})
+      ]);
+      if(studentData&&studentData.curso){
+        try{await db.ref(BASE+'/ranking/'+SESSION_ID+'/'+studentData.curso+'/'+currentUID).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct});}catch(e){}
+      }
+      isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      clearLocalBackup();
+      setStatus('✅ Entregada · '+g.ok+'/'+QUESTIONS.length+' ('+g.pct+'%)');showToast('✅ ¡Entregado!');
+    }catch(e){
+      console.error(e);
+      localBackup();
+      showToast('No se pudo entregar (sin conexión o error de red). Tu avance quedó guardado en este dispositivo: vuelve a intentar "Entregar" cuando tengas internet.');
+      document.getElementById('submitBtn').disabled=false;
+    }
+  }
+
+  function hydrate(saved){
+    if(!saved)return;
+    if(saved.answers){Object.entries(saved.answers).forEach(([qid,l])=>{
+      if(qid&&qid!=='undefined'&&l!==undefined&&QUESTIONS.some(q=>q.id===qid)&&!answers[qid])pick(qid,l);
+    });}
+    if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
+    if(typeof saved.desarrollo2==='string')document.getElementById('desarrollo2').value=saved.desarrollo2;
+    if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+      document.getElementById('submitBtn').disabled=true;
+      document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
+      setStatus('✅ Clase ya entregada.');}
+  }
+
+  renderWarmup();
+  render();
+  document.getElementById('submitBtn').addEventListener('click',submitGuide);
+  document.getElementById('desarrollo').addEventListener('input',scheduleSave);
+  document.getElementById('desarrollo2').addEventListener('input',scheduleSave);
+  document.getElementById('btnModelo2').addEventListener('click',()=>{
+    const t=(document.getElementById('desarrollo2').value||'').trim();
+    if(t.split(/s+/).length<15){showToast('Primero escribe tu comparación (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox2').classList.add('show');
+  });
+  document.getElementById('btnModelo').addEventListener('click',()=>{
+    const txt=(document.getElementById('desarrollo').value||'').trim();
+    if(txt.split(/\s+/).length<15){showToast('Primero escribe tu respuesta (al menos unas 15 palabras).');return;}
+    document.getElementById('modeloBox').classList.add('show');
+  });
+
+  if(!IS_LOCAL){
+    auth.onAuthStateChanged(async user=>{
+      if(!user){window.location.href=SHARED_LOGIN_URL;return;}
+      currentUID=user.uid;
+      try{
+        const [stuSnap,savedSnap]=await Promise.all([
+          db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
+          db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value')
+        ]);
+        studentData=stuSnap.val();
+        if(!studentData){auth.signOut();return;}
+        const remote=savedSnap.val();
+        let local=null;
+        try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
+        const useLocal=local && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
+        hydrate(useLocal?local:remote);
+        if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
+        if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
+      }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}
+    });
+  }else{setStatus('Vista previa local.');}
+</script>
+</body>
+</html>

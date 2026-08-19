@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calificar interrogación · Mocha Dick · NM4</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1d4f91">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{--ink:#132033;--muted:#5c6d82;--line:#d5e0ec;--blue:#1d4f91;--blue-d:#143a6d;--soft:#f2f7fc;
+        --ok:#0f766e;--ok-bg:#effdf9;--warn:#78440a;--warn-bg:#fffbeb;--warn-line:#f7d070;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;color:var(--ink);line-height:1.55;
+       background:linear-gradient(180deg,#f8fbff 0%,#eaf1f8 60%,#e3ebf4 100%);min-height:100vh;}
+  .wrap{max-width:960px;margin:0 auto;padding:22px 18px 70px;}
+
+  .top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px;}
+  .top h1{margin:0;font-size:20px;flex:1;min-width:200px;}
+  .top .quien{font-size:13px;font-weight:700;color:var(--blue);background:#fff;border:1.5px solid var(--line);
+              padding:6px 13px;border-radius:999px;}
+  .salir{font-size:12.5px;color:var(--muted);background:none;border:0;cursor:pointer;font-family:inherit;text-decoration:underline;}
+
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin-bottom:16px;
+        box-shadow:0 10px 26px rgba(15,23,42,.05);}
+  .card h2{margin:0 0 4px;font-size:17px;color:var(--blue);}
+  .card .sub{margin:0 0 14px;font-size:13.5px;color:var(--muted);}
+
+  label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
+        letter-spacing:.05em;margin-bottom:5px;}
+  select,input[type=password],textarea{width:100%;font:inherit;font-size:15px;padding:11px 13px;
+        border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
+  select:focus,input:focus,textarea:focus{outline:2px solid #9dc2ea;outline-offset:1px;border-color:var(--blue);}
+  .fila{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
+  .campo{margin-bottom:13px;}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-size:14.5px;
+       font-weight:700;padding:12px 20px;border-radius:10px;border:1.5px solid var(--blue);
+       color:var(--blue);background:#fff;cursor:pointer;}
+  .btn.solid{background:var(--blue);color:#fff;}
+  .btn.solid:hover{background:var(--blue-d);}
+  .btn:disabled{opacity:.45;cursor:not-allowed;}
+  .btn.chico{padding:8px 14px;font-size:13px;}
+  .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+
+  .aviso{border-radius:10px;padding:11px 15px;font-size:13.6px;margin-top:12px;display:none;}
+  .aviso.ver{display:block;}
+  .aviso.err{background:#fef3f3;border:1px solid #f2b2b2;color:#7f1d1d;}
+  .aviso.ok{background:var(--ok-bg);border:1px solid #7fdcc8;color:var(--ok);}
+
+  .preg{border:1px solid var(--line);border-radius:11px;margin-bottom:11px;overflow:hidden;}
+  .preg-h{background:var(--soft);padding:9px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--line);}
+  .preg-h .np{width:24px;height:24px;border-radius:7px;background:var(--blue);color:#fff;display:flex;
+              align-items:center;justify-content:center;font-size:12.5px;font-weight:800;flex:0 0 24px;}
+  .preg-h .banco{font-size:12px;font-weight:700;color:var(--muted);}
+  .preg-h .cambiar{margin-left:auto;font-size:12px;font-weight:700;color:var(--blue);background:#fff;
+                   border:1px solid #cfe0f2;border-radius:999px;padding:4px 11px;cursor:pointer;font-family:inherit;}
+  .preg-h .cambiar:disabled{opacity:.4;cursor:not-allowed;}
+  .preg-b{padding:12px 14px;}
+  .preg-t{font-size:14.6px;margin-bottom:11px;line-height:1.5;}
+  .escala{display:flex;flex-wrap:wrap;gap:6px;}
+  .escala button{font:inherit;font-size:13.5px;font-weight:700;min-width:48px;padding:8px 6px;border-radius:8px;
+                 border:1.5px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
+  .escala button:hover{border-color:#9dc2ea;}
+  .escala button.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+  .marcador{position:sticky;bottom:0;background:rgba(255,255,255,.96);backdrop-filter:blur(8px);
+            border:1.5px solid var(--line);border-radius:13px;padding:13px 18px;margin-top:14px;
+            display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 -6px 22px rgba(15,30,55,.08);}
+  .marcador .lbl{font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .marcador .val{font-size:30px;font-weight:800;color:var(--blue);line-height:1;font-variant-numeric:tabular-nums;}
+  .marcador .det{font-size:13px;color:var(--muted);}
+  .marcador .der{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap;}
+
+  table{width:100%;border-collapse:collapse;font-size:13.6px;}
+  th,td{border-bottom:1px solid #e6edf5;padding:8px 10px;text-align:left;}
+  thead th{background:var(--soft);color:var(--blue);font-size:11.5px;text-transform:uppercase;
+           letter-spacing:.05em;font-weight:800;}
+  td.n{font-weight:800;color:var(--blue);text-align:center;font-variant-numeric:tabular-nums;}
+  .vacio{text-align:center;color:var(--muted);padding:18px;font-size:13.5px;}
+
+  .oculto{display:none !important;}
+  @media (max-width:640px){
+    .fila{grid-template-columns:1fr;}
+    .card{padding:16px 15px;}
+    .marcador{gap:11px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ENTRAR -->
+  <section id="vLogin">
+    <div class="top"><h1>Interrogación Mocha Dick · calificar</h1></div>
+    <div class="card" style="max-width:440px;">
+      <h2>Ingreso docente</h2>
+      <p class="sub">Solo para quienes toman esta interrogación.</p>
+      <div class="campo">
+        <label for="docente">Docente</label>
+        <select id="docente">
+          <option value="">Seleccione…</option>
+          <option value="alicia">Alicia Aguilera · 4°A</option>
+          <option value="joselin">Joselin Díaz · 4°D y 4°E</option>
+          <option value="pia">Pía Benavides · 4°B y 4°C</option>
+        </select>
+      </div>
+      <div class="campo">
+        <label for="clave">Clave</label>
+        <input type="password" id="clave" autocomplete="current-password" placeholder="••••••••">
+      </div>
+      <button class="btn solid" id="btnEntrar" style="width:100%;">Entrar</button>
+      <div class="aviso err" id="errLogin"></div>
+    </div>
+  </section>
+
+  <!-- PANEL -->
+  <section id="vPanel" class="oculto">
+    <div class="top">
+      <h1>Interrogación Mocha Dick</h1>
+      <span class="quien" id="quien"></span>
+      <button class="salir" id="btnSalir">Salir</button>
+    </div>
+
+    <div class="card">
+      <h2>1 · Elige al estudiante</h2>
+      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco.</p>
+      <div class="fila">
+        <div class="campo"><label for="curso">Curso</label><select id="curso"></select></div>
+        <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
+      </div>
+      <div class="btns">
+        <button class="btn solid" id="btnSortear">🎲 Sortear las 7 preguntas</button>
+      </div>
+      <div class="aviso" id="avisoSorteo"></div>
+    </div>
+
+    <div class="card oculto" id="cardPreg">
+      <h2>2 · Interrogación</h2>
+      <p class="sub">Puntúa cada respuesta. Se puede cambiar <strong>una sola</strong> pregunta, y la nueva la elige el sorteo.</p>
+      <div id="zonaPreg"></div>
+      <div class="campo" style="margin-top:14px;">
+        <label for="obs">Observación (opcional)</label>
+        <textarea id="obs" rows="2" placeholder="Algo que quieras dejar registrado de esta interrogación"></textarea>
+      </div>
+      <div class="marcador">
+        <div><div class="lbl">Nota</div><div class="val" id="notaVal">—</div></div>
+        <div class="det" id="notaDet">Sin puntajes asignados</div>
+        <div class="der">
+          <button class="btn" id="btnCancelar">Cancelar</button>
+          <button class="btn solid" id="btnGuardar">Guardar nota</button>
+        </div>
+      </div>
+      <div class="aviso" id="avisoGuardar"></div>
+    </div>
+
+    <div class="card">
+      <h2>3 · Notas guardadas</h2>
+      <p class="sub" id="subNotas">Aún no hay interrogaciones registradas.</p>
+      <div style="overflow-x:auto;">
+        <table>
+          <thead><tr><th style="width:9%">Curso</th><th style="width:6%">N°</th><th>Estudiante</th><th style="width:9%">Nota</th><th style="width:15%">Fecha</th><th style="width:9%"></th></tr></thead>
+          <tbody id="tablaNotas"><tr><td colspan="6" class="vacio">Sin registros todavía.</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var API = '/api/interrogacion';
+  var BANCO = [
+    '¿Quiénes son los autores y qué hizo cada uno?',
+    '¿Qué tipo de texto es Mocha Dick y en qué se diferencia de una novela común?',
+    '¿En qué lugar y año comienza la historia?',
+    '¿Qué hecho de la naturaleza abre el relato?',
+    '¿Cómo se llama el anciano protagonista?',
+    '¿A qué edad se embarcó por primera vez y en qué circunstancias?',
+    '¿Cómo se llamaba su barco ballenero y de qué puerto era?',
+    '¿Quién es Aliro Leftraru, de dónde viene y qué quería llegar a ser?',
+    '¿Qué se enseñaron mutuamente Caleb y Leftraru?',
+    '¿A qué barco pertenecía el bote de náufragos que encontraron y qué había dentro?',
+    '¿Cuántos sobrevivientes del Essex rescataron y quiénes eran?',
+    '¿En qué fecha naufragó el Essex y cuánto tiempo llevaban a la deriva?',
+    '¿Cómo llama el pueblo de Leftraru a la ballena blanca y qué significa para ellos?',
+    '¿Cómo se llama el pueblo de origen de Leftraru y dónde queda?',
+    '¿Quién es la machi Rosa y qué parentesco tiene con Leftraru?',
+    '¿Qué nombre le da el pueblo lafquenche a Caleb y qué significa?',
+    '¿Quién es Duncan Sheffield, de dónde viene y cómo se llama su barco?',
+    '¿Qué ofrece el padre del muchacho muerto en el Essex y por qué?',
+    '¿Cómo se llama el barco del capitán Abel Macys?',
+    '¿Qué secreto esconde el joven marinero llamado Joe?',
+    'Nombra los tres hechos reales en que se basa la obra, según la nota preliminar.',
+    'Según la confesión de Owen Chase, ¿cuál fue el pecado que provocó el ataque de la ballena al Essex?',
+    '¿Cuál es la verdad que el capitán Pollard ocultó sobre la muerte de su sobrino?',
+    '¿Por qué Chase confiesa la verdad recién en el carguero y estando borracho?',
+    'Según Sheffield, ¿qué protege realmente la ballena blanca en la isla Mocha?',
+    '¿Qué advertencia hace Sheffield sobre el futuro de las ballenas?',
+    '¿Qué es «la escalada» de la que habla Sheffield? Explícala con sus palabras.',
+    '¿Por qué Ferguson odia especialmente a Leftraru? ¿Qué le pasó a su padre?',
+    '¿Por qué las ballenas francas eran presas más fáciles que los cachalotes?',
+    'Explica la frase de Caleb: «capturar grandes machos o hembras solitarias es de balleneros; matar crías y madres, de salvajes».',
+    '¿Qué significa que la tripulación acuse a alguien de ser un «Jonás»? ¿Con qué epígrafe del libro se relaciona?',
+    '¿Por qué no cazaban ballenas azules en esa época y qué cambió en 1870?',
+    '¿Cuál era la verdadera razón del viaje del Peleg Hawthorne?',
+    '¿Por qué el cuaderno de Sheffield es tan valioso para el capitán Macys?',
+    '¿Por qué Josephine vivía disfrazada de hombre? ¿Qué dice ella sobre su padre?',
+    '¿Qué método usa Macys para atraer a la ballena blanca?',
+    '¿Cómo se defiende Josephine cuando un tripulante intenta abusar de ella?',
+    '¿Quién le pone el nombre «Mocha Dick» a la ballena y en qué momento?',
+    '¿Qué había ocurrido en realidad cuando la ballena se llevó a Leftraru la primera vez?',
+    '¿Cómo muere el capitán Macys y qué hace en ese momento?',
+    'Según la novela, ¿cómo llegó esta historia a convertirse en literatura mundial? Explica la cadena completa.',
+    'La historia se cuenta varias veces y ninguna versión es completa. Identifica al menos dos omisiones y explica por qué importan.',
+    'Compara la visión de la ballena que tienen los balleneros de Nantucket y la que tiene el pueblo lafquenche. Fundamenta con ejemplos.',
+    '¿Es la Mocha un monstruo, una víctima o algo distinto? Fundamenta con evidencia del libro.',
+    'Explica la frase sobre los niños que se hacen hombres, los héroes y los reyes. ¿Por qué se dice de Leftraru?',
+    '¿Por qué la novela empieza y termina en Tomé, 1889? ¿Qué aporta esa estructura?',
+    '¿Qué rol cumple Josephine en la historia? Argumenta si es un personaje secundario o no.',
+    '¿Qué vigencia tiene hoy la advertencia de Sheffield? Relaciona con lo que el libro cuenta sobre 1870.',
+    'Interpreta el final: «Gracias, mi madre», «sin victorias ni derrotas» y «sobreviví para contarlo».',
+    '¿Por qué crees que los autores eligieron la novela gráfica y no la novela tradicional? Fundamenta con dos recursos visuales.'
+  ];
+  var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
+  var CURSO_LBL = { '4ATP': '4°A', '4BTP': '4°B', '4CTP': '4°C', '4DTP': '4°D', '4ETP': '4°E' };
+
+  var sesion = null;      // {docente, clave, cursos, notas}
+  var actual = null;      // interrogación en curso
+  var $ = function (id) { return document.getElementById(id); };
+
+  function aviso(el, texto, tipo) {
+    el.textContent = texto;
+    el.className = 'aviso ver ' + (tipo || 'ok');
+    if (!texto) el.className = 'aviso';
+  }
+
+  async function llamar(cuerpo) {
+    var r = await fetch(API, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.assign({ docente: sesion && sesion.docente, clave: sesion && sesion.clave }, cuerpo))
+    });
+    var j = await r.json().catch(function () { return {}; });
+    if (!r.ok) throw new Error(j.error || 'Error de conexión.');
+    return j;
+  }
+
+  // ---------- entrar ----------
+  $('btnEntrar').addEventListener('click', async function () {
+    var d = $('docente').value, c = $('clave').value;
+    if (!d || !c) { return aviso($('errLogin'), 'Elige tu nombre y escribe la clave.', 'err'); }
+    $('btnEntrar').disabled = true;
+    sesion = { docente: d, clave: c };
+    try {
+      var r = await llamar({ accion: 'nomina' });
+      sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {};
+      $('quien').textContent = r.docente;
+      $('vLogin').classList.add('oculto');
+      $('vPanel').classList.remove('oculto');
+      pintarCursos(); pintarNotas();
+    } catch (e) {
+      sesion = null;
+      aviso($('errLogin'), e.message, 'err');
+    }
+    $('btnEntrar').disabled = false;
+  });
+  $('clave').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btnEntrar').click(); });
+
+  $('btnSalir').addEventListener('click', function () {
+    sesion = null; actual = null;
+    $('clave').value = '';
+    $('vPanel').classList.add('oculto');
+    $('vLogin').classList.remove('oculto');
+  });
+
+  // ---------- selección ----------
+  function pintarCursos() {
+    var s = $('curso'); s.innerHTML = '';
+    Object.keys(sesion.cursos).forEach(function (c) {
+      var o = document.createElement('option');
+      o.value = c; o.textContent = (CURSO_LBL[c] || c) + ' · ' + sesion.cursos[c].length + ' estudiantes';
+      s.appendChild(o);
+    });
+    pintarAlumnos();
+  }
+  $('curso').addEventListener('change', pintarAlumnos);
+
+  function pintarAlumnos() {
+    var c = $('curso').value, s = $('alumno');
+    s.innerHTML = '';
+    (sesion.cursos[c] || []).forEach(function (a) {
+      var o = document.createElement('option');
+      o.value = a.id;
+      o.textContent = a.n + ' · ' + a.nombre + (sesion.notas[a.id] ? '  ✓ ' + sesion.notas[a.id].nota : '');
+      s.appendChild(o);
+    });
+  }
+
+  // ---------- sorteo ----------
+  function sortear(cuantas, excluir) {
+    var pool = [];
+    for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1) pool.push(i);
+    var out = [];
+    for (var k = 0; k < cuantas && pool.length; k++) {
+      var j = Math.floor(Math.random() * pool.length);
+      out.push(pool.splice(j, 1)[0]);
+    }
+    return out;
+  }
+
+  $('btnSortear').addEventListener('click', function () {
+    var id = $('alumno').value;
+    if (!id) return;
+    var opt = $('alumno').options[$('alumno').selectedIndex];
+    if (sesion.notas[id] && !confirm('Este estudiante ya tiene nota ' + sesion.notas[id].nota + '. ¿Volver a interrogarlo? Se reemplazará la nota anterior.')) return;
+    actual = {
+      id: id,
+      alumno: opt.textContent.replace(/\s+✓.*$/, '').replace(/^\d+\s·\s/, ''),
+      preguntas: sortear(7, []),
+      puntajes: {},
+      cambiada: null
+    };
+    $('obs').value = '';
+    aviso($('avisoSorteo'), '', '');
+    aviso($('avisoGuardar'), '', '');
+    $('cardPreg').classList.remove('oculto');
+    pintarPreguntas();
+    $('cardPreg').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  function pintarPreguntas() {
+    var z = $('zonaPreg'); z.innerHTML = '';
+    actual.preguntas.forEach(function (idx, pos) {
+      var d = document.createElement('div');
+      d.className = 'preg';
+      var puedeCambiar = actual.cambiada === null;
+      d.innerHTML =
+        '<div class="preg-h"><div class="np">' + (pos + 1) + '</div>' +
+        '<span class="banco">Pregunta ' + (idx + 1) + ' del banco</span>' +
+        '<button class="cambiar" data-pos="' + pos + '"' + (puedeCambiar ? '' : ' disabled') + '>' +
+        (actual.cambiada === pos ? 'cambiada' : '⟳ cambiar') + '</button></div>' +
+        '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
+        '<div class="escala" data-pos="' + pos + '">' +
+        PUNTOS.map(function (p) {
+          var on = actual.puntajes[pos] === p ? ' on' : '';
+          return '<button class="' + on.trim() + '" data-p="' + p + '">' + p.toFixed(1).replace('.', ',') + '</button>';
+        }).join('') +
+        '</div></div>';
+      z.appendChild(d);
+    });
+
+    z.querySelectorAll('.escala button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var pos = Number(b.parentNode.dataset.pos);
+        actual.puntajes[pos] = Number(b.dataset.p);
+        pintarPreguntas(); marcador();
+      });
+    });
+    z.querySelectorAll('.cambiar').forEach(function (b) {
+      b.addEventListener('click', function () {
+        if (actual.cambiada !== null) return;
+        var pos = Number(b.dataset.pos);
+        var nueva = sortear(1, actual.preguntas)[0];
+        actual.preguntas[pos] = nueva;
+        actual.cambiada = pos;
+        delete actual.puntajes[pos];
+        pintarPreguntas(); marcador();
+      });
+    });
+    marcador();
+  }
+
+  function marcador() {
+    var vals = Object.values(actual.puntajes);
+    var suma = vals.reduce(function (t, v) { return t + v; }, 0);
+    var n = Math.max(1, Math.round(suma * 10) / 10);
+    $('notaVal').textContent = vals.length ? n.toFixed(1).replace('.', ',') : '—';
+    $('notaDet').textContent = vals.length + ' de 7 preguntas puntuadas · suma ' +
+      suma.toFixed(1).replace('.', ',') + (vals.length < 7 ? ' · faltan ' + (7 - vals.length) : '');
+  }
+
+  $('btnCancelar').addEventListener('click', function () {
+    actual = null;
+    $('cardPreg').classList.add('oculto');
+  });
+
+  $('btnGuardar').addEventListener('click', async function () {
+    if (!actual) return;
+    var vals = Object.keys(actual.puntajes).length;
+    if (vals < 7 && !confirm('Faltan ' + (7 - vals) + ' preguntas por puntuar. ¿Guardar igual?')) return;
+    $('btnGuardar').disabled = true;
+    try {
+      var r = await llamar({
+        accion: 'guardar', alumnoId: actual.id, alumno: actual.alumno,
+        preguntas: actual.preguntas.map(function (i) { return i + 1; }),
+        puntajes: actual.puntajes, cambiada: actual.cambiada,
+        observacion: $('obs').value
+      });
+      sesion.notas[actual.id] = {
+        alumno: actual.alumno, curso: actual.id.split('_')[0],
+        nota: r.nota, fecha: new Date().toISOString()
+      };
+      aviso($('avisoGuardar'), 'Guardado. ' + actual.alumno + ' quedó con nota ' + r.nota.toFixed(1).replace('.', ',') + '.', 'ok');
+      actual = null;
+      $('cardPreg').classList.add('oculto');
+      pintarAlumnos(); pintarNotas();
+    } catch (e) {
+      aviso($('avisoGuardar'), e.message, 'err');
+    }
+    $('btnGuardar').disabled = false;
+  });
+
+  // ---------- notas guardadas ----------
+  function pintarNotas() {
+    var t = $('tablaNotas'), ids = Object.keys(sesion.notas);
+    t.innerHTML = '';
+    if (!ids.length) {
+      t.innerHTML = '<tr><td colspan="6" class="vacio">Sin registros todavía.</td></tr>';
+      $('subNotas').textContent = 'Aún no hay interrogaciones registradas.';
+      return;
+    }
+    var filas = ids.map(function (id) { return Object.assign({ id: id }, sesion.notas[id]); });
+    filas.sort(function (a, b) { return (a.curso + a.id).localeCompare(b.curso + b.id); });
+    var suma = filas.reduce(function (s, f) { return s + (f.nota || 0); }, 0);
+    $('subNotas').textContent = filas.length + ' interrogación(es) registrada(s) · promedio ' +
+      (suma / filas.length).toFixed(1).replace('.', ',');
+
+    filas.forEach(function (f) {
+      var tr = document.createElement('tr');
+      tr.innerHTML = '<td>' + (CURSO_LBL[f.curso] || f.curso) + '</td>' +
+        '<td>' + (f.id.split('_')[1] || '').replace(/^0/, '') + '</td>' +
+        '<td>' + (f.alumno || '') + '</td>' +
+        '<td class="n">' + (f.nota != null ? f.nota.toFixed(1).replace('.', ',') : '—') + '</td>' +
+        '<td>' + (f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : '') + '</td>' +
+        '<td><button class="btn chico" data-borrar="' + f.id + '">Borrar</button></td>';
+      t.appendChild(tr);
+    });
+
+    t.querySelectorAll('[data-borrar]').forEach(function (b) {
+      b.addEventListener('click', async function () {
+        if (!confirm('¿Borrar esta nota? La interrogación habrá que repetirla.')) return;
+        try {
+          await llamar({ accion: 'borrar', alumnoId: b.dataset.borrar });
+          delete sesion.notas[b.dataset.borrar];
+          pintarAlumnos(); pintarNotas();
+        } catch (e) { alert(e.message); }
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

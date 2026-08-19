@@ -694,7 +694,12 @@ auth.onAuthStateChanged(async user=>{
     document.getElementById('adminName').textContent=displayName;
     applyDocenteFilters();
     initMobileNav();
-    await loadAllData();
+    try{
+        await loadAllData();
+    }catch(error){
+        console.error('Error al cargar los datos del panel:',error);
+        toast('No se pudieron cargar los datos. Revisa la conexion y recarga.','err');
+    }
 });
 
 /* ============ DOCENTE FILTERS ============ */
@@ -957,12 +962,17 @@ function updateCourseSelect(selectEl,cursos,includeAll){
     selectEl.innerHTML=html;
 }
 
+// La carga va en dos tiempos a proposito. Antes se pedian los cuatro nodos
+// juntos con un Promise.all, y como /resultados y /respuestas guardan TODO lo
+// que ha respondido cada estudiante en cada sesion, pesan varios MB: con
+// internet lento el panel se veia dibujado pero con el selector de sesiones
+// vacio hasta que terminaba de bajar todo. Ahora primero llegan sesiones y
+// estudiantes, que son livianos, y el panel ya se puede usar; lo pesado se
+// carga despues y vuelve a pintar lo que depende de ello.
 async function loadAllData(){
-    const [estS,sesS,resS,respS]=await Promise.all([
+    const [estS,sesS]=await Promise.all([
         readOnceWithRetry(BASE+'/estudiantes'),
-        readOnceWithRetry(BASE+'/sesiones'),
-        readOnceWithRetry(BASE+'/resultados'),
-        readOnceWithRetry(BASE+'/respuestas')
+        readOnceWithRetry(BASE+'/sesiones')
     ]);
     students=estS.val()||{};
     const remoteSessions=sesS.val()||{};
@@ -970,13 +980,20 @@ async function loadAllData(){
     Object.entries(remoteSessions).forEach(([id,value])=>{
         sessions[id]={...(STATIC_SESSION_FALLBACKS[id]||{}),...value};
     });
-    allResults=resS.val()||{};
-    allResponses=respS.val()||{};
     populateSessionUnitFilter();
-    renderOverview();
     renderStudents();
     renderSessions();
     populateResultsDropdown();
+    populateLiveDropdown();
+
+    const [resS,respS]=await Promise.all([
+        readOnceWithRetry(BASE+'/resultados'),
+        readOnceWithRetry(BASE+'/respuestas')
+    ]);
+    allResults=resS.val()||{};
+    allResponses=respS.val()||{};
+    renderOverview();
+    renderStudents();
     populateLiveDropdown();
 }
 

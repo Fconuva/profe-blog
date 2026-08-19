@@ -150,6 +150,42 @@ exigía la frase de la fecha que se acababa de cambiar (`190eb58d`), y el verifi
 bloqueó un deploy por un fallo de red al comprobar una URL. En el segundo caso se comprobó que la URL
 respondía 200 en tres intentos antes de reintentar, en vez de saltarse el guardián.
 
+### Los veintisiete commits, en orden
+
+| Fecha | Hash | Qué |
+|---|---|---|
+| 18-08 20:33 | `b885f93b` | Herramienta para calificar la interrogación de Mocha Dick |
+| 18-08 20:17 | `d54e0ab0` | Publicar el banco de 50 preguntas y la mecánica de Mocha Dick |
+| 18-08 16:55 | `15b8d2ca` | Ordenar la Unidad 3 de NM4 y cambiar cómo se evalúa |
+| 18-08 16:24 | `44004457` | Decorar la Clase 1 de NM3 y corregir el cuadro de conceptos |
+| 18-08 15:26 | `87ee8990` | NM3 Unidad 3: video de apertura y cambio de evaluación |
+| 18-08 15:08 | `190eb58d` | Actualizar el auditor del anuario a la fecha nueva |
+| 18-08 15:03 | `159f135a` | Anunciar las nueve secciones del anuario de 4°D y fijar la fecha |
+| 18-08 14:55 | `3eb6183e` | Arreglar la Clase 6: no se veían las preguntas |
+| 18-08 11:56 | `d257db4f` | Reparar la Clase 6: faltaban elementos y se quedaba sin preguntas |
+| 18-08 11:15 | `bf04d2cd` | Rehacer la Clase 6 con Siglo de Oro, figuras ampliadas e imágenes |
+| 18-08 10:46 | `978befff` | Publicar la Clase 6 de SIMCE para los cursos |
+| 18-08 10:11 | `cc99c1a9` | Proteger la Clase 6 de SIMCE en el manifiesto |
+| 18-08 10:07 | `f909d166` | SIMCE NM2: Clase 6 de poesía y plan de la unidad a la vista |
+| 17-08 14:57 | `ca28c050` | Corregir el título de la novela en la tarjeta del calendario |
+| 17-08 14:53 | `72c7e8ad` | Mover la interrogación de *El lugar sin límites* al 4 de septiembre |
+| 17-08 14:37 | `ea605b0b` | Simplificar el encabezado del portal NM3 |
+| 17-08 10:22 | `2c5088ca` | Proteger la Clase 1 de NM3 en el manifiesto |
+| 17-08 10:18 | `b1aa9162` | Abrir la Unidad 3 de NM3 y publicar la Clase 1 |
+| 17-08 08:44 | `b66297cd` | Arreglar el cálculo de nota en la disertación técnica |
+| 16-08 18:14 | `9cba3bd0` | Clase 2 de NM4 U3 en formato presentación |
+| 16-08 17:28 | `ed2c556b` | Clase 2 de NM4 U3: trabajo en parejas y sin botones de impresión |
+| 16-08 17:15 | `c0986c9e` | Registrar en bitácora la Clase 2 rehecha |
+| 16-08 17:13 | `bb2bf795` | Proteger los recursos de la Clase 2 en el manifiesto |
+| 16-08 17:08 | `f279607d` | Rehacer la Clase 2 de NM4 U3 con video propio y estaciones extensas |
+| 16-08 16:32 | `f96f3584` | Quitar la tarjeta de liquidación del portal, se llega desde las clases |
+| 16-08 16:22 | `19753ccc` | Proteger la Clase 2 de U3 en producción |
+| 16-08 16:17 | `293a7eaf` | Clase 2 de U3 con cinco estaciones de casos laborales |
+
+Ocho de los veintisiete son de manifiesto y auditores, no de contenido. Es el costo fijo de publicar:
+cada recurso nuevo entra primero como `allowMissingInProduction`, y recién después de verlo responder
+200 en producción pasa a protegido.
+
 ---
 
 ## 2026-08-16, Clase 2 de NM4 Unidad 3 rehecha

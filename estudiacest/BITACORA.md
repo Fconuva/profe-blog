@@ -23,6 +23,135 @@ Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se h
 
 ---
 
+## 2026-08-18, tres unidades abiertas y una herramienta de evaluación
+
+Semana de apertura de Unidad 3 en los tres niveles. Veintisiete commits entre el 16 y el 18 de agosto.
+Lo que sigue está ordenado por tema, no por commit, con el hash al lado para poder volver.
+
+### NM4 · Unidad 3, Comunicación para el mundo laboral
+
+**La Clase 2 pasó a formato presentación** (`9cba3bd0`). Catorce slides con botones adelante y atrás,
+navegación por teclado, deslizamiento con el dedo en teléfono y enlace propio por slide (`#8`). Cada
+slide lleva **cronómetro** cargado con los minutos de ese momento, porque las cinco estaciones duran
+nueve minutos cada una y el slide marca la rotación. Antes de eso se había rehecho entera con video
+propio, y después pasó a **trabajo en parejas sin botones de impresión** (`ed2c556b`).
+
+**La unidad se reordenó y cambió cómo se evalúa** (`15b8d2ca`). Ya no hay prueba: la nota sale de la
+**revisión de cuaderno y timbres** el 28 de septiembre. Las clases quedaron así, con su equivalencia
+para 4°D, que trabaja los martes:
+
+| # | Clase | Fecha |
+|---|---|---|
+| 3 | Currículum joven | 24 de agosto |
+| 4 | Industria 4.0 · investigación | 31 de agosto |
+| 5 | La entrevista de trabajo | 7 de septiembre |
+| 6 | Escribir en el trabajo | 21 de septiembre |
+| — | Revisión de cuaderno y timbres | 28 de septiembre |
+
+Se agregó además la **interrogación de Mocha Dick** del 31 de agosto al 7 de septiembre, dicha como
+tramo y no como día fijo. En el calendario reemplazó al trabajo de libro que estaba el 28 de
+septiembre, en las dos tablas: la de 4°A-4°B-4°C-4°E y la de 4°D.
+
+### NM3 · Unidad 3, Análisis crítico de comunidades digitales
+
+**Se abrió la unidad y se publicó la Clase 1** (`b1aa9162`), sobre el caso de la influencer Rawvana
+que aparece en el propio programa oficial de 3° medio. La Unidad 2 quedó compactada en un desplegable,
+replicando el patrón que ya usaba NM4.
+
+**El encabezado del portal se simplificó** (`ea605b0b`): quedaron solo el logo, el colegio, la
+asignatura y el curso. Salieron el título, el párrafo de presentación, las tres etiquetas y el
+recuadro lateral. Con eso el manifiesto pasó a verificar el título del documento, que no cambia al
+cambiar de unidad, en vez del encabezado que se acababa de quitar.
+
+**Video de apertura de la unidad, de 4:02** (`87ee8990`). Explica qué es una comunidad digital, cómo
+se fabrica y cómo se verifica una noticia falsa, y por qué la unidad termina en un podcast. Se armó
+con **veinte imágenes generadas y zoom lento**, no con clips de Veo: Veo cobra por cada ocho segundos
+y cuatro minutos habrían sido treinta clips.
+
+**La unidad ya no cierra con prueba escrita.** La nota es el **podcast** y ese mismo día se hace
+**revisión de cuaderno** como nota de proceso. Se corrigió también en los dos calendarios del semestre,
+que anunciaban "Prueba escrita de la Unidad 3" el 23 de octubre.
+
+**La Clase 1 se decoró** (`44004457`): marco por lámina con filete azul, entrada escalonada por
+elemento y nueve imágenes generadas. Dos láminas quedaron sin imagen a propósito, la tabla de
+conceptos y la noticia, porque ahí la figura caía bajo el pliegue y no se veía al proyectar.
+
+### SIMCE NM2 · Clase 6
+
+**Poesía y lenguaje figurado, con Siglo de Oro** (`bf04d2cd`). La primera versión usaba dos poemas
+inventados y cuatro figuras; Francisco pidió rehacerla. Quedó con **veintidós figuras agrupadas en
+cinco familias**, los tópicos literarios, la estructura del soneto y **dos sonetos de dominio público
+que el anexo de lecturas de las Bases Curriculares nombra**: Garcilaso, Soneto XXIII, y Lope de Vega,
+Soneto 126. Cuatro ilustraciones generadas en estilo pictórico de época.
+
+Los catorce ítems se midieron antes de publicar: claves repartidas A3 B3 C4 D4 y la clave es la más
+larga en 2 de 14, por debajo del 25% que daría el azar. Son los dos sesgos que la auditoría de julio
+encontró en las guías anteriores.
+
+### Anuario 4°D
+
+**Se anunciaron las nueve secciones** (`159f135a`), todas en gris y sin formulario todavía, para que
+cada estudiante sepa qué material juntar: transcripción de entrevistas, aniversarios, profesores jefe
+de primero y segundo, profesor jefe actual, el curso con fotos, algo creado en la especialidad, una
+asignatura del plan común, la asignatura favorita y fotos con amigos. La entrega pasó de "fines de
+octubre" a la fecha exacta: **martes 27 de octubre**.
+
+### Disertación técnica 3°ATP
+
+**Se arregló el cálculo de nota** (`b66297cd`) y se cargaron los puntajes del Grupo 1.
+
+### Mocha Dick · plan lector NM4
+
+Se leyó el libro completo, página por página, desde un PDF escaneado de 145 páginas sin texto
+extraíble. De ahí salieron tres cosas:
+
+- Un **análisis con banco de 50 preguntas y respuestas**, en PDF, para el profesor.
+- La **página de estudio** con las 50 preguntas sin respuesta, la mecánica y la escala de evaluación
+  (`d54e0ab0`), más el PDF del libro para descargar.
+- La **herramienta para calificar** (`b885f93b`), en `/nm4/interrogacion-mocha-dick/calificar/`.
+
+**Sobre la herramienta.** Entra cada docente con su nombre y una clave compartida, y ve solo sus
+cursos: Alicia Aguilera 4°A, Joselin Díaz 4°D y 4°E, Pía Benavides 4°B y 4°C. Sortea 7 preguntas de
+las 50, permite cambiar una sola —y la nueva la elige el sorteo, no el docente—, puntúa de 0 a 1,0 en
+décimas y guarda. La nota es la suma, con piso 1,0.
+
+Cuatro decisiones que conviene no deshacer:
+
+1. **La clave se valida en el servidor**, nunca viaja al navegador. En el código solo vive su hash
+   SHA-256, reemplazable con la variable `INTERROGACION_HASH` en Vercel sin tocar el repositorio.
+2. La comparación de la clave es **en tiempo constante**.
+3. **El servidor rechaza guardar en un curso ajeno**, no solo la interfaz. Está probado en producción:
+   con Alicia intentando escribir en 4°C, responde "Ese curso no le corresponde".
+4. La nómina entrega curso, número de lista y nombre. **El RUN no se envía al navegador**, igual que
+   en la página de asistencia.
+
+### Lecciones técnicas de la semana
+
+**Una sección vacía no dice dónde está la falla.** La Clase 6 se publicó y las preguntas no aparecían.
+La causa no estaba en las preguntas: al reescribir el cuerpo se perdieron siete elementos que el
+script necesitaba, y el primero que buscaba —`warmupZone`— lanzaba una excepción que mataba el script
+antes de pintar nada (`3eb6183e`). **El chequeo que lo detecta en un segundo es comparar los
+`getElementById` del script contra los `id` del HTML.** Correrlo siempre después de reescribir el
+cuerpo de una guía.
+
+**En ese mismo arreglo apareció un error silencioso peor:** el textarea del desarrollo había quedado
+con otro `id`, así que lo que escribiera el estudiante no se habría guardado nunca. No daba error
+visible; simplemente se perdía.
+
+**Escribir con `open(f,'w')` trunca antes de fallar.** Un `UnicodeEncodeError` a mitad de escritura
+dejó un HTML de 43 KB en cero bytes. Se recuperó desde git. Desde ahora: escribir a `.tmp` y
+`os.replace`.
+
+**Los emojis fuera del BMP rompen la escritura en Python** si quedan como pares surrogate. Costó tres
+intentos. Si no son esenciales, no ponerlos.
+
+**Los guardianes hicieron su trabajo dos veces.** El auditor del anuario bloqueó el build porque
+exigía la frase de la fecha que se acababa de cambiar (`190eb58d`), y el verificador de release
+bloqueó un deploy por un fallo de red al comprobar una URL. En el segundo caso se comprobó que la URL
+respondía 200 en tres intentos antes de reintentar, en vez de saltarse el guardián.
+
+---
+
 ## 2026-08-16, Clase 2 de NM4 Unidad 3 rehecha
 
 La versión anterior de `/nm4/u3-clase2-derechos-y-seguridad/` abría pidiendo recordar la Actividad 2 de la Clase 1. Francisco avisó que en algunos cursos esa actividad se hizo y en otros no alcanzó el tiempo, así que la clase no puede depender de ella. Se rehízo entera para que funcione sola.
@@ -182,6 +311,39 @@ Las nueve rutas públicas responden 200: raíz, `/nm3/`, `/nm3/odisea-antes-del-
 4. **Revisión de la actividad de La Odisea por la educadora diferencial** una vez que esté terminada. Idea de Francisco, aún sin hacer.
 5. **`class-submission-contract.json` solo registra 3 archivos**: `estudiantes/guia-u3-s4-infografias.html`, `estudiantes/apoyo-personal/index.html` y `paes/guia16.html`. La Odisea y el Anuario entregan trabajo pero no están ahí. Tienen sus propios auditores (`audit-odisea-cine.js` y `audit-anuario-4dtp.js`), así que la cobertura existe, pero por otra vía. Conviene decidir si se unifican.
 6. **Dos secciones se perdieron al volver de `estudiacest-2026`.** `/nm3/clase-conclusion-ensayo/` (visor web con 14 diapositivas en 4K y 8K, más el PPTX, del 24-jul) y `/nm1/` (portal NM1, del 22-jul). Las dos dan 404 en producción y no están en este repo. No hay enlaces rotos apuntando a ellas. Siguen completas en el historial de `Fconuva/estudiacest-2026` si se quieren recuperar. No se encontró ninguna nota que diga que fue una decisión.
+
+
+### Abiertos al 18 de agosto
+
+**Clases anunciadas y todavía sin construir.** Las tarjetas ya están publicadas y los estudiantes ven
+la fecha, así que la deuda es visible:
+
+| Nivel | Clase | Fecha |
+|---|---|---|
+| NM4 | Clase 3, Currículum joven | 24 de agosto |
+| NM4 | Clase 4, Industria 4.0 | 31 de agosto |
+| NM4 | Clase 5, La entrevista de trabajo | 7 de septiembre |
+| NM4 | Clase 6, Escribir en el trabajo | 21 de septiembre |
+| NM3 | Clase 2, memes | semana del 25 de agosto |
+| NM3 | Clases 3 a 8 de la Unidad 3 | septiembre y octubre |
+
+7. **Grabador de podcast para NM3.** La unidad cierra en podcast y la nota es esa. Tiene que existir
+   antes del 6 de octubre.
+8. **Instrumento de la interrogación de *El lugar sin límites*** (NM3, 4 de septiembre). Falta definir
+   si es oral o escrita.
+9. **El PDF del libro de Mocha Dick quedó público.** Se subió tal como se pidió, y quedó dicho que es
+   obra protegida. Si conviene, se mueve detrás del login o se saca.
+10. **La tabla de conceptos de la Clase 2 de NM4 ahora se copia al cuaderno.** Los diez minutos de ese
+    momento se calcularon cuando no se copiaba. Revisar si los 90 minutos siguen alcanzando.
+11. **`matriz.html` de la Clase 2 de NM4 quedó huérfano**: existe pero no lo enlaza nadie.
+12. **Dos imágenes de la Clase 2 de NM4 por rehacer** (`e1-horas`, `e2-liquidacion`), que queden como
+    fotografía y no como ilustración.
+13. **SIMCE: no está confirmado si el Ensayo N°3 se aplicó.** Faltan credenciales de Firebase en esta
+    máquina para mirarlo. Además los resultados de la Clase 5 siguen cerrados para los estudiantes
+    desde el 12 de agosto, y las guías S3, S4 y S5 no tienen habilidad marcada por ítem.
+14. **Capital Semilla.** El informe está fechado el 11 de agosto y `_nomina_completa.json` lo
+    contradice: hay que regenerarlo. El video de Torres Zúñiga (4°E, entregado el 12 de agosto) está
+    descargado y sin calificar, y hay 21 estudiantes que aparecen en los correos y siguen sin nota.
 
 ---
 

@@ -80,6 +80,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - PAES final submissions are immutable until reset, are scored on the server, and hide keys, feedback, and scores until the teacher publishes results in `/paes/admin/`.
 - Keep incomplete PAES submission exceptions server-side and guide-specific. Guide 17 accepts 0 to 24 answers and Guide 18 accepts 0 to 18 answers; all other guide requirements remain unchanged.
 - Return PAES answer keys only after both conditions are true: the attempt is complete and the teacher release applies to that course or student.
+- Blocking a PAES guide must prevent new work without hiding an already published result. Completed students enter in review-only mode; response controls stay disabled and unfinished students continue seeing the lock.
 - Normalize answer collections at the API boundary. Realtime Database may serialize consecutive numeric question keys as a sparse array, and null slots must not count as marked responses.
 - Register every new interactive class in `scripts/class-submission-contract.json` and every critical route or asset in `scripts/academic-release-manifest.json`.
 - When `package.json` adds a build audit, unignore that script explicitly in `.vercelignore` and verify the remote build artifact, not only the local build.

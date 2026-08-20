@@ -87,7 +87,11 @@ assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(\[[^\]]*'17'[^\]]*\]\)/.test(api
 assert(/released && attempt\.completada && INTERACTIVE_GUIDE_KEYS\[guideId\]/.test(api), 'La clave no está protegida por liberación docente.');
 assert(/'17': G17_KEY/.test(api), 'La API no corrige G17 con clave del servidor.');
 assert(/function normalizeStoredAnswers\(rawAnswers\)/.test(api), 'La API no normaliza arreglos de respuestas provenientes de RTDB.');
-assert((api.match(/answers: normalizeStoredAnswers\(/g) || []).length >= 2, 'La API no normaliza respuestas en borrador y estado final.');
+assert(
+  (api.match(/answers: normalizeStoredAnswers\(/g) || []).length >= 2 ||
+  (/const normalizedAnswers = normalizeStoredAnswers\(value\.answers\)/.test(api) && /answers: normalizedAnswers/.test(api)),
+  'La API no normaliza respuestas en borrador y estado final.'
+);
 const normalizerMatch = api.match(/function normalizeStoredAnswers\(rawAnswers\) \{[\s\S]*?\n\}/);
 if (normalizerMatch) {
   const normalizerSandbox = {};

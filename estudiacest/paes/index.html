@@ -1435,26 +1435,50 @@
     });
 
     // ============ BLOQUEO DE GUÍAS EN EL PANEL ============
-    // Refleja la config del docente: las guías bloqueadas se atenúan y muestran candado,
-    // así el alumno distingue de inmediato la(s) guía(s) habilitada(s) de hoy.
-    function applyDashboardGuiaLock(rut) {
-      fetch('/api/paes?action=get-guias-config&rut=' + encodeURIComponent(rut || ''))
-        .then(r => r.json())
-        .then(data => {
+    // Una guía cerrada sigue disponible en modo de revisión cuando el estudiante
+    // ya la entregó y el docente publicó sus resultados.
+    async function hasPublishedGuideReview(guideNumber, rut) {
+      try {
+        const response = await fetch('/api/paes?action=get-guia-state&guiaId=' + guideNumber + '&rut=' + encodeURIComponent(rut || ''));
+        if (!response.ok) return false;
+        const state = await response.json();
+        return Boolean(state && state.released && state.attempt && state.attempt.completada);
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function applyDashboardGuiaLock(rut) {
+      try {
+          const response = await fetch('/api/paes?action=get-guias-config&rut=' + encodeURIComponent(rut || ''));
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const data = await response.json();
           const blocked = (data && data.config && data.config.blocked) || {};
           const allowed = (data && data.config && data.config.allowed) || {};
-          for (let n = 10; n <= 17; n++) {
+          for (let n = 10; n <= 18; n++) {
             if (!blocked['g' + n] || allowed['g' + n]) continue;
             const card = document.getElementById('cardGuia' + n);
             if (!card) continue;
+            if (await hasPublishedGuideReview(n, rut)) {
+              card.dataset.reviewAvailable = 'true';
+              const statusBox = card.querySelector('.ensayo-status-box');
+              if (statusBox) statusBox.innerHTML = '<div class="status-completed" style="color:#34d399;"><span>✓</span> Resultados publicados</div>';
+              const btn = card.querySelector('.btn-action');
+              if (btn) {
+                btn.textContent = 'Ver resultados y respuestas';
+                btn.classList.add('btn-view');
+              }
+              continue;
+            }
             card.style.opacity = '0.5';
             const statusBox = card.querySelector('.ensayo-status-box');
             if (statusBox) statusBox.innerHTML = '<div class="status-pending" style="color:#f87171;"><span>🔒</span> Disponible más adelante</div>';
             const btn = card.querySelector('.btn-action');
             if (btn) btn.outerHTML = '<span class="btn-action" style="opacity:.7; cursor:not-allowed; background:rgba(239,68,68,.06); border:1px solid rgba(239,68,68,.2); color:#fca5a5; justify-content:center;">🔒 Bloqueada por el docente</span>';
           }
-        })
-        .catch(err => console.warn('[Dashboard Guia Lock]', err)); // fail-open
+      } catch (err) {
+        console.warn('[Dashboard Guia Lock]', err); // fail-open
+      }
     }
 
     // ============ CHECK SESSION ON LOAD ============

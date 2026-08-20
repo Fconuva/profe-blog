@@ -67,6 +67,25 @@ function normalizeStoredAnswers(rawAnswers) {
     return normalized;
 }
 
+const G10_KEY = {
+    1:'A',2:'D',3:'B',4:'C',5:'D',6:'C',7:'B',8:'B',9:'A'
+};
+
+const G11_KEY = {
+    1:'C',2:'B',3:'A',4:'D',5:'B',6:'C',7:'A',8:'C',9:'B',
+    10:'C',11:'A',12:'D',13:'B',14:'A',15:'C',16:'B',17:'D',18:'A'
+};
+
+const G12_KEY = {
+    1:'B',2:'C',3:'A',4:'D',5:'C',6:'A',7:'D',8:'B',9:'A',
+    10:'C',11:'B',12:'D',13:'A',14:'C',15:'B'
+};
+
+const G13_KEY = {
+    1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',7:'B',8:'D',9:'A',
+    10:'C',11:'B',12:'D',13:'A',14:'C',15:'B',16:'D',17:'A',18:'C'
+};
+
 const G15_KEY = {
     q01:'B',q02:'D',q03:'A',q04:'C',q05:'B',q06:'A',
     q07:'D',q08:'B',q09:'C',q10:'A',q11:'D',q12:'C',
@@ -120,6 +139,10 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
 };
 
 const INTERACTIVE_GUIDE_KEYS = {
+    '10': G10_KEY,
+    '11': G11_KEY,
+    '12': G12_KEY,
+    '13': G13_KEY,
     '15': G15_KEY,
     '16': G16_KEY,
     '17': G17_KEY,
@@ -426,23 +449,35 @@ async function handleGetGuiaState(req, res) {
     if (!snap.exists()) return res.status(200).json({ success: true, attempt: null, released: false });
 
     const value = snap.val() || {};
+    const normalizedAnswers = normalizeStoredAnswers(value.answers);
+    const legacyCompleted = ['10','11','12','13'].includes(guideId) &&
+        Number(value.submittedAt) > 0 && Object.keys(normalizedAnswers).length > 0;
     const released = await isGuideReleased(guideId, value.curso, rut);
     const attempt = {
-        answers: normalizeStoredAnswers(value.answers),
+        answers: normalizedAnswers,
         dev: value.dev || {},
         status: value.status || 'draft',
-        submitted: value.submitted === true || value.status === 'sent',
-        completada: value.completada === true || value.status === 'sent',
+        submitted: value.submitted === true || value.status === 'sent' || legacyCompleted,
+        completada: value.completada === true || value.status === 'sent' || legacyCompleted,
         submittedAt: value.submittedAt || null,
         completadaAt: value.completadaAt || null,
         lastSavedAt: value.lastSavedAt || null
     };
     if (released && attempt.completada) {
-        attempt.result = {
-            correct: Number(value.correct) || 0,
-            total: Number(value.total) || 0,
-            score: Number(value.score) || 0
-        };
+        const serverKey = INTERACTIVE_GUIDE_KEYS[guideId];
+        if (serverKey) {
+            const correct = Object.keys(serverKey).reduce(
+                (sum, id) => sum + (normalizedAnswers[id] === serverKey[id] ? 1 : 0), 0
+            );
+            const total = Object.keys(serverKey).length;
+            attempt.result = { correct, total, score: Math.round((correct / total) * 100) };
+        } else {
+            attempt.result = {
+                correct: Number(value.correct) || 0,
+                total: Number(value.total) || 0,
+                score: Number(value.score) || 0
+            };
+        }
     }
     const answerKey = released && attempt.completada && INTERACTIVE_GUIDE_KEYS[guideId]
         ? INTERACTIVE_GUIDE_KEYS[guideId]

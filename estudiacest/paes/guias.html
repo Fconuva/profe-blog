@@ -890,25 +890,46 @@
     }
 
     // ============ BLOQUEO DE GUÍAS (config del docente) ============
-    // El docente decide en el admin qué guías quedan disponibles. Aquí se respeta:
-    // una guía bloqueada queda atenuada y sin botón de acción.
-    (function applyGuiasLock() {
-      fetch('/api/paes?action=get-guias-config&rut=' + encodeURIComponent(student && student.rut || ''))
-        .then(r => r.json())
-        .then(data => {
+    // Las guías cerradas quedan bloqueadas para responder, pero una entrega con
+    // resultados publicados conserva un acceso de solo lectura.
+    (async function applyGuiasLock() {
+      try {
+          const rut = student && student.rut || '';
+          const response = await fetch('/api/paes?action=get-guias-config&rut=' + encodeURIComponent(rut));
+          if (!response.ok) throw new Error('HTTP ' + response.status);
+          const data = await response.json();
           const blocked = (data && data.config && data.config.blocked) || {};
           const allowed = (data && data.config && data.config.allowed) || {};
-          document.querySelectorAll('.guia-item[data-guia-id]').forEach(card => {
+          for (const card of document.querySelectorAll('.guia-item[data-guia-id]')) {
             const id = card.getAttribute('data-guia-id');
-            if (!blocked[id] || allowed[id]) return;
+            if (!blocked[id] || allowed[id]) continue;
+            const guideNumber = String(id).replace(/^g/, '');
+            let reviewAvailable = false;
+            if (/^\d+$/.test(guideNumber) && rut) {
+              try {
+                const stateResponse = await fetch('/api/paes?action=get-guia-state&guiaId=' + guideNumber + '&rut=' + encodeURIComponent(rut));
+                const state = stateResponse.ok ? await stateResponse.json() : null;
+                reviewAvailable = Boolean(state && state.released && state.attempt && state.attempt.completada);
+              } catch (_) {}
+            }
+            if (reviewAvailable) {
+              card.classList.add('review-available');
+              const action = Array.from(card.children).find(ch => !ch.classList.contains('guia-item-left'));
+              if (action) {
+                action.textContent = 'Ver resultados y respuestas';
+                action.classList.add('btn-review');
+              }
+              continue;
+            }
             card.classList.add('locked');
             // Cada tarjeta tiene 2 hijos: .guia-item-left (texto) y la zona de acciones.
             // Reemplazamos la zona de acciones (PDF / resolver en línea) por un candado.
             const actionEl = Array.from(card.children).find(ch => !ch.classList.contains('guia-item-left'));
             if (actionEl) actionEl.outerHTML = '<span class="btn-locked">🔒 Bloqueada por el docente</span>';
-          });
-        })
-        .catch(err => console.warn('[Guias Config Error]', err)); // fail-open: si falla, no bloquea
+          }
+      } catch (err) {
+        console.warn('[Guias Config Error]', err); // fail-open: si falla, no bloquea
+      }
     })();
   </script>
 

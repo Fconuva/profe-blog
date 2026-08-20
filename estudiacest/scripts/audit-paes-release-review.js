@@ -10,6 +10,7 @@ const api = read('api/paes.js');
 const lock = read('paes/js/guia-lock.js');
 const portal = read('paes/index.html');
 const materials = read('paes/guias.html');
+const guide16 = read('paes/guia16.html');
 
 for (const guide of [10, 11, 12, 13, 15, 16]) {
   assert(new RegExp(`const G${guide}_KEY =`).test(api), `Falta la clave de la Guía ${guide} en la API.`);
@@ -22,6 +23,7 @@ assert(/fetchReleasedAttempt/.test(lock) && /enableReviewOnly/.test(lock), 'El c
 assert(/data-paes-review-only/.test(lock) && /lockResponseControls/.test(lock), 'El modo de revisión no bloquea la edición.');
 assert(/hasPublishedGuideReview/.test(portal) && /Ver resultados y respuestas/.test(portal), 'El portal no ofrece acceso a resultados publicados.');
 assert(/reviewAvailable/.test(materials) && /Ver resultados y respuestas/.test(materials), 'Materiales no ofrece acceso de revisión.');
+assert(/Resultados publicados\. Revisa tus aciertos/.test(guide16), 'La Guía 16 conserva un mensaje de resultados ocultos después de liberarlos.');
 
 for (const guide of [10, 11, 12, 13, 14]) {
   const html = read(`paes/guia${guide}.html`);

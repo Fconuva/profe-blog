@@ -23,7 +23,7 @@ function evaluateLiteral(code, name) {
   return sandbox[name];
 }
 
-const questionMatch = source.match(/const QUESTIONS = (\[[\s\S]*?\n\s*\]);\n\s*const TOTAL/);
+const questionMatch = source.match(/const QUESTIONS\s*=\s*(\[[\s\S]*?\n\s*\]);\s*\n\s*const TOTAL\s*=/);
 assert(questionMatch, 'No se pudo extraer QUESTIONS.');
 const questions = questionMatch ? evaluateLiteral(questionMatch[1], 'questions') : [];
 

@@ -363,9 +363,12 @@ ${casosHtml}
       entregada = true;
       bloquearFormulario();
       $('detalleOk').textContent = 'Esta prueba ya estaba entregada. El profesor la revisará y la nota se publicará en Lirmi.';
-    } else {
-      marcarEstado('Avance guardado');
+      return;
     }
+    // Solo se anuncia avance si de verdad hay algo escrito: un registro vacio
+    // no es un avance y decir lo contrario confunde al que recien entra.
+    var escrito = QUESTIONS.some(function (q) { return String(a[q.id] || '').trim(); });
+    marcarEstado(escrito ? 'Avance guardado' : 'Sin empezar');
   }
 
   $('entrar').addEventListener('click', function () {
@@ -474,3 +477,110 @@ fs.writeFileSync(DESTINO, pagina, 'utf8');
 console.log(`Generada: ${path.relative(path.join(__dirname, '..'), DESTINO)}`);
 console.log(`  casos: ${lecturas.length} · preguntas: ${preguntas.length} · puntaje: ${puntajeTotal}`);
 console.log(`  bytes: ${fs.statSync(DESTINO).size}`);
+
+// --- Pagina de revision para el profesor --------------------------------
+// Se genera aqui mismo para que los enunciados sean los de la prueba y no una
+// copia que se desactualice.
+const REVISION = path.join(__dirname, '..', 'nm4', 'revision-economista.html');
+
+const revision = `<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Revisión · Prueba El economista callejero · NM4</title>
+<style>
+  :root{--navy:#1a3a6b;--tinta:#172033;--gris:#5b6472;--borde:#c8d2e0;--fondo:#f2f4f8;--blanco:#fff;--verde:#166534}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.55}
+  header{background:var(--navy);color:#fff;padding:12px 18px}
+  header h1{margin:0;font-size:17px}
+  main{max-width:900px;margin:0 auto;padding:18px 16px 60px}
+  .caja{background:var(--blanco);border:1px solid var(--borde);border-radius:8px;padding:16px;margin-bottom:16px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px}
+  input{font:inherit;padding:9px 10px;border:1px solid var(--borde);border-radius:6px;width:260px;max-width:100%}
+  button{font:inherit;font-weight:600;background:var(--navy);color:#fff;border:1px solid var(--navy);border-radius:6px;padding:10px 16px;cursor:pointer}
+  .alumno{border-left:4px solid var(--navy);padding-left:14px;margin-bottom:26px}
+  .alumno h2{font-size:16px;color:var(--navy);margin:0 0 2px}
+  .meta{font-size:13px;color:var(--gris);margin:0 0 12px}
+  .entregada{color:var(--verde);font-weight:600}
+  .p{margin:0 0 14px}
+  .p .enun{font-size:14px;font-weight:600;color:var(--navy);margin:0 0 4px}
+  .p .resp{white-space:pre-wrap;background:#fafbff;border:1px solid var(--borde);border-radius:6px;padding:10px 12px;font-size:15px}
+  .p .vacia{color:#991b1b;font-style:italic}
+  .err{color:#991b1b;background:#fef2f2;border-left:4px solid #991b1b;padding:10px 13px;border-radius:5px}
+  .oculto{display:none}
+</style>
+</head>
+<body>
+<header><h1>Revisión · Prueba de Plan Lector «El economista callejero» · NM4</h1></header>
+<main>
+  <div class="caja" id="acceso">
+    <label for="clave">Clave de revisión</label>
+    <input id="clave" type="password" autocomplete="off" placeholder="Pégala aquí">
+    <button type="button" id="ver">Ver entregas</button>
+    <div id="error" class="err oculto" style="margin-top:10px"></div>
+  </div>
+  <div id="salida"></div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var PREGUNTAS = ${JSON.stringify(preguntas.map((p) => ({ id: p.id, n: p.numero, pts: p.puntos, etiqueta: p.etiqueta, enunciado: p.enunciado })))};
+  var $ = function (id) { return document.getElementById(id); };
+
+  function escapar(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function fecha(ms) {
+    if (!ms) return 'sin fecha';
+    var d = new Date(Number(ms));
+    return d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  $('ver').addEventListener('click', function () {
+    var clave = $('clave').value.trim();
+    $('error').classList.add('oculto');
+    if (!clave) { $('error').textContent = 'Falta la clave.'; $('error').classList.remove('oculto'); return; }
+    fetch('/api/economista?action=admin-list&key=' + encodeURIComponent(clave))
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Error ' + r.status); return d; }); })
+      .then(function (data) {
+        var intentos = data.intentos || {};
+        var claves = Object.keys(intentos).sort();
+        if (!claves.length) { $('salida').innerHTML = '<div class="caja">Todavía no hay ninguna entrega.</div>'; return; }
+        var html = claves.map(function (k) {
+          var a = intentos[k];
+          var resp = a.answers || {};
+          var estado = a.completada === true
+            ? '<span class="entregada">Entregada</span> · ' + fecha(a.submittedAt)
+            : 'Borrador · última edición ' + fecha(a.updatedAt);
+          var cuerpo = PREGUNTAS.map(function (q) {
+            var texto = String(resp[q.id] || '').trim();
+            var palabras = texto ? texto.split(/\\s+/).length : 0;
+            return '<div class="p"><p class="enun">' + q.n + '. ' + escapar(q.etiqueta) + ' (' + q.pts + ' pts) · ' + palabras + ' palabras</p>'
+              + '<p style="margin:0 0 4px;font-size:13.5px;color:#5b6472">' + escapar(q.enunciado) + '</p>'
+              + (texto ? '<div class="resp">' + escapar(texto) + '</div>' : '<div class="resp vacia">Sin responder</div>')
+              + '</div>';
+          }).join('');
+          return '<div class="caja"><div class="alumno"><h2>' + escapar(a.nombre || k) + '</h2>'
+            + '<p class="meta">' + escapar(a.curso || '') + ' · N° ' + escapar(a.n) + ' · ' + estado + '</p>'
+            + cuerpo + '</div></div>';
+        }).join('');
+        $('salida').innerHTML = html;
+        $('acceso').classList.add('oculto');
+      })
+      .catch(function (e) {
+        $('error').textContent = e.message;
+        $('error').classList.remove('oculto');
+      });
+  });
+})();
+</script>
+</body>
+</html>
+`;
+
+fs.writeFileSync(REVISION, revision, 'utf8');
+console.log(`Generada: ${path.relative(path.join(__dirname, '..'), REVISION)} (${fs.statSync(REVISION).size} bytes)`);

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Revisión · Prueba El economista callejero · NM4</title>
+<style>
+  :root{--navy:#1a3a6b;--tinta:#172033;--gris:#5b6472;--borde:#c8d2e0;--fondo:#f2f4f8;--blanco:#fff;--verde:#166534}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,Arial,sans-serif;color:var(--tinta);background:var(--fondo);line-height:1.55}
+  header{background:var(--navy);color:#fff;padding:12px 18px}
+  header h1{margin:0;font-size:17px}
+  main{max-width:900px;margin:0 auto;padding:18px 16px 60px}
+  .caja{background:var(--blanco);border:1px solid var(--borde);border-radius:8px;padding:16px;margin-bottom:16px}
+  label{display:block;font-size:13px;font-weight:600;color:var(--navy);margin-bottom:4px}
+  input{font:inherit;padding:9px 10px;border:1px solid var(--borde);border-radius:6px;width:260px;max-width:100%}
+  button{font:inherit;font-weight:600;background:var(--navy);color:#fff;border:1px solid var(--navy);border-radius:6px;padding:10px 16px;cursor:pointer}
+  .alumno{border-left:4px solid var(--navy);padding-left:14px;margin-bottom:26px}
+  .alumno h2{font-size:16px;color:var(--navy);margin:0 0 2px}
+  .meta{font-size:13px;color:var(--gris);margin:0 0 12px}
+  .entregada{color:var(--verde);font-weight:600}
+  .p{margin:0 0 14px}
+  .p .enun{font-size:14px;font-weight:600;color:var(--navy);margin:0 0 4px}
+  .p .resp{white-space:pre-wrap;background:#fafbff;border:1px solid var(--borde);border-radius:6px;padding:10px 12px;font-size:15px}
+  .p .vacia{color:#991b1b;font-style:italic}
+  .err{color:#991b1b;background:#fef2f2;border-left:4px solid #991b1b;padding:10px 13px;border-radius:5px}
+  .oculto{display:none}
+</style>
+</head>
+<body>
+<header><h1>Revisión · Prueba de Plan Lector «El economista callejero» · NM4</h1></header>
+<main>
+  <div class="caja" id="acceso">
+    <label for="clave">Clave de revisión</label>
+    <input id="clave" type="password" autocomplete="off" placeholder="Pégala aquí">
+    <button type="button" id="ver">Ver entregas</button>
+    <div id="error" class="err oculto" style="margin-top:10px"></div>
+  </div>
+  <div id="salida"></div>
+</main>
+<script>
+(function () {
+  'use strict';
+  var PREGUNTAS = [{"id":"p1","n":1,"pts":3,"etiqueta":"Diagnóstico conceptual","enunciado":"Explica por qué la estación considera el costo de reposición y no solo el precio que pagó por la bencina que tiene almacenada. Relaciona las lecciones 6 y 10 con dos datos del caso."},{"id":"p2","n":2,"pts":4,"etiqueta":"Análisis causal","enunciado":"Construye una cadena de al menos tres consecuencias probables si se congela el precio durante diez días. Incluye efectos sobre conductores, estaciones, proveedores y disponibilidad de combustible."},{"id":"p3","n":3,"pts":5,"etiqueta":"Decisión argumentada","enunciado":"Asesora al municipio. Compara el congelamiento con el apoyo focalizado a transportistas y la llegada de nuevos proveedores. Formula una decisión, usa dos conceptos del libro y considera el peso de la bencina en el presupuesto familiar."},{"id":"p4","n":4,"pts":3,"etiqueta":"Diagnóstico conceptual","enunciado":"Evalúa la frase “si todos tienen más dinero, el país será más rico” usando la distinción de la lección 9. Identifica qué sería riqueza real en el caso y cita dos datos."},{"id":"p5","n":5,"pts":4,"etiqueta":"Análisis causal","enunciado":"Explica la cadena que conecta el aumento del dinero en circulación, una producción prácticamente estable, el alza de precios y la pérdida de poder adquisitivo. Incorpora la diferencia entre quienes reciben y gastan primero y quienes lo hacen después."},{"id":"p6","n":6,"pts":5,"etiqueta":"Decisión argumentada","enunciado":"Decide si recomendarías entregar un segundo bono. Presenta la respuesta que daría un “economista callejero”, reconoce un beneficio inmediato de la medida y propone una alternativa orientada a aumentar la producción o la productividad."},{"id":"p7","n":7,"pts":3,"etiqueta":"Diagnóstico conceptual","enunciado":"Explica por qué la cortadora es un bien de capital y cómo modifica la productividad. Usa al menos dos cifras del caso y una idea de las lecciones 5 u 8."},{"id":"p8","n":8,"pts":4,"etiqueta":"Análisis causal","enunciado":"Analiza el caso como un proceso de destrucción creadora. Distingue una pérdida o costo de transición y al menos dos formas de creación de valor para trabajadores, empresa o consumidores."},{"id":"p9","n":9,"pts":5,"etiqueta":"Decisión argumentada","enunciado":"Evalúa la propuesta de prohibir la máquina. Recomienda una decisión que articule productividad, innovación y protección de quienes deben reconvertirse. Fundamenta con dos lecciones del libro."}];
+  var $ = function (id) { return document.getElementById(id); };
+
+  function escapar(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+  function fecha(ms) {
+    if (!ms) return 'sin fecha';
+    var d = new Date(Number(ms));
+    return d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  $('ver').addEventListener('click', function () {
+    var clave = $('clave').value.trim();
+    $('error').classList.add('oculto');
+    if (!clave) { $('error').textContent = 'Falta la clave.'; $('error').classList.remove('oculto'); return; }
+    fetch('/api/economista?action=admin-list&key=' + encodeURIComponent(clave))
+      .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Error ' + r.status); return d; }); })
+      .then(function (data) {
+        var intentos = data.intentos || {};
+        var claves = Object.keys(intentos).sort();
+        if (!claves.length) { $('salida').innerHTML = '<div class="caja">Todavía no hay ninguna entrega.</div>'; return; }
+        var html = claves.map(function (k) {
+          var a = intentos[k];
+          var resp = a.answers || {};
+          var estado = a.completada === true
+            ? '<span class="entregada">Entregada</span> · ' + fecha(a.submittedAt)
+            : 'Borrador · última edición ' + fecha(a.updatedAt);
+          var cuerpo = PREGUNTAS.map(function (q) {
+            var texto = String(resp[q.id] || '').trim();
+            var palabras = texto ? texto.split(/\s+/).length : 0;
+            return '<div class="p"><p class="enun">' + q.n + '. ' + escapar(q.etiqueta) + ' (' + q.pts + ' pts) · ' + palabras + ' palabras</p>'
+              + '<p style="margin:0 0 4px;font-size:13.5px;color:#5b6472">' + escapar(q.enunciado) + '</p>'
+              + (texto ? '<div class="resp">' + escapar(texto) + '</div>' : '<div class="resp vacia">Sin responder</div>')
+              + '</div>';
+          }).join('');
+          return '<div class="caja"><div class="alumno"><h2>' + escapar(a.nombre || k) + '</h2>'
+            + '<p class="meta">' + escapar(a.curso || '') + ' · N° ' + escapar(a.n) + ' · ' + estado + '</p>'
+            + cuerpo + '</div></div>';
+        }).join('');
+        $('salida').innerHTML = html;
+        $('acceso').classList.add('oculto');
+      })
+      .catch(function (e) {
+        $('error').textContent = e.message;
+        $('error').classList.remove('oculto');
+      });
+  });
+})();
+</script>
+</body>
+</html>

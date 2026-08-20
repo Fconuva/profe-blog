@@ -61,6 +61,7 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 - New PAES sessions must be registered in `estudiacest/scripts/class-submission-contract.json` and `estudiacest/scripts/academic-release-manifest.json`.
 - Any audit script invoked by the production `build` command must also be explicitly included in `estudiacest/.vercelignore`; a local-only audit file will make the Vercel build fail.
 - Visual assessment resources must preserve exactly the information used by the items. Inspect generated images at original resolution before publication.
+- Every new interactive PAES guide, session, mini-essay, or essay must ship in the same change with Dylan Francisco Abaca Alvarado's guided route (`22.932.773-9`, normalized `229327739`). Preserve the same reading objective, default to a short text with six A-D items, visual step-by-step instructions, one question at a time, and no timer. Route only that RUN, keep keys and feedback server-side, store `variant: guided-access-2026`, integrate Firebase/admin, and test mobile access, readback, delivery, redirects, and console output. Never expose diagnosis or clinical labels in student-facing copy. The PAES release is incomplete while this variant is missing.
 
 ## Session Grading
 

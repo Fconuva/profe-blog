@@ -45,6 +45,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - NM3 TP: `3A-TP`, `3B-TP`, `3D-TP` -> `/lecturas/dashboard`
 - NM4 TP: `4A-TP`, `4B-TP`, `4C-TP`, `4D-TP`, `4E-TP` -> `/nm4/`
 - PAES HC: `3A-HC`, `3B-HC`, `4A-HC`, `4B-HC` -> `/paes/`
+- Student-specific PAES invariant: every new interactive instrument also includes Dylan Abaca's guided route for normalized RUN `229327739`; it must remain isolated from the regular attempt and use the same Firebase/admin release lifecycle.
 - Remaining students: `/estudiantes/dashboard.html`
 - Incomplete profile: `/estudiantes/perfil.html?next=...`
 
@@ -78,6 +79,7 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - `fetch_webpage` can show cached or pre-redirect HTML; browser validation is the source of truth for the live route.
 - Some fixes in legacy/duplicate admin surfaces may need syncing between `profefconuva/estudiantes/adminprofe/index.html` and `profefconuva/estudiacest/estudiantes/adminprofe/index.html`.
 - PAES final submissions are immutable until reset, are scored on the server, and hide keys, feedback, and scores until the teacher publishes results in `/paes/admin/`.
+- A PAES change is incomplete without Dylan's companion guided route: brief visual mediation, one question at a time, no student-facing diagnosis, exact RUN gate, server-selected key and total, `guided-access-2026` variant, restored-session redirect, Firebase readback, admin review, and mobile/console QA.
 - Keep incomplete PAES submission exceptions server-side and guide-specific. Guide 17 accepts 0 to 24 answers and Guide 18 accepts 0 to 18 answers; all other guide requirements remain unchanged.
 - Return PAES answer keys only after both conditions are true: the attempt is complete and the teacher release applies to that course or student.
 - Blocking a PAES guide must prevent new work without hiding an already published result. Completed students enter in review-only mode; response controls stay disabled and unfinished students continue seeing the lock.

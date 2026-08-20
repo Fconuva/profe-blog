@@ -1303,6 +1303,30 @@
       }
     }
 
+    const GUIDED_PAES_RUT = '229327739';
+
+    function applyGuidedPaesRoute(student) {
+      if (cleanRut(student && student.rut) !== GUIDED_PAES_RUT) return;
+      [17, 18].forEach((guideNumber) => {
+        const card = document.getElementById(`cardGuia${guideNumber}`);
+        if (!card) return;
+        card.dataset.guidedAccess = 'true';
+        const title = card.querySelector('h3');
+        if (title) title.textContent = guideNumber === 17
+          ? 'Guía N°17: Doble evidencia · Ruta guiada'
+          : 'Guía N°18: Arquitectura del ensayo · Ruta guiada';
+        const meta = card.querySelector('.ensayo-card-meta');
+        if (meta) meta.innerHTML = '<span>1 texto breve</span><span>6 preguntas</span><span>Una pregunta a la vez</span><span>Sin límite de tiempo</span>';
+        const status = card.querySelector('.ensayo-status-box');
+        if (status) status.innerHTML = `<div class="status-pending" style="color:var(--paes-color-light);"><span class="status-dot"></span>${guideNumber === 17 ? 'Dos pistas para sostener una inferencia' : 'Tesis, giro, función y alcance con apoyo visual'}</div>`;
+        const button = card.querySelector('.btn-action');
+        if (button) {
+          button.href = `guia${guideNumber}-guiada.html`;
+          button.childNodes[0].textContent = `Iniciar ruta guiada ${guideNumber} `;
+        }
+      });
+    }
+
     // ============ DASHBOARD RENDER ============
     function showDashboard(student) {
       document.getElementById('loginSection').style.display = 'none';
@@ -1312,6 +1336,7 @@
 
       document.getElementById('studentWelcomeName').textContent = `Bienvenido, ${student.nombre}`;
       document.getElementById('studentCourseBadge').textContent = student.curso;
+      applyGuidedPaesRoute(student);
 
       // Update Ensayos state locally first
       renderEnsayoStatus(1, student.rut);
@@ -1456,6 +1481,7 @@
           const blocked = (data && data.config && data.config.blocked) || {};
           const allowed = (data && data.config && data.config.allowed) || {};
           for (let n = 10; n <= 18; n++) {
+            if (cleanRut(rut) === GUIDED_PAES_RUT && (n === 17 || n === 18)) continue;
             if (!blocked['g' + n] || allowed['g' + n]) continue;
             const card = document.getElementById('cardGuia' + n);
             if (!card) continue;

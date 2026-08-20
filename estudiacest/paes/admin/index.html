@@ -1470,6 +1470,27 @@
     };
     let currentGuia = '18';
     function cfg() { return GUIAS[currentGuia]; }
+    const GUIDED_CFG = {
+      '17': {
+        titulo: 'Guía 17 — Doble evidencia · Versión guiada',
+        total: 6,
+        key: { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' },
+        skill: { 1:'LOCALIZAR', 2:'INTERPRETAR', 3:'INTERPRETAR', 4:'INTERPRETAR', 5:'INTERPRETAR', 6:'EVALUAR' },
+        devOrder: [], devLabels: {}
+      },
+      '18': {
+        titulo: 'Guía 18 — Arquitectura del ensayo · Versión guiada',
+        total: 6,
+        key: { 1:'C', 2:'A', 3:'D', 4:'B', 5:'C', 6:'A' },
+        skill: { 1:'LOCALIZAR', 2:'INTERPRETAR', 3:'INTERPRETAR', 4:'INTERPRETAR', 5:'EVALUAR', 6:'EVALUAR' },
+        devOrder: [], devLabels: {}
+      }
+    };
+    function cfgForRecord(record) {
+      return record && record.variant === 'guided-access-2026' && GUIDED_CFG[currentGuia]
+        ? GUIDED_CFG[currentGuia]
+        : cfg();
+    }
     function gmEscape(s){ return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
     let gmRut = null;
 
@@ -1908,12 +1929,13 @@
           Object.keys(agg).forEach(sk => { agg[sk].ok += Number(r.skills[sk]?.correct || 0); agg[sk].tot += Number(r.skills[sk]?.total || 0); });
           return;
         }
+        const recordCfg = cfgForRecord(r);
         const ans = r.answers || {};
-        for (let q = 1; q <= C.total; q++) {
-          const sk = C.skill && C.skill[q]; if (!sk || !agg[sk]) continue;
+        for (let q = 1; q <= recordCfg.total; q++) {
+          const sk = recordCfg.skill && recordCfg.skill[q]; if (!sk || !agg[sk]) continue;
           const response = ans[q] || ans[`q${String(q).padStart(2, '0')}`];
           agg[sk].tot++;
-          if (response === C.key[q]) agg[sk].ok++;
+          if (response === recordCfg.key[q]) agg[sk].ok++;
         }
       });
       return agg;
@@ -1940,9 +1962,9 @@
 
     // ============ GUÍA INTERACTIVA: MODAL DE REVISIÓN + CALIFICACIÓN ============
     function openGuiaModal(rut) {
-      const C = cfg();
       const r = ((databaseData.guiaResp && databaseData.guiaResp[currentGuia]) || {})[rut];
       if (!r) return;
+      const C = cfgForRecord(r);
       gmRut = rut;
 
       const ans0 = r.answers || {};

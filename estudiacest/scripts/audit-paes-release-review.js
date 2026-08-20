@@ -19,7 +19,7 @@ for (const guide of [10, 11, 12, 13, 15, 16]) {
 }
 
 assert(/legacyCompleted/.test(api), 'La API no reconoce entregas históricas anteriores al estado sent.');
-assert(/const serverKey = INTERACTIVE_GUIDE_KEYS\[guideId\]/.test(api), 'La API no recalcula resultados con clave de servidor.');
+assert(/const serverKey = guideKeyFor\(guideId, rutLimpio\)/.test(api), 'La API no recalcula resultados con clave de servidor.');
 assert(/fetchReleasedAttempt/.test(lock) && /enableReviewOnly/.test(lock), 'El candado no permite revisión de entregas publicadas.');
 assert(/data-paes-review-only/.test(lock) && /lockResponseControls/.test(lock), 'El modo de revisión no bloquea la edición.');
 assert(/await accessPromise/.test(guide14App) && /window\.checkGuiaAccess/.test(guide14App), 'G14 inicia el temporizador antes de comprobar el candado.');

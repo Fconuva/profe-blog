@@ -113,6 +113,48 @@ const G18_KEY = {
     13:'D',14:'B',15:'C',16:'A',17:'D',18:'B'
 };
 
+const GUIDED_ACCESS_RUT = '229327739';
+const GUIDED_VARIANT = 'guided-access-2026';
+const G17_GUIDED_KEY = { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' };
+const G18_GUIDED_KEY = { 1:'C', 2:'A', 3:'D', 4:'B', 5:'C', 6:'A' };
+const GUIDED_GUIDE_KEYS = {
+    '17': G17_GUIDED_KEY,
+    '18': G18_GUIDED_KEY
+};
+
+const G17_GUIDED_FEEDBACK = {
+    1:'El primer párrafo indica que los vecinos usaban el paraguas para acompañar hasta el bus a quienes llegaban sin protección.',
+    2:'Martín llega antes para revisar el paraguas y luego lo busca cuando desaparece la banca. Ambas acciones muestran un cuidado que él no reconoce en voz alta.',
+    3:'Martín se relaja después de comprobar que el paraguas está guardado y conserva la etiqueta que explica su uso comunitario.',
+    4:'El cuidado primero es secreto; al final queda organizado mediante una caja y una instrucción visible para todo el barrio.',
+    5:'Martín llega antes para revisar el paraguas y se relaja cuando comprueba que está protegido. Las dos pistas muestran que el objeto le importa personalmente.',
+    6:'Las acciones de Martín muestran que una ayuda discreta puede mantenerse y organizarse para beneficiar a otras personas.'
+};
+
+const G18_GUIDED_FEEDBACK = {
+    1:'El texto reconoce explícitamente que el silencio reduce interrupciones y permite concentrarse en una lectura extensa.',
+    2:'“Sin embargo” no borra la ventaja anterior: introduce el límite de aplicar el silencio como única regla.',
+    3:'La propuesta central es organizar zonas distintas para que la concentración individual y la colaboración puedan convivir.',
+    4:'Los casos del tercer párrafo demuestran que conversar también puede ser parte de una actividad de comprensión.',
+    5:'El emisor valora el silencio cuando protege el aprendizaje, pero rechaza que se aplique de manera absoluta.',
+    6:'El mejor respaldo debe comprobar las dos partes de la propuesta: concentración en una zona y colaboración efectiva en la otra.'
+};
+
+function isGuidedAccess(guideId, rut) {
+    return cleanRut(rut) === GUIDED_ACCESS_RUT && Object.prototype.hasOwnProperty.call(GUIDED_GUIDE_KEYS, String(guideId));
+}
+
+function guideKeyFor(guideId, rut) {
+    return isGuidedAccess(guideId, rut) ? GUIDED_GUIDE_KEYS[String(guideId)] : INTERACTIVE_GUIDE_KEYS[String(guideId)];
+}
+
+function guideFeedbackFor(guideId, rut) {
+    if (isGuidedAccess(guideId, rut)) {
+        return String(guideId) === '17' ? G17_GUIDED_FEEDBACK : G18_GUIDED_FEEDBACK;
+    }
+    return INTERACTIVE_GUIDE_FEEDBACK[String(guideId)];
+}
+
 const G18_FEEDBACK = {
     1:'El texto reconoce que registrar permite advertir patrones que podrían pasar inadvertidos; no afirma que todo descanso deba medirse.',
     2:'La enumeración muestra cómo la lógica de rendimiento se extiende desde el trabajo hacia actividades que antes quedaban fuera de ella.',
@@ -361,7 +403,7 @@ async function handleSubmitGuia(req, res) {
     let safeCorrect = parseInt(correct, 10) || 0;
     let safeTotal = parseInt(total, 10) || 0;
     let safeScore = parseInt(score, 10) || 0;
-    const serverKey = INTERACTIVE_GUIDE_KEYS[guideId];
+    const serverKey = guideKeyFor(guideId, rutLimpio);
     if (serverKey) {
         safeAnswers = {};
         Object.keys(serverKey).forEach((id) => {
@@ -394,6 +436,7 @@ async function handleSubmitGuia(req, res) {
         submitted: !draft,
         completada: !draft
     };
+    if (isGuidedAccess(guideId, rutLimpio)) payload.variant = GUIDED_VARIANT;
     if (!draft) {
         payload.submittedAt = now;
         payload.completadaAt = now;
@@ -461,10 +504,11 @@ async function handleGetGuiaState(req, res) {
         completada: value.completada === true || value.status === 'sent' || legacyCompleted,
         submittedAt: value.submittedAt || null,
         completadaAt: value.completadaAt || null,
-        lastSavedAt: value.lastSavedAt || null
+        lastSavedAt: value.lastSavedAt || null,
+        variant: value.variant || null
     };
     if (released && attempt.completada) {
-        const serverKey = INTERACTIVE_GUIDE_KEYS[guideId];
+        const serverKey = guideKeyFor(guideId, rut);
         if (serverKey) {
             const correct = Object.keys(serverKey).reduce(
                 (sum, id) => sum + (normalizedAnswers[id] === serverKey[id] ? 1 : 0), 0
@@ -479,11 +523,13 @@ async function handleGetGuiaState(req, res) {
             };
         }
     }
-    const answerKey = released && attempt.completada && INTERACTIVE_GUIDE_KEYS[guideId]
-        ? INTERACTIVE_GUIDE_KEYS[guideId]
+    const selectedKey = guideKeyFor(guideId, rut);
+    const answerKey = released && attempt.completada && selectedKey
+        ? selectedKey
         : null;
-    const feedback = released && attempt.completada && INTERACTIVE_GUIDE_FEEDBACK[guideId]
-        ? INTERACTIVE_GUIDE_FEEDBACK[guideId]
+    const selectedFeedback = guideFeedbackFor(guideId, rut);
+    const feedback = released && attempt.completada && selectedFeedback
+        ? selectedFeedback
         : null;
     return res.status(200).json({ success: true, attempt, released, answerKey, feedback });
 }

@@ -11,6 +11,7 @@ Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se h
 - Se publicaron en Firebase los resultados de las guías 10 a 16 para `3°A HC`, `3°B HC`, `4°A HC` y `4°B HC`. Las guías 17 y 18 continúan sin resultados liberados.
 - Las guías anteriores permanecen cerradas para nuevas respuestas. Un estudiante con entrega registrada y resultado publicado conserva un acceso de solo lectura desde el portal y desde Materiales.
 - El modo de revisión muestra puntaje, respuesta marcada y clave correcta; además bloquea alternativas, textos y botones de entrega para impedir modificaciones o reenvíos.
+- Se corrigió un defecto heredado: las páginas G10–G14 no cargaban `guia-lock.js`, aunque sus tarjetas sí aparecían cerradas. Ahora la URL directa también respeta el bloqueo y el modo de revisión.
 - La API incorporó claves de servidor para G10–G13, recalcula el resultado al leerlo y reconoce entregas históricas anteriores al estado `sent` cuando tienen `submittedAt` y respuestas.
 - Se agregó `scripts/audit-paes-release-review.js` al build para verificar claves, liberación, acceso de revisión, bloqueo de edición y sintaxis de los scripts del portal.
 

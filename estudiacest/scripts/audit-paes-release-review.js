@@ -23,6 +23,12 @@ assert(/data-paes-review-only/.test(lock) && /lockResponseControls/.test(lock), 
 assert(/hasPublishedGuideReview/.test(portal) && /Ver resultados y respuestas/.test(portal), 'El portal no ofrece acceso a resultados publicados.');
 assert(/reviewAvailable/.test(materials) && /Ver resultados y respuestas/.test(materials), 'Materiales no ofrece acceso de revisión.');
 
+for (const guide of [10, 11, 12, 13, 14]) {
+  const html = read(`paes/guia${guide}.html`);
+  assert(html.includes(`window.GUIA_LOCK_ID = 'g${guide}'`), `La Guía ${guide} no carga el candado común.`);
+  assert(/<script src="js\/guia-lock\.js"><\/script>/.test(html), `La Guía ${guide} no carga guia-lock.js.`);
+}
+
 for (const file of ['paes/index.html', 'paes/guias.html']) {
   const html = read(file);
   const scripts = [...html.matchAll(/<script(?![^>]*\bsrc=)(?![^>]*type=["']application\/json["'])[^>]*>([\s\S]*?)<\/script>/gi)];

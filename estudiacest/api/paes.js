@@ -88,13 +88,45 @@ const G17_KEY = {
     19:'D',20:'B',21:'C',22:'A',23:'D',24:'B'
 };
 
+const G18_KEY = {
+    1:'B',2:'D',3:'A',4:'C',5:'B',6:'D',
+    7:'C',8:'A',9:'D',10:'B',11:'A',12:'C',
+    13:'D',14:'B',15:'C',16:'A',17:'D',18:'B'
+};
+
+const G18_FEEDBACK = {
+    1:'El texto reconoce que registrar permite advertir patrones que podrían pasar inadvertidos; no afirma que todo descanso deba medirse.',
+    2:'La enumeración muestra cómo la lógica de rendimiento se extiende desde el trabajo hacia actividades que antes quedaban fuera de ella.',
+    3:'La racha deja de apoyar la lectura cuando conservar el número importa más que comprender: la medida desplaza el sentido de la actividad.',
+    4:'La frase rechaza justificar el descanso por una productividad oculta. Su valor no depende de producir un beneficio posterior.',
+    5:'El emisor no rechaza los registros: reconoce su utilidad, pero cuestiona que se transformen en autoridad sobre la experiencia.',
+    6:'La evidencia más directa sería que registrar mejora la atención sin alterar el sentido personal, porque contradice el riesgo central planteado.',
+    7:'El texto señala dos usos concretos: proteger piezas frágiles y permitir observar aspectos que el original no deja examinar del mismo modo.',
+    8:'La embarcación muestra que una misma pieza no responde todas las preguntas y que distintas preguntas requieren distintas formas de proximidad.',
+    9:'Mientras más convincente parece una reconstrucción, mayor es su deber de distinguir lo conservado, lo inferido y lo añadido.',
+    10:'El texto supera la oposición original-copia y propone evaluar cada objeto según las preguntas y comprensiones que hace posibles.',
+    11:'El título reúne los dos factores que complejizan la autenticidad: la condición de réplica y la relación espacial con el lugar.',
+    12:'Distinguir visualmente conservación, inferencia y añadido aplica el criterio de transparencia defendido a lo largo del texto.',
+    13:'El archivo espera una consulta; el recomendador se adelanta y selecciona qué mostrar según señales del usuario.',
+    14:'El polvo vuelve visible el olvido en un estante; la recomendación puede volver invisible una ausencia sin que el usuario la advierta.',
+    15:'Toda exploración usa mediaciones. La exigencia del texto es que sus criterios puedan reconocerse, discutirse y modificarse.',
+    16:'La tesis no rechaza recomendar: sostiene que esa mediación puede ser útil, pero debe ser comprensible y discutible.',
+    17:'El emisor reconoce poder en el sistema sin presentarlo como absoluto; por eso exige criterios visibles y alternativas de recorrido.',
+    18:'La proporción de obras disponibles que nunca aparece en recorridos reales mediría directamente la distancia entre conservar y exponer.'
+};
+
+const INTERACTIVE_GUIDE_FEEDBACK = {
+    '18': G18_FEEDBACK
+};
+
 const INTERACTIVE_GUIDE_KEYS = {
     '15': G15_KEY,
     '16': G16_KEY,
-    '17': G17_KEY
+    '17': G17_KEY,
+    '18': G18_KEY
 };
 
-const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17']);
+const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17', '18']);
 
 const G14_KEY = {
     q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',
@@ -415,7 +447,10 @@ async function handleGetGuiaState(req, res) {
     const answerKey = released && attempt.completada && INTERACTIVE_GUIDE_KEYS[guideId]
         ? INTERACTIVE_GUIDE_KEYS[guideId]
         : null;
-    return res.status(200).json({ success: true, attempt, released, answerKey });
+    const feedback = released && attempt.completada && INTERACTIVE_GUIDE_FEEDBACK[guideId]
+        ? INTERACTIVE_GUIDE_FEEDBACK[guideId]
+        : null;
+    return res.status(200).json({ success: true, attempt, released, answerKey, feedback });
 }
 
 async function handleSubmitGuia14(req, res) {

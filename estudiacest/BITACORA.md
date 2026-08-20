@@ -6,6 +6,18 @@ Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se h
 
 ---
 
+## 2026-08-20, Guía PAES 18 y secuencia hasta la aplicación oficial
+
+- Se creó `paes/guia18.html`: tres ensayos originales de 532 a 584 palabras, 18 reactivos A–D de dificultad alta y estrategia explícita para seguir tesis, giro, función y alcance.
+- La Guía 18 autoguarda, permite entregar con respuestas pendientes, confirma la escritura leyendo la API y mantiene clave, puntaje y retroalimentación ocultos hasta la habilitación docente.
+- El portal PAES quedó en orden `16 → 17 → 18`; solo la 18 dice `Sesión actual`. Se añadieron tarjetas grises G19–G31, el receso del 17 de septiembre y el hito PAES Regular del 30 de noviembre al 2 de diciembre.
+- `paes/guias.html` ya incluye G17 y G18. En el administrador se agregó G18, el libro de notas llega hasta G18 y G16 fue corregida de 15 a sus 25 preguntas reales.
+- Se añadió `scripts/audit-paes-g18.js` al build y se amplió el contrato para reconocer `QUESTIONS.length`. Las pruebas de navegador cubren entrega con una respuesta y sin respuestas.
+
+Secuencia planificada: G19 vocabulario en contexto; G20 relaciones entre textos; G21 simulacro parcial; G22 distractores; G23 evidencia y consistencia; G24 discontinuos avanzados; G25 simulacro 1; G26 retroalimentación; G27 inferencias globales; G28 simulacro 2; G29 plan personal; G30 ensayo final; G31 estrategia final.
+
+---
+
 ## Dónde vive todo (leer antes de tocar nada)
 
 | Qué | Dónde |

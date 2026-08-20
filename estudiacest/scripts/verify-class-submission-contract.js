@@ -13,7 +13,7 @@ const required = [
   ['fecha submittedAt', /submittedAt\s*:/g, 1],
   ['fecha completadaAt', /completadaAt\s*:/g, 1],
   ['puntaje score', /score\s*:/g, 1],
-  ['total dinámico', /total\s*:\s*questions\.length/g, 1],
+  ['total dinámico', /total\s*:\s*(?:questions|QUESTIONS)\.length/g, 1],
   ['cola de autoguardado', /saveQueue\s*=\s*Promise\.resolve\(\)/g, 1],
   ['espera de autoguardado', /await\s+saveQueue/g, 1],
   ['confirmación visible', /Entrega confirmada/g, 2],

@@ -1,6 +1,26 @@
 {
   "rules": {
     "plataforma_estudiantes": {
+      "3atp_clase1": {
+        ".read": true,
+        ".write": true,
+        "$grupo": {
+          "images": {
+            "$i": {
+              "dataUrl": {
+                ".validate": "newData.isString() && newData.val().length <= 2500000"
+              },
+              "caption": {
+                ".validate": "newData.isString() && newData.val().length <= 600"
+              }
+            }
+          }
+        }
+      },
+      "3atp_informe": {
+        ".read": true,
+        ".write": true
+      },
       "admins": {
         ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
@@ -16,7 +36,7 @@
         }
       },
       "estudiantes": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         ".indexOn": [
           "curso"
         ],
@@ -24,15 +44,8 @@
           ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
         }
       },
-      "triptico_revisiones": {
-        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
-        ".indexOn": [
-          "curso"
-        ]
-      },
       "sesiones": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
       },
       "respuestas": {
@@ -41,35 +54,36 @@
           ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
           "$uid": {
             ".read": "auth != null && auth.uid === $uid",
-            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
-            ".validate": "root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || data.child('completada').val() !== true || newData.child('completada').val() === true"
+            ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || (auth.uid === $uid && data.child('completada').val() !== true && ($sesionId !== 'ensayo-simce-n3-nm2-2026' || newData.child('completada').val() !== true)))",
+            ".validate": "root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || data.child('completada').val() !== true"
           }
         }
       },
       "resultados": {
-        ".read": "auth != null",
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         "$sesionId": {
           ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
           "$uid": {
-            ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+            ".read": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('plataforma_estudiantes/sesiones').child($sesionId).child('resultados_visibles').val() === true))",
+            ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || (auth.uid === $uid && $sesionId !== 'ensayo-simce-n3-nm2-2026' && !data.exists()))"
           }
         }
       },
       "ranking": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         "$sesionId": {
           ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
           "$curso": {
             "$uid": {
-              ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
+              ".write": "auth != null && (root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true || (auth.uid === $uid && $sesionId !== 'ensayo-simce-n3-nm2-2026'))"
             }
           }
         }
       },
       "avatar": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         "$uid": {
-          ".read": "auth != null",
+          ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
           ".write": "auth != null && (auth.uid === $uid || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)"
         }
       },
@@ -89,14 +103,21 @@
         }
       },
       "mensajes": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         ".indexOn": [
           "timestamp"
         ],
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
       },
+      "triptico_revisiones": {
+        ".read": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
+        ".indexOn": [
+          "curso"
+        ]
+      },
       "admin_refresh": {
-        ".read": "auth != null",
+        ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
         ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true",
         "all": {
           ".write": "auth != null && root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true"
@@ -129,7 +150,7 @@
           }
         },
         "records": {
-          ".read": "auth != null",
+          ".read": "auth != null && (root.child('plataforma_estudiantes/estudiantes').child(auth.uid).exists() || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
           "$uid": {
             ".write": "auth != null && auth.uid === $uid"
           }
@@ -176,12 +197,56 @@
             }
           }
         }
+      }
+    },
+    "plataforma_nm1": {
+      "admins": {
+        ".read": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+        "$uid": {
+          ".read": "auth != null && auth.uid === $uid"
+        }
       },
-      "colab": {
+      "estudiantes": {
+        ".read": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+        ".indexOn": [
+          "curso"
+        ],
+        "$uid": {
+          ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_nm1/admins').child(auth.uid).val() === true)"
+        }
+      },
+      "sesiones": {
+        ".read": "auth != null && (root.child('plataforma_nm1/estudiantes').child(auth.uid).child('activo').val() === true || root.child('plataforma_nm1/admins').child(auth.uid).val() === true)",
+        ".write": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true"
+      },
+      "respuestas": {
+        ".read": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
         "$sesionId": {
-          "$pairKey": {
-            ".read": "auth != null && ($pairKey.contains(auth.uid) || root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true)",
-            ".write": "auth != null && $pairKey.contains(auth.uid)"
+          ".write": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+          "$uid": {
+            ".read": "auth != null && (auth.uid === $uid || root.child('plataforma_nm1/admins').child(auth.uid).val() === true)",
+            ".write": "auth != null && (root.child('plataforma_nm1/admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('plataforma_nm1/estudiantes').child(auth.uid).child('activo').val() === true && root.child('plataforma_nm1/sesiones').child($sesionId).child('activa').val() === true && newData.exists() && data.child('completada').val() !== true && ($sesionId !== 'ensayo-simce-n3-nm1-2026' || newData.child('completada').val() !== true)))",
+            ".validate": "root.child('plataforma_nm1/admins').child(auth.uid).val() === true || data.child('completada').val() !== true"
+          }
+        }
+      },
+      "resultados": {
+        ".read": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+        "$sesionId": {
+          ".write": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+          "$uid": {
+            ".read": "auth != null && (root.child('plataforma_nm1/admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('plataforma_nm1/sesiones').child($sesionId).child('resultados_visibles').val() === true))",
+            ".write": "auth != null && (root.child('plataforma_nm1/admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('plataforma_nm1/estudiantes').child(auth.uid).child('activo').val() === true && root.child('plataforma_nm1/sesiones').child($sesionId).child('activa').val() === true && $sesionId !== 'ensayo-simce-n3-nm1-2026' && !data.exists() && newData.exists()))"
+          }
+        }
+      },
+      "ranking": {
+        ".read": "auth != null && root.child('plataforma_nm1/admins').child(auth.uid).val() === true",
+        "$sesionId": {
+          "$curso": {
+            "$uid": {
+              ".write": "auth != null && (root.child('plataforma_nm1/admins').child(auth.uid).val() === true || (auth.uid === $uid && root.child('plataforma_nm1/estudiantes').child(auth.uid).child('activo').val() === true && root.child('plataforma_nm1/sesiones').child($sesionId).child('activa').val() === true && root.child('plataforma_nm1/estudiantes').child(auth.uid).child('curso').val() === $curso && $sesionId !== 'ensayo-simce-n3-nm1-2026' && !data.exists() && newData.exists()))"
+            }
           }
         }
       }
@@ -249,6 +314,10 @@
       }
     },
     ".read": false,
-    ".write": false
+    ".write": false,
+    "plataforma_nm4": {
+      ".read": false,
+      ".write": false
+    }
   }
 }

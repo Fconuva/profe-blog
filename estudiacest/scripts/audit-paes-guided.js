@@ -64,6 +64,11 @@ expect(portal.includes("const GUIDED_PAES_RUT = '229327739'"), 'El portal no rec
 expect(portal.includes('guia${guideNumber}-guiada.html'), 'El portal no dirige a las páginas guiadas.');
 expect(portal.includes("n === 17 || n === 18"), 'El cierre general podría ocultar la ruta individual solicitada.');
 
+const regular17 = read('paes/guia17.html');
+const regular18 = read('paes/guia18.html');
+expect(regular17.includes("cleanRut(record&&record.rut)==='229327739'"), 'La Guía 17 regular no redirige una sesión restaurada a la ruta guiada.');
+expect(regular18.includes("cleanRut(saved&&saved.rut)==='229327739'"), 'La Guía 18 regular no redirige una sesión restaurada a la ruta guiada.');
+
 const admin = read('paes/admin/index.html');
 expect(admin.includes("record.variant === 'guided-access-2026'"), 'El admin no diferencia el instrumento guiado.');
 expect(admin.includes('Guía 17 — Doble evidencia · Versión guiada'), 'El admin no identifica la versión guiada de G17.');

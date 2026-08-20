@@ -11,6 +11,7 @@ const lock = read('paes/js/guia-lock.js');
 const portal = read('paes/index.html');
 const materials = read('paes/guias.html');
 const guide16 = read('paes/guia16.html');
+const guide14App = read('paes/assets/guia14/guia14-app.js');
 
 for (const guide of [10, 11, 12, 13, 15, 16]) {
   assert(new RegExp(`const G${guide}_KEY =`).test(api), `Falta la clave de la Guía ${guide} en la API.`);
@@ -21,7 +22,7 @@ assert(/legacyCompleted/.test(api), 'La API no reconoce entregas históricas ant
 assert(/const serverKey = INTERACTIVE_GUIDE_KEYS\[guideId\]/.test(api), 'La API no recalcula resultados con clave de servidor.');
 assert(/fetchReleasedAttempt/.test(lock) && /enableReviewOnly/.test(lock), 'El candado no permite revisión de entregas publicadas.');
 assert(/data-paes-review-only/.test(lock) && /lockResponseControls/.test(lock), 'El modo de revisión no bloquea la edición.');
-assert(/g14-login-card/.test(lock) && /g14IdentityTimer/.test(lock), 'El acceso directo de G14 no comunica su identidad al candado común.');
+assert(/await accessPromise/.test(guide14App) && /window\.checkGuiaAccess/.test(guide14App), 'G14 inicia el temporizador antes de comprobar el candado.');
 assert(/hasPublishedGuideReview/.test(portal) && /Ver resultados y respuestas/.test(portal), 'El portal no ofrece acceso a resultados publicados.');
 assert(/reviewAvailable/.test(materials) && /Ver resultados y respuestas/.test(materials), 'Materiales no ofrece acceso de revisión.');
 assert(/Resultados publicados\. Revisa tus aciertos/.test(guide16), 'La Guía 16 conserva un mensaje de resultados ocultos después de liberarlos.');

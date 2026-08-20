@@ -41,7 +41,43 @@ function scheduleSave(){if(state.sent||submitting)return;localStorage.setItem(lo
 async function save(final){if(!final&&(state.sent||submitting))return;try{const resp=await fetch('/api/paes?action=submit-guia14',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut:student.rut,nombre:student.nombre,curso:student.curso,answers:state.answers,form:state.form,incidents:state.incidents,startedAt:state.startedAt,final:!!final})});if(!resp.ok)throw new Error('No se pudo guardar');if(!final)toast('Avance guardado')}catch(e){if(final)throw e}}
 async function submit(auto){if(state.sent||submitting)return;const missing=TOTAL-Object.keys(state.answers).length;if(missing&&!auto&&!confirm(`Quedan ${missing} preguntas sin responder. ¿Enviar de todas formas?`))return;if(!auto&&!confirm('Al enviar no podrás modificar tus respuestas. ¿Continuar?'))return;submitting=true;clearTimeout(saveTimer);clearInterval(timerHandle);try{await save(true);state.sent=true;localStorage.setItem(localKey(),JSON.stringify(state));document.querySelector('#g14-exam').innerHTML='<div class="end-card"><h3>RESPUESTAS RECIBIDAS</h3><p>El resultado permanecerá bloqueado hasta que el profesor lo habilite desde el panel de administración.</p></div>';document.querySelector('#g14-toolbar')?.remove();toast('Ensayo enviado')}catch(e){submitting=false;startTimer();alert('No se pudo enviar. Tu avance continúa guardado en este equipo.')}}
 function renderSent(attempt,released){const r=attempt&&attempt.result,review=released&&r?Object.keys(r.displayKeys||{}).map(id=>{const exp=r.itemCorrect[id]===null,ok=r.itemCorrect[id]===true;return `<div style="border:1px solid #cbd5e1;padding:7px;text-align:center;background:${exp?'#f8fafc':ok?'#ecfdf5':'#fff1f2'}"><strong>${Number(id.slice(1))}</strong><br>${r.displayAnswers[id]||'—'}${!exp&&!ok?` / ${r.displayKeys[id]}`:''}<br><small>${exp?'EXP':ok?'Correcta':'Incorrecta'}</small></div>`}).join(''):'';document.body.innerHTML=`<main id="g14-exam"><div class="end-card"><h3>ENSAYO ENVIADO</h3>${released&&r?`<p><strong>${r.correct}/${r.total}</strong> respuestas operativas correctas.</p><p>Puntaje PAES referencial: <strong>${r.paesReferential}</strong> (${r.equivalentCorrect}/60 equivalentes).</p><p style="font-size:9pt">Estimación proporcional basada en la tabla DEMRE de Invierno, Admisión 2027; no corresponde a un puntaje oficial.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-top:18px">${review}</div>`:'<p>Tu resultado se mostrará cuando el profesor lo habilite desde el panel de administración.</p>'}</div></main>`}
-async function start(s){student=s;const fresh=()=>({answers:{},struck:{},incidents:[],startedAt:Date.now(),sent:false});const raw=localStorage.getItem(localKey());try{state=raw?JSON.parse(raw):fresh()}catch(_){state=fresh()}delete state.marked;let cloud=null,released=false;try{const [stateResp,formResp]=await Promise.all([fetch('/api/paes?action=get-guia14-state&rut='+encodeURIComponent(s.rut)),fetch('/api/paes?action=get-guia14-form&rut='+encodeURIComponent(s.rut))]);if(!stateResp.ok||!formResp.ok)throw new Error('Servicio no disponible');const d=await stateResp.json(),f=await formResp.json();cloud=d.attempt;released=d.released;if(!cloud&&(state.sent||!Object.keys(state.answers||{}).length||Date.now()-Number(state.startedAt)>LIMIT*1000))state=fresh();state.serverForm=f.form;if(cloud){state.answers=Object.assign({},cloud.answers||{},state.answers||{});state.incidents=cloud.incidents||state.incidents;state.startedAt=cloud.startedAt||state.startedAt;state.sent=cloud.status==='sent'}localStorage.setItem(localKey(),JSON.stringify(state))}catch(_){document.querySelector('.g14-login-error').textContent='No fue posible cargar tu forma individual. Revisa la conexión e intenta nuevamente.';return}document.body.classList.remove('g14-locked');document.querySelector('#g14-login').remove();if(state.sent){renderSent(cloud,released);return}setupExam()}
+async function start(s){
+  student=s;
+  try{sessionStorage.setItem('paes_student',JSON.stringify(s))}catch(_){}
+  const accessPromise=typeof window.checkGuiaAccess==='function'?window.checkGuiaAccess(s.rut):Promise.resolve(true);
+  const fresh=()=>({answers:{},struck:{},incidents:[],startedAt:Date.now(),sent:false});
+  const raw=localStorage.getItem(localKey());
+  try{state=raw?JSON.parse(raw):fresh()}catch(_){state=fresh()}
+  delete state.marked;
+  let cloud=null,released=false;
+  try{
+    const [stateResp,formResp]=await Promise.all([
+      fetch('/api/paes?action=get-guia14-state&rut='+encodeURIComponent(s.rut)),
+      fetch('/api/paes?action=get-guia14-form&rut='+encodeURIComponent(s.rut))
+    ]);
+    if(!stateResp.ok||!formResp.ok)throw new Error('Servicio no disponible');
+    const d=await stateResp.json(),f=await formResp.json();
+    cloud=d.attempt;
+    released=d.released;
+    if(!cloud&&(state.sent||!Object.keys(state.answers||{}).length||Date.now()-Number(state.startedAt)>LIMIT*1000))state=fresh();
+    state.serverForm=f.form;
+    if(cloud){
+      state.answers=Object.assign({},cloud.answers||{},state.answers||{});
+      state.incidents=cloud.incidents||state.incidents;
+      state.startedAt=cloud.startedAt||state.startedAt;
+      state.sent=cloud.status==='sent';
+    }
+    localStorage.setItem(localKey(),JSON.stringify(state));
+  }catch(_){
+    document.querySelector('.g14-login-error').textContent='No fue posible cargar tu forma individual. Revisa la conexión e intenta nuevamente.';
+    return;
+  }
+  if(!await accessPromise)return;
+  document.body.classList.remove('g14-locked');
+  document.querySelector('#g14-login').remove();
+  if(state.sent){renderSent(cloud,released);return}
+  setupExam();
+}
 async function init(){document.body.classList.add('g14-locked');const login=document.createElement('div');login.id='g14-login';login.innerHTML='<form class="g14-login-card"><h1>Miniensayo PAES · Guía 14</h1><p>Identifícate para recibir una versión individual del instrumento.</p><label for="g14-rut">RUT del estudiante</label><input id="g14-rut" inputmode="text" autocomplete="off" placeholder="12.345.678-9"><button>Ingresar</button><div class="g14-login-error"></div></form>';document.body.appendChild(login);document.body.insertAdjacentHTML('beforeend','<div class="g14-toast"></div>');const input=login.querySelector('input');input.oninput=()=>input.value=fmtRut(input.value);login.querySelector('form').onsubmit=async e=>{e.preventDefault();let roster=typeof NOMINAS_PAES!=='undefined'?[...NOMINAS_PAES]:[];try{const x=await fetch('/api/paes?action=get-nomina-extra').then(r=>r.json());roster=roster.concat(x.nomina_extra||[])}catch(_){}const rut=clean(input.value),found=roster.find(x=>clean(x.rut)===rut);if(!found){login.querySelector('.g14-login-error').textContent='RUT no encontrado en la nómina PAES.';return}start(found)}}
 init();
 })();

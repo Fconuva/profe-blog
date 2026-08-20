@@ -192,26 +192,6 @@
     checkAccess(detail && detail.rut ? detail.rut : '');
   });
 
-  // G14 conserva un inicio de sesión propio. Esperamos a que valide el RUN y
-  // retire su formulario antes de aplicar el mismo candado del resto.
-  if (id === 'g14') {
-    document.addEventListener('submit', function (event) {
-      if (!event.target || !event.target.classList.contains('g14-login-card')) return;
-      var input = event.target.querySelector('#g14-rut');
-      var rut = input ? input.value : '';
-      var attempts = 0;
-      var g14IdentityTimer = setInterval(function () {
-        attempts += 1;
-        if (!document.getElementById('g14-login')) {
-          clearInterval(g14IdentityTimer);
-          checkAccess(rut);
-        } else if (attempts >= 30) {
-          clearInterval(g14IdentityTimer);
-        }
-      }, 200);
-    }, true);
-  }
-
   var studentRut = '';
   try {
     var storedStudent = JSON.parse(sessionStorage.getItem('paes_student') || 'null');

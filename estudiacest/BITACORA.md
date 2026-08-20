@@ -13,6 +13,7 @@ Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se h
 - El modo de revisión muestra puntaje, respuesta marcada y clave correcta; además bloquea alternativas, textos y botones de entrega para impedir modificaciones o reenvíos.
 - Se corrigió un defecto heredado: las páginas G10–G14 no cargaban `guia-lock.js`, aunque sus tarjetas sí aparecían cerradas. Ahora la URL directa también respeta el bloqueo y el modo de revisión.
 - El inicio propio de G14 comunica el RUN validado al candado común, de modo que el acceso directo también queda bloqueado o entra en revisión según corresponda.
+- G14 espera la respuesta del candado antes de crear el examen y arrancar su temporizador. Esto evita que un borrador antiguo se autoentregue al abrir una guía cerrada.
 - La confirmación de G16 cambia a «Resultados publicados» al mostrar la revisión; ya no conserva el mensaje contradictorio de resultado oculto.
 - La API incorporó claves de servidor para G10–G13, recalcula el resultado al leerlo y reconoce entregas históricas anteriores al estado `sent` cuando tienen `submittedAt` y respuestas.
 - Se agregó `scripts/audit-paes-release-review.js` al build para verificar claves, liberación, acceso de revisión, bloqueo de edición y sintaxis de los scripts del portal.

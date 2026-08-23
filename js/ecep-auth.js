@@ -51,6 +51,8 @@
     'media-religion': 'Educación Media · Religión Católica',
     'media-contabilidad': 'Media TP · Contabilidad',
     'epja': 'Educación de Personas Jóvenes y Adultas (EPJA)',
+    'encierro': 'Educación en Contextos de Encierro',
+    'media-electricidad': 'Media TP · Electricidad',
     'musica-basica': 'Educación Básica · Música',
     'artes-basica': 'Educación Básica · Artes Visuales'
   };
@@ -75,6 +77,7 @@
     var p = location.pathname;
     if (p.indexOf('/educacion-parvularia/') >= 0) return 'parvularia';
     if (p.indexOf('/educacion-epja/') >= 0) return 'epja';
+    if (p.indexOf('/educacion-encierro/') >= 0) return 'encierro';
     if (p.indexOf('/educacion-especial/') >= 0) { var me = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//); return me ? 'especial-' + me[1] : null; }
     if (p.indexOf('/educacion-media/') >= 0) { var mm = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//); if (!mm) return null; return mm[1] === 'lengua-y-literatura' ? 'media-lengua' : 'media-' + mm[1]; }
     var m = p.match(/\/(?:estudio|prueba)\/([^\/]+)\//);

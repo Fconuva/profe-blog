@@ -122,3 +122,17 @@
     img.addEventListener('error', hide);
   });
 })();
+
+// ---- CTA al servicio de Portafolio (la plataforma gratuita es el enganche) ----
+(function () {
+  var ec = document.querySelector('.ec');
+  if (!ec || document.querySelector('.ec-cta-portafolio')) return;
+  var cta = document.createElement('div');
+  cta.className = 'ec-cta-portafolio';
+  cta.innerHTML = '<div style="max-width:900px;margin:34px auto 26px;padding:22px 24px;border-radius:16px;background:linear-gradient(135deg,#1e1b4b,#312e81);color:#fff;display:flex;align-items:center;gap:16px;flex-wrap:wrap;box-shadow:0 14px 40px -18px rgba(30,27,75,.55)">' +
+    '<span style="font-size:30px">🎓</span>' +
+    '<div style="flex:1;min-width:230px"><b style="font-size:16px">Este material es gratis. ¿Y tu Portafolio?</b>' +
+    '<p style="margin:3px 0 0;font-size:13.5px;color:#c7d2fe">Un profesor <b style="color:#fff">tramo Experto I</b> te construye los 3 módulos personalizados, al nivel Destacado. Tú revisas primero y pagas después.</p></div>' +
+    '<a href="/" style="background:#fbbf24;color:#1e1b4b;font-weight:800;padding:11px 20px;border-radius:11px;text-decoration:none;white-space:nowrap">Conocer el servicio →</a></div>';
+  ec.appendChild(cta);
+})();

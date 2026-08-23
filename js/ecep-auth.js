@@ -374,26 +374,13 @@
     }
 
     if (mode === 'gated') {
-      if (!user) { window.location.replace(LOGIN); return; }
-      registrar(user);
-      populateUser(user);
-      var did = dossierFromPath();
-      if (!did) { reveal(); return; }            // panel/dashboard u otra página sin dossier
-      if (isAdmin(user)) { reveal(); enableProtection(user); return; }  // admin ve todo
-      // Si vuelve de pagar (?pago=ok), espera a que el webhook escriba el acceso (unos segundos).
-      var pagoReturn = /[?&]pago=ok/.test(location.search);
-      if (pagoReturn) showVerifying();
-      (function check(tries) {
-        firebase.database().ref('ecep_accesos/' + user.uid).once('value')
-          .then(function (snap) {
-            var acc = snap.val() || {};
-            // "todos" = acceso total permanente (cubre dossiers actuales y futuros)
-            if (acc[did] === true || acc.todos === true) { hideVerifying(); reveal(); enableProtection(user); }
-            else if (tries > 1) { setTimeout(function () { check(tries - 1); }, 1600); }
-            else { reclaimThenCheck(did, user); }   // sin pago: ver si está en su prueba gratis de 30 min
-          })
-          .catch(function () { checkTrial(did, user); });
-      })(pagoReturn ? 7 : 1);
+      // 🎁 PLATAFORMA LIBERADA (13-ago-2026, decisión de Francisco): los dossiers y las
+      // pruebas son GRATIS y abiertos para TODOS, sin pago ni login. Son el enganche de
+      // marketing hacia el servicio de Portafolio. Se conserva el registro silencioso de
+      // quien SÍ entra logueado (ecep_usuarios) para conocer a los interesados; los nodos
+      // ecep_accesos quedan intactos por si algún día se revierte.
+      if (user) { registrar(user); populateUser(user); }
+      reveal();
       return;
     }
 

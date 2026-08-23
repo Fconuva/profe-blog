@@ -53,6 +53,10 @@
     'epja': 'Educación de Personas Jóvenes y Adultas (EPJA)',
     'encierro': 'Educación en Contextos de Encierro',
     'media-electricidad': 'Media TP · Electricidad',
+    'media-mecanica-industrial': 'Media TP · Mecánica Industrial',
+    'media-didactica-tp': 'Media TP · Didáctica de la Formación TP',
+    'media-ciencias-ciudadania': 'Educación Media · Ciencias para la Ciudadanía',
+    'media-educacion-ciudadana': 'Educación Media · Educación Ciudadana',
     'musica-basica': 'Educación Básica · Música',
     'artes-basica': 'Educación Básica · Artes Visuales'
   };

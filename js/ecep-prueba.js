@@ -33,12 +33,15 @@
 
   // ---------- pantallas ----------
   function intro() {
+    var esEnsayo = String(P.id || '').indexOf('ensayo-') === 0;
     mount.innerHTML =
       '<div class="ecq-intro">' +
-        '<span class="ecq-eyebrow"><i class="bi bi-ui-checks"></i> Prueba real ECEP 2024</span>' +
+        '<span class="ecq-eyebrow"><i class="bi bi-ui-checks"></i> ' + (esEnsayo ? 'Ensayo de práctica tipo ECEP' : 'Prueba real ECEP 2024') + '</span>' +
         '<h1>' + esc(P.titulo) + '</h1>' +
-        '<p>Esta es la <strong>prueba oficial</strong> tal cual se rindió, con <strong>' + total + ' preguntas</strong> y su <strong>clave oficial</strong>. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>' +
-        '<ul class="ecq-tips"><li><i class="bi bi-check2"></i> Feedback inmediato con la clave oficial</li><li><i class="bi bi-bookmark-check"></i> Tu avance se guarda en este dispositivo</li><li><i class="bi bi-image"></i> Las preguntas con figura muestran la imagen original</li></ul>' +
+        (esEnsayo
+          ? '<p>Este es un <strong>ensayo de práctica</strong> elaborado por nuestro equipo con el formato de la ECEP, con <strong>' + total + ' preguntas</strong> y su pauta de corrección. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>'
+          : '<p>Esta es la <strong>prueba oficial</strong> tal cual se rindió, con <strong>' + total + ' preguntas</strong> y su <strong>clave oficial</strong>. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>') +
+        '<ul class="ecq-tips"><li><i class="bi bi-check2"></i> Feedback inmediato con la ' + (esEnsayo ? 'pauta de corrección' : 'clave oficial') + '</li><li><i class="bi bi-bookmark-check"></i> Tu avance se guarda en este dispositivo</li><li><i class="bi bi-image"></i> Las preguntas con figura muestran la imagen original</li></ul>' +
         (answeredCount() ? '<div class="ecq-resume">Llevas <b>' + answeredCount() + '/' + total + '</b> respondidas.</div>' : '') +
         '<div class="ecq-introbtns">' +
           '<button class="ecq-start" id="ecq-go">' + (answeredCount() ? 'Continuar' : 'Comenzar la prueba') + '</button>' +
@@ -80,7 +83,7 @@
     if (dada) {
       var ok = dada === q.correcta;
       html += '<div class="ecq-verdict ' + (ok ? 'ok' : 'bad') + '"><i class="bi ' + (ok ? 'bi-check-circle-fill' : 'bi-x-circle-fill') + '"></i> ' +
-        (ok ? 'Correcta.' : 'Incorrecta.') + ' La respuesta oficial es <b>' + q.correcta + '</b>.</div>';
+        (ok ? 'Correcta.' : 'Incorrecta.') + ' La respuesta ' + (String(P.id || '').indexOf('ensayo-') === 0 ? 'correcta' : 'oficial') + ' es <b>' + q.correcta + '</b>.</div>';
     }
     html += '<div class="ecq-nav">' +
       '<button class="ecq-prev"' + (state.idx === 0 ? ' disabled' : '') + '><i class="bi bi-arrow-left"></i> Anterior</button>' +
@@ -137,7 +140,9 @@
   // crédito de autoría (persistente, en todas las pantallas)
   var cred = document.createElement('p');
   cred.className = 'ecq-credit';
-  cred.innerHTML = 'Examen oficial de la <b>Evaluación Docente (ECEP)</b>, elaborado por el <b>CPEIP · Ministerio de Educación de Chile</b>. Material de uso libre; se reproduce aquí solo con fines de estudio. No es elaboración propia.';
+  cred.innerHTML = String(P.id || '').indexOf('ensayo-') === 0
+    ? 'Ensayo de práctica elaborado por nuestro equipo con el formato de la ECEP. <b>No es una forma oficial del CPEIP</b>: para esta modalidad no hay pruebas oficiales liberadas.'
+    : 'Examen oficial de la <b>Evaluación Docente (ECEP)</b>, elaborado por el <b>CPEIP · Ministerio de Educación de Chile</b>. Material de uso libre; se reproduce aquí solo con fines de estudio. No es elaboración propia.';
   if (mount.parentNode) mount.parentNode.appendChild(cred);
 
   intro();

@@ -16,7 +16,8 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - En “Las secciones del anuario”, la transcripción quedó marcada para el 25 de agosto y “Aniversarios del colegio” quedó disponible como avance opcional mediante `Textos → Memoria escolar`.
 - Se conservan el cronograma, las evaluaciones de avance y la meta final dentro del panel autenticado.
 - Validaciones: auditoría 4DTP, build completo y navegador móvil en producción; respuesta HTTP 200, sin errores de consola, recursos fallidos ni desborde horizontal.
-- Commit publicado: `f7389417`. Deploy: `dpl_9xqa7PD3Eg71CMMaEL1o6D8t1FdC`.
+- Instrucciones iniciales: commit `f7389417`, deploy `dpl_9xqa7PD3Eg71CMMaEL1o6D8t1FdC`.
+- Apertura de las dos primeras secciones: commit `a057c134`, deploy `dpl_AEjNhHr3rP2zfFzYBHXj4aapJ95Q`.
 
 ---
 

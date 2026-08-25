@@ -60,18 +60,27 @@ requireText(api, "admin-save-evaluation", 'API');
 requireText(api, "MAX_STUDENT_STORAGE = 100 * 1024 * 1024", 'API');
 requireText(api, "handlePrepareUpload", 'API');
 requireText(api, "uploadReservations", 'API');
+requireText(api, "defaultWrittenProducts", 'API');
+requireText(api, "submit-activity2", 'API');
+requireText(api, "secondProgressGrade", 'API');
 requireText(app, "let saveChain = Promise.resolve(true)", 'Cliente');
 requireText(app, "persistenceReady", 'Cliente');
 requireText(app, "API_TIMEOUT_MS", 'Cliente');
 requireText(app, "window.addEventListener('offline',updateNetworkStatus)", 'Cliente');
 requireText(app, "Sin conexión a internet", 'Cliente');
+requireText(app, "submitWriting", 'Cliente');
 requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
-requireText(page, 'Tres copias cosidas para el 27 de octubre', 'Página 4DTP');
-// La entrega dejo de ser "fines de octubre": la fecha exacta es el martes 27.
-requireText(page, 'Martes 27 de octubre de 2026', 'Página 4DTP');
+requireText(page, 'Productos escritos · Fase 1', 'Página 4DTP');
+requireText(page, 'Tres copias cosidas a más tardar el 31 de octubre', 'Página 4DTP');
+requireText(page, '31 de octubre de 2026', 'Página 4DTP');
+requireText(page, 'Revisión 1 · 4 de septiembre', 'Página 4DTP');
+requireText(page, 'Revisión 2 · 25 de septiembre', 'Página 4DTP');
+requireText(page, 'Ruta de producción hasta el 31 de octubre', 'Página 4DTP');
 // Las nueve secciones se anuncian en gris antes de abrir su formulario.
 requireText(page, 'Las secciones del anuario', 'Página 4DTP');
 requireText(admin, 'Calificación docente', 'Admin 4DTP');
+requireText(admin, 'secondProgressGrade', 'Admin 4DTP');
+requireText(admin, 'Productos escritos · Fase 1', 'Admin 4DTP');
 requireText(admin, 'Abrir carpeta', 'Admin 4DTP');
 requireText(admin, 'data-open-folder-file', 'Admin 4DTP');
 requireText(admin, "api('admin-file-url'", 'Admin 4DTP');
@@ -91,6 +100,11 @@ for (const student of roster) {
 
 const heroPath = path.join(ROOT, '4dtp', 'assets', 'anuario-hero.webp');
 if (!fs.existsSync(heroPath) || fs.statSync(heroPath).size < 100000) failures.push('La imagen principal del anuario falta o tiene baja resolución.');
+for (const asset of ['ejemplo-portada-anuario.webp', 'ejemplo-entrevista-anuario.webp', 'ejemplo-memoria-anuario.webp', 'ejemplo-proyecto-grafica.webp', 'hojas-del-anuario-v2.webp']) {
+  const assetPath = path.join(ROOT, '4dtp', 'assets', asset);
+  if (!fs.existsSync(assetPath) || fs.statSync(assetPath).size < 100000) failures.push(`Falta el apoyo visual ${asset} o tiene baja resolución.`);
+  if (!page.includes(`assets/${asset}`)) failures.push(`La página no utiliza el apoyo visual ${asset}.`);
+}
 
 const rewrites = Array.isArray(vercel.rewrites) ? vercel.rewrites : [];
 if (!rewrites.some(rule => rule.source === '/4dtp/' && rule.destination === '/4dtp/index.html')) failures.push('Falta la ruta /4dtp/ en vercel.json.');

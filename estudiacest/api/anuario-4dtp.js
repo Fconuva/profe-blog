@@ -113,6 +113,48 @@ function defaultInterviews() {
   }));
 }
 
+function defaultWrittenProducts() {
+  return {
+    interviewTitle: '',
+    interviewContext: '',
+    interviewQuestions: '',
+    interviewQuote: '',
+    memoryTitle: '',
+    memoryText: '',
+    memoryCaption: '',
+    projectTitle: '',
+    projectText: '',
+    projectCaption: '',
+    farewellTitle: '',
+    farewellText: '',
+    captions: ''
+  };
+}
+
+function sanitizeWrittenProducts(raw, current) {
+  const previous = current && typeof current === 'object' ? current : defaultWrittenProducts();
+  const incoming = raw && typeof raw === 'object' ? raw : previous;
+  const fieldLimits = {
+    interviewTitle: 140,
+    interviewContext: 1200,
+    interviewQuestions: 6000,
+    interviewQuote: 500,
+    memoryTitle: 140,
+    memoryText: 5000,
+    memoryCaption: 500,
+    projectTitle: 140,
+    projectText: 5000,
+    projectCaption: 500,
+    farewellTitle: 140,
+    farewellText: 4000,
+    captions: 2400
+  };
+  return Object.fromEntries(Object.entries(fieldLimits).map(([field, limit]) => {
+    const value = Object.prototype.hasOwnProperty.call(incoming, field) ? incoming[field] : previous[field];
+    return [field, limitedText(value, limit)];
+  }));
+}
+
 function sanitizeInterviews(raw, current) {
   const previous = Array.isArray(current) ? current : defaultInterviews();
   const supplied = Array.isArray(raw) ? raw : [];
@@ -139,9 +181,18 @@ function studentRecord(student, current) {
     files: value.files && typeof value.files === 'object' ? value.files : {},
     uploadReservations: value.uploadReservations && typeof value.uploadReservations === 'object' ? value.uploadReservations : {},
     projectNotes: limitedText(value.projectNotes, 4000),
+    writtenProducts: sanitizeWrittenProducts(value.writtenProducts, defaultWrittenProducts()),
     activity1Status: value.activity1Status === 'submitted' ? 'submitted' : 'draft',
     activity1SubmittedAt: Number(value.activity1SubmittedAt || 0),
-    evaluation: value.evaluation && typeof value.evaluation === 'object' ? value.evaluation : { progressGrade: '', finalGrade: '', teacherNotes: '', updatedAt: 0 },
+    activity2Status: value.activity2Status === 'submitted' ? 'submitted' : 'draft',
+    activity2SubmittedAt: Number(value.activity2SubmittedAt || 0),
+    evaluation: {
+      progressGrade: value.evaluation && value.evaluation.progressGrade != null ? value.evaluation.progressGrade : '',
+      secondProgressGrade: value.evaluation && value.evaluation.secondProgressGrade != null ? value.evaluation.secondProgressGrade : '',
+      finalGrade: value.evaluation && value.evaluation.finalGrade != null ? value.evaluation.finalGrade : '',
+      teacherNotes: value.evaluation && value.evaluation.teacherNotes ? value.evaluation.teacherNotes : '',
+      updatedAt: Number(value.evaluation && value.evaluation.updatedAt || 0)
+    },
     createdAt: Number(value.createdAt || Date.now()),
     updatedAt: Number(value.updatedAt || 0)
   };
@@ -167,8 +218,11 @@ function publicState(student, value) {
     interviews: record.interviews,
     files: Object.values(record.files).map(publicFile).sort((a, b) => b.createdAt - a.createdAt),
     projectNotes: record.projectNotes,
+    writtenProducts: record.writtenProducts,
     activity1Status: record.activity1Status,
     activity1SubmittedAt: record.activity1SubmittedAt,
+    activity2Status: record.activity2Status,
+    activity2SubmittedAt: record.activity2SubmittedAt,
     storage: {
       usedBytes,
       limitBytes: MAX_STUDENT_STORAGE,
@@ -183,6 +237,13 @@ function calculateProgress(record) {
   const interviews = Array.isArray(record.interviews) ? record.interviews : defaultInterviews();
   const completed = interviews.filter(item => item.interviewee && item.transcription.length >= 80 && item.audioFileId).length;
   const files = Object.values(record.files || {});
+  const written = sanitizeWrittenProducts(record.writtenProducts, defaultWrittenProducts());
+  const writtenCompleted = [
+    written.interviewContext.length >= 80 && written.interviewQuestions.length >= 200,
+    written.memoryText.length >= 500,
+    written.projectText.length >= 400,
+    written.farewellText.length >= 300 && written.captions.length >= 80
+  ].filter(Boolean).length;
   return {
     completed,
     total: 5,
@@ -190,6 +251,8 @@ function calculateProgress(record) {
     photos: files.filter(file => file.category === 'photo').length,
     documents: files.filter(file => file.category === 'document').length,
     other: files.filter(file => file.category === 'other').length,
+    writtenCompleted,
+    writtenTotal: 4,
     usedBytes: files.reduce((sum, file) => sum + Number(file.size || 0), 0),
     limitBytes: MAX_STUDENT_STORAGE
   };
@@ -278,6 +341,7 @@ async function handleSave(req, res) {
     const record = studentRecord(student, current);
     record.interviews = sanitizeInterviews(body.interviews, record.interviews);
     record.projectNotes = limitedText(body.projectNotes, 4000);
+    record.writtenProducts = sanitizeWrittenProducts(body.writtenProducts, record.writtenProducts);
     record.updatedAt = now;
     return record;
   }, undefined, false);
@@ -464,6 +528,18 @@ async function handleSubmitActivity(req, res) {
   return res.status(200).json({ ok: true, message: 'Avance de la Actividad 1 entregado.', submittedAt: record.activity1SubmittedAt });
 }
 
+async function handleSubmitActivity2(req, res) {
+  const student = await verifyStudent(req);
+  const ref = admin.database().ref(`${STUDENTS_PATH}/${student.rut}`);
+  const snapshot = await ref.once('value');
+  const record = studentRecord(student, snapshot.val());
+  record.activity2Status = 'submitted';
+  record.activity2SubmittedAt = Date.now();
+  record.updatedAt = Date.now();
+  await ref.set(record);
+  return res.status(200).json({ ok: true, message: 'Productos escritos enviados para revisión.', submittedAt: record.activity2SubmittedAt });
+}
+
 async function handleAdminList(req, res) {
   await verifyAdmin(req);
   const snapshot = await admin.database().ref(STUDENTS_PATH).once('value');
@@ -477,6 +553,8 @@ async function handleAdminList(req, res) {
       started: Boolean(records[student.rut]),
       activity1Status: record.activity1Status,
       activity1SubmittedAt: record.activity1SubmittedAt,
+      activity2Status: record.activity2Status,
+      activity2SubmittedAt: record.activity2SubmittedAt,
       updatedAt: record.updatedAt,
       progress: calculateProgress(record),
       evaluation: record.evaluation
@@ -508,6 +586,7 @@ async function handleAdminSaveEvaluation(req, res) {
   if (!student) return res.status(404).json({ error: 'Estudiante no encontrado.' });
   const evaluation = {
     progressGrade: gradeValue(body.progressGrade),
+    secondProgressGrade: gradeValue(body.secondProgressGrade),
     finalGrade: gradeValue(body.finalGrade),
     teacherNotes: limitedText(body.teacherNotes, 2400),
     updatedAt: Date.now()
@@ -551,6 +630,7 @@ module.exports = async function handler(req, res) {
     if (action === 'delete-file' && req.method === 'POST') return await handleDeleteFile(req, res);
     if (action === 'file-url' && req.method === 'GET') return await handleFileUrl(req, res);
     if (action === 'submit-activity1' && req.method === 'POST') return await handleSubmitActivity(req, res);
+    if (action === 'submit-activity2' && req.method === 'POST') return await handleSubmitActivity2(req, res);
     if (action === 'admin-list' && req.method === 'GET') return await handleAdminList(req, res);
     if (action === 'admin-detail' && req.method === 'GET') return await handleAdminDetail(req, res);
     if (action === 'admin-save-evaluation' && req.method === 'POST') return await handleAdminSaveEvaluation(req, res);

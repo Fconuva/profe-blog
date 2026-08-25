@@ -6,6 +6,7 @@
   const MAX_FILE_SIZE = 100 * 1024 * 1024;
   const FIREBASE_CONFIG = { apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w', authDomain:'estudiacest.firebaseapp.com', databaseURL:'https://estudiacest-default-rtdb.firebaseio.com', projectId:'estudiacest', storageBucket:'estudiacest.firebasestorage.app', messagingSenderId:'999002169815', appId:'1:999002169815:web:51203237bc77c2e74deb92' };
   const kinds = ['Compañero 1', 'Compañero 2', 'Compañero 3', 'Docente 1', 'Docente 2'];
+  const writtenFieldIds = ['interviewTitle','interviewContext','interviewQuestions','interviewQuote','memoryTitle','memoryText','memoryCaption','projectTitle','projectText','projectCaption','farewellTitle','farewellText','captions'];
   const $ = id => document.getElementById(id);
 
   firebase.initializeApp(FIREBASE_CONFIG);
@@ -30,7 +31,7 @@
   function escapeHtml(value) { return String(value == null ? '' : value).replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character])); }
   function formatBytes(bytes) { const value=Number(bytes||0);if(value<1024)return value+' B';if(value<1048576)return (value/1024).toFixed(1)+' KB';if(value<1073741824)return (value/1048576).toFixed(1)+' MB';return (value/1073741824).toFixed(2)+' GB'; }
   function formatDate(value) { return value ? new Intl.DateTimeFormat('es-CL',{dateStyle:'short',timeStyle:'short'}).format(new Date(value)) : '—'; }
-  function setSave(message, status) { $('saveState').textContent=message;$('saveState').dataset.state=status||'';$('documentStatus').textContent=message; }
+  function setSave(message, status) { $('saveState').textContent=message;$('saveState').dataset.state=status||''; }
 
   function friendlyError(error) {
     const message = String(error && error.message || '');
@@ -92,9 +93,18 @@
     return kinds.map((_,index)=>({slot:index+1,kind:index<3?'compañero':'docente',interviewee:'',transcription:'',audioFileId:'',updatedAt:0}));
   }
 
+  function defaultWrittenProducts() {
+    return Object.fromEntries(writtenFieldIds.map(field=>[field,'']));
+  }
+
   function normalizeState(value) {
     const data=value||{};
-    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), updatedAt:Number(data.updatedAt||0) };
+    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), updatedAt:Number(data.updatedAt||0) };
+  }
+
+  function renderWrittenProducts() {
+    writtenFieldIds.forEach(field=>{$(field).value=state.writtenProducts[field]||'';});
+    updateWordCounts();
   }
 
   function renderInterviews() {
@@ -116,25 +126,46 @@
 
   function collectDocument() {
     const interviews=state.interviews.map((item,index)=>({slot:item.slot,kind:item.kind,interviewee:$('interviewee-'+(index+1)).value.trim(),transcription:$('transcription-'+(index+1)).value.trim(),audioFileId:item.audioFileId||''}));
-    return { interviews, projectNotes:$('projectNotes').value.trim() };
+    const writtenProducts=Object.fromEntries(writtenFieldIds.map(field=>[field,$(field).value.trim()]));
+    return { interviews, projectNotes:$('projectNotes').value.trim(), writtenProducts };
   }
 
   function scheduleSave() { setSave('Cambios pendientes','');window.clearTimeout(saveTimer);saveTimer=window.setTimeout(saveNow,900); }
   function saveNow() {
     if(!student||!auth.currentUser)return Promise.resolve(true);
     window.clearTimeout(saveTimer);
-    const documentData=collectDocument();state.interviews=documentData.interviews;state.projectNotes=documentData.projectNotes;
+    const documentData=collectDocument();state.interviews=documentData.interviews;state.projectNotes=documentData.projectNotes;state.writtenProducts=documentData.writtenProducts;
     const operation=async()=>{setSave('Guardando...','');try{const data=await api('save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(documentData)});state.updatedAt=data.updatedAt;setSave('Guardado en la nube','saved');updateProgress();return true;}catch(error){setSave('No se pudo guardar','error');return false;}};
     saveChain=saveChain.then(operation,operation);
     return saveChain;
   }
 
   function interviewComplete(item) { return Boolean(item.interviewee && item.transcription.trim().length>=80 && item.audioFileId); }
+  function wordCount(value) { return String(value||'').trim().split(/\s+/).filter(Boolean).length; }
+  function writtenSectionsCompleted(written) {
+    return [
+      written.interviewContext.length>=80&&written.interviewQuestions.length>=200,
+      written.memoryText.length>=500,
+      written.projectText.length>=400,
+      written.farewellText.length>=300&&written.captions.length>=80
+    ].filter(Boolean).length;
+  }
+  function updateWordCounts() {
+    document.querySelectorAll('[data-count-for]').forEach(counter=>{
+      const count=wordCount($(counter.dataset.countFor).value);
+      counter.textContent=count+' '+(count===1?'palabra':'palabras');
+      counter.dataset.state=count>=40?'target':'';
+    });
+  }
   function updateProgress() {
-    const current=collectDocument();state.interviews=current.interviews;state.projectNotes=current.projectNotes;
+    const current=collectDocument();state.interviews=current.interviews;state.projectNotes=current.projectNotes;state.writtenProducts=current.writtenProducts;
     const completed=state.interviews.filter(interviewComplete).length;
+    const writtenCompleted=writtenSectionsCompleted(state.writtenProducts);
     $('documentStatus').textContent=state.activity1Status==='submitted'?'Avance entregado · '+formatDate(state.activity1SubmittedAt):completed+' de 5 entrevistas completas';
     $('interviewTileStatus').textContent=state.activity1Status==='submitted'?'Avance entregado':completed+' de 5 completas';
+    $('writingStatus').textContent=state.activity2Status==='submitted'?'Fase 1 entregada · '+formatDate(state.activity2SubmittedAt):writtenCompleted+' de 4 productos avanzados';
+    $('writingTileStatus').textContent=state.activity2Status==='submitted'?'Fase 1 entregada':writtenCompleted+' de 4 productos';
+    updateWordCounts();
     const audios=state.files.filter(file=>file.category==='interview_audio').length;
     const photos=state.files.filter(file=>file.category==='photo').length;
     const others=state.files.filter(file=>['document','other'].includes(file.category)).length;
@@ -181,14 +212,27 @@
 
   async function submitActivity(){
     $('submitError').textContent='';const saved=await saveNow();if(!saved){$('submitError').textContent='No fue posible guardar los cambios. Revisa tu conexión y vuelve a intentar.';return;}const incomplete=state.interviews.find(item=>!interviewComplete(item));if(incomplete){$('submitError').textContent='Completa las cinco entrevistas con nombre, audio y una transcripción de al menos 80 caracteres.';document.querySelector(`[data-slot="${incomplete.slot}"]`).scrollIntoView({behavior:'smooth',block:'start'});return;}if(!confirm('¿Entregar este avance para revisión? Podrás continuar corrigiéndolo después.'))return;
-    $('submitActivityButton').disabled=true;try{const data=await api('submit-activity1',{method:'POST'});state.activity1Status='submitted';state.activity1SubmittedAt=data.submittedAt;updateProgress();$('successDialog').showModal();setSave('Avance entregado','saved');}catch(error){$('submitError').textContent=error.message;}finally{$('submitActivityButton').disabled=false;}
+    $('submitActivityButton').disabled=true;try{const data=await api('submit-activity1',{method:'POST'});state.activity1Status='submitted';state.activity1SubmittedAt=data.submittedAt;updateProgress();$('successTitle').textContent='Entrevistas entregadas';$('successMessage').textContent='Las cinco entrevistas quedaron registradas para revisión. Puedes continuar corrigiéndolas.';$('successDialog').showModal();setSave('Avance entregado','saved');}catch(error){$('submitError').textContent=error.message;}finally{$('submitActivityButton').disabled=false;}
   }
 
+  async function submitWriting(){
+    $('submitWritingError').textContent='';
+    const saved=await saveNow();
+    if(!saved){$('submitWritingError').textContent='No fue posible guardar los cambios. Revisa tu conexión y vuelve a intentar.';return;}
+    if(!confirm('¿Enviar los productos escritos para revisión? Podrás continuar corrigiéndolos después.'))return;
+    $('submitWritingButton').disabled=true;
+    try{const data=await api('submit-activity2',{method:'POST'});state.activity2Status='submitted';state.activity2SubmittedAt=data.submittedAt;updateProgress();$('successTitle').textContent='Productos escritos entregados';$('successMessage').textContent='La fase 1 quedó registrada para revisión y para el trabajo de diagramación en Gráfica.';$('successDialog').showModal();setSave('Fase 1 entregada','saved');}
+    catch(error){$('submitWritingError').textContent=error.message;}
+    finally{$('submitWritingButton').disabled=false;}
+  }
+
+  function openModel(button){$('modelDialogTitle').textContent=button.dataset.modelTitle||'Modelo de página';$('modelDialogImage').src=button.dataset.modelImage;$('modelDialogImage').alt=button.dataset.modelTitle||'Modelo ampliado de página del anuario';$('modelDialog').showModal();}
+
   function showView(name){document.querySelectorAll('.app-view').forEach(view=>view.classList.add('hidden'));document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===name));$('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
-  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';$('loginError').dataset.state='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}if(!navigator.onLine){updateNetworkStatus();return;}loginPending=true;$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=friendlyError(error);$('loginError').dataset.state=navigator.onLine?'error':'offline';}finally{loginPending=false;$('loginButton').textContent='Ingresar a mi carpeta';updateNetworkStatus();}}
+  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';$('loginError').dataset.state='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}if(!navigator.onLine){updateNetworkStatus();return;}loginPending=true;$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderWrittenProducts();renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=friendlyError(error);$('loginError').dataset.state=navigator.onLine?'error':'offline';}finally{loginPending=false;$('loginButton').textContent='Ingresar a mi carpeta';updateNetworkStatus();}}
   async function logout(){window.clearTimeout(saveTimer);if(student)await saveNow().catch(()=>{});if(activeRecorder)activeRecorder.stop();await auth.signOut();student=null;state=null;$('workspace').classList.add('hidden');$('loginView').classList.remove('hidden');$('publicBar').classList.remove('hidden');$('rutInput').value='';updateNetworkStatus();window.scrollTo(0,0);}
 
-  $('loginForm').addEventListener('submit',login);$('rutInput').addEventListener('input',event=>{event.target.value=formatRut(event.target.value);});$('logoutButton').addEventListener('click',logout);$('saveNowButton').addEventListener('click',saveNow);$('submitActivityButton').addEventListener('click',submitActivity);$('generalUploadButton').addEventListener('click',()=>$('generalFileInput').click());$('generalFileInput').addEventListener('change',()=>{const file=$('generalFileInput').files&&$('generalFileInput').files[0];if(file)uploadFile(file,$('generalCategory').value,0);$('generalFileInput').value='';});$('closeUploadDialog').addEventListener('click',()=>$('uploadDialog').close());$('closeSuccessDialog').addEventListener('click',()=>$('successDialog').close());document.querySelectorAll('[data-view]').forEach(tab=>tab.addEventListener('click',()=>showView(tab.dataset.view)));document.querySelectorAll('[data-open-view]').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.openView)));
+  $('loginForm').addEventListener('submit',login);$('rutInput').addEventListener('input',event=>{event.target.value=formatRut(event.target.value);});$('logoutButton').addEventListener('click',logout);$('saveNowButton').addEventListener('click',saveNow);$('saveWritingButton').addEventListener('click',saveNow);$('submitActivityButton').addEventListener('click',submitActivity);$('submitWritingButton').addEventListener('click',submitWriting);$('generalUploadButton').addEventListener('click',()=>$('generalFileInput').click());$('generalFileInput').addEventListener('change',()=>{const file=$('generalFileInput').files&&$('generalFileInput').files[0];if(file)uploadFile(file,$('generalCategory').value,0);$('generalFileInput').value='';});$('closeUploadDialog').addEventListener('click',()=>$('uploadDialog').close());$('closeSuccessDialog').addEventListener('click',()=>$('successDialog').close());$('closeModelDialog').addEventListener('click',()=>$('modelDialog').close());$('modelDialog').addEventListener('click',event=>{if(event.target===$('modelDialog'))$('modelDialog').close();});document.querySelectorAll('[data-written]').forEach(field=>field.addEventListener('input',()=>{scheduleSave();updateWordCounts();}));document.querySelectorAll('[data-model-image]').forEach(button=>button.addEventListener('click',()=>openModel(button)));document.querySelectorAll('[data-view]').forEach(tab=>tab.addEventListener('click',()=>showView(tab.dataset.view)));document.querySelectorAll('[data-open-view]').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.openView)));
   window.addEventListener('offline',updateNetworkStatus);
   window.addEventListener('online',updateNetworkStatus);
   updateNetworkStatus();

@@ -2,6 +2,16 @@
 
 Proyecto aislado para mover las rutas `/estudiantes`, `/lecturas`, `/nm4` y `/np` al dominio `estudiacest.com` usando Vercel y Firebase Realtime Database.
 
+## Entrada operativa única
+
+- Reglas canónicas: `REGLAS.md`.
+- Memoria de cambios: `BITACORA.md`.
+- Alcance local para agentes: `AGENTS.md`.
+- Skill especializada: `../.github/skills/estudiacest-platform/SKILL.md`.
+
+Estos documentos corresponden solo a la plataforma estudiantil. No se mezclan
+con portafolios docentes, clientes, pagos ni cartera.
+
 ## Arquitectura vigente
 
 - La raiz `index.html` redirige a `/lecturas/`.

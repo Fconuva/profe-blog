@@ -2,7 +2,28 @@
 
 Registro para retomar el contexto entre sesiones, agentes y máquinas. El bloque más reciente va arriba.
 
-Esto complementa, no reemplaza, a los documentos de reglas. Aquí va **qué se hizo, qué quedó y qué está pendiente**. Las reglas de cómo trabajar están en `.github/workflows/README.md`, `AGENTS.md`, `.github/skills/estudiacest-platform/SKILL.md` y `CONTRATO_ENTREGA_CLASES.md`.
+Esto complementa, no reemplaza, a `REGLAS.md`. Aquí va **qué se hizo, qué quedó y qué está pendiente**. Es una bitácora exclusiva de Estudia CEST: no contiene operaciones de portafolios docentes.
+
+No registrar RUT, notas individuales, correos, credenciales, tokens ni información clínica. Una corrección se agrega como entrada nueva; no se borra el antecedente.
+
+---
+
+## 2026-08-24, instrucciones de trabajo para 4DTP
+
+- Se reemplazó el bloque inicial de entrega final de `/4dtp/` por las instrucciones concretas del martes 25 de agosto.
+- La portada indica completar cinco entrevistas: tres a compañeros y dos a docentes; cada registro exige nombre, audio y una transcripción de al menos 80 caracteres.
+- El último paso visible pide revisar y usar `Entregar avance de Actividad 1` antes de salir.
+- Se conservan el cronograma, las evaluaciones de avance y la meta final dentro del panel autenticado.
+
+---
+
+## 2026-08-24, reglas y memoria exclusivas de Estudia CEST
+
+- Se crearon `REGLAS.md` y el `AGENTS.md` propio de esta carpeta para separar la plataforma estudiantil del sistema de portafolios docentes.
+- La única fuente editable sigue siendo `C:\dev\profe-blog\estudiacest`; esta bitácora conserva todo el historial operativo previo.
+- Las skills y referencias externas pasan a ser puntos de entrada hacia estas reglas, no copias paralelas con instrucciones distintas.
+- La nueva regla de cierre exige registrar aquí los cambios de comportamiento, datos, contenido académico, administración o producción.
+- No hubo cambios de datos ni de comportamiento productivo en esta separación documental.
 
 ---
 

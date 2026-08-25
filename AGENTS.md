@@ -1,5 +1,13 @@
 # Profefconuva Workspace Guidelines
 
+## Alcance propio de Estudia CEST
+
+Para cualquier tarea limitada a `estudiacest/**`, primero se leen
+`estudiacest/AGENTS.md`, `estudiacest/REGLAS.md` y las entradas recientes de
+`estudiacest/BITACORA.md`. Esas instrucciones locales mandan en ese subárbol.
+Las reglas posteriores sobre portafolios, clientes, cobros y cartera pertenecen
+a otros sistemas del repositorio y no se trasladan a Estudia CEST.
+
 ## ⚠️ Carpeta de trabajo y deploy (CRÍTICO)
 
 - Trabaja SIEMPRE en el clon local `C:\dev\profe-blog`. NO uses la copia dentro de OneDrive: OneDrive corrompe el `.git` (errores `mmap`, commits fantasma, divergencias entre PCs). Ver `CLAUDE.md`.

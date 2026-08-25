@@ -1,11 +1,18 @@
 ---
 name: estudiacest-platform
-description: 'Maintain, debug, document, or audit Estudia CEST. Use for shared login routing, NM3/NM4/PAES course rules, adminprofe checks, console-error audits, Vercel deploys, and production validation.'
+description: 'Maintain, debug, document, or audit the student platform Estudia CEST. Applies exclusively to estudiacest.com and never to teacher portfolios, clients, payments, or collections.'
 argument-hint: 'Describe the Estudia CEST route, section, bug, or audit target.'
 user-invocable: true
 ---
 
 # Estudia CEST Platform
+
+## Canonical Instructions
+
+Before doing any work, read `estudiacest/REGLAS.md` and the latest entries in
+`estudiacest/BITACORA.md`. They are the single source of cross-cutting rules and
+operational memory for this platform. This skill adds routing context; it does
+not duplicate or override those files.
 
 ## When To Use
 - Shared login changes in `estudiacest/lecturas/index.html`
@@ -89,16 +96,5 @@ Never force-push, hard-reset, restore an older copy over current work, delete an
 - `sesion-u2-1` is not writing-only through generic `notes`: `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` stores writing in `ticket` and `thesisContexts`.
 - The extra `2A-HC` block inside `estudiacest/estudiantes/guia-u2-s1-columna-opinion.html` is course-gated but should read as two extra opinion columns only.
 - Keep the hidden rule in docs and code: Text 2 checks posture + support, Text 3 checks objection + response. Do not expose activation or scoring language in student-facing copy.
-- Portfolio registration names must be validated after trimming on both the public form and the admin API. A `required` input still accepts whitespace.
-- Activating a contracted plan from an archived pre-registration must clear the portfolio archive fields. Do not generalize this to blocked users, cancellations, or contracted records archived intentionally.
-
-## Portfolio Admin Financial Contract
-
-- Reconcile received cash from `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado` by taking the greatest valid accumulated amount, never their sum.
-- Benefits have no collectible balance or plan target. Money paid before granting a benefit still counts as received cash.
-- Render collection windows from `portafolios/{uid}/cartera`. A documented WhatsApp date overrides the 30-day default; recording dates never determine payment collection.
-- Keep `esperar_m1`, undated, paused, and post-September balances in separate filters. Headline counts are unique clients; the detail table may show multiple movements.
-- Validate the live deployed admin, its filters, totals, and console after any financial UI change.
-
 ## Deploy Command
 - From `C:\dev\profe-blog\estudiacest`: `npm run deploy:prod:safe`. Do not invoke Vercel directly.

@@ -2,6 +2,11 @@
 
 This folder already contains disabled deploy automation. The operational workflow for the current student site is manual and should be followed consistently.
 
+The canonical cross-cutting rules are `estudiacest/REGLAS.md`; operational
+history is recorded only in `estudiacest/BITACORA.md`. This workflow applies to
+the student platform and excludes portfolio, client, payment, and collection
+operations.
+
 ## Mandatory Multi-Agent Sync Before Push or Deploy
 
 Every agent must continue from the latest `origin/main` so changes from NM3, NM4, PAES, SIMCE, and other sections remain intact.
@@ -62,21 +67,6 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 6. Record findings with page, action, console evidence, and impact.
 
 Every audit script called by `npm run build` must be explicitly allowed through `estudiacest/.vercelignore`; otherwise Vercel receives `package.json` without the required script and fails remotely.
-
-## Portfolio Registration Check
-
-1. Verify the public registration form rejects an empty or whitespace-only name before creating the authentication account.
-2. Verify the admin create and profile-update API normalizes the name and rejects fewer than three visible characters.
-3. Verify changing an archived pre-registration to a contracted plan removes the portfolio archive fields.
-4. Verify the same save does not unarchive a cancellation, blocked user, or already contracted record archived intentionally.
-
-## Portfolio Admin Financial Check
-
-1. Confirm cash uses the greatest accumulated value across `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado`, without double-counting mirrored fields.
-2. Confirm a benefit excludes its plan from receivables while preserving any payment received before the benefit.
-3. Confirm agenda cards read `portafolios/{uid}/cartera`, apply WhatsApp agreements before the 30-day fallback, and ignore class-recording dates.
-4. Confirm `esperar_m1`, undated, paused, and later balances remain separate; card counts represent unique people.
-5. After deployment, compare the production cards and filters with live Firebase and inspect browser console errors.
 
 ## Deploy Command
 

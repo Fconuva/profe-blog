@@ -13,6 +13,7 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - Se reemplazó el bloque inicial de entrega final de `/4dtp/` por las instrucciones concretas del martes 25 de agosto.
 - La portada indica completar cinco entrevistas: tres a compañeros y dos a docentes; cada registro exige nombre, audio y una transcripción de al menos 80 caracteres.
 - El último paso visible pide revisar y usar `Entregar avance de Actividad 1` antes de salir.
+- En “Las secciones del anuario”, la transcripción quedó marcada para el 25 de agosto y “Aniversarios del colegio” quedó disponible como avance opcional mediante `Textos → Memoria escolar`.
 - Se conservan el cronograma, las evaluaciones de avance y la meta final dentro del panel autenticado.
 - Validaciones: auditoría 4DTP, build completo y navegador móvil en producción; respuesta HTTP 200, sin errores de consola, recursos fallidos ni desborde horizontal.
 - Commit publicado: `f7389417`. Deploy: `dpl_9xqa7PD3Eg71CMMaEL1o6D8t1FdC`.

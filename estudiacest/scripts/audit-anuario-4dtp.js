@@ -73,6 +73,8 @@ requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
 requireText(page, 'Productos escritos · Fase 1', 'Página 4DTP');
 requireText(page, 'Trabajo del martes 25 de agosto', 'Página 4DTP');
 requireText(page, 'Hoy debes dejar listas tus cinco entrevistas', 'Página 4DTP');
+requireText(page, 'Las dos primeras ya están disponibles', 'Página 4DTP');
+requireText(page, 'Textos → Memoria escolar', 'Página 4DTP');
 requireText(page, '31 de octubre de 2026', 'Página 4DTP');
 requireText(page, 'Revisión 1 · 4 de septiembre', 'Página 4DTP');
 requireText(page, 'Revisión 2 · 25 de septiembre', 'Página 4DTP');

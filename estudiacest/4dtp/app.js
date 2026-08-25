@@ -163,8 +163,10 @@
     const writtenCompleted=writtenSectionsCompleted(state.writtenProducts);
     $('documentStatus').textContent=state.activity1Status==='submitted'?'Avance entregado · '+formatDate(state.activity1SubmittedAt):completed+' de 5 entrevistas completas';
     $('interviewTileStatus').textContent=state.activity1Status==='submitted'?'Avance entregado':completed+' de 5 completas';
+    $('homeInterviewStatus').textContent=state.activity1Status==='submitted'?'Entregadas · '+formatDate(state.activity1SubmittedAt):completed+' de 5 completas';
     $('writingStatus').textContent=state.activity2Status==='submitted'?'Fase 1 entregada · '+formatDate(state.activity2SubmittedAt):writtenCompleted+' de 4 productos avanzados';
     $('writingTileStatus').textContent=state.activity2Status==='submitted'?'Fase 1 entregada':writtenCompleted+' de 4 productos';
+    $('homeWritingStatus').textContent=state.activity2Status==='submitted'?'Fase 1 entregada':writtenCompleted+' de 4 avanzados';
     updateWordCounts();
     const audios=state.files.filter(file=>file.category==='interview_audio').length;
     const photos=state.files.filter(file=>file.category==='photo').length;

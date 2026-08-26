@@ -3067,6 +3067,73 @@ function viewSession(sesId){
     openModal('viewSession');
 }
 
+function formatTelemetryDate(value){
+    const timestamp=Number(value);
+    if(!Number.isFinite(timestamp)||timestamp<=0)return 'Sin registro';
+    return new Date(timestamp).toLocaleString('es-CL',{dateStyle:'short',timeStyle:'medium'});
+}
+
+function formatTelemetryDuration(value){
+    const milliseconds=Number(value);
+    if(!Number.isFinite(milliseconds)||milliseconds<0)return 'Sin registro';
+    const totalSeconds=Math.round(milliseconds/1000);
+    const hours=Math.floor(totalSeconds/3600);
+    const minutes=Math.floor((totalSeconds%3600)/60);
+    const seconds=totalSeconds%60;
+    if(hours>0)return `${hours} h ${minutes} min ${seconds} s`;
+    if(minutes>0)return `${minutes} min ${seconds} s`;
+    return `${seconds} s`;
+}
+
+async function loadWorkTelemetry(uid,sesId){
+    const host=document.getElementById('workTelemetryPanel');
+    if(!host)return;
+    try{
+        const snapshot=await db.ref(`${BASE}/telemetria_clases/${sesId}/${uid}`).once('value');
+        const data=snapshot.val();
+        if(!data){
+            host.innerHTML='<div style="color:#64748b;font-size:12px">Sin telemetría histórica. Las clases realizadas antes de activar este registro no permiten calcular una duración confiable.</div>';
+            return;
+        }
+        const startedAt=Number(data.startedAt)||0;
+        const submittedAt=Number(data.submittedAt)||0;
+        const elapsed=Number(data.elapsedMsAtSubmission)||(startedAt&&submittedAt?Math.max(0,submittedAt-startedAt):null);
+        const activeMs=Number(data.activeMs)||0;
+        const questionCount=Object.keys(data.questionIds||{}).length;
+        const events=data.events||{};
+        const eventLabels={
+            copy:'Copiar',paste:'Pegar',cut:'Cortar',shortcutCopy:'Atajo copiar',shortcutPaste:'Atajo pegar',
+            shortcutCut:'Atajo cortar',shortcutPrint:'Atajo imprimir',contextMenu:'Menú contextual',
+            selectionStart:'Selección en pantalla',dragStart:'Arrastre',hidden:'Pestaña oculta',windowBlur:'Ventana sin foco'
+        };
+        const eventRows=Object.entries(eventLabels).map(([key,label])=>{
+            const event=events[key]||{};
+            const count=Number(event.count)||0;
+            if(count===0)return '';
+            return `<tr><td style="padding:6px 8px">${label}</td><td style="padding:6px 8px;text-align:center;font-weight:800">${count}</td><td style="padding:6px 8px;text-align:center">${Number(event.editableCount)||0}</td><td style="padding:6px 8px;text-align:center">${Number(event.pageCount)||0}</td><td style="padding:6px 8px">${formatTelemetryDate(event.lastAt)}</td></tr>`;
+        }).filter(Boolean).join('');
+        const timingNote=data.legacyTiming
+            ? '<div style="margin-top:8px;color:#92400e;font-size:11px"><strong>Registro parcial:</strong> la entrega es anterior a la activación del cronómetro; no usar para sancionar.</div>'
+            : '<div style="margin-top:8px;color:#475569;font-size:11px">Estos datos orientan una revisión. No prueban copia por sí solos y no modifican automáticamente la nota.</div>';
+        host.innerHTML=`
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Inicio</strong><br><span style="font-size:12px">${formatTelemetryDate(startedAt)}</span></div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Entrega confirmada</strong><br><span style="font-size:12px">${formatTelemetryDate(submittedAt)}</span></div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Tiempo total</strong><br>${formatTelemetryDuration(elapsed)}</div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Tiempo activo</strong><br>${formatTelemetryDuration(activeMs)}</div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Aperturas</strong><br>${Number(data.pageOpenCount)||0}</div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Interacciones</strong><br>${Number(data.answerInteractionCount)||0} · ${questionCount} ítems</div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Intervalos rápidos</strong><br>${Number(data.rapidAnswerCount)||0}</div>
+                <div style="background:#fff;padding:9px;border:1px solid #cbd5e1;border-radius:7px"><strong>Intervalo mínimo</strong><br>${formatTelemetryDuration(data.fastestAnswerIntervalMs)}</div>
+            </div>
+            ${eventRows?`<div style="overflow:auto;margin-top:10px"><table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#e2e8f0"><th style="padding:6px 8px;text-align:left">Evento</th><th>Total</th><th>En escritura</th><th>En lectura</th><th style="text-align:left">Último registro</th></tr></thead><tbody>${eventRows}</tbody></table></div>`:'<div style="margin-top:9px;color:#64748b;font-size:12px">Sin eventos de portapapeles, selección o cambio de foco registrados.</div>'}
+            ${timingNote}`;
+    }catch(error){
+        host.innerHTML='<div style="color:#b91c1c;font-size:12px">No fue posible cargar la telemetría de esta entrega.</div>';
+        console.error(error);
+    }
+}
+
 function viewStudentResponses(uid, sesId){
     const est=students[uid];
     const ses=sessions[sesId];
@@ -3159,6 +3226,7 @@ function viewStudentResponses(uid, sesId){
         if(res.notas_completadas) html+=`<div><strong>Notas:</strong> ${res.notas_completadas}</div>`;
         html+=`</div>`;
     }
+    html+='<section style="background:#f1f5f9;border:1px solid #cbd5e1;border-radius:10px;padding:12px 14px;margin-bottom:16px"><h4 style="font-size:14px;margin:0 0 8px">Registro de trabajo y entrega</h4><div id="workTelemetryPanel"><span style="font-size:12px;color:#64748b">Cargando telemetría…</span></div></section>';
 
     // Questions detail
     const pregs=ses.contenido?.preguntas||[];
@@ -3353,6 +3421,7 @@ function viewStudentResponses(uid, sesId){
     }
 
     document.getElementById('respStudentContent').innerHTML=html;
+    loadWorkTelemetry(uid,sesId);
     openModal('studentResponses');
 }
 

@@ -58,6 +58,9 @@ for (const entry of registry.files || []) {
   if (storage === 'api' && (!/get-guia-state/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
     failures.push(`${relativePath}: falta la lectura final de confirmación mediante API.`);
   }
+  if (relativePath.startsWith('estudiantes/guia-') && !/work-telemetry\.js["'][^>]*data-session=["'][^"']+["']/.test(source)) {
+    failures.push(`${relativePath}: falta work-telemetry.js con data-session.`);
+  }
 
   const inlineScripts = [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])

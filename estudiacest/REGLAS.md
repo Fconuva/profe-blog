@@ -81,6 +81,13 @@ Antes de editar y nuevamente antes de publicar:
 - La entrega no exige respuestas completas salvo que la actividad lo indique
   expresamente y el servidor aplique la misma regla.
 - Un error de red conserva el avance, explica qué ocurrió y permite reintentar.
+- Toda guía SIMCE interactiva carga `estudiantes/js/work-telemetry.js` con su
+  `sessionId`. El registro conserva inicio, entrega confirmada, tiempo activo,
+  aperturas, interacciones y contadores de copiar, pegar, cortar, atajos,
+  selección y cambios de foco. Nunca guarda el texto ni el portapapeles.
+- La telemetría es un indicio para revisión docente, no una prueba automática de
+  copia. Si una sesión antigua no tiene `startedAt`, no se reconstruye ni se
+  sanciona por velocidad.
 
 ## 7. Evaluaciones y resultados
 
@@ -144,4 +151,3 @@ Antes de declarar una tarea terminada:
 - Registrar el cierre en `BITACORA.md`: fecha, área, cambio, archivos o rutas,
   validaciones, commit y deploy. La bitácora es exclusiva de Estudia CEST y no
   reemplaza ni se mezcla con historiales de docentes o portafolios.
-

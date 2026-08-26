@@ -77,7 +77,22 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - El acceso individual por licencia médica debe alterar la disponibilidad, no el estado ni las respuestas del estudiante.
 - La publicación de resultados es independiente de la entrega y solo la controla el profesor.
 
-## 9. Recuperación de inconsistencias
+## 9. Registro de trabajo y entrega
+
+- Toda guía SIMCE interactiva carga `estudiantes/js/work-telemetry.js` e indica
+  su sesión mediante `data-session`.
+- Se registran por separado la hora inicial, la entrega confirmada, el tiempo
+  transcurrido y el tiempo activo. La entrega solo se fecha cuando Firebase ya
+  contiene `completada: true`.
+- Los eventos de copiar, pegar, cortar, atajos de teclado, menú contextual,
+  selección y pérdida de foco se guardan como contadores y marcas de tiempo. No
+  se almacena el texto seleccionado, escrito o copiado.
+- El admin presenta estos datos como indicadores de revisión. Ninguno cambia la
+  nota ni demuestra copia por sí solo.
+- Una actividad anterior a la activación de la telemetría se marca como registro
+  parcial. Nunca se inventa una hora inicial para calcular duración.
+
+## 10. Recuperación de inconsistencias
 
 - Antes de calificar se auditan registros con `submitted: true` y `completada` ausente o falsa.
 - También se revisan entregas completas sin `score`, con `total` incorrecto, puntaje fuera de rango o identidad faltante.
@@ -87,7 +102,7 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - El control final debe informar cero inconsistencias pendientes.
 - Para la Clase 4 se usa `node scripts/check-preassigned-ensayos.js --repair-session sesion-u3-4`.
 
-## 10. Pruebas obligatorias
+## 11. Pruebas obligatorias
 
 - Validar la sintaxis de todos los scripts embebidos de la página y del dashboard.
 - Ejecutar `npm run verify:class-submission` antes de desplegar.
@@ -99,7 +114,7 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - Después del despliegue comprobar el HTML servido desde `https://www.estudiacest.com`, no solo el archivo local.
 - Ejecutar un segundo barrido de inconsistencias cuando la clase ya está siendo usada.
 
-## 11. Despliegue y preservación
+## 12. Despliegue y preservación
 
 - Publicar únicamente desde la fuente canónica con `npm run deploy:prod:safe`.
 - Nunca usar un snapshot parcial ni `vercel deploy --prod` directamente.
@@ -110,7 +125,7 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - El build debe fallar si una página registrada incumple el contrato técnico.
 - Los cambios se confirman en Git antes del despliegue y se verifica la URL pública después.
 
-## 12. Definición de terminado
+## 13. Definición de terminado
 
 Una clase no está terminada hasta que cumple simultáneamente lo siguiente:
 

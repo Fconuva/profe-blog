@@ -26,6 +26,7 @@ const OBLIGATORIOS = [
   ['plataforma_estudiantes', 'estudiantes'],
   ['plataforma_estudiantes', 'sesiones'],
   ['plataforma_estudiantes', 'respuestas'],
+  ['plataforma_estudiantes', 'telemetria_clases'],
   ['plataforma_estudiantes', 'resultados'],
   ['plataforma_nm1'],
   ['plataforma_nm4'],

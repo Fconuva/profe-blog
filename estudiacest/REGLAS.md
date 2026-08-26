@@ -146,6 +146,9 @@ Antes de declarar una tarea terminada:
   ```
 
 - Se prohíben `vercel deploy --prod` y `npx vercel deploy --prod` directos.
+- Todo script nuevo invocado por `npm run build` debe quedar respaldado en Git y
+  exceptuado explícitamente en `.vercelignore`; que el build pase localmente no
+  demuestra que Vercel haya recibido ese archivo.
 - Esperar a que el proceso termine; no dejar sesiones de deploy activas.
 - Verificar la URL pública y el flujo modificado después de la promoción.
 - Registrar el cierre en `BITACORA.md`: fecha, área, cambio, archivos o rutas,

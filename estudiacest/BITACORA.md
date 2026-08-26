@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-26, PAES Guía 19: vocabulario en contexto
+
+- Se publicó `/paes/guia19.html` como sesión actual del 27 de agosto. Contiene
+  tres textos originales de 641, 631 y 630 palabras, 18 reactivos A–D y una
+  estrategia visual de inferencia por rol, pistas, sustitución y sentido global.
+- El instrumento distribuye las claves `A5 / B4 / C5 / D4`, sin ciclos, y las
+  habilidades `Localizar 3 / Interpretar 12 / Evaluar 3`. La clave y la
+  retroalimentación permanecen en la API y solo se muestran después de la
+  liberación docente.
+- Se agregó `/paes/guia19-guiada.html` a la ruta individual ya vigente: un
+  texto breve, seis reactivos, una pregunta por pantalla, instrucciones directas
+  y la misma habilidad con menor carga. El portal, la API y el admin distinguen
+  la variante sin exponer etiquetas diagnósticas.
+- El admin incorpora G19 en resultados, calificación, restablecimiento, libro de
+  notas, bloqueo por curso y excepción individual. La entrada directa vuelve a
+  comprobar el candado después de identificar al estudiante.
+- Playwright comprobó selección, autoguardado, entrega con preguntas pendientes,
+  lectura posterior de confirmación, mensaje visible, bloqueo desde enlace
+  directo, ruta guiada de seis preguntas y ausencia de desborde.
+- `npm run build` y la verificación postpublicación pasaron con 102 recursos
+  críticos. Producción responde 200 para la guía general, la guiada y su CSS,
+  sin errores de consola. Deploy: `dpl_CjiJQFfTZgJnYQJJ5kypsJaNdwPY`.
+- Un primer build remoto falló porque la auditoría nueva no estaba exceptuada en
+  `.vercelignore`; no fue promovido. Se corrigió el inventario y se añadió la
+  regla permanente correspondiente en `REGLAS.md`.
+
+---
+
 ## 2026-08-26, publicación privada de notas de trabajo SIMCE y alineación de Lirmi
 
 - Se publicaron 498 calificaciones privadas de laboriosidad correspondientes a

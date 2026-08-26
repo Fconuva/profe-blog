@@ -36,6 +36,8 @@ if (publisher) {
     "rows.length !== 498",
     "students.size !== 83",
     "firstChecksum !== secondChecksum",
+    "args['published-at']",
+    "args['verify-snapshot']",
     "appliedChecksum !== firstChecksum"
   ].forEach(fragment => {
     if (!publisher.includes(fragment)) failures.push(`Publicador: falta la guarda ${fragment}.`);

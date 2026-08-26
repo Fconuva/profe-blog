@@ -148,7 +148,10 @@ function buildPublication(source, publishedAt) {
 }
 
 function recordsFromSnapshot(snapshot, expectedPairs) {
-  const root = snapshot.val() || {};
+  return recordsFromObject(snapshot.val() || {}, expectedPairs);
+}
+
+function recordsFromObject(root, expectedPairs) {
   const records = {};
   expectedPairs.forEach(pair => {
     const [uid, sessionId] = pair.split('/');
@@ -161,7 +164,7 @@ async function main() {
   const args = parseArgs(process.argv.slice(2));
   const input = path.resolve(args.input || path.join(os.tmpdir(), 'simce-u3-labor-review.json'));
   const source = JSON.parse(fs.readFileSync(input, 'utf8'));
-  const publishedAt = new Date().toISOString();
+  const publishedAt = String(args['published-at'] || new Date().toISOString());
   const first = buildPublication(source, publishedAt);
   const second = buildPublication(source, publishedAt);
   const firstChecksum = checksum(first.records);
@@ -177,6 +180,24 @@ async function main() {
     ...first.stats
   };
   console.log(JSON.stringify(report, null, 2));
+
+  if (args.output) {
+    const output = path.resolve(args.output);
+    fs.mkdirSync(path.dirname(output), { recursive: true });
+    fs.writeFileSync(output, JSON.stringify(first.records), 'utf8');
+    console.log(JSON.stringify({ output, records: first.stats.rows, checksum: firstChecksum }, null, 2));
+  }
+
+  if (args['verify-snapshot']) {
+    const snapshotPath = path.resolve(args['verify-snapshot']);
+    const snapshotData = JSON.parse(fs.readFileSync(snapshotPath, 'utf8')) || {};
+    const snapshotRecords = recordsFromObject(snapshotData, Object.keys(first.records));
+    const snapshotChecksum = checksum(snapshotRecords);
+    if (snapshotChecksum !== firstChecksum) {
+      throw new Error(`El respaldo leído no coincide: esperado ${firstChecksum}, recibido ${snapshotChecksum}.`);
+    }
+    console.log(JSON.stringify({ verified: first.stats.rows, checksum: snapshotChecksum }, null, 2));
+  }
   if (!args.apply) return;
 
   initializeFirebase(args.env);

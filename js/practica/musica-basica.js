@@ -677,3 +677,11 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Fotografía museográfica que aporta contexto sin mostrar la técnica preguntada.
+(function () {
+ var q = window.PRUEBA.preguntas.find(function (item) { return item.n === 9; });
+ if (!q) return;
+ q.imagen = "/imagenes/ecep/practica/musica-basica/n9.webp";
+ q.alt = "Siku andino de cañas naturales de longitudes graduales, unido con amarras textiles y aislado sobre un fondo claro; no aparecen intérpretes ni manos.";
+})();

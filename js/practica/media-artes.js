@@ -718,3 +718,22 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Estímulos visuales originales para conceptos que antes solo se describían.
+(function () {
+ var I = {
+  7: {
+   imagen: "/imagenes/ecep/practica/media-artes/n7.webp",
+   alt: "Rostro de una niña ficticia completamente nítido en primer plano; detrás, los puestos y colores de una feria aparecen muy desenfocados."
+  },
+  8: {
+   imagen: "/imagenes/ecep/practica/media-artes/n8.webp",
+   alt: "Sala completa de un museo ocupada por cientos de paraguas de colores suspendidos a distintas alturas, mientras visitantes pequeños recorren el espacio entre ellos."
+  },
+  47: {
+   imagen: "/imagenes/ecep/practica/media-artes/n47.webp",
+   alt: "Fotografía de cartones, botellas y metales sin etiquetas en un centro de residuos; los colores permanecen reconocibles, pero aparecen muy apagados y cercanos al gris, sin perder luminosidad general."
+  }
+ };
+ window.PRUEBA.preguntas.forEach(function (q) { if (I[q.n]) { q.imagen = I[q.n].imagen; q.alt = I[q.n].alt; } });
+})();

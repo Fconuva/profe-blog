@@ -721,3 +721,40 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Fórmulas, ecuaciones y magnitudes químicas compuestas con LaTeX.
+(function () {
+ var L = {
+  1: { "NaOH": "\\mathrm{NaOH}", "40 g/mol": "40\\,\\mathrm{g/mol}", "250 mL": "250\\,\\mathrm{mL}", "0,125 mol/L": "0{,}125\\,\\mathrm{mol/L}", "2,0 mol/L": "2{,}0\\,\\mathrm{mol/L}", "0,5 mol/L": "0{,}5\\,\\mathrm{mol/L}", "0,002 mol/L": "0{,}002\\,\\mathrm{mol/L}" },
+  2: { "CH3-CH2-OH": "\\mathrm{CH_3{-}CH_2{-}OH}", "CH3-O-CH3": "\\mathrm{CH_3{-}O{-}CH_3}", "C2H6O": "\\mathrm{C_2H_6O}", "78 °C": "78^{\\circ}\\mathrm{C}", "-24 °C": "-24^{\\circ}\\mathrm{C}" },
+  4: { "pH 9": "\\mathrm{pH}=9" },
+  6: { "1,0×10⁻² mol/L": "1{,}0\\times10^{-2}\\,\\mathrm{mol/L}", "Ka = 1,0×10⁻⁶": "K_a=1{,}0\\times10^{-6}" },
+  9: { "CH3-CH(CH3)-CH2-CH2-OH": "\\mathrm{CH_3{-}CH(CH_3){-}CH_2{-}CH_2{-}OH}" },
+  12: { "C2-C3": "\\mathrm{C_2{-}C_3}", "CH3-CH2-CH2-CH3": "\\mathrm{CH_3{-}CH_2{-}CH_2{-}CH_3}", "180 grados": "180^{\\circ}", "120 grados": "120^{\\circ}", "60 grados": "60^{\\circ}" },
+  13: { "pH 3": "\\mathrm{pH}=3", "pH 6": "\\mathrm{pH}=6", "pH mayor que 7": "\\mathrm{pH}>7" },
+  14: {
+   "Mg(OH)2": "\\mathrm{Mg(OH)_2}", "Mg(OH)2 + 2HCl → MgCl2 + 2H2O": "\\mathrm{Mg(OH)_2+2HCl\\rightarrow MgCl_2+2H_2O}",
+   "Mg + 2HCl → MgCl2 + H2": "\\mathrm{Mg+2HCl\\rightarrow MgCl_2+H_2}", "Mg(OH)2 → MgO + H2O": "\\mathrm{Mg(OH)_2\\rightarrow MgO+H_2O}", "MgO + CO2 → MgCO3": "\\mathrm{MgO+CO_2\\rightarrow MgCO_3}"
+  },
+  15: { "MnO4- + Fe2+ + H+ → Mn2+ + Fe3+ + H2O": "\\mathrm{MnO_4^-+Fe^{2+}+H^+\\rightarrow Mn^{2+}+Fe^{3+}+H_2O}", "MnO4-": "\\mathrm{MnO_4^-}", "Fe2+": "\\mathrm{Fe^{2+}}", "H+": "\\mathrm{H^+}", "H2O": "\\mathrm{H_2O}" },
+  17: { "6,02×10²³": "6{,}02\\times10^{23}" },
+  18: { "4Ag + 2H2S + O2 → 2Ag2S + 2H2O": "\\mathrm{4Ag+2H_2S+O_2\\rightarrow 2Ag_2S+2H_2O}" },
+  19: { "2H2O2 → 2H2O + O2": "\\mathrm{2H_2O_2\\rightarrow 2H_2O+O_2}", "0,006 mol/(L·s)": "0{,}006\\,\\mathrm{mol/(L\\,s)}", "0,012 mol/(L·s)": "0{,}012\\,\\mathrm{mol/(L\\,s)}", "0,018 mol/(L·s)": "0{,}018\\,\\mathrm{mol/(L\\,s)}", "0,024 mol/(L·s)": "0{,}024\\,\\mathrm{mol/(L\\,s)}" },
+  20: { "CH3-CH=CH-CH3": "\\mathrm{CH_3{-}CH{=}CH{-}CH_3}" },
+  28: { "ΔH = +40 kJ/mol": "\\Delta H=+40\\,\\mathrm{kJ/mol}", "ΔS = +0,100 kJ/(mol·K)": "\\Delta S=+0{,}100\\,\\mathrm{kJ/(mol\\,K)}", "500 K": "500\\,\\mathrm{K}" },
+  29: { "N2 + 3H2 → 2NH3": "\\mathrm{N_2+3H_2\\rightarrow 2NH_3}", "N2 = 28 g/mol": "\\mathrm{N_2}=28\\,\\mathrm{g/mol}", "H2 = 2 g/mol": "\\mathrm{H_2}=2\\,\\mathrm{g/mol}", "NH3 = 17 g/mol": "\\mathrm{NH_3}=17\\,\\mathrm{g/mol}" },
+  30: { "25%": "25\\%" },
+  31: { "1,5 L": "1{,}5\\,\\mathrm{L}", "3 mg": "3\\,\\mathrm{mg}", "1 g/mL": "1\\,\\mathrm{g/mL}", "4,5 ppm": "4{,}5\\,\\mathrm{ppm}", "0,5 ppm": "0{,}5\\,\\mathrm{ppm}", "3,0 ppm": "3{,}0\\,\\mathrm{ppm}", "2,0 ppm": "2{,}0\\,\\mathrm{ppm}" },
+  36: { "CH2=CH2": "\\mathrm{CH_2{=}CH_2}", "sp3": "sp^3", "sp2": "sp^2" },
+  41: { "20 °C": "20^{\\circ}\\mathrm{C}", "40 °C": "40^{\\circ}\\mathrm{C}", "60 °C": "60^{\\circ}\\mathrm{C}" },
+  43: { "Zn + Cu2+ → Zn2+ + Cu": "\\mathrm{Zn+Cu^{2+}\\rightarrow Zn^{2+}+Cu}", "Cu2+": "\\mathrm{Cu^{2+}}", "Zn2+": "\\mathrm{Zn^{2+}}" },
+  45: { "CF2=CF2": "\\mathrm{CF_2{=}CF_2}", "CH2=CH2": "\\mathrm{CH_2{=}CH_2}", "C6H5-CH=CH2": "\\mathrm{C_6H_5{-}CH{=}CH_2}", "CH2=CHCl": "\\mathrm{CH_2{=}CHCl}" },
+  50: { "CO2": "\\mathrm{CO_2}" },
+  51: { "pH cercano a 7,4": "\\mathrm{pH}\\approx7{,}4", "pH": "\\mathrm{pH}" },
+  52: { "10% m/m": "10\\%\\,m/m", "1,2 g/mL": "1{,}2\\,\\mathrm{g/mL}", "% m/v": "\\%\\,m/v", "8,3% m/v": "8{,}3\\%\\,m/v", "120% m/v": "120\\%\\,m/v", "12% m/v": "12\\%\\,m/v" },
+  54: { "CH3-CH2-OH": "\\mathrm{CH_3{-}CH_2{-}OH}", "C6H14": "\\mathrm{C_6H_{14}}" },
+  55: { "N2(g) + 3H2(g) ⇌ 2NH3(g)": "\\mathrm{N_2(g)+3H_2(g)\\rightleftharpoons 2NH_3(g)}", "ΔH menor que cero": "\\Delta H<0" },
+  56: { "N2(g) + 3H2(g) ⇌ 2NH3(g)": "\\mathrm{N_2(g)+3H_2(g)\\rightleftharpoons 2NH_3(g)}", "ΔH menor que cero": "\\Delta H<0" }
+ };
+ window.PRUEBA.preguntas.forEach(function (q) { if (L[q.n]) q.latex = L[q.n]; });
+})();

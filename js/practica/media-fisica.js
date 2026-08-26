@@ -672,3 +672,30 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Notación física compuesta con LaTeX, sin alterar los textos auditados.
+(function () {
+ var L = {
+  1: { "20 m/s": "20\\,\\mathrm{m/s}", "1 m/s": "1\\,\\mathrm{m/s}", "21 m/s": "21\\,\\mathrm{m/s}", "19 m/s": "19\\,\\mathrm{m/s}" },
+  3: { "g = 10 m/s²": "g=10\\,\\mathrm{m/s^2}", "30 N": "30\\,\\mathrm{N}" },
+  5: { "8 s": "8\\,\\mathrm{s}", "80 m": "80\\,\\mathrm{m}", "160 m": "160\\,\\mathrm{m}", "120 m": "120\\,\\mathrm{m}", "40 m": "40\\,\\mathrm{m}" },
+  7: { "4π m/s": "4\\pi\\,\\mathrm{m/s}", "2π m/s": "2\\pi\\,\\mathrm{m/s}", "2 m/s": "2\\,\\mathrm{m/s}", "0,16π m/s": "0{,}16\\pi\\,\\mathrm{m/s}" },
+  9: { "2 kg": "2\\,\\mathrm{kg}", "30°": "30^{\\circ}", "g = 10 m/s²": "g=10\\,\\mathrm{m/s^2}", "5 m/s²": "5\\,\\mathrm{m/s^2}", "10 m/s²": "10\\,\\mathrm{m/s^2}", "8,7 m/s²": "8{,}7\\,\\mathrm{m/s^2}", "2,5 m/s²": "2{,}5\\,\\mathrm{m/s^2}" },
+  10: { "4R": "4R", "2R": "2R", "R/4": "\\frac{R}{4}" },
+  11: { "8 m/s": "8\\,\\mathrm{m/s}", "4 m/s": "4\\,\\mathrm{m/s}", "8 m": "8\\,\\mathrm{m}" },
+  13: { "12 V": "12\\,\\mathrm{V}", "6 Ω": "6\\,\\Omega", "240 J": "240\\,\\mathrm{J}", "14 400 J": "14\\,400\\,\\mathrm{J}", "1 440 J": "1\\,440\\,\\mathrm{J}", "86 400 J": "86\\,400\\,\\mathrm{J}" },
+  15: { "40 kg": "40\\,\\mathrm{kg}", "60 kg": "60\\,\\mathrm{kg}", "3 m/s": "3\\,\\mathrm{m/s}", "2 m/s": "2\\,\\mathrm{m/s}", "4,5 m/s": "4{,}5\\,\\mathrm{m/s}", "1,2 m/s": "1{,}2\\,\\mathrm{m/s}" },
+  17: { "1 000 kg/m³": "1\\,000\\,\\mathrm{kg/m^3}", "80%": "80\\%", "800 kg/m³": "800\\,\\mathrm{kg/m^3}", "1 250 kg/m³": "1\\,250\\,\\mathrm{kg/m^3}", "200 kg/m³": "200\\,\\mathrm{kg/m^3}" },
+  18: { "20 N": "20\\,\\mathrm{N}", "5 N·m": "5\\,\\mathrm{N\\,m}", "10 N·m": "10\\,\\mathrm{N\\,m}", "40 N·m": "40\\,\\mathrm{N\\,m}", "20 N·m": "20\\,\\mathrm{N\\,m}" },
+  21: { "25 m/s": "25\\,\\mathrm{m/s}", "5 s": "5\\,\\mathrm{s}", "62,5 m": "62{,}5\\,\\mathrm{m}", "125 m": "125\\,\\mathrm{m}", "187,5 m": "187{,}5\\,\\mathrm{m}", "25 m": "25\\,\\mathrm{m}" },
+  23: { "g = 10 m/s²": "g=10\\,\\mathrm{m/s^2}", "400 m/s": "400\\,\\mathrm{m/s}", "200 m/s": "200\\,\\mathrm{m/s}", "20 m/s": "20\\,\\mathrm{m/s}", "14 m/s": "14\\,\\mathrm{m/s}" },
+  30: { "1 000 kg/m³": "1\\,000\\,\\mathrm{kg/m^3}", "g = 10 m/s²": "g=10\\,\\mathrm{m/s^2}", "100 kPa": "100\\,\\mathrm{kPa}", "400 kPa": "400\\,\\mathrm{kPa}", "300 kPa": "300\\,\\mathrm{kPa}", "130 kPa": "130\\,\\mathrm{kPa}", "3 100 kPa": "3\\,100\\,\\mathrm{kPa}" },
+  31: { "0,01 m²": "0{,}01\\,\\mathrm{m^2}", "0,1 m²": "0{,}1\\,\\mathrm{m^2}", "500 N": "500\\,\\mathrm{N}", "50 N": "50\\,\\mathrm{N}", "5 000 N": "5\\,000\\,\\mathrm{N}", "5 N": "5\\,\\mathrm{N}" },
+  32: { "220 V": "220\\,\\mathrm{V}", "880 V": "880\\,\\mathrm{V}", "55 V": "55\\,\\mathrm{V}", "110 V": "110\\,\\mathrm{V}" },
+  42: { "2 N/m": "2\\,\\mathrm{N/m}", "50 N/m": "50\\,\\mathrm{N/m}" },
+  46: { "g = 10 m/s²": "g=10\\,\\mathrm{m/s^2}", "5 000 W": "5\\,000\\,\\mathrm{W}", "25 W": "25\\,\\mathrm{W}", "500 W": "500\\,\\mathrm{W}", "250 W": "250\\,\\mathrm{W}" },
+  49: { "T²": "T^2" },
+  52: { "340 m/s": "340\\,\\mathrm{m/s}", "170 Hz": "170\\,\\mathrm{Hz}", "0,5 m": "0{,}5\\,\\mathrm{m}", "2 m": "2\\,\\mathrm{m}", "170 m": "170\\,\\mathrm{m}", "57 800 m": "57\\,800\\,\\mathrm{m}" }
+ };
+ window.PRUEBA.preguntas.forEach(function (q) { if (L[q.n]) q.latex = L[q.n]; });
+})();

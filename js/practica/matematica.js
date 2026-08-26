@@ -148,7 +148,8 @@ window.PRUEBA = {
   },
   {
    "n": 14,
-   "svg": "<svg role='img' aria-label='Desarrollo escrito por un estudiante: dos quintos más un tercio igual a tres octavos, acompañado de las anotaciones porque 2 + 1 = 3 y porque 5 + 3 = 8.' viewBox='0 0 360 175' xmlns='http://www.w3.org/2000/svg'><rect width='360' height='175' fill='white'/><text x='60' y='48' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>2</text><line x1='46' y1='57' x2='74' y2='57' stroke='black' stroke-width='2'/><text x='60' y='82' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>5</text><text x='98' y='66' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>+</text><text x='136' y='48' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>1</text><line x1='122' y1='57' x2='150' y2='57' stroke='black' stroke-width='2'/><text x='136' y='82' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>3</text><text x='176' y='66' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>=</text><text x='216' y='48' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>3</text><line x1='202' y1='57' x2='230' y2='57' stroke='black' stroke-width='2'/><text x='216' y='82' font-family='Arial, sans-serif' font-size='26' text-anchor='middle'>8</text><text x='60' y='125' font-family='Arial, sans-serif' font-size='17' fill='#444'>porque 2 + 1 = 3</text><text x='60' y='152' font-family='Arial, sans-serif' font-size='17' fill='#444'>y 5 + 3 = 8</text></svg>",
+   "formula": "\\begin{aligned} \\frac{2}{5}+\\frac{1}{3}&=\\frac{3}{8} \\\\[4pt] \\text{porque }2+1&=3 \\\\ \\text{y }5+3&=8 \\end{aligned}",
+   "alt": "Desarrollo escrito por un estudiante: dos quintos más un tercio igual a tres octavos, acompañado de las anotaciones porque 2 más 1 es igual a 3 y porque 5 más 3 es igual a 8.",
    "enunciado": "Al resolver la adición de fracciones 2/5 + 1/3, un estudiante de sexto básico registra el desarrollo que muestra la figura. ¿Cuál es el origen del error del estudiante?",
    "alternativas": [
     "Opera los numeradores entre sí y los denominadores entre sí, sin considerar que sumar fracciones requiere partes del mismo tamaño.",
@@ -679,3 +680,59 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Presentación matemática: las cadenas auditadas de los ítems no se modifican.
+// El runner sustituye únicamente estos fragmentos exactos por LaTeX.
+(function () {
+ var L = {
+  3: { "3 · 1/4": "3\\cdot\\frac{1}{4}", "3/4": "\\frac{3}{4}" },
+  5: { "1 cm³": "1\\,\\mathrm{cm}^3", "cm³": "\\mathrm{cm}^3", "m³": "\\mathrm{m}^3", "mm³": "\\mathrm{mm}^3" },
+  7: { "(5 + 3) · 2": "(5+3)\\cdot 2", "5 + 3 · 2": "5+3\\cdot 2" },
+  10: { "π": "\\pi" },
+  11: { "ax = b": "ax=b" },
+  14: { "2/5 + 1/3": "\\frac{2}{5}+\\frac{1}{3}" },
+  15: { "25 %": "25\\%" },
+  17: { "180°": "180^{\\circ}" },
+  19: {
+   "2² · 3² · 5": "2^2\\cdot 3^2\\cdot 5",
+   "2 · 3² · 10": "2\\cdot 3^2\\cdot 10",
+   "2² · 45": "2^2\\cdot 45",
+   "4 · 9 · 5": "4\\cdot 9\\cdot 5"
+  },
+  20: { "-3/4": "-\\frac{3}{4}" },
+  25: { "25 %": "25\\%", "10 %": "10\\%" },
+  26: { "8 %": "8\\%" },
+  27: {
+   "(2/3)³ · (2/3)⁻¹": "\\left(\\frac{2}{3}\\right)^3\\cdot\\left(\\frac{2}{3}\\right)^{-1}",
+   "16/81": "\\frac{16}{81}", "27/8": "\\frac{27}{8}", "9/4": "\\frac{9}{4}", "4/9": "\\frac{4}{9}"
+  },
+  28: {
+   "3,5 × 10⁻⁵": "3{,}5\\times 10^{-5}", "2 × 10³": "2\\times 10^3",
+   "7 × 10⁻¹⁵ g": "7\\times 10^{-15}\\,\\mathrm{g}", "7 × 10⁻⁸ g": "7\\times 10^{-8}\\,\\mathrm{g}",
+   "7 × 10⁻² g": "7\\times 10^{-2}\\,\\mathrm{g}", "7 × 10⁸ g": "7\\times 10^8\\,\\mathrm{g}"
+  },
+  29: { "n + 4": "n+4", "4n + 1": "4n+1", "4n + 5": "4n+5", "5n + 4": "5n+4" },
+  30: { "x² + 5": "x^2+5", "x² + 25": "x^2+25", "2(x + 5)": "2(x+5)", "(x + 5)²": "(x+5)^2" },
+  31: { "2bn": "2bn", "b + 2n": "b+2n", "b · 2ⁿ": "b\\cdot 2^n", "(2b)ⁿ": "(2b)^n" },
+  32: { "180 + x ≤ 450": "180+x\\leq 450", "180 + x < 450": "180+x<450", "180 + x ≥ 450": "180+x\\geq 450", "x − 180 ≤ 450": "x-180\\leq 450" },
+  33: {
+   "x/3 − 1/2 > 5/6": "\\frac{x}{3}-\\frac{1}{2}>\\frac{5}{6}", "x > 4/9": "x>\\frac{4}{9}",
+   "x > 4": "x>4", "x > 4/3": "x>\\frac{4}{3}", "x > 1": "x>1"
+  },
+  35: { "[0, 8]": "[0,8]", "[3, 4]": "[3,4]", "[1, 5]": "[1,5]", "[1, 4]": "[1,4]" },
+  38: {
+   "h(t)": "h(t)", "h(t) = 20 + 2t": "h(t)=20+2t", "h(t) = 2t − 20": "h(t)=2t-20",
+   "h(t) = 20 − 2t": "h(t)=20-2t", "h(t) = 20 − t/2": "h(t)=20-\\frac{t}{2}"
+  },
+  41: { "60°": "60^{\\circ}", "108°": "108^{\\circ}", "120°": "120^{\\circ}", "720°": "720^{\\circ}" },
+  45: { "48 m²": "48\\,\\mathrm{m}^2", "68 m²": "68\\,\\mathrm{m}^2", "80 m²": "80\\,\\mathrm{m}^2", "92 m²": "92\\,\\mathrm{m}^2" },
+  47: { "216 cm³": "216\\,\\mathrm{cm}^3", "432 cm³": "432\\,\\mathrm{cm}^3", "864 cm³": "864\\,\\mathrm{cm}^3", "1.728 cm³": "1\\,728\\,\\mathrm{cm}^3" },
+  48: { "π ≈ 3,14": "\\pi\\approx 3{,}14" },
+  49: { "90°": "90^{\\circ}" },
+  50: { "A(1, 1)": "A(1,1)", "B(4, 1)": "B(4,1)", "C(2, 5)": "C(2,5)", "(-3, 2)": "(-3,2)" },
+  54: { "8:00": "8{:}00", "10:00": "10{:}00", "12:00": "12{:}00", "14:00": "14{:}00", "16:00": "16{:}00" },
+  59: { "3/5": "\\frac{3}{5}", "1/2": "\\frac{1}{2}", "2/5": "\\frac{2}{5}", "5/3": "\\frac{5}{3}" },
+  60: { "1/4": "\\frac{1}{4}", "3/17": "\\frac{3}{17}", "3/20": "\\frac{3}{20}", "17/20": "\\frac{17}{20}" }
+ };
+ window.PRUEBA.preguntas.forEach(function (q) { if (L[q.n]) q.latex = L[q.n]; });
+})();

@@ -11,6 +11,10 @@
   var KEY = 'ecep_practica_' + P.id;
   var total = P.preguntas.length;
   var state = load();           // { resp: {n:'A'}, idx: 0, done: false }
+  var mathNeeded = P.preguntas.some(function (q) {
+    return !!(q.formula || (q.latex && Object.keys(q.latex).length));
+  });
+  var mathLoader = null;
 
   // estilos propios del modo examen (selección neutra antes de corregir)
   var st = document.createElement('style');
@@ -23,8 +27,52 @@
     '.ecq-figzoom{border:none;background:#f1f5f9;color:#0e7d8a;font-weight:600;font-size:12.5px;border-radius:999px;padding:4px 12px;cursor:pointer}' +
     '.ecq-fig.zoom .ecq-svg{position:fixed;inset:0;z-index:9999;background:#fff;padding:24px;overflow:auto;display:flex;align-items:center;justify-content:center}' +
     '.ecq-fig.zoom svg{max-width:none;width:min(96vw,1200px)}' +
+    '.ecq-formula{min-height:92px;display:flex;align-items:center;justify-content:center;padding:14px;color:#0f172a;font-size:1.2rem}' +
+    '.ecq-formula mjx-container{max-width:100%;overflow-x:auto;overflow-y:hidden;padding:4px 2px}' +
+    '.ecq-fig.zoom .ecq-formula{font-size:clamp(1.35rem,4vw,2.25rem)}' +
+    '.ecq-enun mjx-container,.ecq-alt mjx-container,.ecq-texto mjx-container{font-size:1.03em}' +
     '.ecq-rev-nav{position:sticky;bottom:0;background:#ffffffee;padding:8px 0}';
   document.head.appendChild(st);
+
+  function clearMath() {
+    try {
+      if (window.MathJax && window.MathJax.typesetClear) window.MathJax.typesetClear([mount]);
+    } catch (e) {}
+  }
+
+  function loadMathJax() {
+    if (!mathNeeded) return Promise.resolve();
+    if (window.MathJax && window.MathJax.typesetPromise) return Promise.resolve(window.MathJax);
+    if (mathLoader) return mathLoader;
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']],
+        processEscapes: true
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code']
+      }
+    };
+    mathLoader = new Promise(function (resolve, reject) {
+      var script = document.createElement('script');
+      script.src = 'https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js';
+      script.defer = true;
+      script.onload = function () { resolve(window.MathJax); };
+      script.onerror = function () { reject(new Error('No fue posible cargar MathJax.')); };
+      document.head.appendChild(script);
+    });
+    return mathLoader;
+  }
+
+  function typesetMath() {
+    if (!mathNeeded) return;
+    loadMathJax().then(function () {
+      if (window.MathJax && window.MathJax.typesetPromise) return window.MathJax.typesetPromise([mount]);
+    }).catch(function (err) {
+      if (window.console && console.warn) console.warn('ECEP: LaTeX no se pudo renderizar.', err);
+    });
+  }
 
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.resp) return s; } catch (e) {}
@@ -34,6 +82,32 @@
   function answeredCount() { return Object.keys(state.resp).length; }
   function score() { var s = 0; P.preguntas.forEach(function (q) { if (state.resp[q.n] === q.correcta) s++; }); return s; }
   function esc(t) { return (t == null ? '' : String(t)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
+  // Conserva intacto el texto auditado del banco y reemplaza solo fragmentos
+  // declarados de forma explícita por su notación LaTeX accesible.
+  function richText(t, q) {
+    var source = t == null ? '' : String(t);
+    var replacements = q && q.latex ? Object.keys(q.latex) : [];
+    replacements.sort(function (a, b) { return b.length - a.length; });
+    if (!replacements.length) return esc(source).replace(/\n/g, '<br>');
+
+    // Una sola pasada evita que una clave corta vuelva a reemplazar texto ya
+    // insertado dentro de otra expresión TeX (por ejemplo, «pH» dentro de
+    // «pH cercano a 7,4»).
+    var pattern = new RegExp(replacements.map(function (plain) {
+      return plain.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }).join('|'), 'g');
+    var h = '';
+    var cursor = 0;
+    var match;
+    while ((match = pattern.exec(source)) !== null) {
+      h += esc(source.slice(cursor, match.index));
+      h += '\\(' + esc(q.latex[match[0]]) + '\\)';
+      cursor = match.index + match[0].length;
+    }
+    h += esc(source.slice(cursor));
+    return h.replace(/\n/g, '<br>');
+  }
 
   function guardarFirebase() {
     try {
@@ -47,6 +121,7 @@
   }
 
   function intro() {
+    clearMath();
     mount.innerHTML =
       '<div class="ecq-intro">' +
         '<span class="ecq-eyebrow"><i class="bi bi-mortarboard-fill"></i> Práctica ECEP 2026</span>' +
@@ -71,12 +146,13 @@
 
   function estimulos(q, idFig) {
     var h = '';
-    if (q.textoBase) h += '<div class="ecq-texto"><span class="tt"><i class="bi bi-card-text"></i> Texto base</span><div>' + esc(q.textoBase).replace(/\n/g, '<br>') + '</div></div>';
-    // figura: SVG inline (datos, esquemas) o imagen (ilustración o fotografía)
-    if (q.svg || q.imagen) {
+    if (q.textoBase) h += '<div class="ecq-texto"><span class="tt"><i class="bi bi-card-text"></i> Texto base</span><div>' + richText(q.textoBase, q) + '</div></div>';
+    // figura: SVG inline, imagen o expresión matemática compuesta con LaTeX
+    if (q.svg || q.imagen || q.formula) {
       h += '<figure class="ecq-fig" id="' + idFig + '">';
       if (q.svg) h += '<div class="ecq-svg">' + q.svg + '</div>';
-      else h += '<div class="ecq-svg"><img src="' + esc(q.imagen) + '" alt="' + esc(q.alt || ('Figura de la pregunta ' + q.n)) + '" loading="lazy" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px"></div>';
+      else if (q.imagen) h += '<div class="ecq-svg"><img src="' + esc(q.imagen) + '" alt="' + esc(q.alt || ('Figura de la pregunta ' + q.n)) + '" loading="lazy" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px"></div>';
+      else h += '<div class="ecq-svg ecq-formula" role="img" aria-label="' + esc(q.alt || ('Expresión matemática de la pregunta ' + q.n)) + '">\\[' + esc(q.formula) + '\\]</div>';
       h += '<figcaption class="ecq-figcap">Figura de la pregunta ' + q.n +
         ' <button type="button" class="ecq-figzoom" data-fig="' + idFig + '">Ampliar</button></figcaption></figure>';
     }
@@ -95,7 +171,7 @@
     html += '<article class="ecq-card">';
     html += '<div class="ecq-num">' + q.n + '</div>';
     html += estimulos(q, 'fig-' + q.n);
-    html += '<div class="ecq-enun">' + esc(q.enunciado).replace(/\n/g, '<br>') + '</div>';
+    html += '<div class="ecq-enun">' + richText(q.enunciado, q) + '</div>';
     html += '<div class="ecq-alts">';
     LET.forEach(function (L, k) {
       var txt = q.alternativas && q.alternativas[k] ? q.alternativas[k] : '';
@@ -105,7 +181,7 @@
         else if (L === dada) cls += ' bad';
         else cls += ' dim';
       } else if (dada === L) cls += ' sel';
-      html += '<button class="' + cls + '" data-l="' + L + '"' + (rev ? ' disabled' : '') + '><span class="lt">' + L + '</span><span class="tx">' + esc(txt) + '</span></button>';
+      html += '<button class="' + cls + '" data-l="' + L + '"' + (rev ? ' disabled' : '') + '><span class="lt">' + L + '</span><span class="tx">' + richText(txt, q) + '</span></button>';
     });
     html += '</div>';
     if (rev) {
@@ -121,7 +197,9 @@
         : '<button class="ecq-next">Siguiente <i class="bi bi-arrow-right"></i></button>') +
       '</div>';
     html += '</article></div>';
+    clearMath();
     mount.innerHTML = html;
+    typesetMath();
     window.scrollTo(0, 0);
 
     if (!rev) {
@@ -167,6 +245,7 @@
     });
     html += '</div><div class="ecq-nav"><button class="ecq-back"><i class="bi bi-arrow-left"></i> Volver</button>' +
       (rev ? '<button class="ecq-fin">Ver puntaje <i class="bi bi-trophy-fill"></i></button>' : '<button class="ecq-fin">Finalizar <i class="bi bi-flag-fill"></i></button>') + '</div></div>';
+    clearMath();
     mount.innerHTML = html;
     mount.querySelectorAll('.ecq-grid .g').forEach(function (b) { b.onclick = function () { go(+b.getAttribute('data-i')); }; });
     mount.querySelector('.ecq-back').onclick = function () { go(state.idx); };
@@ -190,6 +269,7 @@
       html += '<button class="g ' + (d === q.correcta ? 'ok' : 'bad') + '" data-i="' + i + '" title="Tu respuesta: ' + (d || 'sin responder') + ' · Correcta: ' + q.correcta + '">' + q.n + '</button>';
     });
     html += '</div><p style="font-size:13px;color:#64748b;margin-top:8px">Verde = correcta, rojo = incorrecta o sin responder. Toca cualquier número para ver la pregunta con su solución.</p></div>';
+    clearMath();
     mount.innerHTML = html;
     mount.querySelectorAll('.ecq-grid .g').forEach(function (b) { b.onclick = function () { go(+b.getAttribute('data-i')); }; });
     mount.querySelector('.ecq-back').onclick = function () { go(0); };

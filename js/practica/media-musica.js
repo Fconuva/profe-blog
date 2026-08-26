@@ -715,3 +715,11 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Detalle organológico original, sin rótulos ni indicaciones que regalen la función.
+(function () {
+ var q = window.PRUEBA.preguntas.find(function (item) { return item.n === 53; });
+ if (!q) return;
+ q.imagen = "/imagenes/ecep/practica/media-musica/n53.webp";
+ q.alt = "Primer plano del puente de una guitarra acústica: seis cuerdas salen de seis pines, pasan sobre una selleta clara y continúan por encima de la tapa de madera hacia el mástil.";
+})();

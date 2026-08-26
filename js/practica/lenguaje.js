@@ -671,3 +671,20 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Plano cartográfico redibujado con rutas y destinos inequívocos.
+(function () {
+ var q = window.PRUEBA.preguntas.find(function (item) { return item.n === 35; });
+ if (!q) return;
+ q.svg = "<svg role='img' aria-label='Plano de un parque nacional con una laguna, el mirador del volcán, la zona de camping y la entrada. El sendero Los Notros va de la entrada a la laguna, y el sendero El Coihue va del camping al mirador.' viewBox='0 0 680 430' xmlns='http://www.w3.org/2000/svg'>" +
+  "<defs><linearGradient id='l35land' x1='0' y1='0' x2='1' y2='1'><stop stop-color='#f0fdf4'/><stop offset='1' stop-color='#dcfce7'/></linearGradient><linearGradient id='l35water' x1='0' y1='0' x2='0' y2='1'><stop stop-color='#bae6fd'/><stop offset='1' stop-color='#38bdf8'/></linearGradient><filter id='l35shadow'><feDropShadow dx='0' dy='3' stdDeviation='5' flood-color='#0f172a' flood-opacity='.14'/></filter></defs>" +
+  "<rect width='680' height='430' rx='24' fill='#f8fafc'/><path d='M30 70Q105 25 188 65T350 54T520 72T650 45V395H30Z' fill='url(#l35land)' stroke='#86a98a' stroke-width='2' filter='url(#l35shadow)'/>" +
+  "<g fill='none' stroke='#bbd6bd' stroke-width='1.5' opacity='.85'><path d='M52 120Q160 75 260 110T470 105T630 90'/><path d='M50 170Q150 130 265 166T470 150T640 142'/><path d='M45 230Q150 195 250 225T465 213T635 195'/><path d='M40 300Q155 260 280 298T500 280T642 255'/></g>" +
+  "<path d='M73 106Q104 70 158 76Q204 80 222 111Q198 146 141 151Q87 149 61 126Z' fill='url(#l35water)' stroke='#0284c7' stroke-width='2'/><path d='M82 121q20-13 40 0t40 0t38 0' fill='none' stroke='#e0f2fe' stroke-width='3'/><text x='142' y='119' font-family='Inter,Arial,sans-serif' font-size='18' font-weight='800' text-anchor='middle' fill='#075985'>Laguna</text>" +
+  "<g transform='translate(535 74)'><path d='M-54 70L0 0L58 70Z' fill='#cbd5e1' stroke='#64748b' stroke-width='2'/><path d='M-9 12L0 0L15 18L5 16L-3 23Z' fill='white'/><circle cx='0' cy='-2' r='10' fill='#c2410c' stroke='white' stroke-width='4'/><text x='0' y='94' font-family='Inter,Arial,sans-serif' font-size='17' font-weight='750' text-anchor='middle' fill='#334155'>Mirador del volcán</text></g>" +
+  "<g transform='translate(358 290)' font-family='Inter,Arial,sans-serif'><path d='M-25 20L0-12L25 20Z' fill='#fdba74' stroke='#9a3412' stroke-width='2'/><path d='M0-12V20' stroke='#9a3412' stroke-width='2'/><text x='0' y='48' font-size='17' font-weight='750' text-anchor='middle' fill='#334155'>Zona de camping</text></g>" +
+  "<g transform='translate(88 357)' font-family='Inter,Arial,sans-serif'><path d='M-17 15V-15H17V15M-17-15L0-27L17-15' fill='#fef3c7' stroke='#a16207' stroke-width='2'/><path d='M0-27V-42' stroke='#a16207' stroke-width='3'/><text x='0' y='42' font-size='17' font-weight='750' text-anchor='middle' fill='#334155'>Entrada</text></g>" +
+  "<path d='M104 331C120 270 150 222 153 151' fill='none' stroke='white' stroke-width='9'/><path d='M104 331C120 270 150 222 153 151' fill='none' stroke='#0284c7' stroke-width='5' stroke-dasharray='9 7'/><path d='M378 272C417 229 470 184 528 139' fill='none' stroke='white' stroke-width='9'/><path d='M378 272C417 229 470 184 528 139' fill='none' stroke='#15803d' stroke-width='5' stroke-dasharray='9 7'/>" +
+  "<g font-family='Inter,Arial,sans-serif' font-size='16' font-weight='800'><rect x='63' y='226' width='174' height='32' rx='16' fill='white' stroke='#7dd3fc'/><text x='150' y='248' text-anchor='middle' fill='#0369a1'>Sendero Los Notros</text><rect x='412' y='202' width='174' height='32' rx='16' fill='white' stroke='#86efac'/><text x='499' y='224' text-anchor='middle' fill='#166534'>Sendero El Coihue</text></g>" +
+  "<g transform='translate(618 342)' font-family='Inter,Arial,sans-serif' text-anchor='middle'><text y='-24' font-size='18' font-weight='850' fill='#0f172a'>N</text><path d='M0-14L-12 18L0 12L12 18Z' fill='#0e7d8a'/><line y1='12' y2='48' stroke='#0e7d8a' stroke-width='4'/></g></svg>";
+})();

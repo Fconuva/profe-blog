@@ -3,7 +3,7 @@
 Documento de encargo. Aquí está todo lo necesario para agregar o mejorar **figuras e ilustraciones**
 en las pruebas de práctica, sin romper nada. Léelo completo antes de tocar un banco.
 
-Repo del sitio: `C:\Users\franc\profe-blog-work` (Eleventy). Deploy = `git push` a `main`,
+Repo canónico del sitio: `C:\dev\profe-blog` (Eleventy). Deploy = `git push` a `main`,
 **nunca** `vercel deploy` (una vez eso revirtió producción a una versión vieja).
 
 ---
@@ -42,6 +42,8 @@ window.PRUEBA = {
       svg: "<svg ...>...</svg>", // opcional: figura vectorial (datos, esquemas)
       imagen: "/imagenes/ecep/practica/<id>/n12.webp",  // opcional: ilustración o foto
       alt: "Descripción de la imagen para quien no la ve",  // OBLIGATORIO si usas imagen
+      formula: "\\frac{2}{5}+\\frac{1}{3}", // opcional: figura matemática compuesta con LaTeX
+      latex: { "2/5": "\\frac{2}{5}" }, // sustituciones exactas dentro del texto visible
       enunciado: "...",
       alternativas: ["...", "...", "...", "..."],
       correcta: "B"
@@ -50,9 +52,13 @@ window.PRUEBA = {
 };
 ```
 
-- Un ítem lleva **`svg` o `imagen`, nunca los dos**. Si están ambos, el motor muestra el SVG.
+- Un ítem lleva **`svg`, `imagen` o `formula`, nunca más de uno**. Si están combinados, el motor
+  prioriza el SVG y luego la imagen.
 - `alt` es obligatorio con `imagen` y debe permitir responder sin ver la figura, **sin revelar
   cuál es la alternativa correcta**.
+- `formula` también requiere `alt`. El motor la compone con MathJax y permite ampliarla.
+- `latex` no cambia las cadenas auditadas: mapea un fragmento literal a su notación TeX y el motor
+  lo reemplaza solo al presentar `textoBase`, `enunciado` o `alternativas`.
 - Los SVG llevan `role="img"` y `aria-label="..."` con el mismo criterio.
 - El motor ya envuelve la figura en un `<figure>` con pie y botón **Ampliar**: no agregues tú
   marcos, títulos ni pies dentro del SVG o la imagen.
@@ -76,9 +82,11 @@ Piloto ya hecho el 26-ago-2026, **respeta estos resultados y no los repitas**:
 | **Pintura original abstracta** (probado: simetría axial, colores análogos) | Excelente, con textura de pincelada | **Usar** |
 | **Diagrama científico rotulado** (probado: neurona, dos intentos) | El modelo dibuja **líneas indicadoras que no apuntan a nada**, incluso prohibiéndoselas | **No usar**: en una prueba esas líneas hacen creer que señalan algo |
 
-Regla que sale de ahí: **los datos y los esquemas van en SVG; las ilustraciones y fotos van en
-imagen generada**. No conviertas a imagen ninguna de las 84 figuras SVG que ya existen: son
-gráficos, tablas, circuitos, planos y pentagramas donde la precisión y el texto nítido importan.
+Regla que sale de ahí: **los datos y los esquemas precisos se redibujan en SVG; las expresiones
+matemáticas se componen con LaTeX; las ilustraciones y fotos van en imagen generada**. La instrucción
+vigente desde el 26-ago es revisar sistemáticamente también mapas, gráficos, tablas, circuitos,
+planos y pentagramas. Eso no significa rasterizarlos: se reemplazan por una versión vectorial más
+clara, con una gramática gráfica común, conservando cada valor, rótulo y relación espacial.
 
 ### Reglas duras al generar
 
@@ -105,7 +113,7 @@ gráficos, tablas, circuitos, planos y pentagramas donde la precisión y el text
 
 ## 4. Antes de dar por buena una edición: los validadores
 
-Corre los tres desde `C:\Users\franc\profe-blog-work`:
+Corre los tres desde `C:\dev\profe-blog`:
 
 ```bash
 # 1) integridad del banco (60 ítems, claves, guion largo, SVG balanceados)
@@ -145,8 +153,11 @@ hallazgo ni entrega.
    fotografía de objeto sobre fondo blanco, solo en ítems que no pregunten cuál es el instrumento.
 3. **Optimización**: revisar que ninguna figura pase de 250 KB y que todas tengan `alt` o
    `aria-label` útil.
-4. **Segunda pasada de estilo**: unificar paleta y grosores de los 84 SVG (hoy cada banco tiene el
-   suyo). Cambio cosmético, cuidando no alterar valores ni rótulos.
+4. **Reemplazo sistemático de SVG**: unificar paleta, tipografía, grosores, jerarquía y espacio en
+   mapas, gráficos, tablas, circuitos, planos y pentagramas. Comparar antes/después y comprobar que
+   no cambió ningún valor ni rótulo.
+5. **Lenguaje matemático**: registrar expresiones en `latex` o usar `formula` cuando la figura sea
+   puramente algebraica. Nunca dibujar fracciones o ecuaciones a mano con líneas y textos SVG.
 
 Cuando termines una tarea: deja la evidencia (qué mediste y con qué número), commitea con rutas
 explícitas y avisa. El detalle del estado de la sección está en la bitácora

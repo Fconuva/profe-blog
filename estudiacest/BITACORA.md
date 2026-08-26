@@ -8,6 +8,40 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-26, publicación privada de notas de trabajo SIMCE y alineación de Lirmi
+
+- Se publicaron 498 calificaciones privadas de laboriosidad correspondientes a
+  83 estudiantes de `2A-HC` y `2B-HC`, en las clases 1 a 6 de la Unidad 3. La
+  escala aplicada es `1 / 3 / 5 / 7` y conserva los ajustes ya auditados por
+  escritura incompleta y coincidencia textual superior al 90 %.
+- El panel del estudiante incorpora una tabla compacta y plegable con la nota
+  de cada clase, el promedio parcial y una leyenda para entrega confirmada,
+  ausencia de entrega, borrador, escritura incompleta y nota ajustada. También
+  incluye el canal institucional de contacto sin exponer datos de otros
+  estudiantes.
+- Las notas viven en `plataforma_estudiantes/calificaciones_clase/{uid}`. Las
+  reglas permiten que cada estudiante lea solo su propio nodo y reservan la
+  escritura a administración. La publicación no libera claves, respuestas ni
+  retroalimentación académica.
+- La escritura masiva se simuló, respaldó y releyó: 498 registros aplicados y
+  checksum exacto
+  `fb3e2ec26cc50fb2fef1a82681d7818205bd5e56bf14c0b4857f2e5f515397bb`.
+- La prueba productiva comprobó panel cerrado por defecto, promedio, seis
+  filas, leyenda, vista móvil sin desborde, lectura propia permitida, lectura
+  cruzada denegada, escritura estudiantil denegada y cero errores de consola.
+- Se auditaron en Lirmi las planificaciones vigentes de 14 cursos de SIMCE,
+  PAES, NM3 y NM4. Se corrigieron únicamente seis diferencias verificadas: dos
+  objetivos omitidos de la clase SIMCE de textos visuales y cuatro sesiones
+  PAES que aún describían vocabulario en vez de la Guía 18 sobre arquitectura
+  del ensayo. NM3 y NM4 se conservaron porque sus fechas y actividades
+  vigentes coincidían con Estudia CEST.
+- Las seis correcciones de Lirmi se aplicaron desde una simulación con respaldo
+  temporal y fueron releídas desde Planifica. Checksum esperado y obtenido:
+  `3747c0436a5537b7eb1d386f62d2c6db027a42b21fb0b00fa66aa4052ae9bf60`.
+- Deploy productivo del panel: `dpl_5Ve6Qkw9kWRNU25jGND1y9BR1v5G`.
+
+---
+
 ## 2026-08-26, ajuste privado por coincidencias textuales
 
 - A solicitud docente, toda respuesta escrita con coincidencia superior al

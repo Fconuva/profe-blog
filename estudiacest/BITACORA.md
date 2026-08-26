@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-26, ajuste privado por coincidencias textuales
+
+- A solicitud docente, toda respuesta escrita con coincidencia superior al
+  90 % respecto de otro estudiante deja la nota de esa clase con máximo 5,0
+  para ambos involucrados.
+- El motivo queda visible en el detalle y como comentario de la celda:
+  `Coincidencia textual superior al 90 %; posible uso no autorizado de IA o copia`.
+- El nuevo cálculo detectó 132 pares y afectó 73 combinaciones estudiante/clase,
+  correspondientes a 40 estudiantes. Los 73 casos quedaron en 5,0.
+- Se generó una segunda versión del informe porque el archivo anterior estaba
+  abierto y Windows impidió reemplazarlo. La versión ajustada termina en
+  `_AJUSTADA_90.xlsx`.
+- Las notas siguen siendo privadas: no se modificaron resultados ni
+  calificaciones en Firebase.
+
+---
+
 ## 2026-08-26, revisión privada de laboriosidad y telemetría SIMCE
 
 - Se auditaron en solo lectura las clases 1 a 6 de la Unidad 3 para `2A-HC` y

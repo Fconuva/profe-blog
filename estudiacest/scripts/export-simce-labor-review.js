@@ -192,7 +192,8 @@ function rowFor(student, uid, sessionId, session, response, result) {
     responseTimestamp: response.submittedAt || response.completadaAt || response.submitted_at || response.updatedAt || response.last_save || null,
     resultTimestamp: result.submitted_at || result.timestamp || null,
     substantiveWriting: substantiveWriting(sessionId, response, result),
-    duplicateGroups: []
+    duplicateGroups: [],
+    penalizedDuplicateGroups: []
   };
 }
 
@@ -212,11 +213,15 @@ function findWritingMatches(rows) {
         if (lengthRatio < 0.82) continue;
         const exact = left.normalized === right.normalized;
         const similarity = exact ? 1 : tokenSimilarity(left.normalized, right.normalized);
-        if (!exact && similarity < 0.94) continue;
+        if (!exact && similarity <= 0.90) continue;
         groupNumber += 1;
         const groupId = `C${String(groupNumber).padStart(3, '0')}`;
         left.row.duplicateGroups.push(groupId);
         right.row.duplicateGroups.push(groupId);
+        if (exact || similarity > 0.90) {
+          left.row.penalizedDuplicateGroups.push(groupId);
+          right.row.penalizedDuplicateGroups.push(groupId);
+        }
         matches.push({
           groupId,
           sessionId,
@@ -231,7 +236,11 @@ function findWritingMatches(rows) {
   });
   rows.forEach(row => {
     row.duplicateGroups = [...new Set(row.duplicateGroups)];
-    if (row.duplicateGroups.length) row.flags.push('Coincidencia escrita: revisar manualmente; no se rebajó en forma automática');
+    row.penalizedDuplicateGroups = [...new Set(row.penalizedDuplicateGroups)];
+    if (row.penalizedDuplicateGroups.length) {
+      row.proposedGrade = Math.min(row.proposedGrade, 5);
+      row.flags.push('Ajuste aplicado: coincidencia textual superior al 90 % con otro estudiante; posible uso no autorizado de IA o copia. Nota máxima 5,0');
+    }
   });
   return matches;
 }
@@ -282,7 +291,7 @@ async function main() {
       grades: { none: 1, halfOrLess: 3, moreThanHalf: 5, almostAll: 7, almostAllThreshold: 0.85 },
       writingAdjustment: 'La escritura ausente o incompleta baja una banda cuando corresponde.',
       timing: 'No se aplica rebaja: las clases 1 a 6 no guardaron hora inicial confiable.',
-      matches: 'Las coincidencias escritas solo se señalan para revisión manual.'
+      matches: 'Toda coincidencia textual superior al 90 % deja la nota de ambos estudiantes con máximo 5,0.'
     },
     sessionState,
     rows,

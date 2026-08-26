@@ -16,8 +16,13 @@
   var st = document.createElement('style');
   st.textContent = '.ecq-alt.sel{border-color:#0e7d8a;background:#e6f7f9;box-shadow:0 0 0 2px #0e7d8a33}' +
     '.ecq-alt.sel .lt{background:#0e7d8a;color:#fff}' +
-    '.ecq-svg{margin:14px 0;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow-x:auto}' +
-    '.ecq-svg svg{max-width:100%;height:auto;display:block;margin:0 auto}' +
+    '.ecq-fig{margin:14px 0;padding:12px 12px 8px;background:#fff;border:1px solid #e2e8f0;border-radius:12px}' +
+    '.ecq-fig .ecq-svg{overflow-x:auto}' +
+    '.ecq-fig svg{max-width:100%;height:auto;display:block;margin:0 auto}' +
+    '.ecq-figcap{margin:8px 0 0;font-size:12.5px;color:#64748b;text-align:center}' +
+    '.ecq-figzoom{border:none;background:#f1f5f9;color:#0e7d8a;font-weight:600;font-size:12.5px;border-radius:999px;padding:4px 12px;cursor:pointer}' +
+    '.ecq-fig.zoom .ecq-svg{position:fixed;inset:0;z-index:9999;background:#fff;padding:24px;overflow:auto;display:flex;align-items:center;justify-content:center}' +
+    '.ecq-fig.zoom svg{max-width:none;width:min(96vw,1200px)}' +
     '.ecq-rev-nav{position:sticky;bottom:0;background:#ffffffee;padding:8px 0}';
   document.head.appendChild(st);
 
@@ -64,10 +69,17 @@
     if (confirm('¿Borrar tus respuestas y empezar de nuevo?')) { state = { resp: {}, idx: 0, done: false }; save(); intro(); }
   }
 
-  function estimulos(q) {
+  function estimulos(q, idFig) {
     var h = '';
     if (q.textoBase) h += '<div class="ecq-texto"><span class="tt"><i class="bi bi-card-text"></i> Texto base</span><div>' + esc(q.textoBase).replace(/\n/g, '<br>') + '</div></div>';
-    if (q.svg) h += '<div class="ecq-svg">' + q.svg + '</div>';
+    // figura: SVG inline (datos, esquemas) o imagen (ilustración o fotografía)
+    if (q.svg || q.imagen) {
+      h += '<figure class="ecq-fig" id="' + idFig + '">';
+      if (q.svg) h += '<div class="ecq-svg">' + q.svg + '</div>';
+      else h += '<div class="ecq-svg"><img src="' + esc(q.imagen) + '" alt="' + esc(q.alt || ('Figura de la pregunta ' + q.n)) + '" loading="lazy" style="max-width:100%;height:auto;display:block;margin:0 auto;border-radius:8px"></div>';
+      h += '<figcaption class="ecq-figcap">Figura de la pregunta ' + q.n +
+        ' <button type="button" class="ecq-figzoom" data-fig="' + idFig + '">Ampliar</button></figcaption></figure>';
+    }
     if (q.nota) h += '<div class="ecq-nota"><i class="bi bi-info-circle"></i> ' + esc(q.nota) + '</div>';
     return h;
   }
@@ -82,7 +94,7 @@
       '<div class="ecq-meta">Pregunta <b>' + q.n + '</b> de ' + total + ' · ' + answeredCount() + ' respondidas' + (rev ? ' · revisión: ' + score() + ' correctas' : '') + '</div></div>';
     html += '<article class="ecq-card">';
     html += '<div class="ecq-num">' + q.n + '</div>';
-    html += estimulos(q);
+    html += estimulos(q, 'fig-' + q.n);
     html += '<div class="ecq-enun">' + esc(q.enunciado).replace(/\n/g, '<br>') + '</div>';
     html += '<div class="ecq-alts">';
     LET.forEach(function (L, k) {
@@ -123,6 +135,14 @@
         };
       });
     }
+    var zb = mount.querySelector('.ecq-figzoom');
+    if (zb) zb.onclick = function () {
+      var fig = document.getElementById(zb.getAttribute('data-fig'));
+      if (!fig) return;
+      var abierto = fig.classList.toggle('zoom');
+      zb.textContent = abierto ? 'Cerrar' : 'Ampliar';
+      if (abierto) fig.querySelector('.ecq-svg').onclick = function () { fig.classList.remove('zoom'); zb.textContent = 'Ampliar'; };
+    };
     var pv = mount.querySelector('.ecq-prev'); if (pv) pv.onclick = function () { go(state.idx - 1); };
     var nx = mount.querySelector('.ecq-next'); if (nx) nx.onclick = function () { go(state.idx + 1); };
     var fn = mount.querySelector('.ecq-fin'); if (fn) fn.onclick = rev ? resultados : finalizar;

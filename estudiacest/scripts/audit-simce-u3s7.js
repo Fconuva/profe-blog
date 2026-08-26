@@ -13,7 +13,7 @@ vm.createContext(context);
 vm.runInContext(dataSource, context);
 const data = context.window.SIMCE_U3S7_DATA;
 const page = read('estudiantes/guia-u3-s7-discurso.html');
-const api = read('api/simce-u3s7.js');
+const api = read('api/estudiantes.js');
 const dashboard = read('estudiantes/dashboard.html');
 const admin = read('estudiantes/adminprofe/index.html');
 const contract = JSON.parse(read('scripts/class-submission-contract.json'));
@@ -41,7 +41,7 @@ for (const question of data.questions) {
   expect(['LOCALIZAR','INTERPRETAR','REFLEXIONAR'].includes(question.skill), `${question.id}: habilidad inválida.`);
 }
 
-const keyBody = api.match(/const ANSWER_KEY\s*=\s*\{([\s\S]*?)\n\};/)?.[1] || '';
+const keyBody = api.match(/const U3S7_ANSWER_KEY\s*=\s*\{([\s\S]*?)\n\};/)?.[1] || '';
 const keys = Object.fromEntries([...keyBody.matchAll(/(q\d+)\s*:\s*'([ABCD])'/g)].map(match => [match[1],match[2]]));
 expect(Object.keys(keys).length === 50, `La API contiene ${Object.keys(keys).length} claves; se esperaban 50.`);
 expect(Object.keys(keys).every(id => ids.includes(id)), 'La API contiene una clave sin reactivo correspondiente.');

@@ -40,7 +40,7 @@
 (()=>{
   'use strict';
   const CONFIG={apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',databaseURL:'https://estudiacest-default-rtdb.firebaseio.com',projectId:'estudiacest',storageBucket:'estudiacest.firebasestorage.app',messagingSenderId:'999002169815',appId:'1:999002169815:web:51203237bc77c2e74deb92'};
-  const API='/api/simce-u3s7';
+  const API='/api/estudiantes';
   const SESSION='sesion-u3-7';
   const data=window.SIMCE_U3S7_DATA;
   const questions=data.questions;
@@ -102,7 +102,8 @@
   function payload(){return {answers:state.answers,openResponses:state.openResponses,metaResponses:state.metaResponses,concepts:state.concepts}}
   async function callApi(action,method='GET',body=null){
     if(preview)return {ok:true,session:{active:true},attempt:null,student:{nombre:'Vista previa',curso:'2° Medio'}};
-    const token=await user.getIdToken();const response=await fetch(`${API}?action=${encodeURIComponent(action)}`,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+    const route=action==='get-guia-state'?'simce-u3s7-state':action==='save-draft'?'simce-u3s7-save':'simce-u3s7-submit';
+    const token=await user.getIdToken();const response=await fetch(`${API}?action=${encodeURIComponent(route)}`,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
     const json=await response.json().catch(()=>({}));if(!response.ok){const error=new Error(json.error||'No fue posible conectar.');error.status=response.status;throw error}return json;
   }
   function scheduleSave(){

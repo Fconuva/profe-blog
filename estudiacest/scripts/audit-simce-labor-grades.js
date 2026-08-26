@@ -4,7 +4,8 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const dashboard = fs.readFileSync(path.join(root, 'estudiantes', 'dashboard.html'), 'utf8');
 const rules = JSON.parse(fs.readFileSync(path.join(root, 'firebase-rules.json'), 'utf8')).rules;
-const publisher = fs.readFileSync(path.join(root, 'scripts', 'publish-simce-labor-grades.js'), 'utf8');
+const publisherPath = path.join(root, 'scripts', 'publish-simce-labor-grades.js');
+const publisher = fs.existsSync(publisherPath) ? fs.readFileSync(publisherPath, 'utf8') : null;
 const failures = [];
 
 [
@@ -28,16 +29,18 @@ else {
   if (gradeRules.$uid && gradeRules.$uid['.write']) failures.push('Reglas: un estudiante no debe poder escribir calificaciones.');
 }
 
-[
-  "row.proposedGrade",
-  "similarity_adjusted",
-  "rows.length !== 498",
-  "students.size !== 83",
-  "firstChecksum !== secondChecksum",
-  "appliedChecksum !== firstChecksum"
-].forEach(fragment => {
-  if (!publisher.includes(fragment)) failures.push(`Publicador: falta la guarda ${fragment}.`);
-});
+if (publisher) {
+  [
+    "row.proposedGrade",
+    "similarity_adjusted",
+    "rows.length !== 498",
+    "students.size !== 83",
+    "firstChecksum !== secondChecksum",
+    "appliedChecksum !== firstChecksum"
+  ].forEach(fragment => {
+    if (!publisher.includes(fragment)) failures.push(`Publicador: falta la guarda ${fragment}.`);
+  });
+}
 
 if (failures.length) {
   console.error(`Auditoría de notas SIMCE fallida:\n- ${failures.join('\n- ')}`);

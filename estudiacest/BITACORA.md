@@ -8,6 +8,41 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-26, revisión privada de laboriosidad y telemetría SIMCE
+
+- Se auditaron en solo lectura las clases 1 a 6 de la Unidad 3 para `2A-HC` y
+  `2B-HC`: 83 estudiantes y 498 combinaciones estudiante/clase. No se
+  publicaron ni modificaron notas.
+- El informe privado quedó fuera del repositorio, en la carpeta de evaluaciones
+  de NM2 del workspace. Aplica la escala acordada `1 / 3 / 5 / 7`, rebaja una
+  banda cuando falta escritura obligatoria y separa ausencias, borradores y
+  coincidencias para revisión manual.
+- Las sesiones 1 a 5 estaban cerradas para el curso y la sesión 6 activa. Las
+  clases antiguas no guardaron una hora inicial confiable; por eso no se aplicó
+  ninguna rebaja por velocidad ni se reconstruyeron tiempos.
+- Se agregó `estudiantes/js/work-telemetry.js` a las siete clases actuales de la
+  Unidad 3. Registra inicio, entrega confirmada, tiempo total, tiempo activo,
+  aperturas, interacciones, intervalos rápidos y eventos de copiar, pegar,
+  cortar, atajos, menú contextual, selección y pérdida de foco. No almacena el
+  texto ni el contenido del portapapeles.
+- El admin muestra la telemetría al abrir las respuestas de un estudiante y la
+  identifica expresamente como un indicador de revisión, no como prueba
+  automática de copia.
+- Se añadió el nodo protegido `telemetria_clases` a las reglas de Firebase y una
+  guarda obliga a las futuras guías SIMCE registradas en el contrato de entrega
+  a cargar el registrador común.
+- Prueba productiva con una cuenta ficticia temporal: escritura y lectura propia
+  permitidas; lectura y escritura de otro UID denegadas; inicio, entrega, tiempo
+  activo, interacción, copia, atajo, menú contextual y pérdida de foco
+  persistidos; cero errores de consola. La cuenta y todos sus datos se borraron
+  al terminar.
+- Validaciones: reglas Firebase, contrato de entrega, build completo, scripts
+  del admin, 9 rutas productivas HTTP 200 y libro Excel sin errores de fórmula.
+- Commit funcional: `c7a61dbe`. Deploy productivo:
+  `dpl_2NMLYFaYQab2pd4KNDUD86h6GFUP`.
+
+---
+
 ## 2026-08-26, Unidad 3 Clase 7 SIMCE: el discurso
 
 - Se publicó `/estudiantes/guia-u3-s7-discurso.html` para `2A-HC` y `2B-HC`: ocho lecturas, 50 reactivos de selección múltiple, dos respuestas de desarrollo y tres preguntas metacognitivas escritas.

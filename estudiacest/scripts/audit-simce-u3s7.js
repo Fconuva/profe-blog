@@ -71,6 +71,8 @@ expect(meaningfulLengthCue <= 13, `La clave supera por más de 10 caracteres a t
 
 expect(page.includes('50 reactivos'), 'La portada no informa los 50 reactivos.');
 expect(page.includes("SESSION='sesion-u3-7'"), 'La página no usa la sesión canónica.');
+expect(page.includes("const API='/api/estudiantes'"), 'La página no usa la API unificada.');
+expect(page.includes("'simce-u3s7-state'") && page.includes("'simce-u3s7-save'") && page.includes("'simce-u3s7-submit'"), 'Falta una ruta del flujo unificado.');
 expect(page.includes('Puntaje: ${confirmed.result.score} de ${confirmed.result.total}'), 'El popup no muestra puntaje sin respuestas.');
 expect(!page.includes('respuesta correcta es'), 'La página no debe exponer respuestas correctas al entregar.');
 expect(page.includes('saveQueue=Promise.resolve()'), 'Falta la cola serializada de autoguardado.');
@@ -84,6 +86,9 @@ expect(admin.includes("'sesion-u3-7'"), 'El admin no registra la sesión 7.');
 expect(!dashboard.includes('<div class="session-num">7</div>'), 'La tarjeta gris de la clase 7 sigue duplicada en el plan.');
 expect(contract.files.some(entry => entry.path === 'estudiantes/guia-u3-s7-discurso.html' && entry.storage === 'api'), 'La página no está en el contrato de entrega.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/guia-u3-s7-discurso.html'), 'La página no está protegida por el manifiesto.');
+expect(!fs.existsSync(path.join(root, 'api/simce-u3s7.js')), 'La sesión no debe crear una función adicional en Vercel.');
+const deployedApiCount = fs.readdirSync(path.join(root, 'api')).filter(name => name.endsWith('.js') && !name.startsWith('_')).length;
+expect(deployedApiCount <= 12, `Vercel Hobby admite 12 funciones y se detectaron ${deployedApiCount}.`);
 
 const inlineScripts = [...page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match=>match[1]).filter(value=>value.trim());
 inlineScripts.forEach((script,index)=>{try{new Function(script)}catch(error){failures.push(`Script embebido ${index+1} inválido: ${error.message}`)}});

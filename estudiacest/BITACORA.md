@@ -8,6 +8,19 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-26, Unidad 3 Clase 7 SIMCE: el discurso
+
+- Se publicó `/estudiantes/guia-u3-s7-discurso.html` para `2A-HC` y `2B-HC`: ocho lecturas, 50 reactivos de selección múltiple, dos respuestas de desarrollo y tres preguntas metacognitivas escritas.
+- La dificultad se construyó mediante inferencia, integración de evidencias, evaluación de propósito, audiencia, tono y suficiencia; no mediante vocabulario innecesariamente complejo.
+- La clave y el cálculo quedaron solo en la API. Al entregar, el estudiante ve el puntaje sobre 50 y el porcentaje, pero no las alternativas correctas ni el desglose por reactivo.
+- El flujo usa autoguardado serializado, espera las escrituras pendientes, relee Firebase antes de confirmar y muestra un popup persistente de entrega exitosa.
+- La sesión `sesion-u3-7` quedó activa para ambos cursos, con resultados y retroalimentación detallada ocultos.
+- Para respetar el máximo de Vercel Hobby, las rutas de esta clase se integraron en `api/estudiantes.js`; la auditoría impide volver a superar las 12 funciones desplegables.
+- Pruebas productivas con cuenta temporal: ingreso por RUT, borrador recuperado después de recargar, 50 respuestas guardadas, entrega atómica, puntaje persistente después de otra recarga, vista móvil y escritorio sin desborde y cero errores JavaScript. La cuenta y sus datos se eliminaron al terminar.
+- Commit de integración: `b058fe38`. Deploy productivo: `dpl_7GeM6hSrWvmdXjk8fcmScW9HAgjW`.
+
+---
+
 ## 2026-08-24, instrucciones de trabajo para 4DTP
 
 - Se reemplazó el bloque inicial de entrega final de `/4dtp/` por las instrucciones concretas del martes 25 de agosto.

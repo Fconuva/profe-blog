@@ -26,6 +26,7 @@ const OBLIGATORIOS = [
   ['plataforma_estudiantes', 'estudiantes'],
   ['plataforma_estudiantes', 'sesiones'],
   ['plataforma_estudiantes', 'respuestas'],
+  ['plataforma_estudiantes', 'calificaciones_clase'],
   ['plataforma_estudiantes', 'telemetria_clases'],
   ['plataforma_estudiantes', 'resultados'],
   ['plataforma_nm1'],
@@ -36,7 +37,7 @@ const OBLIGATORIOS = [
 
 // Nodos que NUNCA deben quedar abiertos a cualquier cuenta autenticada: si su
 // .read es exactamente "auth != null" volvimos al borrador viejo.
-const SIN_AUTH_PELADO = ['estudiantes', 'sesiones', 'resultados', 'ranking', 'avatar', 'mensajes', 'admin_refresh'];
+const SIN_AUTH_PELADO = ['estudiantes', 'sesiones', 'calificaciones_clase', 'resultados', 'ranking', 'avatar', 'mensajes', 'admin_refresh'];
 
 const fallas = [];
 

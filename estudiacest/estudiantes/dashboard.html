@@ -53,6 +53,45 @@
         .stat-card.purple { border-left-color:#7c3aed; }
         .stat-card.green { border-left-color:#16a34a; }
         .stat-card.amber { border-left-color:#f59e0b; }
+        .labor-grades {
+            display:none; background:#fff; border:1px solid #cbd5e1; border-radius:14px;
+            margin-bottom:24px; box-shadow:0 1px 4px rgba(15,23,42,.06); overflow:hidden;
+        }
+        .labor-grades.visible { display:block; }
+        .labor-grades summary {
+            list-style:none; cursor:pointer; display:flex; align-items:center; justify-content:space-between;
+            gap:16px; padding:16px 18px;
+        }
+        .labor-grades summary::-webkit-details-marker { display:none; }
+        .labor-summary-main { min-width:0; }
+        .labor-summary-kicker { font-size:11px; font-weight:800; color:#1d4ed8; text-transform:uppercase; letter-spacing:.5px; }
+        .labor-summary-title { font-size:17px; font-weight:800; color:#0f172a; margin-top:3px; }
+        .labor-summary-copy { font-size:12px; color:#64748b; line-height:1.45; margin-top:3px; }
+        .labor-summary-side { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+        .labor-average { text-align:right; }
+        .labor-average span { display:block; font-size:10px; color:#64748b; font-weight:700; text-transform:uppercase; }
+        .labor-average strong { display:block; font-size:24px; color:#0f172a; margin-top:2px; }
+        .labor-toggle { padding:7px 10px; border-radius:8px; background:#eff6ff; color:#1d4ed8; font-size:11px; font-weight:800; }
+        .labor-grades[open] .labor-toggle-open, .labor-grades:not([open]) .labor-toggle-close { display:none; }
+        .labor-content { border-top:1px solid #e2e8f0; padding:0 18px 16px; }
+        .labor-table-wrap { overflow-x:auto; }
+        .labor-table { width:100%; border-collapse:collapse; min-width:610px; }
+        .labor-table th { padding:11px 8px 8px; color:#64748b; font-size:10px; text-transform:uppercase; text-align:left; letter-spacing:.45px; }
+        .labor-table td { padding:10px 8px; border-top:1px solid #e2e8f0; color:#334155; font-size:12px; vertical-align:middle; }
+        .labor-table td:first-child { font-weight:700; color:#0f172a; }
+        .labor-grade-value { font-size:15px; font-weight:800; color:#0f172a; white-space:nowrap; }
+        .labor-status { display:inline-flex; align-items:center; gap:6px; font-weight:700; white-space:nowrap; }
+        .labor-status-symbol { width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:11px; }
+        .labor-status.submitted .labor-status-symbol { background:#dcfce7; color:#166534; }
+        .labor-status.not-submitted .labor-status-symbol { background:#fee2e2; color:#b91c1c; }
+        .labor-status.draft .labor-status-symbol { background:#dbeafe; color:#1d4ed8; }
+        .labor-status.incomplete .labor-status-symbol { background:#fef3c7; color:#92400e; }
+        .labor-status.adjusted .labor-status-symbol { background:#ffedd5; color:#9a3412; }
+        .labor-reason { max-width:320px; line-height:1.4; }
+        .labor-legend { display:flex; flex-wrap:wrap; gap:8px 14px; padding-top:13px; border-top:1px solid #e2e8f0; color:#475569; font-size:11px; }
+        .labor-legend span { display:inline-flex; align-items:center; gap:5px; }
+        .labor-contact { margin-top:12px; padding:10px 12px; background:#f8fafc; border-radius:8px; color:#475569; font-size:11px; line-height:1.5; }
+        .labor-contact a { color:#1d4ed8; font-weight:800; }
         .simce-card {
             background:linear-gradient(135deg,#ffffff,#eff6ff 58%,#f8fafc); border:1px solid #bfdbfe;
             border-radius:18px; padding:22px; margin-bottom:28px; box-shadow:0 8px 24px rgba(30,64,175,.08);
@@ -297,6 +336,10 @@
         @media (max-width:640px) {
             .header { padding:12px 16px; flex-wrap:wrap; gap:8px; }
             .stats-grid { grid-template-columns:1fr 1fr; }
+            .labor-grades summary { align-items:flex-start; padding:14px; }
+            .labor-summary-side { flex-direction:column; align-items:flex-end; gap:6px; }
+            .labor-summary-copy { max-width:210px; }
+            .labor-content { padding:0 14px 14px; }
             .session-card { flex-wrap:wrap; padding:16px; }
             .session-status { width:100%; text-align:left; margin-top:4px; }
             .simce-card { padding:18px 16px; }
@@ -354,9 +397,9 @@
                 <div class="stat-sub" id="statTotal">de 0 disponibles</div>
             </div>
             <div class="stat-card purple">
-                <div class="stat-label">Promedio general</div>
+                <div class="stat-label">Promedio de logro</div>
                 <div class="stat-value" id="statAvg">-</div>
-                <div class="stat-sub">de logro</div>
+                <div class="stat-sub">en resultados publicados</div>
             </div>
             <div class="stat-card amber">
                 <div class="stat-label">Racha de días</div>
@@ -364,6 +407,36 @@
                 <div class="stat-sub">días consecutivos</div>
             </div>
         </div>
+
+        <details class="labor-grades" id="laborGradesPanel">
+            <summary>
+                <div class="labor-summary-main">
+                    <div class="labor-summary-kicker">Evaluación de trabajo en clases</div>
+                    <div class="labor-summary-title">Mis notas de la Unidad 3</div>
+                    <div class="labor-summary-copy">Revisa la nota de cada clase y tu promedio parcial.</div>
+                </div>
+                <div class="labor-summary-side">
+                    <div class="labor-average"><span>Promedio parcial</span><strong id="laborAverage">-</strong></div>
+                    <span class="labor-toggle"><span class="labor-toggle-open">Ver detalle</span><span class="labor-toggle-close">Ocultar</span></span>
+                </div>
+            </summary>
+            <div class="labor-content">
+                <div class="labor-table-wrap">
+                    <table class="labor-table">
+                        <thead><tr><th>Clase</th><th>Nota</th><th>Estado</th><th>Detalle</th></tr></thead>
+                        <tbody id="laborGradesBody"></tbody>
+                    </table>
+                </div>
+                <div class="labor-legend" aria-label="Simbología de las calificaciones">
+                    <span><b>✓</b> Entregada</span>
+                    <span><b>○</b> Sin entrega</span>
+                    <span><b>◐</b> Borrador</span>
+                    <span><b>△</b> Escritura incompleta</span>
+                    <span><b>!</b> Ajuste por coincidencia textual</span>
+                </div>
+                <div class="labor-contact">Si faltaste con justificación, necesitas reabrir una clase o tienes dudas, escribe a <a href="mailto:frnunez@salesianostalca.cl">frnunez@salesianostalca.cl</a>.</div>
+            </div>
+        </details>
 
         <!-- Sessions -->
         <div class="section-title">📖 Mis Sesiones</div>
@@ -1071,14 +1144,64 @@
             return PANEL_SECTIONS[sectionKey].prefix + String(index);
         }
 
-        function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult) {
+        function escapeDashboardHtml(value) {
+            return String(value == null ? '' : value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatSchoolGrade(value) {
+            const grade = Number(value);
+            return Number.isFinite(grade) ? grade.toFixed(1).replace('.', ',') : '-';
+        }
+
+        function laborStatusMeta(status) {
+            const statuses = {
+                submitted: { symbol:'✓', label:'Entregada', css:'submitted' },
+                not_submitted: { symbol:'○', label:'Sin entrega', css:'not-submitted' },
+                draft: { symbol:'◐', label:'Borrador', css:'draft' },
+                writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
+                similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
+            };
+            return statuses[status] || statuses.submitted;
+        }
+
+        function renderLaborGrades(grades) {
+            const panel = document.getElementById('laborGradesPanel');
+            const body = document.getElementById('laborGradesBody');
+            const entries = Object.values(grades || {})
+                .filter(item => item && Number.isFinite(Number(item.grade)))
+                .sort((left, right) => Number(left.classNumber || 0) - Number(right.classNumber || 0));
+            if (!panel || !body || !entries.length) {
+                if (panel) panel.classList.remove('visible');
+                return;
+            }
+
+            const total = entries.reduce((sum, item) => sum + Number(item.grade), 0);
+            document.getElementById('laborAverage').textContent = formatSchoolGrade(total / entries.length);
+            body.innerHTML = entries.map(item => {
+                const meta = laborStatusMeta(item.status);
+                return `<tr>
+                    <td>Clase ${Number(item.classNumber || 0)}</td>
+                    <td><span class="labor-grade-value">${formatSchoolGrade(item.grade)}</span></td>
+                    <td><span class="labor-status ${meta.css}"><span class="labor-status-symbol">${meta.symbol}</span>${meta.label}</span></td>
+                    <td class="labor-reason">${escapeDashboardHtml(item.statusLabel || '')}</td>
+                </tr>`;
+            }).join('');
+            panel.classList.add('visible');
+        }
+
+        function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult, myLaborGrade) {
             const isActive = ses.activa !== false || ses.__individualAccess === true;
             const isCompleted = myResp && (myResp.completada === true || myResp.submitted === true);
             const hasResults = ses.resultados_visibles && myResult;
             const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
-                const noteValue = Number(myResult && myResult.nota);
-                const noteBadge = hasResults && Number.isFinite(noteValue)
-                    ? ' <span class="badge badge-grade">Nota ' + noteValue.toFixed(1) + '</span>'
+                const noteValue = Number(myLaborGrade && myLaborGrade.grade);
+                const noteBadge = Number.isFinite(noteValue)
+                    ? ' <span class="badge badge-grade">Nota ' + formatSchoolGrade(noteValue) + '</span>'
                     : '';
 
             let statusBadge = '';
@@ -1087,17 +1210,17 @@
 
             if (!isActive) {
                 cardClass += ' locked';
-                statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>';
+                statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>' + noteBadge;
             } else if (isCompleted) {
                 cardClass += ' completed';
                     statusBadge = '<span class="badge badge-done">✅ Completada</span>' + noteBadge;
                 if (hasResults) statusBadge += '<br><span class="badge badge-results">📊 ' + myResult.porcentaje + '% logro</span>';
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
             } else if (myResp) {
-                statusBadge = '<span class="badge badge-progress">📝 En progreso</span>';
+                statusBadge = '<span class="badge badge-progress">📝 En progreso</span>' + noteBadge;
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
             } else {
-                statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>';
+                statusBadge = '<span class="badge badge-pending">⏳ Pendiente</span>' + noteBadge;
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
             }
 
@@ -1125,7 +1248,7 @@
             return ['plan', 'ensayo', 'retro', 'otro'].flatMap(sectionKey => grouped[sectionKey].map(entry => entry.session));
         }
 
-        function renderSectionGroupsHtml(grouped, respuestas, resultados) {
+        function renderSectionGroupsHtml(grouped, respuestas, resultados, laborGrades) {
             const order = ['plan', 'ensayo', 'retro', 'otro'];
             const html = order.map(sectionKey => {
                 const entries = grouped[sectionKey];
@@ -1137,7 +1260,8 @@
                     index + 1,
                     sectionKey,
                     respuestas[entry.session.id],
-                    resultados[entry.session.id]
+                    resultados[entry.session.id],
+                    laborGrades[entry.session.id]
                 )).join('');
 
                 return `
@@ -1196,7 +1320,7 @@
             currentWrap.classList.remove('show');
         }
 
-        function renderSessionGroups(sesiones, respuestas, resultados) {
+        function renderSessionGroups(sesiones, respuestas, resultados, laborGrades) {
             const byUnit = {
                 u1: createEmptySessionGroups(),
                 [CURRENT_PANEL_UNIT]: createEmptySessionGroups()
@@ -1217,8 +1341,8 @@
 
             return {
                 byUnit,
-                current: renderSectionGroupsHtml(byUnit[CURRENT_PANEL_UNIT], respuestas, resultados),
-                archive: renderSectionGroupsHtml(byUnit.u1, respuestas, resultados)
+                current: renderSectionGroupsHtml(byUnit[CURRENT_PANEL_UNIT], respuestas, resultados, laborGrades),
+                archive: renderSectionGroupsHtml(byUnit.u1, respuestas, resultados, laborGrades)
             };
         }
 
@@ -1227,10 +1351,13 @@
             const currentContainer = document.getElementById('currentSessionList');
             try {
                 // Single batch: fetch sessions, this student's results+responses, and ranking in parallel
-                const [sesSnap, rankSnap] = await Promise.all([
+                const [sesSnap, rankSnap, laborGradeSnap] = await Promise.all([
                     db.ref(BASE + '/sesiones').orderByChild('orden').once('value'),
-                    db.ref(BASE + '/ranking').once('value')
+                    db.ref(BASE + '/ranking').once('value'),
+                    db.ref(BASE + '/calificaciones_clase/' + uid).once('value').catch(() => null)
                 ]);
+                const laborGrades = laborGradeSnap && laborGradeSnap.exists() ? laborGradeSnap.val() : {};
+                renderLaborGrades(laborGrades);
 
                 const sessionMap = new Map(Object.entries(STATIC_SESSION_FALLBACKS).map(([id,session]) => [id,{ id, ...session }]));
                 if (sesSnap.exists()) {
@@ -1265,7 +1392,7 @@
                 }));
 
                 // === RENDER SESSIONS ===
-                const rendered = renderSessionGroups(sesiones, respuestas, resultados);
+                const rendered = renderSessionGroups(sesiones, respuestas, resultados, laborGrades);
                 currentContainer.innerHTML = rendered.current.html || '<div style="text-align:center;padding:12px 0;color:#475569;">Aún no hay clases activas nuevas para Unidad 2.</div>';
                 archiveContainer.innerHTML = rendered.archive.html || '<div style="text-align:center;padding:40px;color:#94a3b8;">No hay sesiones archivadas aún.</div>';
                 syncUnitShell(rendered.current.totalCount > 0);

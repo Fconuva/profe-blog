@@ -113,13 +113,21 @@ const G18_KEY = {
     13:'D',14:'B',15:'C',16:'A',17:'D',18:'B'
 };
 
+const G19_KEY = {
+    1:'C',2:'A',3:'D',4:'B',5:'C',6:'A',
+    7:'B',8:'D',9:'A',10:'C',11:'B',12:'D',
+    13:'A',14:'C',15:'D',16:'B',17:'C',18:'A'
+};
+
 const GUIDED_ACCESS_RUT = '229327739';
 const GUIDED_VARIANT = 'guided-access-2026';
 const G17_GUIDED_KEY = { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' };
 const G18_GUIDED_KEY = { 1:'C', 2:'A', 3:'D', 4:'B', 5:'C', 6:'A' };
+const G19_GUIDED_KEY = { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' };
 const GUIDED_GUIDE_KEYS = {
     '17': G17_GUIDED_KEY,
-    '18': G18_GUIDED_KEY
+    '18': G18_GUIDED_KEY,
+    '19': G19_GUIDED_KEY
 };
 
 const G17_GUIDED_FEEDBACK = {
@@ -140,6 +148,21 @@ const G18_GUIDED_FEEDBACK = {
     6:'El mejor respaldo debe comprobar las dos partes de la propuesta: concentración en una zona y colaboración efectiva en la otra.'
 };
 
+const G19_GUIDED_FEEDBACK = {
+    1:'El segundo párrafo muestra apoyos concretos: mesas, agua y un cartel con horarios. Esos cambios vuelven claro y habitable el espacio.',
+    2:'La sombra no recibe literalmente a las personas: les ofrece protección frente al calor y un lugar donde pueden esperar o permanecer.',
+    3:'La directora no rechaza la propuesta. La acepta con cautela y agrega la condición de conservar momentos sin actividades programadas.',
+    4:'El párrafo explica que ya no era necesario dirigir cada encuentro. Por eso “fluido” significa natural y con menos intervención externa.',
+    5:'El último párrafo limita el aporte: no resuelve la falta de áreas verdes, pero ofrece durante algunas horas un espacio gratuito y abierto.',
+    6:'El texto reúne cuidado material y libertad de uso. El patio facilita los encuentros sin obligar a las personas a participar en un programa.'
+};
+
+const GUIDED_GUIDE_FEEDBACK = {
+    '17': G17_GUIDED_FEEDBACK,
+    '18': G18_GUIDED_FEEDBACK,
+    '19': G19_GUIDED_FEEDBACK
+};
+
 function isGuidedAccess(guideId, rut) {
     return cleanRut(rut) === GUIDED_ACCESS_RUT && Object.prototype.hasOwnProperty.call(GUIDED_GUIDE_KEYS, String(guideId));
 }
@@ -150,7 +173,7 @@ function guideKeyFor(guideId, rut) {
 
 function guideFeedbackFor(guideId, rut) {
     if (isGuidedAccess(guideId, rut)) {
-        return String(guideId) === '17' ? G17_GUIDED_FEEDBACK : G18_GUIDED_FEEDBACK;
+        return GUIDED_GUIDE_FEEDBACK[String(guideId)];
     }
     return INTERACTIVE_GUIDE_FEEDBACK[String(guideId)];
 }
@@ -176,8 +199,30 @@ const G18_FEEDBACK = {
     18:'La proporción de obras disponibles que nunca aparece en recorridos reales mediría directamente la distancia entre conservar y exponer.'
 };
 
+const G19_FEEDBACK = {
+    1:'El primer párrafo indica de manera explícita que el nuevo administrador pidió a Elena ayuda con el inventario; ella no vuelve para recuperar un objeto.',
+    2:'El apuro deja de controlar la conducta del administrador: acerca una silla y se adapta al ritmo de revisión de Elena. “Cedió” significa que perdió predominio.',
+    3:'Elena anota datos verificables y se niega a inventar historias. Su método separa las pistas comprobadas de aquello que todavía no puede afirmarse.',
+    4:'El texto explica que Elena registra una línea, una pregunta y alguna relación necesaria. “Escueto” significa breve, sobrio y sin información accesoria.',
+    5:'El título destaca que no existe un dueño identificado, pero el relato demuestra que aún hay pistas, procedimientos y deberes de cuidado sobre los objetos.',
+    6:'El rigor de Elena se observa cuando no abre la cámara, exige verificación y evita que la emoción o una historia posible reemplacen una prueba comprobable.',
+    7:'El reportaje combina escalas: las imágenes reconocen patrones amplios, los sensores miden variaciones y los recorridos comprueban la experiencia peatonal.',
+    8:'“Trama” se desarrolla como una red que conecta sombra, materiales, tránsito y temperatura. No alude a una narración ni a una simple sucesión de datos.',
+    9:'El párrafo aclara que los árboles no eliminan el calor, pero moderan sus extremos. “Amortiguar” conserva justamente ese sentido de reducción parcial.',
+    10:'El texto advierte que un promedio comunal puede mejorar aunque los sectores más expuestos no reciban beneficios; la cifra general puede ocultar desigualdad.',
+    11:'La expresión nombra una desigualdad acumulada por décadas de menor arborización y mantención. La reparación requiere continuidad y no una distribución idéntica.',
+    12:'Vincular la sombra de rutas efectivamente utilizadas con una menor exposición térmica comprobaría el beneficio central que sostiene la argumentación del reportaje.',
+    13:'Intervalos, probabilidades y márgenes forman parte del alcance de una conclusión: muestran con qué respaldo se afirma y bajo qué condiciones puede cambiar.',
+    14:'El texto define el margen relevante mediante cuatro preguntas: qué se sabe, con qué respaldo, bajo qué condiciones y qué podría modificar la conclusión.',
+    15:'“Erosiona” describe un debilitamiento gradual de la confianza producido por la distancia entre una certeza inicial y su modificación posterior.',
+    16:'El pronóstico muestra que una cifra aparentemente clara puede dispersarse en interpretaciones distintas cuando no se explican el lugar, el periodo y la probabilidad.',
+    17:'La tesis sostiene que simplificar no debe borrar límites decisivos: la claridad responsable conserva la incertidumbre que define el alcance de lo afirmado.',
+    18:'El título une dos ideas que el ensayo defiende: dudar no equivale a vaguedad cuando los límites de una conclusión se formulan con precisión y evidencia.'
+};
+
 const INTERACTIVE_GUIDE_FEEDBACK = {
-    '18': G18_FEEDBACK
+    '18': G18_FEEDBACK,
+    '19': G19_FEEDBACK
 };
 
 const INTERACTIVE_GUIDE_KEYS = {
@@ -188,10 +233,11 @@ const INTERACTIVE_GUIDE_KEYS = {
     '15': G15_KEY,
     '16': G16_KEY,
     '17': G17_KEY,
-    '18': G18_KEY
+    '18': G18_KEY,
+    '19': G19_KEY
 };
 
-const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17', '18']);
+const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17', '18', '19']);
 
 const G14_KEY = {
     q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',

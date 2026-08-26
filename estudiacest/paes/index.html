@@ -1104,7 +1104,7 @@
         <!-- Sesión Interactiva: Guía N°18 -->
         <article class="ensayo-card" id="cardGuia18">
           <div class="ensayo-card-header">
-            <span class="ensayo-tag">Sesión actual</span>
+            <span class="ensayo-tag">Sesión interactiva</span>
             <h3>Guía N°18: Arquitectura del ensayo</h3>
             <div class="ensayo-card-meta">
               <span>3 textos originales</span>
@@ -1122,6 +1122,32 @@
           <div>
             <a href="guia18.html" class="btn-action btn-start">
               Iniciar Guía 18
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </a>
+          </div>
+        </article>
+
+        <!-- Sesión Interactiva: Guía N°19 -->
+        <article class="ensayo-card" id="cardGuia19">
+          <div class="ensayo-card-header">
+            <span class="ensayo-tag">Sesión actual</span>
+            <h3>Guía N°19: Vocabulario en contexto</h3>
+            <div class="ensayo-card-meta">
+              <span>3 textos originales</span>
+              <span>18 preguntas</span>
+              <span>Dificultad alta</span>
+              <span>Sin límite de tiempo</span>
+            </div>
+          </div>
+          <div class="ensayo-status-box">
+            <div class="status-pending" style="color: var(--paes-color-light);">
+              <span class="status-dot"></span>
+              Pistas, sustitución, matiz y sentido global
+            </div>
+          </div>
+          <div>
+            <a href="guia19.html" class="btn-action btn-start">
+              Iniciar Guía 19
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
             </a>
           </div>
@@ -1160,7 +1186,6 @@
           <p>Las tarjetas grises muestran la secuencia planificada. Se habilitarán cuando corresponda.</p>
         </div>
         <div class="upcoming-grid">
-          <article class="upcoming-card"><div class="upcoming-meta"><span>Guía 19</span><time datetime="2026-08-27">27 ago</time></div><h3>Vocabulario en contexto: inferir sin diccionario</h3></article>
           <article class="upcoming-card"><div class="upcoming-meta"><span>Guía 20</span><time datetime="2026-09-03">3 sep</time></div><h3>Relaciones entre textos: acuerdos, tensiones y matices</h3></article>
           <article class="upcoming-card"><div class="upcoming-meta"><span>Guía 21</span><time datetime="2026-09-10">10 sep</time></div><h3>Simulacro parcial 1: resistencia y precisión</h3></article>
           <article class="upcoming-card recess"><div class="upcoming-meta"><span>Receso</span><time datetime="2026-09-17">17 sep</time></div><h3>Semana de Fiestas Patrias</h3></article>
@@ -1307,18 +1332,20 @@
 
     function applyGuidedPaesRoute(student) {
       if (cleanRut(student && student.rut) !== GUIDED_PAES_RUT) return;
-      [17, 18].forEach((guideNumber) => {
+      [17, 18, 19].forEach((guideNumber) => {
         const card = document.getElementById(`cardGuia${guideNumber}`);
         if (!card) return;
         card.dataset.guidedAccess = 'true';
         const title = card.querySelector('h3');
         if (title) title.textContent = guideNumber === 17
           ? 'Guía N°17: Doble evidencia · Ruta guiada'
-          : 'Guía N°18: Arquitectura del ensayo · Ruta guiada';
+          : guideNumber === 18
+            ? 'Guía N°18: Arquitectura del ensayo · Ruta guiada'
+            : 'Guía N°19: Vocabulario en contexto · Ruta guiada';
         const meta = card.querySelector('.ensayo-card-meta');
         if (meta) meta.innerHTML = '<span>1 texto breve</span><span>6 preguntas</span><span>Una pregunta a la vez</span><span>Sin límite de tiempo</span>';
         const status = card.querySelector('.ensayo-status-box');
-        if (status) status.innerHTML = `<div class="status-pending" style="color:var(--paes-color-light);"><span class="status-dot"></span>${guideNumber === 17 ? 'Dos pistas para sostener una inferencia' : 'Tesis, giro, función y alcance con apoyo visual'}</div>`;
+        if (status) status.innerHTML = `<div class="status-pending" style="color:var(--paes-color-light);"><span class="status-dot"></span>${guideNumber === 17 ? 'Dos pistas para sostener una inferencia' : guideNumber === 18 ? 'Tesis, giro, función y alcance con apoyo visual' : 'Pistas cercanas y prueba del reemplazo'}</div>`;
         const button = card.querySelector('.btn-action');
         if (button) {
           button.href = `guia${guideNumber}-guiada.html`;
@@ -1480,8 +1507,8 @@
           const data = await response.json();
           const blocked = (data && data.config && data.config.blocked) || {};
           const allowed = (data && data.config && data.config.allowed) || {};
-          for (let n = 10; n <= 18; n++) {
-            if (cleanRut(rut) === GUIDED_PAES_RUT && (n === 17 || n === 18)) continue;
+          for (let n = 10; n <= 19; n++) {
+            if (cleanRut(rut) === GUIDED_PAES_RUT && (n === 17 || n === 18 || n === 19)) continue;
             if (!blocked['g' + n] || allowed['g' + n]) continue;
             const card = document.getElementById('cardGuia' + n);
             if (!card) continue;

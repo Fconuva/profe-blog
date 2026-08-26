@@ -323,6 +323,8 @@ window.PRUEBA = {
   },
   {
    "n": 29,
+   "imagen": "/imagenes/ecep/practica/artes-basica/n29.webp",
+   "alt": "Obra abstracta sobre tela que combina pinceladas acrílicas, fragmentos de papel gris adheridos y zonas de arena que sobresalen de la superficie.",
    "enunciado": "Al analizar una obra contemporánea, los estudiantes observan que sobre la tela conviven pintura acrílica, recortes de diario pegados y arena adherida que produce relieve real. ¿Qué procedimiento corresponde a la combinación descrita?",
    "alternativas": [
     "Collage.",

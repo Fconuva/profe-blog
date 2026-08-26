@@ -99,6 +99,8 @@ window.PRUEBA = {
   },
   {
    "n": 9,
+   "imagen": "/imagenes/ecep/practica/media-artes/n9.webp",
+   "alt": "Primerísimo plano de un ovillo azul: las hebras retorcidas y las fibras sueltas se perciben casi palpables, aunque la fotografía impresa es completamente lisa.",
    "textoBase": "Un afiche publicitario de lanas para tejido reproduce en gran tamaño la superficie de un ovillo, de modo que las hebras parecen palparse con solo mirar la imagen impresa, que es completamente lisa.",
    "enunciado": "¿Qué elemento del lenguaje visual cumple el rol expresivo principal en este afiche?",
    "alternativas": [

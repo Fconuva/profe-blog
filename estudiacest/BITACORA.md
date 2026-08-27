@@ -8,6 +8,22 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-27, contacto institucional para estudiantes en la portada
+
+- Se incorporó al pie de la portada un bloque visible de consultas para
+  estudiantes, enlazado al correo institucional del profesor mediante
+  `mailto:`. El dato de contacto no se replica en esta bitácora.
+- El enlace mantiene 44 px de alto, contraste claro sobre el pie azul y
+  alineación adaptativa: a la derecha en escritorio y a la izquierda en
+  celular.
+- La auditoría completa pasó con 107 recursos críticos. Playwright verificó en
+  producción anchos de 1440 px y 390 px, respuesta 200, enlace visible, destino
+  correcto, cero desborde y cero errores de página o red.
+- Commit funcional: `ca25895f`. Deploy productivo:
+  `dpl_CRMQNuF4wx5egH2afuGrfs9XYPDF`.
+
+---
+
 ## 2026-08-27, rediseño institucional de portada y acceso PAES
 
 - La portada principal se rediseñó como portal educativo institucional sobre

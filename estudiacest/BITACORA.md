@@ -8,6 +8,36 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-27, rediseño institucional de portada y acceso PAES
+
+- La portada principal se rediseñó como portal educativo institucional sobre
+  fondo blanco, con jerarquía centrada en las tareas, navegación breve y
+  tarjetas simples. El criterio se contrastó con los patrones oficiales de
+  GOV.UK, USWDS y W3C para identidad del servicio, acciones claras, contraste y
+  superficies táctiles.
+- Se conservaron sin cambios los accesos a SIMCE, NM3, NM4, PAES, Anuario 4DTP
+  y el archivo 3ATP. Los botones ahora indican explícitamente a qué plataforma
+  ingresan y mantienen una altura táctil mínima de 44 px.
+- Se generaron cinco ilustraciones institucionales con Nano Banana para las
+  tarjetas del portal. Quedaron optimizadas en WebP, con fondo claro,
+  `object-fit: contain` y márgenes internos para evitar recortes en escritorio
+  y celular.
+- El acceso PAES adoptó la misma paleta azul, verde y dorada. Se corrigió el
+  selector que dejaba el saludo blanco sobre fondo blanco, se oscureció el
+  texto informativo, se simplificó la recomendación inicial y se eliminó la
+  animación de entrada que podía mostrar contenido lavado durante la carga.
+- Playwright verificó la portada a 1440 px y 390 px: cinco imágenes cargadas,
+  cinco destinos correctos, controles de 46 px, cero desborde horizontal y
+  contraste de 6,65:1 en los botones. También comprobó el ingreso con la cuenta
+  técnica PAES, el nombre del curso, el contenido visible y cero errores de
+  página o solicitudes fallidas.
+- `npm run build` aprobó Firebase, contratos de entrega, PAES, SIMCE, Odisea,
+  Anuario y 107 recursos críticos. Todas las rutas preservadas respondieron
+  200 en producción. Commits funcionales: `388803f6` y `0d5c9d6b`. Deploy
+  productivo final: `dpl_ArGdR55ipNfp3AhfcZC5o1ALPUBU`.
+
+---
+
 ## 2026-08-27, cuenta técnica permanente de prueba PAES
 
 - Se incorporó una cuenta sintética de prueba a la nómina PAES. El portal la

@@ -159,6 +159,25 @@ hallazgo ni entrega.
 5. **Lenguaje matemático**: registrar expresiones en `latex` o usar `formula` cuando la figura sea
    puramente algebraica. Nunca dibujar fracciones o ecuaciones a mano con líneas y textos SVG.
 
+### Sistema común de SVG
+
+Desde el 26-ago-2026, los 83 SVG pasan por `polishSvgs` en `js/ecep-practica.js` y reciben la clase
+`ecv-svg`. La gramática visual está en `css/ecep-prueba.css`: Inter, números tabulares, trazos
+redondeados y una normalización restringida de los antiguos negros, grises y azules. No se cambian
+colores con significado disciplinar ni la geometría del recurso.
+
+Para revisar el conjunto completo:
+
+```bash
+npm run gallery:ecep-svgs   # siete láminas comparables en la carpeta temporal
+npm run verify:ecep-svgs    # abre y mide los 83 SVG en navegador a 390 px
+npm run audit:ecep-visuals  # integridad de los 27 bancos y sus recursos
+```
+
+La capa común no reemplaza el redibujo cuando una figura está mal compuesta. Lenguaje Básica n33
+y n34, y Lengua Media n32 y n46, son ejemplos de estímulos redibujados individualmente sobre este
+sistema.
+
 Cuando termines una tarea: deja la evidencia (qué mediste y con qué número), commitea con rutas
 explícitas y avisa. El detalle del estado de la sección está en la bitácora
 `C:\Users\franc\Portabot-2026\BITACORA.md`, entradas del 26-ago-2026.

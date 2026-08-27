@@ -688,3 +688,26 @@ window.PRUEBA = {
   "<g font-family='Inter,Arial,sans-serif' font-size='16' font-weight='800'><rect x='63' y='226' width='174' height='32' rx='16' fill='white' stroke='#7dd3fc'/><text x='150' y='248' text-anchor='middle' fill='#0369a1'>Sendero Los Notros</text><rect x='412' y='202' width='174' height='32' rx='16' fill='white' stroke='#86efac'/><text x='499' y='224' text-anchor='middle' fill='#166534'>Sendero El Coihue</text></g>" +
   "<g transform='translate(618 342)' font-family='Inter,Arial,sans-serif' text-anchor='middle'><text y='-24' font-size='18' font-weight='850' fill='#0f172a'>N</text><path d='M0-14L-12 18L0 12L12 18Z' fill='#0e7d8a'/><line y1='12' y2='48' stroke='#0e7d8a' stroke-width='4'/></g></svg>";
 })();
+
+// Gráfico y tabla informativa redibujados con la gramática visual ECEP.
+(function () {
+ var preguntas = window.PRUEBA.preguntas;
+ var grafico = preguntas.find(function (item) { return item.n === 33; });
+ var tabla = preguntas.find(function (item) { return item.n === 34; });
+ if (grafico) grafico.svg = "<svg role='img' aria-label='Gráfico de barras titulado Préstamos anuales de libros, con cuatro columnas de altura creciente: 1.200 en 2022, 1.500 en 2023, 2.100 en 2024 y 2.600 en 2025. Al pie indica como fuente la Biblioteca Municipal.' viewBox='0 0 700 430' xmlns='http://www.w3.org/2000/svg'>" +
+  "<defs><linearGradient id='l33bar' x1='0' y1='0' x2='0' y2='1'><stop stop-color='#2f8291'/><stop offset='1' stop-color='#0e6673'/></linearGradient><filter id='l33shadow'><feDropShadow dx='0' dy='4' stdDeviation='5' flood-color='#0c2127' flood-opacity='.12'/></filter></defs>" +
+  "<rect width='700' height='430' rx='24' fill='#f8fbfb'/><text x='350' y='42' font-size='28' font-weight='800' text-anchor='middle' fill='#0c2127'>Préstamos anuales de libros</text>" +
+  "<g font-size='18' fill='#52676d'><text x='67' y='344' text-anchor='end'>0</text><text x='67' y='251' text-anchor='end'>1.000</text><text x='67' y='158' text-anchor='end'>2.000</text><text x='67' y='112' text-anchor='end'>2.500</text></g>" +
+  "<g stroke='#d6e2e4' stroke-width='1.5'><line x1='78' y1='340' x2='650' y2='340'/><line x1='78' y1='247' x2='650' y2='247' stroke-dasharray='5 6'/><line x1='78' y1='154' x2='650' y2='154' stroke-dasharray='5 6'/><line x1='78' y1='108' x2='650' y2='108' stroke-dasharray='5 6'/></g>" +
+  "<line x1='78' y1='76' x2='78' y2='340' stroke='#38535a' stroke-width='2.5'/><line x1='78' y1='340' x2='650' y2='340' stroke='#38535a' stroke-width='2.5'/>" +
+  "<g fill='url(#l33bar)' filter='url(#l33shadow)'><path d='M112 229Q112 219 122 219H188Q198 219 198 229V340H112Z'/><path d='M248 201Q248 191 258 191H324Q334 191 334 201V340H248Z'/><path d='M384 145Q384 135 394 135H460Q470 135 470 145V340H384Z'/><path d='M520 99Q520 89 530 89H596Q606 89 606 99V340H520Z'/></g>" +
+  "<g font-size='21' font-weight='800' fill='#0c4853' text-anchor='middle'><text x='155' y='205'>1.200</text><text x='291' y='177'>1.500</text><text x='427' y='121'>2.100</text><text x='563' y='75'>2.600</text></g>" +
+  "<g font-size='20' font-weight='650' fill='#17343d' text-anchor='middle'><text x='155' y='370'>2022</text><text x='291' y='370'>2023</text><text x='427' y='370'>2024</text><text x='563' y='370'>2025</text></g><text x='350' y='408' font-size='18' text-anchor='middle' fill='#52676d'>Fuente: Biblioteca Municipal</text></svg>";
+ if (tabla) tabla.svg = "<svg role='img' aria-label='Tabla de talleres extraescolares con las columnas cupos e inscritos: teatro 20 y 12, ajedrez 15 y 15, folclor 25 y 25, robótica 20 y 8.' viewBox='0 0 700 430' xmlns='http://www.w3.org/2000/svg'>" +
+  "<defs><filter id='l34shadow'><feDropShadow dx='0' dy='5' stdDeviation='7' flood-color='#0c2127' flood-opacity='.12'/></filter></defs><rect width='700' height='430' rx='24' fill='#f8fbfb'/><text x='350' y='46' font-size='28' font-weight='800' text-anchor='middle' fill='#0c2127'>Talleres extraescolares: inscripción</text>" +
+  "<g filter='url(#l34shadow)'><rect x='45' y='78' width='610' height='286' rx='14' fill='white' stroke='#bfd0d3' stroke-width='2'/><path d='M59 78H641Q655 78 655 92V135H45V92Q45 78 59 78Z' fill='#0e6673'/><rect x='45' y='192' width='610' height='57' fill='#f3f8f8'/><rect x='45' y='306' width='610' height='57' fill='#f3f8f8'/></g>" +
+  "<g stroke='#bfd0d3' stroke-width='1.5'><line x1='355' y1='78' x2='355' y2='364'/><line x1='505' y1='78' x2='505' y2='364'/><line x1='45' y1='135' x2='655' y2='135'/><line x1='45' y1='192' x2='655' y2='192'/><line x1='45' y1='249' x2='655' y2='249'/><line x1='45' y1='306' x2='655' y2='306'/></g>" +
+  "<g font-size='22' font-weight='800' fill='white'><text x='67' y='113'>Taller</text><text x='430' y='113' text-anchor='middle'>Cupos</text><text x='580' y='113' text-anchor='middle'>Inscritos</text></g>" +
+  "<g font-size='22' fill='#17343d'><text x='67' y='171'>Teatro</text><text x='67' y='228'>Ajedrez</text><text x='67' y='285'>Folclor</text><text x='67' y='342'>Robótica</text></g>" +
+  "<g font-size='23' font-weight='700' fill='#17343d' text-anchor='middle'><text x='430' y='171'>20</text><text x='580' y='171'>12</text><text x='430' y='228'>15</text><text x='580' y='228'>15</text><text x='430' y='285'>25</text><text x='580' y='285'>25</text><text x='430' y='342'>20</text><text x='580' y='342'>8</text></g></svg>";
+})();

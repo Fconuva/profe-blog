@@ -667,3 +667,15 @@ window.PRUEBA = {
   }
  ]
 };
+
+// Estímulos editoriales redibujados sobre las ilustraciones originales.
+(function () {
+ var preguntas = window.PRUEBA.preguntas;
+ var comic = preguntas.find(function (item) { return item.n === 32; });
+ var afiche = preguntas.find(function (item) { return item.n === 46; });
+ if (comic) comic.svg = "<svg role='img' aria-label='Cómic de dos viñetas. En la primera, una persona duerme y el despertador le dice No me apagues otra vez, por favor. En la segunda, ella estira el brazo y pide cinco minutitos más, mientras el reloj piensa que nadie valora su trabajo.' viewBox='0 0 1400 773' xmlns='http://www.w3.org/2000/svg'>" +
+  "<image href='/imagenes/ecep/practica/media-lengua/n32.webp' width='1400' height='773' preserveAspectRatio='xMidYMid slice'/><g font-size='31' font-weight='750' fill='#17343d' text-anchor='middle'><text x='486' y='164'>¡No me apagues otra</text><text x='486' y='204'>vez, por favor!</text><text x='884' y='158'>Cinco minutitos</text><text x='884' y='198'>más...</text><text x='1195' y='157'>Nadie valora</text><text x='1195' y='197'>mi trabajo...</text></g></svg>";
+ if (afiche) afiche.svg = "<svg role='img' aria-label='Afiche de adopción con el titular Miles de patas esperan una casa sobre la fotografía de un perro mestizo de mirada vulnerable. Abajo se lee Adopta, no compres, y Refugio Huellas del Sur, campaña 2026.' viewBox='0 0 1000 1365' xmlns='http://www.w3.org/2000/svg'>" +
+  "<defs><linearGradient id='ml46top' x1='0' y1='0' x2='0' y2='1'><stop stop-color='#062f37' stop-opacity='.96'/><stop offset='1' stop-color='#062f37' stop-opacity='.76'/></linearGradient><linearGradient id='ml46bottom' x1='0' y1='0' x2='0' y2='1'><stop stop-color='#062f37' stop-opacity='.76'/><stop offset='1' stop-color='#062f37' stop-opacity='.97'/></linearGradient></defs><image href='/imagenes/ecep/practica/media-lengua/n46.webp' width='1000' height='1365' preserveAspectRatio='xMidYMid slice'/><rect width='1000' height='250' fill='url(#ml46top)'/><rect y='1060' width='1000' height='305' fill='url(#ml46bottom)'/>" +
+  "<g text-anchor='middle'><text x='500' y='52' font-size='22' font-weight='800' letter-spacing='4' fill='#f7c46a'>CAMPAÑA DE ADOPCIÓN 2026</text><text x='500' y='123' font-size='54' font-weight='850' fill='white'>MILES DE PATAS</text><text x='500' y='188' font-size='54' font-weight='850' fill='white'>ESPERAN UNA CASA</text><text x='500' y='1168' font-size='52' font-weight='850' fill='#f7c46a'>Adopta. No compres.</text><text x='500' y='1244' font-size='25' font-weight='650' fill='white'>Refugio Huellas del Sur · campaña 2026</text></g><rect x='18' y='18' width='964' height='1329' rx='18' fill='none' stroke='white' stroke-opacity='.72' stroke-width='3'/></svg>";
+})();

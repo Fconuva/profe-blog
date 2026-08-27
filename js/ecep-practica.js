@@ -109,6 +109,21 @@
     return h.replace(/\n/g, '<br>');
   }
 
+  // Todos los SVG de los bancos pasan por la misma gramática visual. La clase
+  // no modifica datos ni geometría: unifica tipografía, trazos y paleta desde
+  // ecep-prueba.css y deja una marca verificable para la auditoría de navegador.
+  function polishSvgs(root) {
+    root.querySelectorAll('.ecq-svg svg').forEach(function (svg) {
+      svg.classList.add('ecv-svg');
+      svg.setAttribute('data-ecv', '1');
+      svg.setAttribute('focusable', 'false');
+      if (!svg.getAttribute('preserveAspectRatio')) svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+      svg.querySelectorAll('text').forEach(function (label) {
+        if (!label.getAttribute('font-family')) label.setAttribute('font-family', 'Inter, system-ui, sans-serif');
+      });
+    });
+  }
+
   function guardarFirebase() {
     try {
       if (typeof firebase === 'undefined' || !firebase.auth) return;
@@ -199,6 +214,7 @@
     html += '</article></div>';
     clearMath();
     mount.innerHTML = html;
+    polishSvgs(mount);
     typesetMath();
     window.scrollTo(0, 0);
 

@@ -8,6 +8,37 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-27, publicación privada de notas PAES del segundo semestre
+
+- Se reconstruyeron y publicaron las calificaciones PAES de las guías 11 a 17
+  para 153 estudiantes. La conversión conserva la escala histórica chilena de
+  1,0 a 7,0 con 60 % de exigencia y mantiene las correcciones manuales vigentes
+  de la Guía 11.
+- La Guía 14 quedó expresamente excluida para `4°A HC`: aparece como `No aplica`
+  y no interviene en el promedio parcial. Las guías sin calificación aparecen
+  como `Sin nota` y tampoco se promedian.
+- El portal `/paes/` incorpora una tarjeta compacta y plegable, cerrada por
+  defecto, con las siete guías, el promedio parcial, simbología y el canal
+  institucional de consulta. En celular se reduce a las tres columnas
+  necesarias; en escritorio conserva el detalle completo.
+- La API pública de notas dejó de devolver el registro completo del libro:
+  limita la respuesta al curso, las notas 11 a 17 y las omisiones del período.
+  No libera claves, aciertos, respuestas ni retroalimentación.
+- La actualización masiva se ejecutó primero en simulación, calculó dos veces el
+  mismo resultado, respaldó el libro anterior y releyó Firebase después de
+  aplicar. Cantidad esperada y aplicada: 153 registros; checksum exacto
+  `966e23f91c56685d7139672c30631d3d79273be49021f5270b6eeda1e9b18b5b`.
+- La auditoría completa, el build y Playwright pasaron en celular y escritorio.
+  En producción se comprobó ingreso real, panel cerrado por defecto, siete
+  filas, promedio, exclusión de G14 en 4°A, ausencia de desborde y cero errores
+  o solicitudes fallidas. Las portadas PAES, SIMCE, NM3 y NM4 continúan en 200.
+- Un primer build remoto falló antes de promoción porque `.vercelignore` no
+  incluía el módulo auxiliar de la auditoría; se corrigió y se repitió mediante
+  el flujo seguro. Commits: `5cdd367f` y `1a59d8d4`. Deploy productivo:
+  `dpl_FAoCPWBcLtZ1iTDdNfvFCPZ79HYk`.
+
+---
+
 ## 2026-08-26, PAES Guía 19: vocabulario en contexto
 
 - Se publicó `/paes/guia19.html` como sesión actual del 27 de agosto. Contiene

@@ -244,7 +244,7 @@
                     <div class="max-w-3xl">
                         <p class="dashboard-command__eyebrow">Control financiero y operativo</p>
                         <h1 id="dashboard-title" class="text-2xl font-heading font-bold mt-1">Qué está pagado, qué falta y cuándo corresponde cobrar</h1>
-                        <p class="text-sm text-slate-300 mt-2 leading-relaxed">El saldo pendiente no significa automáticamente que haya que cobrar hoy. La agenda usa solo fechas confirmadas en WhatsApp; si no existe una fecha clara, la persona queda en “sin fecha acordada”.</p>
+                        <p class="text-sm text-slate-300 mt-2 leading-relaxed">La agenda distingue saldo total y cuota exigible. Para el corte vigente programa una cuota el 1 de septiembre, excluye pagos de los últimos siete días y conserva pausas o fechas posteriores acordadas por WhatsApp.</p>
                     </div>
                     <div class="text-left md:text-right shrink-0">
                         <span class="block text-[10px] font-bold uppercase tracking-wider text-slate-400">Último corte financiero</span>
@@ -2560,9 +2560,9 @@
                     });
                 }
 
-                // La agenda usa la cartera conciliada con WhatsApp. Esa capa aplica la regla de
-                // 30 días desde el último abono, respeta una fecha posterior acordada y separa a
-                // quienes todavía no deben ser cobrados porque falta entregarles el M1.
+                // La agenda usa la cartera conciliada con el libro de caja y WhatsApp. La campaña
+                // del 1-sep muestra la CUOTA exigible, no todo el saldo; además excluye pagos de
+                // los últimos siete días y conserva pausas o fechas posteriores ya acordadas.
                 var _estadoPagoAgenda = String(p.paymentStatus || '').toLowerCase();
                 var _cartera = p.cartera && typeof p.cartera === 'object' ? p.cartera : {};
                 if (_cartera.actualizadoEn) cortesCartera.push(String(_cartera.actualizadoEn).slice(0, 10));
@@ -2584,6 +2584,30 @@
                     };
                     if (_cp.estado === 'pausado' || _cartera.tramoCobro === 'pausado') {
                         agendaPausados.push(Object.assign({}, _baseAgenda, { bucket: 'pausado', fecha: '', monto: _saldoAgenda, ventana: _cp.ventana || '' }));
+                    } else if (_cartera.tramoCobro === 'cobrar_1_septiembre' || _cartera.estadoCobranza === 'ESPERAR_PAGO_RECIENTE') {
+                        // Este bloque debe ir ANTES del compromiso histórico: la campaña cambia
+                        // la fecha operativa sin borrar la evidencia del acuerdo anterior.
+                        var _fechaCampana = String(_cartera.proximoCobroFecha || '');
+                        var _montoCampana = Math.min(
+                            _saldoAgenda,
+                            Math.max(0, Number(_cartera.proximoCobroMonto) || _saldoAgenda)
+                        );
+                        var _bucketCampana = 'sin-fecha';
+                        if (_fechaCampana) {
+                            if (_fechaCampana <= new Date().toISOString().slice(0, 10)) _bucketCampana = 'ahora';
+                            else if (_fechaCampana <= '2026-08-31') _bucketCampana = 'fin-agosto';
+                            else if (_fechaCampana <= '2026-09-15') _bucketCampana = 'mitad-septiembre';
+                            else if (_fechaCampana <= '2026-09-30') _bucketCampana = 'fin-septiembre';
+                            else _bucketCampana = 'despues-septiembre';
+                        }
+                        var _eventoCampana = Object.assign({}, _baseAgenda, {
+                            bucket: _bucketCampana,
+                            fecha: _fechaCampana,
+                            monto: _montoCampana,
+                            estado: _cartera.tramoCobro === 'cobrar_1_septiembre' ? 'campaña-1-sep' : 'pago-reciente'
+                        });
+                        if (_bucketCampana === 'sin-fecha') agendaSinFecha.push(_eventoCampana);
+                        else agendaEventos.push(_eventoCampana);
                     } else if (_cp.estado === 'confirmado' && Array.isArray(_cp.pagos) && _cp.pagos.length) {
                         var _restanteAgenda = _saldoAgenda;
                         _cp.pagos.slice().sort(function(a, b) { return String(a.fecha || '').localeCompare(String(b.fecha || '')); }).forEach(function(_pagoAgenda) {
@@ -2632,7 +2656,7 @@
                         var _eventoCartera = Object.assign({}, _baseAgenda, {
                             bucket: _bucketCartera,
                             fecha: _fechaCartera,
-                            monto: _saldoAgenda,
+                            monto: Math.min(_saldoAgenda, Math.max(0, Number(_cartera.proximoCobroMonto) || _saldoAgenda)),
                             estado: _cartera.compromisoEstructurado === 'CONFIRMADO' ? 'confirmado' : 'calculado'
                         });
                         if (_bucketCartera === 'sin-fecha') agendaSinFecha.push(_eventoCartera);

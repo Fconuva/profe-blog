@@ -9,6 +9,7 @@ const admin = require('firebase-admin');
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
+const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17'];
 
 function normalizePrivateKey(raw) {
     let key = (raw || '').trim();
@@ -698,7 +699,26 @@ async function handleGetMisNotas(req, res) {
     const rut = req.query.rut || req.body.rut;
     if (!rut) return res.status(400).json({ error: 'RUT requerido' });
     const snap = await db.ref(`${BASE}/libro_notas/${cleanRut(rut)}`).once('value');
-    return res.status(200).json({ success: true, libro: snap.exists() ? snap.val() : null });
+    if (!snap.exists()) return res.status(200).json({ success: true, libro: null });
+
+    const stored = snap.val() || {};
+    const notas = {};
+    SECOND_SEMESTER_GUIDES.forEach((guideId) => {
+        const value = stored.notas && stored.notas[guideId];
+        if (value !== undefined && value !== null && String(value).trim() !== '') notas[guideId] = String(value).trim();
+    });
+    const normalizedCourse = String(stored.curso || '').toUpperCase().replace(/\s+/g, '').replace(/[-°º]/g, '');
+    const isFourthA = normalizedCourse === '4AHC';
+    return res.status(200).json({
+        success: true,
+        libro: {
+            curso: stored.curso || '',
+            notas,
+            omitidos: isFourthA ? ['14'] : [],
+            desde: 11,
+            hasta: 17
+        }
+    });
 }
 
 // Admin: guarda (o borra si viene vacío) la nota de una sesión para un alumno.

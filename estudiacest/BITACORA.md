@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-27, cuenta técnica permanente de prueba PAES
+
+- Se incorporó una cuenta sintética de prueba a la nómina PAES. El portal la
+  identifica como `Cuenta de prueba PAES` y curso `PRUEBA PAES`, sin mezclarla
+  con estudiantes reales.
+- La cuenta puede ingresar aunque la guía elegida esté cerrada para los cursos
+  y puede volver a guardar o enviar una guía ya utilizada, sin depender de un
+  restablecimiento manual desde el admin.
+- Quedó excluida de las métricas de ensayos, de la publicación del libro de
+  notas y de los promedios del segundo semestre. En administración aparece con
+  la etiqueta `Prueba` para distinguirla de las nóminas oficiales.
+- `npm run build` pasó las auditorías de Firebase, contratos de entrega, PAES,
+  SIMCE y 102 recursos críticos. En producción se comprobó el ingreso real, la
+  apertura de la Guía 17, dos autoguardados consecutivos y la ausencia de
+  errores de página o solicitudes fallidas. El borrador técnico se eliminó al
+  terminar y Firebase quedó sin libro de notas para esta cuenta.
+- Commit funcional: `c923c2d2`. Deploy productivo:
+  `dpl_3mNvi4h1ToHono86UvMZJ1c44Vu8`.
+
+---
+
 ## 2026-08-27, publicación privada de notas PAES del segundo semestre
 
 - Se reconstruyeron y publicaron las calificaciones PAES de las guías 11 a 17

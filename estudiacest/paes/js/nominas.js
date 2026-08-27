@@ -1,7 +1,14 @@
 // Nóminas oficiales de estudiantes para sección PAES HC (3°A HC, 3°B HC, 4°A HC, 4°B HC, 4°D TP, 4°E TP)
-// Total estudiantes: 220
+// Total: 220 estudiantes y 1 cuenta técnica de prueba
 
 const NOMINAS_PAES = [
+  {
+    "nombre": "Cuenta de prueba PAES",
+    "rut": "111111111",
+    "rut_formato": "11.111.111-1",
+    "curso": "PRUEBA PAES",
+    "es_prueba": true
+  },
   {
     "nombre": "Aguilar Orellana Lucas Joaquin",
     "rut": "232659912",

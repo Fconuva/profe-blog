@@ -10,6 +10,7 @@ const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
 const ADMIN_BASE = 'plataforma_estudiantes';
 const SECOND_SEMESTER_GUIDES = ['11', '12', '13', '14', '15', '16', '17'];
+const PAES_TEST_RUT = '111111111';
 
 function normalizePrivateKey(raw) {
     let key = (raw || '').trim();
@@ -55,6 +56,10 @@ const auth = admin.auth();
 
 function cleanRut(r) { 
     return (r || '').replace(/[.\s-]/g, '').toUpperCase(); 
+}
+
+function isPaesTestRut(rut) {
+    return cleanRut(rut) === PAES_TEST_RUT;
 }
 
 function normalizeStoredAnswers(rawAnswers) {
@@ -490,7 +495,7 @@ async function handleSubmitGuia(req, res) {
     }
 
     const tx = await ref.transaction((current) => {
-        if (current && (current.status === 'sent' || current.completada === true)) return;
+        if (!isPaesTestRut(rutLimpio) && current && (current.status === 'sent' || current.completada === true)) return;
         return Object.assign({}, current || {}, payload);
     });
     if (!tx.committed) {
@@ -587,7 +592,7 @@ async function handleSubmitGuia14(req, res) {
     const rutLimpio = cleanRut(rut);
     const ref = db.ref(`${BASE}/guia_respuestas/14/${rutLimpio}`);
     const previous = await ref.once('value');
-    if (previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent') {
+    if (!isPaesTestRut(rutLimpio) && previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent') {
         return res.status(409).json({ error:'El ensayo ya fue enviado. El docente debe restablecerlo para responder nuevamente.' });
     }
     const safeAnswers = {};
@@ -680,6 +685,9 @@ async function handleGetGuiasConfig(req, res) {
         Object.keys(config.exceptions || {}).forEach((guideId) => {
             if (config.exceptions[guideId] && config.exceptions[guideId][rut] === true) allowed[guideId] = true;
         });
+        if (isPaesTestRut(rut)) {
+            Object.keys(config.blocked || {}).forEach((guideId) => { allowed[guideId] = true; });
+        }
     }
     return res.status(200).json({
         success: true,

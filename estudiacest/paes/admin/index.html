@@ -1342,6 +1342,7 @@
     let idToken = null;
     const EXTRA_RUTS = new Set(); // RUTs agregados/editados desde el admin (en Firebase)
     const CURSOS_PAES = ['3°A HC', '3°B HC', '4°A HC', '4°B HC', '4°D TP', '4°E TP'];
+    const PAES_TEST_RUT = '111111111';
 
     // Fusiona los estudiantes agregados desde el admin sobre la nómina base estática
     function mergeNominaExtra(extras) {
@@ -1613,8 +1614,11 @@
 
     // ============ CALCULATE GLOBAL METRICS ============
     function calculateGlobalMetrics() {
-      const e1Results = databaseData.resultados[1] || {};
-      const e2Results = databaseData.resultados[2] || {};
+      const withoutTestAccount = source => Object.fromEntries(
+        Object.entries(source || {}).filter(([rut]) => rut !== PAES_TEST_RUT)
+      );
+      const e1Results = withoutTestAccount(databaseData.resultados[1]);
+      const e2Results = withoutTestAccount(databaseData.resultados[2]);
 
       const count1 = Object.keys(e1Results).length;
       const count2 = Object.keys(e2Results).length;
@@ -2135,9 +2139,11 @@
 
       filtered.forEach(s => {
         const isExtra = EXTRA_RUTS.has(s.rut);
-        const origen = isExtra
-          ? `<span class="status-pill completed">Agregado</span>`
-          : `<span class="status-pill pending">Base</span>`;
+        const origen = s.es_prueba
+          ? `<span class="status-pill" style="color:#c4b5fd;background:rgba(139,92,246,.12);border-color:rgba(139,92,246,.28);">Prueba</span>`
+          : (isExtra
+            ? `<span class="status-pill completed">Agregado</span>`
+            : `<span class="status-pill pending">Base</span>`);
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td style="font-weight: 600; color: #fff;">${s.nombre}</td>

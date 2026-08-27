@@ -8,6 +8,7 @@ const PROJECT = 'estudiacest';
 const BASE_PATH = '/plataforma_paes';
 const GUIDES = ['11', '12', '13', '14', '15', '16', '17'];
 const MODEL_VERSION = 'paes-segundo-semestre-g11-g17-2026-08-27';
+const TEST_RUT = '111111111';
 
 function stableStringify(value) {
   if (Array.isArray(value)) return `[${value.map(stableStringify).join(',')}]`;
@@ -87,6 +88,7 @@ function recordName(book, responses, rut) {
 function buildPublication(books, responses, publishedAt = Date.now()) {
   const allRuts = new Set(Object.keys(books || {}));
   GUIDES.forEach(guideId => Object.keys((responses && responses[guideId]) || {}).forEach(rut => allRuts.add(rut)));
+  allRuts.delete(TEST_RUT);
 
   const target = {};
   const projection = {};

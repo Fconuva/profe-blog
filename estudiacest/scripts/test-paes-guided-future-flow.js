@@ -21,6 +21,19 @@ async function main() {
   page.on('console', (message) => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('pageerror', (error) => errors.push(error.message));
 
+  if (process.env.REAL_BLOCK_ONLY === '1') {
+    await page.goto(`${baseUrl}/paes/guia31-guiada.html`, { waitUntil: 'networkidle' });
+    await page.fill('#rutInput', authorized[1]);
+    await page.click('#loginForm button[type="submit"]');
+    await page.locator('#errorBox.show').waitFor({ state: 'visible' });
+    const blockedText = await page.locator('#errorBox').textContent();
+    if (!/se habilitará cuando corresponda/i.test(blockedText || '')) throw new Error('La API real no mantuvo bloqueada la guía futura.');
+    await browser.close();
+    if (errors.length) throw new Error(`Errores de consola: ${errors.join(' | ')}`);
+    console.log('OK: acceso futuro bloqueado por la API real, sin escribir respuestas.');
+    return;
+  }
+
   await page.route('**/api/paes**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());

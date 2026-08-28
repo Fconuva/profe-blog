@@ -8,6 +8,38 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-28, rutas individuales PAES preparadas hasta noviembre
+
+- Se construyeron las rutas guiadas 20 a 31 para el estudiante que ya tenía
+  este apoyo registrado. Cubren la secuencia completa desde relaciones entre
+  textos hasta estrategia final, conservan el objetivo lector de cada sesión y
+  reúnen 12 estímulos, 72 preguntas A-D y retroalimentación específica.
+- Cada ruta presenta tres pasos estables, glosario breve, lectura segmentada,
+  palabras clave resaltadas, una pregunta por pantalla, lectura en voz alta,
+  ausencia de temporizador y entrega aunque queden preguntas pendientes. Se
+  generaron 12 apoyos visuales 4:3 con Nano Banana, optimizados en WebP y sin
+  recortes.
+- Las claves y explicaciones quedaron en un módulo exclusivo del servidor. El
+  admin autenticado recibe la clave solo al revisar una entrega y distingue la
+  variante individual; el HTML público no expone claves ni etiquetas clínicas.
+- El portal muestra las futuras rutas únicamente dentro del acceso individual.
+  Firebase se actualizó primero en simulación y luego en aplicación: G20 a G31
+  quedaron bloqueadas por defecto y se preservaron los 20 estados anteriores.
+  El docente podrá habilitarlas por sesión o mediante excepción individual.
+- `REGLAS.md` incorpora como regla dura que toda nueva sesión PAES debe salir el
+  mismo día con esta ruta. El contrato de entrega ahora audita correctamente
+  páginas que comparten lógica y backend, sin exigir duplicar código dentro de
+  cada HTML.
+- `npm run build` aprobó Firebase, 21 contratos de entrega, PAES, SIMCE, Odisea,
+  Anuario y 134 recursos críticos. Playwright verificó escritorio y celular,
+  recursos visuales, tabla, autoguardado, entrega, lectura posterior, bloqueo y
+  cero errores de consola. La comprobación final usó la API real sin escribir
+  respuestas.
+- Commit funcional: `dc08ec5d`. Deploy productivo:
+  `dpl_Drm2Fn3MSHD1V8xZgsjtGxjFk3D8`.
+
+---
+
 ## 2026-08-27, contacto institucional para estudiantes en la portada
 
 - Se incorporó al pie de la portada un bloque visible de consultas para

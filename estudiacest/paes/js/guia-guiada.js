@@ -96,6 +96,48 @@
     });
   }
 
+  function setupReadAloud() {
+    if (!('speechSynthesis' in window) || typeof window.SpeechSynthesisUtterance !== 'function') return;
+    document.querySelectorAll('.reading').forEach((reading, index) => {
+      if (reading.querySelector('.read-aloud')) return;
+      const controls = document.createElement('div');
+      controls.className = 'reading-tools';
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'read-aloud';
+      button.setAttribute('aria-label', `Escuchar lectura ${index + 1}`);
+      button.textContent = 'Escuchar lectura';
+      controls.appendChild(button);
+      reading.prepend(controls);
+
+      button.addEventListener('click', () => {
+        if (button.dataset.playing === 'true') {
+          window.speechSynthesis.cancel();
+          button.dataset.playing = 'false';
+          button.textContent = 'Escuchar lectura';
+          return;
+        }
+        document.querySelectorAll('.read-aloud').forEach((other) => {
+          other.dataset.playing = 'false';
+          other.textContent = 'Escuchar lectura';
+        });
+        window.speechSynthesis.cancel();
+        const parts = reading.querySelectorAll('h2, .paragraph p');
+        const text = Array.from(parts).map((node) => node.textContent.trim()).join('. ');
+        const utterance = new window.SpeechSynthesisUtterance(text);
+        utterance.lang = 'es-CL';
+        utterance.rate = 0.9;
+        utterance.onend = utterance.onerror = () => {
+          button.dataset.playing = 'false';
+          button.textContent = 'Escuchar lectura';
+        };
+        button.dataset.playing = 'true';
+        button.textContent = 'Detener lectura';
+        window.speechSynthesis.speak(utterance);
+      });
+    });
+  }
+
   function selectAnswer(questionId, letter) {
     if (isSubmitted) return;
     const state = readState();
@@ -290,6 +332,22 @@
     return roster.find((entry) => cleanRut(entry.rut) === rut) || null;
   }
 
+  async function canOpenScheduledGuide(rut) {
+    if (config.respectGuideLock !== true) return true;
+    const [configResponse, stateResponse] = await Promise.all([
+      fetch(`/api/paes?action=get-guias-config&rut=${encodeURIComponent(rut)}`),
+      fetch(`/api/paes?action=get-guia-state&guiaId=${encodeURIComponent(config.guideId)}&rut=${encodeURIComponent(rut)}`)
+    ]);
+    if (!configResponse.ok || !stateResponse.ok) throw new Error('No fue posible comprobar el acceso a la guía.');
+    const access = await configResponse.json();
+    const state = await stateResponse.json();
+    const key = `g${config.guideId}`;
+    const blocked = Boolean(access && access.config && access.config.blocked && access.config.blocked[key]);
+    const allowed = Boolean(access && access.config && access.config.allowed && access.config.allowed[key]);
+    const review = Boolean(state && state.released && state.attempt && state.attempt.completada);
+    return !blocked || allowed || review;
+  }
+
   function showError(message) {
     $('errorBox').textContent = message;
     $('errorBox').classList.add('show');
@@ -302,6 +360,15 @@
     }
     if (rut !== AUTHORIZED_RUT) {
       showError('Esta ruta de trabajo está asignada a otro estudiante. Ingresa desde el portal PAES.');
+      return;
+    }
+    try {
+      if (!(await canOpenScheduledGuide(rut))) {
+        showError('Esta guía está preparada y se habilitará cuando corresponda en clase.');
+        return;
+      }
+    } catch (error) {
+      showError(error.message || 'No fue posible comprobar el acceso a la guía.');
       return;
     }
     const found = await findStudent(rut);
@@ -330,6 +397,7 @@
   }
 
   renderQuestions();
+  setupReadAloud();
   $('rutInput').addEventListener('input', (event) => { event.target.value = formatRut(event.target.value); });
   $('loginForm').addEventListener('submit', (event) => {
     event.preventDefault();

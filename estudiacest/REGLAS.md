@@ -103,6 +103,14 @@ Antes de editar y nuevamente antes de publicar:
   y luego se aplica. La cantidad esperada y aplicada debe coincidir.
 - Las adecuaciones individuales conservan el objetivo lector, no exhiben datos
   clínicos y permanecen aisladas del intento regular.
+- Toda nueva guía, sesión, miniensayo o ensayo PAES debe publicarse el mismo día
+  con la ruta individual guiada del estudiante registrado para este apoyo. La
+  adaptación conserva el objetivo lector y usa un estímulo breve, seis preguntas
+  A-D, pasos visuales explícitos, una pregunta a la vez, lectura en voz alta y sin
+  temporizador. Su acceso es exclusivo; las claves y la retroalimentación quedan
+  en servidor con `variant: guided-access-2026`, integración en Firebase y admin,
+  y pruebas de celular, guardado, entrega, lectura de vuelta y redirección. La
+  interfaz nunca muestra diagnósticos ni el nombre técnico de la variante.
 
 ## 8. Administración y datos
 

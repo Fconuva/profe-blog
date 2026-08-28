@@ -5,6 +5,7 @@
 //         | ?action=admin-save-student | ?action=admin-delete-student | ?action=admin-set-guias-config | ?action=admin-save-nota
 
 const admin = require('firebase-admin');
+const { GUIDED_GUIDE_KEYS, GUIDED_GUIDE_FEEDBACK } = require('./_paes-guided-catalog');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
@@ -127,47 +128,6 @@ const G19_KEY = {
 
 const GUIDED_ACCESS_RUT = '229327739';
 const GUIDED_VARIANT = 'guided-access-2026';
-const G17_GUIDED_KEY = { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' };
-const G18_GUIDED_KEY = { 1:'C', 2:'A', 3:'D', 4:'B', 5:'C', 6:'A' };
-const G19_GUIDED_KEY = { 1:'B', 2:'D', 3:'A', 4:'C', 5:'B', 6:'D' };
-const GUIDED_GUIDE_KEYS = {
-    '17': G17_GUIDED_KEY,
-    '18': G18_GUIDED_KEY,
-    '19': G19_GUIDED_KEY
-};
-
-const G17_GUIDED_FEEDBACK = {
-    1:'El primer párrafo indica que los vecinos usaban el paraguas para acompañar hasta el bus a quienes llegaban sin protección.',
-    2:'Martín llega antes para revisar el paraguas y luego lo busca cuando desaparece la banca. Ambas acciones muestran un cuidado que él no reconoce en voz alta.',
-    3:'Martín se relaja después de comprobar que el paraguas está guardado y conserva la etiqueta que explica su uso comunitario.',
-    4:'El cuidado primero es secreto; al final queda organizado mediante una caja y una instrucción visible para todo el barrio.',
-    5:'Martín llega antes para revisar el paraguas y se relaja cuando comprueba que está protegido. Las dos pistas muestran que el objeto le importa personalmente.',
-    6:'Las acciones de Martín muestran que una ayuda discreta puede mantenerse y organizarse para beneficiar a otras personas.'
-};
-
-const G18_GUIDED_FEEDBACK = {
-    1:'El texto reconoce explícitamente que el silencio reduce interrupciones y permite concentrarse en una lectura extensa.',
-    2:'“Sin embargo” no borra la ventaja anterior: introduce el límite de aplicar el silencio como única regla.',
-    3:'La propuesta central es organizar zonas distintas para que la concentración individual y la colaboración puedan convivir.',
-    4:'Los casos del tercer párrafo demuestran que conversar también puede ser parte de una actividad de comprensión.',
-    5:'El emisor valora el silencio cuando protege el aprendizaje, pero rechaza que se aplique de manera absoluta.',
-    6:'El mejor respaldo debe comprobar las dos partes de la propuesta: concentración en una zona y colaboración efectiva en la otra.'
-};
-
-const G19_GUIDED_FEEDBACK = {
-    1:'El segundo párrafo muestra apoyos concretos: mesas, agua y un cartel con horarios. Esos cambios vuelven claro y habitable el espacio.',
-    2:'La sombra no recibe literalmente a las personas: les ofrece protección frente al calor y un lugar donde pueden esperar o permanecer.',
-    3:'La directora no rechaza la propuesta. La acepta con cautela y agrega la condición de conservar momentos sin actividades programadas.',
-    4:'El párrafo explica que ya no era necesario dirigir cada encuentro. Por eso “fluido” significa natural y con menos intervención externa.',
-    5:'El último párrafo limita el aporte: no resuelve la falta de áreas verdes, pero ofrece durante algunas horas un espacio gratuito y abierto.',
-    6:'El texto reúne cuidado material y libertad de uso. El patio facilita los encuentros sin obligar a las personas a participar en un programa.'
-};
-
-const GUIDED_GUIDE_FEEDBACK = {
-    '17': G17_GUIDED_FEEDBACK,
-    '18': G18_GUIDED_FEEDBACK,
-    '19': G19_GUIDED_FEEDBACK
-};
 
 function isGuidedAccess(guideId, rut) {
     return cleanRut(rut) === GUIDED_ACCESS_RUT && Object.prototype.hasOwnProperty.call(GUIDED_GUIDE_KEYS, String(guideId));
@@ -243,7 +203,7 @@ const INTERACTIVE_GUIDE_KEYS = {
     '19': G19_KEY
 };
 
-const INCOMPLETE_SUBMISSION_GUIDES = new Set(['17', '18', '19']);
+const INCOMPLETE_SUBMISSION_GUIDES = new Set(Object.keys(GUIDED_GUIDE_KEYS));
 
 const G14_KEY = {
     q01:'A',q02:'C',q03:'B',q04:'D',q05:'A',q06:'A',q07:'C',q08:'D',q09:'A',q10:'B',
@@ -780,9 +740,14 @@ async function handleAdminGetResults(req, res) {
     ]);
 
     const guiaRespuestas = guiaRespSnap.exists() ? guiaRespSnap.val() : {};
-    Object.values(guiaRespuestas).forEach((guideRecords) => {
+    Object.entries(guiaRespuestas).forEach(([guideId, guideRecords]) => {
         Object.values(guideRecords || {}).forEach((record) => {
-            if (record && typeof record === 'object') record.answers = normalizeStoredAnswers(record.answers);
+            if (record && typeof record === 'object') {
+                record.answers = normalizeStoredAnswers(record.answers);
+                if (record.variant === GUIDED_VARIANT && GUIDED_GUIDE_KEYS[guideId]) {
+                    record.adminKey = GUIDED_GUIDE_KEYS[guideId];
+                }
+            }
         });
     });
     if (guiaRespuestas['14']) guiaRespuestas['14'] = sanitizeGuia14ForAdmin(guiaRespuestas['14']);

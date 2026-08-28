@@ -83,7 +83,7 @@ assert(/Estrategia de doble evidencia/.test(source), 'Falta la infografía de es
 assert(!/<video\b/i.test(source), 'La sesión no debe incluir video.');
 assert((source.match(/id=["']submit["']/g) || []).length === 1, 'Debe existir un solo botón final de entrega.');
 assert(!/validateBeforeSubmit|Debes responder todas las preguntas antes de entregar/.test(source), 'La entrega no puede depender de completar respuestas.');
-assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(\[[^\]]*'17'[^\]]*\]\)/.test(api), 'La API no permite una entrega incompleta en G17.');
+assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(Object\.keys\(GUIDED_GUIDE_KEYS\)\)/.test(api), 'La API no permite una entrega incompleta en G17.');
 assert(/const answerKey = released && attempt\.completada && selectedKey/.test(api), 'La clave no está protegida por liberación docente.');
 assert(/'17': G17_KEY/.test(api), 'La API no corrige G17 con clave del servidor.');
 assert(/function normalizeStoredAnswers\(rawAnswers\)/.test(api), 'La API no normaliza arreglos de respuestas provenientes de RTDB.');

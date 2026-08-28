@@ -100,14 +100,14 @@ assert((source.match(/id=["']submit["']/g) || []).length === 1, 'Debe existir un
 assert(!/validateBeforeSubmit|Debes responder todas las preguntas antes de entregar/.test(source), 'La entrega no puede depender de completar respuestas.');
 assert(/readback\.attempt\.completada!==true/.test(source), 'La entrega no verifica la confirmación del servidor.');
 assert(/await window\.checkGuiaAccess\(student\.rut\)/.test(source), 'El acceso directo no vuelve a comprobar el bloqueo docente después del ingreso.');
-assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(\['17', '18', '19'\]\)/.test(api), 'La API no permite una entrega incompleta en G19.');
+assert(/INCOMPLETE_SUBMISSION_GUIDES = new Set\(Object\.keys\(GUIDED_GUIDE_KEYS\)\)/.test(api), 'La API no permite una entrega incompleta en G19.');
 assert(/'19': G19_KEY/.test(api), 'La API no corrige G19 con clave del servidor.');
 assert(/'19': G19_FEEDBACK/.test(api), 'La API no asocia la retroalimentación de G19.');
 assert(/const answerKey = released && attempt\.completada && selectedKey/.test(api), 'La clave no está protegida por liberación docente.');
 assert(/const feedback = released && attempt\.completada && selectedFeedback/.test(api), 'La retroalimentación no está protegida por liberación docente.');
 assert(/'19': \{[\s\S]*?total: 18/.test(admin), 'El administrador no registra la Guía 19.');
 assert(/id: 'g19'/.test(admin), 'El bloqueo del administrador no incluye la Guía 19.');
-assert(/const SESIONES_LIBRO = \[[^\]]*19\]/.test(admin), 'El libro de notas no incluye la Guía 19.');
+assert(/const SESIONES_LIBRO = \[[^\]]*\b19\b[^\]]*\]/.test(admin), 'El libro de notas no incluye la Guía 19.');
 assert(/data-guia-id="g19"/.test(materials), 'La página de materiales no incluye G19.');
 
 const card18 = portal.indexOf('id="cardGuia18"');

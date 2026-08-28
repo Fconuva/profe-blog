@@ -6,14 +6,14 @@ const registryPath = path.join(__dirname, 'class-submission-contract.json');
 const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
 
 const required = [
-  ['botón de entrega único', /id=["']submit["']/g, 1],
-  ['botón de tipo button', /id=["']submit["'][^>]*type=["']button["']|type=["']button["'][^>]*id=["']submit["']/g, 1],
-  ['marca submitted', /submitted\s*:\s*true/g, 1],
-  ['marca completada', /completada\s*:\s*true/g, 1],
+  ['botón de entrega único', /id=["'](?:submit|submitGuide)["']/g, 1],
+  ['botón de tipo button', /id=["'](?:submit|submitGuide)["'][^>]*type=["']button["']|type=["']button["'][^>]*id=["'](?:submit|submitGuide)["']/g, 1],
+  ['marca submitted', /submitted\s*:\s*(?:true|!draft)/g, 1],
+  ['marca completada', /completada\s*:\s*(?:true|!draft)/g, 1],
   ['fecha submittedAt', /submittedAt\s*:/g, 1],
   ['fecha completadaAt', /completadaAt\s*:/g, 1],
   ['puntaje score', /score\s*:/g, 1],
-  ['total dinámico', /total\s*:\s*(?:questions|QUESTIONS)\.length/g, 1],
+  ['total dinámico', /total\s*:\s*(?:(?:config\.)?questions|QUESTIONS)\.length|const\s+TOTAL\s*=\s*config\.questions\.length/g, 1],
   ['cola de autoguardado', /saveQueue\s*=\s*Promise\.resolve\(\)/g, 1],
   ['espera de autoguardado', /await\s+saveQueue/g, 1],
   ['confirmación visible', /Entrega confirmada/g, 2],
@@ -40,7 +40,17 @@ for (const entry of registry.files || []) {
     continue;
   }
 
-  const source = fs.readFileSync(absolutePath, 'utf8');
+  const pageSource = fs.readFileSync(absolutePath, 'utf8');
+  const relatedPaths = [entry.logic, entry.backend].flat().filter(Boolean);
+  const relatedSources = relatedPaths.map((relatedPath) => {
+    const absoluteRelatedPath = path.join(ROOT, relatedPath);
+    if (!fs.existsSync(absoluteRelatedPath)) {
+      failures.push(`${relativePath}: dependencia de entrega inexistente (${relatedPath}).`);
+      return '';
+    }
+    return fs.readFileSync(absoluteRelatedPath, 'utf8');
+  });
+  const source = [pageSource, ...relatedSources].join('\n');
   for (const [label, pattern, minimum] of required) {
     const count = (source.match(pattern) || []).length;
     if (label === 'botón de entrega único' ? count !== 1 : count < minimum) {
@@ -62,7 +72,7 @@ for (const entry of registry.files || []) {
     failures.push(`${relativePath}: falta work-telemetry.js con data-session.`);
   }
 
-  const inlineScripts = [...source.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+  const inlineScripts = [...pageSource.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])
     .filter(script => script.trim());
   inlineScripts.forEach((script, index) => {

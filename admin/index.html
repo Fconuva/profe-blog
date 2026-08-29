@@ -324,7 +324,7 @@
                     <p class="text-xs font-bold text-amber-700 uppercase tracking-wide">🟡 Te falta cobrar</p>
                     <p class="text-3xl font-heading font-bold text-amber-700 my-1 tabular-nums" id="stat-pending-revenue">$0</p>
                     <p class="text-xs text-amber-600 font-semibold" id="stat-pending-revenue-count">0 por cobrar</p>
-                    <p class="text-[11px] text-gray-500 mt-1 leading-tight">segundas cuotas de quienes ya abonaron (plata comprometida)</p>
+                    <p class="text-[11px] text-gray-500 mt-1 leading-tight">saldo restante de quienes ya abonaron (plata comprometida)</p>
                     <p class="text-[11px] text-amber-700 font-semibold leading-tight mt-1" id="stat-cobranza-aging"></p>
                 </div>
                 <div class="bg-slate-800 rounded-xl border border-slate-800 p-5">
@@ -422,14 +422,14 @@
 
                 <div class="bg-white rounded-2xl border-2 border-amber-300 p-6">
                     <div class="flex items-start justify-between gap-3 mb-1">
-                        <h3 class="font-heading font-bold text-gray-900">🧾 Comprometido · te deben la 2ª cuota</h3>
+                        <h3 class="font-heading font-bold text-gray-900">🧾 Comprometido · saldos de quienes ya abonaron</h3>
                         <span class="text-right shrink-0">
                             <span class="block text-lg font-heading font-bold text-amber-700 tabular-nums" id="tbl-comprometido-monto">$0</span>
                             <span class="block text-[11px] text-amber-600"><span id="tbl-comprometido-n">0</span> docentes</span>
                         </span>
                     </div>
-                    <p class="text-[11px] text-gray-500 mb-3">Ya existe un abono, por eso este saldo es cartera comprometida. La fecha de cobro se lee desde el acuerdo de WhatsApp: un saldo sin fecha no se trata como vencido.</p>
-                    <div id="cobranza-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p></div>
+                    <p class="text-[11px] text-gray-500 mb-3">Ya existe al menos un pago, por eso el saldo restante es cartera comprometida. Puede ser una segunda cuota, una cuota posterior o el saldo final. La fecha de cobro se lee desde el acuerdo de WhatsApp.</p>
+                    <div id="cobranza-table" style="max-height:420px;overflow-y:auto"><p class="text-sm text-gray-400">Sin saldos comprometidos.</p></div>
                 </div>
 
                 <div class="bg-white rounded-2xl border-2 border-indigo-200 p-6">
@@ -2504,7 +2504,7 @@
                     if (p.comprobantePago) mpGross += montoFull; // pago por MercadoPago (tiene ID); las transferencias no
                     paid++; paidCount++; fullPayN++; fullPayMonto += montoFull;
                 } else if (p.paymentStatus === 'abono' || p.esAbono === true) {
-                    // COMPROMETIDO: 1a cuota recibida; el saldo (2a cuota) queda POR COBRAR (firme).
+                    // COMPROMETIDO: existe al menos un abono; el saldo restante queda POR COBRAR.
                     // El respaldo fijo de $100.000 sobrestimaba a quienes abonaron $50.000 y tienen
                     // su pago solo en el arreglo `abonos`.
                     var abono = montoPagadoReal(p) || 100000;
@@ -2813,6 +2813,14 @@
                 esperarM1: agendaEsperarM1,
                 pausados: agendaPausados
             };
+            window._resumenCarteraBruta = {
+                personas: cobranzaList.length + sinPagar,
+                comprometidosPersonas: cobranzaList.length,
+                comprometidoMonto: pendingRevenue,
+                potencialPersonas: sinPagar,
+                potencialMonto: sinPagarMonto,
+                saldoTotal: pendingRevenue + sinPagarMonto
+            };
             var _corteAgenda = document.getElementById('dashboard-corte');
             if (_corteAgenda) {
                 var _ultimoCorte = cortesCartera.sort().pop() || '';
@@ -2834,7 +2842,7 @@
             _setD('stat-cobranza-aging', (mas30 ? mas30 + ' llevan más de 30 días' + (mas60 ? ' (' + mas60 + ' más de 60)' : '') + ' desde su abono' : ''));
             var cobEl = document.getElementById('cobranza-table');
             if (cobEl) {
-                if (!cobranzaList.length) { cobEl.innerHTML = '<p class="text-sm text-gray-400">Sin deudas de 2ª cuota.</p>'; }
+                if (!cobranzaList.length) { cobEl.innerHTML = '<p class="text-sm text-gray-400">Sin saldos comprometidos.</p>'; }
                 else {
                     cobranzaList.sort(function (a, b) { return (b.dias || 0) - (a.dias || 0); });
                     var h = '<table class="w-full text-sm"><thead><tr class="text-left text-[11px] text-gray-400 uppercase"><th class="py-1 pr-2">Docente</th><th class="py-1 pr-2">Abonó</th><th class="py-1 pr-2">Acuerdo</th><th class="py-1 pr-2">Último cobro</th><th class="py-1 text-right">Saldo</th></tr></thead><tbody>';
@@ -4359,7 +4367,12 @@
                     'pausado': 'Cobros detenidos por una razón documentada'
                 };
                 var personas = new Set(lista.map(function(x) { return x.uid; })).size;
-                explicacion.textContent = (rotulos[filtro] || rotulos.todos) + ': ' + personas + ' personas, ' + lista.length + ' movimientos por ' + formatCLP(total) + '. Los montos sin fecha no se suman a una ventana futura.';
+                var resumenBruto = window._resumenCarteraBruta || {};
+                if (filtro === 'todos' && resumenBruto.personas) {
+                    explicacion.textContent = 'Cartera bruta: ' + resumenBruto.personas + ' personas y ' + formatCLP(resumenBruto.saldoTotal) + ' por cobrar en total. Se compone de ' + resumenBruto.comprometidosPersonas + ' saldos comprometidos por ' + formatCLP(resumenBruto.comprometidoMonto) + ' y ' + resumenBruto.potencialPersonas + ' inscritos sin pago por ' + formatCLP(resumenBruto.potencialMonto) + '. La agenda muestra ' + lista.length + ' cuotas o movimientos por ' + formatCLP(total) + '; no confundir esa suma operativa con el saldo total.';
+                } else {
+                    explicacion.textContent = (rotulos[filtro] || rotulos.todos) + ': ' + personas + ' personas, ' + lista.length + ' movimientos por ' + formatCLP(total) + '. Los montos sin fecha no se suman a una ventana futura.';
+                }
             }
             if (!lista.length) {
                 el.innerHTML = '<p class="text-sm text-gray-500 p-5">No hay pagos en esta categoría.</p>';

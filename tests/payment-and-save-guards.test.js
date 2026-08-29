@@ -55,6 +55,15 @@ test('collection agenda uses the reconciled portfolio ledger and keeps non-colle
   assert.doesNotMatch(admin, /fechaGrabacion[^\n]{0,120}agenda/i);
 });
 
+test('gross receivables are not confused with scheduled instalments', () => {
+  assert.match(admin, /window\._resumenCarteraBruta/);
+  assert.match(admin, /saldoTotal: pendingRevenue \+ sinPagarMonto/);
+  assert.match(admin, /Cartera bruta:/);
+  assert.match(admin, /no confundir esa suma operativa con el saldo total/);
+  assert.match(admin, /saldos de quienes ya abonaron/);
+  assert.doesNotMatch(admin, /Comprometido · te deben la 2ª cuota/);
+});
+
 test('financial potential respects each registered plan instead of inflating module-only clients', () => {
   assert.match(admin, /sinPagarMonto \+= price > 0 \? price : 199990/);
   assert.match(admin, /var potencial = totalRevenue \+ sinPagarMonto/);

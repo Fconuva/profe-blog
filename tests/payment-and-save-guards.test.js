@@ -39,6 +39,13 @@ test('inactive users are excluded even when the baja only exists in users', () =
   assert.match(admin, /if \(esClienteInactivo\(c, _p\)\) return false/);
 });
 
+test('reconciled cash and no-cobrar states cannot inflate receivables', () => {
+  assert.match(admin, /cartera\.fuentePago === '_gestion\/LIBRO_DE_CAJA\.jsonl'/);
+  assert.match(admin, /return pagadoLibro/);
+  assert.match(admin, /p\.noCobrar === true \|\| cartera\.tramoCobro === 'no_cobrar'/);
+  assert.match(admin, /p\.paymentStatus === 'gratis' \|\| sinCobro/);
+});
+
 test('collection agenda uses the reconciled portfolio ledger and keeps non-collectible balances separate', () => {
   assert.match(admin, /p\.compromisoPago \|\| \{\}/);
   assert.match(admin, /_cartera\.tramoCobro/);

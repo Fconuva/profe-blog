@@ -98,7 +98,8 @@ Está prohibido usar `git push --force`, `git reset --hard`, restaurar versiones
 
 ## Portfolio Admin Financial Contract
 
-- Cash received is the greatest valid total among `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado`; mirrored migration fields must never be added together.
+- When `cartera.fuentePago` is `_gestion/LIBRO_DE_CAJA.jsonl`, `cartera.pagado` is the canonical cash received. Only legacy records without that reconciliation may fall back to the greatest valid total among `abonos`, `paymentAmount`, `abonoAcumulado`, and `montoPagado`; mirrored migration fields must never be added together.
+- `noCobrar=true` or `cartera.tramoCobro=no_cobrar` removes the balance from committed and potential receivables while preserving any historical cash received.
 - A later benefit or free status removes the plan from receivables, but any prior payment remains real cash received.
 - Collection timing comes from `portafolios/{uid}/cartera`: apply the 30-day rule after the last abono unless WhatsApp records a later agreement. A class-recording date is never a collection date.
 - `esperar_m1` is visible as work-dependent debt and must not enter “Cobrar ahora”. Display people as unique clients even when one balance has multiple agreed movements.

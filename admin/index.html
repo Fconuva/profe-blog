@@ -1755,6 +1755,14 @@
         // dos veces una misma transferencia que quedó replicada durante una migración.
         function montoPagadoReal(p) {
             if (!p) return 0;
+            // Cuando la cartera fue conciliada con el libro de caja, ese total manda. Los
+            // canales históricos pueden contener el precio del plan y no un pago (caso
+            // Alejandro López, 29-ago-2026), por lo que aplicar Math.max los resucita.
+            var cartera = p.cartera && typeof p.cartera === 'object' ? p.cartera : {};
+            var pagadoLibro = Number(cartera.pagado);
+            if (cartera.fuentePago === '_gestion/LIBRO_DE_CAJA.jsonl' && Number.isFinite(pagadoLibro) && pagadoLibro >= 0) {
+                return pagadoLibro;
+            }
             var ab = 0;
             var arr = p.abonos ? (Array.isArray(p.abonos) ? p.abonos : Object.values(p.abonos)) : [];
             arr.forEach(function(a) {
@@ -1792,6 +1800,8 @@
 
         function saldoPendienteReal(p) {
             p = p || {};
+            var cartera = p.cartera && typeof p.cartera === 'object' ? p.cartera : {};
+            if (p.noCobrar === true || cartera.tramoCobro === 'no_cobrar') return 0;
             var pagado = montoPagadoReal(p);
             var precio = getPortfolioPrice(p);
             if (precio > 0 && pagado >= precio) return 0;
@@ -2480,9 +2490,12 @@
                 // Plan real: plan de pago contratado, O ya pagó algo aunque su 'plan' haya quedado como 'pre-inscripcion'.
                 var esPlanReal = (p.plan && p.plan !== 'pre-inscripcion' && price > 0) || pagoReal;
                 if (esPlanReal && !(price > 0)) price = 199990;
-                if (p.paymentStatus === 'gratis') {
+                var carteraConciliada = p.cartera && typeof p.cartera === 'object' ? p.cartera : {};
+                var sinCobro = p.noCobrar === true || carteraConciliada.tramoCobro === 'no_cobrar';
+                if (p.paymentStatus === 'gratis' || sinCobro) {
                     // El beneficio no genera saldo ni integra la meta de planes. Pero si hubo un
                     // abono ANTES de concederlo, ese dinero sí entró y debe aparecer en recaudado.
+                    // Lo mismo vale para una evaluación suspendida con `noCobrar=true`.
                     paid++; regalosN++;
                     if (pagoRegistrado > 0) {
                         paidRevenue += pagoRegistrado;

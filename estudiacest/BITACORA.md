@@ -32,7 +32,8 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   390 × 844, 1920 × 1080 y 3840 × 2160.
 - `npm run build` aprobó Firebase, 21 contratos de entrega y 144 recursos
   críticos. Commit funcional: `1b83457c`. Primer deploy productivo:
-  `dpl_Ffi6KabJmcHwaKdXAJbZVKZtHEGH`.
+  `dpl_Ffi6KabJmcHwaKdXAJbZVKZtHEGH`. Protección final: commit `4018c9bc` y
+  deploy `dpl_5dKy3KmyYfMfHeskGzUywJKyLdkC`.
 
 ---
 

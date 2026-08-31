@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-30, clase NM4 de Industria 4.0 e inteligencia artificial
+
+- Se publicó la Clase 4 de la Unidad 3 para 4°A, 4°B, 4°C y 4°E. 4°D mantiene
+  su trabajo independiente en el proyecto Anuario y no aparece asignado a esta
+  sesión.
+- La presentación reúne 15 pantallas para 90 minutos: video inicial, conceptos,
+  caso modelado, investigación guiada, decisión técnica y defensa. Incluye
+  cuatro casos diferenciados para Mecánica Industrial, Mecánica Automotriz,
+  Electricidad y Electrónica, respaldados por ocho fuentes oficiales.
+- Se incorporó un bloque específico sobre inteligencia artificial y empleo:
+  distingue automatización de tareas y reemplazo completo de ocupaciones,
+  explica el riesgo de rezago profesional y presenta ejemplos en agricultura,
+  medicina y mantenimiento predictivo. El producto final exige separar lo que
+  puede hacer la IA de la decisión que debe verificar y asumir una persona.
+- Se generaron seis apoyos visuales 2K con Nano Banana y un video explicativo
+  de 1 minuto 40 segundos, en 1920 × 1080, con narración y 19 subtítulos
+  inferiores. Los archivos originales quedaron guardados dentro de la ruta de
+  la clase para su reutilización.
+- Playwright verificó la ruta y el portal en producción: respuesta 200,
+  navegación de 1 a 15, video y subtítulos cargados, tarjeta de clase activa,
+  imágenes completas, ausencia de errores de consola y diseño sin desborde en
+  390 × 844, 1920 × 1080 y 3840 × 2160.
+- `npm run build` aprobó Firebase, 21 contratos de entrega y 144 recursos
+  críticos. Commit funcional: `1b83457c`. Primer deploy productivo:
+  `dpl_Ffi6KabJmcHwaKdXAJbZVKZtHEGH`.
+
+---
+
 ## 2026-08-28, rutas individuales PAES preparadas hasta noviembre
 
 - Se construyeron las rutas guiadas 20 a 31 para el estudiante que ya tenía

@@ -52,12 +52,11 @@ function auditPanel(config) {
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
-  const teacherSelect = panelHtml.match(/<select id="docente">([\s\S]*?)<\/select>/);
-  assert(teacherSelect, `${config.label}: falta el selector docente.`);
-  const teachers = [...teacherSelect[1].matchAll(/<option value="([^"]+)">/g)]
-    .map((match) => match[1])
-    .sort();
-  assert.deepStrictEqual(teachers, [...config.teachers].sort(), `${config.label}: docentes inesperados.`);
+  assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
+  assert(!panelHtml.includes('id="docente"'), `${config.label}: aún muestra el selector docente público.`);
+  for (const contract of ['window.location.hash', 'sessionStorage', 'history.replaceState', 'acceso']) {
+    assert(panelHtml.includes(contract), `${config.label}: falta el contrato sin contraseña ${contract}.`);
+  }
   inlineScriptCompiles(panelHtml, config.label);
 }
 
@@ -66,8 +65,7 @@ auditPanel({
   publicPage: 'nm3/interrogacion-un-lugar-sin-limites/index.html',
   panelPage: 'nm3/interrogacion-un-lugar-sin-limites/calificar/index.html',
   publicClass: 'questions',
-  api: "var INSTRUMENTO = 'nm3'",
-  teachers: ['francisco', 'alicia', 'pia', 'joselin']
+  api: "var INSTRUMENTO = 'nm3'"
 });
 
 auditPanel({
@@ -75,8 +73,7 @@ auditPanel({
   publicPage: 'nm4/interrogacion-mocha-dick/index.html',
   panelPage: 'nm4/interrogacion-mocha-dick/calificar/index.html',
   publicClass: 'preg',
-  api: "var API = '/api/interrogacion'",
-  teachers: ['francisco', 'alicia', 'joselin', 'pia']
+  api: "var INSTRUMENTO = 'nm4'"
 });
 
 const nm3Roster = require(path.join(ROOT, 'api/_roster_nm3')).ROSTER_ROWS;
@@ -98,6 +95,8 @@ for (const apiFile of ['api/interrogacion.js']) {
   new vm.Script(source, { filename: apiFile });
   for (const contract of [
     'timingSafeEqual',
+    'ENLACES_DOCENTES_HASH',
+    'cuerpo.acceso',
     'instrumento.alumnos.get',
     'preguntasValidas',
     'puntajesValidos',
@@ -110,6 +109,8 @@ for (const apiFile of ['api/interrogacion.js']) {
     const occurrences = [...source.matchAll(new RegExp(`\\b${docente}: \\{`, 'g'))].length;
     assert.strictEqual(occurrences, 2, `${apiFile}: ${docente} no está configurado en ambos instrumentos.`);
   }
+  assert(!source.includes('cuerpo.clave'), `${apiFile}: la API aún recibe contraseña.`);
+  assert(!source.includes('CLAVE_COMPARTIDA_HASH'), `${apiFile}: quedó la contraseña compartida anterior.`);
   assert(!source.includes('AUDIT_DEPLOY_HASH'), `${apiFile}: quedó un acceso técnico temporal.`);
 }
 

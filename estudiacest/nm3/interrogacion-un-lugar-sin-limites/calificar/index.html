@@ -96,23 +96,8 @@
   <section id="vLogin">
     <div class="top"><h1>Interrogación El lugar sin límites · calificar</h1></div>
     <div class="card" style="max-width:440px;">
-      <h2>Ingreso docente</h2>
-      <p class="sub">Solo para quienes toman esta interrogación.</p>
-      <div class="campo">
-        <label for="docente">Docente</label>
-        <select id="docente">
-          <option value="">Seleccione…</option>
-          <option value="francisco">Francisco Núñez · 3°A, 3°B y 3°D</option>
-          <option value="alicia">Alicia Aguilera · 3°A</option>
-          <option value="pia">Pía Benavides · 3°B</option>
-          <option value="joselin">Joselin Díaz · 3°D</option>
-        </select>
-      </div>
-      <div class="campo">
-        <label for="clave">Clave</label>
-        <input type="password" id="clave" autocomplete="current-password" placeholder="••••••••">
-      </div>
-      <button class="btn solid" id="btnEntrar" style="width:100%;">Entrar</button>
+      <h2>Acceso docente</h2>
+      <p class="sub" id="estadoAcceso">Abriendo tu panel personal…</p>
       <div class="aviso err" id="errLogin"></div>
     </div>
   </section>
@@ -230,7 +215,8 @@
   var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
   var CURSO_LBL = { '3A': '3°A', '3B': '3°B', '3D': '3°D' };
 
-  var sesion = null;      // {docente, clave, cursos, notas}
+  var STORAGE_KEY = 'interrogacion-enlace-' + INSTRUMENTO;
+  var sesion = null;      // {docente, acceso, cursos, notas}
   var actual = null;      // interrogación en curso
   var $ = function (id) { return document.getElementById(id); };
 
@@ -243,19 +229,32 @@
   async function llamar(cuerpo) {
     var r = await fetch(API, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ instrumento: INSTRUMENTO, docente: sesion && sesion.docente, clave: sesion && sesion.clave }, cuerpo))
+      body: JSON.stringify(Object.assign({ instrumento: INSTRUMENTO, docente: sesion && sesion.docente, acceso: sesion && sesion.acceso }, cuerpo))
     });
     var j = await r.json().catch(function () { return {}; });
     if (!r.ok) throw new Error(j.error || 'Error de conexión.');
     return j;
   }
 
-  // ---------- entrar ----------
-  $('btnEntrar').addEventListener('click', async function () {
-    var d = $('docente').value, c = $('clave').value;
-    if (!d || !c) { return aviso($('errLogin'), 'Elige tu nombre y escribe la clave.', 'err'); }
-    $('btnEntrar').disabled = true;
-    sesion = { docente: d, clave: c };
+  // ---------- acceso mediante enlace personal ----------
+  function leerAcceso() {
+    var fragmento = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    var desdeEnlace = { docente: fragmento.get('docente'), acceso: fragmento.get('acceso') };
+    if (desdeEnlace.docente && desdeEnlace.acceso) {
+      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(desdeEnlace)); } catch (_) {}
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      return desdeEnlace;
+    }
+    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null'); } catch (_) { return null; }
+  }
+
+  async function entrar() {
+    var credencial = leerAcceso();
+    if (!credencial || !credencial.docente || !credencial.acceso) {
+      $('estadoAcceso').textContent = 'Abre el enlace personal que recibiste. Este panel no usa contraseña.';
+      return;
+    }
+    sesion = { docente: credencial.docente, acceso: credencial.acceso };
     try {
       var r = await llamar({ accion: 'nomina' });
       sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {};
@@ -265,15 +264,16 @@
       pintarCursos(); pintarNotas();
     } catch (e) {
       sesion = null;
+      try { sessionStorage.removeItem(STORAGE_KEY); } catch (_) {}
+      $('estadoAcceso').textContent = 'No fue posible abrir el panel.';
       aviso($('errLogin'), e.message, 'err');
     }
-    $('btnEntrar').disabled = false;
-  });
-  $('clave').addEventListener('keydown', function (e) { if (e.key === 'Enter') $('btnEntrar').click(); });
+  }
 
   $('btnSalir').addEventListener('click', function () {
     sesion = null; actual = null;
-    $('clave').value = '';
+    try { sessionStorage.removeItem(STORAGE_KEY); } catch (_) {}
+    $('estadoAcceso').textContent = 'Sesión cerrada. Abre nuevamente tu enlace personal para ingresar.';
     $('vPanel').classList.add('oculto');
     $('vLogin').classList.remove('oculto');
   });
@@ -452,6 +452,7 @@
       });
     });
   }
+  entrar();
 })();
 </script>
 </body>

@@ -8,8 +8,12 @@ const { ROSTER_ROWS: ROSTER_ROWS_NM3 } = require('./_roster_nm3');
 
 const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
   || 'https://estudiacest-default-rtdb.firebaseio.com';
-const CLAVE_COMPARTIDA_HASH = process.env.INTERROGACION_HASH
-  || 'ee4a8b655746dcfa0fdf21e73c12221d5961b49b31e86d889b1d7b56703107b4';
+const ENLACES_DOCENTES_HASH = Object.freeze({
+  francisco: process.env.INTERROGACION_LINK_FRANCISCO_HASH || '',
+  alicia: process.env.INTERROGACION_LINK_ALICIA_HASH || '',
+  pia: process.env.INTERROGACION_LINK_PIA_HASH || '',
+  joselin: process.env.INTERROGACION_LINK_JOSELIN_HASH || ''
+});
 const PUNTAJES_VALIDOS = new Set([0, 0.2, 0.4, 0.6, 0.8, 1]);
 
 function privateKey(raw) {
@@ -54,7 +58,6 @@ function configurarAlumnos(roster) {
 const INSTRUMENTOS = {
   nm3: {
     base: 'evaluaciones_nm3/interrogacion_lugar_sin_limites_2026',
-    claveHash: process.env.INTERROGACION_NM3_HASH || CLAVE_COMPARTIDA_HASH,
     docentes: {
       francisco: { nombre: 'Francisco Núñez', cursos: ['3A', '3B', '3D'] },
       alicia: { nombre: 'Alicia Aguilera', cursos: ['3A'] },
@@ -65,7 +68,6 @@ const INSTRUMENTOS = {
   },
   nm4: {
     base: 'evaluaciones_nm4/interrogacion_mocha_dick_2026',
-    claveHash: CLAVE_COMPARTIDA_HASH,
     docentes: {
       francisco: { nombre: 'Francisco Núñez', cursos: ['4ATP', '4BTP', '4CTP', '4DTP', '4ETP'] },
       alicia: { nombre: 'Alicia Aguilera', cursos: ['4ATP'] },
@@ -139,9 +141,11 @@ module.exports = async function handler(req, res) {
   const instrumentoId = cuerpo.instrumento === 'nm3' ? 'nm3' : 'nm4';
   const instrumento = INSTRUMENTOS[instrumentoId];
   const accion = String(cuerpo.accion || 'nomina');
-  const docente = instrumento.docentes[String(cuerpo.docente || '').toLowerCase()];
-  if (!docente || !hashValido(cuerpo.clave, instrumento.claveHash)) {
-    return res.status(401).json({ error: 'Clave o docente incorrectos.' });
+  const docenteId = String(cuerpo.docente || '').toLowerCase();
+  const docente = instrumento.docentes[docenteId];
+  const enlaceHash = ENLACES_DOCENTES_HASH[docenteId];
+  if (!docente || !enlaceHash || !hashValido(cuerpo.acceso, enlaceHash)) {
+    return res.status(401).json({ error: 'El enlace docente no es válido o fue reemplazado.' });
   }
 
   try {

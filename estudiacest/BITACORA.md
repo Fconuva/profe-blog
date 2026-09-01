@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-31, interrogaciones con acceso docente sin contraseña
+
+- Se retiraron el campo de contraseña y el selector público de los paneles de
+  interrogación NM3 y NM4. Cada una de las cuatro cuentas entra mediante un
+  enlace personal y conserva únicamente los cursos ya asignados.
+- El código de acceso viaja en el fragmento privado del enlace, no llega en la
+  solicitud inicial ni en los registros web, se elimina de la barra de
+  direcciones y queda solo durante la sesión de la pestaña.
+- La API dejó de aceptar la contraseña compartida anterior y valida el hash
+  sensible correspondiente a cada cuenta. Los hashes quedaron configurados
+  como variables cifradas de producción; los enlaces se guardaron fuera de Git
+  en una página local de distribución.
+- Playwright verificó en producción los ocho accesos: ingreso directo, ausencia
+  de campos de contraseña, aislamiento por curso, diseño móvil, lectura de
+  nómina y ciclo temporal de escritura, lectura y eliminación en Firebase. Un
+  acceso inválido fue rechazado y los registros de auditoría quedaron limpios.
+- `npm run build` aprobó 145 recursos críticos. Commit funcional: `12a434c4`.
+  Deploy productivo: `dpl_5vZ3czBmwBpYZhQkeNo5s5v1q6d3`.
+
+---
+
 ## 2026-08-31, cuatro docentes habilitados en cada panel de interrogación
 
 - Los paneles de `El lugar sin límites` y `Mocha Dick` muestran ahora las

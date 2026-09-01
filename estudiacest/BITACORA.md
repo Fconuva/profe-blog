@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-31, paneles docentes de interrogación NM3 y NM4 auditados
+
+- Se creó el panel docente de `El lugar sin límites` para NM3, con acceso
+  protegido, los tres cursos vigentes, sorteo de siete preguntas, un cambio,
+  escala de 0 a 1,0, observación, cálculo inmediato y tabla de calificaciones.
+- NM3 y `Mocha Dick` comparten una sola función de servidor para respetar el
+  límite de Vercel, pero mantienen separados sus docentes, nóminas y nodos de
+  Firebase. La compatibilidad del panel NM4 se preservó sin migrar sus notas.
+- El servidor ahora comprueba que el estudiante exista y corresponda al curso,
+  deriva su nombre desde la nómina y valida siete preguntas distintas, rango de
+  banco, posiciones y valores de puntaje. El navegador no recibe RUN.
+- La auditoría común comparó los dos bancos públicos con los paneles y detectó
+  dos formulaciones abreviadas en NM4; fueron igualadas a las preguntas
+  publicadas. En total se verificaron 100 preguntas y 249 estudiantes.
+- Playwright probó celular y escritorio: ingreso simulado, sorteo sin
+  repetidos, un único cambio, siete puntajes, cálculo, guardado y tabla, sin
+  errores de consola ni desborde. En producción se ejecutó un ciclo aislado de
+  escritura, lectura y eliminación en ambos nodos Firebase; los registros
+  técnicos quedaron eliminados y el acceso de un solo uso fue retirado.
+- `npm run build` aprobó las auditorías completas y 145 recursos críticos.
+  Commit funcional: `72612b29`. Primer deploy productivo:
+  `dpl_4rLadYa2y7xWsR7bdY1fAGeVD8WR`.
+
+---
+
 ## 2026-08-30, clase NM4 de Industria 4.0 e inteligencia artificial
 
 - Se publicó la Clase 4 de la Unidad 3 para 4°A, 4°B, 4°C y 4°E. 4°D mantiene

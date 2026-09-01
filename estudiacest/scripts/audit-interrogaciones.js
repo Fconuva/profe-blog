@@ -98,6 +98,7 @@ for (const apiFile of ['api/interrogacion.js']) {
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
   assert(source.includes('interrogacion_lugar_sin_limites_2026'), `${apiFile}: falta el nodo NM3.`);
   assert(source.includes('interrogacion_mocha_dick_2026'), `${apiFile}: falta el nodo NM4.`);
+  assert(!source.includes('AUDIT_DEPLOY_HASH'), `${apiFile}: quedó un acceso técnico temporal.`);
 }
 
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));

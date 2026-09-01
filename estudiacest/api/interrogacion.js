@@ -10,7 +10,6 @@ const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
   || 'https://estudiacest-default-rtdb.firebaseio.com';
 const CLAVE_COMPARTIDA_HASH = process.env.INTERROGACION_HASH
   || 'ee4a8b655746dcfa0fdf21e73c12221d5961b49b31e86d889b1d7b56703107b4';
-const AUDIT_DEPLOY_HASH = 'b640cef04514723824d90a4a39a776a950aba6492d5ad141945b58e3b2c95347';
 const PUNTAJES_VALIDOS = new Set([0, 0.2, 0.4, 0.6, 0.8, 1]);
 
 function privateKey(raw) {
@@ -137,9 +136,7 @@ module.exports = async function handler(req, res) {
   const instrumento = INSTRUMENTOS[instrumentoId];
   const accion = String(cuerpo.accion || 'nomina');
   const docente = instrumento.docentes[String(cuerpo.docente || '').toLowerCase()];
-  const auditoriaTemporal = accion === 'auditar-firebase'
-    && hashValido(cuerpo.auditToken, AUDIT_DEPLOY_HASH);
-  if (!docente || (!hashValido(cuerpo.clave, instrumento.claveHash) && !auditoriaTemporal)) {
+  if (!docente || !hashValido(cuerpo.clave, instrumento.claveHash)) {
     return res.status(401).json({ error: 'Clave o docente incorrectos.' });
   }
 

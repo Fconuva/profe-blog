@@ -52,6 +52,12 @@ function auditPanel(config) {
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
+  const teacherSelect = panelHtml.match(/<select id="docente">([\s\S]*?)<\/select>/);
+  assert(teacherSelect, `${config.label}: falta el selector docente.`);
+  const teachers = [...teacherSelect[1].matchAll(/<option value="([^"]+)">/g)]
+    .map((match) => match[1])
+    .sort();
+  assert.deepStrictEqual(teachers, [...config.teachers].sort(), `${config.label}: docentes inesperados.`);
   inlineScriptCompiles(panelHtml, config.label);
 }
 
@@ -60,7 +66,8 @@ auditPanel({
   publicPage: 'nm3/interrogacion-un-lugar-sin-limites/index.html',
   panelPage: 'nm3/interrogacion-un-lugar-sin-limites/calificar/index.html',
   publicClass: 'questions',
-  api: "var INSTRUMENTO = 'nm3'"
+  api: "var INSTRUMENTO = 'nm3'",
+  teachers: ['francisco', 'alicia', 'pia', 'joselin']
 });
 
 auditPanel({
@@ -68,7 +75,8 @@ auditPanel({
   publicPage: 'nm4/interrogacion-mocha-dick/index.html',
   panelPage: 'nm4/interrogacion-mocha-dick/calificar/index.html',
   publicClass: 'preg',
-  api: "var API = '/api/interrogacion'"
+  api: "var API = '/api/interrogacion'",
+  teachers: ['francisco', 'alicia', 'joselin', 'pia']
 });
 
 const nm3Roster = require(path.join(ROOT, 'api/_roster_nm3')).ROSTER_ROWS;
@@ -98,6 +106,10 @@ for (const apiFile of ['api/interrogacion.js']) {
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
   assert(source.includes('interrogacion_lugar_sin_limites_2026'), `${apiFile}: falta el nodo NM3.`);
   assert(source.includes('interrogacion_mocha_dick_2026'), `${apiFile}: falta el nodo NM4.`);
+  for (const docente of ['francisco', 'alicia', 'joselin', 'pia']) {
+    const occurrences = [...source.matchAll(new RegExp(`\\b${docente}: \\{`, 'g'))].length;
+    assert.strictEqual(occurrences, 2, `${apiFile}: ${docente} no está configurado en ambos instrumentos.`);
+  }
   assert(!source.includes('AUDIT_DEPLOY_HASH'), `${apiFile}: quedó un acceso técnico temporal.`);
 }
 

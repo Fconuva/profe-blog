@@ -56,7 +56,10 @@ const INSTRUMENTOS = {
     base: 'evaluaciones_nm3/interrogacion_lugar_sin_limites_2026',
     claveHash: process.env.INTERROGACION_NM3_HASH || CLAVE_COMPARTIDA_HASH,
     docentes: {
-      francisco: { nombre: 'Francisco Núñez', cursos: ['3A', '3B', '3D'] }
+      francisco: { nombre: 'Francisco Núñez', cursos: ['3A', '3B', '3D'] },
+      alicia: { nombre: 'Alicia Aguilera', cursos: ['3A'] },
+      pia: { nombre: 'Pía Benavides', cursos: ['3B'] },
+      joselin: { nombre: 'Joselin Díaz', cursos: ['3D'] }
     },
     roster: normalizarNm3(ROSTER_ROWS_NM3)
   },
@@ -64,6 +67,7 @@ const INSTRUMENTOS = {
     base: 'evaluaciones_nm4/interrogacion_mocha_dick_2026',
     claveHash: CLAVE_COMPARTIDA_HASH,
     docentes: {
+      francisco: { nombre: 'Francisco Núñez', cursos: ['4ATP', '4BTP', '4CTP', '4DTP', '4ETP'] },
       alicia: { nombre: 'Alicia Aguilera', cursos: ['4ATP'] },
       joselin: { nombre: 'Joselin Díaz', cursos: ['4DTP', '4ETP'] },
       pia: { nombre: 'Pía Benavides', cursos: ['4BTP', '4CTP'] }

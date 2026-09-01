@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-08-31, cuatro docentes habilitados en cada panel de interrogación
+
+- Los paneles de `El lugar sin límites` y `Mocha Dick` muestran ahora las
+  cuatro cuentas docentes: Francisco Núñez, Alicia Aguilera, Pía Benavides y
+  Joselin Díaz.
+- En NM3, Francisco conserva 3°A, 3°B y 3°D; las educadoras acceden solo a la
+  sección correspondiente: Alicia a 3°A, Pía a 3°B y Joselin a 3°D. En NM4,
+  Francisco accede a los cinco cuartos y se conservaron las asignaciones
+  vigentes de las educadoras.
+- La auditoría automática ahora exige exactamente las cuatro cuentas en ambos
+  selectores y comprueba que las cuatro estén configuradas en los dos
+  instrumentos. No se modificaron preguntas, nóminas ni calificaciones.
+- `npm run build` aprobó las auditorías y 145 recursos críticos. Playwright
+  verificó en producción las dos rutas en 390 y 1920 píxeles, sin errores ni
+  desbordes, y confirmó el rechazo protegido de accesos inválidos en la API.
+  Commit funcional: `9e71fe9e`. Deploy productivo:
+  `dpl_3QcMEAiqz2vjHPu9eUQvPxDRipPy`.
+
+---
+
 ## 2026-08-31, paneles docentes de interrogación NM3 y NM4 auditados
 
 - Se creó el panel docente de `El lugar sin límites` para NM3, con acceso

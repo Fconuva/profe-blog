@@ -366,6 +366,8 @@ function secureHash(value, expectedHash) {
 function verifyReviewAgent(req) {
   const key = String((req.headers && req.headers['x-review-key']) || '').trim();
   if (!key || !secureHash(key, process.env.ANUARIO_REVIEW_AGENT_HASH)) throw new Error('No autorizado');
+  ensureFirebase();
+  if (initError) throw new Error(initError);
 }
 
 function findReviewStudent(value) {

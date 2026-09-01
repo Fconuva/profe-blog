@@ -29,7 +29,8 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   técnicos quedaron eliminados y el acceso de un solo uso fue retirado.
 - `npm run build` aprobó las auditorías completas y 145 recursos críticos.
   Commit funcional: `72612b29`. Primer deploy productivo:
-  `dpl_4rLadYa2y7xWsR7bdY1fAGeVD8WR`.
+  `dpl_4rLadYa2y7xWsR7bdY1fAGeVD8WR`. Cierre de seguridad: commit
+  `6ba73921` y deploy `dpl_Cc4xg3DssE6HEErgtsteQYSUMnxd`.
 
 ---
 

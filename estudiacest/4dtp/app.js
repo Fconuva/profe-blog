@@ -99,7 +99,20 @@
 
   function normalizeState(value) {
     const data=value||{};
-    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), updatedAt:Number(data.updatedAt||0) };
+    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), teacherReview:data.teacherReview||{status:'pending',feedback:'',recommendations:'',alerts:'',reviewedAt:0}, updatedAt:Number(data.updatedAt||0) };
+  }
+
+  function renderTeacherReview() {
+    const review=state.teacherReview||{};
+    const visible=Boolean(review.reviewedAt&&(review.feedback||review.recommendations||review.alerts||review.status!=='pending'));
+    $('teacherReview').classList.toggle('hidden',!visible);
+    if(!visible)return;
+    const labels={on_track:'Avance bien encaminado',attention:'Requiere ajustes',critical:'Prioridad alta',excused:'Plazo especial',excluded:'Fuera de revisión',pending:'Pendiente'};
+    $('teacherReviewStatus').textContent=labels[review.status]||labels.pending;
+    $('teacherReviewStatus').dataset.status=review.status||'pending';
+    $('teacherFeedback').textContent=review.feedback||'Sin observaciones adicionales.';
+    $('teacherRecommendations').textContent=review.recommendations||'Continúa con la tarea actual.';
+    $('teacherAlerts').textContent=review.alerts||'Sin alertas por ahora.';
   }
 
   function renderWrittenProducts() {
@@ -174,6 +187,7 @@
     $('audioCount').textContent=audios+' '+(audios===1?'archivo':'archivos');$('photoCount').textContent=photos+' '+(photos===1?'archivo':'archivos');$('otherCount').textContent=others+' '+(others===1?'archivo':'archivos');
     const usedBytes=state.files.reduce((sum,file)=>sum+Number(file.size||0),0);
     $('storageSummary').textContent=state.files.length+' '+(state.files.length===1?'archivo':'archivos')+' · '+formatBytes(usedBytes)+' de 100 MB · '+formatBytes(Math.max(0,MAX_FILE_SIZE-usedBytes))+' disponibles';
+    renderTeacherReview();
     renderFiles();
   }
 

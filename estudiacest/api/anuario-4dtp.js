@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const admin = require('firebase-admin');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
@@ -45,6 +46,7 @@ const ROSTER = ROSTER_ROWS.map(([rut, name]) => ({ rut, name, course: '4DTP' }))
 const ROSTER_BY_RUT = new Map(ROSTER.map(student => [student.rut, student]));
 const FILE_CATEGORIES = new Set(['interview_audio', 'photo', 'document', 'other']);
 const INTERVIEW_TYPES = ['compañero', 'compañero', 'compañero', 'docente', 'docente'];
+const REVIEW_STATUSES = new Set(['pending', 'on_track', 'attention', 'critical', 'excused', 'excluded']);
 
 let initError = null;
 function normalizePrivateKey(raw) {
@@ -131,6 +133,31 @@ function defaultWrittenProducts() {
   };
 }
 
+function defaultTeacherReview() {
+  return {
+    status: 'pending',
+    feedback: '',
+    recommendations: '',
+    alerts: '',
+    reviewedAt: 0
+  };
+}
+
+function sanitizeTeacherReview(raw, current) {
+  const previous = current && typeof current === 'object' ? current : defaultTeacherReview();
+  const incoming = raw && typeof raw === 'object' ? raw : previous;
+  const status = REVIEW_STATUSES.has(String(incoming.status || ''))
+    ? String(incoming.status)
+    : previous.status;
+  return {
+    status,
+    feedback: limitedText(incoming.feedback, 1600),
+    recommendations: limitedText(incoming.recommendations, 1600),
+    alerts: limitedText(incoming.alerts, 800),
+    reviewedAt: Number(incoming.reviewedAt || previous.reviewedAt || 0)
+  };
+}
+
 function sanitizeWrittenProducts(raw, current) {
   const previous = current && typeof current === 'object' ? current : defaultWrittenProducts();
   const incoming = raw && typeof raw === 'object' ? raw : previous;
@@ -193,6 +220,7 @@ function studentRecord(student, current) {
       teacherNotes: value.evaluation && value.evaluation.teacherNotes ? value.evaluation.teacherNotes : '',
       updatedAt: Number(value.evaluation && value.evaluation.updatedAt || 0)
     },
+    teacherReview: sanitizeTeacherReview(value.teacherReview, defaultTeacherReview()),
     createdAt: Number(value.createdAt || Date.now()),
     updatedAt: Number(value.updatedAt || 0)
   };
@@ -223,6 +251,7 @@ function publicState(student, value) {
     activity1SubmittedAt: record.activity1SubmittedAt,
     activity2Status: record.activity2Status,
     activity2SubmittedAt: record.activity2SubmittedAt,
+    teacherReview: record.teacherReview,
     storage: {
       usedBytes,
       limitBytes: MAX_STUDENT_STORAGE,
@@ -231,6 +260,28 @@ function publicState(student, value) {
     createdAt: record.createdAt,
     updatedAt: record.updatedAt
   };
+}
+
+function hasStudentWork(value) {
+  if (!value || typeof value !== 'object') return false;
+  const interviews = Array.isArray(value.interviews) ? value.interviews : [];
+  const files = value.files && typeof value.files === 'object' ? value.files : {};
+  const written = value.writtenProducts && typeof value.writtenProducts === 'object'
+    ? value.writtenProducts
+    : {};
+  return interviews.some(item => item && (
+    limitedText(item.interviewee, 140).trim()
+    || limitedText(item.transcription, 12000).trim()
+    || limitedText(item.audioFileId, 90).trim()
+  ))
+    || Object.keys(files).length > 0
+    || limitedText(value.projectNotes, 4000).trim().length > 0
+    || Object.values(written).some(item => limitedText(item, 12000).trim().length > 0)
+    || value.activity1Status === 'submitted'
+    || value.activity2Status === 'submitted'
+    || Number(value.activity1SubmittedAt || 0) > 0
+    || Number(value.activity2SubmittedAt || 0) > 0
+    || Number(value.updatedAt || 0) > 0;
 }
 
 function calculateProgress(record) {
@@ -275,7 +326,7 @@ function setCors(req, res) {
   ]);
   res.setHeader('Access-Control-Allow-Origin', allowed.has(origin) ? origin : 'https://www.estudiacest.com');
   res.setHeader('Vary', 'Origin');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Review-Key');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Cache-Control', 'no-store');
 }
@@ -304,6 +355,24 @@ async function verifyAdmin(req) {
   ]);
   if (globalAccess.val() !== true && anuarioAccess.val() !== true) throw new Error('No autorizado');
   return decoded;
+}
+
+function secureHash(value, expectedHash) {
+  const actual = Buffer.from(crypto.createHash('sha256').update(String(value || '')).digest('hex'));
+  const expected = Buffer.from(String(expectedHash || ''));
+  return actual.length === expected.length && crypto.timingSafeEqual(actual, expected);
+}
+
+function verifyReviewAgent(req) {
+  const key = String((req.headers && req.headers['x-review-key']) || '').trim();
+  if (!key || !secureHash(key, process.env.ANUARIO_REVIEW_AGENT_HASH)) throw new Error('No autorizado');
+}
+
+function findReviewStudent(value) {
+  const position = Number(value);
+  return Number.isInteger(position) && position >= 1 && position <= ROSTER.length
+    ? ROSTER[position - 1]
+    : null;
 }
 
 function bucket() {
@@ -550,14 +619,15 @@ async function handleAdminList(req, res) {
       name: student.name,
       rut: formatRut(student.rut),
       course: student.course,
-      started: Boolean(records[student.rut]),
+      started: hasStudentWork(records[student.rut]),
       activity1Status: record.activity1Status,
       activity1SubmittedAt: record.activity1SubmittedAt,
       activity2Status: record.activity2Status,
       activity2SubmittedAt: record.activity2SubmittedAt,
       updatedAt: record.updatedAt,
       progress: calculateProgress(record),
-      evaluation: record.evaluation
+      evaluation: record.evaluation,
+      teacherReview: record.teacherReview
     };
   });
   return res.status(200).json({ ok: true, rows });
@@ -591,8 +661,59 @@ async function handleAdminSaveEvaluation(req, res) {
     teacherNotes: limitedText(body.teacherNotes, 2400),
     updatedAt: Date.now()
   };
-  await admin.database().ref(`${STUDENTS_PATH}/${student.rut}/evaluation`).set(evaluation);
-  return res.status(200).json({ ok: true, evaluation });
+  const ref = admin.database().ref(`${STUDENTS_PATH}/${student.rut}`);
+  const snapshot = await ref.once('value');
+  const current = studentRecord(student, snapshot.val());
+  const teacherReview = body.teacherReview
+    ? { ...sanitizeTeacherReview(body.teacherReview, current.teacherReview), reviewedAt: Date.now() }
+    : current.teacherReview;
+  await ref.update({ evaluation, teacherReview });
+  return res.status(200).json({ ok: true, evaluation, teacherReview });
+}
+
+async function handleReviewAgentList(req, res) {
+  verifyReviewAgent(req);
+  const snapshot = await admin.database().ref(STUDENTS_PATH).once('value');
+  const records = snapshot.val() || {};
+  const rows = ROSTER.map((student, index) => {
+    const record = studentRecord(student, records[student.rut]);
+    const state = publicState(student, record);
+    state.profile = { name: student.name, course: student.course };
+    return {
+      studentId: String(index + 1),
+      started: hasStudentWork(records[student.rut]),
+      state,
+      evaluation: record.evaluation
+    };
+  });
+  return res.status(200).json({ ok: true, rows });
+}
+
+async function handleReviewAgentSave(req, res) {
+  verifyReviewAgent(req);
+  const body = jsonBody(req);
+  const student = findReviewStudent(body.studentId);
+  if (!student) return res.status(404).json({ error: 'Estudiante no encontrado.' });
+  const ref = admin.database().ref(`${STUDENTS_PATH}/${student.rut}`);
+  const snapshot = await ref.once('value');
+  const record = studentRecord(student, snapshot.val());
+  const teacherReview = {
+    ...sanitizeTeacherReview(body.teacherReview, record.teacherReview),
+    reviewedAt: Date.now()
+  };
+  await ref.child('teacherReview').set(teacherReview);
+  return res.status(200).json({ ok: true, teacherReview });
+}
+
+async function handleReviewAgentFileUrl(req, res) {
+  verifyReviewAgent(req);
+  const student = findReviewStudent(req.query && req.query.studentId);
+  const fileId = limitedText(req.query && req.query.fileId, 90);
+  if (!student) return res.status(404).json({ error: 'Estudiante no encontrado.' });
+  const snapshot = await admin.database().ref(`${STUDENTS_PATH}/${student.rut}/files/${fileId}`).once('value');
+  const file = snapshot.val();
+  if (!file) return res.status(404).json({ error: 'Archivo no encontrado.' });
+  return res.status(200).json({ ok: true, url: await signedUrl(file) });
 }
 
 async function handleAdminFileUrl(req, res) {
@@ -636,6 +757,9 @@ module.exports = async function handler(req, res) {
     if (action === 'admin-save-evaluation' && req.method === 'POST') return await handleAdminSaveEvaluation(req, res);
     if (action === 'admin-file-url' && req.method === 'GET') return await handleAdminFileUrl(req, res);
     if (action === 'admin-reset' && req.method === 'POST') return await handleAdminReset(req, res);
+    if (action === 'review-agent-list' && req.method === 'GET') return await handleReviewAgentList(req, res);
+    if (action === 'review-agent-save' && req.method === 'POST') return await handleReviewAgentSave(req, res);
+    if (action === 'review-agent-file-url' && req.method === 'GET') return await handleReviewAgentFileUrl(req, res);
     return res.status(405).json({ error: 'Método o acción no disponible.' });
   } catch (error) {
     console.error('[anuario-4dtp]', error);

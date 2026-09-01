@@ -280,8 +280,7 @@ function hasStudentWork(value) {
     || value.activity1Status === 'submitted'
     || value.activity2Status === 'submitted'
     || Number(value.activity1SubmittedAt || 0) > 0
-    || Number(value.activity2SubmittedAt || 0) > 0
-    || Number(value.updatedAt || 0) > 0;
+    || Number(value.activity2SubmittedAt || 0) > 0;
 }
 
 function calculateProgress(record) {

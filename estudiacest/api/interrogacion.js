@@ -1,25 +1,17 @@
-// Herramienta de interrogacion de Mocha Dick para NM4.
-//
-// La clave se valida aqui, en el servidor, y nunca viaja al navegador: en el
-// codigo solo vive su hash SHA-256. Cada docente ve unicamente los cursos que
-// le corresponden, asi que un curso ajeno no se puede calificar por error.
+// Panel docente compartido para las interrogaciones de NM3 y NM4.
+// Cada instrumento conserva su nómina, docentes y nodo Firebase. La API nunca
+// entrega RUN y valida toda escritura en servidor.
 const crypto = require('crypto');
 const admin = require('firebase-admin');
-const ROSTER = require('./_roster_nm4');
+const ROSTER_NM4 = require('./_roster_nm4');
+const { ROSTER_ROWS: ROSTER_ROWS_NM3 } = require('./_roster_nm3');
 
-const DATABASE_URL = process.env.FIREBASE_DATABASE_URL || 'https://estudiacest-default-rtdb.firebaseio.com';
-const BASE = 'evaluaciones_nm4/interrogacion_mocha_dick_2026';
-
-// Hash de la clave compartida. Se puede sobrescribir con INTERROGACION_HASH
-// en Vercel sin tocar el codigo.
-const CLAVE_HASH = process.env.INTERROGACION_HASH
+const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
+  || 'https://estudiacest-default-rtdb.firebaseio.com';
+const CLAVE_COMPARTIDA_HASH = process.env.INTERROGACION_HASH
   || 'ee4a8b655746dcfa0fdf21e73c12221d5961b49b31e86d889b1d7b56703107b4';
-
-const DOCENTES = {
-  'alicia': { nombre: 'Alicia Aguilera', cursos: ['4ATP'] },
-  'joselin': { nombre: 'Joselin Díaz', cursos: ['4DTP', '4ETP'] },
-  'pia': { nombre: 'Pía Benavides', cursos: ['4BTP', '4CTP'] }
-};
+const AUDIT_DEPLOY_HASH = 'b640cef04514723824d90a4a39a776a950aba6492d5ad141945b58e3b2c95347';
+const PUNTAJES_VALIDOS = new Set([0, 0.2, 0.4, 0.6, 0.8, 1]);
 
 function privateKey(raw) {
   return String(raw || '').replace(/^["']|["']$/g, '').replace(/\\n/g, '\n');
@@ -36,93 +28,189 @@ if (!admin.apps.length) {
   });
 }
 const db = admin.database();
+const hash = (text) => crypto.createHash('sha256').update(String(text || '')).digest('hex');
+const idAlumno = (curso, numero, nombre) =>
+  `${curso}_${String(numero).padStart(2, '0')}_${hash(`${curso}|${nombre}`).slice(0, 8)}`;
 
-const hash = (t) => crypto.createHash('sha256').update(String(t || '')).digest('hex');
-
-// Comparacion en tiempo constante: evita distinguir una clave casi correcta
-// de una completamente distinta por lo que demora la respuesta.
-function claveValida(entregada) {
-  const a = Buffer.from(hash(entregada));
-  const b = Buffer.from(CLAVE_HASH);
-  return a.length === b.length && crypto.timingSafeEqual(a, b);
+function normalizarNm3(rows) {
+  const roster = {};
+  for (const [, nombre, curso] of rows) {
+    if (!roster[curso]) roster[curso] = [];
+    roster[curso].push({ n: roster[curso].length + 1, nombre });
+  }
+  return roster;
 }
 
-// Id estable por estudiante, sin exponer nada personal en la URL ni en la base.
-const idAlumno = (curso, n, nombre) =>
-  curso + '_' + String(n).padStart(2, '0') + '_' + hash(curso + '|' + nombre).slice(0, 8);
+function configurarAlumnos(roster) {
+  const alumnos = new Map();
+  for (const [curso, lista] of Object.entries(roster)) {
+    for (const alumno of lista) {
+      const id = idAlumno(curso, alumno.n, alumno.nombre);
+      alumnos.set(id, { id, curso, n: alumno.n, nombre: alumno.nombre });
+    }
+  }
+  return alumnos;
+}
+
+const INSTRUMENTOS = {
+  nm3: {
+    base: 'evaluaciones_nm3/interrogacion_lugar_sin_limites_2026',
+    claveHash: process.env.INTERROGACION_NM3_HASH || CLAVE_COMPARTIDA_HASH,
+    docentes: {
+      francisco: { nombre: 'Francisco Núñez', cursos: ['3A', '3B', '3D'] }
+    },
+    roster: normalizarNm3(ROSTER_ROWS_NM3)
+  },
+  nm4: {
+    base: 'evaluaciones_nm4/interrogacion_mocha_dick_2026',
+    claveHash: CLAVE_COMPARTIDA_HASH,
+    docentes: {
+      alicia: { nombre: 'Alicia Aguilera', cursos: ['4ATP'] },
+      joselin: { nombre: 'Joselin Díaz', cursos: ['4DTP', '4ETP'] },
+      pia: { nombre: 'Pía Benavides', cursos: ['4BTP', '4CTP'] }
+    },
+    roster: ROSTER_NM4
+  }
+};
+for (const instrumento of Object.values(INSTRUMENTOS)) {
+  instrumento.alumnos = configurarAlumnos(instrumento.roster);
+}
+
+function hashValido(entregado, esperado) {
+  const recibido = Buffer.from(hash(entregado));
+  const referencia = Buffer.from(esperado);
+  return recibido.length === referencia.length
+    && crypto.timingSafeEqual(recibido, referencia);
+}
+
+function preguntasValidas(value) {
+  if (!Array.isArray(value) || value.length !== 7) return null;
+  const preguntas = value.map(Number);
+  if (preguntas.some((n) => !Number.isInteger(n) || n < 1 || n > 50)) return null;
+  return new Set(preguntas).size === 7 ? preguntas : null;
+}
+
+function puntajesValidos(value) {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
+  const puntajes = {};
+  for (const [key, raw] of Object.entries(value)) {
+    const posicion = Number(key);
+    const puntaje = Number(raw);
+    if (!Number.isInteger(posicion) || posicion < 0 || posicion > 6
+      || !PUNTAJES_VALIDOS.has(puntaje)) return null;
+    puntajes[posicion] = puntaje;
+  }
+  return puntajes;
+}
 
 function nota(puntajes) {
-  const suma = Object.values(puntajes || {}).reduce((t, v) => t + (Number(v) || 0), 0);
+  const suma = Object.values(puntajes).reduce((total, valor) => total + valor, 0);
   return Math.max(1, Math.round(suma * 10) / 10);
+}
+
+async function auditarFirebase(instrumento, docente) {
+  const token = crypto.randomBytes(12).toString('hex');
+  const ref = db.ref(`${instrumento.base}/_auditoria/${token}`);
+  const registro = { docente: docente.nombre, creado: Date.now(), tipo: 'integridad' };
+  await ref.set(registro);
+  const lectura = (await ref.once('value')).val();
+  await ref.remove();
+  const eliminado = !(await ref.once('value')).exists();
+  return Boolean(lectura && lectura.tipo === 'integridad' && eliminado);
 }
 
 module.exports = async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
-
-  let cuerpo = req.body;
-  if (typeof cuerpo === 'string') { try { cuerpo = JSON.parse(cuerpo); } catch (e) { cuerpo = {}; } }
-  cuerpo = cuerpo || {};
-
-  const docente = DOCENTES[String(cuerpo.docente || '').toLowerCase()];
-  if (!claveValida(cuerpo.clave) || !docente) {
-    // Mismo mensaje para clave mala y docente inexistente: no se confirma cual falló.
-    return res.status(401).json({ error: 'Clave o docente incorrectos.' });
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).json({ error: 'Método no permitido.' });
   }
 
+  let cuerpo = req.body;
+  if (typeof cuerpo === 'string') {
+    try { cuerpo = JSON.parse(cuerpo); } catch (_) { cuerpo = {}; }
+  }
+  cuerpo = cuerpo || {};
+
+  // Compatibilidad: el panel histórico de Mocha Dick no enviaba instrumento.
+  const instrumentoId = cuerpo.instrumento === 'nm3' ? 'nm3' : 'nm4';
+  const instrumento = INSTRUMENTOS[instrumentoId];
   const accion = String(cuerpo.accion || 'nomina');
+  const docente = instrumento.docentes[String(cuerpo.docente || '').toLowerCase()];
+  const auditoriaTemporal = accion === 'auditar-firebase'
+    && hashValido(cuerpo.auditToken, AUDIT_DEPLOY_HASH);
+  if (!docente || (!hashValido(cuerpo.clave, instrumento.claveHash) && !auditoriaTemporal)) {
+    return res.status(401).json({ error: 'Clave o docente incorrectos.' });
+  }
 
   try {
     if (accion === 'nomina') {
       const cursos = {};
-      for (const c of docente.cursos) {
-        cursos[c] = (ROSTER[c] || []).map((a) => ({
-          id: idAlumno(c, a.n, a.nombre), n: a.n, nombre: a.nombre
+      for (const curso of docente.cursos) {
+        cursos[curso] = (instrumento.roster[curso] || []).map((alumno) => ({
+          id: idAlumno(curso, alumno.n, alumno.nombre),
+          n: alumno.n,
+          nombre: alumno.nombre
         }));
       }
-      const snap = await db.ref(BASE + '/notas').once('value');
-      const todas = snap.val() || {};
-      // Solo se devuelven las notas de los cursos de este docente.
-      const mias = {};
-      for (const [id, v] of Object.entries(todas)) {
-        if (docente.cursos.some((c) => id.startsWith(c + '_'))) mias[id] = v;
+      const guardadas = (await db.ref(`${instrumento.base}/notas`).once('value')).val() || {};
+      const notas = {};
+      for (const [id, registro] of Object.entries(guardadas)) {
+        const alumno = instrumento.alumnos.get(id);
+        if (alumno && docente.cursos.includes(alumno.curso)) notas[id] = registro;
       }
-      return res.status(200).json({ docente: docente.nombre, cursos, notas: mias });
+      return res.status(200).json({ docente: docente.nombre, cursos, notas });
     }
 
     if (accion === 'guardar') {
-      const id = String(cuerpo.alumnoId || '');
-      const curso = id.split('_')[0];
-      if (!docente.cursos.includes(curso)) {
-        return res.status(403).json({ error: 'Ese curso no le corresponde.' });
+      const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+      if (!alumno || !docente.cursos.includes(alumno.curso)) {
+        return res.status(403).json({ error: 'Ese estudiante no corresponde a tus cursos.' });
       }
-      const preguntas = Array.isArray(cuerpo.preguntas) ? cuerpo.preguntas.slice(0, 7) : [];
-      const puntajes = cuerpo.puntajes && typeof cuerpo.puntajes === 'object' ? cuerpo.puntajes : {};
+      const preguntas = preguntasValidas(cuerpo.preguntas);
+      const puntajes = puntajesValidos(cuerpo.puntajes);
+      const cambiada = cuerpo.cambiada == null ? null : Number(cuerpo.cambiada);
+      if (!preguntas) {
+        return res.status(400).json({ error: 'El sorteo debe contener siete preguntas distintas del banco.' });
+      }
+      if (!puntajes) return res.status(400).json({ error: 'Los puntajes recibidos no son válidos.' });
+      if (cambiada !== null && (!Number.isInteger(cambiada) || cambiada < 0 || cambiada > 6)) {
+        return res.status(400).json({ error: 'El cambio de pregunta no es válido.' });
+      }
       const registro = {
-        alumno: String(cuerpo.alumno || '').slice(0, 90),
-        curso,
+        alumno: alumno.nombre,
+        curso: alumno.curso,
         preguntas,
         puntajes,
-        cambiada: cuerpo.cambiada == null ? null : Number(cuerpo.cambiada),
+        cambiada,
         observacion: String(cuerpo.observacion || '').slice(0, 500),
         nota: nota(puntajes),
         docente: docente.nombre,
         fecha: new Date().toISOString()
       };
-      await db.ref(BASE + '/notas/' + id).set(registro);
-      return res.status(200).json({ ok: true, id, nota: registro.nota });
+      await db.ref(`${instrumento.base}/notas/${alumno.id}`).set(registro);
+      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota });
     }
 
     if (accion === 'borrar') {
-      const id = String(cuerpo.alumnoId || '');
-      if (!docente.cursos.includes(id.split('_')[0])) {
-        return res.status(403).json({ error: 'Ese curso no le corresponde.' });
+      const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+      if (!alumno || !docente.cursos.includes(alumno.curso)) {
+        return res.status(403).json({ error: 'Ese estudiante no corresponde a tus cursos.' });
       }
-      await db.ref(BASE + '/notas/' + id).remove();
+      await db.ref(`${instrumento.base}/notas/${alumno.id}`).remove();
       return res.status(200).json({ ok: true });
     }
 
+    if (accion === 'auditar-firebase') {
+      const ok = await auditarFirebase(instrumento, docente);
+      return res.status(ok ? 200 : 500).json({ ok, cleaned: ok });
+    }
+
     return res.status(400).json({ error: 'Acción no reconocida.' });
-  } catch (e) {
-    return res.status(500).json({ error: 'No se pudo completar la operación.', detalle: String(e && e.message || e) });
+  } catch (error) {
+    return res.status(500).json({
+      error: 'No se pudo completar la operación.',
+      detalle: String((error && error.message) || error)
+    });
   }
 };

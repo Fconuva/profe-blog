@@ -8,6 +8,32 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-01, revisión individual de carpetas del Anuario 4°D TP
+
+- Se inventariaron los 29 registros del curso sin crear avances ficticios. El
+  panel ahora considera trabajo solo cuando existen entrevistas, archivos,
+  textos o entregas; abrir o guardar una carpeta vacía no cuenta como avance.
+- Se revisaron las entrevistas, transcripciones y productos escritos. También
+  se descargaron y validaron 78 archivos: 75 medios reproducibles y tres
+  fotografías pertinentes. Un WebM no declara duración en su contenedor, pero
+  decodifica correctamente.
+- El resultado agregado quedó en 21 carpetas con evidencia y ocho sin
+  evidencia. Se aplicaron 29 revisiones: seis bien encaminadas, diez con
+  ajustes, once de prioridad alta, una fuera del conteo y una con plazo
+  especial. Las excepciones no exponen motivos personales en la interfaz.
+- Cada estudiante ve retroalimentación, recomendaciones y alerta dentro de su
+  carpeta. El admin permite editarlas por separado de las notas internas y de
+  las tres calificaciones. La comparación antes/después confirmó que ninguna
+  calificación cambió.
+- Se agregó una ruta técnica protegida por hash para auditorías autorizadas;
+  no entrega RUN ni acepta solicitudes sin credencial. Playwright verificó en
+  producción ingreso real, recuperación de carpeta, tarjeta móvil y controles
+  del admin, sin errores de JavaScript.
+- Commits funcionales: `a608c3c4`, `c8a730b5` y `2d2e51cd`. Deploy final:
+  `dpl_HypFsdDHfMNWKtXjWcRhM77EeMYx`.
+
+---
+
 ## 2026-08-31, interrogaciones con acceso docente sin contraseña
 
 - Se retiraron el campo de contraseña y el selector público de los paneles de

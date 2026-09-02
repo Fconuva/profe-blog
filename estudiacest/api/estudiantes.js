@@ -74,6 +74,27 @@ const U3S7_SKILLS = {
 };
 const U3S7_OPEN_MIN = { o1:180, o2:220 };
 const U3S7_META_MIN = { m1:25, m2:25, m3:25 };
+const U3S8_SESSION = 'sesion-u3-8';
+const U3S8_COURSES = new Set(['2A-HC', '2B-HC']);
+const U3S8_ANSWER_KEY = {
+    q1:'B',q2:'D',q3:'A',q4:'C',q5:'B',q6:'D',
+    q7:'A',q8:'C',q9:'D',q10:'B',q11:'A',
+    q12:'C',q13:'B',q14:'D',q15:'A',q16:'C',
+    q17:'D',q18:'A',q19:'B',q20:'C',q21:'D',
+    q22:'B',q23:'C',q24:'A',q25:'D',q26:'B',
+    q27:'A',q28:'D',q29:'C',q30:'B',q31:'A',
+    q32:'C',q33:'B',q34:'D',q35:'A',q36:'C'
+};
+const U3S8_SKILLS = {
+    q1:'LOCALIZAR',q2:'INTERPRETAR',q3:'INTERPRETAR',q4:'REFLEXIONAR',q5:'INTERPRETAR',q6:'REFLEXIONAR',
+    q7:'INTERPRETAR',q8:'LOCALIZAR',q9:'REFLEXIONAR',q10:'INTERPRETAR',q11:'REFLEXIONAR',
+    q12:'INTERPRETAR',q13:'INTERPRETAR',q14:'REFLEXIONAR',q15:'INTERPRETAR',q16:'REFLEXIONAR',
+    q17:'LOCALIZAR',q18:'INTERPRETAR',q19:'INTERPRETAR',q20:'INTERPRETAR',q21:'REFLEXIONAR',
+    q22:'INTERPRETAR',q23:'INTERPRETAR',q24:'LOCALIZAR',q25:'REFLEXIONAR',q26:'REFLEXIONAR',
+    q27:'LOCALIZAR',q28:'INTERPRETAR',q29:'REFLEXIONAR',q30:'INTERPRETAR',q31:'REFLEXIONAR',
+    q32:'INTERPRETAR',q33:'INTERPRETAR',q34:'LOCALIZAR',q35:'INTERPRETAR',q36:'REFLEXIONAR'
+};
+const U3S8_META_IDS = ['m1', 'm2'];
 
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + STUDENT_EMAIL_DOMAIN; }
@@ -297,6 +318,186 @@ async function handleU3S7(req, res, action) {
     }
 }
 
+function u3s8CleanAnswers(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const output = {};
+    Object.keys(U3S8_ANSWER_KEY).forEach((id) => {
+        const value = String(source[id] || '').toUpperCase();
+        if (['A', 'B', 'C', 'D'].includes(value)) output[id] = value;
+    });
+    return output;
+}
+
+function u3s8CleanMeta(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    return Object.fromEntries(U3S8_META_IDS.map((id) => [id, u3s7CleanText(source[id], 700)]));
+}
+
+function u3s8ScoreAnswers(answers) {
+    let score = 0;
+    const bySkill = {};
+    Object.entries(U3S8_ANSWER_KEY).forEach(([id, key]) => {
+        const skill = U3S8_SKILLS[id];
+        if (!bySkill[skill]) bySkill[skill] = { score:0, total:0 };
+        bySkill[skill].total += 1;
+        if (answers[id] === key) {
+            score += 1;
+            bySkill[skill].score += 1;
+        }
+    });
+    return { score, total:Object.keys(U3S8_ANSWER_KEY).length, bySkill };
+}
+
+function u3s8SafeAttempt(value) {
+    if (!value) return null;
+    return {
+        answers:u3s8CleanAnswers(value.answers),
+        metaResponses:u3s8CleanMeta(value.metaResponses),
+        submitted:value.submitted === true,
+        completada:value.completada === true,
+        startedAt:Number(value.startedAt || 0),
+        updatedAt:Number(value.updatedAt || 0),
+        submittedAt:Number(value.submittedAt || 0)
+    };
+}
+
+async function verifyU3S8Student(req) {
+    const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (!token) {
+        const error = new Error('Inicia sesión para continuar.');
+        error.status = 401;
+        throw error;
+    }
+    const decoded = await auth.verifyIdToken(token);
+    const snap = await db.ref(`${BASE}/estudiantes/${decoded.uid}`).once('value');
+    const student = snap.val();
+    if (!student || !U3S8_COURSES.has(student.curso)) {
+        const error = new Error('Este ensayo no está asignado a tu curso.');
+        error.status = 403;
+        throw error;
+    }
+    return { uid:decoded.uid, student };
+}
+
+async function handleU3S8(req, res, action) {
+    try {
+        const { uid, student } = await verifyU3S8Student(req);
+        const [sessionSnap, exceptionSnap] = await Promise.all([
+            db.ref(`${BASE}/sesiones/${U3S8_SESSION}`).once('value'),
+            db.ref(`${BASE}/sesiones/${U3S8_SESSION}/excepciones_desbloqueo/${uid}`).once('value')
+        ]);
+        const session = sessionSnap.val() || {};
+        const access = {
+            active:session.activa !== false || exceptionSnap.val() === true,
+            released:session.resultados_visibles === true,
+            title:session.titulo || 'Unidad 3 · Clase 8 — Ensayo parcial SIMCE'
+        };
+        const responseRef = db.ref(`${BASE}/respuestas/${U3S8_SESSION}/${uid}`);
+
+        if (req.method === 'GET' && action === 'simce-u3s8-state') {
+            const [responseSnap, resultSnap] = await Promise.all([
+                responseRef.once('value'),
+                db.ref(`${BASE}/resultados/${U3S8_SESSION}/${uid}`).once('value')
+            ]);
+            const attempt = u3s8SafeAttempt(responseSnap.val());
+            const storedResult = resultSnap.val();
+            const result = attempt && attempt.completada === true && storedResult
+                ? {
+                    score:Number(storedResult.score || 0),
+                    total:Number(storedResult.total || Object.keys(U3S8_ANSWER_KEY).length),
+                    porcentaje:Number(storedResult.porcentaje || 0)
+                }
+                : null;
+            return res.status(200).json({
+                ok:true,
+                session:access,
+                student:{ nombre:student.nombre || 'Estudiante', curso:student.curso },
+                attempt,
+                result
+            });
+        }
+        if (req.method !== 'POST') return res.status(405).json({ error:'Método no permitido.' });
+        if (!access.active) return res.status(423).json({ error:'La clase está cerrada. Si faltaste con justificación, solicita una habilitación individual.' });
+
+        const currentSnap = await responseRef.once('value');
+        const current = currentSnap.val();
+        if (current && current.completada === true) return res.status(409).json({ error:'Este ensayo ya fue entregado.', completada:true });
+
+        const request = u3s7BodyOf(req);
+        const payload = {
+            answers:u3s8CleanAnswers(request.answers),
+            metaResponses:u3s8CleanMeta(request.metaResponses)
+        };
+        const now = Date.now();
+        const startedAt = Number((current && current.startedAt) || now);
+
+        if (action === 'simce-u3s8-save') {
+            await responseRef.set({
+                ...payload,
+                nombre:u3s7CleanText(student.nombre, 140),
+                curso:student.curso,
+                submitted:false,
+                completada:false,
+                startedAt,
+                updatedAt:now,
+                submittedAt:null,
+                completadaAt:null,
+                score:null,
+                total:Object.keys(U3S8_ANSWER_KEY).length
+            });
+            return res.status(200).json({ ok:true, updatedAt:now });
+        }
+        if (action !== 'simce-u3s8-submit') return res.status(400).json({ error:'Acción desconocida.' });
+
+        const scored = u3s8ScoreAnswers(payload.answers);
+        const percentage = Math.round((scored.score / scored.total) * 100);
+        const responseRecord = {
+            ...payload,
+            nombre:u3s7CleanText(student.nombre, 140),
+            curso:student.curso,
+            submitted:true,
+            completada:true,
+            startedAt,
+            updatedAt:now,
+            submittedAt:now,
+            completadaAt:now,
+            score:scored.score,
+            total:scored.total
+        };
+        const resultRecord = {
+            nombre:u3s7CleanText(student.nombre, 140),
+            curso:student.curso,
+            score:scored.score,
+            total:scored.total,
+            porcentaje:percentage,
+            bySkill:scored.bySkill,
+            answered:Object.keys(payload.answers).length,
+            submitted:true,
+            completada:true,
+            startedAt,
+            updatedAt:now,
+            submittedAt:now,
+            completadaAt:now
+        };
+        const rootUpdates = {};
+        rootUpdates[`${BASE}/respuestas/${U3S8_SESSION}/${uid}`] = responseRecord;
+        rootUpdates[`${BASE}/resultados/${U3S8_SESSION}/${uid}`] = resultRecord;
+        await db.ref().update(rootUpdates);
+        return res.status(200).json({
+            ok:true,
+            completada:true,
+            result:{ score:scored.score, total:scored.total, porcentaje:percentage }
+        });
+    } catch (error) {
+        const status = Number(error.status || (error.code && String(error.code).startsWith('auth/') ? 401 : 500));
+        return res.status(status).json({
+            error:status === 500
+                ? 'No fue posible guardar. Tu avance permanece en pantalla; vuelve a intentarlo.'
+                : error.message
+        });
+    }
+}
+
 function resolveAllowedOrigin(req) {
     const origin = (req.headers.origin || '').trim();
     const explicit = (process.env.ALLOWED_ORIGINS || 'https://estudiacest.com,https://www.estudiacest.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173')
@@ -497,6 +698,7 @@ module.exports = async (req, res) => {
         const action = String(req.query.action || (req.body && req.body.action) || '');
 
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
+        if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

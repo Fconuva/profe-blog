@@ -20,3 +20,7 @@ Al cerrar una tarea que cambie comportamiento, datos, contenido académico,
 administración o producción, agregar una entrada a `BITACORA.md`. No registrar
 RUT, notas individuales, correos, credenciales ni otros datos personales.
 
+Los paneles `/nm3/interrogacion-un-lugar-sin-limites/calificar/` y
+`/nm4/interrogacion-mocha-dick/calificar/` son accesos docentes directos sin
+contraseña ni código de enlace. La ruta base corresponde a Francisco y el
+parámetro `?docente=` conserva los alcances de las educadoras.

@@ -96,8 +96,8 @@
   <section id="vLogin">
     <div class="top"><h1>Interrogación Mocha Dick · calificar</h1></div>
     <div class="card" style="max-width:440px;">
-      <h2>Acceso docente</h2>
-      <p class="sub" id="estadoAcceso">Abriendo tu panel personal…</p>
+      <h2>Panel docente</h2>
+      <p class="sub" id="estadoAcceso">Cargando cursos y calificaciones…</p>
       <div class="aviso err" id="errLogin"></div>
     </div>
   </section>
@@ -107,7 +107,6 @@
     <div class="top">
       <h1>Interrogación Mocha Dick</h1>
       <span class="quien" id="quien"></span>
-      <button class="salir" id="btnSalir">Salir</button>
     </div>
 
     <div class="card">
@@ -215,8 +214,7 @@
   var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
   var CURSO_LBL = { '4ATP': '4°A', '4BTP': '4°B', '4CTP': '4°C', '4DTP': '4°D', '4ETP': '4°E' };
 
-  var STORAGE_KEY = 'interrogacion-enlace-' + INSTRUMENTO;
-  var sesion = null;      // {docente, acceso, cursos, notas}
+  var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
   var $ = function (id) { return document.getElementById(id); };
 
@@ -229,32 +227,21 @@
   async function llamar(cuerpo) {
     var r = await fetch(API, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(Object.assign({ instrumento: INSTRUMENTO, docente: sesion && sesion.docente, acceso: sesion && sesion.acceso }, cuerpo))
+      body: JSON.stringify(Object.assign({ instrumento: INSTRUMENTO, docente: sesion && sesion.docente }, cuerpo))
     });
     var j = await r.json().catch(function () { return {}; });
     if (!r.ok) throw new Error(j.error || 'Error de conexión.');
     return j;
   }
 
-  // ---------- acceso mediante enlace personal ----------
-  function leerAcceso() {
-    var fragmento = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    var desdeEnlace = { docente: fragmento.get('docente'), acceso: fragmento.get('acceso') };
-    if (desdeEnlace.docente && desdeEnlace.acceso) {
-      try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(desdeEnlace)); } catch (_) {}
-      history.replaceState(null, '', window.location.pathname + window.location.search);
-      return desdeEnlace;
-    }
-    try { return JSON.parse(sessionStorage.getItem(STORAGE_KEY) || 'null'); } catch (_) { return null; }
+  // ---------- acceso directo; Francisco es el panel predeterminado ----------
+  function docenteDesdeUrl() {
+    var solicitado = String(new URLSearchParams(window.location.search).get('docente') || 'francisco').toLowerCase();
+    return ['francisco', 'alicia', 'pia', 'joselin'].indexOf(solicitado) >= 0 ? solicitado : 'francisco';
   }
 
   async function entrar() {
-    var credencial = leerAcceso();
-    if (!credencial || !credencial.docente || !credencial.acceso) {
-      $('estadoAcceso').textContent = 'Abre el enlace personal que recibiste. Este panel no usa contraseña.';
-      return;
-    }
-    sesion = { docente: credencial.docente, acceso: credencial.acceso };
+    sesion = { docente: docenteDesdeUrl() };
     try {
       var r = await llamar({ accion: 'nomina' });
       sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {};
@@ -264,19 +251,10 @@
       pintarCursos(); pintarNotas();
     } catch (e) {
       sesion = null;
-      try { sessionStorage.removeItem(STORAGE_KEY); } catch (_) {}
       $('estadoAcceso').textContent = 'No fue posible abrir el panel.';
       aviso($('errLogin'), e.message, 'err');
     }
   }
-
-  $('btnSalir').addEventListener('click', function () {
-    sesion = null; actual = null;
-    try { sessionStorage.removeItem(STORAGE_KEY); } catch (_) {}
-    $('estadoAcceso').textContent = 'Sesión cerrada. Abre nuevamente tu enlace personal para ingresar.';
-    $('vPanel').classList.add('oculto');
-    $('vLogin').classList.remove('oculto');
-  });
 
   // ---------- selección ----------
   function pintarCursos() {

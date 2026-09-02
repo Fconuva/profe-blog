@@ -56,6 +56,7 @@ Force pushes, hard resets, stale deployments, and deletion or rollback of anothe
 - PAES results remain hidden until the teacher publishes them for the selected guide and course.
 - PAES answer keys are server-only and may be returned only for completed attempts covered by a teacher release. Any incomplete-submission exception must be an explicit per-guide server allowlist entry; Guide 17 accepts 0 to 24 answers and Guide 18 accepts 0 to 18 answers.
 - In PAES readback tests, verify that RTDB sparse arrays are normalized to answer objects and that null index slots do not inflate the marked-response count.
+- Interrogation grading: the NM3 and NM4 `/calificar/` URLs open directly as Francisco; educator-specific access uses `?docente=alicia`, `?docente=pia`, or `?docente=joselin`, without passwords or hidden link codes.
 
 ## Audit Workflow
 

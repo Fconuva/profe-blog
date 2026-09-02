@@ -8,12 +8,6 @@ const { ROSTER_ROWS: ROSTER_ROWS_NM3 } = require('./_roster_nm3');
 
 const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
   || 'https://estudiacest-default-rtdb.firebaseio.com';
-const ENLACES_DOCENTES_HASH = Object.freeze({
-  francisco: process.env.INTERROGACION_LINK_FRANCISCO_HASH || '',
-  alicia: process.env.INTERROGACION_LINK_ALICIA_HASH || '',
-  pia: process.env.INTERROGACION_LINK_PIA_HASH || '',
-  joselin: process.env.INTERROGACION_LINK_JOSELIN_HASH || ''
-});
 const PUNTAJES_VALIDOS = new Set([0, 0.2, 0.4, 0.6, 0.8, 1]);
 
 function privateKey(raw) {
@@ -81,13 +75,6 @@ for (const instrumento of Object.values(INSTRUMENTOS)) {
   instrumento.alumnos = configurarAlumnos(instrumento.roster);
 }
 
-function hashValido(entregado, esperado) {
-  const recibido = Buffer.from(hash(entregado));
-  const referencia = Buffer.from(esperado);
-  return recibido.length === referencia.length
-    && crypto.timingSafeEqual(recibido, referencia);
-}
-
 function preguntasValidas(value) {
   if (!Array.isArray(value) || value.length !== 7) return null;
   const preguntas = value.map(Number);
@@ -141,12 +128,9 @@ module.exports = async function handler(req, res) {
   const instrumentoId = cuerpo.instrumento === 'nm3' ? 'nm3' : 'nm4';
   const instrumento = INSTRUMENTOS[instrumentoId];
   const accion = String(cuerpo.accion || 'nomina');
-  const docenteId = String(cuerpo.docente || '').toLowerCase();
+  const docenteId = String(cuerpo.docente || 'francisco').toLowerCase();
   const docente = instrumento.docentes[docenteId];
-  const enlaceHash = ENLACES_DOCENTES_HASH[docenteId];
-  if (!docente || !enlaceHash || !hashValido(cuerpo.acceso, enlaceHash)) {
-    return res.status(401).json({ error: 'El enlace docente no es válido o fue reemplazado.' });
-  }
+  if (!docente) return res.status(404).json({ error: 'Panel docente no encontrado.' });
 
   try {
     if (accion === 'nomina') {

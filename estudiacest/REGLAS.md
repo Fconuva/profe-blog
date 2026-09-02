@@ -88,6 +88,11 @@ Antes de editar y nuevamente antes de publicar:
 - La telemetría es un indicio para revisión docente, no una prueba automática de
   copia. Si una sesión antigua no tiene `startedAt`, no se reconstruye ni se
   sanciona por velocidad.
+- Los paneles de calificación de las interrogaciones NM3 y NM4 abren directamente
+  desde su URL `/calificar/`, sin contraseña ni código oculto. La ruta base abre
+  el panel de Francisco; `?docente=alicia`, `?docente=pia` y `?docente=joselin`
+  limitan la nómina a los cursos asignados. Mantener `noindex` y la validación de
+  curso, estudiante, preguntas y puntajes en el servidor.
 
 ## 7. Evaluaciones y resultados
 

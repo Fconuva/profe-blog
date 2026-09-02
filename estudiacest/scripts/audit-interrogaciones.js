@@ -54,8 +54,11 @@ function auditPanel(config) {
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
   assert(!panelHtml.includes('id="docente"'), `${config.label}: aún muestra el selector docente público.`);
-  for (const contract of ['window.location.hash', 'sessionStorage', 'history.replaceState', 'acceso']) {
-    assert(panelHtml.includes(contract), `${config.label}: falta el contrato sin contraseña ${contract}.`);
+  for (const contract of ['docenteDesdeUrl', "get('docente') || 'francisco'", "accion: 'nomina'"]) {
+    assert(panelHtml.includes(contract), `${config.label}: falta el acceso docente directo ${contract}.`);
+  }
+  for (const removedGate of ['window.location.hash', 'sessionStorage', 'sesion.acceso']) {
+    assert(!panelHtml.includes(removedGate), `${config.label}: conserva el bloqueo oculto ${removedGate}.`);
   }
   inlineScriptCompiles(panelHtml, config.label);
 }
@@ -94,9 +97,8 @@ for (const apiFile of ['api/interrogacion.js']) {
   const source = read(apiFile);
   new vm.Script(source, { filename: apiFile });
   for (const contract of [
-    'timingSafeEqual',
-    'ENLACES_DOCENTES_HASH',
-    'cuerpo.acceso',
+    "cuerpo.docente || 'francisco'",
+    'Panel docente no encontrado.',
     'instrumento.alumnos.get',
     'preguntasValidas',
     'puntajesValidos',
@@ -110,6 +112,8 @@ for (const apiFile of ['api/interrogacion.js']) {
     assert.strictEqual(occurrences, 2, `${apiFile}: ${docente} no está configurado en ambos instrumentos.`);
   }
   assert(!source.includes('cuerpo.clave'), `${apiFile}: la API aún recibe contraseña.`);
+  assert(!source.includes('cuerpo.acceso'), `${apiFile}: la API aún recibe un código oculto de acceso.`);
+  assert(!source.includes('ENLACES_DOCENTES_HASH'), `${apiFile}: quedaron hashes de enlaces personales.`);
   assert(!source.includes('CLAVE_COMPARTIDA_HASH'), `${apiFile}: quedó la contraseña compartida anterior.`);
   assert(!source.includes('AUDIT_DEPLOY_HASH'), `${apiFile}: quedó un acceso técnico temporal.`);
 }
@@ -121,4 +125,4 @@ for (const page of [
   'nm4/interrogacion-mocha-dick/calificar/index.html'
 ]) assert(critical.has(page), `El manifiesto no protege ${page}.`);
 
-console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, autenticación, validación y Firebase protegidos.');
+console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, acceso docente directo, validación y Firebase.');

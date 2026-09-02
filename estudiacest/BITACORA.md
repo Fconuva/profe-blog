@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-02, ensayo parcial SIMCE de la Unidad 3, Clase 8
+
+- Se reemplazó la versión breve de la Clase 8 por un ensayo parcial para 2°A
+  HC y 2°B HC: siete textos de formatos diversos, 36 reactivos y dos preguntas
+  metacognitivas que no alteran el puntaje.
+- Las claves quedaron exclusivamente en el servidor. La distribución es
+  A9/B9/C9/D9 y las habilidades se reparten en seis reactivos de localizar,
+  18 de interpretar y 12 de reflexionar. El orden de los textos y las
+  alternativas cambia por estudiante sin separar cada texto de sus preguntas.
+- La clase permite entregar aun con respuestas pendientes, guarda el avance de
+  forma serializada y confirma la entrega mediante lectura posterior del
+  registro. Al finalizar muestra puntaje, total y porcentaje, pero no revela
+  respuestas correctas mientras la aplicación continúa.
+- El panel estudiantil y el admin incluyen la sesión `sesion-u3-8`, la fecha de
+  aplicación y la ruta vigente. Se retiró el cargador antiguo que escribía por
+  error en otra sesión y se incorporaron el contrato de entrega, el manifiesto
+  protegido y una auditoría específica.
+- `npm run build` aprobó 147 recursos críticos. Playwright verificó producción
+  en 390, 1440 y 3840 píxeles: siete textos, 36 preguntas, 144 alternativas,
+  marcado, confirmación, acceso protegido y ausencia de errores o desbordes.
+  Una prueba técnica temporal comprobó estado inicial, autoguardado, recarga,
+  entrega atómica y estado `Completada`; luego eliminó cuenta, respuestas y
+  resultados, con cero registros temporales restantes.
+- Commits funcionales: `ed9c7232`, `c2547ffe` y `ee451076`. Deploy final:
+  `dpl_9Xcy9FtE7GoAr34uojyFHaaoYqZV`.
+
+---
+
 ## 2026-09-01, revisión individual de carpetas del Anuario 4°D TP
 
 - Se inventariaron los 29 registros del curso sin crear avances ficticios. El

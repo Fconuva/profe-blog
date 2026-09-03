@@ -338,6 +338,7 @@
         intentoId: flow.data.intentoId,
         posicion: position,
         pregunta: question,
+        reemplazarRespuesta: Boolean(flow.editSingle && flow.data.estado !== 'en_curso'),
         fileId: fileId,
         name: name,
         size: localBlob.size,
@@ -373,6 +374,8 @@
       });
       flow.data.respuestas = flow.data.respuestas || {};
       flow.data.respuestas[position] = saved.respuesta;
+      if (saved.estado) flow.data.estado = saved.estado;
+      if (saved.notaEliminada) delete state.notas[flow.student.id];
       releaseLocalAudio();
       await auth.signOut().catch(function () {});
     } catch (error) {
@@ -413,7 +416,9 @@
     $('btnRepetirAudio').classList.add('oculto');
     $('btnRepetirAudio').disabled = false;
     $('btnSiguienteAudio').disabled = true;
-    $('btnSiguienteAudio').textContent = position === 6 ? 'Guardar y finalizar' : 'Guardar y siguiente';
+    $('btnSiguienteAudio').textContent = flow.editSingle
+      ? 'Guardar cambio'
+      : (position === 6 ? 'Guardar y finalizar' : 'Guardar y siguiente');
     $('estadoGrabacion').textContent = 'Presiona grabar cuando el estudiante esté listo.';
     $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
@@ -453,7 +458,27 @@
     try {
       if (localBlob) await uploadCurrentAudio();
       if (!flow.data.respuestas || !flow.data.respuestas[flow.position]) return;
-      flow.position += 1;
+      if (flow.editSingle) {
+        var editedStudentId = flow.student.id;
+        if (firstMissing(flow.data) === 7 && flow.data.estado === 'en_curso') {
+          var delivered = await api({
+            accion: 'entregar-grabacion',
+            alumnoId: flow.student.id,
+            intentoId: flow.data.intentoId
+          });
+          flow.data.estado = delivered.estado;
+          flow.data.fechaEntrega = delivered.fechaEntrega;
+        }
+        state.grabaciones[editedStudentId] = flow.data;
+        flow = null;
+        $('cardAudio').classList.add('oculto');
+        setSelectionLocked(false);
+        renderRecordings();
+        openReview(editedStudentId);
+        setNotice('avisoRevisionAudio', 'La respuesta quedó actualizada. Revisa el audio antes de calificar.', 'ok');
+        return;
+      }
+      flow.position = firstMissing(flow.data);
       renderFlow();
     } catch (_) {}
   }
@@ -482,7 +507,23 @@
   }
 
   async function cancelFlow() {
-    if (!flow || !confirm('¿Descartar esta grabación y sus audios?')) return;
+    if (!flow) return;
+    if (flow.editSingle) {
+      if (!confirm('¿Cancelar este cambio? La respuesta anterior se conservará.')) return;
+      var reviewedStudentId = flow.student.id;
+      if (recorder && recorder.state === 'recording') {
+        discardOnStop = true;
+        recorder.stop();
+      }
+      stopStream();
+      releaseLocalAudio();
+      flow = null;
+      $('cardAudio').classList.add('oculto');
+      setSelectionLocked(false);
+      openReview(reviewedStudentId);
+      return;
+    }
+    if (!confirm('¿Descartar esta grabación y sus audios?')) return;
     if (recorder && recorder.state === 'recording') {
       discardOnStop = true;
       recorder.stop();
@@ -512,15 +553,28 @@
   function renderReview() {
     var zone = $('zonaRevisionAudio');
     zone.innerHTML = '';
+    var savedCount = Object.keys(review.recording.respuestas || {}).length;
+    var complete = savedCount === 7 && review.recording.estado !== 'en_curso';
+    $('revisionEstado').textContent = complete
+      ? 'Escucha cada respuesta, corrige una grabación si es necesario y asigna los siete puntajes.'
+      : 'Hay ' + savedCount + ' de 7 respuestas guardadas. Puedes revisarlas o corregirlas; usa “Continuar grabación” para completar las pendientes.';
+    $('btnGuardarRevisionAudio').disabled = !complete;
     review.recording.preguntas.forEach(function (question, position) {
       var answer = review.recording.respuestas && review.recording.respuestas[position];
       var element = document.createElement('article');
       element.className = 'review-answer';
+      var controls = answer
+        ? '<button type="button" class="btn chico" data-load-audio="' + position + '">Escuchar respuesta · ' + formatDuration(answer.duracionMs) + '</button>' +
+          '<audio class="review-player oculto" controls preload="none" data-player="' + position + '"></audio>' +
+          '<button type="button" class="btn chico" data-edit-audio="' + position + '">Volver a grabar esta respuesta</button>'
+        : '<span class="review-missing">Sin respuesta grabada</span>' +
+          '<button type="button" class="btn chico" data-edit-audio="' + position + '">Grabar esta respuesta</button>';
+      var scale = complete
+        ? '<div class="escala review-scale">' + scoreButtons(position, review.scores[position]) + '</div>'
+        : '';
       element.innerHTML =
         '<div class="review-heading"><span>' + (position + 1) + '</span><strong>' + config.banco[Number(question) - 1] + '</strong></div>' +
-        '<div class="review-controls"><button type="button" class="btn chico" data-load-audio="' + position + '">Escuchar respuesta · ' + formatDuration(answer && answer.duracionMs) + '</button>' +
-        '<audio class="review-player oculto" controls preload="none" data-player="' + position + '"></audio></div>' +
-        '<div class="escala review-scale">' + scoreButtons(position, review.scores[position]) + '</div>';
+        '<div class="review-controls">' + controls + '</div>' + scale;
       zone.appendChild(element);
     });
     zone.querySelectorAll('[data-review-score]').forEach(function (button) {
@@ -532,6 +586,9 @@
     });
     zone.querySelectorAll('[data-load-audio]').forEach(function (button) {
       button.addEventListener('click', function () { loadReviewAudio(Number(button.dataset.loadAudio), button); });
+    });
+    zone.querySelectorAll('[data-edit-audio]').forEach(function (button) {
+      button.addEventListener('click', function () { editReviewAnswer(Number(button.dataset.editAudio)); });
     });
     updateReviewMarker();
   }
@@ -570,11 +627,6 @@
     var student = studentById(studentId);
     var recording = state.grabaciones[studentId];
     if (!student || !recording) return;
-    if (recording.estado === 'en_curso') {
-      $('alumno').value = studentId;
-      startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
-      return;
-    }
     var note = state.notas[studentId];
     review = {
       student: student,
@@ -583,7 +635,12 @@
     };
     $('revisionTitulo').textContent = 'Revisar a ' + student.nombre;
     $('obsRevisionAudio').value = note && note.intentoId === recording.intentoId ? (note.observacion || '') : '';
+    $('notaSeguimientoAudio').value = recording.notaDocente || '';
+    $('fechaNotaAudio').textContent = recording.fechaNotaDocente
+      ? 'Última actualización: ' + formatDate(recording.fechaNotaDocente)
+      : 'Sin nota docente guardada';
     setNotice('avisoRevisionAudio', '', '');
+    setNotice('avisoNotaAudio', '', '');
     $('cardRevisionAudio').classList.remove('oculto');
     renderReview();
     $('cardRevisionAudio').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -591,8 +648,13 @@
 
   async function saveReview() {
     if (!review) return;
+    if (firstMissing(review.recording) < 7 || review.recording.estado === 'en_curso') {
+      return setNotice('avisoRevisionAudio', 'Completa y entrega las siete respuestas antes de calificar.', 'err');
+    }
     var count = Object.keys(review.scores).length;
-    if (count < 7 && !confirm('Faltan ' + (7 - count) + ' respuestas por puntuar. ¿Guardar igualmente?')) return;
+    if (count < 7) {
+      return setNotice('avisoRevisionAudio', 'Faltan ' + (7 - count) + ' respuestas por puntuar.', 'err');
+    }
     $('btnGuardarRevisionAudio').disabled = true;
     try {
       var result = await api({
@@ -610,6 +672,56 @@
       setNotice('avisoRevisionAudio', error.message, 'err');
       $('btnGuardarRevisionAudio').disabled = false;
     }
+  }
+
+  async function saveReviewNote() {
+    if (!review) return;
+    $('btnGuardarNotaAudio').disabled = true;
+    try {
+      var result = await api({
+        accion: 'guardar-nota-grabacion',
+        alumnoId: review.student.id,
+        intentoId: review.recording.intentoId,
+        notaDocente: $('notaSeguimientoAudio').value
+      });
+      review.recording.notaDocente = result.notaDocente;
+      review.recording.fechaNotaDocente = result.fechaNotaDocente;
+      state.grabaciones[review.student.id] = review.recording;
+      $('fechaNotaAudio').textContent = result.fechaNotaDocente
+        ? 'Última actualización: ' + formatDate(result.fechaNotaDocente)
+        : 'Sin nota docente guardada';
+      setNotice('avisoNotaAudio', result.notaDocente ? 'Nota docente guardada.' : 'La nota docente quedó vacía.', 'ok');
+    } catch (error) {
+      setNotice('avisoNotaAudio', error.message, 'err');
+    }
+    $('btnGuardarNotaAudio').disabled = false;
+  }
+
+  function editReviewAnswer(position) {
+    if (!review || !Number.isInteger(position) || position < 0 || position > 6) return;
+    if (review.recording.estado === 'calificada'
+      && !confirm('Al guardar una respuesta nueva, la calificación actual se quitará y quedará pendiente de revisión. ¿Continuar?')) return;
+    flow = {
+      student: review.student,
+      data: review.recording,
+      position: position,
+      editSingle: true
+    };
+    review = null;
+    setSelectionLocked(true);
+    $('cardRevisionAudio').classList.add('oculto');
+    $('cardAudio').classList.remove('oculto');
+    renderFlow();
+    $('cardAudio').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function continueRecording(studentId) {
+    var student = studentById(studentId);
+    if (!student) return;
+    $('curso').value = student.curso;
+    $('curso').dispatchEvent(new Event('change'));
+    $('alumno').value = studentId;
+    startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
   }
 
   async function deleteRecording(studentId) {
@@ -640,7 +752,7 @@
       return ((one && one.curso) + a).localeCompare((two && two.curso) + b);
     });
     var pending = ids.filter(function (id) { return state.grabaciones[id].estado === 'pendiente'; }).length;
-    $('subGrabaciones').textContent = ids.length + ' registro(s) · ' + pending + ' pendiente(s) de calificación.';
+    $('subGrabaciones').textContent = ids.length + ' registro(s) · ' + pending + ' pendiente(s) de calificación. “Continuar grabación” retoma la primera respuesta faltante; “Ver detalle” permite escuchar, corregir y dejar una nota.';
     ids.forEach(function (id) {
       var recording = state.grabaciones[id];
       var student = studentById(id);
@@ -653,12 +765,18 @@
         '<td>' + student.n + '</td><td>' + student.nombre + '</td>' +
         '<td>' + count + '/7</td><td><span class="audio-status ' + recording.estado + '">' + statusLabel + '</span></td>' +
         '<td class="n">' + (note && note.nota != null ? Number(note.nota).toFixed(1).replace('.', ',') : '—') + '</td>' +
-        '<td><div class="row-actions"><button type="button" class="btn chico" data-review="' + id + '">' + (recording.estado === 'en_curso' ? 'Continuar' : 'Revisar') + '</button>' +
+        '<td><div class="row-actions">' + (recording.estado === 'en_curso'
+          ? '<button type="button" class="btn chico solid" data-continue="' + id + '">Continuar grabación</button>'
+          : '') +
+        '<button type="button" class="btn chico" data-review="' + id + '">Ver detalle</button>' +
         '<button type="button" class="btn chico danger" data-delete-recording="' + id + '">Eliminar</button></div></td>';
       table.appendChild(row);
     });
     table.querySelectorAll('[data-review]').forEach(function (button) {
       button.addEventListener('click', function () { openReview(button.dataset.review); });
+    });
+    table.querySelectorAll('[data-continue]').forEach(function (button) {
+      button.addEventListener('click', function () { continueRecording(button.dataset.continue); });
     });
     table.querySelectorAll('[data-delete-recording]').forEach(function (button) {
       button.addEventListener('click', function () { deleteRecording(button.dataset.deleteRecording); });
@@ -695,6 +813,7 @@
     $('cardRevisionAudio').classList.add('oculto');
   });
   $('btnGuardarRevisionAudio').addEventListener('click', saveReview);
+  $('btnGuardarNotaAudio').addEventListener('click', saveReviewNote);
   $('cerrarAudioExito').addEventListener('click', function () { $('audioExito').close(); });
   window.addEventListener('beforeunload', function (event) {
     if (recorder && recorder.state === 'recording') {

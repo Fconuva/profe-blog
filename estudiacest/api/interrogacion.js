@@ -154,6 +154,8 @@ function grabacionPublica(value) {
     fechaInicio: value.fechaInicio || '',
     fechaEntrega: value.fechaEntrega || '',
     fechaCalificacion: value.fechaCalificacion || '',
+    notaDocente: value.notaDocente || '',
+    fechaNotaDocente: value.fechaNotaDocente || '',
     nota: value.nota == null ? null : Number(value.nota)
   };
 }
@@ -285,7 +287,11 @@ async function prepararAudio(instrumentoId, instrumento, docente, docenteId, cue
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
   const snapshot = await ref.once('value');
   const registro = snapshot.val();
-  if (!registro || registro.intentoId !== intentoId || registro.estado !== 'en_curso'
+  const reemplazarRespuesta = cuerpo.reemplazarRespuesta === true;
+  const respuestaExistente = registro && registro.respuestas && registro.respuestas[posicion];
+  const estadoValido = registro && (registro.estado === 'en_curso'
+    || (reemplazarRespuesta && ['pendiente', 'calificada'].includes(registro.estado) && respuestaExistente));
+  if (!registro || registro.intentoId !== intentoId || !estadoValido
     || !Array.isArray(registro.preguntas) || Number(registro.preguntas[posicion]) !== pregunta) {
     return { status: 409, body: { error: 'La grabación ya no coincide con la pregunta actual.' } };
   }
@@ -294,7 +300,17 @@ async function prepararAudio(instrumentoId, instrumento, docente, docenteId, cue
   const now = Date.now();
   const reservas = Object.fromEntries(Object.entries(registro.reservas || {})
     .filter(([, item]) => Number(item.creada || 0) >= now - RESERVATION_TTL));
-  reservas[fileId] = { fileId, storagePath, posicion, pregunta, size, contentType, fileName, creada: now };
+  reservas[fileId] = {
+    fileId,
+    storagePath,
+    posicion,
+    pregunta,
+    size,
+    contentType,
+    fileName,
+    creada: now,
+    reemplazarRespuesta
+  };
   await ref.update({ reservas });
   const uid = `interrogacion_${instrumentoId}_${hash(`${docenteId}|${alumno.id}|${intentoId}`).slice(0, 32)}`;
   const customToken = await admin.auth().createCustomToken(uid, {
@@ -326,16 +342,30 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   }
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
   const before = (await ref.once('value')).val();
-  if (!before || before.intentoId !== intentoId || before.estado !== 'en_curso') {
+  if (!before || before.intentoId !== intentoId) {
     return { status: 409, body: { error: 'La grabación ya no está disponible para recibir audios.' } };
   }
   const reserva = before.reservas && before.reservas[fileId];
   const repetido = before.respuestas && before.respuestas[posicion];
   if (!reserva) {
     if (repetido && repetido.fileId === fileId) {
-      return { status: 200, body: { ok: true, respuesta: grabacionPublica(before).respuestas[posicion] } };
+      return {
+        status: 200,
+        body: {
+          ok: true,
+          respuesta: grabacionPublica(before).respuestas[posicion],
+          estado: before.estado,
+          notaEliminada: false
+        }
+      };
     }
     return { status: 409, body: { error: 'La autorización de carga venció. Graba la respuesta nuevamente.' } };
+  }
+  const esReemplazoEntregado = reserva.reemplazarRespuesta === true
+    && ['pendiente', 'calificada'].includes(before.estado)
+    && Boolean(repetido);
+  if (before.estado !== 'en_curso' && !esReemplazoEntregado) {
+    return { status: 409, body: { error: 'La grabación ya no está disponible para recibir audios.' } };
   }
   if (Number(reserva.posicion) !== posicion || reserva.storagePath !== textoLimitado(cuerpo.storagePath, 900)) {
     return { status: 400, body: { error: 'La ruta del audio no coincide con la pregunta.' } };
@@ -363,11 +393,21 @@ async function registrarAudio(instrumento, docente, cuerpo) {
     // RTDB puede invocar primero la transacción con una caché local vacía.
     // Reutilizar la lectura validada evita rechazar una carga legítima.
     const active = current || before;
-    if (!active || active.intentoId !== intentoId || active.estado !== 'en_curso') return;
-    if (!active.reservas || !active.reservas[fileId]) return;
+    const activeReservation = active && active.reservas && active.reservas[fileId];
+    const activeAnswer = active && active.respuestas && active.respuestas[posicion];
+    const reemplazoValido = activeReservation && activeReservation.reemplazarRespuesta === true
+      && ['pendiente', 'calificada'].includes(active.estado) && Boolean(activeAnswer);
+    if (!active || active.intentoId !== intentoId
+      || (active.estado !== 'en_curso' && !reemplazoValido) || !activeReservation) return;
     active.respuestas = active.respuestas || {};
     active.respuestas[posicion] = respuesta;
     delete active.reservas[fileId];
+    if (reemplazoValido) {
+      active.estado = 'pendiente';
+      active.nota = null;
+      active.fechaCalificacion = '';
+      active.fechaEdicion = new Date().toISOString();
+    }
     return active;
   }, undefined, false);
   if (!transaction.committed) {
@@ -377,10 +417,45 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   if (anterior && anterior.storagePath) {
     await bucket().file(anterior.storagePath).delete({ ignoreNotFound: true }).catch(() => {});
   }
+  let notaEliminada = false;
+  if (esReemplazoEntregado) {
+    const notaRef = db.ref(`${instrumento.base}/notas/${alumno.id}`);
+    const notaActual = (await notaRef.once('value')).val();
+    if (notaActual && notaActual.intentoId === intentoId) {
+      await notaRef.remove();
+      notaEliminada = true;
+    }
+  }
+  const actualizada = transaction.snapshot.val();
   return {
     status: 200,
-    body: { ok: true, respuesta: grabacionPublica(transaction.snapshot.val()).respuestas[posicion] }
+    body: {
+      ok: true,
+      respuesta: grabacionPublica(actualizada).respuestas[posicion],
+      estado: actualizada.estado,
+      notaEliminada
+    }
   };
+}
+
+async function guardarNotaGrabacion(instrumento, docente, cuerpo) {
+  const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+  if (!alumno || !docente.cursos.includes(alumno.curso)) {
+    return { status: 403, body: { error: 'Ese estudiante no corresponde a tus cursos.' } };
+  }
+  const intentoId = idValido(cuerpo.intentoId);
+  const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
+  const registro = (await ref.once('value')).val();
+  if (!intentoId || !registro || registro.intentoId !== intentoId) {
+    return { status: 409, body: { error: 'La grabación cambió o ya no está disponible.' } };
+  }
+  const notaDocente = textoLimitado(cuerpo.notaDocente, 1000);
+  const fechaNotaDocente = notaDocente ? new Date().toISOString() : '';
+  await ref.update({
+    notaDocente: notaDocente || null,
+    fechaNotaDocente: fechaNotaDocente || null
+  });
+  return { status: 200, body: { ok: true, notaDocente, fechaNotaDocente } };
 }
 
 async function entregarGrabacion(instrumento, docente, cuerpo) {
@@ -556,6 +631,11 @@ module.exports = async function handler(req, res) {
 
     if (accion === 'audio-url') {
       const resultado = await audioUrl(instrumento, docente, cuerpo);
+      return res.status(resultado.status).json(resultado.body);
+    }
+
+    if (accion === 'guardar-nota-grabacion') {
+      const resultado = await guardarNotaGrabacion(instrumento, docente, cuerpo);
       return res.status(resultado.status).json(resultado.body);
     }
 

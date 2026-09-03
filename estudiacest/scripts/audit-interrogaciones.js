@@ -56,6 +56,10 @@ function auditPanel(config) {
   assert(panelHtml.includes('id="microfonoAudio"'), `${config.label}: falta seleccionar el micrófono.`);
   assert(panelHtml.includes('id="microfonoActivo"'), `${config.label}: falta identificar el micrófono activo.`);
   assert(panelHtml.includes('id="cardRevisionAudio"'), `${config.label}: falta la revisión de audios.`);
+  assert(panelHtml.includes('id="notaSeguimientoAudio"'), `${config.label}: falta la nota docente independiente.`);
+  assert(panelHtml.includes('id="btnGuardarNotaAudio"'), `${config.label}: falta guardar la nota docente.`);
+  assert(panelHtml.includes('Guardar nota docente'), `${config.label}: la acción de nota docente no es clara.`);
+  assert(panelHtml.includes('id="revisionEstado"'), `${config.label}: falta explicar el estado de la grabación.`);
   assert(panelHtml.includes('id="tablaGrabaciones"'), `${config.label}: falta la lista de grabaciones.`);
   assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
   assert(panelHtml.includes('firebase-storage-compat.js'), `${config.label}: falta Firebase Storage.`);
@@ -119,11 +123,14 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'registrar-audio'",
     "accion === 'entregar-grabacion'",
     "accion === 'audio-url'",
+    "accion === 'guardar-nota-grabacion'",
     "accion === 'borrar-grabacion'",
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
     'MAX_AUDIO_BYTES',
     'const active = current || before',
+    'reemplazarRespuesta',
+    'notaDocente',
     "accion === 'auditar-firebase'",
     "req.method !== 'POST'"
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
@@ -149,6 +156,11 @@ for (const contract of [
   "accion: 'registrar-audio'",
   "accion: 'entregar-grabacion'",
   "accion: 'audio-url'",
+  "accion: 'guardar-nota-grabacion'",
+  'Continuar grabación',
+  'Ver detalle',
+  'Volver a grabar esta respuesta',
+  'btnGuardarNotaAudio',
   'Guardar y siguiente',
   'signInWithCustomToken',
   'customMetadata'

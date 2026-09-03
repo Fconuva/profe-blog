@@ -364,12 +364,21 @@
   }
 
   // ---------- sorteo ----------
+  function indiceAleatorio(max) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      var values = new Uint32Array(1), limit = Math.floor(4294967296 / max) * max;
+      do { window.crypto.getRandomValues(values); } while (values[0] >= limit);
+      return values[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
   function sortear(cuantas, excluir) {
     var pool = [];
     for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1) pool.push(i);
     var out = [];
     for (var k = 0; k < cuantas && pool.length; k++) {
-      var j = Math.floor(Math.random() * pool.length);
+      var j = indiceAleatorio(pool.length);
       out.push(pool.splice(j, 1)[0]);
     }
     return out;

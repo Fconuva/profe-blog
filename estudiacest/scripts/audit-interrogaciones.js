@@ -56,6 +56,7 @@ function auditPanel(config) {
   assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
   assert(panelHtml.includes('firebase-storage-compat.js'), `${config.label}: falta Firebase Storage.`);
   assert(panelHtml.includes('puede analizarse con apoyo tecnológico'), `${config.label}: falta informar el uso de apoyo tecnológico.`);
+  assert(panelHtml.includes('window.crypto.getRandomValues'), `${config.label}: el sorteo no usa azar criptográfico.`);
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
@@ -148,6 +149,7 @@ for (const contract of [
   'signInWithCustomToken',
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
+assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
 
 const reviewTool = read('scripts/review-interrogation-audio.js');
 new vm.Script(reviewTool, { filename: 'scripts/review-interrogation-audio.js' });

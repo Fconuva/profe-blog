@@ -64,11 +64,21 @@
     return String(value).replace(/[^A-Za-z0-9_-]/g, '');
   }
 
+  function randomIndex(max) {
+    if (window.crypto && window.crypto.getRandomValues) {
+      var values = new Uint32Array(1);
+      var limit = Math.floor(4294967296 / max) * max;
+      do { window.crypto.getRandomValues(values); } while (values[0] >= limit);
+      return values[0] % max;
+    }
+    return Math.floor(Math.random() * max);
+  }
+
   function shuffledQuestions() {
     var pool = Array.from({ length: config.banco.length }, function (_, index) { return index + 1; });
     var result = [];
     while (result.length < 7) {
-      result.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+      result.push(pool.splice(randomIndex(pool.length), 1)[0]);
     }
     return result;
   }

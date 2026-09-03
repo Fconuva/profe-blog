@@ -361,12 +361,15 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   };
   const anterior = repetido && repetido.storagePath !== respuesta.storagePath ? repetido : null;
   const transaction = await ref.transaction((current) => {
-    if (!current || current.intentoId !== intentoId || current.estado !== 'en_curso') return;
-    if (!current.reservas || !current.reservas[fileId]) return;
-    current.respuestas = current.respuestas || {};
-    current.respuestas[posicion] = respuesta;
-    delete current.reservas[fileId];
-    return current;
+    // RTDB puede invocar primero la transacción con una caché local vacía.
+    // Reutilizar la lectura validada evita rechazar una carga legítima.
+    const active = current || before;
+    if (!active || active.intentoId !== intentoId || active.estado !== 'en_curso') return;
+    if (!active.reservas || !active.reservas[fileId]) return;
+    active.respuestas = active.respuestas || {};
+    active.respuestas[posicion] = respuesta;
+    delete active.reservas[fileId];
+    return active;
   }, undefined, false);
   if (!transaction.committed) {
     await cloudFile.delete({ ignoreNotFound: true }).catch(() => {});

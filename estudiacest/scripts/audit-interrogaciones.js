@@ -119,6 +119,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
     'MAX_AUDIO_BYTES',
+    'const active = current || before',
     "accion === 'auditar-firebase'",
     "req.method !== 'POST'"
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);

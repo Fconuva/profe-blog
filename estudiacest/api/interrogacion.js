@@ -5,6 +5,7 @@ const crypto = require('crypto');
 const admin = require('firebase-admin');
 const ROSTER_NM4 = require('./_roster_nm4');
 const { ROSTER_ROWS: ROSTER_ROWS_NM3 } = require('./_roster_nm3');
+const { createInterrogationPdf } = require('./_interrogacion-pdf');
 
 const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
   || 'https://estudiacest-default-rtdb.firebaseio.com';
@@ -458,6 +459,27 @@ async function guardarNotaGrabacion(instrumento, docente, cuerpo) {
   return { status: 200, body: { ok: true, notaDocente, fechaNotaDocente } };
 }
 
+async function generarPdfRetroalimentacion(instrumentoId, instrumento, docente, cuerpo) {
+  const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+  if (!alumno || !docente.cursos.includes(alumno.curso)) {
+    return { status: 403, error: 'Ese estudiante no corresponde a tus cursos.' };
+  }
+  const notaGuardada = (await db.ref(`${instrumento.base}/notas/${alumno.id}`).once('value')).val();
+  if (!notaGuardada || notaGuardada.nota == null) {
+    return { status: 409, error: 'El PDF estará disponible después de guardar la calificación.' };
+  }
+  const grabacion = notaGuardada.intentoId
+    ? (await db.ref(`${instrumento.base}/grabaciones/${alumno.id}`).once('value')).val()
+    : null;
+  const pdf = await createInterrogationPdf({
+    instrumentId: instrumentoId,
+    student: alumno,
+    grade: notaGuardada,
+    recording: grabacion
+  });
+  return { status: 200, ...pdf };
+}
+
 async function entregarGrabacion(instrumento, docente, cuerpo) {
   const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
   if (!alumno || !docente.cursos.includes(alumno.curso)) {
@@ -637,6 +659,15 @@ module.exports = async function handler(req, res) {
     if (accion === 'guardar-nota-grabacion') {
       const resultado = await guardarNotaGrabacion(instrumento, docente, cuerpo);
       return res.status(resultado.status).json(resultado.body);
+    }
+
+    if (accion === 'pdf-retroalimentacion') {
+      const resultado = await generarPdfRetroalimentacion(instrumentoId, instrumento, docente, cuerpo);
+      if (resultado.error) return res.status(resultado.status).json({ error: resultado.error });
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', `attachment; filename="${resultado.filename}"`);
+      res.setHeader('Content-Length', String(resultado.bytes.length));
+      return res.status(200).send(resultado.bytes);
     }
 
     if (accion === 'borrar-grabacion') {

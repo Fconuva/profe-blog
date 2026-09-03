@@ -65,6 +65,55 @@
     return data;
   }
 
+  async function downloadFeedback(studentId, button) {
+    var originalText = button ? button.textContent : '';
+    if (button) {
+      button.disabled = true;
+      button.textContent = 'Generando PDF…';
+    }
+    try {
+      var response = await fetch(config.api, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          instrumento: config.instrumento,
+          docente: state.docente,
+          accion: 'pdf-retroalimentacion',
+          alumnoId: studentId
+        })
+      });
+      if (!response.ok) {
+        var errorData = await response.json().catch(function () { return {}; });
+        throw new Error(errorData.error || 'No se pudo generar el PDF.');
+      }
+      var blob = await response.blob();
+      if (blob.type !== 'application/pdf' || blob.size < 1000) throw new Error('El PDF recibido no es válido.');
+      var disposition = response.headers.get('Content-Disposition') || '';
+      var match = disposition.match(/filename="([^"]+)"/i);
+      var link = document.createElement('a');
+      var url = URL.createObjectURL(blob);
+      link.href = url;
+      link.download = match ? match[1] : 'Retroalimentacion_interrogacion.pdf';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      if (button) button.textContent = 'PDF descargado';
+    } catch (error) {
+      window.alert(error.message);
+      if (button) button.textContent = originalText;
+    } finally {
+      if (button) {
+        window.setTimeout(function () {
+          button.disabled = false;
+          button.textContent = originalText;
+        }, 900);
+      }
+    }
+  }
+
+  window.descargarInformeInterrogacion = downloadFeedback;
+
   function randomId() {
     var value = crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(36).slice(2);
     return String(value).replace(/[^A-Za-z0-9_-]/g, '');
@@ -641,6 +690,7 @@
       : 'Sin nota docente guardada';
     setNotice('avisoRevisionAudio', '', '');
     setNotice('avisoNotaAudio', '', '');
+    $('btnDescargarPdfAudio').classList.toggle('oculto', !(note && note.nota != null));
     $('cardRevisionAudio').classList.remove('oculto');
     renderReview();
     $('cardRevisionAudio').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -769,6 +819,7 @@
           ? '<button type="button" class="btn chico solid" data-continue="' + id + '">Continuar grabación</button>'
           : '') +
         '<button type="button" class="btn chico" data-review="' + id + '">Ver detalle</button>' +
+        (note && note.nota != null ? '<button type="button" class="btn chico" data-download-pdf="' + id + '">Descargar PDF</button>' : '') +
         '<button type="button" class="btn chico danger" data-delete-recording="' + id + '">Eliminar</button></div></td>';
       table.appendChild(row);
     });
@@ -777,6 +828,9 @@
     });
     table.querySelectorAll('[data-continue]').forEach(function (button) {
       button.addEventListener('click', function () { continueRecording(button.dataset.continue); });
+    });
+    table.querySelectorAll('[data-download-pdf]').forEach(function (button) {
+      button.addEventListener('click', function () { downloadFeedback(button.dataset.downloadPdf, button); });
     });
     table.querySelectorAll('[data-delete-recording]').forEach(function (button) {
       button.addEventListener('click', function () { deleteRecording(button.dataset.deleteRecording); });
@@ -814,6 +868,9 @@
   });
   $('btnGuardarRevisionAudio').addEventListener('click', saveReview);
   $('btnGuardarNotaAudio').addEventListener('click', saveReviewNote);
+  $('btnDescargarPdfAudio').addEventListener('click', function () {
+    if (review) downloadFeedback(review.student.id, $('btnDescargarPdfAudio'));
+  });
   $('cerrarAudioExito').addEventListener('click', function () { $('audioExito').close(); });
   window.addEventListener('beforeunload', function (event) {
     if (recorder && recorder.state === 'recording') {

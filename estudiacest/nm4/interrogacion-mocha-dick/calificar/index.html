@@ -243,7 +243,7 @@
       <div class="marcador">
         <div><div class="lbl">Nota</div><div class="val" id="notaRevisionAudio">—</div></div>
         <div class="det" id="detalleRevisionAudio">Sin puntajes asignados</div>
-        <div class="der"><button class="btn" id="btnCerrarRevisionAudio" type="button">Cerrar</button><button class="btn solid" id="btnGuardarRevisionAudio" type="button">Guardar calificación</button></div>
+        <div class="der"><button class="btn oculto" id="btnDescargarPdfAudio" type="button">Descargar PDF</button><button class="btn" id="btnCerrarRevisionAudio" type="button">Cerrar</button><button class="btn solid" id="btnGuardarRevisionAudio" type="button">Guardar calificación</button></div>
       </div>
       <div class="aviso" id="avisoRevisionAudio"></div>
     </div>
@@ -530,7 +530,7 @@
         '<td>' + (f.alumno || '') + '</td>' +
         '<td class="n">' + (f.nota != null ? f.nota.toFixed(1).replace('.', ',') : '—') + '</td>' +
         '<td>' + (f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : '') + '</td>' +
-        '<td><button class="btn chico" data-borrar="' + f.id + '">Borrar</button></td>';
+        '<td><div class="row-actions"><button class="btn chico" data-pdf="' + f.id + '">Descargar PDF</button><button class="btn chico danger" data-borrar="' + f.id + '">Borrar</button></div></td>';
       t.appendChild(tr);
     });
 
@@ -542,6 +542,11 @@
           delete sesion.notas[b.dataset.borrar];
           pintarAlumnos(); pintarNotas();
         } catch (e) { alert(e.message); }
+      });
+    });
+    t.querySelectorAll('[data-pdf]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        if (window.descargarInformeInterrogacion) window.descargarInformeInterrogacion(button.dataset.pdf, button);
       });
     });
   }

@@ -60,6 +60,8 @@ function auditPanel(config) {
   assert(panelHtml.includes('id="btnGuardarNotaAudio"'), `${config.label}: falta guardar la nota docente.`);
   assert(panelHtml.includes('Guardar nota docente'), `${config.label}: la acción de nota docente no es clara.`);
   assert(panelHtml.includes('id="revisionEstado"'), `${config.label}: falta explicar el estado de la grabación.`);
+  assert(panelHtml.includes('id="btnDescargarPdfAudio"'), `${config.label}: falta descargar la rúbrica desde el detalle.`);
+  assert(panelHtml.includes('data-pdf="'), `${config.label}: las notas guardadas no ofrecen su PDF.`);
   assert(panelHtml.includes('id="tablaGrabaciones"'), `${config.label}: falta la lista de grabaciones.`);
   assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
   assert(panelHtml.includes('firebase-storage-compat.js'), `${config.label}: falta Firebase Storage.`);
@@ -124,6 +126,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'entregar-grabacion'",
     "accion === 'audio-url'",
     "accion === 'guardar-nota-grabacion'",
+    "accion === 'pdf-retroalimentacion'",
     "accion === 'borrar-grabacion'",
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
@@ -157,6 +160,7 @@ for (const contract of [
   "accion: 'entregar-grabacion'",
   "accion: 'audio-url'",
   "accion: 'guardar-nota-grabacion'",
+  "accion: 'pdf-retroalimentacion'",
   'Continuar grabación',
   'Ver detalle',
   'Volver a grabar esta respuesta',
@@ -206,4 +210,38 @@ for (const page of [
   'assets/interrogacion-audio.js'
 ]) assert(critical.has(page), `El manifiesto no protege ${page}.`);
 
-console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, grabación, revisión, acceso docente directo y Firebase.');
+async function auditPdf() {
+  const { PDFDocument } = require('pdf-lib');
+  const { createInterrogationPdf } = require(path.join(ROOT, 'api/_interrogacion-pdf'));
+  const result = await createInterrogationPdf({
+    instrumentId: 'nm3',
+    student: { nombre: 'ESTUDIANTE DE PRUEBA', curso: '3A' },
+    grade: {
+      preguntas: [2, 8, 14, 21, 33, 42, 50],
+      puntajes: { 0: 1, 1: 0.8, 2: 0.6, 3: 0.4, 4: 0.2, 5: 0, 6: 1 },
+      nota: 4,
+      observacion: 'Responde con precisión y debe fortalecer la evidencia de dos respuestas.',
+      docente: 'Docente responsable',
+      fecha: '2026-09-03T12:00:00.000Z',
+      intentoId: 'audit-pdf-2026'
+    },
+    recording: {
+      intentoId: 'audit-pdf-2026',
+      notaDocente: 'Revisar nuevamente las preguntas de interpretación global.'
+    }
+  });
+  assert(result.bytes.subarray(0, 5).toString() === '%PDF-', 'El informe no es un PDF válido.');
+  assert(result.bytes.length > 10000, 'El PDF institucional quedó incompleto.');
+  assert(result.filename.endsWith('.pdf'), 'El nombre de descarga no termina en PDF.');
+  const document = await PDFDocument.load(result.bytes);
+  assert.strictEqual(document.getPageCount(), 1, 'La rúbrica debe ocupar exactamente una página.');
+  const size = document.getPage(0).getSize();
+  assert(Math.abs(size.width - 595.28) < 0.1 && Math.abs(size.height - 841.89) < 0.1, 'La página no tiene formato A4.');
+}
+
+auditPdf().then(() => {
+  console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, audio, revisión, PDF A4 institucional, acceso docente directo y Firebase.');
+}).catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});

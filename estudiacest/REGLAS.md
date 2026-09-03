@@ -93,6 +93,15 @@ Antes de editar y nuevamente antes de publicar:
   el panel de Francisco; `?docente=alicia`, `?docente=pia` y `?docente=joselin`
   limitan la nómina a los cursos asignados. Mantener `noindex` y la validación de
   curso, estudiante, preguntas y puntajes en el servidor.
+- Las interrogaciones orales guardan un audio independiente por pregunta en
+  Firebase Storage. Cada carga usa un token de alcance único para instrumento,
+  docente, estudiante, intento, posición, archivo y tamaño; la lectura pública
+  permanece cerrada y el panel obtiene enlaces temporales al revisar.
+- Antes de grabar se informa que el audio queda para revisión docente y puede
+  analizarse con apoyo tecnológico. La IA nunca califica automáticamente ni se
+  usa de forma encubierta: entrega antecedentes y la nota la determina el
+  docente. El acceso técnico usa `INTERROGACION_REVIEW_AGENT_HASH` y el script
+  local `npm run review:interrogaciones`; el token no se guarda en Git.
 
 ## 7. Evaluaciones y resultados
 

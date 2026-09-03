@@ -23,6 +23,33 @@ service firebase.storage {
       allow update: if false;
     }
 
+    match /interrogaciones_2026/{instrumento}/{docente}/{alumnoId}/{intentoId}/{posicion}/{fileId}/{fileName} {
+      function canUploadInterrogationAudio() {
+        return request.auth != null
+          && request.auth.token.interrogacionAudio == true
+          && request.auth.token.instrumento == instrumento
+          && request.auth.token.docente == docente
+          && request.auth.token.alumnoId == alumnoId
+          && request.auth.token.intentoId == intentoId
+          && request.auth.token.posicion == posicion
+          && request.auth.token.fileId == fileId
+          && request.auth.token.fileName == fileName;
+      }
+
+      allow create: if canUploadInterrogationAudio()
+        && request.resource.size > 0
+        && request.resource.size <= request.auth.token.uploadMaxBytes
+        && request.resource.size <= 8 * 1024 * 1024
+        && request.resource.contentType.matches('audio/.*')
+        && request.resource.metadata.instrumento == instrumento
+        && request.resource.metadata.docente == docente
+        && request.resource.metadata.alumnoId == alumnoId
+        && request.resource.metadata.intentoId == intentoId
+        && request.resource.metadata.posicion == posicion
+        && request.resource.metadata.fileId == fileId;
+      allow read, update, delete: if false;
+    }
+
     match /{allPaths=**} {
       allow read, write: if false;
     }

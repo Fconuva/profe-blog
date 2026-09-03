@@ -24,3 +24,8 @@ Los paneles `/nm3/interrogacion-un-lugar-sin-limites/calificar/` y
 `/nm4/interrogacion-mocha-dick/calificar/` son accesos docentes directos sin
 contraseña ni código de enlace. La ruta base corresponde a Francisco y el
 parámetro `?docente=` conserva los alcances de las educadoras.
+
+Los audios de estas interrogaciones se revisan desde los mismos paneles. Para
+una revisión técnica asistida se usa `npm run review:interrogaciones --
+--instrumento nm3` o `--instrumento nm4`; el token vive únicamente en el archivo
+local indicado por `REGLAS.md`. Ningún análisis asistido asigna la nota final.

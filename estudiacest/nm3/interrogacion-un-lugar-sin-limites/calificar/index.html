@@ -81,6 +81,41 @@
   td.n{font-weight:800;color:var(--blue);text-align:center;font-variant-numeric:tabular-nums;}
   .vacio{text-align:center;color:var(--muted);padding:18px;font-size:13.5px;}
 
+  .btn.record{background:#b42318;border-color:#b42318;color:#fff;}
+  .btn.record:hover{background:#8f1c13;border-color:#8f1c13;}
+  .btn.record.recording{animation:pulse 1.2s infinite;}
+  .btn.danger{color:#9f1d18;border-color:#efc7c4;background:#fff;}
+  @keyframes pulse{50%{box-shadow:0 0 0 7px rgba(180,35,24,.13);}}
+  .audio-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:14px;}
+  .audio-student{font-size:14px;font-weight:800;color:var(--ink);}
+  .progress-track{height:9px;border-radius:99px;background:#e6edf5;overflow:hidden;margin:8px 0 5px;}
+  .progress-fill{height:100%;width:0;background:var(--ok);transition:width .2s ease;}
+  .progress-meta{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12.5px;}
+  .question-focus{border:1.5px solid #bfd2e8;border-radius:12px;background:#f8fbff;padding:18px;margin-top:16px;}
+  .question-kicker{display:flex;justify-content:space-between;gap:12px;color:var(--blue);font-weight:800;font-size:12px;text-transform:uppercase;}
+  .question-focus h3{font-size:21px;line-height:1.45;margin:16px 0 20px;letter-spacing:0;}
+  .record-panel{border-top:1px solid var(--line);padding-top:16px;}
+  .record-state{font-size:13.5px;color:var(--muted);margin:9px 0;}
+  .record-timer{font-size:24px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--ink);}
+  .audio-preview{display:block;width:100%;margin:12px 0;}
+  .privacy-note{margin-top:14px;padding:10px 12px;background:#f7fafc;border-left:4px solid var(--blue);font-size:12.5px;color:var(--muted);}
+  .review-answer{border:1px solid var(--line);border-radius:11px;padding:14px;margin-bottom:12px;}
+  .review-heading{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:start;line-height:1.45;}
+  .review-heading span{display:grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--blue);color:#fff;font-weight:800;font-size:12px;}
+  .review-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:12px 0;}
+  .review-player{width:min(100%,430px);height:42px;}
+  .review-scale{padding-top:10px;border-top:1px solid #e8eef5;}
+  .audio-status{display:inline-flex;padding:4px 9px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap;}
+  .audio-status.pendiente{background:#fff4d6;color:#7a4908;}
+  .audio-status.calificada{background:#e5f8f1;color:#0d6b59;}
+  .audio-status.en_curso{background:#eaf2ff;color:#24518b;}
+  .row-actions{display:flex;gap:6px;}
+  dialog{border:0;border-radius:14px;padding:0;box-shadow:0 24px 70px rgba(15,23,42,.28);max-width:430px;width:calc(100% - 32px);}
+  dialog::backdrop{background:rgba(15,23,42,.55);}
+  .dialog-body{padding:24px;text-align:center;}
+  .dialog-body h2{margin:0 0 8px;color:var(--blue);}
+  .dialog-body p{color:var(--muted);margin:0 0 18px;}
+
   .oculto{display:none !important;}
   @media (max-width:640px){
     .fila{grid-template-columns:1fr;}
@@ -117,9 +152,35 @@
         <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
       </div>
       <div class="btns">
-        <button class="btn solid" id="btnSortear">🎲 Sortear las 7 preguntas</button>
+        <button class="btn solid" id="btnGrabar">Grabar para revisar</button>
+        <button class="btn" id="btnSortear">Calificar ahora</button>
       </div>
       <div class="aviso" id="avisoSorteo"></div>
+    </div>
+
+    <div class="card oculto" id="cardAudio">
+      <div class="audio-head">
+        <div><h2>2 · Respuestas grabadas</h2><div class="audio-student" id="audioEstudiante"></div></div>
+        <button class="btn chico" id="btnCancelarAudio" type="button">Cancelar</button>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="audioProgresoBarra"></div></div>
+      <div class="progress-meta"><span id="audioProgresoTexto">1 de 7</span><span id="audioGuardadas">0 respuestas guardadas</span></div>
+      <div class="question-focus">
+        <div class="question-kicker"><span id="numeroPreguntaAudio">Pregunta 1</span><span id="referenciaPreguntaAudio"></span></div>
+        <h3 id="textoPreguntaAudio"></h3>
+        <div class="record-panel">
+          <div class="record-timer" id="tiempoGrabacion">0:00 / 3:00</div>
+          <div class="record-state" id="estadoGrabacion">Presiona grabar cuando el estudiante esté listo.</div>
+          <audio class="audio-preview oculto" id="previewAudio" controls></audio>
+          <div class="btns">
+            <button class="btn record" id="btnGrabarAudio" type="button">Grabar respuesta</button>
+            <button class="btn oculto" id="btnRepetirAudio" type="button">Volver a grabar</button>
+            <button class="btn solid" id="btnSiguienteAudio" type="button" disabled>Guardar y siguiente</button>
+          </div>
+        </div>
+      </div>
+      <p class="privacy-note">El audio se guarda para revisión docente y puede analizarse con apoyo tecnológico. La calificación final siempre la determina el docente.</p>
+      <div class="aviso" id="avisoAudio"></div>
     </div>
 
     <div class="card oculto" id="cardPreg">
@@ -151,9 +212,31 @@
         </table>
       </div>
     </div>
+
+    <div class="card oculto" id="cardRevisionAudio">
+      <h2 id="revisionTitulo">Revisar respuestas grabadas</h2>
+      <p class="sub">Escucha cada respuesta y asigna su puntaje. Los enlaces de audio son temporales.</p>
+      <div id="zonaRevisionAudio"></div>
+      <div class="campo"><label for="obsRevisionAudio">Observación (opcional)</label><textarea id="obsRevisionAudio" rows="2"></textarea></div>
+      <div class="marcador">
+        <div><div class="lbl">Nota</div><div class="val" id="notaRevisionAudio">—</div></div>
+        <div class="det" id="detalleRevisionAudio">Sin puntajes asignados</div>
+        <div class="der"><button class="btn" id="btnCerrarRevisionAudio" type="button">Cerrar</button><button class="btn solid" id="btnGuardarRevisionAudio" type="button">Guardar calificación</button></div>
+      </div>
+      <div class="aviso" id="avisoRevisionAudio"></div>
+    </div>
+
+    <div class="card">
+      <h2>4 · Grabaciones</h2>
+      <p class="sub" id="subGrabaciones">Las grabaciones entregadas aparecerán aquí.</p>
+      <div class="aviso" id="avisoListaAudios"></div>
+      <div style="overflow-x:auto;"><table><thead><tr><th>Curso</th><th>N°</th><th>Estudiante</th><th>Audios</th><th>Estado</th><th>Nota</th><th>Acciones</th></tr></thead><tbody id="tablaGrabaciones"><tr><td colspan="7" class="vacio">Cargando grabaciones…</td></tr></tbody></table></div>
+    </div>
   </section>
 
 </div>
+
+<dialog id="audioExito"><div class="dialog-body"><h2>Respuestas guardadas</h2><p>Los siete audios quedaron disponibles para revisarlos y calificarlos después.</p><button class="btn solid" id="cerrarAudioExito" type="button">Aceptar</button></div></dialog>
 
 <script>
 (function () {
@@ -213,6 +296,7 @@
   ];
   var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
   var CURSO_LBL = { '3A': '3°A', '3B': '3°B', '3D': '3°D' };
+  window.INTERROGACION_AUDIO_CONFIG = { api: API, instrumento: INSTRUMENTO, banco: BANCO, puntos: PUNTOS, cursoLabels: CURSO_LBL };
 
   var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
@@ -433,5 +517,9 @@
   entrar();
 })();
 </script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="/assets/interrogacion-audio.js"></script>
 </body>
 </html>

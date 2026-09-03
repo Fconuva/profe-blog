@@ -48,7 +48,14 @@ function auditPanel(config) {
   assert.deepStrictEqual(Array.from(panel), expected, `${config.label}: el panel no coincide con el banco público.`);
   assert.strictEqual(new Set(panel).size, 50, `${config.label}: hay preguntas duplicadas.`);
   assert(panelHtml.includes(config.api), `${config.label}: endpoint incorrecto.`);
-  assert(panelHtml.includes('Sortear las 7 preguntas'), `${config.label}: falta el sorteo.`);
+  assert(panelHtml.includes('Calificar ahora'), `${config.label}: falta la calificación en vivo.`);
+  assert(panelHtml.includes('Grabar para revisar'), `${config.label}: falta el inicio de grabación.`);
+  assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
+  assert(panelHtml.includes('id="cardRevisionAudio"'), `${config.label}: falta la revisión de audios.`);
+  assert(panelHtml.includes('id="tablaGrabaciones"'), `${config.label}: falta la lista de grabaciones.`);
+  assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
+  assert(panelHtml.includes('firebase-storage-compat.js'), `${config.label}: falta Firebase Storage.`);
+  assert(panelHtml.includes('puede analizarse con apoyo tecnológico'), `${config.label}: falta informar el uso de apoyo tecnológico.`);
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
@@ -102,6 +109,15 @@ for (const apiFile of ['api/interrogacion.js']) {
     'instrumento.alumnos.get',
     'preguntasValidas',
     'puntajesValidos',
+    "accion === 'iniciar-grabacion'",
+    "accion === 'preparar-audio'",
+    "accion === 'registrar-audio'",
+    "accion === 'entregar-grabacion'",
+    "accion === 'audio-url'",
+    "accion === 'borrar-grabacion'",
+    "accion === 'revision-agente-lista'",
+    'INTERROGACION_REVIEW_AGENT_HASH',
+    'MAX_AUDIO_BYTES',
     "accion === 'auditar-firebase'",
     "req.method !== 'POST'"
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
@@ -118,11 +134,45 @@ for (const apiFile of ['api/interrogacion.js']) {
   assert(!source.includes('AUDIT_DEPLOY_HASH'), `${apiFile}: quedó un acceso técnico temporal.`);
 }
 
+const audioController = read('assets/interrogacion-audio.js');
+new vm.Script(audioController, { filename: 'assets/interrogacion-audio.js' });
+for (const contract of [
+  'navigator.mediaDevices.getUserMedia',
+  'new MediaRecorder',
+  "accion: 'preparar-audio'",
+  "accion: 'registrar-audio'",
+  "accion: 'entregar-grabacion'",
+  "accion: 'audio-url'",
+  'Guardar y siguiente',
+  'MAX_DURATION_MS = 180000',
+  'signInWithCustomToken',
+  'customMetadata'
+]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
+
+const reviewTool = read('scripts/review-interrogation-audio.js');
+new vm.Script(reviewTool, { filename: 'scripts/review-interrogation-audio.js' });
+for (const contract of [
+  'interrogacion-review-token.txt',
+  "accion: 'revision-agente-lista'",
+  "accion: 'revision-agente-audio'",
+  'X-Review-Key'
+]) assert(reviewTool.includes(contract), `Herramienta de revisión: falta ${contract}.`);
+
+const storageRules = read('storage.rules');
+for (const contract of [
+  'match /interrogaciones_2026/',
+  'request.auth.token.interrogacionAudio == true',
+  'request.resource.contentType.matches(\'audio/.*\')',
+  'request.resource.size <= 8 * 1024 * 1024',
+  'allow read, update, delete: if false;'
+]) assert(storageRules.includes(contract), `Storage: falta ${contract}.`);
+
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 const critical = new Set(manifest.criticalFiles.map((resource) => resource.path));
 for (const page of [
   'nm3/interrogacion-un-lugar-sin-limites/calificar/index.html',
-  'nm4/interrogacion-mocha-dick/calificar/index.html'
+  'nm4/interrogacion-mocha-dick/calificar/index.html',
+  'assets/interrogacion-audio.js'
 ]) assert(critical.has(page), `El manifiesto no protege ${page}.`);
 
-console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, acceso docente directo, validación y Firebase.');
+console.log('Interrogaciones auditadas: NM3 y NM4, 100 preguntas, 249 estudiantes, grabación, revisión, acceso docente directo y Firebase.');

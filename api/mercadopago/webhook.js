@@ -2,7 +2,7 @@
 // Expects MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_WEBHOOK_SECRET and FIREBASE_SERVICE_ACCOUNT (base64 JSON) in env
 
 const { MercadoPagoConfig, Payment } = require('mercadopago');
-const { COURSE_PRICE } = require('../docente-creador-config');
+const { COURSE_PRICE } = require('../../lib/docente-creador-config');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 

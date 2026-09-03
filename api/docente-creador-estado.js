@@ -5,7 +5,7 @@ const {
   ALL_DATE_OPTIONS,
   MEET_LINKS,
   buildReceiptNumber
-} = require('./docente-creador-config');
+} = require('../lib/docente-creador-config');
 
 function initFirebase() {
   if (admin.apps && admin.apps.length) return admin;

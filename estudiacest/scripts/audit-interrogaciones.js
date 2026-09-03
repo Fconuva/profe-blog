@@ -48,8 +48,8 @@ function auditPanel(config) {
   assert.deepStrictEqual(Array.from(panel), expected, `${config.label}: el panel no coincide con el banco público.`);
   assert.strictEqual(new Set(panel).size, 50, `${config.label}: hay preguntas duplicadas.`);
   assert(panelHtml.includes(config.api), `${config.label}: endpoint incorrecto.`);
-  assert(panelHtml.includes('Calificar ahora'), `${config.label}: falta la calificación en vivo.`);
-  assert(panelHtml.includes('Grabar para revisar'), `${config.label}: falta el inicio de grabación.`);
+  assert(panelHtml.includes('Interrogar manual'), `${config.label}: falta la interrogación manual.`);
+  assert(panelHtml.includes('Interrogar con audio'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
   assert(panelHtml.includes('id="nivelMicrofonoBarra"'), `${config.label}: falta el medidor de señal.`);
   assert(panelHtml.includes('id="nivelMicrofonoTexto"'), `${config.label}: falta informar si se detecta voz.`);

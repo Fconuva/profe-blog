@@ -53,6 +53,8 @@ function auditPanel(config) {
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
   assert(panelHtml.includes('id="nivelMicrofonoBarra"'), `${config.label}: falta el medidor de señal.`);
   assert(panelHtml.includes('id="nivelMicrofonoTexto"'), `${config.label}: falta informar si se detecta voz.`);
+  assert(panelHtml.includes('id="microfonoAudio"'), `${config.label}: falta seleccionar el micrófono.`);
+  assert(panelHtml.includes('id="microfonoActivo"'), `${config.label}: falta identificar el micrófono activo.`);
   assert(panelHtml.includes('id="cardRevisionAudio"'), `${config.label}: falta la revisión de audios.`);
   assert(panelHtml.includes('id="tablaGrabaciones"'), `${config.label}: falta la lista de grabaciones.`);
   assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
@@ -154,9 +156,14 @@ for (const contract of [
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
 for (const contract of [
   'startMeter(stream)',
+  'loadMicrophones(activeTrack)',
+  "deviceId: { exact: selectedDevice }",
   'Voz detectada',
   'if (!localBlob.size)'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta validación ${contract}.`);
+for (const processing of ['echoCancellation: true', 'noiseSuppression: true', 'autoGainControl: true']) {
+  assert(!audioController.includes(processing), `Controlador de audio: conserva procesamiento riesgoso ${processing}.`);
+}
 assert(!audioController.includes('/ 3:00'), 'Controlador de audio: aún muestra un límite temporal.');
 assert(!audioController.includes('MAX_DURATION_MS'), 'Controlador de audio: aún detiene por tiempo.');
 

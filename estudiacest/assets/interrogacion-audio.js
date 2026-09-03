@@ -35,6 +35,8 @@
   var analyser = null;
   var analyserSource = null;
   var levelFrame = null;
+  var meterAvailable = false;
+  var voiceDetected = false;
   var $ = function (id) { return document.getElementById(id); };
 
   function docenteDesdeUrl() {
@@ -137,11 +139,38 @@
     audioContext = null;
     if (stream) stream.getTracks().forEach(function (track) { track.stop(); });
     stream = null;
+    if ($('microfonoAudio')) $('microfonoAudio').disabled = false;
   }
 
   function resetMeter() {
+    meterAvailable = false;
+    voiceDetected = false;
     if ($('nivelMicrofonoBarra')) $('nivelMicrofonoBarra').style.width = '0%';
     if ($('nivelMicrofonoTexto')) $('nivelMicrofonoTexto').textContent = 'Habla para comprobar el micrófono';
+  }
+
+  async function loadMicrophones(activeTrack) {
+    var select = $('microfonoAudio');
+    if (!select || !navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) return;
+    try {
+      var previous = select.value;
+      var activeId = activeTrack && activeTrack.getSettings ? activeTrack.getSettings().deviceId : '';
+      var devices = (await navigator.mediaDevices.enumerateDevices()).filter(function (device) {
+        return device.kind === 'audioinput';
+      });
+      select.innerHTML = '<option value="">Automático (predeterminado)</option>';
+      devices.forEach(function (device, index) {
+        var option = document.createElement('option');
+        option.value = device.deviceId;
+        option.textContent = device.label || 'Micrófono ' + (index + 1);
+        select.appendChild(option);
+      });
+      var preferred = previous || activeId;
+      if (preferred && devices.some(function (device) { return device.deviceId === preferred; })) select.value = preferred;
+      if ($('microfonoActivo') && activeTrack) {
+        $('microfonoActivo').textContent = 'En uso: ' + (activeTrack.label || select.options[select.selectedIndex].textContent);
+      }
+    } catch (_) {}
   }
 
   function startMeter(inputStream) {
@@ -155,6 +184,7 @@
       analyser.smoothingTimeConstant = 0.65;
       analyserSource = audioContext.createMediaStreamSource(inputStream);
       analyserSource.connect(analyser);
+      meterAvailable = true;
       audioContext.resume().catch(function () {});
       var samples = new Uint8Array(analyser.fftSize);
       var measure = function () {
@@ -166,6 +196,7 @@
           sum += normalized * normalized;
         }
         var rms = Math.sqrt(sum / samples.length);
+        if (rms >= MIN_SIGNAL_RMS) voiceDetected = true;
         var percent = Math.min(100, Math.max(2, Math.round(rms * 900)));
         if ($('nivelMicrofonoBarra')) $('nivelMicrofonoBarra').style.width = percent + '%';
         if ($('nivelMicrofonoTexto')) {
@@ -210,10 +241,15 @@
       return;
     }
     releaseLocalAudio();
+    setNotice('avisoAudio', '', '');
     try {
+      var selectedDevice = $('microfonoAudio') ? $('microfonoAudio').value : '';
       stream = await navigator.mediaDevices.getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        audio: selectedDevice ? { deviceId: { exact: selectedDevice } } : true
       });
+      var activeTrack = stream.getAudioTracks()[0];
+      await loadMicrophones(activeTrack);
+      if ($('microfonoAudio')) $('microfonoAudio').disabled = true;
       var mimeType = preferredMimeType();
       var options = { audioBitsPerSecond: 48000 };
       if (mimeType) options.mimeType = mimeType;
@@ -258,6 +294,7 @@
     recordingDuration = Math.max(0, Date.now() - recordingStartedAt);
     var type = recorder && recorder.mimeType ? recorder.mimeType : 'audio/webm';
     localBlob = new Blob(chunks, { type: type });
+    var noVoiceDetected = meterAvailable && !voiceDetected;
     stopStream();
     recorder = null;
     chunks = [];
@@ -273,7 +310,12 @@
     $('btnGrabarAudio').classList.add('oculto');
     $('btnRepetirAudio').classList.remove('oculto');
     $('btnSiguienteAudio').disabled = false;
-    $('estadoGrabacion').textContent = 'Escucha brevemente. Si se oye bien, guarda y continúa.';
+    $('estadoGrabacion').textContent = noVoiceDetected
+      ? 'No se detectó voz. Escucha el audio y, si está en silencio, elige otro micrófono y vuelve a grabar.'
+      : 'Escucha brevemente. Si se oye bien, guarda y continúa.';
+    if (noVoiceDetected) {
+      setNotice('avisoAudio', 'El micrófono estuvo activo, pero no recibió voz. Prueba otra entrada en el selector.', 'err');
+    }
     $('tiempoGrabacion').textContent = formatDuration(recordingDuration);
   }
 

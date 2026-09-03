@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-03, rúbrica institucional descargable de las interrogaciones
+
+- Las interrogaciones de `El lugar sin límites` y `Mocha Dick` muestran la
+  opción `Descargar PDF` automáticamente después de guardar una calificación,
+  tanto en la tabla de calificaciones manuales como en el detalle de respuestas
+  grabadas.
+- El documento incluye insignia institucional, identificación del instrumento,
+  estudiante, curso, nota, resultado de las siete respuestas, escala aplicada,
+  retroalimentación y nota de seguimiento. Se genera al solicitarlo y queda
+  ajustado a una sola página A4, listo para enviar o imprimir.
+- Se probó en producción el ciclo completo: calificación temporal, aparición del
+  botón, descarga de un PDF válido de 79.273 bytes, verificación de una página
+  A4 y eliminación posterior del registro. Firebase quedó sin el dato temporal.
+- NM3 y NM4 aprobaron la revisión en escritorio y móvil, sin desborde, errores
+  de consola, solicitudes fallidas ni respuestas HTTP 5xx. El build completo
+  aprobó 148 recursos críticos.
+- La auditoría de dependencias no reporta vulnerabilidades altas ni críticas.
+  Permanecen ocho avisos moderados transitivos de `uuid`; la corrección
+  automática disponible requiere una actualización mayor de Firebase Admin y
+  se deja para una migración independiente.
+- Commit funcional: `e7ad2aff`. Deploy productivo:
+  `dpl_CdzwbdhWtq1Jy2m3mKQRHgB5BEyN`.
+
+---
+
 ## 2026-09-03, detalle y corrección de respuestas grabadas
 
 - `Continuar grabación` quedó reservado para retomar una interrogación incompleta

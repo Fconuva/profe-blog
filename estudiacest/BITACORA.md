@@ -8,6 +8,25 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-02, acceso docente directo a las interrogaciones NM3 y NM4
+
+- Los paneles de calificación de `El lugar sin límites` y `Mocha Dick` abren
+  directamente desde su URL, sin contraseña, código ni pantalla intermedia.
+- La ruta base corresponde a Francisco Núñez y muestra todos sus cursos. Las
+  educadoras conservan enlaces propios mediante el parámetro `docente`, con el
+  acceso limitado a los cursos que tienen asignados.
+- El servidor mantiene la validación del docente declarado, del curso, del
+  estudiante, de las siete preguntas y de los puntajes antes de escribir en
+  Firebase. Las páginas continúan excluidas de indexación pública mediante
+  `noindex,nofollow`.
+- `npm run build` aprobó 147 recursos críticos. La auditoría específica validó
+  NM3 y NM4, 100 preguntas y 249 estudiantes. Playwright verificó en producción
+  ambos paneles y un enlace de educadora: respuestas API 200 y cero errores de
+  consola.
+- Commit funcional: `db4a28f4`. Deploy: `dpl_4bXCtu8kn1Rnx2UHiJAdwtsc3YfN`.
+
+---
+
 ## 2026-09-02, ensayo parcial SIMCE de la Unidad 3, Clase 8
 
 - Se reemplazó la versión breve de la Clase 8 por un ensayo parcial para 2°A

@@ -8,6 +8,17 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-03, nombres claros para los modos de interrogación
+
+- En los paneles NM3 y NM4, `Grabar para revisar` pasó a llamarse
+  `Interrogar con audio` y `Calificar ahora` pasó a `Interrogar manual`.
+- La auditoría específica y el build completo aprobaron 148 recursos críticos.
+  La comprobación HTTP confirmó ambos textos en las dos rutas productivas.
+- Commit funcional: `8ac94564`. Deploy productivo:
+  `dpl_821ejn9fEEjSNgFQg4KDdTaTgzct`.
+
+---
+
 ## 2026-09-03, selección explícita de micrófono y prueba de 20 segundos
 
 - La inspección del archivo reportado confirmó que la carga funcionaba, pero la

@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-03, selección explícita de micrófono y prueba de 20 segundos
+
+- La inspección del archivo reportado confirmó que la carga funcionaba, pero la
+  entrada entregada por el navegador estaba muda: el WebM tenía pista Opus mono,
+  5,6 segundos, 1.693 bytes y nivel máximo de -91 dB.
+- Se retiraron las solicitudes de cancelación de eco, supresión de ruido y
+  ganancia automática para evitar incompatibilidades con controladores de
+  audio. La captura usa ahora la entrada sin procesamiento obligatorio.
+- Después de conceder permiso, el panel enumera los micrófonos disponibles,
+  identifica cuál está en uso y permite elegir otra entrada antes de repetir.
+  El medidor advierte si no recibió voz, pero no bloquea el guardado.
+- Una prueba productiva en navegador aislado grabó 21 segundos, detectó señal,
+  mostró el micrófono seleccionado, creó un archivo de 124.941 bytes, obtuvo
+  respuesta HTTP 200 al leerlo y no produjo errores de consola ni desborde en
+  390 píxeles. El intento y el audio técnicos fueron eliminados al terminar;
+  también se retiraron los intentos vacíos anteriores.
+- Commit funcional: `d08fc30b`. Deploy productivo confirmado y alias vigente:
+  `dpl_EGeP4i3wa7hvxJFCcNG9G7MA4kPP`.
+
+---
+
 ## 2026-09-02, grabación oral y corrección del audio vacío
 
 - Las interrogaciones de NM3 y NM4 incorporaron un flujo de siete respuestas

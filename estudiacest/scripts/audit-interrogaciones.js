@@ -51,6 +51,8 @@ function auditPanel(config) {
   assert(panelHtml.includes('Calificar ahora'), `${config.label}: falta la calificación en vivo.`);
   assert(panelHtml.includes('Grabar para revisar'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
+  assert(panelHtml.includes('id="nivelMicrofonoBarra"'), `${config.label}: falta el medidor de señal.`);
+  assert(panelHtml.includes('id="nivelMicrofonoTexto"'), `${config.label}: falta informar si se detecta voz.`);
   assert(panelHtml.includes('id="cardRevisionAudio"'), `${config.label}: falta la revisión de audios.`);
   assert(panelHtml.includes('id="tablaGrabaciones"'), `${config.label}: falta la lista de grabaciones.`);
   assert(panelHtml.includes('/assets/interrogacion-audio.js'), `${config.label}: falta el controlador compartido de audio.`);
@@ -119,6 +121,8 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
     'MAX_AUDIO_BYTES',
+    'MIN_AUDIO_BYTES',
+    'MIN_AUDIO_DURATION_MS',
     'const active = current || before',
     "accion === 'auditar-firebase'",
     "req.method !== 'POST'"
@@ -151,6 +155,13 @@ for (const contract of [
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
+for (const contract of [
+  'MIN_AUDIO_BYTES = 1500',
+  'MIN_DURATION_MS = 800',
+  'startMeter(stream)',
+  'No se detectó una respuesta audible',
+  'localBlob.size >= MIN_AUDIO_BYTES'
+]) assert(audioController.includes(contract), `Controlador de audio: falta validación ${contract}.`);
 
 const reviewTool = read('scripts/review-interrogation-audio.js');
 new vm.Script(reviewTool, { filename: 'scripts/review-interrogation-audio.js' });
@@ -166,6 +177,7 @@ for (const contract of [
   'match /interrogaciones_2026/',
   'request.auth.token.interrogacionAudio == true',
   'request.resource.contentType.matches(\'audio/.*\')',
+  'request.resource.size >= 1500',
   'request.resource.size <= 8 * 1024 * 1024',
   'allow read, update, delete: if false;'
 ]) assert(storageRules.includes(contract), `Storage: falta ${contract}.`);

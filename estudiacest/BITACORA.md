@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-02, grabación oral y corrección del audio vacío
+
+- Las interrogaciones de NM3 y NM4 incorporaron un flujo de siete respuestas
+  grabadas, una pregunta por vez, con escucha previa, reemplazo y guardado
+  privado en Firebase Storage.
+- Se corrigió la asociación del archivo después de una transacción RTDB con
+  caché inicial vacía. También se agregó un medidor visible de micrófono para
+  advertir si el navegador recibe señal, sin bloquear el guardado.
+- Por decisión docente se retiró el límite temporal y cualquier rechazo por
+  duración o nivel de voz. El sistema solo exige que el navegador haya generado
+  un archivo; el docente decide mediante la escucha previa si debe repetirse.
+- La revisión usa enlaces temporales y la calificación final continúa siendo
+  docente. La lectura pública de Storage permanece cerrada y el acceso técnico
+  protegido no asigna notas automáticamente.
+- Se probó en producción el ciclo de siete cargas, entrega, reproducción y
+  eliminación. Los siete WebM descargados fueron decodificables y presentaron
+  señal de audio; después se eliminó el registro técnico y no quedaron
+  entregas de prueba. Las vistas NM3 y NM4 cargaron sin errores ni desborde en
+  390 píxeles.
+- Commits funcionales: `4a9b1784`, `d0c5a46f`, `4cb4387d`, `32bb598a` y
+  `4950fa78`. Deploy final: `dpl_99Yo2tYrkrrrQGdkFtKMKswB6ZPU`. Reglas de
+  Storage vigentes: `b84737cf-82c8-4eca-8bf4-e18fc14c5ce7`.
+
+---
+
 ## 2026-09-02, acceso docente directo a las interrogaciones NM3 y NM4
 
 - Los paneles de calificación de `El lugar sin límites` y `Mocha Dick` abren

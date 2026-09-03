@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-03, detalle y corrección de respuestas grabadas
+
+- `Continuar grabación` quedó reservado para retomar una interrogación incompleta
+  desde la primera respuesta faltante. Cada registro dispone además de `Ver
+  detalle`, incluso mientras todavía está en curso.
+- El detalle permite escuchar cada audio, identificar respuestas pendientes,
+  volver a grabar una posición específica y guardar una nota docente de
+  seguimiento independiente de la retroalimentación de la calificación.
+- Reemplazar una respuesta ya calificada conserva los demás audios y la nota de
+  seguimiento, elimina la calificación que dejó de corresponder y devuelve el
+  registro al estado `Por revisar`. Una carga fallida no elimina el audio previo.
+- La auditoría focalizada y el build completo aprobaron 148 recursos críticos.
+  En producción se verificaron el registro incompleto, detalle de siete
+  posiciones, persistencia de la nota tras recargar, reemplazo y reproducción
+  del audio, invalidación de una calificación previa, limpieza de los registros
+  técnicos, vistas móvil y escritorio, y cero errores de consola.
+- Commit funcional: `e9b13c36`. Deploy productivo:
+  `dpl_7NVgUWF2TxrtnsJpBS2dJr1jXw71`.
+
+---
+
 ## 2026-09-03, nombres claros para los modos de interrogación
 
 - En los paneles NM3 y NM4, `Grabar para revisar` pasó a llamarse

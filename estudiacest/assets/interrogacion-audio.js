@@ -13,9 +13,6 @@
     messagingSenderId: '999002169815',
     appId: '1:999002169815:web:51203237bc77c2e74deb92'
   };
-  var MAX_DURATION_MS = 180000;
-  var MIN_DURATION_MS = 800;
-  var MIN_AUDIO_BYTES = 1500;
   var MIN_SIGNAL_RMS = 0.004;
   var app = firebase.initializeApp(FIREBASE_CONFIG, 'interrogacion-audio-' + config.instrumento);
   var auth = app.auth();
@@ -38,9 +35,6 @@
   var analyser = null;
   var analyserSource = null;
   var levelFrame = null;
-  var signalMonitoringAvailable = false;
-  var maxSignal = 0;
-  var signalFrames = 0;
   var $ = function (id) { return document.getElementById(id); };
 
   function docenteDesdeUrl() {
@@ -146,9 +140,6 @@
   }
 
   function resetMeter() {
-    signalMonitoringAvailable = false;
-    maxSignal = 0;
-    signalFrames = 0;
     if ($('nivelMicrofonoBarra')) $('nivelMicrofonoBarra').style.width = '0%';
     if ($('nivelMicrofonoTexto')) $('nivelMicrofonoTexto').textContent = 'Habla para comprobar el micrófono';
   }
@@ -164,7 +155,6 @@
       analyser.smoothingTimeConstant = 0.65;
       analyserSource = audioContext.createMediaStreamSource(inputStream);
       analyserSource.connect(analyser);
-      signalMonitoringAvailable = true;
       audioContext.resume().catch(function () {});
       var samples = new Uint8Array(analyser.fftSize);
       var measure = function () {
@@ -176,8 +166,6 @@
           sum += normalized * normalized;
         }
         var rms = Math.sqrt(sum / samples.length);
-        maxSignal = Math.max(maxSignal, rms);
-        if (rms >= MIN_SIGNAL_RMS) signalFrames += 1;
         var percent = Math.min(100, Math.max(2, Math.round(rms * 900)));
         if ($('nivelMicrofonoBarra')) $('nivelMicrofonoBarra').style.width = percent + '%';
         if ($('nivelMicrofonoTexto')) {
@@ -186,9 +174,7 @@
         levelFrame = window.requestAnimationFrame(measure);
       };
       measure();
-    } catch (_) {
-      signalMonitoringAvailable = false;
-    }
+    } catch (_) {}
   }
 
   function resetRecordingControls(message) {
@@ -201,7 +187,7 @@
     $('btnRepetirAudio').classList.add('oculto');
     $('btnSiguienteAudio').disabled = true;
     $('estadoGrabacion').textContent = message || 'Presiona grabar cuando el estudiante esté listo.';
-    $('tiempoGrabacion').textContent = '0:00 / 3:00';
+    $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
   }
 
@@ -246,7 +232,6 @@
       updateTimer();
       timer = window.setInterval(function () {
         updateTimer();
-        if (Date.now() - recordingStartedAt >= MAX_DURATION_MS) stopRecording();
       }, 250);
     } catch (_) {
       stopStream();
@@ -255,8 +240,7 @@
   }
 
   function updateTimer() {
-    var elapsed = Math.min(MAX_DURATION_MS, Date.now() - recordingStartedAt);
-    $('tiempoGrabacion').textContent = formatDuration(elapsed) + ' / 3:00';
+    $('tiempoGrabacion').textContent = formatDuration(Date.now() - recordingStartedAt);
   }
 
   function stopRecording() {
@@ -271,17 +255,15 @@
       chunks = [];
       return;
     }
-    recordingDuration = Math.max(250, Math.min(MAX_DURATION_MS, Date.now() - recordingStartedAt));
+    recordingDuration = Math.max(0, Date.now() - recordingStartedAt);
     var type = recorder && recorder.mimeType ? recorder.mimeType : 'audio/webm';
     localBlob = new Blob(chunks, { type: type });
-    var hasVoice = !signalMonitoringAvailable || signalFrames >= 2 || maxSignal >= MIN_SIGNAL_RMS * 1.5;
-    var validCapture = recordingDuration >= MIN_DURATION_MS && localBlob.size >= MIN_AUDIO_BYTES && hasVoice;
     stopStream();
     recorder = null;
     chunks = [];
-    if (!validCapture) {
-      resetRecordingControls('No se detectó una respuesta audible. Acerca el micrófono, habla y vuelve a grabar.');
-      setNotice('avisoAudio', 'El audio estaba vacío o era demasiado breve; no fue guardado.', 'err');
+    if (!localBlob.size) {
+      resetRecordingControls('El navegador no generó el archivo. Revisa el permiso y vuelve a grabar.');
+      setNotice('avisoAudio', 'No se recibió un archivo de audio. Intenta nuevamente.', 'err');
       return;
     }
     localUrl = URL.createObjectURL(localBlob);
@@ -297,11 +279,6 @@
 
   async function uploadCurrentAudio() {
     if (!localBlob || !flow) return;
-    if (localBlob.size < MIN_AUDIO_BYTES || recordingDuration < MIN_DURATION_MS) {
-      resetRecordingControls('La grabación es demasiado breve. Vuelve a grabar la respuesta.');
-      setNotice('avisoAudio', 'No se guardó un audio incompleto.', 'err');
-      return;
-    }
     var position = flow.position;
     var question = Number(flow.data.preguntas[position]);
     var fileId = randomId();
@@ -396,7 +373,7 @@
     $('btnSiguienteAudio').disabled = true;
     $('btnSiguienteAudio').textContent = position === 6 ? 'Guardar y finalizar' : 'Guardar y siguiente';
     $('estadoGrabacion').textContent = 'Presiona grabar cuando el estudiante esté listo.';
-    $('tiempoGrabacion').textContent = '0:00 / 3:00';
+    $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
   }
 

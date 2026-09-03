@@ -121,8 +121,6 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
     'MAX_AUDIO_BYTES',
-    'MIN_AUDIO_BYTES',
-    'MIN_AUDIO_DURATION_MS',
     'const active = current || before',
     "accion === 'auditar-firebase'",
     "req.method !== 'POST'"
@@ -150,18 +148,17 @@ for (const contract of [
   "accion: 'entregar-grabacion'",
   "accion: 'audio-url'",
   'Guardar y siguiente',
-  'MAX_DURATION_MS = 180000',
   'signInWithCustomToken',
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
 for (const contract of [
-  'MIN_AUDIO_BYTES = 1500',
-  'MIN_DURATION_MS = 800',
   'startMeter(stream)',
-  'No se detectó una respuesta audible',
-  'localBlob.size >= MIN_AUDIO_BYTES'
+  'Voz detectada',
+  'if (!localBlob.size)'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta validación ${contract}.`);
+assert(!audioController.includes('/ 3:00'), 'Controlador de audio: aún muestra un límite temporal.');
+assert(!audioController.includes('MAX_DURATION_MS'), 'Controlador de audio: aún detiene por tiempo.');
 
 const reviewTool = read('scripts/review-interrogation-audio.js');
 new vm.Script(reviewTool, { filename: 'scripts/review-interrogation-audio.js' });
@@ -177,7 +174,7 @@ for (const contract of [
   'match /interrogaciones_2026/',
   'request.auth.token.interrogacionAudio == true',
   'request.resource.contentType.matches(\'audio/.*\')',
-  'request.resource.size >= 1500',
+  'request.resource.size > 0',
   'request.resource.size <= 8 * 1024 * 1024',
   'allow read, update, delete: if false;'
 ]) assert(storageRules.includes(contract), `Storage: falta ${contract}.`);

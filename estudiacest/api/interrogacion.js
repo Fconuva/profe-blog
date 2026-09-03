@@ -11,9 +11,6 @@ const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
 const DEFAULT_STORAGE_BUCKET = 'estudiacest.firebasestorage.app';
 const STORAGE_PREFIX = 'interrogaciones_2026';
 const MAX_AUDIO_BYTES = 8 * 1024 * 1024;
-const MIN_AUDIO_BYTES = 1500;
-const MIN_AUDIO_DURATION_MS = 800;
-const MAX_AUDIO_DURATION_MS = 3 * 60 * 1000;
 const RESERVATION_TTL = 20 * 60 * 1000;
 const PUNTAJES_VALIDOS = new Set([0, 0.2, 0.4, 0.6, 0.8, 1]);
 
@@ -282,7 +279,7 @@ async function prepararAudio(instrumentoId, instrumento, docente, docenteId, cue
   const contentType = tipoAudioValido(cuerpo.contentType);
   if (!intentoId || !fileId || !Number.isInteger(posicion) || posicion < 0 || posicion > 6
     || !Number.isInteger(pregunta) || pregunta < 1 || pregunta > 50
-    || !Number.isInteger(size) || size < MIN_AUDIO_BYTES || size > MAX_AUDIO_BYTES || !contentType) {
+    || !Number.isInteger(size) || size <= 0 || size > MAX_AUDIO_BYTES || !contentType) {
     return { status: 400, body: { error: 'El audio o su identificación no son válidos.' } };
   }
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
@@ -311,7 +308,7 @@ async function prepararAudio(instrumentoId, instrumento, docente, docenteId, cue
     fileName,
     uploadMaxBytes: size
   });
-  return { status: 200, body: { ok: true, customToken, storagePath, maxDurationMs: MAX_AUDIO_DURATION_MS } };
+  return { status: 200, body: { ok: true, customToken, storagePath } };
 }
 
 async function registrarAudio(instrumento, docente, cuerpo) {
@@ -324,7 +321,7 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   const posicion = Number(cuerpo.posicion);
   const duracionMs = Math.round(Number(cuerpo.duracionMs || 0));
   if (!intentoId || !fileId || !Number.isInteger(posicion) || posicion < 0 || posicion > 6
-    || !Number.isFinite(duracionMs) || duracionMs < MIN_AUDIO_DURATION_MS || duracionMs > MAX_AUDIO_DURATION_MS + 2000) {
+    || !Number.isFinite(duracionMs) || duracionMs < 0) {
     return { status: 400, body: { error: 'La duración o identificación del audio no es válida.' } };
   }
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
@@ -347,7 +344,7 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   const [metadata] = await cloudFile.getMetadata();
   const size = Number(metadata.size || 0);
   const contentType = tipoAudioValido(metadata.contentType || reserva.contentType);
-  if (size < MIN_AUDIO_BYTES || size > Number(reserva.size) || size > MAX_AUDIO_BYTES || !contentType) {
+  if (!size || size > Number(reserva.size) || size > MAX_AUDIO_BYTES || !contentType) {
     await cloudFile.delete({ ignoreNotFound: true });
     return { status: 400, body: { error: 'El archivo recibido no es un audio válido.' } };
   }

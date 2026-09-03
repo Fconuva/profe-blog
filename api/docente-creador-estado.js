@@ -1,14 +1,11 @@
 const admin = require('firebase-admin');
-
-const COURSE_KEY = 'docente_creador';
-const DATE_OPTIONS = {
-  '2026-06-06': 'Sábado 6 de junio',
-  '2026-06-20': 'Sábado 20 de junio'
-};
-const MEET_LINKS = {
-  '2026-06-06': 'https://meet.google.com/tji-qart-iqd',
-  '2026-06-20': 'https://meet.google.com/rzj-ortp-gmx'
-};
+const {
+  COURSE_KEY,
+  COURSE_PRICE,
+  ALL_DATE_OPTIONS,
+  MEET_LINKS,
+  buildReceiptNumber
+} = require('./docente-creador-config');
 
 function initFirebase() {
   if (admin.apps && admin.apps.length) return admin;
@@ -59,20 +56,21 @@ module.exports = async (req, res) => {
   const email = normalizeText(body.email).toLowerCase();
   const fecha = normalizeText(body.fecha);
   const registrationId = normalizeText(body.registrationId);
+  const receiptNumber = normalizeText(body.receiptNumber).toUpperCase();
 
   if (!fecha) {
     return res.status(400).json({ ok: false, error: 'La fecha es obligatoria.' });
   }
 
-  if (!registrationId && !email) {
-    return res.status(400).json({ ok: false, error: 'Correo o registrationId es obligatorio.' });
+  if (!registrationId && (!email || !receiptNumber)) {
+    return res.status(400).json({ ok: false, error: 'Ingresa el correo y el código del comprobante.' });
   }
 
   if (email && !isValidEmail(email)) {
     return res.status(400).json({ ok: false, error: 'Ingresa un correo válido.' });
   }
 
-  if (!DATE_OPTIONS[fecha]) {
+  if (!ALL_DATE_OPTIONS[fecha]) {
     return res.status(400).json({ ok: false, error: 'Selecciona una fecha válida.' });
   }
 
@@ -86,17 +84,22 @@ module.exports = async (req, res) => {
       const byIdSnap = await baseRef.child(registrationId).once('value');
       if (byIdSnap.exists()) {
         const value = byIdSnap.val() || {};
-        if (value.selectedDate === fecha) {
+        const emailMatches = !email || normalizeText(value.email).toLowerCase() === email;
+        const storedReceipt = value.receiptNumber || buildReceiptNumber(registrationId, fecha);
+        const receiptMatches = !receiptNumber || storedReceipt.toUpperCase() === receiptNumber;
+        if (value.selectedDate === fecha && emailMatches && receiptMatches) {
           found = { id: registrationId, ...value };
         }
       }
     }
 
-    if (!found && email) {
+    if (!found && email && receiptNumber) {
       const snap = await baseRef.orderByChild('email').equalTo(email).once('value');
       snap.forEach((child) => {
         const value = child.val() || {};
-        if (!found && value.selectedDate === fecha) {
+        const storedReceipt = value.receiptNumber || buildReceiptNumber(child.key, fecha);
+        const receiptMatches = !receiptNumber || storedReceipt.toUpperCase() === receiptNumber;
+        if (!found && value.selectedDate === fecha && receiptMatches) {
           found = { id: child.key, ...value };
         }
       });
@@ -115,21 +118,26 @@ module.exports = async (req, res) => {
       ok: true,
       found: true,
       id: found.id,
+      receiptNumber: found.receiptNumber || buildReceiptNumber(found.id, fecha),
       nombre: found.nombre || '',
       email: found.email || email || '',
       selectedDate: fecha,
-      selectedDateLabel: found.selectedDateLabel || DATE_OPTIONS[fecha],
+      selectedDateLabel: found.selectedDateLabel || ALL_DATE_OPTIONS[fecha],
       status: found.paymentStatus || found.status || 'pending_checkout',
-      paymentId: found.paymentId || found.mercadoPagoPaymentId || ''
+      paymentId: found.paymentId || found.mercadoPagoPaymentId || '',
+      amount: Number(found.amount || COURSE_PRICE)
     };
 
     if (response.status === 'approved') {
+      const meetLink = MEET_LINKS[fecha] || '';
       return res.status(200).json({
         ...response,
-        canJoin: true,
-        meetLink: MEET_LINKS[fecha],
-        schedule: '10:00 a 13:00 (America/Santiago)',
-        message: 'Inscripción confirmada. Debes entrar a Google Meet con el correo inscrito.'
+        canJoin: Boolean(meetLink),
+        meetLink,
+        schedule: 'Fecha y horario informados al confirmar la cohorte.',
+        message: meetLink
+          ? 'Inscripción confirmada. Entra a la clase con el correo inscrito.'
+          : 'Inscripción confirmada. Recibirás la fecha, el horario y el acceso de la clase en tu correo.'
       });
     }
 

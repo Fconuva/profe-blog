@@ -6,6 +6,8 @@ const path = require('node:path');
 const root = path.resolve(__dirname, '..');
 const dashboard = fs.readFileSync(path.join(root, 'dashboard', 'index.html'), 'utf8');
 const admin = fs.readFileSync(path.join(root, 'admin', 'index.html'), 'utf8');
+const docenteCreador = fs.readFileSync(path.join(root, 'docente-creador', 'index.njk'), 'utf8');
+const courseConfig = require(path.join(root, 'api', 'docente-creador-config.js'));
 const webhook = require(path.join(root, 'api', 'mercadopago', 'webhook.js'))._test;
 const verifySource = fs.readFileSync(path.join(root, 'api', 'mercadopago', 'verify-payment.js'), 'utf8');
 const preferenceSource = fs.readFileSync(path.join(root, 'api', 'mercadopago', 'create_preference.js'), 'utf8');
@@ -37,6 +39,12 @@ test('inactive users are excluded even when the baja only exists in users', () =
   assert.match(admin, /function esClienteInactivo\(c, p\)/);
   assert.match(admin, /\['baja', 'liberado', 'archivado', 'duplicado'\]/);
   assert.match(admin, /if \(esClienteInactivo\(c, _p\)\) return false/);
+});
+
+test('all inline Docente Creador scripts have valid JavaScript syntax', () => {
+  const scripts = Array.from(docenteCreador.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi));
+  assert.ok(scripts.length > 0);
+  scripts.forEach((match) => new Function(match[1]));
 });
 
 test('reconciled cash and no-cobrar states cannot inflate receivables', () => {
@@ -145,6 +153,7 @@ test('portfolio payment endpoints require the authenticated Firebase session', (
 });
 
 test('course and ECEP webhooks require their exact CLP price', () => {
+  assert.equal(courseConfig.COURSE_PRICE, 30000);
   assert.equal(webhook.isExpectedMoney({ transaction_amount: 10000, currency_id: 'CLP' }, 10000), true);
   assert.equal(webhook.isExpectedMoney({ transaction_amount: 9999, currency_id: 'CLP' }, 10000), false);
   assert.equal(webhook.isExpectedMoney({ transaction_amount: 30000, currency_id: 'USD' }, 30000), false);
@@ -217,6 +226,16 @@ test('payment classification distinguishes full payment, instalment and invalid 
     webhook.classifyPortfolioPayment({ transaction_amount: 100000, currency_id: 'CLP' }, { tipo: 'abono' }, 'modulo2').valid,
     false
   );
+});
+
+test('course registration creates a stable user-facing receipt', () => {
+  const receipt = courseConfig.buildReceiptNumber('-Oabc1234XYZ9876', '2026-06-20');
+  assert.equal(receipt, 'IA-2026-4XYZ9876');
+  assert.deepEqual(Object.keys(courseConfig.DATE_OPTIONS), ['proxima-cohorte']);
+  assert.match(docenteCreador, /Usuario del curso:/);
+  assert.match(docenteCreador, /Comprobante de inscripción:/);
+  assert.match(docenteCreador, /id="mi-inscripcion"/);
+  assert.match(docenteCreador, /curso-ia-docentes\.mp4/);
 });
 
 test('an individually agreed price overrides the generic plan in admin and payments', () => {

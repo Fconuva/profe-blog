@@ -6,6 +6,7 @@ module.exports = {
     './cuenta/**/*.html',
     './dashboard/**/*.html',
     './admin/**/*.html',
+    './docente-creador/**/*.{html,njk,js}',
   ],
   theme: {
     extend: {

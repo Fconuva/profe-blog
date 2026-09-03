@@ -2,6 +2,7 @@
 // Expects MERCADOPAGO_ACCESS_TOKEN, MERCADOPAGO_WEBHOOK_SECRET and FIREBASE_SERVICE_ACCOUNT (base64 JSON) in env
 
 const { MercadoPagoConfig, Payment } = require('mercadopago');
+const { COURSE_PRICE } = require('../docente-creador-config');
 const admin = require('firebase-admin');
 const crypto = require('crypto');
 
@@ -319,7 +320,7 @@ module.exports = async (req, res) => {
       if (!payerPlan) payerPlan = 'completo';
       const portfolioClassification = isCourseRegistration ? null : classifyPortfolioPayment(payment, metadata, payerPlan, currentPortfolio);
 
-      if (isCourseRegistration && !isExpectedMoney(payment, 30000)) {
+      if (isCourseRegistration && !isExpectedMoney(payment, COURSE_PRICE)) {
         console.error('Course payment amount or currency mismatch', { paymentId: payment.id });
         return res.status(200).send('course_invalid_amount');
       }

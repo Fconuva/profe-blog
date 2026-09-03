@@ -1,15 +1,14 @@
 const admin = require('firebase-admin');
 const { MercadoPagoConfig, Preference } = require('mercadopago');
-
-const COURSE_KEY = 'docente_creador';
-const COURSE_SLUG = 'docente-creador';
-const COURSE_PRICE = 30000;
-const MAX_CAPACITY = 150;
-const HOLD_MINUTES = 30;
-const DATE_OPTIONS = {
-  '2026-06-06': 'Sábado 6 de junio',
-  '2026-06-20': 'Sábado 20 de junio'
-};
+const {
+  COURSE_KEY,
+  COURSE_SLUG,
+  COURSE_PRICE,
+  MAX_CAPACITY,
+  HOLD_MINUTES,
+  DATE_OPTIONS,
+  buildReceiptNumber
+} = require('./docente-creador-config');
 
 function initFirebase() {
   if (admin.apps && admin.apps.length) return admin;
@@ -169,6 +168,8 @@ module.exports = async (req, res) => {
       return res.status(200).json({
         ok: true,
         alreadyRegistered: true,
+        id: existing.id,
+        receiptNumber: existing.receiptNumber || buildReceiptNumber(existing.id, fecha),
         checkoutUrl: existing.checkoutUrl,
         selectedDateLabel: DATE_OPTIONS[fecha],
         remainingSeats: Math.max(0, MAX_CAPACITY - reservedForDate)
@@ -177,13 +178,16 @@ module.exports = async (req, res) => {
 
     const reservedCount = await countReservedForDate(baseRef, fecha);
     if (reservedCount >= MAX_CAPACITY) {
-      return res.status(409).json({ ok: false, error: 'Esta sesión ya alcanzó el máximo de 150 cupos.' });
+      return res.status(409).json({ ok: false, error: 'Esta cohorte ya completó sus cupos.' });
     }
 
     const host = getHost(req);
     const notificationUrl = `${host}/api/mercadopago/webhook`;
     const registrationRef = existing ? baseRef.child(existing.id) : baseRef.push();
     const registrationId = registrationRef.key;
+    const receiptNumber = existing && existing.receiptNumber
+      ? existing.receiptNumber
+      : buildReceiptNumber(registrationId, fecha);
     const holdUntilMs = nowMs + HOLD_MINUTES * 60 * 1000;
     const client = new MercadoPagoConfig({
       accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
@@ -193,7 +197,7 @@ module.exports = async (req, res) => {
     const preferencePayload = {
       items: [
         {
-          title: `Docente Creador — ${DATE_OPTIONS[fecha]}`,
+          title: `Curso IA y Agentes para la Educación - ${DATE_OPTIONS[fecha]}`,
           quantity: 1,
           currency_id: 'CLP',
           unit_price: COURSE_PRICE
@@ -247,6 +251,7 @@ module.exports = async (req, res) => {
       tipoEstablecimiento,
       aniosDocencia,
       consent,
+      receiptNumber,
       selectedDate: fecha,
       selectedDateLabel: DATE_OPTIONS[fecha],
       status: 'pending_checkout',
@@ -269,6 +274,7 @@ module.exports = async (req, res) => {
       ok: true,
       alreadyRegistered: false,
       id: registrationId,
+      receiptNumber,
       checkoutUrl: result.init_point,
       selectedDateLabel: DATE_OPTIONS[fecha],
       remainingSeats: Math.max(0, MAX_CAPACITY - (reservedCount + 1))

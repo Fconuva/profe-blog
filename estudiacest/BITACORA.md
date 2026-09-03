@@ -8,6 +8,20 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-03, revisión de consultas y reaperturas individuales SIMCE
+
+- Se contrastaron dos consultas recibidas por correo con las entregas, las
+  calificaciones publicadas y los controles de integridad registrados en
+  Firebase. Se respondió en los hilos originales explicando la escala de
+  laboriosidad y diferenciando coincidencia textual de rapidez de respuesta.
+- Se confirmó una actividad antigua sin entrega y una actividad vigente en
+  progreso. Ambas quedaron con acceso individual en Firebase para completarse
+  hasta el domingo 6 de septiembre; no se modificaron respuestas ni notas.
+- La lectura posterior confirmó los dos permisos en `true`. El panel SIMCE y
+  las dos guías involucradas respondieron HTTP 200 en producción.
+
+---
+
 ## 2026-09-03, rúbrica institucional descargable de las interrogaciones
 
 - Las interrogaciones de `El lugar sin límites` y `Mocha Dick` muestran la

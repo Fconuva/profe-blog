@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, corrección y evidencia de las interrogaciones orales NM4
+
+- Se corrigió la conversión de logro a nota para que la escala comience en
+  `1,0` y llegue a `7,0`, conservando los avances parciales de cada respuesta.
+- La interrogación con audio permite cambiar exactamente una pregunta antes de
+  grabarla. El servidor rechaza un segundo cambio, una pregunta repetida y el
+  reemplazo después de iniciar el audio de esa posición.
+- Ocho entregas completas fueron revisadas con la calibración `60/100` y leídas
+  de vuelta desde producción. Cada calificación conserva siete puntajes, siete
+  síntesis fieles de las respuestas y el intento de audio correspondiente.
+- Se eliminó la corrupción de tildes y eñes en las retroalimentaciones. El
+  detalle y el PDF muestran `Respuesta registrada` cuando existe una síntesis
+  revisada; no se presenta como transcripción literal si alguna palabra del audio
+  es dudosa.
+- Se verificó en producción un PDF institucional de una página A4, sin
+  caracteres sustituidos, con siete filas, nota, evidencias y retroalimentación
+  sin cortes. El inventario final no mostró nuevas entregas completas pendientes.
+- Commits funcionales: `e728eee0` y `e8de02c4`. Deploy productivo vigente:
+  `dpl_49BUh2E6TgBUm1rPbGADE8Ai1dCP`.
+
 ## 2026-09-07, preparación de revisión oral Mocha Dick en 4°A
 
 - Se verificó en producción, sin modificar registros, que la interrogación de

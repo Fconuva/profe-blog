@@ -840,11 +840,26 @@
 
   function continueRecording(studentId) {
     var student = studentById(studentId);
-    if (!student) return;
-    $('curso').value = student.curso;
-    $('curso').dispatchEvent(new Event('change'));
-    $('alumno').value = studentId;
-    startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
+    var recording = state.grabaciones[studentId];
+    if (!student || !recording) {
+      setNotice('avisoListaAudios', 'No fue posible encontrar esta grabación. Se actualizará la lista.', 'err');
+      return load();
+    }
+    if (recording.estado !== 'en_curso') {
+      setNotice('avisoListaAudios', 'Esta grabación ya no está incompleta. Ábrela desde “Ver detalle”.', 'err');
+      return load();
+    }
+    flow = {
+      student: student,
+      data: recording,
+      position: firstMissing(recording)
+    };
+    setSelectionLocked(true);
+    $('cardPreg').classList.add('oculto');
+    $('cardRevisionAudio').classList.add('oculto');
+    $('cardAudio').classList.remove('oculto');
+    renderFlow();
+    $('cardAudio').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   async function deleteRecording(studentId) {

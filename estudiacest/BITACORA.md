@@ -8,6 +8,21 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, corrección del flujo Continuar grabación
+
+- Se corrigió `Continuar grabación` en el panel de interrogaciones orales: ahora
+  recupera directamente el intento incompleto y avanza a la primera respuesta
+  pendiente, sin intentar seleccionar al estudiante en una nómina que lo excluye
+  precisamente por tener una grabación iniciada.
+- Se corrigió una condición de carrera al cargar el panel NM4. La actualización
+  compartida ya no intenta repintar estudiantes antes de que la nómina principal
+  haya recibido sus cursos; con ello la tabla deja de quedar detenida en
+  `Cargando grabaciones…` por una respuesta de red que llega en distinto orden.
+- La auditoría de interrogaciones incorpora regresiones para ambos contratos.
+  `npm run audit:interrogaciones` y `npm run build` aprobaron antes del despliegue.
+
+---
+
 ## 2026-09-07, Unidad 3 Clases 9 y 10: corrección del ensayo, crónica y carta, imágenes IA e integridad
 
 - **Clase 9** (`sesion-u3-9`, 9-sep, `guia-u3-s9-correccion-ensayo.html`): corrige las 36 preguntas

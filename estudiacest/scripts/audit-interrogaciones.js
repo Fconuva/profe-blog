@@ -101,7 +101,8 @@ function auditPanel(config) {
       'id="filtroGrabacionesCurso"',
       '!sesion.notas[a.id] && !sesion.grabaciones[a.id]',
       'Sin estudiantes pendientes en este curso',
-      'window.actualizarNominaInterrogacion'
+      'window.actualizarNominaInterrogacion',
+      'sesion.cursos && Object.keys(sesion.cursos).length'
     ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
   }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
@@ -212,6 +213,15 @@ for (const contract of [
   'signInWithCustomToken',
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
+assert(
+  audioController.includes('var recording = state.grabaciones[studentId]')
+    && audioController.includes('position: firstMissing(recording)'),
+  'Controlador de audio: Continuar grabación no recupera directamente el intento existente.'
+);
+assert(
+  !/function continueRecording\(studentId\)[\s\S]{0,500}\$\('alumno'\)\.value = studentId/.test(audioController),
+  'Controlador de audio: Continuar grabación aún depende de la nómina que excluye registros iniciados.'
+);
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
 assert(audioController.includes('flow.data.cambiada != null'), 'Controlador de audio: no bloquea el segundo cambio de pregunta.');
 assert(audioController.includes('gradeFromScore(total)'), 'Controlador de audio: no usa la conversión de logro 0-7 a nota 1-7.');

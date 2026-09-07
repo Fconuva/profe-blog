@@ -713,7 +713,7 @@ async function handleReviewAgentFileUrl(req, res) {
   if (!student) return res.status(404).json({ error: 'Estudiante no encontrado.' });
   const snapshot = await admin.database().ref(`${STUDENTS_PATH}/${student.rut}/files/${fileId}`).once('value');
   const file = snapshot.val();
-  if (!file) return res.status(404).json({ error: 'Archivo no encontrado.' });
+  if (!file || !String(file.storagePath || '').startsWith(`${STORAGE_PREFIX}/${student.rut}/`)) return res.status(404).json({ error: 'Archivo no encontrado.' });
   return res.status(200).json({ ok: true, url: await signedUrl(file) });
 }
 
@@ -724,7 +724,7 @@ async function handleAdminFileUrl(req, res) {
   if (!student) return res.status(404).json({ error: 'Estudiante no encontrado.' });
   const snapshot = await admin.database().ref(`${STUDENTS_PATH}/${student.rut}/files/${fileId}`).once('value');
   const file = snapshot.val();
-  if (!file) return res.status(404).json({ error: 'Archivo no encontrado.' });
+  if (!file || !String(file.storagePath || '').startsWith(`${STORAGE_PREFIX}/${student.rut}/`)) return res.status(404).json({ error: 'Archivo no encontrado.' });
   return res.status(200).json({ ok: true, url: await signedUrl(file) });
 }
 

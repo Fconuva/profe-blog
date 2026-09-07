@@ -22,6 +22,11 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - Las tablas de notas y grabaciones incorporan filtros independientes por
   curso. El filtro no modifica datos y conserva el acceso a todos los registros
   cuando se selecciona "Todos los cursos".
+- `npm run audit:interrogaciones` y `npm run build` aprobaron. La verificación
+  productiva confirmó los dos filtros, la exclusión de la entrega de referencia
+  de la nómina disponible, la nota, los siete audios y las siete evidencias.
+  Commit funcional: `13f248d7`. Deploy productivo:
+  `dpl_4TnBioQUFA47n3i2ynwPeVUxV9md`.
 
 ---
 

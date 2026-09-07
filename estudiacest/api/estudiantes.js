@@ -498,6 +498,45 @@ async function handleU3S8(req, res, action) {
     }
 }
 
+async function handleU3S9Classstats(req, res) {
+    try {
+        if (req.method !== 'GET') return res.status(405).json({ error:'Método no permitido.' });
+        const { student } = await verifyU3S8Student(req);
+        const curso = student.curso;
+        const responsesSnap = await db.ref(`${BASE}/respuestas/${U3S8_SESSION}`).once('value');
+        const responses = responsesSnap.val() || {};
+        const perQuestion = {};
+        Object.keys(U3S8_ANSWER_KEY).forEach((id) => { perQuestion[id] = { total:0, aciertos:0 }; });
+        let estudiantesConsiderados = 0;
+        Object.values(responses).forEach((attempt) => {
+            if (!attempt || attempt.curso !== curso) return;
+            const answers = attempt.answers || {};
+            if (!Object.keys(answers).length) return;
+            estudiantesConsiderados += 1;
+            Object.keys(U3S8_ANSWER_KEY).forEach((id) => {
+                const dado = answers[id];
+                if (!dado) return;
+                perQuestion[id].total += 1;
+                if (dado === U3S8_ANSWER_KEY[id]) perQuestion[id].aciertos += 1;
+            });
+        });
+        const porPregunta = {};
+        Object.entries(perQuestion).forEach(([id, q]) => {
+            porPregunta[id] = {
+                total:q.total,
+                aciertos:q.aciertos,
+                porcentaje:q.total ? Math.round((q.aciertos / q.total) * 1000) / 10 : null
+            };
+        });
+        return res.status(200).json({ ok:true, curso, estudiantesConsiderados, porPregunta });
+    } catch (error) {
+        const status = Number(error.status || (error.code && String(error.code).startsWith('auth/') ? 401 : 500));
+        return res.status(status).json({
+            error:status === 500 ? 'No fue posible calcular los resultados del curso.' : error.message
+        });
+    }
+}
+
 function resolveAllowedOrigin(req) {
     const origin = (req.headers.origin || '').trim();
     const explicit = (process.env.ALLOWED_ORIGINS || 'https://estudiacest.com,https://www.estudiacest.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173')
@@ -699,6 +738,7 @@ module.exports = async (req, res) => {
 
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
+        if (action === 'simce-u3s9-classstats') return await handleU3S9Classstats(req, res);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

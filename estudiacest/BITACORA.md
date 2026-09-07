@@ -8,6 +8,49 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, Unidad 3 Clases 9 y 10: corrección del ensayo, crónica y carta, imágenes IA e integridad
+
+- **Clase 9** (`sesion-u3-9`, 9-sep, `guia-u3-s9-correccion-ensayo.html`): corrige las 36 preguntas
+  del ensayo de la Clase 8, con % real de acierto por pregunta calculado en el servidor
+  (`api/estudiantes.js`, acción `simce-u3s9-classstats`, agregado por curso, sin exponer
+  identidad). Es **solo informativa**: no tiene botón de entrega ni está en
+  `class-submission-contract.json`. Al final trae una sección de práctica dirigida (6
+  reactivos nuevos, 2 por habilidad) que se abre por defecto en la habilidad con menor %
+  del propio curso. El orden correcto es: revisar las 36 respuestas primero, practicar
+  después — no al revés.
+- **Clase 10** (`sesion-u3-10`, 23-sep, `guia-u3-s10-cronica-carta.html`): clase de enseñanza
+  (no ensayo) sobre crónica y carta, con dos textos originales sobre el mismo hecho, 14
+  reactivos, un desarrollo con respuesta modelo, y una tarea de producción nueva —**escribir
+  una noticia propia** sobre un hecho real del curso, sin opinión— que se guarda en
+  `resultados/sesion-u3-10/<uid>.noticia`. Guarda directo a Firebase (patrón de la Clase 6:
+  clave visible, corrección al responder cada bloque), sí está en el contrato de entrega
+  (`storage: firebase-client`).
+- **Reglas de construcción de reactivos**, aplicadas por primera vez como chequeo automático
+  (`scripts/audit-simce-u3s9.js`, `scripts/audit-simce-u3s10.js`): 4 alternativas sin
+  duplicados, cada distractor con una falla técnica explícita y etiquetada, clave resuelta
+  por cita textual, y clave nunca notoriamente más larga que los distractores (conteo real
+  de caracteres). La auditoría encontró y corrigió 6 reactivos de la Clase 10 donde la clave
+  era 18 a 48 caracteres más larga que el distractor más largo.
+- **7 ilustraciones generadas con Nano Banana** (Gemini, `gen_image.py`), paleta navy/dorado
+  del sitio, sin rostros identificables: hero e infografía de habilidades en la Clase 9;
+  hero de la crónica, ilustración de la carta, infografía comparativa crónica-vs-carta e
+  ícono de la caja ATENCIÓN en la Clase 10. Registradas en el manifiesto.
+- **Integridad de la Clase 10**: `work-telemetry.js` ya registra tiempo activo, copiar/pegar
+  y cambios de foco por estudiante (no hacía falta agregarlo). Se sumó `startedAt`/`elapsedMs`
+  propios en el payload de entrega, y un script nuevo de revisión manual,
+  `scripts/audit-simce-u3s10-integridad.js` (`npm run review:simce-u3s10-integridad`), que
+  cruza tiempo de entrega vs. puntaje, uso de copiar/pegar, y similitud de 8-gramas entre los
+  textos libres (`desarrollo`, `noticia`) de estudiantes del mismo curso. Es un barrido para
+  revisar caso por caso, no un veredicto automático; hay que correrlo después de que cierren
+  las entregas de la Clase 10 (23-sep) con las credenciales reales de Firebase.
+- Deploys: `dpl_ARSFGLvW1tQmLaS6Au9G92UNCi7r`, `dpl_GmcNg9gsBCoi1XaQNZ9johxHQo1a`,
+  `dpl_EGc1rAzbep1pMK5rfSMYx9WibGcW`, `dpl_BvTYgM5ND9jtfJRbvAu8boS2Kxhr` y el pendiente de
+  este cierre. Commits: `3513c062`, `c0d2cd4d`, `57928b17`, `b61c08f3`, `16bf1d47`.
+- Pendiente: correr `npm run review:simce-u3s10-integridad` después del 23-sep y revisar los
+  casos que arroje antes de tomar cualquier acción sobre un estudiante.
+
+---
+
 ## 2026-09-07, nómina pendiente y filtros en la interrogación de Mocha Dick
 
 - Se aplicó y leyó de vuelta la calificación máxima de la entrega oral que el

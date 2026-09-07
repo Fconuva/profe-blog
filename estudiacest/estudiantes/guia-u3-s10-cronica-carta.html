@@ -192,7 +192,22 @@
   </section>
 
   <section class="card">
-    <span class="step-tag">8 · Tu diagnóstico</span>
+    <span class="step-tag">8 · Producción</span>
+    <h2>Escribe tu propia noticia</h2>
+    <p class="muted">Ahora tú escribes el género opuesto: una <strong>noticia</strong> no deja ver la opinión de quien la redacta, a diferencia de la crónica y la carta que acabas de leer. Elige un hecho <strong>real y reciente</strong> de tu curso o colegio — algo que hayas visto u oído, no inventado — y cuéntalo sin opinar.</p>
+    <ol class="pasos-dev">
+      <li><b>Titular:</b> una línea que resuma el hecho, sin opinión ni exclamaciones.</li>
+      <li><b>Lead</b> (primer párrafo): responde qué, quién, cuándo y dónde.</li>
+      <li><b>Cuerpo:</b> más detalles y, si puedes, una frase textual de alguien involucrado.</li>
+      <li><b>Cierre:</b> un dato final o qué se espera que pase después.</li>
+    </ol>
+    <div class="dev-rubrica"><b>Lo que NO debe tener:</b> adjetivos valorativos («increíble», «pésimo»), juicios personales ni comparaciones con guiones como las que viste en la crónica de hoy. Si aparece tu opinión, no es una noticia.</div>
+    <textarea id="noticia" rows="9" placeholder="Titular: ...&#10;&#10;(Lead) El [qué] ocurrió el [cuándo] en [dónde], cuando [quién]..."></textarea>
+    <div class="save-status" id="noticiaMeta" style="margin-top:6px">0 palabras</div>
+  </section>
+
+  <section class="card">
+    <span class="step-tag">9 · Tu diagnóstico</span>
     <h2>¿Cómo te fue por habilidad?</h2>
     <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparece al responder las 14 preguntas:</p>
     <div class="diag">
@@ -366,7 +381,7 @@
 
   const HABNAME={L:'Localizar',I:'Interpretar',R:'Reflexionar'};
   const HABCLS={L:'sk-l',I:'sk-i',R:'sk-r'};
-  let answers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null;
+  let answers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null, startedAt=null;
 
   function setStatus(t){document.getElementById('saveStatus').textContent=t;}
   function showToast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
@@ -447,9 +462,9 @@
     return clean;
   }
   function payload(completed){
-    return {answers:cleanAnswers(),desarrollo:(document.getElementById('desarrollo').value||'').trim(),
+    return {answers:cleanAnswers(),desarrollo:(document.getElementById('desarrollo').value||'').trim(),noticia:(document.getElementById('noticia').value||'').trim(),
       submitted:!!completed,completada:!!completed,nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
-      last_save:Date.now()};
+      startedAt:startedAt||Date.now(),last_save:Date.now()};
   }
   function localKey(){return currentUID?('draft_'+SESSION_ID+'_'+currentUID):null;}
   function localBackup(){
@@ -511,11 +526,14 @@
       const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
       const data={...payload(true),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:g.ok,total:QUESTIONS.length};
       await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data);
+      const elapsedMs=Math.max(0,now-(startedAt||now));
       await db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
         score:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
         por_habilidad:{L:s.L,I:s.I,R:s.R},
         desarrollo:(document.getElementById('desarrollo').value||'').trim(),
+        noticia:(document.getElementById('noticia').value||'').trim(),
         nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
+        startedAt:startedAt||now,elapsedMs:elapsedMs,
         submittedAt:now,completadaAt:now});
       const confirmSnap=await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).child('completada').once('value');
       if(confirmSnap.val()!==true)throw new Error('La plataforma aún no confirma la entrega. Vuelve a intentarlo.');
@@ -543,15 +561,24 @@
       if(qid&&qid!=='undefined'&&l!==undefined&&QUESTIONS.some(q=>q.id===qid)&&!answers[qid])pick(qid,l);
     });}
     if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
+    if(typeof saved.noticia==='string'){document.getElementById('noticia').value=saved.noticia;updateNoticiaMeta();}
+    if(saved.startedAt)startedAt=saved.startedAt;
     if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
       document.getElementById('submit').disabled=true;
       document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
       setStatus('✅ Clase ya entregada.');}
   }
 
+  function updateNoticiaMeta(){
+    const value=(document.getElementById('noticia').value||'').trim();
+    const words=value?value.split(/\s+/).filter(Boolean).length:0;
+    document.getElementById('noticiaMeta').textContent=words+' palabras';
+  }
+
   render();
   document.getElementById('submit').addEventListener('click',submitGuide);
   document.getElementById('desarrollo').addEventListener('input',scheduleSave);
+  document.getElementById('noticia').addEventListener('input',()=>{updateNoticiaMeta();scheduleSave();});
   document.getElementById('btnModelo').addEventListener('click',()=>{
     const txt=(document.getElementById('desarrollo').value||'').trim();
     if(txt.split(/\s+/).length<15){showToast('Primero escribe tu respuesta (al menos unas 15 palabras).');return;}
@@ -574,6 +601,7 @@
         try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}
         const useLocal=local && !(remote&&remote.completada) && (!remote || (local.last_save||0)>(remote.last_save||0));
         hydrate(useLocal?local:remote);
+        if(!startedAt){startedAt=Date.now();scheduleSave();}
         if(useLocal){showToast('Recuperamos tu avance guardado en este dispositivo.');scheduleSave();}
         if(!isSubmitted)setStatus('Tus respuestas se guardan solas. Puedes cambiarlas cuando quieras. 💡');
       }catch(e){console.error(e);showToast('No se pudo cargar la clase.');}

@@ -73,6 +73,9 @@ expect(cartaBody.length >= 900, 'La carta quedó demasiado breve.');
 
 expect(page.includes('<div class="atencion">') && page.includes('ATENCIÓN'), 'Falta la caja de modelado ATENCIÓN.');
 expect(page.includes('id="desarrollo"') && page.includes('id="modeloBox"'), 'Falta la pregunta de desarrollo con su respuesta modelo.');
+expect(page.includes('id="noticia"') && page.includes('Escribe tu propia noticia'), 'Falta la tarea de producción de escribir una noticia.');
+expect(page.includes('noticia:(document.getElementById(\'noticia\').value') || page.includes("noticia:(document.getElementById('noticia').value"), 'La noticia escrita por el estudiante no se está guardando.');
+expect(page.includes('startedAt') && page.includes('elapsedMs'), 'Falta capturar el tiempo que demora el estudiante (startedAt/elapsedMs) para poder detectar entregas sospechosamente rápidas.');
 expect(page.includes('SESSION_ID=\'sesion-u3-10\''), 'La página no usa la sesión canónica sesion-u3-10.');
 expect(page.includes('work-telemetry.js" data-session="sesion-u3-10"'), 'Falta telemetría con la sesión correcta.');
 expect(page.includes('id="submit"') && page.includes('type="button"'), 'El botón de entrega no está bien declarado.');

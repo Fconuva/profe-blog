@@ -8,6 +8,17 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, preguntas autosuficientes en el sorteo de Mocha Dick
+
+- Se reescribieron trece preguntas del banco que dependían de un referente
+  implícito o de una pregunta anterior. Cada reactivo sorteado ahora nombra la
+  obra, el personaje, el barco, el periodo o la escena necesarios para
+  comprenderlo de manera independiente.
+- Se conservaron la numeración, la habilidad evaluada y las respuestas
+  esperadas; los registros de interrogaciones ya realizadas no cambian.
+- La auditoría exige referentes explícitos en los casos de Caleb, el Dauphin,
+  Nathan Coffin, el cambio tecnológico de 1870 y el desenlace de Macys.
+
 ## 2026-09-07, pauta visible en la interrogación manual de Mocha Dick
 
 - El modo `Interrogar manual` muestra, debajo de cada pregunta sorteada, una

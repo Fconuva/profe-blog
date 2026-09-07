@@ -85,6 +85,16 @@ function auditPanel(config) {
     assert(panelHtml.includes('class="respuesta-esperada"'), `${config.label}: la pauta no se muestra en la interrogación manual.`);
     assert(panelHtml.includes("RESPUESTAS[idx]"), `${config.label}: la pauta no sigue la pregunta sorteada.`);
     assert(!/INTERROGACION_AUDIO_CONFIG\s*=\s*\{[^}]*respuestas/i.test(panelHtml), `${config.label}: la pauta quedó expuesta al modo con audio.`);
+    for (const standalone of [
+      '¿Qué edad tenía Caleb Hienam cuando se embarcó por primera vez',
+      '¿Cómo se llamaba el barco ballenero en el que se embarcó Caleb Hienam',
+      'que encontró la tripulación del Dauphin',
+      '¿Qué recompensa ofrece Nathan Coffin',
+      'a comienzos del siglo XIX',
+      'cuando Leftraru lo enfrenta sobre Mocha'
+    ]) {
+      assert(panel.some((question) => question.includes(standalone)), `${config.label}: falta el referente explícito en ${standalone}.`);
+    }
   }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);

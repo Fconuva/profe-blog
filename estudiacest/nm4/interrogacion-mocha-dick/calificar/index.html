@@ -134,10 +134,15 @@
   .dialog-body p{color:var(--muted);margin:0 0 18px;}
 
   .oculto{display:none !important;}
+  .table-tools{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:14px 0 12px;}
+  .table-tools .campo{width:min(100%,280px);margin:0;}
+  .availability{margin-top:9px;color:var(--muted);font-size:.9rem;font-weight:700;}
   @media (max-width:640px){
     .fila{grid-template-columns:1fr;}
     .card{padding:16px 15px;}
     .marcador{gap:11px;}
+    .table-tools{align-items:stretch;flex-direction:column;}
+    .table-tools .campo{width:100%;}
   }
 </style>
 </head>
@@ -163,11 +168,12 @@
 
     <div class="card">
       <h2>1 · Elige al estudiante</h2>
-      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco.</p>
+      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco. Quienes ya fueron interrogados se gestionan en los registros inferiores.</p>
       <div class="fila">
-        <div class="campo"><label for="curso">Curso</label><select id="curso"></select></div>
+        <div class="campo"><label for="curso">Filtrar por curso</label><select id="curso"></select></div>
         <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
       </div>
+      <div class="availability" id="estadoNomina" aria-live="polite"></div>
       <div class="btns">
         <button class="btn solid" id="btnGrabar">Interrogar con audio</button>
         <button class="btn" id="btnSortear">Interrogar manual</button>
@@ -230,6 +236,9 @@
     <div class="card">
       <h2>3 · Notas guardadas</h2>
       <p class="sub" id="subNotas">Aún no hay interrogaciones registradas.</p>
+      <div class="table-tools">
+        <div class="campo"><label for="filtroNotasCurso">Filtrar notas por curso</label><select id="filtroNotasCurso"><option value="">Todos los cursos</option></select></div>
+      </div>
       <div style="overflow-x:auto;">
         <table>
           <thead><tr><th style="width:9%">Curso</th><th style="width:6%">N°</th><th>Estudiante</th><th style="width:9%">Nota</th><th style="width:15%">Fecha</th><th style="width:9%"></th></tr></thead>
@@ -259,6 +268,9 @@
     <div class="card">
       <h2>4 · Grabaciones</h2>
       <p class="sub" id="subGrabaciones">Las grabaciones entregadas aparecerán aquí.</p>
+      <div class="table-tools">
+        <div class="campo"><label for="filtroGrabacionesCurso">Filtrar grabaciones por curso</label><select id="filtroGrabacionesCurso"><option value="">Todos los cursos</option></select></div>
+      </div>
       <div class="aviso" id="avisoListaAudios"></div>
       <div style="overflow-x:auto;"><table><thead><tr><th>Curso</th><th>N°</th><th>Estudiante</th><th>Audios</th><th>Estado</th><th>Nota</th><th>Acciones</th></tr></thead><tbody id="tablaGrabaciones"><tr><td colspan="7" class="vacio">Cargando grabaciones…</td></tr></tbody></table></div>
     </div>
@@ -410,11 +422,11 @@
     sesion = { docente: docenteDesdeUrl() };
     try {
       var r = await llamar({ accion: 'nomina' });
-      sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {};
+      sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {}; sesion.grabaciones = r.grabaciones || {};
       $('quien').textContent = r.docente;
       $('vLogin').classList.add('oculto');
       $('vPanel').classList.remove('oculto');
-      pintarCursos(); pintarNotas();
+      pintarCursos(); prepararFiltroNotas(); pintarNotas();
     } catch (e) {
       sesion = null;
       $('estadoAcceso').textContent = 'No fue posible abrir el panel.';
@@ -437,13 +449,46 @@
   function pintarAlumnos() {
     var c = $('curso').value, s = $('alumno');
     s.innerHTML = '';
-    (sesion.cursos[c] || []).forEach(function (a) {
+    var total = (sesion.cursos[c] || []).length;
+    var disponibles = (sesion.cursos[c] || []).filter(function (a) {
+      return !sesion.notas[a.id] && !sesion.grabaciones[a.id];
+    });
+    disponibles.forEach(function (a) {
       var o = document.createElement('option');
       o.value = a.id;
-      o.textContent = a.n + ' · ' + a.nombre + (sesion.notas[a.id] ? '  ✓ ' + sesion.notas[a.id].nota : '');
+      o.textContent = a.n + ' · ' + a.nombre;
       s.appendChild(o);
     });
+    if (!disponibles.length) {
+      var empty = document.createElement('option');
+      empty.value = ''; empty.textContent = 'Sin estudiantes pendientes en este curso';
+      s.appendChild(empty);
+    }
+    s.disabled = !disponibles.length;
+    $('btnGrabar').disabled = !disponibles.length;
+    $('btnSortear').disabled = !disponibles.length;
+    $('estadoNomina').textContent = disponibles.length + ' estudiante(s) disponible(s) · ' +
+      (total - disponibles.length) + ' ya registrado(s).';
   }
+
+  function prepararFiltroNotas() {
+    var select = $('filtroNotasCurso'), actual = select.value;
+    select.innerHTML = '<option value="">Todos los cursos</option>';
+    Object.keys(sesion.cursos).forEach(function (curso) {
+      var option = document.createElement('option');
+      option.value = curso; option.textContent = CURSO_LBL[curso] || curso;
+      select.appendChild(option);
+    });
+    if ([].some.call(select.options, function (option) { return option.value === actual; })) select.value = actual;
+  }
+  $('filtroNotasCurso').addEventListener('change', pintarNotas);
+
+  window.actualizarNominaInterrogacion = function (grabaciones, notas) {
+    if (!sesion) return;
+    if (grabaciones) sesion.grabaciones = grabaciones;
+    if (notas) sesion.notas = notas;
+    pintarAlumnos();
+  };
 
   // ---------- sorteo ----------
   function indiceAleatorio(max) {
@@ -571,17 +616,19 @@
 
   // ---------- notas guardadas ----------
   function pintarNotas() {
-    var t = $('tablaNotas'), ids = Object.keys(sesion.notas);
+    var t = $('tablaNotas'), todos = Object.keys(sesion.notas);
+    var filtro = $('filtroNotasCurso').value;
+    var ids = todos.filter(function (id) { return !filtro || String(id).split('_')[0] === filtro; });
     t.innerHTML = '';
     if (!ids.length) {
-      t.innerHTML = '<tr><td colspan="6" class="vacio">Sin registros todavía.</td></tr>';
-      $('subNotas').textContent = 'Aún no hay interrogaciones registradas.';
+      t.innerHTML = '<tr><td colspan="6" class="vacio">Sin notas para el filtro seleccionado.</td></tr>';
+      $('subNotas').textContent = todos.length ? 'No hay notas guardadas en este curso.' : 'Aún no hay interrogaciones registradas.';
       return;
     }
     var filas = ids.map(function (id) { return Object.assign({ id: id }, sesion.notas[id]); });
     filas.sort(function (a, b) { return (a.curso + a.id).localeCompare(b.curso + b.id); });
     var suma = filas.reduce(function (s, f) { return s + (f.nota || 0); }, 0);
-    $('subNotas').textContent = filas.length + ' interrogación(es) registrada(s) · promedio ' +
+    $('subNotas').textContent = filas.length + (filtro ? ' nota(s) en el curso' : ' interrogación(es) registrada(s)') + ' · promedio ' +
       (suma / filas.length).toFixed(1).replace('.', ',');
 
     filas.forEach(function (f) {

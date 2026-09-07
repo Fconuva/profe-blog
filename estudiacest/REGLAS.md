@@ -114,6 +114,10 @@ Antes de editar y nuevamente antes de publicar:
   exactamente una antes de comenzar a grabarla; el servidor registra ese uso y
   rechaza un segundo cambio, una pregunta repetida o el cambio de una respuesta
   ya iniciada.
+- En el panel docente, la nómina para iniciar una interrogación muestra solo a
+  estudiantes sin grabación ni calificación. Quienes ya comenzaron, entregaron
+  o fueron evaluados se gestionan desde las tablas de registros, con filtro por
+  curso; al eliminar deliberadamente su registro vuelven a quedar disponibles.
 - La suma de logro de las siete respuestas va de `0,0` a `7,0`, pero no es la
   nota. La calificación se calcula con `1 + (logro / 7) × 6`, redondeada a un
   decimal: cero puntos equivale a `1,0` y siete puntos a `7,0`.

@@ -95,6 +95,14 @@ function auditPanel(config) {
     ]) {
       assert(panel.some((question) => question.includes(standalone)), `${config.label}: falta el referente explícito en ${standalone}.`);
     }
+    for (const rosterContract of [
+      'id="estadoNomina"',
+      'id="filtroNotasCurso"',
+      'id="filtroGrabacionesCurso"',
+      '!sesion.notas[a.id] && !sesion.grabaciones[a.id]',
+      'Sin estudiantes pendientes en este curso',
+      'window.actualizarNominaInterrogacion'
+    ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
   }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
@@ -197,6 +205,9 @@ for (const contract of [
   'Ver detalle',
   'Volver a grabar esta respuesta',
   'btnGuardarNotaAudio',
+  'filtroGrabacionesCurso',
+  'prepareRecordingCourseFilter',
+  'window.actualizarNominaInterrogacion',
   'Guardar y siguiente',
   'signInWithCustomToken',
   'customMetadata'

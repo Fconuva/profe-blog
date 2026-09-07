@@ -607,6 +607,7 @@
       flow.data.estado = result.estado;
       flow.data.fechaEntrega = result.fechaEntrega;
       state.grabaciones[flow.student.id] = flow.data;
+      if (window.actualizarNominaInterrogacion) window.actualizarNominaInterrogacion(state.grabaciones, state.notas);
       $('audioProgresoBarra').style.width = '100%';
       renderRecordings();
       $('cardAudio').classList.add('oculto');
@@ -646,6 +647,7 @@
       await api({ accion: 'borrar-grabacion', alumnoId: flow.student.id });
       delete state.grabaciones[flow.student.id];
       delete state.notas[flow.student.id];
+      if (window.actualizarNominaInterrogacion) window.actualizarNominaInterrogacion(state.grabaciones, state.notas);
       flow = null;
       $('cardAudio').classList.add('oculto');
       setSelectionLocked(false);
@@ -852,6 +854,7 @@
       await api({ accion: 'borrar-grabacion', alumnoId: studentId });
       delete state.grabaciones[studentId];
       delete state.notas[studentId];
+      if (window.actualizarNominaInterrogacion) window.actualizarNominaInterrogacion(state.grabaciones, state.notas);
       renderRecordings();
       window.setTimeout(function () { window.location.reload(); }, 250);
     } catch (error) {
@@ -861,11 +864,16 @@
 
   function renderRecordings() {
     var table = $('tablaGrabaciones');
-    var ids = Object.keys(state.grabaciones);
+    var allIds = Object.keys(state.grabaciones);
+    var filter = $('filtroGrabacionesCurso') ? $('filtroGrabacionesCurso').value : '';
+    var ids = allIds.filter(function (id) {
+      var student = studentById(id);
+      return !filter || (student && student.curso === filter);
+    });
     table.innerHTML = '';
     if (!ids.length) {
-      table.innerHTML = '<tr><td colspan="7" class="vacio">Aún no hay respuestas grabadas.</td></tr>';
-      $('subGrabaciones').textContent = 'Las grabaciones entregadas aparecerán aquí.';
+      table.innerHTML = '<tr><td colspan="7" class="vacio">Sin grabaciones para el filtro seleccionado.</td></tr>';
+      $('subGrabaciones').textContent = allIds.length ? 'No hay grabaciones en este curso.' : 'Las grabaciones entregadas aparecerán aquí.';
       return;
     }
     ids.sort(function (a, b) {
@@ -873,7 +881,7 @@
       return ((one && one.curso) + a).localeCompare((two && two.curso) + b);
     });
     var pending = ids.filter(function (id) { return state.grabaciones[id].estado === 'pendiente'; }).length;
-    $('subGrabaciones').textContent = ids.length + ' registro(s) · ' + pending + ' pendiente(s) de calificación. “Continuar grabación” retoma la primera respuesta faltante; “Ver detalle” permite escuchar, corregir y dejar una nota.';
+    $('subGrabaciones').textContent = ids.length + (filter ? ' registro(s) en el curso' : ' registro(s)') + ' · ' + pending + ' pendiente(s) de calificación. “Continuar grabación” retoma la primera respuesta faltante; “Ver detalle” permite escuchar, corregir y dejar una nota.';
     ids.forEach(function (id) {
       var recording = state.grabaciones[id];
       var student = studentById(id);
@@ -908,6 +916,20 @@
     });
   }
 
+  function prepareRecordingCourseFilter() {
+    var select = $('filtroGrabacionesCurso');
+    if (!select) return;
+    var current = select.value;
+    select.innerHTML = '<option value="">Todos los cursos</option>';
+    Object.keys(state.cursos).forEach(function (course) {
+      var option = document.createElement('option');
+      option.value = course;
+      option.textContent = config.cursoLabels[course] || course;
+      select.appendChild(option);
+    });
+    if ([].some.call(select.options, function (option) { return option.value === current; })) select.value = current;
+  }
+
   async function load() {
     try {
       var data = await api({ accion: 'nomina' });
@@ -915,7 +937,8 @@
       state.cursos = data.cursos || {};
       state.notas = data.notas || {};
       state.grabaciones = data.grabaciones || {};
-      $('btnGrabar').disabled = false;
+      prepareRecordingCourseFilter();
+      if (window.actualizarNominaInterrogacion) window.actualizarNominaInterrogacion(state.grabaciones, state.notas);
       renderRecordings();
     } catch (error) {
       setNotice('avisoListaAudios', error.message, 'err');
@@ -923,6 +946,7 @@
   }
 
   $('btnGrabar').disabled = true;
+  if ($('filtroGrabacionesCurso')) $('filtroGrabacionesCurso').addEventListener('change', renderRecordings);
   $('btnGrabar').addEventListener('click', function () {
     startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
   });

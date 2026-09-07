@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, nómina pendiente y filtros en la interrogación de Mocha Dick
+
+- Se aplicó y leyó de vuelta la calificación máxima de la entrega oral que el
+  docente definió expresamente como referencia de desempeño. El registro quedó
+  asociado a sus siete audios, con siete puntajes, siete síntesis de evidencia
+  y una retroalimentación específica. El PDF resultante fue validado como una
+  página A4.
+- La nómina para iniciar una interrogación ahora excluye a quienes ya tienen
+  una grabación iniciada, entregada o calificada, y muestra el total disponible
+  del curso. Esos estudiantes siguen accesibles en las tablas de notas y
+  grabaciones para revisar, continuar, descargar o eliminar su registro.
+- Las tablas de notas y grabaciones incorporan filtros independientes por
+  curso. El filtro no modifica datos y conserva el acceso a todos los registros
+  cuando se selecciona "Todos los cursos".
+
+---
+
 ## 2026-09-07, preguntas autosuficientes en el sorteo de Mocha Dick
 
 - Se reescribieron trece preguntas del banco que dependían de un referente

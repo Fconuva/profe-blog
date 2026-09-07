@@ -42,9 +42,31 @@ for (const item of review.items) {
   expect(['A', 'B', 'C', 'D'].includes(item.correcta), `${item.id}: letra de respuesta inválida.`);
 }
 
+const SKILLS = ['LOCALIZAR', 'INTERPRETAR', 'REFLEXIONAR'];
+expect(review.practica && typeof review.practica === 'object', 'Falta el banco de práctica dirigida por habilidad.');
+for (const skill of SKILLS) {
+  const bank = review.practica && review.practica[skill];
+  expect(bank, `Falta el banco de práctica de la habilidad ${skill}.`);
+  if (!bank) continue;
+  expect(typeof bank.atencion === 'string' && bank.atencion.length >= 30, `${skill}: falta la caja "Atención" o es muy breve.`);
+  expect(bank.texto && typeof bank.texto.body === 'string' && bank.texto.body.length >= 200, `${skill}: el texto de práctica es demasiado breve.`);
+  expect(Array.isArray(bank.preguntas) && bank.preguntas.length >= 2, `${skill}: se esperaban al menos 2 preguntas de práctica.`);
+  for (const question of bank.preguntas || []) {
+    const labels = Object.keys(question.options || {});
+    expect(labels.join('') === 'ABCD', `${question.id}: alternativas de práctica incompletas o desordenadas.`);
+    expect(['A', 'B', 'C', 'D'].includes(question.correcta), `${question.id}: letra de respuesta de práctica inválida.`);
+    expect(typeof question.explicacion === 'string' && question.explicacion.length >= 30, `${question.id}: explicación de práctica demasiado breve.`);
+  }
+}
+const practiceIds = SKILLS.flatMap(skill => (review.practica[skill]?.preguntas || []).map(question => question.id));
+expect(new Set(practiceIds).size === practiceIds.length, 'Hay ids repetidos entre las preguntas de práctica.');
+expect(practiceIds.every(id => !ids.includes(id)), 'Una pregunta de práctica reutiliza el id de una pregunta del ensayo original.');
+
 expect(page.includes('/estudiantes/js/u3s8-data.js') && page.includes('/estudiantes/js/u3s9-data.js'), 'La página no carga los dos archivos de datos que necesita.');
 expect(page.includes("const API='/api/estudiantes'"), 'La página no usa la API unificada.');
 expect(page.includes('simce-u3s9-classstats'), 'La página no consulta los resultados reales del curso.');
+expect(page.includes('review.practica') && page.includes('computeWeakestSkill'), 'La corrección no incluye práctica dirigida a la habilidad más débil del curso: revisar no es lo mismo que ejercitar.');
+expect(page.includes('practice-option') && page.includes("data-correct"), 'La práctica dirigida no es interactiva (falta la respuesta clicable con corrección).');
 expect(page.includes('work-telemetry.js" data-session="sesion-u3-9"'), 'Falta telemetría con la sesión correcta de la Clase 9.');
 expect(!/preview===\s*'1'.*submit|action=simce-u3s8-submit/i.test(page), 'La corrección no debe reenviar ni recalificar el ensayo original.');
 
@@ -70,4 +92,4 @@ if (failures.length) {
   console.error('Auditoría SIMCE U3S9 incumplida:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log('SIMCE U3S9 auditado: 36 correcciones, claves alineadas con el servidor, resultados del curso limitados a agregados propios.');
+console.log(`SIMCE U3S9 auditado: 36 correcciones, claves alineadas con el servidor, resultados del curso limitados a agregados propios, y ${practiceIds.length} preguntas de práctica dirigida (${SKILLS.join('/')}).`);

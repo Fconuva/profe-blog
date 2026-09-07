@@ -4,6 +4,47 @@ window.SIMCE_U3S9_DATA = {
     titulo: 'Unidad 3 · Clase 9 — Corrección del ensayo',
     fuente: 'Ensayo parcial de la Clase 8 (7 textos, 36 preguntas).'
   },
+  practica: {
+    LOCALIZAR: {
+      titulo: 'Localizar y obtener información',
+      atencion: 'Busca el dato exacto que pide la pregunta en el texto. No lo deduzcas: si el texto no lo dice con esas palabras o un sinónimo directo, no es la respuesta.',
+      texto: {
+        titulo: 'Nuevo horario de la biblioteca municipal',
+        genre: 'Noticia',
+        body: `<p>La biblioteca municipal informó que, a partir del lunes 14 de septiembre, ampliará su horario de atención. Actualmente abre de 9:00 a 18:00 de lunes a viernes. Desde esa fecha, funcionará también los sábados, entre las 10:00 y las 14:00.</p><p>La encargada, Marcela Ibáñez, explicó que la medida responde a solicitudes de estudiantes que preparan pruebas los fines de semana. El nuevo horario sabatino incluirá préstamo de libros, pero no acceso a las salas de estudio grupal, que permanecerán cerradas ese día. La biblioteca solicita a quienes retiren libros el sábado que los devuelvan antes del jueves siguiente.</p>`
+      },
+      preguntas: [
+        { id:'p-loc-1', prompt:'¿Desde qué día comenzará a funcionar el nuevo horario sabatino?', options:{ A:'Desde el lunes 14 de septiembre.', B:'Desde el próximo sábado.', C:'Desde el jueves siguiente.', D:'Desde el 9 de septiembre.' }, correcta:'A', explicacion:'El texto lo dice de forma literal: "a partir del lunes 14 de septiembre".' },
+        { id:'p-loc-2', prompt:'Según el texto, ¿qué servicio NO estará disponible los sábados?', options:{ A:'El préstamo de libros.', B:'Las salas de estudio grupal.', C:'La atención en biblioteca.', D:'La devolución de libros.' }, correcta:'B', explicacion:'El texto lo aclara explícitamente: "no acceso a las salas de estudio grupal, que permanecerán cerradas ese día".' }
+      ]
+    },
+    INTERPRETAR: {
+      titulo: 'Relacionar e interpretar',
+      atencion: 'Pregúntate qué función cumple la parte señalada dentro de todo el texto: no repitas lo que dice, explica para qué está ahí.',
+      texto: {
+        titulo: 'El semáforo que nadie apuraba',
+        genre: 'Relato',
+        body: `<p>Cuando instalaron el semáforo en la esquina de la escuela, varios vecinos protestaron: decían que la calle nunca había tenido un accidente y que el nuevo poste solo iba a generar tacos. Doña Elena, que vendía sopaipillas ahí desde hacía veinte años, fue la única que no dijo nada.</p><p>Los primeros días, en efecto, los autos se detenían más de lo necesario, inseguros frente a la luz roja. Pero con las semanas el ritmo cambió: los niños ya no cruzaban corriendo entre los autos, y los conductores empezaron a frenar antes de llegar a la esquina, no después.</p><p>Un mes más tarde, alguien preguntó a doña Elena qué pensaba del semáforo. Ella señaló su carrito, todavía en el mismo lugar de siempre, y respondió: «Antes tenía que estar mirando para todos lados. Ahora solo vendo sopaipillas».</p>`
+      },
+      preguntas: [
+        { id:'p-int-1', prompt:'¿Qué función cumple la última frase de doña Elena en el relato?', options:{ A:'Explica por qué el semáforo generó más accidentes de tránsito.', B:'Muestra, desde su experiencia cotidiana, que la calle se volvió más segura.', C:'Critica a los vecinos que protestaron contra el semáforo.', D:'Describe el proceso técnico de instalación del semáforo.' }, correcta:'B', explicacion:'La frase no habla de tránsito en abstracto, sino de su propia rutina: antes vigilaba, ahora no necesita hacerlo. Es evidencia indirecta de que la calle es más segura.' },
+        { id:'p-int-2', prompt:'¿Qué idea central se puede extraer del relato?', options:{ A:'Los vecinos siempre tienen razón al oponerse a un cambio.', B:'Una medida cuestionada al principio puede demostrar su utilidad con el tiempo.', C:'Los semáforos son innecesarios en calles sin accidentes previos.', D:'El comercio ambulante depende del tránsito vehicular.' }, correcta:'B', explicacion:'El relato muestra un cambio: protesta inicial, incomodidad los primeros días, y después un beneficio real confirmado por el testimonio de doña Elena.' }
+      ]
+    },
+    REFLEXIONAR: {
+      titulo: 'Reflexionar y evaluar',
+      atencion: 'Para detectar una falla de argumentación, pregúntate qué evidencia falta o qué recurso se usa para convencer sin aportar pruebas reales.',
+      texto: {
+        titulo: '¿Todos lo dicen?',
+        genre: 'Columna de opinión',
+        body: `<p>Un aviso publicitario asegura: «El 90% de los jóvenes ya cambió a esta marca de zapatillas». La cifra suena contundente, pero no explica de dónde salió: ¿se preguntó a cien personas en una tienda de la marca? ¿A mil estudiantes de un solo colegio? Sin esa información, el dato funciona más como un gancho emocional —nadie quiere ser del 10% que se quedó atrás— que como una prueba real.</p><p>Además, el aviso no menciona el precio, la duración del producto ni comparaciones con otras marcas: solo repite la cifra en letras grandes, tres veces en el mismo afiche. Convencer no debería depender de cuántas veces se repite una frase, sino de la calidad de la evidencia que la respalda.</p>`
+      },
+      preguntas: [
+        { id:'p-ref-1', prompt:'¿Qué falla de argumentación denuncia principalmente el texto sobre el aviso publicitario?', options:{ A:'Que usa un porcentaje sin indicar cómo ni a quiénes se consultó.', B:'Que compara el precio con el de otras marcas.', C:'Que no repite suficientes veces la cifra para convencer.', D:'Que menciona la duración del producto sin pruebas.' }, correcta:'A', explicacion:'El texto cuestiona la cifra "90%" precisamente porque no se sabe cómo se obtuvo ni a quiénes se preguntó: una cifra sin respaldo metodológico.' },
+        { id:'p-ref-2', prompt:'¿Con qué propósito el autor pregunta «¿se preguntó a cien personas en una tienda de la marca?»?', options:{ A:'Para informar el método real que usó la empresa.', B:'Para cuestionar, con un ejemplo hipotético, la falta de respaldo de la cifra.', C:'Para proponer una nueva forma de hacer encuestas.', D:'Para explicar por qué el producto es de mala calidad.' }, correcta:'B', explicacion:'Es una pregunta retórica: no describe lo que realmente pasó, sino que plantea un escenario posible para mostrar cuánto se ignora sobre el origen del dato.' }
+      ]
+    }
+  },
   items: [
     { id:'q1', correcta:'B', explicacion:'El texto lo dice de forma literal: "la guardó en el bolsillo sin preguntar qué película se había exhibido". No hay fotografía ni comparación con otras entradas; ese dato se inventa.' },
     { id:'q2', correcta:'D', explicacion:'Todo el relato gira en torno al cierre del cine y su transformación en farmacia: la última función es una despedida. La falla técnica (A) es un episodio, no el conflicto completo, y el abuelo no muestra dificultad para aceptar el cambio (C).' },

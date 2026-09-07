@@ -18,6 +18,9 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - La pauta se contrastó con la obra. Se fijó, entre otros datos, que el Essex
   naufragó el 20 de noviembre de 1820 y que los sobrevivientes llevaban casi
   ochenta días a la deriva.
+- Se corrigió y leyó de vuelta el único registro ya calificado que había sido
+  penalizado por responder correctamente ese dato; se recalcularon el puntaje,
+  la nota y la retroalimentación sin alterar los audios ni las demás respuestas.
 - La auditoría específica y el build completo verificaron el banco, las claves,
   el aislamiento del modo de audio y los 148 recursos críticos.
 

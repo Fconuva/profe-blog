@@ -102,6 +102,14 @@ Antes de editar y nuevamente antes de publicar:
   usa de forma encubierta: entrega antecedentes y la nota la determina el
   docente. El acceso técnico usa `INTERROGACION_REVIEW_AGENT_HASH` y el script
   local `npm run review:interrogaciones`; el token no se guarda en Git.
+- La revisión y calificación de estas interrogaciones sigue la skill
+  `.github/skills/estudiacest-oral-interrogation-grading`. Su calibración
+  predeterminada es exigencia `60/100`: acepta rasgos normales de oralidad, pero
+  exige precisión y evidencia cuando el reactivo las solicita. La cifra es
+  interna y no se muestra al estudiante.
+- Un audio vacío, corrupto o inaudible se registra como incidencia técnica; no
+  se convierte automáticamente en puntaje `0,0`. Toda propuesta asistida se
+  escucha y valida antes de que el docente autorice su aplicación.
 
 ## 7. Evaluaciones y resultados
 

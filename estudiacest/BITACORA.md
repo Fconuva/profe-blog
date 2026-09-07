@@ -8,6 +8,24 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, preparación de revisión oral Mocha Dick en 4°A
+
+- Se verificó en producción, sin modificar registros, que la interrogación de
+  `Mocha Dick` está guardando evidencia durante su aplicación: tres entregas
+  completas con siete respuestas cada una; el panel mostraba además registros
+  en curso. Ningún objeto informado por el servidor tenía tamaño cero.
+- Se descargaron temporalmente los veintiún audios de las entregas completas y
+  todos fueron decodificables como WebM/Opus y presentaron señal medible. El
+  contenedor de Chrome no siempre declara duración, por lo que la validación se
+  realizó decodificando el contenido y no leyendo solo ese metadato.
+- Se creó la skill
+  `.github/skills/estudiacest-oral-interrogation-grading` para inventariar,
+  escuchar, contrastar con la obra, proponer puntajes, aplicar solo con orden
+  explícita y generar una retroalimentación institucional de una página A4.
+- La exigencia interna quedó fijada en `60/100`. No se aplicaron notas, no se
+  publicaron resultados y no se alteraron audios mientras la evaluación sigue
+  en curso.
+
 ## 2026-09-03, revisión de consultas y reaperturas individuales SIMCE
 
 - Se contrastaron dos consultas recibidas por correo con las entregas, las

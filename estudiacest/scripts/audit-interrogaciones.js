@@ -32,6 +32,12 @@ function panelBank(html) {
   return vm.runInNewContext(`(${match[1]})`);
 }
 
+function answerBank(html) {
+  const match = html.match(/var RESPUESTAS =\s*(\[[\s\S]*?\]);\s*var BANCO/);
+  assert(match, 'No se encontró RESPUESTAS en el panel docente.');
+  return vm.runInNewContext(`(${match[1]})`);
+}
+
 function inlineScriptCompiles(html, label) {
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
   assert(scripts.length, `${label}: falta script.`);
@@ -72,6 +78,14 @@ function auditPanel(config) {
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   assert(panelHtml.includes('(Math.max(0, Math.min(7, suma)) / 7) * 6'), `${config.label}: la vista manual no convierte el logro a la escala de notas 1-7.`);
+  if (config.manualAnswers) {
+    const answers = answerBank(panelHtml);
+    assert.strictEqual(answers.length, 50, `${config.label}: la pauta manual no tiene 50 respuestas.`);
+    assert(answers.every((answer) => typeof answer === 'string' && answer.trim().length >= 10), `${config.label}: hay respuestas esperadas vacías o insuficientes.`);
+    assert(panelHtml.includes('class="respuesta-esperada"'), `${config.label}: la pauta no se muestra en la interrogación manual.`);
+    assert(panelHtml.includes("RESPUESTAS[idx]"), `${config.label}: la pauta no sigue la pregunta sorteada.`);
+    assert(!/INTERROGACION_AUDIO_CONFIG\s*=\s*\{[^}]*respuestas/i.test(panelHtml), `${config.label}: la pauta quedó expuesta al modo con audio.`);
+  }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
   assert(!panelHtml.includes('id="docente"'), `${config.label}: aún muestra el selector docente público.`);
@@ -97,7 +111,8 @@ auditPanel({
   publicPage: 'nm4/interrogacion-mocha-dick/index.html',
   panelPage: 'nm4/interrogacion-mocha-dick/calificar/index.html',
   publicClass: 'preg',
-  api: "var INSTRUMENTO = 'nm4'"
+  api: "var INSTRUMENTO = 'nm4'",
+  manualAnswers: true
 });
 
 const nm3Roster = require(path.join(ROOT, 'api/_roster_nm3')).ROSTER_ROWS;

@@ -8,6 +8,19 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-07, pauta visible en la interrogación manual de Mocha Dick
+
+- El modo `Interrogar manual` muestra, debajo de cada pregunta sorteada, una
+  respuesta esperada breve para orientar la calificación docente en vivo.
+- La pauta tiene cincuenta respuestas alineadas uno a uno con el banco y señala
+  criterios de aceptación en los reactivos interpretativos. No se incorpora a
+  la configuración ni a la interfaz del modo `Interrogar con audio`.
+- La pauta se contrastó con la obra. Se fijó, entre otros datos, que el Essex
+  naufragó el 20 de noviembre de 1820 y que los sobrevivientes llevaban casi
+  ochenta días a la deriva.
+- La auditoría específica y el build completo verificaron el banco, las claves,
+  el aislamiento del modo de audio y los 148 recursos críticos.
+
 ## 2026-09-07, corrección y evidencia de las interrogaciones orales NM4
 
 - Se corrigió la conversión de logro a nota para que la escala comience en

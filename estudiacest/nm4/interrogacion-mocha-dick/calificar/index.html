@@ -60,6 +60,10 @@
   .preg-h .cambiar:disabled{opacity:.4;cursor:not-allowed;}
   .preg-b{padding:12px 14px;}
   .preg-t{font-size:14.6px;margin-bottom:11px;line-height:1.5;}
+  .respuesta-esperada{margin:0 0 12px;padding:10px 12px;border-left:4px solid #16805c;border-radius:7px;
+                      background:#effaf5;color:#183d32;font-size:13.5px;line-height:1.5;}
+  .respuesta-esperada strong{display:block;margin-bottom:3px;color:#0f6849;font-size:11.5px;
+                             text-transform:uppercase;letter-spacing:.04em;}
   .escala{display:flex;flex-wrap:wrap;gap:6px;}
   .escala button{font:inherit;font-size:13.5px;font-weight:700;min-width:48px;padding:8px 6px;border-radius:8px;
                  border:1.5px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
@@ -268,6 +272,58 @@
 (function () {
   var API = '/api/interrogacion';
   var INSTRUMENTO = 'nm4';
+  var RESPUESTAS = [
+    "Francisco Ortega escribió el guion y Gonzalo Martínez realizó las ilustraciones.",
+    "Es una novela gráfica: narra mediante viñetas, imágenes, encuadres, globos y texto; una novela común depende principalmente de la prosa.",
+    "En Tomé, Chile, en 1889.",
+    "Un terremoto deja varado en la costa a un enorme cachalote blanco.",
+    "El pastor Caleb Hienam, ya anciano.",
+    "A los 15 años; su padre, Jonathan Hienam, dueño del Dauphin, lo embarcó para aprender el oficio familiar.",
+    "El Dauphin, con bandera de Nantucket, Estados Unidos.",
+    "Aliro Leftraru es un joven lafquenche de Tirúa; quería convertirse en un gran arponero.",
+    "Caleb enseñó inglés a Leftraru; Leftraru ayudó a Caleb con el español y le enseñó expresiones en mapudungun.",
+    "El bote pertenecía al Essex y llevaba a tres sobrevivientes exhaustos del naufragio.",
+    "Tres: el capitán George Pollard, el primer oficial Owen Chase y Charles Ramsdell.",
+    "El Essex naufragó el 20 de noviembre de 1820 y llevaban casi 80 días a la deriva.",
+    "La llaman Mocha: la abuela de todas las ballenas, un ser sagrado como el mar.",
+    "La caleta de Nuestra Señora de Montserrat de Tirúa, Turunhue, en el Lafquenmapu; Turunhue significa 'lugar de encuentro'.",
+    "La machi Rosa es la abuela de Leftraru, guía y protectora espiritual del lof; lo crió tras la muerte de su madre.",
+    "Ailiñ Ngue, que significa 'Ojos Claros'.",
+    "Duncan Sheffield es un naturalista escocés; su barco se llama Kurew, 'Golondrina'.",
+    "Nathan Coffin ofrece una gran recompensa por la cola de Mocha porque cree que la ballena mató a su hijo Owen en el Essex.",
+    "El Peleg Hawthorne.",
+    "Joe es Josephine, hija de Macys, obligada a ocultarse y vivir como varón.",
+    "El hundimiento real del Essex, los relatos sobre el cachalote blanco Mocha Dick y la publicación de esa historia, que luego influyó en Moby Dick de Herman Melville.",
+    "El Essex había matado una cría y a su madre; esa caza rompió el equilibrio y provocó el ataque de Mocha.",
+    "Pollard y los demás eligieron y mataron a Owen, su sobrino, para alimentarse; la ballena no lo había matado.",
+    "La culpa y el alcohol rompen su silencio; lejos de Pollard, Chase se atreve a contradecir la versión oficial y confesar el canibalismo y la causa del ataque.",
+    "Protege el santuario de cachalotes de isla Mocha y, con ello, el equilibrio entre el ser humano y el mar.",
+    "Advierte que la caza creciente terminará por dejar el mar sin ballenas.",
+    "Es una cadena de ambición: una recompensa lleva a ofrecer más dinero y exigir cuotas mayores, hasta que no quede una sola ballena.",
+    "Ferguson proyecta sobre Leftraru el odio que siente porque su padre, un cazador, fue capturado e impalado por patagones.",
+    "Eran más lentas y confiadas, se acercaban a la costa y resultaban más fáciles de alcanzar con lanzas y arpones que los cachalotes.",
+    "Distingue una caza limitada de la matanza indiscriminada: matar madres y crías destruye la reproducción y rompe el equilibrio del mar.",
+    "Un 'Jonás' es el tripulante al que se culpa de atraer la mala suerte; alude al relato bíblico de Jonás y la criatura marina citado en el epígrafe.",
+    "Eran demasiado grandes y rápidas para los medios de la época; hacia 1870 el arpón explosivo y los barcos a vapor permitieron cazarlas.",
+    "Obtener la cola de Mocha y cobrar la recompensa ofrecida por Nathan Coffin; no era una expedición ballenera común.",
+    "Reúne años de observaciones sobre rutas y hábitos; permite predecir dónde estarán las ballenas y localizar a Mocha.",
+    "Su padre quería un hijo y heredero varón y la obligó a vivir como tal; Josephine explica que él moldeó su infancia contra su naturaleza.",
+    "Macys manda herir y matar una cría junto a su madre; el sufrimiento y la sangre atraen a Mocha.",
+    "Golpea al agresor con una botella y lo deja inconsciente.",
+    "Josephine la llama Mocha Dick cuando reaparece después de dos días; Caleb reconoce que nunca supo por qué eligió ese nombre.",
+    "La ballena no lo devoró: lo llevó con los suyos y Leftraru regresó para ayudar a sus amigos.",
+    "Leftraru le clava un arpón durante la lucha sobre Mocha, cuando Macys intenta matarlo y sigue atacando a la ballena.",
+    "Caleb cuenta la historia a Jeremiah Reynolds, quien la publica; después Herman Melville retoma el relato del cachalote blanco y lo transforma en Moby Dick.",
+    "Ejemplos válidos: Pollard omite el asesinato de Owen y la caza de la madre y su cría; Caleb también reserva parte de la verdad al hablar con Reynolds. Las omisiones cambian quién parece responsable o monstruoso.",
+    "Para Nantucket la ballena es presa, aceite y dinero; para los lafquenches es un ser sagrado, una Trempulcahue que mantiene el equilibrio entre la humanidad y el mar.",
+    "Respuesta interpretativa: es principalmente víctima y guardiana del equilibrio, pues reacciona ante la caza de crías y madres. Se acepta otra postura si usa evidencia precisa del libro.",
+    "Leftraru deja de ser aprendiz, se convierte en protector y líder, y se sacrifica para salvar a Mocha y a los demás; por eso se lo presenta como héroe y rey.",
+    "La estructura circular enmarca el recuerdo de Caleb: la ballena varada abre el relato del pasado y su despedida lo cierra, mostrando memoria, consecuencias y paso del tiempo.",
+    "Josephine es decisiva: revela la verdad del viaje, evita una ejecución, libera a Caleb y Leftraru, cambia el rumbo y nombra a Mocha Dick; no es meramente secundaria.",
+    "Sigue vigente porque una tecnología más eficaz puede convertir la explotación en exterminio; lo ocurrido desde 1870 anticipa la caza industrial y la pérdida de biodiversidad.",
+    "Leftraru agradece a Mocha como madre y guardiana; no hay victoria porque todos pagan un costo y la violencia no resuelve el conflicto; Caleb sobrevive como testigo encargado de conservar la memoria.",
+    "La novela gráfica permite mostrar escala, movimiento y silencio visual. Debe mencionar dos recursos concretos, como viñetas sin texto, páginas completas para la ballena, contrastes, encuadres o gestos."
+  ];
   var BANCO = [
     '¿Quiénes son los autores y qué hizo cada uno?',
     '¿Qué tipo de texto es Mocha Dick y en qué se diferencia de una novela común?',
@@ -442,6 +498,7 @@
         '<button class="cambiar" data-pos="' + pos + '"' + (puedeCambiar ? '' : ' disabled') + '>' +
         (actual.cambiada === pos ? 'cambiada' : '⟳ cambiar') + '</button></div>' +
         '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
+        '<div class="respuesta-esperada"><strong>Respuesta esperada</strong>' + RESPUESTAS[idx] + '</div>' +
         '<div class="escala" data-pos="' + pos + '">' +
         PUNTOS.map(function (p) {
           var on = actual.puntajes[pos] === p ? ' on' : '';

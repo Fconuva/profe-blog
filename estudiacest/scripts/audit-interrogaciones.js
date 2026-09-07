@@ -51,6 +51,8 @@ function auditPanel(config) {
   assert(panelHtml.includes('Interrogar manual'), `${config.label}: falta la interrogación manual.`);
   assert(panelHtml.includes('Interrogar con audio'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
+  assert(panelHtml.includes('id="btnCambiarPreguntaAudio"'), `${config.label}: falta el cambio único en audio.`);
+  assert(panelHtml.includes('id="estadoCambioPreguntaAudio"'), `${config.label}: falta informar el estado del cambio.`);
   assert(panelHtml.includes('id="nivelMicrofonoBarra"'), `${config.label}: falta el medidor de señal.`);
   assert(panelHtml.includes('id="nivelMicrofonoTexto"'), `${config.label}: falta informar si se detecta voz.`);
   assert(panelHtml.includes('id="microfonoAudio"'), `${config.label}: falta seleccionar el micrófono.`);
@@ -69,6 +71,7 @@ function auditPanel(config) {
   assert(panelHtml.includes('window.crypto.getRandomValues'), `${config.label}: el sorteo no usa azar criptográfico.`);
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
+  assert(panelHtml.includes('(Math.max(0, Math.min(7, suma)) / 7) * 6'), `${config.label}: la vista manual no convierte el logro a la escala de notas 1-7.`);
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
   assert(!panelHtml.includes('id="docente"'), `${config.label}: aún muestra el selector docente público.`);
@@ -121,6 +124,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     'preguntasValidas',
     'puntajesValidos',
     "accion === 'iniciar-grabacion'",
+    "accion === 'cambiar-pregunta-grabacion'",
     "accion === 'preparar-audio'",
     "accion === 'registrar-audio'",
     "accion === 'entregar-grabacion'",
@@ -139,6 +143,7 @@ for (const apiFile of ['api/interrogacion.js']) {
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
   assert(source.includes('interrogacion_lugar_sin_limites_2026'), `${apiFile}: falta el nodo NM3.`);
   assert(source.includes('interrogacion_mocha_dick_2026'), `${apiFile}: falta el nodo NM4.`);
+  assert(source.includes('(logro / 7) * 6'), `${apiFile}: la nota no parte en 1,0 ni escala el logro hasta 7,0.`);
   for (const docente of ['francisco', 'alicia', 'joselin', 'pia']) {
     const occurrences = [...source.matchAll(new RegExp(`\\b${docente}: \\{`, 'g'))].length;
     assert.strictEqual(occurrences, 2, `${apiFile}: ${docente} no está configurado en ambos instrumentos.`);
@@ -158,6 +163,7 @@ for (const contract of [
   "accion: 'preparar-audio'",
   "accion: 'registrar-audio'",
   "accion: 'entregar-grabacion'",
+  "accion: 'cambiar-pregunta-grabacion'",
   "accion: 'audio-url'",
   "accion: 'guardar-nota-grabacion'",
   "accion: 'pdf-retroalimentacion'",
@@ -170,6 +176,8 @@ for (const contract of [
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
+assert(audioController.includes('flow.data.cambiada != null'), 'Controlador de audio: no bloquea el segundo cambio de pregunta.');
+assert(audioController.includes('gradeFromScore(total)'), 'Controlador de audio: no usa la conversión de logro 0-7 a nota 1-7.');
 for (const contract of [
   'startMeter(stream)',
   'loadMicrophones(activeTrack)',

@@ -103,7 +103,8 @@ function puntajesValidos(value) {
 
 function nota(puntajes) {
   const suma = Object.values(puntajes).reduce((total, valor) => total + valor, 0);
-  return Math.max(1, Math.round(suma * 10) / 10);
+  const logro = Math.max(0, Math.min(7, suma));
+  return Math.round((1 + (logro / 7) * 6) * 10) / 10;
 }
 
 function cuerpoJson(req) {
@@ -135,6 +136,7 @@ function tipoAudioValido(value) {
 
 function grabacionPublica(value) {
   if (!value || typeof value !== 'object') return null;
+  const cambiada = value.cambiada == null ? null : Number(value.cambiada);
   const respuestas = value.respuestas && typeof value.respuestas === 'object'
     ? Object.fromEntries(Object.entries(value.respuestas).map(([posicion, item]) => [posicion, {
       posicion: Number(item.posicion),
@@ -149,6 +151,7 @@ function grabacionPublica(value) {
     alumno: value.alumno || '',
     curso: value.curso || '',
     preguntas: Array.isArray(value.preguntas) ? value.preguntas.map(Number) : [],
+    cambiada: Number.isInteger(cambiada) && cambiada >= 0 && cambiada <= 6 ? cambiada : null,
     respuestas,
     estado: value.estado || 'en_curso',
     docente: value.docente || '',
@@ -248,6 +251,7 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
     alumno: alumno.nombre,
     curso: alumno.curso,
     preguntas,
+    cambiada: null,
     respuestas: {},
     reservas: {},
     estado: 'en_curso',
@@ -267,6 +271,51 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
     }
   }
   return { status: 200, body: { ok: true, grabacion: grabacionPublica(registro) } };
+}
+
+async function cambiarPreguntaGrabacion(instrumento, docente, cuerpo) {
+  const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+  if (!alumno || !docente.cursos.includes(alumno.curso)) {
+    return { status: 403, body: { error: 'Ese estudiante no corresponde a tus cursos.' } };
+  }
+  const intentoId = idValido(cuerpo.intentoId);
+  const posicion = Number(cuerpo.posicion);
+  const nuevaPregunta = Number(cuerpo.nuevaPregunta);
+  if (!intentoId || !Number.isInteger(posicion) || posicion < 0 || posicion > 6
+    || !Number.isInteger(nuevaPregunta) || nuevaPregunta < 1 || nuevaPregunta > 50) {
+    return { status: 400, body: { error: 'El cambio de pregunta no es válido.' } };
+  }
+  const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
+  const before = (await ref.once('value')).val();
+  const reservasActivas = Object.values((before && before.reservas) || {})
+    .some((item) => Number(item && item.posicion) === posicion);
+  if (!before || before.intentoId !== intentoId || before.estado !== 'en_curso'
+    || !Array.isArray(before.preguntas) || before.cambiada != null
+    || (before.respuestas && before.respuestas[posicion]) || reservasActivas
+    || Number(before.preguntas[posicion]) === nuevaPregunta
+    || before.preguntas.map(Number).includes(nuevaPregunta)) {
+    return { status: 409, body: { error: 'El cambio ya fue utilizado o esta pregunta ya comenzó a grabarse.' } };
+  }
+  const fechaCambioPregunta = new Date().toISOString();
+  const transaction = await ref.transaction((current) => {
+    const active = current || before;
+    const activeReservations = Object.values((active && active.reservas) || {})
+      .some((item) => Number(item && item.posicion) === posicion);
+    if (!active || active.intentoId !== intentoId || active.estado !== 'en_curso'
+      || !Array.isArray(active.preguntas) || active.cambiada != null
+      || (active.respuestas && active.respuestas[posicion]) || activeReservations
+      || Number(active.preguntas[posicion]) === nuevaPregunta
+      || active.preguntas.map(Number).includes(nuevaPregunta)) return;
+    active.preguntas = active.preguntas.map(Number);
+    active.preguntas[posicion] = nuevaPregunta;
+    active.cambiada = posicion;
+    active.fechaCambioPregunta = fechaCambioPregunta;
+    return active;
+  }, undefined, false);
+  if (!transaction.committed) {
+    return { status: 409, body: { error: 'No fue posible cambiar la pregunta. Recarga el panel y revisa el intento.' } };
+  }
+  return { status: 200, body: { ok: true, grabacion: grabacionPublica(transaction.snapshot.val()) } };
 }
 
 async function prepararAudio(instrumentoId, instrumento, docente, docenteId, cuerpo) {
@@ -633,6 +682,11 @@ module.exports = async function handler(req, res) {
 
     if (accion === 'iniciar-grabacion') {
       const resultado = await iniciarGrabacion(instrumento, docente, docenteId, cuerpo);
+      return res.status(resultado.status).json(resultado.body);
+    }
+
+    if (accion === 'cambiar-pregunta-grabacion') {
+      const resultado = await cambiarPreguntaGrabacion(instrumento, docente, cuerpo);
       return res.status(resultado.status).json(resultado.body);
     }
 

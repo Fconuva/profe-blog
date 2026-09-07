@@ -138,6 +138,18 @@
     return result;
   }
 
+  function randomQuestionExcluding(excluded) {
+    var used = new Set((excluded || []).map(Number));
+    var pool = Array.from({ length: config.banco.length }, function (_, index) { return index + 1; })
+      .filter(function (question) { return !used.has(question); });
+    return pool.length ? pool[randomIndex(pool.length)] : null;
+  }
+
+  function gradeFromScore(score) {
+    var achievement = Math.max(0, Math.min(7, Number(score) || 0));
+    return Math.round((1 + (achievement / 7) * 6) * 10) / 10;
+  }
+
   function selectedStudent() {
     var select = $('alumno');
     if (!select || !select.value) return null;
@@ -269,6 +281,26 @@
     $('estadoGrabacion').textContent = message || 'Presiona grabar cuando el estudiante esté listo.';
     $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
+    updateQuestionChangeControls();
+  }
+
+  function updateQuestionChangeControls() {
+    var button = $('btnCambiarPreguntaAudio');
+    var status = $('estadoCambioPreguntaAudio');
+    if (!button || !status) return;
+    var used = Boolean(flow && flow.data.cambiada != null);
+    var position = flow ? flow.position : -1;
+    var answered = Boolean(flow && flow.data.respuestas && flow.data.respuestas[position]);
+    var recordingNow = Boolean(recorder && recorder.state === 'recording');
+    var allowed = Boolean(flow && !flow.editSingle && flow.data.estado === 'en_curso'
+      && !used && !answered && !localBlob && !recordingNow && position >= 0 && position < 7);
+    button.disabled = !allowed;
+    button.textContent = used ? 'Cambio utilizado' : 'Cambiar esta pregunta';
+    status.textContent = used
+      ? 'Ya se utilizó el único cambio disponible.'
+      : (flow && flow.editSingle
+        ? 'No se cambia la pregunta al corregir una grabación.'
+        : 'Disponible una vez, antes de grabar.');
   }
 
   function setSelectionLocked(locked) {
@@ -314,6 +346,7 @@
       $('btnGrabarAudio').classList.add('recording');
       $('btnGrabarAudio').textContent = 'Detener grabación';
       $('estadoGrabacion').textContent = 'Grabando… habla cerca del micrófono.';
+      updateQuestionChangeControls();
       updateTimer();
       timer = window.setInterval(function () {
         updateTimer();
@@ -366,6 +399,7 @@
       setNotice('avisoAudio', 'El micrófono estuvo activo, pero no recibió voz. Prueba otra entrada en el selector.', 'err');
     }
     $('tiempoGrabacion').textContent = formatDuration(recordingDuration);
+    updateQuestionChangeControls();
   }
 
   async function uploadCurrentAudio() {
@@ -378,6 +412,7 @@
     var name = 'respuesta-' + (position + 1) + '-' + Date.now() + '.' + extension;
     $('btnSiguienteAudio').disabled = true;
     $('btnRepetirAudio').disabled = true;
+    updateQuestionChangeControls();
     $('estadoGrabacion').textContent = 'Preparando el audio…';
     var prepared = null;
     try {
@@ -471,6 +506,34 @@
     $('estadoGrabacion').textContent = 'Presiona grabar cuando el estudiante esté listo.';
     $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
+    updateQuestionChangeControls();
+  }
+
+  async function changeAudioQuestion() {
+    if (!flow || flow.editSingle || flow.data.estado !== 'en_curso'
+      || flow.data.cambiada != null || localBlob || (recorder && recorder.state === 'recording')) return;
+    var position = flow.position;
+    if (flow.data.respuestas && flow.data.respuestas[position]) return;
+    if (!confirm('¿Cambiar esta pregunta? El sorteo elegirá otra y no podrás cambiar nuevamente.')) return;
+    var next = randomQuestionExcluding(flow.data.preguntas);
+    if (!next) return setNotice('avisoAudio', 'No hay otra pregunta disponible.', 'err');
+    $('btnCambiarPreguntaAudio').disabled = true;
+    try {
+      var result = await api({
+        accion: 'cambiar-pregunta-grabacion',
+        alumnoId: flow.student.id,
+        intentoId: flow.data.intentoId,
+        posicion: position,
+        nuevaPregunta: next
+      });
+      flow.data = result.grabacion;
+      state.grabaciones[flow.student.id] = result.grabacion;
+      renderFlow();
+      setNotice('avisoAudio', 'Pregunta cambiada. El único cambio disponible ya fue utilizado.', 'ok');
+    } catch (error) {
+      setNotice('avisoAudio', error.message, 'err');
+      updateQuestionChangeControls();
+    }
   }
 
   async function startFlow() {
@@ -645,7 +708,7 @@
   function updateReviewMarker() {
     var values = Object.values(review.scores);
     var total = values.reduce(function (sum, value) { return sum + Number(value || 0); }, 0);
-    var grade = Math.max(1, Math.round(total * 10) / 10);
+    var grade = gradeFromScore(total);
     $('notaRevisionAudio').textContent = values.length ? grade.toFixed(1).replace('.', ',') : '—';
     $('detalleRevisionAudio').textContent = values.length + ' de 7 respuestas puntuadas';
   }
@@ -712,7 +775,7 @@
         alumnoId: review.student.id,
         preguntas: review.recording.preguntas,
         puntajes: review.scores,
-        cambiada: null,
+        cambiada: review.recording.cambiada == null ? null : Number(review.recording.cambiada),
         observacion: $('obsRevisionAudio').value,
         intentoId: review.recording.intentoId
       });
@@ -856,6 +919,7 @@
     startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
   });
   $('btnGrabarAudio').addEventListener('click', beginRecording);
+  if ($('btnCambiarPreguntaAudio')) $('btnCambiarPreguntaAudio').addEventListener('click', changeAudioQuestion);
   $('btnRepetirAudio').addEventListener('click', function () {
     releaseLocalAudio();
     renderFlow();

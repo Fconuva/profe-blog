@@ -13,6 +13,13 @@ Esta calibración busca una corrección rigurosa, pero compatible con una respue
 | `0,2` | Entrega una idea vaga o genérica relacionada con la obra, sin precisión suficiente para resolver el reactivo. |
 | `0,0` | No responde, responde algo ajeno o contradice un elemento central de la obra. Una falla técnica no se clasifica aquí. |
 
+## Conversión A Calificación
+
+Suma los siete puntajes para obtener un logro entre `0,0` y `7,0`. Luego aplica
+`nota = 1 + (logro / 7) × 6` y redondea a un decimal. La nota mínima `1,0`
+corresponde a cero puntos; los avances parciales siempre elevan la nota sobre
+ese mínimo. No uses la suma bruta como calificación.
+
 ## Según Tipo De Pregunta
 
 ### Hecho, personaje o secuencia
@@ -45,4 +52,3 @@ Esta calibración busca una corrección rigurosa, pero compatible con una respue
 `Reconociste correctamente la decisión central del personaje y la relacionaste con una escena de la obra. Para mejorar, explica con mayor precisión por qué esa evidencia sostiene tu interpretación. Repasa las preguntas de causa y consecuencia antes de la próxima interrogación.`
 
 El modelo orienta el tono, no debe copiarse si no coincide con la evidencia real.
-

@@ -48,6 +48,7 @@ description: Revisar audios, proponer y aplicar calificaciones y generar retroal
 - No penalices por duración breve, pronunciación, muletillas o timidez cuando la respuesta cumple lo solicitado.
 - Exige precisión conceptual y la evidencia concreta pedida por el reactivo. No completes por inferencia lo que el estudiante no dijo.
 - Usa la escala vigente por respuesta: `1,0`, `0,8`, `0,6`, `0,4`, `0,2` o `0,0`. Lee `references/calibracion-60.md` antes de proponer puntajes.
+- Los siete puntajes forman un logro de `0,0` a `7,0`. La calificación no es esa suma: se calcula con `1 + (logro / 7) × 6`, redondeada a un decimal. Por tanto, `0/7 = 1,0` y `7/7 = 7,0`.
 
 ## Revisión Y Propuesta
 

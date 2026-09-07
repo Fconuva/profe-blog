@@ -110,6 +110,13 @@ Antes de editar y nuevamente antes de publicar:
 - Un audio vacío, corrupto o inaudible se registra como incidencia técnica; no
   se convierte automáticamente en puntaje `0,0`. Toda propuesta asistida se
   escucha y valida antes de que el docente autorice su aplicación.
+- En una interrogación oral se sortean siete preguntas. El docente puede cambiar
+  exactamente una antes de comenzar a grabarla; el servidor registra ese uso y
+  rechaza un segundo cambio, una pregunta repetida o el cambio de una respuesta
+  ya iniciada.
+- La suma de logro de las siete respuestas va de `0,0` a `7,0`, pero no es la
+  nota. La calificación se calcula con `1 + (logro / 7) × 6`, redondeada a un
+  decimal: cero puntos equivale a `1,0` y siete puntos a `7,0`.
 
 ## 7. Evaluaciones y resultados
 

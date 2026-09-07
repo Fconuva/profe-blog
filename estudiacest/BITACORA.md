@@ -20,6 +20,10 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   `Cargando grabaciones…` por una respuesta de red que llega en distinto orden.
 - La auditoría de interrogaciones incorpora regresiones para ambos contratos.
   `npm run audit:interrogaciones` y `npm run build` aprobaron antes del despliegue.
+- Producción confirmó en NM4 y NM3 que las tablas cargan sin aviso de error y
+  que `Continuar grabación` abre el mismo intento en su primera respuesta
+  pendiente, sin iniciar el micrófono ni modificar los datos. Commit funcional:
+  `9f9a8d5c`. Deploy: `dpl_4sBfm1WWH7fjdnk9ZDEZRYkBJvfX`.
 
 ---
 

@@ -47,6 +47,25 @@ ese mínimo. No uses la suma bruta como calificación.
 - No asumas que una respuesta larga es mejor. Una respuesta breve puede obtener `1,0` si cumple todos los componentes.
 - Si el audio no permite decidir con seguridad, marca confianza baja y solicita revisión humana; no completes la respuesta desde la transcripción.
 
+## Referencia De Desempeño Máximo
+
+El 7 de septiembre de 2026 el docente fijó una entrega oral completa como
+referencia práctica de nota `7,0`. Al comparar respuestas posteriores con este
+estándar:
+
+- Otorga `1,0` cuando el estudiante resuelve el sentido completo del reactivo,
+  relaciona correctamente personajes o acontecimientos y aporta una explicación
+  o evidencia pertinente, aunque no repita la pauta de manera literal.
+- No rebajes por vacilaciones, reinicios, autocorrecciones, sintaxis oral o una
+  pronunciación aproximada de nombres propios si el referente permanece
+  inequívoco y la relación conceptual es correcta.
+- La extensión no define el máximo: una respuesta breve y precisa puede
+  equivaler a una respuesta desarrollada. Sí se rebaja cuando falta un
+  componente solicitado, la evidencia no corresponde o la explicación cambia
+  un hecho central de la obra.
+- Usa esta referencia para calibrar la exigencia, no para copiar puntajes: cada
+  audio se contrasta con su propia pregunta y evidencia.
+
 ## Retroalimentación Modelo
 
 `Reconociste correctamente la decisión central del personaje y la relacionaste con una escena de la obra. Para mejorar, explica con mayor precisión por qué esa evidencia sostiene tu interpretación. Repasa las preguntas de causa y consecuencia antes de la próxima interrogación.`

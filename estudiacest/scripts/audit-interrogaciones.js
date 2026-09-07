@@ -123,6 +123,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     'instrumento.alumnos.get',
     'preguntasValidas',
     'puntajesValidos',
+    'evidenciasValidas',
     "accion === 'iniciar-grabacion'",
     "accion === 'cambiar-pregunta-grabacion'",
     "accion === 'preparar-audio'",
@@ -178,6 +179,7 @@ for (const contract of [
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
 assert(audioController.includes('flow.data.cambiada != null'), 'Controlador de audio: no bloquea el segundo cambio de pregunta.');
 assert(audioController.includes('gradeFromScore(total)'), 'Controlador de audio: no usa la conversión de logro 0-7 a nota 1-7.');
+assert(audioController.includes('Respuesta registrada:'), 'Controlador de audio: no muestra la evidencia revisada de cada respuesta.');
 for (const contract of [
   'startMeter(stream)',
   'loadMicrophones(activeTrack)',
@@ -227,7 +229,8 @@ async function auditPdf() {
     grade: {
       preguntas: [2, 8, 14, 21, 33, 42, 50],
       puntajes: { 0: 1, 1: 0.8, 2: 0.6, 3: 0.4, 4: 0.2, 5: 0, 6: 1 },
-      nota: 4,
+      evidencias: { 0: 'Identifica al personaje y fundamenta con una escena concreta.' },
+      nota: 4.4,
       observacion: 'Responde con precisión y debe fortalecer la evidencia de dos respuestas.',
       docente: 'Docente responsable',
       fecha: '2026-09-03T12:00:00.000Z',

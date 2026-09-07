@@ -135,13 +135,14 @@ async function createInterrogationPdf({ instrumentId, student, grade, recording 
   page.drawRectangle({ x: 36, y: 627, width: 523, height: 22, color: COLORS.blue });
   page.drawText('N°', { x: 46, y: 634, size: 7.5, font: bold, color: COLORS.white });
   page.drawText('PREGUNTA SORTEADA', { x: 74, y: 634, size: 7.5, font: bold, color: COLORS.white });
-  page.drawText('NIVEL OBSERVADO', { x: 178, y: 634, size: 7.5, font: bold, color: COLORS.white });
+  page.drawText('RESPUESTA REGISTRADA / NIVEL', { x: 178, y: 634, size: 7.5, font: bold, color: COLORS.white });
   page.drawText('PUNTAJE', { x: 507, y: 634, size: 7.5, font: bold, color: COLORS.white });
 
   const questions = Array.isArray(grade.preguntas) ? grade.preguntas : [];
   const scores = grade.puntajes && typeof grade.puntajes === 'object' ? grade.puntajes : {};
+  const evidences = grade.evidencias && typeof grade.evidencias === 'object' ? grade.evidencias : {};
   for (let index = 0; index < 7; index++) {
-    const y = 585 - index * 42;
+    const y = 579 - index * 48;
     const hasScore = Object.prototype.hasOwnProperty.call(scores, index);
     const score = hasScore ? Number(scores[index]) : null;
     const level = hasScore ? LEVELS.get(score) : { label: 'Sin puntaje', detail: 'No se registró puntaje para esta respuesta.' };
@@ -149,16 +150,16 @@ async function createInterrogationPdf({ instrumentId, student, grade, recording 
       x: 36,
       y,
       width: 523,
-      height: 42,
+      height: 48,
       color: index % 2 ? COLORS.soft : COLORS.white,
       borderColor: COLORS.line,
       borderWidth: 0.55
     });
-    page.drawText(String(index + 1), { x: 48, y: y + 16, size: 9, font: bold, color: COLORS.blue });
-    page.drawText(`Pregunta ${questions[index] || '-'} del banco`, { x: 74, y: y + 16, size: 8.2, font: regular, color: COLORS.ink });
-    page.drawText(level.label, { x: 178, y: y + 24, size: 8.2, font: bold, color: COLORS.ink });
-    drawWrapped(page, level.detail, { x: 178, y: y + 12, width: 310, maxLines: 2, size: 7.1, lineHeight: 8.4, font: regular, color: COLORS.muted });
-    page.drawText(hasScore ? formatNumber(score) : '-', { x: 516, y: y + 16, size: 10, font: bold, color: COLORS.blue });
+    page.drawText(String(index + 1), { x: 48, y: y + 19, size: 9, font: bold, color: COLORS.blue });
+    page.drawText(`Pregunta ${questions[index] || '-'} del banco`, { x: 74, y: y + 19, size: 8.2, font: regular, color: COLORS.ink });
+    page.drawText(level.label, { x: 178, y: y + 34, size: 8.2, font: bold, color: COLORS.ink });
+    drawWrapped(page, evidences[index] || level.detail, { x: 178, y: y + 21, width: 310, maxLines: 2, size: 7.1, lineHeight: 8.4, font: regular, color: COLORS.muted });
+    page.drawText(hasScore ? formatNumber(score) : '-', { x: 516, y: y + 19, size: 10, font: bold, color: COLORS.blue });
   }
 
   page.drawText('ESCALA DE REFERENCIA', { x: 36, y: 279, size: 8.8, font: bold, color: COLORS.blue });

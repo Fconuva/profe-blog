@@ -687,6 +687,12 @@
       element.innerHTML =
         '<div class="review-heading"><span>' + (position + 1) + '</span><strong>' + config.banco[Number(question) - 1] + '</strong></div>' +
         '<div class="review-controls">' + controls + '</div>' + scale;
+      if (review.evidences[position]) {
+        var evidence = document.createElement('p');
+        evidence.className = 'review-evidence';
+        evidence.textContent = 'Respuesta registrada: ' + review.evidences[position];
+        element.querySelector('.review-controls').after(evidence);
+      }
       zone.appendChild(element);
     });
     zone.querySelectorAll('[data-review-score]').forEach(function (button) {
@@ -743,7 +749,8 @@
     review = {
       student: student,
       recording: recording,
-      scores: note && note.intentoId === recording.intentoId ? Object.assign({}, note.puntajes || {}) : {}
+      scores: note && note.intentoId === recording.intentoId ? Object.assign({}, note.puntajes || {}) : {},
+      evidences: note && note.intentoId === recording.intentoId ? Object.assign({}, note.evidencias || {}) : {}
     };
     $('revisionTitulo').textContent = 'Revisar a ' + student.nombre;
     $('obsRevisionAudio').value = note && note.intentoId === recording.intentoId ? (note.observacion || '') : '';
@@ -775,6 +782,7 @@
         alumnoId: review.student.id,
         preguntas: review.recording.preguntas,
         puntajes: review.scores,
+        evidencias: review.evidences,
         cambiada: review.recording.cambiada == null ? null : Number(review.recording.cambiada),
         observacion: $('obsRevisionAudio').value,
         intentoId: review.recording.intentoId

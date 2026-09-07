@@ -101,6 +101,19 @@ function puntajesValidos(value) {
   return puntajes;
 }
 
+function evidenciasValidas(value) {
+  if (value == null) return {};
+  if (typeof value !== 'object' || Array.isArray(value)) return null;
+  const evidencias = {};
+  for (const [key, raw] of Object.entries(value)) {
+    const posicion = Number(key);
+    if (!Number.isInteger(posicion) || posicion < 0 || posicion > 6) return null;
+    const evidencia = String(raw == null ? '' : raw).replace(/\s+/g, ' ').trim().slice(0, 260);
+    if (evidencia) evidencias[posicion] = evidencia;
+  }
+  return evidencias;
+}
+
 function nota(puntajes) {
   const suma = Object.values(puntajes).reduce((total, valor) => total + valor, 0);
   const logro = Math.max(0, Math.min(7, suma));
@@ -736,12 +749,14 @@ module.exports = async function handler(req, res) {
       }
       const preguntas = preguntasValidas(cuerpo.preguntas);
       const puntajes = puntajesValidos(cuerpo.puntajes);
+      const evidencias = evidenciasValidas(cuerpo.evidencias);
       const cambiada = cuerpo.cambiada == null ? null : Number(cuerpo.cambiada);
       const intentoId = cuerpo.intentoId ? idValido(cuerpo.intentoId) : '';
       if (!preguntas) {
         return res.status(400).json({ error: 'El sorteo debe contener siete preguntas distintas del banco.' });
       }
       if (!puntajes) return res.status(400).json({ error: 'Los puntajes recibidos no son válidos.' });
+      if (!evidencias) return res.status(400).json({ error: 'La evidencia de las respuestas no es válida.' });
       if (cambiada !== null && (!Number.isInteger(cambiada) || cambiada < 0 || cambiada > 6)) {
         return res.status(400).json({ error: 'El cambio de pregunta no es válido.' });
       }
@@ -759,6 +774,7 @@ module.exports = async function handler(req, res) {
         curso: alumno.curso,
         preguntas,
         puntajes,
+        evidencias,
         cambiada,
         observacion: String(cuerpo.observacion || '').slice(0, 500),
         nota: nota(puntajes),

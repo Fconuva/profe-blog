@@ -117,6 +117,9 @@ Antes de editar y nuevamente antes de publicar:
 - La suma de logro de las siete respuestas va de `0,0` a `7,0`, pero no es la
   nota. La calificación se calcula con `1 + (logro / 7) × 6`, redondeada a un
   decimal: cero puntos equivale a `1,0` y siete puntos a `7,0`.
+- Cuando exista una transcripción revisada, la calificación guarda una síntesis
+  fiel de cada respuesta y la muestra en `Ver detalle` y en el PDF A4. No se
+  presenta como cita literal si el audio contiene una palabra dudosa.
 
 ## 7. Evaluaciones y resultados
 

@@ -68,6 +68,9 @@ Para cada estudiante prepara primero una hoja interna, sin escribir en producci�
 - En preguntas de varias partes, separa los componentes solicitados antes de puntuar.
 - Revisa manualmente toda propuesta de confianza baja.
 - No uses duración, velocidad de respuesta o fluidez como reemplazo del contenido.
+- Si la síntesis fue revisada contra el audio, guárdala en `evidencias` para que
+  aparezca como `Respuesta registrada` en el detalle y en el PDF. No uses
+  comillas ni la presentes como transcripción literal cuando haya palabras dudosas.
 - Antes de aplicar en lote, informa cuántas entregas están completas, incompletas, con incidencia y listas para calificar.
 
 ## Retroalimentación

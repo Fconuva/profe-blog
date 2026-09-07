@@ -43,6 +43,8 @@ for (const item of review.items) {
 }
 
 const SKILLS = ['LOCALIZAR', 'INTERPRETAR', 'REFLEXIONAR'];
+const DISTRACTOR_TAG = /^Trampa\s*\((cambio de foco|sobregeneralización|literalización|invención plausible|contrasentido|confusión técnica|parcialmente correcto)\)/i;
+let longestKeyCues = 0;
 expect(review.practica && typeof review.practica === 'object', 'Falta el banco de práctica dirigida por habilidad.');
 for (const skill of SKILLS) {
   const bank = review.practica && review.practica[skill];
@@ -55,9 +57,28 @@ for (const skill of SKILLS) {
     const labels = Object.keys(question.options || {});
     expect(labels.join('') === 'ABCD', `${question.id}: alternativas de práctica incompletas o desordenadas.`);
     expect(['A', 'B', 'C', 'D'].includes(question.correcta), `${question.id}: letra de respuesta de práctica inválida.`);
-    expect(typeof question.explicacion === 'string' && question.explicacion.length >= 30, `${question.id}: explicación de práctica demasiado breve.`);
+    const normalized = labels.map(letter => (question.options[letter] || '').toLowerCase().replace(/[^a-záéíóúüñ0-9]+/gi, ' ').trim());
+    expect(new Set(normalized).size === 4, `${question.id}: contiene alternativas duplicadas.`);
+    expect(typeof question.cita === 'string' && question.cita.length >= 15, `${question.id}: falta la cita textual de respaldo.`);
+    expect(question.why && typeof question.why === 'object', `${question.id}: falta la explicación por alternativa (why).`);
+    if (question.why) {
+      for (const letter of labels) {
+        const text = question.why[letter];
+        expect(typeof text === 'string' && text.length >= 20, `${question.id}${letter}: explicación de la alternativa demasiado breve o ausente.`);
+        if (letter === question.correcta) {
+          expect(/^Correcta\./.test(text || ''), `${question.id}${letter}: la explicación de la clave debe declarar explícitamente "Correcta.".`);
+        } else {
+          expect(DISTRACTOR_TAG.test(text || ''), `${question.id}${letter}: el distractor no declara una falla técnica explícita (Trampa (...)).`);
+        }
+      }
+    }
+    const lengths = labels.map(letter => (question.options[letter] || '').length);
+    const keyLength = (question.options[question.correcta] || '').length;
+    const otherMax = Math.max(...labels.filter(letter => letter !== question.correcta).map(letter => (question.options[letter] || '').length));
+    if (keyLength - otherMax > 14) longestKeyCues += 1;
   }
 }
+expect(longestKeyCues === 0, `La clave es notoriamente más larga que todos los distractores en ${longestKeyCues} reactivo(s) de práctica.`);
 const practiceIds = SKILLS.flatMap(skill => (review.practica[skill]?.preguntas || []).map(question => question.id));
 expect(new Set(practiceIds).size === practiceIds.length, 'Hay ids repetidos entre las preguntas de práctica.');
 expect(practiceIds.every(id => !ids.includes(id)), 'Una pregunta de práctica reutiliza el id de una pregunta del ensayo original.');
@@ -92,4 +113,4 @@ if (failures.length) {
   console.error('Auditoría SIMCE U3S9 incumplida:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`SIMCE U3S9 auditado: 36 correcciones, claves alineadas con el servidor, resultados del curso limitados a agregados propios, y ${practiceIds.length} preguntas de práctica dirigida (${SKILLS.join('/')}).`);
+console.log(`SIMCE U3S9 auditado: 36 correcciones, claves alineadas con el servidor, resultados del curso limitados a agregados propios, y ${practiceIds.length} preguntas de práctica dirigida (${SKILLS.join('/')}) que cumplen las reglas de construcción de reactivos: 4 alternativas sin duplicados, distractor con falla técnica explícita, clave nunca la más larga (0 indicios) y cita textual de respaldo.`);

@@ -30,17 +30,34 @@ expect(ids.join(',') === Array.from({ length: 14 }, (_, i) => `q${i + 1}`).join(
 const skillDistribution = QUESTIONS.reduce((acc, q) => { acc[q.hab] = (acc[q.hab] || 0) + 1; return acc; }, {});
 expect(JSON.stringify(skillDistribution) === JSON.stringify({ L: 4, I: 7, R: 3 }), `Distribución de habilidades inesperada: ${JSON.stringify(skillDistribution)}.`);
 
+const DISTRACTOR_TAG = /^Trampa\s*\((cambio de foco|sobregeneralización|literalización|invención plausible|contrasentido|confusión técnica|dato de otro momento|exageración del cronista|parcialmente correcto)\)/i;
+let longestKeyCues = 0;
 for (const question of QUESTIONS) {
   const letters = (question.ops || []).map(o => o.l);
   expect(letters.join('') === 'ABCD', `${question.id}: alternativas incompletas o desordenadas.`);
   expect(['L', 'I', 'R'].includes(question.hab), `${question.id}: habilidad inválida.`);
   expect(['A', 'B', 'C', 'D'].includes(question.correcta), `${question.id}: letra de respuesta inválida.`);
   expect(question.why && ['A', 'B', 'C', 'D'].every(letter => typeof question.why[letter] === 'string' && question.why[letter].length >= 20), `${question.id}: faltan explicaciones por alternativa.`);
+  if (question.why) {
+    for (const letter of letters) {
+      const text = question.why[letter] || '';
+      if (letter === question.correcta) {
+        expect(/^Correcta\./.test(text), `${question.id}${letter}: la explicación de la clave debe declarar explícitamente "Correcta.".`);
+      } else {
+        expect(DISTRACTOR_TAG.test(text), `${question.id}${letter}: el distractor no declara una falla técnica explícita (Trampa (...)).`);
+      }
+    }
+  }
+  const opByLetter = Object.fromEntries((question.ops || []).map(o => [o.l, o.t]));
+  const keyLength = (opByLetter[question.correcta] || '').length;
+  const otherMax = Math.max(...letters.filter(l => l !== question.correcta).map(l => (opByLetter[l] || '').length));
+  if (keyLength - otherMax > 14) longestKeyCues += 1;
   expect(typeof question.cita === 'string' && question.cita.length >= 15, `${question.id}: falta la cita textual de respaldo.`);
   expect(['p1', 'p2', 'ambos'].includes(question.texto), `${question.id}: referencia un texto inexistente.`);
   const normalized = (question.ops || []).map(o => o.t.toLowerCase().replace(/[^a-záéíóúüñ0-9]+/gi, ' ').trim());
   expect(new Set(normalized).size === 4, `${question.id}: contiene alternativas duplicadas.`);
 }
+expect(longestKeyCues === 0, `La clave es notoriamente más larga que todos los distractores en ${longestKeyCues} reactivo(s).`);
 
 const p1Words = QUESTIONS.filter(q => q.texto === 'p1').length;
 const p2Words = QUESTIONS.filter(q => q.texto === 'p2').length;
@@ -78,4 +95,4 @@ if (failures.length) {
   console.error('Auditoría SIMCE U3S10 incumplida:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`SIMCE U3S10 auditado: 2 textos (crónica y carta), 14 reactivos, habilidades ${JSON.stringify(skillDistribution)}, desarrollo con modelo y entrega directa a Firebase verificada.`);
+console.log(`SIMCE U3S10 auditado: 2 textos (crónica y carta), 14 reactivos, habilidades ${JSON.stringify(skillDistribution)}, desarrollo con modelo y entrega directa a Firebase verificada. Reglas de construcción: 4 alternativas sin duplicados, distractor con falla técnica explícita, clave nunca la más larga (${longestKeyCues} indicios) y cita textual de respaldo en todos los reactivos.`);

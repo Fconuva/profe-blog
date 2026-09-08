@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-08, cuota general de 3 GB por estudiante en Anuario 4DTP
+
+- La carpeta privada de cada estudiante admite ahora 3 GB acumulados entre
+  audios, fotografías, documentos y otros aportes. La cuota corresponde al
+  total de la carpeta y no se aplica como un límite fijo por archivo.
+- La API descuenta el audio anterior al reemplazar una entrevista y cuenta las
+  reservas activas antes de autorizar una subida, por lo que las cargas
+  simultáneas tampoco pueden superar los 3 GB. Storage mantiene la validación
+  del propietario, la ruta y el tamaño exacto autorizado por la API.
+- `npm run audit:anuario-4dtp`, `npm run verify:rules` y `npm run build`
+  aprobaron. Las pruebas de borde aceptaron exactamente 3 GB y rechazaron un
+  byte adicional; producción respondió con `maxStudentStorage: 3221225472`.
+  La página se abrió en móvil y escritorio sin errores de consola ni desborde.
+- Commit funcional `7383d963`. Deploy productivo
+  `dpl_72DGEjpmdg2zpNu72zjBdCa5YkPN`. Reglas de Storage publicadas en el
+  ruleset `e827b647-bf9b-42f8-97c3-034700d8f00d`.
+
 ## 2026-09-08, sincronización entre docentes en las interrogaciones orales
 
 - Los paneles de `Mocha Dick` y `El lugar sin límites` consultan nuevamente la

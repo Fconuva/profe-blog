@@ -8,6 +8,29 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-08, avance `No sabe` y cierre de calificaciones orales pendientes
+
+- Las interrogaciones orales NM3 y NM4 incorporan la acción explícita
+  `No sabe · siguiente`. El servidor guarda una marca sin audio asociada a la
+  pregunta y posición exactas, permite avanzar y exige igualmente siete
+  posiciones antes de entregar. En la revisión aparece diferenciada de una
+  falla técnica, propone `0,0` y puede reemplazarse por una grabación.
+- La descarga técnica ya no intenta reproducir ni transcribir esas posiciones:
+  las omite como archivos de audio y las enumera por separado en el manifiesto.
+- La prueba simulada de navegador recorrió las siete preguntas, confirmó una
+  sola entrega, siete marcas visibles y siete puntajes iniciales `0,0`, sin
+  errores de consola. También se corrigió NM3 para habilitar el inicio de audio
+  y excluir de la nómina inicial a quienes ya tienen un registro.
+- Se revisaron las tres entregas completas nuevas de NM4: 21 audios, 21
+  puntajes y 21 evidencias. La simulación previa, la aplicación y la lectura
+  posterior coincidieron; los tres PDF institucionales resultantes aprobaron
+  cabecera, tamaño A4 y una sola página.
+- Se dejó documentado además el lote inmediatamente anterior de 14 entregas
+  completas NM4: 98 audios revisados, 14 calificaciones leídas de vuelta y 14
+  PDF A4 de una página validados, sin incidencias técnicas.
+- `npm run audit:interrogaciones` y `npm run build` aprobaron. Commit funcional:
+  `fb96503b`. Deploy productivo: `dpl_By4DSikJByJ5eVagyAw2ZFCc4b9o`.
+
 ## 2026-09-07, corrección del flujo Continuar grabación
 
 - Se corrigió `Continuar grabación` en el panel de interrogaciones orales: ahora

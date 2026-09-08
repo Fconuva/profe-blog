@@ -8,6 +8,20 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-08, pauta visible en la interrogación manual de *El lugar sin límites*
+
+- El panel docente NM3 muestra ahora una respuesta esperada bajo cada una de
+  las siete preguntas sorteadas. Se incorporó una pauta sustantiva para las 50
+  preguntas y se conserva la correspondencia cuando se cambia una pregunta.
+- La pauta quedó solo en la vista docente de calificación manual; no se expone
+  en la página del estudiante ni forma parte de la configuración del flujo de
+  audio.
+- `npm run audit:interrogaciones` y `npm run build` aprobaron. La verificación
+  en producción confirmó siete preguntas y siete respuestas en escritorio y
+  móvil, sin desbordamiento horizontal.
+- Commit funcional `c4eb4a37`. Deploy productivo
+  `dpl_8nNJ3Fa6fibYouD5cVrCUThCj9M3`.
+
 ## 2026-09-08, cuota general de 3 GB por estudiante en Anuario 4DTP
 
 - La carpeta privada de cada estudiante admite ahora 3 GB acumulados entre

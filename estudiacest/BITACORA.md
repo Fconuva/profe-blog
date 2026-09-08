@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-08, sincronización entre docentes en las interrogaciones orales
+
+- Los paneles de `Mocha Dick` y `El lugar sin límites` consultan nuevamente la
+  nómina cada 30 segundos, actualizan pendientes, notas y grabaciones sin
+  recargar la página y conservan el estudiante seleccionado mientras siga
+  disponible.
+- Antes de iniciar una interrogación manual o con audio se exige una consulta
+  fresca. Si otro panel ya tomó al estudiante, la interfaz lo informa y evita
+  comenzar. La API también rechaza una grabación o calificación manual tardía,
+  por lo que un panel no puede sobrescribir silenciosamente al otro.
+- `npm run audit:interrogaciones` y `npm run build` aprobaron. En producción se
+  abrieron ambos paneles simultáneamente: cada uno hizo una nueva consulta al
+  cumplirse los 30 segundos, mantuvo su selección y no registró errores de
+  consola ni respuestas fallidas.
+- Commit funcional `d3abae21`. Deploy productivo
+  `dpl_B5d4g1bCH25hz8tPZGH6D8n4jfx7`.
+
 ## 2026-09-08, avance `No sabe` y cierre de calificaciones orales pendientes
 
 - Las interrogaciones orales NM3 y NM4 incorporan la acción explícita

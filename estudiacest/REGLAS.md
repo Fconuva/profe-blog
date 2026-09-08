@@ -127,6 +127,11 @@ Antes de editar y nuevamente antes de publicar:
   estudiantes sin grabación ni calificación. Quienes ya comenzaron, entregaron
   o fueron evaluados se gestionan desde las tablas de registros, con filtro por
   curso; al eliminar deliberadamente su registro vuelven a quedar disponibles.
+- Cuando dos docentes interrogan en paralelo, ambos paneles actualizan la nómina
+  desde el servidor cada 30 segundos y vuelven a comprobarla inmediatamente
+  antes de iniciar. La actualización conserva la selección si sigue disponible;
+  si otro panel ya tomó al estudiante, lo retira de pendientes. El servidor
+  rechaza cualquier intento tardío de sobrescribir su registro.
 - La suma de logro de las siete respuestas va de `0,0` a `7,0`, pero no es la
   nota. La calificación se calcula con `1 + (logro / 7) × 6`, redondeada a un
   decimal: cero puntos equivale a `1,0` y siete puntos a `7,0`.

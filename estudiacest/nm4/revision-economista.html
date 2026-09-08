@@ -31,13 +31,8 @@
 <body>
 <header><h1>Revisión · Prueba de Plan Lector «El economista callejero» · NM4</h1></header>
 <main>
-  <div class="caja" id="acceso">
-    <label for="clave">Clave de revisión</label>
-    <input id="clave" type="password" autocomplete="off" placeholder="Pégala aquí">
-    <button type="button" id="ver">Ver entregas</button>
-    <div id="error" class="err oculto" style="margin-top:10px"></div>
-  </div>
-  <div id="salida"></div>
+  <div id="error" class="err oculto"></div>
+  <div id="salida"><div class="caja">Cargando entregas…</div></div>
 </main>
 <script>
 (function () {
@@ -55,11 +50,9 @@
     return d.toLocaleDateString('es-CL') + ' ' + d.toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' });
   }
 
-  $('ver').addEventListener('click', function () {
-    var clave = $('clave').value.trim();
+  function cargar() {
     $('error').classList.add('oculto');
-    if (!clave) { $('error').textContent = 'Falta la clave.'; $('error').classList.remove('oculto'); return; }
-    fetch('/api/economista?action=admin-list&key=' + encodeURIComponent(clave))
+    fetch('/api/economista?action=admin-list')
       .then(function (r) { return r.json().then(function (d) { if (!r.ok) throw new Error(d.error || 'Error ' + r.status); return d; }); })
       .then(function (data) {
         var intentos = data.intentos || {};
@@ -84,13 +77,13 @@
             + cuerpo + '</div></div>';
         }).join('');
         $('salida').innerHTML = html;
-        $('acceso').classList.add('oculto');
       })
       .catch(function (e) {
         $('error').textContent = e.message;
         $('error').classList.remove('oculto');
       });
-  });
+  }
+  cargar();
 })();
 </script>
 </body>

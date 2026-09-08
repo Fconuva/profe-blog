@@ -145,10 +145,9 @@ async function handleGuardar(req, res, draft) {
 }
 
 async function handleAdminList(req, res) {
-    const q = req.method === 'GET' ? req.query : req.body;
-    if (!process.env.ADMIN_KEY || q.key !== process.env.ADMIN_KEY) {
-        return res.status(401).json({ error: 'No autorizado' });
-    }
+    // Acceso docente directo, sin clave: la ruta vive detras de una URL no
+    // indexada (noindex,nofollow), mismo patron que los paneles de
+    // interrogacion NM3/NM4 (ver AGENTS.md).
     const snap = await db.ref(BASE).once('value');
     return res.status(200).json({ success: true, intentos: snap.val() || {} });
 }

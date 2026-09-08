@@ -8,6 +8,17 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-08, registro de interrogaciones manuales NM3 en 3°B
+
+- Se registraron ocho calificaciones finales informadas por el docente para
+  interrogaciones orales realizadas manualmente de *El lugar sin límites*.
+- La simulación previa resolvió ocho números de lista únicos contra la nómina
+  vigente y confirmó que ninguno tenía nota ni grabación previa.
+- La escritura y la lectura posterior coincidieron en ocho de ocho registros,
+  con origen manual declarado, sin preguntas o puntajes inventados y sin crear
+  audios. Fue una mutación de datos; no requirió cambios de aplicación ni
+  despliegue.
+
 ## 2026-09-08, pauta visible en la interrogación manual de *El lugar sin límites*
 
 - El panel docente NM3 muestra ahora una respuesta esperada bajo cada una de

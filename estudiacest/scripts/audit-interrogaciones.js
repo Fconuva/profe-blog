@@ -99,20 +99,15 @@ function auditPanel(config) {
     assert(panelHtml.includes('class="respuesta-esperada"'), `${config.label}: la pauta no se muestra en la interrogación manual.`);
     assert(panelHtml.includes("RESPUESTAS[idx]"), `${config.label}: la pauta no sigue la pregunta sorteada.`);
     assert(!/INTERROGACION_AUDIO_CONFIG\s*=\s*\{[^}]*respuestas/i.test(panelHtml), `${config.label}: la pauta quedó expuesta al modo con audio.`);
-    for (const standalone of [
-      '¿Qué edad tenía Caleb Hienam cuando se embarcó por primera vez',
-      '¿Cómo se llamaba el barco ballenero en el que se embarcó Caleb Hienam',
-      'que encontró la tripulación del Dauphin',
-      '¿Qué recompensa ofrece Nathan Coffin',
-      'a comienzos del siglo XIX',
-      'cuando Leftraru lo enfrenta sobre Mocha'
-    ]) {
+    for (const standalone of config.manualReferents || []) {
       assert(panel.some((question) => question.includes(standalone)), `${config.label}: falta el referente explícito en ${standalone}.`);
     }
-    for (const rosterContract of [
-      'id="filtroNotasCurso"',
-      'id="filtroGrabacionesCurso"',
-    ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
+    if (config.manualCourseFilters) {
+      for (const rosterContract of [
+        'id="filtroNotasCurso"',
+        'id="filtroGrabacionesCurso"',
+      ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
+    }
   }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
   assert(!panelHtml.includes('type="password"'), `${config.label}: aún muestra una contraseña.`);
@@ -131,7 +126,8 @@ auditPanel({
   publicPage: 'nm3/interrogacion-un-lugar-sin-limites/index.html',
   panelPage: 'nm3/interrogacion-un-lugar-sin-limites/calificar/index.html',
   publicClass: 'questions',
-  api: "var INSTRUMENTO = 'nm3'"
+  api: "var INSTRUMENTO = 'nm3'",
+  manualAnswers: true
 });
 
 auditPanel({
@@ -140,7 +136,16 @@ auditPanel({
   panelPage: 'nm4/interrogacion-mocha-dick/calificar/index.html',
   publicClass: 'preg',
   api: "var INSTRUMENTO = 'nm4'",
-  manualAnswers: true
+  manualAnswers: true,
+  manualCourseFilters: true,
+  manualReferents: [
+    '¿Qué edad tenía Caleb Hienam cuando se embarcó por primera vez',
+    '¿Cómo se llamaba el barco ballenero en el que se embarcó Caleb Hienam',
+    'que encontró la tripulación del Dauphin',
+    '¿Qué recompensa ofrece Nathan Coffin',
+    'a comienzos del siglo XIX',
+    'cuando Leftraru lo enfrenta sobre Mocha'
+  ]
 });
 
 const nm3Roster = require(path.join(ROOT, 'api/_roster_nm3')).ROSTER_ROWS;

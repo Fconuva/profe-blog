@@ -60,6 +60,10 @@
   .preg-h .cambiar:disabled{opacity:.4;cursor:not-allowed;}
   .preg-b{padding:12px 14px;}
   .preg-t{font-size:14.6px;margin-bottom:11px;line-height:1.5;}
+  .respuesta-esperada{margin:0 0 12px;padding:10px 12px;border-left:4px solid #16805c;border-radius:7px;
+                      background:#effaf5;color:#183d32;font-size:13.5px;line-height:1.5;}
+  .respuesta-esperada strong{display:block;margin-bottom:3px;color:#0f6849;font-size:11.5px;
+                             text-transform:uppercase;letter-spacing:.04em;}
   .escala{display:flex;flex-wrap:wrap;gap:6px;}
   .escala button{font:inherit;font-size:13.5px;font-weight:700;min-width:48px;padding:8px 6px;border-radius:8px;
                  border:1.5px solid var(--line);background:#fff;color:var(--muted);cursor:pointer;}
@@ -270,6 +274,58 @@
 (function () {
   var API = '/api/interrogacion';
   var INSTRUMENTO = 'nm3';
+  var RESPUESTAS = [
+    "La bocina del camión rojo permite comprobar si Pancho regresó al pueblo. Manuela quiere saberlo porque recuerda su violencia, le teme y, al mismo tiempo, espera enfrentarlo.",
+    "Intenta reparar su vestido rojo de española, roto la noche anterior. La prenda sostiene su identidad femenina y su papel de bailarina, por eso prepararla equivale a prepararse para la posible llegada de Pancho.",
+    "Don Alejo le presta dinero para comprar el camión y luego usa la deuda y su influencia sobre los trabajos disponibles para mantenerlo subordinado.",
+    "Octavio le presta el dinero que le falta y lo acompaña a pagar la deuda, decidido a terminar con la humillación económica que don Alejo ejerce sobre Pancho.",
+    "La gana en una apuesta con don Alejo: la Japonesa asegura que logrará seducir a Manuela y hacer que actúe como hombre. Al cumplir la apuesta recibe la casa y comparte la propiedad con Manuela.",
+    "La Japonesita es hija biológica de la Japonesa Grande y Manuela. La Japonesa es su madre y Manuela, aunque se reconoce como mujer, es llamada 'papá' por su hija.",
+    "La analepsis explica el origen de la casa, la propiedad compartida y la filiación de la Japonesita; también muestra el poder electoral de don Alejo y demora el conflicto anunciado en el presente.",
+    "Don Alejo informa que la electricidad no llegará a El Olivo. Con ello se derrumba el proyecto de comprar un Wurlitzer, modernizar el local y recuperar la prosperidad del pueblo.",
+    "Entran porque don Alejo se los había prohibido. Después de pagar la deuda, Pancho convierte la visita en un gesto de rebeldía frente al patrón, aunque en realidad sigue actuando condicionado por él.",
+    "La victrola se rompe y Octavio termina de desarmarla. Al quedar el salón sin música, la fiesta se desplaza hacia el camión y la escena avanza hacia el encuentro violento final.",
+    "Manuela sale del gallinero, baila y seduce a Pancho; al salir intenta besarlo. Octavio cuestiona a Pancho, este golpea a Manuela, Octavio la sujeta y ambos la persiguen hasta las viñas, donde la agreden.",
+    "La Japonesita baja las llamas, anuncia que comprará otra victrola, resta importancia a la ausencia de Manuela, apaga las luces y se acuesta. Sus actos revelan resignación y normalización de la violencia.",
+    "Controla empleos, créditos, tierras, favores, protección y promesas de progreso. Presenta esa dominación como cuidado de un padre hacia sus hijos, pero exige obediencia política y personal.",
+    "Son extensiones del poder amenazante de don Alejo: vigilan, intimidan y atacan por orden suya. También refuerzan la imagen infernal del dominio del patrón sobre El Olivo.",
+    "Manuela es expansiva, festiva y busca ser reconocida como mujer; la Japonesita es austera, retraída y la obliga a ocupar el lugar de padre. Pese al contraste, ambas comparten encierro, miedo y fascinación por Pancho.",
+    "Pancho desea a Manuela, pero siente que ese deseo amenaza la masculinidad que debe exhibir ante Octavio y el pueblo. Convierte la vergüenza y el miedo a ser juzgado en violencia contra quien revela su contradicción.",
+    "Ema quiere llevar a Norma a Talca, educarla en un colegio de monjas y lograr que estudie obstetricia y elija con mayor libertad con quién casarse. Aspira a la movilidad social que ella no tuvo.",
+    "Imita a Misia Blanca, quien enterró su trenza con su hija, y arroja sus anteojos a la tumba del marido. El gesto muestra su identificación servil con los patrones y un sacrificio que la deja sin visión.",
+    "Funciona como centro social y oficina de campaña: allí se atrae a votantes indecisos con vino y regalos y se celebra la victoria electoral de don Alejo.",
+    "Don Céspedes muestra tanto la crueldad de don Alejo, que reemplaza o mata a sus perros, como la miseria que impone incluso a sus servidores fieles. También deja ver a un patrón envejecido y temeroso.",
+    "Aunque ya es dueño del camión, Pancho sigue ligado afectivamente al fundo y depende de la red laboral de don Alejo. Incluso ir al prostíbulo es una reacción a la prohibición del patrón, no una decisión plenamente libre.",
+    "Expresa la escasez, el temor a perder lo ahorrado y una vida sin expectativas. Su administración preserva un negocio decadente, en contraste con el derroche y la vitalidad de la Japonesa Grande.",
+    "La Japonesita insiste en llamar a Manuela 'papá' y le exige protección masculina; Manuela reclama ser reconocida como mujer y rechaza ese rol. La dependencia entre ambas mezcla cuidado, vergüenza y resentimiento.",
+    "Octavio actúa como vigilante de la masculinidad de Pancho: interpreta el beso como una humillación, lo increpa, sujeta a Manuela y participa en la persecución y la golpiza.",
+    "Simboliza la feminidad escénica de Manuela, su deseo y la libertad momentánea que alcanza al bailar. Sus roturas anticipan la destrucción de esa identidad bajo la violencia patriarcal.",
+    "Simboliza movilidad, virilidad e independencia económica para Pancho, pero también recuerda la deuda y los vínculos de subordinación que hacen contradictoria esa libertad.",
+    "El rojo vincula el deseo, la energía y la exhibición de ambos personajes. A la vez, anticipa sangre y peligro: aquello que los acerca también desencadena la violencia final.",
+    "La focalización móvil y el estilo indirecto libre permiten entrar en pensamientos contradictorios. Así, el lector recompone una realidad compleja sin una única versión estable de la identidad o el deseo.",
+    "Ambos sonidos anuncian desde fuera la llegada de fuerzas masculinas amenazantes: la bocina hace presente a Pancho y los ladridos, a don Alejo. Antes de que aparezcan, ya dominan el espacio por el miedo.",
+    "El Wurlitzer representa modernización, electricidad y un futuro próspero; la victrola vieja y rota encarna el atraso, la decadencia y la reducción de esas esperanzas a una repetición del pasado.",
+    "Los viñedos fértiles y en expansión concentran la riqueza de don Alejo, mientras la estación y el pueblo se arruinan. El contraste evidencia que el progreso del patrón se construye junto al abandono de los demás.",
+    "Es refugio, trabajo y escenario donde Manuela puede representar su identidad y las mujeres forman comunidad; pero también depende del poder masculino y reproduce explotación, jerarquías y violencia.",
+    "Las esperanzas se frustran o se vuelven trampas: no llega la electricidad, el camión no libera completamente a Pancho y la protección de don Alejo no salva a Manuela. El orden social impide un cambio real.",
+    "El título alude a un infierno sin salida ni fronteras precisas: la dominación de clase, el paternalismo y el machismo alcanzan el pueblo, el fundo y las relaciones íntimas de todos los personajes.",
+    "El cambio le arrebata a Manuela el nombre y el género con que se construyó. La agresión funciona como un castigo patriarcal que intenta devolverla por la fuerza a la categoría masculina 'Manuel'.",
+    "Revela que su protección paternal era una ilusión condicionada por su conveniencia. Cuando Manuela enfrenta el peligro definitivo, el poder que consideraba omnipotente no interviene.",
+    "Se apoya en dos señales que Manuela trata de negar: oyó la bocina del camión la noche anterior y lleva todo el día reparando su vestido rojo para recibir a Pancho.",
+    "Sus palabras niegan lo que revelan sus actos. El miedo convive con el deseo de atraerlo, desafiarlo y vengarse de sus burlas, por eso se prepara aunque afirme que nadie llegará.",
+    "Quiere que el pueblo conozca lo que ocurra para desmentir las burlas de Pancho, exhibir su deseo por ella y vengarse públicamente de lo que él dice sobre las 'locas'.",
+    "Muestra un momento de cuidado e intimidad, pero también su conflicto de roles: Manuela puede ayudarla a presentarse como mujer ante Pancho, aunque no puede ni quiere ser el padre protector que ella exige.",
+    "El recuerdo del intento de abuso funde deseo y miedo en la Japonesita, vuelve concreta la amenaza de la visita y anticipa que la violencia anterior puede repetirse.",
+    "El cambio de focalización expone simultáneamente lo que ambas callan: miedo, deseo, rechazo y necesidad de reconocimiento. El presente se mezcla con el trauma y vuelve inestable la escena cotidiana.",
+    "Espera atraer clientes, modernizar el salón y asegurar el futuro económico de la casa. Sin electricidad pierde no solo una comodidad, sino el símbolo de que el negocio y El Olivo todavía podían progresar.",
+    "El camión promete recorrer caminos, trabajar y alejarse del fundo, pero fue comprado con dinero de don Alejo. La deuda y el control del patrón sobre los empleos convierten el emblema de libertad en instrumento de dependencia.",
+    "Allí Manuela puede bailar y ser reconocida, y las mujeres encuentran casa y trabajo; sin embargo, el lugar comercia con sus cuerpos, depende de clientes y patrones y no las protege de la violencia masculina.",
+    "El deseo de Pancho por Manuela queda expuesto en el baile y el beso. La mirada y las burlas de Octavio lo avergüenzan, y Pancho intenta restaurar su imagen de macho mediante una violencia que Octavio sostiene y comparte.",
+    "La bocina y los ladridos son señales acústicas repetidas que invaden el pueblo antes que sus dueños. Crean suspenso, anuncian a Pancho y don Alejo y hacen sentir que sus poderes amenazantes son inevitables.",
+    "El rojo une la feminidad y el deseo de Manuela con la virilidad y movilidad que Pancho atribuye al camión. Esa atracción compartida se asocia también con sangre, agresión y el desenlace fatal.",
+    "La Japonesita espera electricidad y un Wurlitzer; Pancho, independencia mediante el camión; Manuela, reconocimiento y protección. Todas dependen del poder ajeno y terminan frustradas o convertidas en nuevas formas de encierro.",
+    "El 'lugar sin límites' es el orden opresivo que parece eterno y del que nadie logra salir. La electricidad nunca llega mientras don Alejo expande sus viñas; Pancho paga el camión pero sigue condicionado por él, y Manuela muere esperando su protección."
+  ];
   var BANCO =   [
       "¿Por qué Manuela pide averiguar si el camión de Pancho está en el pueblo?",
       "¿Qué objeto intenta reparar Manuela durante el último domingo del relato y por qué es importante para ella?",
@@ -501,6 +557,7 @@
         '<button class="cambiar" data-pos="' + pos + '"' + (puedeCambiar ? '' : ' disabled') + '>' +
         (actual.cambiada === pos ? 'cambiada' : '⟳ cambiar') + '</button></div>' +
         '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
+        '<div class="respuesta-esperada"><strong>Respuesta esperada</strong>' + RESPUESTAS[idx] + '</div>' +
         '<div class="escala" data-pos="' + pos + '">' +
         PUNTOS.map(function (p) {
           var on = actual.puntajes[pos] === p ? ' on' : '';

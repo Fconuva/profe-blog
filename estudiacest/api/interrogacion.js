@@ -885,6 +885,45 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota });
     }
 
+    if (accion === 'guardar-nota-manual') {
+      // Para calificaciones que no pasaron por el flujo de 7 preguntas de
+      // este sistema (p. ej. una evaluacion adecuada tomada por la educadora
+      // diferencial PIE fuera de esta herramienta). Nunca inventa preguntas
+      // ni puntajes: solo registra la nota final con su origen declarado, y
+      // el PDF/detalle la muestran sin desglose por pregunta.
+      const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+      if (!alumno || !docente.cursos.includes(alumno.curso)) {
+        return res.status(403).json({ error: 'Ese estudiante no corresponde a tus cursos.' });
+      }
+      const notaValor = Number(cuerpo.nota);
+      if (!Number.isFinite(notaValor) || notaValor < 1 || notaValor > 7) {
+        return res.status(400).json({ error: 'La nota debe ser un número entre 1,0 y 7,0.' });
+      }
+      const origen = String(cuerpo.origen || '').trim().slice(0, 300);
+      if (origen.length < 10) {
+        return res.status(400).json({ error: 'Falta declarar el origen de esta nota (quién y cómo evaluó).' });
+      }
+      const grabacionExistente = (await db.ref(`${instrumento.base}/grabaciones/${alumno.id}`).once('value')).val();
+      if (grabacionExistente) {
+        return res.status(409).json({ error: 'Este estudiante ya tiene una interrogación grabada en el sistema; usa el flujo normal.' });
+      }
+      const registro = {
+        alumno: alumno.nombre,
+        curso: alumno.curso,
+        nota: notaValor,
+        docente: docente.nombre,
+        fecha: new Date().toISOString(),
+        modalidad: 'manual_pie',
+        observacion: origen
+      };
+      const notaRef = db.ref(`${instrumento.base}/notas/${alumno.id}`);
+      const guardado = await notaRef.transaction((actual) => (actual ? undefined : registro), undefined, false);
+      if (!guardado.committed) {
+        return res.status(409).json({ error: 'Este estudiante ya fue calificado. Actualiza la lista.' });
+      }
+      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota });
+    }
+
     if (accion === 'borrar') {
       const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
       if (!alumno || !docente.cursos.includes(alumno.curso)) {

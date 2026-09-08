@@ -33,9 +33,13 @@ description: Revisar audios, proponer y aplicar calificaciones y generar retroal
 
 ## Validación De Evidencia
 
-- Una entrega completa debe tener siete posiciones y un audio asociado a cada pregunta sorteada.
+- Una entrega completa debe tener siete posiciones. Cada una contiene un audio
+  o la marca explícita `No sabe`; esta última es una decisión registrada del
+  estudiante y se propone con `0,0`, no una incidencia técnica.
 - Decodifica todos los archivos con `ffmpeg`; no confíes solo en el tamaño o en la duración informada por el contenedor WebM.
 - Confirma que existe señal audible. Un archivo vacío, corrupto o inaudible se marca como incidencia técnica y no recibe `0,0` automáticamente.
+- La descarga técnica omite las posiciones `No sabe` y las conserva enumeradas
+  en el manifiesto. No se debe intentar transcribir ni reproducir esas posiciones.
 - Conserva la relación `posición -> pregunta del banco -> audio`. No califiques una respuesta contra otra pregunta.
 - Usa la obra local como fuente primaria. Para `Mocha Dick`, consulta `nm4/pdf/Mocha_Dick_Ortega_Martinez.pdf`; al ser un escaneo, renderiza u obtiene OCR cuando sea necesario y confirma visualmente los pasajes dudosos.
 - La transcripción es un apoyo para navegar el audio. Escucha directamente nombres propios, citas, negaciones, autocorrecciones y fragmentos de baja confianza.

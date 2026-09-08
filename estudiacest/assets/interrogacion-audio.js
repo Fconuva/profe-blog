@@ -278,6 +278,7 @@
     $('btnGrabarAudio').textContent = 'Grabar respuesta';
     $('btnRepetirAudio').classList.add('oculto');
     $('btnSiguienteAudio').disabled = true;
+    updateNoAnswerControl();
     $('estadoGrabacion').textContent = message || 'Presiona grabar cuando el estudiante esté listo.';
     $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
@@ -301,6 +302,16 @@
       : (flow && flow.editSingle
         ? 'No se cambia la pregunta al corregir una grabación.'
         : 'Disponible una vez, antes de grabar.');
+  }
+
+  function updateNoAnswerControl() {
+    var button = $('btnNoSabeAudio');
+    if (!button) return;
+    var position = flow ? flow.position : -1;
+    var answered = Boolean(flow && flow.data.respuestas && flow.data.respuestas[position]);
+    var recordingNow = Boolean(recorder && recorder.state === 'recording');
+    button.disabled = !Boolean(flow && !flow.editSingle && flow.data.estado === 'en_curso'
+      && !answered && !localBlob && !recordingNow && position >= 0 && position < 7);
   }
 
   function setSelectionLocked(locked) {
@@ -347,6 +358,7 @@
       $('btnGrabarAudio').textContent = 'Detener grabación';
       $('estadoGrabacion').textContent = 'Grabando… habla cerca del micrófono.';
       updateQuestionChangeControls();
+      updateNoAnswerControl();
       updateTimer();
       timer = window.setInterval(function () {
         updateTimer();
@@ -400,6 +412,7 @@
     }
     $('tiempoGrabacion').textContent = formatDuration(recordingDuration);
     updateQuestionChangeControls();
+    updateNoAnswerControl();
   }
 
   async function uploadCurrentAudio() {
@@ -412,6 +425,7 @@
     var name = 'respuesta-' + (position + 1) + '-' + Date.now() + '.' + extension;
     $('btnSiguienteAudio').disabled = true;
     $('btnRepetirAudio').disabled = true;
+    updateNoAnswerControl();
     updateQuestionChangeControls();
     $('estadoGrabacion').textContent = 'Preparando el audio…';
     var prepared = null;
@@ -466,6 +480,7 @@
       await auth.signOut().catch(function () {});
       $('btnSiguienteAudio').disabled = false;
       $('btnRepetirAudio').disabled = false;
+      updateNoAnswerControl();
       setNotice('avisoAudio', error.message, 'err');
       throw error;
     }
@@ -507,6 +522,38 @@
     $('tiempoGrabacion').textContent = '0:00';
     resetMeter();
     updateQuestionChangeControls();
+    updateNoAnswerControl();
+  }
+
+  async function markUnknownAndContinue() {
+    if (!flow || flow.editSingle || flow.data.estado !== 'en_curso' || localBlob
+      || (recorder && recorder.state === 'recording')) return;
+    var position = flow.position;
+    if (position < 0 || position > 6 || (flow.data.respuestas && flow.data.respuestas[position])) return;
+    var button = $('btnNoSabeAudio');
+    button.disabled = true;
+    $('estadoGrabacion').textContent = 'Registrando que el estudiante no sabe…';
+    setNotice('avisoAudio', '', '');
+    try {
+      var saved = await api({
+        accion: 'registrar-sin-respuesta',
+        alumnoId: flow.student.id,
+        intentoId: flow.data.intentoId,
+        posicion: position,
+        pregunta: Number(flow.data.preguntas[position])
+      });
+      flow.data.respuestas = flow.data.respuestas || {};
+      flow.data.respuestas[position] = saved.respuesta;
+      if (saved.estado) flow.data.estado = saved.estado;
+      state.grabaciones[flow.student.id] = flow.data;
+      flow.position = firstMissing(flow.data);
+      renderFlow();
+      if (flow) setNotice('avisoAudio', 'Se registró “No sabe” y se avanzó a la siguiente pregunta.', 'ok');
+    } catch (error) {
+      setNotice('avisoAudio', error.message, 'err');
+      $('estadoGrabacion').textContent = 'No se registró la respuesta. Puedes volver a intentarlo.';
+      updateNoAnswerControl();
+    }
   }
 
   async function changeAudioQuestion() {
@@ -677,12 +724,15 @@
       var answer = review.recording.respuestas && review.recording.respuestas[position];
       var element = document.createElement('article');
       element.className = 'review-answer';
-      var controls = answer
-        ? '<button type="button" class="btn chico" data-load-audio="' + position + '">Escuchar respuesta · ' + formatDuration(answer.duracionMs) + '</button>' +
+      var controls = answer && answer.sinRespuesta
+        ? '<span class="review-missing">El estudiante indicó que no sabía la respuesta</span>' +
+          '<button type="button" class="btn chico" data-edit-audio="' + position + '">Grabar una respuesta ahora</button>'
+        : answer
+          ? '<button type="button" class="btn chico" data-load-audio="' + position + '">Escuchar respuesta · ' + formatDuration(answer.duracionMs) + '</button>' +
           '<audio class="review-player oculto" controls preload="none" data-player="' + position + '"></audio>' +
           '<button type="button" class="btn chico" data-edit-audio="' + position + '">Volver a grabar esta respuesta</button>'
-        : '<span class="review-missing">Sin respuesta grabada</span>' +
-          '<button type="button" class="btn chico" data-edit-audio="' + position + '">Grabar esta respuesta</button>';
+          : '<span class="review-missing">Sin respuesta grabada</span>' +
+            '<button type="button" class="btn chico" data-edit-audio="' + position + '">Grabar esta respuesta</button>';
       var scale = complete
         ? '<div class="escala review-scale">' + scoreButtons(position, review.scores[position]) + '</div>'
         : '';
@@ -754,6 +804,11 @@
       scores: note && note.intentoId === recording.intentoId ? Object.assign({}, note.puntajes || {}) : {},
       evidences: note && note.intentoId === recording.intentoId ? Object.assign({}, note.evidencias || {}) : {}
     };
+    if (!(note && note.intentoId === recording.intentoId)) {
+      Object.entries(recording.respuestas || {}).forEach(function (entry) {
+        if (entry[1] && entry[1].sinRespuesta === true) review.scores[Number(entry[0])] = 0;
+      });
+    }
     $('revisionTitulo').textContent = 'Revisar a ' + student.nombre;
     $('obsRevisionAudio').value = note && note.intentoId === recording.intentoId ? (note.observacion || '') : '';
     $('notaSeguimientoAudio').value = recording.notaDocente || '';
@@ -966,6 +1021,7 @@
     startFlow().catch(function (error) { setNotice('avisoAudio', error.message, 'err'); });
   });
   $('btnGrabarAudio').addEventListener('click', beginRecording);
+  if ($('btnNoSabeAudio')) $('btnNoSabeAudio').addEventListener('click', markUnknownAndContinue);
   if ($('btnCambiarPreguntaAudio')) $('btnCambiarPreguntaAudio').addEventListener('click', changeAudioQuestion);
   $('btnRepetirAudio').addEventListener('click', function () {
     releaseLocalAudio();

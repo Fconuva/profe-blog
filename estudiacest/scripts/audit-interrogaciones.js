@@ -58,12 +58,21 @@ function auditPanel(config) {
   assert(panelHtml.includes('Interrogar con audio'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
   assert(panelHtml.includes('id="btnCambiarPreguntaAudio"'), `${config.label}: falta el cambio único en audio.`);
+  assert(panelHtml.includes('id="btnNoSabeAudio"'), `${config.label}: falta avanzar cuando el estudiante no sabe.`);
+  assert(panelHtml.includes('No sabe · siguiente'), `${config.label}: la acción sin respuesta no es clara.`);
   assert(panelHtml.includes('id="estadoCambioPreguntaAudio"'), `${config.label}: falta informar el estado del cambio.`);
   assert(panelHtml.includes('id="nivelMicrofonoBarra"'), `${config.label}: falta el medidor de señal.`);
   assert(panelHtml.includes('id="nivelMicrofonoTexto"'), `${config.label}: falta informar si se detecta voz.`);
   assert(panelHtml.includes('id="microfonoAudio"'), `${config.label}: falta seleccionar el micrófono.`);
   assert(panelHtml.includes('id="microfonoActivo"'), `${config.label}: falta identificar el micrófono activo.`);
   assert(panelHtml.includes('id="cardRevisionAudio"'), `${config.label}: falta la revisión de audios.`);
+  for (const rosterContract of [
+    'id="estadoNomina"',
+    '!sesion.notas[a.id] && !sesion.grabaciones[a.id]',
+    'Sin estudiantes pendientes en este curso',
+    'window.actualizarNominaInterrogacion',
+    'sesion.cursos && Object.keys(sesion.cursos).length'
+  ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
   assert(panelHtml.includes('id="notaSeguimientoAudio"'), `${config.label}: falta la nota docente independiente.`);
   assert(panelHtml.includes('id="btnGuardarNotaAudio"'), `${config.label}: falta guardar la nota docente.`);
   assert(panelHtml.includes('Guardar nota docente'), `${config.label}: la acción de nota docente no es clara.`);
@@ -96,13 +105,8 @@ function auditPanel(config) {
       assert(panel.some((question) => question.includes(standalone)), `${config.label}: falta el referente explícito en ${standalone}.`);
     }
     for (const rosterContract of [
-      'id="estadoNomina"',
       'id="filtroNotasCurso"',
       'id="filtroGrabacionesCurso"',
-      '!sesion.notas[a.id] && !sesion.grabaciones[a.id]',
-      'Sin estudiantes pendientes en este curso',
-      'window.actualizarNominaInterrogacion',
-      'sesion.cursos && Object.keys(sesion.cursos).length'
     ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
   }
   assert(!/\bRUN\b|\bRUT\b/.test(panelHtml), `${config.label}: el panel expone un identificador personal.`);
@@ -162,6 +166,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'cambiar-pregunta-grabacion'",
     "accion === 'preparar-audio'",
     "accion === 'registrar-audio'",
+    "accion === 'registrar-sin-respuesta'",
     "accion === 'entregar-grabacion'",
     "accion === 'audio-url'",
     "accion === 'guardar-nota-grabacion'",
@@ -197,6 +202,7 @@ for (const contract of [
   'new MediaRecorder',
   "accion: 'preparar-audio'",
   "accion: 'registrar-audio'",
+  "accion: 'registrar-sin-respuesta'",
   "accion: 'entregar-grabacion'",
   "accion: 'cambiar-pregunta-grabacion'",
   "accion: 'audio-url'",
@@ -210,6 +216,9 @@ for (const contract of [
   'prepareRecordingCourseFilter',
   'window.actualizarNominaInterrogacion',
   'Guardar y siguiente',
+  'No sabe',
+  'answer.sinRespuesta',
+  'review.scores[Number(entry[0])] = 0',
   'signInWithCustomToken',
   'customMetadata'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
@@ -245,6 +254,7 @@ for (const contract of [
   'interrogacion-review-token.txt',
   "accion: 'revision-agente-lista'",
   "accion: 'revision-agente-audio'",
+  'answer.sinRespuesta === true',
   'X-Review-Key'
 ]) assert(reviewTool.includes(contract), `Herramienta de revisión: falta ${contract}.`);
 

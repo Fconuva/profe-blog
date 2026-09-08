@@ -51,7 +51,7 @@ async function download(instrumento, outputDirectory) {
     fs.mkdirSync(folder, { recursive: true });
     for (let position = 0; position < 7; position += 1) {
       const answer = row.respuestas && row.respuestas[position];
-      if (!answer) continue;
+      if (!answer || answer.sinRespuesta === true) continue;
       const result = await call({
         accion: 'revision-agente-audio',
         instrumento,
@@ -73,7 +73,10 @@ async function download(instrumento, outputDirectory) {
       curso: row.curso,
       preguntas: row.preguntas,
       estado: row.estado,
-      fechaEntrega: row.fechaEntrega
+      fechaEntrega: row.fechaEntrega,
+      sinRespuesta: Object.entries(row.respuestas || {})
+        .filter(([, answer]) => answer && answer.sinRespuesta === true)
+        .map(([position]) => Number(position))
     });
   }
   fs.writeFileSync(path.join(outputDirectory, 'manifest.json'), JSON.stringify(manifest, null, 2));
@@ -96,6 +99,8 @@ async function main() {
     curso: row.curso,
     estado: row.estado,
     respuestas: Object.keys(row.respuestas || {}).length,
+    audios: Object.values(row.respuestas || {}).filter((answer) => answer && answer.sinRespuesta !== true).length,
+    sinRespuesta: Object.values(row.respuestas || {}).filter((answer) => answer && answer.sinRespuesta === true).length,
     fechaEntrega: row.fechaEntrega
   })), null, 2));
 }

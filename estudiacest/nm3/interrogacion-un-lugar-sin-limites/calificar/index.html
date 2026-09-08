@@ -164,6 +164,7 @@
         <div class="campo"><label for="curso">Curso</label><select id="curso"></select></div>
         <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
       </div>
+      <div class="availability" id="estadoNomina" aria-live="polite"></div>
       <div class="btns">
         <button class="btn solid" id="btnGrabar">Interrogar con audio</button>
         <button class="btn" id="btnSortear">Interrogar manual</button>
@@ -195,6 +196,7 @@
           <audio class="audio-preview oculto" id="previewAudio" controls></audio>
           <div class="btns">
             <button class="btn record" id="btnGrabarAudio" type="button">Grabar respuesta</button>
+            <button class="btn" id="btnNoSabeAudio" type="button">No sabe · siguiente</button>
             <button class="btn oculto" id="btnRepetirAudio" type="button">Volver a grabar</button>
             <button class="btn solid" id="btnSiguienteAudio" type="button" disabled>Guardar y siguiente</button>
           </div>
@@ -354,7 +356,7 @@
     sesion = { docente: docenteDesdeUrl() };
     try {
       var r = await llamar({ accion: 'nomina' });
-      sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {};
+      sesion.nombre = r.docente; sesion.cursos = r.cursos; sesion.notas = r.notas || {}; sesion.grabaciones = r.grabaciones || {};
       $('quien').textContent = r.docente;
       $('vLogin').classList.add('oculto');
       $('vPanel').classList.remove('oculto');
@@ -381,13 +383,34 @@
   function pintarAlumnos() {
     var c = $('curso').value, s = $('alumno');
     s.innerHTML = '';
-    (sesion.cursos[c] || []).forEach(function (a) {
+    var total = (sesion.cursos[c] || []).length;
+    var disponibles = (sesion.cursos[c] || []).filter(function (a) {
+      return !sesion.notas[a.id] && !sesion.grabaciones[a.id];
+    });
+    disponibles.forEach(function (a) {
       var o = document.createElement('option');
       o.value = a.id;
-      o.textContent = a.n + ' · ' + a.nombre + (sesion.notas[a.id] ? '  ✓ ' + sesion.notas[a.id].nota : '');
+      o.textContent = a.n + ' · ' + a.nombre;
       s.appendChild(o);
     });
+    if (!disponibles.length) {
+      var empty = document.createElement('option');
+      empty.value = ''; empty.textContent = 'Sin estudiantes pendientes en este curso';
+      s.appendChild(empty);
+    }
+    s.disabled = !disponibles.length;
+    $('btnGrabar').disabled = !disponibles.length;
+    $('btnSortear').disabled = !disponibles.length;
+    $('estadoNomina').textContent = disponibles.length + ' estudiante(s) disponible(s) · ' +
+      (total - disponibles.length) + ' ya registrado(s).';
   }
+
+  window.actualizarNominaInterrogacion = function (grabaciones, notas) {
+    if (!sesion) return;
+    if (grabaciones) sesion.grabaciones = grabaciones;
+    if (notas) sesion.notas = notas;
+    if (sesion.cursos && Object.keys(sesion.cursos).length) pintarAlumnos();
+  };
 
   // ---------- sorteo ----------
   function indiceAleatorio(max) {

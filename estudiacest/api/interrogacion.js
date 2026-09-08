@@ -154,6 +154,7 @@ function grabacionPublica(value) {
     ? Object.fromEntries(Object.entries(value.respuestas).map(([posicion, item]) => [posicion, {
       posicion: Number(item.posicion),
       pregunta: Number(item.pregunta),
+      sinRespuesta: item.sinRespuesta === true,
       size: Number(item.size || 0),
       duracionMs: Number(item.duracionMs || 0),
       fecha: item.fecha || ''
@@ -501,6 +502,75 @@ async function registrarAudio(instrumento, docente, cuerpo) {
   };
 }
 
+async function registrarSinRespuesta(instrumento, docente, cuerpo) {
+  const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+  if (!alumno || !docente.cursos.includes(alumno.curso)) {
+    return { status: 403, body: { error: 'Ese estudiante no corresponde a tus cursos.' } };
+  }
+  const intentoId = idValido(cuerpo.intentoId);
+  const posicion = Number(cuerpo.posicion);
+  const pregunta = Number(cuerpo.pregunta);
+  if (!intentoId || !Number.isInteger(posicion) || posicion < 0 || posicion > 6
+    || !Number.isInteger(pregunta) || pregunta < 1 || pregunta > 50) {
+    return { status: 400, body: { error: 'La pregunta que se desea omitir no es válida.' } };
+  }
+  const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
+  const before = (await ref.once('value')).val();
+  const repetida = before && before.respuestas && before.respuestas[posicion];
+  if (before && before.intentoId === intentoId && repetida && repetida.sinRespuesta === true
+    && Number(repetida.pregunta) === pregunta) {
+    return {
+      status: 200,
+      body: {
+        ok: true,
+        respuesta: grabacionPublica(before).respuestas[posicion],
+        estado: before.estado
+      }
+    };
+  }
+  if (!before || before.intentoId !== intentoId || before.estado !== 'en_curso'
+    || !Array.isArray(before.preguntas) || Number(before.preguntas[posicion]) !== pregunta
+    || repetida) {
+    return { status: 409, body: { error: 'La grabación ya no coincide con la pregunta actual.' } };
+  }
+  const reservasActivas = Object.values(before.reservas || {})
+    .some((item) => Number(item && item.posicion) === posicion);
+  if (reservasActivas) {
+    return { status: 409, body: { error: 'Esta pregunta ya comenzó a guardar un audio. Espera o vuelve a cargar el panel.' } };
+  }
+  const respuesta = {
+    posicion,
+    pregunta,
+    sinRespuesta: true,
+    size: 0,
+    duracionMs: 0,
+    fecha: new Date().toISOString()
+  };
+  const transaction = await ref.transaction((current) => {
+    const active = current || before;
+    const activeReservations = Object.values((active && active.reservas) || {})
+      .some((item) => Number(item && item.posicion) === posicion);
+    if (!active || active.intentoId !== intentoId || active.estado !== 'en_curso'
+      || !Array.isArray(active.preguntas) || Number(active.preguntas[posicion]) !== pregunta
+      || (active.respuestas && active.respuestas[posicion]) || activeReservations) return;
+    active.respuestas = active.respuestas || {};
+    active.respuestas[posicion] = respuesta;
+    return active;
+  }, undefined, false);
+  if (!transaction.committed) {
+    return { status: 409, body: { error: 'No fue posible registrar la respuesta. Recarga el panel e inténtalo nuevamente.' } };
+  }
+  const actualizada = transaction.snapshot.val();
+  return {
+    status: 200,
+    body: {
+      ok: true,
+      respuesta: grabacionPublica(actualizada).respuestas[posicion],
+      estado: actualizada.estado
+    }
+  };
+}
+
 async function guardarNotaGrabacion(instrumento, docente, cuerpo) {
   const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
   if (!alumno || !docente.cursos.includes(alumno.curso)) {
@@ -710,6 +780,11 @@ module.exports = async function handler(req, res) {
 
     if (accion === 'registrar-audio') {
       const resultado = await registrarAudio(instrumento, docente, cuerpo);
+      return res.status(resultado.status).json(resultado.body);
+    }
+
+    if (accion === 'registrar-sin-respuesta') {
+      const resultado = await registrarSinRespuesta(instrumento, docente, cuerpo);
       return res.status(resultado.status).json(resultado.body);
     }
 

@@ -110,6 +110,15 @@ Antes de editar y nuevamente antes de publicar:
 - Un audio vacío, corrupto o inaudible se registra como incidencia técnica; no
   se convierte automáticamente en puntaje `0,0`. Toda propuesta asistida se
   escucha y valida antes de que el docente autorice su aplicación.
+- Si el estudiante declara que no sabe una respuesta, el docente puede usar
+  `No sabe · siguiente`. Esa decisión se guarda como una respuesta explícita sin
+  audio, permite avanzar y se propone con `0,0` en la revisión. No se confunde
+  con un audio vacío, corrupto o inaudible, y el docente puede reemplazarla por
+  una grabación antes de calificar.
+- Una interrogación oral completa puede contener audios y respuestas explícitas
+  `No sabe`; deben existir siete posiciones registradas antes de entregar. La
+  herramienta local omite estas posiciones al descargar audios y las informa
+  por separado en su manifiesto.
 - En una interrogación oral se sortean siete preguntas. El docente puede cambiar
   exactamente una antes de comenzar a grabarla; el servidor registra ese uso y
   rechaza un segundo cambio, una pregunta repetida o el cambio de una respuesta

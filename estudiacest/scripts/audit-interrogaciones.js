@@ -71,7 +71,12 @@ function auditPanel(config) {
     '!sesion.notas[a.id] && !sesion.grabaciones[a.id]',
     'Sin estudiantes pendientes en este curso',
     'window.actualizarNominaInterrogacion',
-    'sesion.cursos && Object.keys(sesion.cursos).length'
+    'sesion.cursos && Object.keys(sesion.cursos).length',
+    'var seleccionado = s.value',
+    'se renueva cada 30 s.',
+    'window.refrescarNominaInterrogacion({ requireFresh: true, silent: true })',
+    'Este estudiante ya fue tomado desde otro panel.',
+    'inicioManualEnCurso'
   ]) assert(panelHtml.includes(rosterContract), `${config.label}: falta el control de nómina ${rosterContract}.`);
   assert(panelHtml.includes('id="notaSeguimientoAudio"'), `${config.label}: falta la nota docente independiente.`);
   assert(panelHtml.includes('id="btnGuardarNotaAudio"'), `${config.label}: falta guardar la nota docente.`);
@@ -179,6 +184,9 @@ for (const apiFile of ['api/interrogacion.js']) {
     'reemplazarRespuesta',
     'notaDocente',
     "accion === 'auditar-firebase'",
+    'notaRef.transaction((actual) => actual ? undefined : registro',
+    'Este estudiante ya fue tomado desde otro panel.',
+    'Este estudiante ya fue calificado desde otro panel.',
     "req.method !== 'POST'"
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
   assert(source.includes('interrogacion_lugar_sin_limites_2026'), `${apiFile}: falta el nodo NM3.`);
@@ -215,6 +223,9 @@ for (const contract of [
   'filtroGrabacionesCurso',
   'prepareRecordingCourseFilter',
   'window.actualizarNominaInterrogacion',
+  'AUTO_REFRESH_MS = 30000',
+  'window.refrescarNominaInterrogacion = refreshSharedState',
+  'requireFresh: true',
   'Guardar y siguiente',
   'No sabe',
   'answer.sinRespuesta',

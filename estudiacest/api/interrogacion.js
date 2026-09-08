@@ -252,6 +252,10 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
   if (!preguntas || !intentoId) {
     return { status: 400, body: { error: 'No fue posible iniciar el registro de las preguntas.' } };
   }
+  const notaAnterior = (await db.ref(`${instrumento.base}/notas/${alumno.id}`).once('value')).val();
+  if (notaAnterior && cuerpo.reemplazar !== true) {
+    return { status: 409, body: { error: 'Este estudiante ya fue calificado desde otro panel. Actualiza la lista.' } };
+  }
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
   const anterior = (await ref.once('value')).val();
   if (anterior && anterior.intentoId === intentoId) {
@@ -279,8 +283,8 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
   await ref.set(registro);
   if (anterior) {
     await borrarArchivosGrabacion(anterior);
-    const notaAnterior = (await db.ref(`${instrumento.base}/notas/${alumno.id}`).once('value')).val();
-    if (notaAnterior && notaAnterior.intentoId === anterior.intentoId) {
+    const notaVinculada = (await db.ref(`${instrumento.base}/notas/${alumno.id}`).once('value')).val();
+    if (notaVinculada && notaVinculada.intentoId === anterior.intentoId) {
       await db.ref(`${instrumento.base}/notas/${alumno.id}`).remove();
     }
   }
@@ -858,7 +862,19 @@ module.exports = async function handler(req, res) {
         intentoId: intentoId || null,
         modalidad: intentoId ? 'audio' : 'en_vivo'
       };
-      await db.ref(`${instrumento.base}/notas/${alumno.id}`).set(registro);
+      const notaRef = db.ref(`${instrumento.base}/notas/${alumno.id}`);
+      if (!intentoId) {
+        const grabacionExistente = (await db.ref(`${instrumento.base}/grabaciones/${alumno.id}`).once('value')).val();
+        if (grabacionExistente) {
+          return res.status(409).json({ error: 'Este estudiante ya fue tomado desde otro panel. Actualiza la lista.' });
+        }
+        const guardadoManual = await notaRef.transaction((actual) => actual ? undefined : registro, undefined, false);
+        if (!guardadoManual.committed) {
+          return res.status(409).json({ error: 'Este estudiante ya fue calificado desde otro panel. Actualiza la lista.' });
+        }
+      } else {
+        await notaRef.set(registro);
+      }
       if (grabacion) {
         await db.ref(`${instrumento.base}/grabaciones/${alumno.id}`).update({
           estado: 'calificada',

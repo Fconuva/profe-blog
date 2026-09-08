@@ -395,6 +395,7 @@
 
   var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
+  var inicioManualEnCurso = false;
   var $ = function (id) { return document.getElementById(id); };
 
   function aviso(el, texto, tipo) {
@@ -449,6 +450,7 @@
 
   function pintarAlumnos() {
     var c = $('curso').value, s = $('alumno');
+    var seleccionado = s.value;
     s.innerHTML = '';
     var total = (sesion.cursos[c] || []).length;
     var disponibles = (sesion.cursos[c] || []).filter(function (a) {
@@ -460,6 +462,7 @@
       o.textContent = a.n + ' · ' + a.nombre;
       s.appendChild(o);
     });
+    if ([].some.call(s.options, function (option) { return option.value === seleccionado; })) s.value = seleccionado;
     if (!disponibles.length) {
       var empty = document.createElement('option');
       empty.value = ''; empty.textContent = 'Sin estudiantes pendientes en este curso';
@@ -468,8 +471,11 @@
     s.disabled = !disponibles.length;
     $('btnGrabar').disabled = !disponibles.length;
     $('btnSortear').disabled = !disponibles.length;
+    var hora = sesion.ultimaActualizacion
+      ? new Date(sesion.ultimaActualizacion).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      : '';
     $('estadoNomina').textContent = disponibles.length + ' estudiante(s) disponible(s) · ' +
-      (total - disponibles.length) + ' ya registrado(s).';
+      (total - disponibles.length) + ' ya registrado(s).' + (hora ? ' Actualizado ' + hora + '; se renueva cada 30 s.' : '');
   }
 
   function prepararFiltroNotas() {
@@ -484,11 +490,15 @@
   }
   $('filtroNotasCurso').addEventListener('change', pintarNotas);
 
-  window.actualizarNominaInterrogacion = function (grabaciones, notas) {
+  window.actualizarNominaInterrogacion = function (grabaciones, notas, meta) {
     if (!sesion) return;
     if (grabaciones) sesion.grabaciones = grabaciones;
     if (notas) sesion.notas = notas;
-    if (sesion.cursos && Object.keys(sesion.cursos).length) pintarAlumnos();
+    sesion.ultimaActualizacion = meta && meta.updatedAt ? meta.updatedAt : Date.now();
+    if (sesion.cursos && Object.keys(sesion.cursos).length) {
+      pintarAlumnos();
+      pintarNotas();
+    }
   };
 
   // ---------- sorteo ----------
@@ -512,14 +522,38 @@
     return out;
   }
 
-  $('btnSortear').addEventListener('click', function () {
+  $('btnSortear').addEventListener('click', async function () {
     var id = $('alumno').value;
-    if (!id) return;
-    var opt = $('alumno').options[$('alumno').selectedIndex];
-    if (sesion.notas[id] && !confirm('Este estudiante ya tiene nota ' + sesion.notas[id].nota + '. ¿Volver a interrogarlo? Se reemplazará la nota anterior.')) return;
+    if (!id || inicioManualEnCurso) return;
+    inicioManualEnCurso = true;
+    $('btnSortear').disabled = true;
+    try {
+      if (window.refrescarNominaInterrogacion) await window.refrescarNominaInterrogacion({ requireFresh: true, silent: true });
+    } catch (e) {
+      aviso($('avisoSorteo'), 'No fue posible comprobar la lista actual. Intenta nuevamente.', 'err');
+      inicioManualEnCurso = false;
+      $('btnSortear').disabled = false;
+      return;
+    }
+    if (sesion.notas[id] || sesion.grabaciones[id]) {
+      aviso($('avisoSorteo'), 'Este estudiante ya fue tomado desde otro panel. Elige a otro estudiante.', 'err');
+      inicioManualEnCurso = false;
+      pintarAlumnos();
+      return;
+    }
+    var alumno = null;
+    Object.keys(sesion.cursos).some(function (curso) {
+      alumno = (sesion.cursos[curso] || []).find(function (item) { return item.id === id; }) || null;
+      return Boolean(alumno);
+    });
+    if (!alumno) {
+      inicioManualEnCurso = false;
+      $('btnSortear').disabled = false;
+      return;
+    }
     actual = {
       id: id,
-      alumno: opt.textContent.replace(/\s+✓.*$/, '').replace(/^\d+\s·\s/, ''),
+      alumno: alumno.nombre,
       preguntas: sortear(7, []),
       puntajes: {},
       cambiada: null
@@ -530,6 +564,8 @@
     $('cardPreg').classList.remove('oculto');
     pintarPreguntas();
     $('cardPreg').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    inicioManualEnCurso = false;
+    $('btnSortear').disabled = false;
   });
 
   function pintarPreguntas() {

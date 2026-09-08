@@ -37,6 +37,10 @@
   var levelFrame = null;
   var meterAvailable = false;
   var voiceDetected = false;
+  var AUTO_REFRESH_MS = 30000;
+  var refreshTimer = null;
+  var refreshPromise = null;
+  var lastRefreshAt = 0;
   var $ = function (id) { return document.getElementById(id); };
 
   function docenteDesdeUrl() {
@@ -584,6 +588,12 @@
   }
 
   async function startFlow() {
+    var selectedId = $('alumno') && $('alumno').value;
+    await refreshSharedState({ requireFresh: true, silent: true });
+    if (selectedId && (state.notas[selectedId] || state.grabaciones[selectedId])) {
+      setNotice('avisoAudio', 'Este estudiante ya fue tomado desde otro panel. La lista quedó actualizada.', 'err');
+      return;
+    }
     var student = selectedStudent();
     if (!student) return;
     var existing = state.grabaciones[student.id];
@@ -1000,20 +1010,50 @@
     if ([].some.call(select.options, function (option) { return option.value === current; })) select.value = current;
   }
 
-  async function load() {
-    try {
-      var data = await api({ accion: 'nomina' });
-      state.nombre = data.docente;
-      state.cursos = data.cursos || {};
-      state.notas = data.notas || {};
-      state.grabaciones = data.grabaciones || {};
-      prepareRecordingCourseFilter();
-      if (window.actualizarNominaInterrogacion) window.actualizarNominaInterrogacion(state.grabaciones, state.notas);
-      renderRecordings();
-    } catch (error) {
-      setNotice('avisoListaAudios', error.message, 'err');
+  async function refreshSharedState(options) {
+    options = options || {};
+    if (!refreshPromise) {
+      refreshPromise = (async function () {
+        try {
+          var data = await api({ accion: 'nomina' });
+          state.nombre = data.docente;
+          state.cursos = data.cursos || {};
+          state.notas = data.notas || {};
+          state.grabaciones = data.grabaciones || {};
+          lastRefreshAt = Date.now();
+          prepareRecordingCourseFilter();
+          if (window.actualizarNominaInterrogacion) {
+            window.actualizarNominaInterrogacion(state.grabaciones, state.notas, { updatedAt: lastRefreshAt });
+          }
+          renderRecordings();
+          setNotice('avisoListaAudios', '', '');
+          return { ok: true };
+        } catch (error) {
+          return { ok: false, error: error };
+        }
+      }());
     }
+    var activeRefresh = refreshPromise;
+    var result = await activeRefresh;
+    if (refreshPromise === activeRefresh) refreshPromise = null;
+    if (!result.ok) {
+      if (!options.silent || !Object.keys(state.cursos).length) {
+        setNotice('avisoListaAudios', 'No se pudo actualizar la lista. Se reintentará automáticamente.', 'err');
+      }
+      if (options.requireFresh) throw result.error;
+      return false;
+    }
+    return true;
   }
+
+  function startAutomaticRefresh() {
+    if (refreshTimer) window.clearInterval(refreshTimer);
+    refreshTimer = window.setInterval(function () {
+      refreshSharedState({ silent: true });
+    }, AUTO_REFRESH_MS);
+  }
+
+  window.refrescarNominaInterrogacion = refreshSharedState;
 
   $('btnGrabar').disabled = true;
   if ($('filtroGrabacionesCurso')) $('filtroGrabacionesCurso').addEventListener('change', renderRecordings);
@@ -1045,5 +1085,9 @@
       event.returnValue = '';
     }
   });
-  load();
+  window.addEventListener('focus', function () {
+    if (Date.now() - lastRefreshAt > 5000) refreshSharedState({ silent: true });
+  });
+  startAutomaticRefresh();
+  refreshSharedState();
 }());

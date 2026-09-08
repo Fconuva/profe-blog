@@ -3,7 +3,6 @@
 
   const API = '/api/anuario-4dtp';
   const API_TIMEOUT_MS = 20000;
-  const MAX_FILE_SIZE = 100 * 1024 * 1024;
   const FIREBASE_CONFIG = { apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w', authDomain:'estudiacest.firebaseapp.com', databaseURL:'https://estudiacest-default-rtdb.firebaseio.com', projectId:'estudiacest', storageBucket:'estudiacest.firebasestorage.app', messagingSenderId:'999002169815', appId:'1:999002169815:web:51203237bc77c2e74deb92' };
   const kinds = ['Compañero 1', 'Compañero 2', 'Compañero 3', 'Docente 1', 'Docente 2'];
   const writtenFieldIds = ['interviewTitle','interviewContext','interviewQuestions','interviewQuote','memoryTitle','memoryText','memoryCaption','projectTitle','projectText','projectCaption','farewellTitle','farewellText','captions'];
@@ -99,7 +98,7 @@
 
   function normalizeState(value) {
     const data=value||{};
-    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), teacherReview:data.teacherReview||{status:'pending',feedback:'',recommendations:'',alerts:'',reviewedAt:0}, updatedAt:Number(data.updatedAt||0) };
+    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), teacherReview:data.teacherReview||{status:'pending',feedback:'',recommendations:'',alerts:'',reviewedAt:0}, storage:data.storage||{usedBytes:0,limitBytes:0,remainingBytes:0}, updatedAt:Number(data.updatedAt||0) };
   }
 
   function renderTeacherReview() {
@@ -186,7 +185,10 @@
     const others=state.files.filter(file=>['document','other'].includes(file.category)).length;
     $('audioCount').textContent=audios+' '+(audios===1?'archivo':'archivos');$('photoCount').textContent=photos+' '+(photos===1?'archivo':'archivos');$('otherCount').textContent=others+' '+(others===1?'archivo':'archivos');
     const usedBytes=state.files.reduce((sum,file)=>sum+Number(file.size||0),0);
-    $('storageSummary').textContent=state.files.length+' '+(state.files.length===1?'archivo':'archivos')+' · '+formatBytes(usedBytes)+' de 100 MB · '+formatBytes(Math.max(0,MAX_FILE_SIZE-usedBytes))+' disponibles';
+    const limitBytes=Number(state.storage&&state.storage.limitBytes||0);
+    const remainingBytes=Math.max(0,limitBytes-usedBytes);
+    state.storage={usedBytes,limitBytes,remainingBytes};
+    $('storageSummary').textContent=state.files.length+' '+(state.files.length===1?'archivo':'archivos')+' · '+formatBytes(usedBytes)+' de '+formatBytes(limitBytes)+' · '+formatBytes(remainingBytes)+' disponibles';
     renderTeacherReview();
     renderFiles();
   }
@@ -202,7 +204,7 @@
   function safeFileName(name){return String(name||'archivo').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9._-]+/g,'-').replace(/-+/g,'-').slice(-140);}
   function randomId(){return (crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g,'');}
   async function uploadFile(file,category,slot){
-    if(!file||!student)return;if(file.size>MAX_FILE_SIZE){window.alert('El archivo supera el cupo total de 100 MB de la carpeta.');return;}
+    if(!file||!student)return;
     const fileId=randomId();let prepared=null;
     $('uploadTitle').textContent=category==='interview_audio'?'Guardando audio':'Subiendo archivo';$('uploadFileName').textContent=file.name;$('uploadProgress').style.width='0%';$('uploadPercent').textContent='0%';$('uploadError').textContent='';$('closeUploadDialog').classList.add('hidden');$('uploadDialog').showModal();
     try{
@@ -212,7 +214,7 @@
       const reference=storage.ref(path);const task=reference.put(file,{contentType:file.type||'application/octet-stream',customMetadata:{ownerRut:cleanRut(student.rut),category,fileId,slot:String(slot||0)}});
       await new Promise((resolve,reject)=>task.on('state_changed',snapshot=>{const percent=Math.round(snapshot.bytesTransferred/snapshot.totalBytes*100);$('uploadProgress').style.width=percent+'%';$('uploadPercent').textContent=percent+'%';},reject,resolve));
       const data=await api('register-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId,storagePath:path,name:file.name,category,slot:slot||0,contentType:file.type})});
-      if(category==='interview_audio'){state.files=state.files.filter(item=>!(item.category==='interview_audio'&&item.slot===slot));state.interviews[slot-1].audioFileId=data.file.id;$('audio-status-'+slot).textContent='Audio guardado: '+data.file.name+' · '+formatBytes(data.file.size);}state.files.push(data.file);$('uploadTitle').textContent='Archivo guardado';$('uploadPercent').textContent='100%';setTimeout(()=>$('uploadDialog').close(),650);setSave('Archivo guardado','saved');updateProgress();
+      if(category==='interview_audio'){state.files=state.files.filter(item=>!(item.category==='interview_audio'&&item.slot===slot));state.interviews[slot-1].audioFileId=data.file.id;$('audio-status-'+slot).textContent='Audio guardado: '+data.file.name+' · '+formatBytes(data.file.size);}state.files.push(data.file);state.storage=data.storage;$('uploadTitle').textContent='Archivo guardado';$('uploadPercent').textContent='100%';setTimeout(()=>$('uploadDialog').close(),650);setSave('Archivo guardado','saved');updateProgress();
     }catch(error){if(prepared)await api('cancel-upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId})}).catch(()=>{});$('uploadError').textContent=error.message||'No se pudo subir el archivo.';$('closeUploadDialog').classList.remove('hidden');setSave('Error al subir','error');}
   }
 

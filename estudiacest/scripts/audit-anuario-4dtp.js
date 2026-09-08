@@ -19,6 +19,15 @@ function requireText(contents, marker, label) {
   if (!contents.includes(marker)) failures.push(`${label} no contiene: ${marker}`);
 }
 
+function requireOwnedStorageCheck(contents, functionName) {
+  const start = contents.indexOf(`async function ${functionName}`);
+  const end = contents.indexOf('\nasync function ', start + 1);
+  const body = start >= 0 ? contents.slice(start, end >= 0 ? end : undefined) : '';
+  if (!body.includes("startsWith(`${STORAGE_PREFIX}/${student.rut}/`)")) {
+    failures.push(`${functionName} no valida la carpeta propietaria del estudiante.`);
+  }
+}
+
 function validRut(rut) {
   const body = rut.slice(0, -1);
   const expected = rut.slice(-1);
@@ -47,6 +56,46 @@ const portal = read('index.html');
 const archived = read('3atp/index.html');
 const vercel = JSON.parse(read('vercel.json') || '{}');
 
+try {
+  const apiModule = { exports: {} };
+  vm.runInNewContext(`${api}\nmodule.exports.__quotaTest = { MAX_STUDENT_STORAGE, uploadValidation, uploadFitsStudentQuota };`, {
+    require,
+    module: apiModule,
+    exports: apiModule.exports,
+    process,
+    console,
+    Buffer,
+    URL,
+    setTimeout,
+    clearTimeout
+  }, { filename: 'api/anuario-4dtp.js' });
+  const { MAX_STUDENT_STORAGE, uploadValidation, uploadFitsStudentQuota } = apiModule.exports.__quotaTest;
+  const GB = 1024 * 1024 * 1024;
+  if (MAX_STUDENT_STORAGE !== 3 * GB) failures.push('La cuota efectiva no equivale a 3 GB por estudiante.');
+  if (uploadValidation({ fileId: 'archivo_grande_01', name: 'video.mp4', size: 2 * GB, category: 'other', slot: 0, contentType: 'video/mp4' })) {
+    failures.push('La API rechaza un archivo válido por un límite individual fijo.');
+  }
+  const fullRecord = {
+    files: {
+      audioAnterior: { id: 'audioAnterior', size: GB },
+      material: { id: 'material', size: 2 * GB }
+    },
+    interviews: [{ slot: 1, audioFileId: 'audioAnterior' }],
+    uploadReservations: {}
+  };
+  if (uploadFitsStudentQuota(fullRecord, { category: 'other', slot: 0, size: 1 })) failures.push('La cuota acumulada permite superar 3 GB.');
+  if (!uploadFitsStudentQuota(fullRecord, { category: 'interview_audio', slot: 1, size: GB })) failures.push('El reemplazo de un audio no descuenta el archivo anterior.');
+  const reservedRecord = {
+    files: { material: { id: 'material', size: 2 * GB } },
+    interviews: [],
+    uploadReservations: { pendiente: { size: GB / 2 } }
+  };
+  if (!uploadFitsStudentQuota(reservedRecord, { category: 'other', slot: 0, size: GB / 2 })) failures.push('La cuota rechaza una suma exacta de 3 GB.');
+  if (uploadFitsStudentQuota(reservedRecord, { category: 'other', slot: 0, size: (GB / 2) + 1 })) failures.push('La cuota ignora bytes ya reservados.');
+} catch (error) {
+  failures.push(`No se pudo probar la cuota acumulada: ${error.message}`);
+}
+
 const roster = [...api.matchAll(/^\s*\['([0-9K]+)',\s*'([^']+)'\],?$/gm)].map(match => ({ rut: match[1], name: match[2] }));
 if (roster.length !== 29) failures.push(`La nómina contiene ${roster.length} estudiantes; se esperaban 29.`);
 if (new Set(roster.map(student => student.rut)).size !== roster.length) failures.push('Hay RUN duplicados en la nómina.');
@@ -61,12 +110,19 @@ requireText(api, "review-agent-list", 'API');
 requireText(api, "hasStudentWork", 'API');
 requireText(api, "ANUARIO_REVIEW_AGENT_HASH", 'API');
 requireText(api, "teacherReview", 'API');
-requireText(api, "MAX_STUDENT_STORAGE = 100 * 1024 * 1024", 'API');
+requireText(api, "MAX_STUDENT_STORAGE = 3 * 1024 * 1024 * 1024", 'API');
+requireText(api, "usedBytes + reservedBytes + request.size <= MAX_STUDENT_STORAGE", 'API');
+requireText(api, "uploadFitsStudentQuota(record, request)", 'API');
+if (api.includes('MAX_FILE_SIZE')) failures.push('API conserva un límite fijo por archivo.');
+requireText(api, "if (!Number.isInteger(request.size) || request.size <= 0)", 'API');
 requireText(api, "handlePrepareUpload", 'API');
 requireText(api, "uploadReservations", 'API');
 requireText(api, "defaultWrittenProducts", 'API');
 requireText(api, "submit-activity2", 'API');
 requireText(api, "secondProgressGrade", 'API');
+for (const handler of ['handleDeleteFile', 'handleFileUrl', 'handleReviewAgentFileUrl', 'handleAdminFileUrl']) {
+  requireOwnedStorageCheck(api, handler);
+}
 requireText(app, "let saveChain = Promise.resolve(true)", 'Cliente');
 requireText(app, "persistenceReady", 'Cliente');
 requireText(app, "API_TIMEOUT_MS", 'Cliente');
@@ -98,9 +154,15 @@ requireText(admin, "api('admin-file-url'", 'Admin 4DTP');
 requireText(api, 'admin_scopes/anuario4dtp', 'API');
 requireText(storageRules, "request.auth.token.anuario4dtp == true", 'Reglas Storage');
 requireText(storageRules, "request.auth.uid == 'anuario_' + rut", 'Reglas Storage');
-requireText(storageRules, 'request.resource.size <= 100 * 1024 * 1024', 'Reglas Storage');
 requireText(storageRules, 'request.auth.token.uploadFileId == fileId', 'Reglas Storage');
 requireText(storageRules, 'request.auth.token.uploadFileName == fileName', 'Reglas Storage');
+requireText(storageRules, 'request.resource.size <= request.auth.token.uploadMaxBytes', 'Reglas Storage');
+if (storageRules.includes('request.resource.size <= 100 * 1024 * 1024')) failures.push('Storage conserva el límite antiguo de 100 MB por archivo.');
+if (storageRules.includes('request.resource.size <= 3 * 1024 * 1024 * 1024')) failures.push('Storage aplica la cuota total como límite por archivo.');
+if (app.includes('MAX_FILE_SIZE')) failures.push('Cliente conserva un límite fijo por archivo.');
+requireText(app, 'storage:data.storage||', 'Cliente');
+requireText(page, 'Cada estudiante dispone de 3 GB en total.', 'Página 4DTP');
+requireText(page, 'Los 3 GB corresponden al total de tu carpeta, no a cada archivo.', 'Página 4DTP');
 requireText(portal, 'href="/4dtp/"', 'Portada');
 requireText(portal, 'href="/3atp/"', 'Portada');
 requireText(archived, 'Proyecto archivado', 'Archivo 3ATP');

@@ -6,8 +6,7 @@ const DEFAULT_STORAGE_BUCKET = 'estudiacest.firebasestorage.app';
 const ADMIN_BASE = 'plataforma_estudiantes';
 const STUDENTS_PATH = `${ADMIN_BASE}/nm4/4dtp/anuario_2026/students`;
 const STORAGE_PREFIX = 'anuario_2026/4dtp';
-const MAX_STUDENT_STORAGE = 100 * 1024 * 1024;
-const MAX_FILE_SIZE = MAX_STUDENT_STORAGE;
+const MAX_STUDENT_STORAGE = 3 * 1024 * 1024 * 1024;
 const RESERVATION_TTL = 30 * 60 * 1000;
 
 const ROSTER_ROWS = [
@@ -432,10 +431,22 @@ function uploadRequest(body) {
 function uploadValidation(request) {
   if (!/^[A-Za-z0-9_-]{8,90}$/.test(request.fileId)) return 'Identificador de archivo inválido.';
   if (!request.name) return 'El archivo debe tener un nombre.';
-  if (!Number.isInteger(request.size) || request.size <= 0 || request.size > MAX_FILE_SIZE) return 'El archivo está vacío o supera el cupo total de 100 MB.';
+  if (!Number.isInteger(request.size) || request.size <= 0) return 'El archivo está vacío o tiene un tamaño inválido.';
   if (!FILE_CATEGORIES.has(request.category)) return 'Categoría de archivo inválida.';
   if (request.category === 'interview_audio' && (request.slot < 1 || request.slot > 5)) return 'Selecciona la entrevista correspondiente.';
   return '';
+}
+
+function uploadFitsStudentQuota(record, request) {
+  const files = Object.values(record.files);
+  let usedBytes = files.reduce((sum, file) => sum + Number(file.size || 0), 0);
+  if (request.category === 'interview_audio') {
+    const interview = record.interviews.find(item => Number(item.slot) === request.slot);
+    const replaced = interview && record.files[interview.audioFileId];
+    if (replaced) usedBytes -= Number(replaced.size || 0);
+  }
+  const reservedBytes = Object.values(record.uploadReservations).reduce((sum, reservation) => sum + Number(reservation.size || 0), 0);
+  return usedBytes + reservedBytes + request.size <= MAX_STUDENT_STORAGE;
 }
 
 async function handlePrepareUpload(req, res) {
@@ -449,20 +460,12 @@ async function handlePrepareUpload(req, res) {
   const transaction = await ref.transaction(current => {
     const record = studentRecord(student, current);
     record.uploadReservations = Object.fromEntries(Object.entries(record.uploadReservations).filter(([, reservation]) => Number(reservation.createdAt || 0) >= now - RESERVATION_TTL));
-    const files = Object.values(record.files);
-    let usedBytes = files.reduce((sum, file) => sum + Number(file.size || 0), 0);
-    if (request.category === 'interview_audio') {
-      const interview = record.interviews.find(item => Number(item.slot) === request.slot);
-      const replaced = interview && record.files[interview.audioFileId];
-      if (replaced) usedBytes -= Number(replaced.size || 0);
-    }
-    const reservedBytes = Object.values(record.uploadReservations).reduce((sum, reservation) => sum + Number(reservation.size || 0), 0);
-    if (usedBytes + reservedBytes + request.size > MAX_STUDENT_STORAGE) return;
+    if (!uploadFitsStudentQuota(record, request)) return;
     record.uploadReservations[request.fileId] = { ...request, storagePath, createdAt: now };
     record.updatedAt = now;
     return record;
   }, undefined, false);
-  if (!transaction.committed) return res.status(413).json({ error: 'Tu carpeta no tiene espacio suficiente. El máximo total es 100 MB.' });
+  if (!transaction.committed) return res.status(413).json({ error: 'Tu carpeta no tiene espacio suficiente. La cuota total por estudiante es de 3 GB.' });
   const customToken = await admin.auth().createCustomToken(`anuario_${student.rut}`, {
     anuario4dtp: true,
     course: '4DTP',
@@ -490,7 +493,7 @@ async function handleRegisterFile(req, res) {
   const cloudFile = bucket().file(storagePath);
   const [metadata] = await cloudFile.getMetadata();
   const size = Number(metadata.size || 0);
-  if (!size || size > Number(reservation.size || 0) || size > MAX_FILE_SIZE) {
+  if (!size || size > Number(reservation.size || 0)) {
     await cloudFile.delete({ ignoreNotFound: true });
     return res.status(400).json({ error: 'El archivo está vacío o supera el cupo autorizado.' });
   }
@@ -742,7 +745,7 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).end();
   try {
     const action = String((req.query && req.query.action) || 'health');
-    if (action === 'health' && req.method === 'GET') return res.status(200).json({ ok: true, project: 'anuario-4dtp-2026', rosterCount: ROSTER.length, maxFileSize: MAX_FILE_SIZE, maxStudentStorage: MAX_STUDENT_STORAGE, storageBucket: process.env.FIREBASE_STORAGE_BUCKET || DEFAULT_STORAGE_BUCKET });
+    if (action === 'health' && req.method === 'GET') return res.status(200).json({ ok: true, project: 'anuario-4dtp-2026', rosterCount: ROSTER.length, maxStudentStorage: MAX_STUDENT_STORAGE, storageBucket: process.env.FIREBASE_STORAGE_BUCKET || DEFAULT_STORAGE_BUCKET });
     if (action === 'login' && req.method === 'POST') return await handleLogin(req, res);
     if (action === 'state' && req.method === 'GET') return await handleState(req, res);
     if (action === 'save' && req.method === 'POST') return await handleSave(req, res);

@@ -120,6 +120,10 @@ function nota(puntajes) {
   return Math.round((1 + (logro / 7) * 6) * 10) / 10;
 }
 
+function revisionRegistro(registro) {
+  return String(registro && (registro.revision || registro.fechaActualizacion || registro.fecha) || '');
+}
+
 function cuerpoJson(req) {
   if (req.body && typeof req.body === 'object') return req.body;
   try { return JSON.parse(req.body || '{}'); } catch (_) { return {}; }
@@ -859,6 +863,7 @@ module.exports = async function handler(req, res) {
         nota: nota(puntajes),
         docente: docente.nombre,
         fecha: new Date().toISOString(),
+        revision: crypto.randomUUID(),
         intentoId: intentoId || null,
         modalidad: intentoId ? 'audio' : 'en_vivo'
       };
@@ -882,7 +887,7 @@ module.exports = async function handler(req, res) {
           fechaCalificacion: registro.fecha
         });
       }
-      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota });
+      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota, revision: registro.revision });
     }
 
     if (accion === 'guardar-nota-manual') {
@@ -913,6 +918,7 @@ module.exports = async function handler(req, res) {
         nota: notaValor,
         docente: docente.nombre,
         fecha: new Date().toISOString(),
+        revision: crypto.randomUUID(),
         modalidad: 'manual_pie',
         observacion: origen
       };
@@ -921,7 +927,107 @@ module.exports = async function handler(req, res) {
       if (!guardado.committed) {
         return res.status(409).json({ error: 'Este estudiante ya fue calificado. Actualiza la lista.' });
       }
-      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota });
+      return res.status(200).json({ ok: true, id: alumno.id, nota: registro.nota, revision: registro.revision });
+    }
+
+    if (accion === 'actualizar-nota-manual') {
+      const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
+      if (!alumno || !docente.cursos.includes(alumno.curso)) {
+        return res.status(403).json({ error: 'Ese estudiante no corresponde a tus cursos.' });
+      }
+      const revisionEsperada = textoLimitado(cuerpo.revisionEsperada, 100);
+      if (!revisionEsperada) {
+        return res.status(400).json({ error: 'Falta la revisión del registro que se quiere editar.' });
+      }
+      const notaRef = db.ref(`${instrumento.base}/notas/${alumno.id}`);
+      const existente = (await notaRef.once('value')).val();
+      if (!existente) {
+        return res.status(404).json({ error: 'La nota ya no existe. Actualiza la lista.' });
+      }
+      if (existente.intentoId || existente.modalidad === 'audio') {
+        return res.status(409).json({ error: 'Las interrogaciones grabadas se corrigen desde su detalle de audio.' });
+      }
+      if (revisionRegistro(existente) !== revisionEsperada) {
+        return res.status(409).json({ error: 'La nota cambió desde otro panel. Actualiza la lista antes de editar.' });
+      }
+
+      const conDesglose = Array.isArray(existente.preguntas);
+      let cambios;
+      if (conDesglose) {
+        const preguntasAnteriores = preguntasValidas(existente.preguntas);
+        const preguntas = preguntasValidas(cuerpo.preguntas);
+        const puntajes = puntajesValidos(cuerpo.puntajes);
+        const evidencias = evidenciasValidas(cuerpo.evidencias);
+        const cambiada = cuerpo.cambiada == null ? null : Number(cuerpo.cambiada);
+        if (!preguntasAnteriores || !preguntas) {
+          return res.status(400).json({ error: 'El registro debe conservar siete preguntas distintas del banco.' });
+        }
+        if (!puntajes) return res.status(400).json({ error: 'Los puntajes recibidos no son válidos.' });
+        if (!evidencias) return res.status(400).json({ error: 'La evidencia de las respuestas no es válida.' });
+        if (cambiada !== null && (!Number.isInteger(cambiada) || cambiada < 0 || cambiada > 6)) {
+          return res.status(400).json({ error: 'El cambio de pregunta no es válido.' });
+        }
+        const diferencias = preguntas.reduce((out, pregunta, posicion) => {
+          if (pregunta !== preguntasAnteriores[posicion]) out.push(posicion);
+          return out;
+        }, []);
+        const cambioAnterior = existente.cambiada == null ? null : Number(existente.cambiada);
+        const cambioInvalido = cambioAnterior !== null
+          ? (diferencias.length > 0 || cambiada !== cambioAnterior)
+          : (diferencias.length > 1 || (diferencias.length === 1 && cambiada !== diferencias[0])
+            || (diferencias.length === 0 && cambiada !== null));
+        if (cambioInvalido) {
+          return res.status(400).json({ error: 'Solo se puede cambiar una pregunta durante toda la interrogación.' });
+        }
+        cambios = {
+          preguntas,
+          puntajes,
+          evidencias,
+          cambiada,
+          observacion: String(cuerpo.observacion || '').slice(0, 500),
+          nota: nota(puntajes),
+          modalidad: existente.modalidad || 'en_vivo'
+        };
+      } else {
+        const notaValor = Number(cuerpo.nota);
+        if (!Number.isFinite(notaValor) || notaValor < 1 || notaValor > 7) {
+          return res.status(400).json({ error: 'La nota debe ser un número entre 1,0 y 7,0.' });
+        }
+        const origen = String(cuerpo.origen || '').trim().slice(0, 300);
+        if (origen.length < 10) {
+          return res.status(400).json({ error: 'Falta declarar el origen de esta nota (quién y cómo evaluó).' });
+        }
+        cambios = {
+          nota: Math.round(notaValor * 10) / 10,
+          observacion: origen,
+          modalidad: existente.modalidad || 'manual_pie'
+        };
+      }
+
+      const fechaActualizacion = new Date().toISOString();
+      const revision = crypto.randomUUID();
+      const actualizado = await notaRef.transaction((actual) => {
+        if (!actual || actual.intentoId || actual.modalidad === 'audio'
+          || revisionRegistro(actual) !== revisionEsperada
+          || Array.isArray(actual.preguntas) !== conDesglose) return undefined;
+        return Object.assign({}, actual, cambios, {
+          alumno: alumno.nombre,
+          curso: alumno.curso,
+          docente: docente.nombre,
+          fechaActualizacion,
+          revision
+        });
+      }, undefined, false);
+      if (!actualizado.committed) {
+        return res.status(409).json({ error: 'La nota cambió desde otro panel. Actualiza la lista antes de editar.' });
+      }
+      return res.status(200).json({
+        ok: true,
+        id: alumno.id,
+        nota: cambios.nota,
+        fechaActualizacion,
+        revision
+      });
     }
 
     if (accion === 'borrar') {

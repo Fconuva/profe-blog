@@ -91,6 +91,22 @@ function auditPanel(config) {
   assert(panelHtml.includes('window.crypto.getRandomValues'), `${config.label}: el sorteo no usa azar criptográfico.`);
   assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
+  for (const manualEditingContract of [
+    'id="borradorManual"',
+    'id="btnContinuarManual"',
+    'id="btnDescartarBorradorManual"',
+    'id="btnDescartarActual"',
+    'Pausar',
+    'Continuar',
+    'localStorage.setItem(claveBorradorManual()',
+    'localStorage.removeItem(claveBorradorManual()',
+    'data-editar-respuestas',
+    'Editar respuestas',
+    'data-editar-nota',
+    'Editar nota',
+    'revisionEsperada',
+    "accion: 'actualizar-nota-manual'"
+  ]) assert(panelHtml.includes(manualEditingContract), `${config.label}: falta continuidad o edición manual ${manualEditingContract}.`);
   assert(panelHtml.includes('(Math.max(0, Math.min(7, suma)) / 7) * 6'), `${config.label}: la vista manual no convierte el logro a la escala de notas 1-7.`);
   if (config.manualAnswers) {
     const answers = answerBank(panelHtml);
@@ -182,6 +198,7 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'guardar-nota-grabacion'",
     "accion === 'pdf-retroalimentacion'",
     "accion === 'borrar-grabacion'",
+    "accion === 'actualizar-nota-manual'",
     "accion === 'revision-agente-lista'",
     'INTERROGACION_REVIEW_AGENT_HASH',
     'MAX_AUDIO_BYTES',
@@ -190,6 +207,11 @@ for (const apiFile of ['api/interrogacion.js']) {
     'notaDocente',
     "accion === 'auditar-firebase'",
     'notaRef.transaction((actual) => actual ? undefined : registro',
+    'revisionRegistro(actual) !== revisionEsperada',
+    'diferencias.length > 1',
+    'cambioAnterior !== null',
+    'fechaActualizacion',
+    'crypto.randomUUID()',
     'Este estudiante ya fue tomado desde otro panel.',
     'Este estudiante ya fue calificado desde otro panel.',
     "req.method !== 'POST'"

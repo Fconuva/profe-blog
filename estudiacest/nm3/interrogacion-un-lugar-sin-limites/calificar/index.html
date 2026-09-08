@@ -30,7 +30,7 @@
 
   label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;
         letter-spacing:.05em;margin-bottom:5px;}
-  select,input[type=password],textarea{width:100%;font:inherit;font-size:15px;padding:11px 13px;
+  select,input[type=password],input[type=number],textarea{width:100%;font:inherit;font-size:15px;padding:11px 13px;
         border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink);}
   select:focus,input:focus,textarea:focus{outline:2px solid #9dc2ea;outline-offset:1px;border-color:var(--blue);}
   .fila{display:grid;grid-template-columns:1fr 1fr;gap:13px;}
@@ -44,6 +44,10 @@
   .btn:disabled{opacity:.45;cursor:not-allowed;}
   .btn.chico{padding:8px 14px;font-size:13px;}
   .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .draft-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+             margin-top:14px;padding:11px 13px;border:1px solid var(--warn-line);border-radius:10px;background:var(--warn-bg);}
+  .draft-bar span{font-size:13px;font-weight:700;color:var(--warn);}
+  .draft-bar .row-actions{min-width:0;}
 
   .aviso{border-radius:10px;padding:11px 15px;font-size:13.6px;margin-top:12px;display:none;}
   .aviso.ver{display:block;}
@@ -132,6 +136,8 @@
   .dialog-body{padding:24px;text-align:center;}
   .dialog-body h2{margin:0 0 8px;color:var(--blue);}
   .dialog-body p{color:var(--muted);margin:0 0 18px;}
+  .dialog-form{text-align:left;}
+  .dialog-form .btns{justify-content:flex-end;}
 
   .oculto{display:none !important;}
   @media (max-width:640px){
@@ -173,6 +179,13 @@
         <button class="btn solid" id="btnGrabar">Interrogar con audio</button>
         <button class="btn" id="btnSortear">Interrogar manual</button>
       </div>
+      <div class="draft-bar oculto" id="borradorManual" aria-live="polite">
+        <span id="borradorManualTexto">Hay una interrogación manual en pausa.</span>
+        <div class="row-actions">
+          <button class="btn chico solid" id="btnContinuarManual" type="button">Continuar</button>
+          <button class="btn chico danger" id="btnDescartarBorradorManual" type="button">Descartar</button>
+        </div>
+      </div>
       <div class="aviso" id="avisoSorteo"></div>
     </div>
 
@@ -211,7 +224,7 @@
     </div>
 
     <div class="card oculto" id="cardPreg">
-      <h2>2 · Interrogación</h2>
+      <h2 id="tituloManual">2 · Interrogación</h2>
       <p class="sub">Puntúa cada respuesta. Se puede cambiar <strong>una sola</strong> pregunta, y la nueva la elige el sorteo.</p>
       <div id="zonaPreg"></div>
       <div class="campo" style="margin-top:14px;">
@@ -222,7 +235,8 @@
         <div><div class="lbl">Nota</div><div class="val" id="notaVal">—</div></div>
         <div class="det" id="notaDet">Sin puntajes asignados</div>
         <div class="der">
-          <button class="btn" id="btnCancelar">Cancelar</button>
+          <button class="btn" id="btnCancelar">Pausar</button>
+          <button class="btn danger" id="btnDescartarActual">Descartar</button>
           <button class="btn solid" id="btnGuardar">Guardar nota</button>
         </div>
       </div>
@@ -269,6 +283,14 @@
 </div>
 
 <dialog id="audioExito"><div class="dialog-body"><h2>Respuestas guardadas</h2><p>Los siete audios quedaron disponibles para revisarlos y calificarlos después.</p><button class="btn solid" id="cerrarAudioExito" type="button">Aceptar</button></div></dialog>
+<dialog id="editarNotaFinal"><div class="dialog-body dialog-form">
+  <h2>Editar nota manual</h2>
+  <p id="editarNotaFinalEstudiante"></p>
+  <div class="campo"><label for="notaFinalEditar">Nota final</label><input id="notaFinalEditar" type="number" min="1" max="7" step="0.1" inputmode="decimal"></div>
+  <div class="campo"><label for="origenNotaFinalEditar">Origen de la evaluación</label><textarea id="origenNotaFinalEditar" rows="3" maxlength="300"></textarea></div>
+  <div class="aviso" id="avisoEdicionFinal"></div>
+  <div class="btns"><button class="btn" id="btnCancelarEdicionFinal" type="button">Cancelar</button><button class="btn solid" id="btnGuardarEdicionFinal" type="button">Guardar cambios</button></div>
+</div></dialog>
 
 <script>
 (function () {
@@ -384,6 +406,7 @@
 
   var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
+  var edicionFinal = null;
   var inicioManualEnCurso = false;
   var $ = function (id) { return document.getElementById(id); };
 
@@ -401,6 +424,98 @@
     var j = await r.json().catch(function () { return {}; });
     if (!r.ok) throw new Error(j.error || 'Error de conexión.');
     return j;
+  }
+
+  function claveBorradorManual() {
+    return 'interrogacion-manual:v1:' + INSTRUMENTO + ':' + (sesion ? sesion.docente : docenteDesdeUrl());
+  }
+
+  function buscarAlumno(id) {
+    var encontrado = null;
+    if (!sesion || !sesion.cursos) return encontrado;
+    Object.keys(sesion.cursos).some(function (curso) {
+      encontrado = (sesion.cursos[curso] || []).find(function (item) { return item.id === id; }) || null;
+      return Boolean(encontrado);
+    });
+    return encontrado;
+  }
+
+  function revisionRegistro(registro) {
+    return String(registro && (registro.revision || registro.fechaActualizacion || registro.fecha) || '');
+  }
+
+  function borrarBorradorManual() {
+    try { localStorage.removeItem(claveBorradorManual()); } catch (_) {}
+  }
+
+  function leerBorradorManual() {
+    var dato = null;
+    try { dato = JSON.parse(localStorage.getItem(claveBorradorManual()) || 'null'); } catch (_) {}
+    var alumno = dato && buscarAlumno(String(dato.id || ''));
+    var preguntas = dato && Array.isArray(dato.preguntas) ? dato.preguntas.map(Number) : [];
+    var puntajes = {};
+    if (dato && dato.puntajes && typeof dato.puntajes === 'object') {
+      Object.keys(dato.puntajes).forEach(function (key) {
+        var posicion = Number(key), valor = Number(dato.puntajes[key]);
+        if (Number.isInteger(posicion) && posicion >= 0 && posicion < 7 && PUNTOS.indexOf(valor) >= 0) puntajes[posicion] = valor;
+      });
+    }
+    var cambiada = dato && dato.cambiada != null ? Number(dato.cambiada) : null;
+    var valido = alumno && preguntas.length === 7 && new Set(preguntas).size === 7
+      && preguntas.every(function (indice) { return Number.isInteger(indice) && indice >= 0 && indice < BANCO.length; })
+      && (cambiada === null || (Number.isInteger(cambiada) && cambiada >= 0 && cambiada < 7))
+      && !sesion.notas[alumno.id] && !sesion.grabaciones[alumno.id];
+    if (!valido) {
+      if (dato) borrarBorradorManual();
+      return null;
+    }
+    return {
+      id: alumno.id,
+      alumno: alumno.nombre,
+      preguntas: preguntas,
+      puntajes: puntajes,
+      evidencias: {},
+      cambiada: cambiada,
+      observacion: String(dato.observacion || '').slice(0, 500),
+      editando: false
+    };
+  }
+
+  function pintarBorradorManual(borrador) {
+    var dato = borrador === undefined ? leerBorradorManual() : borrador;
+    $('borradorManual').classList.toggle('oculto', !dato || Boolean(actual));
+    if (!dato) return;
+    var alumno = buscarAlumno(dato.id);
+    $('borradorManualTexto').textContent = 'Interrogación manual en pausa: ' +
+      (CURSO_LBL[alumno.curso] || alumno.curso) + ', N° ' + alumno.n + '.';
+  }
+
+  function guardarBorradorManual() {
+    if (!actual || actual.editando) return;
+    try {
+      localStorage.setItem(claveBorradorManual(), JSON.stringify({
+        id: actual.id,
+        preguntas: actual.preguntas,
+        puntajes: actual.puntajes,
+        cambiada: actual.cambiada,
+        observacion: $('obs').value
+      }));
+    } catch (_) {}
+    pintarBorradorManual();
+  }
+
+  function abrirManual(registro) {
+    actual = registro;
+    $('obs').value = registro.observacion || '';
+    $('tituloManual').textContent = registro.editando ? 'Editar interrogación manual' : '2 · Interrogación';
+    $('btnCancelar').textContent = registro.editando ? 'Cerrar' : 'Pausar';
+    $('btnDescartarActual').classList.toggle('oculto', Boolean(registro.editando));
+    $('btnGuardar').textContent = registro.editando ? 'Guardar cambios' : 'Guardar nota';
+    aviso($('avisoGuardar'), '', '');
+    $('cardPreg').classList.remove('oculto');
+    pintarPreguntas();
+    pintarAlumnos();
+    $('cardPreg').scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   // ---------- acceso directo; Francisco es el panel predeterminado ----------
@@ -457,14 +572,17 @@
       empty.value = ''; empty.textContent = 'Sin estudiantes pendientes en este curso';
       s.appendChild(empty);
     }
+    var borrador = leerBorradorManual();
+    var flujoManualActivo = Boolean(actual || borrador);
     s.disabled = !disponibles.length;
-    $('btnGrabar').disabled = !disponibles.length;
-    $('btnSortear').disabled = !disponibles.length;
+    $('btnGrabar').disabled = !disponibles.length || flujoManualActivo;
+    $('btnSortear').disabled = !disponibles.length || flujoManualActivo;
     var hora = sesion.ultimaActualizacion
       ? new Date(sesion.ultimaActualizacion).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       : '';
     $('estadoNomina').textContent = disponibles.length + ' estudiante(s) disponible(s) · ' +
       (total - disponibles.length) + ' ya registrado(s).' + (hora ? ' Actualizado ' + hora + '; se renueva cada 30 s.' : '');
+    pintarBorradorManual(borrador);
   }
 
   window.actualizarNominaInterrogacion = function (grabaciones, notas, meta) {
@@ -472,6 +590,12 @@
     if (grabaciones) sesion.grabaciones = grabaciones;
     if (notas) sesion.notas = notas;
     sesion.ultimaActualizacion = meta && meta.updatedAt ? meta.updatedAt : Date.now();
+    if (actual && !actual.editando && (sesion.notas[actual.id] || sesion.grabaciones[actual.id])) {
+      borrarBorradorManual();
+      actual = null;
+      $('cardPreg').classList.add('oculto');
+      aviso($('avisoSorteo'), 'Este estudiante fue registrado desde otro panel. El borrador local se descartó.', 'err');
+    }
     if (sesion.cursos && Object.keys(sesion.cursos).length) {
       pintarAlumnos();
       pintarNotas();
@@ -518,31 +642,25 @@
       pintarAlumnos();
       return;
     }
-    var alumno = null;
-    Object.keys(sesion.cursos).some(function (curso) {
-      alumno = (sesion.cursos[curso] || []).find(function (item) { return item.id === id; }) || null;
-      return Boolean(alumno);
-    });
+    var alumno = buscarAlumno(id);
     if (!alumno) {
       inicioManualEnCurso = false;
       $('btnSortear').disabled = false;
       return;
     }
-    actual = {
+    abrirManual({
       id: id,
       alumno: alumno.nombre,
       preguntas: sortear(7, []),
       puntajes: {},
-      cambiada: null
-    };
-    $('obs').value = '';
+      evidencias: {},
+      cambiada: null,
+      observacion: '',
+      editando: false
+    });
+    guardarBorradorManual();
     aviso($('avisoSorteo'), '', '');
-    aviso($('avisoGuardar'), '', '');
-    $('cardPreg').classList.remove('oculto');
-    pintarPreguntas();
-    $('cardPreg').scrollIntoView({ behavior: 'smooth', block: 'start' });
     inicioManualEnCurso = false;
-    $('btnSortear').disabled = false;
   });
 
   function pintarPreguntas() {
@@ -571,6 +689,7 @@
       b.addEventListener('click', function () {
         var pos = Number(b.parentNode.dataset.pos);
         actual.puntajes[pos] = Number(b.dataset.p);
+        guardarBorradorManual();
         pintarPreguntas(); marcador();
       });
     });
@@ -582,6 +701,7 @@
         actual.preguntas[pos] = nueva;
         actual.cambiada = pos;
         delete actual.puntajes[pos];
+        guardarBorradorManual();
         pintarPreguntas(); marcador();
       });
     });
@@ -598,9 +718,36 @@
   }
 
   $('btnCancelar').addEventListener('click', function () {
+    if (actual && !actual.editando) guardarBorradorManual();
     actual = null;
     $('cardPreg').classList.add('oculto');
+    pintarAlumnos();
   });
+
+  $('btnDescartarActual').addEventListener('click', function () {
+    if (!actual || !confirm('¿Descartar esta interrogación en curso?')) return;
+    borrarBorradorManual();
+    actual = null;
+    $('cardPreg').classList.add('oculto');
+    pintarAlumnos();
+  });
+
+  $('btnContinuarManual').addEventListener('click', function () {
+    var borrador = leerBorradorManual();
+    if (!borrador) {
+      pintarAlumnos();
+      return;
+    }
+    abrirManual(borrador);
+  });
+
+  $('btnDescartarBorradorManual').addEventListener('click', function () {
+    if (!confirm('¿Descartar la interrogación manual que está en pausa?')) return;
+    borrarBorradorManual();
+    pintarAlumnos();
+  });
+
+  $('obs').addEventListener('input', guardarBorradorManual);
 
   $('btnGuardar').addEventListener('click', async function () {
     if (!actual) return;
@@ -608,17 +755,32 @@
     if (vals < 7 && !confirm('Faltan ' + (7 - vals) + ' preguntas por puntuar. ¿Guardar igual?')) return;
     $('btnGuardar').disabled = true;
     try {
-      var r = await llamar({
-        accion: 'guardar', alumnoId: actual.id, alumno: actual.alumno,
-        preguntas: actual.preguntas.map(function (i) { return i + 1; }),
-        puntajes: actual.puntajes, cambiada: actual.cambiada,
+      var registro = actual;
+      var payload = {
+        accion: registro.editando ? 'actualizar-nota-manual' : 'guardar', alumnoId: registro.id,
+        preguntas: registro.preguntas.map(function (i) { return i + 1; }),
+        puntajes: registro.puntajes, evidencias: registro.evidencias || {}, cambiada: registro.cambiada,
         observacion: $('obs').value
-      });
-      sesion.notas[actual.id] = {
-        alumno: actual.alumno, curso: actual.id.split('_')[0],
-        nota: r.nota, fecha: new Date().toISOString()
       };
-      aviso($('avisoGuardar'), 'Guardado. ' + actual.alumno + ' quedó con nota ' + r.nota.toFixed(1).replace('.', ',') + '.', 'ok');
+      if (registro.editando) payload.revisionEsperada = registro.revisionEsperada;
+      var r = await llamar(payload);
+      var anterior = sesion.notas[registro.id] || {};
+      sesion.notas[registro.id] = Object.assign({}, anterior, {
+        alumno: registro.alumno,
+        curso: registro.id.split('_')[0],
+        preguntas: payload.preguntas,
+        puntajes: registro.puntajes,
+        evidencias: registro.evidencias || {},
+        cambiada: registro.cambiada,
+        observacion: payload.observacion,
+        nota: r.nota,
+        fecha: anterior.fecha || new Date().toISOString(),
+        fechaActualizacion: r.fechaActualizacion || anterior.fechaActualizacion || '',
+        revision: r.revision,
+        modalidad: anterior.modalidad || 'en_vivo'
+      });
+      borrarBorradorManual();
+      aviso($('avisoSorteo'), registro.editando ? 'Cambios guardados.' : 'Nota guardada correctamente.', 'ok');
       actual = null;
       $('cardPreg').classList.add('oculto');
       pintarAlumnos(); pintarNotas();
@@ -629,6 +791,37 @@
   });
 
   // ---------- notas guardadas ----------
+  function editarRespuestas(id) {
+    var registro = sesion.notas[id];
+    var alumno = buscarAlumno(id);
+    if (!registro || !alumno || !Array.isArray(registro.preguntas) || registro.preguntas.length !== 7) return;
+    var puntajes = {};
+    Object.keys(registro.puntajes || {}).forEach(function (key) { puntajes[key] = Number(registro.puntajes[key]); });
+    abrirManual({
+      id: id,
+      alumno: alumno.nombre,
+      preguntas: registro.preguntas.map(function (numero) { return Number(numero) - 1; }),
+      puntajes: puntajes,
+      evidencias: Object.assign({}, registro.evidencias || {}),
+      cambiada: registro.cambiada == null ? null : Number(registro.cambiada),
+      observacion: registro.observacion || '',
+      revisionEsperada: revisionRegistro(registro),
+      editando: true
+    });
+  }
+
+  function editarNotaFinal(id) {
+    var registro = sesion.notas[id];
+    var alumno = buscarAlumno(id);
+    if (!registro || !alumno) return;
+    edicionFinal = { id: id, revisionEsperada: revisionRegistro(registro) };
+    $('editarNotaFinalEstudiante').textContent = (CURSO_LBL[alumno.curso] || alumno.curso) + ', N° ' + alumno.n + '.';
+    $('notaFinalEditar').value = Number(registro.nota).toFixed(1);
+    $('origenNotaFinalEditar').value = registro.observacion || '';
+    aviso($('avisoEdicionFinal'), '', '');
+    $('editarNotaFinal').showModal();
+  }
+
   function pintarNotas() {
     var t = $('tablaNotas'), ids = Object.keys(sesion.notas);
     t.innerHTML = '';
@@ -645,13 +838,24 @@
 
     filas.forEach(function (f) {
       var tr = document.createElement('tr');
+      var editable = !f.intentoId && f.modalidad !== 'audio';
+      var botonEditar = editable && Array.isArray(f.preguntas)
+        ? '<button class="btn chico" data-editar-respuestas="' + f.id + '">Editar respuestas</button>'
+        : (editable ? '<button class="btn chico" data-editar-nota="' + f.id + '">Editar nota</button>' : '');
       tr.innerHTML = '<td>' + (CURSO_LBL[f.curso] || f.curso) + '</td>' +
         '<td>' + (f.id.split('_')[1] || '').replace(/^0/, '') + '</td>' +
         '<td>' + (f.alumno || '') + '</td>' +
         '<td class="n">' + (f.nota != null ? f.nota.toFixed(1).replace('.', ',') : '—') + '</td>' +
         '<td>' + (f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : '') + '</td>' +
-        '<td><div class="row-actions"><button class="btn chico" data-pdf="' + f.id + '">Descargar PDF</button><button class="btn chico danger" data-borrar="' + f.id + '">Borrar</button></div></td>';
+        '<td><div class="row-actions">' + botonEditar + '<button class="btn chico" data-pdf="' + f.id + '">Descargar PDF</button><button class="btn chico danger" data-borrar="' + f.id + '">Borrar</button></div></td>';
       t.appendChild(tr);
+    });
+
+    t.querySelectorAll('[data-editar-respuestas]').forEach(function (button) {
+      button.addEventListener('click', function () { editarRespuestas(button.dataset.editarRespuestas); });
+    });
+    t.querySelectorAll('[data-editar-nota]').forEach(function (button) {
+      button.addEventListener('click', function () { editarNotaFinal(button.dataset.editarNota); });
     });
 
     t.querySelectorAll('[data-borrar]').forEach(function (b) {
@@ -670,6 +874,49 @@
       });
     });
   }
+
+  $('btnCancelarEdicionFinal').addEventListener('click', function () {
+    edicionFinal = null;
+    $('editarNotaFinal').close();
+  });
+
+  $('btnGuardarEdicionFinal').addEventListener('click', async function () {
+    if (!edicionFinal) return;
+    var notaFinal = Number($('notaFinalEditar').value);
+    var origen = $('origenNotaFinalEditar').value.trim();
+    if (!Number.isFinite(notaFinal) || notaFinal < 1 || notaFinal > 7) {
+      aviso($('avisoEdicionFinal'), 'La nota debe estar entre 1,0 y 7,0.', 'err');
+      return;
+    }
+    if (origen.length < 10) {
+      aviso($('avisoEdicionFinal'), 'Describe quién evaluó y cómo se obtuvo la nota.', 'err');
+      return;
+    }
+    $('btnGuardarEdicionFinal').disabled = true;
+    try {
+      var datos = edicionFinal;
+      var r = await llamar({
+        accion: 'actualizar-nota-manual',
+        alumnoId: datos.id,
+        nota: notaFinal,
+        origen: origen,
+        revisionEsperada: datos.revisionEsperada
+      });
+      sesion.notas[datos.id] = Object.assign({}, sesion.notas[datos.id], {
+        nota: r.nota,
+        observacion: origen,
+        fechaActualizacion: r.fechaActualizacion,
+        revision: r.revision
+      });
+      edicionFinal = null;
+      $('editarNotaFinal').close();
+      aviso($('avisoSorteo'), 'Cambios guardados.', 'ok');
+      pintarNotas();
+    } catch (e) {
+      aviso($('avisoEdicionFinal'), e.message, 'err');
+    }
+    $('btnGuardarEdicionFinal').disabled = false;
+  });
   entrar();
 })();
 </script>

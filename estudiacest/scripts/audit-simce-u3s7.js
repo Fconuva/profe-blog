@@ -78,7 +78,17 @@ expect(page.includes('Puntaje: ${confirmed.result.score} de ${confirmed.result.t
 expect(!page.includes('respuesta correcta es'), 'La página no debe exponer respuestas correctas al entregar.');
 expect(page.includes('saveQueue=Promise.resolve()'), 'Falta la cola serializada de autoguardado.');
 expect(page.includes('await saveQueue'), 'La entrega no espera el autoguardado.');
-expect(page.includes('attempt.completada !== true'), 'La entrega no relee la confirmación del servidor.');
+expect(page.includes('0 de 55 respuestas completadas'), 'El contador inicial no refleja las 55 respuestas reales.');
+expect(page.includes("const normalizedText=value=>String(value??'').replace(/\\s+/g,' ').trim()"), 'El cliente no comparte la normalización de espacios del servidor.');
+expect(api.includes("return String(value || '').replace(/\\s+/g, ' ').trim().slice(0, max)"), 'El servidor no conserva la normalización canónica de espacios.');
+expect(page.includes('normalizedTextLength(field.value)') && page.includes('normalizedTextLength(state.openResponses[item.id])') && page.includes('normalizedTextLength(state.metaResponses[item.id])'), 'Contadores, progreso y validación no usan la misma longitud normalizada.');
+expect(page.includes('error.payload=json'), 'callApi no conserva la respuesta de error para reconciliar conflictos.');
+expect(page.includes('if(!confirmedAttempt)return false') && page.includes('if(attempt.submitted!==true||attempt.completada !== true)return false'), 'La confirmación no tolera un intento nulo o incompleto.');
+expect(page.includes("if(error.status!==409||!error.payload||error.payload.completada!==true)throw error"), 'La entrega no reconoce el conflicto 409 ya completado.');
+expect(page.includes("const confirmed=await callApi('get-guia-state')"), 'La entrega no relee el estado canónico después de enviar.');
+expect(page.includes('if(!applyConfirmedDelivery(confirmed))throw new Error'), 'La entrega no exige la lectura canónica antes de anunciar éxito.');
+expect((page.match(/lockCompleted\(\)/g)||[]).length === 2, 'El estado entregado puede activarse fuera de la confirmación canónica.');
+expect(!page.includes("if(preview){$('confirmModal').classList.add('open')"), 'La vista previa no puede simular una entrega confirmada.');
 expect(page.includes('/estudiantes/assets/u3s7/infografia-leer-discurso.png'), 'La infografía no está integrada.');
 expect(fs.statSync(path.join(root,'estudiantes/assets/u3s7/infografia-leer-discurso.png')).size > 500000, 'La infografía no tiene resolución suficiente.');
 

@@ -8,6 +8,9 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - La sesión debe tener una ruta pública válida en `link_guia` y estar registrada en `scripts/academic-release-manifest.json` cuando sea un recurso académico crítico.
 - Los cursos deben usar la nomenclatura normalizada del sistema, por ejemplo `2A-HC`, `3A-HC` o `3A-TP`.
 - Nunca se debe crear una segunda copia de una sesión para corregir su estado. Se corrige la sesión canónica.
+- El nombre, correo o RUN pueden ayudar a localizar un registro, pero la lectura
+  y toda escritura usan el UID autenticado, el curso comprobado y el `sessionId`.
+  Antes de reparar se buscan UID antiguos o duplicados para no separar evidencia.
 
 ## 2. Estados de una entrega
 
@@ -15,8 +18,15 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - Borrador: existe un registro y `completada` no es `true`; la tarjeta muestra `En progreso`.
 - Entrega final: el registro contiene simultáneamente `submitted: true` y `completada: true`; la tarjeta muestra `Completada`.
 - `completada` es la marca canónica del dashboard y del admin.
-- Por compatibilidad histórica, el dashboard también puede reconocer `submitted: true` como entrega, pero todo registro nuevo debe guardar ambas marcas.
-- Una entrega final debe incluir `submittedAt`, `completadaAt`, `updatedAt`, `score`, `total` y la identidad básica del estudiante.
+- El lector canónico aplica esta precedencia y no la reemplaza con inferencias locales:
+  1. `manual_attestation`: ambas marcas son verdaderas y la atestación docente contiene fuente, fecha y motivo.
+  2. `confirmed`: ambas marcas son verdaderas.
+  3. `legacy_confirmed`: solo una marca es verdadera, pero existe timestamp de entrega, resultado canónico o telemetría de confirmación. Se muestra como completada por compatibilidad y se informa para reparación.
+  4. `inconsistent`: hay una marca aislada sin apoyo, o existe solo resultado, nota o telemetría. Requiere revisión y no se convierte automáticamente en entrega.
+  5. `draft` o `missing`: no existe confirmación final.
+- Todo consumidor debe usar esta precedencia. Un resultado, una calificación o
+  una traza son evidencia de apoyo; nunca sustituyen el registro de respuesta.
+- Una entrega final digital debe incluir `submittedAt`, `completadaAt`, `updatedAt`, `score`, `total` y la identidad básica del estudiante. La atestación manual es la única excepción: confirma finalización sin inventar contenido, `score` ni `total`.
 - El envío final se realiza en una sola escritura atómica. No se guardan primero las respuestas y después la marca de entrega en operaciones independientes.
 
 ## 3. Autoguardado sin pérdida
@@ -36,6 +46,9 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - Durante la escritura el botón queda deshabilitado y cambia a `Entregando…`.
 - La página debe esperar la respuesta de Firebase, directamente o mediante la API oficial de la sección, y leer de vuelta `completada` antes de anunciar éxito.
 - Solo después de confirmar `completada: true` se cambia el botón a `Clase entregada`.
+- La lectura posterior también verifica `submitted: true`. Si una API responde
+  conflicto porque el intento ya estaba entregado, el cliente vuelve a consultar
+  el estado y aplica la misma reconciliación en vez de dejar un error terminal.
 - Si Firebase falla, el botón vuelve a estar disponible, conserva las respuestas y muestra un error visible con opción de reintento.
 - Una entrega ya confirmada no se vuelve a escribir por accidente. Al abrirla nuevamente se restaura en estado entregado.
 
@@ -71,6 +84,9 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 
 - El dashboard debe leer el registro de la misma ruta que escribe la guía: `plataforma_estudiantes/respuestas/{sessionId}/{uid}`.
 - Los estados deben ser mutuamente excluyentes: `Pendiente`, `En progreso` o `Completada`.
+- Dashboard, admin, exportadores y publicadores no pueden decidir entrega solo
+  porque exista un resultado, una nota o telemetría. Deben aplicar la precedencia
+  de la sección 2 y exponer las inconsistencias al auditor.
 - Una entrega confirmada debe aparecer como completada al regresar o recargar el dashboard.
 - El admin debe distinguir borrador de entrega final y no inferir entrega a partir de una nota manual.
 - Restablecer una actividad debe ser una acción deliberada del profesor y no debe ocurrir al editar una calificación.
@@ -98,8 +114,20 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - También se revisan entregas completas sin `score`, con `total` incorrecto, puntaje fuera de rango o identidad faltante.
 - Un borrador solo se recupera como entrega cuando contiene toda la estructura obligatoria de la sesión.
 - Toda reparación se ejecuta primero en modo de simulación y luego con `--apply`.
+- Los estados heredados se reconcilian para todo el padrón con
+  `npm run reconcile:class-submissions -- --apply`, nunca mediante una regla
+  nominal. Solo se normaliza una marca aislada cuando el lector canónico la
+  clasifica como `legacy_confirmed`; los estados `inconsistent` quedan para
+  revisión humana.
 - La reparación conserva respuestas, calcula con la clave individual correcta y agrega marcas de tiempo sin borrar evidencia.
-- El control final debe informar cero inconsistencias pendientes.
+- Si la reparación se funda en observación directa del docente, puede confirmar
+  la finalización sin fabricar contenido académico ni puntaje. Debe guardar
+  `manualCompletion: true` y una atestación con `source`, `recordedAt` y `reason`.
+- La simulación valida UID, curso y sesiones exactas; la aplicación debe ser
+  atómica, conservar los registros originales y terminar con una relectura
+  independiente del mismo conjunto.
+- El control final debe informar cero inconsistencias en el alcance reparado y
+  enumerar, sin datos personales, las inconsistencias históricas que queden fuera.
 - Para la Clase 4 se usa `node scripts/check-preassigned-ensayos.js --repair-session sesion-u3-4`.
 
 ## 11. Pruebas obligatorias
@@ -113,6 +141,14 @@ Este documento define el comportamiento mínimo de toda clase, guía o ensayo de
 - Verificar en Firebase las dos marcas, los tiempos, `score`, `total` y la identidad.
 - Después del despliegue comprobar el HTML servido desde `https://www.estudiacest.com`, no solo el archivo local.
 - Ejecutar un segundo barrido de inconsistencias cuando la clase ya está siendo usada.
+- Ejecutar la auditoría reutilizable de integridad de entregas antes de publicar
+  calificaciones o después de una incidencia; su salida nunca incluye respuestas
+  ni identificadores personales innecesarios.
+- Comando: `npm run audit:class-submission-integrity`. Agregar `-- --strict`
+  cuando el proceso deba fallar si encuentra estados heredados o inconsistentes.
+- La lógica de reparación general se prueba con
+  `npm run audit:class-submission-reconciliation`; la prueba exige que no altere
+  notas ni convierta evidencia ambigua en entrega.
 
 ## 12. Despliegue y preservación
 
@@ -133,7 +169,7 @@ Una clase no está terminada hasta que cumple simultáneamente lo siguiente:
 - Valida campos faltantes con mensajes visibles.
 - Permite entregar aunque existan respuestas incorrectas.
 - Guarda `submitted: true` y `completada: true` en una única operación final.
-- Confirma la escritura leyendo Firebase.
+- Confirma ambas marcas leyendo Firebase o la API canónica.
 - Muestra `Entrega confirmada` y un regreso claro al dashboard.
 - El dashboard la muestra como `Completada`.
 - El admin recibe la entrega en la sesión y curso correctos.

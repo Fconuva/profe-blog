@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 const admin = require('firebase-admin');
+const { classifySubmissionStatus } = require('./class-submission-status');
 
 const BASE = 'plataforma_estudiantes';
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
@@ -151,19 +152,20 @@ function rowFor(student, uid, sessionId, session, response, result) {
   const totalUnits = config.alternatives + config.concepts + config.writing.length;
   const completedUnits = alternativesDone + conceptsDone + writingDone;
   const completion = totalUnits ? completedUnits / totalUnits : 0;
-  const hasResponse = Object.keys(response || {}).length > 0 || Object.keys(result || {}).length > 0;
-  const submitted = response.completada === true || response.submitted === true || Object.keys(result || {}).length > 0;
+  const hasActivityEvidence = Object.keys(response || {}).length > 0 || Object.keys(result || {}).length > 0;
+  const submission = classifySubmissionStatus(response, { result });
   const writingAttempted = writings.filter(item => item.length > 0).length;
   const writingComplete = writings.filter(item => item.score === 1).length;
   let proposedGrade = gradeBand(completion);
   if (config.writing.length && writingAttempted === 0 && proposedGrade >= 5) proposedGrade -= 2;
   else if (config.writing.length && writingComplete < config.writing.length && proposedGrade === 7) proposedGrade = 5;
-  if (!hasResponse) proposedGrade = 1;
+  if (!hasActivityEvidence) proposedGrade = 1;
 
   const flags = [];
-  if (!hasResponse) flags.push('Sin respuesta: validar asistencia, licencia o vía alternativa antes de cerrar la nota');
-  else if (!submitted) flags.push('Borrador sin entrega confirmada');
-  if (hasResponse && writingAttempted === 0) flags.push('Escritura requerida ausente');
+  if (!hasActivityEvidence) flags.push('Sin respuesta: validar asistencia, licencia o vía alternativa antes de cerrar la nota');
+  else if (submission.status === 'inconsistent') flags.push('Estado de entrega inconsistente: resultado, nota o telemetría no sustituyen los indicadores canónicos');
+  else if (!submission.delivered) flags.push('Borrador sin entrega confirmada');
+  if (hasActivityEvidence && writingAttempted === 0) flags.push('Escritura requerida ausente');
   else if (writingComplete < config.writing.length) flags.push('Escritura requerida incompleta');
   flags.push('Sin tiempo inicial histórico: no aplicar rebaja por velocidad');
 
@@ -175,7 +177,8 @@ function rowFor(student, uid, sessionId, session, response, result) {
     sessionId,
     sessionTitle: session.titulo || sessionId,
     applicationDate: session.fecha_aplicacion || '',
-    status: !hasResponse ? 'Sin iniciar' : submitted ? 'Entregada' : 'Borrador',
+    status: !hasActivityEvidence ? 'Sin iniciar' : submission.delivered ? 'Entregada' : submission.status === 'inconsistent' ? 'Inconsistente' : 'Borrador',
+    submissionStatus: submission.status,
     alternativesDone,
     alternativesTotal: config.alternatives,
     conceptsDone,

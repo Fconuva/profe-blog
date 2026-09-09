@@ -6,6 +6,7 @@ const dashboard = fs.readFileSync(path.join(root, 'estudiantes', 'dashboard.html
 const rules = JSON.parse(fs.readFileSync(path.join(root, 'firebase-rules.json'), 'utf8')).rules;
 const publisherPath = path.join(root, 'scripts', 'publish-simce-labor-grades.js');
 const publisher = fs.existsSync(publisherPath) ? fs.readFileSync(publisherPath, 'utf8') : null;
+const exporter = fs.readFileSync(path.join(root, 'scripts', 'export-simce-labor-review.js'), 'utf8');
 const failures = [];
 
 [
@@ -42,6 +43,21 @@ if (publisher) {
   ].forEach(fragment => {
     if (!publisher.includes(fragment)) failures.push(`Publicador: falta la guarda ${fragment}.`);
   });
+}
+
+[
+  "require('./class-submission-status')",
+  'classifySubmissionStatus(response, { result })',
+  "submission.status === 'inconsistent'",
+  "status: !hasActivityEvidence ? 'Sin iniciar'"
+].forEach(fragment => {
+  if (!exporter.includes(fragment)) failures.push(`Exportador: falta el lector canónico ${fragment}.`);
+});
+if (exporter.includes("Object.keys(result || {}).length > 0;\n  const submitted")) {
+  failures.push('Exportador: un resultado aún confirma una entrega por sí solo.');
+}
+if (publisher && !publisher.includes("row.status === 'Inconsistente'")) {
+  failures.push('Publicador: no conserva el estado de entrega inconsistente.');
 }
 
 if (failures.length) {

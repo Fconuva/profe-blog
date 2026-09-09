@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-09, regularización general de entregas y reapertura SIMCE U3
+
+- Se definió un contrato único para clasificar todas las entregas: una clase se
+  considera entregada solo por confirmación final verificable, por evidencia
+  digital legada suficiente o por una atestación manual explícita. Una nota,
+  un resultado aislado, telemetría o un borrador no bastan por sí solos.
+- La reconciliación general revisó en simulación 946 pares de estudiante y
+  sesión. Detectó 342 entregas legadas normalizables y 22 estados de nota
+  desactualizados; los casos parciales o contradictorios quedan señalados para
+  revisión y nunca se marcan automáticamente como entregados.
+- Se preparó la reapertura de las 11 actividades SIMCE de Unidad 3 para los 86
+  estudiantes de los dos cursos, hasta el 23 de septiembre, junto con un aviso
+  persistente y dirigido en el panel. La simulación validó 69 rutas atómicas.
+- La Sesión 7 exige ahora confirmación final completa y reconcilia respuestas
+  interrumpidas. La Sesión 10 mantiene ocultas las respuestas correctas y la
+  retroalimentación hasta que el docente las libere desde la configuración.
+- `npm run build` aprobó contratos, auditorías de reconciliación, Sesiones 7 y
+  10, reapertura y manifiesto de recursos. Queda ejecutar las escrituras,
+  desplegar y registrar las lecturas independientes de producción.
+
 ## 2026-09-09, ruta personal SIMCE de sesiones 2 a 10
 
 - Se reemplazó la estrategia de excepciones individuales en las guías estándar

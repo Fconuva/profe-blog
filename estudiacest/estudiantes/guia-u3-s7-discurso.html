@@ -28,7 +28,7 @@
   <section class="band"><div class="step">8 · Cierre escrito</div><h2>Tres respuestas directas</h2><p class="lead">Escribe qué comprendiste, qué evidencia utilizaste y qué revisarás en otra lectura.</p><div class="meta-grid" id="metacognition"></div><div id="saveStatus" class="status" role="status" aria-live="polite">Tu avance se guarda automáticamente.</div></section>
 </main>
 
-<div class="dock"><div class="dock-in"><div class="progress"><div class="bar"><span id="progressBar"></span></div><div class="progress-text" id="progressText">0 de 29 respuestas completadas</div></div><button id="submit" type="button" class="submit">Entregar clase</button></div></div>
+<div class="dock"><div class="dock-in"><div class="progress"><div class="bar"><span id="progressBar"></span></div><div class="progress-text" id="progressText">0 de 55 respuestas completadas</div></div><button id="submit" type="button" class="submit">Entregar clase</button></div></div>
 
 <div class="modal" id="visualModal" role="dialog" aria-modal="true" aria-labelledby="visualTitle"><div class="modal-card"><button type="button" class="close" data-close="visualModal" aria-label="Cerrar">×</button><h2 id="visualTitle">Estrategia para leer un discurso</h2><img src="/estudiantes/assets/u3s7/infografia-leer-discurso.png" alt="Infografía ampliada: cinco preguntas para leer un discurso"></div></div>
 <div class="modal" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle"><div class="modal-card confirm"><h2 id="confirmTitle">Entrega confirmada</h2><p>Tu trabajo quedó guardado y aparecerá como <strong>Completada</strong> en el panel.</p><div id="scoreSummary" style="font-size:1.3rem;font-weight:800;color:var(--blue);margin:18px 0">Puntaje registrado</div><p>Las respuestas correctas no se muestran para que todos los cursos puedan rendir la actividad en igualdad de condiciones.</p><a class="btn" href="/estudiantes/dashboard.html">Volver al panel</a><p class="sr-only" style="position:absolute;left:-9999px">Entrega confirmada y registrada.</p></div></div>
@@ -56,6 +56,8 @@
   const hash=value=>{let h=2166136261;for(const ch of String(value)){h^=ch.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0};
   const shuffled=(entries,seed)=>entries.map((item,index)=>({item,n:hash(seed+'|'+index)})).sort((a,b)=>a.n-b.n).map(entry=>entry.item);
   const displayLetter=index=>'ABCD'[index];
+  const normalizedText=value=>String(value??'').replace(/\s+/g,' ').trim();
+  const normalizedTextLength=value=>normalizedText(value).length;
 
   function renderConcepts(){
     $('concepts').innerHTML=data.concepts.map((item,index)=>`<div class="concept"><div class="concept-case"><strong>Caso ${index+1}.</strong> ${esc(item.case)}</div><label for="${item.id}">${esc(item.prompt)}</label><select id="${item.id}" data-concept="${item.id}"><option value="">Selecciona una respuesta</option>${item.options.map((option,i)=>`<option value="${i}">${displayLetter(i)}. ${esc(option)}</option>`).join('')}</select></div>`).join('');
@@ -88,15 +90,15 @@
     document.querySelectorAll('[data-open]').forEach(field=>{field.value=state.openResponses[field.dataset.open]||'';updateCounter(field)});
     document.querySelectorAll('[data-meta]').forEach(field=>{field.value=state.metaResponses[field.dataset.meta]||'';updateCounter(field)});
     document.querySelectorAll('[data-concept]').forEach(field=>{if(state.concepts[field.dataset.concept]!==undefined)field.value=String(state.concepts[field.dataset.concept])});
-    if(attempt.completada===true)lockCompleted();updateProgress();
+    updateProgress();
   }
   function updateCounter(field){
     const item=[...data.openQuestions,...data.metaQuestions].find(entry=>entry.id===(field.dataset.open||field.dataset.meta));if(!item)return;
-    const value=field.value.trim().length;const counter=$('count-'+item.id);counter.textContent=`${value} / mínimo ${item.min} caracteres`;counter.classList.toggle('low',value<item.min);
+    const value=normalizedTextLength(field.value);const counter=$('count-'+item.id);counter.textContent=`${value} / mínimo ${item.min} caracteres`;counter.classList.toggle('low',value<item.min);
   }
   function updateProgress(){
     const alt=Object.keys(state.answers).length;
-    const written=[...data.openQuestions.map(item=>(state.openResponses[item.id]||'').trim().length>=item.min),...data.metaQuestions.map(item=>(state.metaResponses[item.id]||'').trim().length>=item.min)].filter(Boolean).length;
+    const written=[...data.openQuestions.map(item=>normalizedTextLength(state.openResponses[item.id])>=item.min),...data.metaQuestions.map(item=>normalizedTextLength(state.metaResponses[item.id])>=item.min)].filter(Boolean).length;
     const done=alt+written,total=questions.length+data.openQuestions.length+data.metaQuestions.length;
     $('progressBar').style.width=`${Math.round(done/total*100)}%`;$('progressText').textContent=`${done} de ${total} respuestas completadas`;
   }
@@ -105,7 +107,7 @@
     if(preview)return {ok:true,session:{active:true},attempt:null,student:{nombre:'Vista previa',curso:'2° Medio'}};
     const route=action==='get-guia-state'?'simce-u3s7-state':action==='save-draft'?'simce-u3s7-save':'simce-u3s7-submit';
     const token=await user.getIdToken();const response=await fetch(`${API}?action=${encodeURIComponent(route)}`,{method,headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-    const json=await response.json().catch(()=>({}));if(!response.ok){const error=new Error(json.error||'No fue posible conectar.');error.status=response.status;throw error}return json;
+    const json=await response.json().catch(()=>({}));if(!response.ok){const error=new Error(json.error||'No fue posible conectar.');error.status=response.status;error.payload=json;throw error}return json;
   }
   function scheduleSave(){
     if(preview||submitting||(attempt&&attempt.completada===true))return;clearTimeout(saveTimer);$('saveStatus').textContent='Cambios pendientes…';$('saveStatus').className='status';
@@ -113,22 +115,34 @@
   }
   function firstMissing(){
     for(const question of questions)if(!state.answers[question.id])return {id:'block-'+question.id,message:`Faltan ${questions.filter(item=>!state.answers[item.id]).length} alternativas por responder.`};
-    for(const item of data.openQuestions)if((state.openResponses[item.id]||'').trim().length<item.min)return {id:'block-'+item.id,message:'Desarrolla la respuesta usando la evidencia solicitada.'};
-    for(const item of data.metaQuestions)if((state.metaResponses[item.id]||'').trim().length<item.min)return {id:item.id,message:'Completa las tres preguntas del cierre con una idea explicada.'};
+    for(const item of data.openQuestions)if(normalizedTextLength(state.openResponses[item.id])<item.min)return {id:'block-'+item.id,message:'Desarrolla la respuesta usando la evidencia solicitada.'};
+    for(const item of data.metaQuestions)if(normalizedTextLength(state.metaResponses[item.id])<item.min)return {id:item.id,message:'Completa las tres preguntas del cierre con una idea explicada.'};
     return null;
+  }
+  function applyConfirmedDelivery(confirmed){
+    const confirmedAttempt=confirmed&&confirmed.attempt;
+    if(!confirmedAttempt)return false;
+    attempt=confirmedAttempt;
+    if(attempt.submitted!==true||attempt.completada !== true)return false;
+    if(confirmed.result)$('scoreSummary').textContent=`Puntaje: ${confirmed.result.score} de ${confirmed.result.total} · ${confirmed.result.porcentaje}%`;
+    lockCompleted();
+    return true;
   }
   async function submitWork(){
     const missing=firstMissing();if(missing){$('saveStatus').textContent=missing.message;$('saveStatus').className='status error';$(missing.id)?.scrollIntoView({behavior:'smooth',block:'center'});return}
-    if(preview){$('confirmModal').classList.add('open');return}
+    if(preview){$('saveStatus').textContent='Vista previa: la entrega no se registra.';$('saveStatus').className='status';return}
     submitting=true;clearTimeout(saveTimer);const button=$('submit');button.disabled=true;button.textContent='Entregando…';
     try{
       await saveQueue;
       const now=Date.now();
-      await callApi('submit','POST',{...payload(),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:null,total:questions.length});
+      try{
+        await callApi('submit','POST',{...payload(),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:null,total:questions.length});
+      }catch(error){
+        if(error.status!==409||!error.payload||error.payload.completada!==true)throw error;
+      }
       const confirmed=await callApi('get-guia-state');attempt=confirmed.attempt;
-      if(attempt.completada !== true)throw new Error('La plataforma aún no confirma la entrega. Vuelve a intentarlo.');
-      if(confirmed.result)$('scoreSummary').textContent=`Puntaje: ${confirmed.result.score} de ${confirmed.result.total} · ${confirmed.result.porcentaje}%`;
-      lockCompleted();$('confirmModal').classList.add('open');
+      if(!applyConfirmedDelivery(confirmed))throw new Error('La plataforma aún no confirma la entrega. Vuelve a intentarlo.');
+      $('confirmModal').classList.add('open');
     }catch(error){button.disabled=false;button.textContent='Reintentar entrega';$('saveStatus').textContent=error.message;$('saveStatus').className='status error';submitting=false}
   }
   function lockCompleted(){
@@ -156,7 +170,7 @@
     try{
       const result=await callApi('get-guia-state');student=result.student;attempt=result.attempt;$('studentLine').textContent=`${student.nombre} · ${student.curso}`;
       if(!result.session.active&&!(attempt&&attempt.completada===true)){document.querySelector('main').innerHTML='<section class="band locked"><h2>Clase cerrada</h2><p>Si faltaste con justificación, solicita al profesor una habilitación individual.</p><a class="btn" href="/estudiantes/dashboard.html">Volver al panel</a></section>';document.querySelector('.dock').remove();return}
-      restore();if(attempt&&attempt.completada===true&&result.result){$('scoreSummary').textContent=`Puntaje: ${result.result.score} de ${result.result.total} · ${result.result.porcentaje}%`;setTimeout(()=>$('confirmModal').classList.add('open'),120)}
+      restore();if(applyConfirmedDelivery(result)&&result.result)setTimeout(()=>$('confirmModal').classList.add('open'),120)
     }catch(error){$('saveStatus').textContent=error.message;$('saveStatus').className='status error'}
   }
   if(preview)start(null);else auth.onAuthStateChanged(activeUser=>{if(!activeUser){location.href='/lecturas/?next='+encodeURIComponent(location.pathname);return}start(activeUser)});

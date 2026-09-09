@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
+const { classifySubmissionStatus } = require('./class-submission-status');
 
 const ROOT = path.resolve(__dirname, '..');
 const registryPath = path.join(__dirname, 'class-submission-contract.json');
 const registry = JSON.parse(fs.readFileSync(registryPath, 'utf8'));
+
+const expectedStatusResolution = {
+  identity: ['sessionId', 'uid', 'course'],
+  primaryFlag: 'completada',
+  confirmedRequires: ['submitted', 'completada'],
+  nonCanonicalEvidence: ['result', 'grade', 'telemetry'],
+  states: ['manual_attestation', 'confirmed', 'legacy_confirmed', 'inconsistent', 'draft', 'missing']
+};
 
 const required = [
   ['botón de entrega único', /id=["'](?:submit|submitGuide)["']/g, 1],
@@ -30,6 +39,39 @@ const forbidden = [
 ];
 
 const failures = [];
+
+if (Number(registry.version || 0) < 2) failures.push('El registro no declara la versión 2 del lector canónico.');
+if (registry.documentation !== 'CONTRATO_ENTREGA_CLASES.md') failures.push('El registro no enlaza la documentación canónica.');
+const resolution = registry.statusResolution || {};
+Object.entries(expectedStatusResolution).forEach(([key, expected]) => {
+  const actual = resolution[key];
+  const matches = Array.isArray(expected)
+    ? Array.isArray(actual) && JSON.stringify(actual) === JSON.stringify(expected)
+    : actual === expected;
+  if (!matches) failures.push(`El lector canónico declara ${key} de forma incorrecta.`);
+});
+if (!Array.isArray(resolution.supportingEvidence) || !resolution.supportingEvidence.includes('telemetry.submissionConfirmationCount')) {
+  failures.push('El lector canónico no distingue la telemetría como evidencia de apoyo.');
+}
+if (!Array.isArray(resolution.manualAttestationRequires) || !resolution.manualAttestationRequires.includes('attestation.reason')) {
+  failures.push('El lector canónico no exige una atestación docente auditable.');
+}
+
+const statusFixtures = [
+  [{ submitted: true, completada: true, submittedAt: 1 }, {}, 'confirmed', true],
+  [{ submitted: true, completada: true, manualCompletion: true, attestation: { source: 'teacher', recordedAt: 1, reason: 'observación directa' } }, {}, 'manual_attestation', true],
+  [{ completada: true, submitted_at: 1 }, {}, 'legacy_confirmed', true],
+  [{ submitted: true }, {}, 'inconsistent', false],
+  [{ answers: { q1: 'A' } }, {}, 'draft', false],
+  [null, { result: { score: 10 } }, 'inconsistent', false],
+  [null, {}, 'missing', false]
+];
+statusFixtures.forEach(([response, supporting, expectedStatus, expectedDelivered]) => {
+  const actual = classifySubmissionStatus(response, supporting);
+  if (actual.status !== expectedStatus || actual.delivered !== expectedDelivered) {
+    failures.push(`El lector canónico resolvió ${expectedStatus} como ${actual.status}.`);
+  }
+});
 
 for (const entry of registry.files || []) {
   const relativePath = typeof entry === 'string' ? entry : entry.path;

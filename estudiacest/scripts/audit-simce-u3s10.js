@@ -7,6 +7,22 @@ const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 const stripHtml = value => String(value || '').replace(/<[^>]+>/g, ' ').replace(/&[^;]+;/g, ' ').replace(/\s+/g, ' ').trim();
+const functionBody = (source, name) => {
+  const signature = `function ${name}(`;
+  const start = source.indexOf(signature);
+  if (start < 0) return '';
+  const open = source.indexOf('{', start);
+  if (open < 0) return '';
+  let depth = 0;
+  for (let index = open; index < source.length; index += 1) {
+    if (source[index] === '{') depth += 1;
+    if (source[index] === '}') {
+      depth -= 1;
+      if (depth === 0) return source.slice(open + 1, index);
+    }
+  }
+  return '';
+};
 
 const page = read('estudiantes/guia-u3-s10-cronica-carta.html');
 const dashboard = read('estudiantes/dashboard.html');
@@ -74,6 +90,8 @@ expect(cartaBody.length >= 900, 'La carta quedó demasiado breve.');
 expect(page.includes('<div class="atencion">') && page.includes('ATENCIÓN'), 'Falta la caja de modelado ATENCIÓN.');
 expect(/\.illus\{[^}]*width:100%/.test(page), 'Las ilustraciones de la Clase 10 pueden desbordar el ancho disponible en móvil.');
 expect(page.includes('id="desarrollo"') && page.includes('id="modeloBox"'), 'Falta la pregunta de desarrollo con su respuesta modelo.');
+expect(/\.modelo\{[^}]*display:none/.test(page), 'La respuesta modelo no parte oculta.');
+expect(/\.retro\{[^}]*display:none/.test(page), 'Las explicaciones por alternativa no parten ocultas.');
 expect(page.includes('id="noticia"') && page.includes('Escribe tu propia noticia'), 'Falta la tarea de producción de escribir una noticia.');
 expect(page.includes('noticia:(document.getElementById(\'noticia\').value') || page.includes("noticia:(document.getElementById('noticia').value"), 'La noticia escrita por el estudiante no se está guardando.');
 expect(page.includes('startedAt') && page.includes('elapsedMs'), 'Falta capturar el tiempo que demora el estudiante (startedAt/elapsedMs) para poder detectar entregas sospechosamente rápidas.');
@@ -83,7 +101,41 @@ expect(page.includes('id="submit"') && page.includes('type="button"'), 'El botó
 expect((page.match(/Entrega confirmada/g) || []).length >= 2, 'Falta el aviso de entrega confirmada en el modal.');
 expect(page.includes('role="dialog"') && page.includes('aria-modal="true"'), 'Falta el diálogo accesible de confirmación.');
 expect(page.includes('saveQueue=Promise.resolve()') && page.includes('await saveQueue'), 'El autoguardado no está serializado con la entrega.');
-expect(page.includes("child('completada').once('value')"), 'La entrega no relee la confirmación desde Firebase.');
+expect(page.includes("child('submitted').once('value')") && page.includes("child('completada').once('value')"), 'La entrega no relee ambos indicadores canónicos desde Firebase.');
+
+const pickBody = functionBody(page, 'pick');
+const hydrateBody = functionBody(page, 'hydrate');
+const revealBody = functionBody(page, 'revealAllCorrections');
+const diagBody = functionBody(page, 'updateDiag');
+const submitBody = functionBody(page, 'submitGuide');
+const gateBody = functionBody(page, 'canShowFeedback');
+const configBody = functionBody(page, 'setFeedbackConfig');
+
+expect(Boolean(pickBody), 'No se encontró la función pick.');
+expect(!pickBody.includes('revealAllCorrections') && !pickBody.includes('.correcta') && !pickBody.includes('.why') && !pickBody.includes('.cita'), 'Elegir una alternativa puede revelar pauta o explicación.');
+expect(Boolean(hydrateBody), 'No se encontró la función hydrate.');
+expect(!hydrateBody.includes('revealAllCorrections') && !hydrateBody.includes('scoreSummary') && !hydrateBody.includes('grade('), 'Cargar un borrador puede revelar corrección o puntaje.');
+expect(hydrateBody.includes('hasConfirmedDelivery(saved)'), 'La hidratación no exige una entrega confirmada por el lector local.');
+expect(page.includes('saved.submitted===true&&saved.completada===true'), 'El lector local no exige ambos indicadores canónicos de entrega.');
+expect(gateBody.includes('feedbackReleased===true&&isSubmitted===true'), 'La retroalimentación no exige simultáneamente publicación y entrega confirmada.');
+expect(revealBody.trimStart().startsWith('if(!canShowFeedback())'), 'La función de corrección no está protegida por la compuerta canónica.');
+expect(diagBody.indexOf('if(!canShowFeedback())') >= 0 && diagBody.indexOf('if(!canShowFeedback())') < diagBody.indexOf("s[h].ok+'/'+s[h].n"), 'El diagnóstico puede mostrar aciertos antes de habilitar la retroalimentación.');
+expect(configBody.includes('config.resultados_visibles===true||config.retroalimentacion_visible===true'), 'La liberación no usa exclusivamente los indicadores canónicos de la sesión.');
+expect(page.includes("db.ref(BASE+'/sesiones/'+SESSION_ID).once('value')"), 'La página no lee la configuración canónica de sesion-u3-10.');
+const configApplyIndex = page.indexOf('setFeedbackConfig(sessionSnap.val())');
+const hydrateCallIndex = page.indexOf('hydrate(useLocal?local:remote)');
+expect(configApplyIndex >= 0 && hydrateCallIndex > configApplyIndex, 'La configuración de retroalimentación debe cargarse antes de hidratar el intento.');
+expect(!submitBody.includes('revealAllCorrections'), 'La entrega revela correcciones antes de confirmar la escritura.');
+expect(submitBody.indexOf('applyFeedbackVisibility()') > submitBody.indexOf('isSubmitted=true'), 'La entrega intenta mostrar retroalimentación antes de quedar confirmada.');
+expect(submitBody.includes('Entrega confirmada. La pauta y el puntaje se publicarán más adelante.'), 'La entrega cerrada no muestra una confirmación genérica.');
+expect(page.includes('id="btnModelo" disabled aria-disabled="true"'), 'El botón de respuesta modelo no inicia bloqueado.');
+const modelHandlerIndex = page.indexOf("document.getElementById('btnModelo').addEventListener");
+const modelGuardIndex = page.indexOf('if(!canShowFeedback())', modelHandlerIndex);
+const modelRevealIndex = page.indexOf("document.getElementById('modeloBox').classList.add('show')", modelHandlerIndex);
+expect(modelHandlerIndex >= 0 && modelGuardIndex > modelHandlerIndex && modelRevealIndex > modelGuardIndex, 'La respuesta modelo puede abrirse sin pasar por la compuerta de publicación.');
+expect((page.match(/modeloBox'\)\.classList\.add\('show'\)/g) || []).length === 1, 'Existe una vía adicional para mostrar la respuesta modelo.');
+expect(page.includes('let answers={}, currentUID=null, studentData=null, isSubmitted=false, feedbackReleased=false'), 'La retroalimentación no está cerrada por defecto.');
+expect(!page.includes('Tu resultado por eje aparece al responder las 14 preguntas'), 'La interfaz aún promete corrección inmediata al completar alternativas.');
 
 expect(dashboard.includes("'sesion-u3-10'"), 'El dashboard no registra la Clase 10.');
 expect(admin.includes("'sesion-u3-10'"), 'El admin no registra la Clase 10.');
@@ -99,4 +151,4 @@ if (failures.length) {
   console.error('Auditoría SIMCE U3S10 incumplida:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`SIMCE U3S10 auditado: 2 textos (crónica y carta), 14 reactivos, habilidades ${JSON.stringify(skillDistribution)}, desarrollo con modelo y entrega directa a Firebase verificada. Reglas de construcción: 4 alternativas sin duplicados, distractor con falla técnica explícita, clave nunca la más larga (${longestKeyCues} indicios) y cita textual de respaldo en todos los reactivos.`);
+console.log(`SIMCE U3S10 auditado: 2 textos (crónica y carta), 14 reactivos, habilidades ${JSON.stringify(skillDistribution)}, entrega directa a Firebase y retroalimentación cerrada hasta publicación canónica verificadas. Reglas de construcción: 4 alternativas sin duplicados, distractor con falla técnica explícita, clave nunca la más larga (${longestKeyCues} indicios) y cita textual de respaldo en todos los reactivos.`);

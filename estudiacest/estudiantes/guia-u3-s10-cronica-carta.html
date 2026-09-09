@@ -186,7 +186,7 @@
       <li><b>Explicación:</b> por qué esa frase es una valoración y no un dato verificable.</li>
     </ol>
     <textarea id="desarrollo" rows="7" placeholder="Ejemplo de inicio: En la crónica, la opinión del autor se nota en..."></textarea>
-    <button type="button" class="btn ghost" id="btnModelo">Ver respuesta modelo</button>
+    <button type="button" class="btn ghost" id="btnModelo" disabled aria-disabled="true">Ver respuesta modelo</button>
     <div class="modelo" id="modeloBox"><b>Respuesta modelo</b><p>En la carta, la opinión de la apoderada se nota con más fuerza en la frase «para mí fue el mejor momento de la noche, mejor que cualquier luz bien puesta». No es un dato verificable —nadie puede comprobar objetivamente cuál fue «el mejor momento»—, sino un juicio personal que la propia apoderada marca con «para mí», reconociendo que es su valoración y no un hecho que todos compartirían necesariamente.</p></div>
     <div class="dev-rubrica"><b>Se evalúa así:</b> sin cita textual no hay puntaje completo, aunque la idea sea correcta. La cita es la prueba.</div>
   </section>
@@ -209,14 +209,14 @@
   <section class="card">
     <span class="step-tag">9 · Tu diagnóstico</span>
     <h2>¿Cómo te fue por habilidad?</h2>
-    <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparece al responder las 14 preguntas:</p>
+    <p class="muted">Esto es lo que mide el SIMCE. Tu resultado por eje aparecerá cuando el profesor publique la retroalimentación:</p>
     <div class="diag">
       <div class="box" style="background:#e0f2fe;"><span>🔎 Localizar</span><b id="dL">—</b></div>
       <div class="box" style="background:#fef3c7;"><span>🧩 Interpretar</span><b id="dI">—</b></div>
       <div class="box" style="background:#fce7f3;"><span>🪞 Reflexionar</span><b id="dR">—</b></div>
     </div>
-    <p class="muted" id="diagCopy">La habilidad donde falles más es tu foco de práctica de la semana.</p>
-    <div class="done-banner" id="doneBanner">✅ ¡Clase entregada! Resultado guardado.</div>
+    <p class="muted" id="diagCopy">Mientras respondes, aquí verás tu avance por habilidad.</p>
+    <div class="done-banner" id="doneBanner">✅ ¡Clase entregada! Tu trabajo quedó guardado.</div>
   </section>
 </div>
 
@@ -230,7 +230,7 @@
   <div class="modal-card">
     <h2 id="confirmTitle">Entrega confirmada</h2>
     <p>Entrega confirmada: tu clase quedó guardada y aparecerá como <strong>Completada</strong> en el panel.</p>
-    <div class="score" id="scoreSummary">Puntaje registrado</div>
+    <div class="score" id="scoreSummary">Tu entrega quedó guardada correctamente.</div>
     <a class="btn primary" href="/estudiantes/dashboard.html">Volver al panel</a>
   </div>
 </div>
@@ -381,7 +381,7 @@
 
   const HABNAME={L:'Localizar',I:'Interpretar',R:'Reflexionar'};
   const HABCLS={L:'sk-l',I:'sk-i',R:'sk-r'};
-  let answers={}, currentUID=null, studentData=null, isSubmitted=false, saveTimer=null, startedAt=null;
+  let answers={}, currentUID=null, studentData=null, isSubmitted=false, feedbackReleased=false, saveTimer=null, startedAt=null;
 
   function setStatus(t){document.getElementById('saveStatus').textContent=t;}
   function showToast(m){const t=document.createElement('div');t.className='toast';t.textContent=m;document.body.appendChild(t);setTimeout(()=>t.remove(),2200);}
@@ -405,15 +405,21 @@
       b.classList.remove('selected','correct','wrong');
       if(b.dataset.l===letra)b.classList.add('selected');
     });
-    if(Object.keys(answers).length===QUESTIONS.length){
-      revealAllCorrections();
-    }else{
-      const r=document.getElementById('retro-'+qid);r.className='retro';r.innerHTML='';
-    }
+    const r=document.getElementById('retro-'+qid);r.className='retro';r.innerHTML='';
     updateDiag(); scheduleSave();
   }
 
+  function canShowFeedback(){return feedbackReleased===true&&isSubmitted===true;}
+  function hasConfirmedDelivery(saved){return !!(saved&&saved.submitted===true&&saved.completada===true);}
+
+  function hideFeedback(){
+    document.querySelectorAll('.opt').forEach(b=>b.classList.remove('correct','wrong'));
+    document.querySelectorAll('.retro').forEach(r=>{r.className='retro';r.innerHTML='';});
+    document.getElementById('modeloBox').classList.remove('show');
+  }
+
   function revealAllCorrections(){
+    if(!canShowFeedback()){hideFeedback();return;}
     QUESTIONS.forEach(q=>{
       const letra=answers[q.id];if(!letra)return;
       const ok=letra===q.correcta;
@@ -437,6 +443,15 @@
   }
   function updateDiag(){
     const s=statsByHab();
+    if(!canShowFeedback()){
+      [['L','dL'],['I','dI'],['R','dR']].forEach(([h,id])=>{
+        document.getElementById(id).textContent=s[h].n+' respondida'+(s[h].n===1?'':'s');
+      });
+      document.getElementById('diagCopy').textContent=isSubmitted
+        ? 'Tu entrega está confirmada. La pauta y el puntaje se publicarán más adelante.'
+        : 'Completa las preguntas y entrega la clase. La corrección se publicará más adelante.';
+      return;
+    }
     [['L','dL'],['I','dI'],['R','dR']].forEach(([h,id])=>{
       const el=document.getElementById(id);
       el.textContent=s[h].n? s[h].ok+'/'+s[h].n+' ('+Math.round(s[h].ok/s[h].n*100)+'%)':'—';
@@ -446,6 +461,21 @@
       const peor=['L','I','R'].sort((a,b)=>pct(a)-pct(b))[0];
       document.getElementById('diagCopy').innerHTML='🎯 Tu foco de la semana: <b>'+HABNAME[peor]+'</b>. En las próximas clases practicaremos justo eso.';
     }
+  }
+
+  function applyFeedbackVisibility(){
+    const allowed=canShowFeedback();
+    const modelBtn=document.getElementById('btnModelo');
+    modelBtn.disabled=!allowed;
+    modelBtn.setAttribute('aria-disabled',String(!allowed));
+    if(allowed)revealAllCorrections();
+    else hideFeedback();
+    updateDiag();
+  }
+
+  function setFeedbackConfig(config){
+    feedbackReleased=!!(config&&(config.resultados_visibles===true||config.retroalimentacion_visible===true));
+    applyFeedbackVisibility();
   }
 
   function grade(){
@@ -519,7 +549,6 @@
       : '¿Entregar la clase? Tu resultado quedará registrado.';
     if(!confirm(msg))return;
     const submitBtn=document.getElementById('submit');submitBtn.disabled=true;
-    revealAllCorrections();
     try{
       await saveQueue;
       const g=grade();const now=Date.now();const s=statsByHab();
@@ -535,16 +564,26 @@
         nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
         startedAt:startedAt||now,elapsedMs:elapsedMs,
         submittedAt:now,completadaAt:now});
-      const confirmSnap=await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).child('completada').once('value');
-      if(confirmSnap.val()!==true)throw new Error('La plataforma aún no confirma la entrega. Vuelve a intentarlo.');
+      const responseRef=db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID);
+      const [submittedSnap,completedSnap]=await Promise.all([
+        responseRef.child('submitted').once('value'),
+        responseRef.child('completada').once('value')
+      ]);
+      if(submittedSnap.val()!==true||completedSnap.val()!==true)throw new Error('La plataforma aún no confirma la entrega. Vuelve a intentarlo.');
       if(studentData&&studentData.curso){
         try{await db.ref(BASE+'/ranking/'+SESSION_ID+'/'+studentData.curso+'/'+currentUID).set({nombre:studentData.nombre,puntaje:g.ok,porcentaje:g.pct});}catch(e){}
       }
       isSubmitted=true;document.getElementById('doneBanner').style.display='block';
       document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
       clearLocalBackup();
-      setStatus('✅ Entregada · '+g.ok+'/'+QUESTIONS.length+' ('+g.pct+'%)');
-      document.getElementById('scoreSummary').textContent='Puntaje: '+g.ok+' de '+QUESTIONS.length+' · '+g.pct+'%';
+      applyFeedbackVisibility();
+      if(canShowFeedback()){
+        setStatus('✅ Entregada · '+g.ok+'/'+QUESTIONS.length+' ('+g.pct+'%)');
+        document.getElementById('scoreSummary').textContent='Puntaje: '+g.ok+' de '+QUESTIONS.length+' · '+g.pct+'%';
+      }else{
+        setStatus('✅ Entrega confirmada. La pauta y el puntaje se publicarán más adelante.');
+        document.getElementById('scoreSummary').textContent='Tu entrega quedó guardada correctamente. La pauta y el puntaje se publicarán más adelante.';
+      }
       document.getElementById('confirmModal').classList.add('open');
     }catch(e){
       console.error(e);
@@ -563,10 +602,11 @@
     if(typeof saved.desarrollo==='string')document.getElementById('desarrollo').value=saved.desarrollo;
     if(typeof saved.noticia==='string'){document.getElementById('noticia').value=saved.noticia;updateNoticiaMeta();}
     if(saved.startedAt)startedAt=saved.startedAt;
-    if(saved.completada){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
+    if(hasConfirmedDelivery(saved)){isSubmitted=true;document.getElementById('doneBanner').style.display='block';
       document.getElementById('submit').disabled=true;
       document.querySelectorAll('.opt').forEach(b=>b.disabled=true);
       setStatus('✅ Clase ya entregada.');}
+    applyFeedbackVisibility();
   }
 
   function updateNoticiaMeta(){
@@ -580,6 +620,7 @@
   document.getElementById('desarrollo').addEventListener('input',scheduleSave);
   document.getElementById('noticia').addEventListener('input',()=>{updateNoticiaMeta();scheduleSave();});
   document.getElementById('btnModelo').addEventListener('click',()=>{
+    if(!canShowFeedback()){showToast('La respuesta modelo se publicará junto con la retroalimentación.');return;}
     const txt=(document.getElementById('desarrollo').value||'').trim();
     if(txt.split(/\s+/).length<15){showToast('Primero escribe tu respuesta (al menos unas 15 palabras).');return;}
     document.getElementById('modeloBox').classList.add('show');
@@ -590,12 +631,14 @@
       if(!user){window.location.href=SHARED_LOGIN_URL;return;}
       currentUID=user.uid;
       try{
-        const [stuSnap,savedSnap]=await Promise.all([
+        const [stuSnap,savedSnap,sessionSnap]=await Promise.all([
           db.ref(BASE+'/estudiantes/'+user.uid).once('value'),
-          db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value')
+          db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+user.uid).once('value'),
+          db.ref(BASE+'/sesiones/'+SESSION_ID).once('value')
         ]);
         studentData=stuSnap.val();
         if(!studentData){auth.signOut();return;}
+        setFeedbackConfig(sessionSnap.val());
         const remote=savedSnap.val();
         let local=null;
         try{const raw=localStorage.getItem(localKey());if(raw)local=JSON.parse(raw);}catch(e){}

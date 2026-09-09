@@ -78,6 +78,29 @@ Antes de editar y nuevamente antes de publicar:
   timestamps y los campos de resultado pertinentes.
 - El éxito se muestra solo después de leer la confirmación desde el servidor o
   Firebase. El dashboard debe reflejar `Completada`, no `En progreso`.
+- El estado se interpreta siempre con el lector canónico descrito en
+  `CONTRATO_ENTREGA_CLASES.md`: primero se valida `sessionId + uid + curso`,
+  luego se leen juntas `completada` y `submitted`, y recién después se usan
+  timestamps, resultado y telemetría como evidencia de apoyo. Un resultado,
+  una nota o una traza aislados nunca convierten por sí solos un borrador en
+  entrega.
+- Una sola marca verdadera es compatibilidad histórica, no un registro sano.
+  Puede conservar la visualización de `Completada` si existe evidencia de
+  confirmación, pero debe quedar informada por la auditoría para reparar ambas
+  marcas. Toda escritura nueva debe dejar el par completo. La reconciliación de
+  estados heredados se aplica al padrón completo con
+  `npm run reconcile:class-submissions`, primero sin `--apply`; no se crean
+  excepciones nominales para un error que puede afectar a más estudiantes.
+- El nombre sirve para buscar, nunca para decidir identidad ni escribir. Toda
+  lectura, reparación o excepción se resuelve por UID autenticado, curso y
+  sesión, comprobando antes posibles UID históricos o duplicados.
+- Una corrección manual requiere observación explícita del docente, conserva
+  toda evidencia existente, no inventa respuestas ni puntajes y registra fuente,
+  fecha y motivo de la atestación. Se simula, se aplica al conteo exacto y se
+  relee de forma independiente.
+- Una respuesta de conflicto o entrega duplicada (`409`) obliga al cliente a
+  releer el intento canónico y reconciliar la pantalla; nunca deja al estudiante
+  atrapado en `Pendiente` si el servidor ya confirmó la entrega.
 - La entrega no exige respuestas completas salvo que la actividad lo indique
   expresamente y el servidor aplique la misma regla.
 - Un error de red conserva el avance, explica qué ocurrió y permite reintentar.

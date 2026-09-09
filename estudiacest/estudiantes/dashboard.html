@@ -264,6 +264,14 @@
         .unit-accordion:not([open]) > .unit-content { display:none; }
         .unit-content { padding:0 20px 20px; border-top:1px solid #e2e8f0; background:#f8fafc; }
         .unit-content .session-list { margin-bottom:0; padding-top:16px; }
+        .course-notice {
+            margin-top:16px; padding:14px 16px; border:1px solid #fbbf24; border-left:4px solid #d97706;
+            border-radius:10px; background:#fffbeb; color:#78350f;
+        }
+        .course-notice[hidden] { display:none; }
+        .course-notice strong { display:block; font-size:13px; font-weight:800; margin-bottom:4px; }
+        .course-notice p { font-size:12px; line-height:1.55; color:#92400e; white-space:pre-wrap; }
+        .course-notice time { display:block; margin-top:6px; color:#a16207; font-size:10px; font-weight:700; }
         /* RANKING PREVIEW */
         .ranking-preview {
             background:#fff; border-radius:12px; padding:20px 24px; box-shadow:0 1px 4px rgba(0,0,0,.06);
@@ -460,6 +468,11 @@
                     </div>
                 </summary>
                 <div class="unit-content">
+                  <div class="course-notice" id="courseNotice" role="status" hidden>
+                    <strong>Regularizaci&oacute;n de la Unidad 3</strong>
+                    <p id="courseNoticeText"></p>
+                    <time id="courseNoticeTime"></time>
+                  </div>
                   <div class="unit-current-list show" id="currentUnitListWrap">
                     <div class="session-list" id="currentSessionList"></div>
                   </div>
@@ -661,8 +674,8 @@
                 orden:310,
                 programa:'simce',
                 activa:true,
-                resultados_visibles:true,
-                retroalimentacion_visible:true,
+                resultados_visibles:false,
+                retroalimentacion_visible:false,
                 panel_unidad:'u3',
                 panel_seccion:'plan',
                 panel_orden:10,
@@ -1107,7 +1120,7 @@
                 loadAvatar(user.uid, student.nombre);
                 renderSideMissions(user.uid, student.curso);
                 loadLogrosPreview(user.uid);
-                listenForMessages();
+                listenForMessages(student.curso, programa);
 
             } catch(e) { console.error(e); }
         });
@@ -1180,8 +1193,37 @@
         }
 
         function formatSchoolGrade(value) {
+            if (value === null || value === undefined || value === '') return '-';
             const grade = Number(value);
             return Number.isFinite(grade) ? grade.toFixed(1).replace('.', ',') : '-';
+        }
+
+        function classifySubmissionStatus(response) {
+            if (!response || typeof response !== 'object') {
+                return { status: 'not_started', completed: false, canonical: false, legacy: false };
+            }
+            const submitted = response.submitted === true;
+            const completed = response.completada === true;
+            const attestation = response.attestation && typeof response.attestation === 'object' ? response.attestation : {};
+            const hasManualAttestation = response.manualCompletion === true &&
+                String(attestation.source || '').trim() !== '' &&
+                Number(attestation.recordedAt || 0) > 0 &&
+                String(attestation.reason || '').trim() !== '';
+            const hasSupportingEvidence = [response.submittedAt, response.completadaAt, response.submitted_at]
+                .some(value => Number(value || 0) > 0);
+            if (submitted && completed && hasManualAttestation) {
+                return { status: 'manual_attestation', completed: true, canonical: true, legacy: false };
+            }
+            if (submitted && completed) {
+                return { status: 'confirmed', completed: true, canonical: true, legacy: false };
+            }
+            if ((submitted || completed) && hasSupportingEvidence) {
+                return { status: 'legacy_confirmed', completed: true, canonical: false, legacy: true };
+            }
+            if (submitted || completed) {
+                return { status: 'inconsistent', completed: false, canonical: false, legacy: false };
+            }
+            return { status: 'draft', completed: false, canonical: false, legacy: false };
         }
 
         function laborStatusMeta(status) {
@@ -1189,30 +1231,49 @@
                 submitted: { symbol:'✓', label:'Entregada', css:'submitted' },
                 not_submitted: { symbol:'○', label:'Sin entrega', css:'not-submitted' },
                 draft: { symbol:'◐', label:'Borrador', css:'draft' },
+                submission_inconsistent: { symbol:'!', label:'Por revisar', css:'adjusted' },
                 writing_incomplete: { symbol:'△', label:'Escritura incompleta', css:'incomplete' },
                 similarity_adjusted: { symbol:'!', label:'Nota ajustada', css:'adjusted' }
             };
             return statuses[status] || statuses.submitted;
         }
 
-        function renderLaborGrades(grades) {
+        function reconcileLaborGradeStatus(item, respuestas) {
+            const submissionStatus = classifySubmissionStatus(respuestas[item.sessionId]);
+            const snapshotDeniesSubmission = item.status === 'not_submitted' || item.status === 'draft';
+            if (!submissionStatus.completed || !snapshotDeniesSubmission) return item;
+            return {
+                ...item,
+                status: 'submitted',
+                statusLabel: submissionStatus.legacy
+                    ? 'Entrega registrada (registro anterior).'
+                    : 'Entrega registrada.'
+            };
+        }
+
+        function renderLaborGrades(grades, respuestas) {
             const panel = document.getElementById('laborGradesPanel');
             const body = document.getElementById('laborGradesBody');
-            const entries = Object.values(grades || {})
-                .filter(item => item && Number.isFinite(Number(item.grade)))
+            const entries = Object.entries(grades || {})
+                .map(([sessionId, item]) => item && reconcileLaborGradeStatus({
+                    ...item,
+                    sessionId: item.sessionId || sessionId
+                }, respuestas))
+                .filter(Boolean)
                 .sort((left, right) => Number(left.classNumber || 0) - Number(right.classNumber || 0));
             if (!panel || !body || !entries.length) {
                 if (panel) panel.classList.remove('visible');
                 return;
             }
 
-            const total = entries.reduce((sum, item) => sum + Number(item.grade), 0);
-            document.getElementById('laborAverage').textContent = formatSchoolGrade(total / entries.length);
+            const gradedEntries = entries.filter(item => item.grade !== null && item.grade !== undefined && item.grade !== '' && Number.isFinite(Number(item.grade)));
+            const total = gradedEntries.reduce((sum, item) => sum + Number(item.grade), 0);
+            document.getElementById('laborAverage').textContent = gradedEntries.length ? formatSchoolGrade(total / gradedEntries.length) : '-';
             body.innerHTML = entries.map(item => {
                 const meta = laborStatusMeta(item.status);
                 return `<tr>
                     <td>Clase ${Number(item.classNumber || 0)}</td>
-                    <td><span class="labor-grade-value">${formatSchoolGrade(item.grade)}</span></td>
+                    <td><span class="labor-grade-value">${item.grade === null || item.grade === undefined || item.grade === '' ? 'Pendiente' : formatSchoolGrade(item.grade)}</span></td>
                     <td><span class="labor-status ${meta.css}"><span class="labor-status-symbol">${meta.symbol}</span>${meta.label}</span></td>
                     <td class="labor-reason">${escapeDashboardHtml(item.statusLabel || '')}</td>
                 </tr>`;
@@ -1224,7 +1285,7 @@
             const isActive = (ses.activa !== false && ses.respuestas_bloqueadas !== true)
                 || ses.__individualAccess === true;
             const requiresSubmission = ses.requiere_entrega !== false;
-            const isCompleted = myResp && (myResp.completada === true || myResp.submitted === true);
+            const submissionStatus = classifySubmissionStatus(myResp);
             const hasResults = ses.resultados_visibles && myResult;
             const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
                 const noteValue = Number(myLaborGrade && myLaborGrade.grade);
@@ -1242,12 +1303,15 @@
             } else if (!requiresSubmission) {
                 statusBadge = '<span class="badge badge-info">ℹ️ Informativa</span>';
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
-            } else if (isCompleted) {
+            } else if (submissionStatus.completed) {
                 cardClass += ' completed';
-                    statusBadge = '<span class="badge badge-done">✅ Completada</span>' + noteBadge;
+                    const completionLabel = submissionStatus.legacy
+                        ? '✅ Completada · registro anterior'
+                        : '✅ Completada';
+                    statusBadge = '<span class="badge badge-done">' + completionLabel + '</span>' + noteBadge;
                 if (hasResults) statusBadge += '<br><span class="badge badge-results">📊 ' + myResult.porcentaje + '% logro</span>';
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
-            } else if (myResp) {
+            } else if (submissionStatus.status === 'draft') {
                 statusBadge = '<span class="badge badge-progress">📝 En progreso</span>' + noteBadge;
                 onclick = `onclick="window.location.href='${sessionTarget}'"`;
             } else {
@@ -1388,7 +1452,6 @@
                     db.ref(BASE + '/calificaciones_clase/' + uid).once('value').catch(() => null)
                 ]);
                 const laborGrades = laborGradeSnap && laborGradeSnap.exists() ? laborGradeSnap.val() : {};
-                renderLaborGrades(laborGrades);
 
                 const sessionMap = new Map(Object.entries(STATIC_SESSION_FALLBACKS).map(([id,session]) => [id,{ id, ...session }]));
                 if (sesSnap.exists()) {
@@ -1421,6 +1484,7 @@
                         }
                     } catch(e) {}
                 }));
+                renderLaborGrades(laborGrades, respuestas);
 
                 // === RENDER SESSIONS ===
                 const rendered = renderSessionGroups(sesiones, respuestas, resultados, laborGrades);
@@ -1439,7 +1503,7 @@
                 let totalSesiones = 0, completadas = 0, totalPct = 0, conResultados = 0;
                 trackedSesiones.forEach(ses => {
                     if (ses.activa !== false) totalSesiones++;
-                    if (respuestas[ses.id] && (respuestas[ses.id].completada === true || respuestas[ses.id].submitted === true)) {
+                    if (classifySubmissionStatus(respuestas[ses.id]).completed) {
                         completadas++;
                     }
                     if (resultados[ses.id]) {
@@ -1657,22 +1721,73 @@
 
         // ==================== MESSAGING (Bell) ====================
         let lastMsgId = null;
-        function listenForMessages() {
-            db.ref(BASE + '/mensajes').limitToLast(1).on('value', snap => {
-                if (!snap.exists()) return;
-                snap.forEach(child => {
-                    const msg = child.val();
-                    const msgId = child.key;
-                    if (msgId !== lastMsgId && msg.timestamp > (Date.now() - 3600000)) {
-                        lastMsgId = msgId;
-                        document.getElementById('bellDot').classList.add('show');
-                        document.getElementById('msgText').textContent = msg.texto || '';
-                        const d = new Date(msg.timestamp);
-                        document.getElementById('msgTime').textContent = d.toLocaleTimeString('es-CL', {hour:'2-digit',minute:'2-digit'});
-                        document.getElementById('msgPopup').classList.add('show');
-                        setTimeout(() => document.getElementById('msgPopup').classList.remove('show'), 8000);
-                    }
-                });
+        function messageMatchesAudience(msg, curso, programa) {
+            if (!msg || typeof msg !== 'object') return false;
+            const messageProgram = String(msg.programa || '').trim().toLowerCase();
+            const studentProgram = String(programa || '').trim().toLowerCase();
+            if (messageProgram && messageProgram !== studentProgram) return false;
+
+            const courses = Array.isArray(msg.cursos)
+                ? msg.cursos
+                : (msg.cursos && typeof msg.cursos === 'object' ? Object.keys(msg.cursos) : []);
+            if (courses.length && !courses.map(value => String(value).trim().toUpperCase()).includes(String(curso || '').trim().toUpperCase())) {
+                return false;
+            }
+
+            const validUntil = Number(msg.vigente_hasta || 0);
+            return !validUntil || validUntil > Date.now();
+        }
+
+        function setMessageContent(msg) {
+            document.getElementById('msgText').textContent = msg.texto || '';
+            const timestamp = Number(msg.timestamp || 0);
+            document.getElementById('msgTime').textContent = timestamp
+                ? new Date(timestamp).toLocaleString('es-CL', {dateStyle:'short', hour:'2-digit', minute:'2-digit'})
+                : '';
+        }
+
+        function renderCourseNotice(msg) {
+            const notice = document.getElementById('courseNotice');
+            if (!msg || msg.destacar_en_panel !== true) {
+                notice.hidden = true;
+                document.getElementById('courseNoticeText').textContent = '';
+                document.getElementById('courseNoticeTime').textContent = '';
+                return;
+            }
+            document.getElementById('courseNoticeText').textContent = msg.texto || '';
+            const validUntil = Number(msg.vigente_hasta || 0);
+            document.getElementById('courseNoticeTime').textContent = msg.plazo_texto
+                ? String(msg.plazo_texto)
+                : validUntil
+                ? 'Vigente hasta el ' + new Date(validUntil - 1).toLocaleDateString('es-CL', {day:'numeric', month:'long'})
+                : '';
+            notice.hidden = false;
+        }
+
+        function listenForMessages(curso, programa) {
+            db.ref(BASE + '/mensajes').limitToLast(20).on('value', snap => {
+                const messages = [];
+                if (snap.exists()) {
+                    snap.forEach(child => {
+                        const msg = child.val();
+                        if (messageMatchesAudience(msg, curso, programa)) messages.push({ id:child.key, ...msg });
+                    });
+                }
+
+                messages.sort((a, b) => Number(b.timestamp || 0) - Number(a.timestamp || 0));
+                const latest = messages[0] || null;
+                const highlighted = messages.find(msg => msg.destacar_en_panel === true) || null;
+                renderCourseNotice(highlighted);
+                if (!latest) return;
+
+                setMessageContent(latest);
+                const isRecent = Number(latest.timestamp || 0) > (Date.now() - 3600000);
+                if (latest.id !== lastMsgId && isRecent) {
+                    lastMsgId = latest.id;
+                    document.getElementById('bellDot').classList.add('show');
+                    document.getElementById('msgPopup').classList.add('show');
+                    setTimeout(() => document.getElementById('msgPopup').classList.remove('show'), 8000);
+                }
             });
         }
         function toggleMsgPopup() {

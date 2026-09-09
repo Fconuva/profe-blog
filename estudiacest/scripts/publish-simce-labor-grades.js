@@ -80,6 +80,12 @@ function publicStatus(row) {
       label: 'Trabajo iniciado, pero sin entrega confirmada.'
     };
   }
+  if (row.status === 'Inconsistente') {
+    return {
+      code: 'submission_inconsistent',
+      label: 'Registro inconsistente: requiere revisión docente; una nota o resultado no confirma la entrega.'
+    };
+  }
   if (containsFlag(row, 'escritura requerida ausente') || containsFlag(row, 'escritura requerida incompleta')) {
     return {
       code: 'writing_incomplete',

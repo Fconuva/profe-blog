@@ -72,6 +72,7 @@ const cartaBody = stripHtml((page.match(/Carta a la dirección del colegio[\s\S]
 expect(cartaBody.length >= 900, 'La carta quedó demasiado breve.');
 
 expect(page.includes('<div class="atencion">') && page.includes('ATENCIÓN'), 'Falta la caja de modelado ATENCIÓN.');
+expect(/\.illus\{[^}]*width:100%/.test(page), 'Las ilustraciones de la Clase 10 pueden desbordar el ancho disponible en móvil.');
 expect(page.includes('id="desarrollo"') && page.includes('id="modeloBox"'), 'Falta la pregunta de desarrollo con su respuesta modelo.');
 expect(page.includes('id="noticia"') && page.includes('Escribe tu propia noticia'), 'Falta la tarea de producción de escribir una noticia.');
 expect(page.includes('noticia:(document.getElementById(\'noticia\').value') || page.includes("noticia:(document.getElementById('noticia').value"), 'La noticia escrita por el estudiante no se está guardando.');

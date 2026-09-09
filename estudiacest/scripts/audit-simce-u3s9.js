@@ -23,6 +23,7 @@ const page = read('estudiantes/guia-u3-s9-correccion-ensayo.html');
 const api = read('api/estudiantes.js');
 const dashboard = read('estudiantes/dashboard.html');
 const admin = read('estudiantes/adminprofe/index.html');
+const contract = JSON.parse(read('scripts/class-submission-contract.json'));
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 
 expect(review && review.session === 'sesion-u3-8', 'La Clase 9 debe declarar que revisa la sesión sesion-u3-8.');
@@ -84,6 +85,7 @@ expect(new Set(practiceIds).size === practiceIds.length, 'Hay ids repetidos entr
 expect(practiceIds.every(id => !ids.includes(id)), 'Una pregunta de práctica reutiliza el id de una pregunta del ensayo original.');
 
 expect(page.includes('/estudiantes/js/u3s8-data.js') && page.includes('/estudiantes/js/u3s9-data.js'), 'La página no carga los dos archivos de datos que necesita.');
+expect(/\.illus\{[^}]*width:100%/.test(page), 'Las ilustraciones de la Clase 9 pueden desbordar el ancho disponible en móvil.');
 expect(page.includes("const API='/api/estudiantes'"), 'La página no usa la API unificada.');
 expect(page.includes('simce-u3s9-classstats'), 'La página no consulta los resultados reales del curso.');
 expect(page.includes('review.practica') && page.includes('computeWeakestSkill'), 'La corrección no incluye práctica dirigida a la habilidad más débil del curso: revisar no es lo mismo que ejercitar.');
@@ -100,6 +102,11 @@ expect(api.includes("action === 'simce-u3s9-classstats'"), 'La ruta simce-u3s9-c
 
 expect(dashboard.includes("'sesion-u3-9'"), 'El dashboard no registra la Clase 9.');
 expect(admin.includes("'sesion-u3-9'"), 'El admin no registra la Clase 9.');
+expect(/'sesion-u3-9':\s*\{[\s\S]*?requiere_entrega:false/.test(dashboard), 'El dashboard no declara la Clase 9 como informativa y sin entrega.');
+expect(/'sesion-u3-9':\{[^\n]*requiere_entrega:false/.test(admin), 'El admin no declara la Clase 9 como informativa y sin entrega.');
+expect(page.includes('data-session="sesion-u3-9"') && !contract.files.some(entry => entry.path === 'estudiantes/guia-u3-s9-correccion-ensayo.html'), 'La Clase 9 informativa no debe pertenecer al contrato de entregas.');
+expect(dashboard.includes("ses.requiere_entrega !== false") && dashboard.includes('ℹ️ Informativa'), 'El panel no distingue visualmente las clases informativas de las pendientes.');
+expect(/const trackedSesiones = \([\s\S]*?\)\s*\.filter\(ses => ses\.requiere_entrega !== false\)/.test(dashboard), 'Las clases informativas siguen contando como obligatorias en el avance del estudiante.');
 expect(!dashboard.includes('<div class="session-num">9</div>'), 'La tarjeta gris de la Clase 9 sigue duplicada en el plan de la Unidad 3.');
 
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/guia-u3-s9-correccion-ensayo.html'), 'La página de corrección no está protegida por el manifiesto.');

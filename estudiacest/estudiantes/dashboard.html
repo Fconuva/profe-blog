@@ -202,6 +202,7 @@
             display:inline-block; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:700;
         }
         .badge-pending { background:#fef3c7; color:#92400e; }
+        .badge-info { background:#e0f2fe; color:#075985; }
         .badge-progress { background:#dbeafe; color:#1e40af; }
         .badge-done { background:#dcfce7; color:#166534; }
             .badge-grade { background:#ede9fe; color:#5b21b6; margin-left:4px; }
@@ -676,6 +677,7 @@
                 orden:309,
                 programa:'simce',
                 activa:true,
+                requiere_entrega:false,
                 resultados_visibles:true,
                 retroalimentacion_visible:true,
                 panel_unidad:'u3',
@@ -1220,6 +1222,7 @@
 
         function renderSessionCard(ses, displayIndex, sectionKey, myResp, myResult, myLaborGrade) {
             const isActive = ses.activa !== false || ses.__individualAccess === true;
+            const requiresSubmission = ses.requiere_entrega !== false;
             const isCompleted = myResp && (myResp.completada === true || myResp.submitted === true);
             const hasResults = ses.resultados_visibles && myResult;
             const sessionTarget = ses.prefer_guia && ses.link_guia ? ses.link_guia : `sesion.html?id=${ses.id}`;
@@ -1235,6 +1238,9 @@
             if (!isActive) {
                 cardClass += ' locked';
                 statusBadge = '<span class="badge badge-locked">🔒 Bloqueada</span>' + noteBadge;
+            } else if (!requiresSubmission) {
+                statusBadge = '<span class="badge badge-info">ℹ️ Informativa</span>';
+                onclick = `onclick="window.location.href='${sessionTarget}'"`;
             } else if (isCompleted) {
                 cardClass += ' completed';
                     statusBadge = '<span class="badge badge-done">✅ Completada</span>' + noteBadge;
@@ -1422,9 +1428,10 @@
                 syncUnitShell(rendered.current.totalCount > 0);
 
                 const primaryUnit = rendered.current.totalCount > 0 ? rendered.byUnit[CURRENT_PANEL_UNIT] : rendered.byUnit.u1;
-                const trackedSesiones = primaryUnit.plan.length
+                const trackedSesiones = (primaryUnit.plan.length
                     ? primaryUnit.plan.map(entry => entry.session)
-                    : flattenSessionGroups(primaryUnit);
+                    : flattenSessionGroups(primaryUnit))
+                    .filter(ses => ses.requiere_entrega !== false);
                 const trackedSessionIds = new Set(trackedSesiones.map(ses => ses.id));
 
                 // === STATS (reuse fetched data) ===

@@ -48,6 +48,7 @@ const SESSION_DATA = {
   orden: 309,
   programa: 'simce',
   activa: true,
+  requiere_entrega: false,
   resultados_visibles: true,
   retroalimentacion_visible: true,
   panel_unidad: 'u3',

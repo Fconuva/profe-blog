@@ -16,34 +16,37 @@
   var COLS = 5, FILAS = 5;
   var DIRS = ['SE', 'SW', 'NE', 'NW'];
 
-  var CATALOGO = [
-    {id:'bedSingle',        nom:'Cama',            xp:0,    motivo:'De partida',             sup:0},
-    {id:'desk',             nom:'Escritorio',      xp:0,    motivo:'De partida',             sup:42},
-    {id:'chairDesk',        nom:'Silla',           xp:0,    motivo:'De partida',             sup:0},
-    {id:'rugRound',         nom:'Alfombra',        xp:0,    motivo:'De partida',             sup:0, plano:true},
-    {id:'lampSquareFloor',  nom:'Lámpara de pie',  xp:120,  motivo:'Primera clase completa', sup:0},
-    {id:'pottedPlant',      nom:'Planta',          xp:120,  motivo:'Primera clase completa', sup:0},
-    {id:'bookcaseOpen',     nom:'Estante',         xp:260,  motivo:'Tres clases completas',  sup:0},
-    {id:'books',            nom:'Libros',          xp:260,  motivo:'Tres clases completas',  sup:0, apila:true},
-    {id:'laptop',           nom:'Notebook',        xp:420,  motivo:'Ensayo SIMCE rendido',   sup:0, apila:true},
-    {id:'sideTable',        nom:'Velador',         xp:420,  motivo:'Ensayo SIMCE rendido',   sup:36},
-    {id:'trashcan',         nom:'Papelero',        xp:520,  motivo:'Racha de 5 días',        sup:0},
-    {id:'plantSmall1',      nom:'Suculenta',       xp:520,  motivo:'Racha de 5 días',        sup:0, apila:true},
-    {id:'lampRoundTable',   nom:'Lamparita',       xp:640,  motivo:'Seis clases completas',  sup:0, apila:true},
-    {id:'radio',            nom:'Radio',           xp:640,  motivo:'Seis clases completas',  sup:0, apila:true},
-    {id:'bear',             nom:'Peluche',         xp:800,  motivo:'Nivel 5',                sup:0, apila:true},
-    {id:'computerScreen',   nom:'Monitor',         xp:800,  motivo:'Nivel 5',                sup:0, apila:true},
-    {id:'loungeSofa',       nom:'Sofá',            xp:1100, motivo:'Unidad 3 terminada',     sup:0},
-    {id:'tableCoffee',      nom:'Mesa de centro',  xp:1100, motivo:'Unidad 3 terminada',     sup:30},
-    {id:'televisionModern', nom:'Televisor',       xp:1500, motivo:'Nivel 8',                sup:0, apila:true},
-    {id:'speaker',          nom:'Parlante',        xp:1500, motivo:'Nivel 8',                sup:0},
-    {id:'bookcaseClosed',   nom:'Repisa cerrada',  xp:1900, motivo:'Nivel 10',               sup:0},
-    {id:'rugSquare',        nom:'Alfombra grande', xp:1900, motivo:'Nivel 10',               sup:0, plano:true},
-    {id:'coatRackStanding', nom:'Perchero',        xp:2400, motivo:'Nivel 12',               sup:0},
-    {id:'kitchenFridgeSmall',nom:'Frigobar',       xp:2400, motivo:'Nivel 12',               sup:34}
+  // El catálogo lo genera la carga masiva y vive en js/catalogo-casa.js. Si no
+  // llegó a cargarse, se usa un juego mínimo para que la casa no quede vacía.
+  var CATALOGO = global.CATALOGO_CASA || [
+    {id:'bedSingle', nom:'Cama',        fam:'dormitorio', xp:0, motivo:'De partida', sup:0},
+    {id:'desk',      nom:'Escritorio',  fam:'estudio',    xp:0, motivo:'De partida', sup:42},
+    {id:'chairDesk', nom:'Silla',       fam:'estudio',    xp:0, motivo:'De partida', sup:0},
+    {id:'rugRound',  nom:'Alfombra',    fam:'alfombra',   xp:0, motivo:'De partida', sup:0, plano:true}
   ];
+
+  var FAMILIAS = [
+    { id:'todo',       nom:'Todo' },
+    { id:'dormitorio', nom:'Dormitorio' },
+    { id:'estudio',    nom:'Estudio' },
+    { id:'living',     nom:'Living' },
+    { id:'alfombra',   nom:'Alfombras' },
+    { id:'deco',       nom:'Decoración' },
+    { id:'cocina',     nom:'Cocina' },
+    { id:'baño',       nom:'Baño' }
+  ];
+  // Objetos que van colgados del muro, no apoyados en el piso. En Habbo son los
+  // "wallitems": el cuadro no se pone en una baldosa, se cuelga.
+  var DE_PARED = {
+    bathroomMirror:1, coatRack:1, lampSquareCeiling:1,
+    kitchenCabinetUpper:1, kitchenCabinetUpperCorner:1,
+    kitchenCabinetUpperDouble:1, kitchenCabinetUpperLow:1
+  };
   var POR_ID = {}; CATALOGO.forEach(function (m) { POR_ID[m.id] = m; });
   function ficha(id) { return POR_ID[id] || { sup: 0 }; }
+  function esDePared(id) { return !!DE_PARED[String(id).split('__')[0]]; }
+
+  var RANURAS = 5, NIVELES = 2;   // por muro
 
   var S = {};   // estado del módulo
 
@@ -139,9 +142,122 @@
     cx.fillStyle = '#9fd8ef'; cx.fill();
     cx.strokeStyle = '#fff'; cx.lineWidth = 3; cx.stroke();
   }
+  // ---------------- muro: geometría y objetos colgados ----------------
+  function esquinas() {
+    var n = celda(0, 0), e = celda(COLS - 1, 0), w = celda(0, FILAS - 1);
+    return {
+      N: { x: n.x + TW / 2, y: n.y },
+      E: { x: e.x + TW, y: e.y + ROMBO / 2 },
+      W: { x: w.x, y: w.y + ROMBO / 2 }
+    };
+  }
+  // Punto donde se cuelga un objeto: a lo largo del muro y a cierta altura.
+  function puntoMuro(pared, pos, nivel) {
+    var q = esquinas();
+    var a = pared === 'izq' ? q.W : q.N;
+    var b = pared === 'izq' ? q.N : q.E;
+    var t = (pos + 0.5) / RANURAS;
+    return {
+      x: a.x + (b.x - a.x) * t,
+      y: a.y + (b.y - a.y) * t - (46 + nivel * 44)
+    };
+  }
+  function pintarColgado(m) {
+    var im = imgs[m.id + '_' + (m.pared === 'izq' ? 'SW' : 'SE')];
+    if (!im || !im.complete || !im.naturalWidth) return null;
+    var p = puntoMuro(m.pared, m.pos, m.nivel);
+    var x = p.x - im.naturalWidth / 2, y = p.y - im.naturalHeight / 2;
+    S.cx.drawImage(im, x, y);
+    return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight };
+  }
+  // De un punto del lienzo saca la ranura de muro más cercana, si está cerca.
+  function ranuraEn(px, py) {
+    var mejor = null, dm = 46;
+    ['izq', 'der'].forEach(function (pared) {
+      for (var pos = 0; pos < RANURAS; pos++) for (var niv = 0; niv < NIVELES; niv++) {
+        var p = puntoMuro(pared, pos, niv);
+        var d = Math.hypot(p.x - px, p.y - py);
+        if (d < dm) { dm = d; mejor = { pared: pared, pos: pos, nivel: niv }; }
+      }
+    });
+    return mejor;
+  }
+  function ranuraOcupada(r, salvo) {
+    return S.pieza.some(function (m, i) {
+      return i !== salvo && m.pared === r.pared && m.pos === r.pos && m.nivel === r.nivel;
+    });
+  }
+
   function pintarPersonaje() {
+    // Durante la caminata la posición es fraccionaria, entre dos baldosas.
     var p = celda(S.av.col, S.av.fila);
     global.AvatarLookSystem.pintar(S.cx, p.x + TW / 2, p.y + 53 + 16, S.look, 0.62);
+  }
+
+  // ---------------- caminar ----------------
+  // Como en Habbo: se toca una baldosa libre y el personaje camina hasta ella,
+  // rodeando los muebles en vez de atravesarlos.
+  function bloqueada(col, fila) {
+    return S.pieza.some(function (m) {
+      if (m.col !== col || m.fila !== fila) return false;
+      var f = ficha(m.id);
+      return !f.plano && !m.sobre;      // se puede pisar una alfombra
+    });
+  }
+  function ruta(desde, hasta) {
+    if (bloqueada(hasta.col, hasta.fila)) return null;
+    var clave = function (c, f) { return c + ',' + f; };
+    var cola = [{ col: desde.col, fila: desde.fila }];
+    var previo = {}; previo[clave(desde.col, desde.fila)] = null;
+    var pasos = [[1,0],[-1,0],[0,1],[0,-1]];
+    while (cola.length) {
+      var act = cola.shift();
+      if (act.col === hasta.col && act.fila === hasta.fila) {
+        var camino = [], k = clave(act.col, act.fila);
+        while (k) {
+          var par = k.split(',');
+          camino.unshift({ col: +par[0], fila: +par[1] });
+          k = previo[k];
+        }
+        return camino;
+      }
+      for (var i = 0; i < pasos.length; i++) {
+        var nc = act.col + pasos[i][0], nf = act.fila + pasos[i][1];
+        if (nc < 0 || nc >= COLS || nf < 0 || nf >= FILAS) continue;
+        var k2 = clave(nc, nf);
+        if (previo.hasOwnProperty(k2) || bloqueada(nc, nf)) continue;
+        previo[k2] = clave(act.col, act.fila);
+        cola.push({ col: nc, fila: nf });
+      }
+    }
+    return null;
+  }
+  var caminando = null;
+  function caminar(hasta) {
+    var camino = ruta({ col: Math.round(S.av.col), fila: Math.round(S.av.fila) }, hasta);
+    if (!camino || camino.length < 2) {
+      if (!camino) avisar('Por ahí no se puede llegar');
+      return;
+    }
+    if (caminando) cancelAnimationFrame(caminando.id);
+    var i = 0, MS = 300, t0 = performance.now();
+    function paso(ahora) {
+      var avance = Math.min(1, (ahora - t0) / MS);
+      var a = camino[i], b = camino[i + 1];
+      S.av.col = a.col + (b.col - a.col) * avance;
+      S.av.fila = a.fila + (b.fila - a.fila) * avance;
+      dibujar();
+      if (avance >= 1) {
+        i++; t0 = ahora;
+        if (i >= camino.length - 1) {
+          S.av.col = b.col; S.av.fila = b.fila;
+          caminando = null; dibujar(); guardar('personajeEn', S.av);
+          return;
+        }
+      }
+      caminando = { id: requestAnimationFrame(paso) };
+    }
+    caminando = { id: requestAnimationFrame(paso) };
   }
 
   function dibujar() {
@@ -174,8 +290,37 @@
     }
 
     cajas = [];
+
+    // Lo colgado va contra el muro: se pinta antes que todo lo del piso.
+    S.pieza.forEach(function (m, i) {
+      if (!m.pared) return;
+      var caja = pintarColgado(m);
+      if (caja) {
+        caja.idx = i; cajas.push(caja);
+        if (i === S.sel) {
+          cx.save(); cx.strokeStyle = '#38bdf8'; cx.lineWidth = 2; cx.setLineDash([5, 4]);
+          cx.strokeRect(caja.x - 2, caja.y - 2, caja.w + 4, caja.h + 4); cx.restore();
+        }
+      }
+    });
+    // Ranuras libres, mientras se está colgando algo
+    if (S.elegido && esDePared(S.elegido)) {
+      cx.save();
+      ['izq', 'der'].forEach(function (pared) {
+        for (var pos = 0; pos < RANURAS; pos++) for (var niv = 0; niv < NIVELES; niv++) {
+          if (ranuraOcupada({ pared: pared, pos: pos, nivel: niv }, -1)) continue;
+          var p = puntoMuro(pared, pos, niv);
+          cx.beginPath(); cx.arc(p.x, p.y, 13, 0, Math.PI * 2);
+          cx.fillStyle = 'rgba(56,189,248,.28)'; cx.fill();
+          cx.strokeStyle = 'rgba(56,189,248,.75)'; cx.lineWidth = 1.5; cx.stroke();
+        }
+      });
+      cx.restore();
+    }
+
     function capa(m) { var f = ficha(m.id); return f.plano ? 0 : (m.sobre ? 2 : 1); }
-    var orden = S.pieza.map(function (m, i) { return { m: m, i: i }; });
+    var orden = S.pieza.filter(function (m) { return !m.pared; })
+                       .map(function (m) { return { m: m, i: S.pieza.indexOf(m) }; });
     orden.sort(function (a, b) {
       var d = (a.m.col + a.m.fila) - (b.m.col + b.m.fila);
       return d !== 0 ? d : capa(a.m) - capa(b.m);
@@ -238,7 +383,7 @@
     return '' +
     '<div class="esp-tabs">' +
       '<button data-p="personaje" class="on">Mi personaje</button>' +
-      '<button data-p="pieza">Mi pieza</button>' +
+      '<button data-p="pieza">Mi casa</button>' +
       '<button data-p="muebles">Muebles</button>' +
       '<span class="esp-estado"></span>' +
     '</div>' +
@@ -261,6 +406,11 @@
     '<div class="esp-panel oculto" data-panel="muebles">' +
       '<div class="esp-subtabs"><button data-f="tengo" class="on">Tengo</button>' +
         '<button data-f="faltan">Por ganar</button><span id="espCuenta"></span></div>' +
+      '<div class="esp-familias" id="espFamilias">' +
+        FAMILIAS.map(function (f, i) {
+          return '<button data-fam="' + f.id + '"' + (i === 0 ? ' class="on"' : '') + '>' + f.nom + '</button>';
+        }).join('') +
+      '</div>' +
       '<div class="esp-rejilla" id="espRejilla"></div>' +
     '</div>';
   }
@@ -291,6 +441,7 @@
         }
         S.look[b.dataset.cat] = b.dataset.op;
         pintarFigura(); pintarRopero(); dibujar();
+        avisarLook();
         guardar('look', S.look);
       });
     });
@@ -299,11 +450,17 @@
     global.AvatarLookSystem.render(S.host.querySelector('#espFigura'),
       { look: S.look, xpTotal: S.xp, size: 170 });
   }
+  // El personaje también se muestra arriba, junto al nombre: si cambia acá,
+  // tiene que cambiar allá en el mismo momento.
+  function avisarLook() {
+    if (typeof S.alCambiarLook === 'function') S.alCambiarLook(S.look);
+  }
 
-  var filtro = 'tengo';
+  var filtro = 'tengo', familia = 'todo';
   function pintarMuebles() {
     var cont = S.host.querySelector('#espRejilla');
     var lista = CATALOGO.filter(function (m) {
+      if (familia !== 'todo' && m.fam !== familia) return false;
       return filtro === 'tengo' ? S.xp >= m.xp : S.xp < m.xp;
     });
     S.host.querySelector('#espCuenta').textContent =
@@ -368,8 +525,35 @@
     S.cv.addEventListener('pointerdown', function (ev) {
       var p = punto(ev), idx = muebleEn(p.x, p.y);
       if (idx >= 0 && !S.elegido) { S.sel = (S.sel === idx) ? -1 : idx; botones(); dibujar(); return; }
+
+      // Colgar en el muro
+      if (S.elegido && esDePared(S.elegido)) {
+        var r = ranuraEn(p.x, p.y);
+        if (!r) { avisar('Toca uno de los puntos del muro'); return; }
+        if (ranuraOcupada(r, -1)) { avisar('Ahí ya hay algo colgado'); return; }
+        S.pieza.push({ id: S.elegido, pared: r.pared, pos: r.pos, nivel: r.nivel });
+        S.sel = S.pieza.length - 1; S.elegido = null;
+        botones(); pintarMuebles(); dibujar(); guardar('pieza', S.pieza);
+        avisar('Colgado en el muro');
+        return;
+      }
+      // Mover algo ya colgado a otra ranura
+      if (S.sel >= 0 && S.pieza[S.sel] && S.pieza[S.sel].pared) {
+        var r2 = ranuraEn(p.x, p.y);
+        if (!r2) { avisar('Toca otro punto del muro'); return; }
+        if (ranuraOcupada(r2, S.sel)) { avisar('Ahí ya hay algo colgado'); return; }
+        var mp = S.pieza[S.sel];
+        mp.pared = r2.pared; mp.pos = r2.pos; mp.nivel = r2.nivel;
+        S.sel = -1; botones(); dibujar(); guardar('pieza', S.pieza);
+        return;
+      }
+
       var c = aCelda(p.x, p.y);
-      if (c.col < 0 || c.col >= COLS || c.fila < 0 || c.fila >= FILAS) return;
+      // Tocar fuera del piso suelta la selección: si no, no se puede caminar.
+      if (c.col < 0 || c.col >= COLS || c.fila < 0 || c.fila >= FILAS) {
+        if (S.sel >= 0 || S.elegido) { S.sel = -1; S.elegido = null; botones(); pintarMuebles(); dibujar(); }
+        return;
+      }
       if (S.elegido) {
         var no = estorbo(S.elegido, c.col, c.fila, -1);
         if (no) { avisar(no); return; }
@@ -386,13 +570,21 @@
         var oc2 = ocupacion(c.col, c.fila, S.sel);
         m.col = c.col; m.fila = c.fila;
         m.sobre = oc2.base >= 0 && !!ficha(m.id).apila;
-        dibujar(); guardar('pieza', S.pieza);
+        // se suelta al dejarlo: el siguiente toque en el piso hace caminar
+        S.sel = -1; botones(); dibujar(); guardar('pieza', S.pieza);
+      } else {
+        caminar(c);   // baldosa libre y nada seleccionado: el personaje camina
       }
     });
     S.host.querySelector('#espRotar').addEventListener('click', function () {
       if (S.sel < 0) return;
       var m = S.pieza[S.sel];
-      m.dir = DIRS[(DIRS.indexOf(m.dir) + 1) % DIRS.length];
+      if (m.pared) {                       // lo colgado cambia de muro
+        m.pared = m.pared === 'izq' ? 'der' : 'izq';
+        if (ranuraOcupada(m, S.sel)) { m.pared = m.pared === 'izq' ? 'der' : 'izq'; avisar('El otro muro está ocupado ahí'); return; }
+      } else {
+        m.dir = DIRS[(DIRS.indexOf(m.dir) + 1) % DIRS.length];
+      }
       dibujar(); guardar('pieza', S.pieza);
     });
     S.host.querySelector('#espQuitar').addEventListener('click', function () {
@@ -405,7 +597,7 @@
 
   function montar(cfg) {
     S.host = cfg.host; S.db = cfg.db; S.base = cfg.base; S.uid = cfg.uid;
-    S.xp = cfg.xp || 0;
+    S.xp = cfg.xp || 0; S.alCambiarLook = cfg.alCambiarLook;
     S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
     S.pieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
@@ -413,7 +605,9 @@
       { id: 'desk', col: 4, fila: 1, dir: 'SW' },
       { id: 'chairDesk', col: 3, fila: 1, dir: 'NE' }
     ];
-    S.av = { col: 2, fila: 3 };
+    S.av = cfg.personajeEn && typeof cfg.personajeEn.col === 'number'
+         ? { col: cfg.personajeEn.col, fila: cfg.personajeEn.fila }
+         : { col: 2, fila: 3 };
     S.sel = -1; S.elegido = null; S.hover = null;
 
     S.host.innerHTML = plantilla();
@@ -427,6 +621,12 @@
       b.addEventListener('click', function () {
         S.host.querySelectorAll('.esp-subtabs button').forEach(function (x) { x.classList.remove('on'); });
         b.classList.add('on'); filtro = b.dataset.f; pintarMuebles();
+      });
+    });
+    S.host.querySelectorAll('#espFamilias button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        S.host.querySelectorAll('#espFamilias button').forEach(function (x) { x.classList.remove('on'); });
+        b.classList.add('on'); familia = b.dataset.fam; pintarMuebles();
       });
     });
     S.host.querySelector('.esp-azar').addEventListener('click', function () {

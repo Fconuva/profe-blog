@@ -359,6 +359,7 @@
     <!-- Sistema de Protección Anticopia y Seguridad -->
     <script src="js/security-protection.js"></script>
     <link rel="stylesheet" href="css/mi-espacio.css">
+    <style>.esp-caja{ scroll-margin-top:74px }</style>
 </head>
 <body>
     <div class="header">
@@ -646,6 +647,7 @@
 
     <script src="js/avatar-levels.js"></script>
     <script src="js/personaje-iso.js"></script>
+    <script src="js/catalogo-casa.js"></script>
     <script src="js/mi-espacio.js"></script>
     <script src="js/gato-alerts.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -1665,7 +1667,15 @@
                     MiEspacio.montar({
                         host: document.getElementById('miEspacio'),
                         db: db, base: BASE, uid: uid,
-                        xp: xpTotal, look: look, pieza: av.pieza
+                        xp: xpTotal, look: look, pieza: av.pieza, personajeEn: av.personajeEn,
+                        // al cambiar el personaje se repinta también arriba,
+                        // junto al nombre, y en el botón del encabezado
+                        alCambiarLook: function (nuevo) {
+                            var op = { look: nuevo, xpTotal: xpTotal, avatarData: av };
+                            AvatarLookSystem.render(document.getElementById('avatarEmoji'), Object.assign({ size: 84 }, op));
+                            if (headerAvatar) AvatarLookSystem.render(headerAvatar, Object.assign({ size: 38 }, op));
+                            if (headerAvatarBtn) AvatarLookSystem.render(headerAvatarBtn, Object.assign({ size: 22 }, op));
+                        }
                     });
                 }
             } catch(e) { console.error('Avatar load error:', e); }

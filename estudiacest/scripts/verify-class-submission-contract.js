@@ -13,13 +13,13 @@ const required = [
   ['fecha submittedAt', /submittedAt\s*:/g, 1],
   ['fecha completadaAt', /completadaAt\s*:/g, 1],
   ['puntaje score', /score\s*:/g, 1],
-  ['total dinámico', /total\s*:\s*(?:(?:config\.)?questions|QUESTIONS)\.length|const\s+TOTAL\s*=\s*config\.questions\.length/g, 1],
+  ['total dinámico', /total\s*:\s*(?:(?:(?:config|activity)\.)?questions|QUESTIONS)\.length|const\s+TOTAL\s*=\s*(?:config|activity)\.questions\.length/g, 1],
   ['cola de autoguardado', /saveQueue\s*=\s*Promise\.resolve\(\)/g, 1],
   ['espera de autoguardado', /await\s+saveQueue/g, 1],
   ['confirmación visible', /Entrega confirmada/g, 2],
   ['diálogo accesible', /role=["']dialog["'][^>]*aria-modal=["']true["']/g, 1],
   ['estado accesible', /role=["']status["'][^>]*aria-live=["']polite["']/g, 1],
-  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/["']/g, 1],
+  ['regreso al panel o ruta personal', /\/estudiantes\/dashboard\.html|href=["']#inicio["']|href=["']\/paes\/["']|href=["']\/estudiantes\/apoyo-personal\/["']/g, 1],
   ['manejo de error', /catch\s*\(/g, 1]
 ];
 
@@ -65,7 +65,7 @@ for (const entry of registry.files || []) {
   if (storage === 'firebase-client' && !/child\(["']completada["']\)\.once\(["']value["']\)/.test(source)) {
     failures.push(`${relativePath}: falta la verificación final de Firebase.`);
   }
-  if (storage === 'api' && (!/get-guia-state/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
+  if (storage === 'api' && (!/(?:get-guia-state|personal-guided-state)/.test(source) || !/attempt\.completada\s*!==\s*true/.test(source))) {
     failures.push(`${relativePath}: falta la lectura final de confirmación mediante API.`);
   }
   if (relativePath.startsWith('estudiantes/guia-') && !/work-telemetry\.js["'][^>]*data-session=["'][^"']+["']/.test(source)) {

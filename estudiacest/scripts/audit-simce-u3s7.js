@@ -70,6 +70,7 @@ for (const question of data.questions) {
 expect(meaningfulLengthCue <= 13, `La clave supera por más de 10 caracteres a todos los distractores en ${meaningfulLengthCue}/50 reactivos.`);
 
 expect(page.includes('50 reactivos'), 'La portada no informa los 50 reactivos.');
+expect(page.includes('Clase 7 · 9 de septiembre'), 'La portada no muestra la fecha vigente de aplicación.');
 expect(page.includes("SESSION='sesion-u3-7'"), 'La página no usa la sesión canónica.');
 expect(page.includes("const API='/api/estudiantes'"), 'La página no usa la API unificada.');
 expect(page.includes("'simce-u3s7-state'") && page.includes("'simce-u3s7-save'") && page.includes("'simce-u3s7-submit'"), 'Falta una ruta del flujo unificado.');
@@ -83,6 +84,10 @@ expect(fs.statSync(path.join(root,'estudiantes/assets/u3s7/infografia-leer-discu
 
 expect(dashboard.includes("'sesion-u3-7'"), 'El dashboard no registra la sesión 7.');
 expect(admin.includes("'sesion-u3-7'"), 'El admin no registra la sesión 7.');
+expect(/'sesion-u3-7':\s*\{[\s\S]*?fecha_aplicacion:'2026-09-09'/.test(dashboard), 'El panel no conserva la fecha vigente de la Clase 7.');
+expect(/'sesion-u3-7':\{[^\n]*fecha_aplicacion:'2026-09-09'/.test(admin), 'El panel docente no conserva la fecha vigente de la Clase 7.');
+expect(api.includes("session.activa !== false && session.respuestas_bloqueadas !== true"), 'La API permite responder aunque el docente haya detenido la Clase 7.');
+expect(dashboard.includes("ses.activa !== false && ses.respuestas_bloqueadas !== true"), 'El panel del estudiante no refleja la detención de respuestas de la Clase 7.');
 expect(!dashboard.includes('<div class="session-num">7</div>'), 'La tarjeta gris de la clase 7 sigue duplicada en el plan.');
 expect(contract.files.some(entry => entry.path === 'estudiantes/guia-u3-s7-discurso.html' && entry.storage === 'api'), 'La página no está en el contrato de entrega.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/guia-u3-s7-discurso.html'), 'La página no está protegida por el manifiesto.');

@@ -93,7 +93,7 @@ expect(page.includes('practice-option') && page.includes("data-correct"), 'La pr
 expect(page.includes('work-telemetry.js" data-session="sesion-u3-9"'), 'Falta telemetría con la sesión correcta de la Clase 9.');
 expect(!/preview===\s*'1'.*submit|action=simce-u3s8-submit/i.test(page), 'La corrección no debe reenviar ni recalificar el ensayo original.');
 
-const classstatsHandler = api.match(/async function handleU3S9Classstats[\s\S]*?function resolveAllowedOrigin/)?.[0] || '';
+const classstatsHandler = api.match(/async function handleU3S9Classstats[\s\S]*?function personalSessionNumber/)?.[0] || '';
 expect(classstatsHandler, 'No se encontró el handler simce-u3s9-classstats en la API.');
 expect(classstatsHandler.includes('verifyU3S8Student'), 'El handler de resultados debe validar que el estudiante pertenece a un curso asignado.');
 expect(!/nombre|uid:|rut/i.test(classstatsHandler), 'El handler de resultados no debe exponer identidad de estudiantes, solo agregados.');

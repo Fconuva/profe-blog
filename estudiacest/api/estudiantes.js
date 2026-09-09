@@ -3,6 +3,10 @@
 // Routes: ?action=create | ?action=reset-password | ?action=bulk-create
 
 const admin = require('firebase-admin');
+const {
+    GUIDED_VARIANT,
+    getGuidedSession
+} = require('./_simce-personal-guided-catalog');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const STUDENT_EMAIL_DOMAIN = '@est.estudiacest.com';
@@ -95,6 +99,8 @@ const U3S8_SKILLS = {
     q32:'INTERPRETAR',q33:'INTERPRETAR',q34:'LOCALIZAR',q35:'INTERPRETAR',q36:'REFLEXIONAR'
 };
 const U3S8_META_IDS = ['m1', 'm2'];
+const PERSONAL_ROUTE = '/estudiantes/apoyo-personal/';
+const PERSONAL_QUESTION_IDS = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
 
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + STUDENT_EMAIL_DOMAIN; }
@@ -207,7 +213,8 @@ async function handleU3S7(req, res, action) {
         ]);
         const session = sessionSnap.val() || {};
         const access = {
-            active: session.activa !== false || exceptionSnap.val() === true,
+            active: (session.activa !== false && session.respuestas_bloqueadas !== true)
+                || exceptionSnap.val() === true,
             released: session.resultados_visibles === true,
             title: session.titulo || 'Unidad 3 · Clase 7 — El discurso'
         };
@@ -537,6 +544,215 @@ async function handleU3S9Classstats(req, res) {
     }
 }
 
+function personalSessionNumber(req) {
+    const body = u3s7BodyOf(req);
+    return String(req.query.sesion || body.sesion || '').trim();
+}
+
+function personalCleanAnswers(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const output = {};
+    PERSONAL_QUESTION_IDS.forEach((id) => {
+        const value = String(source[id] || '').toUpperCase();
+        if (['A', 'B', 'C', 'D'].includes(value)) output[id] = value;
+    });
+    return output;
+}
+
+function personalSafeAttempt(value) {
+    if (!value || typeof value !== 'object') return null;
+    return {
+        answers:personalCleanAnswers(value.answers),
+        submitted:value.submitted === true,
+        completada:value.completada === true,
+        startedAt:Number(value.startedAt || 0),
+        updatedAt:Number(value.updatedAt || 0),
+        submittedAt:Number(value.submittedAt || 0),
+        variant:value.variant || null
+    };
+}
+
+function personalIsAssigned(asignados, uid) {
+    if (Array.isArray(asignados)) return asignados.includes(uid);
+    if (!asignados || typeof asignados !== 'object') return false;
+    return asignados[uid] === true || Object.values(asignados).includes(uid);
+}
+
+function personalScore(session, answers) {
+    let score = 0;
+    const bySkill = {};
+    PERSONAL_QUESTION_IDS.forEach((id) => {
+        const skill = session.skills[id];
+        if (!bySkill[skill]) bySkill[skill] = { score:0, total:0 };
+        bySkill[skill].total += 1;
+        if (answers[id] === session.key[id]) {
+            score += 1;
+            bySkill[skill].score += 1;
+        }
+    });
+    return { score, total:PERSONAL_QUESTION_IDS.length, bySkill };
+}
+
+async function verifyPersonalStudent(req, session) {
+    const token = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (!token) {
+        const error = new Error('Inicia sesión para continuar.');
+        error.status = 401;
+        throw error;
+    }
+    const decoded = await auth.verifyIdToken(token);
+    const [studentSnap, sessionSnap] = await Promise.all([
+        db.ref(`${BASE}/estudiantes/${decoded.uid}`).once('value'),
+        db.ref(`${BASE}/sesiones/${session.id}`).once('value')
+    ]);
+    const student = studentSnap.val();
+    const storedSession = sessionSnap.val();
+    if (!student || student.ruta_personal !== PERSONAL_ROUTE) {
+        const error = new Error('Esta actividad no está asignada a tu cuenta.');
+        error.status = 403;
+        throw error;
+    }
+    if (!storedSession || storedSession.variant !== GUIDED_VARIANT || !personalIsAssigned(storedSession.asignados, decoded.uid)) {
+        const error = new Error('Esta sesión todavía no está asignada a tu ruta.');
+        error.status = 403;
+        throw error;
+    }
+    return { uid:decoded.uid, student, storedSession };
+}
+
+async function handlePersonalGuided(req, res, action) {
+    try {
+        const number = personalSessionNumber(req);
+        const session = getGuidedSession(number);
+        if (!session) return res.status(404).json({ error:'Sesión personal no encontrada.' });
+
+        const { uid, student, storedSession } = await verifyPersonalStudent(req, session);
+        const responseRef = db.ref(`${BASE}/respuestas/${session.id}/${uid}`);
+        const resultRef = db.ref(`${BASE}/resultados/${session.id}/${uid}`);
+        const access = {
+            active:storedSession.activa !== false && storedSession.respuestas_bloqueadas !== true,
+            released:storedSession.resultados_visibles === true,
+            title:storedSession.titulo || `Ruta personal · Sesión ${number}`
+        };
+
+        if (req.method === 'GET' && action === 'personal-guided-state') {
+            const [responseSnap, resultSnap] = await Promise.all([
+                responseRef.once('value'),
+                resultRef.once('value')
+            ]);
+            const attempt = personalSafeAttempt(responseSnap.val());
+            const storedResult = resultSnap.val();
+            let result = null;
+            let review = null;
+            if (access.released && attempt && attempt.completada && storedResult) {
+                result = {
+                    score:Number(storedResult.score || 0),
+                    total:Number(storedResult.total || PERSONAL_QUESTION_IDS.length),
+                    porcentaje:Number(storedResult.porcentaje || 0)
+                };
+                review = Object.fromEntries(PERSONAL_QUESTION_IDS.map((id) => [id, {
+                    respuesta:attempt.answers[id] || null,
+                    correcta:session.key[id],
+                    esCorrecta:attempt.answers[id] === session.key[id],
+                    retroalimentacion:session.feedback[id]
+                }]));
+            }
+            return res.status(200).json({
+                ok:true,
+                session:access,
+                student:{ nombre:student.nombre || 'Estudiante', curso:student.curso || '' },
+                attempt,
+                result,
+                review
+            });
+        }
+
+        if (req.method !== 'POST') return res.status(405).json({ error:'Método no permitido.' });
+        if (!access.active) return res.status(423).json({ error:'Esta sesión está cerrada por el docente.' });
+
+        const currentSnap = await responseRef.once('value');
+        const current = currentSnap.val();
+        if (current && current.completada === true) {
+            return res.status(409).json({ error:'Esta sesión ya fue entregada.', completada:true });
+        }
+
+        const request = u3s7BodyOf(req);
+        const answers = personalCleanAnswers(request.answers);
+        const now = Date.now();
+        const startedAt = Number((current && current.startedAt) || now);
+        const baseRecord = {
+            answers,
+            nombre:u3s7CleanText(student.nombre, 140),
+            curso:u3s7CleanText(student.curso, 30),
+            variant:GUIDED_VARIANT,
+            startedAt,
+            updatedAt:now,
+            total:PERSONAL_QUESTION_IDS.length
+        };
+
+        if (action === 'personal-guided-save') {
+            await responseRef.set({
+                ...baseRecord,
+                submitted:false,
+                completada:false,
+                submittedAt:null,
+                completadaAt:null,
+                score:null
+            });
+            return res.status(200).json({ ok:true, updatedAt:now, variant:GUIDED_VARIANT });
+        }
+
+        if (action !== 'personal-guided-submit') return res.status(400).json({ error:'Acción desconocida.' });
+        const missing = PERSONAL_QUESTION_IDS.filter((id) => !answers[id]);
+        if (missing.length) return res.status(400).json({ error:`Faltan ${missing.length} preguntas por responder.` });
+
+        const scored = personalScore(session, answers);
+        const porcentaje = Math.round((scored.score / scored.total) * 100);
+        const responseRecord = {
+            ...baseRecord,
+            submitted:true,
+            completada:true,
+            submittedAt:now,
+            completadaAt:now,
+            score:null
+        };
+        const resultRecord = {
+            nombre:u3s7CleanText(student.nombre, 140),
+            curso:u3s7CleanText(student.curso, 30),
+            variant:GUIDED_VARIANT,
+            score:scored.score,
+            total:scored.total,
+            porcentaje,
+            bySkill:scored.bySkill,
+            submitted:true,
+            completada:true,
+            startedAt,
+            updatedAt:now,
+            submittedAt:now,
+            completadaAt:now
+        };
+        const rootUpdates = {};
+        rootUpdates[`${BASE}/respuestas/${session.id}/${uid}`] = responseRecord;
+        rootUpdates[`${BASE}/resultados/${session.id}/${uid}`] = resultRecord;
+        await db.ref().update(rootUpdates);
+        const confirmation = await responseRef.child('completada').once('value');
+        if (confirmation.val() !== true) throw new Error('La entrega no pudo confirmarse.');
+
+        return res.status(200).json({
+            ok:true,
+            completada:true,
+            result:access.released ? { score:scored.score, total:scored.total, porcentaje } : null
+        });
+    } catch (error) {
+        const status = Number(error.status || (error.code && String(error.code).startsWith('auth/') ? 401 : 500));
+        return res.status(status).json({
+            error:status === 500
+                ? 'No fue posible guardar. Tu avance permanece en pantalla; vuelve a intentarlo.'
+                : error.message
+        });
+    }
+}
+
 function resolveAllowedOrigin(req) {
     const origin = (req.headers.origin || '').trim();
     const explicit = (process.env.ALLOWED_ORIGINS || 'https://estudiacest.com,https://www.estudiacest.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173')
@@ -739,6 +955,7 @@ module.exports = async (req, res) => {
         if (action.startsWith('simce-u3s7-')) return await handleU3S7(req, res, action);
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
         if (action === 'simce-u3s9-classstats') return await handleU3S9Classstats(req, res);
+        if (action.startsWith('personal-guided-')) return await handlePersonalGuided(req, res, action);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

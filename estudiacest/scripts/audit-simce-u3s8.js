@@ -93,7 +93,7 @@ expect(page.includes('work-telemetry.js" data-session="sesion-u3-8"'), 'Falta te
 expect(page.includes("shuffled(config.units,(user&&user.uid)||'preview')"), 'Los textos no cambian de orden por estudiante.');
 expect(page.includes("shuffled(Object.entries(question.options)"), 'Las alternativas no cambian de orden por estudiante.');
 
-const s8Handler = api.match(/async function handleU3S8[\s\S]*?function resolveAllowedOrigin/)?.[0] || '';
+const s8Handler = api.match(/async function handleU3S8[\s\S]*?async function handleU3S9Classstats/)?.[0] || '';
 expect(s8Handler.includes('db.ref().update(rootUpdates)'), 'La entrega final no es atómica.');
 expect(!/correcta\s*:|answerKey/i.test(s8Handler), 'El handler no debe devolver la clave al navegador.');
 expect(s8Handler.includes('score:scored.score') && s8Handler.includes('total:scored.total'), 'El servidor no calcula y guarda el resultado.');

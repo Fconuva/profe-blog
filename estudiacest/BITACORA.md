@@ -24,9 +24,14 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - La Sesión 7 exige ahora confirmación final completa y reconcilia respuestas
   interrumpidas. La Sesión 10 mantiene ocultas las respuestas correctas y la
   retroalimentación hasta que el docente las libere desde la configuración.
+- La escritura y su relectura confirmaron 11 sesiones abiertas, 86 estudiantes
+  y el aviso del panel. La reconciliación normalizó 342 entregas históricas y
+  corrigió 22 estados de nota; una auditoría independiente dejó cero marcas
+  legadas y cero notas desactualizadas entre los 946 pares revisados.
 - `npm run build` aprobó contratos, auditorías de reconciliación, Sesiones 7 y
-  10, reapertura y manifiesto de recursos. Queda ejecutar las escrituras,
-  desplegar y registrar las lecturas independientes de producción.
+  10, reapertura y los 162 recursos críticos. El dominio público respondió 200
+  y coincidió con los cuatro archivos desplegados. Commits `bd6b7eaf` y
+  `1ebdef96`; deploy productivo `dpl_AsSnwU2FT9UrvmMyXkuvZmsJrYVp`.
 
 ## 2026-09-09, ruta personal SIMCE de sesiones 2 a 10
 

@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1e293b">
+<meta name="robots" content="noindex,nofollow">
+<title>Mi pieza · Prueba de estilo</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#1e293b; --panel2:#273449; --line:#334155;
+    --ink:#e8edf5; --muted:#94a3b8; --acc:#38bdf8; --acc2:#22c55e; --warn:#f59e0b;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg); color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    display:flex; flex-direction:column; overflow:hidden;
+  }
+
+  header{
+    background:var(--panel); border-bottom:1px solid var(--line);
+    padding:10px 14px; display:flex; align-items:center; gap:12px; flex:none;
+  }
+  header h1{font-size:15px; margin:0; font-weight:800; letter-spacing:.2px}
+  header .sub{font-size:11px; color:var(--muted); margin-top:1px}
+  .xp{margin-left:auto; text-align:right; flex:none}
+  .xp b{font-size:16px; color:var(--acc)}
+  .xp span{display:block; font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.6px}
+
+  .escena{flex:1; position:relative; overflow:hidden; background:
+    radial-gradient(120% 90% at 50% 8%, #223049 0%, #101a2c 60%, #0b1220 100%);}
+  canvas{display:block; width:100%; height:100%; touch-action:none}
+
+  .hint{
+    position:absolute; left:50%; transform:translateX(-50%); bottom:12px;
+    background:rgba(15,23,42,.85); border:1px solid var(--line); color:var(--muted);
+    font-size:12px; padding:7px 14px; border-radius:20px; pointer-events:none;
+    transition:opacity .3s; text-align:center; max-width:92%;
+  }
+
+  .acciones{
+    position:absolute; top:10px; right:10px; display:flex; flex-direction:column; gap:8px;
+  }
+  .acciones button{
+    width:44px; height:44px; border-radius:12px; border:1px solid var(--line);
+    background:rgba(30,41,59,.92); color:var(--ink); font-size:19px; cursor:pointer;
+    display:grid; place-items:center; backdrop-filter:blur(4px);
+  }
+  .acciones button:active{background:var(--acc); color:#04263a; border-color:var(--acc)}
+  .acciones button:disabled{opacity:.35; cursor:default}
+
+  .cajon{
+    flex:none; background:var(--panel); border-top:1px solid var(--line);
+    max-height:44vh; display:flex; flex-direction:column;
+  }
+  .cajon-top{
+    display:flex; align-items:center; gap:10px; padding:9px 14px 7px;
+  }
+  .cajon-top h2{font-size:13px; margin:0; font-weight:700}
+  .cajon-top .cuenta{font-size:11px; color:var(--muted)}
+  .tabs{margin-left:auto; display:flex; gap:4px}
+  .tabs button{
+    border:1px solid var(--line); background:transparent; color:var(--muted);
+    font-size:11px; font-weight:700; padding:5px 11px; border-radius:20px; cursor:pointer;
+  }
+  .tabs button.on{background:var(--acc); border-color:var(--acc); color:#04263a}
+
+  .rejilla{
+    display:grid; grid-template-columns:repeat(auto-fill,minmax(76px,1fr));
+    gap:8px; padding:0 12px 14px; overflow-y:auto;
+  }
+  .item{
+    background:var(--panel2); border:1.5px solid transparent; border-radius:12px;
+    padding:6px 4px 5px; cursor:pointer; text-align:center; position:relative;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+  }
+  .item:active{transform:scale(.96)}
+  .item.sel{border-color:var(--acc); background:#0f3548}
+  .item img{width:100%; height:52px; object-fit:contain; image-rendering:pixelated}
+  .item .nom{font-size:10px; line-height:1.15; color:var(--muted)}
+  .item.bloq{opacity:.52}
+  .item.bloq img{filter:grayscale(1) brightness(.55)}
+  .item .req{
+    font-size:9px; color:var(--warn); font-weight:700; line-height:1.1;
+  }
+  .item .puestos{
+    position:absolute; top:4px; right:5px; background:var(--acc2); color:#052e16;
+    font-size:9px; font-weight:800; border-radius:9px; padding:1px 5px;
+  }
+
+  .aviso{
+    padding:10px 14px; margin:0 12px 12px; border-radius:10px;
+    background:#1c2b3f; border:1px solid var(--line); font-size:11px; color:var(--muted);
+    line-height:1.5;
+  }
+  .aviso b{color:var(--ink)}
+
+  @media(min-width:900px){
+    body{flex-direction:row}
+    header{position:absolute; top:0; left:0; right:340px; z-index:5; background:rgba(30,41,59,.9); backdrop-filter:blur(6px)}
+    .escena{flex:1}
+    .cajon{width:340px; max-height:none; border-top:none; border-left:1px solid var(--line); padding-top:6px}
+    .rejilla{grid-template-columns:repeat(3,1fr)}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Mi pieza</h1>
+    <div class="sub">Prueba de estilo · no es la versión final</div>
+  </div>
+  <div class="xp"><b id="xp">840</b><span>XP</span></div>
+</header>
+
+<div class="escena">
+  <canvas id="lienzo"></canvas>
+  <div class="acciones">
+    <button id="btnRotar" title="Girar" disabled>⟳</button>
+    <button id="btnQuitar" title="Guardar en el cajón" disabled>✕</button>
+    <button id="btnCentrar" title="Centrar">⌖</button>
+  </div>
+  <div class="hint" id="hint">Elige un mueble abajo y tócalo en el piso</div>
+</div>
+
+<div class="cajon">
+  <div class="cajon-top">
+    <h2>Mis muebles</h2>
+    <span class="cuenta" id="cuenta"></span>
+    <div class="tabs">
+      <button class="on" data-tab="tengo">Tengo</button>
+      <button data-tab="faltan">Por ganar</button>
+    </div>
+  </div>
+  <div class="rejilla" id="rejilla"></div>
+  <div class="aviso">
+    <b>Cómo se ganarían:</b> cada mueble se desbloquea con una tarea entregada, una
+    clase completa o un logro. En esta prueba el XP y los desbloqueos son de ejemplo,
+    para ver cómo se ve. Muebles de <b>Kenney</b>, licencia CC0.
+  </div>
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var RUTA = 'assets/pieza/';
+  var TW = 151, TH = 110;        // tamaño del tile de piso
+  var ROMBO = 106;               // alto del rombo superior del tile
+  var SX = 75, SY = 53;          // paso de la grilla, verificado sin huecos
+  var COLS = 5, FILAS = 5;
+  var DIRS = ['SE','SW','NE','NW'];
+
+  // Catálogo. xp = XP necesario; motivo = cómo se gana.
+  //   apila : true  -> es cosa chica, puede ir sobre una mesa o en el suelo
+  //   sup   : px    -> altura de su superficie; si es 0, no se le pone nada encima
+  //   plano : true  -> alfombras, siempre debajo de todo
+  var CATALOGO = [
+    {id:'bedSingle',        nom:'Cama',            xp:0,    motivo:'De partida',            sup:0},
+    {id:'desk',             nom:'Escritorio',      xp:0,    motivo:'De partida',            sup:42},
+    {id:'chairDesk',        nom:'Silla',           xp:0,    motivo:'De partida',            sup:0},
+    {id:'rugRound',         nom:'Alfombra',        xp:0,    motivo:'De partida',            sup:0, plano:true},
+    {id:'lampSquareFloor',  nom:'Lámpara de pie',  xp:120,  motivo:'Primera clase completa',sup:0},
+    {id:'pottedPlant',      nom:'Planta',          xp:120,  motivo:'Primera clase completa',sup:0},
+    {id:'bookcaseOpen',     nom:'Estante',         xp:260,  motivo:'Tres tareas entregadas',sup:0},
+    {id:'books',            nom:'Libros',          xp:260,  motivo:'Tres tareas entregadas',sup:0, apila:true},
+    {id:'laptop',           nom:'Notebook',        xp:420,  motivo:'Ensayo SIMCE rendido',  sup:0, apila:true},
+    {id:'sideTable',        nom:'Velador',         xp:420,  motivo:'Ensayo SIMCE rendido',  sup:36},
+    {id:'trashcan',         nom:'Papelero',        xp:520,  motivo:'Racha de 5 días',       sup:0},
+    {id:'plantSmall1',      nom:'Suculenta',       xp:520,  motivo:'Racha de 5 días',       sup:0, apila:true},
+    {id:'lampRoundTable',   nom:'Lamparita',       xp:640,  motivo:'Clase 9 completa',      sup:0, apila:true},
+    {id:'radio',            nom:'Radio',           xp:640,  motivo:'Clase 9 completa',      sup:0, apila:true},
+    {id:'bear',             nom:'Peluche',         xp:800,  motivo:'Logro: sin faltas',     sup:0, apila:true},
+    {id:'computerScreen',   nom:'Monitor',         xp:800,  motivo:'Logro: sin faltas',     sup:0, apila:true},
+    {id:'loungeSofa',       nom:'Sofá',            xp:1100, motivo:'Unidad 3 terminada',    sup:0},
+    {id:'tableCoffee',      nom:'Mesa de centro',  xp:1100, motivo:'Unidad 3 terminada',    sup:30},
+    {id:'televisionModern', nom:'Televisor',       xp:1500, motivo:'Sobre 60% en el ensayo',sup:0, apila:true},
+    {id:'speaker',          nom:'Parlante',        xp:1500, motivo:'Sobre 60% en el ensayo',sup:0},
+    {id:'bookcaseClosed',   nom:'Repisa cerrada',  xp:1900, motivo:'Top 10 del curso',      sup:0},
+    {id:'rugSquare',        nom:'Alfombra grande', xp:1900, motivo:'Top 10 del curso',      sup:0, plano:true},
+    {id:'coatRackStanding', nom:'Perchero',        xp:2400, motivo:'Nivel 10',              sup:0},
+    {id:'kitchenFridgeSmall',nom:'Frigobar',       xp:2400, motivo:'Nivel 10',              sup:34}
+  ];
+  var POR_ID = {};
+  CATALOGO.forEach(function(m){ POR_ID[m.id] = m; });
+  function ficha(id){ return POR_ID[id] || {sup:0}; }
+
+  var XP = 840;                      // de ejemplo
+  var imgs = {}, listos = 0, total = 0;
+  var puestos = [];                  // {id, col, fila, dir}
+  var seleccionCat = null;           // id del catálogo elegido
+  var seleccionPuesto = -1;          // índice en puestos
+  var zoom = 1, panX = 0, panY = 0;
+  var cv = document.getElementById('lienzo'), cx = cv.getContext('2d');
+  var hint = document.getElementById('hint');
+
+  function desbloqueado(m){ return XP >= m.xp; }
+
+  // ---------- carga de imágenes ----------
+  function cargar(nombre){
+    if (imgs[nombre]) return;
+    total++;
+    var im = new Image();
+    im.onload = function(){ listos++; dibujar(); };
+    im.onerror = function(){ listos++; };
+    im.src = RUTA + nombre + '.png';
+    imgs[nombre] = im;
+  }
+  ['floorFull_SE','wall_SE','wall_SW','wallWindow_SE','wallDoorway_SW'].forEach(cargar);
+  CATALOGO.forEach(function(m){ DIRS.forEach(function(d){ cargar(m.id+'_'+d); }); });
+
+  // ---------- estado guardado (solo esta prueba) ----------
+  function guardar(){
+    try{ localStorage.setItem('miPiezaPiloto', JSON.stringify(puestos)); }catch(e){}
+  }
+  function restaurar(){
+    try{
+      var v = JSON.parse(localStorage.getItem('miPiezaPiloto')||'null');
+      if (Array.isArray(v)) puestos = v;
+    }catch(e){}
+    if (!puestos.length){
+      puestos = [
+        {id:'rugRound',       col:2, fila:2, dir:'SE'},
+        {id:'bedSingle',      col:0, fila:1, dir:'SE'},
+        {id:'desk',           col:4, fila:1, dir:'SW'},
+        {id:'computerScreen', col:4, fila:1, dir:'SW', sobre:true},
+        {id:'chairDesk',      col:3, fila:1, dir:'NE'},
+        {id:'sideTable',      col:0, fila:0, dir:'SE'},
+        {id:'lampRoundTable', col:0, fila:0, dir:'SE', sobre:true},
+        {id:'bookcaseOpen',   col:0, fila:3, dir:'SE'},
+        {id:'pottedPlant',    col:4, fila:4, dir:'SE'}
+      ];
+    }
+  }
+
+  // ---------- geometría ----------
+  function origen(){
+    // El rombo del piso mide (COLS+FILAS)*SX de ancho y (COLS+FILAS)*SY de alto.
+    // Se centra en el lienzo en vez de anclarlo arriba.
+    var altoPiso = (COLS + FILAS) * SY;
+    return {
+      ox: cv.clientWidth/2 - TW/2 + (FILAS - COLS)/2 * SX + panX,
+      oy: (cv.clientHeight - altoPiso)/2 + 30 + panY
+    };
+  }
+  function celdaAPantalla(col, fila){
+    var o = origen();
+    return { x: o.ox + (col - fila)*SX, y: o.oy + (col + fila)*SY };
+  }
+  // Invierte la proyección: de un punto de pantalla a la celda del piso.
+  function pantallaACelda(px, py){
+    var o = origen();
+    var dx = px - o.ox - TW/2, dy = py - o.oy - 53;
+    var col = (dx/SX + dy/SY)/2, fila = (dy/SY - dx/SX)/2;
+    return { col: Math.floor(col + 0.5), fila: Math.floor(fila + 0.5) };
+  }
+
+  function dibujarSprite(nombre, col, fila, z){
+    var im = imgs[nombre];
+    if (!im || !im.complete || !im.naturalWidth) return null;
+    var p = celdaAPantalla(col, fila);
+    // Kenney recorta cada sprite a su caja: el punto más bajo del dibujo es la
+    // esquina frontal del objeto, que en isométrico cae en el vértice inferior
+    // del rombo (p.y + ROMBO). Por eso la base se ancla ahí y no al centro.
+    // z levanta el objeto cuando va apoyado sobre otro mueble.
+    var x = p.x + (TW - im.naturalWidth)/2;
+    var y = p.y + ROMBO - im.naturalHeight - (z || 0);
+    cx.drawImage(im, x, y);
+    return { x:x, y:y, w:im.naturalWidth, h:im.naturalHeight };
+  }
+
+  // Qué hay en una baldosa: la base (mueble de suelo) y lo que tenga encima.
+  function ocupacion(col, fila, salvo){
+    var r = { plano:-1, base:-1, encima:-1 };
+    puestos.forEach(function(m, i){
+      if (i === salvo || m.col !== col || m.fila !== fila) return;
+      var f = ficha(m.id);
+      if (f.plano) r.plano = i;
+      else if (m.sobre) r.encima = i;
+      else r.base = i;
+    });
+    return r;
+  }
+
+  // Devuelve el motivo por el que NO se puede poner, o null si sí se puede.
+  function estorbo(id, col, fila, salvo){
+    var f = ficha(id), o = ocupacion(col, fila, salvo);
+    if (f.plano) return o.plano >= 0 ? 'Ya hay una alfombra ahí' : null;
+    if (o.base < 0) return null;                       // suelo libre
+    var base = ficha(puestos[o.base].id);
+    if (!f.apila) return 'Esa baldosa ya está ocupada';
+    if (!base.sup) return 'Encima de eso no se puede poner nada';
+    if (o.encima >= 0) return 'Ya hay algo sobre ese mueble';
+    return null;
+  }
+
+  var cajas = [];   // para tocar los muebles ya puestos
+
+  // La pieza mide (COLS+FILAS)*SX de ancho más el tile; en un teléfono no cabe,
+  // así que el zoom se calcula para que entre entera, con aire a los lados.
+  function ajustarZoom(W, H){
+    var anchoPieza = (COLS + FILAS) * SX + TW;
+    var altoPieza  = (COLS + FILAS) * SY + ROMBO + ALTO_PARED;
+    zoom = Math.min(1, (W - 20) / anchoPieza, (H - 20) / altoPieza);
+  }
+
+  function dibujar(){
+    var dpr = devicePixelRatio || 1;
+    var W = cv.clientWidth, H = cv.clientHeight;
+    if (cv.width !== W*dpr || cv.height !== H*dpr){
+      cv.width = W*dpr; cv.height = H*dpr;
+    }
+    cx.setTransform(dpr,0,0,dpr,0,0);
+    cx.clearRect(0,0,W,H);
+    ajustarZoom(W,H);
+    cx.save();
+    cx.translate(W/2, H/2); cx.scale(zoom, zoom); cx.translate(-W/2, -H/2);
+    cx.imageSmoothingEnabled = false;
+
+    // piso
+    var piso = imgs['floorFull_SE'];
+    if (piso && piso.complete){
+      for (var f=0; f<FILAS; f++) for (var c=0; c<COLS; c++){
+        var p = celdaAPantalla(c,f);
+        cx.drawImage(piso, p.x, p.y);
+      }
+    }
+    dibujarParedes();
+
+    // celda resaltada
+    if (seleccionCat && hover){
+      var ph = celdaAPantalla(hover.col, hover.fila);
+      cx.save();
+      cx.globalAlpha = .55; cx.fillStyle = '#38bdf8';
+      cx.beginPath();
+      cx.moveTo(ph.x + TW/2, ph.y);
+      cx.lineTo(ph.x + TW, ph.y + 53);
+      cx.lineTo(ph.x + TW/2, ph.y + 106);
+      cx.lineTo(ph.x, ph.y + 53);
+      cx.closePath(); cx.fill();
+      cx.restore();
+    }
+
+    // muebles y avatar, de atrás hacia adelante
+    cajas = [];
+    var orden = puestos.map(function(m,i){ return {m:m, i:i}; });
+    // De atrás hacia adelante; dentro de una misma baldosa: alfombra, luego el
+    // mueble de suelo, y al final lo que va encima.
+    function capa(m){ var f = ficha(m.id); return f.plano ? 0 : (m.sobre ? 2 : 1); }
+    orden.sort(function(a,b){
+      var d = (a.m.col + a.m.fila) - (b.m.col + b.m.fila);
+      return d !== 0 ? d : capa(a.m) - capa(b.m);
+    });
+    var avatarDibujado = false;
+    orden.forEach(function(o){
+      if (!avatarDibujado && (o.m.col + o.m.fila) > (AV.col + AV.fila)){
+        dibujarAvatar(); avatarDibujado = true;
+      }
+      var z = 0;
+      if (o.m.sobre){
+        var oc = ocupacion(o.m.col, o.m.fila, o.i);
+        if (oc.base >= 0) z = ficha(puestos[oc.base].id).sup || 0;
+      }
+      var caja = dibujarSprite(o.m.id + '_' + o.m.dir, o.m.col, o.m.fila, z);
+      if (caja){
+        caja.idx = o.i; cajas.push(caja);
+        if (o.i === seleccionPuesto){
+          cx.save();
+          cx.strokeStyle = '#38bdf8'; cx.lineWidth = 2; cx.setLineDash([5,4]);
+          cx.strokeRect(caja.x-2, caja.y-2, caja.w+4, caja.h+4);
+          cx.restore();
+        }
+      }
+    });
+    if (!avatarDibujado) dibujarAvatar();
+
+    cx.restore();
+  }
+
+  // ---------- paredes ----------
+  // Los sprites de pared de Kenney son más angostos que el tile y al ponerlos
+  // seguidos dejan huecos. Se dibujan como dos planos, que además permiten
+  // elegir color y quedan sin costuras.
+  var ALTO_PARED = 132;
+  function esquinasPiso(){
+    var n = celdaAPantalla(0, 0), e = celdaAPantalla(COLS-1, 0),
+        s = celdaAPantalla(COLS-1, FILAS-1), w = celdaAPantalla(0, FILAS-1);
+    return {
+      N:{x:n.x + TW/2, y:n.y},
+      E:{x:e.x + TW,   y:e.y + ROMBO/2},
+      S:{x:s.x + TW/2, y:s.y + ROMBO},
+      W:{x:w.x,        y:w.y + ROMBO/2}
+    };
+  }
+  function plano(a, b, relleno, borde){
+    cx.beginPath();
+    cx.moveTo(a.x, a.y); cx.lineTo(b.x, b.y);
+    cx.lineTo(b.x, b.y - ALTO_PARED); cx.lineTo(a.x, a.y - ALTO_PARED);
+    cx.closePath();
+    cx.fillStyle = relleno; cx.fill();
+    // franja superior, para que se lea el canto del muro
+    cx.beginPath();
+    cx.moveTo(a.x, a.y - ALTO_PARED); cx.lineTo(b.x, b.y - ALTO_PARED);
+    cx.lineTo(b.x, b.y - ALTO_PARED + 7); cx.lineTo(a.x, a.y - ALTO_PARED + 7);
+    cx.closePath();
+    cx.fillStyle = borde; cx.fill();
+  }
+  function dibujarParedes(){
+    var q = esquinasPiso();
+    plano(q.W, q.N, '#cdd6e0', '#e6ecf3');   // muro izquierdo, en sombra
+    plano(q.N, q.E, '#e3e9f0', '#f4f7fa');   // muro derecho, iluminado
+    // ventana en el muro derecho
+    var t = 0.55, m = { x:q.N.x + (q.E.x-q.N.x)*t, y:q.N.y + (q.E.y-q.N.y)*t };
+    var an = 62, alto = 52, sube = 74;
+    var dx = (q.E.x-q.N.x), dy = (q.E.y-q.N.y), L = Math.hypot(dx,dy);
+    var ux = dx/L, uy = dy/L;
+    cx.beginPath();
+    cx.moveTo(m.x, m.y - sube);
+    cx.lineTo(m.x + ux*an, m.y + uy*an - sube);
+    cx.lineTo(m.x + ux*an, m.y + uy*an - sube + alto);
+    cx.lineTo(m.x, m.y - sube + alto);
+    cx.closePath();
+    cx.fillStyle = '#9fd8ef'; cx.fill();
+    cx.strokeStyle = '#ffffff'; cx.lineWidth = 3; cx.stroke();
+    // zócalo del piso, para separar muro y suelo
+    cx.beginPath();
+    cx.moveTo(q.W.x, q.W.y); cx.lineTo(q.N.x, q.N.y); cx.lineTo(q.E.x, q.E.y);
+    cx.strokeStyle = 'rgba(120,132,150,.55)'; cx.lineWidth = 2; cx.stroke();
+  }
+
+  // ---------- avatar ----------
+  var AV = { col:3, fila:2, piel:'#f0c9a4', pelo:'#3f2a1d', polera:'#38bdf8', pantalon:'#334155' };
+  function dibujarAvatar(){
+    var p = celdaAPantalla(AV.col, AV.fila);
+    var cxp = p.x + TW/2, base = p.y + 53 + 18;
+    cx.save();
+    // sombra
+    cx.globalAlpha = .28; cx.fillStyle = '#000';
+    cx.beginPath(); cx.ellipse(cxp, base, 19, 8, 0, 0, Math.PI*2); cx.fill();
+    cx.globalAlpha = 1;
+    // piernas
+    cx.fillStyle = AV.pantalon;
+    cx.fillRect(cxp-11, base-26, 9, 26); cx.fillRect(cxp+2, base-26, 9, 26);
+    // torso
+    cx.fillStyle = AV.polera;
+    cx.beginPath(); cx.roundRect(cxp-15, base-52, 30, 29, 6); cx.fill();
+    // brazos
+    cx.fillStyle = AV.piel;
+    cx.beginPath(); cx.roundRect(cxp-21, base-50, 7, 22, 3.5); cx.fill();
+    cx.beginPath(); cx.roundRect(cxp+14, base-50, 7, 22, 3.5); cx.fill();
+    // cuello y cabeza
+    cx.fillRect(cxp-4, base-56, 8, 6);
+    cx.beginPath(); cx.roundRect(cxp-17, base-88, 34, 34, 13); cx.fill();
+    // pelo
+    cx.fillStyle = AV.pelo;
+    cx.beginPath(); cx.roundRect(cxp-18, base-92, 36, 20, 11); cx.fill();
+    cx.fillRect(cxp-18, base-78, 6, 12);
+    cx.fillRect(cxp+12, base-78, 6, 12);
+    // ojos
+    cx.fillStyle = '#20242c';
+    cx.beginPath(); cx.ellipse(cxp-6, base-70, 2.6, 3.4, 0, 0, Math.PI*2); cx.fill();
+    cx.beginPath(); cx.ellipse(cxp+6, base-70, 2.6, 3.4, 0, 0, Math.PI*2); cx.fill();
+    // boca
+    cx.strokeStyle = '#20242c'; cx.lineWidth = 1.8; cx.lineCap = 'round';
+    cx.beginPath(); cx.arc(cxp, base-64, 4.6, 0.25*Math.PI, 0.75*Math.PI); cx.stroke();
+    cx.restore();
+  }
+
+  // ---------- interacción ----------
+  var hover = null;
+
+  function puntoEnCanvas(ev){
+    var r = cv.getBoundingClientRect();
+    var t = (ev.touches && ev.touches[0]) || ev;
+    var x = t.clientX - r.left, y = t.clientY - r.top;
+    // deshacer el zoom, que va centrado en el lienzo
+    var W = cv.clientWidth, H = cv.clientHeight;
+    x = (x - W/2)/zoom + W/2;
+    y = (y - H/2)/zoom + H/2;
+    return {x:x, y:y};
+  }
+
+  function muebleEn(x, y){
+    for (var i = cajas.length - 1; i >= 0; i--){
+      var c = cajas[i];
+      if (x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h){
+        var im = imgs[puestos[c.idx].id + '_' + puestos[c.idx].dir];
+        // hit-test por opacidad, para no tomar el aire del recuadro
+        try{
+          var aux = document.createElement('canvas');
+          aux.width = 1; aux.height = 1;
+          var a = aux.getContext('2d', {willReadFrequently:true});
+          a.drawImage(im, Math.floor(x - c.x), Math.floor(y - c.y), 1, 1, 0, 0, 1, 1);
+          if (a.getImageData(0,0,1,1).data[3] > 20) return c.idx;
+        }catch(e){ return c.idx; }
+      }
+    }
+    return -1;
+  }
+
+  cv.addEventListener('pointermove', function(ev){
+    if (!seleccionCat) return;
+    var p = puntoEnCanvas(ev);
+    var cel = pantallaACelda(p.x, p.y);
+    hover = (cel.col>=0 && cel.col<COLS && cel.fila>=0 && cel.fila<FILAS) ? cel : null;
+    dibujar();
+  });
+
+  cv.addEventListener('pointerdown', function(ev){
+    var p = puntoEnCanvas(ev);
+    var idx = muebleEn(p.x, p.y);
+    if (idx >= 0 && !seleccionCat){
+      seleccionPuesto = (seleccionPuesto === idx) ? -1 : idx;
+      sincronizarBotones(); dibujar(); return;
+    }
+    var cel = pantallaACelda(p.x, p.y);
+    if (cel.col<0 || cel.col>=COLS || cel.fila<0 || cel.fila>=FILAS) return;
+    if (seleccionCat){
+      var no = estorbo(seleccionCat, cel.col, cel.fila, -1);
+      if (no){ decir(no); return; }
+      var oc = ocupacion(cel.col, cel.fila, -1);
+      var encima = oc.base >= 0 && ficha(seleccionCat).apila;
+      puestos.push({id:seleccionCat, col:cel.col, fila:cel.fila, dir:'SE', sobre:encima});
+      seleccionPuesto = puestos.length-1;
+      seleccionCat = null; hover = null;
+      guardar(); pintarCatalogo(); sincronizarBotones(); dibujar();
+      decir(encima ? 'Quedó encima. Con ⟳ lo giras' : 'Puesto. Con ⟳ lo giras');
+    } else if (seleccionPuesto >= 0){
+      var m = puestos[seleccionPuesto];
+      var no2 = estorbo(m.id, cel.col, cel.fila, seleccionPuesto);
+      if (no2){ decir(no2); return; }
+      var oc2 = ocupacion(cel.col, cel.fila, seleccionPuesto);
+      m.col = cel.col; m.fila = cel.fila;
+      m.sobre = oc2.base >= 0 && ficha(m.id).apila;
+      guardar(); dibujar();
+    }
+  });
+
+  document.getElementById('btnRotar').addEventListener('click', function(){
+    if (seleccionPuesto < 0) return;
+    var m = puestos[seleccionPuesto];
+    m.dir = DIRS[(DIRS.indexOf(m.dir)+1) % DIRS.length];
+    guardar(); dibujar();
+  });
+  document.getElementById('btnQuitar').addEventListener('click', function(){
+    if (seleccionPuesto < 0) return;
+    puestos.splice(seleccionPuesto,1);
+    seleccionPuesto = -1;
+    guardar(); pintarCatalogo(); sincronizarBotones(); dibujar();
+    decir('Guardado en el cajón');
+  });
+  document.getElementById('btnCentrar').addEventListener('click', function(){
+    panX = 0; panY = 0; seleccionCat = null; seleccionPuesto = -1;
+    sincronizarBotones(); pintarCatalogo(); dibujar();
+  });
+
+  function sincronizarBotones(){
+    document.getElementById('btnRotar').disabled = seleccionPuesto < 0;
+    document.getElementById('btnQuitar').disabled = seleccionPuesto < 0;
+  }
+
+  var tHint;
+  function decir(msg){
+    hint.textContent = msg; hint.style.opacity = 1;
+    clearTimeout(tHint);
+    tHint = setTimeout(function(){ hint.style.opacity = .0; }, 2600);
+  }
+
+  // ---------- catálogo ----------
+  var tab = 'tengo';
+  function pintarCatalogo(){
+    var cont = document.getElementById('rejilla');
+    cont.innerHTML = '';
+    var lista = CATALOGO.filter(function(m){
+      return tab === 'tengo' ? desbloqueado(m) : !desbloqueado(m);
+    });
+    document.getElementById('cuenta').textContent =
+      CATALOGO.filter(desbloqueado).length + ' de ' + CATALOGO.length;
+
+    lista.forEach(function(m){
+      var n = puestos.filter(function(p){ return p.id === m.id; }).length;
+      var el = document.createElement('div');
+      el.className = 'item' + (desbloqueado(m) ? '' : ' bloq') + (seleccionCat===m.id ? ' sel' : '');
+      el.innerHTML =
+        '<img src="' + RUTA + m.id + '_SE.png" alt="' + m.nom + '">' +
+        '<div class="nom">' + m.nom + '</div>' +
+        (desbloqueado(m) ? '' : '<div class="req">' + m.motivo + '</div>') +
+        (n ? '<span class="puestos">' + n + '</span>' : '');
+      if (desbloqueado(m)){
+        el.addEventListener('click', function(){
+          seleccionCat = (seleccionCat === m.id) ? null : m.id;
+          seleccionPuesto = -1;
+          sincronizarBotones(); pintarCatalogo(); dibujar();
+          if (seleccionCat) decir('Ahora toca una baldosa del piso');
+        });
+      } else {
+        el.addEventListener('click', function(){ decir('Se gana así: ' + m.motivo); });
+      }
+      cont.appendChild(el);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(b){
+    b.addEventListener('click', function(){
+      Array.prototype.forEach.call(document.querySelectorAll('.tabs button'), function(x){ x.classList.remove('on'); });
+      b.classList.add('on'); tab = b.dataset.tab; pintarCatalogo();
+    });
+  });
+
+  window.addEventListener('resize', dibujar);
+  document.getElementById('xp').textContent = XP;
+  restaurar(); pintarCatalogo(); sincronizarBotones();
+  setTimeout(dibujar, 60);
+  setTimeout(dibujar, 400);
+})();
+</script>
+</body>
+</html>

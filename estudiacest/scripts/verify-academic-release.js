@@ -254,7 +254,8 @@ async function validateProduction(manifest) {
     const gitPath = path.posix.join(projectPrefix, relativePath.replaceAll("\\", "/"));
     const inHead = run("git", ["cat-file", "-e", `HEAD:${gitPath}`]).status === 0;
     const inOrigin = run("git", ["cat-file", "-e", `origin/main:${gitPath}`]).status === 0;
-    return inHead && !inOrigin;
+    const inParent = run("git", ["cat-file", "-e", `HEAD^:${gitPath}`]).status === 0;
+    return inHead && (!inOrigin || !inParent);
   }
 
   for (const entry of manifest.criticalFiles) {

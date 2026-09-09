@@ -8,6 +8,24 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-09, cierre QA de las clases SIMCE 9 y 10
+
+- La Clase 9 quedó declarada explícitamente como informativa mediante
+  `requiere_entrega: false`: el panel muestra `Informativa`, no `Pendiente`, y
+  la excluye del total de clases obligatorias. La guía no pertenece al contrato
+  de entregas ni escribe respuestas del estudiante.
+- La propiedad se persistió en Firebase y su lectura posterior devolvió
+  `false`. La Clase 10 mantiene su flujo evaluativo con 14 preguntas,
+  desarrollo, producción escrita, guardado automático, entrega confirmada y
+  recuperación del estado al reingresar.
+- Se corrigió el ancho de las ilustraciones de ambas guías para evitar
+  desbordamiento horizontal en móvil. `npm run build` aprobó las auditorías de
+  las dos clases y los 158 recursos académicos críticos.
+- La prueba de navegador contra producción aprobó panel, Clase 9 y Clase 10 en
+  escritorio y móvil, sin errores de consola, página, red ni respuestas HTTP
+  fallidas. Commit funcional `d0d451c6`. Deploy productivo
+  `dpl_4ZLTtKihpRDTFNQb54RC9VofLtSF`.
+
 ## 2026-09-08, registro de interrogaciones manuales NM3 en 3°B
 
 - Se registraron ocho calificaciones finales informadas por el docente para

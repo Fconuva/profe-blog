@@ -358,6 +358,7 @@
 
     <!-- Sistema de Protección Anticopia y Seguridad -->
     <script src="js/security-protection.js"></script>
+    <link rel="stylesheet" href="css/mi-espacio.css">
 </head>
 <body>
     <div class="header">
@@ -369,7 +370,7 @@
             </div>
         </div>
         <div class="header-right">
-            <a href="avatar.html" class="btn-avatar" id="btnAvatar" title="Mi Avatar"><span class="avatar-btn-mini" id="headerAvatarEmoji"></span><span class="av-label">Avatar</span></a>
+            <a href="#miEspacio" class="btn-avatar" id="btnAvatar" title="Mi espacio"><span class="avatar-btn-mini" id="headerAvatarEmoji"></span><span class="av-label">Mi espacio</span></a>
             <button class="bell-btn" id="bellBtn" onclick="toggleMsgPopup()" title="Mensajes del profesor">🔔<span class="bell-dot" id="bellDot"></span></button>
             <button class="btn-logout" id="btnLogout">Cerrar Sesión</button>
         </div>
@@ -377,7 +378,7 @@
 
     <div class="main">
         <!-- Avatar -->
-        <a href="avatar.html" class="avatar-card" id="avatarCard">
+        <div class="avatar-card" id="avatarCard">
             <div class="avatar-emoji" id="avatarEmoji"></div>
             <div class="avatar-info">
                 <div class="avatar-title-row">
@@ -394,9 +395,19 @@
                     <div class="avatar-stat"><div class="stat-label">Constancia</div><div class="stars" id="statConstS">☆☆☆☆☆</div></div>
                     <div class="avatar-stat"><div class="stat-label">Velocidad</div><div class="stars" id="statVelS">☆☆☆☆☆</div></div>
                 </div>
-                <div style="font-size:11px;color:#64748b;margin-top:8px">Toca para editar tu avatar →</div>
             </div>
-        </a>
+        </div>
+
+        <!-- Mi espacio: personaje, pieza y muebles -->
+        <div class="esp-caja">
+            <div class="esp-cab">
+                <div>
+                    <h2>Mi espacio</h2>
+                    <p>Arma tu personaje y decora tu pieza con los muebles que vas ganando.</p>
+                </div>
+            </div>
+            <div id="miEspacio"></div>
+        </div>
 
         <!-- Stats -->
         <div class="stats-grid" id="statsGrid">
@@ -634,7 +645,8 @@
     <div class="connectivity online" id="connectivity">🟢 Conectado</div>
 
     <script src="js/avatar-levels.js"></script>
-    <script src="js/avatar-look.js"></script>
+    <script src="js/personaje-iso.js"></script>
+    <script src="js/mi-espacio.js"></script>
     <script src="js/gato-alerts.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -1648,6 +1660,14 @@
                 document.getElementById('statConstS').textContent = makeStars(Math.round((st.constancia || 0) / MAX_STAT * STARS), STARS);
                 document.getElementById('statVelS').textContent = makeStars(Math.round((st.velocidad || 0) / MAX_STAT * STARS), STARS);
 
+                // Mi espacio: personaje, pieza y muebles, con guardado en Firebase
+                if (window.MiEspacio) {
+                    MiEspacio.montar({
+                        host: document.getElementById('miEspacio'),
+                        db: db, base: BASE, uid: uid,
+                        xp: xpTotal, look: look, pieza: av.pieza
+                    });
+                }
             } catch(e) { console.error('Avatar load error:', e); }
         }
 

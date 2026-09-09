@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-09, ruta personal SIMCE de sesiones 2 a 10
+
+- Se reemplazó la estrategia de excepciones individuales en las guías estándar
+  por nueve sesiones exclusivas dentro de la ruta personal ya habilitada. Esta
+  entrada corrige y deja sin efecto los 11 desbloqueos descritos en la entrada
+  anterior; la entrega existente de la Sesión 1 se conservó sin cambios.
+- Cada sesión presenta un estímulo breve, apoyo visual, tres pasos, seis
+  preguntas A-D de una en una, lectura en voz alta y trabajo sin temporizador.
+  Incluye autoguardado, entrega atómica, lectura final de confirmación y claves
+  y retroalimentación alojadas solo en el servidor.
+- La lectura posterior de Firebase confirmó nueve de nueve sesiones personales
+  asignadas y diez de diez accesos estándar ausentes. La Sesión 7 general quedó
+  activa para su aplicación regular, sin incorporarla a la cuenta especial.
+- `npm run build` aprobó 24 contratos y 162 recursos críticos. La prueba de
+  navegador aprobó móvil y escritorio, navegación entre preguntas y ausencia
+  de desbordamiento. Producción respondió 200 para la ruta y sus recursos, y la
+  API rechazó correctamente el acceso sin sesión con 401.
+- Commits funcionales `4a3bc2ad`, `cb90d04d` y `4f00b8b1`. Deploy productivo
+  `dpl_B1hXypnbeHdy7KboVSTmXvuKwiW6`.
+
 ## 2026-09-09, habilitación individual de todas las guías SIMCE de Unidad 3
 
 - Se resolvió una única cuenta del curso solicitado contra la nómina vigente y

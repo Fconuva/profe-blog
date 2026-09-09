@@ -8,6 +8,19 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-09, habilitación individual de todas las guías SIMCE de Unidad 3
+
+- Se resolvió una única cuenta del curso solicitado contra la nómina vigente y
+  se confirmó que tenía perfil completo y correo institucional registrado.
+- La simulación reunió las clases 1 a 10 y el ensayo de la unidad. Se
+  escribieron 11 excepciones individuales de acceso, sin abrir las sesiones
+  para el resto del curso ni modificar respuestas o resultados existentes.
+- Una lectura posterior independiente confirmó 11 de 11 permisos. El aviso se
+  envió desde la cuenta institucional y quedó verificado en la carpeta de
+  enviados. La Clase 9 se informó como material sin entrega y no pendiente.
+- Fue una mutación de datos y una notificación; no requirió cambios de
+  aplicación ni despliegue.
+
 ## 2026-09-09, cierre QA de las clases SIMCE 9 y 10
 
 - La Clase 9 quedó declarada explícitamente como informativa mediante

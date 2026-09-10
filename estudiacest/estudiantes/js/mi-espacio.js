@@ -410,11 +410,57 @@
                    sentado: !caminando && sentableEn(Math.round(S.av.col), Math.round(S.av.fila)) }];
     Object.keys(S.otros).forEach(function (uid) {
       if (uid === S.uid) return;
-      var o = S.otros[uid], c = Number(o.col) || 0, f = Number(o.fila) || 0;
+      var o = S.otros[uid], v = S.vistos[uid];
+      var c = v ? v.col : (Number(o.col) || 0), f = v ? v.fila : (Number(o.fila) || 0);
       lista.push({ uid: uid, look: global.AvatarLookSystem.normalizeLook(o.look, { xpTotal: 99999 }),
-                   col: c, fila: f, nombre: nombreCorto(o.nombre), esYo: false, sentado: sentableEn(c, f) });
+                   col: c, fila: f, nombre: nombreCorto(o.nombre), esYo: false,
+                   sentado: !(v && v.camino) && sentableEn(Math.round(c), Math.round(f)) });
     });
     return lista;
+  }
+
+  // Los demás caminan como en Habbo: cuando llega su nuevo destino, se les
+  // dibuja recorriendo la misma ruta que haría uno, en vez de aparecer de golpe.
+  function seguirOtros() {
+    var ahora = performance.now();
+    Object.keys(S.vistos).forEach(function (uid) { if (!S.otros[uid]) delete S.vistos[uid]; });
+    Object.keys(S.otros).forEach(function (uid) {
+      if (uid === S.uid) return;
+      var o = S.otros[uid], meta = { col: Number(o.col) || 0, fila: Number(o.fila) || 0 };
+      var v = S.vistos[uid];
+      if (!v) { S.vistos[uid] = { col: meta.col, fila: meta.fila, meta: meta, camino: null }; return; }
+      if (v.meta.col === meta.col && v.meta.fila === meta.fila) return;
+      v.meta = meta;
+      var desde = { col: Math.round(v.col), fila: Math.round(v.fila) };
+      var camino = ruta(desde, meta);
+      v.col = desde.col; v.fila = desde.fila;
+      if (!camino || camino.length < 2) { v.col = meta.col; v.fila = meta.fila; v.camino = null; return; }
+      v.camino = camino; v.i = 0; v.t0 = ahora;
+    });
+    animarOtros();
+  }
+  var animOtros = null;
+  function animarOtros() {
+    if (animOtros) return;
+    function tick(ahora) {
+      var alguno = false;
+      Object.keys(S.vistos).forEach(function (uid) {
+        var v = S.vistos[uid];
+        if (!v.camino) return;
+        alguno = true;
+        var avance = Math.min(1, (ahora - v.t0) / PASO_MS);
+        var a = v.camino[v.i], b = v.camino[v.i + 1];
+        v.col = a.col + (b.col - a.col) * avance;
+        v.fila = a.fila + (b.fila - a.fila) * avance;
+        if (avance >= 1) {
+          v.i++; v.t0 = ahora;
+          if (v.i >= v.camino.length - 1) { v.col = b.col; v.fila = b.fila; v.camino = null; }
+        }
+      });
+      dibujar();
+      animOtros = alguno ? requestAnimationFrame(tick) : null;
+    }
+    animOtros = requestAnimationFrame(tick);
   }
 
   // ---------------- caminar ----------------
@@ -462,13 +508,16 @@
     }
     return null;
   }
-  var caminando = null;
+  var caminando = null, PASO_MS = 300;
   function caminar(hasta) {
     if (hasta.col < 0 || hasta.col >= COLS || hasta.fila < 0 || hasta.fila >= FILAS) return;
     var camino = ruta({ col: Math.round(S.av.col), fila: Math.round(S.av.fila) }, hasta);
     if (!camino || camino.length < 2) { if (!camino) avisar('Por ahí no se puede llegar'); return; }
     if (caminando) cancelAnimationFrame(caminando.id);
-    var i = 0, MS = 300, t0 = performance.now();
+    // Los demás reciben el destino al partir, así me ven caminar a la par.
+    S.destino = { col: hasta.col, fila: hasta.fila };
+    avisarPosicion();
+    var i = 0, MS = PASO_MS, t0 = performance.now();
     function paso(ahora) {
       var avance = Math.min(1, (ahora - t0) / MS);
       var a = camino[i], b = camino[i + 1];
@@ -481,7 +530,6 @@
           S.av.col = b.col; S.av.fila = b.fila;
           caminando = null; dibujar();
           if (!S.visitando) guardar('personajeEn', S.av);
-          latido();                       // los demás me ven llegar
           return;
         }
       }
@@ -537,9 +585,20 @@
   var latidoTimer = null, burbujaTimer = null;
   function latido() {
     if (!S.sala) return;
-    api('latido', { sala: S.sala, col: Math.round(S.av.col), fila: Math.round(S.av.fila), look: S.look })
+    var p = S.destino || { col: Math.round(S.av.col), fila: Math.round(S.av.fila) };
+    api('latido', { sala: S.sala, col: p.col, fila: p.fila, look: S.look })
       .then(function (r) { if (r && r.fuera) conectarSala(S.sala, true); })
       .catch(function () {});
+  }
+  // Un aviso de posición por segundo como máximo: con flechas se camina casilla
+  // a casilla, y el último destino sale al cerrar la ventana.
+  var AVISO_MS = 1000, ultimoAviso = 0, avisoTimer = null;
+  function avisarPosicion() {
+    if (!S.sala || avisoTimer) return;
+    var espera = AVISO_MS - (Date.now() - ultimoAviso);
+    avisoTimer = setTimeout(function () {
+      avisoTimer = null; ultimoAviso = Date.now(); latido();
+    }, Math.max(0, espera));
   }
 
   function desconectarSala() {
@@ -549,7 +608,7 @@
     clearInterval(latidoTimer); latidoTimer = null;
     clearInterval(burbujaTimer); burbujaTimer = null;
     if (S.sala) api('salir', { sala: S.sala }, true).catch(function () {});
-    S.sala = null; S.otros = {}; S.burbujas = {};
+    S.sala = null; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
   }
 
   function conectarSala(sala, silencioso) {
@@ -559,12 +618,13 @@
           avisar((r && r.error) || 'No se pudo entrar');
           return false;
         }
-        S.sala = sala; S.otros = {}; S.burbujas = {};
+        S.sala = sala; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
         // El servidor devuelve cómo te ven los demás (con desempate si hace falta)
         if (r.yo) S.miNombre = r.yo;
         S.refPresentes = S.db.ref(S.base + '/salas/' + sala + '/presentes');
         S.refPresentes.on('value', function (snap) {
           S.otros = snap.val() || {};
+          seguirOtros();
           pintarCabecera(); dibujar();
         });
         S.refChat = S.db.ref(S.base + '/salas/' + sala + '/chat').orderByChild('ts').limitToLast(40);
@@ -1039,7 +1099,7 @@
     S.miCasa = (cfg.casa && typeof cfg.casa === 'object') ? cfg.casa : { piso: 'claro', muro: 'blanco' };
     S.casa = S.miCasa;
     S.sel = -1; S.elegido = null; S.hover = null;
-    S.visitando = false; S.sala = null; S.otros = {}; S.burbujas = {};
+    S.visitando = false; S.sala = null; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
 
     S.host.innerHTML = plantilla();
     S.cv = S.host.querySelector('#espLienzo');

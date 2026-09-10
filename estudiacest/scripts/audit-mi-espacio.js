@@ -183,6 +183,24 @@ exigir(!/nombre:\s*yo\.nombre\.slice/.test(salasApi),
 exigir((salasApi.match(/nombre: yo\.nombre,/g) || []).length === 2,
   'El nombre completo solo va a los dos registros del profesor (bloqueados_chat y alertas_chat).');
 
+// Caso (10-sep-2026): los visitantes solo mandaban su posición al llegar y cada
+// 20 s, y se dibujaban de golpe en la casilla nueva. Como en Habbo, el destino
+// sale al empezar a caminar (a lo más uno por segundo) y cada cliente dibuja a
+// los demás recorriendo la ruta.
+const moverJs = leer('estudiantes/js/mi-espacio.js');
+const cuerpoDe = (nombre) => { const i = moverJs.indexOf('function ' + nombre + '('); return i < 0 ? '' : moverJs.slice(i, moverJs.indexOf('\n  }\n', i)); };
+exigir(/avisarPosicion\(\)/.test(cuerpoDe('caminar')) && /S\.destino\s*=/.test(cuerpoDe('caminar')),
+  'caminar() debe fijar S.destino y avisarlo al partir: si no, los demás te ven aparecer cuando ya llegaste.');
+exigir(/S\.destino \|\|/.test(cuerpoDe('latido')), 'latido() debe mandar el destino, no la casilla intermedia del camino.');
+const avisoMs = Number((moverJs.match(/AVISO_MS = (\d+)/) || [])[1]);
+exigir(avisoMs >= 1000, 'avisarPosicion necesita un tope de al menos 1000 ms entre avisos (con flechas se camina casilla a casilla).');
+exigir(/ruta\(desde, meta\)/.test(cuerpoDe('seguirOtros')) && /animarOtros\(\)/.test(cuerpoDe('seguirOtros')),
+  'seguirOtros() debe calcular la ruta de cada visitante y animarla.');
+exigir(/v = S\.vistos\[uid\]/.test(cuerpoDe('personas')) && /var c = v \? v\.col/.test(cuerpoDe('personas')),
+  'personas() debe dibujar a los demás en su posición animada (S.vistos), no en la casilla final.');
+exigir(/S\.otros = snap\.val\(\) \|\| \{\};\s*seguirOtros\(\);/.test(moverJs), 'La escucha de presentes debe llamar a seguirOtros().');
+exigir(!/latido\(\);\s*\/\/ los demás me ven llegar/.test(moverJs), 'El aviso al llegar quedó reemplazado por el aviso al partir.');
+
 // Caso (10-sep-2026): toLocaleString con dateStyle y hour/minute a la vez lanza
 // "Invalid option" en todos los navegadores. En el panel cortaba el aviso
 // emergente y la campanita de los mensajes del profesor desde el 9-sep.

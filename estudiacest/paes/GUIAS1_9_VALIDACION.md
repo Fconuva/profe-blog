@@ -28,6 +28,12 @@ Son sesiones de enseñanza, no simulacros de extensión PAES. Se documenta la ex
 
 ## Fórmula y evaluación
 
+Cada guía tiene una tarjeta independiente en el portal principal, con su título, objetivo breve, cantidad de textos/preguntas y botón propio. El catálogo conserva sus nueve entradas y PDF históricos.
+
+Las dieciocho páginas (regular y acompañada) incluyen objetivo observable, tres criterios de logro, instrucciones desplegables, recorrido de aprendizaje, activación y cierre en el cuaderno. Los nueve esquemas son específicos: ruta de evidencia, embudo de síntesis, secuencia temporal, estructura del argumento, interpretación poética, vínculo del razonamiento, función del recurso, convergencia de indicios y contraste de perspectivas. Se construyen con HTML semántico y CSS adaptable; no dependen de imágenes externas ni contienen respuestas evaluadas.
+
+El esquema y el modelado se muestran en la práctica y se ocultan al entrar en «Evalúa». El cierre aparece en «Revisión y entrega». Las consignas de cada etapa indican qué hacer; las actividades de cuaderno se distinguen del contenido guardado. Estos cambios de presentación no alteran lecturas, claves ni la versión de los intentos.
+
 Explica → Modela (ATENCIÓN, ejemplo distinto) → Ejercita N1/N2/N3 → Evalúa → Analiza el error y transfiere.
 
 - Preguntas 1–2: procedimiento específico; 3–4: apoyo general; 5–6: resolución autónoma dentro de la práctica. Son niveles de apoyo previstos, no dificultad psicométrica medida.

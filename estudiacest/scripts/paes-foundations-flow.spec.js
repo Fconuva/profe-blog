@@ -37,6 +37,10 @@ for(const width of [390,1440,3840])test(`Regular G1–G9: entrega, recarga y pub
  await page.setViewportSize({width,height:width===3840?2160:900});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  for(let id=1;id<=9;id++){
   await login(page,id);await expect(page.locator('.question')).toHaveCount(12);await expect(page.locator('#method')).toContainText('Observa cómo se decide');
+  await expect(page.locator('#lessonObjective')).toBeVisible();await expect(page.locator('.success-criteria li')).toHaveCount(3);await expect(page.locator('.reading-scheme')).toBeVisible();await expect(page.locator('.scheme-nodes li')).toHaveCount(3);await expect(page.locator('.notebook-closing')).toBeHidden();
+  await page.locator('#workInstructions summary').click();await expect(page.locator('#workInstructions')).toContainText('La entrega cierra el intento');await page.locator('#workInstructions summary').click();
+  await page.locator('.reading-scheme').screenshot({path:test.info().outputPath(`scheme-g${id}-${width}.png`)});
+  await page.locator('[data-tab="2"]').click();await expect(page.locator('#methodSection')).toBeHidden();await expect(page.locator('#panel-2 .stage-instruction')).toContainText('7–12');await page.locator('[data-tab="1"]').click();await expect(page.locator('#methodSection')).toBeVisible();
   await page.locator('#question-1 .option').first().click();await page.locator('#question-1 .flag').click();await page.locator('[data-tab="2"]').click();await page.locator('#question-7 .option').last().click();await expect(page.locator('#question-7 .level')).toHaveCount(0);await page.locator('[data-tab="4"]').click();await page.locator('#evidence').fill('Pregunta 1: evidencia de prueba.');
   await expect(page.locator('#savedState')).toHaveText('Guardado en línea');await page.evaluate(()=>localStorage.clear());await page.reload();await page.locator('#rutInput').fill(STUDENT.rut);await page.locator('#loginForm button').click();await expect(page.locator('#session')).toBeVisible();await expect(page.locator('#answeredInfo')).toHaveText('2 de 12 marcadas');
   await page.locator('[data-tab="4"]').click();await expect(page.locator('#evidence')).toHaveValue('Pregunta 1: evidencia de prueba.');await page.locator('#submit').click();await expect(page.locator('#confirmDialog')).toBeVisible();await expect(page.locator('#resultBox')).toBeHidden();await page.locator('#closeDialog').click();
@@ -86,4 +90,14 @@ test('Panel docente real: selector G1–9, respuestas y pautas regular/acompaña
  }
  await page.evaluate(()=>{currentGuia='1';openGuiaModal('111111111');});await expect(page.locator('#gmDevList')).toContainText('Justificación de prueba');
  expect(errors).toEqual([]);
+});
+
+test('Portada: nueve tarjetas independientes y conservación de G10–21',async({page})=>{
+ for(const width of [390,1440,3840]){
+  await page.setViewportSize({width,height:width===3840?2160:900});await page.goto(origin+'/paes/');
+  if(await page.locator('#rutInput').isVisible()){await page.locator('#rutInput').fill(STUDENT.rut);await page.locator('#loginForm button[type="submit"]').click();}await expect(page.locator('#dashboardSection')).toBeVisible();
+  for(let id=1;id<=21;id++){const card=page.locator(`article#cardGuia${id}`);await expect(card).toHaveCount(1);if(id<=9){await expect(card.locator('a.btn-start')).toHaveAttribute('href',`guia${id}.html`);await expect(card.locator('h3')).toContainText(`Guía N°${id}:`);}}
+  await expect(page.locator('article#cardFundamentos')).toHaveCount(0);expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.locator('#cardGuia1').scrollIntoViewIfNeeded();await page.screenshot({path:test.info().outputPath(`portal-${width}.png`)});
+ }
 });

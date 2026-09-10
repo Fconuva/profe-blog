@@ -13,7 +13,12 @@ edit('paes/guias.html',s=>{
  return s;
 });
 edit('paes/index.html',s=>{
- const block=`<!-- foundations:start --><article class="ensayo-card" id="cardFundamentos"><div class="ensayo-card-header"><span class="ensayo-tag">Biblioteca · Tramo inicial</span><h3>Guías 1–9: fundamentos de lectura</h3><p>Explica → Modela → Ejercita N1–N3 → Evalúa → Analiza el error</p><p>Dos textos y doce preguntas por guía. Incluye acceso individual acompañado.</p></div><div style="padding:20px;display:flex;flex-wrap:wrap;gap:12px">${bank.guides.map(g=>`<a class="btn-start" href="guia${g.id}.html">Guía ${g.id} · ${g.title}</a>`).join('')}</div></article><!-- foundations:end -->`;
+ const block=`<!-- foundations:start -->\n${bank.guides.map(g=>`<article class="ensayo-card" id="cardGuia${g.id}">
+ ${g.id==='1'?'<span id="cardFundamentos" aria-hidden="true"></span>':''}
+ <div class="ensayo-card-header"><span class="ensayo-tag">Guía interactiva · Tramo inicial${g.id==='5'?' · Complementaria':''}</span><h3>Guía N°${g.id}: ${g.title}</h3><div class="ensayo-card-meta"><span>2 textos originales</span><span>12 preguntas</span><span>Sin límite de tiempo</span></div></div>
+ <div class="ensayo-status-box"><p class="status-pending" style="color:var(--paes-color-light)">${g.objective}</p><p>Objetivo e instrucciones · Esquema y ejemplo resuelto · Práctica y evaluación</p></div>
+ <div><a class="btn-action btn-start" href="guia${g.id}.html">Iniciar Guía ${g.id}<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a></div>
+ </article>`).join('\n')}\n<!-- foundations:end -->`.replace(/[ \t]+$/gm,'');
  if(s.includes('<!-- foundations:start -->'))return s.replace(/<!-- foundations:start -->[\s\S]*?<!-- foundations:end -->/,block);
  return s.replace('<!-- Sesión Interactiva: Guía N°10 -->',block+'\n        <!-- Sesión Interactiva: Guía N°10 -->');
 });

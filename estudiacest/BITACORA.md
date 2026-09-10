@@ -8,6 +8,20 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: tarjetas individuales y encuadre de guía de aprendizaje
+
+- Solicitud adicional de Francisco: separar las nueve tarjetas agrupadas y completar los elementos visuales, objetivos e instrucciones de cada guía.
+- Portal: nueve artículos independientes `cardGuia1` a `cardGuia9`, con botón y destino propios; se conserva el ancla histórica `cardFundamentos`, el catálogo y las tarjetas G10–G21.
+- Dieciocho páginas, regulares y acompañadas: objetivo observable, tres criterios de logro, instrucciones desplegables, recorrido, activación, esquema conceptual específico y cierre en el cuaderno. El modelado se oculta durante la evaluación independiente. No se alteran textos, claves, intentos ni versión `foundations-v1`.
+- Fuentes reproducibles: `scripts/paes-foundations-teaching.js`, generador, integrador y CSS compartido. Auditoría ampliada exige nueve tarjetas y nueve esquemas distintos. Pruebas incluyen sus anchos 390/1440/3840, navegación, guardado, entrega y administración. Build completo aprobado; cierre de pruebas y publicación se registrarán al finalizar.
+- Se conservan cambios ajenos pendientes en `api/estudiantes.js` y `api/lecturas-login.js`; no forman parte de esta implementación. La publicación depende del guard canónico de despliegue.
+
+## 2026-09-10, PAES 1–9: comprobación final del bloqueo de bancos
+
+- Tercer despliegue terminado con código 0 y READY: `dpl_3qMucPNoCaZMw837J2mr4UKwJT5a`, commit `b5622eda`, alias `https://www.estudiacest.com`.
+- Verificador de producción terminado con código 0: los cuatro módulos privados y sus variantes con barra final y consulta terminan en 404 (doce comprobaciones); 18 páginas HTTP 200; nueve respuestas públicas sin claves; pauta docente protegida.
+- Guardado, recuperación sin copia local, entrega persistida y recarga inmutable comprobados con registro ficticio. Limpieza y ausencia del registro verificadas. No se alteraron liberaciones ni estudiantes reales. Queda resuelta la incidencia de URL documentada en las entradas anteriores.
+
 ## 2026-09-10, PAES 1–9: bloqueo ampliado a variantes de URL
 
 - Segundo despliegue READY: `dpl_6nRqActXtsawqXRYeMhcACDn3TG6`, commit `91b831bb`. Cuatro descargas directas terminaron en 404; 18 páginas y entrega real volvieron a pasar, con limpieza del registro ficticio comprobada.

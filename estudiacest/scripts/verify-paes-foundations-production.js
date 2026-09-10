@@ -5,11 +5,12 @@ const {chromium}=require('@playwright/test');
 const {getAccessToken,requestJson}=require('./firebase-maintenance-db');
 const origin='https://www.estudiacest.com',rut='111111111',nombre='PRUEBA TÉCNICA G1–9',ref=`plataforma_paes/guia_respuestas/1/${rut}`;
 async function main(){
+ const portal=await(await fetch(origin+'/paes/')).text();for(let id=1;id<=9;id++)assert(portal.includes(`id="cardGuia${id}"`));assert(!portal.includes('<article class="ensayo-card" id="cardFundamentos">'));
  for(const name of ['_paes-foundations','_paes-foundations-1-3','_paes-foundations-4-6','_paes-foundations-7-9']){
   for(const suffix of ['', '/', '?v=1']){const r=await fetch(`${origin}/api/${name}.js${suffix}`);assert.equal(r.status,404,'Banco editorial descargable públicamente');}
  }
  for(let id=1;id<=9;id++){
-  for(const suffix of ['','-guiada']){const r=await fetch(`${origin}/paes/guia${id}${suffix}.html`);assert.equal(r.status,200);assert((await r.text()).includes('guia-foundations.js'));}
+  for(const suffix of ['','-guiada']){const r=await fetch(`${origin}/paes/guia${id}${suffix}.html`);assert.equal(r.status,200);const html=await r.text();for(const token of ['guia-foundations.js','Objetivo de la clase','workInstructions','reading-scheme','Cierre de la clase'])assert(html.includes(token));}
   const r=await fetch(`${origin}/api/paes?action=get-foundation&guiaId=${id}&rut=${rut}&mode=regular`);assert.equal(r.status,200);const d=await r.json();assert.equal(d.activity.questions.length,12);assert.equal(d.activity.version,'foundations-v1');d.activity.questions.forEach(q=>assert(!q.key&&!q.answer&&!q.reasons));
  }
  assert.equal((await fetch(origin+'/api/paes?action=admin-get-foundation&guiaId=1')).status,401);

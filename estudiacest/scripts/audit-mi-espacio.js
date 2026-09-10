@@ -183,6 +183,13 @@ exigir(!/nombre:\s*yo\.nombre\.slice/.test(salasApi),
 exigir((salasApi.match(/nombre: yo\.nombre,/g) || []).length === 2,
   'El nombre completo solo va a los dos registros del profesor (bloqueados_chat y alertas_chat).');
 
+// Caso (10-sep-2026): toLocaleString con dateStyle y hour/minute a la vez lanza
+// "Invalid option" en todos los navegadores. En el panel cortaba el aviso
+// emergente y la campanita de los mensajes del profesor desde el 9-sep.
+const panelHtml = leer('estudiantes/dashboard.html');
+exigir(!/\bdateStyle\s*:[^{}]*\b(hour|minute)\s*:|\b(hour|minute)\s*:[^{}]*\bdateStyle\s*:/.test(panelHtml),
+  'dashboard.html mezcla dateStyle con hour/minute en toLocaleString: el navegador lanza un error y los mensajes del profesor no avisan.');
+
 // El sistema viejo no debe seguir referenciado
 const paginas = fs.readdirSync(path.join(root, 'estudiantes')).filter(f => f.endsWith('.html'));
 paginas.forEach(f => {

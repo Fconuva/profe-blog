@@ -8,6 +8,43 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, Salas: "Nombre Apellido" y fuera los perfiles del navegador
+
+- Pedido de Francisco: que en las casas se vea primer nombre y primer apellido.
+  `api/_nombre-visible.js` resuelve el orden de nómina (PATERNO MATERNO
+  NOMBRES) con apellidos compuestos (DE LA FUENTE, DEL RÍO, SAN MARTÍN) y
+  desempata dentro del curso con la inicial del materno. Medido sobre los 882
+  perfiles sin imprimir nombres: 0 resultados vacíos o anómalos; los 10 con
+  apellido compuesto al inicio antes salían con un pedazo del apellido.
+- Al revisarlo aparecieron dos exposiciones del chat, ya corregidas:
+  `presentes` y `chat` guardaban el nombre completo (nodos que leen todos los
+  estudiantes), y la lista "¿A quién visitas?" descargaba el nodo `estudiantes`
+  entero, con RUT, en el navegador. Ahora la lista la arma el servidor
+  (`salas-lista`) y solo devuelve nombre visible y ocupación; el nombre completo
+  queda solo en `bloqueados_chat` y `alertas_chat`, de lectura exclusiva del
+  profesor. En la base había una sola sala de prueba y ningún nombre de nómina:
+  no alcanzó a exponerse nada por el chat.
+- El navegador tiene una copia de la función; `audit-mi-espacio.js` corre ambas
+  con los mismos casos. Probado con mutaciones: el build se detiene si divergen
+  o si la sala vuelve a guardar el nombre completo.
+- Deploy desde un worktree limpio de `origin/main`: la carpeta compartida tenía
+  la Guía 20 de PAES a medio hacer (sin commit) y el deploy seguro la bloqueó,
+  como corresponde. Se verificó antes que la carpeta no tuviera nada publicado
+  fuera de Git (solo los cinco archivos de la Guía 20, que daban 404).
+- Commit `ba7ae9db`. Producción verificada: el `mi-espacio.js` servido usa
+  `salas-lista` y no lee `/estudiantes`; dashboard, Guía 21, rutas guiadas e
+  interrogaciones responden 200.
+
+**Pendiente grave, anterior al chat, esperando decisión de Francisco:**
+`ranking.html`, `arena.html` y `arena-gato.html` descargan el nodo `estudiantes`
+completo en el navegador de cualquier estudiante, y la regla `.read` de ese
+nodo lo permite. Cada perfil trae el RUT, el usuario es el RUT y la clave
+inicial son sus seis primeros dígitos; 780 de 882 estudiantes no la han
+cambiado. Propuesta: un endpoint que devuelva solo nombre visible y curso para
+esas tres páginas, y después cerrar la regla (`.read` del nodo solo admin;
+cada `$uid` solo para sí mismo o admin), comparando antes las reglas vivas.
+También hay un estudiante de 2°A HC con tres perfiles con el mismo RUT.
+
 ## 2026-09-10, Mi espacio: visitas, chat con filtro, teclado, terreno y asientos
 
 - Chat y visitas dentro de la pestaña Mi casa del panel: hasta 30 personas por

@@ -8,6 +8,14 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: ampliaciones e imágenes IA publicadas y verificadas
+
+- Publicado el contenido del commit `50003aec` mediante `npm run deploy:prod:safe`, desde la fuente canónica, conservando el cierre paralelo `80192853`. Despliegue `dpl_8g9KYf21KE2TfkNC9QZvMQ2be9b1`: estado Ready y dominio `www.estudiacest.com` comprobados. La CLI perdió la conexión de seguimiento con ECONNRESET; la construcción continuó en Vercel y se confirmó su finalización con una inspección de solo lectura, sin duplicar el despliegue.
+- Nueve ilustraciones originales de IA y 5.455 palabras de enseñanza incorporadas en las 18 páginas regulares y acompañadas. Cada imagen tiene texto alternativo, explicación, consigna de observación y crédito; cada ampliación desarrolla conceptos, estrategia razonada, modelado, error frecuente, comprobación y transferencia. Recursos y prompts reproducibles en `paes/imagenes/fundamentos/`.
+- Dos rondas completas de ocho pruebas Playwright aprobadas, incluida la comprobación final de teclado y versión acompañada. Build con 203 recursos críticos y 44 contratos aprobado. Guard canónico repetido después de publicar: 203 recursos correctos. Capturas locales y públicas inspeccionadas en 390, 1440 y 3840 px, sin desbordes.
+- Verificación pública: 18 páginas HTTP 200; nueve imágenes WebP con hash idéntico al archivo local; nueve bancos sin claves públicas; fuentes privadas y pauta docente protegidas. Flujo real de G1 con identidad ficticia: guardado, recuperación después de eliminar la copia local, entrega persistida con ambas banderas y fechas coherentes, y recarga sin edición ni resultados anticipados. Registro ficticio eliminado y ausencia comprobada. Sin cambios a intentos de estudiantes reales, liberaciones, textos evaluados, preguntas, claves ni versión `foundations-v1`.
+- Acceso para Francisco: `https://www.estudiacest.com/paes/#cardGuia1`. Abrir cualquier guía 1–9 y su sección de enseñanza para revisar la imagen y desplegar los conceptos, pasos y ejemplos. Se preservan tarjetas individuales, G10–G21 y planificación G22–G32. Continúa pendiente el pilotaje y cotejo pedagógico docente antes del uso sumativo; no se declara validación editorial independiente.
+
 ## 2026-09-10, Datos de estudiantes fuera de la web e ingreso por RUT cerrado
 
 - **Qué se encontró.** Con `"outputDirectory": "."` Vercel publica la carpeta

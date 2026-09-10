@@ -55,18 +55,16 @@ test('reconciled cash and no-cobrar states cannot inflate receivables', () => {
 });
 
 test('collection agenda uses the reconciled portfolio ledger and keeps non-collectible balances separate', () => {
-  assert.match(admin, /p\.compromisoPago \|\| \{\}/);
-  assert.match(admin, /_cartera\.tramoCobro/);
-  assert.match(admin, /_cartera\.proximoCobroFecha/);
+  const f = require('../admin/finanzas.js');
+  const base = {uid:'test', saldo:99990};
+  assert.equal(f.agenda({cartera:{tramoCobro:'esperar_m1'}},base,'2026-09-10')[0].bucket,'esperar-m1');
+  assert.equal(f.agenda({compromisoPago:{estado:'pausado'}},base,'2026-09-10')[0].bucket,'pausado');
+  assert.equal(f.agenda({compromisoPago:{estado:'fecha-incompleta'}},base,'2026-09-10')[0].bucket,'sin-fecha');
+  assert.deepEqual(f.agenda({noCobrar:true},base,'2026-09-10'),[]);
   assert.match(admin, /Esperar entrega M1/);
   assert.match(admin, /Cobrar ahora/);
   assert.match(admin, /Cobro pausado/);
-  assert.match(admin, /Las fechas de clase grabada no influyen/);
-  assert.match(admin, /_cp\.estado === 'confirmado'/);
-  assert.match(admin, /_cp\.estado === 'pausado'/);
-  assert.match(admin, /_cp\.estado === 'fecha-incompleta'/);
-  assert.match(admin, /_cartera\.tramoCobro === 'esperar_m1'/);
-  assert.match(admin, /_agendaPersonas/);
+  assert.equal(f.agenda({fechaGrabacion:'2026-09-20'},base,'2026-09-10')[0].fecha,'');
   assert.doesNotMatch(admin, /fechaGrabacion[^\n]{0,120}agenda/i);
 });
 
@@ -74,23 +72,33 @@ test('gross receivables are not confused with scheduled instalments', () => {
   assert.match(admin, /window\._resumenCarteraBruta/);
   assert.match(admin, /saldoTotal: pendingRevenue \+ sinPagarMonto/);
   assert.match(admin, /Cartera bruta:/);
-  assert.match(admin, /no confundir esa suma operativa con el saldo total/);
-  assert.match(admin, /saldos de quienes ya abonaron/);
+  const {render} = require('./helpers/admin-dashboard.cjs');
+  const {nodes,context} = render({users:{a:{nombre:'Prueba'}},portafolios:{a:{plan:'modulo1',cartera:{saldo:79990,pagado:0,fuentePago:'_gestion/LIBRO_DE_CAJA.jsonl'},compromisoPago:{estado:'confirmado',pagos:[{fecha:'2026-09-20',monto:30000}]}}}});
+  assert.equal(Object.values(context.window._agendaCobros).flat().reduce((s,e)=>s+e.monto,0),79990);
+  assert.match(nodes['agenda-cobros-explicacion'].textContent,/1 personas/);
+  assert.match(nodes['agenda-cobros-explicacion'].textContent,/2 partidas/);
+  assert.match(admin, /Saldos de quienes ya abonaron/);
   assert.doesNotMatch(admin, /Comprometido · te deben la 2ª cuota/);
 });
 
 test('financial potential respects each registered plan instead of inflating module-only clients', () => {
-  assert.match(admin, /sinPagarMonto \+= price > 0 \? price : 199990/);
+  const {render} = require('./helpers/admin-dashboard.cjs');
+  const {context} = render({users:{a:{nombre:'Módulo'},b:{nombre:'Sin precio'}},portafolios:{a:{plan:'modulo1'}}});
+  assert.equal(context.window._resumenCarteraBruta.potencialMonto,79990);
+  assert.equal(context.window._resumenCarteraBruta.potencialPersonas,1);
   assert.match(admin, /var potencial = totalRevenue \+ sinPagarMonto/);
   assert.match(admin, /potencial - planPaidRevenue/);
   assert.doesNotMatch(admin, /sinPagar \* 199990/);
-  assert.match(admin, /según el valor de su plan/);
   assert.match(admin, /formatCLP\(x\.valor\)/);
   assert.doesNotMatch(admin, /a \$199\.990 cada uno/);
 });
 
 test('paused collections never leak into follow-up or no-response alerts', () => {
-  assert.match(admin, /if \(_cp\.estado !== 'pausado'\)/);
+  const {render} = require('./helpers/admin-dashboard.cjs');
+  const {nodes,context} = render({users:{a:{nombre:'Pausa'}},portafolios:{a:{plan:'completo',cartera:{saldo:99990,respuestaCobro:'NO_RESPONDIO'},compromisoPago:{estado:'pausado'}}}});
+  assert.equal(context.window._segList.length,0);
+  assert.equal(nodes['alerta-cobro-card'].style.display,'none');
+  assert.equal(context.window._agendaCobros.pausados.length,1);
   assert.match(admin, /_respuestaCartera === 'NO_RESPONDIO'/);
   assert.match(admin, /_respuestaCartera === 'CUBIERTO_POR_ABONO'/);
   assert.match(admin, /_respuestaCartera === 'SIN_COBRO_REGISTRADO'/);

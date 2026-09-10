@@ -84,6 +84,8 @@ Codex la estaba construyendo y se cayó a medio camino; el trabajo quedó sin co
 
 El proyecto Vercel no está conectado a GitHub: un push a main no publica nada. Los recursos nuevos entraron con `allowMissingInProduction: true` y, una vez verificados en producción, el manifiesto volvió a protegerlos sin la excepción.
 
+**Bloqueo de guías.** La Guía 21 quedó publicada y verificada con `g21` todavía en `plataforma_paes/guias_config/blocked`, herencia del bloqueo masivo de guías futuras del 20 de agosto. Se quitó solo esa clave con `firebase database:remove` (lectura antes, 32 claves; después, 31; relectura por la API pública). Mientras tanto la cuenta admin guardaba la misma configuración desde el panel y quitó `g17`; el panel reemplaza el mapa completo al guardar, así que hay que recargarlo antes de volver a guardar para no rebloquear la 21. Lección: publicar la guía del día no la habilita; hay que leer `get-guias-config` y quitar su id.
+
 ---
 
 ## 2026-09-09, regularización general de entregas y reapertura SIMCE U3

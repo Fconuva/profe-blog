@@ -181,6 +181,27 @@
         let activeTab = 'programa';
         let myPair = [];
 
+
+    // Ranking y arena ya no leen el nodo `estudiantes`: cada perfil trae RUT,
+    // correo y teléfono, y la clave inicial sale del RUT. El servidor devuelve
+    // solo nombre visible ("Nombre Apellido"), curso y programa.
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+    function perfilesPublicos() {
+        return auth.currentUser.getIdToken().then(function (token) {
+            return fetch('/api/estudiantes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ action: 'perfiles-publicos' })
+            });
+        }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (j) {
+                if (!r.ok || !j.ok) throw new Error(j.error || 'No se pudo cargar la lista de compañeros');
+                return j.perfiles || {};
+            });
+        });
+    }
+
         auth.onAuthStateChanged(async (user) => {
             if (!user) { window.location.href = 'index.html'; return; }
             currentUid = user.uid;
@@ -189,7 +210,7 @@
             try {
                 const [studentSnap, allEstSnap, avatarSnap, arenaRecSnap] = await Promise.all([
                     db.ref(BASE + '/estudiantes/' + user.uid).once('value'),
-                    db.ref(BASE + '/estudiantes').once('value'),
+                    perfilesPublicos(),
                     db.ref(BASE + '/avatar').once('value'),
                     db.ref(BASE + '/arena/records').once('value')
                 ]);
@@ -203,7 +224,7 @@
                 myPair = RANKING_PAIRS[currentCurso] || [currentCurso];
 
                 const avatars = avatarSnap.val() || {};
-                const allEst = allEstSnap.val() || {};
+                const allEst = allEstSnap || {};
 
                 // Build student list with XP/level data (exclude admin demo account)
                 allStudents = [];
@@ -359,7 +380,7 @@
                         '<div class="podium-base">' +
                         '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
                         s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
-                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-name">' + esc(s.nombre) + '</div>' +
                         '<div class="podium-level" style="background:' + s.bg + '">Nv. ' + s.level + '</div>' +
                         '<div class="podium-xp">' + s.xp.toLocaleString() + ' XP</div>' +
                         '</div></div>';
@@ -385,7 +406,7 @@
                     '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
                     '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
                     '<div class="rank-info">' +
-                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-name">' + esc(s.nombre) + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
                     '<div class="rank-sub">' + s.title + ' · ' + s.xp.toLocaleString() + ' XP</div>' +
                     '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + s.progress + '%;background:' + s.color + '"></div></div>' +
                     '<span class="pb-text">Nv. ' + s.level + '</span></div>' +
@@ -441,7 +462,7 @@
                         '<div class="podium-base">' +
                         '<div class="podium-avatar" style="background:' + s.bg + ';margin:0 auto 6px">' +
                         s.emoji + '<span class="podium-medal">' + medal + '</span></div>' +
-                        '<div class="podium-name">' + s.nombre + '</div>' +
+                        '<div class="podium-name">' + esc(s.nombre) + '</div>' +
                         '<div class="podium-level" style="background:linear-gradient(135deg,#ef4444,#f59e0b)">' + s.arenaWins + 'W</div>' +
                         '<div class="podium-xp">' + wr + '% · racha ' + s.arenaStreak + '</div>' +
                         '</div></div>';
@@ -466,7 +487,7 @@
                     '<div class="rank-pos' + (pos <= 10 ? ' top' : '') + '">' + pos + '</div>' +
                     '<div class="rank-ava" style="background:' + s.bg + '">' + s.emoji + '</div>' +
                     '<div class="rank-info">' +
-                    '<div class="rank-name">' + s.nombre + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
+                    '<div class="rank-name">' + esc(s.nombre) + (isMe ? ' <span style="font-size:10px;color:#60a5fa">(tú)</span>' : '') + '</div>' +
                     '<div class="rank-sub">' + s.arenaWins + 'W / ' + s.arenaLosses + 'L · ' + wr + '% winrate</div>' +
                     '<div class="power-bar"><div class="pb-bg"><div class="pb-fill" style="width:' + wr + '%;background:linear-gradient(90deg,#ef4444,#f59e0b)"></div></div>' +
                     '<span class="pb-text">🔥 ' + s.arenaStreak + '</span></div>' +

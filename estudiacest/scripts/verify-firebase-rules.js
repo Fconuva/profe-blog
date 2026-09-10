@@ -78,6 +78,41 @@ if (!canonico) {
       fallas.push(`${nombre}: .read quedo en "auth != null", que deja entrar a cualquier cuenta. Debe exigir estudiante registrado o admin.`);
     }
   }
+
+  // Caso (10-sep-2026): el nodo `estudiantes` completo lo podía leer cualquier
+  // estudiante registrado, y ranking y arena lo descargaban en el navegador.
+  // Cada perfil trae RUT, correo, teléfono y apoderado; el usuario es el RUT y la
+  // clave inicial son sus seis primeros dígitos (780 de 882 sin cambiarla).
+  // El nodo completo es solo para admin; cada perfil, solo para su dueño o admin.
+  const est = pe.estudiantes || {};
+  const ES_ADMIN = "root.child('plataforma_estudiantes/admins').child(auth.uid).val() === true";
+  if (est['.read'] !== `auth != null && ${ES_ADMIN}`) {
+    fallas.push('estudiantes: el nodo completo debe leerlo solo un admin. Un estudiante que lo lee obtiene el RUT de todos, y con él su usuario y su clave inicial.');
+  }
+  if (!est.$uid || est.$uid['.read'] !== `auth != null && (auth.uid === $uid || ${ES_ADMIN})`) {
+    fallas.push('estudiantes/$uid: cada perfil debe leerlo solo su dueño o un admin.');
+  }
+
+  // Con esa regla, una página de estudiante que lea el nodo completo falla con
+  // PERMISSION_DENIED. Los nombres de los demás se piden a la API
+  // (acción perfiles-publicos). Los paneles de profesor sí pueden leerlo.
+  const SALTAR = new Set(['node_modules', '.git', '.vercel', 'api', 'scripts', 'backups', 'scratch', 'test-results', '.cache']);
+  const PANELES = [/[\\/]adminprofe[\\/]/, /[\\/]admin[\\/]/];
+  const LECTURA_NODO = /ref\(\s*[^)]*['"`]\/?estudiantes['"`]\s*\)|['"`]plataforma_estudiantes\/estudiantes['"`]\s*\)|\$\{\s*BASE\s*\}\/estudiantes`\s*\)/;
+  const recorrer = (dir) => {
+    for (const nombre of fs.readdirSync(dir)) {
+      const ruta = path.join(dir, nombre);
+      const stat = fs.statSync(ruta);
+      if (stat.isDirectory()) { if (!SALTAR.has(nombre)) recorrer(ruta); continue; }
+      if (!/\.(html|js)$/.test(nombre) || /^_tmp|^push_sesion_/.test(nombre)) continue;
+      if (PANELES.some((r) => r.test(ruta))) continue;
+      const texto = fs.readFileSync(ruta, 'utf8');
+      if (LECTURA_NODO.test(texto)) {
+        fallas.push(`${path.relative(ROOT, ruta)} lee el nodo estudiantes completo desde el navegador: con la regla cerrada se rompe, y además expone el RUT. Usa la acción perfiles-publicos de /api/estudiantes.`);
+      }
+    }
+  };
+  recorrer(ROOT);
 }
 
 if (fs.existsSync(COPIA)) {

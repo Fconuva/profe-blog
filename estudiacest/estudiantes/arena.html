@@ -419,13 +419,34 @@
         document.getElementById('battlesLeft').textContent = Math.max(0, MAX_BATTLES_PER_DAY - todayBattles);
     }
 
+
+    // Ranking y arena ya no leen el nodo `estudiantes`: cada perfil trae RUT,
+    // correo y teléfono, y la clave inicial sale del RUT. El servidor devuelve
+    // solo nombre visible ("Nombre Apellido"), curso y programa.
+    function esc(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) {
+        return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+    function perfilesPublicos() {
+        return auth.currentUser.getIdToken().then(function (token) {
+            return fetch('/api/estudiantes', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ action: 'perfiles-publicos' })
+            });
+        }).then(function (r) {
+            return r.json().catch(function () { return {}; }).then(function (j) {
+                if (!r.ok || !j.ok) throw new Error(j.error || 'No se pudo cargar la lista de compañeros');
+                return j.perfiles || {};
+            });
+        });
+    }
+
     async function loadOpponents() {
         var pairCursos = getCoursePair(currentCurso);
         var [estSnap, avSnap] = await Promise.all([
-            db.ref(BASE + '/estudiantes').once('value'),
+            perfilesPublicos(),
             db.ref(BASE + '/avatar').once('value')
         ]);
-        var allEst = estSnap.val() || {};
+        var allEst = estSnap || {};
         var allAv = avSnap.val() || {};
         opponents = [];
         for (var uid in allEst) {
@@ -487,7 +508,7 @@
                 : '';
             return '<div class="opp-card' + disabled + '" ' + (noFights ? '' : 'onclick="startBattle(\'' + o.uid + '\')"') + '>' +
                 '<div class="opp-avatar" data-uid="' + o.uid + '"></div>' +
-                '<div class="opp-info"><div class="opp-name">' + o.nombre + '</div>' +
+                '<div class="opp-info"><div class="opp-name">' + esc(o.nombre) + '</div>' +
                 '<div class="opp-meta">' + (CURSO_LABELS[o.curso]||o.curso) + ' · ' + o.level.title + '</div>' +
                 rewardTag +
                 '<div class="opp-stats"><span>🧠 ' + o.stats.comprension + '</span><span>🔥 ' + o.stats.constancia + '</span><span>⚡ ' + o.stats.velocidad + '</span></div></div>' +

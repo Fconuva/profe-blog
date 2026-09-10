@@ -943,6 +943,9 @@ async function handleBulkCreate(req, res, decoded) {
 // Salas y chat de Mi espacio. Vive como módulo interno y no como función propia
 // porque Vercel Hobby admite 12 funciones y ya están ocupadas.
 const SALAS = require('./_salas.js');
+// Nombre visible, curso y programa de los demás, para ranking y arena: el
+// navegador ya no lee el nodo `estudiantes` (trae RUT, correo y teléfono).
+const PERFILES = require('./_perfiles-publicos.js');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
@@ -961,6 +964,7 @@ module.exports = async (req, res) => {
         if (action === 'simce-u3s9-classstats') return await handleU3S9Classstats(req, res);
         if (action.startsWith('personal-guided-')) return await handlePersonalGuided(req, res, action);
         if (action.startsWith('salas-')) return await SALAS.manejar(req, res, action.slice('salas-'.length), db, auth);
+        if (action === 'perfiles-publicos') return await PERFILES.manejar(req, res, db, auth);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

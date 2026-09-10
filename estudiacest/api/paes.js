@@ -565,7 +565,13 @@ async function handleGetGuiaState(req, res) {
     };
     // Con reenvío abierto, lo enviado vuelve editable y sin clave ni resultado:
     // quien vuelve a responder no ve la pauta mientras responde.
-    if (attempt.completada && await reenvioAbierto(guideId)) {
+    // Caso (10-sep-2026): las guías 16–21 releen el estado justo después de
+    // entregar y exigen completada; con la guía ya editable, mostraban "No se
+    // confirmó la entrega" aunque había quedado guardada. Una entrega de los
+    // últimos minutos se informa como entregada; después vuelve a ser editable.
+    const ultimaEntrega = Math.max(Number(value.submittedAt) || 0, Number(value.reenviadoAt) || 0);
+    const recienEntregada = Date.now() - ultimaEntrega < RECIEN_ENTREGADA_MS;
+    if (attempt.completada && !recienEntregada && await reenvioAbierto(guideId)) {
         const b = value.reenvioBorrador || null;
         Object.assign(attempt, {
             answers: normalizeStoredAnswers((b && b.answers) || value.answers),
@@ -716,6 +722,7 @@ async function readGuiasConfig() {
 // anterior (con su nota) queda en intentosAnteriores; el autoguardado de quien
 // vuelve a responder va a reenvioBorrador, así abrir la guía nunca deshace una
 // entrega que no se vuelve a enviar.
+const RECIEN_ENTREGADA_MS = 5 * 60 * 1000;
 async function reenvioAbierto(guideId) {
     const snap = await db.ref(`${BASE}/guias_config/reenvio/g${String(guideId)}`).once('value');
     return snap.val() === true;

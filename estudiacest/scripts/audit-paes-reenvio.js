@@ -36,6 +36,13 @@ exigir(/if \(!isPaesTestRut\(rutLimpio\) && current && \(current\.status === 'se
 exigir(/reenvioAbierto\(guideId\)/.test(cuerpo('handleGetGuiaState')) && /answerKey: null, feedback: null, reenvio: true/.test(cuerpo('handleGetGuiaState')),
   'get-guia-state debe devolver lo enviado como editable y sin pauta cuando el reenvío está abierto.');
 exigir(/reenvioAbierto\(guiaId\)/.test(cuerpo('handleGetGuiaDraft')), 'get-guia-draft (guías 10–13) debe respetar el reenvío.');
+// Caso (10-sep-2026): 16–21 releen el estado tras entregar y exigen completada.
+exigir(/if \(attempt\.completada && !recienEntregada && await reenvioAbierto\(guideId\)\)/.test(cuerpo('handleGetGuiaState')) &&
+  /const RECIEN_ENTREGADA_MS = \d+ \* 60 \* 1000;/.test(api),
+  'get-guia-state debe informar como entregada una entrega recién hecha: las guías 16–21 releen el estado para confirmar.');
+for (const archivo of ['paes/guia16.html', 'paes/guia17.html', 'paes/guia18.html', 'paes/guia19.html', 'paes/js/guia20.js', 'paes/js/guia21.js']) {
+  exigir(/readback\.attempt\.completada\s*!==\s*true/.test(leer(archivo)), `${archivo}: cambió su relectura; revisar que el reenvío siga confirmando la entrega.`);
+}
 exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleSubmitGuia14')) && /ref\.child\('reenvioBorrador'\)/.test(cuerpo('handleSubmitGuia14')),
   'El ensayo de la 14 tiene su propia ruta de envío y también debe respetar el reenvío.');
 exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleGetGuia14State')), 'get-guia14-state debe respetar el reenvío.');

@@ -111,18 +111,17 @@ assert(/const SESIONES_LIBRO = \[[^\]]*\b19\b[^\]]*\]/.test(admin), 'El libro de
 assert(/data-guia-id="g19"/.test(materials), 'La página de materiales no incluye G19.');
 
 const card18 = portal.indexOf('id="cardGuia18"');
-const card19 = portal.indexOf('id="cardGuia19"');
-assert(card18 >= 0 && card18 < card19, 'El portal no ordena G18 antes de G19.');
+const card19Index = portal.indexOf('id="cardGuia19"');
+assert(card18 >= 0 && card18 < card19Index, 'El portal no ordena G18 antes de G19.');
 assert((portal.match(/<span class="ensayo-tag">Sesión actual<\/span>/g) || []).length === 1, 'Debe existir una sola tarjeta marcada como Sesión actual.');
-const previousCard19 = portal.match(/<article\b[^>]*id="cardGuia19"[^>]*>([\s\S]*?)<\/article>/);
-assert(previousCard19 && /<span class="ensayo-tag">Sesión anterior<\/span>/.test(previousCard19[1]) && /href="guia19\.html"/.test(previousCard19[1]), 'G19 debe conservarse como sesión anterior con acceso a guia19.html.');
+const card19 = portal.match(/<article\b[^>]*id="cardGuia19"[^>]*>([\s\S]*?)<\/article>/);
+assert(card19 && /<span class="ensayo-tag">Sesión interactiva<\/span>/.test(card19[1]) && /href="guia19\.html"/.test(card19[1]), 'G19 debe conservarse como sesión interactiva con acceso a guia19.html.');
 const currentCard21 = portal.match(/<article\b[^>]*id="cardGuia21"[^>]*>([\s\S]*?)<\/article>/);
 assert(currentCard21 && /<span class="ensayo-tag">Sesión actual<\/span>/.test(currentCard21[1]), 'G21 debe existir como sesión actual, no como tarjeta futura.');
 assert(currentCard21 && /href="guia21\.html"/.test(currentCard21[1]), 'La sesión actual debe abrir guia21.html.');
 assert(currentCard21 && /24 preguntas/.test(currentCard21[1]) && /3 textos/.test(currentCard21[1]) && /datetime="2026-09-10"/.test(currentCard21[1]), 'G21 debe anunciar 24 preguntas, 3 textos y fecha 10 de septiembre de 2026.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="21"/.test(portal), 'G21 no puede duplicarse como sesión futura.');
-for (let guide = 20; guide <= 31; guide += 1) {
-  if (guide === 21) continue;
+for (let guide = 22; guide <= 31; guide += 1) {
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }
 

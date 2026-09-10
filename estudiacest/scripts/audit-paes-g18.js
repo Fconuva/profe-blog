@@ -117,7 +117,7 @@ const card18 = portal.indexOf('id="cardGuia18"');
 const card19 = portal.indexOf('id="cardGuia19"');
 assert(card16 >= 0 && card16 < card17 && card17 < card18 && card18 < card19, 'El portal no ordena las tarjetas G16 → G17 → G18 → G19.');
 assert((portal.match(/<span class="ensayo-tag">Sesión actual<\/span>/g) || []).length === 1, 'Debe existir una sola tarjeta marcada como Sesión actual.');
-for (let guide = 20; guide <= 31; guide += 1) {
+for (let guide = 22; guide <= 31; guide += 1) {
   if (guide === 21) continue;
   assert(portal.includes(`Guía ${guide}</span>`), `Falta la tarjeta futura gris de la Guía ${guide}.`);
 }

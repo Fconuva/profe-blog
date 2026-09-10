@@ -17,6 +17,7 @@ const api = read('api/paes.js');
 const catalog = read('api/_paes-guided-catalog.js');
 const admin = read('paes/admin/index.html');
 const portal = read('paes/index.html');
+const materials = read('paes/guias.html');
 const contract = JSON.parse(read('scripts/class-submission-contract.json'));
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 
@@ -77,7 +78,7 @@ const counts = Object.values(keyLetters);
 assert(counts.length === 4 && Math.max(...counts) - Math.min(...counts) <= 2, `Distribución de claves desequilibrada: ${JSON.stringify(keyLetters)}.`);
 assert(/require\('\.\/_paes-g21'\)/.test(api) && /'21':\s*G21\.key/.test(api) && /'21':\s*G21\.feedback/.test(api), 'api/paes.js no carga la clave y la retroalimentación de G21.');
 assert(/'21':\s*\{\s*1:'[A-D]'/.test(catalog), 'El catálogo guiado debe incluir la 21; de él depende la entrega con preguntas pendientes.');
-assert(/guideId === '21'/.test(api), 'admin-get-results no adjunta la clave de G21 para el panel.');
+assert(/INTERACTIVE_GUIDE_KEYS\[guideId\]/.test(api), 'admin-get-results no adjunta la clave interactiva para el panel.');
 
 // Mapa de habilidades del admin
 const adminMatch = admin.match(/'21':\s*\{\s*titulo:[^\n]*\n\s*total:\s*24,\s*\n\s*key:\s*\{\},\s*\n\s*skill:\s*(\{[^}]*\})/);
@@ -110,10 +111,11 @@ assert(card21 && /Sesión actual/.test(card21[1]) && /href="guia21\.html"/.test(
 assert(card21 && /24 preguntas/.test(card21[1]) && /datetime="2026-09-10"/.test(card21[1]), 'La tarjeta de G21 no anuncia 24 preguntas y la fecha 10 de septiembre.');
 assert(!/<article\b[^>]*class="upcoming-card"[^>]*data-guided-guide="21"/.test(portal), 'G21 sigue duplicada como sesión futura.');
 assert(/for \(let n = 10; n <= 21; n\+\+\)/.test(portal), 'El bloqueo de guías del portal no cubre g21.');
-assert(/\[17, 18, 19, 21\]/.test(portal) && exists('paes/guia21-guiada.html'), 'La ruta individual de G21 no está enlazada desde el portal.');
+assert(/\[17, 18, 19, 20, 21\]/.test(portal) && exists('paes/guia21-guiada.html'), 'La ruta individual de G21 no está enlazada desde el portal.');
 
 // Contrato y manifiesto
 assert(contract.files.some((entry) => entry.path === 'paes/guia21.html' && entry.storage === 'api'), 'G21 no está protegida por el contrato de entrega.');
+assert(/data-guia-id="g21"/.test(materials) && /href="guia21\.html"/.test(materials), 'El catalogo de materiales no ofrece la Guia 21.');
 for (const requiredPath of ['paes/guia21.html', 'paes/css/guia21.css', 'paes/js/guia21.js', 'paes/data/guia21.json', 'paes/assets/guia21/archivo.png', 'paes/assets/guia21/transporte.png', 'paes/assets/guia21/reparar.png']) {
   assert(manifest.criticalFiles.some((entry) => entry.path === requiredPath), `El manifiesto de release no protege ${requiredPath}.`);
 }
@@ -124,3 +126,4 @@ if (failures.length) {
   process.exit(1);
 }
 console.log(`PAES G21 auditada: 3 textos (${wordCounts.join(', ')} palabras), 24 reactivos, claves ${JSON.stringify(keyLetters)}, habilidades ${JSON.stringify(skills)}, entrega con pendientes coherente con el servidor y portal en sesión actual.`);
+require('./audit-paes-g20');

@@ -1,6 +1,8 @@
 'use strict';
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const b=require('../api/_paes-foundations');let total=0;const issues=[];
+const routing=JSON.parse(fs.readFileSync(path.join(__dirname,'../vercel.json'),'utf8'));
+for(const name of ['_paes-foundations','_paes-foundations-1-3','_paes-foundations-4-6','_paes-foundations-7-9'])assert(routing.redirects.some(r=>r.source===`/api/${name}.js`&&r.destination==='/api/paes?action=private-source'&&r.permanent===false),'Falta bloqueo de descarga del banco editorial anterior al sistema de archivos');
 for(const g of b.guides){
  assert.equal(g.texts.length,2);assert.equal(g.texts[0].guided.length>0,true);
  for(const [s,t] of g.texts.entries()){

@@ -916,6 +916,10 @@ module.exports = async (req, res) => {
 
     try {
         const action = req.query.action || req.body.action;
+        if (action === 'private-source') {
+            res.setHeader('Cache-Control', 'private, no-store');
+            return res.status(404).json({ error: 'Recurso no disponible' });
+        }
 
         // Public actions
         if (action === 'submit') return await handleSubmit(req, res);

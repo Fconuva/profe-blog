@@ -8,6 +8,21 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: comprobación adicional de archivos internos
+
+- La comprobación directa posterior detectó que `outputDirectory: "."` servía los cuatro módulos auxiliares nuevos como JavaScript estático. La API pública sí ocultaba las claves, pero esa comprobación no bastaba para afirmar privacidad del banco.
+- Corrección: cuatro redirecciones explícitas de Vercel interceptan la descarga antes del sistema de archivos y terminan en 404 desde la API, sin afectar la importación interna. No se usan rewrites, cuya precedencia no bloquea archivos existentes (documentación: https://vercel.com/docs/project-configuration/vercel-json). Auditoría de build exige las reglas y verificador de producción exige 404 antes de iniciar su prueba de entrega.
+- Pendiente al escribir esta entrada: nuevo despliegue seguro y repetición completa de la comprobación en producción. Se conserva el antecedente del primer despliegue abajo; la comprobación posterior manda sobre la afirmación inicial de privacidad.
+
+## 2026-09-10, PAES 1–9: primera publicación y entrega verificadas
+
+- Implementación guardada y enviada a `origin/main`: `ff486d1b`. Despliegue mediante `npm run deploy:prod:safe`, terminado con código 0 y estado READY: `dpl_EaXNu7v5C7NbWLsEnnyLDJo9iE6Z`, asociado a `https://www.estudiacest.com`.
+- Build de producción aprobado: 108 reactivos iniciales, 18 páginas, 44 contratos de clase y 194 recursos críticos, además de las auditorías transversales existentes.
+- `node scripts/verify-paes-foundations-production.js` terminó con código 0: las 18 páginas responden HTTP 200; los nueve bancos públicos no entregan claves; la pauta docente exige autenticación.
+- Prueba real y acotada en G1 con identidad ficticia: guardado en Firebase, recuperación después de borrar la copia local, entrega con pendientes, doble bandera y marcas de tiempo coherentes, versión correcta y recarga sin edición ni resultados anticipados. Registro ficticio eliminado y ausencia comprobada. No se cambiaron bloqueos, liberaciones ni datos de estudiantes reales.
+- Captura móvil de producción inspeccionada: texto legible, tildes correctas y sin desborde horizontal. Acceso para Francisco: `https://www.estudiacest.com/paes/#cardFundamentos`; pautas en `https://www.estudiacest.com/paes/admin/`, seleccionar guía y usar «Pauta G1–9».
+- Se conservan G10–G21, PDF históricos y planificación G22–G32. Pendiente pedagógico explícito: revisión docente de las pautas y pilotaje antes de uso sumativo; no se declara revisión editorial independiente.
+
 ## 2026-09-10, PAES: reconstrucción interactiva de las guías 1–9
 
 - Autorización: Francisco pidió construir G1–G9 y corregir las existentes para unificar el formato actual. Se preservan los PDF históricos y G10–G21; G22–G32 permanecen planificadas.

@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: "No se confirmó la entrega" en 16–21 con el reenvío abierto
+
+- **Reporte de Francisco:** en la 18, al entregar salía "No se confirmó la
+  entrega: no quedó confirmada en el registro".
+- **Causa (mía):** las guías 16–21 releen el estado justo después de entregar
+  y exigen `completada` (20 y 21 también `submitted`). Con el reenvío abierto,
+  `get-guia-state` devolvía lo enviado como editable, así que la relectura
+  fallaba aunque la entrega sí quedaba guardada. En la prueba anterior se
+  probó el servidor por API y la G12 (que no relee), no una entrega en 16–21.
+- **Contención:** reenvío cerrado en g16–g21 mientras se arreglaba (g12–g15
+  siguieron abiertas).
+- **Arreglo (commit 9b6412e2):** una entrega de los últimos 5 minutos se
+  informa como entregada; pasado ese plazo vuelve a ser editable. Probado en
+  producción con la cuenta de prueba y el reenvío abierto: G18 entrega y
+  confirma, a los 10 minutos simulados vuelve editable con su respuesta y el
+  reenvío confirma; G21 y G16 entregan y confirman. Consola sin errores.
+  Reenvío reabierto en g12–g21. `audit-paes-reenvio` vigila la ventana y la
+  relectura de las seis páginas.
+- **Datos:** desde las 12:25, 17 entregas en 16–21, todas guardadas como
+  enviadas; ninguna se perdió. Ya hay reenvíos en 13, 14, 15, 17, 18 y 19.
+- Francisco confirma que todos pueden volver a entrar y responder hasta el
+  recálculo de notas del 23-sep-2026; la nota se toma de la última entrega y
+  las anteriores quedan en `intentosAnteriores`.
+
 ## 2026-09-10, PAES: guías 12–21 habilitadas con reenvío y botón de enviar arreglado
 
 - **Pedido de Francisco:** dejar habilitadas desde la 12 para volver a

@@ -6,6 +6,7 @@
 
 const admin = require('firebase-admin');
 const { GUIDED_GUIDE_KEYS, GUIDED_GUIDE_FEEDBACK } = require('./_paes-guided-catalog');
+const G21 = require('./_paes-g21');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
@@ -187,11 +188,13 @@ const G19_FEEDBACK = {
 };
 
 const INTERACTIVE_GUIDE_FEEDBACK = {
+    '21': G21.feedback,
     '18': G18_FEEDBACK,
     '19': G19_FEEDBACK
 };
 
 const INTERACTIVE_GUIDE_KEYS = {
+    '21': G21.key,
     '10': G10_KEY,
     '11': G11_KEY,
     '12': G12_KEY,
@@ -746,6 +749,8 @@ async function handleAdminGetResults(req, res) {
                 record.answers = normalizeStoredAnswers(record.answers);
                 if (record.variant === GUIDED_VARIANT && GUIDED_GUIDE_KEYS[guideId]) {
                     record.adminKey = GUIDED_GUIDE_KEYS[guideId];
+                } else if (guideId === '21') {
+                    record.adminKey = G21.key;
                 }
             }
         });

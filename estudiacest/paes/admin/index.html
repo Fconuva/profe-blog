@@ -1334,7 +1334,7 @@
       { id: 'g18',   n: 'Guía N°18 — Arquitectura del ensayo',       tipo: 'Interactiva' },
       { id: 'g19',   n: 'Guía N°19 — Vocabulario en contexto',       tipo: 'Interactiva' },
       { id: 'g20',   n: 'Guía N°20 — Relaciones entre textos',       tipo: 'Ruta individual' },
-      { id: 'g21',   n: 'Guía N°21 — Simulacro breve de precisión',  tipo: 'Ruta individual' },
+      { id: 'g21',   n: 'Guía N°21 — Simulacro parcial 1: resistencia y precisión', tipo: 'Interactiva' },
       { id: 'g22',   n: 'Guía N°22 — Clínica de distractores',       tipo: 'Ruta individual' },
       { id: 'g23',   n: 'Guía N°23 — Evidencia y consistencia',      tipo: 'Ruta individual' },
       { id: 'g24',   n: 'Guía N°24 — Textos discontinuos',           tipo: 'Ruta individual' },
@@ -1493,7 +1493,13 @@
         }
       },
       '20': { titulo:'Guía 20 — Relaciones entre textos', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
-      '21': { titulo:'Guía 21 — Simulacro breve de precisión', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
+      '21': {
+        titulo: 'Guía 21: Simulacro parcial 1: resistencia y precisión',
+        total: 24,
+        key: {},
+        skill: { 1:'LOCALIZAR',2:'INTERPRETAR',3:'INTERPRETAR',4:'INTERPRETAR',5:'INTERPRETAR',6:'INTERPRETAR',7:'EVALUAR',8:'EVALUAR',9:'LOCALIZAR',10:'LOCALIZAR',11:'INTERPRETAR',12:'INTERPRETAR',13:'INTERPRETAR',14:'INTERPRETAR',15:'EVALUAR',16:'EVALUAR',17:'LOCALIZAR',18:'INTERPRETAR',19:'INTERPRETAR',20:'INTERPRETAR',21:'INTERPRETAR',22:'INTERPRETAR',23:'INTERPRETAR',24:'EVALUAR' },
+        devOrder: [], devLabels: {}
+      },
       '22': { titulo:'Guía 22 — Clínica de distractores', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '23': { titulo:'Guía 23 — Evidencia y consistencia', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '24': { titulo:'Guía 24 — Textos discontinuos', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
@@ -1505,7 +1511,7 @@
       '30': { titulo:'Guía 30 — Ensayo final guiado', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} },
       '31': { titulo:'Guía 31 — Estrategia final', total:6, key:{}, skill:{}, devOrder:[], devLabels:{} }
     };
-    let currentGuia = '19';
+    let currentGuia = '21';
     function cfg() { return GUIAS[currentGuia]; }
     const GUIDED_CFG = {
       '17': {
@@ -1545,6 +1551,9 @@
     function cfgForRecord(record) {
       if (record && record.variant === 'guided-access-2026' && GUIDED_CFG[currentGuia]) {
         return { ...GUIDED_CFG[currentGuia], key: record.adminKey || {} };
+      }
+      if (currentGuia === '21') {
+        return { ...cfg(), key: (record && record.adminKey) || {} };
       }
       return cfg();
     }
@@ -1993,6 +2002,7 @@
         const ans = r.answers || {};
         for (let q = 1; q <= recordCfg.total; q++) {
           const sk = recordCfg.skill && recordCfg.skill[q]; if (!sk || !agg[sk]) continue;
+          if (currentGuia === '21' && !recordCfg.key[q]) continue;
           const response = ans[q] || ans[`q${String(q).padStart(2, '0')}`];
           agg[sk].tot++;
           if (response === recordCfg.key[q]) agg[sk].ok++;
@@ -2004,7 +2014,9 @@
       const box = document.getElementById('guiaHabSummary');
       const summaryRows = currentGuia === '14'
         ? rows.filter(r => r.status === 'sent' && r.skills)
-        : rows;
+        : currentGuia === '21'
+          ? rows.filter(r => Object.keys(cfgForRecord(r).key).length === cfgForRecord(r).total)
+          : rows;
       if (!summaryRows.length || (currentGuia !== '14' && !C.skill)) { box.style.display = 'none'; return; }
       const agg = perHabilidad(summaryRows, C);
       const nice = { LOCALIZAR:'Localizar', INTERPRETAR:'Interpretar', EVALUAR:'Evaluar' };
@@ -2038,6 +2050,7 @@
         Object.keys(sk).forEach(k => { sk[k].ok = Number(r.skills[k]?.correct || 0); sk[k].tot = Number(r.skills[k]?.total || 0); });
       } else {
         for (let q=1; q<=C.total; q++){
+          if (currentGuia === '21' && !C.key[q]) continue;
           const s = C.skill && C.skill[q];
           const response = ans0[q] || ans0[`q${String(q).padStart(2, '0')}`];
           if (s && sk[s]) { sk[s].tot++; if (response === C.key[q]) sk[s].ok++; }
@@ -2060,7 +2073,7 @@
         const ans = isG14 ? (r.displayAnswers && r.displayAnswers[qid]) : (ans0[q] || ans0[qid]);
         const key = isG14 ? (r.displayKeys && r.displayKeys[qid]) : C.key[q];
         const experimental = isG14 && r.itemCorrect && r.itemCorrect[qid] === null;
-        const canEvaluate = !isG14 || !isDraft;
+        const canEvaluate = isG14 ? !isDraft : currentGuia !== '21' || !!key;
         const ok = isG14 ? r.itemCorrect && r.itemCorrect[qid] === true : ans === key;
         const cell = document.createElement('div');
         cell.className = `q-cell ${experimental || !canEvaluate ? '' : (ans ? (ok ? 'correct' : 'incorrect') : '')}`;
@@ -2068,7 +2081,7 @@
           <div class="q-cell-num">${String(q).padStart(2, '0')}</div>
           <div class="q-cell-ans">
             <span class="student-ans">${ans || '—'}</span>
-            ${experimental ? '<span class="correct-ans">EXP</span>' : (ans && !ok ? `<span class="correct-ans">${key}</span>` : '')}
+            ${experimental ? '<span class="correct-ans">EXP</span>' : (canEvaluate && ans && !ok ? `<span class="correct-ans">${key}</span>` : '')}
           </div>
           ${C.skill && C.skill[q] ? `<div style="font-size:8px; color:var(--text-muted); font-weight:800; text-transform:uppercase; margin-top:2px;">${C.skill[q].slice(0,3)}</div>` : ''}`;
         grid.appendChild(cell);

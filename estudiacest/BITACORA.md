@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES Guía 21: Simulacro parcial 1, sesión del 10 de septiembre
+
+Codex la estaba construyendo y se cayó a medio camino; el trabajo quedó sin commit en el árbol y se retomó desde ahí en esta sesión. Francisco la llama «clase 20 de PAES HC»; en la numeración del portal y del admin es la Guía N°21.
+
+**Qué quedó publicado.**
+
+- `/paes/guia21.html`: tres lecturas originales (626, 556 y 571 palabras; la segunda con tabla y gráfico de barras), 24 preguntas A-D, ocho por lectura, con habilidades Localizar 4, Interpretar 15 y Evaluar 5. Tiempo sugerido 50 minutos. Tres pestañas de lectura más una de revisión y entrega, con mapa de respuestas, marcas «para revisar» y dos reflexiones breves.
+- Clave (6 por letra) y retroalimentación por ítem en `api/_paes-g21.js`, cargadas por `api/paes.js`. El JSON público `paes/data/guia21.json` no contiene claves ni retroalimentación.
+- Se puede entregar con preguntas pendientes y el servidor aplica la misma regla, porque `21` figura en el catálogo guiado y por eso entra en `INCOMPLETE_SUBMISSION_GUIDES`.
+- Ruta individual: `guia21-guiada.html` existía desde el 28 de agosto; el portal la enruta para el estudiante con acceso guiado y la página regular lo redirige por RUT.
+- Portal: la Guía 19 pasa a «Sesión anterior», la 21 es «Sesión actual» y desaparece de la fila de futuras; el bloqueo de guías cubre hasta g21. Admin: g21 pasa de «Ruta individual» a «Interactiva» con 24 ítems, mapa de habilidades y clave que llega desde el servidor; el panel abre por defecto en la 21.
+- Contrato de entrega: `paes/guia21.html` con storage api. Manifiesto de release: siete recursos nuevos de G21.
+
+**Correcciones sobre lo que dejó Codex.**
+
+1. Un borrador que estaba encolado se seguía enviando después de que un 409 reconciliara la entrega hecha desde otra pestaña. Ahora la cola descarta ese envío si la guía ya está entregada, pero sigue vaciándose completa antes de una entrega en curso.
+2. Las dos reflexiones no se bloqueaban mientras la entrega estaba en curso; ahora se deshabilitan junto con las alternativas.
+3. Las tres ilustraciones pesaban 8,2 MB en total; se dejaron en PNG de 256 colores, mismo nombre y mismas dimensiones 1536×1024, 2,3 MB en total.
+
+**Verificación.** `scripts/paes-g21-flow.spec.js` corre 14 de 14 con Playwright contra un servidor local que no expone nómina ni API real. Nueva auditoría `npm run audit:paes-g21` (lecturas, reactivos, clave en servidor, coherencia JSON-admin, portal, contrato y manifiesto), enganchada a `build`. Auditorías g18, g19, guiadas, release-review, contrato de entrega (25 clases), reglas de Firebase y `verify-academic-release --artifact` en verde.
+
+**Pendiente.** Publicar resultados desde el admin cuando Francisco lo decida (PAES no muestra puntaje hasta entonces). La Guía 20 del 3 de septiembre quedó solo como ruta individual; no hubo versión regular. Probar la sesión en un celular real al inicio de la clase.
+
+---
+
 ## 2026-09-09, regularización general de entregas y reapertura SIMCE U3
 
 - Se definió un contrato único para clasificar todas las entregas: una clase se

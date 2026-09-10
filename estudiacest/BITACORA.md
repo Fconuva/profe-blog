@@ -8,6 +8,13 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: mejoras verificadas y publicación detenida por cambios ajenos
+
+- Implementación confirmada y enviada a `origin/main`: `72042830`. Ocho pruebas Playwright aprobadas en la repetición completa (1,1 minutos); inspección de capturas móvil, escritorio y 4K; build completo y auditoría focalizada aprobados.
+- `npm run deploy:prod:safe` terminó con código 1 antes de desplegar: hay cambios sin commit, distintos de producción, en `api/estudiantes.js` y `api/lecturas-login.js`. Se preservaron intactos y fuera del commit PAES; no se eludió el guard ni se usó otra fuente.
+- Comprobación HTTP del portal: la tarjeta individual G1 todavía no está publicada. La versión pública sigue siendo la anterior. No se ejecutó una prueba de escritura en producción para una versión no desplegada.
+- Pendiente: coordinar el cierre o aislamiento autorizado de esos dos cambios, repetir el deploy canónico y ejecutar `node scripts/verify-paes-foundations-production.js`. Las mejoras solicitadas están construidas y probadas, pero aún no visibles en el sitio.
+
 ## 2026-09-10, PAES 1–9: tarjetas individuales y encuadre de guía de aprendizaje
 
 - Solicitud adicional de Francisco: separar las nueve tarjetas agrupadas y completar los elementos visuales, objetivos e instrucciones de cada guía.

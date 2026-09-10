@@ -8,6 +8,14 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: tarjetas y encuadre de guía publicados y verificados
+
+- Francisco autorizó publicar y apartar temporalmente los dos cambios ajenos de acceso. Se aislaron únicamente `api/estudiantes.js` y `api/lecturas-login.js`; terminado el despliegue se restauraron y se cotejaron sus hashes originales: ambos idénticos. No se incluyeron esos cambios ni se modificaron los demás pendientes del repositorio.
+- Publicación canónica mediante `npm run deploy:prod:safe`, código 0 y estado READY: `dpl_5KDs8cKEDAMfuzc6wGxn2yLX6r36`, fuente `38f3e667` con implementación `72042830`, alias `https://www.estudiacest.com`. Predeploy, build local y build del servidor aprobados: 194 recursos críticos, 44 contratos de entrega y auditorías transversales.
+- `node scripts/verify-paes-foundations-production.js` terminó con código 0: nueve tarjetas individuales; 18 páginas regulares y acompañadas con objetivo, instrucciones, esquema y cierre; nueve bancos públicos sin claves; pauta privada exige autenticación. Las doce variantes de URL de los cuatro módulos privados terminan en 404.
+- Prueba real acotada con identidad ficticia: guardado en línea, recuperación sin copia local, entrega persistida con doble bandera y marcas de tiempo coherentes, recarga inmutable y resultados aún privados. Registro ficticio eliminado y ausencia verificada. No se alteraron estudiantes reales ni liberaciones. Captura móvil pública inspeccionada: objetivo y criterios legibles, instrucciones visibles y sin desborde horizontal.
+- Acceso para Francisco: `https://www.estudiacest.com/paes/#cardGuia1`. G1–G9 tienen tarjetas propias y encuadre de aprendizaje; se conservan G10–G21 y la planificación G22–G32. Se mantiene el pendiente pedagógico de revisión docente y pilotaje antes del uso sumativo, sin afirmar validación editorial independiente.
+
 ## 2026-09-10, PAES 1–9: mejoras verificadas y publicación detenida por cambios ajenos
 
 - Implementación confirmada y enviada a `origin/main`: `72042830`. Ocho pruebas Playwright aprobadas en la repetición completa (1,1 minutos); inspección de capturas móvil, escritorio y 4K; build completo y auditoría focalizada aprobados.

@@ -67,6 +67,37 @@ exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleSubmitGuia14')) && /ref\.chil
   'El ensayo de la 14 tiene su propia ruta de envío y también debe respetar el reenvío.');
 exigir(/reenvioAbierto\('14'\)/.test(cuerpo('handleGetGuia14State')), 'get-guia14-state debe respetar el reenvío.');
 
+// ---- Bloqueo programado con cuenta regresiva (10-sep-2026) ----
+// Francisco: "avisar que se bloquean hasta la 19 el 23 de septiembre".
+const fuenteInicio = (api.match(/function inicioDelDiaEnChile\(fecha\) \{[\s\S]*?\n\}/) || [])[0];
+const fuenteEstado = (api.match(/function estadoBloqueoProgramado\(programado, hoy\) \{[\s\S]*?\n\}/) || [])[0];
+exigir(fuenteInicio && fuenteEstado, 'Faltan inicioDelDiaEnChile() y estadoBloqueoProgramado().');
+if (fuenteInicio && fuenteEstado) {
+  const inicio = new Function(`${fuenteInicio}; return inicioDelDiaEnChile;`)();
+  const estado = new Function(`${fuenteEstado}; return estadoBloqueoProgramado;`)();
+  exigir(inicio('2026-09-23') === Date.parse('2026-09-23T03:00:00Z'),
+    'El 23-sep-2026 empieza a las 00:00 de Chile (03:00 UTC, horario de verano).');
+  exigir(inicio('2026-07-01') === Date.parse('2026-07-01T04:00:00Z'), 'En invierno Chile está a UTC-4.');
+  const p = { fecha: '2026-09-23', guias: { g12: true, g19: true, g20: false } };
+  const antes = estado(p, '2026-09-22'), dia = estado(p, '2026-09-23'), ya = estado(Object.assign({}, p, { aplicado: true }), '2026-09-30');
+  exigir(antes.pendiente && !antes.aplicar, 'Antes de la fecha el bloqueo está pendiente y se avisa.');
+  exigir(!dia.pendiente && dia.aplicar && dia.guias.join() === 'g12,g19', 'El día de la fecha se aplica, solo a las guías marcadas.');
+  exigir(!ya.pendiente && !ya.aplicar, 'Aplicado una vez, no se vuelve a aplicar: el docente puede desbloquear desde el admin.');
+  exigir(!estado({ fecha: 'pronto', guias: { g12: true } }, '2026-09-30').aplicar, 'Una fecha mal escrita no bloquea nada.');
+}
+exigir(/estadoBloqueoProgramado\(v && v\.bloqueo_programado, hoyEnChileISO\(\)\)/.test(cuerpo('readGuiasConfig')) &&
+  /cambios\[`blocked\/\$\{g\}`\] = true/.test(cuerpo('readGuiasConfig')) && /aplicado: true/.test(cuerpo('readGuiasConfig')),
+  'readGuiasConfig debe aplicar el bloqueo programado una vez y marcarlo como aplicado.');
+exigir(/programado: config\.programado/.test(cuerpo('handleGetGuiasConfig')), 'La configuración pública debe informar el bloqueo programado (lo usa el aviso).');
+const aviso = leer('paes/js/aviso-cierre.js');
+exigir(/action=get-guias-config/.test(aviso) && /data\.config\.programado/.test(aviso), 'aviso-cierre.js debe leer la fecha del servidor, no tenerla escrita.');
+exigir(/guias\.indexOf\(id\) < 0\) return;/.test(aviso), 'Dentro de una guía, el aviso solo aparece si esa guía se bloquea.');
+exigir(!/2026-09-23/.test(aviso), 'aviso-cierre.js no debe traer la fecha escrita: la fija el servidor.');
+exigir(/aviso\.src = '\/paes\/js\/aviso-cierre\.js';/.test(leer('paes/js/guia-lock.js')), 'guia-lock.js debe cargar el aviso en cada guía.');
+for (const pagina of ['paes/index.html', 'paes/guias.html']) {
+  exigir(/<script src="\/paes\/js\/aviso-cierre\.js" defer><\/script>/.test(leer(pagina)), `${pagina} debe cargar el aviso de cierre.`);
+}
+
 // Guías antiguas: el motivo real del rechazo llega al estudiante.
 for (const n of [11, 12, 13]) {
   const html = leer(`paes/guia${n}.html`);

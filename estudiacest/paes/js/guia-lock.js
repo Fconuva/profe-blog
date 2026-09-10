@@ -15,6 +15,15 @@
   var id = window.GUIA_LOCK_ID;
   if (!id) return;
 
+  // Aviso con cuenta regresiva del bloqueo programado (aviso-cierre.js decide
+  // si esta guía es de las que se bloquean).
+  if (!document.querySelector('script[src*="aviso-cierre.js"]')) {
+    var aviso = document.createElement('script');
+    aviso.src = '/paes/js/aviso-cierre.js';
+    aviso.defer = true;
+    (document.head || document.documentElement).appendChild(aviso);
+  }
+
   function showLock() {
     if (document.getElementById('guiaLockOverlay')) return;
     var overlay = document.createElement('div');

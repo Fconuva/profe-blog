@@ -703,14 +703,50 @@ async function handleGetNominaExtra(req, res) {
 
 // Lee la config de acceso de guías (qué guías están bloqueadas para los alumnos).
 // blocked = { id: true } -> solo las listadas están bloqueadas; ausente/false = habilitada.
+// Bloqueo programado: guias_config/bloqueo_programado =
+//   { fecha: 'AAAA-MM-DD', guias: { g12: true, ... }, aplicado?: true }
+// Caso (10-sep-2026): Francisco pidió avisar con cuenta regresiva que las guías
+// hasta la 19 se bloquean el 23-sep. El bloqueo se escribe en `blocked` la
+// primera vez que alguien lee la configuración desde esa fecha (hora de Chile)
+// y queda marcado como aplicado: después el docente puede desbloquear desde el
+// admin sin que el programa lo vuelva a bloquear.
+function inicioDelDiaEnChile(fecha) {
+    for (const desfase of ['-03:00', '-04:00']) {
+        const ms = Date.parse(`${fecha}T00:00:00${desfase}`);
+        if (new Date(ms).toLocaleString('sv-SE', { timeZone: 'America/Santiago' }).startsWith(`${fecha} 00:00`)) return ms;
+    }
+    return Date.parse(`${fecha}T00:00:00-03:00`);
+}
+function estadoBloqueoProgramado(programado, hoy) {
+    const p = programado || {};
+    const fecha = String(p.fecha || '');
+    const guias = Object.keys(p.guias || {}).filter((g) => p.guias[g] === true);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha) || !guias.length || p.aplicado === true) {
+        return { pendiente: false, aplicar: false, fecha, guias };
+    }
+    return { pendiente: hoy < fecha, aplicar: hoy >= fecha, fecha, guias };
+}
+
 async function readGuiasConfig() {
-    const snap = await db.ref(`${BASE}/guias_config`).once('value');
-    const v = snap.exists() ? snap.val() : {};
+    let snap = await db.ref(`${BASE}/guias_config`).once('value');
+    let v = snap.exists() ? snap.val() : {};
+    const prog = estadoBloqueoProgramado(v && v.bloqueo_programado, hoyEnChileISO());
+    if (prog.aplicar) {
+        // Escribir el bloqueo es idempotente; la transacción solo deja constancia.
+        const cambios = { updatedAt: Date.now(), updatedBy: 'bloqueo programado ' + prog.fecha };
+        prog.guias.forEach((g) => { cambios[`blocked/${g}`] = true; });
+        await db.ref(`${BASE}/guias_config`).update(cambios);
+        await db.ref(`${BASE}/guias_config/bloqueo_programado`).transaction((actual) =>
+            (actual && actual.aplicado !== true ? Object.assign({}, actual, { aplicado: true, aplicadoAt: Date.now() }) : undefined));
+        snap = await db.ref(`${BASE}/guias_config`).once('value');
+        v = snap.exists() ? snap.val() : {};
+    }
     return {
         blocked: (v && v.blocked) || {},
         exceptions: (v && v.exceptions) || {},
         reenvio: (v && v.reenvio) || {},
         reenvioCierra: (v && v.reenvio_cierra) || null,
+        programado: prog.pendiente ? { fecha: prog.fecha, guias: prog.guias, limite: inicioDelDiaEnChile(prog.fecha) } : null,
         updatedAt: (v && v.updatedAt) || null,
         updatedBy: (v && v.updatedBy) || null
     };
@@ -766,7 +802,7 @@ async function handleGetGuiasConfig(req, res) {
     }
     return res.status(200).json({
         success: true,
-        config: { blocked: config.blocked, allowed, updatedAt: config.updatedAt }
+        config: { blocked: config.blocked, allowed, programado: config.programado, updatedAt: config.updatedAt }
     });
 }
 

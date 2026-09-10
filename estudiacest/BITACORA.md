@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: secuencia regular completa y operativa hasta la Guía 21
+
+- Se corrigió el salto visible entre las guías 19 y 21. La Guía 20 ahora tiene
+  una versión regular propia con tres pares de textos originales, 18 preguntas
+  y foco en acuerdos, tensiones, matices y alcance. La ruta individual guiada
+  existente se conservó y su estudiante asignado sigue siendo derivado a ella.
+- Portada, catálogo de materiales, panel docente, API de entrega, contrato de
+  persistencia y manifiesto de publicación quedaron alineados para G20. La
+  clave y la retroalimentación permanecen solo en el servidor y los resultados
+  no se muestran antes de la liberación docente.
+- Se ajustaron las auditorías de G18, G19 y G21 para la nueva continuidad. El
+  build completo aprobó 173 recursos críticos. Playwright verificó G17–G18 y
+  19 pruebas de G20–G21; la prueba focal de G20 cubrió 390, 1440 y 3840 px,
+  guardado, recarga, entrega, liberación y derivación guiada.
+- Commit `64cb48a6` enviado a `origin/main`. Despliegue seguro de producción
+  `dpl_2hQHUv4G1YWHqvv1Xtc4i2qqASQi` en estado `READY` y alias aplicado a
+  `www.estudiacest.com`. Se verificaron por HTTP la portada, el catálogo, G20,
+  sus datos/estilos/lógica y G21; una navegación real en Chrome confirmó cinco
+  tarjetas consecutivas, 18 reactivos, seis lecturas y ausencia de desborde o
+  errores en móvil.
+- Se simuló y verificó el cambio de acceso antes de retirar el bloqueo `g20` en
+  Firebase. La lectura pública posterior confirmó `g20: false` y `g21: false`
+  para un alumno sin excepción.
+
 ## 2026-09-10, Salas: "Nombre Apellido" y fuera los perfiles del navegador
 
 - Pedido de Francisco: que en las casas se vea primer nombre y primer apellido.

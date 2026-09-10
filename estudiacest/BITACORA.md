@@ -8,6 +8,52 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, Mi espacio: visitas, chat con filtro, teclado, terreno y asientos
+
+- Chat y visitas dentro de la pestaña Mi casa del panel: hasta 30 personas por
+  casa, presencia con latido cada 20 s y caída a los 60 s sin señal, últimos
+  100 mensajes por casa. El cliente solo lee el nodo `salas`; todo lo que se
+  escribe pasa por el servidor (`api/_salas.js`), que identifica por token,
+  limita a un mensaje cada 1,5 s y revisa cada texto con
+  `api/_filtro-garabatos.js`.
+- El filtro compara por palabra normalizada, no por "contiene" (computador,
+  disputa, diputado y "las 3 y pico" pasan), entiende deletreos, leet y las
+  formas chilenas (weón, ql, ctm, conchetumare pegado o separado), y NO
+  bloquea lo que indica riesgo: "me quiero morir" se publica y llega como
+  alerta. Lo bloqueado no se publica pero queda registrado. La auditoría corre
+  35 casos (bloquear, dejar pasar, alertar). Nueva sección "Chat de casas" en
+  `adminprofe/` con alertas, intentos bloqueados y casas con gente; marcar una
+  alerta como vista pasa por la API con token de admin.
+- Movilidad sin mouse: flechas o WASD y un pad en pantalla; Tab elige muebles y
+  las flechas los mueven; R gira, Supr guarda, Esc suelta. El personaje se
+  sienta en sillas, sofás y camas. Terreno: 8 pisos (variantes teñidas del
+  sprite) y 8 colores de muro, desbloqueables por XP. Corregido el orden de
+  dibujo: las alfombras se pintan antes que todo lo demás y ya no tapan las
+  piernas del personaje.
+- Las salas van como módulo interno enrutado desde `api/estudiantes.js` con
+  acciones `salas-*`: Vercel Hobby admite 12 funciones y estaban ocupadas; la
+  auditoría de la Sesión 7 lo detectó y la de Mi espacio ahora exige que
+  `api/salas.js` no exista.
+- Reglas de RTDB: tres nodos nuevos bajo `plataforma_estudiantes` (`salas` con
+  lectura para registrados, `alertas_chat` y `bloqueados_chat` solo admin),
+  los tres con escritura cerrada al cliente. Publicadas con
+  `npm run deploy:rules` y releídas desde producción: idénticas al repo. La
+  copia de `estudiacest-2026` se sincronizó antes, como exige la guarda.
+- Bloqueos de deploy encontrados y resueltos en el camino, sin tocar código
+  ajeno: el guard exigía en producción los recursos de la Guía 21 que otro
+  agente acababa de sumar al manifiesto (lo resolvió su propio flag
+  `allowMissingInProduction`), y después el build remoto murió porque
+  `scripts/audit-paes-g21.js` estaba en el build pero no en la lista blanca de
+  `.vercelignore` (regla 10). Se agregó esa línea.
+- Verificación pública tras el deploy: `mi-espacio.js` trae las acciones
+  `salas-`, el CSS trae el pad, una llamada sin token a `salas-latido` responde
+  401 con el mensaje nuevo, pisos y admin responden 200 y `paes/guia21.html`
+  quedó publicada. Commits `2ed3d254` y `b9581813`; deploy
+  `dpl_6TEtq62rFtVEP2g6QweFoNfTTZZ1`.
+- Pendiente de decisión docente: el nombre que se muestra en el chat toma la
+  tercera palabra del nombre registrado (formato APELLIDO APELLIDO NOMBRE); si
+  algún curso tiene otro formato, se verá el apellido.
+
 ## 2026-09-10, PAES Guía 21: Simulacro parcial 1, sesión del 10 de septiembre
 
 Codex la estaba construyendo y se cayó a medio camino; el trabajo quedó sin commit en el árbol y se retomó desde ahí en esta sesión. Francisco la llama «clase 20 de PAES HC»; en la numeración del portal y del admin es la Guía N°21.

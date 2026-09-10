@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: el reenvío se cierra solo el 23 de septiembre
+
+- Francisco aprobó cerrar el reenvío el 23-sep-2026, antes de recalcular
+  notas, para que ese día nadie cambie respuestas.
+- `guias_config/reenvio_cierra = '2026-09-23'` (primer día cerrado, hora de
+  Chile). `reenvioVigente()` decide con la marca de cada guía y esa fecha;
+  desde las 00:00 del 23 las guías 12–21 vuelven a mostrar lo enviado como
+  entregado y no aceptan un segundo envío. Commit 231a9449, desplegado desde
+  worktree en LF. `audit-paes-reenvio` prueba la regla de fechas tal como está
+  en el código (3 mutaciones, incluida cerrar un día tarde).
+- Verificado: la fecha quedó en la base; hoy, pasado el aviso de 5 minutos,
+  una entrega de prueba en G17 vuelve editable (RUT ficticio, borrado).
+- El cierre no bloquea a quien nunca entregó: la guía sigue habilitada para
+  una primera entrega. Para cortar también eso, bloquear las guías en el admin.
+- Para mover la fecha: cambiar `reenvio_cierra`; para cerrar ya una guía,
+  borrar `reenvio/gNN`.
+
 ## 2026-09-10, PAES: "No se confirmó la entrega" en 16–21 con el reenvío abierto
 
 - **Reporte de Francisco:** en la 18, al entregar salía "No se confirmó la

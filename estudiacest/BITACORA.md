@@ -8,6 +8,58 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, Datos de estudiantes fuera de la web e ingreso por RUT cerrado
+
+- **Qué se encontró.** Con `"outputDirectory": "."` Vercel publica la carpeta
+  completa. Se podían descargar: el registro PIE (nombre completo, RUT,
+  categoría de apoyo y notas de 14 estudiantes) y sus 14 archivos por
+  estudiante; exportaciones SIMCE con 66 RUT; exportaciones y `_tmp_*.json` con
+  nombres, notas y textos de 2A-HC y 2B-HC; una planilla con la lista de 3°D TP;
+  los `.md`, scripts y configuración; y el código de la API, que traía un valor
+  de respaldo de la clave de administrador que era la vigente, porque Vercel no
+  define `ADMIN_PASSWORD`. El repositorio de GitHub es público.
+- **Bloqueo (commit 097fd55d, opción a autorizada por Francisco).** Diez
+  redirecciones en `vercel.json` hacia `/api/paes?action=private-source` (404),
+  que Vercel aplica antes de buscar el archivo. En producción, 17 rutas
+  bloqueadas dan 404 sin contenido; portada, panel, ranking, PAES, lecturas,
+  revisión de tríptico, 3ATP y recursos siguen en 200.
+- **Ingreso por RUT.** `/api/lecturas-login` entregaba sesión con la clave por
+  defecto aunque el estudiante ya hubiera elegido la suya. Ahora se niega si
+  `password_changed` o `perfil_completo`. Probado con una cuenta ficticia
+  temporal (RUT inventado de la serie 30.000.00x, ya borrada). Estudiante nuevo
+  con clave por defecto: entra. Tras elegir clave: el atajo se niega y Firebase
+  rechaza la clave por defecto (400); la clave nueva entra. Perfil completo sin
+  la marca: el atajo se niega. Tras restablecer: el atajo vuelve a servir.
+- **admin-login** ya no tiene clave escrita: queda apagado (403) mientras no
+  existan `ADMIN_PASSWORD` y `ADMIN_UID`. Ninguna página lo usa. La clave
+  anterior sigue en el historial público de Git; Francisco debe cambiarla donde
+  la use.
+- Restablecer clave y cambiar RUT dejan `perfil_completo` en false, así que el
+  estudiante vuelve a elegir clave. No se probó con una cuenta admin; sí el
+  estado resultante en el atajo.
+- **Guarda.** `scripts/audit-datos-publicos.js` corre en el build: exige los
+  bloqueos, falla si un archivo servido trae 3 o más RUT con dígito verificador
+  válido y vigila los dos arreglos de la API. Cuatro mutaciones detectadas.
+- **Efectos.** El verificador de deploy compara con producción descargando los
+  archivos sin commit; ya no puede descargar `api/*.js` ni `.md`, así que un
+  deploy con cambios sin commit ahí queda bloqueado aunque sean iguales. Se
+  despliega desde worktree limpio. `lecturas/adminprofe/pie.html` ya no carga el
+  registro PIE hasta moverlo a `plataforma_lecturas/pie_registro` (opción b).
+- **RUT que el sitio todavía entrega** (declarados en la guarda):
+  `paes/js/nominas.js` (218 de estudiantes reales), `revision-triptico/index.html`
+  (321), `3atp/index.html` (43) y `3atp/informe/index.html` (42). Todas
+  identifican por RUT contra una nómina escrita en la página; el arreglo es
+  preguntarle a la API. `lecturas/adminprofe/index.html` trae 1 RUT real.
+- **Corrección de la entrada anterior.** Los tres perfiles repetidos de 2A-HC
+  no comparten RUT: no tienen RUT ni cuenta de ingreso, y guardan resultados
+  idénticos de una misma sesión, entregados con un minuto de diferencia. El
+  borrado de dos quedó detenido para reconfirmar con Francisco. Aparte, un RUT
+  tiene dos perfiles, en 4A-HC y 4B-HC.
+- Sin OK todavía: b (registro PIE a Firebase admin), c (sacar los archivos del
+  repo), d (reglas del perfil) y f (nóminas con RUT). Recomendado: poner el repo
+  en privado; el GitHub Pages de `fconuva.github.io/profe-blog` dejaría de
+  funcionar en el plan gratuito.
+
 ## 2026-09-10, PAES 1–9: enseñanza ampliada e ilustraciones IA preparadas
 
 - A solicitud de Francisco se amplió la enseñanza de G1–G9, manteniendo objetivos, tarjetas individuales, lecturas, reactivos, claves y versión de intentos. Se agregaron 5.455 palabras de contenido didáctico original entre las nueve guías: conceptos, estrategia con razones, ejemplo pensado en voz alta, error frecuente, comprobación y transferencia. La secuencia conserva explica → modela → ejercita → evalúa → analiza.

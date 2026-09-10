@@ -6,7 +6,7 @@ const {getAccessToken,requestJson}=require('./firebase-maintenance-db');
 const origin='https://www.estudiacest.com',rut='111111111',nombre='PRUEBA TÉCNICA G1–9',ref=`plataforma_paes/guia_respuestas/1/${rut}`;
 async function main(){
  for(const name of ['_paes-foundations','_paes-foundations-1-3','_paes-foundations-4-6','_paes-foundations-7-9']){
-  const r=await fetch(`${origin}/api/${name}.js`);assert.equal(r.status,404,'Banco editorial descargable públicamente');
+  for(const suffix of ['', '/', '?v=1']){const r=await fetch(`${origin}/api/${name}.js${suffix}`);assert.equal(r.status,404,'Banco editorial descargable públicamente');}
  }
  for(let id=1;id<=9;id++){
   for(const suffix of ['','-guiada']){const r=await fetch(`${origin}/paes/guia${id}${suffix}.html`);assert.equal(r.status,200);assert((await r.text()).includes('guia-foundations.js'));}

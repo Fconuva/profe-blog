@@ -8,6 +8,12 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: bloqueo ampliado a variantes de URL
+
+- Segundo despliegue READY: `dpl_6nRqActXtsawqXRYeMhcACDn3TG6`, commit `91b831bb`. Cuatro descargas directas terminaron en 404; 18 páginas y entrega real volvieron a pasar, con limpieza del registro ficticio comprobada.
+- Una comprobación adicional encontró que añadir barra final permitía servir el archivo estático. Se amplía el bloqueo al prefijo completo `/api/_paes-foundations(.*)` y se agrega esa variante al verificador, junto con parámetros de consulta. No se considera cerrado hasta repetir la verificación tras publicar.
+- La URL inmutable del primer despliegue exige inicio de sesión Vercel; no entrega públicamente el archivo. Se preserva el historial de comprobaciones y correcciones.
+
 ## 2026-09-10, PAES 1–9: comprobación adicional de archivos internos
 
 - La comprobación directa posterior detectó que `outputDirectory: "."` servía los cuatro módulos auxiliares nuevos como JavaScript estático. La API pública sí ocultaba las claves, pero esa comprobación no bastaba para afirmar privacidad del banco.

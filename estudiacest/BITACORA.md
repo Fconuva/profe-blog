@@ -8,6 +8,16 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: reconstrucción interactiva de las guías 1–9
+
+- Autorización: Francisco pidió construir G1–G9 y corregir las existentes para unificar el formato actual. Se preservan los PDF históricos y G10–G21; G22–G32 permanecen planificadas.
+- Nueve guías regulares, 18 textos originales y 108 reactivos A–D; nueve rutas acompañadas de seis preguntas con acceso individual centralizado. G2 corrige el foco no literario; G5 es poesía complementaria, sin atribuirla como unidad obligatoria PAES.
+- Fórmula recuperada: explica, modela, práctica con retiro gradual de ayudas, evaluación independiente y análisis/transferencia tras liberación. Claves, evidencia y distractores en API privada; botón «Pauta G1–9» en el panel docente. Resumen del estudiante separa práctica y evaluación.
+- Guardado serializado, recuperación, entrega con pendientes y lectura posterior de las dos banderas/marcas de tiempo. Versión `foundations-v1`: no sobrescribe ni recalifica intentos de versiones distintas. Lectura agregada previa en producción: cero registros en G1–G9; sin cambios en estudiantes reales.
+- Integrados portada, catálogo, admin, API, contrato de entrega, manifiesto y auditoría de build. Plan anual actualizado y ficha `paes/GUIAS1_9_VALIDACION.md` con extensión, tareas, decisiones y límites. No se declara pilotaje ni revisión editorial independiente: corresponde cotejo docente antes de uso sumativo.
+- Validación: auditoría de 108 reactivos y 18 páginas; siete pruebas Playwright aprobadas (390/1440/3840 px, entregas, publicación, rutas acompañadas, fallo de red, versiones y panel docente). Repetición focalizada de rutas acompañadas tras ajustes: aprobada. Build completo aprobado: 44 contratos de clase y 194 recursos críticos. Inspección visual de celular y escritorio sin desbordes.
+- Siguiente paso de esta entrega: commit acotado, push y deploy seguro; comprobación pública y prueba acotada con registro ficticio, seguida de limpieza verificada. El resultado se agregará como nueva entrada al terminar.
+
 ## 2026-09-10, Cerrada la exposición de RUT y arreglado el aviso de mensajes
 
 - **Qué pasaba.** La regla del nodo `plataforma_estudiantes/estudiantes` dejaba

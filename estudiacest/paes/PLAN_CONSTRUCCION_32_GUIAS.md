@@ -4,11 +4,11 @@ Fecha de referencia: 10 de septiembre de 2026. Documento interno de planificaci�
 
 ## 1. Decisión y alcance
 
-Por indicación de Francisco, conservar las guías existentes y dejar las ausentes planificadas, sin construirlas ni publicarlas en esta intervención. El objetivo es completar progresivamente una biblioteca reutilizable el próximo año y mejorarla con evidencia de aprendizaje.
+Decisión actualizada de Francisco el 10 de septiembre: construir y corregir G1–G9 para unificar el formato interactivo. Se conserva la continuidad de G10–G21 y la planificación de las restantes. El objetivo es una biblioteca reutilizable el próximo año, mejorada con evidencia de aprendizaje.
 
 - G10–G21: conservar la secuencia regular operativa; hacer mejoras acotadas, sin reemplazar intentos, objetivos ni resultados históricos.
-- G1–G9: planificar su incorporación digital desde los originales de aula. El catálogo ya contiene PDF de G1, G2, G4 y G6–G9; eso no equivale a una sesión interactiva completa.
-- G3 y G5: existen como originales de aula, aunque no aparezcan en el catálogo revisado. Recuperarlas, no inventar otros objetivos con esos números.
+- G1–G9: versión interactiva `foundations-v1`, con 12 preguntas regulares y ruta acompañada de seis por guía. Los PDF anteriores se conservan como históricos; sus claves no se aplican a esta versión.
+- G3 y G5: se incorporan al catálogo interactivo, conservando los focos narrativo y poético. Se usan textos originales nuevos, no reproducciones de lecturas protegidas.
 - G22–G31: conservar títulos y fechas anunciados; construir la versión regular cuando corresponda. Las rutas individuales guiadas existentes son adecuaciones específicas, no sustitutos de la versión regular ni actividades incompletas por tener seis preguntas.
 - G32: reservar cierre y transferencia; no publicar ni asignarle automáticamente una fecha.
 
@@ -52,24 +52,24 @@ Las matrices siguientes son un mapa propuesto de oportunidades, no una certifica
 
 Antes de reutilizar en 2027, contrastar con el temario del proceso de admisión correspondiente cuando esté publicado. No afirmar hoy alineación definitiva con Admisión 2028.
 
-## 4. Primer tramo: originales y mejoras previstas para G1–G10
+## 4. Primer tramo: reconstrucción G1–G9 y puente con G10
 
-Mantener los temas históricos. La columna de mejora describe trabajo futuro, no cambios ejecutados ni una afirmación de ausencia en todos los originales.
+Se corrigieron los contenidos y rótulos inconsistentes con autorización expresa. G1–G9 contienen enseñanza, modelado y práctica graduada (preguntas 1–6), seguidos de evaluación en otro texto sin pistas (7–12). La ruta acompañada es una adecuación con apoyos, no una medición equivalente al bloque independiente regular. Véase [registro de validación](GUIAS1_9_VALIDACION.md).
 
 | Guía | Foco histórico | Objetivo observable / ajuste de incorporación |
 |---|---|---|
-| G1 | Localizar e Interpretar | Diagnosticar las tres habilidades; localizar con paráfrasis, distinguir tema de idea principal y registrar una línea base. |
-| G2 | Comprensión Narrativa | Reconstruir conflicto, motivaciones y relaciones; separar lo dicho de lo inferido. |
-| G3 | Interpretar Textos Literarios Narrativos | Recuperar original y solucionario; modelar narrador, tiempo y relación entre episodio y totalidad. |
+| G1 | Localizar e interpretar | Localizar información y paráfrasis; relacionar pistas sin inventar. Separar resultados de práctica y aplicación independiente; no tratarlos como diagnóstico estandarizado. |
+| G2 | Síntesis y relaciones en textos no literarios | Conservar idea central, alcance y vínculos entre argumentos y ejemplos. Corrige el rótulo histórico de comprensión narrativa, que no correspondía a sus lecturas. |
+| G3 | Narrador, tiempo y conflicto | Interpretar relatos originales mediante voz narrativa, secuencia temporal, motivaciones y totalidad. |
 | G4 | Evaluar Textos Argumentativos | Reconstruir tesis y razones antes de juzgar; diferenciar hechos, opiniones y respaldo. |
-| G5 | Interpretar Textos Poéticos | Recuperar original; conservar como formación literaria y transferencia inferencial. No presentarla como unidad obligatoria del temario vigente ni desplazar narrativa por ella. |
+| G5 | Interpretar textos poéticos | Dos poemas originales para formación literaria y transferencia inferencial. No es una unidad obligatoria del temario vigente ni reemplaza la cobertura narrativa. |
 | G6 | Identificar Falacias Argumentativas | Explicar qué falla en la relación entre razón y conclusión; evitar evaluar solo nombres de falacias. |
 | G7 | Recursos Retóricos y Discursivos | Explicar el efecto de un recurso en propósito y destinatario; no reducir a identificar figuras. |
-| G8 | Inferencias en Narrativa Latinoamericana | Sostener hipótesis sobre personajes y contexto con indicios; distinguir inferencia de invención. |
+| G8 | Inferencias narrativas: indicios y contexto | Sostener hipótesis sobre personajes y contexto con indicios; distinguir inferencia de invención. No atribuir los relatos originales a movimientos o autores históricos. |
 | G9 | Sesgos, Falacias y Postura del Emisor | Comparar posturas y alcance de afirmaciones; incorporar una tarea de transferencia a una situación nueva. |
 | G10 | Hipótesis del Relato y Relaciones entre Textos | Conservar versión publicada; revisar que la comparación incluya evidencia de ambos textos. |
 
-Puentes necesarios para un próximo año: añadir práctica expositiva de síntesis y jerarquización en G1/G4 y recuperaciones breves entre G6–G10. Así se equilibra el arranque narrativo-argumentativo sin renumerar ni convertir G3/G5 en guías de otro tema.
+G2 aporta el puente de síntesis y jerarquización no literaria. Para el próximo año, programar recuperaciones breves entre G6–G10 según las respuestas del curso, sin renumerar ni convertir G3/G5 en guías de otro tema.
 
 Criterio de paso sugerido, ajustable con datos del curso: resolver al menos cuatro de cinco tareas breves de un foco en dos textos nuevos y justificar dos decisiones. Si no ocurre, aplicar una recuperación de 10–15 minutos y verificar nuevamente; no repetir toda la unidad ni inferir dominio de una única respuesta.
 
@@ -173,12 +173,12 @@ En «anclaje» se indica dónde enseñar/revisar expresamente; «retorno» exige
 
 | Código / foco abreviado | Anclaje | Retorno |
 |---|---|---|
-| L01 · Información | G2 | G8, G22 |
-| L02 · Personajes | G2, G3 | G8, G27 |
+| L01 · Información | G1, G3 | G8, G22 |
+| L02 · Personajes | G3 | G8, G27 |
 | L03 · Espacio/tiempo | G3 | G8, G27 |
 | L04 · Creencias | G3, G8 | G13, G27 |
-| L05 · Temas | G2 | G13, G27 |
-| L06 · Conflictos | G2 | G8, G27 |
+| L05 · Temas | G3 | G13, G27 |
+| L06 · Conflictos | G3 | G8, G27 |
 | L07 · Parte/totalidad | G3 | G10, G27 |
 | L08 · Recursos narrativos | G3 | G10, G27 |
 | L09 · Símbolos/tópicos | G5, G8 | G27 |
@@ -191,8 +191,8 @@ G5 aporta transferencia, pero L09 debe verificarse también en narración. No us
 
 ### Diversidad y recuperación
 
-- Aprender: artículos de divulgación, exposición y reportajes en G12/G23/G25/G28.
-- Lectura personal: narraciones y reseñas en G2/G3/G8/G13/G27/G30.
+- Aprender: exposición y argumentación en G2; divulgación y reportajes en G12/G23/G25/G28.
+- Lectura personal: narraciones y reseñas en G1/G3/G8/G13/G27/G30.
 - Comunidad: normas, instrucciones y debate público en G9/G16/G20/G24/G32.
 - Formatos: prosa continua a lo largo de la serie; tablas, gráficos y diagramas integrados en G16/G24 y al menos dos simulacros.
 - Síntesis, jerarquía y transferencia se revisan explícitamente en G26/G29: no asumir que más ejercicios de inferencia las sustituyen.
@@ -200,7 +200,7 @@ G5 aporta transferencia, pero L09 debe verificarse también en narración. No us
 
 ## 9. Orden de construcción y criterio de aceptación
 
-Prioridad de continuidad 2026: G22 → G23 → G24 → G25/G26 → G27 → G28/G29 → G30/G31. G32 se mantiene reservada. Prioridad de biblioteca del próximo año: recuperar G3/G5, incorporar G1–G9 con sus originales y revisar los puentes de síntesis/exposición. Nada de este backlog se declara publicado por figurar aquí.
+Prioridad de continuidad 2026: G22 → G23 → G24 → G25/G26 → G27 → G28/G29 → G30/G31. G32 se mantiene reservada. G1–G9 ya se reconstruyeron: corresponde ahora revisión docente, pilotaje y ajustes versionados, no otra reconstrucción desde cero. Nada del backlog G22–G32 se declara publicado por figurar aquí.
 
 Cada entrega futura exige:
 

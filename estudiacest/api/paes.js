@@ -8,6 +8,9 @@ const admin = require('firebase-admin');
 const { GUIDED_GUIDE_KEYS, GUIDED_GUIDE_FEEDBACK } = require('./_paes-guided-catalog');
 const G20 = require('./_paes-g20');
 const G21 = require('./_paes-g21');
+const FOUNDATIONS = require('./_paes-foundations');
+Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
+Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_paes';
@@ -189,6 +192,7 @@ const G19_FEEDBACK = {
 };
 
 const INTERACTIVE_GUIDE_FEEDBACK = {
+    ...FOUNDATIONS.FEEDBACK,
     '21': G21.feedback,
     '20': G20.feedback,
     '18': G18_FEEDBACK,
@@ -196,6 +200,7 @@ const INTERACTIVE_GUIDE_FEEDBACK = {
 };
 
 const INTERACTIVE_GUIDE_KEYS = {
+    ...FOUNDATIONS.KEYS,
     '21': G21.key,
     '20': G20.key,
     '10': G10_KEY,
@@ -417,6 +422,9 @@ async function handleSubmitGuia(req, res) {
     const rutLimpio = cleanRut(rut);
     const ref = db.ref(`${BASE}/guia_respuestas/${guiaId}/${rutLimpio}`);
     const guideId = String(guiaId);
+    if (FOUNDATIONS.KEYS[guideId] && req.body.contentVersion !== FOUNDATIONS.VERSION) {
+        return res.status(400).json({error:'Actualiza la página antes de responder esta versión de la guía.'});
+    }
     let safeAnswers = answers || {};
     let safeCorrect = parseInt(correct, 10) || 0;
     let safeTotal = parseInt(total, 10) || 0;
@@ -455,12 +463,14 @@ async function handleSubmitGuia(req, res) {
         completada: !draft
     };
     if (isGuidedAccess(guideId, rutLimpio)) payload.variant = GUIDED_VARIANT;
+    if (FOUNDATIONS.KEYS[guideId]) payload.contentVersion = FOUNDATIONS.VERSION;
     if (!draft) {
         payload.submittedAt = now;
         payload.completadaAt = now;
     }
 
     const tx = await ref.transaction((current) => {
+        if (FOUNDATIONS.KEYS[guideId] && current && current.contentVersion !== FOUNDATIONS.VERSION) return;
         if (!isPaesTestRut(rutLimpio) && current && (current.status === 'sent' || current.completada === true)) return;
         return Object.assign({}, current || {}, payload);
     });
@@ -510,6 +520,9 @@ async function handleGetGuiaState(req, res) {
     if (!snap.exists()) return res.status(200).json({ success: true, attempt: null, released: false });
 
     const value = snap.val() || {};
+    if (FOUNDATIONS.KEYS[guideId] && value.contentVersion !== FOUNDATIONS.VERSION) {
+        return res.status(409).json({error:'Existe una respuesta de una versión anterior. El docente debe resguardarla y restablecer el intento antes de usar esta guía.'});
+    }
     const normalizedAnswers = normalizeStoredAnswers(value.answers);
     const legacyCompleted = ['10','11','12','13'].includes(guideId) &&
         Number(value.submittedAt) > 0 && Object.keys(normalizedAnswers).length > 0;
@@ -750,6 +763,11 @@ async function handleAdminGetResults(req, res) {
         Object.values(guideRecords || {}).forEach((record) => {
             if (record && typeof record === 'object') {
                 record.answers = normalizeStoredAnswers(record.answers);
+                if (FOUNDATIONS.KEYS[guideId] && record.contentVersion !== FOUNDATIONS.VERSION) {
+                    record.adminKey = {};
+                    record.legacyVersion = true;
+                    return;
+                }
                 if (record.variant === GUIDED_VARIANT && GUIDED_GUIDE_KEYS[guideId]) {
                     record.adminKey = GUIDED_GUIDE_KEYS[guideId];
                 } else if (INTERACTIVE_GUIDE_KEYS[guideId]) {
@@ -907,6 +925,15 @@ module.exports = async (req, res) => {
         if (action === 'get-nomina-extra') return await handleGetNominaExtra(req, res);
         if (action === 'get-guia-draft') return await handleGetGuiaDraft(req, res);
         if (action === 'get-guia-state') return await handleGetGuiaState(req, res);
+        if (action === 'get-foundation') {
+            const id = String(req.query.guiaId || '');
+            const rut = cleanRut(req.query.rut);
+            if (!rut || !FOUNDATIONS.KEYS[id]) return res.status(400).json({error:'Guía o identificación no válida.'});
+            const guided = isGuidedAccess(id, rut);
+            if ((req.query.mode === 'guided') !== guided) return res.status(200).json({redirect:`guia${id}${guided?'-guiada':''}.html`});
+            res.setHeader('Cache-Control','private, no-store');
+            return res.status(200).json({success:true,activity:FOUNDATIONS.publicGuide(id,guided)});
+        }
         if (action === 'submit-guia14') return await handleSubmitGuia14(req, res);
         if (action === 'get-guia14-state') return await handleGetGuia14State(req, res);
         if (action === 'get-guia14-form') return await handleGetGuia14Form(req, res);
@@ -915,6 +942,18 @@ module.exports = async (req, res) => {
 
         // Admin actions (Token verification required)
         const decoded = await verifyAdmin(req);
+
+        if (action === 'admin-get-foundation') {
+            const id = String(req.query.guiaId || '');
+            const guided = req.query.mode === 'guided';
+            const activity = FOUNDATIONS.publicGuide(id, guided);
+            if (!activity) return res.status(400).json({error:'Guía no válida.'});
+            res.setHeader('Cache-Control', 'private, no-store');
+            return res.status(200).json({success:true,activity,
+                key:guided?FOUNDATIONS.GUIDED_KEYS[id]:FOUNDATIONS.KEYS[id],
+                feedback:guided?FOUNDATIONS.GUIDED_FEEDBACK[id]:FOUNDATIONS.FEEDBACK[id],
+                skills:FOUNDATIONS.registry[guided?'guided':'regular'][id].skill});
+        }
 
         switch (action) {
             case 'admin-get-results': return await handleAdminGetResults(req, res);

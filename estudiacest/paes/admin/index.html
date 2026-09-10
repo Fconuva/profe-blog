@@ -754,6 +754,7 @@
   
   <!-- Inyección de nóminas oficiales (152 alumnos) -->
   <script src="../js/nominas.js"></script>
+  <script src="../js/foundations-registry.js"></script>
 </head>
 <body>
 
@@ -969,6 +970,13 @@
           </div>
           <div class="filters-bar">
             <select class="select-filter" id="selectGuia" title="Guía"></select>
+            <button class="btn" type="button" onclick="openFoundationPauta()">Pauta G1–9</button>
+            <dialog id="foundationPauta" style="width:min(900px,90vw);max-height:85vh;overflow:auto;background:#101827;color:#e2e8f0;padding:24px;border:1px solid #64748b;border-radius:12px">
+              <button type="button" onclick="document.getElementById('foundationPauta').close()">Cerrar pauta</button>
+              <button type="button" onclick="openFoundationPauta(false)">Regular</button>
+              <button type="button" onclick="openFoundationPauta(true)">Acompañada</button>
+              <div id="foundationPautaContent"></div>
+            </dialog>
             <input type="text" class="search-input" id="searchGuiaInt" placeholder="Buscar por nombre o RUT...">
             <select class="select-filter" id="filterCourseGuiaInt" title="Curso">
               <option value="">Todos los cursos</option>
@@ -1316,13 +1324,7 @@
     // ====== CATÁLOGO DE GUÍAS (ids compartidos con guias.html y guia-lock.js) ======
     // El 'id' debe coincidir con data-guia-id en guias.html y window.GUIA_LOCK_ID en cada guiaN.html
     const GUIAS_CATALOG = [
-      { id: 'g1',    n: 'Guía N°1 — Localizar e Interpretar',        tipo: 'PDF' },
-      { id: 'g2',    n: 'Guía N°2 — Comprensión Narrativa',          tipo: 'PDF' },
-      { id: 'g4',    n: 'Guía N°4 — Evaluar Textos Argumentativos',  tipo: 'PDF' },
-      { id: 'g6',    n: 'Guía N°6 — Identificar Falacias',           tipo: 'PDF' },
-      { id: 'g7',    n: 'Guía N°7 — Recursos Retóricos',             tipo: 'PDF' },
-      { id: 'g8',    n: 'Guía N°8 — Inferencias (Narrativa LA)',     tipo: 'PDF' },
-      { id: 'g9',    n: 'Guía N°9 — Sesgos y Postura del Emisor',    tipo: 'PDF' },
+      ...Object.entries(window.PAES_FOUNDATIONS_REGISTRY.regular).map(([id,g])=>({id:'g'+id,n:g.titulo,tipo:'Interactiva'})),
       { id: 'g10',   n: 'Guía N°10 — Hipótesis del relato',          tipo: 'Interactiva' },
       { id: 'g11',   n: 'Guía N°11 — Tres textos tipo PAES',         tipo: 'Interactiva' },
       { id: 'g12',   n: 'Guía N°12 — Leo para aprender (Localizar)', tipo: 'Interactiva' },
@@ -1393,6 +1395,7 @@
     // ============ GUÍA INTERACTIVA N°10 (clave + etiquetas de desarrollo) ============
     // ====== REGISTRO DE GUÍAS INTERACTIVAS (extensible: agrega aquí las nuevas) ======
     const GUIAS = {
+      ...window.PAES_FOUNDATIONS_REGISTRY.regular,
       '10': {
         titulo: 'Guía 10 — Hipótesis del relato y relaciones',
         total: 9,
@@ -1521,6 +1524,7 @@
     let currentGuia = '21';
     function cfg() { return GUIAS[currentGuia]; }
     const GUIDED_CFG = {
+      ...window.PAES_FOUNDATIONS_REGISTRY.guided,
       '17': {
         titulo: 'Guía 17 — Doble evidencia · Versión guiada',
         total: 6,
@@ -1559,12 +1563,27 @@
       if (record && record.variant === 'guided-access-2026' && GUIDED_CFG[currentGuia]) {
         return { ...GUIDED_CFG[currentGuia], key: record.adminKey || {} };
       }
-      if (currentGuia === '21') {
+      if (Number(currentGuia) <= 9 || currentGuia === '20' || currentGuia === '21') {
         return { ...cfg(), key: (record && record.adminKey) || {} };
       }
       return cfg();
     }
     function gmEscape(s){ return (s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+    async function openFoundationPauta(guided = false) {
+      if (Number(currentGuia) < 1 || Number(currentGuia) > 9) return alert('La pauta de fundamentos corresponde a las guías 1–9.');
+      const dialog = document.getElementById('foundationPauta');
+      const box = document.getElementById('foundationPautaContent');
+      if (!dialog.open) dialog.showModal();
+      box.textContent = 'Cargando pauta docente…';
+      try {
+        const token = await auth.currentUser.getIdToken();
+        const response = await fetch(`/api/paes?action=admin-get-foundation&guiaId=${currentGuia}&mode=${guided?'guided':'regular'}`, {headers:{Authorization:`Bearer ${token}`}});
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'No se pudo cargar la pauta.');
+        const a = data.activity;
+        box.innerHTML = `<h2>${gmEscape(a.title)}</h2><p>${gmEscape(a.version)} · ${guided?'Ruta acompañada: seis preguntas con apoyo.':'Práctica: 1–6. Evaluación independiente: 7–12.'}</p>` + a.sets.map(s=>s.texts.map(t=>`<details><summary>${gmEscape(t.title)}</summary><div style="white-space:pre-wrap">${gmEscape(t.paragraphs.join('\n\n'))}</div></details>`).join('')).join('') + a.questions.map(q=>`<details><summary>${q.n}. ${gmEscape(q.text)} · ${gmEscape(data.skills[q.n])} · Clave ${data.key[q.n]}</summary><ul>${Object.entries(q.opts).map(([k,v])=>`<li>${k}. ${gmEscape(v)}</li>`).join('')}</ul><p style="white-space:pre-wrap">${gmEscape(data.feedback[q.n])}</p></details>`).join('');
+      } catch (error) { box.textContent = error.message; }
+    }
     let gmRut = null;
 
     // GUIAS GUID MAPS (matches filenames in paes/guias)
@@ -2009,7 +2028,7 @@
         const ans = r.answers || {};
         for (let q = 1; q <= recordCfg.total; q++) {
           const sk = recordCfg.skill && recordCfg.skill[q]; if (!sk || !agg[sk]) continue;
-          if (currentGuia === '21' && !recordCfg.key[q]) continue;
+          if ((Number(currentGuia) <= 9 || currentGuia === '21') && !recordCfg.key[q]) continue;
           const response = ans[q] || ans[`q${String(q).padStart(2, '0')}`];
           agg[sk].tot++;
           if (response === recordCfg.key[q]) agg[sk].ok++;
@@ -2021,6 +2040,8 @@
       const box = document.getElementById('guiaHabSummary');
       const summaryRows = currentGuia === '14'
         ? rows.filter(r => r.status === 'sent' && r.skills)
+        : Number(currentGuia) <= 9
+          ? rows.filter(r => r.status === 'sent' && Object.keys(cfgForRecord(r).key).length === cfgForRecord(r).total)
         : currentGuia === '21'
           ? rows.filter(r => Object.keys(cfgForRecord(r).key).length === cfgForRecord(r).total)
           : rows;
@@ -2057,7 +2078,7 @@
         Object.keys(sk).forEach(k => { sk[k].ok = Number(r.skills[k]?.correct || 0); sk[k].tot = Number(r.skills[k]?.total || 0); });
       } else {
         for (let q=1; q<=C.total; q++){
-          if (currentGuia === '21' && !C.key[q]) continue;
+          if ((Number(currentGuia) <= 9 || currentGuia === '21') && !C.key[q]) continue;
           const s = C.skill && C.skill[q];
           const response = ans0[q] || ans0[`q${String(q).padStart(2, '0')}`];
           if (s && sk[s]) { sk[s].tot++; if (response === C.key[q]) sk[s].ok++; }
@@ -2080,7 +2101,7 @@
         const ans = isG14 ? (r.displayAnswers && r.displayAnswers[qid]) : (ans0[q] || ans0[qid]);
         const key = isG14 ? (r.displayKeys && r.displayKeys[qid]) : C.key[q];
         const experimental = isG14 && r.itemCorrect && r.itemCorrect[qid] === null;
-        const canEvaluate = isG14 ? !isDraft : currentGuia !== '21' || !!key;
+        const canEvaluate = isG14 ? !isDraft : (Number(currentGuia) > 9 && currentGuia !== '21') || !!key;
         const ok = isG14 ? r.itemCorrect && r.itemCorrect[qid] === true : ans === key;
         const cell = document.createElement('div');
         cell.className = `q-cell ${experimental || !canEvaluate ? '' : (ans ? (ok ? 'correct' : 'incorrect') : '')}`;

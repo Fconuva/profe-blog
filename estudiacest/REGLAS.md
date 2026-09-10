@@ -242,6 +242,10 @@ Antes de declarar una tarea terminada:
   `paes/PLAN_CONSTRUCCION_32_GUIAS.md` (decisión del 10-sep-2026).
 - Conservar lo publicado; las guías ausentes quedan planificadas hasta su
   construcción y validación. No renumerar ni sustituir objetivos históricos.
+- Excepción autorizada el 10-sep-2026: reconstruir y corregir G1–G9 para unificar
+  el formato interactivo actual. Conservar PDF y registros anteriores como
+  históricos; corregir el foco mal descrito de G2. G10–G21 y el backlog posterior
+  no se sustituyen por esta autorización.
 - Respetar la fórmula recuperada de los libros y los formatos acordados,
   documentados en ese plan. Antes de reutilizar la serie otro año, revisar el
   temario oficial del proceso correspondiente y el calendario real.

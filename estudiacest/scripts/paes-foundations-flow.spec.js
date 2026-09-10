@@ -39,6 +39,16 @@ for(const width of [390,1440,3840])test(`Regular G1–G9: entrega, recarga y pub
   await login(page,id);await expect(page.locator('.question')).toHaveCount(12);await expect(page.locator('#method')).toContainText('Observa cómo se decide');
   await expect(page.locator('#lessonObjective')).toBeVisible();await expect(page.locator('.success-criteria li')).toHaveCount(3);await expect(page.locator('.reading-scheme')).toBeVisible();await expect(page.locator('.scheme-nodes li')).toHaveCount(3);await expect(page.locator('.notebook-closing')).toBeHidden();
   await page.locator('#workInstructions summary').click();await expect(page.locator('#workInstructions')).toContainText('La entrega cierra el intento');await page.locator('#workInstructions summary').click();
+  await page.locator('.ai-teaching-figure').scrollIntoViewIfNeeded();
+  await expect(page.locator('.ai-teaching-figure img')).toBeVisible();
+  await expect.poll(()=>page.locator('.ai-teaching-figure img').evaluate(img=>img.complete&&img.naturalWidth)).toBe(1200);
+  await expect(page.locator('.lesson-expansion > .lesson-chapter')).toHaveCount(4);
+  await page.locator('.lesson-chapter summary').filter({hasText:'1. Comprende'}).click();await expect(page.locator('.lesson-expansion .chapter-body').first()).toBeVisible();
+  await page.locator('.lesson-chapter summary').filter({hasText:'4. Comprueba'}).click();
+  await expect(page.locator('.lesson-check .teaching-response')).not.toHaveAttribute('open');await page.locator('.lesson-check .teaching-response summary').click();await expect(page.locator('.lesson-check .teaching-response > p')).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);
+  await page.locator('.ai-teaching-figure').screenshot({path:test.info().outputPath(`illustration-g${id}-${width}.png`)});
+  if(id===1){await page.locator('.lesson-expansion').screenshot({path:test.info().outputPath(`teaching-g1-${width}.png`)});}
   await page.locator('.reading-scheme').screenshot({path:test.info().outputPath(`scheme-g${id}-${width}.png`)});
   await page.locator('[data-tab="2"]').click();await expect(page.locator('#methodSection')).toBeHidden();await expect(page.locator('#panel-2 .stage-instruction')).toContainText('7–12');await page.locator('[data-tab="1"]').click();await expect(page.locator('#methodSection')).toBeVisible();
   await page.locator('#question-1 .option').first().click();await page.locator('#question-1 .flag').click();await page.locator('[data-tab="2"]').click();await page.locator('#question-7 .option').last().click();await expect(page.locator('#question-7 .level')).toHaveCount(0);await page.locator('[data-tab="4"]').click();await page.locator('#evidence').fill('Pregunta 1: evidencia de prueba.');
@@ -57,6 +67,12 @@ test('Guiadas G1–G9: derivación, seis preguntas, voz, clave diferenciada e in
  for(let id=1;id<=9;id++){
   const redirect=await(await api(`get-foundation&guiaId=${id}&rut=${GUIDED.rut}&mode=regular`)).json();expect(redirect.redirect).toBe(`guia${id}-guiada.html`);
   const deny=await(await api(`get-foundation&guiaId=${id}&rut=${STUDENT.rut}&mode=guided`)).json();expect(deny.redirect).toBe(`guia${id}.html`);
+  await login(page,id,GUIDED,true);await page.locator('.ai-teaching-figure').scrollIntoViewIfNeeded();
+  await expect.poll(()=>page.locator('.ai-teaching-figure img').evaluate(img=>img.complete&&img.naturalWidth)).toBe(1200);
+  await expect(page.locator('.lesson-expansion > .lesson-chapter[open]')).toHaveCount(0);
+  await page.locator('.lesson-chapter summary').filter({hasText:'2. Aplica'}).focus();await page.keyboard.press('Enter');await expect(page.locator('.strategy-steps li')).toHaveCount(4);await expect(page.locator('.strategy-steps')).toBeVisible();
+  await page.locator('.lesson-chapter summary').filter({hasText:'3. Sigue'}).click();await expect(page.getByRole('heading',{name:'Pienso en voz alta',exact:true})).toBeVisible();
+  if(id===1)await page.locator('.lesson-expansion').screenshot({path:test.info().outputPath('guided-teaching-g1-mobile.png')});
   await login(page,id,GUIDED,true);await expect(page.locator('.question')).toHaveCount(6);await expect(page.locator('.question:visible')).toHaveCount(1);await expect(page.locator('#readAloud')).toBeVisible();await page.locator('#question-1 .option').first().click();await page.locator('#guidedNext').click();await expect(page.locator('#question-2')).toBeVisible();await page.locator('[data-tab="4"]').click();await page.locator('#submit').click();await expect(page.locator('#confirmDialog')).toBeVisible();
   const record=get(`plataforma_paes/guia_respuestas/${id}/${GUIDED.rut}`);expect(record.total).toBe(6);expect(record.variant).toBe('guided-access-2026');const late=await api('submit-guia',{...GUIDED,guiaId:String(id),contentVersion:bank.VERSION,answers:{1:'D'},draft:true});expect(late.status).toBe(409);expect(get(`plataforma_paes/guia_respuestas/${id}/${GUIDED.rut}`)).toEqual(record);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)).toBe(true);

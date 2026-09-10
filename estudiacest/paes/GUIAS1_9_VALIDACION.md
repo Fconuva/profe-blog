@@ -28,6 +28,18 @@ Son sesiones de enseñanza, no simulacros de extensión PAES. Se documenta la ex
 
 ## Fórmula y evaluación
 
+### Ampliación didáctica e imágenes de IA · 10 de septiembre de 2026
+
+Las nueve guías incorporan un desarrollo propio de más de 500 palabras adicionales por guía: distinciones conceptuales, cuatro pasos explicados, un ejemplo original con razonamiento en voz alta, un error frecuente y una comprobación con transferencia. La fuente reproducible es `scripts/paes-foundations-lessons.js`; `scripts/generate-paes-foundations.js` la integra en las dieciocho páginas. Los cuatro bloques desplegables permiten leer por partes; la ruta acompañada mantiene el mismo objetivo y orienta a trabajar un bloque a la vez. No se amplían los estímulos evaluados ni se alteran las claves o `foundations-v1`.
+
+Cada guía presenta una ilustración generada mediante `image_gen`, una descripción alternativa, una consigna de observación y su explicación. Son analogías o escenas ficticias de enseñanza, identificadas como tales; no representan datos reales ni integran la evaluación. El significado esencial queda escrito. Se conservaron los originales generados y se convirtieron copias de entrega a WebP de 1200 × 800 px, entre 100 y 230 kB aproximadamente, con carga diferida y dimensiones reservadas. Recursos y prompts: `paes/imagenes/fundamentos/`.
+
+Los nuevos ejemplos y sus respuestas son públicos y distintos de los reactivos del banco. El bloque completo se oculta al entrar en «Evalúa», igual que el modelado anterior. Las comprobaciones de cuaderno no se guardan ni puntúan. Se conserva la fórmula recuperada del plan: explica → modela → ejercita → evalúa → analiza. El docente selecciona los ejemplos necesarios dentro de los 15 minutos previstos de explicación/modelado; los restantes quedan para profundizar o volver a consultar, sin sumar una lectura obligatoria de todos los apoyos al tiempo de evaluación.
+
+Se cotejó la distinción entre habilidades y conocimientos subyacentes con el [temario oficial DEMRE, Admisión 2027](https://demre.cl/publicaciones/pdf/2027-26-03-19-temario-paes-regular-competencia-lectora.pdf), páginas 5–7. Las explicaciones son elaboración didáctica propia; no se presentan como citas de DEMRE ni de los libros. G5 conserva su condición de formación complementaria. No se afirma que estas nueve clases, por sí solas, cubran todo el temario.
+
+### Encuadre conservado
+
 Cada guía tiene una tarjeta independiente en el portal principal, con su título, objetivo breve, cantidad de textos/preguntas y botón propio. El catálogo conserva sus nueve entradas y PDF históricos.
 
 Las dieciocho páginas (regular y acompañada) incluyen objetivo observable, tres criterios de logro, instrucciones desplegables, recorrido de aprendizaje, activación y cierre en el cuaderno. Los nueve esquemas son específicos: ruta de evidencia, embudo de síntesis, secuencia temporal, estructura del argumento, interpretación poética, vínculo del razonamiento, función del recurso, convergencia de indicios y contraste de perspectivas. Se construyen con HTML semántico y CSS adaptable; no dependen de imágenes externas ni contienen respuestas evaluadas.

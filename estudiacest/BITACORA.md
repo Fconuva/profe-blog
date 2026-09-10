@@ -8,6 +8,15 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–9: enseñanza ampliada e ilustraciones IA preparadas
+
+- A solicitud de Francisco se amplió la enseñanza de G1–G9, manteniendo objetivos, tarjetas individuales, lecturas, reactivos, claves y versión de intentos. Se agregaron 5.455 palabras de contenido didáctico original entre las nueve guías: conceptos, estrategia con razones, ejemplo pensado en voz alta, error frecuente, comprobación y transferencia. La secuencia conserva explica → modela → ejercita → evalúa → analiza.
+- Nueve ilustraciones originales creadas con `image_gen`, inspeccionadas e integradas con texto alternativo, pie explicativo, pregunta de observación y contraste. Son escenas ficticias o analogías de enseñanza, no datos ni estímulos evaluados. Los originales permanecen en el directorio de generación; las copias WebP de 1200 × 800 px pesan 1,34 MB en conjunto. Prompts y recursos: `paes/imagenes/fundamentos/`.
+- Fuente didáctica pública reproducible en `scripts/paes-foundations-lessons.js`, integrada mediante `scripts/generate-paes-foundations.js` en las 18 páginas. Bloques desplegables, enlace para saltar a las preguntas, dimensiones de imagen reservadas y carga diferida. El apoyo completo permanece fuera de la vista de evaluación independiente. Las respuestas de enseñanza no pertenecen al banco evaluado ni puntúan.
+- Se cotejó el encuadre con el temario DEMRE Admisión 2027; G5 sigue siendo complementaria. La skill de instrucción explícita orientó la relación concepto → modelo razonado → comprobación → transferencia; no se modificaron la fórmula recuperada de los libros ni G10–G21 o el backlog G22–G32.
+- Build aprobado con 203 recursos críticos y 44 contratos. Primera ronda de ocho pruebas Playwright aprobada: 390/1440/3840 px, guardado y recuperación, entrega, inmutabilidad, privacidad y admin. Capturas de enseñanza e ilustraciones inspeccionadas; sin desborde. Se añadió cobertura de teclado y de ilustraciones en la ruta acompañada para la repetición final.
+- Se preserva el cambio de seguridad paralelo `097fd55d`, ya integrado y enviado por su autor. No se tocaron los cambios ajenos de Lirmi ni otras áreas. Publicación y comprobación real de producción pendientes de cierre en una entrada posterior.
+
 ## 2026-09-10, PAES 1–9: tarjetas y encuadre de guía publicados y verificados
 
 - Francisco autorizó publicar y apartar temporalmente los dos cambios ajenos de acceso. Se aislaron únicamente `api/estudiantes.js` y `api/lecturas-login.js`; terminado el despliegue se restauraron y se cotejaron sus hashes originales: ambos idénticos. No se incluyeron esos cambios ni se modificaron los demás pendientes del repositorio.

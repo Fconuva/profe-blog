@@ -3,8 +3,8 @@
 //
 // No es una función de Vercel por sí misma (los archivos con guion bajo no se
 // despliegan como funciones): el plan Hobby admite 12 y ya están ocupadas. Se
-// enruta desde api/estudiantes.js con las acciones `salas-entrar`, `salas-latido`,
-// `salas-salir`, `salas-decir` y `salas-atender`.
+// enruta desde api/estudiantes.js con las acciones `salas-entrar`, `salas-lista`,
+// `salas-latido`, `salas-salir`, `salas-decir` y `salas-atender`.
 //
 // Todo lo que escribe el chat pasa por aquí, con credenciales de servidor. El
 // cliente solo LEE el nodo `salas` (regla .read para estudiantes registrados);
@@ -22,6 +22,7 @@
 
 const admin = require('firebase-admin');
 const { revisar } = require('./_filtro-garabatos.js');
+const { visiblesDeCurso } = require('./_nombre-visible.js');
 
 const BASE = 'plataforma_estudiantes';
 const TOPE_SALA = 30;
@@ -48,6 +49,31 @@ async function quien(req, db, auth) {
         curso: est ? String(est.curso || '') : 'admin',
         esAdmin
     };
+}
+
+// ---- nombre que ven los demás ----
+// Primer nombre y primer apellido, desempatado dentro del curso. El nombre
+// completo solo va a los registros del profesor (bloqueados_chat, alertas_chat):
+// el nodo `salas` lo leen todos los estudiantes registrados.
+// Se cachea por curso unos minutos: una instancia caliente atiende muchos
+// mensajes y no hace falta leer la nómina del curso en cada uno.
+const CACHE_CURSO_MS = 5 * 60 * 1000;
+const cacheCurso = new Map();
+
+async function perfilesDeCurso(db, curso) {
+    const guardado = cacheCurso.get(curso);
+    if (guardado && Date.now() - guardado.t < CACHE_CURSO_MS) return guardado;
+    const snap = await db.ref(`${BASE}/estudiantes`).orderByChild('curso').equalTo(curso).once('value');
+    const perfiles = snap.val() || {};
+    const entrada = { t: Date.now(), perfiles, visibles: visiblesDeCurso(perfiles) };
+    cacheCurso.set(curso, entrada);
+    return entrada;
+}
+
+async function nombreDe(db, yo) {
+    if (!yo.curso || yo.curso === 'admin') return 'Profe';
+    const { visibles } = await perfilesDeCurso(db, yo.curso);
+    return visibles[yo.uid] || 'Estudiante';
 }
 
 const idSala = (v) => (/^[A-Za-z0-9_-]{6,64}$/.test(String(v || '')) ? String(v) : null);
@@ -96,14 +122,45 @@ async function entrar(req, res, db, yo) {
         return res.status(200).json({ ok: false, lleno: true, presentes: Object.keys(vivos).length,
             error: `La casa está llena (${TOPE_SALA} personas). Intenta más tarde.` });
     }
+    const visible = await nombreDe(db, yo);
     await db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`).set({
-        nombre: yo.nombre.slice(0, 60),
+        nombre: visible,
         curso: yo.curso,
         look: limpiaLook(req.body.look),
         col: celda(req.body.col, 5), fila: celda(req.body.fila, 5),
         ts: Date.now()
     });
-    return res.status(200).json({ ok: true, presentes: Object.keys(vivos).length + (yaEstaba ? 0 : 1) });
+    return res.status(200).json({ ok: true, yo: visible, presentes: Object.keys(vivos).length + (yaEstaba ? 0 : 1) });
+}
+
+// Casas que se pueden visitar: las del propio curso, con cuántos hay dentro.
+// La arma el servidor para que el navegador no descargue perfiles ajenos: el
+// perfil guarda el RUT, y la clave inicial sale del RUT.
+async function lista(req, res, db, yo) {
+    if (!yo.curso || yo.curso === 'admin') return res.status(200).json({ ok: true, casas: [] });
+    const { perfiles, visibles } = await perfilesDeCurso(db, yo.curso);
+
+    // Un mismo estudiante registrado dos veces (mismo RUT) aparece una sola vez:
+    // se conserva el perfil más reciente.
+    const porRut = {};
+    Object.keys(perfiles).forEach((uid) => {
+        if (uid === yo.uid) return;
+        const rut = String(perfiles[uid].rut || uid).replace(/[^0-9kK]/g, '').toUpperCase() || uid;
+        const previo = porRut[rut];
+        if (!previo || Number(perfiles[uid].createdAt || 0) > Number(perfiles[previo].createdAt || 0)) porRut[rut] = uid;
+    });
+    const uids = Object.values(porRut);
+
+    const ahora = Date.now();
+    const cuentas = await Promise.all(uids.map((uid) =>
+        db.ref(`${BASE}/salas/${uid}/presentes`).once('value').then((s) => {
+            const p = s.val() || {};
+            return Object.keys(p).filter((k) => ahora - Number(p[k].ts || 0) <= VIDA_MS).length;
+        })));
+
+    const casas = uids.map((uid, i) => ({ uid, nombre: visibles[uid] || 'Estudiante', n: cuentas[i] }))
+        .sort((a, b) => (b.n - a.n) || a.nombre.localeCompare(b.nombre, 'es'));
+    return res.status(200).json({ ok: true, casas, tope: TOPE_SALA });
 }
 
 async function latido(req, res, db, yo) {
@@ -153,7 +210,7 @@ async function decir(req, res, db, yo) {
 
     const chatRef = db.ref(`${BASE}/salas/${sala}/chat`);
     const nuevo = chatRef.push();
-    await nuevo.set({ uid: yo.uid, nombre: yo.nombre.slice(0, 60), texto, ts: ahora, alerta: !!veredicto.alerta });
+    await nuevo.set({ uid: yo.uid, nombre: await nombreDe(db, yo), texto, ts: ahora, alerta: !!veredicto.alerta });
     await refYo.update({ ultimoMsg: ahora, ts: ahora });
 
     if (veredicto.alerta) {
@@ -188,6 +245,7 @@ async function manejar(req, res, accion, db, auth) {
     try {
         const yo = await quien(req, db, auth);
         if (accion === 'entrar') return await entrar(req, res, db, yo);
+        if (accion === 'lista') return await lista(req, res, db, yo);
         if (accion === 'latido') return await latido(req, res, db, yo);
         if (accion === 'salir') return await salir(req, res, db, yo);
         if (accion === 'decir') return await decir(req, res, db, yo);

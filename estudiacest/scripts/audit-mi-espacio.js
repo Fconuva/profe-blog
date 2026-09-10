@@ -129,6 +129,60 @@ exigir(espacio.includes('abrirPaleta') && espacio.includes('PISOS'), 'Falta el c
 const admin = leer('estudiantes/adminprofe/index.html');
 exigir(admin.includes('sec-chatcasas') && admin.includes('alertas_chat'), 'El admin debe mostrar las alertas del chat.');
 
+// ---- nombre visible: "Nombre Apellido", nunca el nombre completo ni el RUT ----
+// Caso (10-sep-2026): la sala guardaba el nombre completo en `presentes` y `chat`,
+// que leen todos los estudiantes, y la lista de visitas descargaba el nodo
+// `estudiantes` entero en el navegador: 879 de 882 perfiles traen RUT, y la
+// clave inicial sale del RUT.
+const { nombreVisible, visiblesDeCurso } = require(path.join(root, 'api/_nombre-visible.js'));
+const casosNombre = [
+  ['ALVAREZ MEJIAS BENJAMIN DYLAN', 'Benjamin Alvarez'],
+  ['ÁLVAREZ MEJÍAS BENJAMÍN DYLAN', 'Benjamín Álvarez'],
+  ['MUÑOZ GARRIDO FELIPE MANUEL', 'Felipe Muñoz'],
+  ['DE LA FUENTE SOTO JUAN PABLO', 'Juan de la Fuente'],
+  ['SOTO DE LA FUENTE JUAN', 'Juan Soto'],
+  ['DEL RIO PEREZ ANA MARIA', 'Ana del Rio'],
+  ['SAN MARTIN ROJAS PEDRO', 'Pedro San Martin'],
+  ['PEREZ SOTO JUAN', 'Juan Perez'],
+  ['PEREZ JUAN', 'Juan Perez'],
+  ['GONZALEZ-COTAPOS LIRA TOMAS', 'Tomas Gonzalez-Cotapos'],
+  ['PEREZ ROJAS MARIA DE LOS ANGELES', 'Maria Perez'],
+  ['profe Francisco', 'Profe Francisco'],
+  ['Juan Pablo Pérez Soto', 'Juan Pérez'],
+  ['', 'Estudiante']
+];
+const ctxN = { window: {}, devicePixelRatio: 1, document: ctxP.document, Image: function () {}, setTimeout, setInterval, clearInterval, clearTimeout };
+vm.createContext(ctxN);
+vm.runInContext(personaje, ctxN);
+vm.runInContext(leer('estudiantes/js/catalogo-casa.js'), ctxN);
+vm.runInContext(espacio, ctxN);
+const cliente = ctxN.window.MiEspacio;
+exigir(cliente && typeof cliente.nombreVisible === 'function', 'mi-espacio.js debe exponer MiEspacio.nombreVisible para poder auditarlo.');
+casosNombre.forEach(([entrada, esperado]) => {
+  const s = nombreVisible(entrada);
+  exigir(s === esperado, `Servidor: "${entrada}" da "${s}" y debía dar "${esperado}".`);
+  if (cliente && cliente.nombreVisible) {
+    const c = cliente.nombreVisible(entrada);
+    exigir(c === s, `El navegador y el servidor no coinciden para "${entrada}": "${c}" / "${s}".`);
+  }
+});
+const vc = visiblesDeCurso({ a: { nombre: 'MUÑOZ ROJAS BENJAMIN' }, b: { nombre: 'MUÑOZ SOTO BENJAMIN' }, c: { nombre: 'PEREZ LARA ANA' } });
+exigir(vc.a === 'Benjamin Muñoz R.' && vc.b === 'Benjamin Muñoz S.' && vc.c === 'Ana Perez',
+  `El desempate por curso no funciona: ${JSON.stringify(vc)}`);
+if (cliente && cliente.nombreCorto) {
+  exigir(cliente.nombreCorto('Benjamin Muñoz R.') === 'Benjamin Muñoz R.',
+    'Un nombre que ya viene del servidor no se vuelve a procesar: se perdería la inicial del desempate.');
+}
+
+exigir(!/\/estudiantes['"]\s*\)|\/estudiantes\/['"]\s*\+/.test(espacio),
+  'mi-espacio.js no puede leer perfiles del nodo estudiantes: traen el RUT. La lista la arma el servidor (salas-lista).');
+exigir(/async function lista\(/.test(salasApi) && salasApi.includes("accion === 'lista'"),
+  'Falta la acción salas-lista en el servidor.');
+exigir(!/nombre:\s*yo\.nombre\.slice/.test(salasApi),
+  'La sala y el chat no pueden guardar el nombre completo: usan el nombre visible (nombreDe).');
+exigir((salasApi.match(/nombre: yo\.nombre,/g) || []).length === 2,
+  'El nombre completo solo va a los dos registros del profesor (bloqueados_chat y alertas_chat).');
+
 // El sistema viejo no debe seguir referenciado
 const paginas = fs.readdirSync(path.join(root, 'estudiantes')).filter(f => f.endsWith('.html'));
 paginas.forEach(f => {

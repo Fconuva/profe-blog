@@ -90,13 +90,50 @@
 
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){
     return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]; }); }
+  // ---- nombre visible: primer nombre y primer apellido ----
+  // Copia de api/_nombre-visible.js. La auditoría corre las dos con los mismos
+  // casos: si se cambia una sin la otra, el build se detiene.
+  // Los nombres vienen en orden de nómina, PATERNO MATERNO NOMBRES, y hay
+  // apellidos compuestos al comienzo ("DE LA FUENTE"): la tercera palabra no
+  // siempre es el nombre.
+  var PARTICULAS = { DE:1, DEL:1, LA:1, LAS:1, LOS:1, SAN:1, SANTA:1, VAN:1, VON:1, DA:1, DI:1 };
+  var EN_MINUSCULA = { DE:1, DEL:1, LA:1, LAS:1, LOS:1, VAN:1, VON:1, DA:1, DI:1 };
+  function capital(p) {
+    p = String(p || '').toLowerCase();
+    if (EN_MINUSCULA[p.toUpperCase()]) return p;
+    return p.replace(/(^|[-'])(\S)/g, function (m, sep, letra) { return sep + letra.toUpperCase(); });
+  }
+  function tomarApellido(w, i) {
+    var ini = i;
+    while (i < w.length - 1 && PARTICULAS[w[i].toUpperCase()]) i++;
+    return [w.slice(ini, i + 1), i + 1];
+  }
+  function esDeNomina(n) {
+    var letras = String(n || '').replace(/\s+/g, '');
+    return !!letras && letras === letras.toUpperCase() && /[A-ZÁÉÍÓÚÑÜ]/.test(letras);
+  }
+  function nombreVisible(n) {
+    var w = String(n || '').trim().split(/\s+/).filter(Boolean);
+    if (!w.length) return 'Estudiante';
+    if (w.length === 1) return capital(w[0]);
+    var pila, apellido;
+    if (esDeNomina(n)) {
+      var r1 = tomarApellido(w, 0), i = r1[1];
+      if (w.length - i >= 2) i = tomarApellido(w, i)[1];
+      var nombres = w.slice(i);
+      pila = nombres.filter(function (p) { return !PARTICULAS[p.toUpperCase()]; })[0] || nombres[0] || w[w.length - 1];
+      apellido = r1[0];
+    } else {
+      pila = w[0];
+      apellido = [w.length >= 3 ? w[w.length - 2] : w[1]];
+    }
+    return (capital(pila) + ' ' + apellido.map(capital).join(' ')).trim().slice(0, 40);
+  }
+  // Lo que llega del servidor ya viene como "Nombre Apellido" (y a veces con la
+  // inicial del materno para desempatar): se muestra tal cual. Solo se procesa lo
+  // que todavía viene en mayúsculas de nómina, de mensajes anteriores al cambio.
   function nombreCorto(n) {
-    var partes = String(n || '').trim().split(/\s+/);
-    // Los nombres vienen como "APELLIDO APELLIDO NOMBRE NOMBRE": el primer
-    // nombre está en la tercera palabra. Si no, se usa la primera.
-    var pila = partes.length >= 3 ? partes[2] : partes[0];
-    pila = (pila || 'Alguien').toLowerCase();
-    return pila.charAt(0).toUpperCase() + pila.slice(1);
+    return esDeNomina(n) ? nombreVisible(n) : (String(n || '').trim() || 'Estudiante');
   }
 
   // ---------------- imágenes ----------------
@@ -523,6 +560,8 @@
           return false;
         }
         S.sala = sala; S.otros = {}; S.burbujas = {};
+        // El servidor devuelve cómo te ven los demás (con desempate si hace falta)
+        if (r.yo) S.miNombre = r.yo;
         S.refPresentes = S.db.ref(S.base + '/salas/' + sala + '/presentes');
         S.refPresentes.on('value', function (snap) {
           S.otros = snap.val() || {};
@@ -596,36 +635,35 @@
     panel.hidden = false;
     panel.innerHTML = '<div class="esp-vis-cab"><b>¿A quién visitas?</b><button class="esp-btn-chico" id="espCerrarVis">Cerrar</button></div><div class="esp-vis-lista">Buscando compañeros…</div>';
     panel.querySelector('#espCerrarVis').addEventListener('click', function () { panel.hidden = true; });
-    Promise.all([
-      S.db.ref(S.base + '/estudiantes').orderByChild('curso').equalTo(S.curso).once('value'),
-      S.db.ref(S.base + '/salas').once('value')
-    ]).then(function (res) {
-      var comp = res[0].val() || {}, salas = res[1].val() || {};
-      var ahora = Date.now();
-      var filas = Object.keys(comp).filter(function (u) { return u !== S.uid; }).map(function (u) {
-        var pres = (salas[u] && salas[u].presentes) || {};
-        var n = Object.keys(pres).filter(function (k) { return ahora - Number(pres[k].ts || 0) < 60000; }).length;
-        return { uid: u, nombre: comp[u].nombre || 'Estudiante', n: n };
-      }).sort(function (a, b) { return (b.n - a.n) || a.nombre.localeCompare(b.nombre); });
+    // La lista la arma el servidor: el navegador no descarga perfiles ajenos,
+    // que traen el RUT. Llega solo "Nombre Apellido" y cuántos hay en cada casa.
+    api('lista').then(function (r) {
       var cont = panel.querySelector('.esp-vis-lista');
+      if (!r || !r.ok) { cont.textContent = (r && r.error) || 'No se pudo cargar la lista.'; return; }
+      var filas = r.casas || [];
       if (!filas.length) { cont.textContent = 'Todavía no hay compañeros de tu curso registrados.'; return; }
+      var tope = r.tope || 30;
       cont.innerHTML = filas.map(function (f) {
-        return '<button class="esp-vis-item" data-uid="' + f.uid + '"><span>' + esc(f.nombre) + '</span>' +
-          '<em>' + (f.n ? f.n + ' en casa' : 'vacía') + '</em></button>';
+        var lleno = f.n >= tope;
+        return '<button class="esp-vis-item" data-uid="' + esc(f.uid) + '" data-nombre="' + esc(f.nombre) + '"' +
+          (lleno ? ' disabled' : '') + '><span>' + esc(f.nombre) + '</span>' +
+          '<em>' + (lleno ? 'llena' : (f.n ? f.n + ' en casa' : 'vacía')) + '</em></button>';
       }).join('');
       cont.querySelectorAll('.esp-vis-item').forEach(function (b) {
-        b.addEventListener('click', function () { panel.hidden = true; irACasa(b.dataset.uid); });
+        b.addEventListener('click', function () { panel.hidden = true; irACasa(b.dataset.uid, b.dataset.nombre); });
       });
     }).catch(function () { panel.querySelector('.esp-vis-lista').textContent = 'No se pudo cargar la lista.'; });
   }
 
-  function irACasa(uid) {
+  // El nombre del dueño viene de la lista del servidor: no se lee su perfil,
+  // que trae el RUT.
+  function irACasa(uid, nombreDueno) {
     if (uid === S.sala) return;
     var esMia = uid === S.uid;
     var cargar = esMia
       ? Promise.resolve({ pieza: S.miPieza, nombre: S.miNombre, casa: S.miCasa })
-      : Promise.all([S.db.ref(S.base + '/avatar/' + uid).once('value'), S.db.ref(S.base + '/estudiantes/' + uid).once('value')])
-          .then(function (r) { var av = r[0].val() || {}, est = r[1].val() || {}; return { pieza: av.pieza, nombre: est.nombre, casa: av.casa }; });
+      : S.db.ref(S.base + '/avatar/' + uid).once('value')
+          .then(function (snap) { var av = snap.val() || {}; return { pieza: av.pieza, nombre: nombreDueno || 'un compañero', casa: av.casa }; });
     cargar.then(function (d) {
       desconectarSala();
       S.visitando = !esMia;
@@ -1040,5 +1078,6 @@
     if (S.auth && S.db) conectarSala(S.uid, true);
   }
 
-  global.MiEspacio = { montar: montar, CATALOGO: CATALOGO, PISOS: PISOS, MUROS: MUROS };
+  global.MiEspacio = { montar: montar, CATALOGO: CATALOGO, PISOS: PISOS, MUROS: MUROS,
+                       nombreVisible: nombreVisible, nombreCorto: nombreCorto };
 })(window);

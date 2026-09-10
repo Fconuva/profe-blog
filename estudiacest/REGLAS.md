@@ -235,3 +235,13 @@ Antes de declarar una tarea terminada:
 - Registrar el cierre en `BITACORA.md`: fecha, área, cambio, archivos o rutas,
   validaciones, commit y deploy. La bitácora es exclusiva de Estudia CEST y no
   reemplaza ni se mezcla con historiales de docentes o portafolios.
+
+## 11. Planificación y metodología PAES
+
+- La continuidad y el backlog de las 32 guías se mantienen en
+  `paes/PLAN_CONSTRUCCION_32_GUIAS.md` (decisión del 10-sep-2026).
+- Conservar lo publicado; las guías ausentes quedan planificadas hasta su
+  construcción y validación. No renumerar ni sustituir objetivos históricos.
+- Respetar la fórmula recuperada de los libros y los formatos acordados,
+  documentados en ese plan. Antes de reutilizar la serie otro año, revisar el
+  temario oficial del proceso correspondiente y el calendario real.

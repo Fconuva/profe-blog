@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: planificación reutilizable de 32 guías y fórmula recuperada
+
+- Por indicación de Francisco, las guías ausentes quedan planificadas, no
+  construidas ni publicadas. Se conserva G10–G21 y se documenta la continuidad
+  G22–G31 con los títulos/fechas de portada; G32 queda reservada sin fecha.
+- Se creó `paes/PLAN_CONSTRUCCION_32_GUIAS.md` y se agregó su entrada en
+  `REGLAS.md`. Incluye recuperación digital de G1–G9, objetivos observables,
+  secuencia futura, tiempos, backlog y condiciones de aceptación/publicación.
+- Se recuperó la fórmula del proyecto, contrastando la extracción metodológica
+  con las presentaciones OCR de Moraleja 6/7 y la organización de Puntaje
+  Nacional: explica, modela, ejercita graduado, evalúa y analiza el error.
+  Las reglas actuales de liberación docente prevalecen sobre la retroalimentación
+  inmediata descrita en antecedentes antiguos.
+- Corrección de antecedentes: G3 y G5 existen como originales de aula; su
+  ausencia del catálogo web no autoriza a sustituir sus objetivos. Se conservan
+  los simulacros de tres cuartos (49 preguntas/113 minutos), sujetos a una
+  ventana extendida; no se los reemplaza por instrumentos de 65 preguntas.
+- Se consultó el temario oficial de Admisión 2027. La matriz asigna 14 tareas y
+  30 entradas de conocimientos a oportunidades de enseñanza/retorno. Es cobertura
+  planificada: queda pendiente certificar cada correspondencia con ítems reales.
+- Validación focal: 32 guías, 14 tareas, 17 entradas no literarias y 13 narrativas;
+  enlaces locales y UTF-8 correctos. `npm run build` aprobó todas sus auditorías
+  y los 173 recursos críticos. No se modificaron flujos, HTML, claves ni datos:
+  no corresponde prueba de interacción ni despliegue para este cambio documental.
+- Respaldo mediante commit acotado de este bloque, el plan y REGLAS, y push a
+  `origin/main`; el hash queda en el historial Git. Próxima construcción: G22,
+  cuando se retome su implementación; no se ejecutó dentro de esta tarea.
+
 ## 2026-09-10, PAES: secuencia regular completa y operativa hasta la Guía 21
 
 - Se corrigió el salto visible entre las guías 19 y 21. La Guía 20 ahora tiene

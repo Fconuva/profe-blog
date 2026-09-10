@@ -844,7 +844,9 @@ async function handleResetPassword(req, res) {
 
     const newPassword = defaultPassword(student.rut);
     await auth.updateUser(studentUid, { password: newPassword });
-    await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false });
+    // perfil_completo en false: al entrar con la clave por defecto, el panel lo
+    // lleva a perfil.html y tiene que elegir una propia otra vez.
+    await db.ref(`${BASE}/estudiantes/${studentUid}`).update({ password_changed: false, password_reset_pending: false, perfil_completo: false });
 
     return res.status(200).json({ success: true });
 }
@@ -883,6 +885,7 @@ async function handleChangeRut(req, res, decoded) {
     rut: nuevoRutLimpio,
     password_changed: false,
     password_reset_pending: false,
+    perfil_completo: false,
     rut_anterior: student.rut || null,
     rut_cambiado_at: Date.now(),
     rut_cambiado_por: decoded.uid
@@ -906,8 +909,15 @@ async function handleAdminLogin(req, res) {
     const { password } = req.body;
     if (!password) return res.status(400).json({ error: 'password requerido' });
 
-    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || '#huala88138929';
-    const ADMIN_UID = process.env.ADMIN_UID || 'admin_default';
+    // Caso (10-sep-2026): la clave tenía un valor de respaldo escrito aquí, y como
+    // Vercel no define ADMIN_PASSWORD, era la clave vigente, legible en el repo
+    // público y en /api/estudiantes.js. Sin las dos variables, este ingreso queda
+    // apagado; ninguna página lo usa.
+    const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+    const ADMIN_UID = process.env.ADMIN_UID;
+    if (!ADMIN_PASSWORD || !ADMIN_UID) {
+        return res.status(403).json({ error: 'Ingreso deshabilitado' });
+    }
 
     if (password !== ADMIN_PASSWORD) {
         return res.status(403).json({ error: 'Contraseña incorrecta' });

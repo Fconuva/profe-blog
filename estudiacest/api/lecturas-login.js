@@ -2,8 +2,8 @@
 // Backend login para plataforma de Lecturas que evita el rate-limit de Firebase Auth
 // (auth/too-many-requests) cuando el estudiante usa la contrasena por defecto (primeros 6
 // digitos del RUT). Devuelve un custom token para signInWithCustomToken en el cliente.
-// Si el estudiante usa una contrasena distinta a la predeterminada, responde 200 con una
-// senal de fallback para que el cliente continue con Firebase Auth sin generar ruido en consola.
+// Si el estudiante usa una contrasena distinta a la predeterminada, o ya cambio la suya,
+// responde 200 con una senal de fallback para que el cliente continue con Firebase Auth.
 
 const admin = require('firebase-admin');
 
@@ -87,8 +87,15 @@ module.exports = async function handler(req, res) {
       res.status(403).json({ error: 'Cuenta no habilitada' });
       return;
     }
-    // No bloqueamos si password_changed=true: la contrasena por defecto sigue
-    // funcionando como respaldo (uso escolar / soporte del docente).
+    // Caso (10-sep-2026): este atajo entregaba sesión con la clave por defecto
+    // aunque el estudiante ya la hubiera cambiado, así que su clave propia no lo
+    // protegía: bastaba conocer su RUT. Quien ya eligió su clave (o completó el
+    // perfil, que exige elegirla) sigue por Firebase Auth con la suya. Si la
+    // olvida, el profesor la restablece y el atajo vuelve a servirle.
+    if (student.password_changed === true || student.perfil_completo === true) {
+      res.status(200).json({ fallback: true, code: 'use-firebase-auth' });
+      return;
+    }
     await admin.database().ref(`${BASE}/estudiantes/${uid}/lastLogin`).set(Date.now());
     const customToken = await admin.auth().createCustomToken(uid);
     res.status(200).json({ token: customToken, uid });

@@ -238,6 +238,10 @@ Antes de declarar una tarea terminada:
 
 ## 11. Planificación y metodología PAES
 
+- Todas las guías tienen una apertura didáctica antes de practicar: objetivo,
+  instrucciones, conceptos definidos, estrategia por pasos, ejemplo razonado
+  ATENCIÓN y comprobación formativa. Aplicación y límites en el apartado 2.1
+  de `paes/PLAN_CONSTRUCCION_32_GUIAS.md`; también rige para futuras G22–G32.
 - La continuidad y el backlog de las 32 guías se mantienen en
   `paes/PLAN_CONSTRUCCION_32_GUIAS.md` (decisión del 10-sep-2026).
 - Conservar lo publicado; las guías ausentes quedan planificadas hasta su

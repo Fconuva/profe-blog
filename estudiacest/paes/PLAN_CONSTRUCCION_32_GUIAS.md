@@ -30,7 +30,38 @@ La formulación es la síntesis metodológica del proyecto, no una cita literal 
 
 Los niveles N1/N2/N3 son graduación didáctica, no categorías oficiales de dificultad ni niveles de logro ya medidos. No equivalen a la antigua organización anual en cinco tramos.
 
-Procedimientos que se conservan:
+### 2.1. Apertura homogénea obligatoria
+
+Decisión del 10-sep-2026: todas las guías deben enseñar antes de pedir que se
+aplique una habilidad. La apertura común contiene objetivo observable,
+instrucciones y activación, seguidos de cuatro capítulos desplegables:
+
+1. **Comprende los conceptos:** definiciones, distinciones y alcance.
+2. **Aplica la estrategia paso a paso:** procedimiento y error frecuente.
+3. **Sigue un ejemplo razonado:** ATENCIÓN, texto original no evaluado,
+   pregunta, pensamiento en voz alta y conclusión justificada.
+4. **Comprueba y prepara la práctica:** respuesta del estudiante antes de
+   desplegar el modelo, revisión formativa y transferencia.
+
+G1–G9 conservan sus ampliaciones e imágenes IA. G10–G21 reciben enseñanza
+específica para su foco, sin cambiar lecturas evaluadas, preguntas, claves ni
+intentos. Las catorce rutas guiadas disponibles conservan sus apoyos; no se
+crean rutas G10–G16 mediante esta homogeneización. Los recursos y videos
+anteriores se mantienen como complementos.
+
+En los instrumentos G14 y G21, la preparación aparece antes del ingreso y
+deja de mostrarse al comenzar. No se incorpora al tiempo del instrumento ni
+interrumpe su resolución. La comprobación inicial se responde en cuaderno,
+sin puntaje ni guardado digital; nunca expone una clave del instrumento.
+El análisis de preguntas evaluadas espera la publicación docente.
+
+Para G22–G32 esta estructura es un requisito de construcción, no una orden
+de publicar anticipadamente. La auditoría `scripts/audit-paes-teaching.js`
+comprueba actualmente las 35 páginas disponibles de G1–G21; debe ampliarse
+al construir nuevas guías. La semejanza de formato no reemplaza el pilotaje
+ni una revisión editorial independiente.
+
+### 2.2. Procedimientos que se conservan
 
 - Localización: lectura completa del texto → pregunta y referente → búsqueda de evidencia → contraste de alternativas → confirmación. No reemplazar por una regla universal de «pregunta primero».
 - Síntesis: tema o sujeto temático + ideas reiteradas → idea principal; practicar selección, supresión y generalización, comprobando que la síntesis conserve lo esencial.

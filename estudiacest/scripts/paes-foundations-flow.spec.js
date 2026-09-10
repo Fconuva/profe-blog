@@ -32,6 +32,51 @@ test.beforeAll(async()=>{
 test.beforeEach(()=>{state={plataforma_estudiantes:{admins:{teacher:true}}};failDraft=false;delayDraft=0;});
 test.afterAll(async()=>{server.closeAllConnections();await new Promise(r=>server.close(r));});
 async function api(action,body,admin=false){return fetch(origin+'/api/paes?action='+action,body?{method:'POST',headers:{'Content-Type':'application/json',...(admin?{Authorization:'Bearer teacher'}:{})},body:JSON.stringify(body)}:{headers:admin?{Authorization:'Bearer teacher'}:{}});}
+
+for(const width of [390,1440,3840])test(`Apertura G10–21 y guiadas disponibles: conceptos, teclado y modelo a ${width}px`,async({page})=>{
+ test.setTimeout(120000);
+ await page.setViewportSize({width,height:width===3840?2160:900});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('https://**/*',route=>route.abort());
+ for(let id=10;id<=21;id++)for(const guided of [false,true]){
+  if(guided&&id<17)continue;
+  // Configuración de acceso guiado solo en memoria del entorno aislado.
+  if(guided)await page.route('**/paes/js/guia-guiada*.js',async route=>{
+   const name=new URL(route.request().url()).pathname;
+   const code=fs.readFileSync(path.join(root,name),'utf8').replace(/const AUTHORIZED_RUT = '\d+';/,`const AUTHORIZED_RUT = '${GUIDED.rut}';`);
+   await route.fulfill({contentType:'application/javascript',body:code});
+  });
+  await page.goto(`${origin}/paes/guia${id}${guided?'-guiada':''}.html`);
+  const prelude=page.locator('.paes-prelude');
+  if(![14,21].includes(id)||guided){
+   if(!(await prelude.isVisible())){
+    await page.locator('#rutInput').fill(guided?GUIDED.rut:STUDENT.rut);
+    await page.locator('#loginForm button').click();
+   }
+  }
+  await expect(prelude).toBeVisible();
+  await expect(prelude.locator('.pt-chapter')).toHaveCount(4);
+  await expect(prelude.locator('.pt-objective')).toContainText('Objetivo de la clase');
+  await expect(prelude.locator('.pt-chapter[open]')).toHaveCount(0);
+  await prelude.locator('.pt-chapter > summary').first().focus();await page.keyboard.press('Enter');
+  await expect(prelude.locator('.pt-chapter').first().locator('h3')).toHaveCount(3);
+  await prelude.locator('.pt-chapter > summary').nth(1).click();await expect(prelude.locator('.pt-steps li')).toHaveCount(4);
+  await prelude.locator('.pt-chapter > summary').nth(2).click();await expect(prelude.getByRole('heading',{name:'Pienso en voz alta'})).toBeVisible();
+  await prelude.locator('.pt-chapter > summary').nth(3).click();await expect(prelude.locator('.pt-response')).not.toHaveAttribute('open');
+  await prelude.locator('.pt-response summary').click();await expect(prelude.locator('.pt-response p')).toBeVisible();
+  expect(await prelude.evaluate(el=>el.getBoundingClientRect().left>=-1&&el.getBoundingClientRect().right<=innerWidth+1&&el.scrollWidth<=el.clientWidth+1)).toBe(true);
+  if([10,14,18,21].includes(id))await prelude.screenshot({path:test.info().outputPath(`teaching-${id}${guided?'-guided':''}-${width}.png`)});
+  if(!guided&&[14,21].includes(id)){
+   await page.locator(id===14?'#g14-rut':'#rutInput').fill(STUDENT.rut);
+   await page.locator(id===14?'#g14-login button':'#loginForm button').click();
+   await expect(prelude).toBeHidden();
+   if(id===21)await expect(page.locator('#session')).toBeVisible();
+   else await expect(page.locator('#g14-login')).toHaveCount(0);
+  }
+  await page.evaluate(()=>localStorage.clear());
+ }
+ expect(errors).toEqual([]);
+});
 async function login(page,id,student=STUDENT,guided=false){await page.goto(`${origin}/paes/guia${id}${guided?'-guiada':''}.html`);await page.locator('#rutInput').fill(student.rut);await page.locator('#loginForm button').click();await expect(page.locator('#session')).toBeVisible();}
 for(const width of [390,1440,3840])test(`Regular G1–G9: entrega, recarga y publicación a ${width}px`,async({page})=>{
  await page.setViewportSize({width,height:width===3840?2160:900});const errors=[];page.on('pageerror',e=>errors.push(e.message));

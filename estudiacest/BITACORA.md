@@ -8,6 +8,15 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES 1–21: apertura didáctica homogeneizada
+
+- Se conservaron las ampliaciones e imágenes IA de G1–G9 y se añadieron doce desarrollos específicos (6.319 palabras de contenido editorial, más consignas comunes) a G10–G21 y las cinco versiones guiadas disponibles G17–G21. Las 35 páginas regulares/guiadas de G1–G21 tienen objetivo, instrucciones, conceptos, estrategia por pasos, ejemplo razonado ATENCIÓN y comprobación formativa con respuesta inicialmente cerrada. Capítulos desplegables y navegación por teclado, sin exigir su apertura para entregar.
+- Fuentes: `scripts/paes-continuity-teaching.js` y generador idempotente `scripts/generate-paes-teaching.js`; estilo acotado `paes/css/guia-teaching.css`. G14 clona la preparación dentro del ingreso; G21 la contiene en el ingreso existente. Al entrar al instrumento deja de mostrarse; no se alteran temporizadores, lecturas, preguntas ni claves. Recursos y videos anteriores se conservan. Se precisaron en la enseñanza de G17 las condiciones de la doble evidencia y en G18 el giro de objeción posterior a una concesión.
+- Preservación: comparadas las 17 páginas modificadas con Git, todo el contenido previo permanece salvo esas tres correcciones textuales declaradas. Los controladores y bancos inline son idénticos normalizando CRLF; el único cambio del controlador externo G14 es la inserción del bloque preparatorio. No se escribieron intentos reales, liberaciones ni bancos privados.
+- Validación local: generador idempotente; auditoría de las 35 aperturas incorporada a `prebuild` con sus dependencias exceptuadas en `.vercelignore`; build completo aprobado con 204 recursos críticos y 44 contratos. Tres pruebas de apertura aprobadas y luego suite de 25 pruebas Playwright aprobada: 390/1440/3840 px, teclado, explicación y modelo, preparación separada, flujos G1–G9/G21, recuperación sin copia local, errores de red, concurrencia, entrega con pendientes y publicación privada. Capturas inspeccionadas. En pruebas se sustituye la identidad de la ruta guiada únicamente en memoria.
+- `REGLAS.md` y apartado 2.1 del plan de 32 guías fijan esta apertura para futuras construcciones G22–G32, sin publicarlas anticipadamente. La homogeneización es de estructura didáctica, no una sustitución de los instrumentos ni una declaración de validación editorial independiente. Se conserva el pilotaje docente pendiente.
+- Publicación y comprobación pública pendientes en esta entrada; se registrarán al completar el deploy seguro y `scripts/verify-paes-teaching-production.js`.
+
 ## 2026-09-10, Mi casa: los visitantes se ven caminar
 
 - Francisco pidió volver a la dinámica tipo Habbo. Lo que faltaba era el

@@ -8,6 +8,54 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, Cerrada la exposición de RUT y arreglado el aviso de mensajes
+
+- **Qué pasaba.** La regla del nodo `plataforma_estudiantes/estudiantes` dejaba
+  que cualquier estudiante registrado lo leyera completo. Ranking, arena y
+  arena-gato lo descargaban en el navegador, y cada perfil trae RUT, correo,
+  teléfono y apoderado. Como el usuario es el RUT y la clave inicial son sus seis
+  primeros dígitos (780 de 882 perfiles nunca la cambiaron), cualquier estudiante
+  podía entrar a la cuenta de otro. Francisco autorizó el arreglo inmediato.
+- **Arreglo (commit 284587f8).** Nueva acción `perfiles-publicos` en
+  `/api/estudiantes` (`api/_perfiles-publicos.js`): verifica el token, exige
+  estudiante registrado o admin y devuelve solo nombre visible, curso y programa
+  (sin admins ni la cuenta demo, caché de 3 min). `ranking.html`,
+  `ranking-FranciscoJavier.html`, `arena.html` y `arena-gato.html` la usan en vez
+  de leer el nodo, y escapan los nombres antes de ponerlos en el HTML.
+- **Reglas.** El nodo completo lo lee solo un admin; cada perfil, solo su dueño
+  o un admin. Antes de publicar se comparó la regla viva con la del repo; se
+  publicó con `npm run deploy:rules` y la regla viva quedó idéntica al repo. La
+  copia de `estudiacest-2026` se igualó (sin commit en ese repo).
+  `verify-firebase-rules.js` exige ahora esas dos cadenas exactas y recorre el
+  sitio: falla si una página de estudiante vuelve a leer el nodo completo.
+- **Pruebas con cuenta de estudiante ficticia y temporal** (sin RUT, datos
+  inventados). Nodo completo: 401 (antes 200). Perfil ajeno: 401 (antes 200).
+  Perfil propio: 200. Guardar `lastLogin`/correo: 200. Avatar: 200.
+  `perfiles-publicos`: 200 con 882 perfiles y solo curso, nombre y programa.
+  `salas-lista`: 200 con uid, nombre y conteo. En navegador real: panel cargado,
+  ranking con 882 filas sin nombres en formato nómina, arena y arena-gato con
+  rivales, sin PERMISSION_DENIED. La cuenta de prueba se borró (perfil, avatar
+  y autenticación) y no dejó rastro en 24 nodos revisados.
+- **Aviso de mensajes del profesor (commit 77da014f).** Encontrado al revisar la
+  consola: desde bd6b7eaf (9-sep), `setMessageContent` en `dashboard.html`
+  llamaba a `toLocaleString` con `dateStyle` junto con `hour`/`minute`, lo que
+  lanza "Invalid option" en todos los navegadores. El error cortaba la función
+  antes de encender `bellDot` y mostrar `msgPopup`, así que ningún mensaje avisaba.
+  Se reemplazó por día, mes, año, hora y minuto separados. `audit-mi-espacio.js`
+  falla si vuelve la combinación (probado rompiéndolo a propósito). En producción,
+  la función real corre en Chromium sin error y muestra "10-09-26, 11:53 a. m.".
+- Despliegue con `npm run deploy:prod:safe` desde un worktree limpio de
+  `origin/main`, porque la carpeta compartida tiene trabajo sin commit de otro
+  agente (`api/_paes-foundations-*.js`, que ningún archivo del repo usa todavía).
+  `npm run build` aprobó todas las auditorías y los 173 recursos críticos.
+- **Pendiente, sin OK de Francisco:** (1) limitar lo que un estudiante puede
+  escribir en su propio perfil; hoy puede sobrescribir nombre, curso, RUT y
+  programa, y lo legítimo es solo `lastLogin`, `email`, `email_institucional`,
+  `perfil_completo`, `password_changed`, `perfil_completado_at`, `telefono` y
+  `nombre_apoderado`. (2) Obligar el cambio de la clave inicial. (3) Un
+  estudiante de 2A-HC tiene tres perfiles con el mismo RUT; limpiarlo desde el
+  panel admin (salas ya lo deduplica).
+
 ## 2026-09-10, PAES: planificación reutilizable de 32 guías y fórmula recuperada
 
 - Por indicación de Francisco, las guías ausentes quedan planificadas, no

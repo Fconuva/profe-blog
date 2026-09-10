@@ -710,6 +710,7 @@ async function readGuiasConfig() {
         blocked: (v && v.blocked) || {},
         exceptions: (v && v.exceptions) || {},
         reenvio: (v && v.reenvio) || {},
+        reenvioCierra: (v && v.reenvio_cierra) || null,
         updatedAt: (v && v.updatedAt) || null,
         updatedBy: (v && v.updatedBy) || null
     };
@@ -723,9 +724,21 @@ async function readGuiasConfig() {
 // vuelve a responder va a reenvioBorrador, así abrir la guía nunca deshace una
 // entrega que no se vuelve a enviar.
 const RECIEN_ENTREGADA_MS = 5 * 60 * 1000;
+// El reenvío se cierra solo: guias_config/reenvio_cierra = 'AAAA-MM-DD' es el
+// primer día cerrado, en hora de Chile. Francisco recalcula notas el
+// 23-sep-2026 y pidió que ese día ya nadie cambie respuestas.
+const hoyEnChileISO = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
+function reenvioVigente(marca, cierra, hoy) {
+    if (marca !== true) return false;
+    const fecha = String(cierra || '');
+    return !(/^\d{4}-\d{2}-\d{2}$/.test(fecha) && hoy >= fecha);
+}
 async function reenvioAbierto(guideId) {
-    const snap = await db.ref(`${BASE}/guias_config/reenvio/g${String(guideId)}`).once('value');
-    return snap.val() === true;
+    const [marca, cierre] = await Promise.all([
+        db.ref(`${BASE}/guias_config/reenvio/g${String(guideId)}`).once('value'),
+        db.ref(`${BASE}/guias_config/reenvio_cierra`).once('value')
+    ]);
+    return reenvioVigente(marca.val(), cierre.val(), hoyEnChileISO());
 }
 function archivarIntento(current) {
     const previos = Array.isArray(current.intentosAnteriores) ? current.intentosAnteriores.slice(-4) : [];

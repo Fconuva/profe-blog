@@ -25,6 +25,26 @@ exigir(/async function reenvioAbierto\(guideId\)/.test(api) && /guias_config\/re
   'Falta reenvioAbierto(): la marca por guía vive en guias_config/reenvio/gNN.');
 exigir(/reenvio: \(v && v\.reenvio\) \|\| \{\}/.test(cuerpo('readGuiasConfig')), 'readGuiasConfig debe devolver la marca de reenvío.');
 
+// Cierre automático (pedido de Francisco: cerrar el 23-sep-2026, antes de
+// recalcular notas). Se prueba la regla de fechas tal como está en el código.
+const fuenteVigente = (api.match(/function reenvioVigente\(marca, cierra, hoy\) \{[\s\S]*?\n\}/) || [])[0];
+exigir(!!fuenteVigente, 'Falta reenvioVigente(): el reenvío tiene que poder cerrarse solo por fecha.');
+if (fuenteVigente) {
+  const vigente = new Function(`${fuenteVigente}; return reenvioVigente;`)();
+  [
+    [true, '2026-09-23', '2026-09-22', true, 'el día antes del cierre sigue abierto'],
+    [true, '2026-09-23', '2026-09-23', false, 'el día del cierre ya está cerrado'],
+    [true, '2026-09-23', '2026-10-01', false, 'después del cierre sigue cerrado'],
+    [true, null, '2026-12-31', true, 'sin fecha de cierre, abierto'],
+    [true, 'mañana', '2026-12-31', true, 'una fecha mal escrita no cierra (ni abre) por error'],
+    [null, '2026-09-23', '2026-09-01', false, 'sin la marca de la guía, cerrado']
+  ].forEach(([marca, cierra, hoy, esperado, caso]) => {
+    exigir(vigente(marca, cierra, hoy) === esperado, `reenvioVigente: ${caso}.`);
+  });
+}
+exigir(/guias_config\/reenvio_cierra/.test(cuerpo('reenvioAbierto')) && /America\/Santiago/.test(api),
+  'reenvioAbierto debe leer guias_config/reenvio_cierra y comparar con la fecha de Chile.');
+
 const envio = cuerpo('handleSubmitGuia');
 exigir(/if \(enviado && abierto\) \{/.test(envio), 'handleSubmitGuia debe aceptar un segundo envío solo con reenvío abierto.');
 exigir(/reenvioBorrador: \{ answers: safeAnswers/.test(envio),

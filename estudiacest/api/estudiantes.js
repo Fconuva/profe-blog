@@ -940,6 +940,10 @@ async function handleBulkCreate(req, res, decoded) {
     return res.status(200).json({ success: true, total: estudiantes.length, created: results.created.length, errors: results.errors });
 }
 
+// Salas y chat de Mi espacio. Vive como módulo interno y no como función propia
+// porque Vercel Hobby admite 12 funciones y ya están ocupadas.
+const SALAS = require('./_salas.js');
+
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -956,6 +960,7 @@ module.exports = async (req, res) => {
         if (action.startsWith('simce-u3s8-')) return await handleU3S8(req, res, action);
         if (action === 'simce-u3s9-classstats') return await handleU3S9Classstats(req, res);
         if (action.startsWith('personal-guided-')) return await handlePersonalGuided(req, res, action);
+        if (action.startsWith('salas-')) return await SALAS.manejar(req, res, action.slice('salas-'.length), db, auth);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

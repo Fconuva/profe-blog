@@ -170,10 +170,36 @@
         <a href="#" data-section="results" onclick="showSection('results',this)"><span class="icon">📈</span>Resultados</a>
         <a href="#" data-section="planilla" onclick="showSection('planilla',this);renderPlanilla()"><span class="icon">📝</span>Planilla Notas</a>
         <a href="#" data-section="ranking" onclick="showSection('ranking',this)"><span class="icon">🏆</span>Ranking</a>
+        <a href="#" data-section="chatcasas" onclick="showSection('chatcasas',this);cargarChatCasas()"><span class="icon">🏠</span>Chat de casas</a>
         <a href="#" data-section="reports" onclick="showSection('reports',this)"><span class="icon">📋</span>Reportes</a>
     </nav>
 
     <div class="content">
+        <!-- ================== CHAT DE CASAS ================== -->
+        <div class="section" id="sec-chatcasas">
+            <h2>🏠 Chat de casas</h2>
+            <p style="font-size:12px;color:#64748b;margin:-6px 0 14px">
+                Lo que el filtro <b>marca</b> se publica igual y llega aquí como alerta: esconder "me quiero morir" esconde el pedido de ayuda.
+                Lo que el filtro <b>bloquea</b> no se publica, pero el intento queda registrado.
+            </p>
+            <div class="stat-row" id="chatCasasStats"></div>
+            <div class="panel-table">
+                <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#b42318">⚠️ Alertas para revisar</h3>
+                <table><thead><tr><th>Cuándo</th><th>Estudiante</th><th>Curso</th><th>Mensaje</th><th>Casa de</th><th></th></tr></thead>
+                <tbody id="chatAlertasBody"></tbody></table>
+            </div>
+            <div class="panel-table" style="margin-top:16px">
+                <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">🚫 Intentos bloqueados por garabatos</h3>
+                <table><thead><tr><th>Cuándo</th><th>Estudiante</th><th>Curso</th><th>Lo que intentó escribir</th></tr></thead>
+                <tbody id="chatBloqueadosBody"></tbody></table>
+            </div>
+            <div class="panel-table" style="margin-top:16px">
+                <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#334155">🟢 Casas con gente ahora</h3>
+                <table><thead><tr><th>Casa de</th><th>Personas</th><th>Quiénes</th></tr></thead>
+                <tbody id="chatSalasBody"></tbody></table>
+            </div>
+        </div>
+
         <!-- ================== OVERVIEW ================== -->
         <div class="section active" id="sec-overview">
             <h2>Panel Principal</h2>
@@ -998,6 +1024,62 @@ async function loadAllData(){
     renderOverview();
     renderStudents();
     populateLiveDropdown();
+}
+
+/* ============ CHAT DE CASAS ============ */
+// Alertas y bloqueos del chat de Mi espacio. Solo lectura desde aquí; marcar
+// una alerta como atendida pasa por api/salas.js con el token del admin.
+async function cargarChatCasas(){
+    const fecha = t => t ? new Date(Number(t)).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
+    const escapa = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+    const [alSnap, blSnap, saSnap, esSnap] = await Promise.all([
+        db.ref(BASE+'/alertas_chat').orderByChild('ts').limitToLast(200).once('value'),
+        db.ref(BASE+'/bloqueados_chat').orderByChild('ts').limitToLast(200).once('value'),
+        db.ref(BASE+'/salas').once('value'),
+        db.ref(BASE+'/estudiantes').once('value')
+    ]);
+    const nombres = {}; const ests = esSnap.val()||{};
+    Object.keys(ests).forEach(u=>{ nombres[u] = ests[u].nombre || u; });
+
+    const alertas = []; alSnap.forEach(c=>{ alertas.push(Object.assign({id:c.key}, c.val())); }); alertas.reverse();
+    const bloqueados = []; blSnap.forEach(c=>{ bloqueados.push(Object.assign({id:c.key}, c.val())); }); bloqueados.reverse();
+    const salas = saSnap.val()||{}; const ahora = Date.now();
+    const activas = Object.keys(salas).map(u=>{
+        const pres = (salas[u] && salas[u].presentes)||{};
+        const vivos = Object.keys(pres).filter(k=> ahora-Number(pres[k].ts||0) < 60000);
+        return { dueno:u, n:vivos.length, quienes:vivos.map(k=>pres[k].nombre||k) };
+    }).filter(s=>s.n>0).sort((a,b)=>b.n-a.n);
+
+    const pendientes = alertas.filter(a=>!a.atendida).length;
+    document.getElementById('chatCasasStats').innerHTML =
+        `<div class="stat-card"><div class="stat-value" style="color:${pendientes?'#b42318':'#16a34a'}">${pendientes}</div><div class="stat-label">Alertas sin revisar</div></div>`+
+        `<div class="stat-card"><div class="stat-value">${bloqueados.length}</div><div class="stat-label">Intentos bloqueados</div></div>`+
+        `<div class="stat-card"><div class="stat-value">${activas.reduce((s,x)=>s+x.n,0)}</div><div class="stat-label">Personas en casas ahora</div></div>`;
+
+    document.getElementById('chatAlertasBody').innerHTML = alertas.length ? alertas.map(a=>
+        `<tr style="${a.atendida?'opacity:.55':''}"><td>${fecha(a.ts)}</td><td>${escapa(a.nombre)}</td><td>${escapa(a.curso)}</td>`+
+        `<td style="max-width:420px;white-space:normal">${escapa(a.texto)}</td><td>${escapa(nombres[a.sala]||a.sala)}</td>`+
+        `<td>${a.atendida?'✓ vista':`<button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="atenderAlerta('${a.id}',this)">Marcar vista</button>`}</td></tr>`
+    ).join('') : '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:18px">Sin alertas. Bien.</td></tr>';
+
+    document.getElementById('chatBloqueadosBody').innerHTML = bloqueados.length ? bloqueados.map(b=>
+        `<tr><td>${fecha(b.ts)}</td><td>${escapa(b.nombre)}</td><td>${escapa(b.curso)}</td><td style="max-width:520px;white-space:normal">${escapa(b.texto)}</td></tr>`
+    ).join('') : '<tr><td colspan="4" style="text-align:center;color:#94a3b8;padding:18px">Nadie ha intentado escribir garabatos.</td></tr>';
+
+    document.getElementById('chatSalasBody').innerHTML = activas.length ? activas.map(s=>
+        `<tr><td>${escapa(nombres[s.dueno]||s.dueno)}</td><td>${s.n}</td><td style="white-space:normal">${escapa(s.quienes.join(', '))}</td></tr>`
+    ).join('') : '<tr><td colspan="3" style="text-align:center;color:#94a3b8;padding:18px">No hay nadie en ninguna casa en este momento.</td></tr>';
+}
+async function atenderAlerta(id, btn){
+    try{
+        btn.disabled = true;
+        const token = await auth.currentUser.getIdToken();
+        const r = await fetch('/api/estudiantes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+            body: JSON.stringify({action:'salas-atender', id})});
+        const j = await r.json();
+        if(!j.ok) throw new Error(j.error||'No se pudo');
+        cargarChatCasas();
+    }catch(e){ btn.disabled=false; alert('No se pudo marcar: '+e.message); }
 }
 
 /* ============ NAVIGATION ============ */

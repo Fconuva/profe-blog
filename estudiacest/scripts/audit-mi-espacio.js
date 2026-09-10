@@ -97,6 +97,38 @@ ALS.ORDEN.forEach(cat => {
   exigir(c.opciones.some(o => !o.xp), `${cat}: ninguna opción está disponible con 0 XP.`);
 });
 
+// ---- salas y chat ----
+const salasApi = leer('api/_salas.js');
+exigir(salasApi.includes("require('./_filtro-garabatos.js')"), 'api/_salas.js debe pasar cada mensaje por el filtro de garabatos.');
+exigir(salasApi.includes('verifyIdToken'), 'api/_salas.js debe identificar al estudiante por su token, no por lo que mande el navegador.');
+exigir(!fs.existsSync(path.join(root, 'api/salas.js')), 'api/salas.js no puede existir como función propia: Vercel Hobby admite 12 y ya están ocupadas.');
+exigir(leer('api/estudiantes.js').includes("require('./_salas.js')") && leer('api/estudiantes.js').includes("'salas-'"), 'api/estudiantes.js debe enrutar las acciones salas-* al módulo interno.');
+exigir(espacio.includes("var API = '/api/estudiantes'") && espacio.includes("'salas-' + action"), 'El cliente debe hablar con /api/estudiantes usando acciones salas-*.');
+exigir(/TOPE_SALA\s*=\s*30/.test(salasApi), 'El tope de la casa debe ser 30 personas.');
+exigir(salasApi.includes('bloqueados_chat') && salasApi.includes('alertas_chat'), 'Los bloqueos y las alertas deben quedar registrados para el profesor.');
+
+const reglas = JSON.parse(leer('firebase-rules.json')).rules.plataforma_estudiantes;
+exigir(reglas.salas && reglas.salas['.write'] === false, 'El nodo salas debe tener .write en false: solo escribe el servidor.');
+exigir(reglas.alertas_chat && reglas.alertas_chat['.write'] === false && /admins/.test(reglas.alertas_chat['.read'] || ''), 'alertas_chat debe ser solo lectura de admin.');
+exigir(reglas.bloqueados_chat && reglas.bloqueados_chat['.write'] === false && /admins/.test(reglas.bloqueados_chat['.read'] || ''), 'bloqueados_chat debe ser solo lectura de admin.');
+exigir(/estudiantes'\)\.child\(auth\.uid\)\.exists\(\)/.test(reglas.salas ? reglas.salas['.read'] : ''), 'salas: la lectura debe exigir estudiante registrado o admin, no cualquier cuenta.');
+
+// El filtro se prueba con casos reales: si alguien lo afloja, esto lo delata.
+const { revisar } = require(path.join(root, 'api/_filtro-garabatos.js'));
+['weon', 'weeeón', 'w3on', 'h u e o n', 'ql', 'culiao', 'ctm', 'c.t.m', 'conchetumare', 'concha tu mare', 'maraco', 'puta', 'el pico', 'wea', 'aweonao', 'cagón', 'marica', 'imbécil', 'chupalo']
+  .forEach(t => exigir(!revisar(t).ok, `El filtro dejó pasar: "${t}"`));
+['computador', 'disputa', 'reputación', 'diputado', 'son las 3 y pico', 'Mongolia', 'putativo', 'conchas de mar', 'me gusta tu casa', 'cocina', 'ciencia', 'marisco']
+  .forEach(t => exigir(revisar(t).ok, `El filtro bloqueó una palabra normal: "${t}"`));
+['me quiero morir', 'me voy a matar', 'no quiero vivir', 'me pegan en la casa']
+  .forEach(t => { const r = revisar(t); exigir(r.ok && r.alerta, `"${t}" debe pasar Y quedar como alerta, no bloquearse.`); });
+
+exigir(espacio.includes('conectarSala') && espacio.includes("api('decir'"), 'El módulo debe conectar la sala y hablar por la API.');
+exigir(espacio.includes('conectarTeclado') && espacio.includes('esp-pad'), 'Debe poder moverse con teclado y con el pad en pantalla, sin mouse.');
+exigir(espacio.includes('abrirPaleta') && espacio.includes('PISOS'), 'Falta el cambio de terreno (piso y muros).');
+['roble', 'gris', 'azul', 'verde', 'rosa', 'morado', 'negro'].forEach(p => exigir(enDisco.has(`floorFull__${p}_SE.png`), `Falta el piso ${p}.`));
+const admin = leer('estudiantes/adminprofe/index.html');
+exigir(admin.includes('sec-chatcasas') && admin.includes('alertas_chat'), 'El admin debe mostrar las alertas del chat.');
+
 // El sistema viejo no debe seguir referenciado
 const paginas = fs.readdirSync(path.join(root, 'estudiantes')).filter(f => f.endsWith('.html'));
 paginas.forEach(f => {

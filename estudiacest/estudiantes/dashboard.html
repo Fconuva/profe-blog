@@ -1131,7 +1131,7 @@
 
                 const programa = student.programa || 'simce';
                 await loadDashboard(user.uid, student.curso, programa);
-                loadAvatar(user.uid, student.nombre);
+                loadAvatar(user.uid, student.nombre, student.curso);
                 renderSideMissions(user.uid, student.curso);
                 loadLogrosPreview(user.uid);
                 listenForMessages(student.curso, programa);
@@ -1621,7 +1621,7 @@
             const filled = Math.min(max, Math.max(0, Math.round(value)));
             return '★'.repeat(filled) + '☆'.repeat(max - filled);
         }
-        async function loadAvatar(uid, nombre) {
+        async function loadAvatar(uid, nombre, curso) {
             try {
                 const card = document.getElementById('avatarCard');
                 // Read avatar data + all resultados for stats
@@ -1666,8 +1666,9 @@
                 if (window.MiEspacio) {
                     MiEspacio.montar({
                         host: document.getElementById('miEspacio'),
-                        db: db, base: BASE, uid: uid,
-                        xp: xpTotal, look: look, pieza: av.pieza, personajeEn: av.personajeEn,
+                        db: db, auth: auth, base: BASE, uid: uid,
+                        nombre: nombre, curso: curso || '',
+                        xp: xpTotal, look: look, pieza: av.pieza, personajeEn: av.personajeEn, casa: av.casa,
                         // al cambiar el personaje se repinta también arriba,
                         // junto al nombre, y en el botón del encabezado
                         alCambiarLook: function (nuevo) {

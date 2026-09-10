@@ -77,6 +77,13 @@ Codex la estaba construyendo y se cayó a medio camino; el trabajo quedó sin co
 
 **Pendiente.** Publicar resultados desde el admin cuando Francisco lo decida (PAES no muestra puntaje hasta entonces). La Guía 20 del 3 de septiembre quedó solo como ruta individual; no hubo versión regular. Probar la sesión en un celular real al inicio de la clase.
 
+**Publicación y dos trampas.** Commits `066e392c`, `98fd96e5`, `e660fc84`, `b9581813` y el cierre del manifiesto; desplegado con `npm run deploy:prod:safe` y verificado en vivo (página, datos, lógica, estilos, tres ilustraciones, ruta guiada, portal, admin y API respondiendo para la guía 21).
+
+1. El `.gitignore` de la raíz de profe-blog tiene `GUIA*.html` (línea 78) y en Windows eso atrapa cada `paes/guiaNN.html` nueva: el primer commit salió sin la página y hubo que forzarla con `git add -f`. Antes de dar por publicada una guía, confirmar con `git ls-files` que la página está trackeada.
+2. `.vercelignore` excluye `scripts/*` salvo una lista blanca. Toda auditoría nueva que entre a `build` necesita su línea `!scripts/audit-...js`; sin ella el build de Vercel falla con `MODULE_NOT_FOUND` aunque local pase.
+
+El proyecto Vercel no está conectado a GitHub: un push a main no publica nada. Los recursos nuevos entraron con `allowMissingInProduction: true` y, una vez verificados en producción, el manifiesto volvió a protegerlos sin la excepción.
+
 ---
 
 ## 2026-09-09, regularización general de entregas y reapertura SIMCE U3

@@ -8,6 +8,44 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: guías 12–21 habilitadas con reenvío y botón de enviar arreglado
+
+- **Pedido de Francisco:** dejar habilitadas desde la 12 para volver a
+  responder y enviar, y revisar errores (la 12 "no enviaba").
+- **El fallo de la 12.** El botón sí enviaba, pero el servidor exige todas las
+  preguntas (400) y la página mostraba cualquier rechazo como "sin conexión".
+  Por eso 113 de 131 registros de la G12 y 100 de 122 de la G13 quedaron en
+  borrador. Las guías 11–13 (misma plantilla) ahora dicen qué preguntas faltan
+  antes de enviar y muestran el motivo real del servidor. La G10 tiene otra
+  versión de esa función y sigue bloqueada; no se tocó.
+- **Reenvío (commit 1f167e1d).** Marca por guía `guias_config/reenvio/gNN`.
+  Con la marca, lo enviado vuelve editable y sin pauta; el autoguardado va a
+  `reenvioBorrador` (abrir la guía no deshace la entrega) y al reenviar el
+  intento anterior queda en `intentosAnteriores` con su nota. Cubre las tres
+  rutas: guías antiguas (10–13), nuevas (15–21) y el ensayo de la 14. Sin la
+  marca, lo enviado sigue inmutable (REGLAS §7). `audit-paes-reenvio.js` en el
+  build. Se mantuvieron textuales las condiciones de la cuenta de prueba que
+  exige `audit-paes-semester-grades.js`.
+- **Configuración en producción:** quitadas `g20` y `g21` de `blocked`
+  (g12–g19 ya estaban habilitadas) y `reenvio` en g12…g21, releído en la API
+  pública. El resto del bloqueo quedó igual.
+- **Pruebas en producción.** RUT ficticio fuera de nómina, en G17, G12 y G14:
+  envío, vuelta editable sin pauta, autoguardado sin deshacer la entrega,
+  reenvío con el intento anterior archivado; registros borrados. Navegador con
+  la cuenta de prueba: la G12 avisa "Te faltan 5 preguntas: 11…15", envía,
+  recupera las 15 respuestas y reenvía. Consola limpia en G12–G21, el portal y
+  `guias.html`; ninguna tarjeta 12–21 bloqueada. En G18–G21 cargan preguntas y
+  "Entregar" tras ingresar.
+- **Ojo docente:** las pautas de G12–G16 ya estaban publicadas a 4 cursos;
+  con reenvío abierto no se muestran, pero quien las vio puede recordarlas.
+  Para cerrar el reenvío de una guía basta borrar `guias_config/reenvio/gNN`.
+- **Despliegue desde worktree:** crear la copia con
+  `git -c core.autocrlf=false worktree add`. Con CRLF, `audit-paes-teaching.js`
+  falla en el build de Vercel (así se cayó el deploy de 12bb5121). Este deploy
+  llevó también placas y regalos de Mi espacio: verificados en producción con
+  cuenta ficticia (aviso de regalo, mueble en "Tengo" con 🎁, placas 1→2 de 3,
+  placas junto al nombre); cuenta borrada.
+
 ## 2026-09-10, PAES 1–21: apertura didáctica homogeneizada
 
 - Se conservaron las ampliaciones e imágenes IA de G1–G9 y se añadieron doce desarrollos específicos (6.319 palabras de contenido editorial, más consignas comunes) a G10–G21 y las cinco versiones guiadas disponibles G17–G21. Las 35 páginas regulares/guiadas de G1–G21 tienen objetivo, instrucciones, conceptos, estrategia por pasos, ejemplo razonado ATENCIÓN y comprobación formativa con respuesta inicialmente cerrada. Capítulos desplegables y navegación por teclado, sin exigir su apertura para entregar.

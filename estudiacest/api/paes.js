@@ -469,13 +469,30 @@ async function handleSubmitGuia(req, res) {
         payload.completadaAt = now;
     }
 
+    const abierto = await reenvioAbierto(guideId);
+    let borradorDeReenvio = false;
     const tx = await ref.transaction((current) => {
+        borradorDeReenvio = false;
         if (FOUNDATIONS.KEYS[guideId] && current && current.contentVersion !== FOUNDATIONS.VERSION) return;
+        const enviado = !!current && (current.status === 'sent' || current.completada === true);
+        if (enviado && abierto) {
+            if (draft) {
+                borradorDeReenvio = true;
+                return Object.assign({}, current, { reenvioBorrador: { answers: safeAnswers, dev: dev || {}, lastSavedAt: now } });
+            }
+            return Object.assign({}, current, payload, {
+                intentosAnteriores: archivarIntento(current), reenviadoAt: now, grade: null, reenvioBorrador: null
+            });
+        }
         if (!isPaesTestRut(rutLimpio) && current && (current.status === 'sent' || current.completada === true)) return;
         return Object.assign({}, current || {}, payload);
     });
     if (!tx.committed) {
         return res.status(409).json({ error: 'La guía ya fue enviada. El docente debe restablecerla para responder nuevamente.' });
+    }
+    if (borradorDeReenvio) {
+        return res.status(200).json({ success: true, status: 'draft', submitted: false, completada: false,
+            submittedAt: null, completadaAt: null, reenvio: true });
     }
     const saved = tx.snapshot.val() || {};
     return res.status(200).json({
@@ -496,19 +513,27 @@ async function handleGetGuiaDraft(req, res) {
     }
     const snap = await db.ref(`${BASE}/guia_respuestas/${guiaId}/${cleanRut(rut)}`).once('value');
     const v = snap.exists() ? snap.val() : null;
-    return res.status(200).json({
-        success: true,
-        draft: v ? {
-            answers: normalizeStoredAnswers(v.answers),
-            dev: v.dev || {},
-            status: v.status || null,
-            submitted: v.submitted === true || v.status === 'sent',
-            completada: v.completada === true || v.status === 'sent',
-            submittedAt: v.submittedAt || null,
-            completadaAt: v.completadaAt || null,
-            lastSavedAt: v.lastSavedAt || v.submittedAt || null
-        } : null
-    });
+    const draft = v ? {
+        answers: normalizeStoredAnswers(v.answers),
+        dev: v.dev || {},
+        status: v.status || null,
+        submitted: v.submitted === true || v.status === 'sent',
+        completada: v.completada === true || v.status === 'sent',
+        submittedAt: v.submittedAt || null,
+        completadaAt: v.completadaAt || null,
+        lastSavedAt: v.lastSavedAt || v.submittedAt || null
+    } : null;
+    // Con reenvío abierto, lo enviado vuelve como borrador editable.
+    if (draft && draft.submitted && await reenvioAbierto(guiaId)) {
+        const b = v.reenvioBorrador || null;
+        Object.assign(draft, {
+            answers: normalizeStoredAnswers((b && b.answers) || v.answers),
+            dev: (b && b.dev) || v.dev || {},
+            status: 'draft', submitted: false, completada: false,
+            reenvio: true, enviadaAntes: v.submittedAt || null
+        });
+    }
+    return res.status(200).json({ success: true, draft });
 }
 
 async function handleGetGuiaState(req, res) {
@@ -538,6 +563,18 @@ async function handleGetGuiaState(req, res) {
         lastSavedAt: value.lastSavedAt || null,
         variant: value.variant || null
     };
+    // Con reenvío abierto, lo enviado vuelve editable y sin clave ni resultado:
+    // quien vuelve a responder no ve la pauta mientras responde.
+    if (attempt.completada && await reenvioAbierto(guideId)) {
+        const b = value.reenvioBorrador || null;
+        Object.assign(attempt, {
+            answers: normalizeStoredAnswers((b && b.answers) || value.answers),
+            dev: (b && b.dev) || value.dev || {},
+            status: 'draft', submitted: false, completada: false,
+            reenvio: true, enviadaAntes: value.submittedAt || null
+        });
+        return res.status(200).json({ success: true, attempt, released: false, answerKey: null, feedback: null, reenvio: true });
+    }
     if (released && attempt.completada) {
         const serverKey = guideKeyFor(guideId, rut);
         if (serverKey) {
@@ -571,7 +608,10 @@ async function handleSubmitGuia14(req, res) {
     const rutLimpio = cleanRut(rut);
     const ref = db.ref(`${BASE}/guia_respuestas/14/${rutLimpio}`);
     const previous = await ref.once('value');
-    if (!isPaesTestRut(rutLimpio) && previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent') {
+    const anterior = previous.exists() ? previous.val() : null;
+    const enviado = !!anterior && isCurrentGuia14Record(anterior) && anterior.status === 'sent';
+    const abierto = enviado && await reenvioAbierto('14');
+    if (!isPaesTestRut(rutLimpio) && previous.exists() && isCurrentGuia14Record(previous.val()) && previous.val().status === 'sent' && !abierto) {
         return res.status(409).json({ error:'El ensayo ya fue enviado. El docente debe restablecerlo para responder nuevamente.' });
     }
     const safeAnswers = {};
@@ -581,6 +621,12 @@ async function handleSubmitGuia14(req, res) {
     if (final && Object.keys(safeAnswers).length === 0) {
         return res.status(400).json({ error:'No se puede entregar un ensayo sin respuestas.' });
     }
+    // Reenvío abierto: el avance va aparte hasta que se entregue de nuevo.
+    if (abierto && !final) {
+        await ref.child('reenvioBorrador').set({ answers: safeAnswers, form: Array.isArray(form) ? form : [],
+            incidents: Array.isArray(incidents) ? incidents.slice(-300) : [], lastSavedAt: Date.now() });
+        return res.status(200).json({ success:true, status:'draft', reenvio:true });
+    }
     const payload = {
         rut:rutLimpio, nombre:String(nombre).trim(), curso:String(curso).trim(), guiaId:'14',
         instrumentVersion:G14_VERSION,
@@ -588,6 +634,7 @@ async function handleSubmitGuia14(req, res) {
         startedAt:Number(startedAt) || Date.now(), lastSavedAt:Date.now(), status:final ? 'sent' : 'draft'
     };
     if (final) { Object.assign(payload, scoreGuia14(payload.answers, rutLimpio)); payload.submittedAt=Date.now(); }
+    if (abierto && final) { payload.intentosAnteriores = archivarIntento(anterior); payload.reenviadoAt = Date.now(); }
     await ref.set(payload);
     return res.status(200).json({ success:true, status:payload.status });
 }
@@ -605,6 +652,12 @@ async function handleGetGuia14State(req, res) {
     if (!snap.exists()) return res.status(200).json({success:true,attempt:null,released:false});
     const v=snap.val();
     if (!isCurrentGuia14Record(v)) return res.status(200).json({success:true,attempt:null,released:false});
+    if (v.status === 'sent' && await reenvioAbierto('14')) {
+        const b = v.reenvioBorrador || null;
+        const attempt = { answers: (b && b.answers) || v.answers || {}, form: (b && b.form && b.form.length ? b.form : v.form) || [],
+            incidents: v.incidents || [], startedAt: v.startedAt || null, status: 'draft', reenvio: true, enviadaAntes: v.submittedAt || null };
+        return res.status(200).json({ success: true, attempt, released: false, reenvio: true });
+    }
     const released=await isGuideReleased('14',v.curso,rut);
     const attempt={answers:v.answers||{},form:v.form||[],incidents:v.incidents||[],startedAt:v.startedAt||null,status:v.status||'draft'};
     if(released && v.status==='sent') attempt.result={correct:v.correct,total:v.total,equivalentCorrect:v.equivalentCorrect,paesReferential:v.paesReferential,skills:v.skills,itemCorrect:v.itemCorrect||{},displayAnswers:v.displayAnswers||{},displayKeys:v.displayKeys||{}};
@@ -650,9 +703,32 @@ async function readGuiasConfig() {
     return {
         blocked: (v && v.blocked) || {},
         exceptions: (v && v.exceptions) || {},
+        reenvio: (v && v.reenvio) || {},
         updatedAt: (v && v.updatedAt) || null,
         updatedBy: (v && v.updatedBy) || null
     };
+}
+
+// Reenvío abierto por guía: guias_config/reenvio = { g12: true, ... }.
+// Caso (10-sep-2026): Francisco pidió que desde la Guía 12 se pueda volver a
+// responder y enviar. Un intento enviado sigue siendo inmutable salvo en las
+// guías con esta marca, que el docente pone y quita. Al reenviar, el intento
+// anterior (con su nota) queda en intentosAnteriores; el autoguardado de quien
+// vuelve a responder va a reenvioBorrador, así abrir la guía nunca deshace una
+// entrega que no se vuelve a enviar.
+async function reenvioAbierto(guideId) {
+    const snap = await db.ref(`${BASE}/guias_config/reenvio/g${String(guideId)}`).once('value');
+    return snap.val() === true;
+}
+function archivarIntento(current) {
+    const previos = Array.isArray(current.intentosAnteriores) ? current.intentosAnteriores.slice(-4) : [];
+    const valor = (x) => (x === undefined ? null : x);
+    previos.push({
+        answers: current.answers || {}, dev: current.dev || {}, form: valor(current.form),
+        correct: valor(current.correct), total: valor(current.total), score: valor(current.score),
+        grade: valor(current.grade), submittedAt: valor(current.submittedAt)
+    });
+    return previos;
 }
 
 // Acción pública: las páginas del alumno (guias.html y cada guiaN.html) consultan esto al cargar.

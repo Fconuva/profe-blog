@@ -954,26 +954,43 @@
       const st = getState();
       const answers = st.answers || {};
       const dev = st.dev || {};
+      // El servidor exige todas las preguntas. Se avisa cuáles faltan antes de
+      // enviar: antes el rechazo se mostraba como "sin conexión" (10-sep-2026).
+      const faltan = QUESTIONS.filter(q => !answers[q.n]).map(q => q.n);
+      if (faltan.length) {
+        const una = faltan.length === 1;
+        setSendStatus(`Te falta${una ? "" : "n"} ${faltan.length} pregunta${una ? "" : "s"} por marcar: ${faltan.join(", ")}. Márcala${una ? "" : "s"} y vuelve a enviar.`, "var(--burgundy)");
+        const primera = document.getElementById(`q-${faltan[0]}`);
+        if (primera) primera.scrollIntoView({ behavior: "smooth", block: "center" });
+        return;
+      }
       let correct = 0;
       QUESTIONS.forEach(q => { if (answers[q.n] === q.correct) correct++; });
       const score = Math.round((correct / TOTAL) * 100);
-      setSendStatus('Enviando respuestas a tu profesor…', 'var(--muted)');
+      setSendStatus("Enviando respuestas a tu profesor…", "var(--muted)");
+      let resp;
       try {
-        const resp = await fetch('/api/paes?action=submit-guia', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+        resp = await fetch("/api/paes?action=submit-guia", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             rut: student.rut, nombre: student.nombre, curso: student.curso,
-            guiaId: '13', answers, dev, correct, total: TOTAL, score
+            guiaId: "13", answers, dev, correct, total: TOTAL, score
           })
         });
-        if (!resp.ok) throw new Error('submit error');
-        st.sent = true; setState(st);
-        setSendStatus('✓ Respuestas enviadas a tu profesor. Puedes seguir editando y reenviar.', 'var(--success)');
       } catch (e) {
-        console.error('[submitGuia]', e);
-        setSendStatus('⚠️ No se pudo enviar (sin conexión). Tus respuestas siguen guardadas en este dispositivo.', 'var(--burgundy)');
+        console.error("[submitGuia]", e);
+        setSendStatus("⚠️ No se pudo enviar (sin conexión). Tus respuestas siguen guardadas en este dispositivo.", "var(--burgundy)");
+        return;
       }
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok) {
+        setSendStatus("⚠️ " + (data.error || "No se pudo enviar. Inténtalo de nuevo."), "var(--burgundy)");
+        return;
+      }
+      st.sent = true;
+      localStorage.setItem(SKEY, JSON.stringify(st)); // sin setState: no hace falta otro borrador
+      setSendStatus("✓ Respuestas enviadas a tu profesor. Puedes seguir editando y reenviar.", "var(--success)");
     }
 
     /* ============ AUTOGUARDADO EN LA NUBE (borrador por alumno) ============ */

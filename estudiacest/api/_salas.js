@@ -4,7 +4,7 @@
 // No es una función de Vercel por sí misma (los archivos con guion bajo no se
 // despliegan como funciones): el plan Hobby admite 12 y ya están ocupadas. Se
 // enruta desde api/estudiantes.js con las acciones `salas-entrar`, `salas-lista`,
-// `salas-latido`, `salas-salir`, `salas-decir` y `salas-atender`.
+// `salas-latido`, `salas-salir`, `salas-decir`, `salas-atender` y `salas-regalar`.
 //
 // Todo lo que escribe el chat pasa por aquí, con credenciales de servidor. El
 // cliente solo LEE el nodo `salas` (regla .read para estudiantes registrados);
@@ -231,6 +231,46 @@ async function decir(req, res, db, yo) {
     return res.status(200).json({ ok: true, id: nuevo.key, alerta: !!veredicto.alerta });
 }
 
+// ---- regalar un mueble ----
+// El regalo lo escribe el servidor en el avatar del que recibe: nadie puede
+// escribir el avatar ajeno. Un regalo al día por persona (hora de Chile), y el
+// contador vive en `regalos_log`, un nodo sin regla cliente: el estudiante no
+// puede leerlo ni reiniciarlo. Qué muebles tiene cada uno lo decide su XP, que
+// es del cliente; el servidor no la vuelve a juzgar.
+const REGALOS_POR_DIA = 1;
+const idMueble = (v) => (/^[A-Za-z][A-Za-z0-9_]{1,40}$/.test(String(v || '')) ? String(v) : null);
+const hoyEnChile = () => new Date().toLocaleDateString('en-CA', { timeZone: 'America/Santiago' });
+
+async function regalar(req, res, db, yo) {
+    if (!yo.curso || yo.curso === 'admin') return res.status(403).json({ error: 'Los regalos son entre estudiantes.' });
+    const para = idSala(req.body.para);
+    const mueble = idMueble(req.body.mueble);
+    if (!para || para === yo.uid) return res.status(400).json({ error: 'Elige a un compañero.' });
+    if (!mueble) return res.status(400).json({ error: 'Mueble no válido.' });
+
+    const perfil = (await db.ref(`${BASE}/estudiantes/${para}`).once('value')).val();
+    if (!perfil || String(perfil.curso || '') !== yo.curso) {
+        return res.status(404).json({ error: 'Solo puedes regalar a compañeros de tu curso.' });
+    }
+    const destino = db.ref(`${BASE}/avatar/${para}/regalos/${mueble}`);
+    if ((await destino.once('value')).exists()) {
+        return res.status(200).json({ ok: false, error: 'Ya le regalaron ese mueble. Elige otro.' });
+    }
+
+    const ahora = Date.now();
+    const cupo = await db.ref(`${BASE}/regalos_log/${yo.uid}/${hoyEnChile()}`).transaction((actual) => {
+        const n = Number(actual && actual.n) || 0;
+        if (n >= REGALOS_POR_DIA) return;   // sin cupo: la transacción se aborta
+        return { n: n + 1, ultimo: { para, mueble, ts: ahora } };
+    });
+    if (!cupo.committed) {
+        return res.status(200).json({ ok: false, sinCupo: true, error: 'Ya regalaste hoy. Mañana puedes regalar otro.' });
+    }
+
+    await destino.set({ de: await nombreDe(db, yo), ts: ahora });
+    return res.status(200).json({ ok: true });
+}
+
 async function atender(req, res, db, yo) {
     if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
     const id = String(req.body.id || '');
@@ -250,6 +290,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'salir') return await salir(req, res, db, yo);
         if (accion === 'decir') return await decir(req, res, db, yo);
         if (accion === 'atender') return await atender(req, res, db, yo);
+        if (accion === 'regalar') return await regalar(req, res, db, yo);
         return res.status(400).json({ error: 'Acción no reconocida' });
     } catch (error) {
         const status = error.status || 500;

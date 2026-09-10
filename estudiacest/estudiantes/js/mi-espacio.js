@@ -86,6 +86,63 @@
   function pisoDe(id){ return PISOS.some(function(p){ return p.id===id; }) ? id : 'claro'; }
   function muroDe(id){ for (var i=0;i<MUROS.length;i++) if (MUROS[i].id===id) return MUROS[i]; return MUROS[0]; }
 
+  // Placas: los logros de logros.html (emoji, nombre, rareza). Cada estudiante
+  // se pone hasta 3 de los que ganó y se ven junto a su nombre en la casa. La
+  // auditoría exige que esta lista calce con la de logros.html.
+  var PLACAS = {
+    first_session: ['🎯', 'Primer Paso', 'comun'],
+    three_sessions: ['🔥', 'En Racha', 'poco_comun'],
+    five_sessions: ['💪', 'Dedicación Total', 'raro'],
+    all_sessions: ['🏁', 'Imparable', 'epico'],
+    score_80: ['📈', 'Sobre el Promedio', 'comun'],
+    score_90: ['🌟', 'Sobresaliente', 'poco_comun'],
+    perfect_score: ['💎', 'Perfeccionista', 'raro'],
+    above_80_three: ['📊', 'Consistente', 'poco_comun'],
+    avg_90: ['🏅', 'Élite Académica', 'epico'],
+    paes_debut: ['📝', 'Debut PAES', 'comun'],
+    paes_500: ['🎯', 'Sobre 500 pts', 'poco_comun'],
+    paes_700: ['🔥', 'Sobre 700 pts', 'raro'],
+    paes_850: ['⭐', 'Sobre 850 pts', 'epico'],
+    paes_900: ['👑', 'Élite Nacional', 'legendario'],
+    paes_improve: ['📈', 'Mejora Continua', 'poco_comun'],
+    first_mission: ['🗺️', 'Misión Cumplida', 'comun'],
+    three_missions: ['⚔️', 'Explorador', 'poco_comun'],
+    all_missions: ['🏆', 'Completista', 'epico'],
+    story_500: ['✍️', 'Maestro Narrador', 'raro'],
+    argument_treasure: ['🥇', 'Tesoro del Argumento', 'epico'],
+    distractor_aura: ['⚡', 'Aura del Auditor', 'epico'],
+    xp_250: ['💫', 'Primeros 250', 'comun'],
+    xp_500: ['💪', 'Medio Millar', 'poco_comun'],
+    xp_1000: ['⚡', 'Mil XP', 'raro'],
+    level_3: ['🌿', 'Nivel 10', 'comun'],
+    level_5: ['⚡', 'Nivel 30', 'raro'],
+    level_max: ['👑', 'Nivel Máximo', 'legendario'],
+    top5: ['🏅', 'Top 5', 'poco_comun'],
+    podium: ['🥉', 'Podio', 'raro'],
+    number_one: ['🥇', 'Número Uno', 'epico'],
+    night_owl: ['🦉', 'Búho Nocturno', 'raro'],
+    early_bird: ['🐦', 'Madrugador', 'raro'],
+    title_creative: ['🎨', 'Título Creativo', 'comun'],
+    weekend_warrior: ['📅', 'Guerrero de Fin de Semana', 'poco_comun'],
+    arena_debut: ['⚔️', 'Debut en la Arena', 'comun'],
+    arena_5_battles: ['🥊', 'Puños de Acero', 'poco_comun'],
+    arena_first_win: ['🏆', 'Primera Victoria', 'comun'],
+    arena_10_wins: ['💪', 'Gladiador', 'raro'],
+    arena_streak_3: ['🔥', 'Racha Imparable', 'poco_comun'],
+    arena_streak_5: ['⚡', 'Invicto', 'epico'],
+    arena_streak_10: ['👑', 'Leyenda de la Arena', 'legendario']
+  };
+  var COLOR_RAREZA = { comun: '#94a3b8', poco_comun: '#22c55e', raro: '#3b82f6', epico: '#a855f7', legendario: '#f59e0b' };
+  var MAX_PLACAS = 3;
+  // Solo placas conocidas, ganadas y sin repetir, hasta 3.
+  function placasValidas(lista, logros) {
+    var vistas = {};
+    return (Array.isArray(lista) ? lista : []).filter(function (id) {
+      if (!PLACAS[id] || !logros || !logros[id] || vistas[id]) return false;
+      vistas[id] = true; return true;
+    }).slice(0, MAX_PLACAS);
+  }
+
   var S = {};   // estado del módulo
 
   function esc(t){ return String(t == null ? '' : t).replace(/[&<>"]/g, function(c){
@@ -276,10 +333,23 @@
       cx.save();
       cx.font = '700 11px system-ui, sans-serif'; cx.textAlign = 'center';
       var etiqueta = pers.nombre, w = cx.measureText(etiqueta).width + 12;
+      // Nombre y, pegadas a su derecha, las placas; el conjunto va centrado.
+      var placas = pers.placas || [], LADO = 16, SEP = 2;
+      var ancho = w + (placas.length ? 4 + placas.length * (LADO + SEP) - SEP : 0);
+      var x0 = cxp - ancho / 2;
       cx.fillStyle = pers.esYo ? 'rgba(56,189,248,.92)' : 'rgba(15,23,42,.78)';
-      cx.beginPath(); cx.roundRect(cxp - w / 2, base + 6, w, 16, 8); cx.fill();
+      cx.beginPath(); cx.roundRect(x0, base + 6, w, 16, 8); cx.fill();
       cx.fillStyle = pers.esYo ? '#04263a' : '#e8edf5';
-      cx.fillText(etiqueta, cxp, base + 18);
+      cx.fillText(etiqueta, x0 + w / 2, base + 18);
+      cx.font = '10px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+      placas.forEach(function (id, i) {
+        var pl = PLACAS[id];
+        if (!pl) return;
+        var px = x0 + w + 4 + i * (LADO + SEP);
+        cx.fillStyle = COLOR_RAREZA[pl[2]] || '#94a3b8';
+        cx.beginPath(); cx.roundRect(px, base + 6, LADO, LADO, 4); cx.fill();
+        cx.fillText(pl[0], px + LADO / 2, base + 18);
+      });
       cx.restore();
     }
     var b = S.burbujas[pers.uid];
@@ -407,13 +477,14 @@
   }
   function personas() {
     var lista = [{ uid: S.uid, look: S.look, col: S.av.col, fila: S.av.fila, nombre: S.miNombre, esYo: true,
+                   placas: S.placas,
                    sentado: !caminando && sentableEn(Math.round(S.av.col), Math.round(S.av.fila)) }];
     Object.keys(S.otros).forEach(function (uid) {
       if (uid === S.uid) return;
       var o = S.otros[uid], v = S.vistos[uid];
       var c = v ? v.col : (Number(o.col) || 0), f = v ? v.fila : (Number(o.fila) || 0);
       lista.push({ uid: uid, look: global.AvatarLookSystem.normalizeLook(o.look, { xpTotal: 99999 }),
-                   col: c, fila: f, nombre: nombreCorto(o.nombre), esYo: false,
+                   col: c, fila: f, nombre: nombreCorto(o.nombre), esYo: false, placas: S.placasDe[uid] || [],
                    sentado: !(v && v.camino) && sentableEn(Math.round(c), Math.round(f)) });
     });
     return lista;
@@ -428,7 +499,7 @@
       if (uid === S.uid) return;
       var o = S.otros[uid], meta = { col: Number(o.col) || 0, fila: Number(o.fila) || 0 };
       var v = S.vistos[uid];
-      if (!v) { S.vistos[uid] = { col: meta.col, fila: meta.fila, meta: meta, camino: null }; return; }
+      if (!v) { S.vistos[uid] = { col: meta.col, fila: meta.fila, meta: meta, camino: null }; cargarPlacas(uid); return; }
       if (v.meta.col === meta.col && v.meta.fila === meta.fila) return;
       v.meta = meta;
       var desde = { col: Math.round(v.col), fila: Math.round(v.fila) };
@@ -439,6 +510,18 @@
     });
     animarOtros();
   }
+  // Las placas de cada visitante se leen una vez de su avatar, y solo se
+  // muestran las que calzan con sus logros.
+  function cargarPlacas(uid) {
+    if (S.placasDe[uid]) return;
+    S.placasDe[uid] = [];
+    var ref = S.db.ref(S.base + '/avatar/' + uid);
+    Promise.all([ref.child('placas').once('value'), ref.child('logros').once('value')]).then(function (r) {
+      S.placasDe[uid] = placasValidas(r[0].val(), r[1].val());
+      if (S.placasDe[uid].length) dibujar();
+    }).catch(function () {});
+  }
+
   var animOtros = null;
   function animarOtros() {
     if (animOtros) return;
@@ -539,11 +622,13 @@
   }
 
   // ---------------- guardado ----------------
-  var pendiente = null;
+  // Una espera por campo: si fuera una sola, guardar las placas y enseguida el
+  // look cancelaría las placas.
+  var pendientes = {};
   function guardar(campo, valor) {
     if (!S.db || !S.uid) return;
-    clearTimeout(pendiente);
-    pendiente = setTimeout(function () {
+    clearTimeout(pendientes[campo]);
+    pendientes[campo] = setTimeout(function () {
       var ref = S.db.ref(S.base + '/avatar/' + S.uid + '/' + campo);
       ref.set(valor).then(function () {
         return ref.once('value');   // releer: escribir no es haber guardado
@@ -608,7 +693,7 @@
     clearInterval(latidoTimer); latidoTimer = null;
     clearInterval(burbujaTimer); burbujaTimer = null;
     if (S.sala) api('salir', { sala: S.sala }, true).catch(function () {});
-    S.sala = null; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
+    S.sala = null; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
   }
 
   function conectarSala(sala, silencioso) {
@@ -618,7 +703,7 @@
           avisar((r && r.error) || 'No se pudo entrar');
           return false;
         }
-        S.sala = sala; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
+        S.sala = sala; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
         // El servidor devuelve cómo te ven los demás (con desempate si hace falta)
         if (r.yo) S.miNombre = r.yo;
         S.refPresentes = S.db.ref(S.base + '/salas/' + sala + '/presentes');
@@ -683,11 +768,108 @@
     cab.innerHTML = '<span class="esp-sala-tit">' + titulo + '</span>' +
       '<span class="esp-sala-n">' + n + ' ' + (n === 1 ? 'persona' : 'personas') + '</span>' +
       (S.visitando
-        ? '<button class="esp-btn-chico" id="espVolver">Volver a mi casa</button>'
+        ? '<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>' +
+          '<button class="esp-btn-chico esp-btn-junto" id="espVolver">Volver a mi casa</button>'
         : '<button class="esp-btn-chico" id="espVisitar">Visitar</button>');
-    var bv = cab.querySelector('#espVisitar'), bb = cab.querySelector('#espVolver');
+    var bv = cab.querySelector('#espVisitar'), bb = cab.querySelector('#espVolver'), br = cab.querySelector('#espRegalar');
     if (bv) bv.addEventListener('click', abrirVisitas);
     if (bb) bb.addEventListener('click', function () { irACasa(S.uid); });
+    if (br) br.addEventListener('click', abrirRegalo);
+  }
+
+  // ---------------- regalos ----------------
+  // Un mueble que yo tengo y el dueño de la casa no. Lo escribe el servidor en
+  // su avatar; aquí solo se elige.
+  function tengo(m) { return S.xp >= m.xp || !!(S.regalos && S.regalos[m.id]); }
+  function abrirRegalo() {
+    var panel = S.host.querySelector('#espVisitas');
+    var para = S.sala, nombre = nombreCorto(S.duenoNombre) || 'tu compañero';
+    panel.hidden = false;
+    panel.innerHTML = '<div class="esp-vis-cab"><b>Regalo para ' + esc(nombre) + '</b>' +
+      '<button class="esp-btn-chico" id="espCerrarVis">Cerrar</button></div>' +
+      '<div class="esp-vis-lista">Mirando qué le falta…</div>';
+    panel.querySelector('#espCerrarVis').addEventListener('click', function () { panel.hidden = true; });
+    var cont = panel.querySelector('.esp-vis-lista');
+    var ref = S.db.ref(S.base + '/avatar/' + para);
+    Promise.all([ref.child('xp_total').once('value'), ref.child('regalos').once('value')]).then(function (r) {
+      var suXp = Number(r[0].val()) || 0, suyos = r[1].val() || {};
+      var opciones = CATALOGO.filter(function (m) { return m.xp > 0 && tengo(m) && suXp < m.xp && !suyos[m.id]; });
+      if (!opciones.length) { cont.textContent = 'Ya tiene todos los muebles que tú tienes.'; return; }
+      cont.innerHTML = '<p class="esp-regalo-nota">Elige uno de tus muebles. Puedes regalar uno al día.</p>' +
+        '<div class="esp-regalo-rejilla">' + opciones.map(function (m) {
+          return '<button type="button" class="esp-regalo-op" data-id="' + m.id + '" title="' + esc(m.nom) + '">' +
+            '<img src="' + RUTA + m.id + '_SE.png" alt=""><span>' + esc(m.nom) + '</span></button>';
+        }).join('') + '</div>';
+      var botonesRegalo = cont.querySelectorAll('.esp-regalo-op');
+      var bloquear = function (si) { botonesRegalo.forEach(function (x) { x.disabled = si; }); };
+      botonesRegalo.forEach(function (b) {
+        b.addEventListener('click', function () {
+          var m = POR_ID[b.dataset.id];
+          if (!global.confirm('¿Regalarle «' + m.nom + '» a ' + nombre + '?')) return;
+          bloquear(true);
+          api('regalar', { para: para, mueble: m.id }).then(function (res) {
+            if (res && res.ok) { panel.hidden = true; avisar('🎁 Le regalaste «' + m.nom + '» a ' + nombre); return; }
+            avisar((res && res.error) || 'No se pudo regalar');
+            bloquear(false);
+          }).catch(function () { avisar('No se pudo regalar'); bloquear(false); });
+        });
+      });
+    }).catch(function () { cont.textContent = 'No se pudo cargar.'; });
+  }
+
+  // Los regalos que llegan se anuncian al tiro, y también los que llegaron
+  // mientras no estaba (el último visto queda en este navegador).
+  function escucharRegalos() {
+    var clave = 'espRegalosVistos_' + S.uid, visto = 0;
+    try { visto = Number(localStorage.getItem(clave)) || 0; } catch (e) {}
+    if (S.refRegalos) S.refRegalos.off();
+    S.refRegalos = S.db.ref(S.base + '/avatar/' + S.uid + '/regalos');
+    S.refRegalos.on('child_added', function (snap) {
+      var r = snap.val() || {}, m = POR_ID[snap.key];
+      S.regalos[snap.key] = r;
+      pintarMuebles();
+      if (m && Number(r.ts) > visto) {
+        visto = Number(r.ts);
+        try { localStorage.setItem(clave, String(visto)); } catch (e) {}
+        anunciar('🎁 ' + (r.de || 'Un compañero') + ' te regaló «' + m.nom + '». Ya está en tus muebles.');
+      }
+    });
+  }
+  function anunciar(texto) {
+    var el = S.host.querySelector('#espAnuncio');
+    if (!el) return;
+    el.textContent = texto; el.hidden = false;
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.hidden = true; }, 8000);
+  }
+
+  // ---------------- placas ----------------
+  function pintarPlacas() {
+    var cont = S.host.querySelector('#espPlacas');
+    if (!cont) return;
+    var ganadas = Object.keys(PLACAS).filter(function (id) { return S.logros[id]; });
+    if (!ganadas.length) {
+      cont.innerHTML = '<h4>Placas</h4><p class="esp-placas-vacio">Todavía no tienes logros. ' +
+        'Gánalos en <a href="logros.html">Logros</a> y ponte hasta ' + MAX_PLACAS + ' placas junto a tu nombre.</p>';
+      return;
+    }
+    cont.innerHTML = '<h4>Placas <span>' + S.placas.length + ' de ' + MAX_PLACAS + ' puestas · se ven junto a tu nombre en la casa</span></h4>' +
+      '<div class="esp-placas-lista">' + ganadas.map(function (id) {
+        var pl = PLACAS[id], puesta = S.placas.indexOf(id) >= 0;
+        return '<button type="button" class="esp-placa' + (puesta ? ' on' : '') + '" data-id="' + id + '"' +
+          ' style="--rareza:' + (COLOR_RAREZA[pl[2]] || '#94a3b8') + '" aria-pressed="' + puesta + '">' +
+          '<i>' + pl[0] + '</i><span>' + esc(pl[1]) + '</span></button>';
+      }).join('') + '</div>';
+    cont.querySelectorAll('.esp-placa').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.dataset.id, i = S.placas.indexOf(id);
+        if (i >= 0) S.placas.splice(i, 1);
+        else if (S.placas.length >= MAX_PLACAS) { marcarEstado('Máximo ' + MAX_PLACAS + ' placas: quita una primero', true); return; }
+        else S.placas.push(id);
+        guardar('placas', S.placas.slice());
+        pintarPlacas(); dibujar();
+      });
+    });
   }
 
   function abrirVisitas() {
@@ -754,12 +936,14 @@
       '<button data-p="muebles">Muebles</button>' +
       '<span class="esp-estado"></span>' +
     '</div>' +
+    '<div class="esp-anuncio" id="espAnuncio" role="status" hidden></div>' +
     '<div class="esp-panel" data-panel="personaje">' +
       '<div class="esp-personaje">' +
         '<div class="esp-vista"><div class="esp-figura" id="espFigura"></div>' +
           '<button class="esp-azar" type="button">Al azar</button></div>' +
         '<div class="esp-ropero" id="espRopero"></div>' +
       '</div>' +
+      '<div class="esp-placas" id="espPlacas"></div>' +
     '</div>' +
     '<div class="esp-panel oculto" data-panel="pieza">' +
       '<div class="esp-sala-cab" id="espSalaCab"></div>' +
@@ -845,23 +1029,25 @@
     var cont = S.host.querySelector('#espRejilla');
     var lista = CATALOGO.filter(function (m) {
       if (familia !== 'todo' && m.fam !== familia) return false;
-      return filtro === 'tengo' ? S.xp >= m.xp : S.xp < m.xp;
+      return filtro === 'tengo' ? tengo(m) : !tengo(m);
     });
     S.host.querySelector('#espCuenta').textContent =
-      CATALOGO.filter(function (m) { return S.xp >= m.xp; }).length + ' de ' + CATALOGO.length;
+      CATALOGO.filter(tengo).length + ' de ' + CATALOGO.length;
     cont.innerHTML = lista.map(function (m) {
       var n = S.miPieza.filter(function (p) { return p.id === m.id; }).length;
-      return '<div class="esp-item' + (S.xp >= m.xp ? '' : ' blo') + (S.elegido === m.id ? ' sel' : '') +
+      var regalo = S.xp < m.xp && S.regalos[m.id];
+      return '<div class="esp-item' + (tengo(m) ? '' : ' blo') + (S.elegido === m.id ? ' sel' : '') +
         '" data-id="' + m.id + '">' +
         '<img src="' + RUTA + m.id + '_SE.png" alt="' + esc(m.nom) + '">' +
         '<div class="esp-nom">' + esc(m.nom) + '</div>' +
-        (S.xp >= m.xp ? '' : '<div class="esp-req">' + esc(m.motivo) + '</div>') +
+        (tengo(m) ? '' : '<div class="esp-req">' + esc(m.motivo) + '</div>') +
+        (regalo ? '<span class="esp-regalo" title="Regalo de ' + esc(regalo.de || 'un compañero') + '">🎁</span>' : '') +
         (n ? '<span class="esp-cont">' + n + '</span>' : '') + '</div>';
     }).join('');
     cont.querySelectorAll('.esp-item').forEach(function (el) {
       el.addEventListener('click', function () {
         var m = POR_ID[el.dataset.id];
-        if (S.xp < m.xp) { avisar('Se gana así: ' + m.motivo); return; }
+        if (!tengo(m)) { avisar('Se gana así: ' + m.motivo); return; }
         if (S.visitando) { avisar('Los muebles se ponen en tu casa'); return; }
         S.elegido = (S.elegido === m.id) ? null : m.id;
         S.sel = -1; botones(); pintarMuebles();
@@ -1085,6 +1271,9 @@
     S.host = cfg.host; S.db = cfg.db; S.auth = cfg.auth; S.base = cfg.base; S.uid = cfg.uid;
     S.curso = cfg.curso || ''; S.miNombre = nombreCorto(cfg.nombre || '');
     S.xp = cfg.xp || 0; S.alCambiarLook = cfg.alCambiarLook;
+    S.logros = (cfg.logros && typeof cfg.logros === 'object') ? cfg.logros : {};
+    S.placas = placasValidas(cfg.placas, S.logros);
+    S.regalos = (cfg.regalos && typeof cfg.regalos === 'object') ? cfg.regalos : {};
     S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
     S.miPieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
@@ -1099,7 +1288,7 @@
     S.miCasa = (cfg.casa && typeof cfg.casa === 'object') ? cfg.casa : { piso: 'claro', muro: 'blanco' };
     S.casa = S.miCasa;
     S.sel = -1; S.elegido = null; S.hover = null;
-    S.visitando = false; S.sala = null; S.otros = {}; S.vistos = {}; S.destino = null; S.burbujas = {};
+    S.visitando = false; S.sala = null; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
 
     S.host.innerHTML = plantilla();
     S.cv = S.host.querySelector('#espLienzo');
@@ -1129,15 +1318,16 @@
     ['floorFull_SE'].forEach(function (n) { cargar(n, dibujar); });
     CATALOGO.forEach(function (m) { DIRS.forEach(function (d) { cargar(m.id + '_' + d, dibujar); }); });
 
-    pintarFigura(); pintarRopero(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera();
+    pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera();
     global.addEventListener('resize', dibujar);
     global.addEventListener('pagehide', desconectarSala);
     setTimeout(dibujar, 80);
 
     // Entro a mi propia casa apenas se monta: así los que vengan me ven ahí.
-    if (S.auth && S.db) conectarSala(S.uid, true);
+    if (S.auth && S.db) { conectarSala(S.uid, true); escucharRegalos(); }
   }
 
   global.MiEspacio = { montar: montar, CATALOGO: CATALOGO, PISOS: PISOS, MUROS: MUROS,
-                       nombreVisible: nombreVisible, nombreCorto: nombreCorto };
+                       nombreVisible: nombreVisible, nombreCorto: nombreCorto,
+                       PLACAS: PLACAS, placasValidas: placasValidas };
 })(window);

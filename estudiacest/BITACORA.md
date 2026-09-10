@@ -8,6 +8,24 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, Mi casa: los visitantes se ven caminar
+
+- Francisco pidió volver a la dinámica tipo Habbo. Lo que faltaba era el
+  movimiento en vivo: la posición salía al llegar y cada 20 s, y los demás
+  aparecían de golpe en la casilla nueva.
+- Ahora el destino se avisa al empezar a caminar (a lo más uno por segundo) y
+  cada cliente dibuja a los demás recorriendo la ruta con el mismo buscador de
+  camino del propio personaje. Solo cambia `estudiantes/js/mi-espacio.js`; el
+  servidor ya limitaba las casillas a 0–4. Commit 0f4245c6, desplegado desde
+  worktree limpio después del deploy PAES de 50003aec (producción conserva
+  ambos).
+- Probado en producción con una cuenta ficticia temporal y un visitante falso:
+  el visitante cruzó la casa casilla a casilla en unos 2,5 s. Al hacer clic,
+  Firebase tenía el destino a los 412 ms, con el personaje todavía a mitad de
+  camino. Consola sin errores. Cuenta, casa y capturas borradas.
+- `audit-mi-espacio.js` vigila las piezas del movimiento; siete mutaciones
+  detectadas.
+
 ## 2026-09-10, PAES 1–9: ampliaciones e imágenes IA publicadas y verificadas
 
 - Publicado el contenido del commit `50003aec` mediante `npm run deploy:prod:safe`, desde la fuente canónica, conservando el cierre paralelo `80192853`. Despliegue `dpl_8g9KYf21KE2TfkNC9QZvMQ2be9b1`: estado Ready y dominio `www.estudiacest.com` comprobados. La CLI perdió la conexión de seguimiento con ECONNRESET; la construcción continuó en Vercel y se confirmó su finalización con una inspección de solo lectura, sin duplicar el despliegue.

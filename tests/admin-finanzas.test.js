@@ -54,3 +54,22 @@ test('dashboard conserva caja histórica, excluye bajas y no inventa precios',()
 test('todos los scripts inline compilan',()=>{
  for(const m of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi))if(!/src=|ld\+json/.test(m[1]))new vm.Script(m[2]);
 });
+test('precio pendiente y ficha duplicada quedan fuera de la proyección sin perder a la persona',()=>{
+ const p=(pagado,saldo)=>({plan:'completo',cartera:{fuentePago:'_gestion/LIBRO_DE_CAJA.jsonl',pagado,saldo,precio:199990}});
+ const pendiente={plan:'pre-inscripcion',saldoPendiente:199990,cartera:{precio:199990,saldo:199990,pagado:0},revisionFinanciera:{estado:'precio-pendiente',alcance:'Módulo 3',motivo:'Sin precio comunicado'}};
+ assert.equal(f.precioPendiente(pendiente),true);
+ assert.equal(f.saldo(pendiente,0,0),null);
+ assert.deepEqual(agenda(pendiente,null),[]);
+ const dup={...p(0,199990),paymentStatus:'pendiente',duplicadoDe:'real'};
+ assert.equal(f.sinCobro(dup),true);
+ const portfolios={real:p(0,199990),dup,pendiente,pagado:p(100000,99990)};
+ const users=Object.fromEntries(Object.keys(portfolios).map(k=>[k,{nombre:k,createdAt:'2026-09-01'}]));
+ const {nodes,context}=render({users,portafolios:portfolios});
+ assert.equal(context.getClientUids().includes('dup'),false);
+ assert.equal(context.window._resumenCarteraBruta.saldoTotal,299980);
+ assert.equal(context.window._resumenCarteraBruta.potencialPersonas,1);
+ assert.match(nodes['stat-valoracion'].textContent,/1 sin pago con saldo registrado; 1 sin precio/);
+ assert.match(nodes['potencial-table'].innerHTML,/Módulo 3/);
+ assert.match(nodes['potencial-table'].innerHTML,/Precio por confirmar/);
+ assert.equal(Object.values(context.window._agendaCobros).flat().reduce((s,e)=>s+e.monto,0),299980);
+});

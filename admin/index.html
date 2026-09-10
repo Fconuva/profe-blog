@@ -1160,6 +1160,7 @@
         function formatCLP(n) { return '$' + (n || 0).toLocaleString('es-CL'); }
         function getPlanPrice(plan) { return planPrices[plan] || 0; }
         function getPortfolioPrice(portfolio) {
+            if (FinanzasAdmin.precioPendiente(portfolio)) return 0;
             var cartera = (portfolio || {}).cartera || {};
             var agreed = Number(portfolio && portfolio.precioAcordado);
             if (Number.isFinite(agreed) && agreed > 0) return agreed;
@@ -2354,6 +2355,7 @@
             var estadoUsuario = String(c.status || '').trim().toLowerCase();
             var estadoPago = String(p.paymentStatus || '').trim().toLowerCase();
             return c.archivado === true
+                || !!p.duplicadoDe
                 || p.archivado === true
                 || p.liberado === true
                 || ['baja', 'liberado', 'archivado', 'duplicado'].indexOf(estadoUsuario) >= 0
@@ -2476,7 +2478,7 @@
                 var telefono = cc.telefono || dp.telefono || pp.telefono || '';
                 var digitos = String(telefono).replace(/\D/g, '');
                 var rotuloTelefono = digitos.length >= 8 ? 'Contacto +' + digitos : '';
-                return cc.nombre || dp.nombre || cc.email || dp.email || rotuloTelefono || uid.slice(0, 8);
+                return cc.nombre || pp.nombre || dp.nombre || cc.email || dp.email || rotuloTelefono || uid.slice(0, 8);
             }
             function notasA(p) { // adminNotas puede ser string u objeto {ts: nota}
                 var n = p.adminNotas; if (!n) return [];
@@ -2572,6 +2574,8 @@
                         fecha: fIns ? String(fIns).slice(0, 10) : '',
                         dias: diasIns,
                         valor: saldoRegistrado,
+                        alcance: (p.revisionFinanciera || {}).alcance || planNames[p.plan] || p.plan || 'Por confirmar',
+                        revision: (p.revisionFinanciera || {}).motivo || '',
                         // si ya declaró su OA podemos construirle el M1; si no, primero hay que pedírselo
                         conOA: !!(_dpSP.objetivoAprendizaje && String(_dpSP.objetivoAprendizaje).trim()),
                         conM1: !!(p.modulo1 && p.modulo1.estado === 'completado')
@@ -2708,7 +2712,7 @@
                 return s + (esClienteInactivo(allClients[uid], allPortafolios[uid]) ? montoPagadoReal(allPortafolios[uid]) : 0);
             }, 0);
             _setD('stat-caja-historica', 'Caja histórica registrada: ' + formatCLP(paidRevenue + cajaBajas) + '. Incluye ' + formatCLP(cajaBajas) + ' de personas de baja; esos abonos se conservan.');
-            _setD('stat-valoracion', potencialConSaldo + ' sin pago con saldo registrado; ' + sinValorar + ' sin precio y ' + sinSaldoSinPago + ' con saldo $0, fuera de la proyección. Los importes de preinscripciones son estimaciones pendientes de confirmar alcance y precio.');
+            _setD('stat-valoracion', potencialConSaldo + ' sin pago con saldo registrado; ' + sinValorar + ' sin precio y ' + sinSaldoSinPago + ' con saldo $0, fuera de la proyección. Los alcances o precios pendientes de confirmar no suman ingresos futuros. El saldo registrado no garantiza que se pague ni fija una fecha.');
 
 
             // La tabla conserva cada movimiento pactado, pero las tarjetas cuentan personas
@@ -2805,10 +2809,10 @@
                     sinPagarList.forEach(function (x) {
                         var viejo = (x.dias !== null && x.dias > 21);
                         hp += '<tr class="border-t border-gray-100"><td class="py-1.5 pr-2 font-medium text-gray-800">' + escapeHtml(x.nombre) + '</td>' +
-                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '</td>' +
+                              '<td class="py-1.5 pr-2 text-gray-500">' + escapeHtml(x.fecha || '¿?') + '<br><span class="text-xs">' + escapeHtml(x.alcance) + '</span></td>' +
                               '<td class="py-1.5 pr-2 ' + (viejo ? 'text-rose-600 font-bold' : 'text-gray-500') + '">' + (x.dias === null ? '¿?' : x.dias) + '</td>' +
                               '<td class="py-1.5 pr-2">' + (x.conOA ? '<span class="text-emerald-600 font-semibold">sí</span>' : '<span class="text-gray-400">falta</span>') + '</td>' +
-                              '<td class="py-1.5 text-right tabular-nums text-indigo-700">' + (x.valor === null ? 'Sin precio' : formatCLP(x.valor)) + '</td></tr>';
+                              '<td class="py-1.5 text-right tabular-nums text-indigo-700">' + (x.valor === null ? 'Precio por confirmar' : formatCLP(x.valor)) + (x.revision ? '<div class="text-xs text-gray-500 max-w-xs">' + escapeHtml(x.revision) + '</div>' : '') + '</td></tr>';
                     });
                     hp += '</tbody></table>';
                     potEl.innerHTML = hp;
@@ -3100,7 +3104,8 @@
                         if (confirm('¿Aprobar pago para ' + (c.nombre || '') + '?')) {
                             var paymentId = 'MP-M' + Date.now().toString().substring(5);
                             var plan = p.plan || 'completo';
-                            var expectedAmount = getPortfolioPrice(p) || 199990;
+                            var expectedAmount = getPortfolioPrice(p);
+                            if (!(expectedAmount > 0)) { alert('Confirma el alcance y el precio acordado antes de aprobar un pago.'); return; }
                             var verifiedDate = new Date().toISOString();
 
                             var updates = {};
@@ -3649,7 +3654,8 @@
             if (confirm('¿Aprobar pago manualmente? Se generará un comprobante automático de inmediato.')) {
                 var paymentId = 'MP-M' + Date.now().toString().substring(5);
                 var plan = p.plan || 'completo';
-                var expectedAmount = getPortfolioPrice(p) || 199990;
+                var expectedAmount = getPortfolioPrice(p);
+                if (!(expectedAmount > 0)) { alert('Confirma el alcance y el precio acordado antes de aprobar un pago.'); return; }
                 var verifiedDate = new Date().toISOString();
 
                 var updates = {};
@@ -4743,9 +4749,10 @@
             if (!c || !p) return;
             var uid = document.getElementById('edit-uid').value;
             if (!uid) { alert('No se pudo identificar al docente.'); return; }
-            var total = getPortfolioPrice(p) || 199990;
-            var abonadoAntes = (typeof p.paymentAmount === 'number') ? p.paymentAmount : 0;
-            var saldoAntes = Math.max(0, total - abonadoAntes);
+            var total = getPortfolioPrice(p);
+            if (!(total > 0)) { alert('Confirma el alcance y el precio acordado antes de emitir este comprobante.'); return; }
+            var abonadoAntes = montoPagadoReal(p);
+            var saldoAntes = FinanzasAdmin.saldo(p, total, abonadoAntes);
             var raw = prompt(
                 '¿Cuánto pagó AHORA? (monto de este abono, en pesos)\n\n' +
                 'Plan: ' + formatCLP(total) + '\n' +

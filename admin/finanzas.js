@@ -2,13 +2,18 @@
 (function (root) {
     'use strict';
     function monto(v) { return typeof v === 'number' && Number.isFinite(v) && v >= 0; }
+    function precioPendiente(p) {
+        p = p || {};
+        return (p.revisionFinanciera || {}).estado === 'precio-pendiente';
+    }
     function sinCobro(p) {
-        return p.noCobrar === true || p.archivado === true || p.liberado === true
+        return !!p.duplicadoDe || p.noCobrar === true || p.archivado === true || p.liberado === true
             || ['baja', 'duplicado', 'devuelto', 'gratis'].includes(p.paymentStatus)
             || ['no_cobrar', 'excluido'].includes((p.cartera || {}).tramoCobro);
     }
     function saldo(p, precio, pagado) {
         if (sinCobro(p)) return 0;
+        if (precioPendiente(p)) return null;
         if (monto((p.cartera || {}).saldo)) return p.cartera.saldo;
         if (monto(p.saldoPendiente)) return p.saldoPendiente;
         if (['approved', 'aprobado', 'pagado'].includes(p.paymentStatus)) return 0;
@@ -87,7 +92,7 @@
         if (restante > 0) agregar('', restante, 'sin-fecha', 'Resto del saldo sin fecha; no se considera una cuota pactada.');
         return eventos;
     }
-    var api = { saldo, sinCobro, ultimoPago, hoyChile, bucket, agenda };
+    var api = { saldo, sinCobro, precioPendiente, ultimoPago, hoyChile, bucket, agenda };
     if (typeof module !== 'undefined' && module.exports) module.exports = api;
     else root.FinanzasAdmin = api;
 })(typeof window !== 'undefined' ? window : globalThis);

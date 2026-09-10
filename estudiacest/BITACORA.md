@@ -8,6 +8,28 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-10, PAES: cuenta regresiva y bloqueo programado de las guías hasta la 19
+
+- Pedido de Francisco: un contador en PAES HC que avise que las guías hasta la
+  19 se bloquean el 23 de septiembre.
+- **Bloqueo real (commit 6b9dab73):** `guias_config/bloqueo_programado =
+  { fecha: '2026-09-23', guias: g12…g19 }`. `readGuiasConfig` lo aplica una
+  sola vez, la primera vez que alguien lee la configuración desde las 00:00 de
+  Chile del 23 (escribe `blocked/gNN` y marca `aplicado`); después el docente
+  puede desbloquear desde el admin sin que se vuelva a bloquear. La 20 y la 21
+  no están en la lista. El reenvío de todas (12–21) cierra el mismo día.
+- **Aviso:** `paes/js/aviso-cierre.js`, franja ámbar arriba con la fecha y
+  cuenta regresiva (días, horas, minutos, segundos). Toma fecha y guías del
+  servidor (nunca escritas en el cliente). Carga en `paes/index.html`,
+  `paes/guias.html` y, desde `guia-lock.js`, en cada guía; dentro de una guía
+  solo aparece si esa guía se bloquea. Al llegar la hora cambia a "ya están
+  bloqueadas"; una vez aplicado el bloqueo el servidor deja de informarlo.
+- **Verificado en producción:** la API pública informa g12–g19 con límite
+  2026-09-23T03:00Z (00:00 de Chile, miércoles). Aviso visible en portal,
+  listado, G12 y G19; no en G20. A 400 px no desborda. Consola limpia.
+  `audit-paes-reenvio` prueba la medianoche de Chile en verano e invierno,
+  cuándo se aplica y que no se reaplique (4 mutaciones detectadas).
+
 ## 2026-09-10, PAES: el reenvío se cierra solo el 23 de septiembre
 
 - Francisco aprobó cerrar el reenvío el 23-sep-2026, antes de recalcular

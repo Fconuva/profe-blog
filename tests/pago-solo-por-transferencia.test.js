@@ -69,3 +69,37 @@ test('el formulario de Docente Creador no depende de un enlace de pago que ya no
   assert.ok(!dc.includes('checkoutUrl'), 'el formulario todavia exige un checkoutUrl');
   assert.ok(!dc.includes('No se pudo generar el enlace de pago'), 'sigue el error que bloqueaba la inscripcion');
 });
+
+/*
+ * El comprobante por WhatsApp es obligatorio, no una sugerencia.
+ *
+ * Instruccion de Francisco, 15-sep-2026: «una vez que paguen mandar comprobante por wsp es
+ * obligatorio». Sin pasarela no hay confirmacion automatica: la unica forma de saber que una
+ * docente pago es que nos llegue su comprobante. Si la pantalla lo deja como algo opcional, el
+ * pago entra al banco y nadie lo concilia, y despues se le cobra a alguien que ya pago.
+ */
+test('el numero de comprobante no puede volver a ser opcional', () => {
+  const dashboard = PAGINAS['dashboard/index.html'];
+  assert.doesNotMatch(
+    dashboard,
+    /pay-transfer-comprobante[\s\S]{0,200}\(opcional\)/,
+    'el campo del comprobante volvio a estar marcado como opcional'
+  );
+  assert.match(dashboard, /pay-transfer-comprobante[\s\S]{0,200}\(obligatorio\)/);
+});
+
+test('informar la transferencia exige el dato del comprobante', () => {
+  // Antes se aceptaba vacio y se guardaba solo «Transferencia», sin con que conciliar.
+  const dashboard = PAGINAS['dashboard/index.html'];
+  assert.match(dashboard, /Escribe el N° de comprobante o el titular/);
+  assert.doesNotMatch(dashboard, /'Transferencia' \+ \(ref \? ' — ' \+ ref : ''\)/);
+});
+
+test('las tres pantallas de pago dicen que enviar el comprobante es obligatorio', () => {
+  for (const nombre of ['dashboard/index.html', 'docente-creador/index.njk', 'js/ecep-auth.js']) {
+    assert.match(PAGINAS[nombre], /obligatorio/i, `${nombre} no dice que el comprobante es obligatorio`);
+    // ECEP arma el enlace concatenando ('https://wa.me/' + WSP), asi que no se busca literal.
+    assert.match(PAGINAS[nombre], /wa\.me/, `${nombre} no ofrece el WhatsApp para mandarlo`);
+    assert.match(PAGINAS[nombre], /56988138929/, `${nombre} no trae el numero de WhatsApp`);
+  }
+});

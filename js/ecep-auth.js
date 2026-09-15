@@ -274,7 +274,9 @@
         '<div><dt>Tipo</dt><dd>' + BANCO.tipo + '</dd></div>' +
         '<div><dt>Cuenta</dt><dd><b>' + BANCO.cuenta + '</b></dd></div>' +
         '<div><dt>Correo</dt><dd>' + BANCO.correo + '</dd></div>' +
-      '</dl></div>';
+      '</dl>' +
+      '<p class="ecep-pw-bank-obl">Despues de transferir, enviarnos el comprobante por WhatsApp es <b>obligatorio</b>: tu acceso se activa cuando lo recibimos.</p>' +
+      '</div>';
   }
 
   // ============ PRUEBA GRATIS (30 min) ============
@@ -334,9 +336,9 @@
         '<p class="ecep-pw-sub">Este dossier es de acceso pagado. Adquiérelo una vez y estudia el temario completo, con casos tipo ECEP, imágenes y autoevaluación.</p>' +
         '<div class="ecep-pw-price"><b>' + PRECIO + '</b><span>pago único · este dossier</span></div>' +
         datosTransferenciaHTML() +
-        '<a class="ecep-pw-buy" id="ecep-pw-pay" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ya transferí · enviar comprobante</a>' +
+        '<a class="ecep-pw-buy" id="ecep-pw-pay" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Enviar mi comprobante · obligatorio</a>' +
         '<button class="ecep-pw-refresh" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Ya tengo acceso · actualizar</button>' +
-        '<p class="ecep-pw-note">Apenas confirmamos la transferencia te <b>activamos el acceso</b>. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
+        '<p class="ecep-pw-note">Sin el comprobante no podemos activar tu acceso. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
         '<button class="ecep-pw-logout" onclick="ecepLogout()">Cambiar de cuenta</button>' +
       '</div>';
     document.body.appendChild(ov);

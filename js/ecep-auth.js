@@ -14,7 +14,16 @@
   var LOGIN = '/evaluaciones/acceso/';
   var HOME = '/evaluaciones/';
   var ADMIN_EMAILS = ['fconuva@gmail.com', 'portafolio.admin@profefranciscopancho.com'];
-  var PAY_LINK = 'https://mpago.la/2hAQHvF';
+  // Mercado Pago quedo fuera el 15-sep-2026: suspendio la cuenta y retuvo el saldo. Desde
+  // entonces se cobra por transferencia a Banco Falabella. Un solo lugar con los datos.
+  var BANCO = {
+    titular: 'Francisco Javier Nunez Valenzuela',
+    rut: '17.853.891-8',
+    banco: 'Banco Falabella',
+    tipo: 'Cuenta Corriente',
+    cuenta: '1-999-252726-5',
+    correo: 'fconuva@gmail.com'
+  };
   var PRECIO = '$10.000';
   var WSP = '56988138929';
   var TRIAL_MS = 30 * 60 * 1000; // prueba gratis: 30 minutos desde la creación de la cuenta
@@ -71,7 +80,7 @@
     v.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.97);text-align:center;padding:24px';
     v.innerHTML = '<div><div style="font-size:34px;color:#0e7d8a"><i class="bi bi-hourglass-split"></i></div>' +
       '<h2 style="font:700 20px Poppins,system-ui,sans-serif;color:#0f172a;margin:14px 0 6px">Verificando tu pago…</h2>' +
-      '<p style="color:#64748b;font-size:14px;max-width:360px;margin:0 auto;line-height:1.5">Estamos confirmando tu pago con Mercado Pago para activar tu acceso. Esto toma unos segundos.</p></div>';
+      '<p style="color:#64748b;font-size:14px;max-width:360px;margin:0 auto;line-height:1.5">Estamos confirmando tu acceso. Esto toma unos segundos.</p></div>';
     document.body.appendChild(v);
   }
   function hideVerifying() { var v = document.getElementById('ecep-verify'); if (v && v.parentNode) v.parentNode.removeChild(v); }
@@ -245,21 +254,27 @@
     }, true);
   }
 
-  // ============ PAGO (Mercado Pago) ============
-  function iniciarPago(did, user, btn) {
+  // ============ PAGO (transferencia a Banco Falabella) ============
+  // No hay cobro con tarjeta en el sitio: la pasarela era Mercado Pago y se elimino.
+  // El docente transfiere y nos manda el comprobante; el acceso se activa al confirmarlo.
+  function wspComprobante(did, user) {
     var nombre = DOSSIERS[did] || 'este dossier';
-    var orig = btn ? btn.innerHTML : '';
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Generando pago seguro…'; }
-    fetch('/api/mercadopago/create_preference', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tipo: 'ecep', uid: user.uid, email: user.email || '', dossier: did, dossierName: nombre, returnPath: location.pathname })
-    }).then(function (r) { return r.json(); }).then(function (d) {
-      if (d && d.init_point) { window.location.href = d.init_point; }
-      else { throw new Error((d && d.details) || 'sin init_point'); }
-    }).catch(function (e) {
-      if (btn) { btn.disabled = false; btn.innerHTML = orig; }
-      alert('No se pudo iniciar el pago en línea. Inténtalo de nuevo, o paga por transferencia y envíanos el comprobante por WhatsApp.\n\n(' + ((e && e.message) || '') + ')');
-    });
+    return 'https://wa.me/' + WSP + '?text=' + encodeURIComponent(
+      'Hola, transferi el dossier "' + nombre + '" de la plataforma ECEP. Mi correo de acceso es ' +
+      (user.email || '') + '. Adjunto el comprobante para que activen mi acceso.');
+  }
+
+  function datosTransferenciaHTML() {
+    return '<div class="ecep-pw-bank">' +
+      '<p class="ecep-pw-bank-t">Transfiere ' + PRECIO + ' a esta cuenta</p>' +
+      '<dl>' +
+        '<div><dt>Titular</dt><dd>' + BANCO.titular + '</dd></div>' +
+        '<div><dt>RUT</dt><dd>' + BANCO.rut + '</dd></div>' +
+        '<div><dt>Banco</dt><dd>' + BANCO.banco + '</dd></div>' +
+        '<div><dt>Tipo</dt><dd>' + BANCO.tipo + '</dd></div>' +
+        '<div><dt>Cuenta</dt><dd><b>' + BANCO.cuenta + '</b></dd></div>' +
+        '<div><dt>Correo</dt><dd>' + BANCO.correo + '</dd></div>' +
+      '</dl></div>';
   }
 
   // ============ PRUEBA GRATIS (30 min) ============
@@ -291,7 +306,7 @@
       '<button id="ecep-trial-pay" style="background:#fff;color:#0f766e;border:0;border-radius:9px;padding:8px 15px;font-weight:800;cursor:pointer"><i class="bi bi-unlock-fill"></i> Desbloquear este dossier · ' + PRECIO + '</button>';
     document.body.appendChild(bar);
     var pb = document.getElementById('ecep-trial-pay');
-    pb.onclick = function () { iniciarPago(did, user, pb); };
+    pb.onclick = function () { window.open(wspComprobante(did, user), '_blank', 'noopener'); };
     var end = Date.now() + msLeft, clk = document.getElementById('ecep-trial-clock'), iv;
     function tick() {
       var rem = end - Date.now();
@@ -307,7 +322,7 @@
   function showPaywall(did, user) {
     var nombre = DOSSIERS[did] || 'este dossier';
     var mailTxt = user.email || '';
-    var wspMsg = encodeURIComponent('Hola, pagué el dossier "' + nombre + '" de la plataforma ECEP. Mi correo de acceso es ' + mailTxt + '. Adjunto el comprobante para que activen mi acceso.');
+    var wspMsg = encodeURIComponent('Hola, transferí el dossier "' + nombre + '" de la plataforma ECEP. Mi correo de acceso es ' + mailTxt + '. Adjunto el comprobante para que activen mi acceso.');
     document.body.classList.add('ecep-paywalled');
     var ov = document.createElement('div');
     ov.className = 'ecep-paywall';
@@ -318,15 +333,13 @@
         '<h1>' + nombre + '</h1>' +
         '<p class="ecep-pw-sub">Este dossier es de acceso pagado. Adquiérelo una vez y estudia el temario completo, con casos tipo ECEP, imágenes y autoevaluación.</p>' +
         '<div class="ecep-pw-price"><b>' + PRECIO + '</b><span>pago único · este dossier</span></div>' +
-        '<button class="ecep-pw-buy" id="ecep-pw-pay"><i class="bi bi-credit-card-2-front-fill"></i> Pagar ' + PRECIO + ' con Mercado Pago</button>' +
-        '<a class="ecep-pw-wsp" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> ¿Pagaste por transferencia? Envía el comprobante</a>' +
+        datosTransferenciaHTML() +
+        '<a class="ecep-pw-buy" id="ecep-pw-pay" href="https://wa.me/' + WSP + '?text=' + wspMsg + '" target="_blank" rel="noopener"><i class="bi bi-whatsapp"></i> Ya transferí · enviar comprobante</a>' +
         '<button class="ecep-pw-refresh" onclick="location.reload()"><i class="bi bi-arrow-clockwise"></i> Ya tengo acceso · actualizar</button>' +
-        '<p class="ecep-pw-note">Al pagar con Mercado Pago tu acceso se <b>activa solo</b> en unos segundos. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
+        '<p class="ecep-pw-note">Apenas confirmamos la transferencia te <b>activamos el acceso</b>. Ingresaste como <b>' + mailTxt + '</b>.</p>' +
         '<button class="ecep-pw-logout" onclick="ecepLogout()">Cambiar de cuenta</button>' +
       '</div>';
     document.body.appendChild(ov);
-    var payBtn = document.getElementById('ecep-pw-pay');
-    if (payBtn) payBtn.onclick = function () { iniciarPago(did, user, payBtn); };
     reveal();
   }
 

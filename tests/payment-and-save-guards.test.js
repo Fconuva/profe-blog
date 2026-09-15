@@ -144,10 +144,16 @@ test('back buttons describe the draft that is actually preserved', () => {
   assert.match(dashboard, /conservar (?:el )?borrador/i);
 });
 
-test('payment timeout never redirects to an unlinked static payment URL', () => {
+// 15-sep-2026: este test protegia que, si la pasarela demoraba, el dashboard no mandara a la
+// docente a un link estatico de Mercado Pago sin asociar a su cuenta. Con Mercado Pago
+// eliminado ya no hay checkout ni timeout que cubrir, asi que la garantia ahora es mas fuerte:
+// el dashboard no puede sacar a nadie del sitio a pagar. La comprobacion del mensaje
+// «No se realizó ningún cobro» se retira porque ese cobro ya no existe.
+// Ver tests/pago-solo-por-transferencia.test.js
+test('payment flow never redirects to an unlinked static payment URL', () => {
   assert.doesNotMatch(dashboard, /window\.location\.href\s*=\s*fallbackUrl/);
   assert.doesNotMatch(dashboard, /window\.open\(link/);
-  assert.match(dashboard, /No se realizó ningún cobro/);
+  assert.doesNotMatch(dashboard, /mpago\.la/);
 });
 
 test('portfolio payment endpoints require the authenticated Firebase session', () => {

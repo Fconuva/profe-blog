@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-18, Firebase quedó en Spark: la cuenta de facturación existe pero no está vinculada
+
+- **Qué pasó.** De madrugada Google Cloud canceló dos cuentas de facturación
+  (03:55) y, en cadena, Firebase bajó `estudiacest` y `profe-blog` al plan
+  **Spark** (04:00 y 04:01). Mismo origen que la caída de
+  profefranciscopancho.com ese día: la tarjeta que respaldaba los servicios.
+- **Estado verificado el 18-sep a las 09:40.** `estudiacest` sigue en
+  **Spark**. Hay una cuenta de facturación **activa** en Google Cloud, «Mi
+  cuenta de facturación» (`016A0B-EF1A80-ED192E`, gasto $0), pero **el
+  proyecto no está vinculado a ella**. El flujo de Blaze quedó a medias en
+  «Configurar el perfil de facturación» de una segunda cuenta
+  (`016826-8BA235-272903`).
+- **El sitio está arriba**: `https://www.estudiacest.com` responde HTTP 200.
+  No se detectó nada roto todavía, pero no se probó el guardado ni los límites
+  de Realtime Database bajo Spark.
+- **Pendiente, por decisión de Francisco (lo dejó para después).** Vincular
+  `estudiacest` a la cuenta activa para volver a Blaze, o confirmar que Spark
+  alcanza. Antes de decidir conviene medir qué del proyecto necesitaba Blaze:
+  las APIs corren en Vercel, no en Cloud Functions, así que puede que Spark
+  baste. Revisar también `profe-blog`, que quedó igual.
+- No se modificó ningún plan en esta sesión.
+- La consola de Firebase y Google Cloud de estos proyectos vive en la cuenta
+  personal: hay que entrar con `/u/1`, no con la del colegio, que da «este
+  proyecto no existe o no tienes permiso».
+
 ## 2026-09-10, PAES: cuenta regresiva y bloqueo programado de las guías hasta la 19
 
 - Pedido de Francisco: un contador en PAES HC que avise que las guías hasta la

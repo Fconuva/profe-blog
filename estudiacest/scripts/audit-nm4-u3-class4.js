@@ -88,8 +88,8 @@ for (const jump of jumps) {
 const class4Start = portal.indexOf('<h3>Industria 4.0 · investigación</h3>');
 expect(class4Start >= 0, 'La portada NM4 no contiene la Clase 4.');
 const class4Card = class4Start >= 0 ? portal.slice(portal.lastIndexOf('<article', class4Start), portal.indexOf('</article>', class4Start) + 10) : '';
-expect(class4Card.includes('u3-card activa'), 'La Clase 4 no está marcada como actual.');
-expect(class4Card.includes('/nm4/u3-clase4-industria40/'), 'La tarjeta actual no enlaza la nueva clase.');
+expect(class4Card.includes('u3-card'), 'La Clase 4 no tiene una tarjeta válida en el portal.');
+expect(class4Card.includes('/nm4/u3-clase4-industria40/'), 'La tarjeta no enlaza la clase 4.');
 expect(class4Card.includes('4°A, 4°B, 4°C y 4°E'), 'La tarjeta no identifica los cuatro cursos destinatarios.');
 expect(!class4Card.includes('4°D'), 'La tarjeta de Industria 4.0 no debe asignarse a 4°D.');
 expect(page.includes('4°D continúa en el proyecto Anuario'), 'La presentación no aclara la ruta independiente de 4°D.');

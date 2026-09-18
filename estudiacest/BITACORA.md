@@ -8,6 +8,29 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-18, NM4: Despliegue de Clase 5 «La entrevista de trabajo» y reprogramación del calendario
+
+- **Qué se hizo:**
+  - Se creó y desplegó la **Clase 5: La entrevista de trabajo** en `nm4/u3-clase5-entrevista-laboral/index.html` con sistema de 14 diapositivas interactivo, adaptado a resoluciones desde celular hasta 4K, con controles de teclado y gestos táctiles.
+  - Se reprogramó el calendario de la Unidad 3 de NM4 en `nm4/index.html`:
+    - Clase 5: lunes 21 de septiembre (4°D martes 22 de septiembre) · 90 min (marcada como clase actual).
+    - Clase 6 (Escribir en el trabajo): lunes 28 de septiembre (4°D martes 29) · 90 min.
+    - Cierre de Unidad 3 (Revisión de cuadernos y timbres): lunes 5 de octubre (4°D martes 6).
+    - Rango general de la unidad: del 10 de agosto al 5 de octubre.
+  - Se generaron 6 imágenes fotorrealistas con IA (estilo documental de especialidades técnicas salesianas) para la portada general, método STAR y los 4 casos por especialidad (4°A Mecánica Industrial, 4°B Mecánica Automotriz, 4°C Electricidad, 4°E Electrónica).
+  - Se produjo el video introductorio `video-entrevista.mp4` (99s, H.264/AAC, 1080p), con locución chilena (`es-CL-LorenzoNeural`), guion pedagógico `video-entrevista-guion.txt`, póster HD y subtítulos WebVTT (`video-entrevista.vtt`).
+  - Se incorporó el método STAR técnico, el modelado comparativo de respuestas (débil vs. profesional), las 4 preguntas clave de entrevista, la pauta de simulación en parejas (15 min por rol con rúbrica de 5 criterios) y el ticket de salida en el cuaderno.
+  - Se registraron los 10 recursos críticos en `scripts/academic-release-manifest.json` y se creó el script de auditoría `scripts/audit-nm4-u3-class5.js`, integrado en el build general de `package.json`.
+- **Verificación:**
+  - `node scripts/audit-nm4-u3-class5.js`: OK.
+  - `node scripts/audit-nm4-u3-class4.js`: OK.
+  - `npm run build`: OK (214 recursos críticos verificados en el release académico).
+- **Estado y pendientes:**
+  - La Clase 5 queda lista y activa en el portal de NM4 para su ejecución el 21 de septiembre.
+  - Pendiente para la semana del 28-sep: preparación de la Clase 6 («Escribir en el trabajo»).
+
+---
+
 ## 2026-09-18, Firebase quedó en Spark: la cuenta de facturación existe pero no está vinculada
 
 - **Qué pasó.** De madrugada Google Cloud canceló dos cuentas de facturación

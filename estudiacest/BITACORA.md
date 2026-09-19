@@ -8,6 +8,33 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-19, NM4: portada reparada e infografía STAR localizada al español
+
+- **Problema confirmado:** producción conservaba la versión defectuosa de
+  `nm4/index.html`, con tarjetas `<article>` anidadas, dos rangos de la unidad,
+  estados incompatibles y fechas repetidas. La Clase 5 también mostraba una
+  infografía STAR completamente en inglés.
+- **Corrección:** se publicó la reparación de la portada ya contenida en
+  `66d3fde4`; `metodo-star.jpg` se reemplazó por una infografía 4K con solo los
+  rótulos españoles «Método STAR para entrevistas técnicas», «Situación»,
+  «Tarea», «Acción» y «Resultado».
+- **Prevención:** `scripts/audit-nm4-u3-class5.js` ahora exige ocho tarjetas de
+  primer nivel, una sola clase actual, un solo rango vigente, ausencia de las
+  fechas antiguas y el hash de la infografía española aprobada. El manifiesto
+  dejó de tolerar que falten en producción los diez recursos de la Clase 5.
+- **Validación:** auditoría focalizada y `npm run build` aprobados; 214 recursos
+  críticos verificados. Playwright comprobó la portada en 390, 1440 y 3840 px:
+  ocho tarjetas directas, una activa, sin desborde, errores de consola ni
+  solicitudes fallidas. La diapositiva 4 cargó la imagen 3840 × 2160 sin
+  desborde. Tras publicar se repitieron las pruebas móvil y escritorio; el HTML
+  público coincidió con Git y el hash remoto de la imagen coincidió con el
+  local.
+- **Publicación:** commit `4a41064c`; despliegue seguro
+  `dpl_C1m81oPxFasD2aQyGPAtx18GNA2i`, estado `READY`, alias
+  `https://www.estudiacest.com` verificado.
+
+---
+
 ## 2026-09-18, NM4: Despliegue de Clase 5 «La entrevista de trabajo» y reprogramación del calendario
 
 - **Qué se hizo:**

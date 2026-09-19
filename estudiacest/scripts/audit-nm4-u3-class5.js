@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const root = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -12,6 +13,35 @@ const portal = read('nm4/index.html');
 const vtt = read('nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.vtt');
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 const assetRoot = path.join(root, 'nm4', 'u3-clase5-entrevista-laboral', 'assets');
+
+const unitGridStart = portal.indexOf('<div class="u3-grid">');
+const unitArchiveStart = portal.indexOf('<details class="archivo">', unitGridStart);
+expect(unitGridStart >= 0 && unitArchiveStart > unitGridStart, 'No se pudo delimitar la grilla de la Unidad 3.');
+const unitGrid = unitGridStart >= 0 && unitArchiveStart > unitGridStart
+  ? portal.slice(unitGridStart, unitArchiveStart)
+  : '';
+const articleTags = [...unitGrid.matchAll(/<\/?article\b[^>]*>/g)].map(match => match[0]);
+let articleDepth = 0;
+let maxArticleDepth = 0;
+let articleUnderflow = false;
+for (const tag of articleTags) {
+  if (tag.startsWith('</')) {
+    articleDepth -= 1;
+    if (articleDepth < 0) articleUnderflow = true;
+  } else {
+    articleDepth += 1;
+    maxArticleDepth = Math.max(maxArticleDepth, articleDepth);
+  }
+}
+const unitCards = [...unitGrid.matchAll(/<article class="([^"]*\bu3-card\b[^"]*)">/g)]
+  .map(match => match[1].split(/\s+/));
+expect(articleDepth === 0 && !articleUnderflow, 'La portada NM4 tiene etiquetas <article> desbalanceadas en la Unidad 3.');
+expect(maxArticleDepth === 1, 'La portada NM4 tiene tarjetas de la Unidad 3 anidadas entre sí.');
+expect(unitCards.length === 8, `Se esperaban 8 tarjetas en la Unidad 3 y se encontraron ${unitCards.length}.`);
+expect(unitCards.filter(classes => classes.includes('activa')).length === 1, 'Debe existir una sola tarjeta marcada como clase actual.');
+expect((portal.match(/Del 10 de agosto al 5 de octubre\./g) || []).length === 1, 'El rango vigente de la Unidad 3 debe aparecer una sola vez.');
+expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada conserva el rango antiguo de la Unidad 3.');
+expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
 expect(slides.length === 14, `Se esperaban 14 pantallas y se encontraron ${slides.length}.`);
@@ -71,6 +101,7 @@ const images = [
   'caso-electronica.jpg',
   'video-entrevista-poster.jpg'
 ];
+const localizedStarSha256 = '26f04eb0baadc2ee199a1a649f343988ac2338b57682000a0315c98e59cc44da';
 for (const file of images) {
   const absolute = path.join(assetRoot, file);
   expect(fs.existsSync(absolute), `Imagen ausente: ${file}`);
@@ -78,6 +109,10 @@ for (const file of images) {
     const bytes = fs.readFileSync(absolute);
     expect(bytes.length > 300000, `La imagen ${file} no conserva resolución suficiente.`);
     expect(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff, `${file} no coincide con su extensión JPEG.`);
+    if (file === 'metodo-star.jpg') {
+      const hash = crypto.createHash('sha256').update(bytes).digest('hex');
+      expect(hash === localizedStarSha256, 'La infografía STAR no coincide con la versión aprobada íntegramente en español.');
+    }
   }
 }
 
@@ -114,4 +149,3 @@ if (failures.length > 0) {
 } else {
   console.log('AUDITORÍA DE CLASE 5 NM4 EXITOSA: todos los contratos, recursos y vínculos verificados.');
 }
-

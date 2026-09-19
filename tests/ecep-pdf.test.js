@@ -46,12 +46,14 @@ test('el layout carga la interfaz PDF y conserva contenido seleccionable', () =>
   const script = read('js/ecep-pdf.js');
   const styles = read('css/ecep-pdf.css');
 
-  assert.match(layout, /\/css\/ecep-pdf\.css\?v=1/);
-  assert.match(layout, /\/js\/ecep-pdf\.js\?v=1/);
+  assert.match(layout, /\/css\/ecep-pdf\.css\?v=2/);
+  assert.match(layout, /\/js\/ecep-pdf\.js\?v=2/);
   assert.match(script, /fetch\(chapters\[i\]\.url\.href/);
   assert.match(script, /window\.print\(\)/);
   assert.match(script, /MathJax\.typesetPromise/);
   assert.match(script, /\.ec-check, \.ec-caso/);
+  assert.match(script, /profefranciscopancho\.com · ECEP/);
   assert.match(styles, /@page\s*{[\s\S]*size:\s*A4/);
-  assert.doesNotMatch(styles, /user-select:\s*none/);
+  assert.match(styles, /\.ecep-pdf-watermark span\s*{[\s\S]*rgba\(14, 125, 138, \.05\)/);
+  assert.doesNotMatch(styles, /\.ecep-pdf-document[^}]*user-select:\s*none/);
 });

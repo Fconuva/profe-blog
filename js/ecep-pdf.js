@@ -263,6 +263,11 @@
       '<a href="' + new URL('.', window.location.href).href + '"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver al dossier</a>';
     toolbar.querySelector('button').addEventListener('click', function () { window.print(); });
 
+    var watermark = document.createElement('div');
+    watermark.className = 'ecep-pdf-watermark';
+    watermark.setAttribute('aria-hidden', 'true');
+    watermark.innerHTML = '<span>profefranciscopancho.com · ECEP</span>';
+
     var documentShell = document.createElement('div');
     documentShell.className = 'ecep-pdf-document';
     var ec = document.querySelector('.ec');
@@ -274,6 +279,7 @@
     });
     documentShell.appendChild(printable);
     document.body.appendChild(toolbar);
+    document.body.appendChild(watermark);
     document.body.appendChild(documentShell);
     document.title = 'PDF · ' + (document.querySelector('.ecep-pdf-cover h1') || {}).textContent;
 

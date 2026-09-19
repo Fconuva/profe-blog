@@ -52,6 +52,7 @@
     'ef-basica': 'Educación Básica · Educación Física y Salud',
     'tecnologia': 'Educación Básica · Tecnología',
     'religion': 'Educación Básica · Religión Católica',
+    'religion-evangelica': 'Educación Básica · Religión Evangélica',
     'media-musica': 'Educación Media · Música',
     'media-artes-visuales': 'Educación Media · Artes Visuales',
     'media-educacion-fisica': 'Educación Media · Educación Física y Salud',
@@ -105,6 +106,7 @@
     if (seg === 'educacion-fisica') return 'ef-basica';
     if (seg === 'tecnologia') return 'tecnologia';
     if (seg === 'religion') return 'religion';
+    if (seg === 'religion-evangelica') return 'religion-evangelica';
     if (seg === 'musica') return 'musica-basica';
     if (seg === 'artes-visuales') return 'artes-basica';
     return null;

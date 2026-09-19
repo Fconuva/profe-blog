@@ -78,9 +78,60 @@ test('Religión Evangélica aparece en el catálogo, el acceso y los materiales 
   assert.match(pruebas, /prueba\/religion-evangelica\//);
   assert.match(auth, /'religion-evangelica': 'Educación Básica · Religión Evangélica'/);
   assert.match(auth, /seg === 'religion-evangelica'/);
-  assert.match(dossier, /id="teologico"/);
-  assert.match(dossier, /id="ensenanza"/);
+  for (const chapter of ['teologia', 'escrituras', 'conversion', 'iglesia', 'etica', 'ensenanza']) {
+    assert.match(dossier, new RegExp(`href="${chapter}/"`));
+  }
   assert.match(dossier, /educacion_basica_religion_evangelica/);
   assert.match(examen, /1HuAdmMorE4ge21NhS__Z0RqRlWmUa68n/);
   assert.match(examen, /1DSlRO9EMgPBpgyNMnrJqJOuFl4LyPfWX/);
+});
+
+test('el dossier de Religión Evangélica tiene profundidad, práctica e imágenes propias', () => {
+  const base = 'evaluaciones/educacion-basica/estudio/religion-evangelica';
+  const chapters = ['teologia', 'escrituras', 'conversion', 'iglesia', 'etica', 'ensenanza'];
+  const files = ['index', ...chapters].map((name) => read(`${base}/${name}.njk`));
+  const plainText = files
+    .join('\n')
+    .replace(/^---[\s\S]*?---/gm, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const wordCount = (plainText.match(/[\p{L}\p{N}]+/gu) || []).length;
+
+  assert.ok(wordCount >= 19000, `El dossier quedó en ${wordCount} palabras; se esperan al menos 19000.`);
+
+  for (const [index, chapter] of chapters.entries()) {
+    const html = files[index + 1];
+    const chapterText = html.replace(/^---[\s\S]*?---/m, ' ').replace(/<[^>]+>/g, ' ');
+    const chapterWords = (chapterText.match(/[\p{L}\p{N}]+/gu) || []).length;
+    const practices = (html.match(/ec-check|ec-caso/g) || []).length;
+    assert.ok(chapterWords >= 2500, `${chapter}: solo ${chapterWords} palabras.`);
+    assert.ok(practices >= 5, `${chapter}: solo ${practices} prácticas.`);
+  }
+
+  const images = [
+    'hero-estudio.webp',
+    'creacion-dignidad.webp',
+    'iglesia-primitiva.webp',
+    'aula-aprendizaje.webp',
+  ];
+  for (const image of images) {
+    const imagePath = path.join(root, 'imagenes/ecep/religion-evangelica', image);
+    assert.ok(fs.existsSync(imagePath), `Falta la imagen ${image}.`);
+    assert.ok(fs.statSync(imagePath).size > 80000, `${image} parece incompleta.`);
+  }
+
+  const officialCoverage = [
+    /omnipotencia/i,
+    /inspiración/i,
+    /nuevo nacimiento/i,
+    /Concilio de Jerusalén/i,
+    /Reforma protestante/i,
+    /individualismo/i,
+    /conocimientos previos/i,
+    /retroalimentación formativa/i,
+  ];
+  for (const concept of officialCoverage) assert.match(plainText, concept);
+
+  const styles = read('css/ecep-dossier.css');
+  assert.match(styles, /\.ec table\s*{[^}]*width:\s*100%/);
+  assert.match(styles, /@media \(max-width:\s*640px\)[\s\S]*\.ec table\s*{[^}]*overflow-x:\s*auto/);
 });

@@ -11,6 +11,53 @@
   var total = P.preguntas.length;
   var state = load();           // { resp: {n: 'A'}, idx: 0 }
 
+  var VERSION_2026 = {
+    'generalista': '/evaluaciones/practica/generalista/',
+    'lenguaje': '/evaluaciones/practica/lenguaje/',
+    'matematica': '/evaluaciones/practica/matematica/',
+    'historia': '/evaluaciones/practica/historia/',
+    'ciencias': '/evaluaciones/practica/ciencias/',
+    'ingles-b': '/evaluaciones/practica/ingles-b/',
+    'ef-basica': '/evaluaciones/practica/ef-basica/',
+    'religion': '/evaluaciones/practica/religion/',
+    'tecnologia': '/evaluaciones/practica/tecnologia/',
+    'musica-basica': '/evaluaciones/practica/musica-basica/',
+    'artes-basica': '/evaluaciones/practica/artes-basica/',
+    'parvularia': '/evaluaciones/practica/parvularia/',
+    'dea': '/evaluaciones/practica/dea/',
+    'di': '/evaluaciones/practica/di/',
+    'tea': '/evaluaciones/practica/tea/',
+    'tel': '/evaluaciones/practica/tel/',
+    'media-lengua': '/evaluaciones/practica/media-lengua/',
+    'media-matematica': '/evaluaciones/practica/media-matematica/',
+    'media-biologia': '/evaluaciones/practica/media-biologia/',
+    'media-historia': '/evaluaciones/practica/media-historia/',
+    'media-fisica': '/evaluaciones/practica/media-fisica/',
+    'media-quimica': '/evaluaciones/practica/media-quimica/',
+    'media-ingles': '/evaluaciones/practica/media-ingles/',
+    'media-musica': '/evaluaciones/practica/media-musica/',
+    'media-artes': '/evaluaciones/practica/media-artes/',
+    'media-edfisica': '/evaluaciones/practica/media-edfisica/',
+    'media-filosofia': '/evaluaciones/practica/media-filosofia/',
+    'ensayo-epja': '/evaluaciones/practica/epja/',
+    'ensayo-encierro': '/evaluaciones/practica/encierro/',
+    'ensayo-neep': '/evaluaciones/practica/neep/',
+    'ensayo-hospitalaria': '/evaluaciones/practica/hospitalaria/',
+    'ensayo-media-religion': '/evaluaciones/practica/media-religion/',
+    'ensayo-media-tecnologia': '/evaluaciones/practica/media-tecnologia/',
+    'ensayo-contabilidad': '/evaluaciones/practica/contabilidad/',
+    'ensayo-electricidad': '/evaluaciones/practica/electricidad/'
+  };
+
+  function selectorVersiones(esEnsayo) {
+    var siguiente = VERSION_2026[P.id];
+    if (!siguiente) return '';
+    return '<nav class="ecq-versions" aria-label="Versiones de la prueba">' +
+      '<span class="ecq-version current" aria-current="page"><b>2024</b><small>' + (esEnsayo ? 'Ensayo base' : 'Prueba oficial') + '</small></span>' +
+      '<a class="ecq-version" href="' + siguiente + '"><b>2026</b><small>Práctica nueva</small></a>' +
+      '</nav>';
+  }
+
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s && s.resp) return s; } catch (e) {}
     return { resp: {}, idx: 0 };
@@ -38,6 +85,7 @@
       '<div class="ecq-intro">' +
         '<span class="ecq-eyebrow"><i class="bi bi-ui-checks"></i> ' + (esEnsayo ? 'Ensayo de práctica tipo ECEP' : 'Prueba real ECEP 2024') + '</span>' +
         '<h1>' + esc(P.titulo) + '</h1>' +
+        selectorVersiones(esEnsayo) +
         (esEnsayo
           ? '<p>Este es un <strong>ensayo de práctica</strong> elaborado por nuestro equipo con el formato de la ECEP, con <strong>' + total + ' preguntas</strong> y su pauta de corrección. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>'
           : '<p>Esta es la <strong>prueba oficial</strong> tal cual se rindió, con <strong>' + total + ' preguntas</strong> y su <strong>clave oficial</strong>. Al responder cada pregunta verás de inmediato si acertaste y cuál es la respuesta correcta.</p>') +

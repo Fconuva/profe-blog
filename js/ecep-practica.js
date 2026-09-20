@@ -16,6 +16,54 @@
   });
   var mathLoader = null;
 
+  var VERSION_2024 = {
+    'practica-generalista': ['/evaluaciones/educacion-basica/prueba/generalista/', 'Prueba oficial'],
+    'practica-lenguaje': ['/evaluaciones/educacion-basica/prueba/lenguaje/', 'Prueba oficial'],
+    'practica-matematica': ['/evaluaciones/educacion-basica/prueba/matematica/', 'Prueba oficial'],
+    'practica-historia': ['/evaluaciones/educacion-basica/prueba/historia/', 'Prueba oficial'],
+    'practica-ciencias': ['/evaluaciones/educacion-basica/prueba/ciencias/', 'Prueba oficial'],
+    'practica-ingles-b': ['/evaluaciones/educacion-basica/prueba/ingles/', 'Prueba oficial'],
+    'practica-ef-basica': ['/evaluaciones/educacion-basica/prueba/educacion-fisica/', 'Prueba oficial'],
+    'practica-religion': ['/evaluaciones/educacion-basica/prueba/religion/', 'Prueba oficial'],
+    'practica-religion-evangelica': ['/evaluaciones/educacion-basica/prueba/religion-evangelica/', 'Prueba oficial'],
+    'practica-tecnologia': ['/evaluaciones/educacion-basica/prueba/tecnologia/', 'Prueba oficial'],
+    'practica-musica-basica': ['/evaluaciones/educacion-basica/prueba/musica/', 'Prueba oficial'],
+    'practica-artes-basica': ['/evaluaciones/educacion-basica/prueba/artes-visuales/', 'Prueba oficial'],
+    'practica-parvularia': ['/evaluaciones/educacion-parvularia/prueba/', 'Prueba oficial'],
+    'practica-dea': ['/evaluaciones/educacion-especial/prueba/dea/', 'Prueba oficial'],
+    'practica-di': ['/evaluaciones/educacion-especial/prueba/di/', 'Prueba oficial'],
+    'practica-tea': ['/evaluaciones/educacion-especial/prueba/tea/', 'Prueba oficial'],
+    'practica-tel': ['/evaluaciones/educacion-especial/prueba/tel/', 'Prueba oficial'],
+    'practica-media-lengua': ['/evaluaciones/educacion-media/prueba/lengua-y-literatura/', 'Prueba oficial'],
+    'practica-media-matematica': ['/evaluaciones/educacion-media/prueba/matematica/', 'Prueba oficial'],
+    'practica-media-biologia': ['/evaluaciones/educacion-media/prueba/biologia/', 'Prueba oficial'],
+    'practica-media-historia': ['/evaluaciones/educacion-media/prueba/historia/', 'Prueba oficial'],
+    'practica-media-fisica': ['/evaluaciones/educacion-media/prueba/fisica/', 'Prueba oficial'],
+    'practica-media-quimica': ['/evaluaciones/educacion-media/prueba/quimica/', 'Prueba oficial'],
+    'practica-media-ingles': ['/evaluaciones/educacion-media/prueba/ingles/', 'Prueba oficial'],
+    'practica-media-musica': ['/evaluaciones/educacion-media/prueba/musica/', 'Prueba oficial'],
+    'practica-media-artes': ['/evaluaciones/educacion-media/prueba/artes-visuales/', 'Prueba oficial'],
+    'practica-media-edfisica': ['/evaluaciones/educacion-media/prueba/educacion-fisica/', 'Prueba oficial'],
+    'practica-media-filosofia': ['/evaluaciones/educacion-media/prueba/filosofia/', 'Prueba oficial'],
+    'practica-epja': ['/evaluaciones/educacion-epja/prueba/', 'Ensayo base'],
+    'practica-encierro': ['/evaluaciones/educacion-encierro/prueba/', 'Ensayo base'],
+    'practica-neep': ['/evaluaciones/educacion-especial/prueba/neep/', 'Ensayo base'],
+    'practica-hospitalaria': ['/evaluaciones/educacion-especial/prueba/pedagogia-hospitalaria/', 'Ensayo base'],
+    'practica-media-religion': ['/evaluaciones/educacion-media/prueba/religion/', 'Ensayo base'],
+    'practica-media-tecnologia': ['/evaluaciones/educacion-media/prueba/tecnologia/', 'Ensayo base'],
+    'practica-contabilidad': ['/evaluaciones/educacion-media/prueba/contabilidad/', 'Ensayo base'],
+    'practica-electricidad': ['/evaluaciones/educacion-media/prueba/electricidad/', 'Ensayo base']
+  };
+
+  function selectorVersiones() {
+    var anterior = VERSION_2024[P.id];
+    if (!anterior) return '';
+    return '<nav class="ecq-versions" aria-label="Versiones de la prueba">' +
+      '<a class="ecq-version" href="' + anterior[0] + '"><b>2024</b><small>' + anterior[1] + '</small></a>' +
+      '<span class="ecq-version current" aria-current="page"><b>2026</b><small>Práctica nueva</small></span>' +
+      '</nav>';
+  }
+
   // estilos propios del modo examen (selección neutra antes de corregir)
   var st = document.createElement('style');
   st.textContent = '.ecq-alt.sel{border-color:#0e7d8a;background:#e6f7f9;box-shadow:0 0 0 2px #0e7d8a33}' +
@@ -141,7 +189,8 @@
       '<div class="ecq-intro">' +
         '<span class="ecq-eyebrow"><i class="bi bi-mortarboard-fill"></i> Práctica ECEP 2026</span>' +
         '<h1>' + esc(P.titulo) + '</h1>' +
-        '<p>Prueba de práctica con <strong>' + total + ' preguntas nuevas</strong>, creadas por nuestro equipo según el <strong>temario oficial 2026</strong> y con el mismo formato del examen real. Se rinde como la ECEP: respondes toda la prueba (puedes cambiar tus respuestas y saltar entre preguntas) y <strong>al finalizar</strong> ves tu puntaje y la respuesta correcta de cada pregunta.</p>' +
+        selectorVersiones() +
+        '<p>Prueba de práctica con <strong>' + total + ' preguntas</strong> creadas por nuestro equipo. ' + (P.alcance ? esc(P.alcance) + ' ' : 'Se organiza según el temario oficial 2026 y el formato de la ECEP. ') + 'Respondes toda la prueba, puedes cambiar respuestas y saltar entre preguntas; <strong>al finalizar</strong> ves tu puntaje y la respuesta correcta de cada ítem.</p>' +
         '<ul class="ecq-tips"><li><i class="bi bi-flag"></i> La corrección aparece al terminar, como en el examen real</li><li><i class="bi bi-bookmark-check"></i> Tu avance se guarda en este dispositivo</li><li><i class="bi bi-arrow-left-right"></i> Puedes cambiar cualquier respuesta antes de finalizar</li></ul>' +
         (state.done ? '<div class="ecq-resume">Ya finalizaste esta práctica: <b>' + score() + '/' + total + '</b>. Puedes revisarla o reiniciarla.</div>'
           : (answeredCount() ? '<div class="ecq-resume">Llevas <b>' + answeredCount() + '/' + total + '</b> respondidas.</div>' : '')) +
@@ -295,7 +344,9 @@
 
   var cred = document.createElement('p');
   cred.className = 'ecq-credit';
-  cred.innerHTML = 'Prueba de práctica con preguntas nuevas elaboradas por nuestro equipo a partir del <b>temario oficial ECEP 2026</b> (CPEIP). <b>No es una forma oficial</b> ni reproduce preguntas del examen real.';
+  cred.innerHTML = /^Ensayo/.test(P.alcance || '')
+    ? 'Ensayo propio elaborado por nuestro equipo a partir del currículo y los contenidos pedagógicos de la modalidad. <b>No es una forma oficial independiente del CPEIP</b>.'
+    : 'Prueba de práctica con preguntas nuevas elaboradas por nuestro equipo a partir del <b>temario oficial ECEP 2026</b> (CPEIP). <b>No es una forma oficial</b> ni reproduce preguntas del examen real.';
   if (mount.parentNode) mount.parentNode.appendChild(cred);
 
   intro();

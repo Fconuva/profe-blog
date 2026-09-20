@@ -8,6 +8,40 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-20, NM4: Clase 5 rediseñada según la secuencia pedagógica solicitada
+
+- **Corrección visual:** se retiraron de la presentación la infografía STAR y
+  el video que rompían la continuidad del diseño. Se amplió la composición de
+  las diapositivas, las tarjetas y la tipografía para proyección, manteniendo
+  una versión móvil legible. La motivación ahora usa una imagen nueva, generada
+  para la clase, con una reacción progresiva y una escala visual del 1 al 10.
+- **Inicio:** motivación «¿Qué tan preparado te sientes para entrar a
+  trabajar?», activación de experiencias y conocimientos sobre la entrevista,
+  distinción entre preguntas relacionadas con el cargo y condiciones
+  discriminatorias con enlaces oficiales de la Dirección del Trabajo, y
+  objetivo de un solo verbo para copiar en el cuaderno: «Practicar respuestas
+  claras, concretas y seguras para una entrevista laboral».
+- **Desarrollo en el cuaderno:** instrucciones en cuatro pasos, ejemplo
+  modelado con la estructura situación–tarea–acción–resultado, casos por las
+  cuatro especialidades, redacción de 8 a 10 líneas, ensayo entre pares y pauta
+  de monitoreo docente.
+- **Cierre:** plenario con dos lecturas, pregunta de sistematización escrita en
+  el cuaderno y revisión con timbre. La clase quedó en 13 diapositivas.
+- **Prevención y validación:** se actualizó
+  `scripts/audit-nm4-u3-class5.js` para exigir la secuencia completa y rechazar
+  las referencias antiguas; el recurso nuevo quedó fijado por hash en la
+  auditoría y registrado en el manifiesto académico. `npm run build` aprobó
+  los 214 recursos críticos. Playwright comprobó las 13 diapositivas en móvil,
+  escritorio y 4K localmente, y repitió 26 comprobaciones en producción sin
+  desborde horizontal, errores de consola ni solicitudes fallidas. El HTML
+  público coincide exactamente con Git y el hash remoto de la imagen coincide
+  con el local.
+- **Publicación:** implementación `b0148def`; inventario estricto cerrado en
+  `ab03d523`; despliegue seguro final `dpl_Dkpo7NokVceExivo8yNn612xwaiK`,
+  estado `READY`, alias `https://www.estudiacest.com` verificado.
+
+---
+
 ## 2026-09-19, NM4: portada reparada e infografía STAR localizada al español
 
 - **Problema confirmado:** producción conservaba la versión defectuosa de

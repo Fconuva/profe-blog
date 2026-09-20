@@ -135,3 +135,68 @@ test('el dossier de Religión Evangélica tiene profundidad, práctica e imágen
   assert.match(styles, /\.ec table\s*{[^}]*width:\s*100%/);
   assert.match(styles, /@media \(max-width:\s*640px\)[\s\S]*\.ec table\s*{[^}]*overflow-x:\s*auto/);
 });
+
+test('el dossier de Electricidad cubre los seis dominios 2026 con recursos visuales', () => {
+  const base = 'evaluaciones/educacion-media/estudio/electricidad';
+  const chapters = [
+    'instalaciones-electricas',
+    'fundamentos-electrotecnia',
+    'maquinas-mediciones-seguridad',
+    'automatizacion',
+    'competencias-genericas',
+    'didactica-tp',
+  ];
+  const index = read(`${base}/index.njk`);
+  const chapterHtml = chapters.map((chapter) => read(`${base}/${chapter}.njk`));
+  const allHtml = [index, ...chapterHtml].join('\n');
+  const plainText = allHtml
+    .replace(/^---[\s\S]*?---/gm, ' ')
+    .replace(/<[^>]+>/g, ' ');
+  const wordCount = (plainText.match(/[\p{L}\p{N}]+/gu) || []).length;
+  const practices = (allHtml.match(/ec-check|ec-caso/g) || []).length;
+
+  for (const chapter of chapters) assert.match(index, new RegExp(`href="${chapter}/"`));
+  assert.match(index, /emtp_electricidad/);
+  assert.ok(wordCount >= 28000, `Electricidad quedó en ${wordCount} palabras.`);
+  assert.ok(practices >= 100, `Electricidad quedó en ${practices} prácticas.`);
+
+  for (const chapter of ['automatizacion', 'competencias-genericas']) {
+    const html = read(`${base}/${chapter}.njk`);
+    const text = html.replace(/^---[\s\S]*?---/m, ' ').replace(/<[^>]+>/g, ' ');
+    const words = (text.match(/[\p{L}\p{N}]+/gu) || []).length;
+    assert.ok(words >= 1400, `${chapter}: solo ${words} palabras.`);
+    assert.ok((html.match(/ec-check|ec-caso/g) || []).length >= 8, `${chapter}: poca práctica.`);
+  }
+
+  const images = [
+    'hero-taller.webp',
+    'circuitos-medicion.webp',
+    'instalaciones-seguras.webp',
+    'maquinas-medicion.webp',
+    'automatizacion-plc.webp',
+    'sustentabilidad-equipo.webp',
+    'didactica-competencias.webp',
+  ];
+  for (const image of images) {
+    const imagePath = path.join(root, 'imagenes/ecep/electricidad', image);
+    assert.ok(fs.existsSync(imagePath), `Falta la imagen ${image}.`);
+    assert.ok(fs.statSync(imagePath).size > 80000, `${image} parece incompleta.`);
+  }
+
+  for (const concept of [
+    /evaluación preliminar/i,
+    /cuadro de carga/i,
+    /componentes pasivos/i,
+    /ERNC/i,
+    /arquitectura.*PLC/i,
+    /lenguaje Ladder/i,
+    /sustentabilidad ambiental/i,
+    /conocimientos previos/i,
+    /retroalimentar y ajustar/i,
+  ]) assert.match(plainText, concept);
+
+  const styles = read('css/ecep-dossier.css');
+  assert.match(styles, /\.ec-visual-grid\s*{/);
+  assert.match(styles, /\.ec-flow-step\s*{/);
+  assert.match(styles, /\.ec-schema\s*{/);
+});

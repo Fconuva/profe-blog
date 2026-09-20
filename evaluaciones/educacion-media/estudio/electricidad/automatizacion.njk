@@ -1,0 +1,218 @@
+---
+layout: layout-evaluaciones.njk
+title: "Automatización y PLC · Dossier Electricidad TP 2026"
+head: '<link rel="stylesheet" href="/css/ecep-dossier.css?v=38"><link rel="stylesheet" href="/css/ecep-portal.css?v=36"><style>html.ecg body{visibility:hidden} :root{--d-elec:#ca8a04;--d-elec-soft:#fef3c7;--d-elec-ink:#854d0e} .dom-elec{--acc:var(--d-elec);--acc-soft:var(--d-elec-soft);--acc-ink:var(--d-elec-ink)}</style><script>document.documentElement.classList.add("ecg");window.ECEP_PAGE="gated";</script>'
+scripts: '<script src="/js/ecep-auth.js?v=47"></script><script src="/js/ecep-dossier.js?v=36"></script>'
+---
+<div class="ec dom-elec">
+
+  <header class="ec-hero">
+    <div class="ec-wrap">
+      <span class="eyebrow">Dominio 4 · ECEP Media Técnico-Profesional · Electricidad</span>
+      <h1>Automatización y PLC</h1>
+      <p>Un PLC recibe señales, ejecuta un programa y actualiza salidas. La prueba exige reconocer <strong>tipos, arquitectura, partes y recursos</strong>, relacionarlos con una aplicación e interpretar <strong>comandos, diagramas Ladder, operaciones lógicas y secuencias</strong>. El criterio no es memorizar dibujos: es seguir el flujo de información desde el sensor hasta el actuador y predecir qué ocurrirá en cada condición.</p>
+      <div class="meta">
+        <span class="ec-chip"><i class="bi bi-cpu-fill"></i> Arquitectura y recursos</span>
+        <span class="ec-chip"><i class="bi bi-diagram-3-fill"></i> Entradas · lógica · salidas</span>
+        <span class="ec-chip"><i class="bi bi-code-square"></i> Ladder y secuencias</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="ec-toc">
+    <div class="ec-wrap">
+      <a href="#arquitectura">4.1 Arquitectura</a>
+      <a href="#ciclo">Ciclo de escaneo</a>
+      <a href="#recursos">Recursos y selección</a>
+      <a href="#ladder">4.2 Programación Ladder</a>
+      <a href="#logica">Lógica y secuencias</a>
+      <a href="#casos">Casos ECEP</a>
+    </div>
+  </nav>
+
+  <section class="ec-section" style="padding-bottom:8px">
+    <div class="ec-wrap">
+      <figure class="ec-fig">
+        <img src="/imagenes/ecep/electricidad/automatizacion-plc.webp" alt="Docente y estudiantes prueban un panel didáctico con PLC, pulsadores, pilotos y una cinta transportadora de entrenamiento" width="1536" height="1024" loading="eager">
+        <figcaption><b>Seguir la señal:</b> pulsador o sensor → módulo de entrada → CPU y programa → módulo de salida → piloto, contactor o actuador. La fotografía contextualiza; los esquemas siguientes fijan la lógica exacta.</figcaption>
+      </figure>
+      <div class="ec-observe"><i class="bi bi-eye-fill"></i><div><strong>Observa:</strong> distingue en la escena los dispositivos de campo, el controlador y la carga. Que una lámpara esté encendida no demuestra por sí solo que el programa es correcto: también hay que comprobar qué condición la activó y si la secuencia responde al propósito.</div></div>
+    </div>
+  </section>
+
+  <section class="ec-section" id="arquitectura">
+    <div class="ec-wrap">
+      <span class="ec-kicker"><i class="bi bi-boxes"></i> Subdominio 4.1</span>
+      <h2>Manejo y operación de controladores lógicos</h2>
+      <article class="ec-card">
+        <header><div class="ix">A1</div><div><h3>Qué es un PLC y cómo se organiza</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <div class="note base">
+            <span class="lbl"><i class="bi bi-mortarboard-fill"></i> Idea central</span>
+            <p>El <strong>controlador lógico programable</strong> es un computador industrial diseñado para leer entradas, ejecutar una lógica almacenada y gobernar salidas de forma repetitiva y robusta. Reemplaza grandes conjuntos de relés cableados cuando el proceso exige modificar secuencias, temporizar, contar, comparar o comunicar datos. No entrega potencia directamente a cualquier carga: sus salidas suelen accionar interfaces, relés o contactores adecuados.</p>
+          </div>
+          <svg class="ec-schema" viewBox="0 0 900 300" role="img" aria-labelledby="plcArchTitle plcArchDesc">
+            <title id="plcArchTitle">Arquitectura funcional de un PLC</title>
+            <desc id="plcArchDesc">Sensores y pulsadores llegan a entradas; la CPU procesa memoria y programa; salidas accionan indicadores, contactores y actuadores.</desc>
+            <rect class="soft" x="40" y="78" width="170" height="145" rx="16"/><text x="125" y="112" text-anchor="middle" font-weight="700">DISPOSITIVOS</text><text x="125" y="139" text-anchor="middle">Pulsador</text><text x="125" y="164" text-anchor="middle">Sensor</text><text x="125" y="189" text-anchor="middle">Fin de carrera</text>
+            <path class="accent" d="M210 150H300"/><polygon fill="var(--acc)" points="300,150 282,140 282,160"/>
+            <rect class="soft" x="305" y="58" width="290" height="185" rx="18"/><text x="450" y="90" text-anchor="middle" font-weight="700">PLC</text><rect x="330" y="110" width="70" height="95" rx="10" fill="#fff" stroke="var(--acc)"/><text x="365" y="151" text-anchor="middle">Entradas</text><rect x="415" y="110" width="70" height="95" rx="10" fill="#fff" stroke="var(--acc)"/><text x="450" y="145" text-anchor="middle">CPU</text><text x="450" y="166" text-anchor="middle">Memoria</text><rect x="500" y="110" width="70" height="95" rx="10" fill="#fff" stroke="var(--acc)"/><text x="535" y="151" text-anchor="middle">Salidas</text>
+            <path class="accent" d="M595 150H685"/><polygon fill="var(--acc)" points="685,150 667,140 667,160"/>
+            <rect class="soft" x="690" y="78" width="170" height="145" rx="16"/><text x="775" y="112" text-anchor="middle" font-weight="700">ACTUADORES</text><text x="775" y="139" text-anchor="middle">Piloto</text><text x="775" y="164" text-anchor="middle">Contactor</text><text x="775" y="189" text-anchor="middle">Válvula</text>
+            <text x="450" y="278" text-anchor="middle">Fuente de alimentación y comunicación sostienen el sistema</text>
+          </svg>
+          <div class="ec-visual-grid">
+            <article class="ec-visual-card"><span class="ec-icon"><i class="bi bi-box-arrow-in-right"></i></span><h4>Entradas digitales</h4><p>Representan estados discretos: 0/1, abierto/cerrado, ausente/presente.</p></article>
+            <article class="ec-visual-card"><span class="ec-icon"><i class="bi bi-activity"></i></span><h4>Entradas analógicas</h4><p>Representan una magnitud continua, por ejemplo temperatura o presión acondicionada.</p></article>
+            <article class="ec-visual-card"><span class="ec-icon"><i class="bi bi-box-arrow-right"></i></span><h4>Salidas</h4><p>Ordenan pilotos, relés, contactores, válvulas o variadores mediante la interfaz apropiada.</p></article>
+            <article class="ec-visual-card"><span class="ec-icon"><i class="bi bi-memory"></i></span><h4>CPU y memoria</h4><p>Ejecutan instrucciones, guardan estados, temporizadores, contadores y diagnóstico.</p></article>
+          </div>
+          <div class="ec-check">
+            <div class="q"><span class="lbl"><i class="bi bi-patch-question-fill"></i> Comprueba</span> ¿Por qué una salida de PLC no debe conectarse a cualquier motor solo porque ambos aparecen en el mismo diagrama funcional?</div>
+            <button class="reveal">Ver respuesta</button>
+            <div class="a">Porque la salida tiene tipo, tensión y corriente máximos. Un motor suele requerir una interfaz de potencia —por ejemplo, relé, contactor o variador— correctamente dimensionada y protegida. El diagrama funcional indica relación de control, no conexión directa universal.</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ec-section" id="ciclo" style="padding-top:8px">
+    <div class="ec-wrap">
+      <article class="ec-card">
+        <header><div class="ix">A2</div><div><h3>El ciclo de escaneo: por qué el orden importa</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <div class="ec-flow">
+            <div class="ec-flow-step"><b>1. Leer</b>Captura el estado de las entradas</div>
+            <div class="ec-flow-step"><b>2. Ejecutar</b>Resuelve el programa en orden</div>
+            <div class="ec-flow-step"><b>3. Actualizar</b>Transfiere resultados a salidas</div>
+            <div class="ec-flow-step"><b>4. Diagnosticar</b>Comunica y vuelve a comenzar</div>
+          </div>
+          <p>La CPU repite este ciclo muchas veces por segundo. El programa normalmente trabaja con una <strong>imagen de proceso</strong>: una fotografía lógica de entradas tomada al inicio del ciclo y un conjunto de resultados que se aplicará a las salidas. Esta idea explica por qué una señal que cambia durante la ejecución puede verse recién en el escaneo siguiente y por qué dos instrucciones que escriben sobre la misma variable crean resultados dependientes del orden.</p>
+          <div class="note ojo">
+            <span class="lbl"><i class="bi bi-exclamation-triangle-fill"></i> Error frecuente</span>
+            <p>Imaginar que cada contacto del diagrama Ladder es un interruptor físico por el que circula la corriente de la carga. En el programa, contacto y bobina son <strong>instrucciones lógicas</strong> asociadas a variables. El cableado real está en módulos de entrada y salida; la lógica se resuelve en memoria.</p>
+          </div>
+          <div class="ec-check">
+            <div class="q"><span class="lbl"><i class="bi bi-patch-question-fill"></i> Predice</span> Si una entrada cambia justo después de que el PLC tomó su imagen de entradas, ¿cuándo suele influir en el programa?</div>
+            <button class="reveal">Ver respuesta</button>
+            <div class="a">En el siguiente ciclo de escaneo, cuando se vuelva a leer la entrada. Hay particularidades según hardware e instrucciones inmediatas, pero el modelo básico ECEP es leer → ejecutar → actualizar.</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ec-section" id="recursos" style="padding-top:8px">
+    <div class="ec-wrap">
+      <article class="ec-card">
+        <header><div class="ix">A3</div><div><h3>Seleccionar PLC según la aplicación</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <p>“Usar PLC” no determina cuál. Primero se cuenta la cantidad y tipo de señales; luego se revisan tensión, corriente, velocidad de respuesta, memoria, comunicación, ambiente, posibilidad de expansión y mantenimiento. Un PLC compacto integra fuente, CPU y E/S en una carcasa; uno modular permite añadir tarjetas. Ninguno es siempre mejor: la selección depende del proceso y su crecimiento esperado.</p>
+          <table>
+            <thead><tr><th>Requerimiento</th><th>Recurso que se verifica</th><th>Pregunta de control</th></tr></thead>
+            <tbody>
+              <tr><td>12 pulsadores y sensores discretos</td><td>Entradas digitales disponibles</td><td>¿Quedan puntos de reserva razonables?</td></tr>
+              <tr><td>Dos transmisores de temperatura</td><td>Entradas analógicas y rango compatible</td><td>¿La señal requiere acondicionamiento?</td></tr>
+              <tr><td>Motor con variación de velocidad</td><td>Comunicación o salida analógica hacia variador</td><td>¿Cómo se enviará consigna y estado?</td></tr>
+              <tr><td>Ampliación futura</td><td>Arquitectura modular y capacidad</td><td>¿CPU, memoria y bus admiten expansión?</td></tr>
+              <tr><td>Registro y supervisión</td><td>Puerto/protocolo de comunicación</td><td>¿Debe integrarse con HMI o red?</td></tr>
+            </tbody>
+          </table>
+          <div class="ec-caso">
+            <span class="tag"><i class="bi bi-clipboard2-pulse"></i> Caso de selección</span>
+            <div class="escenario">Una estación requiere ocho sensores digitales, cuatro pulsadores, seis salidas a contactores y dos señales analógicas. El PLC propuesto posee 12 entradas digitales, ocho salidas digitales y ninguna entrada analógica ni expansión. ¿Qué evaluación es correcta?</div>
+            <ol><li><b>A)</b> Es suficiente porque el total de puntos coincide.</li><li><b>B)</b> Es insuficiente por el tipo de señal, aunque alcance en entradas y salidas digitales.</li><li><b>C)</b> Es suficiente si las señales analógicas se unen en paralelo.</li><li><b>D)</b> Solo falta aumentar la memoria del programa.</li></ol>
+            <button class="reveal">Ver respuesta y explicación</button>
+            <div class="a"><strong>Correcta: B.</strong> La cantidad total no reemplaza la compatibilidad de tipo. Las dos señales analógicas requieren módulos adecuados; unirlas destruiría información y puede dañar equipos.</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ec-section" id="ladder">
+    <div class="ec-wrap">
+      <span class="ec-kicker"><i class="bi bi-code-square"></i> Subdominio 4.2</span>
+      <h2>Programación de controladores lógicos</h2>
+      <article class="ec-card">
+        <header><div class="ix">L1</div><div><h3>Leer Ladder como una condición lógica</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <p>Un peldaño Ladder se interpreta de izquierda a derecha: si existe continuidad lógica desde el riel izquierdo hasta la instrucción de salida, la condición del peldaño es verdadera. Un contacto normalmente abierto examina si su variable vale 1; uno normalmente cerrado examina si vale 0. La bobina asigna el resultado a una variable. “Normalmente” describe la instrucción representada, no necesariamente el estado físico seguro de un pulsador real.</p>
+          <div class="ec-visual" aria-label="Ejemplo visual de lógica Ladder">
+            <h3>Marcha con paro e interbloqueo</h3>
+            <svg class="ec-schema" viewBox="0 0 900 230" role="img" aria-labelledby="ladderTitle ladderDesc">
+              <title id="ladderTitle">Peldaño Ladder de marcha y paro</title>
+              <desc id="ladderDesc">Paro y protección están en serie; marcha y contacto de memoria están en paralelo; la bobina motor está al final.</desc>
+              <path class="wire" d="M70 30V200M830 30V200M70 90H155M250 90H330M500 90H650M745 90H830"/>
+              <path class="wire" d="M155 65V115M250 65V115M180 65V115M225 65V115M330 65V155M500 65V155M355 65V115M400 65V115M355 155H400M430 65V115M475 65V115M430 155H475"/>
+              <path class="wire" d="M400 90H430M400 155H430M330 65H355M475 65H500M330 155H355M475 155H500"/>
+              <path class="wire" d="M650 65V115M745 65V115M675 65C700 42 725 42 745 65M675 115C700 138 725 138 745 115"/>
+              <text x="202" y="50" text-anchor="middle">PARO seguro</text><text x="377" y="50" text-anchor="middle">MARCHA</text><text x="452" y="184" text-anchor="middle">MEMORIA</text><text x="700" y="50" text-anchor="middle">MOTOR</text>
+            </svg>
+            <p>La salida se activa si la condición de paro/protección permite continuidad y está activa Marcha <strong>o</strong> la propia memoria. Al abrirse la cadena de seguridad, desaparece continuidad y cae la salida.</p>
+          </div>
+          <div class="note ojo">
+            <span class="lbl"><i class="bi bi-shield-exclamation"></i> Seguridad</span>
+            <p>Una parada de emergencia de una máquina real requiere arquitectura y componentes de seguridad apropiados. Un contacto dibujado en un programa didáctico <strong>no reemplaza</strong> el diseño del circuito de seguridad, su evaluación de riesgo ni los dispositivos certificados.</p>
+          </div>
+          <div class="ec-check">
+            <div class="q"><span class="lbl"><i class="bi bi-patch-question-fill"></i> Interpreta</span> ¿Qué operación lógica representan dos contactos en serie y dos contactos en paralelo?</div>
+            <button class="reveal">Ver respuesta</button>
+            <div class="a">En serie representan <strong>AND</strong>: todas las condiciones deben permitir continuidad. En paralelo representan <strong>OR</strong>: basta una rama verdadera. Un contacto que examina el estado negado representa <strong>NOT</strong> respecto de esa variable.</div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ec-section" id="logica" style="padding-top:8px">
+    <div class="ec-wrap">
+      <article class="ec-card">
+        <header><div class="ix">L2</div><div><h3>Operaciones, temporizadores y secuencias</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <table>
+            <thead><tr><th>A</th><th>B</th><th>A AND B</th><th>A OR B</th><th>NOT A</th></tr></thead>
+            <tbody><tr><td>0</td><td>0</td><td>0</td><td>0</td><td>1</td></tr><tr><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr><tr><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td></tr><tr><td>1</td><td>1</td><td>1</td><td>1</td><td>0</td></tr></tbody>
+          </table>
+          <p>Un temporizador a la conexión —habitualmente TON— empieza a acumular cuando su condición es verdadera y activa su bit de término al alcanzar el tiempo prefijado. Un contador registra eventos según flancos o condiciones definidas. Para una secuencia conviene separar <strong>estado actual, condición de transición y acción de salida</strong>: primero se describe el proceso, luego se programa.</p>
+          <div class="ec-flow">
+            <div class="ec-flow-step"><b>Reposo</b>Motor detenido; espera Marcha</div>
+            <div class="ec-flow-step"><b>Transporte</b>Cinta avanza hasta sensor</div>
+            <div class="ec-flow-step"><b>Espera</b>TON cuenta dos segundos</div>
+            <div class="ec-flow-step"><b>Expulsión</b>Actuador opera y vuelve a reposo</div>
+          </div>
+          <div class="ec-caso">
+            <span class="tag"><i class="bi bi-clipboard2-pulse"></i> Caso de temporización</span>
+            <div class="escenario">Se desea encender un ventilador solo si un sensor permanece activo durante cinco segundos. ¿Qué recurso es el más directo?</div>
+            <ol><li><b>A)</b> Un contador de eventos sin condición de tiempo.</li><li><b>B)</b> Un temporizador a la conexión cuya condición sea el sensor.</li><li><b>C)</b> Una salida conectada directamente al sensor.</li><li><b>D)</b> Negar permanentemente la entrada.</li></ol>
+            <button class="reveal">Ver respuesta y explicación</button>
+            <div class="a"><strong>Correcta: B.</strong> El TON confirma permanencia durante un intervalo. La conexión directa encendería de inmediato; el contador registra eventos, no duración continua; negar la señal invierte la condición, pero no agrega tiempo.</div>
+          </div>
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-1-circle-fill"></i> Chequeo</span> ¿Qué tres elementos conviene definir antes de programar una secuencia?</div><button class="reveal">Ver respuesta</button><div class="a">Estado actual, condición que permite pasar al estado siguiente y acciones/salidas asociadas. Un diagrama de estados o GRAFCET puede organizar esta descripción antes de llevarla al lenguaje del PLC.</div></div>
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-2-circle-fill"></i> Chequeo</span> ¿Qué diferencia una entrada analógica de una digital?</div><button class="reveal">Ver respuesta</button><div class="a">La digital representa estados discretos; la analógica representa una magnitud dentro de un rango y debe convertirse a un valor numérico con resolución y escalamiento definidos.</div></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="ec-section" id="casos">
+    <div class="ec-wrap">
+      <article class="ec-card">
+        <header><div class="ix">✓</div><div><h3>Autoevaluación del dominio</h3></div><button class="ec-done"></button></header>
+        <div class="body">
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-3-circle-fill"></i> Arquitectura</span> Traza el recorrido de una señal desde un sensor hasta un motor.</div><button class="reveal">Ver respuesta</button><div class="a">Sensor → interfaz/módulo de entrada → imagen de entradas → CPU ejecuta programa → imagen/módulo de salida → interfaz de potencia adecuada → contactor o variador → motor.</div></div>
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-4-circle-fill"></i> Selección</span> ¿Por qué se revisan tipo y cantidad de E/S por separado?</div><button class="reveal">Ver respuesta</button><div class="a">Porque 16 puntos digitales no sustituyen una entrada analógica, una salida rápida o una interfaz de comunicación. Deben coincidir número, tipo, rango y características eléctricas.</div></div>
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-5-circle-fill"></i> Programa</span> ¿Qué representan serie, paralelo y contacto negado?</div><button class="reveal">Ver respuesta</button><div class="a">Serie: AND. Paralelo: OR. Examen del estado negado: NOT. Estas relaciones permiten traducir una condición verbal a lógica.</div></div>
+          <div class="ec-check"><div class="q"><span class="lbl"><i class="bi bi-6-circle-fill"></i> Diagnóstico</span> Una entrada física está activa, pero el programa la ve inactiva. ¿Qué secuencia de revisión evita cambiar el PLC sin evidencia?</div><button class="reveal">Ver respuesta</button><div class="a">Revisar alimentación y sensor, medir la señal en borne, comprobar común y cableado, observar indicador/diagnóstico del módulo, verificar direccionamiento y recién después evaluar canal o módulo. Se localiza la falla por zonas.</div></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <div class="ec-progress" aria-hidden="true"><span>Avance del dominio</span><div class="bar"><span></span></div><b class="pct">0%</b></div>
+  <footer class="ec-foot"><div class="ec-wrap"><div class="grid">
+    <a class="ec-navcard" href="../maquinas-mediciones-seguridad/"><small>Dominio anterior</small><b>&larr; Máquinas y equipos</b></a>
+    <a class="ec-navcard" href="../competencias-genericas/"><small>Dominio siguiente</small><b>Competencias genéricas &rarr;</b></a>
+  </div></div></footer>
+</div>

@@ -10,7 +10,6 @@ const expect = (condition, message) => { if (!condition) failures.push(message);
 const pagePath = 'nm4/u3-clase5-entrevista-laboral/index.html';
 const page = read(pagePath);
 const portal = read('nm4/index.html');
-const vtt = read('nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.vtt');
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 const assetRoot = path.join(root, 'nm4', 'u3-clase5-entrevista-laboral', 'assets');
 
@@ -44,10 +43,58 @@ expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada co
 expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
-expect(slides.length === 14, `Se esperaban 14 pantallas y se encontraron ${slides.length}.`);
-expect(slides.includes('Estructura STAR'), 'Falta la pantalla sobre Estructura STAR.');
-expect(page.includes('90 minutos') && page.includes('Simulación en parejas'), 'La clase no explicita duración y metodología.');
-expect(page.includes('0–15 min') && page.includes('80–90 min'), 'La ruta no cubre los 90 minutos completos.');
+expect(slides.length === 13, `Se esperaban 13 pantallas y se encontraron ${slides.length}.`);
+[
+  'Motivación · Escala 1 a 10',
+  'Activación de conocimientos previos',
+  'Objetivo de la clase',
+  'Instrucciones de la actividad',
+  'Ejemplo modelado',
+  'Trabajo y monitoreo',
+  'Cierre · Plenario y timbre'
+].forEach(title => expect(slides.includes(title), `Falta la pantalla «${title}».`));
+
+expect(page.includes('90 minutos') && page.includes('Trabajo en cuaderno'), 'La portada no explicita duración y modalidad.');
+expect(page.includes('Practicar respuestas claras, concretas y seguras para una entrevista laboral.'), 'El objetivo breve de un solo verbo no está presente.');
+expect(!page.includes('Estructurar y defender oralmente'), 'La página conserva el objetivo antiguo de dos verbos.');
+expect(page.includes('Escribe el objetivo en tu cuaderno.'), 'No se indica copiar el objetivo en el cuaderno.');
+
+const scaleStart = page.indexOf('<figcaption class="scale"');
+const scaleEnd = page.indexOf('</figcaption>', scaleStart);
+const scaleMarkup = scaleStart >= 0 && scaleEnd > scaleStart ? page.slice(scaleStart, scaleEnd) : '';
+const scaleNumbers = [...scaleMarkup.matchAll(/<span>(\d+)<\/span>/g)].map(match => Number(match[1]));
+expect(scaleNumbers.join(',') === '1,2,3,4,5,6,7,8,9,10', 'La motivación no presenta una escala completa de 1 a 10.');
+expect(page.includes('assets/escala-preparacion-trabajo.jpg'), 'Falta la imagen-meme de preparación para el trabajo.');
+
+[
+  '¿Has vivido una entrevista real, informal o de práctica?',
+  '¿Qué hemos visto y qué sabes sobre una entrevista laboral?',
+  '¿Qué preguntas crees que puede hacer legalmente una empresa?',
+  'Embarazo o planes de tener hijos.',
+  'Antecedentes penales, salvo que sean indispensables para esa función.'
+].forEach(text => expect(page.includes(text), `Falta la activación: ${text}`));
+
+[
+  'https://www.dt.gob.cl/legislacion/1624/w3-article-123284.html',
+  'https://www.dt.gob.cl/portal/1628/w3-article-60121.html',
+  'https://www.dt.gob.cl/portal/1628/w3-article-60778.html'
+].forEach(url => expect(page.includes(url), `Falta la fuente oficial ${url}.`));
+
+[
+  'Selecciona',
+  'Planifica',
+  'Escribe',
+  'Ensaya',
+  'Respuesta final de 8 a 10 líneas.',
+  'El docente monitorea y orienta mientras trabajas.'
+].forEach(text => expect(page.includes(text), `Falta la instrucción de desarrollo: ${text}`));
+
+[
+  '<b>S</b><strong>Situación:</strong>',
+  '<b>T</b><strong>Tarea:</strong>',
+  '<b>A</b><strong>Acción:</strong>',
+  '<b>R</b><strong>Resultado:</strong>'
+].forEach(fragment => expect(page.includes(fragment), `El ejemplo no modela ${fragment}.`));
 
 [
   '4°A · Mecánica Industrial',
@@ -56,34 +103,27 @@ expect(page.includes('0–15 min') && page.includes('80–90 min'), 'La ruta no 
   '4°E · Electrónica'
 ].forEach(label => expect(page.includes(label), `Falta la especialidad ${label}.`));
 
+const jumps = [...page.matchAll(/data-go="(\d+)"[^>]*>Abrir caso (4°[ABCE])/g)]
+  .map(match => ({target:Number(match[1]), course:match[2]}));
+expect(jumps.length === 4, 'Faltan accesos directos para alguna especialidad.');
+for (const jump of jumps) {
+  expect((slides[jump.target - 1] || '').startsWith(`Caso ${jump.course}`), `El acceso ${jump.course} apunta a una pantalla incorrecta.`);
+}
+expect((page.match(/data-go="12"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
+
 [
-  'método STAR',
-  'Tolerancia al límite y turno atrasado',
-  'Falla intermitente y cliente desconfiado',
-  'La presión de producción vs. Bloqueo LOTO',
-  'Alarma falsa en lazo 4-20 mA y orden de forzado',
-  'Háblame de ti y de tu formación en el CEST',
-  '¿Por qué deberíamos contratarte si no tienes experiencia formal?',
-  '¿Cuál es tu principal debilidad técnica?',
-  '¿Qué harías si cometes un error en un montaje y nadie te vio?',
-  'Ticket de salida individual'
-].forEach(text => expect(page.includes(text), `Falta el componente académico: ${text}`));
+  '35 min',
+  'escritura y monitoreo',
+  '10 min',
+  'lectura en parejas y mejora',
+  'Dos estudiantes leen su respuesta.',
+  'REVISIÓN Y TIMBRE',
+  '¿Qué elementos hacen que una respuesta de entrevista demuestre preparación y confianza profesional?'
+].forEach(text => expect(page.includes(text), `Falta el componente de trabajo o cierre: ${text}`));
 
-expect((page.match(/class="options"/g) || []).length === 4, 'Cada especialidad debe presentar tres opciones de decisión.');
-expect((page.match(/Abrir fuente oficial/g) || []).length === 8, 'Cada especialidad debe tener dos fuentes oficiales.');
-
-const officialHosts = [
-  'certificacion.chilevalora.cl',
-  'www.sandvik.coromant.com',
-  'www.boschaftermarket.com',
-  'www.sec.cl',
-  'www.siemens.com'
-];
-officialHosts.forEach(host => expect(page.includes(`https://${host}`), `Falta la fuente oficial ${host}.`));
-
-expect(page.includes('video-entrevista.mp4') && page.includes('video-entrevista.vtt'), 'El video o sus subtítulos no están integrados.');
-expect(vtt.startsWith('WEBVTT'), 'El archivo de subtítulos no es WebVTT.');
-expect((vtt.match(/-->/g) || []).length >= 15, 'Los subtítulos no cubren suficientemente la narración.');
+expect(!page.includes('metodo-star.jpg'), 'La presentación todavía referencia la infografía STAR rechazada.');
+expect(!page.includes('video-entrevista.mp4'), 'La secuencia todavía incluye el video anterior.');
+expect(!page.includes('Ticket de salida individual'), 'La secuencia conserva el ticket de salida anterior.');
 
 const localAssets = [...page.matchAll(/(?:src|poster)="assets\/([^"]+)"/g)].map(match => match[1].split('?')[0]);
 for (const file of new Set(localAssets)) {
@@ -94,14 +134,13 @@ for (const file of new Set(localAssets)) {
 
 const images = [
   'hero-entrevista-laboral.jpg',
-  'metodo-star.jpg',
+  'escala-preparacion-trabajo.jpg',
   'caso-mecanica-industrial.jpg',
   'caso-mecanica-automotriz.jpg',
   'caso-electricidad.jpg',
-  'caso-electronica.jpg',
-  'video-entrevista-poster.jpg'
+  'caso-electronica.jpg'
 ];
-const localizedStarSha256 = '26f04eb0baadc2ee199a1a649f343988ac2338b57682000a0315c98e59cc44da';
+const approvedMemeSha256 = 'ae8ef4ef3393410cf7fd9fb3b4534ba031e5c4c74ac7dd41a3bee24499093ad5';
 for (const file of images) {
   const absolute = path.join(assetRoot, file);
   expect(fs.existsSync(absolute), `Imagen ausente: ${file}`);
@@ -109,43 +148,27 @@ for (const file of images) {
     const bytes = fs.readFileSync(absolute);
     expect(bytes.length > 300000, `La imagen ${file} no conserva resolución suficiente.`);
     expect(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff, `${file} no coincide con su extensión JPEG.`);
-    if (file === 'metodo-star.jpg') {
+    if (file === 'escala-preparacion-trabajo.jpg') {
       const hash = crypto.createHash('sha256').update(bytes).digest('hex');
-      expect(hash === localizedStarSha256, 'La infografía STAR no coincide con la versión aprobada íntegramente en español.');
+      expect(hash === approvedMemeSha256, 'La imagen-meme no coincide con la versión aprobada.');
     }
   }
-}
-
-const video = path.join(assetRoot, 'video-entrevista.mp4');
-expect(fs.existsSync(video) && fs.statSync(video).size > 5000000, 'El video inicial está ausente o incompleto.');
-const videoHeader = fs.existsSync(video) ? fs.readFileSync(video).subarray(0, 64).toString('latin1') : '';
-expect(videoHeader.includes('ftyp'), 'El archivo de video no tiene una cabecera MP4 válida.');
-
-const jumps = [...page.matchAll(/data-go="(\d+)"[^>]*>Abrir caso (4°[ABCE])/g)].map(match => ({target:Number(match[1]), course:match[2]}));
-expect(jumps.length === 4, 'Faltan accesos directos para alguna especialidad.');
-for (const jump of jumps) {
-  expect((slides[jump.target - 1] || '').startsWith(`Caso ${jump.course}`), `El acceso ${jump.course} apunta a una pantalla incorrecta.`);
 }
 
 const class5Start = portal.indexOf('<h3>La entrevista de trabajo</h3>');
 expect(class5Start >= 0, 'La portada NM4 no contiene la Clase 5.');
 const class5Card = class5Start >= 0 ? portal.slice(portal.lastIndexOf('<article', class5Start), portal.indexOf('</article>', class5Start) + 10) : '';
 expect(class5Card.includes('u3-card activa'), 'La Clase 5 no está marcada como actual.');
-expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta actual no enlaza la nueva clase.');
-expect(class5Card.includes('21 de septiembre'), 'La tarjeta no tiene la nueva fecha del 21 de septiembre.');
+expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta actual no enlaza la clase.');
+expect(class5Card.includes('21 de septiembre'), 'La tarjeta no tiene la fecha del 21 de septiembre.');
 
-const requiredManifest = [
-  pagePath,
-  'nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.mp4',
-  'nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.vtt',
-  ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)
-];
+const requiredManifest = [pagePath, ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)];
 requiredManifest.forEach(file => expect(manifest.criticalFiles.some(entry => entry.path === file), `El manifiesto no protege ${file}.`));
 
 if (failures.length > 0) {
   console.error(`FALLO EN AUDITORÍA DE CLASE 5 NM4 (${failures.length} errores):`);
-  failures.forEach(f => console.error(` - ${f}`));
+  failures.forEach(failure => console.error(` - ${failure}`));
   process.exit(1);
-} else {
-  console.log('AUDITORÍA DE CLASE 5 NM4 EXITOSA: todos los contratos, recursos y vínculos verificados.');
 }
+
+console.log('AUDITORÍA DE CLASE 5 NM4 EXITOSA: secuencia Inicio–Desarrollo–Cierre, cuaderno, recursos y portada verificados.');

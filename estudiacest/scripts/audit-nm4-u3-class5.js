@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -43,13 +44,14 @@ expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada co
 expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
-expect(slides.length === 17, `Se esperaban 17 pantallas y se encontraron ${slides.length}.`);
+expect(slides.length === 18, `Se esperaban 18 pantallas y se encontraron ${slides.length}.`);
 [
   'Motivación · Escala 1 a 10',
   'Activación de conocimientos previos',
   'Objetivo de la clase',
   'Instrucciones de la actividad',
   'Ejemplo modelado',
+  'Video · Entrevista laboral completa',
   'Entrevista completa · Apertura',
   'Entrevista completa · Evidencia',
   'Entrevista completa · Trabajo con otros',
@@ -60,17 +62,17 @@ expect(slides.length === 17, `Se esperaban 17 pantallas y se encontraron ${slide
 const interviewStart = page.indexOf('<section class="slide" data-title="Entrevista completa · Apertura">');
 const interviewEnd = page.indexOf('<section class="slide" data-title="Elige tu especialidad">', interviewStart);
 const interview = interviewStart >= 0 && interviewEnd > interviewStart ? page.slice(interviewStart, interviewEnd) : '';
-expect((interview.match(/<p><strong>Entrevistadora:<\/strong>/g) || []).length === 13, 'La entrevista modelo debe incluir 13 preguntas o intervenciones de la entrevistadora.');
+expect((interview.match(/<p><strong>Entrevistador:<\/strong>/g) || []).length === 13, 'La entrevista modelo debe incluir 13 preguntas o intervenciones del entrevistador.');
 expect((interview.match(/<p class="applicant"><strong>Postulante:<\/strong>/g) || []).length === 13, 'Cada intervención debe tener respuesta del postulante.');
 [
-  'Diálogo ficticio para aprender',
+  'Transcripción del video · diálogo ficticio para aprender',
   'por qué te interesa este puesto',
   '¿qué hiciste tú exactamente?',
   'un error que hayas cometido',
   '¿Hay algo que quieras preguntarnos?',
   'Gracias por explicarme el proceso y por su tiempo.'
 ].forEach(text => expect(interview.includes(text), `La entrevista completa omite: ${text}`));
-expect(page.includes('1 / 17'), 'El contador inicial no refleja las 17 pantallas.');
+expect(page.includes('1 / 18'), 'El contador inicial no refleja las 18 pantallas.');
 
 expect(page.includes('90 minutos') && page.includes('Trabajo en cuaderno'), 'La portada no explicita duración y modalidad.');
 expect(page.includes('Practicar respuestas claras, concretas y seguras para una entrevista laboral.'), 'El objetivo breve de un solo verbo no está presente.');
@@ -127,7 +129,7 @@ expect(jumps.length === 4, 'Faltan accesos directos para alguna especialidad.');
 for (const jump of jumps) {
   expect((slides[jump.target - 1] || '').startsWith(`Caso ${jump.course}`), `El acceso ${jump.course} apunta a una pantalla incorrecta.`);
 }
-expect((page.match(/data-go="16"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
+expect((page.match(/data-go="17"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
 
 [
   '20 min',
@@ -144,7 +146,23 @@ const scheduledMinutes = [...page.matchAll(/<span class="time">(\d+) min(?: en t
 expect(scheduledMinutes === 90, `Los tiempos visibles suman ${scheduledMinutes} minutos; la clase debe durar 90.`);
 
 expect(!page.includes('metodo-star.jpg'), 'La presentación todavía referencia la infografía STAR rechazada.');
-expect(!page.includes('video-entrevista.mp4'), 'La secuencia todavía incluye el video anterior.');
+expect(page.includes('<video id="interview-video" controls playsinline') && page.includes('src="assets/video-entrevista.mp4"'), 'La secuencia no permite reproducir la entrevista.');
+expect(page.includes('<track kind="captions" src="assets/video-entrevista.vtt"') && page.includes('Recreación didáctica: actores de archivo y voces sintéticas'), 'Faltan subtítulos o aviso claro de recreación.');
+expect(page.includes("if(video && !slides[target].contains(video))video.pause();"), 'El video debe pausarse al avanzar a otra pantalla.');
+expect(!page.includes('Entrevistadora:'), 'El modelo audiovisual solicitado debe tener solo voces masculinas.');
+const interviewVideo = path.join(assetRoot, 'video-entrevista.mp4');
+if (fs.existsSync(interviewVideo)) {
+  try {
+    const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', interviewVideo], { encoding: 'utf8' }));
+    const duration = Number(probe.format?.duration || 0);
+    expect(duration >= 180 && duration <= 600, `La entrevista completa debe durar entre 3 y 10 minutos; dura ${duration.toFixed(1)}.`);
+    expect(probe.streams?.some(stream => stream.codec_type === 'video') && probe.streams?.some(stream => stream.codec_type === 'audio'), 'El MP4 debe contener imagen y sonido.');
+  } catch (error) {
+    expect(false, `No se pudo inspeccionar el video: ${error.message}`);
+  }
+}
+const captions = read('nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.vtt');
+expect((captions.match(/Entrevistador:/g) || []).length >= 13 && (captions.match(/Postulante:/g) || []).length >= 13, 'Los subtítulos no cubren los 13 intercambios.');
 expect(!page.includes('Ticket de salida individual'), 'La secuencia conserva el ticket de salida anterior.');
 
 const localAssets = [...page.matchAll(/(?:src|poster)="assets\/([^"]+)"/g)].map(match => match[1].split('?')[0]);
@@ -184,7 +202,7 @@ expect(class5Card.includes('u3-card activa'), 'La Clase 5 no está marcada como 
 expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta actual no enlaza la clase.');
 expect(class5Card.includes('21 de septiembre'), 'La tarjeta no tiene la fecha del 21 de septiembre.');
 
-const requiredManifest = [pagePath, ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)];
+const requiredManifest = [pagePath, ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`), ...['video-entrevista.mp4', 'video-entrevista.vtt', 'video-entrevista-poster.jpg'].map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)];
 requiredManifest.forEach(file => expect(manifest.criticalFiles.some(entry => entry.path === file), `El manifiesto no protege ${file}.`));
 
 if (failures.length > 0) {

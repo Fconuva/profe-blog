@@ -1,3 +1,4 @@
+const BOOK_GUIDE = require('../4dtp/book-guide.js');
 const crypto = require('crypto');
 const admin = require('firebase-admin');
 
@@ -132,6 +133,14 @@ function defaultWrittenProducts() {
   };
 }
 
+function sanitizeBookSections(raw, current) {
+  const previous = current && typeof current === 'object' ? current : {};
+  const incoming = raw && typeof raw === 'object' ? raw : {};
+  return Object.fromEntries(BOOK_GUIDE.map(section => [section.id,
+    limitedText(Object.prototype.hasOwnProperty.call(incoming, section.id) ? incoming[section.id] : previous[section.id], 20000)
+  ]));
+}
+
 function defaultTeacherReview() {
   return {
     status: 'pending',
@@ -162,18 +171,18 @@ function sanitizeWrittenProducts(raw, current) {
   const incoming = raw && typeof raw === 'object' ? raw : previous;
   const fieldLimits = {
     interviewTitle: 140,
-    interviewContext: 1200,
-    interviewQuestions: 6000,
+    interviewContext: 20000,
+    interviewQuestions: 20000,
     interviewQuote: 500,
     memoryTitle: 140,
-    memoryText: 5000,
+    memoryText: 20000,
     memoryCaption: 500,
     projectTitle: 140,
-    projectText: 5000,
+    projectText: 20000,
     projectCaption: 500,
     farewellTitle: 140,
-    farewellText: 4000,
-    captions: 2400
+    farewellText: 20000,
+    captions: 20000
   };
   return Object.fromEntries(Object.entries(fieldLimits).map(([field, limit]) => {
     const value = Object.prototype.hasOwnProperty.call(incoming, field) ? incoming[field] : previous[field];
@@ -192,7 +201,7 @@ function sanitizeInterviews(raw, current) {
       slot,
       kind,
       interviewee: limitedText(incoming.interviewee, 140),
-      transcription: limitedText(incoming.transcription, 12000),
+      transcription: limitedText(incoming.transcription, 60000),
       audioFileId: limitedText(old.audioFileId, 90),
       updatedAt: Date.now()
     };
@@ -208,6 +217,7 @@ function studentRecord(student, current) {
     uploadReservations: value.uploadReservations && typeof value.uploadReservations === 'object' ? value.uploadReservations : {},
     projectNotes: limitedText(value.projectNotes, 4000),
     writtenProducts: sanitizeWrittenProducts(value.writtenProducts, defaultWrittenProducts()),
+    bookSections: sanitizeBookSections(value.bookSections),
     activity1Status: value.activity1Status === 'submitted' ? 'submitted' : 'draft',
     activity1SubmittedAt: Number(value.activity1SubmittedAt || 0),
     activity2Status: value.activity2Status === 'submitted' ? 'submitted' : 'draft',
@@ -246,6 +256,7 @@ function publicState(student, value) {
     files: Object.values(record.files).map(publicFile).sort((a, b) => b.createdAt - a.createdAt),
     projectNotes: record.projectNotes,
     writtenProducts: record.writtenProducts,
+    bookSections: record.bookSections,
     activity1Status: record.activity1Status,
     activity1SubmittedAt: record.activity1SubmittedAt,
     activity2Status: record.activity2Status,
@@ -273,6 +284,7 @@ function hasStudentWork(value) {
     || limitedText(item.transcription, 12000).trim()
     || limitedText(item.audioFileId, 90).trim()
   ))
+    || Object.values(value.bookSections || {}).some(text => String(text || "").trim())
     || Object.keys(files).length > 0
     || limitedText(value.projectNotes, 4000).trim().length > 0
     || Object.values(written).some(item => limitedText(item, 12000).trim().length > 0)
@@ -302,6 +314,8 @@ function calculateProgress(record) {
     other: files.filter(file => file.category === 'other').length,
     writtenCompleted,
     writtenTotal: 4,
+    bookCompleted: Object.values(record.bookSections || {}).filter(text => String(text || "").trim()).length,
+    bookTotal: BOOK_GUIDE.length,
     usedBytes: files.reduce((sum, file) => sum + Number(file.size || 0), 0),
     limitBytes: MAX_STUDENT_STORAGE
   };
@@ -411,6 +425,7 @@ async function handleSave(req, res) {
     record.interviews = sanitizeInterviews(body.interviews, record.interviews);
     record.projectNotes = limitedText(body.projectNotes, 4000);
     record.writtenProducts = sanitizeWrittenProducts(body.writtenProducts, record.writtenProducts);
+    record.bookSections = sanitizeBookSections(body.bookSections, record.bookSections);
     record.updatedAt = now;
     return record;
   }, undefined, false);

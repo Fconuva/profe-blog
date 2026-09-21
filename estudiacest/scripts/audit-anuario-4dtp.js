@@ -132,16 +132,40 @@ requireText(app, "submitWriting", 'Cliente');
 requireText(app, "renderTeacherReview", 'Cliente');
 requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
 requireText(page, 'Productos escritos · Fase 1', 'Página 4DTP');
-requireText(page, 'Trabajo del martes 25 de agosto', 'Página 4DTP');
-requireText(page, 'Hoy debes dejar listas tus cinco entrevistas', 'Página 4DTP');
-requireText(page, 'Las dos primeras ya están disponibles', 'Página 4DTP');
+requireText(page, 'Todas las secciones habilitadas', 'Página 4DTP');
+requireText(page, 'De la portada a la última página', 'Página 4DTP');
+requireText(page, 'Las nueve secciones ya están disponibles', 'Página 4DTP');
+if (page.includes('Próximamente')) failures.push('El anuario conserva secciones bloqueadas.');
+requireText(page, 'id="viewBook"', 'Página 4DTP');
+requireText(page, 'modelo.html', 'Página 4DTP');
+requireText(api, 'sanitizeBookSections(body.bookSections, record.bookSections)', 'Guardado completo');
+requireText(app, 'renderBook();renderWrittenProducts();renderInterviews();', 'Recuperación del anuario');
+requireText(admin, 'id="bookReview"', 'Revisión del anuario completo');
+requireText(admin, 'AnuarioMedia.bind', 'Reproducción docente');
+requireText(app, 'renderInterviewPlayers', 'Reproducción del estudiante');
+const media = read('4dtp/media.js');
+requireText(media, '<audio controls', 'Reproductor');
+requireText(media, 'audio.onerror', 'Error de reproducción');
+requireText(media, 'Volver a cargar audio', 'Renovación de enlaces privados');
+const guide = require('../4dtp/book-guide.js');
+const model = require('../4dtp/modelo-content.js');
+const expectedParts = ['portada','dedicatoria','indice','presentacion','jefes','jefeactual','curso','comun','favorita','amigos','agradecimientos','creditos','contraportada'];
+if (guide.length !== expectedParts.length || expectedParts.some(id=>!guide.some(item=>item.id===id && item.instructions.length>=3 && item.example.length>100))) failures.push('Faltan partes completas, instrucciones o ejemplos.');
+if (model.length !== 24 || model[0].id !== 'portada' || model[23].id !== 'contraportada') failures.push('El modelo no contiene las 24 páginas completas.');
+for (const id of ['entrevistas','entrevista-2','entrevista-3','entrevista-4','entrevista-5','editada','aniversario','especialidad','despedida',...expectedParts]) {
+  if (!model.some(page=>page.id===id && page.text.length>100)) failures.push(`Modelo incompleto: ${id}`);
+}
+const renderedModel = read('4dtp/modelo.html');
+if ((renderedModel.match(/class="book-page /g)||[]).length !== 24) failures.push('El modelo web no representa las 24 páginas.');
+requireText(renderedModel, 'modelo-completo.pdf', 'Descarga del modelo');
+for (const script of ['4dtp/book-guide.js','4dtp/media.js','4dtp/modelo-content.js']) checkSyntax(script);
 requireText(page, 'Textos → Memoria escolar', 'Página 4DTP');
 requireText(page, '31 de octubre de 2026', 'Página 4DTP');
 requireText(page, 'Revisión 1 · 4 de septiembre', 'Página 4DTP');
 requireText(page, 'Revisión 2 · 25 de septiembre', 'Página 4DTP');
 requireText(page, 'Ruta de producción hasta el 31 de octubre', 'Página 4DTP');
 requireText(page, 'Retroalimentación', 'Página 4DTP');
-// Las nueve secciones se anuncian en gris antes de abrir su formulario.
+// Las nueve secciones están disponibles y se preserva el contenido anterior.
 requireText(page, 'Las secciones del anuario', 'Página 4DTP');
 requireText(admin, 'Calificación docente', 'Admin 4DTP');
 requireText(admin, 'secondProgressGrade', 'Admin 4DTP');

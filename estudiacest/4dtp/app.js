@@ -7,6 +7,7 @@
   const kinds = ['Compañero 1', 'Compañero 2', 'Compañero 3', 'Docente 1', 'Docente 2'];
   const writtenFieldIds = ['interviewTitle','interviewContext','interviewQuestions','interviewQuote','memoryTitle','memoryText','memoryCaption','projectTitle','projectText','projectCaption','farewellTitle','farewellText','captions'];
   const $ = id => document.getElementById(id);
+  const bookGuide = window.AnuarioGuide;
 
   firebase.initializeApp(FIREBASE_CONFIG);
   const auth = firebase.auth();
@@ -98,7 +99,21 @@
 
   function normalizeState(value) {
     const data=value||{};
-    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), teacherReview:data.teacherReview||{status:'pending',feedback:'',recommendations:'',alerts:'',reviewedAt:0}, storage:data.storage||{usedBytes:0,limitBytes:0,remainingBytes:0}, updatedAt:Number(data.updatedAt||0) };
+    return { profile:data.profile||{}, interviews:Array.isArray(data.interviews)&&data.interviews.length===5?data.interviews:defaultInterviews(), files:Array.isArray(data.files)?data.files:[], projectNotes:data.projectNotes||'', writtenProducts:{...defaultWrittenProducts(),...(data.writtenProducts||{})}, bookSections:data.bookSections||{}, activity1Status:data.activity1Status==='submitted'?'submitted':'draft', activity1SubmittedAt:Number(data.activity1SubmittedAt||0), activity2Status:data.activity2Status==='submitted'?'submitted':'draft', activity2SubmittedAt:Number(data.activity2SubmittedAt||0), teacherReview:data.teacherReview||{status:'pending',feedback:'',recommendations:'',alerts:'',reviewedAt:0}, storage:data.storage||{usedBytes:0,limitBytes:0,remainingBytes:0}, updatedAt:Number(data.updatedAt||0) };
+  }
+
+  function renderBook() {
+    $('bookSections').innerHTML = bookGuide.map((section,index) => `<details class="book-section" ${index===0?'open':''}><summary>${escapeHtml(section.title)}</summary><div class="book-section-body"><p class="book-target">${escapeHtml(section.words)}</p><ol>${section.instructions.map(step=>`<li>${escapeHtml(step)}</li>`).join('')}</ol><details class="solved-example"><summary>Ver ejemplo resuelto</summary><p>Modelo ficticio. Reemplázalo con tu propia experiencia.</p><div>${escapeHtml(section.example).replace(/\n/g,'<br>')}</div></details><label for="book-${section.id}">Mi texto · ${escapeHtml(section.title)}</label><textarea id="book-${section.id}" data-book="${section.id}" maxlength="20000" placeholder="Escribe tu versión aquí…">${escapeHtml(state.bookSections[section.id]||'')}</textarea><small class="word-count" data-count-for="book-${section.id}">0 palabras</small></div></details>`).join('');
+    document.querySelectorAll('[data-book]').forEach(field=>field.addEventListener('input',()=>{scheduleSave();updateWordCounts();}));
+  }
+  function renderInterviewPlayers() {
+    state.interviews.forEach(item=>{
+      const container=$('interview-player-'+item.slot);
+      if (!container) return;
+      AnuarioMedia.stop(container);
+      container.innerHTML=AnuarioMedia.markup(state.files.find(file=>file.id===item.audioFileId));
+      AnuarioMedia.bind(container,async fileId=>(await api('file-url',{method:'GET'},{fileId})).url);
+    });
   }
 
   function renderTeacherReview() {
@@ -125,8 +140,9 @@
       const questions=index<3
         ? ['¿Qué experiencia del curso o del colegio recuerdas especialmente y por qué?', '¿Qué aprendizaje te llevas de estos años y de la especialidad?', '¿Cómo describirías a nuestra generación con un ejemplo concreto?', '¿Qué persona o momento influyó en tu experiencia escolar?', '¿Qué mensaje dejarías en el anuario?']
         : ['¿Qué característica distingue a esta generación?', '¿Qué momento compartido con el curso recuerda especialmente?', '¿Qué aprendizaje considera importante que los estudiantes conserven?', '¿Qué consejo les daría para la etapa que comienza?', '¿Qué mensaje dejaría en el anuario?'];
-      return `<section class="interview" data-slot="${item.slot}"><div class="interview-head"><h2>Entrevista ${item.slot} · ${kinds[index]}</h2><span class="kind">${index<3?'Compañero':'Docente'}</span></div><div class="interview-fields"><div class="field"><label for="interviewee-${item.slot}">Nombre de la persona entrevistada</label><input id="interviewee-${item.slot}" data-interviewee="${item.slot}" maxlength="140" value="${escapeHtml(item.interviewee)}" placeholder="Nombre y apellido"></div><div class="audio-controls"><button class="audio-button" type="button" data-record="${item.slot}">Grabar audio</button><button class="audio-button" type="button" data-upload-audio="${item.slot}">Subir audio</button><input class="hidden" type="file" data-audio-input="${item.slot}" accept="audio/*,.m4a,.mp3,.wav,.ogg,.webm"></div></div><span class="audio-status" id="audio-status-${item.slot}">${audio?'Audio guardado: '+escapeHtml(audio.name)+' · '+formatBytes(audio.size):'Aún no hay audio en esta entrevista.'}</span><div class="question-guide"><strong>Guion base</strong><ol>${questions.map(question=>`<li>${question}</li>`).join('')}</ol><span>Puedes formular repreguntas cuando una respuesta necesite mayor explicación.</span></div><div class="field transcription"><label for="transcription-${item.slot}">Transcripción de la entrevista</label><textarea id="transcription-${item.slot}" data-transcription="${item.slot}" maxlength="12000" placeholder="Escribe aquí la transcripción completa. Mantén las ideas de la persona entrevistada y distingue claramente preguntas y respuestas.">${escapeHtml(item.transcription)}</textarea></div></section>`;
+      return `<section class="interview" data-slot="${item.slot}"><div class="interview-head"><h2>Entrevista ${item.slot} · ${kinds[index]}</h2><span class="kind">${index<3?'Compañero':'Docente'}</span></div><div class="interview-fields"><div class="field"><label for="interviewee-${item.slot}">Nombre de la persona entrevistada</label><input id="interviewee-${item.slot}" data-interviewee="${item.slot}" maxlength="140" value="${escapeHtml(item.interviewee)}" placeholder="Nombre y apellido"></div><div class="audio-controls"><button class="audio-button" type="button" data-record="${item.slot}">Grabar audio</button><button class="audio-button" type="button" data-upload-audio="${item.slot}">Subir audio</button><input class="hidden" type="file" data-audio-input="${item.slot}" accept="audio/*,.m4a,.mp3,.wav,.ogg,.webm"></div></div><span class="audio-status" id="audio-status-${item.slot}">${audio?'Audio guardado: '+escapeHtml(audio.name)+' · '+formatBytes(audio.size):'Aún no hay audio en esta entrevista.'}</span><div id="interview-player-${item.slot}"></div><div class="question-guide"><strong>Guion base</strong><ol>${questions.map(question=>`<li>${question}</li>`).join('')}</ol><span>Puedes formular repreguntas cuando una respuesta necesite mayor explicación.</span></div><div class="field transcription"><label for="transcription-${item.slot}">Transcripción de la entrevista</label><textarea id="transcription-${item.slot}" data-transcription="${item.slot}" maxlength="60000" placeholder="Escribe aquí la transcripción completa. Mantén las ideas de la persona entrevistada y distingue claramente preguntas y respuestas.">${escapeHtml(item.transcription)}</textarea></div></section>`;
     }).join('');
+    renderInterviewPlayers();
     $('projectNotes').value=state.projectNotes||'';
     document.querySelectorAll('[data-record]').forEach(button=>button.addEventListener('click',()=>toggleRecording(Number(button.dataset.record))));
     document.querySelectorAll('[data-upload-audio]').forEach(button=>button.addEventListener('click',()=>document.querySelector(`[data-audio-input="${button.dataset.uploadAudio}"]`).click()));
@@ -139,14 +155,15 @@
   function collectDocument() {
     const interviews=state.interviews.map((item,index)=>({slot:item.slot,kind:item.kind,interviewee:$('interviewee-'+(index+1)).value.trim(),transcription:$('transcription-'+(index+1)).value.trim(),audioFileId:item.audioFileId||''}));
     const writtenProducts=Object.fromEntries(writtenFieldIds.map(field=>[field,$(field).value.trim()]));
-    return { interviews, projectNotes:$('projectNotes').value.trim(), writtenProducts };
+    const bookSections=Object.fromEntries(bookGuide.map(section=>[section.id,$('book-'+section.id).value.trim()]));
+    return { interviews, projectNotes:$('projectNotes').value.trim(), writtenProducts, bookSections };
   }
 
   function scheduleSave() { setSave('Cambios pendientes','');window.clearTimeout(saveTimer);saveTimer=window.setTimeout(saveNow,900); }
   function saveNow() {
     if(!student||!auth.currentUser)return Promise.resolve(true);
     window.clearTimeout(saveTimer);
-    const documentData=collectDocument();state.interviews=documentData.interviews;state.projectNotes=documentData.projectNotes;state.writtenProducts=documentData.writtenProducts;
+    const documentData=collectDocument();state.interviews=documentData.interviews;state.projectNotes=documentData.projectNotes;state.writtenProducts=documentData.writtenProducts;state.bookSections=documentData.bookSections;
     const operation=async()=>{setSave('Guardando...','');try{const data=await api('save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(documentData)});state.updatedAt=data.updatedAt;setSave('Guardado en la nube','saved');updateProgress();return true;}catch(error){setSave('No se pudo guardar','error');return false;}};
     saveChain=saveChain.then(operation,operation);
     return saveChain;
@@ -170,7 +187,8 @@
     });
   }
   function updateProgress() {
-    const current=collectDocument();state.interviews=current.interviews;state.projectNotes=current.projectNotes;state.writtenProducts=current.writtenProducts;
+    const current=collectDocument();state.interviews=current.interviews;state.projectNotes=current.projectNotes;state.writtenProducts=current.writtenProducts;state.bookSections=current.bookSections;
+    $('bookStatus').textContent=Object.values(state.bookSections).filter(text=>text.trim()).length+' de '+bookGuide.length+' partes complementarias con texto · entrevistas, memoria, proyecto y despedida en sus pestañas';
     const completed=state.interviews.filter(interviewComplete).length;
     const writtenCompleted=writtenSectionsCompleted(state.writtenProducts);
     $('documentStatus').textContent=state.activity1Status==='submitted'?'Avance entregado · '+formatDate(state.activity1SubmittedAt):completed+' de 5 entrevistas completas';
@@ -214,12 +232,22 @@
       const reference=storage.ref(path);const task=reference.put(file,{contentType:file.type||'application/octet-stream',customMetadata:{ownerRut:cleanRut(student.rut),category,fileId,slot:String(slot||0)}});
       await new Promise((resolve,reject)=>task.on('state_changed',snapshot=>{const percent=Math.round(snapshot.bytesTransferred/snapshot.totalBytes*100);$('uploadProgress').style.width=percent+'%';$('uploadPercent').textContent=percent+'%';},reject,resolve));
       const data=await api('register-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId,storagePath:path,name:file.name,category,slot:slot||0,contentType:file.type})});
-      if(category==='interview_audio'){state.files=state.files.filter(item=>!(item.category==='interview_audio'&&item.slot===slot));state.interviews[slot-1].audioFileId=data.file.id;$('audio-status-'+slot).textContent='Audio guardado: '+data.file.name+' · '+formatBytes(data.file.size);}state.files.push(data.file);state.storage=data.storage;$('uploadTitle').textContent='Archivo guardado';$('uploadPercent').textContent='100%';setTimeout(()=>$('uploadDialog').close(),650);setSave('Archivo guardado','saved');updateProgress();
+      if(category==='interview_audio'){state.files=state.files.filter(item=>!(item.category==='interview_audio'&&item.slot===slot));state.interviews[slot-1].audioFileId=data.file.id;$('audio-status-'+slot).textContent='Audio guardado: '+data.file.name+' · '+formatBytes(data.file.size);}state.files.push(data.file);state.storage=data.storage;if(category==='interview_audio')renderInterviewPlayers();$('uploadTitle').textContent='Archivo guardado';$('uploadPercent').textContent='100%';setTimeout(()=>$('uploadDialog').close(),650);setSave('Archivo guardado','saved');updateProgress();
     }catch(error){if(prepared)await api('cancel-upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId})}).catch(()=>{});$('uploadError').textContent=error.message||'No se pudo subir el archivo.';$('closeUploadDialog').classList.remove('hidden');setSave('Error al subir','error');}
   }
 
-  async function openFile(fileId){try{const data=await api('file-url',{method:'GET'},{fileId});window.open(data.url,'_blank','noopener');}catch(error){window.alert(error.message);}}
-  async function deleteFile(fileId){const file=state.files.find(item=>item.id===fileId);if(!file||!confirm('¿Eliminar "'+file.name+'" de tu carpeta?'))return;try{await api('delete-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId})});state.files=state.files.filter(item=>item.id!==fileId);state.interviews.forEach(item=>{if(item.audioFileId===fileId)item.audioFileId='';});renderInterviews();updateProgress();setSave('Archivo eliminado','saved');}catch(error){window.alert(error.message);}}
+  async function openFile(fileId){
+    const file=state.files.find(item=>item.id===fileId);
+    if(AnuarioMedia.isAudio(file)){
+      $('audioPreviewBody').innerHTML=AnuarioMedia.markup(file);
+      AnuarioMedia.bind($('audioPreviewBody'),async id=>(await api('file-url',{method:'GET'},{fileId:id})).url);
+      $('audioPreviewDialog').showModal();return;
+    }
+    const popup=window.open('','_blank');if(popup){popup.opener=null;popup.document.body.textContent='Abriendo archivo…';}
+    try{const data=await api('file-url',{method:'GET'},{fileId});if(popup)popup.location.replace(data.url);else{$('fileOpenLink').href=data.url;$('fileOpenLink').hidden=false;}}
+    catch(error){if(popup)popup.close();window.alert(error.message);}
+  }
+  async function deleteFile(fileId){if(!await saveNow())return;const file=state.files.find(item=>item.id===fileId);if(!file||!confirm('¿Eliminar "'+file.name+'" de tu carpeta?'))return;try{await api('delete-file',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fileId})});state.files=state.files.filter(item=>item.id!==fileId);state.interviews.forEach(item=>{if(item.audioFileId===fileId)item.audioFileId='';});renderInterviews();updateProgress();setSave('Archivo eliminado','saved');}catch(error){window.alert(error.message);}}
 
   async function toggleRecording(slot){
     if(activeRecorder){if(recordingSlot===slot){activeRecorder.stop();return;}window.alert('Detén la grabación actual antes de comenzar otra.');return;}
@@ -247,10 +275,17 @@
   function openModel(button){$('modelDialogTitle').textContent=button.dataset.modelTitle||'Modelo de página';$('modelDialogImage').src=button.dataset.modelImage;$('modelDialogImage').alt=button.dataset.modelTitle||'Modelo ampliado de página del anuario';$('modelDialog').showModal();}
 
   function showView(name){document.querySelectorAll('.app-view').forEach(view=>view.classList.add('hidden'));document.querySelectorAll('.tab').forEach(tab=>tab.classList.toggle('active',tab.dataset.view===name));$('view'+name.charAt(0).toUpperCase()+name.slice(1)).classList.remove('hidden');window.scrollTo({top:0,behavior:'smooth'});}
-  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';$('loginError').dataset.state='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}if(!navigator.onLine){updateNetworkStatus();return;}loginPending=true;$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderWrittenProducts();renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=friendlyError(error);$('loginError').dataset.state=navigator.onLine?'error':'offline';}finally{loginPending=false;$('loginButton').textContent='Ingresar a mi carpeta';updateNetworkStatus();}}
-  async function logout(){window.clearTimeout(saveTimer);if(student)await saveNow().catch(()=>{});if(activeRecorder)activeRecorder.stop();await auth.signOut();student=null;state=null;$('workspace').classList.add('hidden');$('loginView').classList.remove('hidden');$('publicBar').classList.remove('hidden');$('rutInput').value='';updateNetworkStatus();window.scrollTo(0,0);}
+  async function login(event){event.preventDefault();const rut=cleanRut($('rutInput').value);$('loginError').textContent='';$('loginError').dataset.state='';if(rut.length<8){$('loginError').textContent='Ingresa un RUN válido.';return;}if(!navigator.onLine){updateNetworkStatus();return;}loginPending=true;$('loginButton').disabled=true;$('loginButton').textContent='Abriendo carpeta...';try{const data=await api('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({rut})});await persistenceReady;await auth.signInWithCustomToken(data.customToken);student=data.student;state=normalizeState(data.state);$('studentName').textContent=student.name;$('studentMeta').textContent=student.course+' · '+student.rut;$('folderTitle').textContent='Carpeta de '+student.name.split(' ')[0].toLowerCase().replace(/^./,letter=>letter.toUpperCase());renderBook();renderWrittenProducts();renderInterviews();updateProgress();$('loginView').classList.add('hidden');$('publicBar').classList.add('hidden');$('workspace').classList.remove('hidden');setSave(state.updatedAt?'Carpeta recuperada':'Carpeta creada','saved');}catch(error){$('loginError').textContent=friendlyError(error);$('loginError').dataset.state=navigator.onLine?'error':'offline';}finally{loginPending=false;$('loginButton').textContent='Ingresar a mi carpeta';updateNetworkStatus();}}
+  async function logout(){window.clearTimeout(saveTimer);if(student&&!await saveNow()){window.alert('No se guardaron los últimos cambios. Revisa la conexión y pulsa Guardar ahora antes de salir.');return;}AnuarioMedia.stop(document);if(activeRecorder)activeRecorder.stop();await auth.signOut();student=null;state=null;$('workspace').classList.add('hidden');$('loginView').classList.remove('hidden');$('publicBar').classList.remove('hidden');$('rutInput').value='';updateNetworkStatus();window.scrollTo(0,0);}
 
   $('loginForm').addEventListener('submit',login);$('rutInput').addEventListener('input',event=>{event.target.value=formatRut(event.target.value);});$('logoutButton').addEventListener('click',logout);$('saveNowButton').addEventListener('click',saveNow);$('saveWritingButton').addEventListener('click',saveNow);$('submitActivityButton').addEventListener('click',submitActivity);$('submitWritingButton').addEventListener('click',submitWriting);$('generalUploadButton').addEventListener('click',()=>$('generalFileInput').click());$('generalFileInput').addEventListener('change',()=>{const file=$('generalFileInput').files&&$('generalFileInput').files[0];if(file)uploadFile(file,$('generalCategory').value,0);$('generalFileInput').value='';});$('closeUploadDialog').addEventListener('click',()=>$('uploadDialog').close());$('closeSuccessDialog').addEventListener('click',()=>$('successDialog').close());$('closeModelDialog').addEventListener('click',()=>$('modelDialog').close());$('modelDialog').addEventListener('click',event=>{if(event.target===$('modelDialog'))$('modelDialog').close();});document.querySelectorAll('[data-written]').forEach(field=>field.addEventListener('input',()=>{scheduleSave();updateWordCounts();}));document.querySelectorAll('[data-model-image]').forEach(button=>button.addEventListener('click',()=>openModel(button)));document.querySelectorAll('[data-view]').forEach(tab=>tab.addEventListener('click',()=>showView(tab.dataset.view)));document.querySelectorAll('[data-open-view]').forEach(button=>button.addEventListener('click',()=>showView(button.dataset.openView)));
+  $('saveBookButton').addEventListener('click',saveNow);
+  $('closeAudioPreview').addEventListener('click',()=>$('audioPreviewDialog').close());
+  $('audioPreviewDialog').addEventListener('close',()=>AnuarioMedia.stop($('audioPreviewBody')));
+  document.querySelectorAll('[data-expand-editor]').forEach(button=>button.addEventListener('click',()=>{
+    const expanded=document.body.classList.toggle('expanded-editors');
+    document.querySelectorAll('[data-expand-editor]').forEach(item=>{item.textContent=expanded?'Tamaño normal':'Ampliar escritura';item.setAttribute('aria-pressed',String(expanded));});
+  }));
   window.addEventListener('offline',updateNetworkStatus);
   window.addEventListener('online',updateNetworkStatus);
   updateNetworkStatus();

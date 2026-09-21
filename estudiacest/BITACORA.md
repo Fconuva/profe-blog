@@ -8,6 +8,36 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: audios visibles y anuario completo
+
+- **Audios:** el administrador mostraba solo «Audio registrado» y abría enlaces
+  después de una espera, susceptible al bloqueo de ventanas. Ahora hay controles
+  de reproducción dentro de cada entrevista y de «Abrir carpeta», también para
+  estudiantes. Los enlaces privados se solicitan al escuchar, pueden renovarse
+  y tienen alternativa de apertura/descarga y explicación de errores.
+- **Escritura:** acceso y panel docente más amplios, áreas de texto de 380–500 px
+  y botón «Ampliar escritura». Límite de transcripción aumentado a 60.000
+  caracteres; textos largos y nuevas partes, a 20.000, coincidiendo con la API.
+- **Anuario:** nueve secciones disponibles; nueva pestaña «Anuario completo»
+  con 13 partes iniciales, personales y finales, pasos y ejemplos resueltos.
+  Conserva entrevistas, productos escritos y archivos existentes. Guardado
+  serializado y revisión docente de todas las partes mediante `bookSections`.
+- **Modelo:** `/4dtp/modelo.html` y `/4dtp/modelo-completo.pdf`, 24 páginas desde
+  portada hasta contraportada, cinco entrevistas ficticias completas, nueve
+  secciones, despedida, agradecimientos y créditos. Tres ilustraciones originales
+  con IA, identificadas como tales; prompts en `4dtp/assets/modelo-imagenes.json`.
+  El modelo no atribuye declaraciones ni imágenes ficticias a personas reales.
+- **Validación local:** auditoría focalizada y `npm run build` aprobados, 223
+  recursos críticos. API real con Firebase simulado en memoria: conservación,
+  guardado, lectura, entregas, límites y permisos comprobados sin escribir datos
+  de estudiantes reales. Navegador: guardado/recarga, recuperación de tildes,
+  reproducción con duración válida, admin y editor móvil sin desbordes,
+  escritorio y 4K. PDF de 24 páginas revisado visualmente y sin texto desbordado.
+- **Publicación:** implementación preparada para el deploy seguro; el resultado
+  de producción se registra en la entrada de cierre posterior.
+
+---
+
 ## 2026-09-20, NM4: Clase 5 rediseñada según la secuencia pedagógica solicitada
 
 - **Corrección visual:** se retiraron de la presentación la infografía STAR y

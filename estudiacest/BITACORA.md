@@ -8,6 +8,25 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: edición visual publicada y verificada
+
+- Contenido confirmado en `bb2b6f4b`, con push. Deploy seguro
+  `dpl_9KHts8ZhdCyu4RYKCh24t8hJqjSh`, estado `READY`, alias público activo.
+  Un primer proceso terminó sin confirmación; el reintento aprobó íntegramente
+  los 229 recursos antes de publicar, sin desactivar verificaciones.
+- Nueve archivos públicos comprobados por HTTP 200 y SHA-256 coincidente con
+  la fuente: modelo, estilos, PDF, guía, metadatos y las cuatro imágenes nuevas.
+  PAES, NM3, NM4, 3ATP y estudiantes continúan respondiendo HTTP 200.
+- Navegador: 32 páginas, ocho fondos de color, sin desbordes ni errores de
+  consola. El selector acompaña el capítulo activo y el desplazamiento reserva
+  la altura real de la barra; en celular el título ya no queda tapado.
+  `Imprimir PDF` abre el archivo final publicado en el visor del navegador.
+- Se entrega enlace al modelo, documento con ocho prompts completos para
+  Gemini y ZIP local del lote de cuatro ilustraciones. Las imágenes de Gemini
+  siguen pendientes de recepción e integración.
+
+---
+
 ## 2026-09-21, 4°D TP: modelo a todo color y encargos de imágenes
 
 - A petición del docente, las 32 páginas del modelo web y PDF tienen fondos

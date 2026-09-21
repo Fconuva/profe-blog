@@ -33,6 +33,10 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - Validaciones: `npm run audit:interrogaciones` y `npm run build` aprobados;
   ocho comprobaciones de la función de retiro, incluidas tildes y un curso que
   no corresponde.
+- Commit `a91d97f5` en `origin/main`. **Deploy pendiente**: el entorno del
+  agente bloqueó `npm run deploy:prod:safe`, así que el cambio está en la
+  fuente pero todavía no en producción. Hasta que se despliegue, los paneles
+  siguen ofreciendo a los cuatro retirados.
 
 ## 2026-09-21, NM4 Unidad 3 Clase 5: entrevista laboral completa
 

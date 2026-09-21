@@ -132,9 +132,9 @@ requireText(app, "submitWriting", 'Cliente');
 requireText(app, "renderTeacherReview", 'Cliente');
 requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
 requireText(page, 'Productos escritos · Fase 1', 'Página 4DTP');
-requireText(page, 'Todas las secciones habilitadas', 'Página 4DTP');
+requireText(page, 'Ver modelo final completo', 'Página 4DTP');
 requireText(page, 'De la portada a la última página', 'Página 4DTP');
-requireText(page, 'Las nueve secciones ya están disponibles', 'Página 4DTP');
+requireText(page, 'Las partes del modelo', 'Página 4DTP');
 if (page.includes('Próximamente')) failures.push('El anuario conserva secciones bloqueadas.');
 requireText(page, 'id="viewBook"', 'Página 4DTP');
 requireText(page, 'modelo.html', 'Página 4DTP');
@@ -161,20 +161,28 @@ for(const id of optionalParts){
   if(!guide.some(part=>part.id===id&&part.optional&&part.instructions.length>=3&&part.example.length>300)) failures.push(`Opción sin instrucciones completas: ${id}`);
   if(!model.some(part=>part.id===id&&part.optional&&part.text.length>300)) failures.push(`Opción sin modelo resuelto: ${id}`);
 }
-requireText(read('4dtp/pauta.html'),'No tienes que hacerlas todas','Opciones flexibles');
-requireText(page,'pauta.html','Acceso a la pauta ampliada');
-requireText(admin,'pauta.html','Pauta docente');
+requireText(page,'No tienes que hacerlas todas','Opciones flexibles');
+requireText(admin,'modelo.html','Modelo docente');
+if (fs.existsSync(path.join(ROOT,'4dtp/pauta.html'))) failures.push('La pauta retirada sigue publicada como página independiente.');
+if (!vercel.redirects?.some(rule=>rule.source==='/4dtp/pauta.html' && rule.destination==='/4dtp/modelo.html' && rule.permanent===true)) failures.push('La dirección antigua de la pauta no lleva al modelo final.');
+for (const [name,html] of [['Portada',page],['Administrador',admin],['Modelo',renderedModel]]) {
+  if (/href=["'][^"']*pauta\.html/.test(html)) failures.push(`${name} conserva un enlace a la pauta retirada.`);
+}
+for (const match of page.matchAll(/href="modelo\.html#([^"]+)"/g)) {
+  if (!model.some(part=>part.id===match[1])) failures.push(`La portada enlaza a una parte inexistente: ${match[1]}`);
+}
+for (const id of ['entrevistas','aniversario','jefes','jefeactual','curso','especialidad','comun','favorita','amigos']) requireText(page,`modelo.html#${id}`,'Destinos vigentes del anuario');
 if ((renderedModel.match(/class="book-page /g)||[]).length !== 32) failures.push('El modelo web no representa las 32 páginas.');
 requireText(renderedModel, 'modelo-completo.pdf', 'Descarga del modelo');
 for (const script of ['4dtp/book-guide.js','4dtp/media.js','4dtp/modelo-content.js']) checkSyntax(script);
-requireText(page, 'Textos → Memoria escolar', 'Página 4DTP');
+requireText(page, '<h2>Memoria escolar</h2>', 'Página 4DTP');
 requireText(page, '31 de octubre de 2026', 'Página 4DTP');
 requireText(page, 'Revisión 1 · 4 de septiembre', 'Página 4DTP');
 requireText(page, 'Revisión 2 · 25 de septiembre', 'Página 4DTP');
 requireText(page, 'Ruta de producción hasta el 31 de octubre', 'Página 4DTP');
 requireText(page, 'Retroalimentación', 'Página 4DTP');
 // Las nueve secciones están disponibles y se preserva el contenido anterior.
-requireText(page, 'Las secciones del anuario', 'Página 4DTP');
+requireText(page, 'Las partes del modelo', 'Página 4DTP');
 requireText(admin, 'Calificación docente', 'Admin 4DTP');
 requireText(admin, 'secondProgressGrade', 'Admin 4DTP');
 requireText(admin, 'Productos escritos · Fase 1', 'Admin 4DTP');
@@ -208,8 +216,9 @@ if (!fs.existsSync(heroPath) || fs.statSync(heroPath).size < 100000) failures.pu
 for (const asset of ['ejemplo-portada-anuario.webp', 'ejemplo-entrevista-anuario.webp', 'ejemplo-memoria-anuario.webp', 'ejemplo-proyecto-grafica.webp', 'hojas-del-anuario-v2.webp']) {
   const assetPath = path.join(ROOT, '4dtp', 'assets', asset);
   if (!fs.existsSync(assetPath) || fs.statSync(assetPath).size < 100000) failures.push(`Falta el apoyo visual ${asset} o tiene baja resolución.`);
-  if (!page.includes(`assets/${asset}`)) failures.push(`La página no utiliza el apoyo visual ${asset}.`);
+  if (page.includes(`assets/${asset}`)) failures.push(`La portada conserva una maqueta anterior al modelo final: ${asset}.`);
 }
+requireText(page,'assets/modelo-portada-color.png','Portada del modelo vigente');
 
 const rewrites = Array.isArray(vercel.rewrites) ? vercel.rewrites : [];
 if (!rewrites.some(rule => rule.source === '/4dtp/' && rule.destination === '/4dtp/index.html')) failures.push('Falta la ruta /4dtp/ en vercel.json.');

@@ -8,6 +8,29 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: portada unificada con el modelo final
+
+- Por solicitud del docente se retira `4dtp/pauta.html`. Su dirección conserva
+  acceso mediante redirección permanente a `4dtp/modelo.html`; portada, editor
+  y administración apuntan al modelo final como referencia única.
+- La portada muestra la ilustración vigente, ingreso a la carpeta, descarga
+  del PDF, seis grupos desplegables y tres pasos de trabajo. Se conservan los
+  nueve destinos de contenido originales dentro de 28 enlaces válidos al modelo.
+  Se retiran maquetas anteriores, calendarios repetidos y cantidades fijas de
+  páginas. Los ocho capítulos personales se presentan como opciones.
+- El plan interno y las orientaciones de escritura se alinean con esa misma
+  referencia. Se conservan fechas de revisión, entrega final, formularios,
+  guardado y datos existentes. El PDF de 32 páginas permanece sin cambios.
+- Auditoría del anuario, API aislada y build aprobados: 228 recursos críticos.
+  Navegador con identidad ficticia: ingreso, pestañas, escritura, recarga y
+  lectura docente correctos. Portada revisada visualmente en celular y
+  escritorio; medición en 4K sin desborde. Imágenes cargadas y consola limpia.
+  La captura 4K no terminó; no se presenta como inspección visual realizada.
+- Publicación y comprobación del enlace retirado se registrarán al finalizar
+  el deploy seguro.
+
+---
+
 ## 2026-09-21, 4°D TP: edición visual publicada y verificada
 
 - Contenido confirmado en `bb2b6f4b`, con push. Deploy seguro

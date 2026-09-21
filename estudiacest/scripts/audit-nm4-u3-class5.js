@@ -1,7 +1,6 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { execFileSync } = require('child_process');
 
 const root = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
@@ -153,10 +152,16 @@ expect(!page.includes('Entrevistadora:'), 'El modelo audiovisual solicitado debe
 const interviewVideo = path.join(assetRoot, 'video-entrevista.mp4');
 if (fs.existsSync(interviewVideo)) {
   try {
-    const probe = JSON.parse(execFileSync('ffprobe', ['-v', 'error', '-show_entries', 'format=duration:stream=codec_type', '-of', 'json', interviewVideo], { encoding: 'utf8' }));
-    const duration = Number(probe.format?.duration || 0);
+    const mp4 = fs.readFileSync(interviewVideo);
+    expect(mp4.toString('ascii', 4, 8) === 'ftyp', 'El video no tiene cabecera MP4.');
+    const movieHeader = mp4.indexOf(Buffer.from('mvhd', 'ascii'));
+    expect(movieHeader > 0, 'El MP4 no contiene cabecera de duración.');
+    const version = mp4[movieHeader + 4];
+    const timeScale = version === 1 ? mp4.readUInt32BE(movieHeader + 24) : mp4.readUInt32BE(movieHeader + 16);
+    const ticks = version === 1 ? Number(mp4.readBigUInt64BE(movieHeader + 28)) : mp4.readUInt32BE(movieHeader + 20);
+    const duration = ticks / timeScale;
     expect(duration >= 180 && duration <= 600, `La entrevista completa debe durar entre 3 y 10 minutos; dura ${duration.toFixed(1)}.`);
-    expect(probe.streams?.some(stream => stream.codec_type === 'video') && probe.streams?.some(stream => stream.codec_type === 'audio'), 'El MP4 debe contener imagen y sonido.');
+    expect(mp4.includes(Buffer.from('avc1', 'ascii')) && mp4.includes(Buffer.from('mp4a', 'ascii')), 'El MP4 debe contener imagen H.264 y sonido AAC.');
   } catch (error) {
     expect(false, `No se pudo inspeccionar el video: ${error.message}`);
   }

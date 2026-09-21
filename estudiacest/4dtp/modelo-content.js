@@ -74,4 +74,33 @@ pages.find(page=>page.id==='indice').text=pages.map((page,i)=>`${String(i+1).pad
 pages.find(page=>page.id==='presentacion').text+='\n\nEste recorrido también deja lugar para intereses, anécdotas, actividades y decisiones personales. Son caminos posibles: cada estudiante puede elegir y combinar los que representan su historia. El orden y las 32 páginas de este modelo no son una cantidad obligatoria para todos.';
 pages.find(page=>page.id==='galeria').text='Imagen 3. Libro abierto y aves de papel en un patio imaginario. Ilustración con IA, 2026.\n\nLos recuerdos toman otra forma cuando los compartimos.\n\nImagen 4. Dibujar, colaborar en una obra y mirar por la ventana de un viaje: escenas ficticias de participación escolar. Ilustración con IA, 2026.\n\nCada persona conserva un recorrido diferente. Esta galería usa cuatro ilustraciones distintas para mostrar cómo relacionar imágenes y recuerdos. En tu versión puedes seleccionar fotografías propias autorizadas o creaciones tuyas, identificando sus autores y lo que representan.';
 pages.find(page=>page.id==='galeria').secondImage=caminos;
+// Dirección de arte compartida por la edición web y el PDF.
+const palettes = [
+  {paper:'#FFD55E',ink:'#22304A',accent:'#934522',soft:'#FFE79A'},
+  {paper:'#87CDB8',ink:'#123A36',accent:'#135647',soft:'#BCE5CB'},
+  {paper:'#BCA8E4',ink:'#282344',accent:'#4C277D',soft:'#D9C8F0'},
+  {paper:'#94C8EA',ink:'#12364A',accent:'#104A65',soft:'#C0E0F2'},
+  {paper:'#F9A783',ink:'#30253C',accent:'#723548',soft:'#FFD4B7'},
+  {paper:'#EEA8C0',ink:'#44233D',accent:'#722545',soft:'#F8D1DC'},
+  {paper:'#FFB65A',ink:'#342746',accent:'#7A3A24',soft:'#FFD698'}
+];
+const layouts = {portada:'cover',dedicatoria:'poster',indice:'index',trayectoria:'timeline',ficha:'cards',creaciones:'cards',amigos:'gallery',galeria:'gallery',futuro:'letter',agradecimientos:'poster',contraportada:'back'};
+const quotes = {
+  identidad:'Un doblez, otro intento, una historia propia.',jefes:'Aprender también es sentirse acompañado.',
+  jefeactual:'Las ayudas pequeñas dejan huella.',anecdota:'Lo que salió distinto también merece una página.',
+  salidas:'Salir del aula. Volver con preguntas.',comun:'Una idea cambia cuando podemos explicarla.',
+  despedida:'Lo que hicimos juntos sigue con nosotros.'
+};
+for (const [i,page] of pages.entries()) {
+  page.visual={...palettes[i%palettes.length],layout:layouts[page.id]||(page.id==='entrevistas'||/^entrevista-\d/.test(page.id)?'interview':'story'),quote:quotes[page.id]||''};
+  if(page.cover||page.back)Object.assign(page.visual,{paper:'#233CA6',ink:'#FFF6DA',accent:'#FFD55E',soft:'#1C3086'});
+}
+const visualImage=(id,file,caption)=>Object.assign(pages.find(page=>page.id===id),{image:'assets/'+file,caption});
+visualImage('portada','modelo-portada-color.png','Un libro abre un mundo de recuerdos. Ilustración original con IA.');
+pages[0].text='Lo que aprendimos juntos\nAnuario 2026 · 4°D TP · CEST\nAlex · personaje ficticio de esta edición\nModelo visual didáctico · textos e ilustraciones de ficción';
+visualImage('presentacion','modelo-comunidad-color.png','Escuchar, dibujar y compartir: comunidad escolar ficticia, ilustrada con IA.');
+visualImage('identidad','modelo-viaje-color.png','El barco de papel como símbolo de una trayectoria. Ilustración original con IA.');
+visualImage('intereses','modelo-recuerdos-color.png','Objetos que cuentan intereses y experiencias ficticias. Ilustración original con IA.');
+visualImage('futuro','modelo-viaje-color.png','Un recorrido que sigue abierto. Ilustración original con IA.');
+pages.find(page=>page.id==='creditos').text=pages.find(page=>page.id==='creditos').text.replace('cuatro imágenes originales','ocho imágenes originales').replace('Diseño de referencia: páginas verticales, títulos jerarquizados, folios y pies de imagen.','Diseño de referencia: fondos de color en todas las páginas, líneas de tiempo, citas destacadas, fichas, galerías y una paleta común.');
 module.exports=pages;

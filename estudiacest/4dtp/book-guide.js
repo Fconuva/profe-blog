@@ -8,7 +8,7 @@
       "Agrega tu nombre, 4°D TP, CEST y 2026.",
       "Sube a Archivos la imagen de portada y anota aquí su nombre."
     ],
-    "example": "Huellas en papel\nLo que aprendimos juntos\nAnuario 2026 · 4°D TP · CEST\nEdición de ejemplo: Alex, estudiante ficticio\nImagen: modelo-portada.png; ilustración generada con IA."
+    "example": "Huellas en papel\nLo que aprendimos juntos\nAnuario 2026 · 4°D TP · CEST\nEdición de ejemplo: Alex, estudiante ficticio\nImagen: modelo-portada-color.png; ilustración generada con IA."
   },
   {
     "id": "dedicatoria",
@@ -129,7 +129,7 @@
       "Anota las fuentes y los permisos de imágenes y citas.",
       "Indica formato, impresión y encuadernación; distingue lo planificado de lo realizado. Declara las imágenes generadas con IA."
     ],
-    "example": "Título: Huellas en papel.\nEdición didáctica de ejemplo: Estudia CEST, 2026.\nTextos: relatos ficticios creados para modelar el trabajo escolar; no corresponden a declaraciones reales.\nPersonajes: Alex, Emilia, Diego, Sofía, Elena, Tomás y Martín; todos ficticios.\nIlustraciones: cuatro imágenes originales generadas con la herramienta de imágenes de OpenAI para este modelo. No son fotografías del colegio ni del curso.\nDiseño de referencia: páginas verticales, títulos jerarquizados, folios y pies de imagen.\nProducción propuesta para el estudiante: revisión en Lengua y Literatura; diagramación, prueba de impresión y encuadernación cosida en Gráfica; tres copias finales.\nFuentes: textos e ilustraciones originales de esta edición didáctica.\n\nCriterio de edición: estructura común y capítulos personales a elección. Los avances recibidos orientaron las posibilidades de contenido; no se reproducen aquí textos, fotografías ni datos personales de estudiantes."
+    "example": "Título: Huellas en papel.\nEdición didáctica de ejemplo: Estudia CEST, 2026.\nTextos: relatos ficticios creados para modelar el trabajo escolar; no corresponden a declaraciones reales.\nPersonajes: Alex, Emilia, Diego, Sofía, Elena, Tomás y Martín; todos ficticios.\nIlustraciones: ocho imágenes originales generadas con la herramienta de imágenes de OpenAI para este modelo. No son fotografías del colegio ni del curso.\nDiseño de referencia: páginas verticales, títulos jerarquizados, folios y pies de imagen.\nProducción propuesta para el estudiante: revisión en Lengua y Literatura; diagramación, prueba de impresión y encuadernación cosida en Gráfica; tres copias finales.\nFuentes: textos e ilustraciones originales de esta edición didáctica.\n\nCriterio de edición: estructura común y capítulos personales a elección. Los avances recibidos orientaron las posibilidades de contenido; no se reproducen aquí textos, fotografías ni datos personales de estudiantes."
   },
   {
     "id": "contraportada",

@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: modelo a todo color y encargos de imágenes
+
+- A petición del docente, las 32 páginas del modelo web y PDF tienen fondos
+  coloridos. Se añadieron paletas compartidas, títulos amplios, citas destacadas,
+  índice en columnas, trayectoria visual, preguntas jerarquizadas, fichas y
+  cartas; la portada del PDF usa una ilustración de gran formato.
+- Lote propio de cuatro ilustraciones nuevas: portada, comunidad, viaje de
+  papel e intereses. Originales conservados y copias en `4dtp/assets/`; ocho
+  ilustraciones distintas en total. Prompts y procedencia registrados en
+  `modelo-imagenes.json`. No se utilizan retratos ni materiales de estudiantes.
+- `4dtp/imagenes-gemini.md` entrega ocho prompts completos, archivos y destinos
+  previstos para imágenes complementarias. Se incorporarán cuando el docente
+  las comparta; no se atribuyen a Gemini las imágenes actuales de OpenAI.
+- Validación: PDF de 32 páginas renderizadas y revisadas, control de desbordes;
+  navegador en celular, escritorio y 4K; contraste de texto superior a 4,5:1;
+  auditoría del anuario y build aprobados, 229 recursos críticos. La publicación
+  y comprobación de producción se registran en el cierre siguiente.
+
+---
+
 ## 2026-09-21, 4°D TP: avances recibidos y posibilidades del anuario ampliadas
 
 ### Cierre de publicación

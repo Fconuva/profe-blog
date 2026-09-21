@@ -26,6 +26,11 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   `estudiacest` y volver a comprobar reproducción y duración. Se informó a
   Francisco y se solicitó autorización antes de cualquier cambio financiero.
   No se modificaron cuentas de facturación ni medios de pago durante el diagnóstico.
+- **Confirmación en consola:** «Reabrir cuenta de facturación» está deshabilitado
+  y su descripción informa «No puedes volver a abrir esta cuenta de facturación
+  porque no se encuentra en regla». La revisión de configuración no identificó
+  una causa más específica; no se atribuye el cierre a deuda, tarjeta o identidad
+  sin evidencia. La consola quedó abierta para la gestión de Francisco.
 
 ---
 

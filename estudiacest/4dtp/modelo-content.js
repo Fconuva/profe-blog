@@ -1,9 +1,10 @@
 /* Contenido exclusivamente ficticio de la edición didáctica. */
 const guide = require('./book-guide.js');
-const section = (id, extra={}) => ({id,title:guide.find(s=>s.id===id).title,text:guide.find(s=>s.id===id).example,...extra});
+const section = (id, extra={}) => ({id,title:guide.find(s=>s.id===id).title,text:guide.find(s=>s.id===id).example,optional:Boolean(guide.find(s=>s.id===id).optional),...extra});
 const patio = 'assets/modelo-patio.png';
 const taller = 'assets/modelo-taller.png';
 const portada = 'assets/modelo-portada.png';
+const caminos = 'assets/modelo-caminos.png';
 const voices = [
   {name:'Emilia',role:'Compañera 1',theme:'Aprender a pedir ayuda',answers:[
     'Recuerdo la primera prueba de impresión del cuadernillo. La imagen quedó muy oscura y pensamos que todo el trabajo se había perdido. Al comparar las pruebas descubrimos que podíamos corregirla. Me gustó que nadie tuviera que resolverlo solo.',
@@ -49,7 +50,7 @@ const interviews = voices.map((voice,i)=>({id:i===0?'entrevistas':'entrevista-'+
 const memory = `La mañana del aniversario, nuestro cartel seguía sobre una mesa y todavía faltaba pegar algunas letras. Afuera comenzaban las actividades, pero nosotros discutíamos qué color usar para que el mensaje se leyera desde el patio. Alguien propuso mirarlo a varios metros de distancia. Esa prueba sencilla terminó la discusión.\n\nMientras un grupo ajustaba las letras, otros buscaron materiales y ordenaron lo que sobraba. No todo salió como esperábamos: una esquina se despegó y hubo que reforzarla antes de llevar el cartel afuera. La dificultad nos obligó a repartir mejor las tareas. Esta vez preguntamos quién necesitaba ayuda en lugar de asumir que cada uno ya sabía qué hacer.\n\nCuando finalmente lo instalamos, nos quedamos un momento observándolo. No era el trabajo más complejo que habíamos hecho, pero reconocíamos decisiones de todos. La fotografía que elegí para esta página representa esa pausa después del esfuerzo, cuando ya no estábamos apurados y podíamos conversar.\n\nCon el tiempo olvidé algunos detalles de la actividad, pero conservé esa sensación de haber resuelto algo juntos. El aniversario me enseñó que pertenecer a un curso no depende solamente de compartir una sala. También se construye cuando una tarea nos obliga a escuchar, colaborar y cuidar lo que hacemos.`;
 const project = `EL DESAFÍO\nCrear un cuadernillo que pudiera abrirse con facilidad y conservar sus páginas ordenadas. Queríamos que la encuadernación acompañara el contenido y resistiera la lectura.\n\nCÓMO LO HICIMOS\nPrimero dibujamos una maqueta y distribuimos los textos. Después imprimimos una prueba para comprobar el orden de lectura, los márgenes y el tamaño de las letras. Al doblar los pliegos descubrimos que algunas páginas no coincidían: corregimos la organización antes de continuar.\n\nMarcamos los puntos de costura sobre una guía y practicamos el recorrido del hilo. Durante el montaje revisamos la tensión para que el libro pudiera abrirse sin deformarse. Un compañero comprobó la secuencia de páginas y otro observó la terminación.\n\nLO QUE APRENDIMOS\nAprendimos que la calidad no aparece solamente al final. Cada decisión afecta la siguiente: si la maqueta está desordenada, la encuadernación no puede arreglarla. La prueba de impresión y la revisión compartida nos permitieron corregir a tiempo y explicar cómo habíamos construido el objeto.`;
 const farewell = `Llegamos a cuarto medio con experiencias distintas y terminamos compartiendo una mesa de trabajo. En ella quedaron conversaciones, papeles, pruebas y errores que nos enseñaron más de lo que imaginábamos. No todos recordaremos los mismos momentos, pero cada uno lleva una parte de lo que vivimos juntos.\n\nMe despido agradeciendo las ayudas pequeñas: una explicación antes de entregar, una pregunta hecha a tiempo y la paciencia de quien esperaba mientras yo terminaba. También me llevo las dificultades, porque nos obligaron a hablar con más claridad y a hacernos responsables de nuestros acuerdos.\n\nNo sé dónde estaremos dentro de algunos años. Espero que podamos mirar estas páginas y reconocer algo nuestro: el humor, el esfuerzo y la disposición a volver a intentar. El colegio termina como etapa; lo que aprendimos con otros sigue acompañándonos.`;
-module.exports = [
+const pages = [
   section('portada',{title:'Huellas en papel',kicker:'Anuario 2026 · 4°D TP · CEST',image:portada,cover:true}),
   section('dedicatoria'),section('indice'),section('presentacion',{image:patio,caption:'Una conversación imaginada en el patio. Ilustración generada con IA para este modelo.'}),
   ...interviews,
@@ -64,3 +65,13 @@ module.exports = [
   {id:'despedida',title:'Lo que sigue con nosotros',kicker:'Despedida · Cierre personal',text:farewell},
   section('agradecimientos'),section('creditos'),section('contraportada',{image:portada,back:true})
 ];
+const insertBefore = (anchor, ...items) => pages.splice(pages.findIndex(page=>page.id===anchor),0,...items);
+insertBefore('entrevistas',section('identidad'),section('trayectoria'));
+insertBefore('especialidad',section('anecdota'),section('participacion',{image:caminos,caption:'Creación y participación escolar imaginadas. Ilustración original con IA; personajes ficticios.'}),section('salidas'));
+insertBefore('amigos',section('intereses'),section('creaciones',{image:caminos,caption:'La imagen con IA acompaña el guion ficticio. El estudiante puede ilustrar su propia creación a mano.'}));
+insertBefore('despedida',section('futuro'));
+pages.find(page=>page.id==='indice').text=pages.map((page,i)=>`${String(i+1).padStart(2,'0')} · ${page.title}`).join('\n');
+pages.find(page=>page.id==='presentacion').text+='\n\nEste recorrido también deja lugar para intereses, anécdotas, actividades y decisiones personales. Son caminos posibles: cada estudiante puede elegir y combinar los que representan su historia. El orden y las 32 páginas de este modelo no son una cantidad obligatoria para todos.';
+pages.find(page=>page.id==='galeria').text='Imagen 3. Libro abierto y aves de papel en un patio imaginario. Ilustración con IA, 2026.\n\nLos recuerdos toman otra forma cuando los compartimos.\n\nImagen 4. Dibujar, colaborar en una obra y mirar por la ventana de un viaje: escenas ficticias de participación escolar. Ilustración con IA, 2026.\n\nCada persona conserva un recorrido diferente. Esta galería usa cuatro ilustraciones distintas para mostrar cómo relacionar imágenes y recuerdos. En tu versión puedes seleccionar fotografías propias autorizadas o creaciones tuyas, identificando sus autores y lo que representan.';
+pages.find(page=>page.id==='galeria').secondImage=caminos;
+module.exports=pages;

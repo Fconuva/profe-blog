@@ -150,13 +150,21 @@ requireText(media, 'Volver a cargar audio', 'Renovación de enlaces privados');
 const guide = require('../4dtp/book-guide.js');
 const model = require('../4dtp/modelo-content.js');
 const expectedParts = ['portada','dedicatoria','indice','presentacion','jefes','jefeactual','curso','comun','favorita','amigos','agradecimientos','creditos','contraportada'];
-if (guide.length !== expectedParts.length || expectedParts.some(id=>!guide.some(item=>item.id===id && item.instructions.length>=3 && item.example.length>100))) failures.push('Faltan partes completas, instrucciones o ejemplos.');
-if (model.length !== 24 || model[0].id !== 'portada' || model[23].id !== 'contraportada') failures.push('El modelo no contiene las 24 páginas completas.');
+if (guide.length !== expectedParts.length+8 || expectedParts.some(id=>!guide.some(item=>item.id===id && item.instructions.length>=3 && item.example.length>100))) failures.push('Faltan partes completas, instrucciones o ejemplos.');
+if (model.length !== 32 || model[0].id !== 'portada' || model[31].id !== 'contraportada') failures.push('El modelo no contiene las 32 páginas completas.');
 for (const id of ['entrevistas','entrevista-2','entrevista-3','entrevista-4','entrevista-5','editada','aniversario','especialidad','despedida',...expectedParts]) {
   if (!model.some(page=>page.id===id && page.text.length>100)) failures.push(`Modelo incompleto: ${id}`);
 }
 const renderedModel = read('4dtp/modelo.html');
-if ((renderedModel.match(/class="book-page /g)||[]).length !== 24) failures.push('El modelo web no representa las 24 páginas.');
+const optionalParts=['identidad','trayectoria','anecdota','participacion','salidas','intereses','creaciones','futuro'];
+for(const id of optionalParts){
+  if(!guide.some(part=>part.id===id&&part.optional&&part.instructions.length>=3&&part.example.length>300)) failures.push(`Opción sin instrucciones completas: ${id}`);
+  if(!model.some(part=>part.id===id&&part.optional&&part.text.length>300)) failures.push(`Opción sin modelo resuelto: ${id}`);
+}
+requireText(read('4dtp/pauta.html'),'No tienes que hacerlas todas','Opciones flexibles');
+requireText(page,'pauta.html','Acceso a la pauta ampliada');
+requireText(admin,'pauta.html','Pauta docente');
+if ((renderedModel.match(/class="book-page /g)||[]).length !== 32) failures.push('El modelo web no representa las 32 páginas.');
 requireText(renderedModel, 'modelo-completo.pdf', 'Descarga del modelo');
 for (const script of ['4dtp/book-guide.js','4dtp/media.js','4dtp/modelo-content.js']) checkSyntax(script);
 requireText(page, 'Textos → Memoria escolar', 'Página 4DTP');

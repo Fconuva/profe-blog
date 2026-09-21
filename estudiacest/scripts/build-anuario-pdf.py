@@ -45,7 +45,9 @@ for n,page in enumerate(pages,1):
     pdf.setFillColor(HexColor('#c99958') if cover else red);pdf.rect(0,H-8,W,8,fill=1,stroke=0)
     color=HexColor('#ffffff') if cover else ink
     y=H-45
-    y=paragraph(page.get('kicker','Huellas en papel · Edición didáctica'),y,'BookBold',8,HexColor('#f3c88d') if cover else red)-14
+    kicker=page.get('kicker','Huellas en papel · Edición didáctica')
+    if page.get('optional'):kicker='Capítulo a elección · '+kicker
+    y=paragraph(kicker,y,'BookBold',8,HexColor('#f3c88d') if cover else red)-14
     y=paragraph(page['title'],y,'BookSerif',36 if cover else 26,color,31 if not cover else 40)-18
     if page.get('image'):
         max_h=390 if cover else 135 if page['id'] in ['editada','aniversario','especialidad'] else 190

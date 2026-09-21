@@ -8,6 +8,35 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: avances recibidos y posibilidades del anuario ampliadas
+
+- **Alcance:** seis entregas localizadas en la etiqueta escolar indicada por el
+  docente. Se revisaron los PDF, los textos compartidos y la carpeta de trabajo;
+  un editable de Illustrator quedó sin lectura interna por falta de vista previa
+  y descarga bloqueada. Su recepción se reconoce igualmente. La nómina privada
+  de revisión permanece fuera del repositorio y del sitio público.
+- **Criterio docente:** reconocimiento de todas las entregas de esta revisión,
+  incluidas maquetas parciales. La pauta distingue esa valoración de la evaluación
+  final. No se modificaron calificaciones individuales en el panel ni en Lirmi;
+  se consultó en qué registro deben incorporarse.
+- **Pauta:** `/4dtp/pauta.html` unifica una base compartida y ocho posibilidades
+  a elección: identidad, trayectoria, anécdotas, participación, salidas,
+  intereses, creaciones y futuro. Permite organizar por años, temas o relato
+  visual, combinar secciones y conservar el trabajo ya enviado. Las entrevistas
+  admiten adultos de la comunidad educativa y la memoria incluye otras
+  experiencias además del aniversario.
+- **Editor y modelo:** 21 campos de partes del libro, con las ocho opciones
+  identificadas y sin mostrarlas como obligaciones pendientes. El modelo web y
+  PDF crecen a 32 páginas resueltas, con cuatro ilustraciones originales de IA y
+  galería sin imágenes repetidas. No reproduce contenido personal de las entregas.
+- **Verificación:** API aislada conserva campos antiguos y nuevos; escritura,
+  recarga y lectura docente comprobadas con identidad ficticia. Pauta y modelo
+  probados en celular, escritorio y 4K; sin errores de consola. PDF completo
+  renderizado y revisado, sin desbordes. Auditoría del anuario y build aprobados,
+  225 recursos críticos. El resultado del deploy seguro se registra al cerrar.
+
+---
+
 ## 2026-09-21, 4°D TP: publicación verificada y bloqueo externo de audios
 
 - **Publicado:** commit `3c70b48c`, push a `origin/main`, deploy seguro

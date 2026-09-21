@@ -27,12 +27,14 @@ fixture.interviews.forEach((item,i)=>{item.interviewee='Persona ficticia '+(i+1)
 ref(base).set(fixture);
 async function call(action,body,token='qa-student',query={}){let status=200;let data;await api({method:body===undefined?'GET':'POST',headers:{authorization:'Bearer '+token},query:{action,...query},body},{setHeader(){},status(n){status=n;return this;},json(value){data=value;return this;},end(){}});return{status,data};}
 async function tests(){
-  const saved=await call('save',{interviews:fixture.interviews,writtenProducts:{memoryText:'á'.repeat(18000)},bookSections:{portada:'Mi portada de prueba',jefes:'Texto de prueba',unexpected:'rechazar'}});
+  const saved=await call('save',{interviews:fixture.interviews,writtenProducts:{memoryText:'á'.repeat(18000)},bookSections:{portada:'Mi portada de prueba',jefes:'Texto de prueba',trayectoria:'Mi trayectoria ficticia con ñ',creaciones:'Una creación original',unexpected:'rechazar'}});
   assert.equal(saved.status,200);
   const state=(await call('state')).data.state;
   assert.equal(state.bookSections.portada,'Mi portada de prueba');assert.equal(state.writtenProducts.memoryText.length,18000);assert.equal(state.bookSections.unexpected,undefined);
   await call('save',{interviews:fixture.interviews,writtenProducts:{projectText:'Conservar lo anterior'}});
   assert.equal((await call('state')).data.state.bookSections.jefes,'Texto de prueba');
+  assert.equal((await call('state')).data.state.bookSections.trayectoria,'Mi trayectoria ficticia con ñ');
+  assert.equal((await call('state')).data.state.bookSections.creaciones,'Una creación original');
   assert.equal((await call('state')).data.state.writtenProducts.memoryText.length,18000);
   assert.equal((await call('submit-activity1',{})).status,200);
   assert.equal((await call('submit-activity2',{})).status,200);
@@ -43,7 +45,7 @@ async function tests(){
   assert.equal((await call('admin-file-url',undefined,'qa-admin',{rut:'111111111',fileId:'qa-audio-1'})).status,200);
   assert.equal(api.testing.sanitizeInterviews([{slot:1,transcription:'a'.repeat(59000),audioFileId:'forged'}],fixture.interviews)[0].transcription.length,59000);
   assert.equal(api.testing.sanitizeInterviews([{slot:1,audioFileId:'forged'}],fixture.interviews)[0].audioFileId,'qa-audio-1');
-  console.log('API real aislada: guardado, conservación, lectura, entregas, permisos y audio: 15 comprobaciones OK.');
+  console.log('API real aislada: guardado, conservación de partes originales y a elección, lectura, entregas, permisos y audio: OK.');
 }
 const sdk=`(()=>{const isAdmin=location.pathname.endsWith('admin.html');const auth={currentUser:isAdmin?{getIdToken:async()=> 'qa-admin'}:null,setPersistence:async()=>{},signInWithCustomToken:async()=>{auth.currentUser={getIdToken:async()=> 'qa-student'};},signInWithEmailAndPassword:async()=>{},signOut:async()=>{auth.currentUser=null},onAuthStateChanged:fn=>setTimeout(()=>fn(auth.currentUser),0)};const factory=()=>auth;factory.Auth={Persistence:{NONE:'none',LOCAL:'local'}};window.firebase={initializeApp(){},auth:factory,storage:()=>({})};})();`;
 const wav=Buffer.alloc(32044);wav.write('RIFF');wav.writeUInt32LE(32036,4);wav.write('WAVEfmt ',8);wav.writeUInt32LE(16,16);wav.writeUInt16LE(1,20);wav.writeUInt16LE(1,22);wav.writeUInt32LE(16000,24);wav.writeUInt32LE(32000,28);wav.writeUInt16LE(2,32);wav.writeUInt16LE(16,34);wav.write('data',36);wav.writeUInt32LE(32000,40);

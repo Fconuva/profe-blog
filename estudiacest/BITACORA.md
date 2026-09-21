@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, NM4 Unidad 3 Clase 5: entrevista laboral completa
+
+- Por solicitud de Francisco, la clase incorpora una entrevista ficticia completa
+  para un cargo inicial de mantenimiento: presentación, experiencia de taller,
+  repregunta sobre el aporte propio, seguridad, error y aprendizaje, trabajo en
+  equipo, presión de plazo, preguntas del postulante y despedida. Son 13
+  intervenciones con respuesta, distribuidas en cuatro pantallas nuevas.
+- La secuencia conserva los cuatro casos por especialidad y el producto en
+  cuaderno. Ahora tiene 17 pantallas; la lectura guiada ocupa 15 minutos y el
+  trabajo individual/en pareja 30. Los tiempos visibles suman 90 minutos.
+- `scripts/audit-nm4-u3-class5.js` comprueba diálogo, navegación, contador y
+  tiempo. Auditoría focalizada y `npm run build` aprobados. En navegador local:
+  lectura y navegación correctas en celular, escritorio y 4K, sin desborde
+  horizontal ni errores de consola; el salto del caso al trabajo llega a 16/17.
+- Commit `7114c646` enviado a `origin/main`. Deploy seguro
+  `dpl_BNSPh5oNaq5sh2vz56JoboL555wG` en estado `READY` y alias público activo.
+  La URL pública devolvió HTTP 200; el SHA-256 del HTML coincide exactamente
+  con la fuente local publicada (17 pantallas y 13 intercambios comprobados).
+
+---
+
 ## 2026-09-21, 4°D TP: plantilla e ilustraciones publicadas
 
 - Commit de contenido `abbd02cd`, enviado a `origin/main`. Deploy seguro

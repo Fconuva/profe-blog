@@ -43,16 +43,34 @@ expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada co
 expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
-expect(slides.length === 13, `Se esperaban 13 pantallas y se encontraron ${slides.length}.`);
+expect(slides.length === 17, `Se esperaban 17 pantallas y se encontraron ${slides.length}.`);
 [
   'Motivación · Escala 1 a 10',
   'Activación de conocimientos previos',
   'Objetivo de la clase',
   'Instrucciones de la actividad',
   'Ejemplo modelado',
+  'Entrevista completa · Apertura',
+  'Entrevista completa · Evidencia',
+  'Entrevista completa · Trabajo con otros',
+  'Entrevista completa · Cierre',
   'Trabajo y monitoreo',
   'Cierre · Plenario y timbre'
 ].forEach(title => expect(slides.includes(title), `Falta la pantalla «${title}».`));
+const interviewStart = page.indexOf('<section class="slide" data-title="Entrevista completa · Apertura">');
+const interviewEnd = page.indexOf('<section class="slide" data-title="Elige tu especialidad">', interviewStart);
+const interview = interviewStart >= 0 && interviewEnd > interviewStart ? page.slice(interviewStart, interviewEnd) : '';
+expect((interview.match(/<p><strong>Entrevistadora:<\/strong>/g) || []).length === 13, 'La entrevista modelo debe incluir 13 preguntas o intervenciones de la entrevistadora.');
+expect((interview.match(/<p class="applicant"><strong>Postulante:<\/strong>/g) || []).length === 13, 'Cada intervención debe tener respuesta del postulante.');
+[
+  'Diálogo ficticio para aprender',
+  'por qué te interesa este puesto',
+  '¿qué hiciste tú exactamente?',
+  'un error que hayas cometido',
+  '¿Hay algo que quieras preguntarnos?',
+  'Gracias por explicarme el proceso y por su tiempo.'
+].forEach(text => expect(interview.includes(text), `La entrevista completa omite: ${text}`));
+expect(page.includes('1 / 17'), 'El contador inicial no refleja las 17 pantallas.');
 
 expect(page.includes('90 minutos') && page.includes('Trabajo en cuaderno'), 'La portada no explicita duración y modalidad.');
 expect(page.includes('Practicar respuestas claras, concretas y seguras para una entrevista laboral.'), 'El objetivo breve de un solo verbo no está presente.');
@@ -109,10 +127,10 @@ expect(jumps.length === 4, 'Faltan accesos directos para alguna especialidad.');
 for (const jump of jumps) {
   expect((slides[jump.target - 1] || '').startsWith(`Caso ${jump.course}`), `El acceso ${jump.course} apunta a una pantalla incorrecta.`);
 }
-expect((page.match(/data-go="12"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
+expect((page.match(/data-go="16"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
 
 [
-  '35 min',
+  '20 min',
   'escritura y monitoreo',
   '10 min',
   'lectura en parejas y mejora',
@@ -120,6 +138,10 @@ expect((page.match(/data-go="12"[^>]*>Ir al trabajo en cuaderno/g) || []).length
   'REVISIÓN Y TIMBRE',
   '¿Qué elementos hacen que una respuesta de entrevista demuestre preparación y confianza profesional?'
 ].forEach(text => expect(page.includes(text), `Falta el componente de trabajo o cierre: ${text}`));
+expect(page.includes('15 min en total') && page.includes('30 min'), 'La entrevista y el trabajo no tienen tiempo asignado.');
+const scheduledMinutes = [...page.matchAll(/<span class="time">(\d+) min(?: en total)?<\/span>/g)]
+  .reduce((sum, match) => sum + Number(match[1]), 0);
+expect(scheduledMinutes === 90, `Los tiempos visibles suman ${scheduledMinutes} minutos; la clase debe durar 90.`);
 
 expect(!page.includes('metodo-star.jpg'), 'La presentación todavía referencia la infografía STAR rechazada.');
 expect(!page.includes('video-entrevista.mp4'), 'La secuencia todavía incluye el video anterior.');

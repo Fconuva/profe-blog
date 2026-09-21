@@ -103,4 +103,14 @@ visualImage('identidad','modelo-viaje-color.png','El barco de papel como símbol
 visualImage('intereses','modelo-recuerdos-color.png','Objetos que cuentan intereses y experiencias ficticias. Ilustración original con IA.');
 visualImage('futuro','modelo-viaje-color.png','Un recorrido que sigue abierto. Ilustración original con IA.');
 pages.find(page=>page.id==='creditos').text=pages.find(page=>page.id==='creditos').text.replace('cuatro imágenes originales','ocho imágenes originales').replace('Diseño de referencia: páginas verticales, títulos jerarquizados, folios y pies de imagen.','Diseño de referencia: fondos de color en todas las páginas, líneas de tiempo, citas destacadas, fichas, galerías y una paleta común.');
+// Ilustraciones de Gemini entregadas por el docente el 21 de septiembre.
+visualImage('editada','gemini-01-entrevista.png','Escena ficticia de una entrevista escolar. Ilustración con Gemini; no representa a Emilia.');
+visualImage('aniversario','gemini-02-aniversario.png','Preparación imaginada de una celebración escolar. Ilustración con Gemini.');
+visualImage('jefes','gemini-03-profesores.png','Acompañamiento docente en un taller imaginario. Ilustración con Gemini; personas ficticias.');
+visualImage('participacion','gemini-04-participacion.png','Arte, deporte y servicio en una comunidad ficticia. Ilustración con Gemini.');
+visualImage('salidas','gemini-05-salida.png','Una salida educativa imaginada. Ilustración con Gemini.');
+visualImage('ficha','gemini-06-encuadernacion.png','Proceso de encuadernación ilustrado con Gemini. Las técnicas se acuerdan con el docente de Gráfica.');
+visualImage('creaciones','gemini-07-comic.png','Secuencia visual ficticia sobre un barco de papel, creada con Gemini.');
+visualImage('contraportada','gemini-08-contraportada.png','Un libro y un camino que continúa. Ilustración de cierre creada con Gemini.');
+pages.find(page=>page.id==='creditos').text=pages.find(page=>page.id==='creditos').text.replace('ocho imágenes originales','dieciséis ilustraciones: ocho generadas con OpenAI y ocho con Gemini, estas últimas entregadas por el docente');
 module.exports=pages;

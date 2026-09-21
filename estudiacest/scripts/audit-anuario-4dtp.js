@@ -174,6 +174,15 @@ for (const match of page.matchAll(/href="modelo\.html#([^"]+)"/g)) {
 for (const id of ['entrevistas','aniversario','jefes','jefeactual','curso','especialidad','comun','favorita','amigos']) requireText(page,`modelo.html#${id}`,'Destinos vigentes del anuario');
 if ((renderedModel.match(/class="book-page /g)||[]).length !== 32) failures.push('El modelo web no representa las 32 páginas.');
 requireText(renderedModel, 'modelo-completo.pdf', 'Descarga del modelo');
+const illustrationMetadata=JSON.parse(read('4dtp/assets/modelo-imagenes.json'));
+for(const asset of illustrationMetadata.assets.filter(asset=>asset.generator==='Gemini')) {
+  if(!fs.existsSync(path.join(ROOT,'4dtp/assets',asset.file))) failures.push(`Falta la ilustración recibida: ${asset.file}`);
+  if(!model.some(part=>part.image===`assets/${asset.file}`||part.secondImage===`assets/${asset.file}`)) failures.push(`Ilustración recibida sin integrar: ${asset.file}`);
+}
+for(const resource of ['plantilla-anuario-4d.zip','plantilla-anuario-4d.pdf','assets/plantilla-vista-previa.webp']) {
+  requireText(page,resource,'Acceso a la plantilla editable');
+  if(!fs.existsSync(path.join(ROOT,'4dtp',resource))) failures.push(`Falta el recurso de plantilla: ${resource}`);
+}
 for (const script of ['4dtp/book-guide.js','4dtp/media.js','4dtp/modelo-content.js']) checkSyntax(script);
 requireText(page, '<h2>Memoria escolar</h2>', 'Página 4DTP');
 requireText(page, '31 de octubre de 2026', 'Página 4DTP');

@@ -8,6 +8,38 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: plantilla editable e imágenes de Gemini
+
+- Se instaló Inkscape 1.4.4 desde el paquete oficial de winget, con verificación
+  del hash del instalador. Illustrator no está instalado en este equipo.
+- Plantilla A4 de 32 páginas con los colores y el recorrido del modelo, títulos,
+  ilustraciones y espacios guiados para completar. Se retiraron los relatos y
+  personajes del ejemplo de sus campos. Los ocho capítulos a elección siguen
+  señalados y se pueden combinar o quitar.
+- Descargas: `4dtp/plantilla-anuario-4d.pdf` y `plantilla-anuario-4d.zip`.
+  El ZIP incluye PDF, SVG de 32 páginas, 32 SVG individuales, imágenes,
+  instrucciones y un JSX que crea mesas y cuadros de párrafo en Illustrator.
+  El JSX pasó revisión sintáctica; su ejecución nativa en Illustrator no se
+  pudo verificar y se informa expresamente en la guía. No se presenta como
+  archivo AI/AIT nativo ya generado.
+- Las ocho imágenes de Gemini entregadas por el docente se revisaron e
+  integraron en modelo web, PDF y plantilla. El modelo usa 16 ilustraciones;
+  créditos y procedencia distinguen las ocho de OpenAI y las ocho de Gemini.
+  Los prompts propuestos se conservan sin atribuirles un historial no recibido.
+- La portada incorpora una tarjeta de descarga y ayuda desplegable. Se conserva
+  el ingreso y todos los destinos anteriores. El PDF resuelto conserva sus
+  textos y 32 páginas, con el lote nuevo; los generadores quedan en Git.
+- Verificaciones: ZIP íntegro, referencias de imágenes completas, texto y formas
+  conservados en 32 páginas; Inkscape abrió el SVG multipágina y exportó las 32.
+  Se editó una respuesta de prueba y se comprobó su texto al exportar. PDF y
+  plantilla renderizados y revisados; control de límites aprobado. Auditoría
+  y build correctos, 239 recursos críticos. Navegador: descargas e instrucciones
+  disponibles, sin desborde en celular, escritorio y medición 4K; consola limpia.
+  La captura 4K volvió a fallar en la conexión del navegador.
+- El resultado de la publicación segura se registra al cerrar.
+
+---
+
 ## 2026-09-21, 4°D TP: cierre de portada y retiro de pauta
 
 - Contenido confirmado y enviado en `3bfcb1b3`. Deploy seguro

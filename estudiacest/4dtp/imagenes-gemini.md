@@ -1,6 +1,6 @@
 # Imágenes para Gemini · Anuario 4°D TP 2026
 
-Estas ocho imágenes complementarán las cuatro nuevas ilustraciones ya creadas con OpenAI: portada, comunidad, viaje de papel e intereses. Son encargos pendientes para Gemini, no imágenes ya generadas allí.
+Las ocho imágenes fueron entregadas por el docente el 21 de septiembre de 2026 e incorporadas al modelo y a la plantilla. Complementan las ocho ilustraciones anteriores de OpenAI. Se conservan a continuación los prompts propuestos; no se afirma que el historial de generación de Gemini coincida exactamente con ellos.
 
 Genera una imagen por solicitud y guarda con el nombre indicado. Cada prompt es completo: se puede copiar solo. Prefiere PNG y la mayor resolución disponible; orientación horizontal 3:2, salvo la contraportada vertical 2:3. Si Gemini admite una referencia, adjunta una de las nuevas ilustraciones del modelo y pide conservar la paleta y textura, sin copiar su composición. No pidas que genere páginas completas ni textos: los títulos y pies se compondrán en el anuario.
 

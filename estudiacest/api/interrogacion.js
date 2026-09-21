@@ -6,6 +6,7 @@ const admin = require('firebase-admin');
 const ROSTER_NM4 = require('./_roster_nm4');
 const { ROSTER_ROWS: ROSTER_ROWS_NM3 } = require('./_roster_nm3');
 const { createInterrogationPdf } = require('./_interrogacion-pdf');
+const { retiroDe } = require('./_retirados');
 
 const DATABASE_URL = process.env.FIREBASE_DATABASE_URL
   || 'https://estudiacest-default-rtdb.firebaseio.com';
@@ -250,6 +251,9 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
   const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
   if (!alumno || !docente.cursos.includes(alumno.curso)) {
     return { status: 403, body: { error: 'Ese estudiante no corresponde a tus cursos.' } };
+  }
+  if (retiroDe(alumno.curso, alumno.nombre)) {
+    return { status: 409, body: { error: 'Ese estudiante está retirado del colegio.' } };
   }
   const preguntas = preguntasValidas(cuerpo.preguntas);
   const intentoId = idValido(cuerpo.intentoId);
@@ -750,11 +754,18 @@ module.exports = async function handler(req, res) {
     if (accion === 'nomina') {
       const cursos = {};
       for (const curso of docente.cursos) {
-        cursos[curso] = (instrumento.roster[curso] || []).map((alumno) => ({
-          id: idAlumno(curso, alumno.n, alumno.nombre),
-          n: alumno.n,
-          nombre: alumno.nombre
-        }));
+        cursos[curso] = (instrumento.roster[curso] || []).map((alumno) => {
+          const fila = {
+            id: idAlumno(curso, alumno.n, alumno.nombre),
+            n: alumno.n,
+            nombre: alumno.nombre
+          };
+          // Quien ya no esta en el colegio no se ofrece para interrogar, pero
+          // su fila se conserva: el identificador depende del numero de lista.
+          const retiro = retiroDe(curso, alumno.nombre);
+          if (retiro) { fila.retirado = true; fila.retiro = retiro; }
+          return fila;
+        });
       }
       const guardadas = (await db.ref(`${instrumento.base}/notas`).once('value')).val() || {};
       const audiosGuardados = (await db.ref(`${instrumento.base}/grabaciones`).once('value')).val() || {};
@@ -899,6 +910,9 @@ module.exports = async function handler(req, res) {
       const alumno = instrumento.alumnos.get(String(cuerpo.alumnoId || ''));
       if (!alumno || !docente.cursos.includes(alumno.curso)) {
         return res.status(403).json({ error: 'Ese estudiante no corresponde a tus cursos.' });
+      }
+      if (retiroDe(alumno.curso, alumno.nombre)) {
+        return res.status(409).json({ error: 'Ese estudiante está retirado del colegio.' });
       }
       const notaValor = Number(cuerpo.nota);
       if (!Number.isFinite(notaValor) || notaValor < 1 || notaValor > 7) {

@@ -8,6 +8,32 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, interrogaciones NM3 y NM4: los retirados salen de la lista
+
+- Los paneles de calificación ofrecían para interrogar a estudiantes que ya no
+  están en el colegio, porque la nómina de esta plataforma es estática y no
+  conoce los retiros del libro de clases.
+- Se agrega `api/_retirados.js` con los retiros informados por el libro (campo
+  `fecha_retiro` de la matrícula). De los once retiros vigentes en los ocho
+  cursos, **cuatro** aparecían en estas nóminas: dos en 4°B TP, uno en 3°B y uno
+  en 3°D. Los otros siete no figuran en los rosters y nunca se ofrecían.
+- **No se elimina ninguna fila del roster.** El identificador de cada estudiante
+  se calcula con su número de lista, así que borrar una correría a las
+  siguientes y dejaría huérfanas sus calificaciones. La acción `nomina` marca
+  `retirado: true` y los paneles no los listan; si alguno tuviera nota, se
+  sigue viendo.
+- El servidor también los rechaza: `iniciar-grabacion` y `guardar-nota-manual`
+  responden 409 para un estudiante retirado, de modo que la restricción no
+  depende del navegador.
+- El contador de la nómina informa cuántos quedaron fuera por retiro, para que
+  la diferencia entre el curso y la lista sea visible y no parezca un error.
+- Archivos: `api/_retirados.js` (nuevo), `api/interrogacion.js`,
+  `nm3/interrogacion-un-lugar-sin-limites/calificar/index.html`,
+  `nm4/interrogacion-mocha-dick/calificar/index.html`.
+- Validaciones: `npm run audit:interrogaciones` y `npm run build` aprobados;
+  ocho comprobaciones de la función de retiro, incluidas tildes y un curso que
+  no corresponde.
+
 ## 2026-09-21, NM4 Unidad 3 Clase 5: entrevista laboral completa
 
 - Por solicitud de Francisco, la clase incorpora una entrevista ficticia completa

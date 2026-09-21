@@ -567,8 +567,10 @@
     var c = $('curso').value, s = $('alumno');
     var seleccionado = s.value;
     s.innerHTML = '';
-    var total = (sesion.cursos[c] || []).length;
-    var disponibles = (sesion.cursos[c] || []).filter(function (a) {
+    var vigentes = (sesion.cursos[c] || []).filter(function (a) { return !a.retirado; });
+    var retirados = (sesion.cursos[c] || []).length - vigentes.length;
+    var total = vigentes.length;
+    var disponibles = vigentes.filter(function (a) {
       return !sesion.notas[a.id] && !sesion.grabaciones[a.id];
     });
     disponibles.forEach(function (a) {
@@ -592,7 +594,9 @@
       ? new Date(sesion.ultimaActualizacion).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
       : '';
     $('estadoNomina').textContent = disponibles.length + ' estudiante(s) disponible(s) · ' +
-      (total - disponibles.length) + ' ya registrado(s).' + (hora ? ' Actualizado ' + hora + '; se renueva cada 30 s.' : '');
+      (total - disponibles.length) + ' ya registrado(s).' +
+      (retirados ? ' ' + retirados + ' retirado(s) del colegio, fuera de la lista.' : '') +
+      (hora ? ' Actualizado ' + hora + '; se renueva cada 30 s.' : '');
     pintarBorradorManual(borrador);
   }
 

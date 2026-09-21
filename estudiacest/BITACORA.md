@@ -10,6 +10,21 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ## 2026-09-21, 4°D TP: avances recibidos y posibilidades del anuario ampliadas
 
+### Cierre de publicación
+
+- Commit de contenido `e82070c1`, enviado a `origin/main`. Deploy seguro
+  `dpl_BnT75VuRHcDQmZ4gPRFMcv6iTjsJ` completado en estado `READY`, con alias
+  `https://www.estudiacest.com`. Un primer intento se detuvo por fallas
+  transitorias de red; el segundo superó las verificaciones sin excepciones.
+- Los once archivos públicos comprobados, incluidos PDF, pauta e ilustración
+  nueva, responden HTTP 200 y coinciden por SHA-256 con la fuente local. PAES,
+  NM3, NM4, 3ATP y estudiantes también responden HTTP 200.
+- Navegador en producción: 32 páginas e índice de 32 entradas, ocho capítulos
+  a elección, imágenes cargadas y sin errores de consola ni desborde horizontal.
+  La pauta muestra las ocho posibilidades y el reconocimiento del avance.
+- Nómina privada entregada al docente, fuera de Git. Sigue pendiente definir
+  el destino del registro de calificaciones; no se han cargado en panel ni Lirmi.
+
 - **Alcance:** seis entregas localizadas en la etiqueta escolar indicada por el
   docente. Se revisaron los PDF, los textos compartidos y la carpeta de trabajo;
   un editable de Illustrator quedó sin lectura interna por falta de vista previa

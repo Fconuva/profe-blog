@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, NM4 Unidad 3 Clase 5: video de entrevista completa
+
+- Se publicó una recreación audiovisual de los 13 intercambios de la entrevista
+  para ayudante de mantenimiento. Aparecen dos hombres reales en una toma de
+  archivo; el entrevistador y el postulante tienen voces sintéticas masculinas
+  diferenciadas. La pantalla, el guion y la clase avisan que los actores no
+  pronunciaron esas palabras. Duración: 4 min 27 s, con texto en pantalla y
+  subtítulos VTT opcionales.
+- La toma procede de
+  https://mixkit.co/free-stock-video/two-office-men-approving-data-with-a-handshake-30010/
+  y su página indica licencia Mixkit Stock Video Free para uso personal o
+  comercial. El guion completo se lee de la clase al construir el video; el
+  script reproducible es `scripts/build-nm4-u3-class5-video.py`.
+- La secuencia ahora tiene 18 pantallas: video primero, cuatro pantallas de
+  transcripción y análisis después. El bloque conjunto conserva 15 minutos y
+  la clase completa, 90 minutos. Los cuatro saltos a casos y el paso al trabajo
+  en cuaderno se actualizaron; al avanzar, la reproducción se pausa.
+- `node scripts/audit-nm4-u3-class5.js` y `npm run build` aprobados. El MP4 se
+  audita como contenedor H.264/AAC de 267 segundos sin depender de `ffprobe` en
+  Vercel. Prueba local en celular, escritorio y 4K: sin errores de página ni
+  desborde; reproducción y pausa al avanzar comprobadas.
+- Commits `7c403ec1` y `6cb8b111` enviados a `origin/main`. Deploy seguro
+  `dpl_B2cWVKGeBW9VxMbHod6ce3GhKoBE` en estado `READY`, alias público activo.
+  La clase, el MP4, el VTT y la portada devolvieron HTTP 200 y SHA-256 idéntico
+  a la fuente publicada. La ruta pública cargó el video y mostró 7/18 en móvil.
+
+---
+
 ## 2026-09-21, interrogaciones NM3 y NM4: los retirados salen de la lista
 
 - Los paneles de calificación ofrecían para interrogar a estudiantes que ya no

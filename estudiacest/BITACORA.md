@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: publicación verificada y bloqueo externo de audios
+
+- **Publicado:** commit `3c70b48c`, push a `origin/main`, deploy seguro
+  `dpl_CANv78bdA2Y5RuqWnsbYJvb79vo1`, estado `READY` y alias público confirmado.
+  Los doce archivos principales, PDF e ilustraciones responden HTTP 200 y
+  coinciden por SHA-256 con la fuente. Portadas PAES, NM3, NM4, 3ATP y estudiantes
+  continúan disponibles.
+- **Hallazgo en producción:** el administrador autentica y muestra los nuevos
+  controles y las 13 partes. Al abrir una grabación real, Google Storage responde
+  `UserProjectAccountProblem`: cuenta de facturación del proyecto cerrada
+  (`The project to be billed is associated with a closed billing account`).
+  El reproductor funciona en el entorno aislado, pero los audios de producción
+  permanecen bloqueados por Google. No confundir publicación de la interfaz con
+  recuperación de los archivos, ni afirmar que estos fueron eliminados.
+- **Pendiente externo:** reactivar la cuenta de facturación vinculada a
+  `estudiacest` y volver a comprobar reproducción y duración. Se informó a
+  Francisco y se solicitó autorización antes de cualquier cambio financiero.
+  No se modificaron cuentas de facturación ni medios de pago durante el diagnóstico.
+
+---
+
 ## 2026-09-21, 4°D TP: audios visibles y anuario completo
 
 - **Audios:** el administrador mostraba solo «Audio registrado» y abría enlaces

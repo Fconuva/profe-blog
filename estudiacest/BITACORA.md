@@ -8,6 +8,21 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: cierre de portada y retiro de pauta
+
+- Contenido confirmado y enviado en `3bfcb1b3`. Deploy seguro
+  `dpl_yYYQz7RNCfR1E5pWBhMy31Ehf7ym` finalizado en `READY`, alias público activo.
+- `/4dtp/pauta.html` responde HTTP 308 hacia `/4dtp/modelo.html`; el navegador
+  confirma ese destino y conserva las 32 entradas del modelo.
+- Portada, estilos, administración y modelo responden HTTP 200 y coinciden por
+  SHA-256 con la fuente local. PDF y portadas PAES, NM3, NM4, 3ATP y estudiantes
+  responden HTTP 200.
+- Navegador en producción: seis grupos de contenidos, ninguna referencia a la
+  pauta retirada, imágenes visibles cargadas, sin desborde ni errores de consola.
+  Se entrega al docente el enlace de la portada actualizada.
+
+---
+
 ## 2026-09-21, 4°D TP: portada unificada con el modelo final
 
 - Por solicitud del docente se retira `4dtp/pauta.html`. Su dirección conserva

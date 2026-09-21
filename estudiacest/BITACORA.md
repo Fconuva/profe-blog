@@ -8,6 +8,24 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-21, 4°D TP: plantilla e ilustraciones publicadas
+
+- Commit de contenido `abbd02cd`, enviado a `origin/main`. Deploy seguro
+  `dpl_HTjtQAaCJQWH4xZ45pvmJ57GEkJc`, estado `READY`, alias público activo.
+- Diecisiete archivos públicos verificados por HTTP 200 y SHA-256 coincidente:
+  portada, estilos, modelo web y PDF, guía, metadatos, vista previa, ocho
+  ilustraciones de Gemini, PDF de plantilla y ZIP completo de 50.455.549 bytes.
+  PAES, NM3, NM4, 3ATP y estudiantes continúan respondiendo HTTP 200; la pauta
+  retirada mantiene su redirección al modelo.
+- Navegador en producción: instrucciones desplegables, enlaces de descarga,
+  vista previa cargada, 32 páginas y ocho ilustraciones de Gemini presentes;
+  contraportada nueva cargada, consola limpia y sin desborde horizontal.
+- Se entrega el enlace de descarga y se indica abrir `EMPIEZA_AQUI.html` tras
+  extraer el paquete. El PDF y los SVG fueron comprobados en Inkscape; el JSX
+  para Illustrator se entrega con la limitación de ejecución nativa informada.
+
+---
+
 ## 2026-09-21, 4°D TP: plantilla editable e imágenes de Gemini
 
 - Se instaló Inkscape 1.4.4 desde el paquete oficial de winget, con verificación

@@ -1,4 +1,4 @@
-const fs = require('fs');
+﻿const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
@@ -43,7 +43,7 @@ expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada co
 expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
-expect(slides.length === 18, `Se esperaban 18 pantallas y se encontraron ${slides.length}.`);
+expect(slides.length === 20, `Se esperaban 20 pantallas y se encontraron ${slides.length}.`);
 [
   'Motivación · Escala 1 a 10',
   'Activación de conocimientos previos',
@@ -61,17 +61,21 @@ expect(slides.length === 18, `Se esperaban 18 pantallas y se encontraron ${slide
 const interviewStart = page.indexOf('<section class="slide" data-title="Entrevista completa · Apertura">');
 const interviewEnd = page.indexOf('<section class="slide" data-title="Elige tu especialidad">', interviewStart);
 const interview = interviewStart >= 0 && interviewEnd > interviewStart ? page.slice(interviewStart, interviewEnd) : '';
-expect((interview.match(/<p><strong>Entrevistador:<\/strong>/g) || []).length === 13, 'La entrevista modelo debe incluir 13 preguntas o intervenciones del entrevistador.');
-expect((interview.match(/<p class="applicant"><strong>Postulante:<\/strong>/g) || []).length === 13, 'Cada intervención debe tener respuesta del postulante.');
+expect((interview.match(/<p><strong>Entrevistador:<\/strong>/g) || []).length === 16, 'La entrevista modelo debe incluir 16 preguntas o intervenciones del entrevistador.');
+expect((interview.match(/<p class="applicant"><strong>Postulante:<\/strong>/g) || []).length === 16, 'Cada intervención debe tener respuesta del postulante.');
 [
   'Transcripción del video · diálogo ficticio para aprender',
   'por qué te interesa este puesto',
   '¿qué hiciste tú exactamente?',
   'un error que hayas cometido',
+  'tu mejor cualidad',
+  'necesitas mejorar',
+  'pretensiones de sueldo',
+  'no tengo experiencia laboral formal',
   '¿Hay algo que quieras preguntarnos?',
   'Gracias por explicarme el proceso y por su tiempo.'
 ].forEach(text => expect(interview.includes(text), `La entrevista completa omite: ${text}`));
-expect(page.includes('1 / 18'), 'El contador inicial no refleja las 18 pantallas.');
+expect(page.includes('1 / 20'), 'El contador inicial no refleja las 20 pantallas.');
 
 expect(page.includes('90 minutos') && page.includes('Trabajo en cuaderno'), 'La portada no explicita duración y modalidad.');
 expect(page.includes('Practicar respuestas claras, concretas y seguras para una entrevista laboral.'), 'El objetivo breve de un solo verbo no está presente.');
@@ -84,6 +88,7 @@ const scaleMarkup = scaleStart >= 0 && scaleEnd > scaleStart ? page.slice(scaleS
 const scaleNumbers = [...scaleMarkup.matchAll(/<span>(\d+)<\/span>/g)].map(match => Number(match[1]));
 expect(scaleNumbers.join(',') === '1,2,3,4,5,6,7,8,9,10', 'La motivación no presenta una escala completa de 1 a 10.');
 expect(page.includes('assets/escala-preparacion-trabajo.jpg'), 'Falta la imagen-meme de preparación para el trabajo.');
+expect(page.includes('https://www.youtube.com/watch?v=ua9MoQ7R1_o') && page.includes('assets/youtube-entrevista-poster.jpg') && page.includes('Ver video en YouTube'), 'Falta la tarjeta de video de YouTube en la motivación.');
 
 [
   '¿Has vivido una entrevista real, informal o de práctica?',
@@ -103,8 +108,9 @@ expect(page.includes('assets/escala-preparacion-trabajo.jpg'), 'Falta la imagen-
   'Selecciona',
   'Planifica',
   'Escribe',
-  'Ensaya',
-  'Respuesta final de 8 a 10 líneas.',
+  'Entrevista',
+  'Mejora',
+  'Respuesta final de 8 a 10 líneas con una mejora concreta.',
   'El docente monitorea y orienta mientras trabajas.'
 ].forEach(text => expect(page.includes(text), `Falta la instrucción de desarrollo: ${text}`));
 
@@ -124,17 +130,18 @@ expect(page.includes('assets/escala-preparacion-trabajo.jpg'), 'Falta la imagen-
 
 const jumps = [...page.matchAll(/data-go="(\d+)"[^>]*>Abrir caso (4°[ABCE])/g)]
   .map(match => ({target:Number(match[1]), course:match[2]}));
-expect(jumps.length === 4, 'Faltan accesos directos para alguna especialidad.');
+expect(jumps.length === 6, 'Faltan los dos casos de Electricidad o Electrónica.');
 for (const jump of jumps) {
   expect((slides[jump.target - 1] || '').startsWith(`Caso ${jump.course}`), `El acceso ${jump.course} apunta a una pantalla incorrecta.`);
 }
-expect((page.match(/data-go="17"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 4, 'Cada caso debe conducir al trabajo en cuaderno.');
+expect((page.match(/data-go="19"[^>]*>Ir al trabajo en cuaderno/g) || []).length === 6, 'Cada caso debe conducir al trabajo en cuaderno.');
+expect(page.includes('Instalación de sistemas de control eléctrico industrial') && page.includes('Detección de fallas industriales'), 'Los casos nuevos deben declarar su módulo curricular.');
 
 [
-  '20 min',
-  'escritura y monitoreo',
-  '10 min',
-  'lectura en parejas y mejora',
+  '5 min',
+  'preparar casos y roles',
+  'dos entrevistas con roles cambiados',
+  'escribir y mejorar',
   'Dos estudiantes leen su respuesta.',
   'REVISIÓN Y TIMBRE',
   '¿Qué elementos hacen que una respuesta de entrevista demuestre preparación y confianza profesional?'
@@ -167,7 +174,7 @@ if (fs.existsSync(interviewVideo)) {
   }
 }
 const captions = read('nm4/u3-clase5-entrevista-laboral/assets/video-entrevista.vtt');
-expect((captions.match(/Entrevistador:/g) || []).length >= 13 && (captions.match(/Postulante:/g) || []).length >= 13, 'Los subtítulos no cubren los 13 intercambios.');
+expect((captions.match(/Entrevistador:/g) || []).length >= 16 && (captions.match(/Postulante:/g) || []).length >= 16, 'Los subtítulos no cubren los 16 intercambios.');
 expect(!page.includes('Ticket de salida individual'), 'La secuencia conserva el ticket de salida anterior.');
 
 const localAssets = [...page.matchAll(/(?:src|poster)="assets\/([^"]+)"/g)].map(match => match[1].split('?')[0]);
@@ -183,7 +190,8 @@ const images = [
   'caso-mecanica-industrial.jpg',
   'caso-mecanica-automotriz.jpg',
   'caso-electricidad.jpg',
-  'caso-electronica.jpg'
+  'caso-electronica.jpg',
+  'youtube-entrevista-poster.jpg'
 ];
 const approvedMemeSha256 = 'ae8ef4ef3393410cf7fd9fb3b4534ba031e5c4c74ac7dd41a3bee24499093ad5';
 for (const file of images) {
@@ -191,7 +199,7 @@ for (const file of images) {
   expect(fs.existsSync(absolute), `Imagen ausente: ${file}`);
   if (fs.existsSync(absolute)) {
     const bytes = fs.readFileSync(absolute);
-    expect(bytes.length > 300000, `La imagen ${file} no conserva resolución suficiente.`);
+    expect(bytes.length > (file === 'youtube-entrevista-poster.jpg' ? 50000 : 300000), `La imagen ${file} no conserva resolución suficiente.`);
     expect(bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff, `${file} no coincide con su extensión JPEG.`);
     if (file === 'escala-preparacion-trabajo.jpg') {
       const hash = crypto.createHash('sha256').update(bytes).digest('hex');

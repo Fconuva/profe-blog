@@ -57,8 +57,8 @@ def transcript():
                r'<p class="applicant"><strong>Postulante:</strong>(.*?)</p></li>')
     pairs = [(clean(question), clean(answer)) for question, answer
              in re.findall(pattern, source, flags=re.DOTALL)]
-    if len(pairs) != 13:
-        raise ValueError(f"Se esperaban 13 preguntas con respuesta; hay {len(pairs)}")
+    if len(pairs) != 16:
+        raise ValueError(f"Se esperaban 16 preguntas con respuesta; hay {len(pairs)}")
     return [(number, role, text) for number, pair in enumerate(pairs, 1)
             for role, text in zip(("Entrevistador", "Postulante"), pair)]
 
@@ -149,7 +149,7 @@ def build_audio_and_captions(segments, files, temp):
     ass.append(f"Dialogue: 0,{ass_time(0)},{ass_time(2)},Role,,0,0,0,,ENTREVISTA LABORAL · EJEMPLO FICTICIO")
     ass.append(f"Dialogue: 0,{ass_time(0)},{ass_time(2)},Text,,0,0,0,,Escucha primero. Después analizaremos las respuestas.")
     for start, end, number, role, utterance in records:
-        ass.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},Role,,0,0,0,,{role.upper()} · {number:02}/13")
+        ass.append(f"Dialogue: 0,{ass_time(start)},{ass_time(end)},Role,,0,0,0,,{role.upper()} · {number:02}/{len(segments)//2}")
         chunks = subtitle_chunks(utterance)
         weights = [max(len(chunk), 1) for chunk in chunks]
         position = start
@@ -166,7 +166,7 @@ def build_audio_and_captions(segments, files, temp):
     (ASSETS / "video-entrevista-guion.txt").write_text(
         "ENTREVISTA LABORAL · RECREACIÓN DIDÁCTICA\n\n"
         "Dos personajes masculinos. Cargo ficticio: ayudante de mantenimiento.\n"
-        "El diálogo se toma íntegro de index.html (13 preguntas y 13 respuestas).\n"
+        f"El diálogo se toma íntegro de index.html ({len(segments)//2} preguntas y respuestas).\n"
         "Voces sintéticas masculinas: es-MX-JorgeNeural (entrevistador) y "
         "es-CL-LorenzoNeural (postulante).\n"
         "Las personas filmadas son actores de archivo y no pronunciaron este guion.\n\n"
@@ -178,7 +178,7 @@ def build_audio_and_captions(segments, files, temp):
     return wav, total
 
 
-def make_poster(footage, temp):
+def make_poster(footage, temp, count):
     frame = temp / "frame.jpg"
     run("ffmpeg", "-y", "-v", "error", "-ss", "3", "-i", str(footage), "-frames:v", "1", str(frame))
     image = Image.open(frame).convert("RGB")
@@ -189,7 +189,7 @@ def make_poster(footage, temp):
     big = ImageFont.truetype(str(font), 48)
     small = ImageFont.truetype(str(font), 28)
     pen.text((54, 525), "ENTREVISTA LABORAL", font=big, fill="#ffffff")
-    pen.text((54, 604), "Dos hombres · 13 preguntas y respuestas", font=small, fill="#f7c671")
+    pen.text((54, 604), f"Dos hombres · {count} preguntas y respuestas", font=small, fill="#f7c671")
     image.save(ASSETS / "video-entrevista-poster.jpg", quality=95, subsampling=0)
 
 
@@ -202,7 +202,7 @@ def main():
         with urllib.request.urlopen(request, timeout=60) as response, footage.open("wb") as output:
             while chunk := response.read(1024 * 1024):
                 output.write(chunk)
-        make_poster(footage, temp)
+        make_poster(footage, temp, len(segments)//2)
         files = asyncio.run(synthesize(segments, temp))
         wav, total = build_audio_and_captions(segments, files, temp)
         run(

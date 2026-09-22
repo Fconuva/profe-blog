@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-22, NM4 Unidad 3 Clase 5: motivación, entrevista y casos TP
+
+- Se incorporó en la motivación el video «Entrevista Laboral - Presta a la
+  Comedy Central» (3 min 26 s) mediante portada y enlace directo a YouTube.
+  La reproducción incrustada mostró «video no disponible» en la prueba real;
+  el enlace directo evita dejar un reproductor fallido en la clase.
+- El guion y el video de entrevista modelo ahora tienen 16 preguntas y
+  respuestas (5 min 24 s). Se añadieron fortaleza con ejemplo, aspecto por
+  mejorar, pretensiones de sueldo y una respuesta honesta sobre experiencia
+  de taller sin presentarla como empleo formal. Se regeneraron MP4, VTT,
+  guion y póster desde `scripts/build-nm4-u3-class5-video.py`.
+- Electricidad suma un caso de circuito de mando y retención de motor,
+  alineado con el módulo 05 de 4° medio TP; Electrónica suma diagnóstico de
+  sensor digital y entrada PLC, alineado con el módulo 06. La práctica en
+  parejas exige dos rondas, cambio de roles, repregunta, evidencia, comentario
+  del compañero y revisión individual. La secuencia tiene 20 pantallas y
+  conserva 90 minutos.
+- Auditoría focal, `npm run build` y prueba de navegación en 390, 1440 y
+  3840 px aprobadas. La portada del video, HTML, VTT y MP4 públicos tienen
+  SHA-256 idéntico al archivo local. Commit `6fc7239b` enviado a `origin/main`.
+  Deploy seguro `dpl_9Q4HnkaTvHrS6bbniPv3zjV1TjAe` en estado `READY`,
+  alias `https://www.estudiacest.com/nm4/u3-clase5-entrevista-laboral/` activo.
+
+---
+
 ## 2026-09-21, NM4 Unidad 3 Clase 5: video de entrevista completa
 
 - Se publicó una recreación audiovisual de los 13 intercambios de la entrevista

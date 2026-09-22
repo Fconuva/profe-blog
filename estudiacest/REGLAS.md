@@ -142,10 +142,12 @@ Antes de editar y nuevamente antes de publicar:
   `No sabe`; deben existir siete posiciones registradas antes de entregar. La
   herramienta local omite estas posiciones al descargar audios y las informa
   por separado en su manifiesto.
-- En una interrogación oral se sortean siete preguntas. El docente puede cambiar
-  exactamente una antes de comenzar a grabarla; el servidor registra ese uso y
-  rechaza un segundo cambio, una pregunta repetida o el cambio de una respuesta
-  ya iniciada.
+- En una interrogación oral se sortean siete preguntas. Desde el 22-sep-2026, por
+  decisión de Francisco, el docente puede cambiar preguntas **sin tope**, siempre
+  antes de comenzar a grabar esa posición. El servidor cuenta los cambios
+  (`cambiosPregunta`), guarda las preguntas descartadas para que el sorteo no
+  las devuelva mientras haya otras, y rechaza una pregunta repetida o el cambio
+  de una respuesta ya iniciada.
 - En el panel docente, la nómina para iniciar una interrogación muestra solo a
   estudiantes sin grabación ni calificación. Quienes ya comenzaron, entregaron
   o fueron evaluados se gestionan desde las tablas de registros, con filtro por

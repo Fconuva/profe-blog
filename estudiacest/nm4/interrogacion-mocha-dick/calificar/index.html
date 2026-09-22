@@ -203,7 +203,7 @@
       <div class="progress-meta"><span id="audioProgresoTexto">1 de 7</span><span id="audioGuardadas">0 respuestas guardadas</span></div>
       <div class="question-focus">
         <div class="question-kicker"><span id="numeroPreguntaAudio">Pregunta 1</span><span id="referenciaPreguntaAudio"></span></div>
-        <div class="question-change"><button class="btn chico" id="btnCambiarPreguntaAudio" type="button">Cambiar esta pregunta</button><span id="estadoCambioPreguntaAudio">Disponible una vez, antes de grabar.</span></div>
+        <div class="question-change"><button class="btn chico" id="btnCambiarPreguntaAudio" type="button">Cambiar esta pregunta</button><span id="estadoCambioPreguntaAudio">Sin límite, antes de grabar.</span></div>
         <h3 id="textoPreguntaAudio"></h3>
         <div class="record-panel">
           <div class="mic-choice">
@@ -230,7 +230,7 @@
 
     <div class="card oculto" id="cardPreg">
       <h2 id="tituloManual">2 · Interrogación</h2>
-      <p class="sub">Puntúa cada respuesta. Se puede cambiar <strong>una sola</strong> pregunta, y la nueva la elige el sorteo.</p>
+      <p class="sub">Puntúa cada respuesta. Se pueden cambiar las preguntas <strong>las veces que haga falta</strong>, y la nueva la elige el sorteo.</p>
       <div id="zonaPreg"></div>
       <div class="campo" style="margin-top:14px;">
         <label for="obs">Observación (opcional)</label>
@@ -695,12 +695,10 @@
     actual.preguntas.forEach(function (idx, pos) {
       var d = document.createElement('div');
       d.className = 'preg';
-      var puedeCambiar = actual.cambiada === null;
       d.innerHTML =
         '<div class="preg-h"><div class="np">' + (pos + 1) + '</div>' +
         '<span class="banco">Pregunta ' + (idx + 1) + ' del banco</span>' +
-        '<button class="cambiar" data-pos="' + pos + '"' + (puedeCambiar ? '' : ' disabled') + '>' +
-        (actual.cambiada === pos ? 'cambiada' : '⟳ cambiar') + '</button></div>' +
+        '<button class="cambiar" data-pos="' + pos + '">⟳ cambiar</button></div>' +
         '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
         '<div class="respuesta-esperada"><strong>Respuesta esperada</strong>' + RESPUESTAS[idx] + '</div>' +
         '<div class="escala" data-pos="' + pos + '">' +
@@ -722,9 +720,13 @@
     });
     z.querySelectorAll('.cambiar').forEach(function (b) {
       b.addEventListener('click', function () {
-        if (actual.cambiada !== null) return;
         var pos = Number(b.dataset.pos);
-        var nueva = sortear(1, actual.preguntas)[0];
+        var descartadas = actual.descartadas || [];
+        if (descartadas.indexOf(actual.preguntas[pos]) < 0) descartadas.push(actual.preguntas[pos]);
+        actual.descartadas = descartadas;
+        var nueva = sortear(1, actual.preguntas.concat(descartadas))[0];
+        if (nueva == null) nueva = sortear(1, actual.preguntas)[0];
+        if (nueva == null) return;
         actual.preguntas[pos] = nueva;
         actual.cambiada = pos;
         delete actual.puntajes[pos];

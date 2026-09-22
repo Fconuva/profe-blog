@@ -171,6 +171,8 @@ function grabacionPublica(value) {
     curso: value.curso || '',
     preguntas: Array.isArray(value.preguntas) ? value.preguntas.map(Number) : [],
     cambiada: Number.isInteger(cambiada) && cambiada >= 0 && cambiada <= 6 ? cambiada : null,
+    cambiosPregunta: Number(value.cambiosPregunta) || (Number.isInteger(cambiada) ? 1 : 0),
+    descartadas: Array.isArray(value.descartadas) ? value.descartadas.map(Number) : [],
     respuestas,
     estado: value.estado || 'en_curso',
     docente: value.docente || '',
@@ -316,11 +318,11 @@ async function cambiarPreguntaGrabacion(instrumento, docente, cuerpo) {
   const reservasActivas = Object.values((before && before.reservas) || {})
     .some((item) => Number(item && item.posicion) === posicion);
   if (!before || before.intentoId !== intentoId || before.estado !== 'en_curso'
-    || !Array.isArray(before.preguntas) || before.cambiada != null
+    || !Array.isArray(before.preguntas)
     || (before.respuestas && before.respuestas[posicion]) || reservasActivas
     || Number(before.preguntas[posicion]) === nuevaPregunta
     || before.preguntas.map(Number).includes(nuevaPregunta)) {
-    return { status: 409, body: { error: 'El cambio ya fue utilizado o esta pregunta ya comenzó a grabarse.' } };
+    return { status: 409, body: { error: 'Esta pregunta ya comenzó a grabarse o la nueva ya está en el sorteo.' } };
   }
   const fechaCambioPregunta = new Date().toISOString();
   const transaction = await ref.transaction((current) => {
@@ -328,13 +330,17 @@ async function cambiarPreguntaGrabacion(instrumento, docente, cuerpo) {
     const activeReservations = Object.values((active && active.reservas) || {})
       .some((item) => Number(item && item.posicion) === posicion);
     if (!active || active.intentoId !== intentoId || active.estado !== 'en_curso'
-      || !Array.isArray(active.preguntas) || active.cambiada != null
+      || !Array.isArray(active.preguntas)
       || (active.respuestas && active.respuestas[posicion]) || activeReservations
       || Number(active.preguntas[posicion]) === nuevaPregunta
       || active.preguntas.map(Number).includes(nuevaPregunta)) return;
     active.preguntas = active.preguntas.map(Number);
+    const descartadas = Array.isArray(active.descartadas) ? active.descartadas.map(Number) : [];
+    if (!descartadas.includes(active.preguntas[posicion])) descartadas.push(active.preguntas[posicion]);
+    active.descartadas = descartadas;
     active.preguntas[posicion] = nuevaPregunta;
     active.cambiada = posicion;
+    active.cambiosPregunta = (Number(active.cambiosPregunta) || 0) + 1;
     active.fechaCambioPregunta = fechaCambioPregunta;
     return active;
   }, undefined, false);
@@ -981,18 +987,7 @@ module.exports = async function handler(req, res) {
         if (cambiada !== null && (!Number.isInteger(cambiada) || cambiada < 0 || cambiada > 6)) {
           return res.status(400).json({ error: 'El cambio de pregunta no es válido.' });
         }
-        const diferencias = preguntas.reduce((out, pregunta, posicion) => {
-          if (pregunta !== preguntasAnteriores[posicion]) out.push(posicion);
-          return out;
-        }, []);
-        const cambioAnterior = existente.cambiada == null ? null : Number(existente.cambiada);
-        const cambioInvalido = cambioAnterior !== null
-          ? (diferencias.length > 0 || cambiada !== cambioAnterior)
-          : (diferencias.length > 1 || (diferencias.length === 1 && cambiada !== diferencias[0])
-            || (diferencias.length === 0 && cambiada !== null));
-        if (cambioInvalido) {
-          return res.status(400).json({ error: 'Solo se puede cambiar una pregunta durante toda la interrogación.' });
-        }
+        // Los cambios de pregunta no tienen tope: basta con que el sorteo siga siendo válido.
         cambios = {
           preguntas,
           puntajes,

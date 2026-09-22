@@ -293,19 +293,17 @@
     var button = $('btnCambiarPreguntaAudio');
     var status = $('estadoCambioPreguntaAudio');
     if (!button || !status) return;
-    var used = Boolean(flow && flow.data.cambiada != null);
+    var changes = flow ? Number(flow.data.cambiosPregunta) || 0 : 0;
     var position = flow ? flow.position : -1;
     var answered = Boolean(flow && flow.data.respuestas && flow.data.respuestas[position]);
     var recordingNow = Boolean(recorder && recorder.state === 'recording');
     var allowed = Boolean(flow && !flow.editSingle && flow.data.estado === 'en_curso'
-      && !used && !answered && !localBlob && !recordingNow && position >= 0 && position < 7);
+      && !answered && !localBlob && !recordingNow && position >= 0 && position < 7);
     button.disabled = !allowed;
-    button.textContent = used ? 'Cambio utilizado' : 'Cambiar esta pregunta';
-    status.textContent = used
-      ? 'Ya se utilizó el único cambio disponible.'
-      : (flow && flow.editSingle
-        ? 'No se cambia la pregunta al corregir una grabación.'
-        : 'Disponible una vez, antes de grabar.');
+    button.textContent = 'Cambiar esta pregunta';
+    status.textContent = flow && flow.editSingle
+      ? 'No se cambia la pregunta al corregir una grabación.'
+      : ('Sin límite, antes de grabar.' + (changes ? ' Cambios hechos: ' + changes + '.' : ''));
   }
 
   function updateNoAnswerControl() {
@@ -562,11 +560,12 @@
 
   async function changeAudioQuestion() {
     if (!flow || flow.editSingle || flow.data.estado !== 'en_curso'
-      || flow.data.cambiada != null || localBlob || (recorder && recorder.state === 'recording')) return;
+      || localBlob || (recorder && recorder.state === 'recording')) return;
     var position = flow.position;
     if (flow.data.respuestas && flow.data.respuestas[position]) return;
-    if (!confirm('¿Cambiar esta pregunta? El sorteo elegirá otra y no podrás cambiar nuevamente.')) return;
-    var next = randomQuestionExcluding(flow.data.preguntas);
+    if (!confirm('¿Cambiar esta pregunta? El sorteo elegirá otra.')) return;
+    var next = randomQuestionExcluding((flow.data.preguntas || []).concat(flow.data.descartadas || []))
+      || randomQuestionExcluding(flow.data.preguntas);
     if (!next) return setNotice('avisoAudio', 'No hay otra pregunta disponible.', 'err');
     $('btnCambiarPreguntaAudio').disabled = true;
     try {
@@ -580,7 +579,7 @@
       flow.data = result.grabacion;
       state.grabaciones[flow.student.id] = result.grabacion;
       renderFlow();
-      setNotice('avisoAudio', 'Pregunta cambiada. El único cambio disponible ya fue utilizado.', 'ok');
+      setNotice('avisoAudio', 'Pregunta cambiada. Puedes volver a cambiarla si hace falta.', 'ok');
     } catch (error) {
       setNotice('avisoAudio', error.message, 'err');
       updateQuestionChangeControls();

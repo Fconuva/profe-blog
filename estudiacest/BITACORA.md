@@ -8,6 +8,22 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-22, interrogaciones NM3 y NM4: cambio de pregunta sin tope
+
+Francisco pidió que el cambio de pregunta en `/nm3/interrogacion-un-lugar-sin-limites/calificar/`
+deje de estar limitado a una vez. Como NM3 y NM4 comparten API y controlador, el cambio aplica a
+las dos interrogaciones.
+
+- `api/interrogacion.js`: `cambiar-pregunta-grabacion` ya no rechaza el segundo cambio. Sigue
+  rechazando una pregunta repetida y el cambio de una posición que ya empezó a grabarse. El
+  registro suma `cambiosPregunta` y guarda `descartadas`; `cambiada` conserva la última posición
+  cambiada, por compatibilidad. La edición de una nota en vivo ya no exige que difiera una sola
+  pregunta.
+- `assets/interrogacion-audio.js` y los dos paneles `calificar/`: el botón queda siempre
+  disponible antes de grabar, y el sorteo evita las preguntas descartadas mientras quede otra.
+- `REGLAS.md` y `scripts/audit-interrogaciones.js` quedaron con la regla nueva.
+  `node scripts/audit-interrogaciones.js` pasa.
+
 ## 2026-09-22, NM4 Unidad 3 Clase 5: retiro del video generado
 
 - Por indicación de Francisco se retiró la recreación audiovisual creada para

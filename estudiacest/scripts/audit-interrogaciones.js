@@ -57,7 +57,7 @@ function auditPanel(config) {
   assert(panelHtml.includes('Interrogar manual'), `${config.label}: falta la interrogación manual.`);
   assert(panelHtml.includes('Interrogar con audio'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
-  assert(panelHtml.includes('id="btnCambiarPreguntaAudio"'), `${config.label}: falta el cambio único en audio.`);
+  assert(panelHtml.includes('id="btnCambiarPreguntaAudio"'), `${config.label}: falta el cambio de pregunta en audio.`);
   assert(panelHtml.includes('id="btnNoSabeAudio"'), `${config.label}: falta avanzar cuando el estudiante no sabe.`);
   assert(panelHtml.includes('No sabe · siguiente'), `${config.label}: la acción sin respuesta no es clara.`);
   assert(panelHtml.includes('id="estadoCambioPreguntaAudio"'), `${config.label}: falta informar el estado del cambio.`);
@@ -89,7 +89,8 @@ function auditPanel(config) {
   assert(panelHtml.includes('firebase-storage-compat.js'), `${config.label}: falta Firebase Storage.`);
   assert(panelHtml.includes('puede analizarse con apoyo tecnológico'), `${config.label}: falta informar el uso de apoyo tecnológico.`);
   assert(panelHtml.includes('window.crypto.getRandomValues'), `${config.label}: el sorteo no usa azar criptográfico.`);
-  assert(panelHtml.includes('una sola'), `${config.label}: falta el límite de cambio.`);
+  assert(panelHtml.includes('las veces que haga falta'), `${config.label}: falta informar que el cambio de pregunta no tiene tope.`);
+  assert(!panelHtml.includes('actual.cambiada !== null) return'), `${config.label}: el panel en vivo aún bloquea el segundo cambio.`);
   assert(panelHtml.includes('Guardar nota'), `${config.label}: falta la acción de guardado.`);
   for (const manualEditingContract of [
     'id="borradorManual"',
@@ -208,8 +209,8 @@ for (const apiFile of ['api/interrogacion.js']) {
     "accion === 'auditar-firebase'",
     'notaRef.transaction((actual) => actual ? undefined : registro',
     'revisionRegistro(actual) !== revisionEsperada',
-    'diferencias.length > 1',
-    'cambioAnterior !== null',
+    'active.cambiosPregunta = (Number(active.cambiosPregunta) || 0) + 1',
+    'active.descartadas = descartadas',
     'fechaActualizacion',
     'crypto.randomUUID()',
     'Este estudiante ya fue tomado desde otro panel.',
@@ -270,7 +271,8 @@ assert(
   'Controlador de audio: Continuar grabación aún depende de la nómina que excluye registros iniciados.'
 );
 assert(audioController.includes('window.crypto.getRandomValues'), 'Controlador de audio: el sorteo no usa azar criptográfico.');
-assert(audioController.includes('flow.data.cambiada != null'), 'Controlador de audio: no bloquea el segundo cambio de pregunta.');
+assert(!audioController.includes('flow.data.cambiada != null'), 'Controlador de audio: aún bloquea el segundo cambio de pregunta.');
+assert(audioController.includes('flow.data.descartadas'), 'Controlador de audio: el sorteo del cambio no evita las preguntas descartadas.');
 assert(audioController.includes('gradeFromScore(total)'), 'Controlador de audio: no usa la conversión de logro 0-7 a nota 1-7.');
 assert(audioController.includes('Respuesta registrada:'), 'Controlador de audio: no muestra la evidencia revisada de cada respuesta.');
 for (const contract of [

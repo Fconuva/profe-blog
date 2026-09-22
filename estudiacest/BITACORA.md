@@ -8,6 +8,22 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-22, NM4 Unidad 3 Clase 5: retiro del video generado
+
+- Por indicación de Francisco se retiró la recreación audiovisual creada para
+  la entrevista laboral: pantalla, MP4, subtítulos, póster, guion generado y
+  script de construcción. También se quitaron sus entradas del manifiesto.
+- La entrevista escrita de 16 intercambios permanece como lectura dramatizada
+  en parejas (6 min) y análisis (9 min). La clase pasa a 19 pantallas y conserva
+  los 90 minutos, los seis casos y el video de Comedy Central en la motivación.
+- Auditoría focal y `npm run build` aprobados. Navegación de los seis casos y
+  ausencia de desborde comprobadas en 390, 1440 y 3840 px. Commit `28fac78f`
+  enviado a `origin/main`; deploy seguro `dpl_CCzcQ6stcdPmA7maxVxtJzsXcsBm`
+  en estado `READY`. El HTML público coincide en SHA-256 con la fuente local;
+  MP4, VTT y póster retirados responden HTTP 404 en producción.
+
+---
+
 ## 2026-09-22, NM4 Unidad 3 Clase 5: motivación, entrevista y casos TP
 
 - Se incorporó en la motivación el video «Entrevista Laboral - Presta a la

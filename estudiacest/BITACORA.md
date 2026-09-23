@@ -8,6 +8,37 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM3 Unidad 3 Clase 3: 3 videos modelo reproducibles, rodaje con 5 temas escolares y plenario interactivo
+
+- Por requerimiento de Francisco se actualizó integralmente la Clase 3 de 3° Medio («Quién habla y para quién», `nm3/u3-clase3-enunciador-audiencia/index.html`):
+  1. **Los 3 videos de ejemplo en la motivación (Slide 1):**
+     - Se generaron los 3 videos modelados con cortes dinámicos, uniforme oficial de Salesianos Talca (vestón azul marino con insignia bordada, corbata, suéter y pantalón gris) y locución chilena natural (`es-CL-LorenzoNeural` y `es-CL-CatalinaNeural`) a 720x1280 (30 fps) con subtítulos WebVTT y pósters correspondientes:
+       - **Modelo 1 (Vlogger Escolar):** Multicámara estilo Reels/TikTok (`video-situacion1-vlogger.mp4`, 22 seg), lenguaje juvenil coloquial («cabros», «bacán») y B-roll de la sala.
+       - **Modelo 2 (Estudiante Testigo):** Plano medio íntimo en sillón puff del CRA (`video-situacion2-testigo.mp4`, 19 seg), tono reflexivo y vivencial («por fin un lugar sin bulla»).
+       - **Modelo 3 (Comunicado Oficial):** Plano formal en pasillo de Inspectoría General (`video-situacion3-oficial.mp4`, 21 seg), tono institucional, solemne y protocolar.
+     - Switcher interactivo de pestañas en Slide 1 (`#tab-btn-1`, `#tab-btn-2`, `#tab-btn-3`) que actualiza dinámicamente el reproductor de video en el smartphone mockup, la etiqueta en vivo y la radiografía del enunciador correspondiente.
+  2. **Rodaje en terreno con los 5 temas escolares (Slide 6):**
+     - Cada grupo (individual, parejas o tríos) elige **1 de los 5 temas del colegio**:
+       - 1. 🚽 **Baños:** Higiene, insumos (jabón y toallas) y cuidado de instalaciones.
+       - 2. 🍲 **JUNAEB:** Casino escolar, horarios de almuerzo y convivencia en el comedor.
+       - 3. 🏀 **Gimnasio:** Canchas techadas en recreos, préstamo de balones y deportes.
+       - 4. ⚙️ **Talleres General:** Seguridad TP, EPP obligatorio, herramientas y pañol.
+       - 5. 🤝 **PIE:** Inclusión escolar, sala de apoyo, tutorías y empatía.
+     - Y eligen **1 de las 3 versiones de enunciador** (Oficial, Vlogger o Testigo) para grabar un video de 15 a 45 segundos en terreno escolar durante 20 minutos.
+  3. **Módulo de subida de video grupal (Slide 7):**
+     - Admite grabaciones de hasta 1 GB (1024 MB) en MP4/MOV/WEBM.
+     - Selector de tema (`tema-select`) y de versión (`version-select`).
+     - Almacenamiento directo en Firebase Storage (`videos_nm3/u3_clase3/{curso}/{timestamp}__{tema}__{version}__{integrantes}__{safeName}`) con metadata personalizada y retroalimentación inmediata.
+  4. **Plenario Docente en vivo (Slide 8):**
+     - Dispone desde el primer instante de los **3 modelos base** listos para ser proyectados en pantalla completa en el proyector del aula.
+     - Renderiza en tiempo real los videos recibidos de los estudiantes mostrando el badge verde de tema (`badge-tema`), el badge de versión y el botón de proyección directa.
+  5. **Verificación técnica:**
+     - `npm run build`: APROBADO (27 auditorías pasando, 237 recursos críticos presentes).
+     - Validación Playwright completa en servidor local: 10 diapositivas, navegación limpia, cambio de pestañas de video y sin errores de consola.
+     - Cumplimiento de diseño responsive sin desbordes horizontales en 390px y 1440px.
+
+---
+
 ## 2026-09-23, NM4: planificación de cierre, 4 tareas de octubre y semanas PAES de noviembre
 
 - Solicitud de Francisco: en NM4 figuraba una sola tarjeta disponible para los estudiantes; restan 4 tareas evaluativas para el cierre de año y en noviembre las semanas 1 y 2 se destinan íntegra y exclusivamente para Ensayos PAES de Competencia Lectora.

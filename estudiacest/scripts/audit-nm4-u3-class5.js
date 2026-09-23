@@ -36,11 +36,22 @@ const unitCards = [...unitGrid.matchAll(/<article class="([^"]*\bu3-card\b[^"]*)
   .map(match => match[1].split(/\s+/));
 expect(articleDepth === 0 && !articleUnderflow, 'La portada NM4 tiene etiquetas <article> desbalanceadas en la Unidad 3.');
 expect(maxArticleDepth === 1, 'La portada NM4 tiene tarjetas de la Unidad 3 anidadas entre sí.');
-expect(unitCards.length === 8, `Se esperaban 8 tarjetas en la Unidad 3 y se encontraron ${unitCards.length}.`);
+expect(unitCards.length === 13, `Se esperaban 13 tarjetas cronológicas en la Unidad 3 y se encontraron ${unitCards.length}.`);
 expect(unitCards.filter(classes => classes.includes('activa')).length === 1, 'Debe existir una sola tarjeta marcada como clase actual.');
-expect((portal.match(/Del 10 de agosto al 5 de octubre\./g) || []).length === 1, 'El rango vigente de la Unidad 3 debe aparecer una sola vez.');
-expect(!portal.includes('Del 10 de agosto al 28 de septiembre.'), 'La portada conserva el rango antiguo de la Unidad 3.');
-expect(!portal.includes('Lunes 7 de septiembre · 4°D martes 8'), 'La Clase 5 conserva su fecha antigua.');
+expect(portal.includes('Clases y cierre de la unidad, en orden de fecha.'), 'La portada no explica el orden cronológico de la Unidad 3.');
+expect(!portal.includes('Cierre Semestral: 4 Tareas de Octubre'), 'La portada conserva la planificación de cierre descartada.');
+expect((portal.match(/<h3>Actividad por planificar<\/h3>/g) || []).length === 3, 'Deben quedar tres fechas de octubre sin contenido inventado.');
+[
+  'Martes 22 de septiembre · 90 min',
+  'Lunes 28 de septiembre · 90 min',
+  'Lunes 5 de octubre · 90 min',
+  'Lunes 12 de octubre · 90 min',
+  'Lunes 19 de octubre · 90 min',
+  'Lunes 26 y martes 27 de octubre',
+  'Lunes 2 de noviembre',
+  'Lunes 9 de noviembre'
+].forEach(date => expect(portal.includes(date), `Falta la fecha «${date}» en la secuencia NM4.`));
+expect((portal.match(/href="\/paes\/"/g) || []).length >= 2, 'Las dos jornadas de noviembre no enlazan el portal PAES.');
 
 const slides = [...page.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(match => match[1]);
 expect(slides.length === 19, `Se esperaban 19 pantallas y se encontraron ${slides.length}.`);
@@ -194,7 +205,7 @@ expect(class5Start >= 0, 'La portada NM4 no contiene la Clase 5.');
 const class5Card = class5Start >= 0 ? portal.slice(portal.lastIndexOf('<article', class5Start), portal.indexOf('</article>', class5Start) + 10) : '';
 expect(class5Card.includes('u3-card activa'), 'La Clase 5 no está marcada como actual.');
 expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta actual no enlaza la clase.');
-expect(class5Card.includes('21 de septiembre'), 'La tarjeta no tiene la fecha del 21 de septiembre.');
+expect(class5Card.includes('22 de septiembre'), 'La tarjeta no tiene la fecha del 22 de septiembre.');
 
 const requiredManifest = [pagePath, ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)];
 requiredManifest.forEach(file => expect(manifest.criticalFiles.some(entry => entry.path === file), `El manifiesto no protege ${file}.`));

@@ -8,6 +8,58 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM4 Clase 6: versión mecánica del informe técnico para 4°A y 4°B
+
+Francisco decidió que el informe de la línea de 500 kV queda para 4°C (Electricidad) y 4°E (Electrónica). Para 4°A (Mecánica Industrial) y 4°B (Mecánica Automotriz) se pidió otra versión, porque ese caso no les sirve.
+
+**Rutas nuevas**
+- `/nm4/u3-clase6-informe-mecanica/`: 14 pantallas, 90 minutos. Mantiene el lenguaje simple de la versión eléctrica.
+- `/nm4/u3-clase6-informe-mecanica/informe/`: 12 páginas, 27 campos.
+- `/nm4/u3-clase6-informe-mecanica/revisar/`: panel docente.
+
+**El caso**
+- Inspección de seguridad y mantenimiento del taller de una planta procesadora de fruta del Maule (ficticia), antes de la temporada.
+- Equipos: esmeril EB-01, compresor CP-01, elevador de dos columnas EL-01, extintor EX-02 y grúa horquilla GH-02. La grúa queda como hallazgo de conformidad.
+- Inventario con cálculo de la próxima mantención: CP-01 venció el 10-09.
+- Plano con ejes A–E × 1–4 en vez de coordenadas UTM.
+- Hallazgos:
+  - H1 (esmeril) redactado como modelo.
+  - H2 (extintor obstruido) a medio completar.
+  - H3 lo elige el estudiante según su especialidad: CP-01 para Industrial, EL-01 para Automotriz.
+- Fotos ilustrativas de Wikimedia Commons con licencia libre. Los créditos están en `assets/fotos.js`.
+
+**Criterios verificados en la fuente**
+- DS 594: arts. 7, 38, 47 y 53.
+- DS 44/2024: art. 10, vigente desde el 1-feb-2025.
+- DFL 1/2007: art. 12, licencia clase D.
+
+**Sin cifra oficial chilena** (se citan como referencia internacional, y así se declara)
+- Los 3 mm y 6 mm del esmeril: OSHA 1910.215.
+- Compresor: OSHA 1910.169. El DS 10/2012 no aplica, porque solo cubre vapor.
+- Elevador: ALI y HSE HSG261.
+
+**API**
+- `api/_informe-tecnico-nm4.js` ahora tiene versiones (`?version=electrica|mecanica`).
+- Cursos por versión:
+  - eléctrica: 4CTP, 4ETP y PRUEBA;
+  - mecánica: 4ATP, 4BTP y PRUEBA.
+- Un RUT de otro curso recibe 403 con el enlace a su propio informe. Probado en ambos sentidos con RUN reales, sin imprimirlos.
+- Datos en `plataforma_nm4/informe_mecanica_2026/{curso}/{n}`.
+- El 4°D no entra en ninguna versión: sigue con el Anuario.
+
+**Tarjeta 6 del portal**
+- Ofrece las dos versiones por curso.
+- Solo se confirmó ese bloque de la tarjeta. La reorganización cronológica de `nm4/index.html` y de `audit-nm4-u3-class5.js` que otro agente tenía en curso se dejó sin tocar en su copia de trabajo.
+
+**Validación**
+- `audit-nm4-u3-class6` cubre las dos versiones.
+- Contrato de entrega: 46 clases. `npm run build`: 250 recursos.
+- Playwright local con base en memoria: ingreso, autoguardado, recarga, entrega confirmada, 409 tardío, solo lectura y panel.
+- Sin desbordes en 390 px ni en tablet.
+- Deploy pendiente de autorización.
+
+---
+
 ## 2026-09-23, auditoría de la Clase 6 NM4: lenguaje simple y publicación pendiente
 
 Se revisó la Clase 6 y el informe técnico después de que Francisco advirtiera que la experiencia se había roto y que las explicaciones eran demasiado complejas.

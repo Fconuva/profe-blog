@@ -65,6 +65,33 @@ expect(panel.includes('noindex') && panel.includes('Authorization'), 'El panel d
   expect(fs.existsSync(path.join(root, base, file)), `Imagen enlazada inexistente: ${file}.`);
 });
 
+// Versión mecánica (4°A y 4°B): mismos requisitos, su propio caso.
+const mbase = 'nm4/u3-clase6-informe-mecanica/';
+const mdeck = read(mbase + 'index.html');
+const mstudent = read(mbase + 'informe/index.html');
+const mrenderer = read(mbase + 'informe/informe.js');
+const mpanel = read(mbase + 'revisar/index.html');
+const MCAMPOS = require(path.join(root, mbase, 'informe/campos.js'));
+const mslides = [...mdeck.matchAll(/<section class="slide" data-title="([^"]+)"/g)].map(m => m[1]);
+const mminutes = [...mdeck.matchAll(/<span class="time">(\d+) min<\/span>/g)].reduce((sum, m) => sum + Number(m[1]), 0);
+expect(mslides.length === 14 && mminutes === 90, `La clase mecánica tiene ${mslides.length} pantallas y ${mminutes} minutos.`);
+MCAMPOS.questions.forEach(q => {
+  const count = (mrenderer.match(new RegExp(`field\\('${q.id}'`, 'g')) || []).length;
+  expect(count === 1, `Mecánica: el campo ${q.id} aparece ${count} veces en el informe.`);
+});
+expect(MCAMPOS.activity.sessionId !== CAMPOS.activity.sessionId, 'Las dos versiones comparten sessionId.');
+expect(mstudent.includes('version=mecanica') && mpanel.includes('version=mecanica'), 'La versión mecánica no llama a su API.');
+expect(!mstudent.includes("'informeNM4.rut'"), 'La versión mecánica comparte la sesión con la eléctrica.');
+expect(portal.includes('/nm4/u3-clase6-informe-mecanica/informe/'), 'La tarjeta de la Clase 6 no enlaza al informe mecánico.');
+expect(/electrica:[\s\S]*?cursos: \['4CTP', '4ETP', 'PRUEBA'\]/.test(api) && /mecanica:[\s\S]*?cursos: \['4ATP', '4BTP', 'PRUEBA'\]/.test(api), 'La API no separa los cursos de cada versión.');
+['m1.jpg', 'm2.jpg', 'm3.jpg', 'm4.jpg', 'fotos.js', 'qr-informe.svg']
+  .forEach(file => expect(fs.existsSync(path.join(root, mbase, 'assets', file)), `Mecánica: falta el recurso ${file}.`));
+const plan = { cp01: ['2026-06-12', 90, '2026-09-10'], eb01: ['2026-08-03', 60, '2026-10-02'] };
+Object.entries(plan).forEach(([k, [from, days, to]]) => {
+  const d = new Date(from + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + days);
+  expect(d.toISOString().slice(0, 10) === to, `Mecánica: la próxima mantención de ${k} no cuadra (${d.toISOString().slice(0, 10)}).`);
+});
+
 // Coherencia del caso: la ocupación O-1 queda a 5,2 m del eje E-21 a E-22.
 const E21 = [737905, 5891700], E22 = [738160, 5891330], O1 = [738023, 5891538];
 const L = Math.hypot(E22[0] - E21[0], E22[1] - E21[1]);
@@ -76,4 +103,4 @@ if (failures.length) {
   console.error('Clase 6 NM4 con problemas:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`Clase 6 NM4 verificada: ${slides.length} pantallas, ${minutes} min, ${CAMPOS.questions.length} campos, nómina de ${ROWS.length}.`);
+console.log(`Clase 6 NM4 verificada: eléctrica ${slides.length} pantallas y ${CAMPOS.questions.length} campos; mecánica ${mslides.length} pantallas y ${MCAMPOS.questions.length} campos; nómina de ${ROWS.length}.`);

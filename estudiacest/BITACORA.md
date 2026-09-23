@@ -8,6 +8,17 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM3 Unidad 3 Clase 3: reestructuración pedagógica canónica e ilustraciones IA
+
+- Reestructuración completa de la presentación de la Clase 3 («Quién habla y para quién») siguiendo la estructura pedagógica de aula:
+  - INICIO: Motivación con 3 publicaciones de redes sociales ilustradas con imágenes IA (cuenta personal, creador de contenido y comunicado institucional), Presentación de objetivo de clase limpio, Activación de conocimientos previos con tres preguntas clave («¿Quién habla?», «¿A quién se dirige?», «¿Qué espera que ocurra?») y Conceptos clave (Autor real, Enunciador, Audiencia, Propósito, Registro) con etiqueta destacada «Anotar en el cuaderno».
+  - DESARROLLO: Explicación de la actividad con ejemplo modelado de muestra técnica escolar (4 datos objetivos invariables) y actividad en parejas con matriz para el cuaderno y pauta de monitoreo docente.
+  - CIERRE: Revisión en parejas mediante prueba a ciegas con justificación de 2 marcas lingüísticas, retroalimentación en plenario y sistematización con transferencia laboral técnica (diferenciación de registro con compañeros de faena, clientes y jefatura técnica) con ticket de salida de 3 líneas.
+- Generadas e integradas 3 imágenes fotográficas de alta resolución con IA para las publicaciones de la motivación en `nm3/u3-clase3-enunciador-audiencia/img/`.
+- Verificación: `npm run build` aprobado sin errores, pruebas visuales en 1440x900 y 390x844 (móvil) con 0 desbordes horizontales comprobados.
+
+---
+
 ## 2026-09-22, interrogaciones NM3 y NM4: cambio de pregunta sin tope
 
 Francisco pidió que el cambio de pregunta en `/nm3/interrogacion-un-lugar-sin-limites/calificar/`

@@ -12,15 +12,15 @@
   // max: caracteres máximos que acepta el servidor.
   const questions = [
     { id: 'emision', section: 'portada', type: 'date', label: 'Fecha de emisión', max: 10 },
-    { id: 'especialidad', section: 'portada', type: 'select', label: 'Especialidad del inspector o inspectora', options: ESPECIALIDADES, max: 40 },
+    { id: 'especialidad', section: 'portada', type: 'select', label: 'Tu especialidad', options: ESPECIALIDADES, max: 40 },
     { id: 'resumen', section: 'resumen', type: 'textarea', label: 'Resumen ejecutivo', max: 1400, rows: 6 },
     { id: 'obj2', section: 'objetivos', type: 'text', label: 'Objetivo específico 2', max: 220 },
     { id: 'obj3', section: 'objetivos', type: 'text', label: 'Objetivo específico 3', max: 220 },
     { id: 'o1Superficie', section: 'ficha', type: 'number', label: 'Superficie de O-1 (m²)', max: 8 },
-    { id: 'construccion', section: 'ficha', type: 'text', label: 'Construcción principal', max: 120 },
+    { id: 'construccion', section: 'ficha', type: 'text', label: 'Construcción más importante', max: 120 },
     { id: 'superficieTotal', section: 'ficha', type: 'number', label: 'Superficie construida total (m²)', max: 8 },
     { id: 'distanciaMin', section: 'ficha', type: 'number', label: 'Distancia mínima al eje (m)', max: 8 },
-    { id: 'estado', section: 'ficha', type: 'select', label: 'Estado general del sector', options: ESTADOS, max: 60 },
+    { id: 'estado', section: 'ficha', type: 'select', label: 'Nivel de atención del sector', options: ESTADOS, max: 60 },
     { id: 'f3Desc', section: 'fotos', type: 'textarea', label: 'Descripción técnica de la Foto 3', max: 700, rows: 4 },
     { id: 'f4Este', section: 'fotos', type: 'number', label: 'Foto 4 · coordenada Este (m)', max: 10 },
     { id: 'f4Norte', section: 'fotos', type: 'number', label: 'Foto 4 · coordenada Norte (m)', max: 10 },
@@ -31,13 +31,13 @@
     { id: 'h2Riesgo', section: 'hallazgos', type: 'select', label: 'Hallazgo 2 · nivel de riesgo', options: RIESGOS, max: 10 },
     { id: 'h3Titulo', section: 'hallazgos', type: 'text', label: 'Hallazgo 3 · título', max: 160 },
     { id: 'h3Riesgo', section: 'hallazgos', type: 'select', label: 'Hallazgo 3 · nivel de riesgo', options: RIESGOS, max: 10 },
-    { id: 'h3Foto', section: 'hallazgos', type: 'select', label: 'Hallazgo 3 · evidencia', options: FOTOS, max: 30 },
+    { id: 'h3Foto', section: 'hallazgos', type: 'select', label: 'Hallazgo 3 · foto que lo demuestra', options: FOTOS, max: 30 },
     { id: 'h3Condicion', section: 'hallazgos', type: 'textarea', label: 'Hallazgo 3 · condición', max: 700, rows: 3 },
     { id: 'h3Criterio', section: 'hallazgos', type: 'textarea', label: 'Hallazgo 3 · criterio', max: 600, rows: 3 },
     { id: 'h3Efecto', section: 'hallazgos', type: 'textarea', label: 'Hallazgo 3 · efecto', max: 600, rows: 3 },
     { id: 'h3Recomendacion', section: 'hallazgos', type: 'textarea', label: 'Hallazgo 3 · recomendación', max: 600, rows: 3 },
     { id: 'conclusion', section: 'conclusiones', type: 'textarea', label: 'Conclusión', max: 1400, rows: 6 },
-    { id: 'declaracion', section: 'firma', type: 'select', label: 'Declaración de veracidad', options: ['Declaro que este informe se basa solo en la evidencia registrada'], max: 80 }
+    { id: 'declaracion', section: 'firma', type: 'select', label: 'Confirmación final', options: ['Declaro que este informe se basa solo en la evidencia registrada'], max: 80 }
   ];
 
   const activity = {

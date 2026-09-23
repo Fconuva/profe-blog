@@ -89,7 +89,14 @@
       .toc-nav ol{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
     }
     @media (max-width:900px){ .top .btn .t{display:none} .prog{order:5;flex-basis:100%} .top .id{flex-basis:140px} }
-    @media (max-width:560px){ .toc-nav ol{grid-template-columns:1fr} .save{order:6} }
+    @media (max-width:560px){
+      .toc-nav{padding:10px 12px}
+      .toc-nav h2{margin-bottom:6px}
+      .toc-nav ol{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+      .toc-nav li{flex:0 0 172px;scroll-snap-align:start}
+      .toc-nav a{height:100%;border:1px solid var(--line);background:var(--soft)}
+      .save{order:6}
+    }
     @media print{ .top,.toc-nav,.drawer,.deliver,.banner,.gate{display:none!important} .layout{display:block;padding:0} }
   </style>
 </head>
@@ -101,7 +108,7 @@
     <div class="gate-card">
       <p style="margin:0 0 6px;color:var(--teal);font-weight:900;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase">NM4 · Clase 6 · Escribir en el trabajo</p>
       <h1>Informe técnico de inspección</h1>
-      <p>Completa las partes marcadas en amarillo. Todo se guarda solo.</p>
+      <p>Completa los recuadros amarillos. Tu avance se guarda automáticamente.</p>
       <form id="rutForm" novalidate>
         <label for="rut">Tu RUT</label>
         <input id="rut" name="rut" autocomplete="off" inputmode="text" placeholder="12.345.678-9" maxlength="12" required>
@@ -133,11 +140,11 @@
         <ol id="tocList"></ol>
       </nav>
       <main>
-        <p class="banner" id="banner">Las partes <b>en amarillo</b> las escribes tú. Las demás ya están redactadas: léelas, porque te sirven de modelo. Los datos están en la <b>libreta de terreno</b>.</p>
+        <p class="banner" id="banner">Escribe solo en los recuadros <b>amarillos</b>. Busca los datos en la <b>Libreta</b> y usa los textos listos como ejemplo.</p>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
           <h2>Entregar el informe</h2>
-          <p id="deliverText">Puedes entregar cuando quieras. Después de entregar ya no se puede editar.</p>
+          <p id="deliverText">Revisa tu trabajo antes de entregar. Después ya no podrás editarlo.</p>
           <ul id="missingList"></ul>
           <button class="btn" type="button" id="submit">Entregar informe</button>
           <p class="error" id="deliverError" role="alert"></p>
@@ -149,7 +156,7 @@
       <button class="btn ghost close" type="button" id="closeLib">Cerrar</button>
       <h2>Libreta de terreno</h2>
       <div id="libreta"></div>
-      <p class="tip">Estas notas son informales, como las escribe un inspector apurado en terreno. En el informe se pasan a <b>registro formal</b>: sin «como», sin «pal», con cifras exactas y unidades.</p>
+      <p class="tip">Estas son notas rápidas de terreno. Pásalas al informe con palabras claras, cifras exactas y unidades.</p>
     </aside>
   </div>
 
@@ -173,7 +180,7 @@
     const KEY = 'informeNM4.rut';
     const $ = id => document.getElementById(id);
     const SECTION_PAGES = { portada: 'p1', resumen: 'p3', objetivos: 'p4', ficha: 'p6', fotos: 'p9', hallazgos: 'p11', conclusiones: 'p12', firma: 'p12' };
-    const PAGE_TITLES = [['p1', 'Portada'], ['p2', 'Control del documento'], ['p3', '00 Resumen ejecutivo'], ['p4', '01–02 Introducción y objetivos'], ['p5', '03–04 Metodología y criterios'], ['p6', '05 Ficha técnica'], ['p7', '06 Ubicación y croquis'], ['p8', '07 Fotos 1 y 2'], ['p9', '07 Fotos 3 y 4'], ['p10', '08 Hallazgo 1 (modelo)'], ['p11', '08 Hallazgos 2 y 3'], ['p12', '09 Conclusiones y firmas'], ['p13', 'Anexo A']];
+    const PAGE_TITLES = [['p1', 'Portada'], ['p2', 'Datos del documento'], ['p3', 'Resumen'], ['p4', 'Objetivos'], ['p5', 'Cómo se hizo'], ['p6', 'Datos del sector'], ['p7', 'Ubicación'], ['p8', 'Fotos 1 y 2'], ['p9', 'Fotos 3 y 4'], ['p10', 'Hallazgo modelo'], ['p11', 'Tus hallazgos'], ['p12', 'Conclusión y firma'], ['p13', 'Fuentes']];
 
     let rut = '';
     let student = null;
@@ -226,7 +233,7 @@
       delivered = !!(attempt && attempt.completada === true && attempt.submitted === true);
       $('gate').hidden = true; $('app').hidden = false;
       $('topName').textContent = student.nombre;
-      $('topCourse').textContent = `${courseName(student.curso)} · Informe ITM-TSA-INS-S04`;
+      $('topCourse').textContent = `${courseName(student.curso)} · Clase 6`;
       $('libreta').innerHTML = R.LIBRETA;
       draw();
       if (dirty) scheduleSave(200);
@@ -244,7 +251,7 @@
       updateProgress();
       if (delivered) {
         $('banner').className = 'banner done';
-        $('banner').innerHTML = '<b>Entrega confirmada.</b> Este es tu informe tal como quedó guardado. Ya no se puede editar.';
+        $('banner').innerHTML = '<b>Entrega confirmada.</b> Este es el informe que recibió el profesor.';
         $('deliverBox').hidden = true;
         setSave('Entregado', 'ok');
       }
@@ -257,7 +264,7 @@
       try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers })); } catch (_) {}
       R.refreshBindings($('report'), answers);
       updateProgress();
-      setSave('Cambios sin guardar');
+      setSave('Sin guardar');
       scheduleSave(1800);
     }
 
@@ -278,11 +285,11 @@
         return `<li><a href="#${id}"><span>${title}</span>${st}</a></li>`;
       }).join('');
       $('missingList').innerHTML = missing.length
-        ? missing.slice(0, 8).map(q => `<li>${q.label}</li>`).join('') + (missing.length > 8 ? `<li>y ${missing.length - 8} más</li>` : '')
+        ? missing.slice(0, 5).map(q => `<li>${q.label}</li>`).join('') + (missing.length > 5 ? `<li>y ${missing.length - 5} más</li>` : '')
         : '<li>Todo completo. Revisa la redacción antes de entregar.</li>';
       $('deliverText').textContent = missing.length
-        ? `Te faltan ${missing.length} de ${TOTAL} partes. Puedes entregar igual, pero lo que falte no se evalúa.`
-        : 'Completaste todas las partes. Después de entregar ya no se puede editar.';
+        ? `Faltan ${missing.length} partes. Puedes entregar, pero solo se evaluará lo que completaste.`
+        : 'Todo está completo. Revisa una vez más antes de entregar.';
       $('submit').textContent = `Entregar informe (${score} de ${TOTAL})`;
     }
 
@@ -302,12 +309,12 @@
       setSave('Guardando…');
       try {
         const data = await post('save', { rut, answers: C.sanitize(answers) });
-        if (!dirty) setSave('Avance guardado', 'ok');
+        if (!dirty) setSave('Guardado', 'ok');
         return data;
       } catch (error) {
         if (error.status === 409) return reconcile();
         dirty = true;
-        setSave('Error al guardar · se reintenta', 'err');
+        setSave('Sin conexión · reintentando', 'err');
         scheduleSave(6000);
       }
     }

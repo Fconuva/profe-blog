@@ -12,33 +12,33 @@
 
   // Orientación breve bajo cada campo. No entrega la respuesta.
   const HINTS = {
-    emision: 'La fecha en que entregas el informe.',
-    especialidad: 'Tu especialidad técnica.',
-    resumen: 'Escríbelo al final. En 4 a 6 líneas: qué se inspeccionó, qué se encontró, cuál es el hallazgo más grave y qué se recomienda. Con cifras.',
-    obj2: 'Empieza con un verbo en infinitivo: registrar, evaluar, comparar, proponer…',
-    obj3: 'Otro verbo en infinitivo. Un objetivo por línea, sin repetir el 1.',
-    o1Superficie: 'Largo × ancho, con los datos de la libreta.',
-    construccion: 'La ocupación más importante del sector, con su código (O-1, O-2 u O-3).',
-    superficieTotal: 'Suma solo construcciones. Una plantación no es superficie construida.',
-    distanciaMin: 'La ocupación más cercana al eje de la línea.',
-    estado: 'Decide según el hallazgo más grave.',
-    f3Desc: 'Qué se ve, dónde está y qué importancia tiene. Con datos medidos de la libreta, en registro formal.',
+    emision: 'Escribe la fecha de hoy.',
+    especialidad: 'Elige tu especialidad.',
+    resumen: 'Hazlo al final. En 4 a 6 líneas explica qué se revisó, qué se encontró y qué se recomienda. Incluye cifras.',
+    obj2: 'Comienza con un verbo: registrar, evaluar, comparar o proponer.',
+    obj3: 'Escribe otro objetivo distinto, también comenzando con un verbo.',
+    o1Superficie: 'Multiplica largo × ancho. Los datos están en la libreta.',
+    construccion: 'Escribe la construcción más importante y su código: O-1, O-2 u O-3.',
+    superficieTotal: 'Suma solo O-1 y O-2. Los árboles no cuentan como superficie construida.',
+    distanciaMin: 'Busca la menor distancia al eje.',
+    estado: 'Elige según el problema más grave.',
+    f3Desc: 'Explica qué se ve, dónde está y por qué importa. Usa los datos de la libreta.',
     f4Este: 'La coordenada de una foto es el punto desde donde se tomó.',
     f4Norte: 'Revisa la libreta: son 7 cifras.',
-    f4Desc: 'Qué se ve, dónde está y qué importancia tiene. Con datos medidos, sin opiniones.',
-    h2Criterio: 'Busca en la sección 04 la regla que se incumple. Cita la fuente y su numeral.',
-    h2Efecto: '¿Qué puede pasar si esto sigue así? Consecuencias concretas.',
-    h2Recomendacion: 'Una acción para el mandante: quién hace qué.',
+    f4Desc: 'Explica qué se ve, dónde está y por qué importa. Usa datos, no opiniones.',
+    h2Criterio: 'Busca en la página 5 la regla que no se cumple. Nombra la fuente y el número.',
+    h2Efecto: 'Explica qué podría pasar si el problema continúa.',
+    h2Recomendacion: 'Escribe qué acción debe tomar la empresa.',
     h2Riesgo: 'Alto, medio o bajo.',
     h3Titulo: 'Qué se encontró, en pocas palabras. Como el título del Hallazgo 1.',
     h3Riesgo: 'Alto, medio o bajo.',
-    h3Foto: 'La fotografía que respalda el hallazgo.',
-    h3Condicion: 'Lo que realmente ocurre, con medidas y ubicación. Solo hechos.',
-    h3Criterio: 'Qué debería ser: la regla y su fuente.',
-    h3Efecto: 'La consecuencia o el riesgo que produce.',
-    h3Recomendacion: 'Una acción concreta para el mandante.',
-    conclusion: 'Responde al objetivo general: qué se encontró en el vano, qué tan grave es y qué debe decidir el mandante. Sin información nueva.',
-    declaracion: 'Solo si todo lo que escribiste sale de la evidencia del caso.'
+    h3Foto: 'Elige la foto que demuestra el problema.',
+    h3Condicion: 'Describe el problema con medidas y ubicación. Escribe solo hechos.',
+    h3Criterio: 'Escribe la regla que debería cumplirse y su fuente.',
+    h3Efecto: 'Explica la consecuencia o el riesgo.',
+    h3Recomendacion: 'Escribe una acción concreta para la empresa.',
+    conclusion: 'Resume qué se encontró, qué tan grave es y qué debería hacer la empresa. No agregues datos nuevos.',
+    declaracion: 'Confirma solo si todo lo escrito sale de la evidencia del caso.'
   };
 
   // ---------- Geometría del caso (UTM WGS-84, huso 18H) ----------
@@ -127,7 +127,7 @@
       else if (q.type === 'number') control = `<input ${common} type="text" inputmode="decimal" autocomplete="off" maxlength="${q.max}" value="${esc(value)}">`;
       else control = `<input ${common} type="text" maxlength="${q.max}" autocomplete="off" value="${esc(value)}">`;
       if (inline) return `<span class="fill-inline" data-wrap="${id}">${control}${opts.unit ? `<span class="unit">${opts.unit}</span>` : ''}<span class="sr" id="h-${id}">${esc(q.label)}. ${esc(hint)}</span></span>`;
-      return `<div class="fill" data-wrap="${id}"><label for="q-${id}"><span class="fill-tag">Completa</span> ${esc(opts.label || q.label)}</label>${control}<span class="fill-help" id="h-${id}">${esc(hint)}</span></div>`;
+      return `<div class="fill" data-wrap="${id}"><label for="q-${id}"><span class="fill-tag">Escribe</span> ${esc(opts.label || q.label)}</label>${control}<span class="fill-help" id="h-${id}">${esc(hint)}</span></div>`;
     };
   }
 
@@ -220,12 +220,12 @@
           <div><b>449 m</b><span>longitud del vano</span></div>
         </div>
         ${field('resumen')}
-        <p class="note">El resumen ejecutivo se escribe al final, pero va al principio: es lo único que muchos lectores del mandante alcanzan a leer.</p>`),
+        <p class="note">Escribe este resumen al final. Va al principio para que la empresa entienda rápido lo más importante.</p>`),
 
       // 4 · Introducción y objetivos
       page(4, 'p4', '01 Introducción y antecedentes', `
         <p>Transmisora Sur Andes S.A. encargó a Inspecciones Técnicas del Maule Ltda. la inspección visual de las ocupaciones existentes en la franja de seguridad de la línea de transmisión 2×500 kV, en el tramo comprendido entre las estructuras E-21 y E-22, sector de Charrúa, comuna de Cabrero.</p>
-        <p>La franja de seguridad es el área de exclusión de una línea eléctrica: dentro de ella no se permiten edificios, construcciones ni plantaciones. El presente informe registra lo observado en terreno el 14 de septiembre de 2026, lo compara con la normativa vigente y propone acciones al mandante. No constituye una mensura ni un estudio de títulos de dominio.</p>
+        <p>La franja de seguridad es la zona a ambos lados de una línea eléctrica donde no se permiten construcciones ni plantaciones. Este informe registra lo observado el 14 de septiembre de 2026, lo compara con las reglas vigentes y propone acciones a la empresa. Este caso no define límites de propiedad.</p>
         <table class="grid"><thead><tr><th>Antecedente</th><th>Dato</th><th>Fuente</th></tr></thead><tbody>
           <tr><td>Tensión nominal</td><td>500 kV, doble circuito</td><td>Ficha técnica de la línea (mandante)</td></tr>
           <tr><td>Ancho de la franja en el vano</td><td>30 m a cada lado del eje</td><td>Plano de servidumbre del proyecto</td></tr>
@@ -301,7 +301,7 @@
 
       // 8 · Fotos 1 y 2
       page(8, 'p8', '07 Registro fotográfico georreferenciado', `
-        <p class="note">Cada fotografía lleva su ficha: archivo, fecha y hora, coordenadas del punto de toma, altitud, orientación y ubicación. Luego, una descripción técnica.</p>
+        <p class="note">Cada foto indica cuándo y dónde se tomó. La descripción explica qué muestra y por qué importa.</p>
         <div class="photos">
         ${photoCard(1, A + 'f1-torres-charrua.jpg', 'Foto: Matías y Yordan Garrido González · Wikimedia Commons · CC BY-SA 4.0. Ubicación real de la toma.', [
           ['Archivo', 'ITM_S04_F01.jpg'], ['Fecha y hora', '14-09-2026 · 10:40'], ['UTM WGS-84', 'E 737.921 / N 5.891.739 · 18H'], ['Altitud', '124 msnm'], ['Orientación', 'Sur'], ['Ubicación', 'Camino vecinal, al norte de E-21']],
@@ -327,7 +327,7 @@
 
       // 10 · Hallazgo 1 (modelo)
       page(10, 'p10', '08 Hallazgos', `
-        <p class="note">Cada hallazgo compara la evidencia (lo que se vio) con un criterio (lo que debería ser). El Hallazgo 1 está redactado completo: úsalo como modelo.</p>
+        <p class="note">Un hallazgo compara lo observado con una regla. Lee el Hallazgo 1 y úsalo como ejemplo.</p>
         <section class="hz">
           <header><span class="hz-n">Hallazgo 1</span><span class="hz-t">Vivienda liviana habitada dentro de la franja de seguridad</span><span class="risk alto">Riesgo alto</span></header>
           <table class="kv hz-kv"><tbody>
@@ -340,8 +340,8 @@
           </tbody></table>
         </section>
         <div class="howto">
-          <p><b>Cómo se lee un hallazgo</b></p>
-          <ul><li><b>Condición:</b> ¿qué ocurre realmente? Solo hechos medidos.</li><li><b>Criterio:</b> ¿qué debería ser? La regla y su fuente.</li><li><b>Causa:</b> ¿por qué ocurrió? Solo si se sabe.</li><li><b>Efecto:</b> ¿qué consecuencia produce?</li><li><b>Recomendación:</b> ¿qué acción se propone?</li></ul>
+          <p><b>Las cinco preguntas de un hallazgo</b></p>
+          <ul><li><b>Condición:</b> ¿qué ocurre?</li><li><b>Criterio:</b> ¿qué regla debería cumplirse?</li><li><b>Causa:</b> ¿por qué ocurrió? Solo si se sabe.</li><li><b>Efecto:</b> ¿qué podría pasar?</li><li><b>Recomendación:</b> ¿qué se debe hacer?</li></ul>
           <p class="credit">Estructura según el Documento Técnico N.º 85 del Consejo de Auditoría Interna General de Gobierno.</p>
         </div>`),
 
@@ -374,7 +374,7 @@
       // 12 · Conclusiones y firmas
       page(12, 'p12', '09 Conclusiones', `
         ${field('conclusion')}
-        <h3>Condiciones a confirmar</h3>
+        <h3>Datos que faltaría verificar</h3>
         <ul class="confirm">
           <li>Existencia de pozo o fosa séptica asociada a la ocupación O-1.</li>
           <li>Propiedad, ocupante y uso actual de O-1 y O-2, contrastados con el plano de servidumbre oficial.</li>

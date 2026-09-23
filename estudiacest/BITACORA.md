@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, auditoría de la Clase 6 NM4: lenguaje simple y publicación pendiente
+
+Se revisó la Clase 6 y el informe técnico después de que Francisco advirtiera que la experiencia se había roto y que las explicaciones eran demasiado complejas.
+
+**Causa comprobada del quiebre en producción**
+
+- La presentación publicada sí coincidía con la fuente, pero `informe/index.html`, `informe/informe.js` e `informe/informe.css` seguían en una versión anterior.
+- El RUT ficticio de prueba devolvía 404 en producción. Por eso la validación descrita en la entrada anterior no representaba lo que realmente recibía el estudiante.
+- La publicación final del commit `477117bc` no había quedado documentada ni verificada por comparación de archivos.
+
+**Mejoras confirmadas en el commit `d7340eef`**
+
+- Se simplificaron el objetivo, la definición, los ejemplos y las instrucciones. El informe ahora se explica con tres preguntas: qué se observó, con qué regla se comparó y qué se recomienda.
+- Las doce partes se agruparon en cuatro bloques: identificación, propósito, evidencia y decisión.
+- Se reemplazó jerga innecesaria por indicaciones directas y se acortaron ayudas, lista de revisión, mensajes de guardado y nombres de páginas.
+- En celular, el índice de trece páginas pasó a una fila horizontal compacta para que el informe aparezca antes y no quede empujado hacia abajo.
+
+**Validación local**
+
+- `npm run audit:nm4-u3-class6`: aprobado antes de la aparición del cambio concurrente.
+- `npm run build`: aprobado, con 245 recursos críticos.
+- Navegador real: 14 pantallas sin recortes en 1440 × 900; navegación completa y sin errores; sin desborde horizontal en 390 px.
+- Informe: 13 páginas, 27 campos, índice móvil compacto y autoguardado comprobado con servidor simulado.
+
+**Publicación pendiente.** El commit `d7340eef` está en `origin/main`, pero no se ejecutó el deploy. Durante esta auditoría apareció otro trabajo activo y sin commit para una variante mecánica del mismo informe. Ese trabajo modifica la API y las rutas compartidas, y su propia auditoría todavía falla porque faltan cuatro imágenes y `fotos.js`. El guard de publicación debe seguir bloqueando hasta que ese cambio quede completo y confirmado. Después corresponde ejecutar nuevamente `npm run build`, `npm run deploy:prod:safe` y repetir en producción el ingreso con el RUT ficticio, el autoguardado y la comparación de archivos.
+
+---
+
 ## 2026-09-23, NM4 Unidad 3 Clase 6: el informe técnico, método de caso con informe prediseñado en tablet
 
 Pedido de Francisco: la Clase 6 del lunes 28 de septiembre (4°D martes 29) es la del informe técnico. Primero se explica qué es un informe con el método de caso de un informe de auditoría o inspección, usando como referencia los informes que se hicieron para Celeo desde REC. Después, en la tablet, los estudiantes completan un informe prediseñado con páginas: algunas partes listas y otras por redactar. Tablas, imágenes y fotos georreferenciadas incluidas. Los de NM4 no tienen cuenta, así que ingresan con su RUT.

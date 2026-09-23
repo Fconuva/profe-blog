@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM4: calendario de cierre ordenado y publicado
+
+Francisco corrigió las fechas de la Unidad 3. La portada tenía un bloque de cierre que repetía información e incluía actividades que no estaban confirmadas.
+
+**Calendario publicado**
+
+- 22 de septiembre: entrevista de trabajo.
+- 28 de septiembre: informe técnico.
+- 5, 12 y 19 de octubre: fechas reservadas, todavía por planificar.
+- 26 y 27 de octubre: revisión de cuaderno.
+- 2 y 9 de noviembre: trabajo PAES.
+
+Se eliminó el bloque contradictorio y sus estilos sin uso. La portada quedó con una sola secuencia de 13 tarjetas y explicaciones breves. Las fechas no planificadas no incluyen contenido inventado.
+
+**Verificación**
+
+- Auditoría NM4 Clase 5: aprobada.
+- `npm run build`: aprobado, con 250 recursos críticos.
+- Móvil de 390 px y escritorio de 1440 px: sin desborde horizontal.
+- Producción revisada en `https://www.estudiacest.com/nm4/#u3-clases`: 13 tarjetas, fechas correctas, dos enlaces PAES y sin el bloque antiguo.
+- Commit funcional: `bdf78121`.
+
+---
+
 ## 2026-09-23, NM4 Clase 6: versión mecánica del informe técnico para 4°A y 4°B
 
 Francisco decidió que el informe de la línea de 500 kV queda para 4°C (Electricidad) y 4°E (Electrónica). Para 4°A (Mecánica Industrial) y 4°B (Mecánica Automotriz) se pidió otra versión, porque ese caso no les sirve.

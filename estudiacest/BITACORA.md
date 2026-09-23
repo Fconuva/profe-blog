@@ -8,6 +8,19 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM4 Clase 6: las dos versiones verificadas en producción
+
+La Clase 6 quedó en producción con el deploy del calendario NM4 (`bdf78121`/`49c9b62f`). Ese deploy incluyó el commit `cb993ddf`, así que no se hizo un deploy aparte.
+
+Verificado contra Firebase real:
+- Las rutas y la API responden 200. `health`: eléctrica con 85 estudiantes (4°C y 4°E) y mecánica con 88 (4°A y 4°B).
+- Con el RUT de prueba 11.111.111-1, en las dos versiones: autoguardado, recarga con datos, «Entrega confirmada», solo lectura al reabrir y 0 errores JS.
+- La separación de cursos funciona en ambos sentidos, probada con RUN reales de 4°B y 4°E sin imprimirlos: responde 403 con el enlace al informe correcto.
+
+El registro PRUEBA quedó entregado en ambas versiones; se reabre desde `/revisar/`. Se avisó a la sesión que ordena `/nm4/` que conserve el bloque de la tarjeta 6.
+
+---
+
 ## 2026-09-23, NM4: calendario de cierre ordenado y publicado
 
 Francisco corrigió las fechas de la Unidad 3. La portada tenía un bloque de cierre que repetía información e incluía actividades que no estaban confirmadas.

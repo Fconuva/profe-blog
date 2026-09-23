@@ -1,0 +1,392 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Informe técnico · NM4 · Clase 6</title>
+  <meta name="description" content="Completa el informe técnico de inspección de la Clase 6 de NM4: tablas, fotografías georreferenciadas, hallazgos y conclusiones.">
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#12314b">
+  <link rel="icon" href="/estudiantes/assets/insignia_talca_1.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Source+Serif+4:wght@600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="informe.css">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#e3e9ee;color:var(--ink);font-family:Inter,Arial,sans-serif}
+    button{font:inherit;cursor:pointer}
+    :focus-visible{outline:4px solid #f6c84f;outline-offset:2px}
+    [hidden]{display:none!important}
+
+    /* Ingreso */
+    .gate{min-height:100vh;display:grid;place-items:center;padding:24px 16px;background:linear-gradient(160deg,#12314b,#197f78)}
+    .gate-card{width:min(460px,100%);padding:28px 24px;border-radius:12px;background:#fff;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+    .gate-card h1{margin:0 0 6px;color:var(--navy);font:700 27px/1.15 "Source Serif 4",Georgia,serif}
+    .gate-card p{margin:0 0 16px;color:var(--muted)}
+    .gate-card label{display:block;margin-bottom:6px;color:var(--navy);font-weight:800}
+    .gate-card input{width:100%;padding:13px 14px;border:2px solid var(--line);border-radius:8px;font-size:20px;letter-spacing:.04em}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 16px;border:0;border-radius:8px;background:var(--teal);color:#fff;font-weight:800;text-decoration:none}
+    .btn.block{width:100%;margin-top:12px}
+    .btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+    .btn.gold{background:var(--gold);color:var(--navy)}
+    .btn:disabled{opacity:.55;cursor:not-allowed}
+    .error{min-height:20px;margin:10px 0 0;color:var(--red);font-weight:700}
+    .who{padding:14px;border-radius:8px;background:var(--soft);color:var(--navy);font-size:18px;font-weight:800;text-align:center}
+    .who small{display:block;color:var(--muted);font-size:14px;font-weight:600}
+    .row{display:flex;gap:10px}.row .btn{flex:1}
+
+    /* Barra superior */
+    .top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 14px;background:var(--navy-deep);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
+    .top .id{min-width:0;flex:1 1 220px}
+    .top .id b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14.5px}
+    .top .id span{font-size:12px;opacity:.8}
+    .prog{flex:1 1 180px;min-width:150px}
+    .prog-head{display:flex;justify-content:space-between;font-size:12px;font-weight:700;margin-bottom:5px}
+    .track{height:7px;border-radius:4px;background:rgba(255,255,255,.2);overflow:hidden}.track i{display:block;height:100%;width:0;background:var(--gold);transition:width .2s}
+    .top .btn{min-height:40px;padding:8px 12px;font-size:14px}
+    .top .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.35)}
+    .save{font-size:12.5px;font-weight:700;white-space:nowrap}
+    .save.err{color:#ffb3ad}.save.ok{color:#b9ecc9}
+
+    /* Diseño con índice */
+    .layout{display:grid;grid-template-columns:250px minmax(0,1fr);gap:10px;max-width:1180px;margin:0 auto;padding:0 12px}
+    .toc-nav{position:sticky;top:78px;align-self:start;margin-top:18px;padding:14px;border-radius:10px;background:#fff;box-shadow:0 8px 20px rgba(18,49,75,.08);font-size:13.5px}
+    .toc-nav h2{margin:0 0 8px;color:var(--navy);font-size:14px;text-transform:uppercase;letter-spacing:.06em}
+    .toc-nav ol{margin:0;padding:0;list-style:none}
+    .toc-nav a{display:flex;justify-content:space-between;gap:8px;padding:6px 7px;border-radius:6px;color:var(--ink);text-decoration:none}
+    .toc-nav a:hover{background:var(--soft)}
+    .toc-nav .st{flex:0 0 auto;font-size:11.5px;font-weight:800;color:#8a6a0e}
+    .toc-nav .st.done{color:var(--green)}.toc-nav .st.ready{color:var(--muted);font-weight:600}
+    .banner{margin:18px 0 0;padding:12px 14px;border-radius:8px;background:#fff9e5;border-left:6px solid var(--gold);color:#5b4a17;font-size:14px}
+    .banner.done{background:#e9f5ec;border-color:var(--green);color:#244a2f}
+
+    /* Libreta */
+    .drawer{position:fixed;top:0;right:0;bottom:0;z-index:50;width:min(430px,100%);padding:18px 18px 24px;overflow:auto;background:#fffdf3;box-shadow:-16px 0 40px rgba(0,0,0,.22);
+      background-image:repeating-linear-gradient(#fffdf3,#fffdf3 31px,#d8e3ec 32px);transform:translateX(105%);transition:transform .22s ease}
+    .drawer.open{transform:none}
+    .drawer h2{margin:0 0 4px;color:var(--navy);font:700 30px Caveat,cursive}
+    .drawer .close{position:absolute;top:12px;right:12px}
+    .lib-head{margin:0 0 10px;color:var(--muted);font-size:13px}
+    .lib{margin:0;padding-left:0;list-style:none;font:500 22px/32px Caveat,cursive;color:#1f3550}
+    .lib li{margin-bottom:6px}.lib b{color:var(--red)}
+    .drawer .tip{margin-top:12px;padding:10px;border-radius:6px;background:#fff;font:13px/1.45 Inter,Arial,sans-serif;color:var(--muted)}
+
+    /* Entrega */
+    .deliver{width:min(210mm,100%);margin:0 auto 30px;padding:18px;border-radius:10px;background:#fff;box-shadow:0 10px 30px rgba(18,49,75,.12)}
+    .deliver h2{margin:0 0 6px;color:var(--navy);font-size:20px}
+    .deliver ul{margin:6px 0 12px;padding-left:20px;color:var(--muted);font-size:13.5px}
+    .dialog-back{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:16px;background:rgba(11,34,53,.55)}
+    .dialog{width:min(460px,100%);padding:24px;border-radius:12px;background:#fff;text-align:center}
+    .dialog h2{margin:0 0 8px;color:var(--green);font-size:26px}
+    .dialog p{color:var(--muted)}
+    .dialog .row{margin-top:14px}
+
+    @media (max-width:980px){
+      .layout{grid-template-columns:1fr;padding:0}
+      .toc-nav{position:static;margin:14px 12px 0}
+      .toc-nav ol{display:grid;grid-template-columns:1fr 1fr;gap:2px 10px}
+    }
+    @media (max-width:560px){ .toc-nav ol{grid-template-columns:1fr} .top .btn .t{display:none} }
+    @media print{ .top,.toc-nav,.drawer,.deliver,.banner,.gate{display:none!important} .layout{display:block;padding:0} }
+  </style>
+</head>
+<body>
+  <div id="inicio"></div>
+
+  <!-- Ingreso con RUT -->
+  <section class="gate" id="gate">
+    <div class="gate-card">
+      <p style="margin:0 0 6px;color:var(--teal);font-weight:900;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase">NM4 · Clase 6 · Escribir en el trabajo</p>
+      <h1>Informe técnico de inspección</h1>
+      <p>Completa las partes marcadas en amarillo. Todo se guarda solo.</p>
+      <form id="rutForm" novalidate>
+        <label for="rut">Tu RUT</label>
+        <input id="rut" name="rut" autocomplete="off" inputmode="text" placeholder="12.345.678-9" maxlength="12" required>
+        <button class="btn block" id="rutButton" type="submit">Entrar</button>
+      </form>
+      <div id="confirmBox" hidden>
+        <p class="who" id="whoText"></p>
+        <div class="row"><button class="btn ghost" type="button" id="notMe">No soy yo</button><button class="btn" type="button" id="yesMe">Sí, soy yo</button></div>
+      </div>
+      <p class="error" id="gateError" role="alert"></p>
+      <p style="margin:14px 0 0;font-size:12.5px"><a href="/nm4/u3-clase6-informe-tecnico/" style="color:var(--teal)">Volver a la clase</a></p>
+    </div>
+  </section>
+
+  <!-- Informe -->
+  <div id="app" hidden>
+    <header class="top">
+      <div class="id"><b id="topName"></b><span id="topCourse"></span></div>
+      <div class="prog"><div class="prog-head"><span>Avance</span><span id="progText">0 de 0</span></div><div class="track"><i id="progBar"></i></div></div>
+      <span class="save" id="saveState" role="status" aria-live="polite">Sin cambios</span>
+      <button class="btn gold" type="button" id="openLib">📓 <span class="t">Libreta</span></button>
+      <button class="btn ghost" type="button" id="printBtn">🖨 <span class="t">Imprimir</span></button>
+      <button class="btn ghost" type="button" id="logout">Salir</button>
+    </header>
+
+    <div class="layout">
+      <nav class="toc-nav" aria-label="Páginas del informe">
+        <h2>Páginas</h2>
+        <ol id="tocList"></ol>
+      </nav>
+      <main>
+        <p class="banner" id="banner">Las partes <b>en amarillo</b> las escribes tú. Las demás ya están redactadas: léelas, porque te sirven de modelo. Los datos están en la <b>libreta de terreno</b>.</p>
+        <div class="report" id="report"></div>
+        <section class="deliver" id="deliverBox">
+          <h2>Entregar el informe</h2>
+          <p id="deliverText">Puedes entregar cuando quieras. Después de entregar ya no se puede editar.</p>
+          <ul id="missingList"></ul>
+          <button class="btn" type="button" id="submit">Entregar informe</button>
+          <p class="error" id="deliverError" role="alert"></p>
+        </section>
+      </main>
+    </div>
+
+    <aside class="drawer" id="drawer" aria-label="Libreta de terreno" aria-hidden="true">
+      <button class="btn ghost close" type="button" id="closeLib">Cerrar</button>
+      <h2>Libreta de terreno</h2>
+      <div id="libreta"></div>
+      <p class="tip">Estas notas son informales, como las escribe un inspector apurado en terreno. En el informe se pasan a <b>registro formal</b>: sin «como», sin «pal», con cifras exactas y unidades.</p>
+    </aside>
+  </div>
+
+  <div class="dialog-back" id="doneDialog" hidden>
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="doneTitle">
+      <h2 id="doneTitle">Entrega confirmada</h2>
+      <p id="doneText">Tu informe quedó guardado y entregado.</p>
+      <div class="row"><a class="btn ghost" href="#inicio" id="doneBack">Ver mi informe</a><a class="btn" href="/nm4/">Volver a NM4</a></div>
+    </div>
+  </div>
+
+  <script src="campos.js"></script>
+  <script src="informe.js"></script>
+  <script>
+  (function () {
+    const C = window.INFORME_CAMPOS;
+    const R = window.InformeTecnico;
+    const activity = C.activity;
+    const TOTAL = activity.questions.length;
+    const API = '/api/economista?modulo=informe-tecnico&action=';
+    const KEY = 'informeNM4.rut';
+    const $ = id => document.getElementById(id);
+    const SECTION_PAGES = { portada: 'p1', resumen: 'p3', objetivos: 'p4', ficha: 'p6', fotos: 'p9', hallazgos: 'p11', conclusiones: 'p12', firma: 'p12' };
+    const PAGE_TITLES = [['p1', 'Portada'], ['p2', 'Control del documento'], ['p3', '00 Resumen ejecutivo'], ['p4', '01–02 Introducción y objetivos'], ['p5', '03–04 Metodología y criterios'], ['p6', '05 Ficha técnica'], ['p7', '06 Ubicación y croquis'], ['p8', '07 Fotos 1 y 2'], ['p9', '07 Fotos 3 y 4'], ['p10', '08 Hallazgo 1 (modelo)'], ['p11', '08 Hallazgos 2 y 3'], ['p12', '09 Conclusiones y firmas'], ['p13', 'Anexo A']];
+
+    let rut = '';
+    let student = null;
+    let answers = {};
+    let delivered = false;
+    let submitting = false;
+    let dirty = false;
+    let timer = null;
+    let saveQueue = Promise.resolve();
+
+    const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
+    const post = async (action, payload) => {
+      const response = await fetch(API + action, { method: 'POST', headers: { 'Content-Type': 'application/json' }, cache: 'no-store', body: JSON.stringify(payload) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { const error = new Error(data.error || 'No se pudo conectar.'); error.status = response.status; error.data = data; throw error; }
+      return data;
+    };
+    const backupKey = () => student ? `informeNM4.draft.${student.curso}-${student.n}` : '';
+    const setSave = (text, kind) => { const node = $('saveState'); node.textContent = text; node.className = 'save' + (kind ? ' ' + kind : ''); };
+
+    // ---------- Ingreso ----------
+    $('rutForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('gateError').textContent = '';
+      const value = $('rut').value.trim();
+      if (value.replace(/[^0-9kK]/g, '').length < 7) { $('gateError').textContent = 'Escribe tu RUT completo, con dígito verificador.'; return; }
+      $('rutButton').disabled = true; $('rutButton').textContent = 'Buscando…';
+      try {
+        const data = await post('get-guia-state', { rut: value });
+        rut = value; student = data.student;
+        $('whoText').innerHTML = `${student.nombre}<small>${courseName(student.curso)} · N.º ${student.n}</small>`;
+        $('rutForm').hidden = true; $('confirmBox').hidden = false;
+        $('yesMe').onclick = () => start(data.attempt);
+      } catch (error) {
+        $('gateError').textContent = error.status === 404 ? error.message : 'No se pudo conectar. Revisa internet e inténtalo otra vez.';
+      } finally {
+        $('rutButton').disabled = false; $('rutButton').textContent = 'Entrar';
+      }
+    });
+    $('notMe').addEventListener('click', () => { rut = ''; student = null; $('confirmBox').hidden = true; $('rutForm').hidden = false; $('rut').value = ''; $('rut').focus(); });
+
+    function start(attempt) {
+      try { sessionStorage.setItem(KEY, rut); } catch (_) {}
+      answers = attempt ? attempt.answers : {};
+      // Si el servidor no alcanzó a guardar lo último, se recupera la copia de esta pestaña.
+      try {
+        const local = JSON.parse(sessionStorage.getItem(backupKey()) || 'null');
+        if (local && (!attempt || Number(local.at) > Number(attempt.updatedAt || 0)) && !(attempt && attempt.completada)) { answers = C.sanitize(local.answers); dirty = true; }
+      } catch (_) {}
+      delivered = !!(attempt && attempt.completada === true && attempt.submitted === true);
+      $('gate').hidden = true; $('app').hidden = false;
+      $('topName').textContent = student.nombre;
+      $('topCourse').textContent = `${courseName(student.curso)} · Informe ITM-TSA-INS-S04`;
+      $('libreta').innerHTML = R.LIBRETA;
+      draw();
+      if (dirty) scheduleSave(200);
+      window.scrollTo(0, 0);
+    }
+
+    // ---------- Informe ----------
+    function draw() {
+      R.render($('report'), { answers, editable: !delivered, student, assetBase: '../assets/' });
+      $('report').querySelectorAll('[data-q]').forEach(control => {
+        const handler = () => onChange(control.dataset.q, control.value);
+        control.addEventListener('input', handler);
+        control.addEventListener('change', handler);
+      });
+      updateProgress();
+      if (delivered) {
+        $('banner').className = 'banner done';
+        $('banner').innerHTML = '<b>Entrega confirmada.</b> Este es tu informe tal como quedó guardado. Ya no se puede editar.';
+        $('deliverBox').hidden = true;
+        setSave('Entregado', 'ok');
+      }
+    }
+
+    function onChange(id, value) {
+      if (delivered || submitting) return;
+      answers[id] = value;
+      dirty = true;
+      try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers })); } catch (_) {}
+      R.refreshBindings($('report'), answers);
+      updateProgress();
+      setSave('Cambios sin guardar');
+      scheduleSave(1800);
+    }
+
+    function updateProgress() {
+      const clean = C.sanitize(answers);
+      const { score, missing } = C.progress(clean);
+      $('progText').textContent = `${score} de ${TOTAL}`;
+      $('progBar').style.width = `${Math.round(score / TOTAL * 100)}%`;
+      C.questions.forEach(q => {
+        const wrap = $('report').querySelector(`[data-wrap="${q.id}"]`);
+        if (wrap) wrap.classList.toggle('ok', C.isComplete(q, clean[q.id]));
+      });
+      const bySection = {};
+      C.questions.forEach(q => { const p = SECTION_PAGES[q.section]; bySection[p] = bySection[p] || { total: 0, done: 0 }; bySection[p].total++; if (C.isComplete(q, clean[q.id])) bySection[p].done++; });
+      $('tocList').innerHTML = PAGE_TITLES.map(([id, title]) => {
+        const s = bySection[id];
+        const st = !s ? '<span class="st ready">Lista</span>' : s.done === s.total ? '<span class="st done">✓</span>' : `<span class="st">${s.done}/${s.total}</span>`;
+        return `<li><a href="#${id}"><span>${title}</span>${st}</a></li>`;
+      }).join('');
+      $('missingList').innerHTML = missing.length
+        ? missing.slice(0, 8).map(q => `<li>${q.label}</li>`).join('') + (missing.length > 8 ? `<li>y ${missing.length - 8} más</li>` : '')
+        : '<li>Todo completo. Revisa la redacción antes de entregar.</li>';
+      $('deliverText').textContent = missing.length
+        ? `Te faltan ${missing.length} de ${TOTAL} partes. Puedes entregar igual, pero lo que falte no se evalúa.`
+        : 'Completaste todas las partes. Después de entregar ya no se puede editar.';
+      $('submit').textContent = `Entregar informe (${score} de ${TOTAL})`;
+    }
+
+    // ---------- Autoguardado en cola ----------
+    function scheduleSave(delay) {
+      clearTimeout(timer);
+      timer = setTimeout(() => { timer = null; enqueueSave(); }, delay);
+    }
+    function enqueueSave() {
+      if (delivered || submitting || !dirty) return saveQueue;
+      saveQueue = saveQueue.then(saveDraft, saveDraft);
+      return saveQueue;
+    }
+    async function saveDraft() {
+      if (delivered || submitting || !dirty) return;
+      dirty = false;
+      setSave('Guardando…');
+      try {
+        const data = await post('save', { rut, answers: C.sanitize(answers) });
+        if (!dirty) setSave('Avance guardado', 'ok');
+        return data;
+      } catch (error) {
+        if (error.status === 409) return reconcile();
+        dirty = true;
+        setSave('Error al guardar · se reintenta', 'err');
+        scheduleSave(6000);
+      }
+    }
+
+    // ---------- Entrega ----------
+    $('submit').addEventListener('click', async () => {
+      if (submitting || delivered) return;
+      submitting = true;
+      clearTimeout(timer); timer = null;
+      $('deliverError').textContent = '';
+      $('submit').disabled = true; $('submit').textContent = 'Entregando…';
+      try {
+        await saveQueue;
+        const clean = C.sanitize(answers);
+        const { score } = C.progress(clean);
+        const now = Date.now();
+        const data = await post('submit', { rut, answers: clean, submitted: true, completada: true, submittedAt: now, completadaAt: now, score, total: TOTAL });
+        const attempt = data.attempt;
+        if (!attempt || attempt.completada !== true || attempt.submitted !== true) throw new Error('El servidor no confirmó la entrega.');
+        finish(attempt);
+      } catch (error) {
+        if (error.status === 409) { await reconcile(); return; }
+        submitting = false;
+        $('submit').disabled = false;
+        updateProgress();
+        $('deliverError').textContent = 'No se pudo entregar. Tu avance sigue guardado en esta pestaña; revisa internet y vuelve a presionar el botón.';
+      }
+    });
+
+    // Si el servidor ya tenía la entrega (otra pestaña o un reintento), se relee y se muestra.
+    async function reconcile() {
+      try {
+        const data = await post('get-guia-state', { rut });
+        const attempt = data.attempt;
+        if (attempt && attempt.completada === true && attempt.submitted === true) return finish(attempt);
+      } catch (error) {
+        $('deliverError').textContent = 'No se pudo confirmar el estado. Recarga la página.';
+      }
+      submitting = false;
+      $('submit').disabled = false;
+    }
+
+    function finish(attempt) {
+      delivered = true; submitting = false; dirty = false;
+      answers = attempt.answers;
+      try { sessionStorage.removeItem(backupKey()); } catch (_) {}
+      draw();
+      $('doneText').textContent = `Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas. Aparece como Entregado en el panel del profesor. Entrega confirmada.`;
+      $('doneDialog').hidden = false;
+      $('doneBack').focus();
+    }
+    $('doneBack').addEventListener('click', () => { $('doneDialog').hidden = true; });
+
+    // ---------- Libreta, impresión y salida ----------
+    const lib = open => { $('drawer').classList.toggle('open', open); $('drawer').setAttribute('aria-hidden', String(!open)); if (open) $('closeLib').focus(); };
+    $('openLib').addEventListener('click', () => lib(true));
+    $('closeLib').addEventListener('click', () => lib(false));
+    document.addEventListener('keydown', event => { if (event.key === 'Escape') { lib(false); $('doneDialog').hidden = true; } });
+    $('printBtn').addEventListener('click', () => window.print());
+    $('logout').addEventListener('click', async () => {
+      clearTimeout(timer);
+      if (dirty && !delivered) { await enqueueSave(); await saveQueue; }
+      try { sessionStorage.removeItem(KEY); } catch (_) {}
+      location.reload();
+    });
+    window.addEventListener('beforeunload', event => { if (dirty && !delivered) { enqueueSave(); event.preventDefault(); event.returnValue = ''; } });
+
+    // Reingreso en la misma pestaña (recarga): se usa el RUN guardado en la sesión.
+    (async () => {
+      let saved = '';
+      try { saved = sessionStorage.getItem(KEY) || ''; } catch (_) {}
+      if (!saved) return;
+      try {
+        const data = await post('get-guia-state', { rut: saved });
+        rut = saved; student = data.student;
+        start(data.attempt);
+      } catch (error) {
+        try { sessionStorage.removeItem(KEY); } catch (_) {}
+      }
+    })();
+  })();
+  </script>
+</body>
+</html>

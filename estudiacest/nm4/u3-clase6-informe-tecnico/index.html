@@ -1,0 +1,501 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Escribir en el trabajo: el informe técnico · NM4 · Unidad 3</title>
+  <meta name="description" content="Clase de 90 minutos sobre el informe técnico: método de caso con un informe real de inspección bajo una línea de 500 kV, fotografías georreferenciadas, hallazgos y redacción en tablet.">
+  <meta name="theme-color" content="#12314b">
+  <link rel="icon" href="/estudiantes/assets/insignia_talca_1.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Source+Serif+4:wght@600;700&family=Caveat:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --navy:#12314b;--navy-deep:#0b2235;--teal:#197f78;--gold:#dda826;
+      --red:#b6423b;--green:#4f713f;--ink:#172536;--muted:#58697a;
+      --line:#cdd8e2;--paper:#fff;--soft:#f2f6f8;--bar:76px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;overflow:hidden;color:var(--ink);background:#e8edf1;font-family:Inter,Arial,sans-serif;line-height:1.45}
+    button,a{font:inherit}button{cursor:pointer}a{color:inherit}
+    :focus-visible{outline:4px solid #f6c84f;outline-offset:3px}
+    .deck{position:fixed;inset:0 0 var(--bar);overflow:hidden}
+    .slide{position:absolute;inset:0;padding:24px 34px 28px;overflow:auto;opacity:0;visibility:hidden;transform:translateX(26px);
+      transition:opacity .2s ease,transform .2s ease,visibility .2s;
+      background:linear-gradient(90deg,rgba(18,49,75,.035) 1px,transparent 1px),linear-gradient(rgba(18,49,75,.035) 1px,transparent 1px),#f7f9fa;background-size:34px 34px}
+    .slide.on{opacity:1;visibility:visible;transform:none}
+    .slide.from-left{transform:translateX(-26px)}
+    .inside{width:min(1720px,100%);min-height:100%;margin:0 auto;display:flex;flex-direction:column;justify-content:center}
+    .back{position:fixed;top:12px;right:16px;z-index:30;padding:9px 14px;border:1px solid var(--line);border-radius:7px;background:rgba(255,255,255,.97);color:var(--navy);font-size:13px;font-weight:850;text-decoration:none}
+    h1,h2,h3,p{margin-top:0}
+    h1{margin:0 0 18px;color:var(--navy);font-size:clamp(50px,4.8vw,78px);line-height:.98;letter-spacing:-.035em}
+    h2{margin:0;color:var(--navy);font-size:clamp(30px,2.9vw,44px);line-height:1.08;letter-spacing:-.025em}
+    h3{color:var(--navy)}
+    .eyebrow{margin:0 0 12px;color:var(--teal);font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+    .lead{max-width:900px;margin-bottom:20px;color:var(--muted);font-size:21px}
+    .rule{width:118px;height:8px;margin:5px 0 23px;background:var(--gold)}
+    .chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+    .chip{padding:9px 13px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--navy);font-size:14px;font-weight:850}
+    .hero{display:grid;grid-template-columns:.9fr 1.1fr;align-items:center;gap:52px}
+    .hero-visual{position:relative;overflow:hidden;margin:0;border:2px solid var(--navy);border-radius:10px;background:#fff;box-shadow:18px 18px 0 rgba(18,49,75,.11)}
+    .hero-visual img{display:block;width:100%;aspect-ratio:16/10;object-fit:cover;object-position:center 32%}
+    .hero-caption{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line)}
+    .hero-caption span{padding:13px 10px;border-left:1px solid var(--line);color:var(--navy);font-size:13px;font-weight:900;text-align:center}
+    .hero-caption span:first-child{border-left:0}
+    .topline{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-right:120px}
+    .phase{flex:0 0 auto;padding:8px 13px;border-radius:6px;background:var(--navy);color:#fff;font-size:13px;font-weight:900;letter-spacing:.07em;text-transform:uppercase}
+    .phase.start{background:var(--gold);color:var(--navy)}.phase.develop{background:var(--teal)}.phase.close{background:var(--green)}
+    .time{margin-left:auto;white-space:nowrap;padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fff;color:var(--navy);font-size:13px;font-weight:850}
+    .panel{padding:24px;border:1px solid var(--line);border-radius:9px;background:#fff;box-shadow:0 12px 28px rgba(18,49,75,.07)}
+    .panel h3{margin:0 0 12px;font-size:24px}
+    .panel p,.panel li{font-size:17px}
+    .two{display:grid;grid-template-columns:1fr 1fr;gap:22px}
+    .two.wide-left{grid-template-columns:1.15fr .85fr}
+    .big-prompts{margin:0;padding:0;list-style:none;counter-reset:item}
+    .big-prompts li{counter-increment:item;display:grid;grid-template-columns:42px 1fr;gap:13px;align-items:start;margin-bottom:12px;font-size:19px;font-weight:700}
+    .big-prompts li::before{content:counter(item);width:38px;height:38px;display:grid;place-items:center;border-radius:6px;background:var(--navy);color:#fff;font-weight:900}
+    .photo-frame{overflow:hidden;margin:0;border:2px solid var(--navy);border-radius:10px;background:#fff;box-shadow:14px 14px 0 rgba(18,49,75,.1)}
+    .photo-frame img{display:block;width:100%;max-height:520px;object-fit:cover}
+    .photo-frame figcaption{padding:10px 14px;color:var(--muted);font-size:12.5px}
+    .question{margin:0 0 16px;color:var(--navy);font-family:"Source Serif 4",Georgia,serif;font-size:clamp(28px,3vw,44px);line-height:1.15}
+    .versus{display:grid;grid-template-columns:1fr auto 1fr;gap:18px;align-items:stretch}
+    .msg{padding:22px;border-radius:14px;font-size:21px}
+    .msg.chat{background:#dcf8c6;color:#1c3a1a;border-radius:14px 14px 14px 2px;font-family:Arial,sans-serif}
+    .msg.tech{background:#fff;border:1px solid var(--line);border-top:9px solid var(--teal);border-radius:9px;font-family:"Source Serif 4",Georgia,serif}
+    .msg small{display:block;margin-bottom:8px;font:800 12px Inter,Arial,sans-serif;letter-spacing:.07em;text-transform:uppercase;color:var(--muted)}
+    .arrow{display:grid;place-items:center;color:var(--gold);font-size:54px;font-weight:900}
+    .objective-box{display:grid;min-height:330px;place-items:center;padding:48px;border:2px solid var(--navy);border-left:14px solid var(--teal);border-radius:10px;background:#fff;box-shadow:18px 18px 0 #dfe6eb;text-align:center}
+    .objective-box strong{display:block;max-width:1250px;color:var(--navy);font-family:"Source Serif 4",Georgia,serif;font-size:clamp(32px,3.6vw,56px);line-height:1.18}
+    .copy-note{margin-top:26px;padding:16px;border-radius:8px;background:var(--navy);color:#fff;font-size:20px;font-weight:850;text-align:center}
+    .def{padding:26px 30px;border:2px solid var(--navy);border-radius:10px;background:#fff;box-shadow:12px 12px 0 #dfe6eb}
+    .def p{margin:0;color:var(--navy);font-family:"Source Serif 4",Georgia,serif;font-size:clamp(24px,2.3vw,34px);line-height:1.28}
+    .traits{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+    .trait{padding:18px;border:1px solid var(--line);border-top:8px solid var(--teal);border-radius:9px;background:#fff}
+    .trait:nth-child(2){border-top-color:var(--gold)}.trait:nth-child(3){border-top-color:var(--navy)}.trait:nth-child(4){border-top-color:var(--green)}
+    .trait h3{margin:0 0 6px;font-size:21px}.trait p{margin:0 0 8px;color:var(--muted);font-size:15px}
+    .trait code{display:block;padding:8px 10px;border-radius:6px;background:var(--soft);color:var(--navy);font:600 14.5px/1.35 "Source Serif 4",Georgia,serif}
+    .types{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .type{display:flex;flex-direction:column;padding:22px;border:1px solid var(--line);border-top:9px solid var(--navy);border-radius:9px;background:#fff}
+    .type.focus{border-top-color:var(--gold);box-shadow:0 14px 30px rgba(221,168,38,.18)}
+    .type .tag{align-self:flex-start;margin-bottom:10px;padding:4px 9px;border-radius:5px;background:var(--soft);color:var(--teal);font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+    .type h3{margin:0 0 8px;font-size:23px}.type p{margin:0 0 10px;color:var(--muted);font-size:15.5px}
+    .type ul{margin:0 0 12px;padding-left:18px;font-size:14.5px}.type li{margin-bottom:4px}
+    .type a{margin-top:auto;color:var(--teal);font-weight:800;font-size:14px}
+    .facts{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:18px 0}
+    .fact{padding:20px 14px;border-radius:9px;background:var(--navy);color:#fff;text-align:center}
+    .fact b{display:block;font-size:40px;line-height:1}.fact span{font-size:14px;opacity:.85}
+    .anatomy{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+    .mini{position:relative;display:flex;flex-direction:column;min-height:190px;padding:12px;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 8px 18px rgba(18,49,75,.07)}
+    .mini .n{position:absolute;top:-10px;left:-10px;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:var(--gold);color:var(--navy);font-weight:900;font-size:14px}
+    .mini h3{margin:6px 0 6px;font-size:15.5px;line-height:1.2}
+    .mini p{margin:0;color:var(--muted);font-size:13px}
+    .mini .sk{margin-top:auto;padding-top:10px}
+    .sk i{display:block;height:6px;margin-bottom:5px;border-radius:3px;background:#e2e8ee}
+    .sk .tb{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.sk .tb i{height:9px;margin:0;border-radius:0}.sk .tb i:nth-child(-n+3){background:var(--navy)}
+    .sk .img{height:34px;border-radius:3px;background:linear-gradient(135deg,#9fc3d8,#5d8b6e)}
+    .sk .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}.sk .kp i{height:22px;background:var(--navy)}
+    .demand{margin-top:16px;padding:14px 18px;border-left:7px solid var(--gold);background:#fff9e5;color:#62480d;font-size:16px}
+    .geo{display:grid;grid-template-columns:.85fr 1.15fr;gap:24px;align-items:start}
+    .geo img{display:block;width:100%;height:470px;object-fit:cover;object-position:center 35%;border:2px solid var(--navy);border-radius:10px}
+    .kv{width:100%;border-collapse:collapse;font-size:16px;background:#fff}
+    .kv th,.kv td{padding:9px 12px;border:1px solid var(--line);text-align:left}
+    .kv th{width:34%;background:var(--soft);color:var(--navy)}
+    .utm{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+    .utm div{padding:12px;border-radius:8px;background:var(--navy);color:#fff}
+    .utm b{display:block;font-size:22px}.utm span{font-size:13px;opacity:.85}
+    .map-link{display:inline-flex;align-items:center;gap:8px;margin-top:6px;padding:12px 16px;border-radius:7px;background:var(--teal);color:#fff;font-weight:850;text-decoration:none}
+    .finding{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+    .part{display:flex;flex-direction:column;padding:18px;border:1px solid var(--line);border-top:9px solid var(--navy);border-radius:9px;background:#fff}
+    .part:nth-child(2){border-top-color:var(--teal)}.part:nth-child(3){border-top-color:#8c9aa8}.part:nth-child(4){border-top-color:var(--red)}.part:nth-child(5){border-top-color:var(--green)}
+    .part h3{margin:0 0 4px;font-size:22px}.part .q{margin:0 0 10px;color:var(--teal);font-weight:800;font-size:15px}
+    .part p{margin:0;color:var(--ink);font-family:"Source Serif 4",Georgia,serif;font-size:16px;line-height:1.4}
+    .part .opt{margin-top:8px;color:var(--muted);font:600 12.5px Inter,Arial,sans-serif}
+    .pairs{display:grid;gap:14px}
+    .pair{display:grid;grid-template-columns:1fr 60px 1fr;gap:10px;align-items:stretch}
+    .note-card{padding:14px 18px;border-radius:6px;background:#fffdf3;border:1px solid #eadfb5;color:#1f3550;font:600 26px/1.2 Caveat,cursive;background-image:repeating-linear-gradient(#fffdf3,#fffdf3 29px,#e2e8ef 30px)}
+    .formal{position:relative;padding:14px 18px;border:1px solid var(--line);border-left:7px solid var(--teal);border-radius:6px;background:#fff;font-family:"Source Serif 4",Georgia,serif;font-size:19px}
+    .formal.hidden-text span{visibility:hidden}
+    .reveal{position:absolute;inset:0;border:0;border-radius:6px;background:repeating-linear-gradient(45deg,#f2f6f8,#f2f6f8 10px,#e9eef2 10px,#e9eef2 20px);color:var(--navy);font-weight:850;font-size:16px}
+    .tips{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+    .tips span{padding:8px 12px;border-radius:6px;background:var(--navy);color:#fff;font-size:14px;font-weight:800}
+    .steps{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+    .step{padding:20px 18px;border:1px solid var(--line);border-top:9px solid var(--navy);border-radius:9px;background:#fff}
+    .step .num{display:grid;place-items:center;width:44px;height:44px;margin-bottom:12px;border-radius:8px;background:var(--navy);color:#fff;font-size:21px;font-weight:900}
+    .step h3{margin:0 0 6px;font-size:20px}.step p{margin:0;color:var(--muted);font-size:15px}
+    .access{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;margin-top:18px;padding:18px;border-radius:10px;background:#fff;border:1px solid var(--line)}
+    .access img{width:170px;height:170px}
+    .access p{margin:0 0 8px;font-size:18px}.access code{padding:4px 8px;border-radius:5px;background:var(--soft);color:var(--navy);font-size:20px;font-weight:800}
+    .open-report{display:inline-flex;margin-top:6px;padding:14px 18px;border-radius:7px;background:var(--teal);color:#fff;font-weight:850;text-decoration:none;font-size:17px}
+    .work-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+    .timeline{margin:0;padding:0;list-style:none}
+    .timeline li{display:grid;grid-template-columns:96px 1fr;gap:12px;padding:12px 0;border-bottom:1px solid var(--line);font-size:18px}
+    .timeline b{color:var(--teal)}
+    .monitor ul{margin:0;padding:0;list-style:none}
+    .monitor li{position:relative;padding:11px 12px 11px 42px;border-bottom:1px solid var(--line);font-size:17px}
+    .monitor li::before{content:"□";position:absolute;left:10px;top:4px;color:var(--teal);font-size:27px;font-weight:900}
+    .closure-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+    .closure-card{padding:24px;border:1px solid var(--line);border-top:9px solid var(--navy);border-radius:9px;background:#fff}
+    .closure-card:nth-child(2){border-top-color:var(--gold)}.closure-card:nth-child(3){border-top-color:var(--green)}
+    .closure-card h3{margin:0 0 12px;font-size:24px}.closure-card p,.closure-card li{font-size:16.5px}.closure-card ul{padding-left:20px}
+    .system-question{padding:18px;border-left:7px solid var(--gold);background:#fff9e5;color:#62480d;font-family:"Source Serif 4",Georgia,serif;font-size:23px;font-weight:700}
+    .stamp{display:grid;min-height:74px;place-items:center;margin-top:16px;border:3px dashed var(--green);border-radius:8px;color:var(--green);font-size:20px;font-weight:900;text-align:center}
+    .src{margin-top:10px;color:var(--muted);font-size:12.5px}.src a{color:var(--teal)}
+    .bar{position:fixed;inset:auto 0 0;height:var(--bar);z-index:40;display:grid;grid-template-columns:175px 1fr 56px 175px;gap:12px;align-items:center;padding:10px 18px;background:var(--navy-deep);color:#fff;box-shadow:0 -8px 28px rgba(0,0,0,.16)}
+    .nav,.full{height:50px;border:1px solid rgba(255,255,255,.25);border-radius:7px;background:transparent;color:#fff;font-weight:850}.nav.primary{background:var(--teal);border-color:var(--teal)}.nav:disabled{opacity:.35;cursor:not-allowed}
+    .progress{min-width:0}.progress-head{display:flex;justify-content:space-between;gap:14px;margin-bottom:7px;font-size:12px;font-weight:750}.progress-head span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .track{height:6px;overflow:hidden;border-radius:4px;background:rgba(255,255,255,.18)}.track i{display:block;height:100%;background:var(--gold);transition:width .2s ease}
+    @media (min-width:2200px){
+      :root{--bar:112px}.slide{padding:48px 90px 58px}.inside{width:min(3200px,100%)}.back{top:20px;right:28px;padding:13px 18px;font-size:18px}
+      h1{font-size:120px}h2{font-size:64px}.lead{max-width:1500px;font-size:34px}.eyebrow,.chip,.phase,.time{font-size:20px}
+      .panel h3,.type h3,.trait h3,.part h3,.step h3,.closure-card h3{font-size:34px}
+      .panel p,.panel li,.big-prompts li,.type p,.type li,.trait p,.part p,.step p,.closure-card p,.closure-card li,.timeline li,.monitor li,.kv,.access p{font-size:26px}
+      .msg{font-size:32px}.formal{font-size:28px}.note-card{font-size:38px;background-image:none}.mini h3{font-size:24px}.mini p{font-size:20px}.mini{min-height:300px}
+      .fact b{font-size:64px}.fact span{font-size:20px}.utm b{font-size:32px}.geo img{height:760px}.access img{width:260px;height:260px}
+      .bar{grid-template-columns:250px 1fr 82px 250px;gap:18px;padding:16px 28px}.nav,.full{height:78px;font-size:22px}.progress-head{font-size:18px}.track{height:9px}
+    }
+    @media (max-width:1100px){
+      body{overflow:auto}.deck{position:relative;inset:auto;overflow:visible}.slide{position:relative;display:none;min-height:calc(100vh - var(--bar));padding:30px 22px 92px}.slide.on{display:block}
+      .hero,.two,.two.wide-left,.geo,.work-grid,.closure-grid{grid-template-columns:1fr}.inside{justify-content:flex-start}.topline{padding-right:0}
+      .traits,.facts{grid-template-columns:1fr 1fr}.types{grid-template-columns:1fr}.anatomy{grid-template-columns:repeat(3,1fr)}.finding,.steps{grid-template-columns:1fr 1fr}
+    }
+    @media (max-width:650px){
+      :root{--bar:66px}.slide{padding:70px 15px 82px}h1{font-size:42px}.lead{font-size:17px}.topline{align-items:flex-start;flex-wrap:wrap}.topline h2{font-size:27px}.time{margin-left:0}
+      .hero{gap:28px}.hero-caption{grid-template-columns:1fr}.hero-caption span{border-left:0;border-top:1px solid var(--line)}.hero-caption span:first-child{border-top:0}
+      .versus,.pair{grid-template-columns:1fr}.arrow{font-size:34px;transform:rotate(90deg)}
+      .traits,.facts,.finding,.steps,.utm{grid-template-columns:1fr}.anatomy{grid-template-columns:1fr 1fr}
+      .objective-box{min-height:280px;padding:26px 18px}.objective-box strong{font-size:29px}.copy-note{font-size:17px}
+      .access{grid-template-columns:1fr}.geo img{height:320px}.note-card{font-size:23px}
+      .bar{grid-template-columns:52px 1fr 44px 52px;padding:8px}.nav .text{display:none}.back{left:12px;right:auto}
+    }
+  </style>
+</head>
+<body>
+  <a class="back" href="/nm4/">Volver a NM4</a>
+  <main class="deck" id="deck">
+
+    <section class="slide" data-title="Portada">
+      <div class="inside hero">
+        <div>
+          <p class="eyebrow">NM4 · Unidad 3 · Comunicación para el mundo laboral</p>
+          <h1>Escribir en el trabajo: el informe técnico</h1>
+          <div class="rule"></div>
+          <p class="lead">Hoy analizarás un informe real de inspección y completarás uno en la tablet: con tablas, fotografías georreferenciadas y hallazgos.</p>
+          <div class="chips"><span class="chip">Clase 6</span><span class="chip">90 minutos</span><span class="chip">Método de caso</span><span class="chip">Tablet · ingreso con RUT</span></div>
+        </div>
+        <figure class="hero-visual">
+          <img src="assets/f1-torres-charrua.jpg" alt="Torres de alta tensión cerca de la localidad de Charrúa, Región del Biobío">
+          <figcaption class="hero-caption"><span>Evidencia</span><span>Precisión</span><span>Decisión</span></figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Motivación · ¿Puede quedarse?">
+      <div class="inside">
+        <div class="topline"><span class="phase start">Inicio</span><h2>¿Quién decide si esta casa puede quedarse aquí?</h2><span class="time">5 min</span></div>
+        <div class="two wide-left">
+          <figure class="photo-frame">
+            <img src="assets/motivacion-casa-torre.jpg" alt="Casa rodeada de árboles con una torre de alta tensión a pocos metros">
+            <figcaption>Foto: Daniel Case · Wikimedia Commons · CC BY-SA 3.0.</figcaption>
+          </figure>
+          <section class="panel">
+            <h3>Conversa con tu compañero de banco</h3>
+            <ol class="big-prompts">
+              <li>¿Qué riesgo ves en esta imagen?</li>
+              <li>Si trabajaras para la empresa eléctrica, ¿a quién le avisarías?</li>
+              <li>¿Bastaría con decir «se ve peligroso»? ¿Qué pruebas llevarías?</li>
+            </ol>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Activación · Contar no es informar">
+      <div class="inside">
+        <div class="topline"><span class="phase start">Inicio</span><h2>Contar lo que viste no es informar lo que viste</h2><span class="time">5 min</span></div>
+        <div class="versus">
+          <div class="msg chat"><small>Mensaje al jefe</small>Oiga jefe, hay una casita debajo del cable, como a 5 metros, se ve peligroso 😬 parece que vive gente</div>
+          <div class="arrow" aria-hidden="true">→</div>
+          <div class="msg tech"><small>Informe técnico</small>Se identifica una vivienda liviana de madera de 21,0 m², ubicada a 5,2 m del eje de la línea, dentro de la franja de seguridad (Foto 4).</div>
+        </div>
+        <p class="question" style="margin-top:24px">¿Qué cambió entre los dos textos?</p>
+        <div class="tips"><span>Cifras con unidad</span><span>Ubicación exacta</span><span>Evidencia citada</span><span>Sin opinión ni emoji</span><span>«Se identifica»: impersonal</span></div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Objetivo de la clase">
+      <div class="inside">
+        <div class="topline"><span class="phase start">Inicio</span><h2>Objetivo de la clase</h2><span class="time">2 min</span></div>
+        <div class="objective-box"><strong>Redactar las partes de un informe técnico de inspección a partir de evidencia de terreno, con registro formal, datos precisos y fotografías georreferenciadas.</strong></div>
+        <p class="copy-note">Copia el objetivo en tu cuaderno. Al final de la clase copiarás también las cinco partes de un hallazgo.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="¿Qué es un informe técnico?">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>¿Qué es un informe técnico?</h2><span class="time">4 min</span></div>
+        <div class="def"><p>Es un texto profesional que <b>registra lo observado o medido</b>, lo <b>compara con un criterio</b> (una norma, un plano, un contrato) y <b>propone acciones</b> para que otra persona —el mandante— tome una decisión.</p></div>
+        <div class="traits">
+          <div class="trait"><h3>Objetivo</h3><p>Hechos, no opiniones.</p><code>«Se observa corrosión en la base.»</code></div>
+          <div class="trait"><h3>Preciso</h3><p>Cifras, unidades y ubicación.</p><code>«A 5,2 m del eje.»</code></div>
+          <div class="trait"><h3>Impersonal</h3><p>Pasiva refleja: el foco está en la acción.</p><code>«Se midió», «se identifica».</code></div>
+          <div class="trait"><h3>Verificable</h3><p>Cada afirmación tiene su evidencia.</p><code>«(Foto 3; libreta, 10:52)»</code></div>
+        </div>
+        <p class="src">La norma ISO 19011 pide un registro «completo, preciso, conciso y claro»; el Consejo de Auditoría Interna General de Gobierno, un informe «preciso, objetivo, claro, conciso, constructivo».</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Tres informes del mundo laboral">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>Tres informes que se escriben hoy en el sector eléctrico</h2><span class="time">3 min</span></div>
+        <div class="types">
+          <article class="type focus">
+            <span class="tag">Hoy · el caso</span>
+            <h3>Informe de inspección o levantamiento</h3>
+            <p>Una consultora de ingeniería de Talca recorrió en 2026 los terrenos bajo una línea de 500 kV del Biobío y registró las construcciones que había debajo.</p>
+            <ul><li>Ficha técnica por sector</li><li>Tablas con coordenadas UTM</li><li>Registro fotográfico georreferenciado</li><li>Catastro, conclusiones y anexos</li></ul>
+          </article>
+          <article class="type">
+            <span class="tag">Obra</span>
+            <h3>Informe de avance semanal</h3>
+            <p>Lo escribe la inspección técnica de obra (ITO) cada semana, por ejemplo durante la ampliación de una subestación.</p>
+            <ul><li>Avance programado frente al real (curva S)</li><li>Avance por partidas en tablas</li><li>Fotos por especialidad</li><li>Riesgos y plan de la próxima semana</li></ul>
+          </article>
+          <article class="type">
+            <span class="tag">Auditoría</span>
+            <h3>Informe de auditoría técnica</h3>
+            <p>Compara una instalación con la norma. El Coordinador Eléctrico Nacional publica estos informes.</p>
+            <ul><li>Control de versiones y firmas</li><li>Antecedentes, objetivos, alcance y metodología</li><li>Resultados en terreno y hallazgos</li><li>Anexos con cientos de fotos</li></ul>
+            <a href="https://www.coordinador.cl/wp-content/uploads/2019/09/Informe-Auditor%C3%ADa-T%C3%A9cnica-SE-Valdivia-Rev.-D.pdf" target="_blank" rel="noopener">Ver uno real: Auditoría Técnica S/E Valdivia (PDF) →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="El caso">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>El caso: construcciones bajo una línea de 500 kV</h2><span class="time">3 min</span></div>
+        <p class="lead" style="max-width:1300px">Una empresa transmisora necesitaba saber qué había construido en la <b>franja de seguridad</b> de su línea: el área donde la norma no permite edificios, construcciones ni plantaciones. Una consultora de Talca recorrió el trazado y entregó este informe real:</p>
+        <div class="facts">
+          <div class="fact"><b>19</b><span>sectores inspeccionados</span></div>
+          <div class="fact"><b>1.940 m²</b><span>construidos bajo la línea</span></div>
+          <div class="fact"><b>0,90 m</b><span>la construcción más cercana al eje</span></div>
+          <div class="fact"><b>280</b><span>páginas de informe</span></div>
+        </div>
+        <section class="panel">
+          <h3>Hoy trabajas el Sector N.º 4</h3>
+          <p>Es un caso de estudio con la misma estructura del informe real. Las empresas y los datos del sector son ficticios; dos de las fotos son reales, con sus coordenadas. Tienes la <b>libreta de terreno</b> del inspector y un informe con algunas partes listas y otras por redactar.</p>
+        </section>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Anatomía de un informe">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>Las partes del informe, en el orden en que aparecen</h2><span class="time">5 min</span></div>
+        <div class="anatomy">
+          <div class="mini"><span class="n">1</span><h3>Portada</h3><p>Título, código del documento, revisión, mandante, consultora y fecha.</p><div class="sk"><div class="img"></div><i></i><i style="width:60%"></i></div></div>
+          <div class="mini"><span class="n">2</span><h3>Control del documento</h3><p>Versiones: quién elaboró, revisó y aprobó. Índice y abreviaturas.</p><div class="sk"><div class="tb"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="mini"><span class="n">3</span><h3>Resumen ejecutivo</h3><p>Lo esencial con cifras. Se escribe al final y va al principio.</p><div class="sk"><div class="kp"><i></i><i></i><i></i></div><i></i><i></i></div></div>
+          <div class="mini"><span class="n">4</span><h3>Introducción y objetivos</h3><p>Quién encarga, qué se inspecciona y para qué. Objetivos con verbo en infinitivo.</p><div class="sk"><i></i><i></i><i style="width:70%"></i></div></div>
+          <div class="mini"><span class="n">5</span><h3>Metodología y criterios</h3><p>Cómo se trabajó, con qué instrumentos y contra qué normas se compara.</p><div class="sk"><div class="tb"><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="mini"><span class="n">6</span><h3>Ficha y catastro</h3><p>Tablas con los datos del sector: superficies, distancias, materialidad.</p><div class="sk"><div class="tb"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div></div>
+          <div class="mini"><span class="n">7</span><h3>Ubicación</h3><p>Tabla de coordenadas UTM y croquis georreferenciado.</p><div class="sk"><div class="img" style="background:repeating-linear-gradient(90deg,#f4f1e6 0 18px,#c9c2a8 18px 19px)"></div></div></div>
+          <div class="mini"><span class="n">8</span><h3>Registro fotográfico</h3><p>Cada foto con su ficha: fecha, hora, coordenadas, orientación y descripción.</p><div class="sk"><div class="img"></div><i></i></div></div>
+          <div class="mini"><span class="n">9</span><h3>Hallazgos</h3><p>Condición, criterio, causa, efecto y recomendación.</p><div class="sk"><i style="background:var(--navy)"></i><i></i><i></i><i style="width:60%"></i></div></div>
+          <div class="mini"><span class="n">10</span><h3>Conclusiones</h3><p>Responden al objetivo. Sin información nueva.</p><div class="sk"><i></i><i></i><i style="width:50%"></i></div></div>
+          <div class="mini"><span class="n">11</span><h3>Firmas</h3><p>Quién responde por el informe.</p><div class="sk"><i style="width:45%;background:var(--ink);height:2px;margin-top:20px"></i></div></div>
+          <div class="mini"><span class="n">12</span><h3>Anexos</h3><p>Planos, mapas, fuentes y créditos.</p><div class="sk"><div class="img" style="background:linear-gradient(135deg,#dfe6eb,#b8c7d4)"></div></div></div>
+        </div>
+        <p class="demand"><b>Lo que se exige hoy:</b> cada afirmación con su evidencia; fotografías fechadas y georreferenciadas en WGS-84; tablas en vez de párrafos para los datos; código de documento y control de versiones; criterios con su fuente; hallazgos separados de las conclusiones.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="La fotografía georreferenciada">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>Una foto sin coordenadas no prueba dónde está el problema</h2><span class="time">4 min</span></div>
+        <div class="geo">
+          <img src="assets/f1-torres-charrua.jpg" alt="Fotografía real de torres de alta tensión cerca de Charrúa">
+          <div>
+            <table class="kv"><tbody>
+              <tr><th>Archivo</th><td>ITM_S04_F01.jpg</td></tr>
+              <tr><th>Fecha y hora</th><td>14-09-2026 · 10:40</td></tr>
+              <tr><th>Coordenadas UTM</th><td>E 737.921 / N 5.891.739 · huso 18H · WGS-84</td></tr>
+              <tr><th>Altitud y orientación</th><td>124 msnm · mirando al sur</td></tr>
+            </tbody></table>
+            <div class="utm">
+              <div><b>Este</b><span>metros hacia el este dentro del huso</span></div>
+              <div><b>Norte</b><span>metros desde el ecuador (en el sur se suma 10.000.000)</span></div>
+              <div><b>Huso</b><span>Chile continental está en los husos 18 y 19</span></div>
+            </div>
+            <p style="font-size:18px"><b>Regla:</b> la coordenada de una foto es el punto <b>desde donde se tomó</b>, no el objeto que aparece.</p>
+            <a class="map-link" href="https://www.openstreetmap.org/?mlat=-37.09047&amp;mlon=-72.32311#map=17/-37.09047/-72.32311" target="_blank" rel="noopener">📍 Ver este punto real en el mapa</a>
+            <p class="src">La SMA exige el sistema WGS-84 y, en UTM, Este, Norte y huso (Res. Ex. N.º 2.875 de 2025). Foto real: Matías y Yordan Garrido González, Wikimedia Commons, CC BY-SA 4.0.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="El hallazgo">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>El hallazgo: cinco preguntas, en este orden</h2><span class="time">4 min</span></div>
+        <div class="finding">
+          <div class="part"><h3>Condición</h3><p class="q">¿Qué ocurre realmente?</p><p>Vivienda liviana de 6,0 × 3,5 m a 5,2 m del eje, dentro de la franja.</p></div>
+          <div class="part"><h3>Criterio</h3><p class="q">¿Qué debería ser?</p><p>RPTD N.º 07 de la SEC, 4.9: en la franja no se permiten construcciones.</p></div>
+          <div class="part"><h3>Causa</h3><p class="q">¿Por qué ocurrió?</p><p>El ocupante declaró desconocer la servidumbre.</p><span class="opt">Solo si se sabe.</span></div>
+          <div class="part"><h3>Efecto</h3><p class="q">¿Qué consecuencia tiene?</p><p>Riesgo eléctrico y de incendio para quienes la habitan.</p></div>
+          <div class="part"><h3>Recomendación</h3><p class="q">¿Qué se propone?</p><p>Que el mandante gestione con el propietario la reubicación.</p></div>
+        </div>
+        <p class="copy-note">Copia en tu cuaderno las cinco partes con su pregunta.</p>
+        <p class="src">ISO 19011:2018 define el hallazgo como el resultado de comparar la evidencia con los criterios. Las cinco partes siguen el Documento Técnico N.º 85 del Consejo de Auditoría Interna General de Gobierno.</p>
+      </div>
+    </section>
+
+    <section class="slide" data-title="De la libreta al informe">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Desarrollo</span><h2>De la libreta de terreno al informe</h2><span class="time">4 min</span></div>
+        <div class="pairs">
+          <div class="pair"><div class="note-card">Llegamos por camino de tierra, el portón estaba abierto y el dueño nos dejó pasar.</div><div class="arrow" aria-hidden="true">→</div><div class="formal"><span>El acceso al sector se realizó por un camino vecinal de tierra, con autorización del propietario.</span></div></div>
+          <div class="pair"><div class="note-card">La torre está media oxidada abajo, como en las patas.</div><div class="arrow" aria-hidden="true">→</div><div class="formal hidden-text"><span>Se observa corrosión en la base de los montantes de la estructura.</span><button class="reveal" type="button">Díganlo en voz alta · luego tocar para ver</button></div></div>
+          <div class="pair"><div class="note-card">Hay un auto botado al lado del camino, justo abajo de los cables.</div><div class="arrow" aria-hidden="true">→</div><div class="formal hidden-text"><span>Bajo el vano, junto al camino vecinal, se identifica un vehículo en desuso.</span><button class="reveal" type="button">Díganlo en voz alta · luego tocar para ver</button></div></div>
+        </div>
+        <div class="tips"><span>«como», «media», «pal» → cifra exacta</span><span>«llegamos», «medí» → «se realizó», «se midió»</span><span>palabra coloquial → término técnico</span><span>una idea por oración</span></div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Instrucciones del taller">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Taller</span><h2>Ahora te toca: completa el informe en la tablet</h2><span class="time">2 min</span></div>
+        <div class="steps">
+          <div class="step"><div class="num">1</div><h3>Entra</h3><p>Escanea el código o abre la dirección de abajo.</p></div>
+          <div class="step"><div class="num">2</div><h3>Ingresa tu RUT</h3><p>Confirma que aparece tu nombre y tu curso.</p></div>
+          <div class="step"><div class="num">3</div><h3>Lee lo que está listo</h3><p>Las partes redactadas son tu modelo.</p></div>
+          <div class="step"><div class="num">4</div><h3>Completa lo amarillo</h3><p>Los datos están en la libreta de terreno (📓).</p></div>
+          <div class="step"><div class="num">5</div><h3>Entrega</h3><p>Espera el mensaje «Entrega confirmada».</p></div>
+        </div>
+        <div class="access">
+          <img src="assets/qr-informe.svg" alt="Código QR del informe técnico">
+          <div>
+            <p>Dirección: <code>estudiacest.com/nm4</code> → Clase 6 → <b>Completar el informe</b></p>
+            <p>Se guarda solo mientras escribes. Si la tablet es compartida, presiona <b>Salir</b> al terminar.</p>
+            <a class="open-report" href="informe/" target="_blank" rel="noopener">Abrir el informe →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Trabajo y monitoreo">
+      <div class="inside">
+        <div class="topline"><span class="phase develop">Taller</span><h2>Trabajo individual en el informe</h2><span class="time">42 min</span></div>
+        <div class="work-grid">
+          <section class="panel">
+            <h3>Orden sugerido</h3>
+            <ol class="timeline">
+              <li><b>0–8 min</b><span>Ficha técnica y catastro (página 6): calcula superficies y distancia mínima.</span></li>
+              <li><b>8–18 min</b><span>Fotos 3 y 4 (página 9): coordenadas y descripción técnica.</span></li>
+              <li><b>18–32 min</b><span>Hallazgos 2 y 3 (página 11): usa el Hallazgo 1 como modelo.</span></li>
+              <li><b>32–38 min</b><span>Objetivos específicos y conclusión.</span></li>
+              <li><b>38–42 min</b><span>Resumen ejecutivo, portada, declaración y entrega.</span></li>
+            </ol>
+          </section>
+          <section class="panel monitor">
+            <h3>Antes de entregar, revisa</h3>
+            <ul>
+              <li>¿Cada cifra tiene su unidad (m, m², L)?</li>
+              <li>¿Usé «se observa», «se identifica», «se midió»?</li>
+              <li>¿El criterio cita la fuente y el numeral?</li>
+              <li>¿La coordenada de la Foto 4 es el punto de toma?</li>
+              <li>¿Borré «como», «pal», «ojo» y las opiniones?</li>
+              <li>¿La conclusión responde al objetivo general?</li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide" data-title="Cierre · Plenario y timbre">
+      <div class="inside">
+        <div class="topline"><span class="phase close">Cierre</span><h2>Plenario y cierre</h2><span class="time">7 min</span></div>
+        <div class="closure-grid">
+          <section class="closure-card">
+            <h3>Pregunta de cierre</h3>
+            <p class="system-question">¿Cuál es la diferencia entre una observación y un hallazgo?</p>
+            <p>Pista: un hallazgo siempre compara lo observado con un criterio.</p>
+          </section>
+          <section class="closure-card">
+            <h3>Lo que viene</h3>
+            <p><b>Informe técnico de especialidad</b> · entrega el lunes 19 de octubre.</p>
+            <ul><li>Diagnóstico de una situación real de tu taller</li><li>Procedimiento de trabajo seguro</li><li>Normativa chilena con su fuente</li><li>Propuesta técnica</li></ul>
+            <p>Usarás la misma estructura de hoy.</p>
+          </section>
+          <section class="closure-card">
+            <h3>Evidencia de hoy</h3>
+            <ul><li>Informe entregado en la plataforma</li><li>En el cuaderno: objetivo y las cinco partes del hallazgo</li></ul>
+            <div class="stamp">Timbre de la clase</div>
+          </section>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bar" aria-label="Controles de la presentación">
+    <button class="nav" id="prev" type="button" aria-label="Pantalla anterior">‹ <span class="text">Atrás</span></button>
+    <div class="progress"><div class="progress-head"><span id="label">Portada</span><span id="counter">1 / 14</span></div><div class="track"><i id="track"></i></div></div>
+    <button class="full" id="fullscreen" type="button" title="Pantalla completa" aria-label="Pantalla completa">⛶</button>
+    <button class="nav primary" id="next" type="button" aria-label="Pantalla siguiente"><span class="text">Siguiente</span> ›</button>
+  </nav>
+
+  <script>
+    (function(){
+      const slides=[...document.querySelectorAll('.slide')];
+      const prev=document.getElementById('prev');
+      const next=document.getElementById('next');
+      const label=document.getElementById('label');
+      const counter=document.getElementById('counter');
+      const track=document.getElementById('track');
+      let index=0;
+      function show(target,direction){
+        target=Math.max(0,Math.min(slides.length-1,target));
+        if(slides[index].classList.contains('on')&&target===index)return;
+        slides[index].classList.remove('on','from-left');
+        index=target;
+        slides[index].classList.toggle('from-left',direction<0);
+        void slides[index].offsetWidth;
+        slides[index].classList.add('on');
+        slides[index].classList.remove('from-left');
+        slides[index].scrollTop=0;
+        label.textContent=slides[index].dataset.title||'';
+        counter.textContent=`${index+1} / ${slides.length}`;
+        track.style.width=`${(index+1)/slides.length*100}%`;
+        prev.disabled=index===0;
+        next.disabled=index===slides.length-1;
+        history.replaceState(null,'',`#${index+1}`);
+      }
+      prev.addEventListener('click',()=>show(index-1,-1));
+      next.addEventListener('click',()=>show(index+1,1));
+      document.querySelectorAll('.reveal').forEach(button=>button.addEventListener('click',()=>{button.parentElement.classList.remove('hidden-text');button.remove();}));
+      document.addEventListener('keydown',event=>{
+        if(/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName))return;
+        if(['ArrowRight','PageDown',' '].includes(event.key)){event.preventDefault();show(index+1,1)}
+        if(['ArrowLeft','PageUp'].includes(event.key)){event.preventDefault();show(index-1,-1)}
+        if(event.key==='Home'){event.preventDefault();show(0,-1)}
+        if(event.key==='End'){event.preventDefault();show(slides.length-1,1)}
+        if(event.key.toLowerCase()==='f')toggleFullscreen();
+      });
+      let startX=null,startY=null;
+      document.addEventListener('touchstart',event=>{startX=event.touches[0].clientX;startY=event.touches[0].clientY},{passive:true});
+      document.addEventListener('touchend',event=>{
+        if(startX===null)return;
+        const dx=event.changedTouches[0].clientX-startX;
+        const dy=event.changedTouches[0].clientY-startY;
+        if(Math.abs(dx)>64&&Math.abs(dx)>Math.abs(dy)*1.5)show(index+(dx<0?1:-1),dx<0?1:-1);
+        startX=null;startY=null;
+      },{passive:true});
+      function toggleFullscreen(){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen?.()}
+      document.getElementById('fullscreen').addEventListener('click',toggleFullscreen);
+      const initial=Number(location.hash.replace('#',''));
+      show(initial>=1&&initial<=slides.length?initial-1:0,1);
+    })();
+  </script>
+</body>
+</html>

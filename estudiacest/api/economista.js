@@ -11,6 +11,8 @@
 
 const admin = require('firebase-admin');
 const ROSTER = require('./_roster_nm4.js');
+// Informe técnico de la Clase 6 NM4: vive aquí por el tope de 12 funciones.
+const informeTecnico = require('./_informe-tecnico-nm4.js');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const BASE = 'plataforma_nm4/economista_callejero';
@@ -155,11 +157,15 @@ async function handleAdminList(req, res) {
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET,POST,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') return res.status(200).end();
 
     if (initError || !db) {
         return res.status(500).json({ error: 'Firebase no disponible', detalle: initError });
+    }
+
+    if (String((req.query && req.query.modulo) || '') === 'informe-tecnico') {
+        return informeTecnico(req, res, { admin, db });
     }
 
     const action = String((req.query && req.query.action) || (req.body && req.body.action) || '');

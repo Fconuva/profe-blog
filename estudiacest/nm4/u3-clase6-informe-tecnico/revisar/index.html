@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Revisar informes técnicos · NM4 · Clase 6</title>
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="icon" href="/estudiantes/assets/insignia_talca_1.png">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../informe/informe.css">
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#e3e9ee;color:var(--ink);font-family:Inter,Arial,sans-serif}
+    button,select,input{font:inherit}
+    [hidden]{display:none!important}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 14px 40px}
+    h1{margin:0 0 4px;color:var(--navy);font:700 26px "Source Serif 4",Georgia,serif}
+    .muted{color:var(--muted)}
+    .card{padding:18px;border-radius:10px;background:#fff;box-shadow:0 8px 22px rgba(18,49,75,.08)}
+    .login{max-width:420px;margin:40px auto}
+    .login label{display:block;margin:10px 0 4px;font-weight:700;color:var(--navy)}
+    .login input{width:100%;padding:11px;border:1.5px solid var(--line);border-radius:7px}
+    .btn{min-height:42px;padding:8px 14px;border:0;border-radius:7px;background:var(--teal);color:#fff;font-weight:800;cursor:pointer}
+    .btn.ghost{background:#fff;color:var(--navy);border:1.5px solid var(--line)}
+    .btn.warn{background:#fff;color:var(--red);border:1.5px solid #e7b8b4}
+    .btn:disabled{opacity:.5}
+    .error{color:var(--red);font-weight:700;min-height:20px}
+    .bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0}
+    .bar select{padding:9px;border:1.5px solid var(--line);border-radius:7px}
+    .stats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px}
+    .stats span{padding:7px 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:800;color:var(--navy)}
+    table.list{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:14px}
+    .list th,.list td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
+    .list th{background:var(--navy);color:#fff;font-size:12.5px}
+    .pill{padding:3px 9px;border-radius:999px;font-size:12px;font-weight:800}
+    .pill.sub{background:#dcefe2;color:#285b3e}.pill.draft{background:#fff0bf;color:#73550c}.pill.none{background:#eef1f4;color:#7b8794}
+    .viewer{position:fixed;inset:0;z-index:60;overflow:auto;background:#e3e9ee}
+    .viewer-top{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px;background:var(--navy-deep);color:#fff}
+    .viewer-top b{flex:1 1 240px}
+    .scroll-x{overflow-x:auto}
+    @media print{ .viewer-top,.wrap{display:none!important} .viewer{position:static;overflow:visible;background:#fff} }
+  </style>
+</head>
+<body>
+  <div class="wrap" id="main">
+    <h1>Informes técnicos · NM4 · Clase 6</h1>
+    <p class="muted">Inspección de ocupaciones en la franja de seguridad · caso ITM-TSA-INS-S04</p>
+
+    <section class="card login" id="loginCard">
+      <form id="loginForm">
+        <p class="muted" style="margin-top:0">Ingresa con tu cuenta de administrador de Estudia CEST.</p>
+        <label for="email">Correo</label><input id="email" type="email" autocomplete="username" required>
+        <label for="password">Contraseña</label><input id="password" type="password" autocomplete="current-password" required>
+        <p class="error" id="loginError" role="alert"></p>
+        <button class="btn" id="loginButton" type="submit">Entrar</button>
+      </form>
+    </section>
+
+    <section id="panel" hidden>
+      <div class="bar">
+        <label for="course" class="muted">Curso</label>
+        <select id="course"><option value="">Todos</option><option>4ATP</option><option>4BTP</option><option>4CTP</option><option>4DTP</option><option>4ETP</option></select>
+        <button class="btn ghost" id="refresh" type="button">Actualizar</button>
+        <button class="btn ghost" id="csv" type="button">Descargar CSV</button>
+        <button class="btn ghost" id="logout" type="button">Salir</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <p class="error" id="panelError" role="alert"></p>
+      <div class="scroll-x"><table class="list"><thead><tr><th>Curso</th><th>N.º</th><th>Estudiante</th><th>Estado</th><th>Partes</th><th>Última actividad</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+    </section>
+  </div>
+
+  <div class="viewer" id="viewer" hidden>
+    <div class="viewer-top"><b id="viewerTitle"></b>
+      <button class="btn ghost" type="button" id="printOne">Imprimir o guardar PDF</button>
+      <button class="btn warn" type="button" id="reopen">Reabrir para corregir</button>
+      <button class="btn" type="button" id="closeViewer">Cerrar</button>
+    </div>
+    <div class="report" id="report"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+  <script src="../informe/campos.js"></script>
+  <script src="../informe/informe.js"></script>
+  <script>
+  (function () {
+    const FIREBASE_CONFIG = {apiKey:'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',authDomain:'estudiacest.firebaseapp.com',databaseURL:'https://estudiacest-default-rtdb.firebaseio.com',projectId:'estudiacest',storageBucket:'estudiacest.firebasestorage.app',messagingSenderId:'999002169815',appId:'1:999002169815:web:51203237bc77c2e74deb92'};
+    firebase.initializeApp(FIREBASE_CONFIG);
+    const auth = firebase.auth();
+    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const API = '/api/economista?modulo=informe-tecnico&action=';
+    const $ = id => document.getElementById(id);
+    const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
+    const when = ms => ms ? new Date(ms).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+    let rows = [];
+    let current = null;
+
+    async function call(action, options = {}) {
+      const token = await auth.currentUser.getIdToken();
+      const response = await fetch(API + action + (options.query || ''), { method: options.method || 'GET', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' }, body: options.body ? JSON.stringify(options.body) : undefined, cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'No se pudo cargar.');
+      return data;
+    }
+
+    async function load() {
+      $('panelError').textContent = '';
+      $('refresh').disabled = true;
+      try {
+        const course = $('course').value;
+        const data = await call('admin-list', { query: course ? '&curso=' + course : '' });
+        rows = data.rows || [];
+        render();
+      } catch (error) {
+        $('panelError').textContent = error.message;
+      } finally { $('refresh').disabled = false; }
+    }
+
+    function state(row) {
+      const a = row.attempt;
+      if (!a) return ['none', 'Sin ingreso'];
+      if (a.completada && a.submitted) return ['sub', 'Entregado'];
+      return ['draft', 'En progreso'];
+    }
+
+    function render() {
+      const counts = { sub: 0, draft: 0, none: 0 };
+      rows.forEach(r => counts[state(r)[0]]++);
+      $('stats').innerHTML = `<span>${rows.length} estudiantes</span><span>✓ ${counts.sub} entregados</span><span>✎ ${counts.draft} en progreso</span><span>○ ${counts.none} sin ingreso</span>`;
+      $('rows').innerHTML = rows.map((r, i) => {
+        const [k, label] = state(r);
+        const a = r.attempt;
+        return `<tr><td>${courseName(r.curso)}</td><td>${r.n}</td><td>${esc(r.nombre)}</td><td><span class="pill ${k}">${label}</span></td><td>${a ? `${a.score} / ${a.total}` : '—'}</td><td>${a ? when(a.submittedAt || a.updatedAt) : '—'}</td><td>${a ? `<button class="btn ghost" type="button" data-i="${i}">Ver informe</button>` : ''}</td></tr>`;
+      }).join('');
+      $('rows').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => open(rows[Number(b.dataset.i)])));
+    }
+
+    function open(row) {
+      current = row;
+      $('viewerTitle').textContent = `${row.nombre} · ${courseName(row.curso)} · ${state(row)[1]} · ${row.attempt.score} de ${row.attempt.total} partes`;
+      $('reopen').hidden = !(row.attempt.completada && row.attempt.submitted);
+      window.InformeTecnico.render($('report'), { answers: row.attempt.answers, editable: false, student: { nombre: row.nombre, curso: courseName(row.curso) }, assetBase: '../assets/' });
+      $('viewer').hidden = false;
+      $('viewer').scrollTop = 0;
+    }
+
+    $('closeViewer').addEventListener('click', () => { $('viewer').hidden = true; current = null; });
+    $('printOne').addEventListener('click', () => window.print());
+    $('reopen').addEventListener('click', async () => {
+      if (!current || !confirm(`¿Reabrir el informe de ${current.nombre}? Conserva lo escrito y vuelve a quedar editable hasta que lo entregue otra vez.`)) return;
+      try {
+        await call('admin-reset', { method: 'POST', body: { curso: current.curso, n: current.n } });
+        $('viewer').hidden = true;
+        await load();
+      } catch (error) { $('panelError').textContent = error.message; $('viewer').hidden = true; }
+    });
+
+    $('csv').addEventListener('click', () => {
+      const lines = [['Curso', 'N', 'Estudiante', 'Estado', 'Partes', 'Total', 'Entrega']];
+      rows.forEach(r => { const a = r.attempt; lines.push([courseName(r.curso), r.n, r.nombre, state(r)[1], a ? a.score : 0, a ? a.total : '', a && a.submittedAt ? new Date(a.submittedAt).toISOString() : '']); });
+      const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      link.download = `informe-tecnico-nm4-${$('course').value || 'todos'}.csv`;
+      link.click();
+    });
+
+    $('loginForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('loginError').textContent = '';
+      $('loginButton').disabled = true;
+      try { await auth.signInWithEmailAndPassword($('email').value.trim(), $('password').value); }
+      catch (_) { $('loginError').textContent = 'No se pudo iniciar sesión con esa cuenta.'; }
+      finally { $('loginButton').disabled = false; }
+    });
+    $('logout').addEventListener('click', () => auth.signOut());
+    $('refresh').addEventListener('click', load);
+    $('course').addEventListener('change', load);
+    auth.onAuthStateChanged(user => {
+      $('loginCard').hidden = !!user;
+      $('panel').hidden = !user;
+      if (user) load();
+    });
+  })();
+  </script>
+</body>
+</html>

@@ -8,14 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
-## 2026-09-23, NM3 Unidad 3 Clase 3: reestructuración pedagógica canónica e ilustraciones IA
+## 2026-09-23, NM3 Unidad 3 Clase 3: taller audiovisual «1 hecho, 3 versiones», video modelo Salesianos Talca y carga de hasta 1 GB
 
-- Reestructuración completa de la presentación de la Clase 3 («Quién habla y para quién») siguiendo la estructura pedagógica de aula:
-  - INICIO: Motivación con 3 publicaciones de redes sociales ilustradas con imágenes IA (cuenta personal, creador de contenido y comunicado institucional), Presentación de objetivo de clase limpio, Activación de conocimientos previos con tres preguntas clave («¿Quién habla?», «¿A quién se dirige?», «¿Qué espera que ocurra?») y Conceptos clave (Autor real, Enunciador, Audiencia, Propósito, Registro) con etiqueta destacada «Anotar en el cuaderno».
-  - DESARROLLO: Explicación de la actividad con ejemplo modelado de muestra técnica escolar (4 datos objetivos invariables) y actividad en parejas con matriz para el cuaderno y pauta de monitoreo docente.
-  - CIERRE: Revisión en parejas mediante prueba a ciegas con justificación de 2 marcas lingüísticas, retroalimentación en plenario y sistematización con transferencia laboral técnica (diferenciación de registro con compañeros de faena, clientes y jefatura técnica) con ticket de salida de 3 líneas.
-- Generadas e integradas 3 imágenes fotográficas de alta resolución con IA para las publicaciones de la motivación en `nm3/u3-clase3-enunciador-audiencia/img/`.
-- Verificación: `npm run build` aprobado sin errores, pruebas visuales en 1440x900 y 390x844 (móvil) con 0 desbordes horizontales comprobados.
+- Transformación de la Clase 3 («Quién habla y para quién») en un taller audiovisual dinámico e interactivo:
+  - **INICIO:**
+    - **A. Motivación (Situación 1 lista):** Video vertical estilo vlog grabado por un estudiante vistiendo el uniforme fidedigno del Colegio Salesianos Talca (vestón azul marino con escudo bordado TALCA ST, corbata y pantalón gris marengo en el patio del colegio), con voz chilena natural (`es-CL-LorenzoNeural`), subtítulos WebVTT y reproductor en mockup de smartphone (`video-situacion1-vlogger.mp4`, poster y track VTT).
+    - **B. Objetivo:** Analizar la construcción del enunciador y registrar versiones contrastantes.
+    - **C. Activación:** Tres preguntas clave ante cualquier mensaje («¿Quién habla?», «¿A quién se dirige?», «¿Qué espera que ocurra?»).
+    - **D. Conceptos clave:** Autor real, Enunciador, Audiencia, Propósito, Registro con etiqueta «📓 Anotar en el cuaderno».
+  - **DESARROLLO:**
+    - **Explicación y modelamiento:** Hecho base invariable escolar (apertura de la sala de lectura en el 2° piso, lunes, para toda la comunidad).
+    - **Actividad de rodaje en terreno:** Trabajo individual, en parejas o tríos (máximo 3). Salida de 20 min por el colegio a grabar la Versión Oficial (Director/Inspector) o la Versión Testigo (vivencial/compañero) en videos breves de 15 a 45 segundos.
+    - **Módulo de carga de video:** Componente interactivo que soporta archivos de hasta 1 GB (1024 MB) para grabaciones en 4K/1080p, con subida directa y fragmentada a Firebase Storage (`videos_nm3/u3_clase3/{curso}/{timestamp}_{version}_{safeFileName}`), barra de progreso en tiempo real con % y MB transferidos, y vista previa inmediata.
+  - **CIERRE:**
+    - **Plenario con proyector en vivo:** Visor dinámico que lista los videos subidos por los cursos y permite proyectarlos a pantalla completa en la pizarra del aula para la retroalimentación del grupo.
+    - **Sistematización laboral:** Transferencia al entorno técnico profesional (diferenciación de registro con compañeros en faena, clientes y jefatura/orden de trabajo) y ticket de salida de 3 líneas para timbre en el cuaderno.
+- **Firebase Storage:** Reglas actualizadas y desplegadas exitosamente (`npm run deploy:storage`) habilitando `videos_nm3/u3_clase3/{curso}/{fileName}` con límite de 1 GB y validación de tipo de contenido `video/*`.
+- **Verificación:** `npm run build` aprobado sin errores (26 auditorías pasando), prueba de subida de video verificada en producción (200 OK con URL pública generada).
 
 ---
 

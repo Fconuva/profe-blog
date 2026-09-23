@@ -204,6 +204,8 @@ const ROWS = [
   ["00cbfb2fbcf28ad9012af7b2","4ETP",36,"TORRES ZUÑIGA CRISTOBAL ALONSO"],
   ["5bafe3e63d70ccb81218272e","4ETP",37,"VALDERRAMA CASTILLO NICOLAS MARTIN"],
   ["b9071ca282dcbab4037bf06a","4ETP",38,"VALDES ROJAS ANTONIO JESUS"],
-  ["c5f975fb4ac358a42a0c2a90","4ETP",39,"VASQUEZ SOTO MARTIN ALONSO"]
+  ["c5f975fb4ac358a42a0c2a90","4ETP",39,"VASQUEZ SOTO MARTIN ALONSO"],
+  // Identidad de prueba (RUT ficticio 11.111.111-1) para verificar sin tocar registros reales.
+  ["7d0e7edcc832f9a9c60b9642","PRUEBA",1,"ESTUDIANTE DE PRUEBA"]
 ];
 module.exports = { SALT, ROWS };

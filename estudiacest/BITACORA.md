@@ -8,6 +8,50 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM4 Unidad 3 Clase 6: el informe técnico, método de caso con informe prediseñado en tablet
+
+Pedido de Francisco: la Clase 6 del lunes 28 de septiembre (4°D martes 29) es la del informe técnico. Primero se explica qué es un informe con el método de caso de un informe de auditoría o inspección, usando como referencia los informes que se hicieron para Celeo desde REC. Después, en la tablet, los estudiantes completan un informe prediseñado con páginas: algunas partes listas y otras por redactar. Tablas, imágenes y fotos georreferenciadas incluidas. Los de NM4 no tienen cuenta, así que ingresan con su RUT.
+
+**Rutas nuevas**
+- `/nm4/u3-clase6-informe-tecnico/`: presentación de 14 pantallas, 90 minutos.
+- `/nm4/u3-clase6-informe-tecnico/informe/`: informe de 13 páginas con 27 campos. Ingreso con RUT, autoguardado en cola, libreta de terreno informal y entrega.
+- `/nm4/u3-clase6-informe-tecnico/revisar/`: panel docente con login de administrador de Firebase. Filtra por curso, muestra el informe tal como se entregó, imprime y reabre sin borrar lo escrito.
+
+**El caso.** Se usa la estructura del levantamiento real de construcciones bajo la línea de 500 kV Charrúa–Ancoa, hecho para Celeo desde REC: ficha por sector, tabla de estructuras con UTM, registro fotográfico georreferenciado con ficha por foto, catastro, conclusiones y anexos. Empresas, estructuras, ocupaciones y libreta son ficticias, y la página lo declara. No se publicaron fotos ni datos del informe real, porque muestran viviendas de particulares. Solo aparecen cifras generales en una diapositiva: 19 sectores, 1.940 m², 0,90 m y 280 páginas. Las fotos 1 y 2 son reales de Wikimedia Commons, tomadas en Charrúa, con sus coordenadas reales convertidas a UTM 18H. Las fotos 3 y 4 son ilustrativas. Todas tienen licencia CC y crédito en el anexo. Nano Banana no se usó: la cuenta prepago está sin saldo (429).
+
+**Fuentes verificadas en el anexo**
+- Pliego RPTD N.º 07 de la SEC, numerales 3.2, 4.9 y 4.13.
+- DFL 4, art. 57.
+- SMA, Res. Ex. 2.875/2025 (WGS-84 y huso).
+- CAIGG, Documento Técnico N.º 85 (condición, criterio, causa, efecto y recomendación).
+- ISO 19011:2018, apartado 3.10.
+- Enlace al informe público de auditoría técnica de la S/E Valdivia (Coordinador Eléctrico Nacional).
+
+**Técnica**
+- API sin función nueva, por el tope de 12 del plan Hobby. `api/economista.js` deriva a `api/_informe-tecnico-nm4.js` cuando llega `?modulo=informe-tecnico`.
+- El RUN viaja solo en el cuerpo del POST y no se guarda en ninguna parte. `api/_roster_nm4_informe.js` tiene únicamente el hash SHA-256 del RUN, además de curso, número de lista y nombre. Son 200 estudiantes vigentes, sin retirados, más la identidad ficticia `PRUEBA` (RUT 11.111.111-1) para verificar.
+- Datos en `plataforma_nm4/informe_tecnico_2026/{curso}/{n}`. La entrega es una transacción que escribe juntos `submitted` y `completada` con sus timestamps, `score` (partes completas) y `total` (27). Un borrador tardío recibe 409 y no revierte la entrega.
+- Los campos se definen en un solo archivo, `informe/campos.js`, que comparten la página, el panel y el servidor.
+- La tarjeta 6 de `/nm4/` se abre sola el 28-09 (hora de Chile) y pasa la 5 a «Clase anterior».
+- Quedó registrada en `class-submission-contract.json`, en el manifiesto (con `allowMissingInProduction` en el primer deploy) y en el build, con `scripts/audit-nm4-u3-class6.js`.
+
+**Validación**
+- Auditoría propia OK. `verify:class-submission` OK (45 clases). `npm run build` OK (245 recursos).
+- Playwright local con la lógica real del servidor sobre una base en memoria:
+  - rechaza un RUT ajeno;
+  - confirma el nombre;
+  - autoguarda y recupera tras recargar;
+  - la entrega muestra «Entrega confirmada»;
+  - el registro queda completo;
+  - el borrador tardío recibe 409;
+  - el informe reabierto queda en solo lectura;
+  - el panel lista y muestra el informe.
+- Sin desborde en 390 px, 820 px (tablet) ni 1920 px. Presentación sin scroll interno en escritorio.
+
+**Incidente.** Durante el trabajo, otro proceso hizo `git stash` («WIP: NM4 clase 6 informe tecnico»). Ese stash se llevó también cambios ajenos que no se tocaron: `LIRMI_UPLOAD.md`, `css/tw.css`, `lirmi_upload_notes.js`, `package.json` de la raíz y `test-results/`. De ahí se recuperaron solo los archivos de esta clase. Esos cambios ajenos siguen guardados en `stash@{0}` y los debe recuperar quien los estaba haciendo.
+
+---
+
 ## 2026-09-23, NM3 Unidad 3 Clase 3: 3 videos modelo reproducibles, rodaje con 5 temas escolares y plenario interactivo
 
 - Por requerimiento de Francisco se actualizó integralmente la Clase 3 de 3° Medio («Quién habla y para quién», `nm3/u3-clase3-enunciador-audiencia/index.html`):

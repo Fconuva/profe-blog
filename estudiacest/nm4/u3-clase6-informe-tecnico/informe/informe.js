@@ -70,9 +70,9 @@
       return `<g class="ph"><path d="M${cx},${cy}L${cx + r * Math.cos(a1)},${cy + r * Math.sin(a1)}A${r},${r} 0 0 1 ${cx + r * Math.cos(a2)},${cy + r * Math.sin(a2)}Z" class="cone"/><circle cx="${cx}" cy="${cy}" r="9" class="phc"/><text x="${cx}" y="${cy + 3.5}" class="phn">${num}</text></g>`;
     };
     const o1 = [738023, 5891538], o2 = [738063, 5891445];
-    const o3a = onAxis(100, 18), o3b = onAxis(170, 18);
+    const o3a = onAxis(60, -18);
     const trees = [];
-    for (let t = 100; t <= 170; t += 10) { const p = onAxis(t, 18); trees.push(`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="4.2" class="tree"/>`); }
+    for (let t = 60; t <= 130; t += 10) { const p = onAxis(t, -18); trees.push(`<circle cx="${x(p[0])}" cy="${y(p[1])}" r="4.2" class="tree"/>`); }
     const sub = [[737925, 5891935], [738010, 5891935], [738010, 5891985], [737925, 5891985]].map(pt).join(' ');
     const road = [[737975, 5891990], [737982, 5891760], [737990, 5891590], [738001, 5891420], [738012, 5891260]].map(pt).join(' ');
     const lineStart = onAxis(-240, 0), lineEnd = onAxis(L + 90, 0);
@@ -84,7 +84,7 @@
       <polygon points="${sub}" class="sub"/><text x="${x(737930)}" y="${y(5891955)}" class="lb sm">Subestación</text>
       <line x1="${x(lineStart[0])}" y1="${y(lineStart[1])}" x2="${x(lineEnd[0])}" y2="${y(lineEnd[1])}" class="ax"/>
       ${trees.join('')}
-      <text x="${x(o3a[0]) + 10}" y="${y(o3a[1]) - 8}" class="lb">O-3</text>
+      <text x="${x(o3a[0]) - 36}" y="${y(o3a[1]) + 4}" class="lb">O-3</text>
       <rect x="${x(o1[0]) - 6}" y="${y(o1[1]) - 4}" width="12" height="8" class="oc"/><text x="${x(o1[0]) + 10}" y="${y(o1[1]) + 4}" class="lb">O-1</text>
       <rect x="${x(o2[0]) - 8}" y="${y(o2[1]) - 5}" width="16" height="10" class="oc"/><text x="${x(o2[0]) - 36}" y="${y(o2[1]) + 4}" class="lb">O-2</text>
       ${tower(E21, 'E-21', -38)}${tower(E22, 'E-22', 12)}

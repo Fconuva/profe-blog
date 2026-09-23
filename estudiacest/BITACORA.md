@@ -21,6 +21,29 @@ El registro PRUEBA quedó entregado en ambas versiones; se reabre desde `/revisa
 
 ---
 
+## 2026-09-23, NM4: informe técnico habilitado desde ahora
+
+Francisco pidió conservar el calendario ordenado y dejar disponible de inmediato el informe técnico ya creado.
+
+**Cambio publicado**
+
+- La entrevista de trabajo quedó como clase anterior.
+- El informe técnico quedó como actividad actual, con el aviso `Disponible ahora`.
+- Se eliminó el bloqueo que ocultaba los accesos hasta el 28 de septiembre.
+- Quedaron visibles los cuatro accesos: clase e informe para Electricidad/Electrónica y para Mecánica.
+- Las fechas del calendario no cambiaron.
+
+**Verificación**
+
+- Auditorías NM4 de las clases 5 y 6: aprobadas.
+- `npm run build`: aprobado, con 250 recursos críticos.
+- Portada revisada en 390 px y 1440 px, sin desborde.
+- Las dos clases y los dos informes responden en producción; ambos informes muestran el ingreso por RUT.
+- Producción revisada en `https://www.estudiacest.com/nm4/#u3-clases`.
+- Commit funcional: `dca48124`.
+
+---
+
 ## 2026-09-23, NM4: calendario de cierre ordenado y publicado
 
 Francisco corrigió las fechas de la Unidad 3. La portada tenía un bloque de cierre que repetía información e incluía actividades que no estaban confirmadas.

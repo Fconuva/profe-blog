@@ -8,22 +8,20 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
-## 2026-09-23, NM3 Unidad 3 Clase 3: taller audiovisual «1 hecho, 3 versiones», video modelo Salesianos Talca y carga de hasta 1 GB
+## 2026-09-23, NM3 Unidad 3 Clase 3: video multicámara con jump-cuts, voz humanizada y panel docente en vivo
 
-- Transformación de la Clase 3 («Quién habla y para quién») en un taller audiovisual dinámico e interactivo:
-  - **INICIO:**
-    - **A. Motivación (Situación 1 lista):** Video vertical estilo vlog grabado por un estudiante vistiendo el uniforme fidedigno del Colegio Salesianos Talca (vestón azul marino con escudo bordado TALCA ST, corbata y pantalón gris marengo en el patio del colegio), con voz chilena natural (`es-CL-LorenzoNeural`), subtítulos WebVTT y reproductor en mockup de smartphone (`video-situacion1-vlogger.mp4`, poster y track VTT).
-    - **B. Objetivo:** Analizar la construcción del enunciador y registrar versiones contrastantes.
-    - **C. Activación:** Tres preguntas clave ante cualquier mensaje («¿Quién habla?», «¿A quién se dirige?», «¿Qué espera que ocurra?»).
-    - **D. Conceptos clave:** Autor real, Enunciador, Audiencia, Propósito, Registro con etiqueta «📓 Anotar en el cuaderno».
-  - **DESARROLLO:**
-    - **Explicación y modelamiento:** Hecho base invariable escolar (apertura de la sala de lectura en el 2° piso, lunes, para toda la comunidad).
-    - **Actividad de rodaje en terreno:** Trabajo individual, en parejas o tríos (máximo 3). Salida de 20 min por el colegio a grabar la Versión Oficial (Director/Inspector) o la Versión Testigo (vivencial/compañero) en videos breves de 15 a 45 segundos.
-    - **Módulo de carga de video:** Componente interactivo que soporta archivos de hasta 1 GB (1024 MB) para grabaciones en 4K/1080p, con subida directa y fragmentada a Firebase Storage (`videos_nm3/u3_clase3/{curso}/{timestamp}_{version}_{safeFileName}`), barra de progreso en tiempo real con % y MB transferidos, y vista previa inmediata.
-  - **CIERRE:**
-    - **Plenario con proyector en vivo:** Visor dinámico que lista los videos subidos por los cursos y permite proyectarlos a pantalla completa en la pizarra del aula para la retroalimentación del grupo.
-    - **Sistematización laboral:** Transferencia al entorno técnico profesional (diferenciación de registro con compañeros en faena, clientes y jefatura/orden de trabajo) y ticket de salida de 3 líneas para timbre en el cuaderno.
-- **Firebase Storage:** Reglas actualizadas y desplegadas exitosamente (`npm run deploy:storage`) habilitando `videos_nm3/u3_clase3/{curso}/{fileName}` con límite de 1 GB y validación de tipo de contenido `video/*`.
+- **Video multicámara dinámico del Vlogger escolar (Situación 1):**
+  - Superada la toma fija: compilado video vertical en 4 planos reales con jump-cuts estilo TikTok/Reels:
+    1. Plano 1 (0.0s - 4.0s): Estudiante saludando a la cámara con la mano y sonrisa enérgica (`vlogger-saludo.jpg`).
+    2. Plano 2 (4.0s - 9.5s): Salto a plano medio señalando con el dedo hacia el segundo piso (`vlogger-senala.jpg`).
+    3. Plano 3 (9.5s - 14.5s): Inserto dinámico / B-roll cinematográfico de la sala de lectura con libros y sillones.
+    4. Plano 4 (14.5s - 22.5s): Cierre en primer plano con gesto de pulgar arriba y guiño de complicidad (`vlogger-pulgar.jpg`).
+  - Audio humanizado con cadencia juvenil, pausas naturales de respiración y modismos chilenos («¡Buena, cabros de Salesianos! ... ¿Vale la pena? ¡La recorrí completa y quedó bacán! ... ¡Nos vemos!»). Subtítulos WebVTT sincronizados a cada frase.
+- **Panel Docente en tiempo real (Diapositiva 8 - Plenario):**
+  - Integrada consulta asíncrona a Firebase Storage mediante prefijo de curso (`videos_nm3/u3_clase3/{curso}/`).
+  - El profesor en el proyector del aula selecciona el curso (`3°A TP`, `3°B TP`, etc.) y la plataforma carga al instante todos los videos enviados por los estudiantes desde sus celulares, mostrando nombres de integrantes, versión, hora y tamaño en MB.
+  - Botón de proyección con pantalla completa inmediata para debate en plenario con todo el curso.
+- **Firebase Storage:** Reglas actualizadas y desplegadas exitosamente (`npm run deploy:storage`) habilitando `videos_nm3/u3_clase3/{allPaths=**}` con límite de 1 GB, lectura pública y consulta de listado para el panel docente.
 - **Verificación:** `npm run build` aprobado sin errores (26 auditorías pasando), prueba de subida de video verificada en producción (200 OK con URL pública generada).
 
 ---

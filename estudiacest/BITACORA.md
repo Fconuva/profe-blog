@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-23, NM4: planificación de cierre, 4 tareas de octubre y semanas PAES de noviembre
+
+- Solicitud de Francisco: en NM4 figuraba una sola tarjeta disponible para los estudiantes; restan 4 tareas evaluativas para el cierre de año y en noviembre las semanas 1 y 2 se destinan íntegra y exclusivamente para Ensayos PAES de Competencia Lectora.
+- Se diseñó y desplegó en el portal de NM4 (`nm4/index.html`) una sección destacada con la hoja de ruta completa para 4°A, 4°B, 4°C, 4°D y 4°E:
+  - **Banner PAES Noviembre:**
+    - Semana 1 (2 al 6 de noviembre): Ensayo Intensivo 1 · Rastreo e Interpretación (65 preguntas, taller de distractores DEMRE).
+    - Semana 2 (9 al 13 de noviembre): Ensayo Intensivo 2 · Simulación Oficial de Egreso (gestión de tiempo, evaluación y reflexión crítica, cierre definitivo de actas y notas en Lirmi antes de la Licenciatura).
+    - Botón de acceso directo hacia `/paes/`.
+  - **Las 4 Tareas Evaluativas de Cierre (Octubre):**
+    - Tarea 1 (28 sep al 5 oct / 4°D 29 sep al 6 oct): Escribir en el trabajo (correo formal, solicitud y reporte de faena) + Revisión y timbre puesto por puesto de las 6 evidencias de la Unidad 3 en el cuaderno. (Para 4°D: mesa editorial y cierre de inventario de páginas del Anuario).
+    - Tarea 2 (Lunes 19 de octubre, feriado 12-oct trasladado; 4°D martes 13-oct versión digital 2): Informe Técnico de Especialidad TP (diagnóstico, procedimiento seguro, normativa y propuesta técnica).
+    - Tarea 3 (Lunes 26 de octubre; 4°D martes 27-oct): Plan Lector · «Camanchaca» de Diego Zúñiga (guía de análisis e interpretación literaria).
+    - Tarea 4 (26 al 31 de octubre; 4°D martes 27-oct): Portafolio de Inserción Laboral / Cierre NM4 (CV técnico definitivo, autoevaluación STAR y síntesis de seguridad; para 4°D: entrega obligatoria del ejemplar físico del Anuario al profesor).
+- Validación y preservación:
+  - La grilla `<div class="u3-grid">` de la Unidad 3 conserva sus 8 tarjetas y una sola activa para estricto cumplimiento de `scripts/audit-nm4-u3-class5.js`.
+  - `node scripts/audit-nm4-u3-class5.js`: APROBADO.
+  - `npm run build`: APROBADO (27 auditorías y 237 recursos críticos verificados).
+  - Playwright: 0 desbordes horizontales comprobados en 390px (móvil) y 1440px (escritorio).
+
+---
+
 ## 2026-09-23, NM3 Unidad 3 Clase 3: reestructuración pedagógica canónica e ilustraciones IA
 ## 2026-09-23, NM3 Unidad 3 Clase 3: taller audiovisual «1 hecho, 3 versiones», video modelo Salesianos Talca y carga de hasta 1 GB
 ## 2026-09-23, NM3 Unidad 3 Clase 3: video multicámara con jump-cuts, voz humanizada y panel docente en vivo

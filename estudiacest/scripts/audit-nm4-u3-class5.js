@@ -203,8 +203,9 @@ for (const file of images) {
 const class5Start = portal.indexOf('<h3>La entrevista de trabajo</h3>');
 expect(class5Start >= 0, 'La portada NM4 no contiene la Clase 5.');
 const class5Card = class5Start >= 0 ? portal.slice(portal.lastIndexOf('<article', class5Start), portal.indexOf('</article>', class5Start) + 10) : '';
-expect(class5Card.includes('u3-card activa'), 'La Clase 5 no está marcada como actual.');
-expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta actual no enlaza la clase.');
+expect(!class5Card.includes('u3-card pendiente'), 'La Clase 5 quedó bloqueada después de su fecha.');
+expect(class5Card.includes('Clase anterior'), 'La Clase 5 no está marcada como clase anterior.');
+expect(class5Card.includes('/nm4/u3-clase5-entrevista-laboral/'), 'La tarjeta de la Clase 5 no enlaza la clase.');
 expect(class5Card.includes('22 de septiembre'), 'La tarjeta no tiene la fecha del 22 de septiembre.');
 
 const requiredManifest = [pagePath, ...images.map(file => `nm4/u3-clase5-entrevista-laboral/assets/${file}`)];

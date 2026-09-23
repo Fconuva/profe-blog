@@ -27,8 +27,13 @@ expect(slides.length === 14, `Se esperaban 14 pantallas y hay ${slides.length}.`
 const minutes = [...deck.matchAll(/<span class="time">(\d+) min<\/span>/g)].reduce((sum, m) => sum + Number(m[1]), 0);
 expect(minutes === 90, `Los tiempos de la presentación suman ${minutes} minutos, no 90.`);
 
-// Portada NM4: la tarjeta existe, se abre por fecha y no rompe la grilla.
-expect(/id="u3-clase6" data-abre="2026-09-28"/.test(portal), 'La portada NM4 no tiene la tarjeta de la Clase 6 con su fecha de apertura.');
+// Portada NM4: la tarjeta está habilitada y no depende de una apertura futura.
+const class6Start = portal.indexOf('<h3>Escribir en el trabajo: el informe técnico</h3>');
+const class6Card = class6Start >= 0 ? portal.slice(portal.lastIndexOf('<article', class6Start), portal.indexOf('</article>', class6Start) + 10) : '';
+expect(class6Start >= 0, 'La portada NM4 no contiene la Clase 6.');
+expect(class6Card.includes('u3-card activa'), 'La Clase 6 no está habilitada como actividad actual.');
+expect(class6Card.includes('Disponible ahora'), 'La Clase 6 no informa que ya está disponible.');
+expect(!class6Card.includes('hidden') && !class6Card.includes('data-abre'), 'La Clase 6 conserva un bloqueo de apertura futura.');
 expect(portal.includes('/nm4/u3-clase6-informe-tecnico/informe/'), 'La tarjeta de la Clase 6 no enlaza al informe.');
 
 // Campos: cada campo del servidor se dibuja una vez en el informe.

@@ -44,6 +44,27 @@ completo.
 
 ---
 
+## 2026-09-24, NM3: pauta Word para revisar y calificar el ensayo argumentativo
+
+Se consolidó en un documento docente la evaluación aplicada al ensayo argumentativo de NM3. La pauta conserva la rúbrica original de 28 puntos y sus siete criterios con niveles 4, 3, 2 y 0; además incorpora la guía vigente para pasar el borrador en limpio y la clase histórica de conclusión.
+
+**Archivo creado**
+
+- `nm3/documentos-docente/Pauta_revision_y_calificacion_ensayo_argumentativo_NM3_CEST.docx`
+- Tres páginas A4 apaisadas con insignia CEST y logo SDB: rúbrica analítica, hoja operativa de corrección y conversión completa a nota 1,0–7,0 con 60 % de exigencia.
+- La revisión del formato comprueba título propio, texto continuo sin etiquetas de planificación, sangría, separación de párrafos, uso de renglones, partición silábica, legibilidad y corrección final.
+- La calibración aclara que el respaldo podía ser inventado si era creíble y pertinente, que no se evalúa la cantidad de páginas y que laboriosidad depende del registro de clases, no del aspecto del producto final.
+
+**Verificación**
+
+- Validación estructural DOCX: aprobada.
+- Apertura con Microsoft Word y exportación a PDF: tres páginas A4, encabezados y pies repetidos, sin cortes ni desbordes.
+- Extracción completa con Pandoc: sin campos vacíos accidentales ni texto de plantilla.
+- `npm run build`: aprobado con 250 recursos críticos.
+- Commit del documento: `a26b8610`.
+
+No se modificó ni desplegó la plataforma: es un documento docente no enlazado desde el sitio.
+
 ## 2026-09-23, NM4 Clase 6: las dos versiones verificadas en producción
 
 La Clase 6 quedó en producción con el deploy del calendario NM4 (`bdf78121`/`49c9b62f`). Ese deploy incluyó el commit `cb993ddf`, así que no se hizo un deploy aparte.

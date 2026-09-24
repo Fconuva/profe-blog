@@ -8,6 +8,47 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-24, NM3 Clase 3: limpieza de secciones duplicadas y exceso de videos
+
+Francisco informó que en `/nm3/u3-clase3-enunciador-audiencia/` algunas secciones quedaron malas, duplicadas, con exceso de videos y sin sentido. Las ediciones sucesivas habían dejado dos versiones mezcladas en varias diapositivas.
+
+**Diapositiva A (motivación)**
+- La cita y la radiografía del video 1 aparecían dos veces, con `<div>` sin cerrar: las fichas 2 y 3 quedaban anidadas dentro de la primera.
+- El reproductor cargaba dos `<source>` y dos `<track>`.
+- Quedó una ficha por video. Las citas ahora son idénticas a la narración de HeyGen.
+
+**Diapositiva B**
+- El objetivo decía que se grababa solo la versión oficial o testigo, pero la actividad permite las tres. Quedó coherente.
+
+**Diapositiva E**
+- Tenía dos títulos, dos introducciones, dos encabezados de tabla y 6 filas contradictorias para 3 versiones.
+- Quedó con un título, los 4 datos del hecho y una sola tabla de 3 filas.
+
+**Coherencia de la actividad (E y F)**
+- Los grupos graban sobre otro tema (baños, casino, gimnasio…), pero el plenario les pedía «conservar los 4 datos del hecho base» de la sala de lectura.
+- Ahora cada grupo anota en el cuaderno los 4 datos de *su* tema antes de salir (E y F), y el plenario pregunta por esos datos.
+
+**Diapositiva H (plenario)**
+- Volvía a proyectar los 3 videos modelo con tarjetas y botones duplicados.
+- Ahora muestra solo los videos de los estudiantes.
+- El JS tenía un botón sin cerrar y líneas repetidas.
+
+**Cursos**
+- El formulario de carga y el filtro ofrecían 3°C, 3°E HC y 3°F HC, con especialidades no verificadas.
+- Quedaron solo los cursos reales de NM3: 3°A, 3°B y 3°D TP. Se conservan las claves `3A_TP`, `3B_TP` y `3D_TP` de Storage.
+
+**Otros**
+- Las etiquetas del teléfono se acortaron (VLOG, TESTIGO, OFICIAL) porque quedaban bajo la muesca.
+
+**Validación**
+- 10 diapositivas con etiquetas balanceadas; las pestañas muestran una ficha y un video con una pista.
+- 0 errores JS; sin desborde en 390 px ni en 1440 px. `npm run build` OK.
+
+**Pendiente**
+- En Storage, 3°A tiene dos archivos de prueba del desarrollo (`…_Oficial_video_prueba.mp4` y `test_….mp4`) que aparecen en el plenario. No se borraron: la eliminación es irreversible y requiere la decisión de Francisco.
+
+---
+
 ## 2026-09-24, NM3 Clase 3: los tres videos modelo con voces de HeyGen
 
 Francisco encontró que la narración de los videos de NM3 sonaba muy robótica. Venía de edge-tts: `es-CL-LorenzoNeural` y `es-CL-CatalinaNeural`. Comparó muestras de edge-tts, Kokoro y HeyGen. OpenAI quedó fuera porque la key no tiene saldo. Eligió estas voces de HeyGen:

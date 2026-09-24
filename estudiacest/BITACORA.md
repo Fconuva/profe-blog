@@ -8,6 +8,43 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-24, NM3 Clase 3: secuencia de inicio, desarrollo y cierre
+
+Francisco pidió ordenar la clase para que tenga un inicio, un desarrollo y un cierre claros. No sabía si mostrar los videos al inicio o en el desarrollo.
+
+Se decidió usar un solo video al inicio y los tres en el desarrollo:
+- **Inicio:** el video del vlogger funciona como gancho, con preguntas abiertas: «¿le creerían?», «¿irían a la sala?», «¿y si lo contara el inspector?». No adelanta el análisis.
+- **Desarrollo:** los tres videos, con su radiografía, sirven para modelar el análisis justo antes del rodaje.
+
+Mostrar los tres al comienzo gastaba el modelado en los primeros minutos y dejaba el desarrollo repitiéndolo.
+
+**Secuencia nueva:** portada + 10 diapositivas, 90 min. Cada fase muestra sus minutos en la etiqueta.
+- **Inicio (15 min):**
+  - A. Motivación, solo con el video del vlogger (5 min).
+  - B. Objetivo (3 min).
+  - C. Activación con las tres preguntas clave (7 min).
+- **Desarrollo (55 min):**
+  - D. Conceptos clave, se anotan en el cuaderno (8 min).
+  - E. Modelado con los 3 videos y su radiografía (12 min).
+  - F. Qué cambia y qué se mantiene, con los 4 datos (5 min).
+  - G. Rodaje en terreno (25 min).
+  - H. Carga del video (5 min).
+- **Cierre (20 min):**
+  - I. Plenario con los videos de los estudiantes (13 min).
+  - J. Sistematización y ticket de salida (7 min).
+
+**Otros cambios**
+- La portada muestra la agenda por fase.
+- Los conceptos clave pasaron del inicio al desarrollo.
+- `u3-deck.js`, que se comparte con la Clase 2, no se tocó: cuenta las diapositivas solo.
+
+**Validación**
+- Recorrido con el botón «Siguiente» por las 11 pantallas: título y contador correctos.
+- El video de la motivación reproduce el del vlogger; el selector del modelado alterna los tres videos.
+- 0 errores JS y sin desborde en 390 px ni en 1440 px.
+
+---
+
 ## 2026-09-24, NM3 Clase 3: limpieza de secciones duplicadas y exceso de videos
 
 Francisco informó que en `/nm3/u3-clase3-enunciador-audiencia/` algunas secciones quedaron malas, duplicadas, con exceso de videos y sin sentido. Las ediciones sucesivas habían dejado dos versiones mezcladas en varias diapositivas.

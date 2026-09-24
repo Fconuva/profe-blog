@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-24, NM3 Clase 3: los tres videos modelo con voces de HeyGen
+
+Francisco encontró que la narración de los videos de NM3 sonaba muy robótica. Venía de edge-tts: `es-CL-LorenzoNeural` y `es-CL-CatalinaNeural`. Comparó muestras de edge-tts, Kokoro y HeyGen. OpenAI quedó fuera porque la key no tiene saldo. Eligió estas voces de HeyGen:
+
+- Situación 1 · vlogger: **Energetic Male 20s**.
+- Situación 2 · testigo: **Trendy Influencer**. Es femenina porque la imagen muestra a una estudiante.
+- Situación 3 · comunicado oficial: **Sarcastic LatAm Male**.
+
+`scripts/build-nm3-u3-videos.py` se reescribió para producir los tres videos con el CLI `heygen` (locale `es-CL`).
+
+- **Sincronía.** HeyGen devuelve el tiempo de cada palabra; con eso se calculan los cortes de cámara y los subtítulos. La alineación se hace por letras y descarta los marcadores `<start>` y `<end>` que agrega HeyGen.
+- **Fallas.** Si HeyGen falla, se reintenta.
+- **Subtítulos.** Ningún subtítulo se monta sobre el siguiente.
+- **Error corregido.** El VTT de la Situación 1 tenía dos guiones superpuestos, uno antiguo y uno nuevo, y mostraba dos frases a la vez. Quedó uno solo.
+- **Duraciones.** Situación 1: 29,4 s (antes 22,5). Situación 2: 18,4 s. Situación 3: 22,6 s.
+- **Revisión.** Se revisó un cuadro por toma y el nivel de audio: media de −17 a −19 dB, sin saturar.
+
+**HeyGen en este PC**
+- El CLI de HeyGen tiene binario oficial para Windows, aunque su documentación diga que no; se verificó contra `checksums.txt`.
+- Está instalado en `C:\Users\franc\bin\heygen.exe` (v0.8.1).
+- Sesión OAuth con la cuenta gratuita de Francisco.
+
+---
+
 ## 2026-09-24, Interrogaciones NM3 y NM4: opción de evaluación PIE
 
 Alicia Aguilera, educadora diferencial, mandó dos listas de 25 preguntas, una por

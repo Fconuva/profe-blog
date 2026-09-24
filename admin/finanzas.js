@@ -4,7 +4,14 @@
     function monto(v) { return typeof v === 'number' && Number.isFinite(v) && v >= 0; }
     function precioPendiente(p) {
         p = p || {};
-        return (p.revisionFinanciera || {}).estado === 'precio-pendiente';
+        var r = p.revisionFinanciera || {}, c = p.cartera || {};
+        if (r.estado !== 'precio-pendiente') return false;
+        // Una conciliación posterior del libro de caja invalida una alerta histórica.
+        // Así el dashboard no vuelve a ocultar un precio ya confirmado y pagado.
+        var conciliadoDespues = c.fuentePago === '_gestion/LIBRO_DE_CAJA.jsonl'
+            && monto(c.precio) && c.precio > 0 && monto(c.saldo)
+            && dia(c.actualizadoEn) > dia(r.actualizadoEn);
+        return !conciliadoDespues;
     }
     function sinCobro(p) {
         return !!p.duplicadoDe || p.noCobrar === true || p.archivado === true || p.liberado === true

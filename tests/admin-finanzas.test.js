@@ -73,3 +73,13 @@ test('precio pendiente y ficha duplicada quedan fuera de la proyección sin perd
  assert.match(nodes['potencial-table'].innerHTML,/Precio por confirmar/);
  assert.equal(Object.values(context.window._agendaCobros).flat().reduce((s,e)=>s+e.monto,0),299980);
 });
+test('una conciliación posterior del libro invalida una alerta histórica de precio pendiente',()=>{
+ const p={
+  revisionFinanciera:{estado:'precio-pendiente',actualizadoEn:'2026-09-10'},
+  cartera:{fuentePago:'_gestion/LIBRO_DE_CAJA.jsonl',precio:179980,pagado:179980,saldo:0,actualizadoEn:'2026-09-18'}
+ };
+ assert.equal(f.precioPendiente(p),false);
+ assert.equal(f.saldo(p,179980,179980),0);
+ p.cartera.actualizadoEn='2026-09-09';
+ assert.equal(f.precioPendiente(p),true);
+});

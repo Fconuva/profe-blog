@@ -38,6 +38,20 @@ function answerBank(html) {
   return vm.runInNewContext(`(${match[1]})`);
 }
 
+function pieBank(html) {
+  const match = html.match(/var BANCO_PIE =\s*(\{[\s\S]*?\});/);
+  assert(match, 'No se encontró BANCO_PIE en el panel docente.');
+  return vm.runInNewContext(`(${match[1]})`);
+}
+
+function apiPieSelection(instrument) {
+  const source = read('api/interrogacion.js');
+  const block = source.slice(source.indexOf(`  ${instrument}: {`));
+  const match = block.match(/preguntasPie: (\[[^\]]*\])/);
+  assert(match, `API: falta la selección PIE de ${instrument}.`);
+  return JSON.parse(match[1]);
+}
+
 function inlineScriptCompiles(html, label) {
   const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
   assert(scripts.length, `${label}: falta script.`);
@@ -54,6 +68,15 @@ function auditPanel(config) {
   assert.deepStrictEqual(Array.from(panel), expected, `${config.label}: el panel no coincide con el banco público.`);
   assert.strictEqual(new Set(panel).size, 50, `${config.label}: hay preguntas duplicadas.`);
   assert(panelHtml.includes(config.api), `${config.label}: endpoint incorrecto.`);
+  const pie = pieBank(panelHtml);
+  const pieNumbers = Object.keys(pie).map(Number).sort((a, b) => a - b);
+  assert.strictEqual(pieNumbers.length, 25, `${config.label}: la selección PIE no tiene 25 preguntas.`);
+  assert(pieNumbers.every((n) => Number.isInteger(n) && n >= 1 && n <= 50), `${config.label}: la selección PIE sale del banco.`);
+  assert(Object.values(pie).every((text) => typeof text === 'string' && text.trim().length >= 10), `${config.label}: hay preguntas PIE vacías.`);
+  assert.deepStrictEqual(pieNumbers, apiPieSelection(config.instrument).sort((a, b) => a - b), `${config.label}: la selección PIE del panel no coincide con la API.`);
+  for (const pieContract of ['id="modoPie"', 'Evaluación PIE', 'enSeleccionPie', 'textoPregunta(idx, actual.bancoPie)', 'bancoPie: $(\'modoPie\').checked']) {
+    assert(panelHtml.includes(pieContract), `${config.label}: falta la opción PIE ${pieContract}.`);
+  }
   assert(panelHtml.includes('Interrogar manual'), `${config.label}: falta la interrogación manual.`);
   assert(panelHtml.includes('Interrogar con audio'), `${config.label}: falta el inicio de grabación.`);
   assert(panelHtml.includes('id="cardAudio"'), `${config.label}: falta el flujo de audio.`);
@@ -144,6 +167,7 @@ auditPanel({
   panelPage: 'nm3/interrogacion-un-lugar-sin-limites/calificar/index.html',
   publicClass: 'questions',
   api: "var INSTRUMENTO = 'nm3'",
+  instrument: 'nm3',
   manualAnswers: true
 });
 
@@ -153,6 +177,7 @@ auditPanel({
   panelPage: 'nm4/interrogacion-mocha-dick/calificar/index.html',
   publicClass: 'preg',
   api: "var INSTRUMENTO = 'nm4'",
+  instrument: 'nm4',
   manualAnswers: true,
   manualCourseFilters: true,
   manualReferents: [
@@ -215,6 +240,9 @@ for (const apiFile of ['api/interrogacion.js']) {
     'crypto.randomUUID()',
     'Este estudiante ya fue tomado desde otro panel.',
     'Este estudiante ya fue calificado desde otro panel.',
+    'fueraDeSeleccionPie',
+    'before.bancoPie === true',
+    "grabacion ? grabacion.bancoPie === true : cuerpo.bancoPie === true",
     "req.method !== 'POST'"
   ]) assert(source.includes(contract), `${apiFile}: falta contrato ${contract}.`);
   assert(source.includes('interrogacion_lugar_sin_limites_2026'), `${apiFile}: falta el nodo NM3.`);
@@ -259,7 +287,11 @@ for (const contract of [
   'answer.sinRespuesta',
   'review.scores[Number(entry[0])] = 0',
   'signInWithCustomToken',
-  'customMetadata'
+  'customMetadata',
+  'config.bancoPie',
+  'shuffledQuestions(pie)',
+  'questionText(number, flow.data.bancoPie)',
+  'questionText(Number(question), review.recording.bancoPie)'
 ]) assert(audioController.includes(contract), `Controlador de audio: falta ${contract}.`);
 assert(
   audioController.includes('var recording = state.grabaciones[studentId]')

@@ -133,8 +133,22 @@
     return Math.floor(Math.random() * max);
   }
 
-  function shuffledQuestions() {
-    var pool = Array.from({ length: config.banco.length }, function (_, index) { return index + 1; });
+  // Con la evaluación PIE el sorteo usa solo la selección de 25 de la educadora.
+  function questionPool(pie) {
+    if (pie && config.bancoPie) return Object.keys(config.bancoPie).map(Number);
+    return Array.from({ length: config.banco.length }, function (_, index) { return index + 1; });
+  }
+
+  function questionText(number, pie) {
+    return (pie && config.bancoPie && config.bancoPie[number]) || config.banco[number - 1];
+  }
+
+  function questionReference(number, pie) {
+    return 'Pregunta ' + number + ' del banco' + (pie ? ' · PIE' : '');
+  }
+
+  function shuffledQuestions(pie) {
+    var pool = questionPool(pie);
     var result = [];
     while (result.length < 7) {
       result.push(pool.splice(randomIndex(pool.length), 1)[0]);
@@ -142,10 +156,9 @@
     return result;
   }
 
-  function randomQuestionExcluding(excluded) {
+  function randomQuestionExcluding(excluded, pie) {
     var used = new Set((excluded || []).map(Number));
-    var pool = Array.from({ length: config.banco.length }, function (_, index) { return index + 1; })
-      .filter(function (question) { return !used.has(question); });
+    var pool = questionPool(pie).filter(function (question) { return !used.has(question); });
     return pool.length ? pool[randomIndex(pool.length)] : null;
   }
 
@@ -508,8 +521,8 @@
     setNotice('avisoAudio', '', '');
     $('numeroPreguntaAudio').textContent = 'Pregunta ' + (position + 1);
     var number = Number(flow.data.preguntas[position]);
-    $('textoPreguntaAudio').textContent = config.banco[number - 1];
-    $('referenciaPreguntaAudio').textContent = 'Pregunta ' + number + ' del banco';
+    $('textoPreguntaAudio').textContent = questionText(number, flow.data.bancoPie);
+    $('referenciaPreguntaAudio').textContent = questionReference(number, flow.data.bancoPie);
     $('previewAudio').classList.add('oculto');
     $('previewAudio').removeAttribute('src');
     $('btnGrabarAudio').classList.remove('oculto', 'recording');
@@ -564,8 +577,9 @@
     var position = flow.position;
     if (flow.data.respuestas && flow.data.respuestas[position]) return;
     if (!confirm('¿Cambiar esta pregunta? El sorteo elegirá otra.')) return;
-    var next = randomQuestionExcluding((flow.data.preguntas || []).concat(flow.data.descartadas || []))
-      || randomQuestionExcluding(flow.data.preguntas);
+    var pie = flow.data.bancoPie === true;
+    var next = randomQuestionExcluding((flow.data.preguntas || []).concat(flow.data.descartadas || []), pie)
+      || randomQuestionExcluding(flow.data.preguntas, pie);
     if (!next) return setNotice('avisoAudio', 'No hay otra pregunta disponible.', 'err');
     $('btnCambiarPreguntaAudio').disabled = true;
     try {
@@ -603,11 +617,13 @@
       var replace = Boolean(existing);
       if (replace && !confirm('Ya existen audios de este estudiante. ¿Reemplazarlos por una nueva interrogación?')) return;
       var attemptId = randomId();
+      var pie = Boolean($('modoPie') && $('modoPie').checked);
       var result = await api({
         accion: 'iniciar-grabacion',
         alumnoId: student.id,
         intentoId: attemptId,
-        preguntas: shuffledQuestions(),
+        preguntas: shuffledQuestions(pie),
+        bancoPie: pie,
         reemplazar: replace
       });
       flow = { student: student, data: result.grabacion, position: 0 };
@@ -746,7 +762,7 @@
         ? '<div class="escala review-scale">' + scoreButtons(position, review.scores[position]) + '</div>'
         : '';
       element.innerHTML =
-        '<div class="review-heading"><span>' + (position + 1) + '</span><strong>' + config.banco[Number(question) - 1] + '</strong></div>' +
+        '<div class="review-heading"><span>' + (position + 1) + '</span><strong>' + questionText(Number(question), review.recording.bancoPie) + '</strong></div>' +
         '<div class="review-controls">' + controls + '</div>' + scale;
       if (review.evidences[position]) {
         var evidence = document.createElement('p');

@@ -44,6 +44,9 @@
   .btn:disabled{opacity:.45;cursor:not-allowed;}
   .btn.chico{padding:8px 14px;font-size:13px;}
   .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .pie-opcion{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px;padding:10px 12px;border:1px solid #d9dde3;border-radius:10px;cursor:pointer;font-size:.95rem;line-height:1.35;text-transform:none;letter-spacing:normal;font-weight:400;color:inherit;}
+  .pie-opcion input{margin-top:3px;width:18px;height:18px;flex:none;}
+  .tag-pie{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#e8f0fe;color:#1a4fa0;font-size:.75rem;font-weight:700;vertical-align:middle;}
   .draft-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
              margin-top:14px;padding:11px 13px;border:1px solid var(--warn-line);border-radius:10px;background:var(--warn-bg);}
   .draft-bar span{font-size:13px;font-weight:700;color:var(--warn);}
@@ -169,11 +172,12 @@
 
     <div class="card">
       <h2>1 · Elige al estudiante</h2>
-      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco.</p>
+      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco, o de las 25 de la selección PIE si marcas esa opción.</p>
       <div class="fila">
         <div class="campo"><label for="curso">Curso</label><select id="curso"></select></div>
         <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
       </div>
+      <label class="pie-opcion" for="modoPie"><input type="checkbox" id="modoPie"><span><strong>Evaluación PIE</strong> · sortear solo entre las 25 preguntas seleccionadas por la educadora diferencial. Las preguntas se pueden cambiar sin límite.</span></label>
       <div class="availability" id="estadoNomina" aria-live="polite"></div>
       <div class="btns">
         <button class="btn solid" id="btnGrabar">Interrogar con audio</button>
@@ -402,7 +406,39 @@
   ];
   var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
   var CURSO_LBL = { '3A': '3°A', '3B': '3°B', '3D': '3°D' };
-  window.INTERROGACION_AUDIO_CONFIG = { api: API, instrumento: INSTRUMENTO, banco: BANCO, puntos: PUNTOS, cursoLabels: CURSO_LBL };
+  // Evaluación PIE: 25 preguntas del mismo banco elegidas por la educadora
+  // diferencial Alicia Aguilera, con su redacción. La clave es el número del banco.
+  var BANCO_PIE = {
+    2: "¿Qué objeto intenta reparar Manuela durante el último domingo del relato y por qué es importante para ella?",
+    3: "¿Qué originó la deuda o dependencia económica de Pancho respecto a don Alejo?",
+    5: "¿Cómo obtiene la Japonesa Grande la propiedad de la casa donde funciona el prostíbulo?",
+    6: "¿Qué vínculo de parentesco o relación une a la Japonesita con la Japonesa Grande y Manuela?",
+    8: "¿Qué noticia destruye el principal proyecto de progreso de la Japonesita?",
+    9: "¿Por qué Pancho y Octavio entran al prostíbulo la noche del desenlace?",
+    12: "¿Qué hace la Japonesita en las últimas páginas de la novela?",
+    13: "¿Cómo ejerce don Alejo un poder paternalista sobre los habitantes de El Olivo?",
+    14: "¿Qué representan los cuatro perros que acompañan siempre a don Alejo?",
+    15: "¿Qué contraste o diferencia define la relación entre Manuela y la Japonesita?",
+    19: "¿Qué papel cumple la casa de la Japonesa Grande durante la campaña de don Alejo?",
+    22: "¿Qué expresa la austeridad (el ahorro, la rigidez) con que la Japonesita administra el prostíbulo?",
+    24: "¿Qué función cumple Octavio en el conflicto final entre Pancho y Manuela?",
+    25: "¿Qué simboliza principalmente el vestido rojo de Manuela?",
+    26: "¿Qué simboliza el camión de Pancho a lo largo de la novela?",
+    27: "¿Qué efecto o coincidencia produce que el vestido de Manuela y el camión de Pancho sean del mismo color (rojo)?",
+    32: "¿Por qué el prostíbulo puede entenderse como un espacio de protección, pero a la vez de encierro o peligro?",
+    36: "¿Qué revela la ausencia de don Alejo cuando Manuela espera que la proteja?",
+    40: "¿Qué muestra o transmite la escena en que Manuela peina a la Japonesita?",
+    43: "¿Qué esperaba conseguir la Japonesita con la llegada de la electricidad a El Olivo?",
+    44: "¿Por qué la libertad que Pancho busca tener con el camión sigue dependiendo de don Alejo?",
+    46: "¿Cómo influyen los celos o la mirada de Octavio en la agresión de Pancho hacia Manuela?",
+    47: "¿Cómo ayudan la bocina del camión y los ladridos de los perros a crear un ambiente de peligro o amenaza?",
+    49: "Nombra un deseo o esperanza de la Japonesita, uno de Pancho o uno de Manuela y explica si logran cumplirlo o no.",
+    50: "¿Qué significado tiene el título El lugar sin límites a partir de lo que viven los personajes?"
+  };
+  window.INTERROGACION_AUDIO_CONFIG = { api: API, instrumento: INSTRUMENTO, banco: BANCO, bancoPie: BANCO_PIE, puntos: PUNTOS, cursoLabels: CURSO_LBL };
+
+  function textoPregunta(indice, pie) { return (pie && BANCO_PIE[indice + 1]) || BANCO[indice]; }
+  function enSeleccionPie(indice) { return Object.prototype.hasOwnProperty.call(BANCO_PIE, indice + 1); }
 
   var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
@@ -463,6 +499,7 @@
     var cambiada = dato && dato.cambiada != null ? Number(dato.cambiada) : null;
     var valido = alumno && preguntas.length === 7 && new Set(preguntas).size === 7
       && preguntas.every(function (indice) { return Number.isInteger(indice) && indice >= 0 && indice < BANCO.length; })
+      && (!dato.bancoPie || preguntas.every(enSeleccionPie))
       && (cambiada === null || (Number.isInteger(cambiada) && cambiada >= 0 && cambiada < 7))
       && !sesion.notas[alumno.id] && !sesion.grabaciones[alumno.id];
     if (!valido) {
@@ -476,6 +513,7 @@
       puntajes: puntajes,
       evidencias: {},
       cambiada: cambiada,
+      bancoPie: dato.bancoPie === true,
       observacion: String(dato.observacion || '').slice(0, 500),
       editando: false
     };
@@ -498,6 +536,7 @@
         preguntas: actual.preguntas,
         puntajes: actual.puntajes,
         cambiada: actual.cambiada,
+        bancoPie: actual.bancoPie === true,
         observacion: $('obs').value
       }));
     } catch (_) {}
@@ -616,9 +655,9 @@
     return Math.floor(Math.random() * max);
   }
 
-  function sortear(cuantas, excluir) {
+  function sortear(cuantas, excluir, pie) {
     var pool = [];
-    for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1) pool.push(i);
+    for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1 && (!pie || enSeleccionPie(i))) pool.push(i);
     var out = [];
     for (var k = 0; k < cuantas && pool.length; k++) {
       var j = indiceAleatorio(pool.length);
@@ -655,7 +694,8 @@
     abrirManual({
       id: id,
       alumno: alumno.nombre,
-      preguntas: sortear(7, []),
+      preguntas: sortear(7, [], $('modoPie').checked),
+      bancoPie: $('modoPie').checked,
       puntajes: {},
       evidencias: {},
       cambiada: null,
@@ -674,9 +714,9 @@
       d.className = 'preg';
       d.innerHTML =
         '<div class="preg-h"><div class="np">' + (pos + 1) + '</div>' +
-        '<span class="banco">Pregunta ' + (idx + 1) + ' del banco</span>' +
+        '<span class="banco">Pregunta ' + (idx + 1) + ' del banco' + (actual.bancoPie ? ' · PIE' : '') + '</span>' +
         '<button class="cambiar" data-pos="' + pos + '">⟳ cambiar</button></div>' +
-        '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
+        '<div class="preg-b"><div class="preg-t">' + textoPregunta(idx, actual.bancoPie) + '</div>' +
         '<div class="respuesta-esperada"><strong>Respuesta esperada</strong>' + RESPUESTAS[idx] + '</div>' +
         '<div class="escala" data-pos="' + pos + '">' +
         PUNTOS.map(function (p) {
@@ -701,8 +741,8 @@
         var descartadas = actual.descartadas || [];
         if (descartadas.indexOf(actual.preguntas[pos]) < 0) descartadas.push(actual.preguntas[pos]);
         actual.descartadas = descartadas;
-        var nueva = sortear(1, actual.preguntas.concat(descartadas))[0];
-        if (nueva == null) nueva = sortear(1, actual.preguntas)[0];
+        var nueva = sortear(1, actual.preguntas.concat(descartadas), actual.bancoPie)[0];
+        if (nueva == null) nueva = sortear(1, actual.preguntas, actual.bancoPie)[0];
         if (nueva == null) return;
         actual.preguntas[pos] = nueva;
         actual.cambiada = pos;
@@ -765,6 +805,7 @@
       var payload = {
         accion: registro.editando ? 'actualizar-nota-manual' : 'guardar', alumnoId: registro.id,
         preguntas: registro.preguntas.map(function (i) { return i + 1; }),
+        bancoPie: registro.bancoPie === true,
         puntajes: registro.puntajes, evidencias: registro.evidencias || {}, cambiada: registro.cambiada,
         observacion: $('obs').value
       };
@@ -783,6 +824,7 @@
         fecha: anterior.fecha || new Date().toISOString(),
         fechaActualizacion: r.fechaActualizacion || anterior.fechaActualizacion || '',
         revision: r.revision,
+        bancoPie: payload.bancoPie,
         modalidad: anterior.modalidad || 'en_vivo'
       });
       borrarBorradorManual();
@@ -812,6 +854,7 @@
       cambiada: registro.cambiada == null ? null : Number(registro.cambiada),
       observacion: registro.observacion || '',
       revisionEsperada: revisionRegistro(registro),
+      bancoPie: registro.bancoPie === true,
       editando: true
     });
   }
@@ -850,7 +893,7 @@
         : (editable ? '<button class="btn chico" data-editar-nota="' + f.id + '">Editar nota</button>' : '');
       tr.innerHTML = '<td>' + (CURSO_LBL[f.curso] || f.curso) + '</td>' +
         '<td>' + (f.id.split('_')[1] || '').replace(/^0/, '') + '</td>' +
-        '<td>' + (f.alumno || '') + '</td>' +
+        '<td>' + (f.alumno || '') + (f.bancoPie ? '<span class="tag-pie">PIE</span>' : '') + '</td>' +
         '<td class="n">' + (f.nota != null ? f.nota.toFixed(1).replace('.', ',') : '—') + '</td>' +
         '<td>' + (f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : '') + '</td>' +
         '<td><div class="row-actions">' + botonEditar + '<button class="btn chico" data-pdf="' + f.id + '">Descargar PDF</button><button class="btn chico danger" data-borrar="' + f.id + '">Borrar</button></div></td>';

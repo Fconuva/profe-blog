@@ -148,6 +148,14 @@ Antes de editar y nuevamente antes de publicar:
   (`cambiosPregunta`), guarda las preguntas descartadas para que el sorteo no
   las devuelva mientras haya otras, y rechaza una pregunta repetida o el cambio
   de una respuesta ya iniciada.
+- Desde el 24-sep-2026 los dos paneles ofrecen la casilla **Evaluación PIE**:
+  el sorteo y los cambios de pregunta, manuales o con audio, salen solo de las
+  25 preguntas que eligió la educadora diferencial Alicia Aguilera, y el panel
+  muestra su redacción. Son números del mismo banco de 50, así que la pauta, el
+  PDF y la revisión no cambian. El registro guarda `bancoPie: true` y el
+  servidor rechaza una pregunta fuera de la selección (`preguntasPie` en
+  `api/interrogacion.js`, que debe coincidir con `BANCO_PIE` de cada panel;
+  lo comprueba `npm run audit:interrogaciones`).
 - En el panel docente, la nómina para iniciar una interrogación muestra solo a
   estudiantes sin grabación ni calificación. Quienes ya comenzaron, entregaron
   o fueron evaluados se gestionan desde las tablas de registros, con filtro por

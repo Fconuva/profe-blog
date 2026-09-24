@@ -8,6 +8,42 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-24, Interrogaciones NM3 y NM4: opción de evaluación PIE
+
+Alicia Aguilera, educadora diferencial, mandó dos listas de 25 preguntas, una por
+libro, elegidas del banco oficial de 50 para evaluar a estudiantes PIE. Francisco
+pidió que quedaran como opción en las dos interrogaciones y que se pudieran
+cambiar sin límite durante la interrogación, como ya ocurre con el banco
+completo.
+
+**Cambio**
+
+- Casilla `Evaluación PIE` en el paso 1 de `/nm3/interrogacion-un-lugar-sin-limites/calificar/`
+  y `/nm4/interrogacion-mocha-dick/calificar/`, desmarcada por defecto y disponible
+  en todos los paneles (`?docente=`).
+- Con la casilla marcada, el sorteo de 7 y cada cambio de pregunta, manual o con
+  audio, salen solo de las 25. Se muestra la redacción de Alicia, que en NM3
+  simplifica varias preguntas; la referencia sigue siendo el número del banco y
+  la pauta esperada es la misma.
+- Selección NM3: 2, 3, 5, 6, 8, 9, 12, 13, 14, 15, 19, 22, 24, 25, 26, 27, 32,
+  36, 40, 43, 44, 46, 47, 49 y 50. Selección NM4: 1, 3, 5, 6, 8, 10, 11, 13, 15,
+  17, 20, 21, 22, 23, 25, 27, 28, 30, 33, 38, 40, 41, 43, 46 y 49.
+- El registro guarda `bancoPie: true`; la tabla de notas lo marca `PIE` y
+  `Editar respuestas` conserva la selección. El servidor rechaza con 400 una
+  pregunta fuera de la selección al iniciar, cambiar, guardar o editar.
+
+**Verificación**
+
+- `npm run audit:interrogaciones`: aprobado, con la nueva comprobación de que la
+  selección del panel y la de la API coinciden.
+- Prueba local con la API real sobre un Firebase en memoria y Playwright, en los
+  dos libros: 40 comprobaciones aprobadas (sorteo manual y con audio dentro de la
+  selección, 15 cambios manuales y 6 con audio seguidos sin salir de ella, nota y
+  grabación con `bancoPie`, rechazos del servidor, banco completo intacto sin la
+  casilla, 0 errores JS y 390 px sin desborde).
+
+---
+
 ## 2026-09-23, NM4 Clase 6: las dos versiones verificadas en producción
 
 La Clase 6 quedó en producción con el deploy del calendario NM4 (`bdf78121`/`49c9b62f`). Ese deploy incluyó el commit `cb993ddf`, así que no se hizo un deploy aparte.

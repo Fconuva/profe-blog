@@ -44,6 +44,9 @@
   .btn:disabled{opacity:.45;cursor:not-allowed;}
   .btn.chico{padding:8px 14px;font-size:13px;}
   .btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px;}
+  .pie-opcion{display:flex;align-items:flex-start;gap:10px;margin:12px 0 4px;padding:10px 12px;border:1px solid #d9dde3;border-radius:10px;cursor:pointer;font-size:.95rem;line-height:1.35;text-transform:none;letter-spacing:normal;font-weight:400;color:inherit;}
+  .pie-opcion input{margin-top:3px;width:18px;height:18px;flex:none;}
+  .tag-pie{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:#e8f0fe;color:#1a4fa0;font-size:.75rem;font-weight:700;vertical-align:middle;}
   .draft-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
              margin-top:14px;padding:11px 13px;border:1px solid var(--warn-line);border-radius:10px;background:var(--warn-bg);}
   .draft-bar span{font-size:13px;font-weight:700;color:var(--warn);}
@@ -174,11 +177,12 @@
 
     <div class="card">
       <h2>1 · Elige al estudiante</h2>
-      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco. Quienes ya fueron interrogados se gestionan en los registros inferiores.</p>
+      <p class="sub">Al sortear se eligen 7 preguntas al azar de las 50 del banco, o de las 25 de la selección PIE si marcas esa opción. Quienes ya fueron interrogados se gestionan en los registros inferiores.</p>
       <div class="fila">
         <div class="campo"><label for="curso">Filtrar por curso</label><select id="curso"></select></div>
         <div class="campo"><label for="alumno">Estudiante</label><select id="alumno"></select></div>
       </div>
+      <label class="pie-opcion" for="modoPie"><input type="checkbox" id="modoPie"><span><strong>Evaluación PIE</strong> · sortear solo entre las 25 preguntas seleccionadas por la educadora diferencial. Las preguntas se pueden cambiar sin límite.</span></label>
       <div class="availability" id="estadoNomina" aria-live="polite"></div>
       <div class="btns">
         <button class="btn solid" id="btnGrabar">Interrogar con audio</button>
@@ -413,7 +417,39 @@
   ];
   var PUNTOS = [0, 0.2, 0.4, 0.6, 0.8, 1];
   var CURSO_LBL = { '4ATP': '4°A', '4BTP': '4°B', '4CTP': '4°C', '4DTP': '4°D', '4ETP': '4°E' };
-  window.INTERROGACION_AUDIO_CONFIG = { api: API, instrumento: INSTRUMENTO, banco: BANCO, puntos: PUNTOS, cursoLabels: CURSO_LBL };
+  // Evaluación PIE: 25 preguntas del mismo banco elegidas por la educadora
+  // diferencial Alicia Aguilera, con su redacción. La clave es el número del banco.
+  var BANCO_PIE = {
+    1: "¿Quiénes son los autores y qué hizo cada uno?",
+    3: "¿En qué lugar y año comienza la historia?",
+    5: "¿Cómo se llama el anciano protagonista?",
+    6: "¿A qué edad se embarcó por primera vez y en qué circunstancias?",
+    8: "¿Quién es Aliro Leftraru, de dónde viene y qué quería llegar a ser?",
+    10: "¿A qué barco pertenecía el bote de náufragos que encontraron y qué había dentro?",
+    11: "¿Cuántos sobrevivientes del Essex rescataron y quiénes eran?",
+    13: "¿Cómo llama el pueblo de Leftraru a la ballena blanca y qué significa para ellos?",
+    15: "¿Quién es la machi Rosa y qué parentesco tiene con Leftraru?",
+    17: "¿Quién es Duncan Sheffield, de dónde viene y cómo se llama su barco?",
+    20: "¿Qué secreto esconde el joven marinero llamado Joe?",
+    21: "Nombra los tres hechos reales en que se basa la obra, según la nota preliminar.",
+    22: "Según la confesión de Owen Chase, ¿cuál fue el pecado que provocó el ataque de la ballena al Essex?",
+    23: "¿Cuál es la verdad que el capitán Pollard ocultó sobre la muerte de su sobrino?",
+    25: "Según Sheffield, ¿qué protege realmente la ballena blanca en la isla Mocha?",
+    27: "¿Qué es «la escalada» de la que habla Sheffield? Explícala con sus palabras.",
+    28: "¿Por qué Ferguson odia especialmente a Leftraru? ¿Qué le pasó a su padre?",
+    30: "Explica la frase de Caleb: «capturar grandes machos o hembras solitarias es de balleneros; matar crías y madres, de salvajes».",
+    33: "¿Cuál era la verdadera razón del viaje del Peleg Hawthorne?",
+    38: "¿Quién le pone el nombre «Mocha Dick» a la ballena y en qué momento?",
+    40: "¿Cómo muere el capitán Macys y qué hace en ese momento?",
+    41: "Según la novela, ¿cómo llegó esta historia a convertirse en literatura mundial? Explica la cadena completa.",
+    43: "Compara la visión de la ballena que tienen los balleneros de Nantucket y la que tiene el pueblo lafquenche. Fundamenta con ejemplos del texto.",
+    46: "¿Por qué la novela empieza y termina en Tomé, 1889? ¿Qué aporta esa estructura?",
+    49: "Interpreta el final: «Gracias, mi madre», «sin victorias ni derrotas» y «sobreviví para contarlo»."
+  };
+  window.INTERROGACION_AUDIO_CONFIG = { api: API, instrumento: INSTRUMENTO, banco: BANCO, bancoPie: BANCO_PIE, puntos: PUNTOS, cursoLabels: CURSO_LBL };
+
+  function textoPregunta(indice, pie) { return (pie && BANCO_PIE[indice + 1]) || BANCO[indice]; }
+  function enSeleccionPie(indice) { return Object.prototype.hasOwnProperty.call(BANCO_PIE, indice + 1); }
 
   var sesion = null;      // {docente, cursos, notas}
   var actual = null;      // interrogación en curso
@@ -474,6 +510,7 @@
     var cambiada = dato && dato.cambiada != null ? Number(dato.cambiada) : null;
     var valido = alumno && preguntas.length === 7 && new Set(preguntas).size === 7
       && preguntas.every(function (indice) { return Number.isInteger(indice) && indice >= 0 && indice < BANCO.length; })
+      && (!dato.bancoPie || preguntas.every(enSeleccionPie))
       && (cambiada === null || (Number.isInteger(cambiada) && cambiada >= 0 && cambiada < 7))
       && !sesion.notas[alumno.id] && !sesion.grabaciones[alumno.id];
     if (!valido) {
@@ -487,6 +524,7 @@
       puntajes: puntajes,
       evidencias: {},
       cambiada: cambiada,
+      bancoPie: dato.bancoPie === true,
       observacion: String(dato.observacion || '').slice(0, 500),
       editando: false
     };
@@ -509,6 +547,7 @@
         preguntas: actual.preguntas,
         puntajes: actual.puntajes,
         cambiada: actual.cambiada,
+        bancoPie: actual.bancoPie === true,
         observacion: $('obs').value
       }));
     } catch (_) {}
@@ -639,9 +678,9 @@
     return Math.floor(Math.random() * max);
   }
 
-  function sortear(cuantas, excluir) {
+  function sortear(cuantas, excluir, pie) {
     var pool = [];
-    for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1) pool.push(i);
+    for (var i = 0; i < BANCO.length; i++) if (excluir.indexOf(i) === -1 && (!pie || enSeleccionPie(i))) pool.push(i);
     var out = [];
     for (var k = 0; k < cuantas && pool.length; k++) {
       var j = indiceAleatorio(pool.length);
@@ -678,7 +717,8 @@
     abrirManual({
       id: id,
       alumno: alumno.nombre,
-      preguntas: sortear(7, []),
+      preguntas: sortear(7, [], $('modoPie').checked),
+      bancoPie: $('modoPie').checked,
       puntajes: {},
       evidencias: {},
       cambiada: null,
@@ -697,9 +737,9 @@
       d.className = 'preg';
       d.innerHTML =
         '<div class="preg-h"><div class="np">' + (pos + 1) + '</div>' +
-        '<span class="banco">Pregunta ' + (idx + 1) + ' del banco</span>' +
+        '<span class="banco">Pregunta ' + (idx + 1) + ' del banco' + (actual.bancoPie ? ' · PIE' : '') + '</span>' +
         '<button class="cambiar" data-pos="' + pos + '">⟳ cambiar</button></div>' +
-        '<div class="preg-b"><div class="preg-t">' + BANCO[idx] + '</div>' +
+        '<div class="preg-b"><div class="preg-t">' + textoPregunta(idx, actual.bancoPie) + '</div>' +
         '<div class="respuesta-esperada"><strong>Respuesta esperada</strong>' + RESPUESTAS[idx] + '</div>' +
         '<div class="escala" data-pos="' + pos + '">' +
         PUNTOS.map(function (p) {
@@ -724,8 +764,8 @@
         var descartadas = actual.descartadas || [];
         if (descartadas.indexOf(actual.preguntas[pos]) < 0) descartadas.push(actual.preguntas[pos]);
         actual.descartadas = descartadas;
-        var nueva = sortear(1, actual.preguntas.concat(descartadas))[0];
-        if (nueva == null) nueva = sortear(1, actual.preguntas)[0];
+        var nueva = sortear(1, actual.preguntas.concat(descartadas), actual.bancoPie)[0];
+        if (nueva == null) nueva = sortear(1, actual.preguntas, actual.bancoPie)[0];
         if (nueva == null) return;
         actual.preguntas[pos] = nueva;
         actual.cambiada = pos;
@@ -788,6 +828,7 @@
       var payload = {
         accion: registro.editando ? 'actualizar-nota-manual' : 'guardar', alumnoId: registro.id,
         preguntas: registro.preguntas.map(function (i) { return i + 1; }),
+        bancoPie: registro.bancoPie === true,
         puntajes: registro.puntajes, evidencias: registro.evidencias || {}, cambiada: registro.cambiada,
         observacion: $('obs').value
       };
@@ -806,6 +847,7 @@
         fecha: anterior.fecha || new Date().toISOString(),
         fechaActualizacion: r.fechaActualizacion || anterior.fechaActualizacion || '',
         revision: r.revision,
+        bancoPie: payload.bancoPie,
         modalidad: anterior.modalidad || 'en_vivo'
       });
       borrarBorradorManual();
@@ -835,6 +877,7 @@
       cambiada: registro.cambiada == null ? null : Number(registro.cambiada),
       observacion: registro.observacion || '',
       revisionEsperada: revisionRegistro(registro),
+      bancoPie: registro.bancoPie === true,
       editando: true
     });
   }
@@ -875,7 +918,7 @@
         : (editable ? '<button class="btn chico" data-editar-nota="' + f.id + '">Editar nota</button>' : '');
       tr.innerHTML = '<td>' + (CURSO_LBL[f.curso] || f.curso) + '</td>' +
         '<td>' + (f.id.split('_')[1] || '').replace(/^0/, '') + '</td>' +
-        '<td>' + (f.alumno || '') + '</td>' +
+        '<td>' + (f.alumno || '') + (f.bancoPie ? '<span class="tag-pie">PIE</span>' : '') + '</td>' +
         '<td class="n">' + (f.nota != null ? f.nota.toFixed(1).replace('.', ',') : '—') + '</td>' +
         '<td>' + (f.fecha ? new Date(f.fecha).toLocaleDateString('es-CL') : '') + '</td>' +
         '<td><div class="row-actions">' + botonEditar + '<button class="btn chico" data-pdf="' + f.id + '">Descargar PDF</button><button class="btn chico danger" data-borrar="' + f.id + '">Borrar</button></div></td>';

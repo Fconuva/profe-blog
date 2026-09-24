@@ -65,6 +65,9 @@ const INSTRUMENTOS = {
       pia: { nombre: 'Pía Benavides', cursos: ['3B'] },
       joselin: { nombre: 'Joselin Díaz', cursos: ['3D'] }
     },
+    // Evaluación PIE: 25 preguntas del mismo banco elegidas por la educadora
+    // diferencial Alicia Aguilera (22-sep-2026). El panel muestra su redacción.
+    preguntasPie: [2, 3, 5, 6, 8, 9, 12, 13, 14, 15, 19, 22, 24, 25, 26, 27, 32, 36, 40, 43, 44, 46, 47, 49, 50],
     roster: normalizarNm3(ROSTER_ROWS_NM3)
   },
   nm4: {
@@ -75,11 +78,17 @@ const INSTRUMENTOS = {
       joselin: { nombre: 'Joselin Díaz', cursos: ['4DTP', '4ETP'] },
       pia: { nombre: 'Pía Benavides', cursos: ['4BTP', '4CTP'] }
     },
+    preguntasPie: [1, 3, 5, 6, 8, 10, 11, 13, 15, 17, 20, 21, 22, 23, 25, 27, 28, 30, 33, 38, 40, 41, 43, 46, 49],
     roster: ROSTER_NM4
   }
 };
 for (const instrumento of Object.values(INSTRUMENTOS)) {
   instrumento.alumnos = configurarAlumnos(instrumento.roster);
+  instrumento.preguntasPie = new Set(instrumento.preguntasPie);
+}
+
+function fueraDeSeleccionPie(instrumento, preguntas) {
+  return preguntas.some((numero) => !instrumento.preguntasPie.has(Number(numero)));
 }
 
 function preguntasValidas(value) {
@@ -170,6 +179,7 @@ function grabacionPublica(value) {
     alumno: value.alumno || '',
     curso: value.curso || '',
     preguntas: Array.isArray(value.preguntas) ? value.preguntas.map(Number) : [],
+    bancoPie: value.bancoPie === true,
     cambiada: Number.isInteger(cambiada) && cambiada >= 0 && cambiada <= 6 ? cambiada : null,
     cambiosPregunta: Number(value.cambiosPregunta) || (Number.isInteger(cambiada) ? 1 : 0),
     descartadas: Array.isArray(value.descartadas) ? value.descartadas.map(Number) : [],
@@ -262,6 +272,10 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
   if (!preguntas || !intentoId) {
     return { status: 400, body: { error: 'No fue posible iniciar el registro de las preguntas.' } };
   }
+  const bancoPie = cuerpo.bancoPie === true;
+  if (bancoPie && fueraDeSeleccionPie(instrumento, preguntas)) {
+    return { status: 400, body: { error: 'En la evaluación PIE las preguntas deben salir de la selección de 25.' } };
+  }
   const notaAnterior = (await db.ref(`${instrumento.base}/notas/${alumno.id}`).once('value')).val();
   if (notaAnterior && cuerpo.reemplazar !== true) {
     return { status: 409, body: { error: 'Este estudiante ya fue calificado desde otro panel. Actualiza la lista.' } };
@@ -279,6 +293,7 @@ async function iniciarGrabacion(instrumento, docente, docenteId, cuerpo) {
     alumno: alumno.nombre,
     curso: alumno.curso,
     preguntas,
+    bancoPie,
     cambiada: null,
     respuestas: {},
     reservas: {},
@@ -315,6 +330,9 @@ async function cambiarPreguntaGrabacion(instrumento, docente, cuerpo) {
   }
   const ref = db.ref(`${instrumento.base}/grabaciones/${alumno.id}`);
   const before = (await ref.once('value')).val();
+  if (before && before.bancoPie === true && !instrumento.preguntasPie.has(nuevaPregunta)) {
+    return { status: 400, body: { error: 'En la evaluación PIE la nueva pregunta debe salir de la selección de 25.' } };
+  }
   const reservasActivas = Object.values((before && before.reservas) || {})
     .some((item) => Number(item && item.posicion) === posicion);
   if (!before || before.intentoId !== intentoId || before.estado !== 'en_curso'
@@ -869,10 +887,15 @@ module.exports = async function handler(req, res) {
           return res.status(409).json({ error: 'Los audios no coinciden con esta calificación.' });
         }
       }
+      const bancoPie = grabacion ? grabacion.bancoPie === true : cuerpo.bancoPie === true;
+      if (bancoPie && fueraDeSeleccionPie(instrumento, preguntas)) {
+        return res.status(400).json({ error: 'En la evaluación PIE las preguntas deben salir de la selección de 25.' });
+      }
       const registro = {
         alumno: alumno.nombre,
         curso: alumno.curso,
         preguntas,
+        bancoPie,
         puntajes,
         evidencias,
         cambiada,
@@ -981,6 +1004,9 @@ module.exports = async function handler(req, res) {
         const cambiada = cuerpo.cambiada == null ? null : Number(cuerpo.cambiada);
         if (!preguntasAnteriores || !preguntas) {
           return res.status(400).json({ error: 'El registro debe conservar siete preguntas distintas del banco.' });
+        }
+        if (existente.bancoPie === true && fueraDeSeleccionPie(instrumento, preguntas)) {
+          return res.status(400).json({ error: 'En la evaluación PIE las preguntas deben salir de la selección de 25.' });
         }
         if (!puntajes) return res.status(400).json({ error: 'Los puntajes recibidos no son válidos.' });
         if (!evidencias) return res.status(400).json({ error: 'La evidencia de las respuestas no es válida.' });

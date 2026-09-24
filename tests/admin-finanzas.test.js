@@ -49,6 +49,8 @@ test('dashboard conserva caja histórica, excluye bajas y no inventa precios',()
  assert.equal(context.window._resumenCarteraBruta.personas,2);
  assert.match(nodes['stat-caja-historica'].textContent,/250.000/);
  assert.match(nodes['stat-valoracion'].textContent,/1 sin precio y 1 con saldo/);
+ assert.match(nodes['stat-paid-detail'].textContent,/1 exclusión con pago previo/);
+ assert.match(nodes['stat-paid-detail'].textContent,/1 beneficio o cobro suspendido/);
  assert.equal(Object.values(context.window._agendaCobros).flat().reduce((s,e)=>s+e.monto,0),179980);
 });
 test('todos los scripts inline compilan',()=>{

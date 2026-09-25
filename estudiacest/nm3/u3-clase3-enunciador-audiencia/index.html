@@ -925,6 +925,19 @@
       <div class="grid-2">
         <!-- Panel de control docente y lista de entregas -->
         <div>
+          <div id="docente-session" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:10px;font-size:0.8rem;color:var(--muted)">
+            <span id="docente-status">Para eliminar o reemplazar videos, inicia sesión como docente.</span>
+            <button type="button" id="docente-login-toggle" class="btn-action" style="padding:4px 10px;font-size:0.78rem;height:auto;background:#fff;color:var(--blue);border:1px solid var(--line)" onclick="toggleDocenteLogin()">Iniciar sesión docente</button>
+            <button type="button" id="docente-logout" class="btn-action" style="display:none;padding:4px 10px;font-size:0.78rem;height:auto;background:#fff;color:var(--blue);border:1px solid var(--line)" onclick="docenteLogout()">Salir</button>
+          </div>
+          <form id="docente-login-form" style="display:none;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#fff" onsubmit="docenteLogin(event)">
+            <input id="docente-email" type="email" autocomplete="username" placeholder="Correo de administrador" required style="flex:1 1 180px;padding:6px 8px;border:1px solid var(--line);border-radius:6px">
+            <input id="docente-password" type="password" autocomplete="current-password" placeholder="Contraseña" required style="flex:1 1 140px;padding:6px 8px;border:1px solid var(--line);border-radius:6px">
+            <button type="submit" class="btn-action" style="padding:6px 12px;font-size:0.8rem;height:auto">Entrar</button>
+            <span id="docente-login-error" style="flex-basis:100%;color:#b91c1c;font-size:0.78rem"></span>
+          </form>
+          <input type="file" id="docente-replace-input" accept="video/*" style="display:none" onchange="replaceStudentVideo(event)">
+
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;background:#f8fafc;padding:10px;border-radius:8px;border:1px solid var(--line)">
             <label for="docente-curso-filter" style="font-size:0.8rem;font-weight:700;color:var(--blue);white-space:nowrap">Curso:</label>
             <select id="docente-curso-filter" onchange="fetchDocenteCourseVideos()" style="padding:6px 10px;font-size:0.85rem;border:1px solid var(--line);border-radius:6px;flex:1">
@@ -1026,6 +1039,7 @@
 <!-- Firebase compatibility libraries -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 <script src="/nm3/u3-deck.js"></script>
 
 <script>
@@ -1265,6 +1279,107 @@
     }
   };
 
+  // ---------- Modo docente: eliminar o reemplazar videos ----------
+  // Los estudiantes no pueden borrar (reglas de Storage). El docente borra a
+  // través de /api/odisea-cine?modulo=videos-nm3, que verifica que sea administrador.
+  let docenteUser = null;
+  const auth = (typeof firebase !== 'undefined' && firebase.auth) ? firebase.auth() : null;
+  const $d = function(id) { return document.getElementById(id); };
+
+  if (auth) {
+    auth.onAuthStateChanged(function(user) {
+      docenteUser = user;
+      $d('docente-status').textContent = user ? 'Sesión docente: ' + user.email : 'Para eliminar o reemplazar videos, inicia sesión como docente.';
+      $d('docente-login-toggle').style.display = user ? 'none' : '';
+      $d('docente-logout').style.display = user ? '' : 'none';
+      if (user) $d('docente-login-form').style.display = 'none';
+      if (window.fetchDocenteCourseVideos) window.fetchDocenteCourseVideos();
+    });
+  }
+
+  window.toggleDocenteLogin = function() {
+    const form = $d('docente-login-form');
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    if (form.style.display === 'flex') $d('docente-email').focus();
+  };
+
+  window.docenteLogin = async function(event) {
+    event.preventDefault();
+    $d('docente-login-error').textContent = '';
+    try {
+      await auth.signInWithEmailAndPassword($d('docente-email').value.trim(), $d('docente-password').value);
+      $d('docente-password').value = '';
+    } catch (err) {
+      $d('docente-login-error').textContent = 'No se pudo iniciar sesión con esa cuenta.';
+    }
+  };
+
+  window.docenteLogout = function() { if (auth) auth.signOut(); };
+
+  async function deleteOnServer(path) {
+    const token = await docenteUser.getIdToken();
+    const res = await fetch('/api/odisea-cine?modulo=videos-nm3&action=admin-delete', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify({ path: path })
+    });
+    const data = await res.json().catch(function() { return {}; });
+    if (!res.ok) throw new Error(data.error || 'No se pudo eliminar el video.');
+  }
+
+  window.deleteStudentVideo = async function(index) {
+    const item = (window.plenarioItems || [])[index];
+    if (!item || !docenteUser) return;
+    if (!confirm('¿Eliminar el video de ' + item.integrantes + ' (' + temaLabel(item.tema) + ', ' + item.version + ')? No se puede deshacer.')) return;
+    const label = $d('video-count-label');
+    try {
+      label.textContent = 'Eliminando video...';
+      await deleteOnServer(item.path);
+      await window.fetchDocenteCourseVideos();
+    } catch (err) {
+      label.textContent = err.message;
+    }
+  };
+
+  let replaceIndex = null;
+  window.pickReplacement = function(index) {
+    replaceIndex = index;
+    const input = $d('docente-replace-input');
+    input.value = '';
+    input.click();
+  };
+
+  // Reemplazar: sube el archivo nuevo con los mismos datos del grupo y, solo si
+  // la subida termina bien, elimina el anterior.
+  window.replaceStudentVideo = function(event) {
+    const file = event.target.files && event.target.files[0];
+    const item = (window.plenarioItems || [])[replaceIndex];
+    const label = $d('video-count-label');
+    if (!file || !item || !docenteUser || !storage) return;
+    if (!/^video\//.test(file.type || 'video/mp4')) { label.textContent = 'El archivo debe ser un video.'; return; }
+    if (file.size > 1024 * 1024 * 1024) { label.textContent = 'El video supera 1 GB.'; return; }
+    if (!confirm('¿Reemplazar el video de ' + item.integrantes + ' por «' + file.name + '»? El video anterior se eliminará.')) return;
+
+    const safeIntegrantes = encodeURIComponent(item.integrantes.replace(/[^a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]/g, '').replace(/ +/g, '_'));
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const newPath = 'videos_nm3/u3_clase3/' + item.curso + '/' + Date.now() + '__' + item.tema + '__' + item.version + '__' + safeIntegrantes + '__' + safeName;
+    const task = storage.ref(newPath).put(file, {
+      contentType: file.type || 'video/mp4',
+      customMetadata: { curso: item.curso, integrantes: item.integrantes, tema: item.tema, version: item.version, originalName: file.name, uploadedAt: new Date().toISOString(), reemplazaA: item.path }
+    });
+    task.on('state_changed',
+      function(snap) { label.textContent = 'Subiendo reemplazo... ' + Math.round(snap.bytesTransferred / snap.totalBytes * 100) + '%'; },
+      function() { label.textContent = 'No se pudo subir el reemplazo. El video anterior no se tocó.'; },
+      async function() {
+        try {
+          await deleteOnServer(item.path);
+          await window.fetchDocenteCourseVideos();
+        } catch (err) {
+          label.textContent = 'El reemplazo se subió, pero no se pudo eliminar el anterior: ' + err.message;
+        }
+      });
+  };
+
   // Consulta en tiempo real de los videos recibidos por curso (Panel Docente)
   window.fetchDocenteCourseVideos = async function() {
     const filterSelect = document.getElementById('docente-curso-filter');
@@ -1302,7 +1417,8 @@
       }
 
       // Procesar cada archivo en paralelo
-      const cards = await Promise.all(items.map(async function(item) {
+      window.plenarioItems = [];
+      const cards = await Promise.all(items.map(async function(item, index) {
         try {
           const itemRes = await fetch('https://firebasestorage.googleapis.com/v0/b/estudiacest.firebasestorage.app/o/' + encodeURIComponent(item.name));
           const meta = await itemRes.json();
@@ -1338,6 +1454,13 @@
           if (version === 'Vlogger') badgeClass = 'badge-vlogger';
           if (version === 'Testigo') badgeClass = 'badge-testigo';
 
+          window.plenarioItems[index] = { path: item.name, curso: curso, tema: tema, version: version, integrantes: integrantes };
+          const docenteButtons = docenteUser ? `
+              <div style="display:flex;gap:6px;margin-top:4px">
+                <button type="button" class="btn-action" style="flex:1;padding:5px 10px;font-size:0.78rem;background:#fff;color:var(--blue);border:1px solid var(--line)" onclick="pickReplacement(${index})">↻ Reemplazar</button>
+                <button type="button" class="btn-action" style="flex:1;padding:5px 10px;font-size:0.78rem;background:#fff;color:#b91c1c;border:1px solid #fecaca" onclick="deleteStudentVideo(${index})">🗑 Eliminar</button>
+              </div>` : '';
+
           const timeStr = meta.timeCreated ? new Date(meta.timeCreated).toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }) : '';
           const sizeMb = meta.size ? (meta.size / (1024 * 1024)).toFixed(1) + ' MB' : '';
 
@@ -1354,7 +1477,7 @@
               <span style="font-size:0.78rem;color:var(--muted)">Archivo: ${originalName}</span>
               <button type="button" class="btn-action" style="padding:6px 12px;font-size:0.8rem;margin-top:4px" onclick="loadProjectorVideo('${streamUrl}', '${curso.replace('_', ' ')} · ${temaLabel(tema)} (${version})', 'Integrantes: ${integrantes}')">
                 ▶ Proyectar video
-              </button>
+              </button>${docenteButtons}
             </div>
           `;
         } catch(e) {

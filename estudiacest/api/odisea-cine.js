@@ -1,4 +1,5 @@
 const admin = require('firebase-admin');
+const videosNm3 = require('./_videos-nm3.js');
 
 const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
 const ADMIN_BASE = 'plataforma_estudiantes';
@@ -357,6 +358,12 @@ async function handleAdminReset(req, res) {
 module.exports = async function handler(req, res) {
   setCors(req, res);
   if (req.method === 'OPTIONS') return res.status(204).end();
+  // Videos de la Clase 3 de NM3: vive aquí por el tope de 12 funciones.
+  if (String((req.query && req.query.modulo) || '') === 'videos-nm3') {
+    ensureFirebase();
+    if (initError) return res.status(500).json({ error: 'No se pudo procesar la solicitud.' });
+    return videosNm3(req, res, { admin, verifyAdmin });
+  }
   try {
     const action = String((req.query && req.query.action) || 'health');
     if (action === 'health' && req.method === 'GET') {

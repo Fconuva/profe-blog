@@ -8,6 +8,43 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-25, NM3 Clase 3: el docente elimina o reemplaza videos del plenario
+
+Francisco preguntó si un estudiante puede borrar su video y subir una versión mejor. No podía: cada subida crea un archivo nuevo y las reglas de Storage prohíben borrar y modificar. Francisco decidió que él mismo borra o cambia los videos.
+
+**Cómo quedó**
+- **Sesión docente:** en el plenario (diapositiva I), el docente inicia sesión con su cuenta de administrador de Estudia CEST.
+- **Botones:** con la sesión abierta, cada video muestra **Eliminar** y **Reemplazar**. Los estudiantes no ven esos botones.
+- **Eliminar:** pide confirmación y borra en el servidor.
+- **Reemplazar:** sube el archivo nuevo con los mismos datos del grupo (curso, tema, versión e integrantes, más `reemplazaA` en los metadatos). Solo después de que la subida termina bien, elimina el anterior. Si la subida falla, el video anterior no se toca.
+
+**Servidor**
+- `api/_videos-nm3.js`, servido por `api/odisea-cine.js?modulo=videos-nm3`, porque el tope es de 12 funciones.
+- Verifica el token y que el usuario esté en `plataforma_estudiantes/admins`.
+- Solo acepta rutas `videos_nm3/u3_clase3/{curso}/{archivo}`, sin subcarpetas ni `..`.
+- Borra con el Admin SDK.
+- Las reglas de Storage siguen sin permitir borrar desde el navegador.
+
+**`storage.rules` del repositorio**
+- Tenía dos `match` anidados y una línea repetida en el bloque de videos.
+- Quedó un solo `match /videos_nm3/u3_clase3/{allPaths=**}`: lectura pública, creación de videos de hasta 1 GB, sin actualizar ni borrar.
+- **No se desplegó a Firebase** (`npm run deploy:storage`): el comportamiento en producción ya funciona y esa publicación va aparte.
+
+**Validación**
+- Prueba del módulo del servidor:
+  - sin token: 401;
+  - ruta válida con administrador: se elimina;
+  - ruta con `..` o fuera de la carpeta: 400.
+- Prueba en navegador con sesión y Storage simulados:
+  - sin sesión: 0 botones;
+  - con sesión: 2 botones por video;
+  - Eliminar envía la ruta correcta con Bearer;
+  - Reemplazar sube primero y después borra el anterior;
+  - 0 errores JS.
+- Queda pendiente probar un borrado real con la cuenta de Francisco en producción.
+
+---
+
 ## 2026-09-24, NM3 Clase 3: secuencia de inicio, desarrollo y cierre
 
 Francisco pidió ordenar la clase para que tenga un inicio, un desarrollo y un cierre claros. No sabía si mostrar los videos al inicio o en el desarrollo.

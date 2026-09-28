@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-28, Interrogaciones: una grabación NM3 corregida y sincronización final con Lirmi
+
+Se revisó una interrogación NM3 que estaba entregada con siete audios, pero aún
+sin calificación. Los siete archivos decodificaron correctamente y tenían señal
+audible. La corrección aplicó la pauta de exigencia 60/100, guardó siete
+puntajes, siete síntesis de evidencia y una retroalimentación docente. La
+relectura confirmó la nota calculada y el cambio de la grabación desde
+`pendiente` a `calificada`.
+
+El PDF de retroalimentación generado por la API se verificó como `%PDF`, una
+página A4 de 595,28 × 841,89 puntos, con las siete filas, la nota y la
+retroalimentación completas y sin cortes visibles.
+
+La calificación se copió después a la celda vacía correspondiente de Lirmi y se
+releyó. Durante el cruce final aparecieron cuatro calificaciones nuevas de NM4
+en 4°A, creadas en paralelo desde el panel docente; también se copiaron a sus
+cuatro celdas vacías sin sobrescribir valores anteriores. Una de esas notas
+había sido cerrada en el panel con dos de siete posiciones puntuadas; se respetó
+el valor final de la plataforma y no se recalculó ni completó por inferencia.
+
+Estado final comparado por identidad, curso e instrumento: **286 notas en
+Estudia CEST y 286 en Lirmi, 0 faltantes y 0 diferencias**. La auditoría
+`npm run audit:interrogaciones` quedó aprobada.
+
 ## 2026-09-25, NM3 Clase 3: el docente elimina o reemplaza videos del plenario
 
 Francisco preguntó si un estudiante puede borrar su video y subir una versión mejor. No podía: cada subida crea un archivo nuevo y las reglas de Storage prohíben borrar y modificar. Francisco decidió que él mismo borra o cambia los videos.

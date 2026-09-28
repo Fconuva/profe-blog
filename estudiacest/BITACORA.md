@@ -8,6 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-28, 4°D TP: presentación de tres productos escritos
+
+Se publicó una presentación nativa de 10 diapositivas en
+`/4dtp/taller-productos-escritos/`, accesible desde el inicio del Anuario 4°D TP
+y desde la sección Productos escritos. Explica tres alternativas de escritura:
+memoria escolar, proyecto de especialidad y cierre personal. La tarea final pide
+elegir y terminar solo uno de esos productos dentro del Anuario.
+
+La presentación no incluye pauta común, puntaje ni rúbrica. Incorpora modelos de
+inicio, extensiones sugeridas, estructura de cada producto y recordatorios
+breves para redactar. Se puede controlar con botones, flechas del teclado,
+gestos táctiles, enlace por diapositiva y pantalla completa.
+
+**Validación y publicación**
+- `audit:anuario-4dtp` y el build completo aprobaron con 251 recursos críticos.
+- La prueba local y la prueba pública recorrieron las 10 diapositivas; las cuatro
+  imágenes cargaron, no hubo errores de consola ni desborde horizontal en 390 px.
+- La página pública respondió 200 y su SHA-256 coincidió exactamente con el
+  archivo local.
+- Implementación: `ffdf94c5`.
+- Despliegue seguro de Vercel: `7tcoNKyRdCieyjfA6jdGkBWdoMNp`, estado Ready,
+  asociado a `https://www.estudiacest.com`.
+
+---
+
 ## 2026-09-28, NM4 Clase 6: correcciones de la auditoría antes de la clase
 
 Francisco pidió auditar la Clase 6 (informe técnico), en sus dos versiones, el día de la clase.

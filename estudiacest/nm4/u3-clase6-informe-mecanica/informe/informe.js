@@ -177,7 +177,7 @@
           <li><span>08 Hallazgos</span><span>10</span></li>
           <li><span>09 Conclusión y firmas · Anexo</span><span>12</span></li>
         </ol>
-        <h3>Abreviaturas</h3>
+        <h3>Abreviaturas y glosario</h3>
         <table class="grid compact"><tbody>
           <tr><th>EB-01</th><td>Esmeril de banco N.º 1</td></tr>
           <tr><th>CP-01</th><td>Compresor de aire N.º 1</td></tr>
@@ -186,6 +186,10 @@
           <tr><th>GH-02</th><td>Grúa horquilla N.º 2</td></tr>
           <tr><th>B-2</th><td>Cruce de los ejes B y 2 en el plano del taller</td></tr>
           <tr><th>EPP</th><td>Elementos de protección personal</td></tr>
+          <tr><th>Mandante</th><td>Empresa que encarga el informe y decide qué hacer con él</td></tr>
+          <tr><th>Muela</th><td>Piedra abrasiva del esmeril</td></tr>
+          <tr><th>Purga</th><td>Vaciar el agua que se junta en el estanque del compresor</td></tr>
+          <tr><th>Horómetro</th><td>Contador de las horas de uso de una máquina</td></tr>
         </tbody></table>`),
 
       // 3 · Resumen

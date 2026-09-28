@@ -8,6 +8,37 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-28, NM4 Clase 6: correcciones de la auditoría antes de la clase
+
+Francisco pidió auditar la Clase 6 (informe técnico), en sus dos versiones, el día de la clase.
+
+**Resultado de la auditoría**
+- Las instrucciones son entendibles.
+- Los 27 campos de cada versión se pueden responder con los datos del caso.
+- La clase es pertinente al currículo, verificado en fuentes del Mineduc:
+  - OA 5 de 4° medio FG (producir textos adecuados al género y a la audiencia), el verbo que mejor evalúa el producto;
+  - OA 6 (recursos lingüísticos: léxico, verbos, construcciones);
+  - Programa 4° medio, pág. 32 y Anexo 1: géneros del ámbito laboral;
+  - OAG 1 de la Formación TP: comunicarse por escrito con registros pertinentes a la situación laboral;
+  - Electricidad: la especialidad declara «informes técnicos» entre sus productos esperados.
+
+**Correcciones aplicadas en las dos versiones**
+- **Objetivo:** ahora nombra al destinatario («dirigido a la empresa que lo solicita»), como pide el OA 5.
+- **Mínimo para entregar:** páginas 6, 9 y 11 (datos, fotos 3 y 4, hallazgos 2 y 3). Aparece en la pantalla «Trabajo y monitoreo» y en el aviso del informe; el resumen y la conclusión, si alcanza el tiempo. 27 campos en 42 minutos en tablet era demasiado para muchos estudiantes.
+- **Glosario** junto a las abreviaturas:
+  - eléctrica: mandante, vano, eje de la línea, servidumbre, acometida y catastro;
+  - mecánica: mandante, muela, purga y horómetro.
+- **Especialidades:** la versión eléctrica ofrecía también Mecánica y Gráfica en el selector; ahora solo Electricidad y Electrónica.
+
+**Pendiente de decisión de Francisco**
+- Mostrar o no una pauta de evaluación. Depende de si la clase suma a la nota.
+
+**Validación**
+- `audit-nm4-u3-class6` y el contrato de entrega (46 clases) aprobados.
+- Playwright local de ambas versiones: ingreso, autoguardado, recarga, «Entrega confirmada», 409 tardío, solo lectura y panel. Sin desbordes en celular ni tablet.
+
+---
+
 ## 2026-09-28, Interrogaciones: una grabación NM3 corregida y sincronización final con Lirmi
 
 Se revisó una interrogación NM3 que estaba entregada con siete audios, pero aún

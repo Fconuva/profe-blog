@@ -3,7 +3,7 @@
 // (api/_informe-tecnico-nm4.js lo carga con require). Si se agrega o quita un
 // campo, cambia aquí y en ninguna otra parte.
 (function (root) {
-  const ESPECIALIDADES = ['Electricidad', 'Electrónica', 'Mecánica Automotriz', 'Mecánica Industrial', 'Gráfica'];
+  const ESPECIALIDADES = ['Electricidad', 'Electrónica'];
   const RIESGOS = ['Alto', 'Medio', 'Bajo'];
   const ESTADOS = ['Crítico: requiere gestión inmediata', 'Requiere gestión', 'Sin observaciones'];
   const FOTOS = ['Foto 1', 'Foto 2', 'Foto 3', 'Foto 4', 'Sin registro fotográfico'];

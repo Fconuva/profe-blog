@@ -201,7 +201,7 @@
           <li><span>09 Conclusiones y firmas</span><span>12</span></li>
           <li><span>Anexo A · Fuentes, créditos y mapa de ubicación</span><span>13</span></li>
         </ol>
-        <h3>Abreviaturas</h3>
+        <h3>Abreviaturas y glosario</h3>
         <table class="grid compact"><tbody>
           <tr><th>E-21</th><td>Estructura (torre) N.º 21 de la línea</td></tr>
           <tr><th>O-1</th><td>Ocupación N.º 1 detectada en el sector</td></tr>
@@ -209,6 +209,12 @@
           <tr><th>WGS-84</th><td>Sistema de referencia geodésico que usan los GPS</td></tr>
           <tr><th>msnm</th><td>Metros sobre el nivel del mar</td></tr>
           <tr><th>RPTD</th><td>Pliego técnico normativo de la Superintendencia de Electricidad y Combustibles (SEC)</td></tr>
+          <tr><th>Mandante</th><td>Empresa que encarga el informe y decide qué hacer con él</td></tr>
+          <tr><th>Vano</th><td>Tramo de línea entre dos torres seguidas</td></tr>
+          <tr><th>Eje de la línea</th><td>Línea central del trazado; desde ahí se miden las distancias</td></tr>
+          <tr><th>Servidumbre</th><td>Derecho de la empresa a pasar la línea por un terreno ajeno</td></tr>
+          <tr><th>Acometida</th><td>Cable que lleva electricidad desde un poste hasta una construcción</td></tr>
+          <tr><th>Catastro</th><td>Lista ordenada de todo lo encontrado en el sector</td></tr>
         </tbody></table>`),
 
       // 3 · Resumen ejecutivo

@@ -50,6 +50,7 @@ function checkSyntax(relativePath) {
 const api = read('api/anuario-4dtp.js');
 const app = read('4dtp/app.js');
 const page = read('4dtp/index.html');
+const writingWorkshop = read('4dtp/taller-productos-escritos/index.html');
 const admin = read('4dtp/admin.html');
 const storageRules = read('storage.rules');
 const portal = read('index.html');
@@ -132,6 +133,14 @@ requireText(app, "submitWriting", 'Cliente');
 requireText(app, "renderTeacherReview", 'Cliente');
 requireText(page, 'Documento editable · Actividad 1', 'Página 4DTP');
 requireText(page, 'Productos escritos · Fase 1', 'Página 4DTP');
+requireText(page, 'taller-productos-escritos/', 'Acceso al taller de escritura');
+requireText(writingWorkshop, 'Tres productos, una página terminada', 'Presentación de escritura');
+requireText(writingWorkshop, 'Producto 1 · Memoria escolar', 'Presentación de escritura');
+requireText(writingWorkshop, 'Producto 2 · Proyecto de especialidad', 'Presentación de escritura');
+requireText(writingWorkshop, 'Producto 3 · Cierre personal', 'Presentación de escritura');
+requireText(writingWorkshop, 'No tres borradores. Una página que valga la pena volver a leer.', 'Consigna de escritura');
+if ((writingWorkshop.match(/class="slide"/g) || []).length !== 10) failures.push('La presentación no contiene exactamente 10 diapositivas.');
+if (/pauta común|10 puntos|rúbrica/i.test(writingWorkshop)) failures.push('La presentación reincorporó una pauta común o rúbrica no solicitada.');
 requireText(page, 'Ver modelo final completo', 'Página 4DTP');
 requireText(page, 'De la portada a la última página', 'Página 4DTP');
 requireText(page, 'Las partes del modelo', 'Página 4DTP');
@@ -241,6 +250,14 @@ const inlineScripts = [...admin.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/scrip
 for (const [index, script] of inlineScripts.entries()) {
   try { new vm.Script(script, { filename: `4dtp/admin.html#script-${index + 1}` }); }
   catch (error) { failures.push(`Admin 4DTP tiene error de sintaxis: ${error.message}`); }
+}
+
+const workshopScripts = [...writingWorkshop.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
+  .map(match => match[1].trim())
+  .filter(Boolean);
+for (const [index, script] of workshopScripts.entries()) {
+  try { new vm.Script(script, { filename: `4dtp/taller-productos-escritos/index.html#script-${index + 1}` }); }
+  catch (error) { failures.push(`Presentación 4DTP tiene error de sintaxis: ${error.message}`); }
 }
 
 if (failures.length) {

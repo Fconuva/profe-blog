@@ -8,6 +8,28 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (tarde), /termas: ambientación con imágenes IA publicada
+
+- El encabezado dejó la ilustración SVG embebida y ahora usa una escena termal
+  panorámica creada con IA. Los pasos de transporte y almuerzo incorporan otras
+  dos ilustraciones, marcadas como referenciales o ambientacionales.
+- Se agregaron movimiento lento del paisaje, vapor y un destello suave en las
+  escenas. `prefers-reduced-motion` reduce todas las animaciones a `0,01 ms`.
+  Los tres WebP pesan entre 277 y 285 KB y quedaron protegidos por
+  `scripts/academic-release-manifest.json`.
+- Probado en navegador real a 320, 390, 1440 y 3840 px: sin errores de consola
+  ni desborde horizontal; las tres imágenes cargan y el flujo conserva los 45
+  asientos. `npm run build` verificó 289 recursos críticos.
+- Commit `c98fa5da` en `origin/main`. Despliegue
+  `dpl_GqLeEAL771g6cyqASHcmtAaFMXuL`, estado `Ready`, con alias en
+  `www.estudiacest.com`. El despliegue publicó también el almuerzo y el aviso de
+  nómina que habían quedado pendientes en `9c096e9f`.
+- En producción, el HTML y los tres WebP coinciden byte a byte y por SHA-256 con
+  la fuente local; `/termas` conserva `noindex, nofollow`. La lectura real mostró
+  0 asistentes y 45 asientos libres. No se escribió ni creó ningún dato de prueba.
+
+---
+
 ## 2026-09-29 (tarde), /termas: almuerzo incluido y aviso de nómina (sin desplegar)
 
 - Quienes asisten ven la tarjeta «El almuerzo va incluido», con el almuerzo

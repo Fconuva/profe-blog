@@ -2,9 +2,10 @@
 // entrega. No es una función propia de Vercel (el plan Hobby admite 12): la
 // sirve api/economista.js cuando llega ?modulo=informe-tecnico.
 //
-// Hay tres versiones del informe (?version=). La versión eléctrica histórica
-// conserva 4°E para no invalidar borradores anteriores; la portada dirige 4°E
-// al caso nuevo de Electrónica, guardado en una base independiente.
+// Hay versiones por especialidad (?version=). Las versiones eléctrica y
+// mecánica compartidas se conservan como históricas para no invalidar
+// borradores anteriores. Las portadas dirigen a los casos especializados,
+// cada uno guardado en una base independiente.
 //
 // Acciones (todas POST salvo admin-list):
 //   get-guia-state  { rut }            -> estudiante + intento guardado
@@ -39,6 +40,22 @@ const VERSIONS = {
     nombre: 'informe mecánico (4°A y 4°B)',
     ruta: '/nm4/u3-clase6-informe-mecanica/informe/'
   },
+  industrial: {
+    campos: require('../nm4/u3-clase6-informe-industrial/informe/campos.js'),
+    base: 'plataforma_nm4/informe_industrial_2026',
+    cursos: ['4ATP', 'PRUEBA'],
+    nombre: 'informe de Mecánica Industrial (4°A)',
+    ruta: '/nm4/u3-clase6-informe-industrial/informe/',
+    supportsPairs: true
+  },
+  automotriz: {
+    campos: require('../nm4/u3-clase6-informe-automotriz/informe/campos.js'),
+    base: 'plataforma_nm4/informe_automotriz_2026',
+    cursos: ['4BTP', 'PRUEBA'],
+    nombre: 'informe de Mecánica Automotriz (4°B)',
+    ruta: '/nm4/u3-clase6-informe-automotriz/informe/',
+    supportsPairs: true
+  },
   electronica: {
     campos: require('../nm4/u3-clase6-informe-electronica/informe/campos.js'),
     base: 'plataforma_nm4/informe_electronica_2026',
@@ -48,7 +65,7 @@ const VERSIONS = {
     supportsPairs: true
   }
 };
-const COURSE_VERSION = { '4ATP': 'mecanica', '4BTP': 'mecanica', '4CTP': 'electrica', '4ETP': 'electronica' };
+const COURSE_VERSION = { '4ATP': 'industrial', '4BTP': 'automotriz', '4CTP': 'electrica', '4ETP': 'electronica' };
 const ADMINS = 'plataforma_estudiantes/admins';
 const ROSTER = ROWS.map(([hash, curso, n, nombre]) => ({ hash, curso, n, nombre }));
 const BY_HASH = new Map(ROSTER.map(student => [student.hash, student]));

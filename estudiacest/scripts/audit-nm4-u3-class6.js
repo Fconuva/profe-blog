@@ -92,7 +92,7 @@ MCAMPOS.questions.forEach(q => {
 expect(MCAMPOS.activity.sessionId !== CAMPOS.activity.sessionId, 'Las dos versiones comparten sessionId.');
 expect(mstudent.includes('version=mecanica') && mpanel.includes('version=mecanica'), 'La versión mecánica no llama a su API.');
 expect(!mstudent.includes("'informeNM4.rut'"), 'La versión mecánica comparte la sesión con la eléctrica.');
-expect(portal.includes('/nm4/u3-clase6-informe-mecanica/informe/'), 'La tarjeta de la Clase 6 no enlaza al informe mecánico.');
+expect(fs.existsSync(path.join(root, mbase, 'informe/index.html')), 'La versión mecánica histórica dejó de estar disponible.');
 expect(/electrica:[\s\S]*?cursos: \['4CTP', '4ETP', 'PRUEBA'\]/.test(api) && /mecanica:[\s\S]*?cursos: \['4ATP', '4BTP', 'PRUEBA'\]/.test(api), 'La API no conserva separadas las versiones eléctrica y mecánica.');
 ['m1.jpg', 'm2.jpg', 'm3.jpg', 'm4.jpg', 'fotos.js', 'qr-informe.svg']
   .forEach(file => expect(fs.existsSync(path.join(root, mbase, 'assets', file)), `Mecánica: falta el recurso ${file}.`));
@@ -101,6 +101,73 @@ Object.entries(plan).forEach(([k, [from, days, to]]) => {
   const d = new Date(from + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + days);
   expect(d.toISOString().slice(0, 10) === to, `Mecánica: la próxima mantención de ${k} no cuadra (${d.toISOString().slice(0, 10)}).`);
 });
+
+// Versiones especializadas nuevas: 4°A Mecánica Industrial y 4°B Mecánica Automotriz.
+const specialtyRenderer = read('nm4/informe-especialidad-renderer.js');
+const specialtySessions = [];
+function auditSpecialty({ label, route, version, course, sessionKey, caseTokens, forbidden, assets }) {
+  const dir = `nm4/${route}/`;
+  const specialtyDeck = read(dir + 'index.html');
+  const specialtyStudent = read(dir + 'informe/index.html');
+  const specialtyConfig = read(dir + 'informe/informe.js');
+  const specialtyPanel = read(dir + 'revisar/index.html');
+  const fields = require(path.join(root, dir, 'informe/campos.js'));
+  const specialtySlides = [...specialtyDeck.matchAll(/<section class="slide[^>]*data-title="([^"]+)"/g)].map(match => match[1]);
+  const specialtyMinutes = [...specialtyDeck.matchAll(/data-minutes="(\d+)"/g)].reduce((sum, match) => sum + Number(match[1]), 0);
+
+  expect(specialtySlides.length === 14 && specialtyMinutes === 90, `${label}: la clase tiene ${specialtySlides.length} pantallas y ${specialtyMinutes} minutos.`);
+  expect(fields.questions.length === 27, `${label}: se esperaban 27 campos y hay ${fields.questions.length}.`);
+  expect(fields.activity.requiredForSubmit.length === 20, `${label}: no define exactamente 20 campos obligatorios.`);
+  specialtySessions.push(fields.activity.sessionId);
+  expect(specialtyStudent.includes(`version=${version}`) && specialtyPanel.includes(`version=${version}`), `${label}: estudiante y panel no usan su versión de API.`);
+  expect(specialtyStudent.includes(`'${sessionKey}.rut'`), `${label}: la sesión del navegador no está aislada.`);
+  expect(portal.includes(`/nm4/${route}/`) && portal.includes(`/nm4/${route}/informe/`), `${label}: faltan enlaces de clase o informe en el portal NM4.`);
+  expect(api.includes(`base: 'plataforma_nm4/informe_${version}_2026'`) && api.includes(`cursos: ['${course}', 'PRUEBA']`), `${label}: la API no separa base y curso.`);
+  expect(api.includes(`'${course}': '${version}'`), `${label}: COURSE_VERSION no dirige el curso a su versión.`);
+
+  ['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'join-pair', 'Trabajo compartido:', 'sin perder lo que ya escribiste', 'syncFromServer', 'setInterval', 'changedFields', 'Completa las 20 casillas obligatorias'].forEach(token =>
+    expect(specialtyStudent.includes(token), `${label}: la interfaz de estudiante no contiene ${token}.`));
+  ['Registrar una pareja', 'id="pairFirst"', 'id="pairSecond"', "call('admin-pair'", 'Modalidad', 'Pareja con'].forEach(token =>
+    expect(specialtyPanel.includes(token), `${label}: el panel docente no contiene ${token}.`));
+  ['Individual', 'En pareja', 'ambos verán el mismo borrador', 'Completa 20 campos obligatorios'].forEach(token =>
+    expect(specialtyDeck.includes(token), `${label}: la clase no explica «${token}».`));
+  caseTokens.forEach(token => expect(specialtyConfig.includes(token), `${label}: falta el dato verificable ${token}.`));
+  expect(!forbidden.test(specialtyDeck + specialtyStudent + specialtyConfig + specialtyPanel), `${label}: conserva contenido de otra especialidad.`);
+
+  const measurementBlock = specialtyConfig.slice(specialtyConfig.indexOf('measurements: ['), specialtyConfig.indexOf('registerHeaders:'));
+  const extraBlock = specialtyConfig.slice(specialtyConfig.indexOf('extraRegister: ['), specialtyConfig.indexOf('modelFinding:'));
+  const renderedFields = [
+    ...specialtyRenderer.matchAll(/field\('([^']+)'/g),
+    ...measurementBlock.matchAll(/field: '([^']+)'/g),
+    ...extraBlock.matchAll(/field: '([^']+)'/g)
+  ].map(match => match[1]);
+  fields.questions.forEach(question => {
+    const count = renderedFields.filter(id => id === question.id).length;
+    expect(count === 1, `${label}: el campo ${question.id} se dibuja ${count} veces.`);
+  });
+
+  [...assets, 'qr-informe.svg', 'PROMPTS_IMAGENES.md'].forEach(file =>
+    expect(fs.existsSync(path.join(root, dir, 'assets', file)), `${label}: falta el recurso ${file}.`));
+  [...specialtyDeck.matchAll(/src="(assets\/[^"]+)"/g)].forEach(match =>
+    expect(fs.existsSync(path.join(root, dir, match[1])), `${label}: imagen enlazada inexistente: ${match[1]}.`));
+  assets.forEach(file => expect(specialtyConfig.includes(file), `${label}: el informe no integra ${file}.`));
+  return { slides: specialtySlides.length, fields: fields.questions.length };
+}
+
+expect(['workMode', 'rolePlural', 'Obligatorio', 'TOTAL_PAGES = 12'].every(token => specialtyRenderer.includes(token)), 'El renderer compartido no conserva modalidad, roles, obligatoriedad y 12 páginas.');
+const industrialAudit = auditSpecialty({
+  label: '4°A Industrial', route: 'u3-clase6-informe-industrial', version: 'industrial', course: '4ATP', sessionKey: 'informeNM4industrial',
+  caseTokens: ['BP-04', '9,6 mm/s RMS', '82 °C', '6.470 h', 'DS 594'],
+  forbidden: /pastilla|amortiguador|PLC-01|vehículo V-17/i,
+  assets: ['i1-conjunto-motor-bomba.png', 'i2-acoplamiento-fuga.png', 'i3-medicion-vibracion.png']
+});
+const automotiveAudit = auditSpecialty({
+  label: '4°B Automotriz', route: 'u3-clase6-informe-automotriz', version: 'automotriz', course: '4BTP', sessionKey: 'informeNM4automotriz',
+  caseTokens: ['V-17', '128.450 km', '2,5 mm', '3,5 %', 'CONASET'],
+  forbidden: /bomba centrífuga|BP-04|PLC-01|motor M-04/i,
+  assets: ['a1-vehiculo-elevador.png', 'a2-freno-medicion.png', 'a3-amortiguador-fuga.png']
+});
+expect(new Set([CAMPOS.activity.sessionId, MCAMPOS.activity.sessionId, ...specialtySessions]).size === 4, 'Las nuevas actividades comparten un sessionId con otra versión.');
 
 // Versión Electrónica (4°E): automatización, mediciones, configuración y respaldo.
 const ebase = 'nm4/u3-clase6-informe-electronica/';
@@ -117,7 +184,7 @@ ECAMPOS.questions.forEach(q => {
   expect(count === 1, `Electrónica: el campo ${q.id} aparece ${count} veces en el informe.`);
 });
 expect(ECAMPOS.questions.length === 27, `Electrónica: se esperaban 27 campos y hay ${ECAMPOS.questions.length}.`);
-expect(new Set([CAMPOS.activity.sessionId, MCAMPOS.activity.sessionId, ECAMPOS.activity.sessionId]).size === 3, 'Dos versiones comparten el mismo sessionId.');
+expect(new Set([CAMPOS.activity.sessionId, MCAMPOS.activity.sessionId, ECAMPOS.activity.sessionId, ...specialtySessions]).size === 5, 'Dos versiones comparten el mismo sessionId.');
 expect(estudente.includes('version=electronica') && epanel.includes('version=electronica'), 'La versión de Electrónica no llama a su API.');
 expect(estudente.includes("'informeNM4elec.rut'") && !estudente.includes("'informeNM4.rut'"), 'Electrónica comparte la sesión del navegador con otra versión.');
 expect(portal.includes('/nm4/u3-clase6-informe-electronica/informe/'), 'La tarjeta de la Clase 6 no enlaza al informe de Electrónica.');
@@ -153,4 +220,4 @@ if (failures.length) {
   console.error('Clase 6 NM4 con problemas:\n- ' + failures.join('\n- '));
   process.exit(1);
 }
-console.log(`Clase 6 NM4 verificada: eléctrica ${slides.length} pantallas; mecánica ${mslides.length}; Electrónica ${eslides.length} y ${ECAMPOS.questions.length} campos; nómina de ${ROWS.length}.`);
+console.log(`Clase 6 NM4 verificada: eléctrica ${slides.length}; mecánica histórica ${mslides.length}; Industrial ${industrialAudit.slides}/${industrialAudit.fields}; Automotriz ${automotiveAudit.slides}/${automotiveAudit.fields}; Electrónica ${eslides.length}/${ECAMPOS.questions.length}; nómina ${ROWS.length}.`);

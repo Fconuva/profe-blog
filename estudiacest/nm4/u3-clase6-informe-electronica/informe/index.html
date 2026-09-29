@@ -140,7 +140,7 @@
         <ol id="tocList"></ol>
       </nav>
       <main>
-        <p class="banner" id="banner">Escribe solo en los recuadros <b>amarillos</b>. Busca los datos en la <b>Libreta</b> y usa los textos listos como ejemplo. <b>Mínimo para entregar:</b> páginas 6, 8, 9 y 11.</p>
+        <p class="banner" id="banner"><b>Primero completa lo obligatorio:</b> todas las casillas amarillas de las páginas 6, 8, 9 y 11. Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. La portada, el resumen, los objetivos y la conclusión dicen <b>Ampliación</b>: hazlos solo si alcanza el tiempo.</p>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
           <h2>Entregar el informe</h2>
@@ -182,6 +182,7 @@
     const SECTION_PAGES = { portada: 'p1', resumen: 'p3', objetivos: 'p4', ficha: 'p6', fotos: 'p9', hallazgos: 'p11', conclusiones: 'p12', firma: 'p12' };
     const QUESTION_PAGES = { f2Desc: 'p8', f3Desc: 'p9', versionActiva: 'p9', versionRespaldo: 'p9' };
     const REQUIRED = new Set(activity.requiredForSubmit || []);
+    const REQUIRED_TOTAL = REQUIRED.size;
     const PAGE_TITLES = [['p1', 'Portada'], ['p2', 'Datos del documento'], ['p3', 'Resumen'], ['p4', 'Objetivos'], ['p5', 'Cómo se diagnosticó'], ['p6', 'Mediciones y registros'], ['p7', 'Diagrama del sistema'], ['p8', 'Fotos 1 y 2'], ['p9', 'Foto 3 y configuración'], ['p10', 'Hallazgo 1 (modelo)'], ['p11', 'Hallazgos 2 y 3'], ['p12', 'Conclusión y firmas']];
 
     let rut = '';
@@ -274,17 +275,29 @@
     function updateProgress() {
       const clean = C.sanitize(answers);
       const { score, missing } = C.progress(clean);
-      $('progText').textContent = `${score} de ${TOTAL}`;
-      $('progBar').style.width = `${Math.round(score / TOTAL * 100)}%`;
+      const requiredDone = C.questions.filter(q => REQUIRED.has(q.id) && C.isComplete(q, clean[q.id])).length;
+      $('progText').textContent = `${requiredDone} de ${REQUIRED_TOTAL} mínimos`;
+      $('progBar').style.width = `${Math.round(requiredDone / REQUIRED_TOTAL * 100)}%`;
       C.questions.forEach(q => {
         const wrap = $('report').querySelector(`[data-wrap="${q.id}"]`);
         if (wrap) wrap.classList.toggle('ok', C.isComplete(q, clean[q.id]));
       });
       const bySection = {};
-      C.questions.forEach(q => { const p = QUESTION_PAGES[q.id] || SECTION_PAGES[q.section]; bySection[p] = bySection[p] || { total: 0, done: 0 }; bySection[p].total++; if (C.isComplete(q, clean[q.id])) bySection[p].done++; });
+      C.questions.forEach(q => {
+        const p = QUESTION_PAGES[q.id] || SECTION_PAGES[q.section];
+        bySection[p] = bySection[p] || { total: 0, done: 0, required: 0, requiredDone: 0 };
+        bySection[p].total++;
+        if (C.isComplete(q, clean[q.id])) bySection[p].done++;
+        if (REQUIRED.has(q.id)) {
+          bySection[p].required++;
+          if (C.isComplete(q, clean[q.id])) bySection[p].requiredDone++;
+        }
+      });
       $('tocList').innerHTML = PAGE_TITLES.map(([id, title]) => {
         const s = bySection[id];
-        const st = !s ? '<span class="st ready">Lista</span>' : s.done === s.total ? '<span class="st done">✓</span>' : `<span class="st">${s.done}/${s.total}</span>`;
+        const st = !s ? '<span class="st ready">Lista</span>'
+          : !s.required ? (s.done === s.total ? '<span class="st done">✓</span>' : '<span class="st ready">Ampliación</span>')
+          : s.requiredDone === s.required ? '<span class="st done">✓</span>' : `<span class="st">${s.requiredDone}/${s.required}</span>`;
         return `<li><a href="#${id}"><span>${title}</span>${st}</a></li>`;
       }).join('');
       const requiredMissing = missing.filter(q => REQUIRED.has(q.id));
@@ -294,7 +307,7 @@
       $('deliverText').textContent = requiredMissing.length
         ? `Faltan ${requiredMissing.length} partes obligatorias de las páginas 6, 8, 9 y 11.`
         : 'Ya puedes entregar. El resumen y la conclusión amplían el informe, pero no bloquean la entrega.';
-      $('submit').textContent = `Entregar informe (${score} de ${TOTAL})`;
+      $('submit').textContent = `Entregar informe (${requiredDone} de ${REQUIRED_TOTAL} mínimos)`;
     }
 
     // ---------- Autoguardado en cola ----------
@@ -374,7 +387,7 @@
       answers = attempt.answers;
       try { sessionStorage.removeItem(backupKey()); } catch (_) {}
       draw();
-      $('doneText').textContent = `Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas. Aparece como Entregado en el panel del profesor. Entrega confirmada.`;
+      $('doneText').textContent = `Cumpliste el mínimo obligatorio. Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas y aparece como Entregado en el panel del profesor. Entrega confirmada.`;
       $('doneDialog').hidden = false;
       $('doneBack').focus();
     }

@@ -120,6 +120,7 @@ expect(/electronica:[\s\S]*?base: 'plataforma_nm4\/informe_electronica_2026'[\s\
 expect(api.includes("'4ETP': 'electronica'"), 'La API no dirige 4°E a su versión canónica de Electrónica.');
 expect(Array.isArray(ECAMPOS.activity.requiredForSubmit) && ECAMPOS.activity.requiredForSubmit.length === 20, 'Electrónica no define las 20 partes mínimas para entregar.');
 expect(api.includes('requiredForSubmit') && estudente.includes('requiredForSubmit'), 'El mínimo obligatorio no se valida en cliente y servidor.');
+['Obligatorio para entregar:', 'páginas 6, 8, 9 y 11', 'Ampliación', 'de ${REQUIRED_TOTAL} mínimos'].forEach(token => expect((edeck + estudente + erenderer).includes(token), `Electrónica: falta la instrucción de trabajo «${token}».`));
 ['PLC-01', 'S1', '46,8 °C', 'versión 1.8', 'PR-AUT-02'].forEach(token => expect(erenderer.includes(token), `Electrónica: falta el dato verificable ${token}.`));
 expect(!/esmeril|compresor|elevador de vehículos/i.test(edeck + estudente + erenderer + epanel), 'La versión de Electrónica conserva contenido del caso mecánico.');
 ['e1-linea-automatizada.jpg', 'e2-sensor-fotoelectrico.jpg', 'e3-gabinete-ventilacion.jpg', 'qr-informe.svg', 'PROMPTS_IMAGENES.md']

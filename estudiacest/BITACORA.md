@@ -8,6 +8,59 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, NM4 4°E: edición simultánea y registro manual de parejas
+
+Se convirtió el informe compartido de Electrónica en una experiencia
+colaborativa segura para dos equipos distintos y se agregó al panel docente una
+sección para registrar manualmente a quienes no pudieron formar su pareja desde
+la vista estudiantil.
+
+**Colaboración sin pérdida de contenido**
+
+- El navegador guarda únicamente las casillas que esa persona modificó; ya no
+  reemplaza el formulario completo en cada autoguardado.
+- El servidor fusiona esos cambios mediante una transacción y recalcula el
+  avance sobre el borrador canónico. Si cada integrante edita un campo distinto,
+  ambos se conservan aunque guarden simultáneamente. Si editan exactamente la
+  misma casilla, prevalece el último guardado confirmado.
+- Las parejas consultan el servidor cada 2,5 segundos. Los cambios guardados
+  aparecen automáticamente en la otra pantalla sin recargar, salvo el campo que
+  esa persona esté editando en ese instante.
+- La entrega primero vacía la cola local, relee el borrador compartido y pide al
+  servidor cerrar la versión canónica sin reenviar una copia completa obsoleta.
+- La conversión individual a pareja conserva además los dos borradores
+  originales en el respaldo transaccional creado anteriormente.
+
+**Gestión docente**
+
+- El panel protegido `/nm4/u3-clase6-informe-electronica/revisar/` incorpora
+  `Registrar una pareja manualmente`, con curso y dos selectores por número de
+  lista y nombre. No solicita ni expone RUN.
+- La API `admin-pair` vuelve a comprobar autenticación y autorización, exige
+  integrantes distintos del mismo curso, rechaza otras parejas y utiliza la
+  misma migración que conserva y combina avances. Después de registrarla, el
+  panel pide a ambos estudiantes actualizar la página.
+
+**Pruebas y publicación**
+
+- Prueba aislada de API: pareja creada por administrador, dos escrituras
+  concurrentes en campos distintos, ambos campos conservados, entrega desde el
+  borrador canónico, dos respaldos y ningún RUN almacenado.
+- Playwright local: dos navegadores, sincronización bidireccional, envío solo de
+  campos modificados y vista móvil sin desborde. El formulario administrativo
+  también se probó en móvil con autenticación y API simuladas.
+- Prueba completa en producción con una pareja ficticia: dos navegadores
+  escribieron al mismo tiempo, ambos textos aparecieron en las dos pantallas,
+  sobrevivieron a la recarga y las dos identidades recuperaron el mismo
+  borrador. La acción administrativa sin token fue rechazada con HTTP `401`.
+- Build integral y auditoría de Clase 6 aprobados. La API pública informó 44
+  registros habilitados y 27 campos. Los HTML públicos del informe y del panel
+  respondieron `200` y coincidieron por SHA-256 con la fuente local.
+- Implementación: `ae0c0079`. Despliegue seguro:
+  `dpl_DEpWKUSyxiYWw4vFUTEA66b8m9hw`, estado `READY` y alias público verificado.
+
+---
+
 ## 2026-09-29, NM4 4°E: trabajo individual o en pareja sin perder borradores
 
 El informe de Electrónica permite trabajar individualmente o en pareja. Cada

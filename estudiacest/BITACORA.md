@@ -8,6 +8,51 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, NM4 4°E: trabajo individual o en pareja sin perder borradores
+
+El informe de Electrónica permite trabajar individualmente o en pareja. Cada
+integrante se valida contra la nómina del mismo curso y la pareja comparte un
+solo borrador, una sola entrega y el mismo estado en el panel docente. No se
+guarda ningún RUN: después de validar, la asociación usa curso y número de
+lista.
+
+Se añadió compatibilidad especial para estudiantes que ya habían comenzado
+individualmente antes de habilitar las parejas:
+
+- Al recargar un borrador individual aparece `Agregar compañero` dentro del
+  informe. Antes de abrir el selector, la página fuerza el autoguardado.
+- La conversión a pareja es transaccional. Conserva intactos los borradores
+  individuales como respaldo y crea el compartido con los campos ya escritos;
+  si ambos habían avanzado, prioriza los campos del solicitante y completa los
+  que faltan con el trabajo del compañero.
+- No permite asociar a alguien que ya integra otra pareja ni convertir una
+  entrega individual cerrada sin que el profesor la reabra.
+- Una vez formada la pareja, cualquiera puede continuar y entregar. La entrega
+  final bloquea escrituras tardías para ambos.
+
+**Pruebas y publicación**
+
+- Prueba aislada de API: dos borradores individuales conservados, campos
+  combinados, respaldo de ambos, lectura compartida y ausencia de RUN en la
+  base simulada.
+- Prueba Playwright local a 390 px: borrador existente, guardado forzado,
+  selección de compañero, contenido intacto, recarga compartida y sin desborde.
+- Prueba completa en producción con identidades ficticias: borrador individual
+  guardado y recuperado tras recargar; conversión a pareja; lectura y edición
+  desde el segundo integrante; entrega compartida con `20 de 20`; ambos
+  recuperaron las mismas respuestas y una escritura posterior fue rechazada
+  con HTTP `409`.
+- Build completo y auditoría de Clase 6 aprobados. API pública: actividad
+  correcta, 42 registros habilitados y 27 campos. El HTML público incluye el
+  nuevo control y coincide por SHA-256 con la fuente local.
+- Se robusteció el verificador seguro con tres intentos ante fallos transitorios
+  de red; sigue bloqueando recursos ausentes o respuestas HTTP inválidas.
+- Implementación inicial de parejas: `79e18d80`. Migración segura de borradores:
+  `9527e0a2`. Despliegue seguro: `dpl_DUTbRn825yjjNT1NRDnWH3hTSjmE`, estado
+  `READY` y alias `https://www.estudiacest.com` verificado.
+
+---
+
 ## 2026-09-29, 4°D TP: taller accesible desde la portada pública
 
 Se trasladó el acceso principal al taller de productos escritos desde el inicio

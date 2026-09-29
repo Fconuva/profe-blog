@@ -47,10 +47,25 @@
       position: relative;
       overflow: hidden;
       color: #fff;
-      background: radial-gradient(120% 90% at 80% 10%, #1d5c63 0%, rgba(29,92,99,0) 60%), linear-gradient(170deg, #0b2233 0%, #0f3a44 55%, #0f4c4a 100%);
+      background: #0b2233;
+      min-height: clamp(500px, 112vw, 620px);
       padding: 28px 16px 0;
+      display: flex;
+      align-items: flex-end;
     }
-    .hero-in { position: relative; z-index: 2; width: min(1080px, 100%); margin: 0 auto; }
+    .hero::after {
+      content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none;
+      background:
+        linear-gradient(90deg, rgba(6,25,38,.96) 0%, rgba(6,31,42,.8) 48%, rgba(6,31,42,.2) 78%, rgba(6,31,42,.06) 100%),
+        linear-gradient(0deg, rgba(6,25,38,.76) 0%, rgba(6,25,38,.02) 54%, rgba(6,25,38,.22) 100%);
+    }
+    .hero-arte { position: absolute; inset: 0; z-index: 0; margin: 0; }
+    .hero-arte img {
+      display: block; width: 100%; height: 100%; object-fit: cover; object-position: 62% center;
+      transform: scale(1.035); animation: derivaHero 18s ease-in-out infinite alternate;
+    }
+    @keyframes derivaHero { to { transform: scale(1.085) translate3d(-.8%, -.5%, 0); } }
+    .hero-in { position: relative; z-index: 3; width: min(1080px, 100%); margin: 0 auto; padding-bottom: 76px; }
     .marca { display: flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: rgba(255,255,255,.72); }
     .marca img { width: 26px; height: 26px; border-radius: 50%; background: #fff; padding: 2px; }
     .hero h1 { margin-top: 26px; font-size: clamp(34px, 8.6vw, 64px); line-height: 1.02; max-width: 12ch; }
@@ -67,14 +82,14 @@
     .punto { width: 8px; height: 8px; border-radius: 50%; background: #5ff0a8; box-shadow: 0 0 0 0 rgba(95,240,168,.7); animation: latido 2s infinite; }
     .punto.caido { background: #ffb35c; animation: none; }
     @keyframes latido { 0% { box-shadow: 0 0 0 0 rgba(95,240,168,.6); } 70% { box-shadow: 0 0 0 9px rgba(95,240,168,0); } 100% { box-shadow: 0 0 0 0 rgba(95,240,168,0); } }
-    .paisaje { position: relative; display: block; width: 100%; height: auto; margin-top: 18px; z-index: 1; }
-    .vapor path { fill: none; stroke: rgba(255,255,255,.55); stroke-width: 5; stroke-linecap: round; animation: vapor 6s ease-in-out infinite; transform-box: fill-box; }
-    .vapor path:nth-child(2) { animation-delay: -2s; stroke-width: 4; }
-    .vapor path:nth-child(3) { animation-delay: -4s; stroke-width: 3.5; }
-    .vapor path:nth-child(4) { animation-delay: -1s; stroke-width: 3; }
-    @keyframes vapor { 0% { opacity: 0; transform: translateY(16px) scaleY(.8); } 35% { opacity: .9; } 100% { opacity: 0; transform: translateY(-30px) scaleY(1.15); } }
-    .brillo { animation: brillo 5s ease-in-out infinite; }
-    @keyframes brillo { 50% { opacity: .55; } }
+    .bruma { position: absolute; inset: auto 0 0; z-index: 2; height: 150px; overflow: hidden; pointer-events: none; }
+    .bruma::after { content: ""; position: absolute; inset: auto -5% -72px; height: 120px; border-radius: 50% 50% 0 0; background: var(--arena); filter: blur(1px); }
+    .bruma i {
+      position: absolute; bottom: 18px; left: var(--x); width: 48px; height: 126px; border: 5px solid rgba(255,255,255,.38);
+      border-color: rgba(255,255,255,.38) transparent transparent transparent; border-radius: 50%; opacity: 0;
+      animation: vaporFoto var(--t) ease-in-out infinite; animation-delay: var(--d);
+    }
+    @keyframes vaporFoto { 0% { opacity: 0; transform: translate3d(0, 34px, 0) rotate(-6deg) scale(.75); } 35% { opacity: .75; } 100% { opacity: 0; transform: translate3d(18px, -54px, 0) rotate(8deg) scale(1.25); } }
 
     /* ---------- contenido ---------- */
     main { width: min(1080px, 100%); margin: 0 auto; padding: 0 16px 120px; position: relative; z-index: 3; }
@@ -93,6 +108,27 @@
     .paso b { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--termal-claro); color: var(--pino); font-size: 12px; letter-spacing: 0; }
     .tarjeta h2 { font-size: 24px; margin-top: 8px; }
     .tarjeta .sub { color: var(--gris); margin: 6px 0 0; font-size: 15px; }
+    .escena {
+      position: relative; overflow: hidden; margin: 18px 0 20px; border-radius: 16px; min-height: 176px;
+      background: var(--noche); box-shadow: 0 18px 36px -24px rgba(11,34,51,.7);
+      animation: escenaEntra .75s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .escena img { display: block; width: 100%; height: 176px; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+    .escena:hover img { transform: scale(1.025); }
+    .escena::after {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,.16) 42%, transparent 64%);
+      transform: translateX(-125%); animation: destello 9s 1.5s ease-in-out infinite;
+    }
+    .escena figcaption {
+      position: absolute; left: 12px; right: 12px; bottom: 11px; z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; gap: 12px;
+      color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.65);
+    }
+    .escena figcaption strong { font-family: "Fraunces", Georgia, serif; font-size: 20px; line-height: 1.1; }
+    .escena figcaption small { max-width: 22ch; text-align: right; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.84); }
+    .escena figcaption::before { content: ""; position: absolute; z-index: -1; inset: -48px -12px -11px; background: linear-gradient(0deg, rgba(6,25,38,.9), transparent); }
+    @keyframes escenaEntra { from { opacity: 0; transform: translateY(14px) scale(.985); } to { opacity: 1; transform: none; } }
+    @keyframes destello { 0%, 72%, 100% { transform: translateX(-125%); } 86% { transform: translateX(125%); } }
     .campos { display: grid; gap: 14px; margin-top: 18px; }
     .campo label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
     .campo input {
@@ -287,7 +323,9 @@
     footer { width: min(1080px, 100%); margin: 0 auto; padding: 0 16px 40px; color: var(--gris); font-size: 13px; }
 
     @media (min-width: 760px) {
-      .hero { padding: 40px 32px 0; }
+      .hero { min-height: 590px; padding: 40px 32px 0; }
+      .hero-in { padding-bottom: 96px; }
+      .hero-arte img { object-position: center center; }
       main, footer { padding-left: 32px; padding-right: 32px; }
       .tarjeta { padding: 30px 30px; }
       .campos.dos { grid-template-columns: 1fr 1fr; }
@@ -295,6 +333,9 @@
       .zona-bus { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); align-items: start; gap: 36px; }
       .panel-asiento { position: sticky; top: 20px; }
       .comidas { grid-template-columns: 1fr 1fr; }
+      .escena, .escena img { height: 252px; }
+      .escena figcaption { left: 20px; right: 20px; bottom: 17px; }
+      .escena figcaption strong { font-size: 26px; }
       .barra { margin: 22px -32px 0; padding-left: 32px; padding-right: 32px; }
       .pase-datos { grid-template-columns: repeat(4, 1fr); }
     }
@@ -306,11 +347,15 @@
     }
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+      .hero-arte img, .escena:hover img { transform: none !important; }
     }
   </style>
 </head>
 <body>
   <header class="hero">
+    <picture class="hero-arte" aria-hidden="true">
+      <img src="/termas/assets/panimavida-termal-ia.webp" alt="" width="2103" height="748" fetchpriority="high" decoding="async">
+    </picture>
     <div class="hero-in">
       <div class="marca"><img src="/estudiantes/assets/logo-cest.png" alt="">Docentes CEST · Paseo 2026</div>
       <h1>Termas de <em>Panimávida</em></h1>
@@ -322,26 +367,9 @@
         <span class="chip"><strong id="chipLibres">–</strong> asientos libres en el bus</span>
       </div>
     </div>
-    <svg class="paisaje" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
-      <defs>
-        <linearGradient id="gAgua" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5fd6c6"/><stop offset="1" stop-color="#1c8f86"/></linearGradient>
-        <radialGradient id="gSol" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffe4a8" stop-opacity=".9"/><stop offset="1" stop-color="#ffe4a8" stop-opacity="0"/></radialGradient>
-      </defs>
-      <circle class="brillo" cx="930" cy="70" r="90" fill="url(#gSol)"/>
-      <path d="M0 190 L120 120 L210 160 L330 70 L430 150 L520 105 L640 175 L760 90 L860 150 L980 80 L1090 140 L1200 110 L1200 300 L0 300 Z" fill="#ffffff" fill-opacity=".07"/>
-      <path d="M330 70 L365 100 L348 98 L330 112 L312 97 L296 101 Z M760 90 L792 118 L776 115 L760 128 L744 114 L728 118 Z M980 80 L1010 106 L995 104 L980 116 L965 103 L950 107 Z" fill="#ffffff" fill-opacity=".35"/>
-      <path d="M0 225 C140 180 250 200 360 175 C470 150 560 205 690 185 C820 165 930 200 1040 180 C1110 168 1160 176 1200 170 L1200 300 L0 300 Z" fill="#0e3a42"/>
-      <path d="M0 262 C180 236 330 250 470 240 C640 228 760 252 920 244 C1040 238 1130 246 1200 240 L1200 300 L0 300 Z" fill="#0b2f36"/>
-      <ellipse cx="820" cy="276" rx="250" ry="22" fill="url(#gAgua)"/>
-      <ellipse cx="820" cy="271" rx="210" ry="8" fill="#ffffff" fill-opacity=".22"/>
-      <g class="vapor">
-        <path d="M700 262 C690 240 715 225 700 200"/>
-        <path d="M790 262 C778 238 806 222 790 196"/>
-        <path d="M880 262 C868 242 894 226 880 204"/>
-        <path d="M955 264 C946 246 966 232 955 214"/>
-      </g>
-      <path d="M0 300 L0 284 C200 276 400 290 600 284 C800 278 1000 290 1200 282 L1200 300 Z" fill="#f6f1e8"/>
-    </svg>
+    <div class="bruma" aria-hidden="true">
+      <i style="--x:58%;--t:7s;--d:-2s"></i><i style="--x:70%;--t:8.5s;--d:-5s"></i><i style="--x:83%;--t:6.5s;--d:-1s"></i><i style="--x:91%;--t:9s;--d:-6s"></i>
+    </div>
   </header>
 
   <main>
@@ -407,6 +435,10 @@
       <section class="tarjeta oculto" data-paso id="pasoTransporte" aria-labelledby="t-transporte">
         <span class="paso"><b></b>Transporte</span>
         <h2 id="t-transporte">¿Cómo llegas a las termas?</h2>
+        <figure class="escena">
+          <img src="/termas/assets/viaje-bus-ia.webp" alt="" width="1400" height="700" loading="lazy" decoding="async">
+          <figcaption><strong>El viaje también es parte del paseo</strong><small>Ilustración referencial creada con IA</small></figcaption>
+        </figure>
         <div class="opciones" role="radiogroup" aria-labelledby="t-transporte">
           <div class="opcion">
             <input type="radio" name="transporte" id="tr-bus" value="bus">
@@ -464,6 +496,10 @@
       <section class="tarjeta oculto" id="infoAlmuerzo" aria-labelledby="t-almuerzo">
         <span class="paso paso-info">Incluido</span>
         <h2 id="t-almuerzo">El almuerzo va incluido</h2>
+        <figure class="escena">
+          <img src="/termas/assets/mesa-compartida-ia.webp" alt="" width="1400" height="700" loading="lazy" decoding="async">
+          <figcaption><strong>Un día para compartir</strong><small>Imagen ambientacional; el detalle válido está abajo</small></figcaption>
+        </figure>
         <div class="comidas">
           <article class="comida incluida">
             <header><h3>Almuerzo buffet</h3><span class="hora">13:00 a 15:00</span></header>

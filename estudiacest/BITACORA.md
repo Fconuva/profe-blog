@@ -8,6 +8,25 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (tarde), /termas: detalle de desayuno y once
+
+- Francisco entregó la cotización en PDF: Hotel Termas de Panimávida, 09-mar-2026.
+  Ahora la página muestra qué incluye el **desayuno buffet (08:30 a 10:00)** y la
+  **once continental (17:00 a 18:00)**, sin valores, por decisión de Francisco.
+  También agrega la política de la cotización: si se contrata, se paga por todo
+  el grupo reservado.
+- Francisco considera que la oferta no es muy llamativa. La página presenta el
+  detalle en tono neutro, para que cada docente juzgue. Su preferencia opcional
+  queda en el admin.
+- Commit `8c1c055d`. En el deploy `dpl_A9NT1yZsr4cp5FCtGegTjwg5pMeb` la CLI
+  terminó con `ECONNRESET` en la consulta final. Según `vercel inspect`, quedó
+  Ready y con alias en www, y la página publicada mide lo mismo que la local.
+  Las portadas protegidas y `/termas/admin` responden 200.
+- Queda cerrado el pendiente 1 de la entrada del mediodía. Siguen abiertos la
+  capacidad del bus, cuando el colegio responda, y el cruce con la nómina.
+
+---
+
 ## 2026-09-29 (tarde), /termas: cualquier correo, teléfono y contacto de emergencia
 
 Cambios por decisión de Francisco, sobre la entrada de abajo:

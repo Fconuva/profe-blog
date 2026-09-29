@@ -8,6 +8,65 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, NM4 4°A Industrial y 4°B Automotriz: clases e informes especializados
+
+Se reemplazó en el portal la actividad mecánica compartida por dos experiencias
+independientes y coherentes con cada especialidad. La ruta mecánica anterior y
+sus datos permanecen disponibles como historial; no se eliminaron ni migraron
+entregas existentes.
+
+**Diseño de las clases**
+
+- 4°A Mecánica Industrial trabaja el diagnóstico del conjunto motor–bomba
+  BP-04: resguardo, vibración, temperatura, pérdida de lubricante y plan de
+  mantenimiento. La clase tiene 14 pantallas y una secuencia explícita de 90
+  minutos.
+- 4°B Mecánica Automotriz trabaja el vehículo V-17: pastillas y discos,
+  humedad del líquido de frenos, fuga del amortiguador y decisión de aptitud.
+  También tiene 14 pantallas y 90 minutos.
+- Cada caso integra tres imágenes originales generadas con IA, QR propio,
+  libreta de evidencias, modelo de hallazgo y un informe técnico de 12 páginas.
+  Los prompts quedaron archivados junto a los recursos.
+- Cada informe contiene 27 campos, de los cuales 20 son obligatorios para
+  entregar. La interfaz indica el orden exacto de trabajo y distingue las
+  casillas obligatorias de las de ampliación.
+
+**Guardado, parejas y gestión docente**
+
+- Las bases nuevas son independientes:
+  `plataforma_nm4/informe_industrial_2026` y
+  `plataforma_nm4/informe_automotriz_2026`.
+- 4°A y 4°B pueden trabajar individualmente o en pareja. Es posible agregar al
+  compañero después de comenzar; la migración conserva y combina ambos
+  borradores. Cada navegador envía solo sus campos modificados y consulta la
+  versión compartida cada 2,5 segundos.
+- Cada especialidad tiene panel protegido propio y una sección para registrar
+  manualmente parejas por curso y número de lista, sin solicitar ni exponer RUN.
+- La entrega se cierra una sola vez para ambos integrantes; cualquier escritura
+  posterior es rechazada hasta que el docente la reabra.
+
+**Pruebas y publicación**
+
+- Auditoría especializada: 14 pantallas, 90 minutos, 12 páginas, 27 controles
+  únicos, 20 obligatorios y recursos integrados en ambas versiones.
+- API aislada y Playwright local: fusión de borradores individuales, dos
+  escrituras simultáneas conservadas, actualización cruzada, recarga, entrega,
+  bloqueo posterior y alta manual administrativa aprobados para ambas rutas.
+- Producción real: Firebase conservó los aportes de dos sesiones, devolvió la
+  misma entrega compartida a ambos integrantes, confirmó 20/20 y rechazó una
+  escritura tardía con HTTP `409`. El panel sin autenticación respondió `401`.
+- Navegador móvil público: presentación, seis imágenes, informe, autoguardado y
+  relectura aprobados en 4°A y 4°B. Diecinueve recursos públicos coincidieron
+  byte a byte por SHA-256 con la fuente local.
+- Build integral y control posterior aprobados con 284 recursos críticos. La
+  API pública informó 50 identidades habilitadas para Industrial y 47 para
+  Automotriz, con 27 campos en cada actividad.
+- Implementación: `7fba77e0`. Despliegue:
+  `dpl_FESyYkNBNjejJZQcLvFx7GQ5nMLu`, estado `READY` y alias
+  `https://www.estudiacest.com` verificado.
+
+---
+
 ## 2026-09-29, NM4 4°C: parejas, sincronización segura y alta manual
 
 Se aplicaron al informe de Electricidad todas las mejoras colaborativas ya

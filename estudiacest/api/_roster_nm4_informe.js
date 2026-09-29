@@ -206,6 +206,9 @@ const ROWS = [
   ["b9071ca282dcbab4037bf06a","4ETP",38,"VALDES ROJAS ANTONIO JESUS"],
   ["c5f975fb4ac358a42a0c2a90","4ETP",39,"VASQUEZ SOTO MARTIN ALONSO"],
   // Identidad de prueba (RUT ficticio 11.111.111-1) para verificar sin tocar registros reales.
-  ["7d0e7edcc832f9a9c60b9642","PRUEBA",1,"ESTUDIANTE DE PRUEBA"]
+  ["7d0e7edcc832f9a9c60b9642","PRUEBA",1,"ESTUDIANTE DE PRUEBA"],
+  // Identidades ficticias adicionales para verificar el flujo compartido en pareja.
+  ["cfccd2121860f86e8af40546","PRUEBA",2,"ESTUDIANTE DE PRUEBA 2"],
+  ["430df463d80721b8ed78b850","PRUEBA",3,"ESTUDIANTE DE PRUEBA 3"]
 ];
 module.exports = { SALT, ROWS };

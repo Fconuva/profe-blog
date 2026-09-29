@@ -8,8 +8,9 @@
 //
 // Acciones (todas POST salvo admin-list):
 //   get-guia-state  { rut }            -> estudiante + intento guardado
-//   save            { rut, answers }   -> borrador
-//   submit          { rut, answers }   -> entrega final, escritura única
+//   validate-partner { rut, partnerRut } -> valida una pareja opcional
+//   save            { rut, partnerRut?, answers } -> borrador individual o compartido
+//   submit          { rut, partnerRut?, answers } -> entrega final, escritura única
 //   admin-list      GET, Bearer token  -> nómina con estado (solo admins)
 //   admin-reset     { curso, n }, token -> reabre un intento (solo admins)
 //
@@ -39,7 +40,8 @@ const VERSIONS = {
     base: 'plataforma_nm4/informe_electronica_2026',
     cursos: ['4ETP', 'PRUEBA'],
     nombre: 'informe de Electrónica (4°E)',
-    ruta: '/nm4/u3-clase6-informe-electronica/informe/'
+    ruta: '/nm4/u3-clase6-informe-electronica/informe/',
+    supportsPairs: true
   }
 };
 const COURSE_VERSION = { '4ATP': 'mecanica', '4BTP': 'mecanica', '4CTP': 'electrica', '4ETP': 'electronica' };
@@ -62,6 +64,22 @@ function body(req) {
 }
 
 const publicStudent = student => ({ nombre: student.nombre, curso: student.curso, n: student.n });
+const studentKey = student => `${student.curso}/${student.n}`;
+const pairIdFor = (first, second) => `pair_${[first, second].map(student => `${student.curso}_${String(student.n).padStart(3, '0')}`).sort().join('__')}`;
+
+function visibleError(message, status = 400) {
+  return Object.assign(new Error(message), { status, visible: true });
+}
+
+function claimAt(claims, student) {
+  return claims && claims[student.curso] ? claims[student.curso][student.n] : null;
+}
+
+function withClaim(claims, student, value) {
+  const next = { ...(claims || {}) };
+  next[student.curso] = { ...(next[student.curso] || {}), [student.n]: value };
+  return next;
+}
 
 function versionFor(req) {
   const key = String((req.query && req.query.version) || 'electrica');
@@ -89,16 +107,108 @@ function publicAttempt(value, version) {
     score: Number(value.score || 0),
     total: Number(value.total || version.campos.questions.length),
     updatedAt: Number(value.updatedAt || 0),
-    submittedAt: Number(value.submittedAt || 0)
+    submittedAt: Number(value.submittedAt || 0),
+    workMode: value.workMode === 'pair' ? 'pair' : 'individual',
+    team: Array.isArray(value.team) ? value.team.map(publicStudent) : []
   };
+}
+
+async function readWorkState(db, version, student) {
+  const individualRef = db.ref(`${version.base}/${student.curso}/${student.n}`);
+  if (!version.supportsPairs) {
+    const snap = await individualRef.once('value');
+    return { mode: 'individual', claim: null, ref: individualRef, value: snap.val() };
+  }
+  const claimSnap = await db.ref(`${version.base}/_claims/${student.curso}/${student.n}`).once('value');
+  const claim = typeof claimSnap.val() === 'string' ? claimSnap.val() : null;
+  if (claim && claim.startsWith('pair_')) {
+    const ref = db.ref(`${version.base}/_teams/${claim}`);
+    const snap = await ref.once('value');
+    return { mode: 'pair', claim, ref, value: snap.val() };
+  }
+  const snap = await individualRef.once('value');
+  return { mode: 'individual', claim, ref: individualRef, value: snap.val() };
+}
+
+async function validatePair(db, version, student, partnerRut) {
+  if (!version.supportsPairs) throw visibleError('Esta versión del informe se realiza individualmente.');
+  const partner = findStudent(partnerRut);
+  if (!partner) throw visibleError('El RUT del compañero no pertenece a la nómina de esta actividad.', 404);
+  if (!version.cursos.includes(partner.curso) || partner.curso !== student.curso) throw visibleError('El compañero debe pertenecer al mismo curso.', 403);
+  if (studentKey(partner) === studentKey(student)) throw visibleError('El compañero debe ser otra persona.');
+  const pairId = pairIdFor(student, partner);
+  const [firstState, secondState] = await Promise.all([readWorkState(db, version, student), readWorkState(db, version, partner)]);
+  for (const state of [firstState, secondState]) {
+    if (state.claim && state.claim !== pairId) throw visibleError('Uno de los integrantes ya comenzó otro informe. Debe continuar ese trabajo.', 409);
+    if (state.value && !(state.mode === 'pair' && state.claim === pairId)) throw visibleError('Uno de los integrantes ya comenzó otro informe. Debe continuar ese trabajo.', 409);
+  }
+  const members = [student, partner].sort((a, b) => studentKey(a).localeCompare(studentKey(b)));
+  return { partner, pairId, members };
+}
+
+async function claimPair(db, version, pair) {
+  const ref = db.ref(`${version.base}/_claims`);
+  let conflict = false;
+  const result = await ref.transaction(current => {
+    const first = claimAt(current, pair.members[0]);
+    const second = claimAt(current, pair.members[1]);
+    if ((first && first !== pair.pairId) || (second && second !== pair.pairId)) {
+      conflict = true;
+      return;
+    }
+    return withClaim(withClaim(current, pair.members[0], pair.pairId), pair.members[1], pair.pairId);
+  }, undefined, false);
+  if (!result.committed || conflict) throw visibleError('La pareja no pudo reservarse porque uno de los integrantes comenzó otro informe.', 409);
+}
+
+async function claimIndividual(db, version, student) {
+  if (!version.supportsPairs) return;
+  const soloId = `solo_${student.curso}_${String(student.n).padStart(3, '0')}`;
+  const ref = db.ref(`${version.base}/_claims/${student.curso}/${student.n}`);
+  let conflict = false;
+  const result = await ref.transaction(current => {
+    if (current && current !== soloId) { conflict = true; return; }
+    return soloId;
+  }, undefined, false);
+  if (!result.committed || conflict) throw visibleError('Este informe ya está asociado a una pareja. Recarga para continuar el trabajo compartido.', 409);
+}
+
+async function workTarget(input, student, db, version) {
+  const current = await readWorkState(db, version, student);
+  if (!version.supportsPairs) return { ...current, members: [student] };
+  if (current.mode === 'pair') {
+    let members = current.value && Array.isArray(current.value.team) ? current.value.team : null;
+    if (!members && input.partnerRut) members = (await validatePair(db, version, student, input.partnerRut)).members;
+    if (!members) throw visibleError('No se pudo recuperar la pareja. Vuelve a ingresar y confirma al compañero.', 409);
+    return { ...current, members };
+  }
+  if (current.claim && current.claim.startsWith('solo_')) return { ...current, members: [student] };
+  if (input.partnerRut) {
+    const pair = await validatePair(db, version, student, input.partnerRut);
+    await claimPair(db, version, pair);
+    const ref = db.ref(`${version.base}/_teams/${pair.pairId}`);
+    const snap = await ref.once('value');
+    return { mode: 'pair', claim: pair.pairId, ref, value: snap.val(), members: pair.members };
+  }
+  await claimIndividual(db, version, student);
+  return { ...current, claim: `solo_${student.curso}_${String(student.n).padStart(3, '0')}`, members: [student] };
 }
 
 async function handleState(req, res, db, version) {
   const student = findStudent(body(req).rut);
   if (!student) return res.status(404).json({ error: 'Ese RUT no está en las nóminas de 4° medio. Revísalo o avisa al profesor.' });
   if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
-  const snap = await db.ref(`${version.base}/${student.curso}/${student.n}`).once('value');
-  return res.status(200).json({ ok: true, student: publicStudent(student), attempt: publicAttempt(snap.val(), version) });
+  const state = await readWorkState(db, version, student);
+  return res.status(200).json({ ok: true, student: publicStudent(student), attempt: publicAttempt(state.value, version), supportsPairs: version.supportsPairs === true });
+}
+
+async function handleValidatePartner(req, res, db, version) {
+  const input = body(req);
+  const student = findStudent(input.rut);
+  if (!student) return res.status(400).json({ error: 'El RUT no pertenece a la nómina de esta actividad.' });
+  if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
+  const pair = await validatePair(db, version, student, input.partnerRut);
+  return res.status(200).json({ ok: true, partner: publicStudent(pair.partner) });
 }
 
 async function handleSave(req, res, db, version, submit) {
@@ -114,7 +224,8 @@ async function handleSave(req, res, db, version, submit) {
     const missing = CAMPOS.questions.filter(question => required.has(question.id) && !CAMPOS.isComplete(question, answers[question.id]));
     if (missing.length) return res.status(400).json({ error: `Completa primero las ${missing.length} partes obligatorias del informe.`, missing: missing.map(question => question.label) });
   }
-  const ref = db.ref(`${version.base}/${student.curso}/${student.n}`);
+  const target = await workTarget(input, student, db, version);
+  const ref = target.ref;
   const now = Date.now();
   let locked = false;
 
@@ -124,11 +235,14 @@ async function handleSave(req, res, db, version, submit) {
       locked = true;
       return;
     }
+    const members = target.mode === 'pair' ? target.members.map(publicStudent) : [publicStudent(student)];
     const record = {
       sessionId: CAMPOS.activity.sessionId,
-      curso: student.curso,
-      n: student.n,
-      nombre: student.nombre,
+      curso: members[0].curso,
+      n: members[0].n,
+      nombre: members.map(member => member.nombre).join(' y '),
+      workMode: target.mode,
+      team: members,
       answers,
       score,
       total,
@@ -170,7 +284,13 @@ async function handleAdminList(req, res, admin, db, version) {
   const data = snap.val() || {};
   const rows = ROSTER
     .filter(student => version.cursos.includes(student.curso) && (!curso || student.curso === curso))
-    .map(student => ({ ...publicStudent(student), attempt: publicAttempt(data[student.curso] && data[student.curso][student.n], version) }));
+    .map(student => {
+      const claim = claimAt(data._claims, student);
+      const value = claim && claim.startsWith('pair_')
+        ? data._teams && data._teams[claim]
+        : data[student.curso] && data[student.curso][student.n];
+      return { ...publicStudent(student), attempt: publicAttempt(value, version) };
+    });
   return res.status(200).json({ ok: true, total: version.campos.questions.length, rows });
 }
 
@@ -179,7 +299,8 @@ async function handleAdminReset(req, res, admin, db, version) {
   const input = body(req);
   const student = ROSTER.find(item => item.curso === String(input.curso || '').toUpperCase() && item.n === Number(input.n));
   if (!student || !version.cursos.includes(student.curso)) return res.status(404).json({ error: 'Estudiante no encontrado.' });
-  const ref = db.ref(`${version.base}/${student.curso}/${student.n}`);
+  const state = await readWorkState(db, version, student);
+  const ref = state.ref;
   // Reabrir conserva las respuestas: solo quita la marca de entrega.
   await ref.update({ status: 'draft', submitted: false, completada: false, reopenedAt: Date.now() });
   const snap = await ref.once('value');
@@ -198,6 +319,7 @@ module.exports = async function informeTecnico(req, res, { admin, db }) {
     if (action === 'admin-list' && req.method === 'GET') return await handleAdminList(req, res, admin, db, version);
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no disponible.' });
     if (action === 'get-guia-state') return await handleState(req, res, db, version);
+    if (action === 'validate-partner') return await handleValidatePartner(req, res, db, version);
     if (action === 'save') return await handleSave(req, res, db, version, false);
     if (action === 'submit') return await handleSave(req, res, db, version, true);
     if (action === 'admin-reset') return await handleAdminReset(req, res, admin, db, version);

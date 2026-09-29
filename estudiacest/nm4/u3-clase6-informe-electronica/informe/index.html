@@ -35,6 +35,12 @@
     .who{padding:14px;border-radius:8px;background:var(--soft);color:var(--navy);font-size:18px;font-weight:800;text-align:center}
     .who small{display:block;color:var(--muted);font-size:14px;font-weight:600}
     .row{display:flex;gap:10px}.row .btn{flex:1}
+    .mode-title{margin:0 0 10px!important;color:var(--navy)!important;font-weight:900;text-align:center}
+    .mode-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mode-options .btn{min-height:64px;padding:10px}
+    .partner-box{margin-top:14px;padding:14px;border:1.5px solid var(--line);border-radius:9px;background:var(--soft)}
+    .partner-box p{margin:0 0 10px;font-size:13px}
+    .mode-back{width:100%;margin-top:10px;background:transparent!important;border:0!important;color:var(--teal)!important}
 
     /* Barra superior */
     .top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 14px;background:var(--navy-deep);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -118,6 +124,20 @@
         <p class="who" id="whoText"></p>
         <div class="row"><button class="btn ghost" type="button" id="notMe">No soy yo</button><button class="btn" type="button" id="yesMe">Sí, soy yo</button></div>
       </div>
+      <div id="modeBox" hidden>
+        <p class="mode-title">¿Cómo realizarán el informe?</p>
+        <div class="mode-options"><button class="btn ghost" type="button" id="soloMode">👤 Individual</button><button class="btn" type="button" id="pairMode">👥 En pareja</button></div>
+        <div class="partner-box" id="partnerBox" hidden>
+          <p>Escribe el RUT de tu compañero o compañera de 4°E. Ambos compartirán el mismo borrador y la misma entrega.</p>
+          <form id="partnerForm" novalidate>
+            <label for="partnerRut">RUT del compañero</label>
+            <input id="partnerRut" autocomplete="off" inputmode="text" placeholder="12.345.678-9" maxlength="12" required>
+            <button class="btn block" id="partnerButton" type="submit">Buscar compañero</button>
+          </form>
+          <div id="partnerConfirm" hidden><p class="who" id="partnerWho"></p><div class="row"><button class="btn ghost" type="button" id="changePartner">Cambiar</button><button class="btn" type="button" id="confirmPartner">Confirmar pareja</button></div></div>
+        </div>
+        <button class="btn mode-back" type="button" id="modeBack">Volver a mi identidad</button>
+      </div>
       <p class="error" id="gateError" role="alert"></p>
       <p style="margin:14px 0 0;font-size:12.5px"><a href="/nm4/u3-clase6-informe-electronica/" style="color:var(--teal)">Volver a la clase</a></p>
     </div>
@@ -140,6 +160,7 @@
         <ol id="tocList"></ol>
       </nav>
       <main>
+        <p class="banner done" id="teamBanner" hidden></p>
         <p class="banner" id="banner"><b>Primero completa lo obligatorio:</b> todas las casillas amarillas de las páginas 6, 8, 9 y 11. Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. La portada, el resumen, los objetivos y la conclusión dicen <b>Ampliación</b>: hazlos solo si alcanza el tiempo.</p>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
@@ -187,6 +208,9 @@
 
     let rut = '';
     let student = null;
+    let teamMembers = [];
+    let partnerRut = '';
+    let selectedPartner = null;
     let answers = {};
     let delivered = false;
     let submitting = false;
@@ -201,8 +225,15 @@
       if (!response.ok) { const error = new Error(data.error || 'No se pudo conectar.'); error.status = response.status; error.data = data; throw error; }
       return data;
     };
-    const backupKey = () => student ? `informeNM4elec.draft.${student.curso}-${student.n}` : '';
+    const backupKey = () => student ? `informeNM4elec.draft.${(teamMembers.length ? teamMembers : [student]).map(member => `${member.curso}-${member.n}`).sort().join('.')}` : '';
     const setSave = (text, kind) => { const node = $('saveState'); node.textContent = text; node.className = 'save' + (kind ? ' ' + kind : ''); };
+    const reportStudent = () => ({ ...student, nombre: (teamMembers.length ? teamMembers : [student]).map(member => member.nombre).join(' y '), workMode: teamMembers.length > 1 ? 'pair' : 'individual' });
+    const syncTeam = (attempt, chosenPartner) => {
+      if (attempt && Array.isArray(attempt.team) && attempt.team.length > 1) teamMembers = attempt.team;
+      else if (chosenPartner) teamMembers = [student, chosenPartner].sort((a, b) => `${a.curso}-${a.n}`.localeCompare(`${b.curso}-${b.n}`));
+      else teamMembers = [student];
+    };
+    const payload = answersValue => ({ rut, partnerRut: teamMembers.length > 1 ? partnerRut : '', answers: answersValue });
 
     // ---------- Ingreso ----------
     $('rutForm').addEventListener('submit', async event => {
@@ -216,7 +247,10 @@
         rut = value; student = data.student;
         $('whoText').innerHTML = `${student.nombre}<small>${courseName(student.curso)} · N.º ${student.n}</small>`;
         $('rutForm').hidden = true; $('confirmBox').hidden = false;
-        $('yesMe').onclick = () => start(data.attempt);
+        $('yesMe').onclick = () => {
+          if (data.attempt || !data.supportsPairs) start(data.attempt);
+          else { $('confirmBox').hidden = true; $('modeBox').hidden = false; }
+        };
       } catch (error) {
         if (error.status === 403 && error.data && error.data.ruta) { $('gateError').innerHTML = `${error.message} <a href="${error.data.ruta}">Ir a tu informe →</a>`; }
         else $('gateError').textContent = error.status === 404 || error.status === 403 ? error.message : 'No se pudo conectar. Revisa internet e inténtalo otra vez.';
@@ -224,9 +258,37 @@
         $('rutButton').disabled = false; $('rutButton').textContent = 'Entrar';
       }
     });
-    $('notMe').addEventListener('click', () => { rut = ''; student = null; $('confirmBox').hidden = true; $('rutForm').hidden = false; $('rut').value = ''; $('rut').focus(); });
+    function resetIdentity() {
+      rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null;
+      $('confirmBox').hidden = true; $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
+      $('rutForm').hidden = false; $('rut').value = ''; $('partnerRut').value = ''; $('gateError').textContent = ''; $('rut').focus();
+    }
+    $('notMe').addEventListener('click', resetIdentity);
+    $('modeBack').addEventListener('click', () => { $('modeBox').hidden = true; $('confirmBox').hidden = false; $('partnerBox').hidden = true; $('gateError').textContent = ''; });
+    $('soloMode').addEventListener('click', () => { partnerRut = ''; selectedPartner = null; start(null); });
+    $('pairMode').addEventListener('click', () => { $('partnerBox').hidden = false; $('partnerForm').hidden = false; $('partnerConfirm').hidden = true; $('partnerRut').focus(); });
+    $('changePartner').addEventListener('click', () => { partnerRut = ''; selectedPartner = null; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false; $('partnerRut').value = ''; $('partnerRut').focus(); });
+    $('partnerForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('gateError').textContent = '';
+      const value = $('partnerRut').value.trim();
+      if (value.replace(/[^0-9kK]/g, '').length < 7) { $('gateError').textContent = 'Escribe el RUT completo de tu compañero.'; return; }
+      $('partnerButton').disabled = true; $('partnerButton').textContent = 'Buscando…';
+      try {
+        const data = await post('validate-partner', { rut, partnerRut: value });
+        partnerRut = value; selectedPartner = data.partner;
+        $('partnerWho').innerHTML = `${selectedPartner.nombre}<small>${courseName(selectedPartner.curso)} · N.º ${selectedPartner.n}</small>`;
+        $('partnerForm').hidden = true; $('partnerConfirm').hidden = false;
+      } catch (error) {
+        $('gateError').textContent = error.message;
+      } finally {
+        $('partnerButton').disabled = false; $('partnerButton').textContent = 'Buscar compañero';
+      }
+    });
+    $('confirmPartner').addEventListener('click', () => start(null, selectedPartner));
 
-    function start(attempt) {
+    function start(attempt, chosenPartner) {
+      syncTeam(attempt, chosenPartner);
       try { sessionStorage.setItem(KEY, rut); } catch (_) {}
       answers = attempt ? attempt.answers : {};
       // Si el servidor no alcanzó a guardar lo último, se recupera la copia de esta pestaña.
@@ -236,8 +298,10 @@
       } catch (_) {}
       delivered = !!(attempt && attempt.completada === true && attempt.submitted === true);
       $('gate').hidden = true; $('app').hidden = false;
-      $('topName').textContent = student.nombre;
-      $('topCourse').textContent = `${courseName(student.curso)} · Clase 6`;
+      $('topName').textContent = teamMembers.map(member => member.nombre).join(' + ');
+      $('topCourse').textContent = `${teamMembers.length > 1 ? 'Trabajo en pareja · ' : 'Trabajo individual · '}${courseName(student.curso)} · Clase 6`;
+      $('teamBanner').hidden = teamMembers.length < 2;
+      if (teamMembers.length > 1) $('teamBanner').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. Lo que uno guarde o entregue quedará para ambos.`;
       $('libreta').innerHTML = R.LIBRETA;
       draw();
       if (dirty) scheduleSave(200);
@@ -246,7 +310,7 @@
 
     // ---------- Informe ----------
     function draw() {
-      R.render($('report'), { answers, editable: !delivered, student, assetBase: '../assets/' });
+      R.render($('report'), { answers, editable: !delivered, student: reportStudent(), assetBase: '../assets/' });
       $('report').querySelectorAll('[data-q]').forEach(control => {
         const handler = () => onChange(control.dataset.q, control.value);
         control.addEventListener('input', handler);
@@ -325,7 +389,8 @@
       dirty = false;
       setSave('Guardando…');
       try {
-        const data = await post('save', { rut, answers: C.sanitize(answers) });
+        const data = await post('save', payload(C.sanitize(answers)));
+        syncTeam(data.attempt);
         if (!dirty) setSave('Guardado', 'ok');
         return data;
       } catch (error) {
@@ -356,7 +421,7 @@
         }
         const { score } = C.progress(clean);
         const now = Date.now();
-        const data = await post('submit', { rut, answers: clean, submitted: true, completada: true, submittedAt: now, completadaAt: now, score, total: TOTAL });
+        const data = await post('submit', { ...payload(clean), submitted: true, completada: true, submittedAt: now, completadaAt: now, score, total: TOTAL });
         const attempt = data.attempt;
         if (!attempt || attempt.completada !== true || attempt.submitted !== true) throw new Error('El servidor no confirmó la entrega.');
         finish(attempt);
@@ -374,6 +439,7 @@
       try {
         const data = await post('get-guia-state', { rut });
         const attempt = data.attempt;
+        if (attempt) syncTeam(attempt);
         if (attempt && attempt.completada === true && attempt.submitted === true) return finish(attempt);
       } catch (error) {
         $('deliverError').textContent = 'No se pudo confirmar el estado. Recarga la página.';
@@ -384,6 +450,7 @@
 
     function finish(attempt) {
       delivered = true; submitting = false; dirty = false;
+      syncTeam(attempt);
       answers = attempt.answers;
       try { sessionStorage.removeItem(backupKey()); } catch (_) {}
       draw();

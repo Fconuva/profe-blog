@@ -121,6 +121,7 @@
     const field = makeField(ctx);
     const A = options.assetBase || '../assets/';
     const nombre = esc(ctx.student.nombre || '—');
+    const rol = ctx.student.workMode === 'pair' ? 'Técnicos o técnicas en formación' : 'Técnico o técnica en formación';
     const row = (k, v) => `<tr><th>${k}</th><td>${v}</td></tr>`;
 
     const pages = [
@@ -134,7 +135,7 @@
           <tr><th>Ubicación</th><td>Planta Valle Lircay, comuna de San Clemente, Región del Maule</td></tr>
           <tr><th>Diagnóstico en terreno</th><td>Lunes 28 de septiembre de 2026 · 08:15 a 09:20</td></tr>
           <tr><th>Fecha de emisión</th><td>${field('emision', { inline: true })}</td></tr>
-          <tr><th>Técnico o técnica en formación</th><td>${nombre}</td></tr>
+          <tr><th>${rol}</th><td>${nombre}</td></tr>
           <tr><th>Especialidad</th><td>${field('especialidad', { inline: true })}</td></tr>
         </tbody></table>
         <p class="case-note">Caso de estudio con fines educativos. La empresa, los equipos, las mediciones y los documentos internos son ficticios. Las imágenes fueron generadas con IA para representar la evidencia.</p>
@@ -219,7 +220,7 @@
       page(12, 'p12', '09 Conclusión', `
         ${field('conclusion')}
         <h3>Datos que faltarían comprobar en la intervención</h3><ul class="confirm"><li>Corriente y giro de FAN-01 después de su reparación.</li><li>Temperatura de TAB-02 durante un ciclo completo de producción.</li><li>Restauración controlada de la versión 1.8 desde el respaldo nuevo.</li></ul>
-        <h3>Firmas</h3><div class="signs"><div><p class="sign-line">${nombre}</p><p>Técnico o técnica en formación<br>${bind('especialidad', 'Especialidad')} · ${esc(ctx.student.curso || '')}</p></div><div><p class="sign-line">&nbsp;</p><p>Revisión<br>Docente de Lengua y Literatura</p></div></div>
+        <h3>Firmas</h3><div class="signs"><div><p class="sign-line">${nombre}</p><p>${rol}<br>${bind('especialidad', 'Especialidad')} · ${esc(ctx.student.curso || '')}</p></div><div><p class="sign-line">&nbsp;</p><p>Revisión<br>Docente de Lengua y Literatura</p></div></div>
         ${field('declaracion', { label: 'Confirmación final' })}
         <h3>Anexo · Documentos del caso</h3><ul class="sources"><li>FT-S1 · Ficha técnica educativa del sensor fotoeléctrico.</li><li>MAN-TAB-02 · Manual educativo del gabinete de automatización.</li><li>MP-AUT-04 · Plan de mantenimiento preventivo de la línea.</li><li>PR-AUT-02 · Procedimiento de respaldo y restauración del PLC.</li><li>PS-LOTO-01 · Procedimiento de aislamiento, bloqueo y verificación de energía.</li><li>GI-HA-01 · Guía de redacción de hallazgos técnicos.</li></ul>
         <p class="note">Todos los documentos, equipos y datos del caso son ficticios y coherentes entre sí. Las tres imágenes fueron generadas con IA exclusivamente para esta actividad.</p>`)

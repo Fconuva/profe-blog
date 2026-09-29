@@ -66,7 +66,7 @@
       </div>
       <div class="stats" id="stats"></div>
       <p class="error" id="panelError" role="alert"></p>
-      <div class="scroll-x"><table class="list"><thead><tr><th>Curso</th><th>N.º</th><th>Estudiante</th><th>Estado</th><th>Partes</th><th>Última actividad</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
+      <div class="scroll-x"><table class="list"><thead><tr><th>Curso</th><th>N.º</th><th>Estudiante</th><th>Modalidad</th><th>Estado</th><th>Partes</th><th>Última actividad</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
     </section>
   </div>
 
@@ -125,6 +125,20 @@
       return ['draft', 'En progreso'];
     }
 
+    function modality(row) {
+      const attempt = row.attempt;
+      if (!attempt || attempt.workMode !== 'pair' || !Array.isArray(attempt.team)) return 'Individual';
+      const partner = attempt.team.find(member => member.curso !== row.curso || Number(member.n) !== Number(row.n));
+      return partner ? `Pareja con ${partner.nombre}` : 'En pareja';
+    }
+
+    function teamName(row) {
+      const attempt = row.attempt;
+      return attempt && attempt.workMode === 'pair' && Array.isArray(attempt.team)
+        ? attempt.team.map(member => member.nombre).join(' y ')
+        : row.nombre;
+    }
+
     function render() {
       const counts = { sub: 0, draft: 0, none: 0 };
       rows.forEach(r => counts[state(r)[0]]++);
@@ -132,16 +146,16 @@
       $('rows').innerHTML = rows.map((r, i) => {
         const [k, label] = state(r);
         const a = r.attempt;
-        return `<tr><td>${courseName(r.curso)}</td><td>${r.n}</td><td>${esc(r.nombre)}</td><td><span class="pill ${k}">${label}</span></td><td>${a ? `${a.score} / ${a.total}` : '—'}</td><td>${a ? when(a.submittedAt || a.updatedAt) : '—'}</td><td>${a ? `<button class="btn ghost" type="button" data-i="${i}">Ver informe</button>` : ''}</td></tr>`;
+        return `<tr><td>${courseName(r.curso)}</td><td>${r.n}</td><td>${esc(r.nombre)}</td><td>${esc(modality(r))}</td><td><span class="pill ${k}">${label}</span></td><td>${a ? `${a.score} / ${a.total}` : '—'}</td><td>${a ? when(a.submittedAt || a.updatedAt) : '—'}</td><td>${a ? `<button class="btn ghost" type="button" data-i="${i}">Ver informe</button>` : ''}</td></tr>`;
       }).join('');
       $('rows').querySelectorAll('[data-i]').forEach(b => b.addEventListener('click', () => open(rows[Number(b.dataset.i)])));
     }
 
     function open(row) {
       current = row;
-      $('viewerTitle').textContent = `${row.nombre} · ${courseName(row.curso)} · ${state(row)[1]} · ${row.attempt.score} de ${row.attempt.total} partes`;
+      $('viewerTitle').textContent = `${teamName(row)} · ${courseName(row.curso)} · ${state(row)[1]} · ${row.attempt.score} de ${row.attempt.total} partes`;
       $('reopen').hidden = !(row.attempt.completada && row.attempt.submitted);
-      window.InformeTecnico.render($('report'), { answers: row.attempt.answers, editable: false, student: { nombre: row.nombre, curso: courseName(row.curso) }, assetBase: '../assets/' });
+      window.InformeTecnico.render($('report'), { answers: row.attempt.answers, editable: false, student: { nombre: teamName(row), curso: courseName(row.curso), workMode: row.attempt.workMode }, assetBase: '../assets/' });
       $('viewer').hidden = false;
       $('viewer').scrollTop = 0;
     }
@@ -158,8 +172,8 @@
     });
 
     $('csv').addEventListener('click', () => {
-      const lines = [['Curso', 'N', 'Estudiante', 'Estado', 'Partes', 'Total', 'Entrega']];
-      rows.forEach(r => { const a = r.attempt; lines.push([courseName(r.curso), r.n, r.nombre, state(r)[1], a ? a.score : 0, a ? a.total : '', a && a.submittedAt ? new Date(a.submittedAt).toISOString() : '']); });
+      const lines = [['Curso', 'N', 'Estudiante', 'Modalidad', 'Estado', 'Partes', 'Total', 'Entrega']];
+      rows.forEach(r => { const a = r.attempt; lines.push([courseName(r.curso), r.n, r.nombre, modality(r), state(r)[1], a ? a.score : 0, a ? a.total : '', a && a.submittedAt ? new Date(a.submittedAt).toISOString() : '']); });
       const csv = '﻿' + lines.map(l => l.map(v => `"${String(v).replace(/"/g, '""')}"`).join(';')).join('\n');
       const link = document.createElement('a');
       link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));

@@ -54,7 +54,7 @@ expect(new Set(ROWS.map(r => r[1] + '-' + r[2])).size === ROWS.length, 'La nómi
 expect(/modulo\)\s*\|\|\s*''\)\s*===\s*'informe-tecnico'/.test(economista), 'economista.js no deriva ?modulo=informe-tecnico.');
 expect(typeof module_ === 'function', 'El módulo del informe no exporta un controlador.');
 const api = read('api/_informe-tecnico-nm4.js');
-['get-guia-state', "'save'", "'submit'", 'admin-list', 'admin-reset', 'verifyIdToken', 'transaction'].forEach(token => expect(api.includes(token), `La API del informe no contiene ${token}.`));
+['get-guia-state', 'validate-partner', "'save'", "'submit'", 'admin-list', 'admin-reset', 'verifyIdToken', 'transaction'].forEach(token => expect(api.includes(token), `La API del informe no contiene ${token}.`));
 expect(!/req\.query\.rut|query\.rut/.test(api), 'La API recibe el RUN por la URL.');
 
 // Página del estudiante y panel docente.
@@ -121,6 +121,12 @@ expect(api.includes("'4ETP': 'electronica'"), 'La API no dirige 4°E a su versi�
 expect(Array.isArray(ECAMPOS.activity.requiredForSubmit) && ECAMPOS.activity.requiredForSubmit.length === 20, 'Electrónica no define las 20 partes mínimas para entregar.');
 expect(api.includes('requiredForSubmit') && estudente.includes('requiredForSubmit'), 'El mínimo obligatorio no se valida en cliente y servidor.');
 ['Obligatorio para entregar:', 'páginas 6, 8, 9 y 11', 'Ampliación', 'de ${REQUIRED_TOTAL} mínimos'].forEach(token => expect((edeck + estudente + erenderer).includes(token), `Electrónica: falta la instrucción de trabajo «${token}».`));
+['supportsPairs: true', '/_claims', '/_teams', 'workMode', 'validatePair'].forEach(token => expect(api.includes(token), `Electrónica: la API de parejas no contiene ${token}.`));
+['id="pairMode"', 'id="partnerRut"', 'validate-partner', 'Trabajo compartido:', 'Ambos compartirán el mismo borrador'].forEach(token => expect(estudente.includes(token), `Electrónica: la interfaz de parejas no contiene ${token}.`));
+['individualmente o con un compañero', 'Trabajo individual o en pareja', 'ambos comparten el borrador y la entrega'].forEach(token => expect(edeck.includes(token), `Electrónica: la presentación no explica «${token}».`));
+expect(epanel.includes('Modalidad') && epanel.includes('Pareja con'), 'Electrónica: el panel docente no identifica las parejas.');
+expect(ROWS.filter(row => row[1] === 'PRUEBA').length === 3, 'Faltan las tres identidades ficticias para probar individual y pareja.');
+expect(!/partnerRut\s*[:,]\s*input\.partnerRut/.test(api), 'La API intenta guardar el RUT del compañero.');
 ['PLC-01', 'S1', '46,8 °C', 'versión 1.8', 'PR-AUT-02'].forEach(token => expect(erenderer.includes(token), `Electrónica: falta el dato verificable ${token}.`));
 expect(!/esmeril|compresor|elevador de vehículos/i.test(edeck + estudente + erenderer + epanel), 'La versión de Electrónica conserva contenido del caso mecánico.');
 ['e1-linea-automatizada.jpg', 'e2-sensor-fotoelectrico.jpg', 'e3-gabinete-ventilacion.jpg', 'qr-informe.svg', 'PROMPTS_IMAGENES.md']

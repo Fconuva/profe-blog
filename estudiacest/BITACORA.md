@@ -8,6 +8,59 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, NM4 4°C: parejas, sincronización segura y alta manual
+
+Se aplicaron al informe de Electricidad todas las mejoras colaborativas ya
+incorporadas en Electrónica, sin reemplazar ni eliminar respuestas existentes.
+La habilitación de parejas en la versión eléctrica queda restringida a 4° C y
+a la nómina ficticia de prueba: los registros históricos de 4° E que aún se
+leen desde esa base conservan su modalidad individual.
+
+**Experiencia estudiantil y conservación de avances**
+
+- Al ingresar, 4° C puede elegir trabajo individual o en pareja. Quien ya
+  comenzó individualmente puede usar `Agregar compañero` sin perder lo escrito.
+- La migración a pareja es transaccional: respalda los borradores individuales,
+  conserva el avance y combina los campos disponibles en un borrador compartido.
+- Cada navegador envía solo las casillas modificadas. El servidor las fusiona
+  mediante una transacción, por lo que dos integrantes que escriben en campos
+  distintos no se sobrescriben. Si editan la misma casilla, prevalece el último
+  guardado confirmado.
+- Las sesiones consultan el estado cada 2,5 segundos y muestran los cambios
+  guardados del compañero sin recargar. La entrega vacía la cola local, relee
+  el borrador canónico y cierra una sola entrega para ambos integrantes.
+- La presentación de la clase explica explícitamente la elección de modalidad,
+  el RUT del compañero, el borrador compartido y qué debe completarse.
+
+**Gestión docente**
+
+- El panel protegido `/nm4/u3-clase6-informe-tecnico/revisar/` contiene
+  `Registrar una pareja de 4°C manualmente`, con curso y dos selectores por
+  número de lista y nombre; no solicita ni expone RUN.
+- `admin-pair` exige autenticación administrativa, integrantes diferentes del
+  mismo curso y usa la misma migración con respaldo y combinación de avances.
+
+**Pruebas y publicación**
+
+- Prueba aislada de API: unión de dos borradores, respaldo de ambos, escrituras
+  concurrentes conservadas, entrega compartida y ausencia de RUN almacenado.
+- Playwright local: dos navegadores, actualización cruzada, recarga con ambos
+  campos, informe en plural, formulario docente y vista móvil sin desborde.
+- Prueba en producción con una pareja ficticia: dos sesiones escribieron campos
+  distintos simultáneamente, ambas pantallas recibieron los dos textos, la
+  recarga los conservó y ambos integrantes leyeron la misma entrega canónica.
+  La edición posterior fue rechazada con HTTP `409`; `admin-pair` sin sesión
+  administrativa fue rechazado con HTTP `401`.
+- Build integral, auditoría de Clase 6 y verificación de 261 recursos críticos
+  aprobados. La API pública informó 89 identidades habilitadas en la versión
+  eléctrica y 27 campos. Los cuatro recursos públicos modificados respondieron
+  `200` y coincidieron por SHA-256 con la fuente local.
+- Implementación: `85a99c6a`. Despliegue seguro:
+  `dpl_AyU34yn1LckeG3UqtRVimccXRGWr`, estado `READY` y alias
+  `https://www.estudiacest.com` verificado.
+
+---
+
 ## 2026-09-29, NM4 4°E: edición simultánea y registro manual de parejas
 
 Se convirtió el informe compartido de Electrónica en una experiencia

@@ -220,6 +220,10 @@
     let timer = null;
     let saveQueue = Promise.resolve();
     let returningToDraft = false;
+    let dirtyFields = new Set();
+    let lastRevision = 0;
+    let syncTimer = null;
+    let syncing = false;
 
     const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
     const post = async (action, payload) => {
@@ -236,7 +240,31 @@
       else if (chosenPartner) teamMembers = [student, chosenPartner].sort((a, b) => `${a.curso}-${a.n}`.localeCompare(`${b.curso}-${b.n}`));
       else teamMembers = [student];
     };
-    const payload = answersValue => ({ rut, partnerRut: teamMembers.length > 1 ? partnerRut : '', answers: answersValue });
+    const payload = (answersValue, changedFields) => ({
+      rut,
+      partnerRut: teamMembers.length > 1 ? partnerRut : '',
+      answers: answersValue,
+      ...(changedFields === undefined ? {} : { changedFields })
+    });
+
+    function showTeamStatus() {
+      $('topName').textContent = teamMembers.map(member => member.nombre).join(' + ');
+      $('topCourse').textContent = `${teamMembers.length > 1 ? 'Trabajo en pareja · ' : 'Trabajo individual · '}${courseName(student.curso)} · Clase 6`;
+      $('teamBanner').hidden = delivered;
+      if (teamMembers.length > 1) {
+        $('teamBanner').hidden = false;
+        $('teamText').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. La sincronización está activa: los cambios guardados aparecen en ambos equipos en pocos segundos.`;
+        $('addPartner').hidden = true;
+      } else if (!delivered) {
+        $('teamText').innerHTML = '<b>Trabajo individual.</b> Si prefieres continuar en pareja, puedes agregar a un compañero sin perder lo que ya escribiste.';
+        $('addPartner').hidden = false;
+      }
+    }
+
+    function startLiveSync() {
+      clearInterval(syncTimer); syncTimer = null;
+      if (teamMembers.length > 1 && !delivered) syncTimer = setInterval(() => syncFromServer(), 2500);
+    }
 
     // ---------- Ingreso ----------
     $('rutForm').addEventListener('submit', async event => {
@@ -263,6 +291,7 @@
     });
     function resetIdentity() {
       rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null; returningToDraft = false;
+      clearInterval(syncTimer); syncTimer = null; dirtyFields.clear(); lastRevision = 0;
       $('confirmBox').hidden = true; $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
       $('rutForm').hidden = false; $('rut').value = ''; $('partnerRut').value = ''; $('gateError').textContent = ''; $('rut').focus();
     }
@@ -334,28 +363,25 @@
 
     function start(attempt, chosenPartner) {
       syncTeam(attempt, chosenPartner);
+      dirty = false; dirtyFields.clear();
+      lastRevision = Number((attempt && attempt.revision) || 0);
       try { sessionStorage.setItem(KEY, rut); } catch (_) {}
       answers = attempt ? attempt.answers : {};
       // Si el servidor no alcanzó a guardar lo último, se recupera la copia de esta pestaña.
       try {
         const local = JSON.parse(sessionStorage.getItem(backupKey()) || 'null');
-        if (local && (!attempt || Number(local.at) > Number(attempt.updatedAt || 0)) && !(attempt && attempt.completada)) { answers = C.sanitize(local.answers); dirty = true; }
+        if (local && (!attempt || Number(local.at) > Number(attempt.updatedAt || 0)) && !(attempt && attempt.completada)) {
+          answers = C.sanitize(local.answers); dirty = true;
+          const pending = Array.isArray(local.changedFields) ? local.changedFields : Object.keys(answers);
+          pending.filter(id => C.questions.some(question => question.id === id)).forEach(id => dirtyFields.add(id));
+        }
       } catch (_) {}
       delivered = !!(attempt && attempt.completada === true && attempt.submitted === true);
       $('gate').hidden = true; $('app').hidden = false;
-      $('topName').textContent = teamMembers.map(member => member.nombre).join(' + ');
-      $('topCourse').textContent = `${teamMembers.length > 1 ? 'Trabajo en pareja · ' : 'Trabajo individual · '}${courseName(student.curso)} · Clase 6`;
-      $('teamBanner').hidden = delivered;
-      if (teamMembers.length > 1) {
-        $('teamBanner').hidden = false;
-        $('teamText').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. Lo que uno guarde o entregue quedará para ambos.`;
-        $('addPartner').hidden = true;
-      } else if (!delivered) {
-        $('teamText').innerHTML = '<b>Trabajo individual.</b> Si prefieres continuar en pareja, puedes agregar a un compañero sin perder lo que ya escribiste.';
-        $('addPartner').hidden = false;
-      }
+      showTeamStatus();
       $('libreta').innerHTML = R.LIBRETA;
       draw();
+      startLiveSync();
       if (dirty) scheduleSave(200);
       window.scrollTo(0, 0);
     }
@@ -380,12 +406,12 @@
     function onChange(id, value) {
       if (delivered || submitting) return;
       answers[id] = value;
-      dirty = true;
-      try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers })); } catch (_) {}
+      dirtyFields.add(id); dirty = true;
+      try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers, changedFields: [...dirtyFields] })); } catch (_) {}
       R.refreshBindings($('report'), answers);
       updateProgress();
       setSave('Sin guardar');
-      scheduleSave(1800);
+      scheduleSave(900);
     }
 
     function updateProgress() {
@@ -426,6 +452,51 @@
       $('submit').textContent = `Entregar informe (${requiredDone} de ${REQUIRED_TOTAL} mínimos)`;
     }
 
+    function applyServerAttempt(attempt, announce) {
+      if (!attempt) return false;
+      if (attempt.completada === true && attempt.submitted === true) { finish(attempt); return true; }
+      const wasPair = teamMembers.length > 1;
+      syncTeam(attempt);
+      const isPair = teamMembers.length > 1;
+      if (wasPair !== isPair) { showTeamStatus(); startLiveSync(); }
+      const remote = C.sanitize(attempt.answers);
+      const activeId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.q : '';
+      let changed = false;
+      C.questions.forEach(question => {
+        const id = question.id;
+        if (dirtyFields.has(id) || activeId === id) return;
+        const next = remote[id] || '';
+        const previous = answers[id] || '';
+        if (next === previous) return;
+        if (next) answers[id] = next; else delete answers[id];
+        const control = $('report').querySelector(`[data-q="${id}"]`);
+        if (control) control.value = next;
+        changed = true;
+      });
+      const newer = Number(attempt.revision || 0) > lastRevision;
+      lastRevision = Math.max(lastRevision, Number(attempt.revision || 0));
+      if (changed) {
+        R.refreshBindings($('report'), answers);
+        updateProgress();
+        if (announce && newer && !dirty) {
+          const editor = attempt.lastEditor && attempt.lastEditor.nombre;
+          setSave(editor && editor !== student.nombre ? `Actualizado por ${editor}` : 'Trabajo compartido actualizado', 'ok');
+        }
+      }
+      return changed;
+    }
+
+    async function syncFromServer(force) {
+      if (syncing || delivered || !student || (!force && teamMembers.length < 2)) return;
+      syncing = true;
+      try {
+        const data = await post('get-guia-state', { rut });
+        applyServerAttempt(data.attempt, true);
+      } catch (_) {
+        // El autoguardado informa los errores de red; la sincronización vuelve a intentar sola.
+      } finally { syncing = false; }
+    }
+
     // ---------- Autoguardado en cola ----------
     function scheduleSave(delay) {
       clearTimeout(timer);
@@ -436,18 +507,26 @@
       saveQueue = saveQueue.then(saveDraft, saveDraft);
       return saveQueue;
     }
-    async function saveDraft() {
-      if (delivered || submitting || !dirty) return;
-      dirty = false;
+    async function saveDraft(force) {
+      if (delivered || (submitting && !force) || !dirty) return;
+      const sendingFields = [...dirtyFields];
+      if (!sendingFields.length) { dirty = false; return; }
+      sendingFields.forEach(id => dirtyFields.delete(id));
+      dirty = dirtyFields.size > 0;
       setSave('Guardando…');
       try {
-        const data = await post('save', payload(C.sanitize(answers)));
-        syncTeam(data.attempt);
+        const data = await post('save', payload(C.sanitize(answers), sendingFields));
+        applyServerAttempt(data.attempt, false);
+        if (delivered) return data;
+        if (!dirty) { try { sessionStorage.removeItem(backupKey()); } catch (_) {} }
         if (!dirty) setSave('Guardado', 'ok');
         return data;
       } catch (error) {
-        if (error.status === 409) return reconcile();
-        dirty = true;
+        if (error.status === 409) {
+          sendingFields.forEach(id => dirtyFields.add(id)); dirty = true;
+          return reconcile();
+        }
+        sendingFields.forEach(id => dirtyFields.add(id)); dirty = true;
         setSave('Sin conexión · reintentando', 'err');
         scheduleSave(6000);
       }
@@ -462,6 +541,10 @@
       $('submit').disabled = true; $('submit').textContent = 'Entregando…';
       try {
         await saveQueue;
+        if (dirty) await saveDraft(true);
+        if (dirty) throw new Error('No se pudo guardar el último cambio. Revisa internet e inténtalo otra vez.');
+        await syncFromServer(true);
+        if (delivered) return;
         const clean = C.sanitize(answers);
         const requiredMissing = C.questions.filter(q => REQUIRED.has(q.id) && !C.isComplete(q, clean[q.id]));
         if (requiredMissing.length) {
@@ -471,9 +554,8 @@
           $('deliverError').textContent = `Completa primero las ${requiredMissing.length} partes obligatorias indicadas arriba.`;
           return;
         }
-        const { score } = C.progress(clean);
         const now = Date.now();
-        const data = await post('submit', { ...payload(clean), submitted: true, completada: true, submittedAt: now, completadaAt: now, score, total: TOTAL });
+        const data = await post('submit', { ...payload(clean, []), submitted: true, completada: true, submittedAt: now, completadaAt: now });
         const attempt = data.attempt;
         if (!attempt || attempt.completada !== true || attempt.submitted !== true) throw new Error('El servidor no confirmó la entrega.');
         finish(attempt);
@@ -491,19 +573,23 @@
       try {
         const data = await post('get-guia-state', { rut });
         const attempt = data.attempt;
-        if (attempt) syncTeam(attempt);
         if (attempt && attempt.completada === true && attempt.submitted === true) return finish(attempt);
+        if (attempt) applyServerAttempt(attempt, true);
       } catch (error) {
         $('deliverError').textContent = 'No se pudo confirmar el estado. Recarga la página.';
       }
       submitting = false;
       $('submit').disabled = false;
+      if (dirty) scheduleSave(200);
     }
 
     function finish(attempt) {
       delivered = true; submitting = false; dirty = false;
+      dirtyFields.clear(); clearInterval(syncTimer); syncTimer = null;
       syncTeam(attempt);
+      lastRevision = Number(attempt.revision || lastRevision || 0);
       answers = attempt.answers;
+      showTeamStatus();
       try { sessionStorage.removeItem(backupKey()); } catch (_) {}
       draw();
       $('doneText').textContent = `Cumpliste el mínimo obligatorio. Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas y aparece como Entregado en el panel del profesor. Entrega confirmada.`;
@@ -519,7 +605,7 @@
     document.addEventListener('keydown', event => { if (event.key === 'Escape') { lib(false); $('doneDialog').hidden = true; } });
     $('printBtn').addEventListener('click', () => window.print());
     $('logout').addEventListener('click', async () => {
-      clearTimeout(timer);
+      clearTimeout(timer); clearInterval(syncTimer); syncTimer = null;
       if (dirty && !delivered) { await enqueueSave(); await saveQueue; }
       try { sessionStorage.removeItem(KEY); } catch (_) {}
       location.reload();

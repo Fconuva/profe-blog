@@ -13,6 +13,7 @@
 //   save            { rut, partnerRut?, answers } -> borrador individual o compartido
 //   submit          { rut, partnerRut?, answers } -> entrega final, escritura única
 //   admin-list      GET, Bearer token  -> nómina con estado (solo admins)
+//   admin-pair      { curso, firstN, secondN }, token -> forma una pareja
 //   admin-reset     { curso, n }, token -> reabre un intento (solo admins)
 //
 // El RUN nunca viaja en la URL ni se guarda: se compara como hash contra
@@ -111,6 +112,8 @@ function publicAttempt(value, version) {
     total: Number(value.total || version.campos.questions.length),
     updatedAt: Number(value.updatedAt || 0),
     submittedAt: Number(value.submittedAt || 0),
+    revision: Number(value.revision || value.saves || 0),
+    lastEditor: value.lastEditor ? publicStudent(value.lastEditor) : null,
     workMode: value.workMode === 'pair' ? 'pair' : 'individual',
     team: Array.isArray(value.team) ? value.team.map(publicStudent) : []
   };
@@ -133,10 +136,8 @@ async function readWorkState(db, version, student) {
   return { mode: 'individual', claim, ref: individualRef, value: snap.val() };
 }
 
-async function validatePair(db, version, student, partnerRut) {
+async function validatePairStudents(db, version, student, partner) {
   if (!version.supportsPairs) throw visibleError('Esta versión del informe se realiza individualmente.');
-  const partner = findStudent(partnerRut);
-  if (!partner) throw visibleError('El RUT del compañero no pertenece a la nómina de esta actividad.', 404);
   if (!version.cursos.includes(partner.curso) || partner.curso !== student.curso) throw visibleError('El compañero debe pertenecer al mismo curso.', 403);
   if (studentKey(partner) === studentKey(student)) throw visibleError('El compañero debe ser otra persona.');
   const pairId = pairIdFor(student, partner);
@@ -151,6 +152,12 @@ async function validatePair(db, version, student, partnerRut) {
   }
   const members = [student, partner].sort((a, b) => studentKey(a).localeCompare(studentKey(b)));
   return { partner, pairId, members };
+}
+
+async function validatePair(db, version, student, partnerRut) {
+  const partner = findStudent(partnerRut);
+  if (!partner) throw visibleError('El RUT del compañero no pertenece a la nómina de esta actividad.', 404);
+  return await validatePairStudents(db, version, student, partner);
 }
 
 function individualAt(data, student) {
@@ -187,7 +194,9 @@ function mergePairDraft(version, pair, current, primary) {
     createdAt: timestamps.length ? Math.min(...timestamps) : now,
     updatedAt: now,
     pairedAt: existing && existing.pairedAt ? existing.pairedAt : now,
-    saves: sources.reduce((sum, source) => sum + Number(source.saves || 0), 0)
+    saves: sources.reduce((sum, source) => sum + Number(source.saves || 0), 0),
+    revision: Math.max(0, ...sources.map(source => Number(source.revision || source.saves || 0))) + 1,
+    lastEditor: publicStudent(primary)
   };
 }
 
@@ -298,23 +307,41 @@ async function handleSave(req, res, db, version, submit) {
   if (!student) return res.status(400).json({ error: 'El RUT no pertenece a la nómina de esta actividad.' });
   if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
   const CAMPOS = version.campos;
-  const answers = CAMPOS.sanitize(input.answers);
-  const { score, total } = CAMPOS.progress(answers);
-  if (submit && Array.isArray(CAMPOS.activity.requiredForSubmit)) {
-    const required = new Set(CAMPOS.activity.requiredForSubmit);
-    const missing = CAMPOS.questions.filter(question => required.has(question.id) && !CAMPOS.isComplete(question, answers[question.id]));
-    if (missing.length) return res.status(400).json({ error: `Completa primero las ${missing.length} partes obligatorias del informe.`, missing: missing.map(question => question.label) });
-  }
+  const incomingAnswers = CAMPOS.sanitize(input.answers);
+  const allowedFields = new Set(CAMPOS.questions.map(question => question.id));
+  const changedFields = Array.isArray(input.changedFields)
+    ? [...new Set(input.changedFields.map(String).filter(field => allowedFields.has(field)))]
+    : null;
   const target = await workTarget(input, student, db, version);
   const ref = target.ref;
   const now = Date.now();
   let locked = false;
+  let missingForSubmit = [];
 
-  // Transacción: una entrega confirmada no se sobrescribe con un borrador tardío.
+  // Transacción: los clientes colaborativos envían solo los campos modificados.
+  // Así, dos integrantes pueden guardar desde equipos distintos sin borrar los
+  // campos que el otro acaba de cambiar. Los clientes antiguos conservan el
+  // reemplazo completo hasta que actualicen la página.
   const result = await ref.transaction(current => {
+    missingForSubmit = [];
     if (current && (current.completada === true || current.submitted === true)) {
       locked = true;
       return;
+    }
+    const answers = changedFields
+      ? { ...CAMPOS.sanitize(current && current.answers) }
+      : incomingAnswers;
+    if (changedFields) {
+      for (const field of changedFields) {
+        if (Object.prototype.hasOwnProperty.call(incomingAnswers, field)) answers[field] = incomingAnswers[field];
+        else delete answers[field];
+      }
+    }
+    const { score, total } = CAMPOS.progress(answers);
+    if (submit && Array.isArray(CAMPOS.activity.requiredForSubmit)) {
+      const required = new Set(CAMPOS.activity.requiredForSubmit);
+      missingForSubmit = CAMPOS.questions.filter(question => required.has(question.id) && !CAMPOS.isComplete(question, answers[question.id]));
+      if (missingForSubmit.length) return;
     }
     const members = target.mode === 'pair' ? target.members.map(publicStudent) : [publicStudent(student)];
     const record = {
@@ -332,8 +359,12 @@ async function handleSave(req, res, db, version, submit) {
       completada: submit,
       createdAt: current && current.createdAt ? current.createdAt : now,
       updatedAt: now,
-      saves: Number((current && current.saves) || 0) + 1
+      saves: Number((current && current.saves) || 0) + 1,
+      revision: Number((current && (current.revision || current.saves)) || 0) + 1,
+      lastEditor: publicStudent(student)
     };
+    if (current && current.pairedAt) record.pairedAt = current.pairedAt;
+    if (current && current.reopenedAt) record.reopenedAt = current.reopenedAt;
     if (submit) {
       record.submittedAt = now;
       record.completadaAt = now;
@@ -344,6 +375,10 @@ async function handleSave(req, res, db, version, submit) {
   if (!result.committed && locked) {
     return res.status(409).json({ error: 'El informe ya fue entregado.', attempt: publicAttempt(result.snapshot.val(), version) });
   }
+  if (!result.committed && missingForSubmit.length) {
+    return res.status(400).json({ error: `Completa primero las ${missingForSubmit.length} partes obligatorias del informe.`, missing: missingForSubmit.map(question => question.label) });
+  }
+  if (!result.committed) throw visibleError('No se pudo guardar el informe. Recarga e inténtalo otra vez.', 409);
   // Se relee desde la base antes de responder: el cliente confirma con esto.
   const snap = await ref.once('value');
   return res.status(200).json({ ok: true, attempt: publicAttempt(snap.val(), version) });
@@ -375,6 +410,25 @@ async function handleAdminList(req, res, admin, db, version) {
   return res.status(200).json({ ok: true, total: version.campos.questions.length, rows });
 }
 
+async function handleAdminPair(req, res, admin, db, version) {
+  await verifyAdmin(req, admin, db);
+  if (!version.supportsPairs) throw visibleError('Esta versión del informe no admite parejas.');
+  const input = body(req);
+  const curso = String(input.curso || '').toUpperCase();
+  const firstN = Number(input.firstN);
+  const secondN = Number(input.secondN);
+  const first = ROSTER.find(item => item.curso === curso && item.n === firstN);
+  const second = ROSTER.find(item => item.curso === curso && item.n === secondN);
+  if (!first || !second || !version.cursos.includes(curso)) return res.status(404).json({ error: 'No se encontraron ambos estudiantes en la nómina de esta actividad.' });
+  const pair = await validatePairStudents(db, version, first, second);
+  const target = await migratePair(db, version, pair, first);
+  return res.status(200).json({
+    ok: true,
+    team: pair.members.map(publicStudent),
+    attempt: publicAttempt(target.value, version)
+  });
+}
+
 async function handleAdminReset(req, res, admin, db, version) {
   await verifyAdmin(req, admin, db);
   const input = body(req);
@@ -404,6 +458,7 @@ module.exports = async function informeTecnico(req, res, { admin, db }) {
     if (action === 'join-pair') return await handleJoinPair(req, res, db, version);
     if (action === 'save') return await handleSave(req, res, db, version, false);
     if (action === 'submit') return await handleSave(req, res, db, version, true);
+    if (action === 'admin-pair') return await handleAdminPair(req, res, admin, db, version);
     if (action === 'admin-reset') return await handleAdminReset(req, res, admin, db, version);
     return res.status(400).json({ error: 'Acción no reconocida.' });
   } catch (error) {

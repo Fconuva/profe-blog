@@ -29,6 +29,12 @@
     .bar select{padding:9px;border:1.5px solid var(--line);border-radius:7px}
     .stats{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px}
     .stats span{padding:7px 11px;border-radius:999px;background:#fff;font-size:13px;font-weight:800;color:var(--navy)}
+    .pair-card{margin:0 0 16px;border-left:5px solid var(--teal)}
+    .pair-card h2{margin:0 0 5px;color:var(--navy);font-size:19px}
+    .pair-grid{display:grid;grid-template-columns:130px 1fr 1fr auto;gap:10px;align-items:end;margin-top:12px}
+    .pair-grid label{display:grid;gap:5px;color:var(--navy);font-size:12.5px;font-weight:800}
+    .pair-grid select{width:100%;min-height:42px;padding:8px;border:1.5px solid var(--line);border-radius:7px;background:#fff}
+    .pair-status{min-height:20px;margin:10px 0 0;font-weight:700;color:var(--teal)}
     table.list{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;font-size:14px}
     .list th,.list td{padding:9px 10px;border-bottom:1px solid var(--line);text-align:left}
     .list th{background:var(--navy);color:#fff;font-size:12.5px}
@@ -38,6 +44,7 @@
     .viewer-top{position:sticky;top:0;z-index:2;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 14px;background:var(--navy-deep);color:#fff}
     .viewer-top b{flex:1 1 240px}
     .scroll-x{overflow-x:auto}
+    @media(max-width:760px){.pair-grid{grid-template-columns:1fr}.pair-grid .btn{width:100%}}
     @media print{ .viewer-top,.wrap{display:none!important} .viewer{position:static;overflow:visible;background:#fff} }
   </style>
 </head>
@@ -65,6 +72,17 @@
         <button class="btn ghost" id="logout" type="button">Salir</button>
       </div>
       <div class="stats" id="stats"></div>
+      <section class="card pair-card" aria-labelledby="pairTitle">
+        <h2 id="pairTitle">Registrar una pareja manualmente</h2>
+        <p class="muted" style="margin:0">Para quienes no pudieron hacerlo desde su informe. Si ya avanzaron por separado, el sistema conserva ambos borradores y combina sus campos.</p>
+        <form class="pair-grid" id="pairForm">
+          <label>Curso<select id="pairCourse"><option value="4ETP">4°E TP</option><option value="PRUEBA">PRUEBA</option></select></label>
+          <label>Integrante 1<select id="pairFirst" required></select></label>
+          <label>Integrante 2<select id="pairSecond" required></select></label>
+          <button class="btn" id="pairSubmit" type="submit">Registrar pareja</button>
+        </form>
+        <p class="pair-status" id="pairStatus" role="status" aria-live="polite"></p>
+      </section>
       <p class="error" id="panelError" role="alert"></p>
       <div class="scroll-x"><table class="list"><thead><tr><th>Curso</th><th>N.º</th><th>Estudiante</th><th>Modalidad</th><th>Estado</th><th>Partes</th><th>Última actividad</th><th></th></tr></thead><tbody id="rows"></tbody></table></div>
     </section>
@@ -94,6 +112,7 @@
     const esc = v => String(v == null ? '' : v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
     const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
     const when = ms => ms ? new Date(ms).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+    let allRows = [];
     let rows = [];
     let current = null;
 
@@ -109,10 +128,12 @@
       $('panelError').textContent = '';
       $('refresh').disabled = true;
       try {
+        const data = await call('admin-list');
+        allRows = data.rows || [];
         const course = $('course').value;
-        const data = await call('admin-list', { query: course ? '&curso=' + course : '' });
-        rows = data.rows || [];
+        rows = course ? allRows.filter(row => row.curso === course) : allRows;
         render();
+        renderPairChoices();
       } catch (error) {
         $('panelError').textContent = error.message;
       } finally { $('refresh').disabled = false; }
@@ -137,6 +158,25 @@
       return attempt && attempt.workMode === 'pair' && Array.isArray(attempt.team)
         ? attempt.team.map(member => member.nombre).join(' y ')
         : row.nombre;
+    }
+
+    function renderPairChoices() {
+      const course = $('pairCourse').value;
+      const candidates = allRows.filter(row => row.curso === course);
+      const fill = (select, placeholder) => {
+        const selected = select.value;
+        select.innerHTML = `<option value="">${placeholder}</option>`;
+        candidates.forEach(row => {
+          const option = document.createElement('option');
+          option.value = String(row.n);
+          option.textContent = `N.º ${row.n} · ${row.nombre} · ${modality(row)}`;
+          option.disabled = !!(row.attempt && row.attempt.workMode === 'pair');
+          select.appendChild(option);
+        });
+        if ([...select.options].some(option => option.value === selected && !option.disabled)) select.value = selected;
+      };
+      fill($('pairFirst'), 'Selecciona al primer integrante');
+      fill($('pairSecond'), 'Selecciona al segundo integrante');
     }
 
     function render() {
@@ -171,6 +211,30 @@
       } catch (error) { $('panelError').textContent = error.message; $('viewer').hidden = true; }
     });
 
+    $('pairForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('pairStatus').textContent = '';
+      const curso = $('pairCourse').value;
+      const firstN = Number($('pairFirst').value);
+      const secondN = Number($('pairSecond').value);
+      if (!firstN || !secondN) { $('pairStatus').textContent = 'Selecciona a los dos integrantes.'; return; }
+      if (firstN === secondN) { $('pairStatus').textContent = 'Selecciona a dos estudiantes diferentes.'; return; }
+      const first = allRows.find(row => row.curso === curso && row.n === firstN);
+      const second = allRows.find(row => row.curso === curso && row.n === secondN);
+      if (!first || !second) { $('pairStatus').textContent = 'No se encontraron ambos estudiantes.'; return; }
+      if (!confirm(`¿Registrar la pareja de ${first.nombre} y ${second.nombre}? Sus borradores se conservarán y pasarán a un trabajo compartido.`)) return;
+      $('pairSubmit').disabled = true; $('pairSubmit').textContent = 'Registrando…';
+      try {
+        const data = await call('admin-pair', { method: 'POST', body: { curso, firstN, secondN } });
+        $('pairStatus').textContent = `Pareja registrada: ${data.team.map(member => member.nombre).join(' y ')}. Pídeles actualizar la página.`;
+        await load();
+      } catch (error) {
+        $('pairStatus').textContent = error.message;
+      } finally {
+        $('pairSubmit').disabled = false; $('pairSubmit').textContent = 'Registrar pareja';
+      }
+    });
+
     $('csv').addEventListener('click', () => {
       const lines = [['Curso', 'N', 'Estudiante', 'Modalidad', 'Estado', 'Partes', 'Total', 'Entrega']];
       rows.forEach(r => { const a = r.attempt; lines.push([courseName(r.curso), r.n, r.nombre, modality(r), state(r)[1], a ? a.score : 0, a ? a.total : '', a && a.submittedAt ? new Date(a.submittedAt).toISOString() : '']); });
@@ -192,6 +256,7 @@
     $('logout').addEventListener('click', () => auth.signOut());
     $('refresh').addEventListener('click', load);
     $('course').addEventListener('change', load);
+    $('pairCourse').addEventListener('change', renderPairChoices);
     auth.onAuthStateChanged(user => {
       $('loginCard').hidden = !!user;
       $('panel').hidden = !user;

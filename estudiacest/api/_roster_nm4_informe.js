@@ -209,6 +209,9 @@ const ROWS = [
   ["7d0e7edcc832f9a9c60b9642","PRUEBA",1,"ESTUDIANTE DE PRUEBA"],
   // Identidades ficticias adicionales para verificar el flujo compartido en pareja.
   ["cfccd2121860f86e8af40546","PRUEBA",2,"ESTUDIANTE DE PRUEBA 2"],
-  ["430df463d80721b8ed78b850","PRUEBA",3,"ESTUDIANTE DE PRUEBA 3"]
+  ["430df463d80721b8ed78b850","PRUEBA",3,"ESTUDIANTE DE PRUEBA 3"],
+  // Identidades ficticias para probar edición simultánea desde dos equipos.
+  ["f4e64b4f87770c559f5b3ec9","PRUEBA",4,"ESTUDIANTE DE PRUEBA 4"],
+  ["317be0315d875d535ebfda2b","PRUEBA",5,"ESTUDIANTE DE PRUEBA 5"]
 ];
 module.exports = { SALT, ROWS };

@@ -68,6 +68,26 @@ portada de NM4 ahora dirige 4°E al caso nuevo de Electrónica.
 - Prueba aislada de API: entrega incompleta `400`, completa `200` y segundo envío
   bloqueado con `409`.
 
+**Claridad y publicación final**
+- Después de recorrer la versión pública como estudiante, se hizo explícita la
+  diferencia entre `Obligatorio` y `Ampliación`. La pantalla de trabajo indica
+  exactamente las páginas y los tiempos; el informe rotula las ampliaciones y
+  el progreso confirmado muestra `20 de 20 mínimos`, no `20 de 27`.
+- Se efectuó una entrega real con la cuenta de prueba: el servidor la confirmó,
+  la recarga recuperó las respuestas en solo lectura y un segundo envío fue
+  rechazado con `409`. El panel del estudiante informa que el profesor recibió
+  el informe.
+- La prueba pública recorrió las 14 pantallas, abrió la libreta, comprobó las
+  instrucciones y verificó móvil sin desborde; no registró errores de consola ni
+  recursos fallidos.
+- La API pública respondió con la actividad correcta, 40 registros habilitados
+  para 4°E más prueba y 27 campos. Los HTML y JavaScript publicados coincidieron
+  por SHA-256 con la fuente local; las rutas eléctrica y mecánica anteriores
+  continuaron respondiendo `200`.
+- Implementación: `2bde3abc`. Ajuste de claridad: `9902028a`.
+- Despliegue seguro final: `dpl_8iEhViaqdg1mUAMAamL34nCRb6CT`, estado `READY`,
+  asociado a `https://www.estudiacest.com`.
+
 ---
 
 ## 2026-09-28, 4°D TP: presentación de tres productos escritos

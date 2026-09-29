@@ -103,6 +103,7 @@
     .campo input:focus { outline: none; border-color: var(--termal); background: #fff; box-shadow: 0 0 0 4px rgba(31,165,148,.16); }
     .campo input[aria-invalid="true"] { border-color: var(--rojo); }
     .nota { margin: 12px 0 0; font-size: 13px; color: var(--gris); }
+    .subtitulo { margin-top: 22px; font-size: 17px; }
 
     .opciones { display: grid; gap: 12px; margin-top: 18px; grid-template-columns: 1fr 1fr; }
     .opcion { position: relative; }
@@ -310,6 +311,7 @@
       <h1>Termas de <em>Panimávida</em></h1>
       <p class="lead">Confirma si vas, cómo llegas y, si te subes al bus, elige tu asiento. Los cupos se van llenando en vivo.</p>
       <div class="chips" aria-live="polite">
+        <span class="chip"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><strong>Sábado 14 de noviembre</strong></span>
         <span class="chip"><span class="punto" id="puntoVivo"></span><span id="estadoVivo">Conectando…</span></span>
         <span class="chip"><strong id="chipAsisten">–</strong> asisten</span>
         <span class="chip"><strong id="chipLibres">–</strong> asientos libres en el bus</span>
@@ -359,11 +361,17 @@
         <span class="paso"><b></b>Tus datos</span>
         <h2 id="t-datos">¿Quién se inscribe?</h2>
         <div class="campos dos">
-          <div class="campo"><label for="nombre">Nombre</label><input id="nombre" name="nombre" autocomplete="given-name" maxlength="60" required></div>
-          <div class="campo"><label for="apellido">Apellido</label><input id="apellido" name="apellido" autocomplete="family-name" maxlength="60" required></div>
-          <div class="campo ancho"><label for="correo">Correo institucional</label><input id="correo" name="correo" type="email" inputmode="email" autocomplete="email" placeholder="usuario@salesianostalca.cl" maxlength="90" required></div>
+          <div class="campo"><label for="nombre">Nombres</label><input id="nombre" name="nombre" autocomplete="given-name" maxlength="80" required></div>
+          <div class="campo"><label for="apellido">Apellidos</label><input id="apellido" name="apellido" autocomplete="family-name" maxlength="80" required></div>
+          <div class="campo"><label for="correo">Correo</label><input id="correo" name="correo" type="email" inputmode="email" autocomplete="email" placeholder="nombre@correo.cl" maxlength="100" required></div>
+          <div class="campo"><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="tel" inputmode="tel" autocomplete="tel" placeholder="+56 9 1234 5678" maxlength="20" required></div>
         </div>
-        <p class="nota">En el bus se ve tu nombre y primer apellido. El correo solo lo ve la organización.</p>
+        <h3 class="subtitulo">Contacto de emergencia</h3>
+        <div class="campos dos">
+          <div class="campo"><label for="emergenciaNombre">Nombre y parentesco</label><input id="emergenciaNombre" name="emergenciaNombre" autocomplete="off" placeholder="Ej.: Ana Pérez, esposa" maxlength="80" required></div>
+          <div class="campo"><label for="emergenciaTelefono">Teléfono de emergencia</label><input id="emergenciaTelefono" name="emergenciaTelefono" type="tel" inputmode="tel" autocomplete="off" placeholder="+56 9 1234 5678" maxlength="20" required></div>
+        </div>
+        <p class="nota">En el bus se ve tu primer nombre y primer apellido. Correo, teléfono y contacto de emergencia solo los ve la organización.</p>
       </section>
 
       <section class="tarjeta" data-paso aria-labelledby="t-asiste">
@@ -484,7 +492,8 @@
 
     const API = '/api/estudiantes?action=termas-';
     const LLAVE_LOCAL = 'termas2026';
-    const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@salesianostalca\.cl$/;
+    const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
+    const telefonoValido = t => /^\+?[0-9 ()-]{8,20}$/.test(t) && t.replace(/\D/g, '').length >= 8 && t.replace(/\D/g, '').length <= 15;
     const CADA_MS = 5000;
 
     const $ = id => document.getElementById(id);
@@ -680,20 +689,29 @@
         if (e.target.value === 'bus') setTimeout(() => $('pasoAsiento').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
       }
     });
-    ['nombre', 'apellido', 'correo'].forEach(id => $(id).addEventListener('input', () => $(id).removeAttribute('aria-invalid')));
+    const CAMPOS = ['nombre', 'apellido', 'correo', 'telefono', 'emergenciaNombre', 'emergenciaTelefono'];
+    CAMPOS.forEach(id => $(id).addEventListener('input', () => $(id).removeAttribute('aria-invalid')));
 
     function validar() {
-      const faltas = [];
-      const nombre = $('nombre').value.trim(); const apellido = $('apellido').value.trim(); const correo = $('correo').value.trim().toLowerCase();
-      if (!nombre) { faltas.push('nombre'); $('nombre').setAttribute('aria-invalid', 'true'); }
-      if (!apellido) { faltas.push('apellido'); $('apellido').setAttribute('aria-invalid', 'true'); }
-      if (!RE_CORREO.test(correo)) { $('correo').setAttribute('aria-invalid', 'true'); return { error: 'Usa tu correo institucional, el que termina en @salesianostalca.cl.', foco: $('correo') }; }
-      if (faltas.length) return { error: 'Escribe tu ' + faltas.join(' y ') + '.', foco: $(faltas[0]) };
+      const v = {};
+      CAMPOS.forEach(id => { v[id] = $(id).value.trim(); $(id).removeAttribute('aria-invalid'); });
+      v.correo = v.correo.toLowerCase();
+      const problemas = [
+        ['nombre', !v.nombre, 'Escribe tus nombres.'],
+        ['apellido', !v.apellido, 'Escribe tus apellidos.'],
+        ['correo', !RE_CORREO.test(v.correo), 'Revisa tu correo: debe ser como nombre@dominio.cl.'],
+        ['telefono', !telefonoValido(v.telefono), 'Revisa tu teléfono: por ejemplo, +56 9 1234 5678.'],
+        ['emergenciaNombre', v.emergenciaNombre.length < 2, 'Escribe el nombre de tu contacto de emergencia.'],
+        ['emergenciaTelefono', !telefonoValido(v.emergenciaTelefono), 'Revisa el teléfono de tu contacto de emergencia.']
+      ].filter(p => p[1]);
+      problemas.forEach(p => $(p[0]).setAttribute('aria-invalid', 'true'));
+      if (problemas.length) return { error: problemas[0][2], foco: $(problemas[0][0]) };
+      const { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono } = v;
       const asiste = valor('asiste'); if (!asiste) return { error: 'Cuéntanos si asistes.', foco: $('asiste-si') };
       const transporte = asiste === 'si' ? valor('transporte') : '';
       if (asiste === 'si' && !transporte) return { error: 'Elige cómo llegas a las termas.', foco: $('tr-bus') };
       if (transporte === 'bus' && !estado.asiento) return { error: 'Toca un asiento libre del bus.', foco: $('filas') };
-      return { datos: { nombre, apellido, correo, asiste, transporte, asiento: transporte === 'bus' ? estado.asiento : null, comida: asiste === 'si' ? valor('comida') : '' } };
+      return { datos: { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento: transporte === 'bus' ? estado.asiento : null, comida: asiste === 'si' ? valor('comida') : '' } };
     }
 
     form.addEventListener('submit', async e => {
@@ -738,7 +756,7 @@
       if (m.asiste === 'si') {
         if (m.transporte === 'bus') { datos.append(dato('Asiento', String(m.asiento), 'grande'), dato('Ubicación', ubicacion(m.asiento))); }
         else datos.append(dato('Transporte', 'Propio'));
-        datos.append(dato('Destino', 'Termas de Panimávida'), dato('Desayuno u once', TEXTO_COMIDA[m.comida || '']));
+        datos.append(dato('Fecha', 'Sábado 14 de noviembre'), dato('Desayuno u once', TEXTO_COMIDA[m.comida || '']));
       } else {
         datos.append(dato('Asistencia', 'Registramos que no vas'), dato('¿Cambias de idea?', 'Modifica tu inscripción'));
       }
@@ -759,7 +777,7 @@
     $('btnVerBus').addEventListener('click', () => abrirFormulario(true));
 
     function rellenar(m) {
-      $('nombre').value = m.nombre; $('apellido').value = m.apellido; $('correo').value = m.correo;
+      CAMPOS.forEach(id => { $(id).value = m[id] || ''; });
       marcar('asiste', m.asiste); marcar('transporte', m.transporte); marcar('comida', m.comida);
       estado.asiento = m.asiento || null;
     }

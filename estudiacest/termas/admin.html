@@ -63,7 +63,7 @@
         <div class="cabeza">
           <div>
             <h1>Inscripción · Termas de Panimávida</h1>
-            <p class="sub">Formulario público: <a href="/termas" target="_blank" rel="noopener">estudiacest.com/termas</a>. Lo que ves aquí incluye los correos; no lo compartas.</p>
+            <p class="sub">Formulario público: <a href="/termas" target="_blank" rel="noopener">estudiacest.com/termas</a>. Lo que ves aquí incluye correos, teléfonos y contactos de emergencia; no lo compartas.</p>
           </div>
           <div class="acciones">
             <button class="pri" id="btnActualizar" type="button">Actualizar</button>
@@ -85,8 +85,8 @@
         </div>
         <div class="tabla">
           <table>
-            <thead><tr><th>Apellido</th><th>Nombre</th><th>Correo</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Desayuno u once</th><th>Actualizado</th><th></th></tr></thead>
-            <tbody id="filas"><tr><td colspan="9" class="muted">Cargando…</td></tr></tbody>
+            <thead><tr><th>Apellidos</th><th>Nombres</th><th>Correo</th><th>Teléfono</th><th>Contacto de emergencia</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Desayuno u once</th><th>Actualizado</th><th></th></tr></thead>
+            <tbody id="filas"><tr><td colspan="11" class="muted">Cargando…</td></tr></tbody>
           </table>
         </div>
         <p class="nota">«Quitar» borra la inscripción y libera su asiento. Úsalo cuando alguien perdió el acceso desde su navegador o para limpiar un registro que no corresponde: la persona puede inscribirse de nuevo.</p>
@@ -136,10 +136,10 @@
       const filtro = $('filtro').value;
       const filas = datos.filas.filter(f => !filtro || (filtro === 'si' || filtro === 'no' ? f.asiste === filtro : f.asiste === 'si' && f.transporte === filtro));
       const cuerpo = $('filas'); cuerpo.innerHTML = '';
-      if (!filas.length) { cuerpo.innerHTML = '<tr><td colspan="9" class="muted">Sin inscripciones en este filtro.</td></tr>'; return; }
+      if (!filas.length) { cuerpo.innerHTML = '<tr><td colspan="11" class="muted">Sin inscripciones en este filtro.</td></tr>'; return; }
       filas.forEach(f => {
         const tr = document.createElement('tr');
-        const celdas = [f.apellido, f.nombre, f.correo];
+        const celdas = [f.apellido, f.nombre, f.correo, f.telefono, [f.emergenciaNombre, f.emergenciaTelefono].filter(Boolean).join(' · ')];
         celdas.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
         const tdA = document.createElement('td'); tdA.innerHTML = f.asiste === 'si' ? '<span class="tag si">Asiste</span>' : '<span class="tag no">No asiste</span>'; tr.appendChild(tdA);
         const tdT = document.createElement('td'); tdT.textContent = f.asiste !== 'si' ? '—' : f.transporte === 'bus' ? 'Bus' : 'Propio'; tr.appendChild(tdT);
@@ -169,8 +169,8 @@
     function csv() {
       if (!datos) return;
       const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      const lineas = [['Apellido', 'Nombre', 'Correo', 'Asiste', 'Transporte', 'Asiento', 'Desayuno u once', 'Actualizado'].map(esc).join(';')];
-      datos.filas.forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
+      const lineas = [['Apellidos', 'Nombres', 'Correo', 'Teléfono', 'Contacto de emergencia', 'Teléfono de emergencia', 'Asiste', 'Transporte', 'Asiento', 'Desayuno u once', 'Actualizado'].map(esc).join(';')];
+      datos.filas.forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.telefono, f.emergenciaNombre, f.emergenciaTelefono, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
       const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'termas-panimavida-inscripciones.csv'; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);

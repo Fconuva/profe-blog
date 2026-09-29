@@ -9,10 +9,12 @@
 // `plataforma_estudiantes`. La raíz de firebase-rules.json niega lectura y
 // escritura, así que ningún navegador llega a ese nodo: todo pasa por aquí con
 // credenciales de servidor. Hacia afuera solo sale el nombre corto de quien
-// ocupa cada asiento y los totales; el correo lo ve únicamente el admin.
+// ocupa cada asiento y los totales; correo, teléfono y contacto de emergencia
+// los ve únicamente el admin.
 //
 // Reglas de la inscripción:
-//  - Solo correos @salesianostalca.cl, una inscripción por correo.
+//  - Nombres, apellidos, correo (cualquier dominio), teléfono y contacto de
+//    emergencia son obligatorios para todos. Una inscripción por correo.
 //  - Al inscribirse por primera vez, el servidor entrega una llave que queda en
 //    ese navegador y guarda solo su hash. Sin la llave no se modifica una
 //    inscripción ajena. Si alguien la pierde, Francisco quita la inscripción
@@ -30,8 +32,10 @@ const BASE = process.env.TERMAS_BASE || 'eventos_docentes/termas_2026';
 const INSCRIPCIONES = `${BASE}/inscripciones`;
 const CAPACIDAD = 45;
 const TOPE_INSCRIPCIONES = 300;
-const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@salesianostalca\.cl$/;
-const RE_NOMBRE = /^\p{L}[\p{L}'’.\- ]{0,59}$/u;
+// Sin # $ [ ] / en el correo: es la clave en Firebase.
+const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
+const RE_NOMBRE = /^\p{L}[\p{L}'’.\- ]{0,79}$/u;
+const RE_TELEFONO = /^\+?[0-9 ()-]{8,20}$/;
 const COMIDAS = new Set(['', 'desayuno', 'once', 'cualquiera', 'ninguna']);
 
 function fallo(status, mensaje, extra) {
@@ -93,6 +97,9 @@ function inscripcionPropia(ins) {
         nombre: ins.nombre || '',
         apellido: ins.apellido || '',
         correo: ins.correo || '',
+        telefono: ins.telefono || '',
+        emergenciaNombre: ins.emergenciaNombre || '',
+        emergenciaTelefono: ins.emergenciaTelefono || '',
         asiste: ins.asiste || '',
         transporte: ins.transporte || '',
         asiento: vaEnBus(ins) ? Number(ins.asiento) : null,
@@ -103,8 +110,15 @@ function inscripcionPropia(ins) {
 
 function validarCorreo(valor) {
     const correo = String(valor || '').trim().toLowerCase();
-    if (!RE_CORREO.test(correo)) throw fallo(400, 'Usa tu correo institucional, el que termina en @salesianostalca.cl.');
+    if (correo.length > 100 || !RE_CORREO.test(correo)) throw fallo(400, 'Revisa tu correo: debe ser como nombre@dominio.cl.');
     return correo;
+}
+
+function validarTelefono(valor, mensaje) {
+    const telefono = texto(valor, 20);
+    const digitos = telefono.replace(/\D/g, '');
+    if (!RE_TELEFONO.test(telefono) || digitos.length < 8 || digitos.length > 15) throw fallo(400, mensaje);
+    return telefono;
 }
 
 async function estado(req, res, db) {
@@ -126,11 +140,15 @@ async function mia(req, res, db) {
 
 async function inscribir(req, res, db) {
     const body = cuerpo(req);
-    const nombre = texto(body.nombre, 60);
-    const apellido = texto(body.apellido, 60);
-    if (!RE_NOMBRE.test(nombre)) throw fallo(400, 'Escribe tu nombre.');
-    if (!RE_NOMBRE.test(apellido)) throw fallo(400, 'Escribe tu apellido.');
+    const nombre = texto(body.nombre, 80);
+    const apellido = texto(body.apellido, 80);
+    if (!RE_NOMBRE.test(nombre)) throw fallo(400, 'Escribe tus nombres.');
+    if (!RE_NOMBRE.test(apellido)) throw fallo(400, 'Escribe tus apellidos.');
     const correo = validarCorreo(body.correo);
+    const telefono = validarTelefono(body.telefono, 'Revisa tu teléfono: por ejemplo, +56 9 1234 5678.');
+    const emergenciaNombre = texto(body.emergenciaNombre, 80);
+    if (emergenciaNombre.length < 2) throw fallo(400, 'Escribe el nombre de tu contacto de emergencia.');
+    const emergenciaTelefono = validarTelefono(body.emergenciaTelefono, 'Revisa el teléfono de tu contacto de emergencia.');
     const asiste = String(body.asiste || '');
     if (!['si', 'no'].includes(asiste)) throw fallo(400, 'Indica si asistes.');
     const transporte = asiste === 'si' ? String(body.transporte || '') : '';
@@ -163,6 +181,9 @@ async function inscribir(req, res, db) {
             nombre,
             apellido,
             correo,
+            telefono,
+            emergenciaNombre,
+            emergenciaTelefono,
             asiste,
             transporte,
             asiento: transporte === 'bus' ? asiento : null,

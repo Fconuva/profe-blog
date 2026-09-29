@@ -8,6 +8,83 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, /termas: inscripción docente al paseo a las Termas de Panimávida
+
+Página interna para docentes, no para estudiantes: `estudiacest.com/termas`.
+No aparece en ninguna portada ni menú, lleva `noindex` en la página y
+`X-Robots-Tag: noindex, nofollow` en `vercel.json`. Francisco la comparte por su
+cuenta.
+
+**Qué hace**
+
+- Nombre, apellido y correo institucional. Solo se aceptan correos
+  `@salesianostalca.cl`, lo que también deja fuera las cuentas de estudiantes.
+- Asisto o No asisto. Si asiste, elige bus o transporte propio.
+- Si elige bus, ve un bus de 45 asientos (10 filas de 2+2 y una última fila
+  de 5) y toca su asiento. Los tomados muestran iniciales, y al tocarlos se ve
+  el nombre y primer apellido. El mapa se actualiza cada 5 segundos, y si
+  alguien toma el asiento que la persona estaba mirando, se le avisa.
+- Aviso visible: el bus está en gestión con el colegio. El correo a la
+  administración se envió el 29-sep.
+- Sección «Desayuno u once» con preferencia opcional. **El detalle de lo que
+  incluye cada opción y su horario sigue pendiente**: la cotización está en el
+  Gmail personal de Francisco y no se pudo abrir en esta sesión. Se completa en
+  el objeto `COMIDAS` de `termas/index.html`, sin valores ni precios, por
+  decisión de Francisco.
+- Al confirmar aparece un pase de abordar. La inscripción se puede modificar
+  desde el mismo navegador.
+- Admin en `/termas/admin`: la misma cuenta administrativa de Estudia CEST
+  (`plataforma_estudiantes/admins`). Muestra totales, preferencias de comida,
+  tabla con correos, CSV y «Quitar», que borra la inscripción y libera el
+  asiento.
+
+**Cómo está hecha**
+
+- `api/_termas.js`, enrutado desde `api/estudiantes.js` con las acciones
+  `termas-estado`, `termas-mia`, `termas-inscribir`, `termas-admin-lista` y
+  `termas-admin-quitar`. No es función propia porque las 12 de Vercel Hobby
+  están ocupadas.
+- Datos en `eventos_docentes/termas_2026/inscripciones`, fuera de
+  `plataforma_estudiantes`. La raíz de `firebase-rules.json` ya niega lectura y
+  escritura, así que **no se tocaron ni desplegaron reglas**. Sondeado: lectura
+  y escritura anónimas dan 401.
+- El asiento se decide en una transacción sobre todas las inscripciones, y el
+  mapa se deduce de ellas, así que no hay nodo de asientos que pueda quedar
+  huérfano. Al inscribirse, el navegador recibe una llave; en el servidor se
+  guarda solo su hash. Sin esa llave, otra persona no puede cambiar una
+  inscripción ajena, aunque escriba el mismo correo. Si alguien pierde el acceso,
+  se le quita desde el admin y se vuelve a inscribir.
+- `termas/index.html` y `termas/admin.html` quedaron en
+  `scripts/academic-release-manifest.json`.
+
+**Validación**
+
+- Contra un nodo de prueba con datos ficticios, ya borrado: inscripción,
+  asiento ocupado (409), correo ajeno sin llave (409), cambio de asiento con
+  llave, lectura de vuelta, correo de estudiante (400) y asiento fuera de rango
+  (400). En la prueba de carrera, seis pedidos simultáneos al mismo asiento: uno
+  lo obtiene y cinco reciben 409.
+- Navegador: iPhone 13, 320 px y escritorio de 1440 px, sin errores de consola
+  ni desborde horizontal. La inscripción se recuerda al recargar.
+- `npm run build` en verde. Deploy con `npm run deploy:prod:safe` del commit
+  `30202ecf` (`dpl_HZhobrE4AnP9LX6xBAcX1vGGaboC`).
+- Producción: `/termas`, `/termas/`, `/termas/admin`, la raíz, `/paes/`,
+  `/nm4/` y `/estudiantes/` responden 200, y `/api/_termas.js` queda bloqueado.
+  Se hizo un recorrido real con una inscripción ficticia en el asiento 45: se
+  leyó de vuelta, se borró y el nodo real quedó vacío.
+- **No probado:** el ingreso al admin con la cuenta real. Sin sesión, el
+  endpoint responde 401.
+
+**Pendiente**
+
+1. Completar desayuno y once (qué incluye cada uno y su horario) desde la
+   cotización, y volver a desplegar.
+2. Si el colegio confirma un bus de otra capacidad, cambiar `CAPACIDAD` en
+   `api/_termas.js`. La distribución del bus se ajusta sola.
+3. Cuando llegue la nómina docente, cruzarla con las inscripciones del admin.
+
+---
+
 ## 2026-09-29, NM4 4°A Industrial y 4°B Automotriz: clases e informes especializados
 
 Se reemplazó en el portal la actividad mecánica compartida por dos experiencias

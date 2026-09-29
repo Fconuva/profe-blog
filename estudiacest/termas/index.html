@@ -216,6 +216,11 @@
     .comida ul { margin: 10px 0 0; padding-left: 18px; color: #32444c; font-size: 14px; }
     .comida ul li + li { margin-top: 3px; }
     .comida .pend { margin: 10px 0 0; font-size: 14px; color: var(--gris); }
+    .comida.incluida { background: #f2fbf9; border-color: #c4e8df; }
+    .paso-info { padding: 4px 10px; border-radius: 999px; background: var(--termal-claro); color: var(--pino); }
+    .aviso-nomina { margin: 14px 0 0; background: #eef7ff; border-color: #c9def3; color: #173a5c; }
+    .aviso-nomina strong { font-weight: 800; }
+    .pase-nomina { grid-column: 1 / -1; margin: 2px 0 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); font-size: 14px; color: rgba(255,255,255,.82); }
     .preferencia { margin-top: 18px; }
     .preferencia > p { font-weight: 700; margin: 0; font-size: 15px; }
     .pildoras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
@@ -377,6 +382,10 @@
       <section class="tarjeta" data-paso aria-labelledby="t-asiste">
         <span class="paso"><b></b>Asistencia</span>
         <h2 id="t-asiste">¿Vas al paseo?</h2>
+        <div class="aviso-bus aviso-nomina" role="note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h2V5a1 1 0 0 1 1-1Z"/><path d="M9 12l2 2 4-4"/></svg>
+          <span><strong>La nómina se entrega en la recepción de las termas.</strong> Quien no esté inscrito aquí no podrá asistir.</span>
+        </div>
         <div class="opciones" role="radiogroup" aria-labelledby="t-asiste">
           <div class="opcion">
             <input type="radio" name="asiste" id="asiste-si" value="si">
@@ -449,6 +458,23 @@
               <p class="vacio" id="listaVacia">Todavía nadie ha tomado asiento. ¡Elige el tuyo!</p>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section class="tarjeta oculto" id="infoAlmuerzo" aria-labelledby="t-almuerzo">
+        <span class="paso paso-info">Incluido</span>
+        <h2 id="t-almuerzo">El almuerzo va incluido</h2>
+        <div class="comidas">
+          <article class="comida incluida">
+            <header><h3>Almuerzo buffet</h3><span class="hora">13:00 a 15:00</span></header>
+            <ul>
+              <li>Variedad de entradas o ensaladas</li>
+              <li>Tres variedades de platos principales y tres de acompañamientos</li>
+              <li>Al menos cinco postres</li>
+              <li>Té, café o infusión de hierbas</li>
+              <li>Bebida de máquina y shop sin límite durante el almuerzo</li>
+            </ul>
+          </article>
         </div>
       </section>
 
@@ -673,6 +699,7 @@
       $('pasoTransporte').classList.toggle('oculto', asiste !== 'si');
       $('pasoAsiento').classList.toggle('oculto', !(asiste === 'si' && transporte === 'bus'));
       $('pasoComida').classList.toggle('oculto', asiste !== 'si');
+      $('infoAlmuerzo').classList.toggle('oculto', asiste !== 'si');
       numerarPasos(); actualizarResumen();
     }
 
@@ -764,7 +791,10 @@
       if (m.asiste === 'si') {
         if (m.transporte === 'bus') { datos.append(dato('Asiento', String(m.asiento), 'grande'), dato('Ubicación', ubicacion(m.asiento))); }
         else datos.append(dato('Transporte', 'Propio'));
-        datos.append(dato('Fecha', 'Sábado 14 de noviembre'), dato('Desayuno u once', TEXTO_COMIDA[m.comida || '']));
+        datos.append(dato('Fecha', 'Sábado 14 de noviembre'), dato('Almuerzo', '13:00 a 15:00'), dato('Desayuno u once', TEXTO_COMIDA[m.comida || '']));
+        const nomina = document.createElement('p'); nomina.className = 'pase-nomina';
+        nomina.textContent = 'Tu nombre va en la nómina que se entrega en la recepción de las termas.';
+        datos.appendChild(nomina);
       } else {
         datos.append(dato('Asistencia', 'Registramos que no vas'), dato('¿Cambias de idea?', 'Modifica tu inscripción'));
       }

@@ -2,9 +2,9 @@
 // entrega. No es una función propia de Vercel (el plan Hobby admite 12): la
 // sirve api/economista.js cuando llega ?modulo=informe-tecnico.
 //
-// Hay dos versiones del informe, cada una para sus cursos (?version=):
-//   electrica (por defecto) -> 4°C Electricidad y 4°E Electrónica
-//   mecanica                -> 4°A Mecánica Industrial y 4°B Mecánica Automotriz
+// Hay tres versiones del informe (?version=). La versión eléctrica histórica
+// conserva 4°E para no invalidar borradores anteriores; la portada dirige 4°E
+// al caso nuevo de Electrónica, guardado en una base independiente.
 //
 // Acciones (todas POST salvo admin-list):
 //   get-guia-state  { rut }            -> estudiante + intento guardado
@@ -33,8 +33,16 @@ const VERSIONS = {
     cursos: ['4ATP', '4BTP', 'PRUEBA'],
     nombre: 'informe mecánico (4°A y 4°B)',
     ruta: '/nm4/u3-clase6-informe-mecanica/informe/'
+  },
+  electronica: {
+    campos: require('../nm4/u3-clase6-informe-electronica/informe/campos.js'),
+    base: 'plataforma_nm4/informe_electronica_2026',
+    cursos: ['4ETP', 'PRUEBA'],
+    nombre: 'informe de Electrónica (4°E)',
+    ruta: '/nm4/u3-clase6-informe-electronica/informe/'
   }
 };
+const COURSE_VERSION = { '4ATP': 'mecanica', '4BTP': 'mecanica', '4CTP': 'electrica', '4ETP': 'electronica' };
 const ADMINS = 'plataforma_estudiantes/admins';
 const ROSTER = ROWS.map(([hash, curso, n, nombre]) => ({ hash, curso, n, nombre }));
 const BY_HASH = new Map(ROSTER.map(student => [student.hash, student]));
@@ -64,7 +72,7 @@ function versionFor(req) {
 
 // Un estudiante de otro curso recibe la dirección de su propio informe.
 function wrongCourse(res, student, version) {
-  const other = Object.values(VERSIONS).find(v => v !== version && v.cursos.includes(student.curso));
+  const other = VERSIONS[COURSE_VERSION[student.curso]] || Object.values(VERSIONS).find(v => v !== version && v.cursos.includes(student.curso));
   return res.status(403).json({
     error: other ? `Este es el ${version.nombre}. Tu curso trabaja en el ${other.nombre}.` : `Este es el ${version.nombre}. Tu curso no trabaja en este informe.`,
     ruta: other ? other.ruta : null
@@ -101,6 +109,11 @@ async function handleSave(req, res, db, version, submit) {
   const CAMPOS = version.campos;
   const answers = CAMPOS.sanitize(input.answers);
   const { score, total } = CAMPOS.progress(answers);
+  if (submit && Array.isArray(CAMPOS.activity.requiredForSubmit)) {
+    const required = new Set(CAMPOS.activity.requiredForSubmit);
+    const missing = CAMPOS.questions.filter(question => required.has(question.id) && !CAMPOS.isComplete(question, answers[question.id]));
+    if (missing.length) return res.status(400).json({ error: `Completa primero las ${missing.length} partes obligatorias del informe.`, missing: missing.map(question => question.label) });
+  }
   const ref = db.ref(`${version.base}/${student.curso}/${student.n}`);
   const now = Date.now();
   let locked = false;

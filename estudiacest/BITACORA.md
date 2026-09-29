@@ -8,6 +8,48 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, NM4 Clase 6: versión propia para 4°E Electrónica
+
+Se creó una tercera versión completa de la tarea «Escribir en el trabajo: el
+informe técnico», destinada exclusivamente a 4°E. La versión eléctrica
+histórica de 4°C/4°E se conserva sin borrar sus borradores ni entregas, pero la
+portada de NM4 ahora dirige 4°E al caso nuevo de Electrónica.
+
+**Caso y secuencia didáctica**
+- Caso ficticio `AUT-PVL-DIA-L02`: diagnóstico de una línea automatizada de
+  embalaje de fruta con sensor fotoeléctrico, PLC, HMI, variador, motor y
+  gabinete de control.
+- Presentación propia de 14 pantallas y 90 minutos. El foco es seguir una señal,
+  registrar mediciones, interpretar alarmas y documentar versiones del programa,
+  no inspeccionar infraestructura eléctrica de alta tensión.
+- Informe prediseñado de 12 páginas y 27 campos: mediciones de 24 VDC,
+  temperatura del gabinete, evidencia fotográfica, configuración y respaldo del
+  PLC, hallazgos y conclusión.
+- El mínimo de entrega son 20 campos de las páginas 6, 8, 9 y 11. El navegador y
+  la API aplican la misma regla; una entrega confirmada queda bloqueada contra
+  sobrescrituras posteriores.
+- Tres fotografías originales generadas con IA: vista general de la línea,
+  sensor sucio y desalineado, y gabinete con ventilación obstruida. Los prompts
+  quedaron archivados junto a los recursos.
+
+**Persistencia y compatibilidad**
+- Nueva versión API `electronica`, curso canónico `4ETP`, sesión propia y nodo
+  independiente `plataforma_nm4/informe_electronica_2026`.
+- El caso eléctrico anterior y el mecánico mantienen sus rutas, sesiones y bases.
+- Se agregó el panel docente, el contrato de entrega, el manifiesto académico y
+  la auditoría de la Clase 6 para las tres versiones.
+
+**Validación local**
+- Build completo: aprobado con 261 recursos críticos.
+- Auditoría de Clase 6: 14 pantallas y 90 minutos en cada versión; Electrónica
+  tiene 27 campos dibujados una sola vez y cinco datos técnicos verificables.
+- Prueba Playwright: escritorio y móvil sin desborde horizontal; ingreso,
+  bloqueo de 20 campos incompletos y entrega confirmada con los 20 completos.
+- Prueba aislada de API: entrega incompleta `400`, completa `200` y segundo envío
+  bloqueado con `409`.
+
+---
+
 ## 2026-09-28, 4°D TP: presentación de tres productos escritos
 
 Se publicó una presentación nativa de 10 diapositivas en

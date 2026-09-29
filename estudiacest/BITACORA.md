@@ -8,6 +8,23 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (tarde), /termas: almuerzo incluido y aviso de nómina (sin desplegar)
+
+- Quienes asisten ven la tarjeta «El almuerzo va incluido», con el almuerzo
+  buffet de 13:00 a 15:00 y lo que incluye según la página 2 de la cotización.
+  El pase de abordar agrega la línea «Almuerzo 13:00 a 15:00».
+- En el paso de asistencia hay un aviso: la nómina se entrega en la recepción de
+  las termas, y quien no esté inscrito no podrá asistir. El pase lo repite.
+- Probado en local con iPhone 13, sin errores ni desborde. `npm run build` en
+  verde. Commit `9c096e9f` en `origin/main`.
+- **NO desplegado.** Francisco cerró la sesión para pedirle imágenes a Codex.
+  Producción sigue en `8c1c055d`. El próximo `npm run deploy:prod:safe` publica
+  este cambio junto con lo que agregue Codex.
+- El nodo de prueba `eventos_docentes/termas_prueba_local` quedó borrado.
+  `eventos_docentes/termas_2026` no tiene inscripciones de prueba.
+
+---
+
 ## 2026-09-29 (tarde), /termas: detalle de desayuno y once
 
 - Francisco entregó la cotización en PDF: Hotel Termas de Panimávida, 09-mar-2026.

@@ -161,6 +161,29 @@ function validateCanonicalProject(manifest) {
   return failures;
 }
 
+const wait = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function fetchWithRetry(url, options = {}, attempts = 3, timeoutMs = 30000) {
+  let lastError;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await fetch(url, {
+        ...options,
+        signal: AbortSignal.timeout(timeoutMs)
+      });
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts) {
+        await wait(500 * attempt);
+      }
+    }
+  }
+
+  throw lastError;
+}
+
 async function matchesProduction(relativePath, productionOrigin) {
   const localPath = path.join(ROOT, relativePath);
   if (!fs.existsSync(localPath) || !fs.statSync(localPath).isFile()) {
@@ -168,9 +191,8 @@ async function matchesProduction(relativePath, productionOrigin) {
   }
 
   try {
-    const response = await fetch(new URL(`/${relativePath.replaceAll("\\", "/")}`, productionOrigin), {
+    const response = await fetchWithRetry(new URL(`/${relativePath.replaceAll("\\", "/")}`, productionOrigin), {
       redirect: "follow",
-      signal: AbortSignal.timeout(30000),
       headers: { "cache-control": "no-cache" }
     });
     if (!response.ok) {
@@ -261,14 +283,13 @@ async function validateProduction(manifest) {
   for (const entry of manifest.criticalFiles) {
     const url = new URL(entry.url, manifest.project.productionOrigin);
     try {
-      const response = await fetch(url, {
+      const response = await fetchWithRetry(url, {
         method: entry.path.endsWith(".html") ? "GET" : "HEAD",
         redirect: "follow",
-        signal: AbortSignal.timeout(15000),
         headers: {
           "cache-control": "no-cache"
         }
-      });
+      }, 3, 15000);
 
       const firstDeployResource = response.status === 404 && isNewTrackedResource(entry.path);
       if (!response.ok && !firstDeployResource && !(entry.allowMissingInProduction && response.status === 404)) {

@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="informe.css">
   <style>
     *{box-sizing:border-box}
+    html,body{overflow-x:hidden}
     body{margin:0;background:#e3e9ee;color:var(--ink);font-family:Inter,Arial,sans-serif}
     button{font:inherit;cursor:pointer}
     :focus-visible{outline:4px solid #f6c84f;outline-offset:2px}
@@ -41,6 +42,7 @@
     .partner-box{margin-top:14px;padding:14px;border:1.5px solid var(--line);border-radius:9px;background:var(--soft)}
     .partner-box p{margin:0 0 10px;font-size:13px}
     .mode-back{width:100%;margin-top:10px;background:transparent!important;border:0!important;color:var(--teal)!important}
+    .team-action{margin-left:10px;padding:7px 11px;min-height:0;font-size:12.5px}
 
     /* Barra superior */
     .top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 14px;background:var(--navy-deep);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -125,8 +127,8 @@
         <div class="row"><button class="btn ghost" type="button" id="notMe">No soy yo</button><button class="btn" type="button" id="yesMe">Sí, soy yo</button></div>
       </div>
       <div id="modeBox" hidden>
-        <p class="mode-title">¿Cómo realizarán el informe?</p>
-        <div class="mode-options"><button class="btn ghost" type="button" id="soloMode">👤 Individual</button><button class="btn" type="button" id="pairMode">👥 En pareja</button></div>
+        <p class="mode-title" id="modeTitle">¿Cómo realizarán el informe?</p>
+        <div class="mode-options" id="modeOptions"><button class="btn ghost" type="button" id="soloMode">👤 Individual</button><button class="btn" type="button" id="pairMode">👥 En pareja</button></div>
         <div class="partner-box" id="partnerBox" hidden>
           <p>Escribe el RUT de tu compañero o compañera de 4°E. Ambos compartirán el mismo borrador y la misma entrega.</p>
           <form id="partnerForm" novalidate>
@@ -160,7 +162,7 @@
         <ol id="tocList"></ol>
       </nav>
       <main>
-        <p class="banner done" id="teamBanner" hidden></p>
+        <p class="banner done" id="teamBanner" hidden><span id="teamText"></span><button class="btn team-action" type="button" id="addPartner" hidden>Agregar compañero</button></p>
         <p class="banner" id="banner"><b>Primero completa lo obligatorio:</b> todas las casillas amarillas de las páginas 6, 8, 9 y 11. Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. La portada, el resumen, los objetivos y la conclusión dicen <b>Ampliación</b>: hazlos solo si alcanza el tiempo.</p>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
@@ -217,6 +219,7 @@
     let dirty = false;
     let timer = null;
     let saveQueue = Promise.resolve();
+    let returningToDraft = false;
 
     const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
     const post = async (action, payload) => {
@@ -259,13 +262,26 @@
       }
     });
     function resetIdentity() {
-      rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null;
+      rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null; returningToDraft = false;
       $('confirmBox').hidden = true; $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
       $('rutForm').hidden = false; $('rut').value = ''; $('partnerRut').value = ''; $('gateError').textContent = ''; $('rut').focus();
     }
     $('notMe').addEventListener('click', resetIdentity);
-    $('modeBack').addEventListener('click', () => { $('modeBox').hidden = true; $('confirmBox').hidden = false; $('partnerBox').hidden = true; $('gateError').textContent = ''; });
-    $('soloMode').addEventListener('click', () => { partnerRut = ''; selectedPartner = null; start(null); });
+    function closePartnerChooser() {
+      returningToDraft = false;
+      $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
+      $('modeOptions').hidden = false; $('modeTitle').textContent = '¿Cómo realizarán el informe?';
+      $('gateError').textContent = ''; $('gate').hidden = true; $('app').hidden = false;
+    }
+    $('modeBack').addEventListener('click', () => {
+      if (returningToDraft) return closePartnerChooser();
+      $('modeBox').hidden = true; $('confirmBox').hidden = false; $('partnerBox').hidden = true; $('gateError').textContent = '';
+    });
+    $('soloMode').addEventListener('click', () => {
+      partnerRut = ''; selectedPartner = null;
+      if (returningToDraft) return closePartnerChooser();
+      start(null);
+    });
     $('pairMode').addEventListener('click', () => { $('partnerBox').hidden = false; $('partnerForm').hidden = false; $('partnerConfirm').hidden = true; $('partnerRut').focus(); });
     $('changePartner').addEventListener('click', () => { partnerRut = ''; selectedPartner = null; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false; $('partnerRut').value = ''; $('partnerRut').focus(); });
     $('partnerForm').addEventListener('submit', async event => {
@@ -285,7 +301,36 @@
         $('partnerButton').disabled = false; $('partnerButton').textContent = 'Buscar compañero';
       }
     });
-    $('confirmPartner').addEventListener('click', () => start(null, selectedPartner));
+    $('confirmPartner').addEventListener('click', async () => {
+      if (!selectedPartner || !partnerRut) return;
+      $('confirmPartner').disabled = true; $('confirmPartner').textContent = 'Formando pareja…';
+      $('gateError').textContent = '';
+      try {
+        const data = await post('join-pair', { rut, partnerRut });
+        returningToDraft = false;
+        $('modeBox').hidden = true; $('gate').hidden = true;
+        start(data.attempt, selectedPartner);
+      } catch (error) {
+        $('gateError').textContent = error.message;
+      } finally {
+        $('confirmPartner').disabled = false; $('confirmPartner').textContent = 'Confirmar pareja';
+      }
+    });
+
+    $('addPartner').addEventListener('click', async () => {
+      clearTimeout(timer); timer = null;
+      if (dirty) await enqueueSave();
+      await saveQueue;
+      if (dirty) {
+        setSave('No se pudo guardar · revisa internet', 'err');
+        return;
+      }
+      returningToDraft = true; partnerRut = ''; selectedPartner = null;
+      $('app').hidden = true; $('gate').hidden = false; $('rutForm').hidden = true; $('confirmBox').hidden = true;
+      $('modeBox').hidden = false; $('modeOptions').hidden = true; $('modeTitle').textContent = 'Agregar un compañero sin perder tu avance';
+      $('partnerBox').hidden = false; $('partnerForm').hidden = false; $('partnerConfirm').hidden = true;
+      $('partnerRut').value = ''; $('gateError').textContent = ''; $('partnerRut').focus();
+    });
 
     function start(attempt, chosenPartner) {
       syncTeam(attempt, chosenPartner);
@@ -300,8 +345,15 @@
       $('gate').hidden = true; $('app').hidden = false;
       $('topName').textContent = teamMembers.map(member => member.nombre).join(' + ');
       $('topCourse').textContent = `${teamMembers.length > 1 ? 'Trabajo en pareja · ' : 'Trabajo individual · '}${courseName(student.curso)} · Clase 6`;
-      $('teamBanner').hidden = teamMembers.length < 2;
-      if (teamMembers.length > 1) $('teamBanner').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. Lo que uno guarde o entregue quedará para ambos.`;
+      $('teamBanner').hidden = delivered;
+      if (teamMembers.length > 1) {
+        $('teamBanner').hidden = false;
+        $('teamText').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. Lo que uno guarde o entregue quedará para ambos.`;
+        $('addPartner').hidden = true;
+      } else if (!delivered) {
+        $('teamText').innerHTML = '<b>Trabajo individual.</b> Si prefieres continuar en pareja, puedes agregar a un compañero sin perder lo que ya escribiste.';
+        $('addPartner').hidden = false;
+      }
       $('libreta').innerHTML = R.LIBRETA;
       draw();
       if (dirty) scheduleSave(200);

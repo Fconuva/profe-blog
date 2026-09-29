@@ -121,8 +121,8 @@ expect(api.includes("'4ETP': 'electronica'"), 'La API no dirige 4°E a su versi�
 expect(Array.isArray(ECAMPOS.activity.requiredForSubmit) && ECAMPOS.activity.requiredForSubmit.length === 20, 'Electrónica no define las 20 partes mínimas para entregar.');
 expect(api.includes('requiredForSubmit') && estudente.includes('requiredForSubmit'), 'El mínimo obligatorio no se valida en cliente y servidor.');
 ['Obligatorio para entregar:', 'páginas 6, 8, 9 y 11', 'Ampliación', 'de ${REQUIRED_TOTAL} mínimos'].forEach(token => expect((edeck + estudente + erenderer).includes(token), `Electrónica: falta la instrucción de trabajo «${token}».`));
-['supportsPairs: true', '/_claims', '/_teams', 'workMode', 'validatePair'].forEach(token => expect(api.includes(token), `Electrónica: la API de parejas no contiene ${token}.`));
-['id="pairMode"', 'id="partnerRut"', 'validate-partner', 'Trabajo compartido:', 'Ambos compartirán el mismo borrador'].forEach(token => expect(estudente.includes(token), `Electrónica: la interfaz de parejas no contiene ${token}.`));
+['supportsPairs: true', '/_claims', '/_teams', '_pairBackups', 'workMode', 'validatePair', 'migratePair', 'join-pair'].forEach(token => expect(api.includes(token), `Electrónica: la API de parejas no contiene ${token}.`));
+['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'validate-partner', 'join-pair', 'Trabajo compartido:', 'sin perder lo que ya escribiste', 'Ambos compartirán el mismo borrador'].forEach(token => expect(estudente.includes(token), `Electrónica: la interfaz de parejas no contiene ${token}.`));
 ['individualmente o con un compañero', 'Trabajo individual o en pareja', 'ambos comparten el borrador y la entrega'].forEach(token => expect(edeck.includes(token), `Electrónica: la presentación no explica «${token}».`));
 expect(epanel.includes('Modalidad') && epanel.includes('Pareja con'), 'Electrónica: el panel docente no identifica las parejas.');
 expect(ROWS.filter(row => row[1] === 'PRUEBA').length === 3, 'Faltan las tres identidades ficticias para probar individual y pareja.');

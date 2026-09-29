@@ -9,6 +9,7 @@
 // Acciones (todas POST salvo admin-list):
 //   get-guia-state  { rut }            -> estudiante + intento guardado
 //   validate-partner { rut, partnerRut } -> valida una pareja opcional
+//   join-pair       { rut, partnerRut } -> conserva el borrador y lo comparte
 //   save            { rut, partnerRut?, answers } -> borrador individual o compartido
 //   submit          { rut, partnerRut?, answers } -> entrega final, escritura única
 //   admin-list      GET, Bearer token  -> nómina con estado (solo admins)
@@ -66,6 +67,8 @@ function body(req) {
 const publicStudent = student => ({ nombre: student.nombre, curso: student.curso, n: student.n });
 const studentKey = student => `${student.curso}/${student.n}`;
 const pairIdFor = (first, second) => `pair_${[first, second].map(student => `${student.curso}_${String(student.n).padStart(3, '0')}`).sort().join('__')}`;
+const soloIdFor = student => `solo_${student.curso}_${String(student.n).padStart(3, '0')}`;
+const isSubmitted = value => !!(value && (value.completada === true || value.submitted === true));
 
 function visibleError(message, status = 400) {
   return Object.assign(new Error(message), { status, visible: true });
@@ -138,32 +141,103 @@ async function validatePair(db, version, student, partnerRut) {
   if (studentKey(partner) === studentKey(student)) throw visibleError('El compañero debe ser otra persona.');
   const pairId = pairIdFor(student, partner);
   const [firstState, secondState] = await Promise.all([readWorkState(db, version, student), readWorkState(db, version, partner)]);
-  for (const state of [firstState, secondState]) {
-    if (state.claim && state.claim !== pairId) throw visibleError('Uno de los integrantes ya comenzó otro informe. Debe continuar ese trabajo.', 409);
-    if (state.value && !(state.mode === 'pair' && state.claim === pairId)) throw visibleError('Uno de los integrantes ya comenzó otro informe. Debe continuar ese trabajo.', 409);
+  for (const [index, state] of [firstState, secondState].entries()) {
+    const member = index === 0 ? student : partner;
+    const allowedClaim = !state.claim || state.claim === pairId || state.claim === soloIdFor(member);
+    if (!allowedClaim) throw visibleError('Uno de los integrantes ya trabaja con otra pareja. Debe continuar ese informe.', 409);
+    if (isSubmitted(state.value) && !(state.mode === 'pair' && state.claim === pairId)) {
+      throw visibleError('Uno de los integrantes ya entregó su informe individual. El profesor debe reabrirlo antes de formar la pareja.', 409);
+    }
   }
   const members = [student, partner].sort((a, b) => studentKey(a).localeCompare(studentKey(b)));
   return { partner, pairId, members };
 }
 
-async function claimPair(db, version, pair) {
-  const ref = db.ref(`${version.base}/_claims`);
-  let conflict = false;
-  const result = await ref.transaction(current => {
-    const first = claimAt(current, pair.members[0]);
-    const second = claimAt(current, pair.members[1]);
-    if ((first && first !== pair.pairId) || (second && second !== pair.pairId)) {
-      conflict = true;
+function individualAt(data, student) {
+  return data && data[student.curso] ? data[student.curso][student.n] : null;
+}
+
+function mergePairDraft(version, pair, current, primary) {
+  const existing = current._teams && current._teams[pair.pairId];
+  const ordered = [primary, ...pair.members.filter(member => studentKey(member) !== studentKey(primary))];
+  const sources = [existing, ...ordered.map(member => individualAt(current, member))].filter(Boolean);
+  const answers = {};
+  for (const source of sources) {
+    const clean = version.campos.sanitize(source.answers);
+    for (const question of version.campos.questions) {
+      if (!answers[question.id] && clean[question.id]) answers[question.id] = clean[question.id];
+    }
+  }
+  const { score, total } = version.campos.progress(answers);
+  const timestamps = sources.map(source => Number(source.createdAt || 0)).filter(Boolean);
+  const now = Date.now();
+  return {
+    sessionId: version.campos.activity.sessionId,
+    curso: pair.members[0].curso,
+    n: pair.members[0].n,
+    nombre: pair.members.map(member => member.nombre).join(' y '),
+    workMode: 'pair',
+    team: pair.members.map(publicStudent),
+    answers,
+    score,
+    total,
+    status: 'draft',
+    submitted: false,
+    completada: false,
+    createdAt: timestamps.length ? Math.min(...timestamps) : now,
+    updatedAt: now,
+    pairedAt: existing && existing.pairedAt ? existing.pairedAt : now,
+    saves: sources.reduce((sum, source) => sum + Number(source.saves || 0), 0)
+  };
+}
+
+// La conversión individual -> pareja es una sola transacción. Los borradores
+// individuales quedan intactos como respaldo y sus campos se combinan.
+async function migratePair(db, version, pair, primary) {
+  const ref = db.ref(version.base);
+  let conflictMessage = '';
+  const result = await ref.transaction(value => {
+    conflictMessage = '';
+    const current = value || {};
+    const claims = current._claims || {};
+    for (const member of pair.members) {
+      const claim = claimAt(claims, member);
+      if (claim && claim !== pair.pairId && claim !== soloIdFor(member)) {
+        conflictMessage = 'Uno de los integrantes ya trabaja con otra pareja. Debe continuar ese informe.';
+        return;
+      }
+      if (isSubmitted(individualAt(current, member))) {
+        conflictMessage = 'Uno de los integrantes ya entregó su informe individual. El profesor debe reabrirlo antes de formar la pareja.';
+        return;
+      }
+    }
+    const existing = current._teams && current._teams[pair.pairId];
+    if (isSubmitted(existing)) {
+      conflictMessage = 'El informe de esta pareja ya fue entregado.';
       return;
     }
-    return withClaim(withClaim(current, pair.members[0], pair.pairId), pair.members[1], pair.pairId);
+
+    const next = { ...current };
+    next._claims = withClaim(withClaim(claims, pair.members[0], pair.pairId), pair.members[1], pair.pairId);
+    next._teams = { ...(current._teams || {}), [pair.pairId]: mergePairDraft(version, pair, current, primary) };
+    const backups = { ...((current._pairBackups && current._pairBackups[pair.pairId]) || {}) };
+    for (const member of pair.members) {
+      const individual = individualAt(current, member);
+      const key = `${member.curso}_${String(member.n).padStart(3, '0')}`;
+      if (individual && !backups[key]) backups[key] = individual;
+    }
+    next._pairBackups = { ...(current._pairBackups || {}), [pair.pairId]: backups };
+    return next;
   }, undefined, false);
-  if (!result.committed || conflict) throw visibleError('La pareja no pudo reservarse porque uno de los integrantes comenzó otro informe.', 409);
+  if (!result.committed) throw visibleError(conflictMessage || 'No se pudo formar la pareja. Recarga e inténtalo otra vez.', 409);
+  const pairRef = db.ref(`${version.base}/_teams/${pair.pairId}`);
+  const snap = await pairRef.once('value');
+  return { mode: 'pair', claim: pair.pairId, ref: pairRef, value: snap.val(), members: pair.members };
 }
 
 async function claimIndividual(db, version, student) {
   if (!version.supportsPairs) return;
-  const soloId = `solo_${student.curso}_${String(student.n).padStart(3, '0')}`;
+  const soloId = soloIdFor(student);
   const ref = db.ref(`${version.base}/_claims/${student.curso}/${student.n}`);
   let conflict = false;
   const result = await ref.transaction(current => {
@@ -182,16 +256,13 @@ async function workTarget(input, student, db, version) {
     if (!members) throw visibleError('No se pudo recuperar la pareja. Vuelve a ingresar y confirma al compañero.', 409);
     return { ...current, members };
   }
-  if (current.claim && current.claim.startsWith('solo_')) return { ...current, members: [student] };
   if (input.partnerRut) {
     const pair = await validatePair(db, version, student, input.partnerRut);
-    await claimPair(db, version, pair);
-    const ref = db.ref(`${version.base}/_teams/${pair.pairId}`);
-    const snap = await ref.once('value');
-    return { mode: 'pair', claim: pair.pairId, ref, value: snap.val(), members: pair.members };
+    return await migratePair(db, version, pair, student);
   }
+  if (current.claim && current.claim.startsWith('solo_')) return { ...current, members: [student] };
   await claimIndividual(db, version, student);
-  return { ...current, claim: `solo_${student.curso}_${String(student.n).padStart(3, '0')}`, members: [student] };
+  return { ...current, claim: soloIdFor(student), members: [student] };
 }
 
 async function handleState(req, res, db, version) {
@@ -209,6 +280,16 @@ async function handleValidatePartner(req, res, db, version) {
   if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
   const pair = await validatePair(db, version, student, input.partnerRut);
   return res.status(200).json({ ok: true, partner: publicStudent(pair.partner) });
+}
+
+async function handleJoinPair(req, res, db, version) {
+  const input = body(req);
+  const student = findStudent(input.rut);
+  if (!student) return res.status(400).json({ error: 'El RUT no pertenece a la nómina de esta actividad.' });
+  if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
+  const pair = await validatePair(db, version, student, input.partnerRut);
+  const target = await migratePair(db, version, pair, student);
+  return res.status(200).json({ ok: true, attempt: publicAttempt(target.value, version) });
 }
 
 async function handleSave(req, res, db, version, submit) {
@@ -320,6 +401,7 @@ module.exports = async function informeTecnico(req, res, { admin, db }) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no disponible.' });
     if (action === 'get-guia-state') return await handleState(req, res, db, version);
     if (action === 'validate-partner') return await handleValidatePartner(req, res, db, version);
+    if (action === 'join-pair') return await handleJoinPair(req, res, db, version);
     if (action === 'save') return await handleSave(req, res, db, version, false);
     if (action === 'submit') return await handleSave(req, res, db, version, true);
     if (action === 'admin-reset') return await handleAdminReset(req, res, admin, db, version);

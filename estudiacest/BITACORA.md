@@ -8,6 +8,39 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (tarde), /termas: jerarquía tipográfica y responsive publicadas
+
+- Se reemplazó la dupla Fraunces/Plus Jakarta Sans por una sola familia Plus
+  Jakarta Sans alojada localmente. Títulos, etiquetas, ayudas, controles y pase
+  de abordar quedaron con una escala más legible; el coral del CTA se oscureció
+  y alcanza contraste AA de 4,84:1 con texto blanco.
+- El hero ahora concentra marca, destino, explicación breve y acción. La fecha,
+  el estado en vivo y los conteos pasaron a una franja separada. Los números de
+  paso se integraron a cada título y las leyendas de las imágenes salieron de la
+  fotografía para mantener su lectura en celular.
+- Se agregaron recortes móviles 4:3 para las tres escenas, un escudo CEST de
+  4,3 KB y la fuente WOFF2 local. El escudo anterior descargaba 679 KB dos veces.
+  También se quitó la animación continua del recurso LCP; se conservan el vapor,
+  los estados en vivo, el destello único y la retroalimentación de los asientos,
+  todos reducidos por `prefers-reduced-motion`.
+- No cambiaron la API, los nombres ni el orden de los campos, la validación ni
+  los datos guardados. El flujo ficticio completo se probó en 320, 390, 1440 y
+  3840 px: 45 asientos, selección, comida y pase final, sin errores de consola
+  ni desborde. `npm run build` verificó 294 recursos críticos.
+- Lighthouse móvil en producción: rendimiento 99, accesibilidad 100, buenas
+  prácticas 100, LCP 2,0 s, CLS 0, TBT 0 ms y 183 KiB transferidos. El informe
+  quedó completo; la CLI solo informó `EPERM` al limpiar su carpeta temporal de
+  Windows.
+- Commit `84e2b531` en `origin/main`. Despliegue
+  `dpl_JDTXpo3pwjoiCNEC6cRvv2k6niq9`, estado `READY`, con alias en
+  `www.estudiacest.com`.
+- En producción, el HTML y los cinco recursos nuevos coinciden en bytes y
+  SHA-256 con la fuente local. `/termas` conserva `noindex, nofollow`; portada,
+  PAES, NM4, estudiantes y el admin de termas responden 200. La lectura real
+  mostró 0 asistentes y 45 asientos libres. No se escribió ningún dato.
+
+---
+
 ## 2026-09-29 (tarde), /termas: ambientación con imágenes IA publicada
 
 - El encabezado dejó la ilustración SVG embebida y ahora usa una escena termal

@@ -956,6 +956,9 @@ const SALAS = require('./_salas.js');
 // Nombre visible, curso y programa de los demás, para ranking y arena: el
 // navegador ya no lee el nodo `estudiantes` (trae RUT, correo y teléfono).
 const PERFILES = require('./_perfiles-publicos.js');
+// Inscripción docente del paseo a las Termas de Panimávida (/termas). Mismo
+// motivo que SALAS: no quedan funciones libres en el plan.
+const TERMAS = require('./_termas.js');
 
 module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', resolveAllowedOrigin(req));
@@ -975,6 +978,7 @@ module.exports = async (req, res) => {
         if (action.startsWith('personal-guided-')) return await handlePersonalGuided(req, res, action);
         if (action.startsWith('salas-')) return await SALAS.manejar(req, res, action.slice('salas-'.length), db, auth);
         if (action === 'perfiles-publicos') return await PERFILES.manejar(req, res, db, auth);
+        if (action.startsWith('termas-')) return await TERMAS.manejar(req, res, action.slice('termas-'.length), db, auth);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
 
         // admin-login no requiere token previo

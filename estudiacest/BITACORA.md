@@ -8,6 +8,26 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29, 4°D TP: taller accesible desde la portada pública
+
+Se trasladó el acceso principal al taller de productos escritos desde el inicio
+de la carpeta del estudiante a una tarjeta destacada en la portada pública
+`/4dtp/`, antes del ingreso. La tarjeta abre
+`/4dtp/taller-productos-escritos/?slide=1` sin RUN ni inicio de sesión. Se conserva
+el enlace de consulta junto al editor de Textos y todos los demás destinos.
+
+- Archivos: `4dtp/index.html` y `4dtp/styles.css`.
+- Auditoría del anuario y build completos aprobados; 261 recursos críticos.
+- Navegador local y público: acceso sin sesión, apertura en 1/10, avance y
+  regreso al inicio; sin errores de consola ni solicitudes fallidas. Portada
+  sin desborde a 390, 1440 y 3840 píxeles CSS, con tarjeta dentro del ancho.
+- HTML, CSS y presentación públicos: HTTP 200 y SHA-256 idéntico al local.
+  Portadas PAES, NM3, NM4, 3ATP y Estudiantes: HTTP 200.
+- Implementación: `7ef76ec5`. Despliegue seguro:
+  `dpl_EFDVWbutBycHt9ZLdmWPx7FM2Cie`, estado READY y alias público verificado.
+
+---
+
 ## 2026-09-29, NM4 Clase 6: versión propia para 4°E Electrónica
 
 Se creó una tercera versión completa de la tarea «Escribir en el trabajo: el

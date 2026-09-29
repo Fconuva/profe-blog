@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (tarde), /termas: cualquier correo, teléfono y contacto de emergencia
+
+Cambios por decisión de Francisco, sobre la entrada de abajo:
+
+- Se acepta **cualquier correo**. Ya no se exige `@salesianostalca.cl`, así que
+  ese filtro ya no deja fuera a los estudiantes. Lo que queda para depurar es
+  «Quitar» en el admin.
+- Todos deben entregar nombres, apellidos, correo, teléfono y contacto de
+  emergencia (nombre y parentesco, más teléfono), también quienes marcan «No
+  asisto». El servidor valida cada campo: el teléfono debe tener entre 8 y 15
+  dígitos.
+- Esos datos solo salen por el admin, en la tabla y el CSV, y por `termas-mia`
+  para quien tiene la llave de su propia inscripción. El mapa público sigue
+  mostrando solo el nombre corto de cada asiento.
+- Se agregó la fecha: **sábado 14 de noviembre**. Francisco la confirmó el mismo
+  29-sep en el chat de la directiva.
+- Validado con 8 casos de API contra el nodo de prueba, ya borrado. En el
+  navegador, iPhone 13, 320 px y escritorio quedaron sin errores ni desborde.
+  En producción se hizo un recorrido real con un gmail ficticio: se guardaron el
+  teléfono y el contacto de emergencia, y después se borró.
+- `npm run build` en verde. Commit `7b900732`, deploy
+  `dpl_Be2jq9MPzWNqTiUobSBBHyrugHaH`.
+- **Sigue pendiente** el detalle del desayuno y la once. La cotización no está
+  en el correo del colegio ni en WhatsApp. Las dos imágenes del 25-sep en el
+  chat de la directiva eran otro documento.
+
+---
+
 ## 2026-09-29, /termas: inscripción docente al paseo a las Termas de Panimávida
 
 Página interna para docentes, no para estudiantes: `estudiacest.com/termas`.

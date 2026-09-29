@@ -61,6 +61,11 @@ expect(!/req\.query\.rut|query\.rut/.test(api), 'La API recibe el RUN por la URL
 expect(!/localStorage/.test(student), 'La página del estudiante usa localStorage en tablets compartidas.');
 expect(/method: 'POST'/.test(student) && !/\?rut=|&rut=/.test(student), 'La página envía el RUN fuera del cuerpo POST.');
 expect(panel.includes('noindex') && panel.includes('Authorization'), 'El panel docente no está protegido.');
+['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'validate-partner', 'join-pair', 'syncFromServer', 'changedFields', 'sincronización está activa'].forEach(token => expect(student.includes(token), `4°C: la interfaz de parejas no contiene ${token}.`));
+['Registrar una pareja de 4°C manualmente', 'id="pairFirst"', 'id="pairSecond"', "call('admin-pair'", 'Modalidad', 'Pareja con'].forEach(token => expect(panel.includes(token), `4°C: el panel de parejas no contiene ${token}.`));
+['Elige modalidad', 'Trabajo individual o en pareja', 'ambos comparten el borrador'].forEach(token => expect(deck.includes(token), `4°C: la presentación no explica «${token}».`));
+expect(renderer.includes('workMode') && renderer.includes('Inspectores o inspectoras'), '4°C: el informe no presenta correctamente a ambos integrantes.');
+expect(/electrica:[\s\S]*?supportsPairs: true[\s\S]*?pairCourses: \['4CTP', 'PRUEBA'\]/.test(api), 'La API no limita las parejas eléctricas a 4°C y PRUEBA.');
 
 // Recursos.
 ['f1-torres-charrua.jpg', 'f2-subestacion-charrua.jpg', 'f3-camino-plantacion.jpg', 'f4-vivienda-liviana.jpg', 'motivacion-casa-torre.jpg', 'qr-informe.svg']

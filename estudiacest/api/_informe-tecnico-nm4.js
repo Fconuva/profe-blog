@@ -28,7 +28,9 @@ const VERSIONS = {
     base: 'plataforma_nm4/informe_tecnico_2026',
     cursos: ['4CTP', '4ETP', 'PRUEBA'],
     nombre: 'informe eléctrico (4°C y 4°E)',
-    ruta: '/nm4/u3-clase6-informe-tecnico/informe/'
+    ruta: '/nm4/u3-clase6-informe-tecnico/informe/',
+    supportsPairs: true,
+    pairCourses: ['4CTP', 'PRUEBA']
   },
   mecanica: {
     campos: require('../nm4/u3-clase6-informe-mecanica/informe/campos.js'),
@@ -70,6 +72,7 @@ const studentKey = student => `${student.curso}/${student.n}`;
 const pairIdFor = (first, second) => `pair_${[first, second].map(student => `${student.curso}_${String(student.n).padStart(3, '0')}`).sort().join('__')}`;
 const soloIdFor = student => `solo_${student.curso}_${String(student.n).padStart(3, '0')}`;
 const isSubmitted = value => !!(value && (value.completada === true || value.submitted === true));
+const supportsPairsFor = (version, student) => version.supportsPairs === true && (!version.pairCourses || version.pairCourses.includes(student.curso));
 
 function visibleError(message, status = 400) {
   return Object.assign(new Error(message), { status, visible: true });
@@ -121,7 +124,7 @@ function publicAttempt(value, version) {
 
 async function readWorkState(db, version, student) {
   const individualRef = db.ref(`${version.base}/${student.curso}/${student.n}`);
-  if (!version.supportsPairs) {
+  if (!supportsPairsFor(version, student)) {
     const snap = await individualRef.once('value');
     return { mode: 'individual', claim: null, ref: individualRef, value: snap.val() };
   }
@@ -137,7 +140,7 @@ async function readWorkState(db, version, student) {
 }
 
 async function validatePairStudents(db, version, student, partner) {
-  if (!version.supportsPairs) throw visibleError('Esta versión del informe se realiza individualmente.');
+  if (!supportsPairsFor(version, student) || !supportsPairsFor(version, partner)) throw visibleError('Este curso realiza esta versión del informe individualmente.');
   if (!version.cursos.includes(partner.curso) || partner.curso !== student.curso) throw visibleError('El compañero debe pertenecer al mismo curso.', 403);
   if (studentKey(partner) === studentKey(student)) throw visibleError('El compañero debe ser otra persona.');
   const pairId = pairIdFor(student, partner);
@@ -245,7 +248,7 @@ async function migratePair(db, version, pair, primary) {
 }
 
 async function claimIndividual(db, version, student) {
-  if (!version.supportsPairs) return;
+  if (!supportsPairsFor(version, student)) return;
   const soloId = soloIdFor(student);
   const ref = db.ref(`${version.base}/_claims/${student.curso}/${student.n}`);
   let conflict = false;
@@ -258,7 +261,7 @@ async function claimIndividual(db, version, student) {
 
 async function workTarget(input, student, db, version) {
   const current = await readWorkState(db, version, student);
-  if (!version.supportsPairs) return { ...current, members: [student] };
+  if (!supportsPairsFor(version, student)) return { ...current, members: [student] };
   if (current.mode === 'pair') {
     let members = current.value && Array.isArray(current.value.team) ? current.value.team : null;
     if (!members && input.partnerRut) members = (await validatePair(db, version, student, input.partnerRut)).members;
@@ -279,7 +282,7 @@ async function handleState(req, res, db, version) {
   if (!student) return res.status(404).json({ error: 'Ese RUT no está en las nóminas de 4° medio. Revísalo o avisa al profesor.' });
   if (!version.cursos.includes(student.curso)) return wrongCourse(res, student, version);
   const state = await readWorkState(db, version, student);
-  return res.status(200).json({ ok: true, student: publicStudent(student), attempt: publicAttempt(state.value, version), supportsPairs: version.supportsPairs === true });
+  return res.status(200).json({ ok: true, student: publicStudent(student), attempt: publicAttempt(state.value, version), supportsPairs: supportsPairsFor(version, student) });
 }
 
 async function handleValidatePartner(req, res, db, version) {
@@ -419,7 +422,7 @@ async function handleAdminPair(req, res, admin, db, version) {
   const secondN = Number(input.secondN);
   const first = ROSTER.find(item => item.curso === curso && item.n === firstN);
   const second = ROSTER.find(item => item.curso === curso && item.n === secondN);
-  if (!first || !second || !version.cursos.includes(curso)) return res.status(404).json({ error: 'No se encontraron ambos estudiantes en la nómina de esta actividad.' });
+  if (!first || !second || !version.cursos.includes(curso) || !supportsPairsFor(version, first) || !supportsPairsFor(version, second)) return res.status(404).json({ error: 'No se encontraron ambos estudiantes en un curso habilitado para parejas.' });
   const pair = await validatePairStudents(db, version, first, second);
   const target = await migratePair(db, version, pair, first);
   return res.status(200).json({

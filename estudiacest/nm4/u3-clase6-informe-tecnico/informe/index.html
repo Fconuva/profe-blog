@@ -14,6 +14,7 @@
   <link rel="stylesheet" href="informe.css">
   <style>
     *{box-sizing:border-box}
+    html,body{overflow-x:hidden}
     body{margin:0;background:#e3e9ee;color:var(--ink);font-family:Inter,Arial,sans-serif}
     button{font:inherit;cursor:pointer}
     :focus-visible{outline:4px solid #f6c84f;outline-offset:2px}
@@ -35,6 +36,13 @@
     .who{padding:14px;border-radius:8px;background:var(--soft);color:var(--navy);font-size:18px;font-weight:800;text-align:center}
     .who small{display:block;color:var(--muted);font-size:14px;font-weight:600}
     .row{display:flex;gap:10px}.row .btn{flex:1}
+    .mode-title{margin:0 0 10px!important;color:var(--navy)!important;font-weight:900;text-align:center}
+    .mode-options{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .mode-options .btn{min-height:64px;padding:10px}
+    .partner-box{margin-top:14px;padding:14px;border:1.5px solid var(--line);border-radius:9px;background:var(--soft)}
+    .partner-box p{margin:0 0 10px;font-size:13px}
+    .mode-back{width:100%;margin-top:10px;background:transparent!important;border:0!important;color:var(--teal)!important}
+    .team-action{margin-left:10px;padding:7px 11px;min-height:0;font-size:12.5px}
 
     /* Barra superior */
     .top{position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;align-items:center;gap:10px;padding:9px 14px;background:var(--navy-deep);color:#fff;box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -106,7 +114,7 @@
   <!-- Ingreso con RUT -->
   <section class="gate" id="gate">
     <div class="gate-card">
-      <p style="margin:0 0 6px;color:var(--teal);font-weight:900;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase">NM4 · Clase 6 · Escribir en el trabajo</p>
+      <p style="margin:0 0 6px;color:var(--teal);font-weight:900;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase">NM4 · Clase 6 · 4°C Electricidad</p>
       <h1>Informe técnico de inspección</h1>
       <p>Completa los recuadros amarillos. Tu avance se guarda automáticamente.</p>
       <form id="rutForm" novalidate>
@@ -117,6 +125,20 @@
       <div id="confirmBox" hidden>
         <p class="who" id="whoText"></p>
         <div class="row"><button class="btn ghost" type="button" id="notMe">No soy yo</button><button class="btn" type="button" id="yesMe">Sí, soy yo</button></div>
+      </div>
+      <div id="modeBox" hidden>
+        <p class="mode-title" id="modeTitle">¿Cómo realizarán el informe?</p>
+        <div class="mode-options" id="modeOptions"><button class="btn ghost" type="button" id="soloMode">👤 Individual</button><button class="btn" type="button" id="pairMode">👥 En pareja</button></div>
+        <div class="partner-box" id="partnerBox" hidden>
+          <p>Escribe el RUT de tu compañero o compañera de 4°C. Ambos compartirán el mismo borrador y la misma entrega.</p>
+          <form id="partnerForm" novalidate>
+            <label for="partnerRut">RUT del compañero</label>
+            <input id="partnerRut" autocomplete="off" inputmode="text" placeholder="12.345.678-9" maxlength="12" required>
+            <button class="btn block" id="partnerButton" type="submit">Buscar compañero</button>
+          </form>
+          <div id="partnerConfirm" hidden><p class="who" id="partnerWho"></p><div class="row"><button class="btn ghost" type="button" id="changePartner">Cambiar</button><button class="btn" type="button" id="confirmPartner">Confirmar pareja</button></div></div>
+        </div>
+        <button class="btn mode-back" type="button" id="modeBack">Volver a mi identidad</button>
       </div>
       <p class="error" id="gateError" role="alert"></p>
       <p style="margin:14px 0 0;font-size:12.5px"><a href="/nm4/u3-clase6-informe-tecnico/" style="color:var(--teal)">Volver a la clase</a></p>
@@ -140,6 +162,7 @@
         <ol id="tocList"></ol>
       </nav>
       <main>
+        <p class="banner done" id="teamBanner" hidden><span id="teamText"></span><button class="btn team-action" type="button" id="addPartner" hidden>Agregar compañero</button></p>
         <p class="banner" id="banner">Escribe solo en los recuadros <b>amarillos</b>. Busca los datos en la <b>Libreta</b> y usa los textos listos como ejemplo. <b>Mínimo para entregar:</b> páginas 6, 9 y 11.</p>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
@@ -176,7 +199,7 @@
     const R = window.InformeTecnico;
     const activity = C.activity;
     const TOTAL = activity.questions.length;
-    const API = '/api/economista?modulo=informe-tecnico&action=';
+    const API = '/api/economista?modulo=informe-tecnico&version=electrica&action=';
     const KEY = 'informeNM4.rut';
     const $ = id => document.getElementById(id);
     const SECTION_PAGES = { portada: 'p1', resumen: 'p3', objetivos: 'p4', ficha: 'p6', fotos: 'p9', hallazgos: 'p11', conclusiones: 'p12', firma: 'p12' };
@@ -184,12 +207,21 @@
 
     let rut = '';
     let student = null;
+    let teamMembers = [];
+    let partnerRut = '';
+    let selectedPartner = null;
     let answers = {};
     let delivered = false;
     let submitting = false;
     let dirty = false;
     let timer = null;
     let saveQueue = Promise.resolve();
+    let returningToDraft = false;
+    let pairsAllowed = false;
+    let dirtyFields = new Set();
+    let lastRevision = 0;
+    let syncTimer = null;
+    let syncing = false;
 
     const courseName = c => String(c || '').replace(/^4([A-E])TP$/, '4°$1 TP');
     const post = async (action, payload) => {
@@ -198,8 +230,41 @@
       if (!response.ok) { const error = new Error(data.error || 'No se pudo conectar.'); error.status = response.status; error.data = data; throw error; }
       return data;
     };
-    const backupKey = () => student ? `informeNM4.draft.${student.curso}-${student.n}` : '';
+    const backupKey = () => student ? `informeNM4.draft.${(teamMembers.length ? teamMembers : [student]).map(member => `${member.curso}-${member.n}`).sort().join('.')}` : '';
     const setSave = (text, kind) => { const node = $('saveState'); node.textContent = text; node.className = 'save' + (kind ? ' ' + kind : ''); };
+    const reportStudent = () => ({ ...student, nombre: (teamMembers.length ? teamMembers : [student]).map(member => member.nombre).join(' y '), workMode: teamMembers.length > 1 ? 'pair' : 'individual' });
+    const syncTeam = (attempt, chosenPartner) => {
+      if (attempt && Array.isArray(attempt.team) && attempt.team.length > 1) teamMembers = attempt.team;
+      else if (chosenPartner) teamMembers = [student, chosenPartner].sort((a, b) => `${a.curso}-${a.n}`.localeCompare(`${b.curso}-${b.n}`));
+      else teamMembers = [student];
+    };
+    const payload = (answersValue, changedFields) => ({
+      rut,
+      partnerRut: teamMembers.length > 1 ? partnerRut : '',
+      answers: answersValue,
+      ...(changedFields === undefined ? {} : { changedFields })
+    });
+
+    function showTeamStatus() {
+      $('topName').textContent = teamMembers.map(member => member.nombre).join(' + ');
+      $('topCourse').textContent = `${teamMembers.length > 1 ? 'Trabajo en pareja · ' : 'Trabajo individual · '}${courseName(student.curso)} · Clase 6`;
+      $('teamBanner').hidden = delivered;
+      if (teamMembers.length > 1) {
+        $('teamBanner').hidden = false;
+        $('teamText').innerHTML = `<b>Trabajo compartido:</b> ${teamMembers.map(member => member.nombre).join(' y ')}. La sincronización está activa: los cambios guardados aparecen en ambos equipos en pocos segundos.`;
+        $('addPartner').hidden = true;
+      } else if (!delivered && pairsAllowed) {
+        $('teamText').innerHTML = '<b>Trabajo individual.</b> Si prefieres continuar en pareja, puedes agregar a un compañero sin perder lo que ya escribiste.';
+        $('addPartner').hidden = false;
+      } else {
+        $('teamBanner').hidden = true; $('addPartner').hidden = true;
+      }
+    }
+
+    function startLiveSync() {
+      clearInterval(syncTimer); syncTimer = null;
+      if (teamMembers.length > 1 && !delivered) syncTimer = setInterval(() => syncFromServer(), 2500);
+    }
 
     // ---------- Ingreso ----------
     $('rutForm').addEventListener('submit', async event => {
@@ -210,10 +275,13 @@
       $('rutButton').disabled = true; $('rutButton').textContent = 'Buscando…';
       try {
         const data = await post('get-guia-state', { rut: value });
-        rut = value; student = data.student;
+        rut = value; student = data.student; pairsAllowed = data.supportsPairs === true;
         $('whoText').innerHTML = `${student.nombre}<small>${courseName(student.curso)} · N.º ${student.n}</small>`;
         $('rutForm').hidden = true; $('confirmBox').hidden = false;
-        $('yesMe').onclick = () => start(data.attempt);
+        $('yesMe').onclick = () => {
+          if (data.attempt || !data.supportsPairs) start(data.attempt);
+          else { $('confirmBox').hidden = true; $('modeBox').hidden = false; }
+        };
       } catch (error) {
         if (error.status === 403 && error.data && error.data.ruta) { $('gateError').innerHTML = `${error.message} <a href="${error.data.ruta}">Ir a tu informe →</a>`; }
         else $('gateError').textContent = error.status === 404 || error.status === 403 ? error.message : 'No se pudo conectar. Revisa internet e inténtalo otra vez.';
@@ -221,29 +289,103 @@
         $('rutButton').disabled = false; $('rutButton').textContent = 'Entrar';
       }
     });
-    $('notMe').addEventListener('click', () => { rut = ''; student = null; $('confirmBox').hidden = true; $('rutForm').hidden = false; $('rut').value = ''; $('rut').focus(); });
+    function resetIdentity() {
+      rut = ''; student = null; teamMembers = []; partnerRut = ''; selectedPartner = null; returningToDraft = false; pairsAllowed = false;
+      clearInterval(syncTimer); syncTimer = null; dirtyFields.clear(); lastRevision = 0;
+      $('confirmBox').hidden = true; $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
+      $('rutForm').hidden = false; $('rut').value = ''; $('partnerRut').value = ''; $('gateError').textContent = ''; $('rut').focus();
+    }
+    $('notMe').addEventListener('click', resetIdentity);
+    function closePartnerChooser() {
+      returningToDraft = false;
+      $('modeBox').hidden = true; $('partnerBox').hidden = true; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false;
+      $('modeOptions').hidden = false; $('modeTitle').textContent = '¿Cómo realizarán el informe?';
+      $('gateError').textContent = ''; $('gate').hidden = true; $('app').hidden = false;
+    }
+    $('modeBack').addEventListener('click', () => {
+      if (returningToDraft) return closePartnerChooser();
+      $('modeBox').hidden = true; $('confirmBox').hidden = false; $('partnerBox').hidden = true; $('gateError').textContent = '';
+    });
+    $('soloMode').addEventListener('click', () => {
+      partnerRut = ''; selectedPartner = null;
+      if (returningToDraft) return closePartnerChooser();
+      start(null);
+    });
+    $('pairMode').addEventListener('click', () => { $('partnerBox').hidden = false; $('partnerForm').hidden = false; $('partnerConfirm').hidden = true; $('partnerRut').focus(); });
+    $('changePartner').addEventListener('click', () => { partnerRut = ''; selectedPartner = null; $('partnerConfirm').hidden = true; $('partnerForm').hidden = false; $('partnerRut').value = ''; $('partnerRut').focus(); });
+    $('partnerForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      $('gateError').textContent = '';
+      const value = $('partnerRut').value.trim();
+      if (value.replace(/[^0-9kK]/g, '').length < 7) { $('gateError').textContent = 'Escribe el RUT completo de tu compañero.'; return; }
+      $('partnerButton').disabled = true; $('partnerButton').textContent = 'Buscando…';
+      try {
+        const data = await post('validate-partner', { rut, partnerRut: value });
+        partnerRut = value; selectedPartner = data.partner;
+        $('partnerWho').innerHTML = `${selectedPartner.nombre}<small>${courseName(selectedPartner.curso)} · N.º ${selectedPartner.n}</small>`;
+        $('partnerForm').hidden = true; $('partnerConfirm').hidden = false;
+      } catch (error) {
+        $('gateError').textContent = error.message;
+      } finally {
+        $('partnerButton').disabled = false; $('partnerButton').textContent = 'Buscar compañero';
+      }
+    });
+    $('confirmPartner').addEventListener('click', async () => {
+      if (!selectedPartner || !partnerRut) return;
+      $('confirmPartner').disabled = true; $('confirmPartner').textContent = 'Formando pareja…';
+      $('gateError').textContent = '';
+      try {
+        const data = await post('join-pair', { rut, partnerRut });
+        returningToDraft = false;
+        $('modeBox').hidden = true; $('gate').hidden = true;
+        start(data.attempt, selectedPartner);
+      } catch (error) {
+        $('gateError').textContent = error.message;
+      } finally {
+        $('confirmPartner').disabled = false; $('confirmPartner').textContent = 'Confirmar pareja';
+      }
+    });
 
-    function start(attempt) {
+    $('addPartner').addEventListener('click', async () => {
+      clearTimeout(timer); timer = null;
+      if (dirty) await enqueueSave();
+      await saveQueue;
+      if (dirty) { setSave('No se pudo guardar · revisa internet', 'err'); return; }
+      returningToDraft = true; partnerRut = ''; selectedPartner = null;
+      $('app').hidden = true; $('gate').hidden = false; $('rutForm').hidden = true; $('confirmBox').hidden = true;
+      $('modeBox').hidden = false; $('modeOptions').hidden = true; $('modeTitle').textContent = 'Agregar un compañero sin perder tu avance';
+      $('partnerBox').hidden = false; $('partnerForm').hidden = false; $('partnerConfirm').hidden = true;
+      $('partnerRut').value = ''; $('gateError').textContent = ''; $('partnerRut').focus();
+    });
+
+    function start(attempt, chosenPartner) {
+      syncTeam(attempt, chosenPartner);
+      dirty = false; dirtyFields.clear();
+      lastRevision = Number((attempt && attempt.revision) || 0);
       try { sessionStorage.setItem(KEY, rut); } catch (_) {}
       answers = attempt ? attempt.answers : {};
       // Si el servidor no alcanzó a guardar lo último, se recupera la copia de esta pestaña.
       try {
         const local = JSON.parse(sessionStorage.getItem(backupKey()) || 'null');
-        if (local && (!attempt || Number(local.at) > Number(attempt.updatedAt || 0)) && !(attempt && attempt.completada)) { answers = C.sanitize(local.answers); dirty = true; }
+        if (local && (!attempt || Number(local.at) > Number(attempt.updatedAt || 0)) && !(attempt && attempt.completada)) {
+          answers = C.sanitize(local.answers); dirty = true;
+          const pending = Array.isArray(local.changedFields) ? local.changedFields : Object.keys(answers);
+          pending.filter(id => C.questions.some(question => question.id === id)).forEach(id => dirtyFields.add(id));
+        }
       } catch (_) {}
       delivered = !!(attempt && attempt.completada === true && attempt.submitted === true);
       $('gate').hidden = true; $('app').hidden = false;
-      $('topName').textContent = student.nombre;
-      $('topCourse').textContent = `${courseName(student.curso)} · Clase 6`;
+      showTeamStatus();
       $('libreta').innerHTML = R.LIBRETA;
       draw();
+      startLiveSync();
       if (dirty) scheduleSave(200);
       window.scrollTo(0, 0);
     }
 
     // ---------- Informe ----------
     function draw() {
-      R.render($('report'), { answers, editable: !delivered, student, assetBase: '../assets/' });
+      R.render($('report'), { answers, editable: !delivered, student: reportStudent(), assetBase: '../assets/' });
       $('report').querySelectorAll('[data-q]').forEach(control => {
         const handler = () => onChange(control.dataset.q, control.value);
         control.addEventListener('input', handler);
@@ -261,12 +403,12 @@
     function onChange(id, value) {
       if (delivered || submitting) return;
       answers[id] = value;
-      dirty = true;
-      try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers })); } catch (_) {}
+      dirtyFields.add(id); dirty = true;
+      try { sessionStorage.setItem(backupKey(), JSON.stringify({ at: Date.now(), answers, changedFields: [...dirtyFields] })); } catch (_) {}
       R.refreshBindings($('report'), answers);
       updateProgress();
       setSave('Sin guardar');
-      scheduleSave(1800);
+      scheduleSave(900);
     }
 
     function updateProgress() {
@@ -294,6 +436,51 @@
       $('submit').textContent = `Entregar informe (${score} de ${TOTAL})`;
     }
 
+    function applyServerAttempt(attempt, announce) {
+      if (!attempt) return false;
+      if (attempt.completada === true && attempt.submitted === true) { finish(attempt); return true; }
+      const wasPair = teamMembers.length > 1;
+      syncTeam(attempt);
+      const isPair = teamMembers.length > 1;
+      if (wasPair !== isPair) { showTeamStatus(); startLiveSync(); }
+      const remote = C.sanitize(attempt.answers);
+      const activeId = document.activeElement && document.activeElement.dataset ? document.activeElement.dataset.q : '';
+      let changed = false;
+      C.questions.forEach(question => {
+        const id = question.id;
+        if (dirtyFields.has(id) || activeId === id) return;
+        const next = remote[id] || '';
+        const previous = answers[id] || '';
+        if (next === previous) return;
+        if (next) answers[id] = next; else delete answers[id];
+        const control = $('report').querySelector(`[data-q="${id}"]`);
+        if (control) control.value = next;
+        changed = true;
+      });
+      const newer = Number(attempt.revision || 0) > lastRevision;
+      lastRevision = Math.max(lastRevision, Number(attempt.revision || 0));
+      if (changed) {
+        R.refreshBindings($('report'), answers);
+        updateProgress();
+        if (announce && newer && !dirty) {
+          const editor = attempt.lastEditor && attempt.lastEditor.nombre;
+          setSave(editor && editor !== student.nombre ? `Actualizado por ${editor}` : 'Trabajo compartido actualizado', 'ok');
+        }
+      }
+      return changed;
+    }
+
+    async function syncFromServer(force) {
+      if (syncing || delivered || !student || (!force && teamMembers.length < 2)) return;
+      syncing = true;
+      try {
+        const data = await post('get-guia-state', { rut });
+        applyServerAttempt(data.attempt, true);
+      } catch (_) {
+        // El autoguardado informa los errores de red; la sincronización vuelve a intentar sola.
+      } finally { syncing = false; }
+    }
+
     // ---------- Autoguardado en cola ----------
     function scheduleSave(delay) {
       clearTimeout(timer);
@@ -304,17 +491,26 @@
       saveQueue = saveQueue.then(saveDraft, saveDraft);
       return saveQueue;
     }
-    async function saveDraft() {
-      if (delivered || submitting || !dirty) return;
-      dirty = false;
+    async function saveDraft(force) {
+      if (delivered || (submitting && !force) || !dirty) return;
+      const sendingFields = [...dirtyFields];
+      if (!sendingFields.length) { dirty = false; return; }
+      sendingFields.forEach(id => dirtyFields.delete(id));
+      dirty = dirtyFields.size > 0;
       setSave('Guardando…');
       try {
-        const data = await post('save', { rut, answers: C.sanitize(answers) });
+        const data = await post('save', payload(C.sanitize(answers), sendingFields));
+        applyServerAttempt(data.attempt, false);
+        if (delivered) return data;
+        if (!dirty) { try { sessionStorage.removeItem(backupKey()); } catch (_) {} }
         if (!dirty) setSave('Guardado', 'ok');
         return data;
       } catch (error) {
-        if (error.status === 409) return reconcile();
-        dirty = true;
+        if (error.status === 409) {
+          sendingFields.forEach(id => dirtyFields.add(id)); dirty = true;
+          return reconcile();
+        }
+        sendingFields.forEach(id => dirtyFields.add(id)); dirty = true;
         setSave('Sin conexión · reintentando', 'err');
         scheduleSave(6000);
       }
@@ -329,10 +525,13 @@
       $('submit').disabled = true; $('submit').textContent = 'Entregando…';
       try {
         await saveQueue;
+        if (dirty) await saveDraft(true);
+        if (dirty) throw new Error('No se pudo guardar el último cambio. Revisa internet e inténtalo otra vez.');
+        await syncFromServer(true);
+        if (delivered) return;
         const clean = C.sanitize(answers);
-        const { score } = C.progress(clean);
         const now = Date.now();
-        const data = await post('submit', { rut, answers: clean, submitted: true, completada: true, submittedAt: now, completadaAt: now, score, total: TOTAL });
+        const data = await post('submit', { ...payload(clean, []), submitted: true, completada: true, submittedAt: now, completadaAt: now });
         const attempt = data.attempt;
         if (!attempt || attempt.completada !== true || attempt.submitted !== true) throw new Error('El servidor no confirmó la entrega.');
         finish(attempt);
@@ -351,16 +550,22 @@
         const data = await post('get-guia-state', { rut });
         const attempt = data.attempt;
         if (attempt && attempt.completada === true && attempt.submitted === true) return finish(attempt);
+        if (attempt) applyServerAttempt(attempt, true);
       } catch (error) {
         $('deliverError').textContent = 'No se pudo confirmar el estado. Recarga la página.';
       }
       submitting = false;
       $('submit').disabled = false;
+      if (dirty) scheduleSave(200);
     }
 
     function finish(attempt) {
       delivered = true; submitting = false; dirty = false;
+      dirtyFields.clear(); clearInterval(syncTimer); syncTimer = null;
+      syncTeam(attempt);
+      lastRevision = Number(attempt.revision || lastRevision || 0);
       answers = attempt.answers;
+      showTeamStatus();
       try { sessionStorage.removeItem(backupKey()); } catch (_) {}
       draw();
       $('doneText').textContent = `Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas. Aparece como Entregado en el panel del profesor. Entrega confirmada.`;
@@ -376,7 +581,7 @@
     document.addEventListener('keydown', event => { if (event.key === 'Escape') { lib(false); $('doneDialog').hidden = true; } });
     $('printBtn').addEventListener('click', () => window.print());
     $('logout').addEventListener('click', async () => {
-      clearTimeout(timer);
+      clearTimeout(timer); clearInterval(syncTimer); syncTimer = null;
       if (dirty && !delivered) { await enqueueSave(); await saveQueue; }
       try { sessionStorage.removeItem(KEY); } catch (_) {}
       location.reload();
@@ -390,7 +595,7 @@
       if (!saved) return;
       try {
         const data = await post('get-guia-state', { rut: saved });
-        rut = saved; student = data.student;
+        rut = saved; student = data.student; pairsAllowed = data.supportsPairs === true;
         start(data.attempt);
       } catch (error) {
         try { sessionStorage.removeItem(KEY); } catch (_) {}

@@ -160,6 +160,8 @@
     const field = makeField(ctx);
     const A = options.assetBase || '../assets/';
     const nombre = esc(ctx.student.nombre || '—');
+    const rol = ctx.student.workMode === 'pair' ? 'Inspectores o inspectoras' : 'Inspector o inspectora';
+    const rolFirma = ctx.student.workMode === 'pair' ? 'Inspectores o inspectoras en formación' : 'Inspector o inspectora en formación';
     const hallazgoRow = (k, v) => `<tr><th>${k}</th><td>${v}</td></tr>`;
 
     const pages = [
@@ -174,7 +176,7 @@
           <tr><th>Ubicación</th><td>Charrúa, comuna de Cabrero, Región del Biobío</td></tr>
           <tr><th>Inspección en terreno</th><td>Lunes 14 de septiembre de 2026</td></tr>
           <tr><th>Fecha de emisión</th><td>${field('emision', { inline: true })}</td></tr>
-          <tr><th>Inspector o inspectora</th><td>${nombre}</td></tr>
+          <tr><th>${rol}</th><td>${nombre}</td></tr>
           <tr><th>Especialidad</th><td>${field('especialidad', { inline: true })}</td></tr>
         </tbody></table>
         <p class="case-note">Caso de estudio con fines educativos. Sigue la estructura de un informe real de inspección bajo una línea de 500 kV; las empresas y los datos del sector son ficticios.</p>
@@ -388,7 +390,7 @@
         </ul>
         <h3>Firmas</h3>
         <div class="signs">
-          <div><p class="sign-line">${nombre}</p><p>Inspector o inspectora en formación<br>${bind('especialidad', 'Especialidad')} · ${esc(ctx.student.curso || '')}</p></div>
+          <div><p class="sign-line">${nombre}</p><p>${rolFirma}<br>${bind('especialidad', 'Especialidad')} · ${esc(ctx.student.curso || '')}</p></div>
           <div><p class="sign-line">&nbsp;</p><p>Revisión<br>Docente de Lengua y Literatura</p></div>
         </div>
         ${field('declaracion', { label: 'Declaración de veracidad' })}`),

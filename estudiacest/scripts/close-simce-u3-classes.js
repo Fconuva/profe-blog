@@ -45,20 +45,26 @@ function assertExistingSessions(sessions) {
   });
 }
 
-function buildAtomicUpdate(closedAt) {
+// Una sesión ya cerrada conserva su hora de cierre original.
+function closedAtFor(sessions, sessionId, closedAt) {
+  const existing = Number(sessions && sessions[sessionId] && sessions[sessionId].cerrada_at);
+  return existing > 0 ? existing : closedAt;
+}
+
+function buildAtomicUpdate(closedAt, sessions) {
   const update = {};
   SESSION_IDS.forEach(sessionId => {
-    Object.entries(desiredSessionFields(closedAt)).forEach(([field, value]) => {
+    Object.entries(desiredSessionFields(closedAtFor(sessions, sessionId, closedAt))).forEach(([field, value]) => {
       update[`sesiones/${sessionId}/${field}`] = value;
     });
   });
   return update;
 }
 
-function assertAppliedState(sessions, closedAt) {
+function assertAppliedState(sessions, expectedClosedAt) {
   assertExistingSessions(sessions);
   SESSION_IDS.forEach(sessionId => {
-    Object.entries(desiredSessionFields(closedAt)).forEach(([field, expected]) => {
+    Object.entries(desiredSessionFields(expectedClosedAt[sessionId])).forEach(([field, expected]) => {
       const actual = sessions[sessionId][field];
       const normalized = actual === undefined ? null : actual;
       if (stableStringify(normalized) !== stableStringify(expected)) {
@@ -81,7 +87,7 @@ function summarize(sessions, apply, closedAt) {
         excepciones: Object.keys(session.excepciones_desbloqueo || {}).length
       };
     }),
-    atomicPaths: Object.keys(buildAtomicUpdate(closedAt)).length
+    atomicPaths: Object.keys(buildAtomicUpdate(closedAt, sessions)).length
   };
 }
 
@@ -104,9 +110,10 @@ async function main() {
     const backup = Object.fromEntries(SESSION_IDS.map(sessionId => [sessionId, sessions[sessionId]]));
     fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2), 'utf8');
 
-    await updatePlatform(buildAtomicUpdate(closedAt));
+    const expectedClosedAt = Object.fromEntries(SESSION_IDS.map(sessionId => [sessionId, closedAtFor(sessions, sessionId, closedAt)]));
+    await updatePlatform(buildAtomicUpdate(closedAt, sessions));
     const verified = await readPlatform();
-    assertAppliedState(verified.sesiones || {}, closedAt);
+    assertAppliedState(verified.sesiones || {}, expectedClosedAt);
     console.log(JSON.stringify({ applied: true, verifiedSessions: SESSION_IDS.length, backupPath }, null, 2));
   } finally {
     await closeFirebase();

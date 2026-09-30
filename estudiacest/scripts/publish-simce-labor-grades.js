@@ -123,6 +123,8 @@ function buildPublication(source, publishedAt, expectedStudents) {
       modelVersion: MODEL_VERSION,
       publishedAt
     };
+    // Firebase no guarda valores null: una clase pendiente se publica sin `grade`.
+    if (grade === null) delete records[pair].grade;
     stats.grades[grade === null ? 'pendiente' : grade] = (stats.grades[grade === null ? 'pendiente' : grade] || 0) + 1;
     stats.statuses[status.code] = (stats.statuses[status.code] || 0) + 1;
     if (adjustedForSimilarity) stats.adjusted += 1;
@@ -157,10 +159,11 @@ function changesAgainst(currentRoot, records) {
     const [uid, sessionId] = pair.split('/');
     const before = currentRoot[uid] && currentRoot[uid][sessionId];
     const beforeGrade = before && before.grade !== undefined ? before.grade : null;
+    const afterGrade = record.grade !== undefined ? record.grade : null;
     if (!before) changes.created += 1;
-    else if (beforeGrade === record.grade) changes.sameGrade += 1;
-    else if (beforeGrade === null || record.grade === null) changes.pendingChanged += 1;
-    else if (Number(beforeGrade) < record.grade) changes.gradeUp += 1;
+    else if (beforeGrade === afterGrade) changes.sameGrade += 1;
+    else if (beforeGrade === null || afterGrade === null) changes.pendingChanged += 1;
+    else if (Number(beforeGrade) < afterGrade) changes.gradeUp += 1;
     else changes.gradeDown += 1;
   });
   return changes;

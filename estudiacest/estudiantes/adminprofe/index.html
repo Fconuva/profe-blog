@@ -552,6 +552,7 @@ const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LO
 const db=firebase.database();
 const BASE='plataforma_estudiantes';
 const STATIC_SESSION_FALLBACKS={
+'sesion-u3-11':{titulo:'Unidad 3 · Clase 11 — Evidencia en dos tipos de texto',descripcion:'Afirmación, evidencia y explicación en un microcuento y una columna de opinión.',orden:311,programa:'simce',activa:true,resultados_visibles:false,retroalimentacion_visible:false,notas_evaluadas:false,formativa:true,formato_panel:'evidencia-dos-textos',panel_unidad:'u3',panel_seccion:'plan',panel_orden:11,fecha_aplicacion:'2026-09-30',link_guia:'/estudiantes/guia-u3-s11-evidencia-dos-textos.html',prefer_guia:true,asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}},
 'sesion-u3-10':{titulo:'Unidad 3 · Clase 10 — Crónica y carta',descripcion:'Dos géneros que mezclan relato y opinión, con autor que se deja ver.',orden:310,programa:'simce',activa:true,resultados_visibles:false,retroalimentacion_visible:false,panel_unidad:'u3',panel_seccion:'plan',panel_orden:10,fecha_aplicacion:'2026-09-23',link_guia:'/estudiantes/guia-u3-s10-cronica-carta.html',prefer_guia:true,asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}},
 'sesion-u3-9':{titulo:'Unidad 3 · Clase 9 — Corrección del ensayo',descripcion:'Revisión pregunta por pregunta de lo que salió peor en el curso, con la respuesta correcta y su explicación.',orden:309,programa:'simce',activa:true,requiere_entrega:false,resultados_visibles:true,retroalimentacion_visible:true,panel_unidad:'u3',panel_seccion:'plan',panel_orden:9,fecha_aplicacion:'2026-09-09',link_guia:'/estudiantes/guia-u3-s9-correccion-ensayo.html',prefer_guia:true,asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}},
 'sesion-u3-8':{titulo:'Unidad 3 · Clase 8 — Ensayo parcial SIMCE',descripcion:'Siete textos de formatos diversos y 36 preguntas de Localizar, Interpretar y Reflexionar.',orden:308,programa:'simce',activa:true,resultados_visibles:false,retroalimentacion_visible:false,anticopia_activo:true,notas_evaluadas:true,envio_parcial:true,panel_unidad:'u3',panel_seccion:'plan',panel_orden:8,fecha_aplicacion:'2026-09-02',link_guia:'/estudiantes/guia-s8-evidencia-distractores.html',prefer_guia:true,asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}},
@@ -1138,6 +1139,7 @@ function renderOverview(){
     const activity=[];
     for(const[sesId,uidMap]of Object.entries(allResults)){
         if(!sessions[sesId]||!isMiSesion(sessions[sesId])) continue;
+        if(sessions[sesId].formativa===true) continue;
         for(const[uid,res]of Object.entries(uidMap)){
             if(!myStudents[uid]) continue;
             activity.push({
@@ -3391,7 +3393,12 @@ function viewStudentResponses(uid, sesId){
         contra:'Ticket · objecion',
         markers:'Ticket · marcadores',
         texto2:'Texto 2 · analisis escrito',
-        texto3:'Texto 3 · analisis escrito'
+        texto3:'Texto 3 · analisis escrito',
+        texto_narrativo:'Producto 1 · respuesta al microcuento',
+        texto_argumentativo:'Producto 2 · respuesta a la columna',
+        comprendio:'Cierre · qué comprendió',
+        evidencia:'Cierre · qué evidencia usó',
+        mejorara:'Cierre · qué mejorará'
     };
     const ticketEntries=Object.entries(ticketData).filter(([,value])=>String(value||'').trim());
     if(ticketEntries.length>0){
@@ -3544,6 +3551,7 @@ function loadResults(){
 
     const results=allResults[sesId]||{};
     const responses=allResponses[sesId]||{};
+    const isFormativeWriting=sessions[sesId]?.formativa===true||sessions[sesId]?.formato_panel==='evidencia-dos-textos';
     let items=[];
     for(const[uid,r]of Object.entries(results)){
         const est=students[uid];
@@ -3565,12 +3573,12 @@ function loadResults(){
     // Level distribution
     const levels={Insuficiente:0,Elemental:0,Adecuado:0,Destacado:0};
     items.forEach(i=>levels[getLevel(i.porcentaje)]++);
-    document.getElementById('levelCards').innerHTML=`
-        <div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
+    document.getElementById('levelCards').innerHTML=isFormativeWriting
+      ? `<div class="level-card lv-adeq"><div class="lv-label">Productos escritos entregados</div><div class="lv-val">${items.length}</div></div><div class="level-card lv-dest"><div class="lv-label">Modalidad</div><div style="font-weight:800;margin-top:8px">Formativa · sin nota automática</div></div>`
+      : `<div class="level-card lv-insuf"><div class="lv-label">Insuficiente (&lt;40%)</div><div class="lv-val">${levels.Insuficiente}</div></div>
         <div class="level-card lv-elem"><div class="lv-label">Elemental (40-59%)</div><div class="lv-val">${levels.Elemental}</div></div>
         <div class="level-card lv-adeq"><div class="lv-label">Adecuado (60-79%)</div><div class="lv-val">${levels.Adecuado}</div></div>
-        <div class="level-card lv-dest"><div class="lv-label">Destacado (≥80%)</div><div class="lv-val">${levels.Destacado}</div></div>
-    `;
+        <div class="level-card lv-dest"><div class="lv-label">Destacado (≥80%)</div><div class="lv-val">${levels.Destacado}</div></div>`;
 
     const tbody=document.getElementById('resultsBody');
     tbody.innerHTML=items.map((r,i)=>{
@@ -3585,10 +3593,10 @@ function loadResults(){
         return `<tr${rowBg}>
             <td><strong>${r.nombre}</strong>${flagHtml}</td>
             <td><span class="badge ${cBadge(r.curso)}">${cursoLabel}</span></td>
-            <td>${r.puntaje}/${r.total}</td>
-            <td><strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}</td>
-            <td><strong style="color:${notaColor};font-size:18px">${r.nota>0?r.nota.toFixed(1):'—'}</strong></td>
-            <td>${getLevelBadge(r.porcentaje)}</td>
+            <td>${isFormativeWriting?r.total+' productos':r.puntaje+'/'+r.total}</td>
+            <td>${isFormativeWriting?'<strong style="color:#16a34a">Entregada</strong>':`<strong style="color:${r.porcentaje>=60?'#16a34a':'#dc2626'}">${r.porcentaje}%</strong>${r.notas_pct>0?`<br><span style="font-size:10px;color:#64748b">Notas:${r.notas_pct}%</span>`:''}`}</td>
+            <td><strong style="color:${notaColor};font-size:18px">${isFormativeWriting?'—':(r.nota>0?r.nota.toFixed(1):'—')}</strong></td>
+            <td>${isFormativeWriting?'<span class="badge badge-blue">Formativa</span>':getLevelBadge(r.porcentaje)}</td>
             <td style="font-size:12px;color:#64748b">${mins>0?mins+' min':'—'}</td>
             <td>
                 <button class="btn btn-sm btn-secondary" onclick="viewStudentDetail('${r.uid}')">👤</button>
@@ -3619,6 +3627,7 @@ function generateSessionReport(output){
     let html='<h3 style="margin-bottom:16px">📄 Reporte por Sesión</h3>';
     for(const[sesId,ses]of Object.entries(sessions)){
         if(!isMiSesion(ses)) continue;
+        if(ses.formativa===true) continue;
         const results=allResults[sesId]||{};
         const entries=Object.entries(results);
         if(entries.length===0) continue;
@@ -3648,6 +3657,7 @@ function generateCourseReport(output){
         courses[k]={name:v.label,scores:[]};
     }
     for(const[sesId,uidMap]of Object.entries(allResults)){
+        if(sessions[sesId]?.formativa===true) continue;
         for(const[uid,r]of Object.entries(uidMap)){
             const est=students[uid];
             if(est && courses[est.curso]) courses[est.curso].scores.push(r.porcentaje||0);
@@ -3695,6 +3705,7 @@ function showStudentReport(){
     let totalPct=0,count=0;
     for(const[sesId,ses]of Object.entries(sessions)){
         if(!isMiSesion(ses)) continue;
+        if(ses.formativa===true) continue;
         const r=allResults[sesId]?.[uid];
         if(r){
             totalPct+=r.porcentaje;count++;
@@ -3714,6 +3725,7 @@ function exportCSV(type){
         csv='Sesión,Estudiante,Curso,Puntaje,Total,Porcentaje,Nivel\n';
         for(const[sesId,uidMap]of Object.entries(allResults)){
             if(!isMiSesion(sessions[sesId])) continue;
+            if(sessions[sesId]?.formativa===true) continue;
             for(const[uid,r]of Object.entries(uidMap)){
                 const est=students[uid];
                 if(!est||!isMiCurso(est.curso)) continue;
@@ -3726,6 +3738,7 @@ function exportCSV(type){
             if(!isMiCurso(est.curso)) continue;
             let t=0,c=0;
             for(const sesId of Object.keys(allResults)){
+                if(sessions[sesId]?.formativa===true) continue;
                 if(allResults[sesId][uid]){t+=allResults[sesId][uid].porcentaje||0;c++}
             }
             csv+=`"${est.nombre}","${est.rut}","${est.curso}",${c},${c?Math.round(t/c):0}\n`;

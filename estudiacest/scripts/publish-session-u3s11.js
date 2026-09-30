@@ -10,8 +10,8 @@ const envFileArg = process.argv.find(argument => argument.startsWith('--env-file
 const ENV_FILE = envFileArg ? path.resolve(envFileArg.slice('--env-file='.length)) : path.join(__dirname, '..', '.env.local');
 
 const SESSION_DATA = {
-  titulo: 'Unidad 3 · Clase 11 — Del relato a la noticia',
-  descripcion: 'Transformación de un relato en una noticia, conservando hechos y adecuando estructura, propósito y lenguaje.',
+  titulo: 'Unidad 3 · Clase 11 — Noticia y diálogo dramático',
+  descripcion: 'Transformación de dos relatos: uno en noticia y otro en diálogo dramático.',
   orden: 311,
   programa: 'simce',
   activa: true,
@@ -19,7 +19,7 @@ const SESSION_DATA = {
   retroalimentacion_visible: false,
   notas_evaluadas: false,
   formativa: true,
-  formato_panel: 'transformacion-relato-noticia',
+  formato_panel: 'transformacion-relato-generos',
   panel_unidad: 'u3',
   panel_seccion: 'plan',
   panel_orden: 11,

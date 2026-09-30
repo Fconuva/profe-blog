@@ -8,6 +8,55 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, SIMCE NM2 Unidad 3: cierre real y recalificación ajustada (r2)
+
+Francisco pidió arreglar todo lo pendiente de la Unidad 3 y dejar sin revisar la
+Clase 11, que se trabaja hoy. La Clase 11 y su versión personal no se tocaron.
+
+- **Cierre real en las guías.** `estudiantes/js/simce-session-gate.js` lee
+  `sesiones/{id}` y, si la clase está cerrada (`activa: false` o
+  `respuestas_bloqueadas: true`) y el estudiante no tiene excepción, muestra
+  «Clase cerrada» con enlace al panel antes de cargar o guardar respuestas. Si
+  la lectura falla, deja trabajar. Se incorporó a las guías 1, 2, 3, 4, 6 y 10
+  y al Ensayo N.º 3; las clases 5, 7 y 8 ya cerraban por su cuenta. Probado en
+  navegador real a 390 × 844 y 1440 × 900 con sesiones simuladas (cerrada,
+  bloqueada, excepción, abierta y falla de red): capa visible, foco en el
+  botón, sin desborde ni errores.
+- **Panel:** el total del plan ahora cuenta las clases cerradas tras aplicarse
+  (`cerrada_at`) o ya completadas; antes podía mostrar «10 de 1».
+- **Ensayo N.º 3 cerrado** con el mismo script, que ahora conserva la hora de
+  cierre original de las 9 clases (09:33). La Clase 9 sigue abierta.
+- **Ruta personal adaptada:** cada clase se califica con la mejor evidencia
+  entre la guía estándar y la sesión personal (6 preguntas, sin escritura). Lo
+  que todavía no aborda queda `Pendiente`, sin nota y fuera del promedio,
+  mientras su ruta siga abierta. Al cerrarla hay que volver a correr la
+  publicación. Hoy: clases 1 a 4 calificadas y 5, 6, 7, 8 y 10 pendientes.
+- **Copia tardía:** si un texto se entregó 24 h o más antes que otro casi
+  idéntico, el tope 5,0 alcanza solo a la entrega posterior. Se revisaron las
+  fechas de los 27 pares con desfase y ninguno depende de una reentrega. Ocho
+  autores originales dejan de estar ajustados (86 → 78), incluido el que el
+  primer cálculo había bajado de 7,0 a 5,0.
+- **Publicación** (modelo `laboriosidad-u3-c1-c10-2026-09-30-r2`): 83
+  estudiantes × 9 clases = 747 registros, 742 con nota y 5 pendientes. Frente
+  a la publicación anterior: 11 suben, ninguna baja. Firebase no guarda
+  valores `null`: la primera relectura difirió solo en esas 5 claves `grade`;
+  el publicador ahora las omite (`87f1085b`) y la verificación independiente
+  coincidió en 747 de 747, con checksum
+  `db34cc9540f1fe52c73e892b13b3f57e5bd4c3e4b0d7302b147176c5d1fabc72`.
+- **Clase 8:** se mantiene 1,0 para quien no entregó, porque todos tuvieron la
+  regularización del 9 al 23-sep y la reapertura del docente.
+- **No se pudo hacer en esta sesión:** el borrado de las tres «Cuenta técnica
+  temporal» (base y Auth) y el despliegue con `npm run deploy:prod:safe`
+  quedaron bloqueados por permisos. Las cuentas siguen fuera de toda nota. Hasta
+  que se despliegue `c4301787`, el cierre en las guías y el arreglo del
+  contador del panel no están en producción; las sesiones ya figuran cerradas en
+  el panel y las notas ya son visibles. Después del despliegue, verificar el
+  script en producción y quitarle `allowMissingInProduction` en el manifiesto.
+- Build completo aprobado (298 recursos críticos). Informe privado regenerado
+  en la carpeta de evaluaciones de NM2, fuera de Git.
+
+---
+
 ## 2026-09-30, accesos SIMCE, ruta personal 11, entregas y bloqueo de casas
 
 - Se corrigió el destino posterior al cambio de contraseña: los perfiles SIMCE

@@ -2,36 +2,12 @@ const crypto = require('crypto');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const dotenv = require('dotenv');
-const admin = require('firebase-admin');
+const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 
-const BASE = 'plataforma_estudiantes';
-const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
-const EXPECTED_SESSIONS = Array.from({ length: 6 }, (_, index) => `sesion-u3-${index + 1}`);
+// Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
+const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c6-2026-08-26';
-
-function normalizePrivateKey(raw) {
-  let key = String(raw || '').trim();
-  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) key = key.slice(1, -1);
-  return key.replace(/\\n/g, '\n');
-}
-
-function initializeFirebase(envPath) {
-  dotenv.config({
-    path: envPath ? path.resolve(envPath) : path.join(__dirname, '..', '.env.local'),
-    override: Boolean(envPath)
-  });
-  if (admin.apps.length) return admin.app();
-  return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
-    }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL || DEFAULT_DATABASE_URL
-  });
-}
+const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30';
 
 function parseArgs(argv) {
   const args = {};
@@ -95,9 +71,13 @@ function publicStatus(row) {
   return { code: 'submitted', label: 'Entrega registrada.' };
 }
 
-function buildPublication(source, publishedAt) {
+function buildPublication(source, publishedAt, expectedStudents) {
   if (!source || !Array.isArray(source.rows)) throw new Error('El archivo de revisión no contiene rows.');
-  if (source.rows.length !== 498) throw new Error(`Se esperaban 498 registros y llegaron ${source.rows.length}.`);
+  if (!Number.isInteger(expectedStudents) || expectedStudents <= 0) {
+    throw new Error('Indica --expected-students con el número de estudiantes revisado en la simulación.');
+  }
+  const expectedRows = expectedStudents * EXPECTED_SESSIONS.length;
+  if (source.rows.length !== expectedRows) throw new Error(`Se esperaban ${expectedRows} registros y llegaron ${source.rows.length}.`);
 
   const students = new Set();
   const sessions = new Set();
@@ -139,8 +119,8 @@ function buildPublication(source, publishedAt) {
     if (adjustedForSimilarity) stats.adjusted += 1;
   });
 
-  if (students.size !== 83) throw new Error(`Se esperaban 83 estudiantes y llegaron ${students.size}.`);
-  if (sessions.size !== 6) throw new Error(`Se esperaban 6 sesiones y llegaron ${sessions.size}.`);
+  if (students.size !== expectedStudents) throw new Error(`Se esperaban ${expectedStudents} estudiantes y llegaron ${students.size}.`);
+  if (sessions.size !== EXPECTED_SESSIONS.length) throw new Error(`Se esperaban ${EXPECTED_SESSIONS.length} sesiones y llegaron ${sessions.size}.`);
 
   return {
     records,
@@ -153,10 +133,6 @@ function buildPublication(source, publishedAt) {
   };
 }
 
-function recordsFromSnapshot(snapshot, expectedPairs) {
-  return recordsFromObject(snapshot.val() || {}, expectedPairs);
-}
-
 function recordsFromObject(root, expectedPairs) {
   const records = {};
   expectedPairs.forEach(pair => {
@@ -166,24 +142,42 @@ function recordsFromObject(root, expectedPairs) {
   return records;
 }
 
+function changesAgainst(currentRoot, records) {
+  const changes = { created: 0, gradeUp: 0, gradeDown: 0, sameGrade: 0 };
+  Object.entries(records).forEach(([pair, record]) => {
+    const [uid, sessionId] = pair.split('/');
+    const before = currentRoot[uid] && currentRoot[uid][sessionId];
+    if (!before) changes.created += 1;
+    else if (Number(before.grade) < record.grade) changes.gradeUp += 1;
+    else if (Number(before.grade) > record.grade) changes.gradeDown += 1;
+    else changes.sameGrade += 1;
+  });
+  return changes;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const input = path.resolve(args.input || path.join(os.tmpdir(), 'simce-u3-labor-review.json'));
   const source = JSON.parse(fs.readFileSync(input, 'utf8'));
   const publishedAt = String(args['published-at'] || new Date().toISOString());
-  const first = buildPublication(source, publishedAt);
-  const second = buildPublication(source, publishedAt);
+  const expectedStudents = Number(args['expected-students']);
+  const first = buildPublication(source, publishedAt, expectedStudents);
+  const second = buildPublication(source, publishedAt, expectedStudents);
   const firstChecksum = checksum(first.records);
   const secondChecksum = checksum(second.records);
   if (firstChecksum !== secondChecksum || first.stats.rows !== second.stats.rows) {
     throw new Error('La simulación no fue determinista; no se publicará nada.');
   }
 
+  const platform = await readPlatform();
+  const currentRoot = platform.calificaciones_clase || {};
   const report = {
     mode: args.apply ? 'apply' : 'simulation',
     inputGeneratedAt: source.generatedAt || null,
+    modelVersion: MODEL_VERSION,
     checksum: firstChecksum,
-    ...first.stats
+    ...first.stats,
+    changes: changesAgainst(currentRoot, first.records)
   };
   console.log(JSON.stringify(report, null, 2));
 
@@ -206,30 +200,29 @@ async function main() {
   }
   if (!args.apply) return;
 
-  initializeFirebase(args.env);
-  const db = admin.database();
-  const targetRef = db.ref(`${BASE}/calificaciones_clase`);
-  const beforeSnap = await targetRef.once('value');
-  const beforeRecords = recordsFromSnapshot(beforeSnap, Object.keys(first.records));
   const backupDir = path.join(os.tmpdir(), 'estudiacest-private-backups');
   fs.mkdirSync(backupDir, { recursive: true });
   const backupPath = path.join(backupDir, `simce-labor-grades-before-${Date.now()}.json`);
-  fs.writeFileSync(backupPath, JSON.stringify(beforeRecords, null, 2), 'utf8');
+  fs.writeFileSync(backupPath, JSON.stringify(currentRoot, null, 2), 'utf8');
 
-  await targetRef.update(first.records);
-  const afterSnap = await targetRef.once('value');
-  const afterRecords = recordsFromSnapshot(afterSnap, Object.keys(first.records));
+  // Una sola escritura multirruta: o se aplican los registros completos, o ninguno.
+  const update = {};
+  Object.entries(first.records).forEach(([pair, record]) => {
+    update[`calificaciones_clase/${pair}`] = record;
+  });
+  await updatePlatform(update);
+
+  const after = await readPlatform();
+  const afterRecords = recordsFromObject(after.calificaciones_clase || {}, Object.keys(first.records));
   const appliedChecksum = checksum(afterRecords);
   if (appliedChecksum !== firstChecksum) {
     throw new Error(`La lectura posterior no coincide: esperado ${firstChecksum}, recibido ${appliedChecksum}.`);
   }
 
   console.log(JSON.stringify({ applied: first.stats.rows, verified: first.stats.rows, backupPath }, null, 2));
-  await admin.app().delete();
 }
 
-main().catch(async error => {
+main().catch(error => {
   console.error('[publish-simce-labor-grades]', error.message);
-  if (admin.apps.length) await admin.app().delete().catch(() => {});
   process.exitCode = 1;
 });

@@ -1,13 +1,14 @@
 const fs = require('fs');
 const path = require('path');
-const dotenv = require('dotenv');
-const admin = require('firebase-admin');
 const { classifySubmissionStatus } = require('./class-submission-status');
+const { readPlatform } = require('./firebase-maintenance-db');
 
-const BASE = 'plataforma_estudiantes';
-const DEFAULT_DATABASE_URL = 'https://estudiacest-default-rtdb.firebaseio.com';
-const SESSION_IDS = Array.from({ length: 6 }, (_, index) => `sesion-u3-${index + 1}`);
+// Clases 1 a 8 y 10 de la Unidad 3. La Clase 9 es informativa (`requiere_entrega: false`)
+// y no lleva nota. El modelo del 26-ago cubría 1 a 6; el del 30-sep agrega 7, 8 y 10.
+const SESSION_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const COURSES = new Set(['2A-HC', '2B-HC']);
+// Quien se incorpora después del cierre de la regularización (23-sep) no cursó la unidad.
+const UNIT_ENROLLMENT_CUTOFF = Date.parse('2026-09-24T00:00:00-03:00');
 
 const CONFIG = {
   'sesion-u3-1': { alternatives: 16, concepts: 0, writing: [['desarrollo', 60], ['desarrollo2', 60]] },
@@ -15,29 +16,50 @@ const CONFIG = {
   'sesion-u3-3': { alternatives: 10, concepts: 18, writing: [['respuesta_abierta', 40], ['metacognicion.reconozco', 20], ['metacognicion.identifico', 20], ['metacognicion.analizo', 20], ['metacognicion.transfiero', 20], ['metacognicion.proposito', 20]] },
   'sesion-u3-4': { alternatives: 30, concepts: 12, writing: [['open', 40], ['meta.m1', 12], ['meta.m2', 12], ['meta.m3', 12]] },
   'sesion-u3-5': { alternatives: 32, concepts: 8, writing: [['openResponses.q10', 90], ['openResponses.q24', 90], ['meta.identifique', 15], ['meta.explique', 15], ['meta.mejorare', 15]] },
-  'sesion-u3-6': { alternatives: 14, concepts: 0, writing: [['desarrollo', 60], ['desarrollo2', 60]] }
+  'sesion-u3-6': { alternatives: 14, concepts: 0, writing: [['desarrollo', 60], ['desarrollo2', 60]] },
+  // Mínimos de la propia guía (`estudiantes/js/u3s7-data.js`).
+  'sesion-u3-7': { alternatives: 50, concepts: 8, writing: [['openResponses.o1', 180], ['openResponses.o2', 220], ['metaResponses.m1', 25], ['metaResponses.m2', 25], ['metaResponses.m3', 25]] },
+  // Ensayo parcial: las dos preguntas metacognitivas no alteran el puntaje, pero sí la laboriosidad.
+  'sesion-u3-8': { alternatives: 36, concepts: 0, writing: [['metaResponses.m1', 15], ['metaResponses.m2', 15]] },
+  // Desarrollo sobre la opinión del autor y noticia propia con titular, lead, cuerpo y cierre.
+  'sesion-u3-10': { alternatives: 14, concepts: 0, writing: [['desarrollo', 60], ['noticia', 300]] }
 };
 
-function normalizePrivateKey(raw) {
-  let key = String(raw || '').trim();
-  if ((key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))) key = key.slice(1, -1);
-  return key.replace(/\\n/g, '\n');
+// Estas sesiones no tienen `titulo` en Firebase; el panel usa su respaldo estático.
+const TITLE_FALLBACKS = {
+  'sesion-u3-6': 'Unidad 3 · Clase 6 — Poesía II: el lenguaje figurado',
+  'sesion-u3-8': 'Unidad 3 · Clase 8 — Ensayo parcial SIMCE',
+  'sesion-u3-10': 'Unidad 3 · Clase 10 — Crónica y carta'
+};
+
+const SUBSTANTIVE_FIELDS = {
+  'sesion-u3-3': ['respuesta_abierta'],
+  'sesion-u3-4': ['open'],
+  'sesion-u3-5': ['openResponses.q10', 'openResponses.q24'],
+  'sesion-u3-7': ['openResponses.o1', 'openResponses.o2'],
+  'sesion-u3-8': [],
+  'sesion-u3-10': ['desarrollo', 'noticia']
+};
+
+function readSource(snapshotPath) {
+  if (snapshotPath) return Promise.resolve(JSON.parse(fs.readFileSync(path.resolve(snapshotPath), 'utf8')));
+  return readPlatform();
 }
 
-function initializeFirebase(envPath) {
-  dotenv.config({
-    path: envPath ? path.resolve(envPath) : path.join(__dirname, '..', '.env.local'),
-    override: Boolean(envPath)
-  });
-  if (admin.apps.length) return admin.app();
-  return admin.initializeApp({
-    credential: admin.credential.cert({
-      projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-      privateKey: normalizePrivateKey(process.env.FIREBASE_PRIVATE_KEY)
-    }),
-    databaseURL: process.env.FIREBASE_DATABASE_URL || DEFAULT_DATABASE_URL
-  });
+// Exclusiones decididas por UID y datos, nunca por nombre: cuentas técnicas sin RUN,
+// incorporaciones posteriores a la unidad y ruta personal adaptada (decide el docente).
+function exclusionFor(uid, student, sessions) {
+  const hasRun = Boolean(student.run || student.rut || student.RUN);
+  if (!hasRun && /cuenta\s+t\S*cnica/i.test(String(student.nombre || ''))) {
+    return 'Cuenta técnica de prueba';
+  }
+  if (Number(student.createdAt) >= UNIT_ENROLLMENT_CUTOFF) {
+    return 'Incorporación posterior al cierre de la unidad';
+  }
+  const personalRoute = Object.entries(sessions || {}).some(([sessionId, session]) =>
+    sessionId.startsWith('personal-u3-') && Array.isArray(session && session.asignados) && session.asignados.includes(uid));
+  if (personalRoute) return 'Ruta personal adaptada: la nota la define el docente';
+  return '';
 }
 
 function parseArgs(argv) {
@@ -90,7 +112,7 @@ function countConcepts(sessionId, response) {
   if (sessionId === 'sesion-u3-4') {
     return countValues(concepts.matching) + countValues(concepts.tf || concepts.vf);
   }
-  if (sessionId === 'sesion-u3-5') return countValues(concepts);
+  if (sessionId === 'sesion-u3-5' || sessionId === 'sesion-u3-7') return countValues(concepts);
   return 0;
 }
 
@@ -130,13 +152,7 @@ function tokenSimilarity(left, right) {
 }
 
 function substantiveWriting(sessionId, response, result) {
-  const fields = sessionId === 'sesion-u3-5'
-    ? ['openResponses.q10', 'openResponses.q24']
-    : sessionId === 'sesion-u3-3'
-      ? ['respuesta_abierta']
-      : sessionId === 'sesion-u3-4'
-        ? ['open']
-      : ['desarrollo', 'desarrollo2'];
+  const fields = SUBSTANTIVE_FIELDS[sessionId] || ['desarrollo', 'desarrollo2'];
   return fields.map(field => ({ field, text: textValue(response, result, field) })).filter(item => item.text.length >= 60);
 }
 
@@ -167,7 +183,7 @@ function rowFor(student, uid, sessionId, session, response, result) {
   else if (!submission.delivered) flags.push('Borrador sin entrega confirmada');
   if (hasActivityEvidence && writingAttempted === 0) flags.push('Escritura requerida ausente');
   else if (writingComplete < config.writing.length) flags.push('Escritura requerida incompleta');
-  flags.push('Sin tiempo inicial histórico: no aplicar rebaja por velocidad');
+  if (!Number(response.startedAt)) flags.push('Sin tiempo inicial histórico: no aplicar rebaja por velocidad');
 
   return {
     uid,
@@ -175,7 +191,7 @@ function rowFor(student, uid, sessionId, session, response, result) {
     name: student.nombre || student.name || '',
     course: String(student.curso || '').toUpperCase(),
     sessionId,
-    sessionTitle: session.titulo || sessionId,
+    sessionTitle: session.titulo || TITLE_FALLBACKS[sessionId] || sessionId,
     applicationDate: session.fecha_aplicacion || '',
     status: !hasActivityEvidence ? 'Sin iniciar' : submission.delivered ? 'Entregada' : submission.status === 'inconsistent' ? 'Inconsistente' : 'Borrador',
     submissionStatus: submission.status,
@@ -251,22 +267,21 @@ function findWritingMatches(rows) {
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   const output = path.resolve(args.output || path.join(__dirname, '..', 'exports', 'simce-u3-labor-review.json'));
-  initializeFirebase(args.env);
-  const db = admin.database();
-  const [studentsSnap, sessionsSnap, responsesSnap, resultsSnap] = await Promise.all([
-    db.ref(`${BASE}/estudiantes`).once('value'),
-    db.ref(`${BASE}/sesiones`).once('value'),
-    db.ref(`${BASE}/respuestas`).once('value'),
-    db.ref(`${BASE}/resultados`).once('value')
-  ]);
-  const students = studentsSnap.val() || {};
-  const sessions = sessionsSnap.val() || {};
-  const responses = responsesSnap.val() || {};
-  const results = resultsSnap.val() || {};
+  const platform = await readSource(args.snapshot);
+  const students = platform.estudiantes || {};
+  const sessions = platform.sesiones || {};
+  const responses = platform.respuestas || {};
+  const results = platform.resultados || {};
   const rows = [];
+  const excluded = [];
   Object.entries(students).forEach(([uid, student]) => {
     const course = String(student.curso || '').toUpperCase();
     if (!COURSES.has(course)) return;
+    const reason = exclusionFor(uid, student, sessions);
+    if (reason) {
+      excluded.push({ uid, course, name: student.nombre || '', reason });
+      return;
+    }
     SESSION_IDS.forEach(sessionId => {
       rows.push(rowFor(
         student,
@@ -293,17 +308,19 @@ async function main() {
     methodology: {
       grades: { none: 1, halfOrLess: 3, moreThanHalf: 5, almostAll: 7, almostAllThreshold: 0.85 },
       writingAdjustment: 'La escritura ausente o incompleta baja una banda cuando corresponde.',
-      timing: 'No se aplica rebaja: las clases 1 a 6 no guardaron hora inicial confiable.',
-      matches: 'Toda coincidencia textual superior al 90 % deja la nota de ambos estudiantes con máximo 5,0.'
+      timing: 'No se aplica rebaja por velocidad: las clases 1 a 6 no guardaron hora inicial confiable y el criterio no se amplió a 7, 8 y 10.',
+      matches: 'Toda coincidencia textual superior al 90 % deja la nota de ambos estudiantes con máximo 5,0.',
+      scope: 'Clases 1 a 8 y 10; la Clase 9 es informativa y no lleva nota.'
     },
     sessionState,
     rows,
-    matches
+    matches,
+    excluded
   };
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, JSON.stringify(payload, null, 2), 'utf8');
-  console.log(JSON.stringify({ output, rows: rows.length, matches: matches.length }, null, 2));
-  await admin.app().delete();
+  const excludedByReason = excluded.reduce((counts, item) => ({ ...counts, [item.reason]: (counts[item.reason] || 0) + 1 }), {});
+  console.log(JSON.stringify({ output, students: new Set(rows.map(row => row.uid)).size, rows: rows.length, matches: matches.length, excludedByReason }, null, 2));
 }
 
 main().catch(error => {

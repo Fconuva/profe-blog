@@ -34,8 +34,9 @@ if (publisher) {
   [
     "row.proposedGrade",
     "similarity_adjusted",
-    "rows.length !== 498",
-    "students.size !== 83",
+    "source.rows.length !== expectedRows",
+    "students.size !== expectedStudents",
+    "args['expected-students']",
     "firstChecksum !== secondChecksum",
     "args['published-at']",
     "args['verify-snapshot']",
@@ -52,6 +53,13 @@ if (publisher) {
   "status: !hasActivityEvidence ? 'Sin iniciar'"
 ].forEach(fragment => {
   if (!exporter.includes(fragment)) failures.push(`Exportador: falta el lector canónico ${fragment}.`);
+});
+const numberedScope = /\[1, 2, 3, 4, 5, 6, 7, 8, 10\]\.map\(number => `sesion-u3-\$\{number\}`\)/;
+if (!numberedScope.test(exporter)) failures.push('Exportador: el alcance debe ser las clases 1 a 8 y 10.');
+if (publisher && !numberedScope.test(publisher)) failures.push('Publicador: el alcance debe ser las clases 1 a 8 y 10.');
+if (/sesion-u3-9['"]\s*:/.test(exporter)) failures.push('Exportador: la Clase 9 es informativa y no lleva nota.');
+['function exclusionFor(uid, student, sessions)', "sessionId.startsWith('personal-u3-')", 'UNIT_ENROLLMENT_CUTOFF'].forEach(fragment => {
+  if (!exporter.includes(fragment)) failures.push(`Exportador: falta la exclusión ${fragment}.`);
 });
 if (exporter.includes("Object.keys(result || {}).length > 0;\n  const submitted")) {
   failures.push('Exportador: un resultado aún confirma una entrega por sí solo.');

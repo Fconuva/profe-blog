@@ -8,6 +8,69 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, SIMCE NM2 Unidad 3: cierre y recalificación de las clases 1 a 10
+
+- Por indicación de Francisco, terminado el plazo que él dio para volver a
+  responder, se cerraron las clases evaluadas de la Unidad 3 y se recalificó
+  a todo el curso con el modelo de laboriosidad `1 / 3 / 5 / 7` ya publicado
+  el 26-ago, ahora extendido a las clases 7, 8 y 10. La Clase 9 sigue
+  informativa, sin nota y abierta como material. No se tocaron la Clase 11 ni
+  el Ensayo N.º 3, que siguen abiertos.
+- **Cierre** (`scripts/close-simce-u3-classes.js`): `sesion-u3-1` a `8` y
+  `sesion-u3-10` quedaron con `activa: false`, `respuestas_bloqueadas: true`
+  y `cerrada_at`, y sin `excepciones_desbloqueo` (la regularización terminó).
+  Una sola escritura de 36 rutas, respaldo previo local y relectura de las 9
+  sesiones. Se aplicó a las 09:34, tras comprobar que 2°B HC, en clase en ese
+  momento, llevaba más de ocho minutos sin escribir en esas sesiones.
+- **Límite conocido:** el panel y las API de las clases 5, 7 y 8 respetan el
+  cierre, pero las guías 1, 2, 3, 4, 6 y 10 no consultan el estado de la
+  sesión: desde una URL directa todavía guardan borradores y entregas. Las
+  notas se calcularon con la lectura posterior al cierre; una escritura tardía
+  no las cambia salvo que se vuelva a calificar.
+- **Calificación** (`scripts/export-simce-labor-review.js` y
+  `scripts/publish-simce-labor-grades.js`, modelo
+  `laboriosidad-u3-c1-c10-2026-09-30`). Mínimos de escritura de las clases
+  nuevas: los de la propia guía en la 7 (180, 220 y tres de 25 caracteres),
+  15 caracteres en las dos metacognitivas de la 8, y 60 en el desarrollo y 300
+  en la noticia de la 10. Se mantienen la baja de banda por escritura ausente
+  o incompleta y el máximo 5,0 por coincidencia textual superior al 90 %. No
+  se aplicó rebaja por velocidad.
+- **Exclusiones por UID y dato, no por nombre:** tres «Cuenta técnica
+  temporal» de 2°A HC que quedaron de la prueba del 2-sep (inflan la nómina a
+  46), una incorporación a 2°B HC creada el 30-sep y el estudiante con ruta
+  personal adaptada, cuya nota decide el docente. Sus registros quedaron
+  intactos.
+- **Publicación:** 82 estudiantes × 9 clases = 738 notas en una escritura
+  multirruta. 246 nuevas (clases 7, 8 y 10), 35 suben por entregas tardías,
+  456 sin cambio y 1 baja de 7,0 a 5,0: en la Clase 2 un compañero entregó el
+  9-sep un texto 98 % igual al que ese estudiante había entregado el 22-jul, y
+  la regla alcanza a ambos. 86 notas quedan ajustadas por coincidencia.
+  Checksum simulado, aplicado y releído de forma independiente:
+  `bb55a47988b09fb8b6e4b7ba7be3932c5a875eabe05a6feda484d43b7602585e`.
+- **Revisión:** se abrieron el caso que baja, las coincidencias nuevas de la
+  Clase 7 (idénticas o con las mismas faltas) y una muestra por nota de las
+  clases 7, 8 y 10 contra los datos crudos. El barrido de integridad de la
+  Clase 10 (27 entregas con resultado) no encontró respuestas rápidas con
+  logro alto ni pares de desarrollo o noticia similares en el mismo curso; hay
+  copiar/pegar en 18, esperable porque la tarea pide citar la frase.
+- **Para decidir el docente:** en la Clase 8 no entregaron 66 de 82
+  estudiantes (31 de 43 en 2°A, 35 de 39 en 2°B), y solo 23 abrieron la guía;
+  no hay respuestas de esa clase en otro nodo. En 2°B HC tampoco entregaron
+  32 de 39 la Clase 10 y 27 de 39 la Clase 5. Si alguna de esas clases no se
+  aplicó en la plataforma, se excluye y se republica desde la misma
+  simulación.
+- La reconciliación de entregas ya estaba aplicada por el commit `63dd0201`;
+  su simulación no dejó reparaciones pendientes. Informe privado con RUN en la
+  carpeta de evaluaciones de NM2 del workspace (fuera de Git):
+  `Revision_privada_laboriosidad_U3_C1-C10_2A-2B_2026-09-30.xlsx`.
+- Validaciones: auditoría de notas SIMCE, reconciliación en simulación,
+  datos públicos, reenvío PAES y release académico (297 recursos) aprobados.
+  `npm run build` se detuvo en `audit-mi-espacio.js` por un cambio ajeno sin
+  confirmar en `api/_salas.js` (casas deshabilitadas); no forma parte de esta
+  tarea. Sin cambios de sitio: no requirió despliegue.
+
+---
+
 ## 2026-09-30, alta y primer acceso de estudiantes reparados
 
 - El alta individual y masiva del panel docente dejó de crear cuentas desde el

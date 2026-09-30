@@ -92,6 +92,12 @@ Clase 11, que se trabaja hoy. La Clase 11 y su versión personal no se tocaron.
   completo aprobados. Los archivos públicos del admin y Mi espacio se releyeron
   desde producción y contienen el interruptor, el estado seguro y la nueva
   regla de inventario.
+- Cierre adicional: las páginas abiertas consultan el estado cada 15 segundos,
+  por lo que un bloqueo docente se aplica sin cerrar sesión. Se desplegó desde
+  un worktree limpio para no mezclar ediciones simultáneas de otras clases.
+  Despliegue final `dpl_21YG8ZQ6LRS5aMzHokecSvr244ZC`, estado `READY`; la
+  relectura pública confirmó el sondeo, los botones del admin y el estado real
+  `enabled: false`.
 
 ---
 

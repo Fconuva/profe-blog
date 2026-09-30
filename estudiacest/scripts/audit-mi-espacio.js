@@ -260,8 +260,8 @@ exigir(/function tengo\(m\) \{ return Number\(m\.xp \|\| 0\) === 0 \|\| !!\(S\.r
   'tengo(m) debe dejar los muebles iniciales y exigir una asignación para los demás; la XP ya no desbloquea muebles.');
 exigir(/api\('regalar', \{ para: para, mueble: m\.id \}\)/.test(cuerpoDe('abrirRegalo')), 'El regalo se pide al servidor (salas-regalar).');
 exigir(!/avatar\/' \+ (para|S\.sala)\)[^;]*\.(set|update|push)\(/.test(moverJs), 'El navegador no escribe en el avatar ajeno.');
-exigir(/on\('child_added'/.test(cuerpoDe('escucharRegalos')) && /escucharRegalos\(\)/.test(cuerpoDe('montar')),
-  'Los regalos que llegan se escuchan desde que se monta la página.');
+exigir(/on\('child_added'/.test(cuerpoDe('escucharRegalos')) && /escucharRegalos\(\)/.test(cuerpoDe('sincronizarDisponibilidad')) && /sincronizarDisponibilidad\(\)/.test(cuerpoDe('montar')),
+  'Los regalos que llegan se escuchan al habilitar Mi espacio desde la página montada.');
 exigir(/logros: av\.logros, placas: av\.placas, regalos: av\.regalos/.test(panelHtml), 'dashboard.html debe pasar logros, placas y regalos a Mi espacio.');
 
 async function probarRegalos() {

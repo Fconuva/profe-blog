@@ -35,10 +35,11 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   Estudiantes, PAES, NM4, dashboard, admin y la clase nueva respondieron 200.
   El HTML público coincidió con la fuente local en tamaño (34.670 bytes) y
   SHA-256.
-- Commit funcional `dba3fcce`. Despliegue productivo
-  `dpl_FRzQh1gcZxGAVRiNA4SdtEmn5ekH`, estado `READY` y alias confirmado en
-  `www.estudiacest.com`. No se creó ninguna entrega ficticia ni se modificaron
-  datos de estudiantes.
+- Commits `dba3fcce` (implementación) y `65cb7a87` (protección del manifiesto).
+  Despliegues `dpl_FRzQh1gcZxGAVRiNA4SdtEmn5ekH` (alta inicial) y
+  `dpl_C25vJxTo4i3y1HDuVBbUDDacKeCN` (protección final), ambos `READY`, con
+  alias confirmado en `www.estudiacest.com`. No se creó ninguna entrega
+  ficticia ni se modificaron datos de estudiantes.
 
 ---
 

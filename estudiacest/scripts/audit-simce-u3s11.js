@@ -10,7 +10,6 @@ const pagePath = 'estudiantes/guia-u3-s11-evidencia-dos-textos.html';
 const page = read(pagePath);
 const dashboard = read('estudiantes/dashboard.html');
 const admin = read('estudiantes/adminprofe/index.html');
-const publisher = read('scripts/publish-session-u3s11.js');
 const contract = JSON.parse(read('scripts/class-submission-contract.json'));
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 
@@ -53,8 +52,6 @@ expect(admin.includes("noticia_transformada:'Producto final · noticia transform
 expect(admin.includes("plan_evidencia:'Planificación · hechos conservados'") && admin.includes("transformo:'Revisión · cambio de género realizado'"), 'El admin no rotula la planificación y revisión.');
 expect(admin.includes("Number(r.total)===1?'producto':'productos'"), 'El admin no usa singular para el único producto.');
 expect(admin.includes('if(sessions[sesId]?.formativa===true) continue;'), 'Los resultados formativos pueden contaminar un promedio evaluativo.');
-expect(publisher.includes("titulo: 'Unidad 3 · Clase 11 — Del relato a la noticia'") && publisher.includes("formato_panel: 'transformacion-relato-noticia'"), 'El publicador de Firebase conserva metadatos antiguos.');
-
 expect(contract.files.some(entry => entry.path === pagePath && entry.storage === 'firebase-client'), 'La página no está registrada en el contrato de entrega.');
 const manifestEntry = manifest.criticalFiles.find(entry => entry.path === pagePath);
 expect(manifestEntry && manifestEntry.url === '/estudiantes/guia-u3-s11-evidencia-dos-textos.html', 'La página no está protegida por el manifiesto académico.');

@@ -21,8 +21,10 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - Se verificó en producción, antes del cambio, un estudiante recién inscrito
   en su curso correcto y con perfil pendiente. No se registraron datos
   personales en esta bitácora ni se alteraron respuestas académicas.
-- Auditoría focalizada y build completo aprobados; queda pendiente en esta
-  entrada anotar el identificador del despliegue y la verificación pública.
+- Auditoría focalizada y build completo aprobados. Commit `bc965551` publicado
+  mediante el despliegue `dpl_DP9j6R7kx2sjPMupKRz69qbszv33`, estado `READY` y
+  alias confirmado en `www.estudiacest.com`. Las rutas antigua y nueva del
+  perfil respondieron 200, y el login público contiene el destino corregido.
 
 ---
 

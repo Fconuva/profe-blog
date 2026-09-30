@@ -5,6 +5,8 @@ const root = path.resolve(__dirname, '..');
 const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 const admin = read('estudiantes/adminprofe/index.html');
 const api = read('api/estudiantes.js');
+const login = read('lecturas/index.html');
+const vercel = JSON.parse(read('vercel.json'));
 const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
 
@@ -16,6 +18,10 @@ expect(admin.includes("'Authorization':'Bearer '+token"), 'Las altas no envían 
 expect(api.includes("userRecord = await auth.getUserByEmail(email)"), 'La API no recupera una cuenta cuyo correo ya existe.');
 expect(api.includes('const profile = await upsertStudentProfile(userRecord.uid, student, decoded)'), 'La API no reconstruye o actualiza el perfil canónico.');
 expect(api.includes('programa: programFromCourse(student.curso)'), 'La API no conserva el programa académico al crear o recuperar el perfil.');
+
+expect(login.includes("return '/lecturas/perfil.html'"), 'El primer ingreso todavia apunta a una ruta de perfil inexistente.');
+expect(!login.includes("return '/lecturas/perfil' +"), 'El login conserva la ruta corta que producia 404 al completar el perfil.');
+expect(vercel.rewrites.some(rule => rule.source === '/lecturas/perfil' && rule.destination === '/lecturas/perfil.html'), 'La ruta antigua de perfil no tiene compatibilidad para estudiantes que ya quedaron en el 404.');
 
 const inlineScripts = [...admin.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])

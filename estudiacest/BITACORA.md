@@ -8,6 +8,24 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, alta y primer acceso de estudiantes reparados
+
+- El alta individual y masiva del panel docente dejó de crear cuentas desde el
+  navegador. Ahora usa la API administrativa autenticada, recupera una cuenta
+  de Firebase Auth si el correo derivado del RUT ya existía y reconstruye o
+  actualiza su perfil canónico sin producir el error `email-already-in-use`.
+- Se corrigió el primer ingreso: el login enviaba a `/lecturas/perfil`, que
+  respondía 404, aunque la página real era `/lecturas/perfil.html`. El enlace
+  nuevo apunta al archivo existente y Vercel conserva compatibilidad con la
+  ruta antigua para quienes ya habían quedado en esa pantalla.
+- Se verificó en producción, antes del cambio, un estudiante recién inscrito
+  en su curso correcto y con perfil pendiente. No se registraron datos
+  personales en esta bitácora ni se alteraron respuestas académicas.
+- Auditoría focalizada y build completo aprobados; queda pendiente en esta
+  entrada anotar el identificador del despliegue y la verificación pública.
+
+---
+
 ## 2026-09-30, ajuste final SIMCE NM2: noticia y diálogo dramático
 
 - Por indicación de Francisco se eliminó por completo el bloque `4. Planifica`

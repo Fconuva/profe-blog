@@ -134,6 +134,8 @@ exigir(admin.includes('casasConfigStatus') && admin.includes('cambiarEstadoCasas
   'El admin debe permitir habilitar y deshabilitar casas y decoración.');
 exigir(espacio.includes("api('estado')") && espacio.includes('aplicarDisponibilidad') && espacio.includes('S.housesEnabled = false'),
   'Mi espacio debe partir bloqueado y habilitar casas solo después de leer la configuración del servidor.');
+exigir(/setInterval\(sincronizarDisponibilidad, 15000\)/.test(espacio),
+  'El interruptor del profesor debe reflejarse en páginas ya abiertas sin exigir un nuevo inicio de sesión.');
 
 // ---- nombre visible: "Nombre Apellido", nunca el nombre completo ni el RUT ----
 // Caso (10-sep-2026): la sala guardaba el nombre completo en `presentes` y `chat`,

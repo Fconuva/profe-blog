@@ -1182,6 +1182,17 @@
     if (!S.housesEnabled) { desconectarSala(); verPanel('personaje'); }
   }
 
+  function sincronizarDisponibilidad() {
+    return api('estado').then(function (state) {
+      var enabled = !!(state && state.enabled);
+      var changed = enabled !== S.housesEnabled;
+      S.housesEnabled = enabled;
+      aplicarDisponibilidad();
+      if (enabled && !S.sala) { conectarSala(S.uid, true); escucharRegalos(); }
+      if (changed) anunciar(enabled ? '🔓 Casas y decoración habilitadas.' : '🔒 Casas y decoración deshabilitadas.');
+    }).catch(function () { S.housesEnabled = false; aplicarDisponibilidad(); });
+  }
+
   function punto(ev) {
     var r = S.cv.getBoundingClientRect();
     var t = (ev.touches && ev.touches[0]) || ev;
@@ -1296,6 +1307,7 @@
     S.placas = placasValidas(cfg.placas, S.logros);
     S.regalos = (cfg.regalos && typeof cfg.regalos === 'object') ? cfg.regalos : {};
     S.housesEnabled = false;
+    S.stateTimer = null;
     S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
     S.miPieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
@@ -1342,15 +1354,12 @@
 
     pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera(); aplicarDisponibilidad();
     global.addEventListener('resize', dibujar);
-    global.addEventListener('pagehide', desconectarSala);
+    global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); desconectarSala(); });
     setTimeout(dibujar, 80);
 
     if (S.auth && S.db) {
-      api('estado').then(function (state) {
-        S.housesEnabled = !!(state && state.enabled);
-        aplicarDisponibilidad();
-        if (S.housesEnabled) { conectarSala(S.uid, true); escucharRegalos(); }
-      }).catch(function () { aplicarDisponibilidad(); });
+      sincronizarDisponibilidad();
+      S.stateTimer = setInterval(sincronizarDisponibilidad, 15000);
     }
   }
 

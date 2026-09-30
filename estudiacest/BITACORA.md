@@ -8,6 +8,40 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (noche), SIMCE NM2: Clase 11 sobre evidencia en dos tipos de texto
+
+- Se publicó para 2°A HC y 2°B HC, con fecha 30 de septiembre, la ruta
+  `/estudiantes/guia-u3-s11-evidencia-dos-textos.html`. La clase dura 90
+  minutos y enseña la cadena afirmación–evidencia–explicación primero en un
+  microcuento y después en una columna de opinión, ambos textos originales y
+  declarados como tales.
+- Cada género incluye una explicación de qué cuenta como evidencia, errores
+  frecuentes y un modelo razonado distinto de la tarea. El producto individual
+  son dos respuestas escritas, una por género, más tres preguntas de cierre
+  metacognitivo. Los nueve campos se validan, autoguardan y se ensamblan en una
+  vista previa antes de entregar.
+- La entrega escribe de forma atómica `submitted` y `completada`, relee ambas
+  marcas, carga telemetría y deja los dos productos disponibles en el admin.
+  Está declarada como formativa y fue excluida de promedios, niveles, reportes
+  y exportaciones evaluativas; no asigna una nota automática.
+- La sesión `sesion-u3-11` quedó integrada en los respaldos estáticos de dashboard
+  y admin. El script `scripts/publish-session-u3s11.js` permite persistir la
+  misma definición en Firebase cuando estén disponibles las credenciales administrativas,
+  sin que la visibilidad ni la entrega de la clase dependan de esa redundancia.
+- Validaciones: auditoría focalizada y contrato de 50 clases aprobados; build
+  local y remoto completos; navegador real en 390 × 844 y 1440 × 900 sin
+  desborde ni errores de consola; validación de nueve pendientes, vista previa
+  de los dos productos y modo local sin escritura comprobados. Portada,
+  Estudiantes, PAES, NM4, dashboard, admin y la clase nueva respondieron 200.
+  El HTML público coincidió con la fuente local en tamaño (34.670 bytes) y
+  SHA-256.
+- Commit funcional `dba3fcce`. Despliegue productivo
+  `dpl_FRzQh1gcZxGAVRiNA4SdtEmn5ekH`, estado `READY` y alias confirmado en
+  `www.estudiacest.com`. No se creó ninguna entrega ficticia ni se modificaron
+  datos de estudiantes.
+
+---
+
 ## 2026-09-29 (tarde), /termas: jerarquía tipográfica y responsive publicadas
 
 - Se reemplazó la dupla Fraunces/Plus Jakarta Sans por una sola familia Plus

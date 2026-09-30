@@ -8,6 +8,44 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, accesos SIMCE, ruta personal 11, entregas y bloqueo de casas
+
+- Se corrigió el destino posterior al cambio de contraseña: los perfiles SIMCE
+  de 2° medio ya no caen en el panel vacío de Lecturas. La ruta personal se
+  respeta antes que el destino general y el panel antiguo también redirige los
+  perfiles SIMCE al dashboard correcto. Commit `26ccaba3`.
+- La ruta personal recibió una versión guiada de la Clase 11, con texto breve,
+  seis preguntas y clave privada. La sesión quedó activa y asignada al único
+  perfil que usa esa ruta; la escritura se releyó después de aplicarla. Commit
+  `bf23ba0a`.
+- El barrido de entregas se actualizó al padrón vivo de 87 estudiantes y a las
+  once clases de la Unidad 3. Se normalizaron 9 confirmaciones heredadas, 11
+  estados de nota obsoletos y una entrega cuya telemetría demostraba que la
+  plataforma había observado la confirmación antes de que un guardado posterior
+  dejara las marcas en falso. Los casos con solo borrador, nota o telemetría de
+  trabajo permanecieron sin inventar entrega.
+- El panel docente ahora resuelve el estado desde las marcas canónicas de la
+  respuesta, no solo por la existencia de un resultado, y distingue Entregado,
+  Trabajando y Por revisar. Forzar envío escribe respuesta, resultado y ranking
+  de forma atómica; reabrir limpia las dos marcas y sus fechas. Las clases 5 y
+  10 también escriben respuesta y resultado juntas para impedir estados a
+  medias. Commit `63dd0201`, despliegue
+  `dpl_CmB9XLA9LW8bhMgHxVDQVg5uxhmn`, estado `READY`.
+- Casas y decoración quedaron deshabilitadas globalmente en la base real. El
+  servidor rechaza entradas, visitas, chat, movimiento y regalos mientras el
+  estado está cerrado; el cliente parte cerrado y solo habilita las pestañas al
+  recibir autorización del servidor. El admin, en Chat de casas, tiene botones
+  para habilitar o deshabilitar todo y al cerrar elimina presencias activas.
+  Los muebles no iniciales ya no se desbloquean por XP: requieren una asignación
+  registrada, preparada para premios por tareas completadas. Commit `d89ea490`,
+  despliegue `dpl_C3fsnWQXrek3UH5HS94BrJ2G2wLS`, estado `READY`.
+- Auditorías focalizadas, contrato de 50 clases, auditoría de Mi espacio y build
+  completo aprobados. Los archivos públicos del admin y Mi espacio se releyeron
+  desde producción y contienen el interruptor, el estado seguro y la nueva
+  regla de inventario.
+
+---
+
 ## 2026-09-30, SIMCE NM2 Unidad 3: cierre y recalificación de las clases 1 a 10
 
 - Por indicación de Francisco, terminado el plazo que él dio para volver a

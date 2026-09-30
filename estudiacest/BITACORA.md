@@ -8,6 +8,34 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, ajuste final SIMCE NM2: noticia y diálogo dramático
+
+- Por indicación de Francisco se eliminó por completo el bloque `4. Planifica`
+  de la Clase 11, incluidos sus cuatro campos y su incorporación al registro de
+  entrega. La página quedó reducida a cuatro bloques visuales.
+- Se mantuvo la transformación de `El puente de cartón` en noticia y se agregó
+  el relato original `La última página`, que debe reescribirse como diálogo
+  dramático de 100 a 160 palabras, con personajes, parlamentos, al menos dos
+  acotaciones y sin narrador.
+- La clase ahora registra dos productos: noticia y diálogo dramático. Conserva
+  tres preguntas breves de revisión, autoguardado, entrega atómica, relectura de
+  las marcas canónicas y carácter formativo sin nota ni ranking. El admin puede
+  leer ambos productos con rótulos diferenciados.
+- Se incorporó la infografía IA `partes-dialogo-dramatico-ia.webp`, con
+  personaje, parlamento y acotación, además de la infografía ya existente sobre
+  titular, entrada y cuerpo de la noticia. Ambas se verificaron a 1122 × 1402.
+- Auditoría focalizada, contrato de 50 clases y build completo aprobados. En
+  navegador real móvil se verificaron cuatro bloques, ocho campos, validación
+  del primer pendiente, avance `2 de 2 productos listos`, las dos imágenes y
+  ausencia de desborde o errores; el modo local impidió cualquier entrega real.
+- Commit `acedb491` en `origin/main`. Despliegue
+  `dpl_Fuh4MtWBeVY3gjPXgSA9FHw9xK2T`, estado `READY`, con alias en
+  `www.estudiacest.com`. Página y dos infografías respondieron 200 y coincidieron
+  exactamente con la fuente local en bytes y SHA-256; el HTML público quedó en
+  `a85725b787e87a5ca43503d9cefff68e853a7fa60859f410a82cf600513234e4`.
+
+---
+
 ## 2026-09-29 (noche), corrección SIMCE NM2: Clase 11 de transformación textual
 
 - Por indicación de Francisco se reemplazó, en la misma ruta y sesión, la clase

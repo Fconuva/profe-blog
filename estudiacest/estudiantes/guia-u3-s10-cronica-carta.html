@@ -554,16 +554,19 @@
       const g=grade();const now=Date.now();const s=statsByHab();
       const detalle={};QUESTIONS.forEach(q=>{detalle[q.id]={respuesta:answers[q.id]||null,correcta:q.correcta,esCorrecta:answers[q.id]===q.correcta,habilidad:HABNAME[q.hab].toUpperCase()};});
       const data={...payload(true),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:g.ok,total:QUESTIONS.length};
-      await db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID).update(data);
       const elapsedMs=Math.max(0,now-(startedAt||now));
-      await db.ref(BASE+'/resultados/'+SESSION_ID+'/'+currentUID).set({
+      const result={
         score:g.ok,total:QUESTIONS.length,porcentaje:g.pct,nota:g.nota,detalle:detalle,
         por_habilidad:{L:s.L,I:s.I,R:s.R},
         desarrollo:(document.getElementById('desarrollo').value||'').trim(),
         noticia:(document.getElementById('noticia').value||'').trim(),
         nombre:studentData?(studentData.nombre||''):'',curso:studentData?(studentData.curso||''):'',
         startedAt:startedAt||now,elapsedMs:elapsedMs,
-        submittedAt:now,completadaAt:now});
+        submittedAt:now,completadaAt:now};
+      const updates={};
+      updates['respuestas/'+SESSION_ID+'/'+currentUID]=data;
+      updates['resultados/'+SESSION_ID+'/'+currentUID]=result;
+      await db.ref(BASE).update(updates);
       const responseRef=db.ref(BASE+'/respuestas/'+SESSION_ID+'/'+currentUID);
       const [submittedSnap,completedSnap]=await Promise.all([
         responseRef.child('submitted').once('value'),

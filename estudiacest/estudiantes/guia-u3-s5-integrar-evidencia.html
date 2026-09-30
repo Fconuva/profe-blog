@@ -243,15 +243,19 @@
         const detail={};
         questions.forEach(question=>{detail[question.id]={respuesta:answers[question.id]||'',correcta:question.key,esCorrecta:answers[question.id]===question.key,habilidad:question.skill,enunciado:question.prompt}});
         const responseRef=db.ref(`${BASE}/respuestas/${SESSION}/${uid}`);
-        await responseRef.set({...collect(),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:correct,total:questions.length,student:{nombre:student.nombre,curso:student.curso}});
-        await db.ref(`${BASE}/resultados/${SESSION}/${uid}`).set({
+        const response={...collect(),submitted:true,completada:true,submittedAt:now,completadaAt:now,score:correct,total:questions.length,student:{nombre:student.nombre,curso:student.curso}};
+        const result={
           puntaje:correct,total:questions.length,porcentaje:Math.round(correct/questions.length*100),
           puntaje_alternativas:correct,total_alternativas:questions.length,puntaje_desarrollo:0,total_desarrollo:7,
           desarrollo_pendiente:true,detalle:detail,openResponses,presented_options:presentedOptions,
           submitted_at:now,student:{nombre:student.nombre,curso:student.curso},strikes
-        });
-        const confirmation=await responseRef.child('completada').once('value');
-        if(confirmation.val()!==true)throw new Error('La entrega no quedó confirmada en Firebase.');
+        };
+        const updates={};
+        updates[`respuestas/${SESSION}/${uid}`]=response;
+        updates[`resultados/${SESSION}/${uid}`]=result;
+        await db.ref(BASE).update(updates);
+        const [submittedSnap,completedSnap]=await Promise.all([responseRef.child('submitted').once('value'),responseRef.child('completada').once('value')]);
+        if(submittedSnap.val()!==true||completedSnap.val()!==true)throw new Error('La entrega no quedó confirmada en Firebase.');
         $('done').classList.add('show');button.textContent='Clase entregada';$('saveStatus').textContent='Trabajo enviado';showConfirmation();
       }catch(error){
         submitted=false;button.disabled=false;button.textContent='Entregar clase';$('saveStatus').textContent='No se pudo entregar';showNotice('No se pudo registrar la entrega. Revisa la conexión y vuelve a intentarlo.');console.error(error);

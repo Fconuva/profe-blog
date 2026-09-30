@@ -30,6 +30,13 @@ function supportingTimestamp(response, result, telemetry, recordedAt) {
   ]);
 }
 
+function hasConfirmedSubmissionTelemetry(response, telemetry) {
+  return Boolean(response) && response.submitted !== true && response.completada !== true &&
+    Number(telemetry && telemetry.submissionConfirmationCount || 0) > 0 &&
+    firstPositiveNumber([telemetry && telemetry.submittedAt]) !== null &&
+    firstPositiveNumber([telemetry && telemetry.submissionConfirmedAt]) !== null;
+}
+
 function makeSnapshot(platform) {
   return {
     students: platform.estudiantes || {},
@@ -44,7 +51,7 @@ function buildPlan(snapshot, recordedAt) {
   const students = Object.entries(snapshot.students).filter(([, student]) =>
     student && COURSES.has(String(student.curso || '').trim().toUpperCase())
   );
-  if (students.length !== 86) throw new Error(`Padrón inesperado: ${students.length}; se esperaban 86 estudiantes.`);
+  if (!students.length) throw new Error('El padrón SIMCE está vacío; no es seguro reconciliar estados de entrega.');
 
   const update = {};
   const affectedStudents = new Set();
@@ -53,6 +60,7 @@ function buildPlan(snapshot, recordedAt) {
     sessions: SESSION_IDS.length,
     pairs: students.length * SESSION_IDS.length,
     legacyResponsesRepaired: 0,
+    telemetryConfirmationsRepaired: 0,
     staleGradesRepaired: 0,
     unresolvedInconsistent: 0,
     gradeFalsePositives: 0,
@@ -67,11 +75,12 @@ function buildPlan(snapshot, recordedAt) {
       const grade = snapshot.grades[uid] && snapshot.grades[uid][sessionId];
       const telemetry = snapshot.telemetry[sessionId] && snapshot.telemetry[sessionId][uid];
       const state = classifySubmissionStatus(response, { result, grade, telemetry });
+      const telemetryRecovery = !state.delivered && hasConfirmedSubmissionTelemetry(response, telemetry);
 
       if (response && response.curso && String(response.curso).trim().toUpperCase() !== expectedCourse) {
         counts.courseMismatches += 1;
       }
-      if (state.status === 'inconsistent') counts.unresolvedInconsistent += 1;
+      if (state.status === 'inconsistent' && !telemetryRecovery) counts.unresolvedInconsistent += 1;
       if (!state.delivered && grade && (grade.submitted === true || grade.status === 'submitted')) {
         counts.gradeFalsePositives += 1;
       }
@@ -92,7 +101,25 @@ function buildPlan(snapshot, recordedAt) {
         affectedStudents.add(uid);
       }
 
-      if (state.delivered && grade && ['not_submitted', 'draft'].includes(grade.status)) {
+      if (telemetryRecovery) {
+        const timestamp = supportingTimestamp(response, result, telemetry, recordedAt);
+        const attestation = {
+          source: 'submission_telemetry_recovery',
+          recordedAt: Number(telemetry.submissionConfirmedAt),
+          reason: 'La telemetría confirmó que la plataforma observó la entrega antes de que un guardado posterior dejara las marcas en falso.'
+        };
+        update[`respuestas/${sessionId}/${uid}/submitted`] = true;
+        update[`respuestas/${sessionId}/${uid}/completada`] = true;
+        update[`respuestas/${sessionId}/${uid}/submittedAt`] = timestamp;
+        update[`respuestas/${sessionId}/${uid}/completadaAt`] = timestamp;
+        update[`respuestas/${sessionId}/${uid}/manualCompletion`] = true;
+        update[`respuestas/${sessionId}/${uid}/attestation`] = attestation;
+        update[`respuestas/${sessionId}/${uid}/deliveryReconciliation`] = attestation;
+        counts.telemetryConfirmationsRepaired += 1;
+        affectedStudents.add(uid);
+      }
+
+      if ((state.delivered || telemetryRecovery) && grade && ['not_submitted', 'draft'].includes(grade.status)) {
         update[`calificaciones_clase/${uid}/${sessionId}/submitted`] = true;
         update[`calificaciones_clase/${uid}/${sessionId}/status`] = 'submitted';
         update[`calificaciones_clase/${uid}/${sessionId}/statusLabel`] = 'Entrega confirmada mediante la respuesta viva.';
@@ -155,4 +182,4 @@ if (require.main === module) {
   });
 }
 
-module.exports = { assertReconciled, buildPlan, makeSnapshot, supportingTimestamp };
+module.exports = { assertReconciled, buildPlan, hasConfirmedSubmissionTelemetry, makeSnapshot, supportingTimestamp };

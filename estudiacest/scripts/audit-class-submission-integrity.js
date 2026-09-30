@@ -5,7 +5,7 @@ const { closeFirebase, readPlatform } = require('./firebase-maintenance-db');
 
 const COURSES = new Set(['2A-HC', '2B-HC']);
 const SESSION_IDS = [
-  ...Array.from({ length: 10 }, (_, index) => `sesion-u3-${index + 1}`),
+  ...Array.from({ length: 11 }, (_, index) => `sesion-u3-${index + 1}`),
   'ensayo-simce-n3-nm2-2026'
 ];
 
@@ -17,7 +17,7 @@ function auditSnapshot(snapshot) {
   const students = Object.entries(snapshot.students || {}).filter(([, student]) =>
     student && COURSES.has(String(student.curso || '').trim().toUpperCase())
   );
-  if (students.length !== 86) throw new Error(`Padrón inesperado: ${students.length}; se esperaban 86 estudiantes.`);
+  if (!students.length) throw new Error('El padrón SIMCE está vacío; no es seguro auditar estados de entrega.');
 
   const states = {};
   const findings = {};

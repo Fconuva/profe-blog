@@ -1108,6 +1108,16 @@ function initMobileNav(){
 }
 
 /* ============ OVERVIEW ============ */
+function classifyAdminSubmission(response,result){
+    if(!response||typeof response!=='object')return result?{completed:false,status:'inconsistent'}:{completed:false,status:'missing'};
+    const submitted=response.submitted===true;
+    const completed=response.completada===true;
+    const supporting=[response.submittedAt,response.completadaAt,response.submitted_at].some(value=>Number(value||0)>0)||!!result;
+    if(submitted&&completed)return {completed:true,status:'confirmed'};
+    if((submitted||completed)&&supporting)return {completed:true,status:'legacy_confirmed'};
+    return {completed:false,status:(submitted||completed||result)?'inconsistent':'draft'};
+}
+
 function renderOverview(){
     const myStudents=Object.fromEntries(Object.entries(students).filter(([uid,s])=>isMiCurso(s.curso)));
     const totalStudents=Object.keys(myStudents).length;
@@ -1117,10 +1127,10 @@ function renderOverview(){
     const perfilComplete=Object.values(myStudents).filter(s=>s.perfil_completo).length;
 
     let totalSubmissions=0;
-    for(const sesId of Object.keys(allResults)){
+    for(const sesId of Object.keys(allResponses)){
         if(!sessions[sesId]||!isMiSesion(sessions[sesId])) continue;
-        for(const uid of Object.keys(allResults[sesId])){
-            if(myStudents[uid]) totalSubmissions++;
+        for(const[uid,response]of Object.entries(allResponses[sesId]||{})){
+            if(myStudents[uid]&&classifyAdminSubmission(response,allResults[sesId]?.[uid]).completed)totalSubmissions++;
         }
     }
 
@@ -1232,12 +1242,14 @@ function renderLiveProgress(){
         const res=results[uid];
         let status,statusBadge,answeredCount=0,filledNotes=0,lastAct='—';
 
-        if(res){
+        const delivery=classifyAdminSubmission(resp,res);
+        if(delivery.completed){
             status='submitted';submitted++;
-            statusBadge=`<span class="badge badge-green">✅ Enviado (${res.porcentaje}%)</span>`;
-            answeredCount=totalQ;
+            statusBadge=`<span class="badge badge-green">✅ Entregado${res&&Number.isFinite(Number(res.porcentaje))?' ('+res.porcentaje+'%)':''}</span>`;
+            answeredCount=res?totalQ:Object.keys(resp.answers||{}).length;
             filledNotes=totalNotes;
-            lastAct=res.submitted_at?new Date(res.submitted_at).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
+            const deliveredAt=res?.submitted_at||resp.submittedAt||resp.completadaAt||resp.submitted_at;
+            lastAct=deliveredAt?new Date(deliveredAt).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
         } else if(resp){
             status='working';working++;
             const ans=resp.answers||{};
@@ -1245,10 +1257,15 @@ function renderLiveProgress(){
             const nts=resp.notes||{};
             filledNotes=Object.values(nts).filter(n=>n&&n.trim()).length;
             const blk=resp.bloqueado_por_strikes||resp.auto_submitted||resp.bloqueado_por_copia;
-            statusBadge = blk
-                ? `<span class="badge" style="background:#fee2e2;color:#b91c1c">🔒 Bloqueado${resp.strikes?(' · '+resp.strikes+' strikes'):' · strikes'}</span>`
-                : `<span class="badge badge-amber">⏳ Trabajando</span>`;
+            statusBadge = delivery.status==='inconsistent'
+                ? '<span class="badge" style="background:#fef3c7;color:#92400e">⚠️ Por revisar</span>'
+                : blk
+                    ? `<span class="badge" style="background:#fee2e2;color:#b91c1c">🔒 Bloqueado${resp.strikes?(' · '+resp.strikes+' strikes'):' · strikes'}</span>`
+                    : `<span class="badge badge-amber">⏳ Trabajando</span>`;
             lastAct=resp.last_save?new Date(resp.last_save).toLocaleTimeString('es-CL',{hour:'2-digit',minute:'2-digit'}):'—';
+        } else if(res){
+            status='working';working++;
+            statusBadge='<span class="badge" style="background:#fef3c7;color:#92400e">⚠️ Por revisar · resultado sin entrega</span>';
         } else {
             status='notstarted';notStarted++;
             statusBadge='<span class="badge badge-gray">🔘 Sin iniciar</span>';
@@ -2939,10 +2956,10 @@ async function softResetStudent(uid,sesId,nombre){
         await db.ref(BASE+'/respuestas/'+sesId+'/'+uid).update({
             strikes:null, bloqueado_por_copia:null, bloqueado_por_strikes:null,
             auto_submitted:null, auto_submit_motivo:null, strike_motivo:null,
-            last_strike_at:null, completada:null, focus_log:null
+            last_strike_at:null, submitted:null, submittedAt:null, completadaAt:null, submitted_at:null, completada:null, focus_log:null
         });
         if(allResponses[sesId]&&allResponses[sesId][uid]){
-            ['strikes','bloqueado_por_copia','bloqueado_por_strikes','auto_submitted','auto_submit_motivo','strike_motivo','last_strike_at','completada','focus_log']
+            ['strikes','bloqueado_por_copia','bloqueado_por_strikes','auto_submitted','auto_submit_motivo','strike_motivo','last_strike_at','submitted','submittedAt','completadaAt','submitted_at','completada','focus_log']
                 .forEach(k=>delete allResponses[sesId][uid][k]);
         }
         const rankRemovals=[db.ref(BASE+'/resultados/'+sesId+'/'+uid).remove()];
@@ -2997,7 +3014,7 @@ async function forceSubmitPending(){
     const resSes=allResults[sesId]||{};
     const pending=[];
     for(const [uid,resp] of Object.entries(respSes)){
-        if(students[uid] && (!resp.completada || !resSes[uid])){
+        if(students[uid] && !classifyAdminSubmission(resp,resSes[uid]).completed){
             pending.push({uid,resp,est:students[uid]});
         }
     }
@@ -3047,26 +3064,35 @@ async function forceSubmitPending(){
         const notasPct=total>0?Math.round((notesCount/total)*100):0;
         const tiempo=p.resp.started_at?Math.floor((Date.now()-p.resp.started_at)/1000):0;
 
-        await db.ref(BASE+'/respuestas/'+sesId+'/'+p.uid).update({
-            completada:true,submitted_at:Date.now(),auto_submitted:true,
-            auto_submit_motivo:'Cierre administrativo — forzado desde panel'
-        });
-        await db.ref(BASE+'/resultados/'+sesId+'/'+p.uid).set({
+        const submissionAt=Date.now();
+        const forcedResult={
             puntaje:correct,total,porcentaje,nota,detalle,notas:notes,
             notas_completadas:notesCount+'/'+total,notas_pct:notasPct,
             puntaje_combinado:Math.round(porcentaje*0.7+notasPct*0.3),
-            nombre:p.est.nombre,curso:p.est.curso,submitted_at:Date.now(),
+            nombre:p.est.nombre,curso:p.est.curso,submitted_at:submissionAt,
             strikes:p.resp.strikes||0,auto_submitted:true,
             auto_submit_motivo:'Cierre administrativo'
-        });
-        await db.ref(BASE+'/ranking/'+sesId+'/'+p.est.curso+'/'+p.uid).set({
+        };
+        const forcedRanking={
             nombre:p.est.nombre,puntaje:correct,porcentaje,
             tiempo:tiempo
-        });
+        };
+        const forcedUpdate={
+            [`respuestas/${sesId}/${p.uid}/submitted`]:true,
+            [`respuestas/${sesId}/${p.uid}/completada`]:true,
+            [`respuestas/${sesId}/${p.uid}/submittedAt`]:submissionAt,
+            [`respuestas/${sesId}/${p.uid}/completadaAt`]:submissionAt,
+            [`respuestas/${sesId}/${p.uid}/submitted_at`]:submissionAt,
+            [`respuestas/${sesId}/${p.uid}/auto_submitted`]:true,
+            [`respuestas/${sesId}/${p.uid}/auto_submit_motivo`]:'Cierre administrativo — forzado desde panel',
+            [`resultados/${sesId}/${p.uid}`]:forcedResult,
+            [`ranking/${sesId}/${p.est.curso}/${p.uid}`]:forcedRanking
+        };
+        await db.ref(BASE).update(forcedUpdate);
 
         if(!allResults[sesId])allResults[sesId]={};
         allResults[sesId][p.uid]={puntaje:correct,total,porcentaje,nota,nombre:p.est.nombre,curso:p.est.curso,notas_pct:notasPct,puntaje_combinado:Math.round(porcentaje*0.7+notasPct*0.3),strikes:p.resp.strikes||0,auto_submitted:true};
-        allResponses[sesId][p.uid].completada=true;
+        Object.assign(allResponses[sesId][p.uid],{submitted:true,completada:true,submittedAt:submissionAt,completadaAt:submissionAt,submitted_at:submissionAt});
         processed++;
     }
     loadResults();

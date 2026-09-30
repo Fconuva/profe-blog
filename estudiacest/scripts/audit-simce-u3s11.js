@@ -16,16 +16,13 @@ const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 expect(page.includes('Del relato a la noticia'), 'Falta el foco visible de transformación textual.');
 expect(page.includes('El puente de cartón'), 'Falta el relato de origen.');
 expect((page.match(/Texto original creado para esta clase/g) || []).length === 1, 'El relato debe declarar su origen una vez.');
-expect(page.includes('Texto de origen: relato') && page.includes('Texto final: noticia'), 'No se explicitan los dos géneros involucrados.');
-expect(page.includes('Propósito') && page.includes('Estructura') && page.includes('Lenguaje'), 'Falta enseñar qué cambia entre ambos géneros.');
-expect(page.includes('Fragmento del relato') && page.includes('Entrada de noticia'), 'Falta el modelo de transformación.');
-expect(page.includes('Cambió el orden') && page.includes('Cambió el lenguaje') && page.includes('Conservó los hechos'), 'El modelo no explica las decisiones de reescritura.');
-expect(page.includes('no puedes inventar') && page.includes('Información que no puedes inventar'), 'Falta la regla explícita contra la invención de datos.');
-expect(page.includes('140 a 220 palabras'), 'Falta una extensión clara para el producto final.');
-
-const timeValues = [...page.matchAll(/<b>(\d+) min<\/b>/g)].map(match => Number(match[1]));
-const totalMinutes = timeValues.reduce((sum, value) => sum + value, 0);
-expect(totalMinutes === 90, `La ruta declarada suma ${totalMinutes} minutos, no 90.`);
+expect(page.includes('<h2>1. Lee el relato</h2>') && page.includes('<h2>5. Revisa y entrega</h2>'), 'La secuencia visual no contiene los cinco momentos esenciales.');
+expect(page.includes('<h3>Relato</h3>') && page.includes('<h3>Noticia</h3>'), 'Falta el modelo breve de transformación.');
+expect(page.includes('el hecho principal aparece primero') && page.includes('el tono es objetivo') && page.includes('la información se mantiene'), 'El modelo no explica las decisiones principales de reescritura.');
+expect(page.includes('No inventes nombres, fechas, lugares ni opiniones'), 'Falta la regla explícita contra la invención de datos.');
+expect(page.includes('140 y 220 palabras'), 'Falta una extensión clara para el producto final.');
+expect(!page.includes('hero-badges') && !page.includes('quick-nav') && !page.includes('class="timeline"'), 'La apertura conserva elementos visuales eliminados por decisión docente.');
+expect(!page.includes('id="ruta"') && !page.includes('id="comparacion"'), 'La página conserva secciones introductorias redundantes.');
 
 const requiredFields = ['plan-que','plan-quien','plan-donde','plan-evidencia','news-title','news-lead','news-body','close-preserved','close-transformed','close-improve'];
 requiredFields.forEach(id => expect(page.includes(`id="${id}"`), `Falta el campo obligatorio ${id}.`));
@@ -67,4 +64,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('SIMCE U3S11 auditada: 90 minutos, relato original, modelo de transformación, planificación, noticia completa, revisión metacognitiva, autoguardado, entrega atómica, panel docente y exclusión de promedios evaluativos verificados.');
+console.log('SIMCE U3S11 auditada: apertura mínima, cinco momentos, relato original, modelo breve, planificación, noticia completa, revisión, autoguardado, entrega atómica, panel docente y exclusión de promedios evaluativos verificados.');

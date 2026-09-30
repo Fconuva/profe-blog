@@ -8,6 +8,30 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, muebles desbloqueables por tareas y vista unificada de la casa
+
+- Se implementó un inventario de muebles validado por el servidor: los muebles
+  asociados a una tarea aparecen bloqueados y solo se habilitan cuando la
+  entrega figura canónicamente como enviada y completada. No pueden regalarse
+  para eludir el requisito.
+- En `Admin profesor > Chat de casas` se agregó el panel **Muebles por tareas
+  completadas**, que permite asociar un mueble, un set predefinido o una
+  selección personalizada a una o más sesiones equivalentes.
+- **Casa y muebles quedaron en una sola ventana:** el catálogo se muestra bajo
+  la habitación, sin una pestaña separada. Mientras el bloqueo global está
+  activo, el estudiante puede ver los premios y sus requisitos, pero no puede
+  caminar, decorar, visitar, conversar ni usar muebles.
+- Se publicó el primer premio para la Tarea 11, **Set de escritura**, compuesto
+  por libros, monitor, teclado, mouse y lámpara de mesa. Reconoce tanto la guía
+  común como su versión personal guiada; la relectura de producción encontró
+  17 estudiantes que ya cumplen el requisito.
+- Los cambios quedaron en los commits `9432f2b8` y `ccc609f1`. Pasaron la
+  auditoría específica de Mi espacio, las validaciones sintácticas, el build
+  completo y la revisión pública de la vista unificada y del bloqueo de uso.
+  Despliegue final `dpl_9ucsY8caEnAFzDFnJXNRzdfZ4VHy`, estado READY.
+
+---
+
 ## 2026-09-30, SIMCE NM2 Unidad 3: cierre real y recalificación ajustada (r2)
 
 Francisco pidió arreglar todo lo pendiente de la Unidad 3 y dejar sin revisar la

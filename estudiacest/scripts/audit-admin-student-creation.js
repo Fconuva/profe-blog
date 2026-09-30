@@ -6,6 +6,8 @@ const read = relative => fs.readFileSync(path.join(root, relative), 'utf8');
 const admin = read('estudiantes/adminprofe/index.html');
 const api = read('api/estudiantes.js');
 const login = read('lecturas/index.html');
+const profile = read('lecturas/perfil.html');
+const legacyDashboard = read('lecturas/dashboard.html');
 const vercel = JSON.parse(read('vercel.json'));
 const failures = [];
 const expect = (condition, message) => { if (!condition) failures.push(message); };
@@ -22,6 +24,10 @@ expect(api.includes('programa: programFromCourse(student.curso)'), 'La API no co
 expect(login.includes("return '/lecturas/perfil.html'"), 'El primer ingreso todavia apunta a una ruta de perfil inexistente.');
 expect(!login.includes("return '/lecturas/perfil' +"), 'El login conserva la ruta corta que producia 404 al completar el perfil.');
 expect(vercel.rewrites.some(rule => rule.source === '/lecturas/perfil' && rule.destination === '/lecturas/perfil.html'), 'La ruta antigua de perfil no tiene compatibilidad para estudiantes que ya quedaron en el 404.');
+expect(profile.includes("const requestedNext = sanitizeAppPath(targetParams.get('next'))"), 'El perfil de primer ingreso no conserva el destino solicitado por el login.');
+expect(profile.includes("return '/estudiantes/dashboard.html'"), 'El perfil no envia a los cursos SIMCE a su dashboard de clases.');
+expect(legacyDashboard.includes("window.location.replace('/estudiantes/dashboard.html')"), 'El panel antiguo de Lecturas no redirige los cursos SIMCE al dashboard correcto.');
+expect(legacyDashboard.includes('window.location.replace(personalRoute)'), 'El panel antiguo de Lecturas no respeta las rutas personales.');
 
 const inlineScripts = [...admin.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)]
     .map(match => match[1])

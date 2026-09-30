@@ -297,6 +297,7 @@
     const db = firebase.database();
 
     let currentUid = null;
+    let currentStudent = null;
 
     const errorBox = document.getElementById('errorBox');
     const successBox = document.getElementById('successBox');
@@ -339,15 +340,30 @@
 
     const targetParams = new URLSearchParams(window.location.search);
     const requestedTarget = (targetParams.get('target') || '').trim().toLowerCase();
+    const requestedNext = sanitizeAppPath(targetParams.get('next'));
     const GUIDE_TARGETS = {
       'nm4': '/nm4/',
       'nm4-u2-semana11': '/nm4/guia-u2-semana11.html'
     };
 
-    function getTargetDestination() {
-      if (!requestedTarget) return '/lecturas/dashboard';
+    function sanitizeAppPath(rawPath) {
+      if (!rawPath || typeof rawPath !== 'string' || !rawPath.startsWith('/') || rawPath.startsWith('//')) return '';
+      try {
+        const url = new URL(rawPath, window.location.origin);
+        return url.origin === window.location.origin ? url.pathname + url.search + url.hash : '';
+      } catch (_error) {
+        return '';
+      }
+    }
+
+    function getTargetDestination(student) {
+      if (requestedNext) return requestedNext;
       if (GUIDE_TARGETS[requestedTarget]) return GUIDE_TARGETS[requestedTarget];
-      return '/lecturas/?target=' + encodeURIComponent(requestedTarget);
+      if (requestedTarget) return '/lecturas/?target=' + encodeURIComponent(requestedTarget);
+      const personalRoute = String(student && student.ruta_personal || '').trim();
+      if (personalRoute.startsWith('/estudiantes/')) return personalRoute;
+      if (/^2[AB]-HC$/.test(String(student && student.curso || '').trim().toUpperCase())) return '/estudiantes/dashboard.html';
+      return '/lecturas/dashboard';
     }
 
     auth.onAuthStateChanged(async (user) => {
@@ -364,8 +380,9 @@
           window.location.href = '/lecturas/';
           return;
         }
+        currentStudent = student;
         if (student.perfil_completo) {
-          window.location.href = getTargetDestination();
+          window.location.href = getTargetDestination(student);
           return;
         }
         document.getElementById('nameField').value = student.nombre || '';
@@ -422,7 +439,7 @@
         await db.ref(STUDENT_BASE + '/estudiantes/' + currentUid).update(updates);
         showSuccess('Perfil actualizado. Ingresando a Lecturas...');
         setTimeout(() => {
-          window.location.href = getTargetDestination();
+          window.location.href = getTargetDestination(currentStudent);
         }, 1200);
       } catch (error) {
         console.error('[lecturas/perfil/save]', error);

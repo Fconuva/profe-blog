@@ -10,29 +10,33 @@ const pagePath = 'estudiantes/guia-u3-s11-evidencia-dos-textos.html';
 const page = read(pagePath);
 const dashboard = read('estudiantes/dashboard.html');
 const admin = read('estudiantes/adminprofe/index.html');
+const publisher = read('scripts/publish-session-u3s11.js');
 const contract = JSON.parse(read('scripts/class-submission-contract.json'));
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 
-expect(page.includes('La evidencia cambia según el texto'), 'Falta el foco visible de la Clase 11.');
-expect(page.includes('El puente de cartón') && page.includes('Mostrar el borrador, no solo el resultado'), 'No están los dos textos de trabajo.');
-expect((page.match(/Texto original creado para esta clase|Columna original creada para esta clase/g) || []).length === 2, 'Los dos textos deben declarar su origen.');
-expect(page.includes('Texto narrativo') && page.includes('Texto argumentativo'), 'No se explicitan los dos tipos de texto.');
-expect(page.includes('evidencia narrativa') && page.includes('evidencia argumentativa'), 'Falta modelar la evidencia propia de cada tipo textual.');
-expect((page.match(/Afirmación:/g) || []).length >= 2, 'Faltan modelos de afirmación en ambos textos.');
-expect((page.match(/Evidencia:/g) || []).length >= 2, 'Faltan modelos de evidencia en ambos textos.');
-expect((page.match(/Explicación:/g) || []).length >= 2, 'Faltan modelos de explicación en ambos textos.');
+expect(page.includes('Del relato a la noticia'), 'Falta el foco visible de transformación textual.');
+expect(page.includes('El puente de cartón'), 'Falta el relato de origen.');
+expect((page.match(/Texto original creado para esta clase/g) || []).length === 1, 'El relato debe declarar su origen una vez.');
+expect(page.includes('Texto de origen: relato') && page.includes('Texto final: noticia'), 'No se explicitan los dos géneros involucrados.');
+expect(page.includes('Propósito') && page.includes('Estructura') && page.includes('Lenguaje'), 'Falta enseñar qué cambia entre ambos géneros.');
+expect(page.includes('Fragmento del relato') && page.includes('Entrada de noticia'), 'Falta el modelo de transformación.');
+expect(page.includes('Cambió el orden') && page.includes('Cambió el lenguaje') && page.includes('Conservó los hechos'), 'El modelo no explica las decisiones de reescritura.');
+expect(page.includes('no puedes inventar') && page.includes('Información que no puedes inventar'), 'Falta la regla explícita contra la invención de datos.');
+expect(page.includes('140 a 220 palabras'), 'Falta una extensión clara para el producto final.');
 
 const timeValues = [...page.matchAll(/<b>(\d+) min<\/b>/g)].map(match => Number(match[1]));
-expect(timeValues.reduce((sum, value) => sum + value, 0) === 90, `La ruta declarada suma ${timeValues.reduce((sum, value) => sum + value, 0)} minutos, no 90.`);
+const totalMinutes = timeValues.reduce((sum, value) => sum + value, 0);
+expect(totalMinutes === 90, `La ruta declarada suma ${totalMinutes} minutos, no 90.`);
 
-const requiredFields = ['nar-a', 'nar-e', 'nar-x', 'arg-a', 'arg-e', 'arg-x', 'close-understood', 'close-evidence', 'close-improve'];
+const requiredFields = ['plan-que','plan-quien','plan-donde','plan-evidencia','news-title','news-lead','news-body','close-preserved','close-transformed','close-improve'];
 requiredFields.forEach(id => expect(page.includes(`id="${id}"`), `Falta el campo obligatorio ${id}.`));
-expect(page.includes("const QUESTIONS=[") && page.includes("{id:'narrativo'") && page.includes("{id:'argumentativo'"), 'Los dos productos no están declarados como estructura dinámica.');
-expect(page.includes("const CLOSING_FIELDS=['close-understood','close-evidence','close-improve']"), 'El cierre no contiene las tres consignas canónicas.');
+expect(page.includes("const QUESTIONS=[{id:'noticia',fields:['news-title','news-lead','news-body']}];"), 'El único producto no está declarado como noticia completa.');
+expect(page.includes("const PLANNING_FIELDS=['plan-que','plan-quien','plan-donde','plan-evidencia'];"), 'Falta la planificación previa de la noticia.');
+expect(page.includes("const CLOSING_FIELDS=['close-preserved','close-transformed','close-improve'];"), 'Falta el cierre sobre decisiones de transformación.');
 expect(page.includes('function validate()') && page.includes("scrollIntoView({behavior:'smooth',block:'center'})"), 'La validación no lleva al primer campo incompleto.');
-expect(page.includes('score:completedCount(),total:QUESTIONS.length'), 'La entrega no calcula su avance desde los dos productos reales.');
+expect(page.includes('score:completedCount(),total:QUESTIONS.length'), 'La entrega no calcula el avance desde el producto real.');
 expect(page.includes("updates['respuestas/'+SESSION_ID+'/'+currentUID]=response"), 'La entrega final no escribe la respuesta canónica.');
-expect(page.includes("updates['resultados/'+SESSION_ID+'/'+currentUID]=result"), 'La entrega no deja los productos visibles para revisión docente.');
+expect(page.includes("updates['resultados/'+SESSION_ID+'/'+currentUID]=result"), 'La entrega no deja la noticia visible para revisión docente.');
 expect(page.includes('await db.ref(BASE).update(updates)'), 'Respuesta y registro formativo no se escriben atómicamente.');
 expect(page.includes("child('submitted').once('value')") && page.includes("child('completada').once('value')"), 'La entrega no relee ambas marcas canónicas.');
 expect(page.includes('let saveQueue=Promise.resolve()') && page.includes('await saveQueue'), 'El autoguardado no está serializado con la entrega.');
@@ -42,14 +46,19 @@ expect(page.includes('work-telemetry.js" data-session="sesion-u3-11"'), 'Falta l
 expect(page.includes("window.location.hostname==='127.0.0.1'") && page.includes("get('preview')==='1'"), 'La vista previa no está limitada explícitamente a localhost.');
 
 expect(dashboard.includes("'sesion-u3-11'") && dashboard.includes("fecha_aplicacion:'2026-09-30'"), 'El dashboard no registra la Clase 11 con su fecha.');
-expect(admin.includes("'sesion-u3-11'") && admin.includes("formato_panel:'evidencia-dos-textos'"), 'El admin no registra el formato de la Clase 11.');
+expect(dashboard.includes("titulo:'Unidad 3 · Clase 11 — Del relato a la noticia'"), 'El dashboard conserva el título anterior.');
+expect(admin.includes("'sesion-u3-11'") && admin.includes("formato_panel:'transformacion-relato-noticia'"), 'El admin no registra el nuevo formato de la Clase 11.');
 expect(dashboard.includes("asignados:['2A-HC','2B-HC']"), 'La clase no está asignada a 2°A y 2°B HC.');
-expect(admin.includes("texto_narrativo:'Producto 1 · respuesta al microcuento'") && admin.includes("texto_argumentativo:'Producto 2 · respuesta a la columna'"), 'El admin no rotula los dos productos escritos.');
-expect(admin.includes("if(sessions[sesId]?.formativa===true) continue;"), 'Los resultados formativos pueden contaminar un promedio evaluativo.');
+expect(admin.includes("noticia_transformada:'Producto final · noticia transformada'"), 'El admin no rotula la noticia final.');
+expect(admin.includes("plan_evidencia:'Planificación · hechos conservados'") && admin.includes("transformo:'Revisión · cambio de género realizado'"), 'El admin no rotula la planificación y revisión.');
+expect(admin.includes("Number(r.total)===1?'producto':'productos'"), 'El admin no usa singular para el único producto.');
+expect(admin.includes('if(sessions[sesId]?.formativa===true) continue;'), 'Los resultados formativos pueden contaminar un promedio evaluativo.');
+expect(publisher.includes("titulo: 'Unidad 3 · Clase 11 — Del relato a la noticia'") && publisher.includes("formato_panel: 'transformacion-relato-noticia'"), 'El publicador de Firebase conserva metadatos antiguos.');
 
 expect(contract.files.some(entry => entry.path === pagePath && entry.storage === 'firebase-client'), 'La página no está registrada en el contrato de entrega.');
 const manifestEntry = manifest.criticalFiles.find(entry => entry.path === pagePath);
 expect(manifestEntry && manifestEntry.url === '/estudiantes/guia-u3-s11-evidencia-dos-textos.html', 'La página no está protegida por el manifiesto académico.');
+expect(manifestEntry && manifestEntry.contains === 'Del relato a la noticia', 'El manifiesto no exige el nuevo contenido.');
 
 const inlineScripts = [...page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(source => source.trim());
 inlineScripts.forEach((source, index) => {
@@ -61,4 +70,4 @@ if (failures.length) {
   process.exit(1);
 }
 
-console.log('SIMCE U3S11 auditada: 90 minutos, microcuento y columna originales, dos modelos A–E–E, dos productos escritos, cierre metacognitivo, autoguardado, entrega atómica, panel docente y exclusión de promedios evaluativos verificados.');
+console.log('SIMCE U3S11 auditada: 90 minutos, relato original, modelo de transformación, planificación, noticia completa, revisión metacognitiva, autoguardado, entrega atómica, panel docente y exclusión de promedios evaluativos verificados.');

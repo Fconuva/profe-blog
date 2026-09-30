@@ -8,6 +8,32 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, sesión administrativa persistente y regalos manuales de muebles
+
+- La autenticación del panel docente quedó aislada de la sesión estudiantil
+  mediante una aplicación Firebase con nombre propio. Iniciar o cerrar una
+  cuenta de estudiante ya no reemplaza la sesión administrativa; la sesión
+  anterior se migra una vez y el formulario no se muestra durante la
+  recuperación. Cambio base: `4da680d5`.
+- En la misma sección `Admin profesor > Chat de casas` se añadió **Regalar
+  mueble a un estudiante**: permite elegir estudiante y mueble, pide
+  confirmación y, después de entregarlo, lo marca en verde como `Ya lo tiene`,
+  indicando si provino del profesor o de una tarea. El servidor limita cada
+  docente a sus cursos y los premios manuales del profesor no son transferibles
+  entre estudiantes.
+- Se incorporó **PlayStation 5** como mueble decorativo con cuatro orientaciones
+  isométricas transparentes, creado con generación de imagen y ajustado al
+  lenguaje pixel art del catálogo. Cambio funcional: `eb817898`.
+- Pasaron la auditoría de Mi espacio, la auditoría de creación y acceso del
+  admin, `check:api`, el build integral y una prueba real de navegador: selección
+  del estudiante, confirmación, relectura marcada, login oculto y cero errores
+  de consola. En producción se comprobaron el panel, el catálogo, la protección
+  HTTP 401 sin token y los SHA-256 idénticos de las cuatro imágenes.
+- Despliegue `dpl_AzHwNDxi1jGFJKCwCqoh9xuUCoYy`, estado `READY`, asociado a
+  `https://www.estudiacest.com`.
+
+---
+
 ## 2026-09-30, SIMCE NM2 Unidad 3: la Clase 8 queda sin evaluar en ambos cursos (r4)
 
 - Francisco confirmó que la Clase 8 tampoco se hizo en 2°B HC. La regla quedó

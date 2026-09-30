@@ -697,6 +697,7 @@
   }
 
   function conectarSala(sala, silencioso) {
+    if (!S.housesEnabled) return Promise.resolve(false);
     return api('entrar', { sala: sala, look: S.look, col: Math.round(S.av.col), fila: Math.round(S.av.fila) })
       .then(function (r) {
         if (!r || !r.ok) {
@@ -780,8 +781,9 @@
   // ---------------- regalos ----------------
   // Un mueble que yo tengo y el dueño de la casa no. Lo escribe el servidor en
   // su avatar; aquí solo se elige.
-  function tengo(m) { return S.xp >= m.xp || !!(S.regalos && S.regalos[m.id]); }
+  function tengo(m) { return Number(m.xp || 0) === 0 || !!(S.regalos && S.regalos[m.id]); }
   function abrirRegalo() {
+    if (!S.housesEnabled) { avisar('Las casas y la decoración están deshabilitadas'); return; }
     var panel = S.host.querySelector('#espVisitas');
     var para = S.sala, nombre = nombreCorto(S.duenoNombre) || 'tu compañero';
     panel.hidden = false;
@@ -873,6 +875,7 @@
   }
 
   function abrirVisitas() {
+    if (!S.housesEnabled) { avisar('Las visitas están deshabilitadas'); return; }
     var panel = S.host.querySelector('#espVisitas');
     panel.hidden = false;
     panel.innerHTML = '<div class="esp-vis-cab"><b>¿A quién visitas?</b><button class="esp-btn-chico" id="espCerrarVis">Cerrar</button></div><div class="esp-vis-lista">Buscando compañeros…</div>';
@@ -900,6 +903,7 @@
   // El nombre del dueño viene de la lista del servidor: no se lee su perfil,
   // que trae el RUT.
   function irACasa(uid, nombreDueno) {
+    if (!S.housesEnabled) { avisar('Las casas están deshabilitadas'); return; }
     if (uid === S.sala) return;
     var esMia = uid === S.uid;
     var cargar = esMia
@@ -937,6 +941,7 @@
       '<span class="esp-estado"></span>' +
     '</div>' +
     '<div class="esp-anuncio" id="espAnuncio" role="status" hidden></div>' +
+    '<div id="espBloqueo" role="status" hidden style="margin:12px 0;padding:14px 16px;border:1px solid #f59e0b;background:#fffbeb;color:#78350f;font-weight:700">🔒 Casas y decoración deshabilitadas por ahora. Los muebles se entregarán por tareas completadas.</div>' +
     '<div class="esp-panel" data-panel="personaje">' +
       '<div class="esp-personaje">' +
         '<div class="esp-vista"><div class="esp-figura" id="espFigura"></div>' +
@@ -1035,7 +1040,7 @@
       CATALOGO.filter(tengo).length + ' de ' + CATALOGO.length;
     cont.innerHTML = lista.map(function (m) {
       var n = S.miPieza.filter(function (p) { return p.id === m.id; }).length;
-      var regalo = S.xp < m.xp && S.regalos[m.id];
+      var regalo = S.regalos[m.id];
       return '<div class="esp-item' + (tengo(m) ? '' : ' blo') + (S.elegido === m.id ? ' sel' : '') +
         '" data-id="' + m.id + '">' +
         '<img src="' + RUTA + m.id + '_SE.png" alt="' + esc(m.nom) + '">' +
@@ -1099,6 +1104,7 @@
     dibujar(); guardar('pieza', S.pieza);
   }
   function tecla(k, ev) {
+    if (!S.housesEnabled) return;
     if (k === 'Tab') { if (ev) ev.preventDefault(); elegirMueble(ev && ev.shiftKey ? -1 : 1); return; }
     if (k === 'Escape') { soltar(); return; }
     if ((k === 'r' || k === 'R') && S.sel >= 0) { S.host.querySelector('#espRotar').click(); return; }
@@ -1130,6 +1136,7 @@
 
   // ---------------- terreno: piso y muros ----------------
   function abrirPaleta(tipo) {
+    if (!S.housesEnabled) { avisar('La decoración está deshabilitada'); return; }
     if (S.visitando) { avisar('El terreno se cambia en tu casa'); return; }
     var panel = S.host.querySelector('#espPaleta');
     var lista = tipo === 'piso' ? PISOS : MUROS;
@@ -1156,9 +1163,23 @@
     });
   }
   function verPanel(cual) {
+    if (!S.housesEnabled && (cual === 'pieza' || cual === 'muebles')) {
+      anunciar('🔒 Casas y decoración deshabilitadas por ahora.');
+      cual = 'personaje';
+    }
     S.host.querySelectorAll('.esp-panel').forEach(function (p) { p.classList.toggle('oculto', p.dataset.panel !== cual); });
     S.host.querySelectorAll('.esp-tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.p === cual); });
     if (cual === 'pieza') setTimeout(dibujar, 40);
+  }
+
+  function aplicarDisponibilidad() {
+    var bloqueo = S.host.querySelector('#espBloqueo');
+    if (bloqueo) bloqueo.hidden = S.housesEnabled;
+    ['pieza','muebles'].forEach(function (panel) {
+      var button = S.host.querySelector('.esp-tabs button[data-p="' + panel + '"]');
+      if (button) { button.disabled = !S.housesEnabled; button.title = S.housesEnabled ? '' : 'Deshabilitado por el profesor'; }
+    });
+    if (!S.housesEnabled) { desconectarSala(); verPanel('personaje'); }
   }
 
   function punto(ev) {
@@ -1274,6 +1295,7 @@
     S.logros = (cfg.logros && typeof cfg.logros === 'object') ? cfg.logros : {};
     S.placas = placasValidas(cfg.placas, S.logros);
     S.regalos = (cfg.regalos && typeof cfg.regalos === 'object') ? cfg.regalos : {};
+    S.housesEnabled = false;
     S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
     S.miPieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
@@ -1318,13 +1340,18 @@
     ['floorFull_SE'].forEach(function (n) { cargar(n, dibujar); });
     CATALOGO.forEach(function (m) { DIRS.forEach(function (d) { cargar(m.id + '_' + d, dibujar); }); });
 
-    pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera();
+    pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera(); aplicarDisponibilidad();
     global.addEventListener('resize', dibujar);
     global.addEventListener('pagehide', desconectarSala);
     setTimeout(dibujar, 80);
 
-    // Entro a mi propia casa apenas se monta: así los que vengan me ven ahí.
-    if (S.auth && S.db) { conectarSala(S.uid, true); escucharRegalos(); }
+    if (S.auth && S.db) {
+      api('estado').then(function (state) {
+        S.housesEnabled = !!(state && state.enabled);
+        aplicarDisponibilidad();
+        if (S.housesEnabled) { conectarSala(S.uid, true); escucharRegalos(); }
+      }).catch(function () { aplicarDisponibilidad(); });
+    }
   }
 
   global.MiEspacio = { montar: montar, CATALOGO: CATALOGO, PISOS: PISOS, MUROS: MUROS,

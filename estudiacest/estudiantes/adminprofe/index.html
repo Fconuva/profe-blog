@@ -182,6 +182,11 @@
                 Lo que el filtro <b>marca</b> se publica igual y llega aquí como alerta: esconder "me quiero morir" esconde el pedido de ayuda.
                 Lo que el filtro <b>bloquea</b> no se publica, pero el intento queda registrado.
             </p>
+            <div class="panel-table" style="margin-bottom:16px;padding:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+                <div style="flex:1;min-width:240px"><strong>Uso de casas y decoración</strong><div id="casasConfigStatus" style="font-size:12px;color:#64748b;margin-top:3px">Consultando estado…</div></div>
+                <button id="btnCasasBloquear" class="btn btn-danger" onclick="cambiarEstadoCasas(false)">🔒 Deshabilitar</button>
+                <button id="btnCasasHabilitar" class="btn btn-primary" onclick="cambiarEstadoCasas(true)">🔓 Habilitar</button>
+            </div>
             <div class="stat-row" id="chatCasasStats"></div>
             <div class="panel-table">
                 <h3 style="padding:16px 14px 8px;font-size:14px;font-weight:700;color:#b42318">⚠️ Alertas para revisar</h3>
@@ -1026,7 +1031,39 @@ async function loadAllData(){
 /* ============ CHAT DE CASAS ============ */
 // Alertas y bloqueos del chat de Mi espacio. Solo lectura desde aquí; marcar
 // una alerta como atendida pasa por api/salas.js con el token del admin.
-async function cargarChatCasas(){
+async function casasAdminApi(action,payload={}){
+    const token=await auth.currentUser.getIdToken();
+    const response=await fetch('/api/estudiantes',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:JSON.stringify({action:'salas-'+action,...payload})});
+    const data=await response.json();
+    if(!response.ok||data.ok===false)throw new Error(data.error||'No se pudo actualizar Mi espacio');
+    return data;
+}
+async function cargarEstadoCasas(){
+    const status=document.getElementById('casasConfigStatus');
+    try{
+        const state=await casasAdminApi('estado');
+        status.innerHTML=state.enabled
+            ? '<span style="color:#166534;font-weight:800">HABILITADAS</span> · los estudiantes pueden entrar y decorar.'
+            : '<span style="color:#b91c1c;font-weight:800">DESHABILITADAS</span> · no pueden entrar, visitar ni decorar.';
+        document.getElementById('btnCasasBloquear').disabled=!state.enabled;
+        document.getElementById('btnCasasHabilitar').disabled=state.enabled;
+    }catch(error){status.textContent='No se pudo leer el estado: '+error.message;}
+}
+async function cambiarEstadoCasas(enabled){
+    const action=enabled?'habilitar':'deshabilitar';
+    if(!confirm('¿'+action.charAt(0).toUpperCase()+action.slice(1)+' las casas y la decoración para todos los estudiantes?'))return;
+    const buttons=[document.getElementById('btnCasasBloquear'),document.getElementById('btnCasasHabilitar')];
+    buttons.forEach(button=>button.disabled=true);
+    try{
+        await casasAdminApi('configurar',{enabled});
+        await cargarEstadoCasas();
+        await cargarChatCasas(false);
+        toast('Casas y decoración '+(enabled?'habilitadas':'deshabilitadas'),'ok');
+    }catch(error){toast(error.message,'err');await cargarEstadoCasas();}
+}
+async function cargarChatCasas(loadState=true){
+    if(loadState)await cargarEstadoCasas();
     const fecha = t => t ? new Date(Number(t)).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const escapa = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
     const [alSnap, blSnap, saSnap, esSnap] = await Promise.all([

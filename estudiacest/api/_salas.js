@@ -30,6 +30,12 @@ const VIDA_MS = 60 * 1000;
 const ENTRE_MENSAJES_MS = 1500;
 const LARGO_MAX = 200;
 const HISTORIAL = 100;
+const CONFIG_PATH = `${BASE}/configuracion/mi_espacio`;
+
+async function estadoMiEspacio(db) {
+    const value = (await db.ref(CONFIG_PATH).once('value')).val() || {};
+    return { enabled: value.enabled === true, updatedAt: Number(value.updatedAt || 0) };
+}
 
 // ---- identidad: el token dice quién es, la nómina dice si existe ----
 async function quien(req, db, auth) {
@@ -279,11 +285,34 @@ async function atender(req, res, db, yo) {
     return res.status(200).json({ ok: true });
 }
 
+async function configurar(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
+    const enabled = req.body.enabled === true;
+    const config = { enabled, updatedAt: Date.now(), updatedBy: yo.uid };
+    await db.ref(CONFIG_PATH).set(config);
+    if (!enabled) {
+        const salas = (await db.ref(`${BASE}/salas`).once('value')).val() || {};
+        const update = {};
+        Object.keys(salas).forEach((uid) => { update[`${uid}/presentes`] = null; });
+        if (Object.keys(update).length) await db.ref(`${BASE}/salas`).update(update);
+    }
+    return res.status(200).json({ ok: true, enabled, updatedAt: config.updatedAt });
+}
+
 // Punto de entrada desde api/estudiantes.js. `accion` llega sin el prefijo `salas-`.
 async function manejar(req, res, accion, db, auth) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido' });
     try {
         const yo = await quien(req, db, auth);
+        if (accion === 'estado') {
+            const state = await estadoMiEspacio(db);
+            return res.status(200).json({ ok: true, ...state });
+        }
+        if (accion === 'configurar') return await configurar(req, res, db, yo);
+        if (!['salir', 'atender'].includes(accion)) {
+            const state = await estadoMiEspacio(db);
+            if (!state.enabled) return res.status(200).json({ ok: false, disabled: true, error: 'Las casas y la decoración están deshabilitadas por el profesor.' });
+        }
         if (accion === 'entrar') return await entrar(req, res, db, yo);
         if (accion === 'lista') return await lista(req, res, db, yo);
         if (accion === 'latido') return await latido(req, res, db, yo);

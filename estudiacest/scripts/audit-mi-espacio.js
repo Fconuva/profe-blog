@@ -106,6 +106,8 @@ exigir(leer('api/estudiantes.js').includes("require('./_salas.js')") && leer('ap
 exigir(espacio.includes("var API = '/api/estudiantes'") && espacio.includes("'salas-' + action"), 'El cliente debe hablar con /api/estudiantes usando acciones salas-*.');
 exigir(/TOPE_SALA\s*=\s*30/.test(salasApi), 'El tope de la casa debe ser 30 personas.');
 exigir(salasApi.includes('bloqueados_chat') && salasApi.includes('alertas_chat'), 'Los bloqueos y las alertas deben quedar registrados para el profesor.');
+exigir(salasApi.includes('CONFIG_PATH') && salasApi.includes("accion === 'configurar'") && salasApi.includes('if (!state.enabled)'),
+  'El servidor debe bloquear casas y decoración por configuración global y permitir que el admin cambie el estado.');
 
 const reglas = JSON.parse(leer('firebase-rules.json')).rules.plataforma_estudiantes;
 exigir(reglas.salas && reglas.salas['.write'] === false, 'El nodo salas debe tener .write en false: solo escribe el servidor.');
@@ -128,6 +130,10 @@ exigir(espacio.includes('abrirPaleta') && espacio.includes('PISOS'), 'Falta el c
 ['roble', 'gris', 'azul', 'verde', 'rosa', 'morado', 'negro'].forEach(p => exigir(enDisco.has(`floorFull__${p}_SE.png`), `Falta el piso ${p}.`));
 const admin = leer('estudiantes/adminprofe/index.html');
 exigir(admin.includes('sec-chatcasas') && admin.includes('alertas_chat'), 'El admin debe mostrar las alertas del chat.');
+exigir(admin.includes('casasConfigStatus') && admin.includes('cambiarEstadoCasas(false)') && admin.includes('cambiarEstadoCasas(true)'),
+  'El admin debe permitir habilitar y deshabilitar casas y decoración.');
+exigir(espacio.includes("api('estado')") && espacio.includes('aplicarDisponibilidad') && espacio.includes('S.housesEnabled = false'),
+  'Mi espacio debe partir bloqueado y habilitar casas solo después de leer la configuración del servidor.');
 
 // ---- nombre visible: "Nombre Apellido", nunca el nombre completo ni el RUT ----
 // Caso (10-sep-2026): la sala guardaba el nombre completo en `presentes` y `chat`,
@@ -248,11 +254,8 @@ exigir(/pendientes\[campo\]/.test(cuerpoDe('guardar')),
 
 // ---- Regalos (10-sep-2026) ----
 // El navegador solo elige; el servidor escribe en el avatar del que recibe.
-exigir(/function tengo\(m\) \{ return S\.xp >= m\.xp \|\| !!\(S\.regalos && S\.regalos\[m\.id\]\); \}/.test(moverJs),
-  'tengo(m) decide qué muebles hay: XP suficiente o regalo recibido.');
-// La única comparación directa con la XP que queda es la que decide mostrar el 🎁.
-exigir(!/S\.xp\s*[<>]=?\s*m\.xp/.test(cuerpoDe('pintarMuebles').replace(/var regalo = S\.xp < m\.xp && S\.regalos\[m\.id\];/, '')),
-  'pintarMuebles debe usar tengo(m), si no los regalos no aparecen.');
+exigir(/function tengo\(m\) \{ return Number\(m\.xp \|\| 0\) === 0 \|\| !!\(S\.regalos && S\.regalos\[m\.id\]\); \}/.test(moverJs),
+  'tengo(m) debe dejar los muebles iniciales y exigir una asignación para los demás; la XP ya no desbloquea muebles.');
 exigir(/api\('regalar', \{ para: para, mueble: m\.id \}\)/.test(cuerpoDe('abrirRegalo')), 'El regalo se pide al servidor (salas-regalar).');
 exigir(!/avatar\/' \+ (para|S\.sala)\)[^;]*\.(set|update|push)\(/.test(moverJs), 'El navegador no escribe en el avatar ajeno.');
 exigir(/on\('child_added'/.test(cuerpoDe('escucharRegalos')) && /escucharRegalos\(\)/.test(cuerpoDe('montar')),
@@ -290,6 +293,7 @@ async function probarRegalos() {
   }
   const SALAS = require(path.join(root, 'api/_salas.js'));
   const db = baseDeJuguete({ plataforma_estudiantes: {
+    configuracion: { mi_espacio: { enabled: true } },
     estudiantes: {
       uidAnaaaa: { nombre: 'PEREZ SOTO ANA', curso: '2A-HC' },
       uidLuisss: { nombre: 'LARA ROJAS LUIS', curso: '2A-HC' },
@@ -300,10 +304,10 @@ async function probarRegalos() {
     avatar: { uidAnaaaa: { regalos: { rugRound: { de: 'Alguien', ts: 1 } } } }
   } });
   const auth = { verifyIdToken: async (t) => ({ uid: t }) };
-  const pedir = async (quien, cuerpo) => {
+  const pedir = async (quien, cuerpo, accion = 'regalar') => {
     const r = { status: 200, json: null };
     const res = { status(s) { r.status = s; return this; }, json(j) { r.json = j; return this; } };
-    await SALAS.manejar({ method: 'POST', headers: { authorization: 'Bearer ' + quien }, body: cuerpo }, res, 'regalar', db, auth);
+    await SALAS.manejar({ method: 'POST', headers: { authorization: 'Bearer ' + quien }, body: cuerpo }, res, accion, db, auth);
     return r;
   };
   const regalo = (uid, id) => db.leerRuta(`plataforma_estudiantes/avatar/${uid}/regalos/${id}`);
@@ -325,6 +329,12 @@ async function probarRegalos() {
   exigir(r.json && r.json.ok === true, 'El regalo repetido no gasta el cupo del día.');
   r = await pedir('uidProfee', { para: 'uidAnaaaa', mueble: 'bookcaseOpen' });
   exigir(r.status === 403, 'Los regalos son entre estudiantes.');
+  r = await pedir('uidProfee', { enabled: false }, 'configurar');
+  exigir(r.json && r.json.ok === true && r.json.enabled === false, 'El profesor debe poder deshabilitar casas y decoración.');
+  r = await pedir('uidAnaaaa', {}, 'estado');
+  exigir(r.json && r.json.enabled === false, 'El estudiante debe recibir el estado deshabilitado.');
+  r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
+  exigir(r.json && r.json.disabled === true, 'Una acción de casa debe ser rechazada mientras el profesor la mantiene deshabilitada.');
   exigir(/REGALOS_POR_DIA = 1;/.test(salasApi) && /regalos_log\/\$\{yo\.uid\}\/\$\{hoyEnChile\(\)\}`\)\.transaction/.test(salasApi),
     'El cupo diario vive en regalos_log y se descuenta con una transacción.');
 }

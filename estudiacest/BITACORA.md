@@ -8,6 +8,39 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-29 (noche), corrección SIMCE NM2: Clase 11 de transformación textual
+
+- Por indicación de Francisco se reemplazó, en la misma ruta y sesión, la clase
+  de dos respuestas A–E–E por una tarea de producción completa: leer el relato
+  original `El puente de cartón` y transformarlo en una noticia. No se duplicó
+  la Clase 11 ni cambió su fecha del 30 de septiembre o su asignación a 2°A HC
+  y 2°B HC.
+- La nueva secuencia conserva 90 minutos: propósito, lectura, modelo de
+  transformación, planificación, escritura y revisión. Enseña explícitamente
+  qué cambia en propósito, orden, lenguaje y estructura, y qué hechos deben
+  conservarse sin inventar nombres, fechas, lugares, causas ni declaraciones.
+- El producto final es una noticia de 140 a 220 palabras con titular, entrada y
+  cuerpo. La plataforma guarda además cuatro campos de planificación y tres de
+  revisión metacognitiva. Sigue siendo una actividad formativa, sin nota ni
+  ranking, con autoguardado, escritura atómica de respuesta/resultado y
+  relectura de `submitted` y `completada`.
+- Se actualizaron dashboard, admin, rótulos de revisión, publicador de sesión,
+  manifiesto y auditoría. Se conservaron los rótulos de la versión anterior para
+  poder leer cualquier borrador legado. No se creó ni envió una entrega de
+  estudiante durante las pruebas.
+- Validaciones: auditoría focalizada, contrato de 50 clases y build completo
+  aprobados local y remotamente. En navegador real, 1440 × 900 y 390 × 844 no
+  presentaron desborde; se verificaron 10 campos, foco en el primer pendiente,
+  contador, vista previa y producto único. La página pública autenticada mostró
+  el nuevo título y el mensaje de autoguardado.
+- Commits `74e42961` y `89ede072` en `origin/main`. Despliegue final
+  `dpl_8BUDZEwuJX7V6tfQneHxteZM5qxm`, estado `READY`, con alias en
+  `www.estudiacest.com`. Página, dashboard y admin respondieron 200; el HTML
+  público coincidió exactamente con la fuente local en SHA-256
+  `7151167d4c7d863f2b556387c63d5a66b8635b5ec9a22dc79ed8151696eaf071`.
+
+---
+
 ## 2026-09-29 (noche), SIMCE NM2: Clase 11 sobre evidencia en dos tipos de texto
 
 - Se publicó para 2°A HC y 2°B HC, con fecha 30 de septiembre, la ruta

@@ -149,6 +149,11 @@ exigir(/setInterval\(sincronizarInventario, 60000\)/.test(espacio) && espacio.in
   'El inventario debe releer los premios verificados por el servidor.');
 exigir(!espacio.includes('<button data-p="muebles">') && espacio.includes('espMueblesBloque') && espacio.includes('esp-muebles-integrados'),
   'La casa y el catálogo de muebles deben estar en una sola vista, no en pestañas separadas.');
+exigir(!/cual === 'pieza'[^\n]*cual = 'personaje'/.test(espacio) && espacio.includes('Puedes mirar tus premios'),
+  'Con el uso bloqueado se debe poder abrir la vista unificada y mirar los muebles con candado.');
+exigir(espacio.includes("if (!S.housesEnabled) { avisar('El uso de la casa está deshabilitado por ahora'); return; }") &&
+  espacio.includes('chatInput.disabled = !S.housesEnabled'),
+  'Mirar la casa bloqueada no puede permitir caminar, decorar ni chatear.');
 
 // ---- nombre visible: "Nombre Apellido", nunca el nombre completo ni el RUT ----
 // Caso (10-sep-2026): la sala guardaba el nombre completo en `presentes` y `chat`,

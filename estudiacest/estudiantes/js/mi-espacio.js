@@ -1066,7 +1066,8 @@
     cont.querySelectorAll('.esp-item').forEach(function (el) {
       el.addEventListener('click', function () {
         var m = POR_ID[el.dataset.id];
-        if (!tengo(m)) { avisar('Se gana así: ' + m.motivo); return; }
+        if (!tengo(m)) { avisar(requisitoDe(m)); return; }
+        if (!S.housesEnabled) { avisar('La decoración está deshabilitada por ahora'); return; }
         if (S.visitando) { avisar('Los muebles se ponen en tu casa'); return; }
         S.elegido = (S.elegido === m.id) ? null : m.id;
         S.sel = -1; botones(); pintarMuebles();
@@ -1077,9 +1078,9 @@
   }
 
   function botones() {
-    S.host.querySelector('#espRotar').disabled = S.sel < 0;
-    S.host.querySelector('#espQuitar').disabled = S.sel < 0;
-    S.host.querySelector('#espSoltar').disabled = S.sel < 0 && !S.elegido;
+    S.host.querySelector('#espRotar').disabled = !S.housesEnabled || S.sel < 0;
+    S.host.querySelector('#espQuitar').disabled = !S.housesEnabled || S.sel < 0;
+    S.host.querySelector('#espSoltar').disabled = !S.housesEnabled || (S.sel < 0 && !S.elegido);
   }
 
   // ---------------- teclado y pad: sin mouse ----------------
@@ -1177,10 +1178,6 @@
     });
   }
   function verPanel(cual) {
-    if (!S.housesEnabled && (cual === 'pieza' || cual === 'muebles')) {
-      anunciar('🔒 Casas y decoración deshabilitadas por ahora.');
-      cual = 'personaje';
-    }
     S.host.querySelectorAll('.esp-panel').forEach(function (p) { p.classList.toggle('oculto', p.dataset.panel !== cual); });
     S.host.querySelectorAll('.esp-tabs button').forEach(function (b) { b.classList.toggle('on', b.dataset.p === cual); });
     if (cual === 'pieza') setTimeout(dibujar, 40);
@@ -1189,11 +1186,14 @@
   function aplicarDisponibilidad() {
     var bloqueo = S.host.querySelector('#espBloqueo');
     if (bloqueo) bloqueo.hidden = S.housesEnabled;
-    ['pieza','muebles'].forEach(function (panel) {
-      var button = S.host.querySelector('.esp-tabs button[data-p="' + panel + '"]');
-      if (button) { button.disabled = !S.housesEnabled; button.title = S.housesEnabled ? '' : 'Deshabilitado por el profesor'; }
-    });
-    if (!S.housesEnabled) { desconectarSala(); verPanel('personaje'); }
+    var casaButton = S.host.querySelector('.esp-tabs button[data-p="pieza"]');
+    if (casaButton) casaButton.title = S.housesEnabled ? '' : 'Puedes mirar tus premios; el uso está deshabilitado por el profesor';
+    var chatInput = S.host.querySelector('#espChatTexto');
+    var chatButton = S.host.querySelector('#espChatForm button');
+    if (chatInput) chatInput.disabled = !S.housesEnabled;
+    if (chatButton) chatButton.disabled = !S.housesEnabled;
+    botones();
+    if (!S.housesEnabled) desconectarSala();
   }
 
   function sincronizarDisponibilidad() {
@@ -1257,6 +1257,7 @@
       dibujar();
     });
     S.cv.addEventListener('pointerdown', function (ev) {
+      if (!S.housesEnabled) { avisar('El uso de la casa está deshabilitado por ahora'); return; }
       var p = punto(ev);
       // De visita solo se camina: la casa es de otro.
       if (S.visitando) {
@@ -1315,7 +1316,7 @@
       }
     });
     S.host.querySelector('#espRotar').addEventListener('click', function () {
-      if (S.sel < 0 || S.visitando) return;
+      if (!S.housesEnabled || S.sel < 0 || S.visitando) return;
       var m = S.pieza[S.sel];
       if (m.pared) {
         m.pared = m.pared === 'izq' ? 'der' : 'izq';
@@ -1326,7 +1327,7 @@
       dibujar(); guardar('pieza', S.pieza);
     });
     S.host.querySelector('#espQuitar').addEventListener('click', function () {
-      if (S.sel < 0 || S.visitando) return;
+      if (!S.housesEnabled || S.sel < 0 || S.visitando) return;
       S.pieza.splice(S.sel, 1); S.sel = -1;
       botones(); pintarMuebles(); dibujar(); guardar('pieza', S.pieza);
       avisar('Guardado en el cajón');

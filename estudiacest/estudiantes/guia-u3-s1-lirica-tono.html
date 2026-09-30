@@ -290,7 +290,7 @@ tráeme el mundo que yo no vi.</p>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script><script src="/estudiantes/js/simce-session-gate.js"></script>
 <script src="js/forced-refresh.js"></script>
 <script>
   const FIREBASE_CONFIG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",
@@ -713,6 +713,7 @@ tráeme el mundo que yo no vi.</p>
     auth.onAuthStateChanged(async user=>{
       if(!user){window.location.href=SHARED_LOGIN_URL;return;}
       currentUID=user.uid;
+      if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,user.uid))return;
       try{
         const [stuSnap,savedSnap]=await Promise.all([
           db.ref(BASE+'/estudiantes/'+user.uid).once('value'),

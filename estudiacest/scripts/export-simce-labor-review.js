@@ -2,6 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { classifySubmissionStatus } = require('./class-submission-status');
 const { readPlatform } = require('./firebase-maintenance-db');
+const { GUIDED_SESSIONS } = require('../api/_simce-personal-guided-catalog');
 
 // Clases 1 a 8 y 10 de la Unidad 3. La Clase 9 es informativa (`requiere_entrega: false`)
 // y no lleva nota. El modelo del 26-ago cubría 1 a 6; el del 30-sep agrega 7, 8 y 10.
@@ -46,9 +47,9 @@ function readSource(snapshotPath) {
   return readPlatform();
 }
 
-// Exclusiones decididas por UID y datos, nunca por nombre: cuentas técnicas sin RUN,
-// incorporaciones posteriores a la unidad y ruta personal adaptada (decide el docente).
-function exclusionFor(uid, student, sessions) {
+// Exclusiones decididas por UID y datos, nunca por nombre: cuentas técnicas sin RUN e
+// incorporaciones posteriores a la unidad.
+function exclusionFor(uid, student) {
   const hasRun = Boolean(student.run || student.rut || student.RUN);
   if (!hasRun && /cuenta\s+t\S*cnica/i.test(String(student.nombre || ''))) {
     return 'Cuenta técnica de prueba';
@@ -56,10 +57,56 @@ function exclusionFor(uid, student, sessions) {
   if (Number(student.createdAt) >= UNIT_ENROLLMENT_CUTOFF) {
     return 'Incorporación posterior al cierre de la unidad';
   }
-  const personalRoute = Object.entries(sessions || {}).some(([sessionId, session]) =>
-    sessionId.startsWith('personal-u3-') && Array.isArray(session && session.asignados) && session.asignados.includes(uid));
-  if (personalRoute) return 'Ruta personal adaptada: la nota la define el docente';
   return '';
+}
+
+// Ruta personal adaptada: número de clase → sesión personal asignada a este UID.
+function personalRouteFor(uid, sessions) {
+  const route = {};
+  Object.entries(sessions || {}).forEach(([sessionId, session]) => {
+    if (!sessionId.startsWith('personal-u3-')) return;
+    if (!Array.isArray(session && session.asignados) || !session.asignados.includes(uid)) return;
+    const number = Number(sessionId.split('-')[2]);
+    if (Number.isInteger(number)) route[number] = sessionId;
+  });
+  return route;
+}
+
+function personalQuestionCount(personalSessionId, response, result) {
+  const guided = GUIDED_SESSIONS[personalSessionId.split('-')[2]];
+  const key = guided && guided.key;
+  const fromKey = Array.isArray(key) ? key.length : Object.keys(key || {}).length;
+  return fromKey || Number(result.total || response.total) || 6;
+}
+
+// La clase se califica con la mejor evidencia entre la guía estándar y la sesión
+// personal. Sin evidencia en ninguna, queda pendiente mientras la ruta siga abierta.
+function personalRouteRow(student, uid, sessionId, session, standard, personalSessionId, platform) {
+  const standardRow = rowFor(student, uid, sessionId, session, standard.response, standard.result);
+  const response = ((platform.respuestas || {})[personalSessionId] || {})[uid] || {};
+  const result = ((platform.resultados || {})[personalSessionId] || {})[uid] || {};
+  const personalConfig = { alternatives: personalQuestionCount(personalSessionId, response, result), concepts: 0, writing: [] };
+  const personalRow = rowFor(student, uid, sessionId, session, response, result, personalConfig);
+  const hasEvidence = row => row.status !== 'Sin iniciar';
+  const candidates = [standardRow, personalRow].filter(hasEvidence);
+  if (!candidates.length) {
+    return {
+      ...standardRow,
+      status: 'Pendiente ruta personal',
+      proposedGrade: null,
+      personalRoute: true,
+      evidenceSession: personalSessionId,
+      flags: ['Ruta personal adaptada en curso: se califica cuando complete la sesión']
+    };
+  }
+  const best = candidates.sort((left, right) => right.proposedGrade - left.proposedGrade || right.completion - left.completion)[0];
+  return {
+    ...best,
+    sessionId,
+    personalRoute: true,
+    evidenceSession: best === personalRow ? personalSessionId : sessionId,
+    flags: [...best.flags, best === personalRow ? 'Calificada con la sesión de la ruta personal adaptada' : 'Calificada con la guía estándar']
+  };
 }
 
 function parseArgs(argv) {
@@ -156,8 +203,8 @@ function substantiveWriting(sessionId, response, result) {
   return fields.map(field => ({ field, text: textValue(response, result, field) })).filter(item => item.text.length >= 60);
 }
 
-function rowFor(student, uid, sessionId, session, response, result) {
-  const config = CONFIG[sessionId];
+function rowFor(student, uid, sessionId, session, response, result, configOverride) {
+  const config = configOverride || CONFIG[sessionId];
   const alternativesDone = Math.min(config.alternatives, countAlternatives(response));
   const conceptsDone = Math.min(config.concepts, countConcepts(sessionId, response));
   const writings = config.writing.map(([field, minimum]) => {
@@ -216,6 +263,12 @@ function rowFor(student, uid, sessionId, session, response, result) {
   };
 }
 
+const LATE_COPY_GAP_MS = 24 * 60 * 60 * 1000;
+
+function submissionTime(row) {
+  return Number(row.responseTimestamp || row.resultTimestamp || 0);
+}
+
 function findWritingMatches(rows) {
   const matches = [];
   let groupNumber = 0;
@@ -237,14 +290,20 @@ function findWritingMatches(rows) {
         const groupId = `C${String(groupNumber).padStart(3, '0')}`;
         left.row.duplicateGroups.push(groupId);
         right.row.duplicateGroups.push(groupId);
+        // Si un texto se entregó 24 h o más antes que el otro, quien entregó primero no
+        // pudo copiar el texto posterior: el tope solo alcanza a la entrega tardía.
+        const leftAt = submissionTime(left.row);
+        const rightAt = submissionTime(right.row);
+        const lateCopy = leftAt > 0 && rightAt > 0 && Math.abs(leftAt - rightAt) >= LATE_COPY_GAP_MS;
         if (exact || similarity > 0.90) {
-          left.row.penalizedDuplicateGroups.push(groupId);
-          right.row.penalizedDuplicateGroups.push(groupId);
+          if (!lateCopy || leftAt > rightAt) left.row.penalizedDuplicateGroups.push(groupId);
+          if (!lateCopy || rightAt > leftAt) right.row.penalizedDuplicateGroups.push(groupId);
         }
         matches.push({
           groupId,
           sessionId,
           field: left.field,
+          lateCopy,
           exact,
           similarity: Math.round(similarity * 1000) / 1000,
           left: { uid: left.row.uid, name: left.row.name, course: left.row.course, text: left.text },
@@ -257,7 +316,7 @@ function findWritingMatches(rows) {
     row.duplicateGroups = [...new Set(row.duplicateGroups)];
     row.penalizedDuplicateGroups = [...new Set(row.penalizedDuplicateGroups)];
     if (row.penalizedDuplicateGroups.length) {
-      row.proposedGrade = Math.min(row.proposedGrade, 5);
+      if (row.proposedGrade !== null) row.proposedGrade = Math.min(row.proposedGrade, 5);
       row.flags.push('Ajuste aplicado: coincidencia textual superior al 90 % con otro estudiante; posible uso no autorizado de IA o copia. Nota máxima 5,0');
     }
   });
@@ -277,12 +336,21 @@ async function main() {
   Object.entries(students).forEach(([uid, student]) => {
     const course = String(student.curso || '').toUpperCase();
     if (!COURSES.has(course)) return;
-    const reason = exclusionFor(uid, student, sessions);
+    const reason = exclusionFor(uid, student);
     if (reason) {
       excluded.push({ uid, course, name: student.nombre || '', reason });
       return;
     }
+    const personalRoute = personalRouteFor(uid, sessions);
     SESSION_IDS.forEach(sessionId => {
+      const personalSessionId = personalRoute[Number(sessionId.split('-').pop())];
+      if (personalSessionId) {
+        rows.push(personalRouteRow(student, uid, sessionId, sessions[sessionId] || {}, {
+          response: (responses[sessionId] || {})[uid] || {},
+          result: (results[sessionId] || {})[uid] || {}
+        }, personalSessionId, platform));
+        return;
+      }
       rows.push(rowFor(
         student,
         uid,

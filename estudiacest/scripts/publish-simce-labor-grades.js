@@ -7,7 +7,7 @@ const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 // Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
 const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30';
+const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r2';
 
 function parseArgs(argv) {
   const args = {};
@@ -38,6 +38,12 @@ function containsFlag(row, fragment) {
 }
 
 function publicStatus(row) {
+  if (row.status === 'Pendiente ruta personal') {
+    return {
+      code: 'draft',
+      label: 'Ruta personal en curso: esta clase se califica cuando completes su sesión.'
+    };
+  }
   if ((row.penalizedDuplicateGroups || []).length) {
     return {
       code: 'similarity_adjusted',
@@ -88,7 +94,9 @@ function buildPublication(source, publishedAt, expectedStudents) {
   source.rows.forEach(row => {
     if (!row.uid || !row.sessionId) throw new Error('Hay una fila sin UID o sesión.');
     if (!EXPECTED_SESSIONS.includes(row.sessionId)) throw new Error(`Sesión fuera del alcance: ${row.sessionId}.`);
-    if (!ALLOWED_GRADES.has(Number(row.proposedGrade))) throw new Error(`Nota no permitida en ${row.sessionId}.`);
+    // Solo la ruta personal adaptada puede quedar pendiente (sin nota) mientras sigue abierta.
+    const pendingPersonal = row.personalRoute === true && row.status === 'Pendiente ruta personal' && row.proposedGrade === null;
+    if (!pendingPersonal && !ALLOWED_GRADES.has(Number(row.proposedGrade))) throw new Error(`Nota no permitida en ${row.sessionId}.`);
     const pair = `${row.uid}/${row.sessionId}`;
     if (pairs.has(pair)) throw new Error(`Registro duplicado: ${pair}.`);
     pairs.add(pair);
@@ -96,9 +104,9 @@ function buildPublication(source, publishedAt, expectedStudents) {
     sessions.add(row.sessionId);
 
     const status = publicStatus(row);
-    const grade = Number(row.proposedGrade);
+    const grade = pendingPersonal ? null : Number(row.proposedGrade);
     const adjustedForSimilarity = status.code === 'similarity_adjusted';
-    if (adjustedForSimilarity && grade > 5) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
+    if (adjustedForSimilarity && grade !== null && grade > 5) throw new Error(`Una coincidencia ajustada conserva nota ${grade}.`);
 
     records[pair] = {
       sessionId: row.sessionId,
@@ -111,10 +119,11 @@ function buildPublication(source, publishedAt, expectedStudents) {
       statusLabel: status.label,
       submitted: row.status === 'Entregada',
       adjustedForSimilarity,
+      ...(row.personalRoute ? { personalRoute: true, evidenceSession: String(row.evidenceSession || row.sessionId) } : {}),
       modelVersion: MODEL_VERSION,
       publishedAt
     };
-    stats.grades[grade] += 1;
+    stats.grades[grade === null ? 'pendiente' : grade] = (stats.grades[grade === null ? 'pendiente' : grade] || 0) + 1;
     stats.statuses[status.code] = (stats.statuses[status.code] || 0) + 1;
     if (adjustedForSimilarity) stats.adjusted += 1;
   });
@@ -143,14 +152,16 @@ function recordsFromObject(root, expectedPairs) {
 }
 
 function changesAgainst(currentRoot, records) {
-  const changes = { created: 0, gradeUp: 0, gradeDown: 0, sameGrade: 0 };
+  const changes = { created: 0, gradeUp: 0, gradeDown: 0, sameGrade: 0, pendingChanged: 0 };
   Object.entries(records).forEach(([pair, record]) => {
     const [uid, sessionId] = pair.split('/');
     const before = currentRoot[uid] && currentRoot[uid][sessionId];
+    const beforeGrade = before && before.grade !== undefined ? before.grade : null;
     if (!before) changes.created += 1;
-    else if (Number(before.grade) < record.grade) changes.gradeUp += 1;
-    else if (Number(before.grade) > record.grade) changes.gradeDown += 1;
-    else changes.sameGrade += 1;
+    else if (beforeGrade === record.grade) changes.sameGrade += 1;
+    else if (beforeGrade === null || record.grade === null) changes.pendingChanged += 1;
+    else if (Number(beforeGrade) < record.grade) changes.gradeUp += 1;
+    else changes.gradeDown += 1;
   });
   return changes;
 }

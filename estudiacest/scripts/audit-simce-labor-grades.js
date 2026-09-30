@@ -58,9 +58,12 @@ const numberedScope = /\[1, 2, 3, 4, 5, 6, 7, 8, 10\]\.map\(number => `sesion-u3
 if (!numberedScope.test(exporter)) failures.push('Exportador: el alcance debe ser las clases 1 a 8 y 10.');
 if (publisher && !numberedScope.test(publisher)) failures.push('Publicador: el alcance debe ser las clases 1 a 8 y 10.');
 if (/sesion-u3-9['"]\s*:/.test(exporter)) failures.push('Exportador: la Clase 9 es informativa y no lleva nota.');
-['function exclusionFor(uid, student, sessions)', "sessionId.startsWith('personal-u3-')", 'UNIT_ENROLLMENT_CUTOFF'].forEach(fragment => {
-  if (!exporter.includes(fragment)) failures.push(`Exportador: falta la exclusión ${fragment}.`);
+['function exclusionFor(uid, student)', 'UNIT_ENROLLMENT_CUTOFF', "sessionId.startsWith('personal-u3-')", 'function personalRouteRow(', 'LATE_COPY_GAP_MS'].forEach(fragment => {
+  if (!exporter.includes(fragment)) failures.push(`Exportador: falta la regla ${fragment}.`);
 });
+if (publisher && !publisher.includes("row.personalRoute === true && row.status === 'Pendiente ruta personal'")) {
+  failures.push('Publicador: una nota vacía solo se admite en la ruta personal pendiente.');
+}
 if (exporter.includes("Object.keys(result || {}).length > 0;\n  const submitted")) {
   failures.push('Exportador: un resultado aún confirma una entrega por sí solo.');
 }

@@ -6,9 +6,12 @@ const path = require('path');
 const { closeFirebase, readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 
 // Cierre de las clases evaluadas de la Unidad 3 SIMCE (2°A HC y 2°B HC) antes de
-// recalificar. La Clase 9 es informativa y queda abierta como material; la Clase 11
-// y el Ensayo N.º 3 no forman parte de este cierre.
-const SESSION_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
+// recalificar, más el Ensayo N.º 3, que se reabrió en la misma regularización. La
+// Clase 9 es informativa y queda abierta como material; la Clase 11 no se toca.
+const SESSION_IDS = [
+  ...[1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`),
+  'ensayo-simce-n3-nm2-2026'
+];
 const TARGET_COURSES = ['2A-HC', '2B-HC'];
 
 function stableStringify(value) {

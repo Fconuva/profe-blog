@@ -372,6 +372,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="/estudiantes/js/simce-session-gate.js"></script>
   <script src="ensayo_n3_data.js"></script>
   <script>
     (function () {
@@ -478,6 +479,7 @@
       auth.onAuthStateChanged(async user=>{
         if(!user){location.href='/lecturas/?next='+encodeURIComponent(location.pathname);return;}
         uid=user.uid;
+        if(window.SimceSessionGate&&await window.SimceSessionGate.check(db,BASE,SESSION_ID,uid))return;
         try{const [studentSnap,responseSnap]=await Promise.all([db.ref(`${BASE}/estudiantes/${uid}`).once('value'),db.ref(`${BASE}/respuestas/${SESSION_ID}/${uid}`).once('value')]);student=studentSnap.val();if(!student){await auth.signOut();return;}hydrate(responseSnap.val());if(!submitted)status('Puedes responder. El avance se guarda automaticamente.');}
         catch(e){console.error(e);status('No se pudo cargar tu avance. Actualiza la pagina.');}
       });

@@ -123,7 +123,12 @@
             .reward-form{grid-template-columns:1fr}.reward-form .wide{grid-column:auto}
         }
         /* LOGIN SCREEN */
-        .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b)}
+        .auth-boot{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;font-size:14px;font-weight:700}
+        .auth-boot-content{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;max-width:440px;padding:24px;text-align:center}
+        .auth-boot-spinner{width:24px;height:24px;border:3px solid rgba(226,232,240,.25);border-top-color:#e2e8f0;border-radius:50%;animation:auth-spin .8s linear infinite}
+        .auth-boot button{display:none;width:100%;max-width:180px;margin-top:8px;padding:10px 16px;border:0;border-radius:8px;background:#e2e8f0;color:#0f172a;font-weight:800;cursor:pointer}
+        @keyframes auth-spin{to{transform:rotate(360deg)}}
+        .login-screen{display:none;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b)}
         .login-box{background:#fff;border-radius:16px;padding:36px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3)}
         .login-box h2{font-size:20px;font-weight:800;color:#0f172a;margin-bottom:4px;text-align:center}
         .login-box p{font-size:13px;color:#64748b;margin-bottom:20px;text-align:center}
@@ -137,6 +142,15 @@
     </style>
 </head>
 <body>
+
+<!-- ESPERA DE AUTENTICACIÓN: evita mostrar el login mientras Firebase recupera la sesión -->
+<div class="auth-boot" id="authBoot" role="status" aria-live="polite">
+    <div class="auth-boot-content">
+        <span class="auth-boot-spinner" id="authBootSpinner" aria-hidden="true"></span>
+        <span id="authBootMessage">Recuperando sesión administrativa…</span>
+        <button type="button" id="authRetryBtn" onclick="location.reload()">Reintentar</button>
+    </div>
+</div>
 
 <!-- LOGIN SCREEN (se muestra si no hay sesión) -->
 <div class="login-screen" id="loginScreen">
@@ -573,12 +587,17 @@ María González ; 98765432-1 ; 2B-HC"></textarea>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
 <script>
 const FIREBASE_CONFIG={apiKey:"AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w",authDomain:"estudiacest.firebaseapp.com",databaseURL:"https://estudiacest-default-rtdb.firebaseio.com",projectId:"estudiacest",storageBucket:"estudiacest.firebasestorage.app",messagingSenderId:"999002169815",appId:"1:999002169815:web:51203237bc77c2e74deb92"};
-firebase.initializeApp(FIREBASE_CONFIG);
-const auth=firebase.auth();
+// La app predeterminada conserva solo la sesión heredada para migrarla una vez.
+// El admin usa una app Firebase con nombre propio: así un ingreso o cierre de
+// sesión estudiantil en este mismo navegador no vuelve a reemplazar al docente.
+const legacyFirebaseApp=firebase.initializeApp(FIREBASE_CONFIG);
+const adminFirebaseApp=firebase.initializeApp(FIREBASE_CONFIG,'estudiacest-admin');
+const legacyAuth=legacyFirebaseApp.auth();
+const auth=adminFirebaseApp.auth();
 const authPersistenceReady=auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(error=>{
     console.warn('No se pudo confirmar la persistencia local de la sesión:',error);
 });
-const db=firebase.database();
+const db=adminFirebaseApp.database();
 const BASE='plataforma_estudiantes';
 const STATIC_SESSION_FALLBACKS={
 'sesion-u3-11':{titulo:'Unidad 3 · Clase 11 — Noticia y diálogo dramático',descripcion:'Transformación de dos relatos: uno en noticia y otro en diálogo dramático.',orden:311,programa:'simce',activa:true,resultados_visibles:false,retroalimentacion_visible:false,notas_evaluadas:false,formativa:true,formato_panel:'transformacion-relato-generos',panel_unidad:'u3',panel_seccion:'plan',panel_orden:11,fecha_aplicacion:'2026-09-30',link_guia:'/estudiantes/guia-u3-s11-evidencia-dos-textos.html',prefer_guia:true,asignados:['2A-HC','2B-HC'],contenido:{textos:[],preguntas:[]}},
@@ -621,6 +640,7 @@ let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
 let autoLoginAttempted=false;
 let authStateResolved=false;
 let adminValidationRun=0;
+let legacyMigrationAttempted=false;
 let houseRewardRules=[];
 let houseRewardCatalog=[];
 let houseRewardSelected=new Set();
@@ -658,6 +678,65 @@ function tryAutoLoginFromSavedCredentials(){
     adminLogin();
 }
 
+function waitForInitialAuthState(authInstance){
+    return new Promise(resolve=>{
+        let unsubscribe=()=>{};
+        unsubscribe=authInstance.onAuthStateChanged(
+            user=>{unsubscribe();resolve(user)},
+            ()=>{unsubscribe();resolve(null)}
+        );
+    });
+}
+
+async function migrateLegacyAdminSession(){
+    if(legacyMigrationAttempted||auth.currentUser) return false;
+    legacyMigrationAttempted=true;
+    const legacyUser=await waitForInitialAuthState(legacyAuth);
+    if(!legacyUser) return false;
+    const legacyToken=await legacyUser.getIdToken();
+    const response=await fetch('/api/estudiantes?action=admin-session-token',{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+legacyToken},
+        body:'{}'
+    });
+    if(!response.ok){
+        if(response.status===401||response.status===403) return false;
+        throw new Error('No se pudo migrar la sesión administrativa');
+    }
+    const data=await response.json();
+    if(!data.token) return false;
+    await authPersistenceReady;
+    await auth.signInWithCustomToken(data.token);
+    await legacyAuth.signOut().catch(()=>null);
+    return true;
+}
+
+function hideAuthBoot(){
+    const boot=document.getElementById('authBoot');
+    if(boot) boot.style.display='none';
+}
+
+function showAuthRecovery(message){
+    const boot=document.getElementById('authBoot');
+    const text=document.getElementById('authBootMessage');
+    const spinner=document.getElementById('authBootSpinner');
+    const retry=document.getElementById('authRetryBtn');
+    if(boot) boot.style.display='flex';
+    if(text) text.textContent=message;
+    if(spinner) spinner.style.display='none';
+    if(retry) retry.style.display='block';
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('adminPanel').style.display='none';
+}
+
+function showAdminLogin(message=''){
+    hideAuthBoot();
+    document.getElementById('loginScreen').style.display='flex';
+    document.getElementById('adminPanel').style.display='none';
+    const errEl=document.getElementById('loginError');
+    if(message){errEl.textContent=message;errEl.style.display='block'}
+}
+
 // Chrome puede completar la contraseña unos instantes después de cargar la página.
 // Si existen credenciales guardadas, entra sin exigir un segundo clic.
 window.addEventListener('load',()=>{
@@ -693,15 +772,25 @@ async function readOnceWithRetry(path,attempts=4,delayMs=800){
 }
 
 auth.onAuthStateChanged(async user=>{
-    authStateResolved=true;
     const validationRun=++adminValidationRun;
     if(!user){
-        document.getElementById('loginScreen').style.display='flex';
-        document.getElementById('adminPanel').style.display='none';
+        try{
+            if(await migrateLegacyAdminSession()) return;
+        }catch(error){
+            console.warn('No fue posible migrar la sesión administrativa anterior:',error);
+            if(validationRun===adminValidationRun&&!auth.currentUser){
+                showAuthRecovery('No se pudo recuperar la sesión guardada. Revisa la conexión y vuelve a intentar.');
+            }
+            return;
+        }
+        if(validationRun!==adminValidationRun||auth.currentUser) return;
+        authStateResolved=true;
+        showAdminLogin();
         currentAdminUid=null;
         currentDocente=null;
         return;
     }
+    authStateResolved=true;
     const errEl=document.getElementById('loginError');
     let snap;
     try{
@@ -711,15 +800,13 @@ auth.onAuthStateChanged(async user=>{
     }catch(error){
         if(validationRun!==adminValidationRun) return;
         if(currentAdminUid===user.uid){
+            hideAuthBoot();
             document.getElementById('loginScreen').style.display='none';
             document.getElementById('adminPanel').style.display='block';
             toast('Conexión inestable. La sesión sigue activa; reintentando…','err');
             setTimeout(()=>{if(auth.currentUser?.uid===user.uid) loadAllData().catch(console.error)},3000);
         }else{
-            document.getElementById('loginScreen').style.display='flex';
-            document.getElementById('adminPanel').style.display='none';
-            errEl.textContent='La sesión sigue activa, pero no fue posible cargar los permisos. Revisa la conexión y vuelve a intentar.';
-            errEl.style.display='block';
+            showAuthRecovery('La sesión sigue activa, pero no fue posible cargar los permisos. Revisa la conexión y vuelve a intentar.');
         }
         console.error('Error al validar el acceso administrativo:',error);
         return;
@@ -727,14 +814,19 @@ auth.onAuthStateChanged(async user=>{
     if(validationRun!==adminValidationRun||auth.currentUser?.uid!==user.uid) return;
     // Check admin role
     if(!snap.val()){
-        document.getElementById('loginScreen').style.display='flex';
-        document.getElementById('adminPanel').style.display='none';
-        errEl.textContent='La cuenta inició sesión, pero no se pudo confirmar el permiso administrativo. Intenta nuevamente en unos segundos.';
-        errEl.style.display='block';
+        showAdminLogin('La cuenta inició sesión, pero no se pudo confirmar el permiso administrativo. Intenta nuevamente en unos segundos.');
         return;
     }
     // Load docente profile
-    const docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,5,1000);
+    let docSnap;
+    try{
+        docSnap=await readOnceWithRetry(BASE+'/docentes/'+user.uid,5,1000);
+    }catch(error){
+        if(validationRun!==adminValidationRun) return;
+        showAuthRecovery('La sesión sigue activa, pero no fue posible cargar el perfil docente. Revisa la conexión y vuelve a intentar.');
+        console.error('Error al cargar el perfil docente:',error);
+        return;
+    }
     const docData=docSnap.val();
     if(docData){
         currentDocente={
@@ -747,6 +839,7 @@ auth.onAuthStateChanged(async user=>{
         currentDocente={nombre:user.email,cursos:Object.keys(ALL_CURSOS),superadmin:true};
     }
     // Mostrar panel, ocultar login
+    hideAuthBoot();
     document.getElementById('loginScreen').style.display='none';
     document.getElementById('adminPanel').style.display='block';
     currentAdminUid=user.uid;
@@ -1675,7 +1768,7 @@ async function resetPassword(uid){
     loader.innerHTML='<div style="background:#fff;border-radius:12px;padding:32px 40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">🔑</div><p style="font-size:15px;font-weight:600;color:#0f172a;margin:0">Restableciendo contraseña...</p><p style="font-size:12px;color:#94a3b8;margin:4px 0 0">Puede tardar unos segundos</p></div>';
     document.body.appendChild(loader);
     try{
-        const token=await firebase.auth().currentUser.getIdToken();
+        const token=await auth.currentUser.getIdToken();
         const resp=await fetch('/api/estudiantes?action=reset-password',{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
@@ -1705,7 +1798,7 @@ async function generateLoginLink(uid){
     loader.innerHTML='<div style="background:#fff;border-radius:12px;padding:32px 40px;text-align:center"><div style="font-size:32px;margin-bottom:8px">⏳</div><p style="font-size:15px;font-weight:600;color:#0f172a;margin:0">Generando link seguro...</p><p style="font-size:12px;color:#94a3b8;margin:4px 0 0">Puede tardar unos segundos</p></div>';
     document.body.appendChild(loader);
     try{
-        const token=await firebase.auth().currentUser.getIdToken();
+        const token=await auth.currentUser.getIdToken();
         const resp=await fetch('/api/estudiantes?action=login-token',{
             method:'POST',
             headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},

@@ -934,6 +934,13 @@ async function handleAdminLogin(req, res) {
     }
 }
 
+async function handleAdminSessionToken(req, res, decoded) {
+    // Migra una sesión administrativa de la app Firebase compartida al
+    // contenedor exclusivo del panel. verifyAdmin ya validó token y permiso.
+    const customToken = await auth.createCustomToken(decoded.uid);
+    return res.status(200).json({ success: true, token: customToken });
+}
+
 async function handleBulkCreate(req, res, decoded) {
     const { estudiantes } = req.body;
     if (!Array.isArray(estudiantes) || estudiantes.length === 0) return res.status(400).json({ error: 'Array de estudiantes requerido' });
@@ -989,12 +996,13 @@ module.exports = async (req, res) => {
         const decoded = await verifyAdmin(req);
 
         switch (action) {
+            case 'admin-session-token': return await handleAdminSessionToken(req, res, decoded);
             case 'create': return await handleCreate(req, res, decoded);
             case 'reset-password': return await handleResetPassword(req, res);
             case 'bulk-create': return await handleBulkCreate(req, res, decoded);
             case 'login-token': return await handleLoginToken(req, res);
             case 'change-rut': return await handleChangeRut(req, res, decoded);
-            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, create, reset-password, bulk-create, login-token, change-rut' });
+            default: return res.status(400).json({ error: 'Acción no válida. Usa: admin-login, admin-session-token, create, reset-password, bulk-create, login-token, change-rut' });
         }
     } catch (error) {
         console.error('Error:', error);

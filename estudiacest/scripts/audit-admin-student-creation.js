@@ -21,6 +21,18 @@ expect(api.includes("userRecord = await auth.getUserByEmail(email)"), 'La API no
 expect(api.includes('const profile = await upsertStudentProfile(userRecord.uid, student, decoded)'), 'La API no reconstruye o actualiza el perfil canónico.');
 expect(api.includes('programa: programFromCourse(student.curso)'), 'La API no conserva el programa académico al crear o recuperar el perfil.');
 
+expect(admin.includes("firebase.initializeApp(FIREBASE_CONFIG,'estudiacest-admin')"), 'El panel administrativo no tiene un contenedor Firebase exclusivo.');
+expect(admin.includes('const auth=adminFirebaseApp.auth()'), 'El panel no usa la sesión administrativa aislada.');
+expect(admin.includes('const db=adminFirebaseApp.database()'), 'La base del panel no está vinculada a la aplicación administrativa aislada.');
+expect(admin.includes("action=admin-session-token"), 'El panel no migra de forma segura la sesión administrativa heredada.');
+expect(admin.includes('await legacyAuth.signOut().catch(()=>null)'), 'La sesión administrativa heredada queda activa y puede reabrir el panel después de salir.');
+expect(admin.includes('class="login-screen" id="loginScreen"'), 'No se encontró la pantalla de acceso administrativo.');
+expect(admin.includes('.login-screen{display:none;'), 'El formulario de acceso vuelve a aparecer antes de resolver la sesión guardada.');
+expect(admin.includes('id="authBoot"'), 'Falta el estado de espera mientras se recupera la sesión administrativa.');
+expect(admin.includes('showAuthRecovery('), 'Un error temporal todavía puede reemplazar una sesión activa por el formulario de acceso.');
+expect(!admin.includes('firebase.auth().currentUser'), 'Una acción del panel todavía toma el token desde la sesión Firebase compartida.');
+expect(api.includes("case 'admin-session-token': return await handleAdminSessionToken(req, res, decoded)"), 'La API no intercambia la sesión heredada después de verificar el permiso administrativo.');
+
 expect(login.includes("return '/lecturas/perfil.html'"), 'El primer ingreso todavia apunta a una ruta de perfil inexistente.');
 expect(!login.includes("return '/lecturas/perfil' +"), 'El login conserva la ruta corta que producia 404 al completar el perfil.');
 expect(vercel.rewrites.some(rule => rule.source === '/lecturas/perfil' && rule.destination === '/lecturas/perfil.html'), 'La ruta antigua de perfil no tiene compatibilidad para estudiantes que ya quedaron en el 404.');
@@ -41,4 +53,4 @@ if (failures.length) {
     process.exit(1);
 }
 
-console.log('Alta individual y masiva auditadas: API autenticada, recuperación de cuentas existentes y perfil canónico verificados.');
+console.log('Admin auditado: sesión aislada de estudiantes, migración autenticada, acceso sin parpadeo y altas canónicas verificados.');

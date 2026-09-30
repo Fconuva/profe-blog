@@ -81,6 +81,7 @@ return [
   {id:"trashcan",nom:"Papelero",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:false,plano:false},
   {id:"speaker",nom:"Parlante",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:false,plano:false},
   {id:"speakerSmall",nom:"Parlante chico",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:true,plano:false},
+  {id:"playStation5",nom:"PlayStation 5",fam:"deco",xp:9999,motivo:"Premio del profesor",sup:0,apila:true,plano:false},
   {id:"pottedPlant",nom:"Planta",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:false,plano:false},
   {id:"plantSmall2",nom:"Planta chica",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:true,plano:false},
   {id:"radio",nom:"Radio",fam:"deco",xp:820,motivo:"Nivel alto",sup:0,apila:true,plano:false},

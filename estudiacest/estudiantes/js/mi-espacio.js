@@ -784,7 +784,9 @@
   function tengo(m) {
     if (Number(m.xp || 0) === 0) return true;
     var requisitos = S.requisitos && S.requisitos[m.id];
-    if (Array.isArray(requisitos) && requisitos.length) return !!(S.recompensas && S.recompensas[m.id]);
+    if (Array.isArray(requisitos) && requisitos.length) {
+      return !!((S.recompensas && S.recompensas[m.id]) || (S.regalos && S.regalos[m.id]));
+    }
     return !!(S.regalos && S.regalos[m.id]);
   }
   function requisitoDe(m) {
@@ -1209,9 +1211,11 @@
 
   function aplicarInventario(data) {
     var anteriores = S.recompensas || {};
+    var regalosAnteriores = S.regalos || {};
     var primeraCarga = !S.inventoryReady;
     S.recompensas = (data && data.desbloqueados && typeof data.desbloqueados === 'object') ? data.desbloqueados : {};
     S.requisitos = (data && data.requisitos && typeof data.requisitos === 'object') ? data.requisitos : {};
+    if (data && data.regalos && typeof data.regalos === 'object') S.regalos = data.regalos;
     S.inventoryReady = true;
     if (!S.visitando) {
       S.miPieza = (Array.isArray(S.miPieza) ? S.miPieza : []).filter(function (pieza) {
@@ -1223,6 +1227,8 @@
     if (!primeraCarga) {
       var nuevos = Object.keys(S.recompensas).filter(function (id) { return !anteriores[id] && POR_ID[id]; });
       if (nuevos.length) anunciar('🎁 Desbloqueaste ' + nuevos.length + (nuevos.length === 1 ? ' mueble por completar una tarea.' : ' muebles por completar una tarea.'));
+      var regalosNuevos = Object.keys(S.regalos || {}).filter(function (id) { return !regalosAnteriores[id] && POR_ID[id]; });
+      if (!nuevos.length && regalosNuevos.length) anunciar('🎁 Recibiste «' + POR_ID[regalosNuevos[0]].nom + '». Ya está en tus muebles.');
     }
   }
 

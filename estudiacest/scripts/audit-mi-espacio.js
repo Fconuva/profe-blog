@@ -141,6 +141,10 @@ exigir(admin.includes('casasConfigStatus') && admin.includes('cambiarEstadoCasas
   'El admin debe permitir habilitar y deshabilitar casas y decoración.');
 exigir(admin.includes('mueblesTareasPanel') && admin.includes('guardarRecompensaMuebles') && admin.includes('recompensas-guardar'),
   'El admin debe permitir asociar uno o varios muebles a una tarea.');
+exigir(admin.includes('regaloManualPanel') && admin.includes('entregarRegaloManual') && admin.includes('regalos-admin-entregar'),
+  'El admin debe permitir revisar el inventario y regalar un mueble a un estudiante.');
+exigir(admin.includes("item.tiene?'✓ Ya lo tiene':'Regalar'"),
+  'El catálogo docente debe marcar los muebles que el estudiante ya posee.');
 exigir(espacio.includes("api('estado')") && espacio.includes('aplicarDisponibilidad') && espacio.includes('S.housesEnabled = false'),
   'Mi espacio debe partir bloqueado y habilitar casas solo después de leer la configuración del servidor.');
 exigir(/setInterval\(sincronizarDisponibilidad, 15000\)/.test(espacio),
@@ -276,6 +280,8 @@ exigir(/pendientes\[campo\]/.test(cuerpoDe('guardar')),
 // El navegador solo elige; el servidor escribe en el avatar del que recibe.
 exigir(/function tengo\(m\)/.test(moverJs) && moverJs.includes('S.requisitos[m.id]') && moverJs.includes('S.recompensas[m.id]'),
   'tengo(m) debe dejar los muebles iniciales y exigir una tarea completada para cada premio configurado.');
+exigir(moverJs.includes('(S.regalos && S.regalos[m.id])'),
+  'Un regalo manual del profesor también debe habilitar un mueble asociado a una tarea.');
 exigir(/api\('regalar', \{ para: para, mueble: m\.id \}\)/.test(cuerpoDe('abrirRegalo')), 'El regalo se pide al servidor (salas-regalar).');
 exigir(!/avatar\/' \+ (para|S\.sala)\)[^;]*\.(set|update|push)\(/.test(moverJs), 'El navegador no escribe en el avatar ajeno.');
 exigir(/on\('child_added'/.test(cuerpoDe('escucharRegalos')) && /escucharRegalos\(\)/.test(cuerpoDe('sincronizarDisponibilidad')) && /sincronizarDisponibilidad\(\)/.test(cuerpoDe('montar')),
@@ -334,7 +340,8 @@ async function probarRegalos() {
       uidDianaa: { nombre: 'MORA VEGA DIANA', curso: '2A-HC' },
       uidEvaaaa: { nombre: 'MORA DIAZ EVA', curso: '3B-HC' }
     },
-    admins: { uidProfee: true },
+    admins: { uidProfee: true, uidProfe2: true },
+    docentes: { uidProfee: { superadmin: true }, uidProfe2: { superadmin: false, cursos: ['2A-HC'] } },
     avatar: {
       uidAnaaaa: { regalos: {
         rugRound: { de: 'Alguien', ts: 1 },
@@ -362,6 +369,23 @@ async function probarRegalos() {
   r = await pedir('uidProfee', { tipo: 'sesion', fuente: 'sesion-u3-10', nombreSet: 'Premio de prueba', muebles: ['bear'] }, 'recompensas-guardar');
   exigir(r.json && r.json.ok === true && r.json.regla && r.json.regla.muebles[0] === 'bear',
     'El profesor debe poder asignar un mueble a una tarea desde el servidor.');
+  r = await pedir('uidProfee', { estudiante: 'uidLuisss' }, 'regalos-admin-inventario');
+  const ps5Antes = r.json && r.json.catalogo && r.json.catalogo.find(m => m.id === 'playStation5');
+  exigir(r.json && r.json.ok === true && ps5Antes && ps5Antes.tiene === false,
+    'El profesor debe ver la PlayStation 5 disponible antes de entregarla.');
+  r = await pedir('uidProfee', { estudiante: 'uidLuisss', mueble: 'playStation5' }, 'regalos-admin-entregar');
+  exigir(r.json && r.json.ok === true && regalo('uidLuisss', 'playStation5') && regalo('uidLuisss', 'playStation5').tipo === 'docente',
+    'El regalo manual debe quedar en el inventario como premio del profesor.');
+  r = await pedir('uidProfee', { estudiante: 'uidLuisss' }, 'regalos-admin-inventario');
+  const ps5Despues = r.json && r.json.catalogo && r.json.catalogo.find(m => m.id === 'playStation5');
+  exigir(ps5Despues && ps5Despues.tiene === true && /profesor/i.test(ps5Despues.origen),
+    'Después de regalar, el mueble debe aparecer marcado como ya obtenido.');
+  r = await pedir('uidProfe2', { estudiante: 'uidEvaaaa', mueble: 'playStation5' }, 'regalos-admin-entregar');
+  exigir(r.status === 403 && !regalo('uidEvaaaa', 'playStation5'),
+    'Un docente no puede regalar muebles fuera de sus cursos asignados.');
+  r = await pedir('uidLuisss', { para: 'uidAnaaaa', mueble: 'playStation5' });
+  exigir(r.json && r.json.ok === false && /profesor/i.test(r.json.error) && !regalo('uidAnaaaa', 'playStation5'),
+    'Un premio manual del profesor no se puede transferir a otro estudiante.');
 
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
   exigir(r.json && r.json.ok === true && regalo('uidLuisss', 'lampSquareFloor') && regalo('uidLuisss', 'lampSquareFloor').de === 'Ana Perez',

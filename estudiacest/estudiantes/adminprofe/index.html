@@ -104,6 +104,14 @@
         .reward-list{display:grid;gap:8px;padding:0 14px 14px}
         .reward-rule{display:flex;align-items:flex-start;gap:10px;border:1px solid #e2e8f0;border-radius:10px;padding:10px}
         .reward-rule>div{flex:1;min-width:0}.reward-rule p{font-size:11px;color:#64748b;margin-top:3px;line-height:1.4}
+        .manual-gift-form{display:grid;grid-template-columns:minmax(250px,1.2fr) minmax(200px,1fr);gap:12px;padding:14px}
+        .manual-gift-form .wide{grid-column:1/-1}
+        .manual-gift-item{display:flex;align-items:center;gap:8px;min-height:64px;border:1px solid #e2e8f0;border-radius:10px;padding:8px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:#334155}
+        .manual-gift-item:hover:not(:disabled){border-color:#2563eb;background:#eff6ff}
+        .manual-gift-item img{width:48px;height:44px;object-fit:contain;image-rendering:pixelated;flex-shrink:0}
+        .manual-gift-item span{font-size:11px;line-height:1.35}.manual-gift-item strong{display:block;color:#1e40af;margin-top:3px}
+        .manual-gift-item.owned{border-color:#86efac;background:#f0fdf4;color:#166534;cursor:default;opacity:1}
+        .manual-gift-item.owned strong{color:#15803d}
         /* ACHIEVEMENT LEVELS */
         .level-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
         .level-card{padding:16px;border-radius:10px;text-align:center}
@@ -120,7 +128,7 @@
             .mobile-nav a{white-space:nowrap;color:#94a3b8;text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600}
             .mobile-nav a.active{color:#fff;background:#1e40af}
             .level-row{grid-template-columns:repeat(2,1fr)}
-            .reward-form{grid-template-columns:1fr}.reward-form .wide{grid-column:auto}
+            .reward-form,.manual-gift-form{grid-template-columns:1fr}.reward-form .wide,.manual-gift-form .wide{grid-column:auto}
         }
         /* LOGIN SCREEN */
         .auth-boot{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b);color:#e2e8f0;font-size:14px;font-weight:700}
@@ -224,6 +232,15 @@
                     <div class="wide" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-success" onclick="guardarRecompensaMuebles()">Guardar asignación</button><button type="button" class="btn btn-secondary" onclick="limpiarEditorRecompensa()">Limpiar</button></div>
                 </div>
                 <div id="rewardRules" class="reward-list"></div>
+            </div>
+            <div class="panel-table" id="regaloManualPanel">
+                <h3 style="padding:16px 14px 4px;font-size:15px;color:#0f172a">🎁 Regalar mueble a un estudiante</h3>
+                <p style="padding:0 14px;font-size:12px;color:#64748b;line-height:1.45">Después de revisar su trabajo, elige al estudiante y entrégale un mueble. Los que ya posee aparecen marcados.</p>
+                <div class="manual-gift-form">
+                    <div class="form-group"><label for="manualGiftStudent">Estudiante</label><select id="manualGiftStudent" onchange="cargarInventarioRegaloManual()"></select></div>
+                    <div class="form-group"><label for="manualGiftSearch">Buscar mueble</label><input id="manualGiftSearch" placeholder="Ej.: PlayStation 5" oninput="renderCatalogoRegaloManual()"></div>
+                    <div class="wide"><div id="manualGiftSummary" style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:7px">Selecciona un estudiante.</div><div id="manualGiftCatalog" class="reward-catalog"></div></div>
+                </div>
             </div>
             <div class="stat-row" id="chatCasasStats"></div>
             <div class="panel-table">
@@ -646,6 +663,9 @@ let houseRewardCatalog=[];
 let houseRewardSelected=new Set();
 let editingHouseReward=null;
 let editingHouseRewardSources=[];
+let manualGiftCatalog=[];
+let manualGiftStudent=null;
+let manualGiftLoadRun=0;
 
 /* ============ AUTH ============ */
 async function adminLogin(){
@@ -1259,6 +1279,70 @@ async function eliminarRecompensaMuebles(id){
     try{await casasAdminApi('recompensas-eliminar',{regla:id});toast('Premio retirado','ok');await cargarRecompensasMuebles();}
     catch(error){toast(error.message,'err');}
 }
+function renderEstudiantesRegaloManual(){
+    const select=document.getElementById('manualGiftStudent');if(!select)return;
+    const current=select.value;
+    const grupos={};
+    Object.entries(students).filter(([,student])=>isMiCurso(student.curso)).forEach(([uid,student])=>{
+        const curso=String(student.curso||'Sin curso');
+        if(!grupos[curso])grupos[curso]=[];
+        grupos[curso].push({uid,nombre:String(student.nombre||uid)});
+    });
+    const cursos=Object.keys(grupos).sort((a,b)=>cLabel(a).localeCompare(cLabel(b),'es'));
+    select.innerHTML='<option value="">Selecciona estudiante…</option>'+cursos.map(curso=>{
+        const opciones=grupos[curso].sort((a,b)=>a.nombre.localeCompare(b.nombre,'es'))
+            .map(student=>`<option value="${esc(student.uid)}">${esc(student.nombre)}</option>`).join('');
+        return `<optgroup label="${esc(cLabel(curso))}">${opciones}</optgroup>`;
+    }).join('');
+    if(Object.values(grupos).some(lista=>lista.some(student=>student.uid===current)))select.value=current;
+}
+function renderCatalogoRegaloManual(){
+    const host=document.getElementById('manualGiftCatalog');if(!host)return;
+    const query=(document.getElementById('manualGiftSearch')?.value||'').trim().toLowerCase();
+    const visibles=manualGiftCatalog.filter(item=>!query||`${item.nombre} ${item.familia}`.toLowerCase().includes(query));
+    host.innerHTML=visibles.map(item=>`<button type="button" class="manual-gift-item ${item.tiene?'owned':''}" ${item.tiene?'disabled':''} onclick="entregarRegaloManual('${esc(item.id)}')"><img src="/estudiantes/assets/pieza/${esc(item.id)}_SE.png" alt=""><span>${esc(item.nombre)}<br><small>${esc(item.familia)}</small><strong>${item.tiene?'✓ Ya lo tiene':'Regalar'}</strong>${item.tiene&&item.origen?`<small>${esc(item.origen)}</small>`:''}</span></button>`).join('')||'<p style="font-size:12px;color:#64748b">No hay muebles que coincidan.</p>';
+}
+async function cargarInventarioRegaloManual(){
+    const select=document.getElementById('manualGiftStudent');
+    const uid=select?.value||'';
+    const host=document.getElementById('manualGiftCatalog');
+    const summary=document.getElementById('manualGiftSummary');
+    const run=++manualGiftLoadRun;
+    manualGiftCatalog=[];manualGiftStudent=null;
+    if(!uid){if(summary)summary.textContent='Selecciona un estudiante.';if(host)host.innerHTML='';return;}
+    if(summary)summary.textContent='Consultando inventario…';
+    if(host)host.innerHTML='<p style="font-size:12px;color:#64748b">Cargando muebles…</p>';
+    try{
+        const data=await casasAdminApi('regalos-admin-inventario',{estudiante:uid});
+        if(run!==manualGiftLoadRun||select.value!==uid)return;
+        manualGiftCatalog=Array.isArray(data.catalogo)?data.catalogo:[];
+        manualGiftStudent=data.estudiante||null;
+        const tiene=manualGiftCatalog.filter(item=>item.tiene).length;
+        if(summary)summary.textContent=`${manualGiftStudent?.nombre||'Estudiante'} · ${cLabel(manualGiftStudent?.curso||'')} · ${tiene} muebles obtenidos`;
+        renderCatalogoRegaloManual();
+    }catch(error){
+        if(run!==manualGiftLoadRun)return;
+        if(summary)summary.textContent='No se pudo cargar el inventario.';
+        if(host)host.innerHTML=`<p style="font-size:12px;color:#b91c1c">${esc(error.message)}</p>`;
+    }
+}
+async function cargarRegalosManuales(){
+    renderEstudiantesRegaloManual();
+    const select=document.getElementById('manualGiftStudent');
+    if(select?.value)await cargarInventarioRegaloManual();
+}
+async function entregarRegaloManual(id){
+    const item=manualGiftCatalog.find(mueble=>mueble.id===id);
+    const uid=document.getElementById('manualGiftStudent')?.value||'';
+    if(!item||!uid||item.tiene)return;
+    const nombre=manualGiftStudent?.nombre||'este estudiante';
+    if(!confirm(`¿Regalar “${item.nombre}” a ${nombre}?`))return;
+    try{
+        const data=await casasAdminApi('regalos-admin-entregar',{estudiante:uid,mueble:id});
+        toast(data.yaLoTiene?'El estudiante ya tenía ese mueble':'Mueble entregado correctamente','ok');
+        await cargarInventarioRegaloManual();
+    }catch(error){toast(error.message,'err');}
+}
 async function cargarEstadoCasas(){
     const status=document.getElementById('casasConfigStatus');
     try{
@@ -1283,7 +1367,7 @@ async function cambiarEstadoCasas(enabled){
     }catch(error){toast(error.message,'err');await cargarEstadoCasas();}
 }
 async function cargarChatCasas(loadState=true){
-    if(loadState)await Promise.all([cargarEstadoCasas(),cargarRecompensasMuebles()]);
+    if(loadState)await Promise.all([cargarEstadoCasas(),cargarRecompensasMuebles(),cargarRegalosManuales()]);
     const fecha = t => t ? new Date(Number(t)).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const escapa = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
     const [alSnap, blSnap, saSnap, esSnap] = await Promise.all([

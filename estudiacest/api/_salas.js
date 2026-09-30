@@ -121,6 +121,81 @@ async function inventarioPorTareas(db, yo) {
     return { desbloqueados, requisitos };
 }
 
+async function inventarioConRegalos(db, yo) {
+    const [porTareas, regalosSnap] = await Promise.all([
+        inventarioPorTareas(db, yo),
+        db.ref(`${BASE}/avatar/${yo.uid}/regalos`).once('value')
+    ]);
+    const regalosCrudos = regalosSnap.val() || {};
+    const regalos = {};
+    Object.keys(regalosCrudos).forEach(id => {
+        if (CATALOGO_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id] === 'object') regalos[id] = regalosCrudos[id];
+    });
+    return { ...porTareas, regalos };
+}
+
+async function estudianteAdministrable(db, yo, uidSolicitado) {
+    if (!yo.esAdmin) { const e = new Error('Solo el profesor.'); e.status = 403; throw e; }
+    const uid = idSala(uidSolicitado);
+    if (!uid) { const e = new Error('Estudiante no válido.'); e.status = 400; throw e; }
+    const [perfilSnap, docenteSnap] = await Promise.all([
+        db.ref(`${BASE}/estudiantes/${uid}`).once('value'),
+        db.ref(`${BASE}/docentes/${yo.uid}`).once('value')
+    ]);
+    const perfil = perfilSnap.val();
+    if (!perfil) { const e = new Error('Estudiante no encontrado.'); e.status = 404; throw e; }
+    const docente = docenteSnap.val();
+    if (docente && docente.superadmin !== true) {
+        const cursos = Array.isArray(docente.cursos)
+            ? docente.cursos.map(String)
+            : Object.keys(docente.cursos || {}).filter(clave => docente.cursos[clave] === true);
+        if (!cursos.includes(String(perfil.curso || ''))) {
+            const e = new Error('Ese estudiante no pertenece a tus cursos.'); e.status = 403; throw e;
+        }
+    }
+    return { uid, nombre: String(perfil.nombre || 'Estudiante'), curso: String(perfil.curso || '') };
+}
+
+async function listarInventarioParaRegalo(req, res, db, yo) {
+    const estudiante = await estudianteAdministrable(db, yo, req.body.estudiante);
+    const inventario = await inventarioConRegalos(db, { ...estudiante, esAdmin: false });
+    const catalogo = CATALOGO_CASA.filter(mueble => Number(mueble.xp || 0) > 0).map(mueble => {
+        const regalo = inventario.regalos[mueble.id];
+        const tarea = inventario.desbloqueados[mueble.id];
+        let origen = '';
+        if (regalo) origen = regalo.tipo === 'docente' ? 'Regalo del profesor' : `Regalo de ${String(regalo.de || 'un compañero').slice(0, 80)}`;
+        else if (tarea) origen = `Tarea completada: ${String(tarea.titulo || tarea.nombreSet || '').slice(0, 120)}`;
+        return { id: mueble.id, nombre: mueble.nom, familia: mueble.fam, tiene: !!(regalo || tarea), origen };
+    });
+    return res.status(200).json({ ok: true, estudiante, catalogo });
+}
+
+async function entregarRegaloDocente(req, res, db, yo) {
+    const estudiante = await estudianteAdministrable(db, yo, req.body.estudiante);
+    const mueble = idMueble(req.body.mueble);
+    const fichaMueble = mueble && CATALOGO_POR_ID.get(mueble);
+    if (!fichaMueble || Number(fichaMueble.xp || 0) === 0) return res.status(400).json({ error: 'Mueble no válido.' });
+
+    const inventario = await inventarioConRegalos(db, { ...estudiante, esAdmin: false });
+    if (inventario.regalos[mueble] || inventario.desbloqueados[mueble]) {
+        return res.status(200).json({ ok: true, yaLoTiene: true, mueble });
+    }
+
+    const ahora = Date.now();
+    const destino = db.ref(`${BASE}/avatar/${estudiante.uid}/regalos/${mueble}`);
+    const resultado = await destino.transaction(actual => actual || {
+        de: 'Profe', ts: ahora, tipo: 'docente', otorgadoPor: yo.uid
+    });
+    if (!resultado.committed && !(await destino.once('value')).exists()) {
+        return res.status(500).json({ error: 'No se pudo confirmar el regalo.' });
+    }
+    const releido = (await destino.once('value')).val();
+    if (!releido || releido.tipo !== 'docente') {
+        return res.status(200).json({ ok: true, yaLoTiene: true, mueble });
+    }
+    return res.status(200).json({ ok: true, mueble, nombre: fichaMueble.nom });
+}
+
 async function listarRecompensas(req, res, db, yo) {
     if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
     return res.status(200).json({
@@ -412,6 +487,9 @@ async function regalar(req, res, db, yo) {
     }
     const regaloPropio = await db.ref(`${BASE}/avatar/${yo.uid}/regalos/${mueble}`).once('value');
     if (!regaloPropio.exists()) return res.status(200).json({ ok: false, error: 'No tienes ese mueble disponible para regalar.' });
+    if (regaloPropio.val() && regaloPropio.val().tipo === 'docente') {
+        return res.status(200).json({ ok: false, error: 'Un premio entregado por el profesor no se puede transferir.' });
+    }
 
     const ahora = Date.now();
     const cupo = await db.ref(`${BASE}/regalos_log/${yo.uid}/${hoyEnChile()}`).transaction((actual) => {
@@ -462,7 +540,9 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'recompensas-listar') return await listarRecompensas(req, res, db, yo);
         if (accion === 'recompensas-guardar') return await guardarRecompensa(req, res, db, yo);
         if (accion === 'recompensas-eliminar') return await eliminarRecompensa(req, res, db, yo);
-        if (accion === 'inventario') return res.status(200).json({ ok: true, ...(await inventarioPorTareas(db, yo)) });
+        if (accion === 'regalos-admin-inventario') return await listarInventarioParaRegalo(req, res, db, yo);
+        if (accion === 'regalos-admin-entregar') return await entregarRegaloDocente(req, res, db, yo);
+        if (accion === 'inventario') return res.status(200).json({ ok: true, ...(await inventarioConRegalos(db, yo)) });
         if (!['salir', 'atender'].includes(accion)) {
             const state = await estadoMiEspacio(db);
             if (!state.enabled) return res.status(200).json({ ok: false, disabled: true, error: 'Las casas y la decoración están deshabilitadas por el profesor.' });

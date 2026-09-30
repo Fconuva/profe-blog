@@ -583,10 +583,6 @@ function cursoOptions(sel,filterCursos){
 }
 function progFromCurso(c){return ALL_CURSOS[c]?.prog||'simce'}
 
-// Secondary app for creating student accounts without signing out admin
-const secondaryApp=firebase.initializeApp(FIREBASE_CONFIG,"secondary");
-const secondaryAuth=secondaryApp.auth();
-
 let students={};
 let sessions={};
 let allResults={};
@@ -1383,32 +1379,39 @@ function defaultPassword(r){
     return digits.substring(0,6).padEnd(6,'0');
 }
 
+async function adminStudentRequest(action,payload){
+    const user=auth.currentUser;
+    if(!user) throw new Error('Tu sesión expiró. Recarga la página e inicia sesión de nuevo.');
+    const token=await user.getIdToken();
+    const response=await fetch('/api/estudiantes?action='+encodeURIComponent(action),{
+        method:'POST',
+        headers:{'Content-Type':'application/json','Authorization':'Bearer '+token},
+        body:JSON.stringify(payload)
+    });
+    let data={};
+    try{data=await response.json();}catch(error){}
+    if(!response.ok) throw new Error(data.error||'No se pudo completar la operación.');
+    return data;
+}
+
 async function createStudent(){
     const name=document.getElementById('newStudentName').value.trim();
     const rut=cleanRut(document.getElementById('newStudentRut').value);
     const curso=document.getElementById('newStudentCurso').value;
     if(!name||!rut||!curso){toast('Completa todos los campos','err');return}
 
-    const email=rutToEmail(rut);
-    const pass=defaultPassword(rut);
-
     try{
-        const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-        await secondaryAuth.signOut();
-        const uid=cred.user.uid;
-        await db.ref(BASE+'/estudiantes/'+uid).set({
-            nombre:name,rut:rut,curso:curso,programa:progFromCurso(curso),
-            perfil_completo:false,password_changed:false,
-            createdAt:Date.now(),createdBy:currentAdminUid
-        });
-        students[uid]={nombre:name,rut:rut,curso:curso,programa:progFromCurso(curso),perfil_completo:false};
-        renderStudents();renderOverview();
+        const result=await adminStudentRequest('create',{nombre:name,rut:rut,curso:curso});
+        await loadAllData();
         closeModal('addStudent');
         document.getElementById('newStudentName').value='';
         document.getElementById('newStudentRut').value='';
-        toast('Estudiante creado exitosamente','ok');
+        const message=result.recoveredAuth
+            ?(result.recoveredProfile?'El estudiante ya existía. Sus datos fueron actualizados.':'Cuenta existente recuperada y estudiante agregado.')
+            :'Estudiante creado exitosamente';
+        toast(message,'ok');
     }catch(e){
-        console.error(e);
+        console.error('Create student error:',e);
         toast('Error: '+e.message,'err');
     }
 }
@@ -1417,33 +1420,36 @@ async function bulkCreateStudents(){
     const raw=document.getElementById('bulkData').value.trim();
     if(!raw){toast('Pega la lista de estudiantes','err');return}
     const lines=raw.split('\n').filter(l=>l.trim());
-    let created=0,errors=[];
+    let created=0,errors=[],entries=[];
 
     for(const line of lines){
         const parts=line.split(';').map(s=>s.trim());
         if(parts.length<3){errors.push(line+' — formato inválido');continue}
         const[name,rut,curso]=parts;
-        const email=rutToEmail(rut);
-        const pass=defaultPassword(rut);
-        try{
-            const cred=await secondaryAuth.createUserWithEmailAndPassword(email,pass);
-            await secondaryAuth.signOut();
-            await db.ref(BASE+'/estudiantes/'+cred.user.uid).set({
-                nombre:name,rut:cleanRut(rut),curso:curso,programa:progFromCurso(curso),
-                perfil_completo:false,password_changed:false,
-                createdAt:Date.now(),createdBy:currentAdminUid
-            });
-            created++;
-        }catch(e){errors.push(name+' — '+e.message)}
+        if(!name||!rut||!curso){errors.push((name||line)+' — campos incompletos');continue}
+        entries.push({nombre:name,rut:cleanRut(rut),curso:curso});
     }
 
-    await loadAllData();
-    closeModal('bulkAdd');
-    document.getElementById('bulkData').value='';
-    let msg=created+' estudiantes creados.';
-    if(errors.length) msg+=' '+errors.length+' errores.';
-    toast(msg,errors.length?'err':'ok');
-    if(errors.length) console.warn('Errores carga masiva:',errors);
+    try{
+        for(let i=0;i<entries.length;i+=50){
+            const result=await adminStudentRequest('bulk-create',{estudiantes:entries.slice(i,i+50)});
+            created+=Number(result.created||0);
+            (result.errors||[]).forEach(item=>errors.push((item.nombre||'?')+' — '+(item.error||'error desconocido')));
+        }
+        await loadAllData();
+        closeModal('bulkAdd');
+        document.getElementById('bulkData').value='';
+        let msg=created+' estudiantes creados o recuperados.';
+        if(errors.length) msg+=' '+errors.length+' errores.';
+        toast(msg,errors.length?'err':'ok');
+        if(errors.length) console.warn('Errores carga masiva:',errors);
+    }catch(e){
+        try{
+            await loadAllData();
+        }catch(refreshError){}
+        console.error('Bulk create students error:',e);
+        toast('Error: '+e.message,'err');
+    }
 }
 
 function editStudent(uid){

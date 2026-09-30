@@ -105,6 +105,7 @@ const PERSONAL_QUESTION_IDS = ['q1', 'q2', 'q3', 'q4', 'q5', 'q6'];
 function cleanRut(r) { return (r || '').replace(/[.\s]/g, '').toUpperCase(); }
 function rutToEmail(r) { return cleanRut(r).replace(/-/g, '') + STUDENT_EMAIL_DOMAIN; }
 function defaultPassword(r) { var d = cleanRut(r).replace(/[^0-9]/g, ''); return d.substring(0, 6).padEnd(6, '0'); }
+function programFromCourse(course) { return /^[34]/.test(String(course || '')) ? 'paes' : 'simce'; }
 
 function u3s7BodyOf(req) {
     if (req.body && typeof req.body === 'object') return req.body;
@@ -783,6 +784,7 @@ async function upsertStudentProfile(uid, student, decoded) {
         nombre: student.nombre,
         rut: cleanRut(student.rut),
         curso: student.curso,
+        programa: programFromCourse(student.curso),
         perfil_completo: existing.perfil_completo === true,
         password_changed: existing.password_changed === true,
         createdAt: existing.createdAt || Date.now(),

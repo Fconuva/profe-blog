@@ -781,7 +781,18 @@
   // ---------------- regalos ----------------
   // Un mueble que yo tengo y el dueño de la casa no. Lo escribe el servidor en
   // su avatar; aquí solo se elige.
-  function tengo(m) { return Number(m.xp || 0) === 0 || !!(S.regalos && S.regalos[m.id]); }
+  function tengo(m) {
+    if (Number(m.xp || 0) === 0) return true;
+    var requisitos = S.requisitos && S.requisitos[m.id];
+    if (Array.isArray(requisitos) && requisitos.length) return !!(S.recompensas && S.recompensas[m.id]);
+    return !!(S.regalos && S.regalos[m.id]);
+  }
+  function requisitoDe(m) {
+    var requisitos = (S.requisitos && S.requisitos[m.id]) || [];
+    if (!requisitos.length) return 'Recompensa pendiente de asignación';
+    var nombres = requisitos.map(function (r) { return r.titulo || r.fuente; }).filter(Boolean);
+    return 'Completa ' + nombres.slice(0, 2).join(' o ');
+  }
   function abrirRegalo() {
     if (!S.housesEnabled) { avisar('Las casas y la decoración están deshabilitadas'); return; }
     var panel = S.host.querySelector('#espVisitas');
@@ -795,7 +806,9 @@
     var ref = S.db.ref(S.base + '/avatar/' + para);
     Promise.all([ref.child('xp_total').once('value'), ref.child('regalos').once('value')]).then(function (r) {
       var suXp = Number(r[0].val()) || 0, suyos = r[1].val() || {};
-      var opciones = CATALOGO.filter(function (m) { return m.xp > 0 && tengo(m) && suXp < m.xp && !suyos[m.id]; });
+      var opciones = CATALOGO.filter(function (m) {
+        return m.xp > 0 && tengo(m) && !(S.requisitos && S.requisitos[m.id]) && suXp < m.xp && !suyos[m.id];
+      });
       if (!opciones.length) { cont.textContent = 'Ya tiene todos los muebles que tú tienes.'; return; }
       cont.innerHTML = '<p class="esp-regalo-nota">Elige uno de tus muebles. Puedes regalar uno al día.</p>' +
         '<div class="esp-regalo-rejilla">' + opciones.map(function (m) {
@@ -921,7 +934,8 @@
       S.sel = -1; S.elegido = null; S.hover = null;
       if (esMia) S.av = { col: S.miAv.col, fila: S.miAv.fila }; else S.av = { col: 2, fila: 4 };
       S.host.querySelector('.esp-acciones').hidden = !esMia;
-      S.host.querySelector('.esp-tabs button[data-p="muebles"]').hidden = !esMia;
+      var mueblesBloque = S.host.querySelector('#espMueblesBloque');
+      if (mueblesBloque) mueblesBloque.hidden = !esMia;
       S.pieza.forEach(function (m) { DIRS.forEach(function (d2) { cargar_(m.id + '_' + d2); }); });
       botones(); pintarMuebles(); dibujar();
       return conectarSala(uid);
@@ -937,7 +951,6 @@
     '<div class="esp-tabs">' +
       '<button data-p="personaje" class="on">Mi personaje</button>' +
       '<button data-p="pieza">Mi casa</button>' +
-      '<button data-p="muebles">Muebles</button>' +
       '<span class="esp-estado"></span>' +
     '</div>' +
     '<div class="esp-anuncio" id="espAnuncio" role="status" hidden></div>' +
@@ -982,16 +995,17 @@
           '<button type="submit">Decir</button>' +
         '</form>' +
       '</div>' +
-    '</div>' +
-    '<div class="esp-panel oculto" data-panel="muebles">' +
-      '<div class="esp-subtabs"><button data-f="tengo" class="on">Tengo</button>' +
-        '<button data-f="faltan">Por ganar</button><span id="espCuenta"></span></div>' +
-      '<div class="esp-familias" id="espFamilias">' +
-        FAMILIAS.map(function (f, i) {
-          return '<button data-fam="' + f.id + '"' + (i === 0 ? ' class="on"' : '') + '>' + f.nom + '</button>';
-        }).join('') +
-      '</div>' +
-      '<div class="esp-rejilla" id="espRejilla"></div>' +
+      '<section id="espMueblesBloque" class="esp-muebles-integrados" aria-labelledby="espMueblesTitulo">' +
+        '<h3 id="espMueblesTitulo">Muebles de mi casa</h3>' +
+        '<div class="esp-subtabs"><button data-f="tengo" class="on">Tengo</button>' +
+          '<button data-f="faltan">Por ganar</button><span id="espCuenta"></span></div>' +
+        '<div class="esp-familias" id="espFamilias">' +
+          FAMILIAS.map(function (f, i) {
+            return '<button data-fam="' + f.id + '"' + (i === 0 ? ' class="on"' : '') + '>' + f.nom + '</button>';
+          }).join('') +
+        '</div>' +
+        '<div class="esp-rejilla" id="espRejilla"></div>' +
+      '</section>' +
     '</div>';
   }
 
@@ -1045,7 +1059,7 @@
         '" data-id="' + m.id + '">' +
         '<img src="' + RUTA + m.id + '_SE.png" alt="' + esc(m.nom) + '">' +
         '<div class="esp-nom">' + esc(m.nom) + '</div>' +
-        (tengo(m) ? '' : '<div class="esp-req">' + esc(m.motivo) + '</div>') +
+        (tengo(m) ? ((S.recompensas && S.recompensas[m.id]) ? '<div class="esp-req">✓ Tarea completada</div>' : '') : '<div class="esp-req">🔒 ' + esc(requisitoDe(m)) + '</div>') +
         (regalo ? '<span class="esp-regalo" title="Regalo de ' + esc(regalo.de || 'un compañero') + '">🎁</span>' : '') +
         (n ? '<span class="esp-cont">' + n + '</span>' : '') + '</div>';
     }).join('');
@@ -1193,6 +1207,34 @@
     }).catch(function () { S.housesEnabled = false; aplicarDisponibilidad(); });
   }
 
+  function aplicarInventario(data) {
+    var anteriores = S.recompensas || {};
+    var primeraCarga = !S.inventoryReady;
+    S.recompensas = (data && data.desbloqueados && typeof data.desbloqueados === 'object') ? data.desbloqueados : {};
+    S.requisitos = (data && data.requisitos && typeof data.requisitos === 'object') ? data.requisitos : {};
+    S.inventoryReady = true;
+    if (!S.visitando) {
+      S.miPieza = (Array.isArray(S.miPieza) ? S.miPieza : []).filter(function (pieza) {
+        return !!POR_ID[pieza.id] && tengo(POR_ID[pieza.id]);
+      });
+      S.pieza = S.miPieza;
+    }
+    pintarMuebles(); botones(); dibujar();
+    if (!primeraCarga) {
+      var nuevos = Object.keys(S.recompensas).filter(function (id) { return !anteriores[id] && POR_ID[id]; });
+      if (nuevos.length) anunciar('🎁 Desbloqueaste ' + nuevos.length + (nuevos.length === 1 ? ' mueble por completar una tarea.' : ' muebles por completar una tarea.'));
+    }
+  }
+
+  function sincronizarInventario() {
+    return api('inventario').then(function (data) {
+      if (data && data.ok) aplicarInventario(data);
+    }).catch(function () {
+      S.recompensas = {}; S.requisitos = {}; S.inventoryReady = false;
+      pintarMuebles();
+    });
+  }
+
   function punto(ev) {
     var r = S.cv.getBoundingClientRect();
     var t = (ev.touches && ev.touches[0]) || ev;
@@ -1306,8 +1348,12 @@
     S.logros = (cfg.logros && typeof cfg.logros === 'object') ? cfg.logros : {};
     S.placas = placasValidas(cfg.placas, S.logros);
     S.regalos = (cfg.regalos && typeof cfg.regalos === 'object') ? cfg.regalos : {};
+    S.recompensas = {};
+    S.requisitos = {};
+    S.inventoryReady = false;
     S.housesEnabled = false;
     S.stateTimer = null;
+    S.inventoryTimer = null;
     S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
     S.miPieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
@@ -1354,12 +1400,14 @@
 
     pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera(); aplicarDisponibilidad();
     global.addEventListener('resize', dibujar);
-    global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); desconectarSala(); });
+    global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); clearInterval(S.inventoryTimer); desconectarSala(); });
     setTimeout(dibujar, 80);
 
     if (S.auth && S.db) {
       sincronizarDisponibilidad();
+      sincronizarInventario();
       S.stateTimer = setInterval(sincronizarDisponibilidad, 15000);
+      S.inventoryTimer = setInterval(sincronizarInventario, 60000);
     }
   }
 

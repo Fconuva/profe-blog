@@ -3,7 +3,12 @@
  * Las variantes de color se obtienen rotando el matiz del PNG original.
  * No editar a mano: se regenera.
  */
-window.CATALOGO_CASA = [
+(function (root, factory) {
+  var catalogo = factory();
+  if (root) root.CATALOGO_CASA = catalogo;
+  if (typeof module === 'object' && module.exports) module.exports = catalogo;
+})(typeof window !== 'undefined' ? window : null, function () {
+return [
   {id:"bedSingle",nom:"Cama",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},
   {id:"bedDouble",nom:"Cama de dos plazas",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},
   {id:"bedBunk",nom:"Camarote",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},
@@ -157,3 +162,4 @@ window.CATALOGO_CASA = [
   {id:"kitchenFridgeBuiltIn",nom:"Refrigerador empotrado",fam:"cocina",xp:2200,motivo:"Nivel alto",sup:0,apila:false,plano:false},
   {id:"washerDryerStacked",nom:"Torre de lavado",fam:"cocina",xp:2200,motivo:"Nivel alto",sup:0,apila:false,plano:false}
 ];
+});

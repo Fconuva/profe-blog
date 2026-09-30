@@ -94,6 +94,16 @@
         .section-tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid #e2e8f0;padding-bottom:0}
         .section-tab{padding:8px 16px;font-size:12px;font-weight:700;cursor:pointer;border:none;background:none;color:#64748b;border-bottom:2px solid transparent;margin-bottom:-2px;font-family:inherit}
         .section-tab.active{color:#1e40af;border-bottom-color:#1e40af}
+        .reward-form{display:grid;grid-template-columns:minmax(220px,1.4fr) minmax(180px,1fr);gap:12px;padding:14px}
+        .reward-form .wide{grid-column:1/-1}
+        .reward-catalog{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:7px;max-height:300px;overflow:auto;padding:4px}
+        .reward-item{display:flex;align-items:center;gap:8px;border:1px solid #e2e8f0;border-radius:9px;padding:7px;background:#fff;cursor:pointer;font-size:11px;color:#334155}
+        .reward-item:has(input:checked){border-color:#2563eb;background:#eff6ff;color:#1e3a8a;font-weight:700}
+        .reward-item img{width:42px;height:34px;object-fit:contain;image-rendering:pixelated}
+        .reward-item input{width:auto}
+        .reward-list{display:grid;gap:8px;padding:0 14px 14px}
+        .reward-rule{display:flex;align-items:flex-start;gap:10px;border:1px solid #e2e8f0;border-radius:10px;padding:10px}
+        .reward-rule>div{flex:1;min-width:0}.reward-rule p{font-size:11px;color:#64748b;margin-top:3px;line-height:1.4}
         /* ACHIEVEMENT LEVELS */
         .level-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
         .level-card{padding:16px;border-radius:10px;text-align:center}
@@ -110,6 +120,7 @@
             .mobile-nav a{white-space:nowrap;color:#94a3b8;text-decoration:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600}
             .mobile-nav a.active{color:#fff;background:#1e40af}
             .level-row{grid-template-columns:repeat(2,1fr)}
+            .reward-form{grid-template-columns:1fr}.reward-form .wide{grid-column:auto}
         }
         /* LOGIN SCREEN */
         .login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#0f172a,#1e293b)}
@@ -186,6 +197,19 @@
                 <div style="flex:1;min-width:240px"><strong>Uso de casas y decoración</strong><div id="casasConfigStatus" style="font-size:12px;color:#64748b;margin-top:3px">Consultando estado…</div></div>
                 <button id="btnCasasBloquear" class="btn btn-danger" onclick="cambiarEstadoCasas(false)">🔒 Deshabilitar</button>
                 <button id="btnCasasHabilitar" class="btn btn-primary" onclick="cambiarEstadoCasas(true)">🔓 Habilitar</button>
+            </div>
+            <div class="panel-table" id="mueblesTareasPanel">
+                <h3 style="padding:16px 14px 4px;font-size:15px;color:#0f172a">🎁 Muebles por tareas completadas</h3>
+                <p style="padding:0 14px;font-size:12px;color:#64748b;line-height:1.45">Asigna un mueble o un set. El estudiante lo verá bloqueado hasta que la plataforma confirme su entrega.</p>
+                <div class="reward-form">
+                    <div class="form-group"><label for="rewardTask">Tarea</label><select id="rewardTask" onchange="cambiarFuenteRecompensa()"></select></div>
+                    <div class="form-group"><label for="rewardName">Nombre del premio</label><input id="rewardName" maxlength="80" placeholder="Ej.: Set de escritura"></div>
+                    <div class="form-group"><label for="rewardPreset">Selección rápida</label><select id="rewardPreset" onchange="aplicarPresetRecompensa(this.value)"><option value="">Elegir…</option><option value="uno">Un mueble</option><option value="escritura">Set de escritura</option><option value="lectura">Set de lectura</option><option value="dormitorio">Set de dormitorio</option><option value="personalizado">Set personalizado</option></select></div>
+                    <div class="form-group"><label for="rewardSearch">Buscar mueble</label><input id="rewardSearch" placeholder="Nombre o categoría" oninput="renderCatalogoRecompensas()"></div>
+                    <div class="wide"><div id="rewardSelectionCount" style="font-size:12px;font-weight:700;color:#1e40af;margin-bottom:6px">0 muebles seleccionados</div><div id="rewardCatalog" class="reward-catalog"></div></div>
+                    <div class="wide" style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="btn btn-success" onclick="guardarRecompensaMuebles()">Guardar asignación</button><button type="button" class="btn btn-secondary" onclick="limpiarEditorRecompensa()">Limpiar</button></div>
+                </div>
+                <div id="rewardRules" class="reward-list"></div>
             </div>
             <div class="stat-row" id="chatCasasStats"></div>
             <div class="panel-table">
@@ -597,6 +621,11 @@ let currentDocente=null; // {nombre,cursos:[...],superadmin:bool}
 let autoLoginAttempted=false;
 let authStateResolved=false;
 let adminValidationRun=0;
+let houseRewardRules=[];
+let houseRewardCatalog=[];
+let houseRewardSelected=new Set();
+let editingHouseReward=null;
+let editingHouseRewardSources=[];
 
 /* ============ AUTH ============ */
 async function adminLogin(){
@@ -1039,6 +1068,104 @@ async function casasAdminApi(action,payload={}){
     if(!response.ok||data.ok===false)throw new Error(data.error||'No se pudo actualizar Mi espacio');
     return data;
 }
+const HOUSE_REWARD_PRESETS={
+    escritura:['books','computerScreen','computerKeyboard','computerMouse','lampSquareTable'],
+    lectura:['bookcaseOpen','chairCushion','lampRoundFloor','rugRectangle'],
+    dormitorio:['cabinetBed','sideTable','lampRoundTable','bear']
+};
+function rewardSessionOptions(){
+    return Object.entries(sessions).filter(([,session])=>isMiSesion(session))
+        .sort((a,b)=>(Number(b[1]?.orden)||0)-(Number(a[1]?.orden)||0));
+}
+function renderRewardTaskOptions(){
+    const select=document.getElementById('rewardTask');
+    if(!select)return;
+    const current=select.value;
+    const options=rewardSessionOptions();
+    select.innerHTML=options.map(([id,session])=>`<option value="${esc(id)}">${esc(session.titulo||id)}</option>`).join('');
+    if(options.some(([id])=>id===current))select.value=current;
+    if(!select.value&&options.length)select.value=options[0][0];
+}
+function renderCatalogoRecompensas(){
+    const host=document.getElementById('rewardCatalog');
+    if(!host)return;
+    const query=(document.getElementById('rewardSearch')?.value||'').trim().toLowerCase();
+    const visibles=houseRewardCatalog.filter(item=>!query||`${item.nombre} ${item.familia}`.toLowerCase().includes(query));
+    host.innerHTML=visibles.map(item=>`<label class="reward-item"><input type="checkbox" value="${esc(item.id)}" ${houseRewardSelected.has(item.id)?'checked':''} onchange="toggleMuebleRecompensa('${esc(item.id)}',this.checked)"><img src="/estudiantes/assets/pieza/${esc(item.id)}_SE.png" alt=""><span>${esc(item.nombre)}<br><small>${esc(item.familia)}</small></span></label>`).join('')||'<p style="font-size:12px;color:#64748b">No hay muebles que coincidan.</p>';
+    const count=document.getElementById('rewardSelectionCount');
+    if(count)count.textContent=`${houseRewardSelected.size} ${houseRewardSelected.size===1?'mueble seleccionado':'muebles seleccionados'}`;
+}
+function toggleMuebleRecompensa(id,checked){
+    if(checked){
+        if(houseRewardSelected.size>=24){toast('Máximo 24 muebles por premio','err');renderCatalogoRecompensas();return;}
+        houseRewardSelected.add(id);
+    }else houseRewardSelected.delete(id);
+    renderCatalogoRecompensas();
+}
+function aplicarPresetRecompensa(preset){
+    if(preset==='uno')houseRewardSelected=new Set();
+    else if(HOUSE_REWARD_PRESETS[preset])houseRewardSelected=new Set(HOUSE_REWARD_PRESETS[preset]);
+    else if(preset==='personalizado')houseRewardSelected=new Set();
+    const names={escritura:'Set de escritura',lectura:'Set de lectura',dormitorio:'Set de dormitorio',uno:'Mueble individual',personalizado:'Set personalizado'};
+    if(names[preset])document.getElementById('rewardName').value=names[preset];
+    renderCatalogoRecompensas();
+}
+function cambiarFuenteRecompensa(){
+    if(editingHouseReward)editingHouseRewardSources=[document.getElementById('rewardTask').value];
+}
+function limpiarEditorRecompensa(){
+    editingHouseReward=null;editingHouseRewardSources=[];houseRewardSelected=new Set();
+    const name=document.getElementById('rewardName');if(name)name.value='';
+    const preset=document.getElementById('rewardPreset');if(preset)preset.value='';
+    const search=document.getElementById('rewardSearch');if(search)search.value='';
+    renderCatalogoRecompensas();
+}
+function renderReglasRecompensa(){
+    const host=document.getElementById('rewardRules');if(!host)return;
+    const nombres=Object.fromEntries(houseRewardCatalog.map(item=>[item.id,item.nombre]));
+    host.innerHTML=houseRewardRules.map(rule=>`<div class="reward-rule"><div><strong>${esc(rule.nombreSet)}</strong><p>${esc(rule.titulo)}<br>${rule.muebles.map(id=>esc(nombres[id]||id)).join(' · ')}</p></div><button type="button" class="btn btn-secondary btn-sm" onclick="editarRecompensaMuebles('${esc(rule.id)}')">Editar</button><button type="button" class="btn btn-danger btn-sm" onclick="eliminarRecompensaMuebles('${esc(rule.id)}')">Quitar</button></div>`).join('')||'<p style="font-size:12px;color:#64748b">Aún no hay premios asignados.</p>';
+}
+async function cargarRecompensasMuebles(){
+    try{
+        const data=await casasAdminApi('recompensas-listar');
+        houseRewardRules=Array.isArray(data.reglas)?data.reglas:[];
+        houseRewardCatalog=Array.isArray(data.catalogo)?data.catalogo:[];
+        renderRewardTaskOptions();renderCatalogoRecompensas();renderReglasRecompensa();
+    }catch(error){
+        const host=document.getElementById('rewardRules');if(host)host.innerHTML=`<p style="font-size:12px;color:#b91c1c">${esc(error.message)}</p>`;
+    }
+}
+function editarRecompensaMuebles(id){
+    const rule=houseRewardRules.find(item=>item.id===id);if(!rule)return;
+    editingHouseReward=rule.id;editingHouseRewardSources=Array.isArray(rule.fuentes)?rule.fuentes.slice():[rule.fuente];
+    renderRewardTaskOptions();
+    document.getElementById('rewardTask').value=rule.fuente;
+    document.getElementById('rewardName').value=rule.nombreSet||'';
+    document.getElementById('rewardPreset').value='';
+    houseRewardSelected=new Set(rule.muebles||[]);
+    renderCatalogoRecompensas();
+    document.getElementById('mueblesTareasPanel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+async function guardarRecompensaMuebles(){
+    const fuente=document.getElementById('rewardTask').value;
+    const muebles=Array.from(houseRewardSelected);
+    if(!fuente){toast('Selecciona una tarea','err');return;}
+    if(!muebles.length){toast('Selecciona al menos un mueble','err');return;}
+    try{
+        await casasAdminApi('recompensas-guardar',{regla:editingHouseReward,tipo:'sesion',fuente,
+            fuentes:editingHouseRewardSources.length?editingHouseRewardSources:[fuente],
+            titulo:(sessions[fuente]&&sessions[fuente].titulo)||fuente,
+            nombreSet:document.getElementById('rewardName').value.trim(),muebles});
+        toast('Premio guardado y vinculado a la tarea','ok');
+        limpiarEditorRecompensa();await cargarRecompensasMuebles();
+    }catch(error){toast(error.message,'err');}
+}
+async function eliminarRecompensaMuebles(id){
+    const rule=houseRewardRules.find(item=>item.id===id);if(!rule)return;
+    if(!confirm(`¿Quitar el premio "${rule.nombreSet}" de esta tarea?`))return;
+    try{await casasAdminApi('recompensas-eliminar',{regla:id});toast('Premio retirado','ok');await cargarRecompensasMuebles();}
+    catch(error){toast(error.message,'err');}
+}
 async function cargarEstadoCasas(){
     const status=document.getElementById('casasConfigStatus');
     try{
@@ -1063,7 +1190,7 @@ async function cambiarEstadoCasas(enabled){
     }catch(error){toast(error.message,'err');await cargarEstadoCasas();}
 }
 async function cargarChatCasas(loadState=true){
-    if(loadState)await cargarEstadoCasas();
+    if(loadState)await Promise.all([cargarEstadoCasas(),cargarRecompensasMuebles()]);
     const fecha = t => t ? new Date(Number(t)).toLocaleString('es-CL',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '';
     const escapa = s => String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
     const [alSnap, blSnap, saSnap, esSnap] = await Promise.all([

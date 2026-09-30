@@ -23,6 +23,7 @@
 const admin = require('firebase-admin');
 const { revisar } = require('./_filtro-garabatos.js');
 const { visiblesDeCurso } = require('./_nombre-visible.js');
+const CATALOGO_CASA = require('../estudiantes/js/catalogo-casa.js');
 
 const BASE = 'plataforma_estudiantes';
 const TOPE_SALA = 30;
@@ -31,10 +32,151 @@ const ENTRE_MENSAJES_MS = 1500;
 const LARGO_MAX = 200;
 const HISTORIAL = 100;
 const CONFIG_PATH = `${BASE}/configuracion/mi_espacio`;
+const RECOMPENSAS_PATH = `${BASE}/configuracion/recompensas_muebles`;
+const CATALOGO_POR_ID = new Map(CATALOGO_CASA.map(mueble => [mueble.id, mueble]));
 
 async function estadoMiEspacio(db) {
     const value = (await db.ref(CONFIG_PATH).once('value')).val() || {};
     return { enabled: value.enabled === true, updatedAt: Number(value.updatedAt || 0) };
+}
+
+function idFuente(valor) {
+    const id = String(valor || '').trim();
+    return /^[A-Za-z0-9_-]{3,100}$/.test(id) ? id : null;
+}
+
+function normalizarRegla(id, valor) {
+    if (!valor || valor.activa === false) return null;
+    const tipo = valor.tipo === 'tarea' ? 'tarea' : 'sesion';
+    const fuente = idFuente(valor.fuente);
+    const fuentes = [];
+    if (fuente) fuentes.push(fuente);
+    Object.keys(valor.fuentes || {}).forEach(clave => {
+        const normalizada = idFuente(clave);
+        if (normalizada && valor.fuentes[clave] === true && !fuentes.includes(normalizada)) fuentes.push(normalizada);
+    });
+    const muebles = Object.keys(valor.muebles || {}).filter(mueble =>
+        valor.muebles[mueble] === true && CATALOGO_POR_ID.has(mueble) && Number(CATALOGO_POR_ID.get(mueble).xp || 0) > 0
+    );
+    if (!fuentes.length || !muebles.length) return null;
+    return {
+        id,
+        tipo,
+        fuente: fuentes[0],
+        fuentes,
+        titulo: String(valor.titulo || fuentes[0]).trim().slice(0, 140),
+        nombreSet: String(valor.nombreSet || (muebles.length === 1 ? 'Mueble' : 'Set de muebles')).trim().slice(0, 80),
+        muebles,
+        updatedAt: Number(valor.updatedAt || 0)
+    };
+}
+
+async function leerReglasRecompensa(db) {
+    const valor = (await db.ref(RECOMPENSAS_PATH).once('value')).val() || {};
+    return Object.keys(valor).map(id => normalizarRegla(id, valor[id])).filter(Boolean);
+}
+
+function entregaCanonica(valor) {
+    return !!valor && valor.submitted === true && valor.completada === true;
+}
+
+async function inventarioPorTareas(db, yo) {
+    const reglas = await leerReglasRecompensa(db);
+    if (yo.esAdmin) return { desbloqueados: {}, requisitos: {}, reglas };
+
+    const lecturas = new Map();
+    const leerEntrega = (tipo, fuente) => {
+        const ruta = tipo === 'tarea'
+            ? `${BASE}/tareas/${fuente}/${yo.uid}`
+            : `${BASE}/respuestas/${fuente}/${yo.uid}`;
+        if (!lecturas.has(ruta)) lecturas.set(ruta, db.ref(ruta).once('value').then(snap => snap.val()));
+        return lecturas.get(ruta);
+    };
+
+    const evaluadas = await Promise.all(reglas.map(async regla => {
+        const valores = await Promise.all(regla.fuentes.map(fuente => leerEntrega(regla.tipo, fuente)));
+        const completa = valores.some(valor => regla.tipo === 'tarea' ? !!(valor && valor.completada === true) : entregaCanonica(valor));
+        return { regla, completa };
+    }));
+
+    const desbloqueados = {};
+    const requisitos = {};
+    evaluadas.forEach(({ regla, completa }) => {
+        regla.muebles.forEach(mueble => {
+            if (!requisitos[mueble]) requisitos[mueble] = [];
+            requisitos[mueble].push({
+                regla: regla.id,
+                tipo: regla.tipo,
+                fuente: regla.fuente,
+                titulo: regla.titulo,
+                nombreSet: regla.nombreSet
+            });
+            if (completa) desbloqueados[mueble] = {
+                regla: regla.id,
+                titulo: regla.titulo,
+                nombreSet: regla.nombreSet
+            };
+        });
+    });
+    return { desbloqueados, requisitos };
+}
+
+async function listarRecompensas(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
+    return res.status(200).json({
+        ok: true,
+        reglas: await leerReglasRecompensa(db),
+        catalogo: CATALOGO_CASA.filter(mueble => Number(mueble.xp || 0) > 0).map(mueble => ({
+            id: mueble.id,
+            nombre: mueble.nom,
+            familia: mueble.fam
+        }))
+    });
+}
+
+async function guardarRecompensa(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
+    const tipo = req.body.tipo === 'tarea' ? 'tarea' : 'sesion';
+    const fuente = idFuente(req.body.fuente);
+    if (!fuente) return res.status(400).json({ error: 'La tarea no es válida.' });
+    const fuentesSolicitadas = Array.isArray(req.body.fuentes) ? req.body.fuentes : [fuente];
+    const fuentes = [...new Set([fuente, ...fuentesSolicitadas].map(idFuente).filter(Boolean))].slice(0, 5);
+    const muebles = [...new Set((Array.isArray(req.body.muebles) ? req.body.muebles : []).map(String))]
+        .filter(id => CATALOGO_POR_ID.has(id) && Number(CATALOGO_POR_ID.get(id).xp || 0) > 0)
+        .slice(0, 24);
+    if (!muebles.length) return res.status(400).json({ error: 'Selecciona al menos un mueble no inicial.' });
+    const reglaSolicitada = String(req.body.regla || '');
+    const regla = /^[A-Za-z0-9_-]{6,100}$/.test(reglaSolicitada)
+        ? reglaSolicitada
+        : `premio-${tipo}-${fuente}`.slice(0, 100);
+    const tituloSesion = tipo === 'sesion' ? (await db.ref(`${BASE}/sesiones/${fuente}`).once('value')).val() : null;
+    const registro = {
+        activa: true,
+        tipo,
+        fuente,
+        fuentes: Object.fromEntries(fuentes.map(id => [id, true])),
+        titulo: String((tituloSesion && tituloSesion.titulo) || req.body.titulo || fuente).trim().slice(0, 140),
+        nombreSet: String(req.body.nombreSet || (muebles.length === 1 ? CATALOGO_POR_ID.get(muebles[0]).nom : 'Set de muebles')).trim().slice(0, 80),
+        muebles: Object.fromEntries(muebles.map(id => [id, true])),
+        updatedAt: Date.now(),
+        updatedBy: yo.uid
+    };
+    const ref = db.ref(`${RECOMPENSAS_PATH}/${regla}`);
+    await ref.set(registro);
+    const releida = normalizarRegla(regla, (await ref.once('value')).val());
+    if (!releida || releida.muebles.length !== muebles.length) return res.status(500).json({ error: 'No se pudo confirmar la recompensa guardada.' });
+    return res.status(200).json({ ok: true, regla: releida });
+}
+
+async function eliminarRecompensa(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
+    const regla = String(req.body.regla || '');
+    if (!/^[A-Za-z0-9_-]{6,100}$/.test(regla)) return res.status(400).json({ error: 'Recompensa no válida.' });
+    await db.ref(`${RECOMPENSAS_PATH}/${regla}`).remove();
+    if ((await db.ref(`${RECOMPENSAS_PATH}/${regla}`).once('value')).exists()) {
+        return res.status(500).json({ error: 'No se pudo confirmar la eliminación.' });
+    }
+    return res.status(200).json({ ok: true });
 }
 
 // ---- identidad: el token dice quién es, la nómina dice si existe ----
@@ -253,6 +395,8 @@ async function regalar(req, res, db, yo) {
     const mueble = idMueble(req.body.mueble);
     if (!para || para === yo.uid) return res.status(400).json({ error: 'Elige a un compañero.' });
     if (!mueble) return res.status(400).json({ error: 'Mueble no válido.' });
+    const fichaMueble = CATALOGO_POR_ID.get(mueble);
+    if (!fichaMueble || Number(fichaMueble.xp || 0) === 0) return res.status(400).json({ error: 'Ese mueble no se puede regalar.' });
 
     const perfil = (await db.ref(`${BASE}/estudiantes/${para}`).once('value')).val();
     if (!perfil || String(perfil.curso || '') !== yo.curso) {
@@ -262,6 +406,12 @@ async function regalar(req, res, db, yo) {
     if ((await destino.once('value')).exists()) {
         return res.status(200).json({ ok: false, error: 'Ya le regalaron ese mueble. Elige otro.' });
     }
+    const reglas = await leerReglasRecompensa(db);
+    if (reglas.some(regla => regla.muebles.includes(mueble))) {
+        return res.status(200).json({ ok: false, error: 'Ese mueble se obtiene completando su tarea y no se puede transferir.' });
+    }
+    const regaloPropio = await db.ref(`${BASE}/avatar/${yo.uid}/regalos/${mueble}`).once('value');
+    if (!regaloPropio.exists()) return res.status(200).json({ ok: false, error: 'No tienes ese mueble disponible para regalar.' });
 
     const ahora = Date.now();
     const cupo = await db.ref(`${BASE}/regalos_log/${yo.uid}/${hoyEnChile()}`).transaction((actual) => {
@@ -309,6 +459,10 @@ async function manejar(req, res, accion, db, auth) {
             return res.status(200).json({ ok: true, ...state });
         }
         if (accion === 'configurar') return await configurar(req, res, db, yo);
+        if (accion === 'recompensas-listar') return await listarRecompensas(req, res, db, yo);
+        if (accion === 'recompensas-guardar') return await guardarRecompensa(req, res, db, yo);
+        if (accion === 'recompensas-eliminar') return await eliminarRecompensa(req, res, db, yo);
+        if (accion === 'inventario') return res.status(200).json({ ok: true, ...(await inventarioPorTareas(db, yo)) });
         if (!['salir', 'atender'].includes(accion)) {
             const state = await estadoMiEspacio(db);
             if (!state.enabled) return res.status(200).json({ ok: false, disabled: true, error: 'Las casas y la decoración están deshabilitadas por el profesor.' });

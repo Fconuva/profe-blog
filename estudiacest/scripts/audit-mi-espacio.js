@@ -18,9 +18,12 @@ const ctx = { window: {} };
 vm.createContext(ctx);
 vm.runInContext(leer('estudiantes/js/catalogo-casa.js'), ctx);
 const catalogo = ctx.window.CATALOGO_CASA;
+const catalogoServidor = require(path.join(root, 'estudiantes/js/catalogo-casa.js'));
 
 exigir(Array.isArray(catalogo) && catalogo.length >= 120,
   `El catálogo debería traer al menos 120 objetos y trae ${catalogo ? catalogo.length : 0}.`);
+exigir(Array.isArray(catalogoServidor) && catalogoServidor.length === catalogo.length,
+  'El servidor y el navegador deben compartir exactamente el mismo catálogo de muebles.');
 
 const DIRS = ['SE', 'SW', 'NE', 'NW'];
 const dirAssets = path.join(root, 'estudiantes/assets/pieza');
@@ -108,6 +111,10 @@ exigir(/TOPE_SALA\s*=\s*30/.test(salasApi), 'El tope de la casa debe ser 30 pers
 exigir(salasApi.includes('bloqueados_chat') && salasApi.includes('alertas_chat'), 'Los bloqueos y las alertas deben quedar registrados para el profesor.');
 exigir(salasApi.includes('CONFIG_PATH') && salasApi.includes("accion === 'configurar'") && salasApi.includes('if (!state.enabled)'),
   'El servidor debe bloquear casas y decoración por configuración global y permitir que el admin cambie el estado.');
+exigir(salasApi.includes('RECOMPENSAS_PATH') && salasApi.includes("accion === 'recompensas-guardar'") && salasApi.includes("accion === 'inventario'"),
+  'El servidor debe administrar premios de muebles y calcular el inventario desde las tareas completadas.');
+exigir(/submitted === true && valor\.completada === true/.test(salasApi),
+  'Una sesión solo puede desbloquear muebles con las dos marcas canónicas de entrega.');
 
 const reglas = JSON.parse(leer('firebase-rules.json')).rules.plataforma_estudiantes;
 exigir(reglas.salas && reglas.salas['.write'] === false, 'El nodo salas debe tener .write en false: solo escribe el servidor.');
@@ -132,10 +139,16 @@ const admin = leer('estudiantes/adminprofe/index.html');
 exigir(admin.includes('sec-chatcasas') && admin.includes('alertas_chat'), 'El admin debe mostrar las alertas del chat.');
 exigir(admin.includes('casasConfigStatus') && admin.includes('cambiarEstadoCasas(false)') && admin.includes('cambiarEstadoCasas(true)'),
   'El admin debe permitir habilitar y deshabilitar casas y decoración.');
+exigir(admin.includes('mueblesTareasPanel') && admin.includes('guardarRecompensaMuebles') && admin.includes('recompensas-guardar'),
+  'El admin debe permitir asociar uno o varios muebles a una tarea.');
 exigir(espacio.includes("api('estado')") && espacio.includes('aplicarDisponibilidad') && espacio.includes('S.housesEnabled = false'),
   'Mi espacio debe partir bloqueado y habilitar casas solo después de leer la configuración del servidor.');
 exigir(/setInterval\(sincronizarDisponibilidad, 15000\)/.test(espacio),
   'El interruptor del profesor debe reflejarse en páginas ya abiertas sin exigir un nuevo inicio de sesión.');
+exigir(/setInterval\(sincronizarInventario, 60000\)/.test(espacio) && espacio.includes("api('inventario')"),
+  'El inventario debe releer los premios verificados por el servidor.');
+exigir(!espacio.includes('<button data-p="muebles">') && espacio.includes('espMueblesBloque') && espacio.includes('esp-muebles-integrados'),
+  'La casa y el catálogo de muebles deben estar en una sola vista, no en pestañas separadas.');
 
 // ---- nombre visible: "Nombre Apellido", nunca el nombre completo ni el RUT ----
 // Caso (10-sep-2026): la sala guardaba el nombre completo en `presentes` y `chat`,
@@ -256,8 +269,8 @@ exigir(/pendientes\[campo\]/.test(cuerpoDe('guardar')),
 
 // ---- Regalos (10-sep-2026) ----
 // El navegador solo elige; el servidor escribe en el avatar del que recibe.
-exigir(/function tengo\(m\) \{ return Number\(m\.xp \|\| 0\) === 0 \|\| !!\(S\.regalos && S\.regalos\[m\.id\]\); \}/.test(moverJs),
-  'tengo(m) debe dejar los muebles iniciales y exigir una asignación para los demás; la XP ya no desbloquea muebles.');
+exigir(/function tengo\(m\)/.test(moverJs) && moverJs.includes('S.requisitos[m.id]') && moverJs.includes('S.recompensas[m.id]'),
+  'tengo(m) debe dejar los muebles iniciales y exigir una tarea completada para cada premio configurado.');
 exigir(/api\('regalar', \{ para: para, mueble: m\.id \}\)/.test(cuerpoDe('abrirRegalo')), 'El regalo se pide al servidor (salas-regalar).');
 exigir(!/avatar\/' \+ (para|S\.sala)\)[^;]*\.(set|update|push)\(/.test(moverJs), 'El navegador no escribe en el avatar ajeno.');
 exigir(/on\('child_added'/.test(cuerpoDe('escucharRegalos')) && /escucharRegalos\(\)/.test(cuerpoDe('sincronizarDisponibilidad')) && /sincronizarDisponibilidad\(\)/.test(cuerpoDe('montar')),
@@ -279,6 +292,7 @@ async function probarRegalos() {
     const ref = (p) => ({
       once: async () => foto(leerRuta(p)),
       set: async (v) => escribir(p, v),
+      remove: async () => escribir(p, null),
       update: async (v) => Object.keys(v).forEach((k) => escribir(p + '/' + k, v[k])),
       transaction: async (fn) => {
         const nuevo = fn(leerRuta(p) === undefined ? null : copia(leerRuta(p)));
@@ -295,7 +309,20 @@ async function probarRegalos() {
   }
   const SALAS = require(path.join(root, 'api/_salas.js'));
   const db = baseDeJuguete({ plataforma_estudiantes: {
-    configuracion: { mi_espacio: { enabled: true } },
+    configuracion: {
+      mi_espacio: { enabled: true },
+      recompensas_muebles: {
+        premio_s11: { activa: true, tipo: 'sesion', fuente: 'sesion-u3-11', fuentes: { 'sesion-u3-11': true },
+          titulo: 'Tarea 11', nombreSet: 'Set de escritura', muebles: { computerScreen: true, computerKeyboard: true } }
+      }
+    },
+    sesiones: { 'sesion-u3-11': { titulo: 'Tarea 11' }, 'sesion-u3-10': { titulo: 'Tarea 10' } },
+    respuestas: {
+      'sesion-u3-11': {
+        uidAnaaaa: { submitted: true, completada: true },
+        uidLuisss: { submitted: false, completada: true }
+      }
+    },
     estudiantes: {
       uidAnaaaa: { nombre: 'PEREZ SOTO ANA', curso: '2A-HC' },
       uidLuisss: { nombre: 'LARA ROJAS LUIS', curso: '2A-HC' },
@@ -303,7 +330,14 @@ async function probarRegalos() {
       uidEvaaaa: { nombre: 'MORA DIAZ EVA', curso: '3B-HC' }
     },
     admins: { uidProfee: true },
-    avatar: { uidAnaaaa: { regalos: { rugRound: { de: 'Alguien', ts: 1 } } } }
+    avatar: {
+      uidAnaaaa: { regalos: {
+        rugRound: { de: 'Alguien', ts: 1 },
+        lampSquareFloor: { de: 'Alguien', ts: 1 },
+        bookcaseOpen: { de: 'Alguien', ts: 1 }
+      } },
+      uidDianaa: { regalos: { chair: { de: 'Alguien', ts: 1 } } }
+    }
   } });
   const auth = { verifyIdToken: async (t) => ({ uid: t }) };
   const pedir = async (quien, cuerpo, accion = 'regalar') => {
@@ -314,7 +348,17 @@ async function probarRegalos() {
   };
   const regalo = (uid, id) => db.leerRuta(`plataforma_estudiantes/avatar/${uid}/regalos/${id}`);
 
-  let r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
+  let r = await pedir('uidAnaaaa', {}, 'inventario');
+  exigir(r.json && r.json.desbloqueados.computerScreen && r.json.requisitos.computerKeyboard,
+    'Una entrega canónica debe desbloquear todos los muebles de su set.');
+  r = await pedir('uidLuisss', {}, 'inventario');
+  exigir(r.json && !r.json.desbloqueados.computerScreen && r.json.requisitos.computerScreen,
+    'Una sola marca de entrega no debe desbloquear el mueble.');
+  r = await pedir('uidProfee', { tipo: 'sesion', fuente: 'sesion-u3-10', nombreSet: 'Premio de prueba', muebles: ['bear'] }, 'recompensas-guardar');
+  exigir(r.json && r.json.ok === true && r.json.regla && r.json.regla.muebles[0] === 'bear',
+    'El profesor debe poder asignar un mueble a una tarea desde el servidor.');
+
+  r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
   exigir(r.json && r.json.ok === true && regalo('uidLuisss', 'lampSquareFloor') && regalo('uidLuisss', 'lampSquareFloor').de === 'Ana Perez',
     `Un regalo válido debe quedar en el avatar del que recibe, con el nombre visible del que regala: ${JSON.stringify(r)}.`);
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'bookcaseOpen' });
@@ -327,10 +371,13 @@ async function probarRegalos() {
   exigir(r.status === 400, 'Un id de mueble raro se rechaza antes de tocar la base.');
   r = await pedir('uidDianaa', { para: 'uidAnaaaa', mueble: 'rugRound' });
   exigir(r.json && r.json.ok === false && regalo('uidAnaaaa', 'rugRound').de === 'Alguien', 'Un regalo repetido se rechaza y no pisa el anterior.');
-  r = await pedir('uidDianaa', { para: 'uidAnaaaa', mueble: 'bookcaseOpen' });
+  r = await pedir('uidDianaa', { para: 'uidAnaaaa', mueble: 'chair' });
   exigir(r.json && r.json.ok === true, 'El regalo repetido no gasta el cupo del día.');
   r = await pedir('uidProfee', { para: 'uidAnaaaa', mueble: 'bookcaseOpen' });
   exigir(r.status === 403, 'Los regalos son entre estudiantes.');
+  r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'computerScreen' });
+  exigir(r.json && r.json.ok === false && !regalo('uidLuisss', 'computerScreen'),
+    'Un mueble asociado a una tarea no se puede transferir a quien no la completó.');
   r = await pedir('uidProfee', { enabled: false }, 'configurar');
   exigir(r.json && r.json.ok === true && r.json.enabled === false, 'El profesor debe poder deshabilitar casas y decoración.');
   r = await pedir('uidAnaaaa', {}, 'estado');

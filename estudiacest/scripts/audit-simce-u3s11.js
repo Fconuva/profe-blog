@@ -10,6 +10,9 @@ const pagePath = 'estudiantes/guia-u3-s11-evidencia-dos-textos.html';
 const page = read(pagePath);
 const dashboard = read('estudiantes/dashboard.html');
 const admin = read('estudiantes/adminprofe/index.html');
+const personalIndex = read('estudiantes/apoyo-personal/index.html');
+const personalClient = read('estudiantes/apoyo-personal/sesiones.js');
+const personalServer = read('api/_simce-personal-guided-catalog.js');
 const contract = JSON.parse(read('scripts/class-submission-contract.json'));
 const manifest = JSON.parse(read('scripts/academic-release-manifest.json'));
 
@@ -63,6 +66,11 @@ expect(manifestEntry && manifestEntry.url === '/estudiantes/guia-u3-s11-evidenci
 expect(manifestEntry && manifestEntry.contains === 'Noticia y diálogo dramático', 'El manifiesto no exige el nuevo contenido.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s11/partes-noticia-ia.webp'), 'La infografía IA no está protegida por el manifiesto académico.');
 expect(manifest.criticalFiles.some(entry => entry.path === 'estudiantes/assets/u3s11/partes-dialogo-dramatico-ia.webp'), 'La infografía IA del diálogo dramático no está protegida por el manifiesto académico.');
+expect(personalIndex.includes('actividad.html?sesion=11'), 'La ruta personal no muestra la Sesión 11.');
+expect(personalClient.includes("version: 'simce-personal-u3-s2-s11-v1'"), 'El catálogo personal no declara cobertura hasta la Sesión 11.');
+expect(personalClient.includes("sessionId: 'personal-u3-11-transformacion-generos'"), 'Falta la actividad adaptada de la Sesión 11 en el cliente.');
+expect(personalServer.includes("id: 'personal-u3-11-transformacion-generos'"), 'Falta la pauta privada de la Sesión 11 adaptada.');
+expect(personalClient.includes('Noticia: titular, entrada y cuerpo') && personalClient.includes('Diálogo dramático: personajes, parlamentos y acotaciones'), 'La adaptación no conserva los dos géneros trabajados en la clase común.');
 
 const inlineScripts = [...page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/gi)].map(match => match[1]).filter(source => source.trim());
 inlineScripts.forEach((source, index) => {

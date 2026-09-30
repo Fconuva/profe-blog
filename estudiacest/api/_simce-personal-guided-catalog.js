@@ -119,6 +119,19 @@ const GUIDED_SESSIONS = {
             q5:'Ambos textos mencionan el mismo hecho, pero lo organizan con propósitos diferentes.',
             q6:'La crónica permite reconstruir la secuencia; la carta formula una petición directa.'
         }
+    },
+    '11': {
+        id: 'personal-u3-11-transformacion-generos',
+        key: { q1:'B', q2:'C', q3:'A', q4:'D', q5:'B', q6:'C' },
+        skills: { q1:'LOCALIZAR', q2:'INTERPRETAR', q3:'INTERPRETAR', q4:'LOCALIZAR', q5:'INTERPRETAR', q6:'REFLEXIONAR' },
+        feedback: {
+            q1:'El relato indica que el cuaderno estaba debajo de una banca del patio.',
+            q2:'El titular correcto resume el hallazgo y la recuperación sin agregar causas ni hechos.',
+            q3:'La entrada reúne a la participante, el hallazgo, el lugar y la recuperación.',
+            q4:'El diálogo dramático se organiza con personajes, parlamentos y acotaciones.',
+            q5:'El fragmento presenta el nombre del personaje, su parlamento y una acción escénica.',
+            q6:'Cambiar de género modifica la forma de contar, pero no autoriza a inventar hechos.'
+        }
     }
 };
 

@@ -1,7 +1,7 @@
 'use strict';
 
 window.SIMCE_PERSONAL_GUIDED_DATA = {
-  version: 'simce-personal-u3-s2-s10-v1',
+  version: 'simce-personal-u3-s2-s11-v1',
   sessions: {
     '2': {
       sessionId: 'personal-u3-2-teatro',
@@ -210,6 +210,28 @@ window.SIMCE_PERSONAL_GUIDED_DATA = {
         { id:'q4', skill:'INTERPRETAR', prompt:'¿Cuál es el propósito principal de la carta?', cue:'Integra el agradecimiento con la propuesta final.', options:{ A:'Describir la apariencia del gimnasio.', B:'Ordenar cronológicamente todos los hechos.', C:'Agradecer y proponer una mejora.', D:'Inventar un final diferente para la muestra.' } },
         { id:'q5', skill:'REFLEXIONAR', prompt:'¿Qué relación existe entre ambos textos?', cue:'Compara el hecho presentado y la forma de organizarlo.', options:{ A:'Relatan actividades diferentes sin conexión.', B:'Presentan el mismo hecho con propósitos distintos.', C:'Usan exactamente la misma estructura y destinatario.', D:'Defienden que la muestra debió suspenderse.' } },
         { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué diferencia de género se observa con mayor claridad?', cue:'Piensa qué permite hacer cada estructura.', options:{ A:'La carta usa horas y la crónica nunca las usa.', B:'La crónica tiene destinatario y firma obligatorios.', C:'Ambos textos solo expresan opiniones personales.', D:'La crónica reconstruye; la carta formula una petición.' } }
+      ]
+    },
+    '11': {
+      sessionId: 'personal-u3-11-transformacion-generos',
+      title: 'Transformar un relato',
+      objective: 'Reconocer cómo un relato cambia al convertirse en noticia o diálogo dramático, sin alterar los hechos principales.',
+      steps: ['Identifica los hechos que deben mantenerse.', 'Reconoce la estructura del género nuevo.', 'Elige la transformación que no inventa información.'],
+      stimulusLabel: 'Relato breve',
+      stimulusTitle: 'El cuaderno recuperado',
+      stimulus: [
+        'Durante el segundo recreo, Emilia encontró un cuaderno azul debajo de una banca del patio. En la primera página leyó el nombre de Vicente, estudiante de otro curso.',
+        'Emilia llevó el cuaderno a inspectoría. Minutos después, Vicente llegó preocupado porque allí guardaba los apuntes para una prueba. Al recibirlo, agradeció la ayuda y volvió a su sala.',
+        'Los hechos comprobables son: el hallazgo ocurrió durante el segundo recreo, el cuaderno estaba bajo una banca, Emilia lo entregó en inspectoría y Vicente lo recuperó.'
+      ],
+      visual: { title:'Dos formas de transformar', items:['Noticia: titular, entrada y cuerpo', 'Diálogo dramático: personajes, parlamentos y acotaciones', 'En ambos casos se conservan los hechos'] },
+      questions: [
+        { id:'q1', skill:'LOCALIZAR', prompt:'¿Dónde encontró Emilia el cuaderno?', cue:'Relee la primera oración del relato.', options:{ A:'Dentro de la biblioteca.', B:'Debajo de una banca del patio.', C:'En la sala de Vicente.', D:'Junto a la entrada del colegio.' } },
+        { id:'q2', skill:'INTERPRETAR', prompt:'¿Cuál titular informa mejor el hecho principal sin inventar datos?', cue:'El titular debe resumir lo comprobable.', options:{ A:'Misterioso robo altera la jornada escolar.', B:'Vicente pierde por tercera vez sus apuntes.', C:'Estudiante encuentra un cuaderno y permite recuperarlo.', D:'Inspectora premia a Emilia frente a todo el colegio.' } },
+        { id:'q3', skill:'INTERPRETAR', prompt:'¿Qué oración funciona mejor como entrada de una noticia?', cue:'Busca una síntesis que responda qué ocurrió, quién participó y dónde.', options:{ A:'Un cuaderno azul fue encontrado por Emilia bajo una banca y luego recuperado por su dueño en inspectoría.', B:'Era un día extraño y todos sospechaban que algo importante ocurriría.', C:'Vicente era el estudiante más preocupado de todo el establecimiento.', D:'El cuaderno contenía secretos que nadie se atrevía a leer.' } },
+        { id:'q4', skill:'LOCALIZAR', prompt:'¿Qué elemento es propio de un diálogo dramático?', cue:'Recuerda cómo se presenta lo que dice y hace cada personaje.', options:{ A:'Un titular que resume el hecho.', B:'Una entrada con la información principal.', C:'Un cuerpo ordenado de manera informativa.', D:'Parlamentos y acotaciones entre paréntesis.' } },
+        { id:'q5', skill:'INTERPRETAR', prompt:'¿Cuál fragmento transforma el relato en diálogo dramático?', cue:'Busca nombres de personajes, parlamentos y una acción entre paréntesis.', options:{ A:'Cuaderno recuperado durante el segundo recreo.', B:'EMILIA: Encontré este cuaderno. (Lo entrega en inspectoría).', C:'Durante el recreo ocurrió un hallazgo en el patio.', D:'La estudiante llevó el objeto al lugar indicado.' } },
+        { id:'q6', skill:'REFLEXIONAR', prompt:'¿Qué regla debe respetarse en ambas transformaciones?', cue:'Compara noticia y diálogo con el relato original.', options:{ A:'Cambiar el lugar para hacer el texto más interesante.', B:'Agregar personajes que expliquen lo ocurrido.', C:'Conservar los hechos principales sin inventar información.', D:'Eliminar quién encontró y recuperó el cuaderno.' } }
       ]
     }
   }

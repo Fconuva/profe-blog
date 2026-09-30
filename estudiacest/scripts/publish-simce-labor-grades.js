@@ -7,9 +7,12 @@ const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 // Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
 const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r3';
+const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r4';
 // Debe coincidir con el exportador: esas clases no se publican y su nota se retira.
-const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC'] };
+const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC', '2B-HC'] };
+const COURSES = ['2A-HC', '2B-HC'];
+// Clases que no se evalúan en ningún curso: no aportan filas a la publicación.
+const FULLY_NOT_EVALUATED = Object.keys(NOT_EVALUATED).filter(sessionId => COURSES.every(course => NOT_EVALUATED[sessionId].includes(course)));
 
 function parseArgs(argv) {
   const args = {};
@@ -139,7 +142,11 @@ function buildPublication(source, publishedAt, expectedStudents) {
   });
 
   if (students.size !== expectedStudents) throw new Error(`Se esperaban ${expectedStudents} estudiantes y llegaron ${students.size}.`);
-  if (sessions.size !== EXPECTED_SESSIONS.length) throw new Error(`Se esperaban ${EXPECTED_SESSIONS.length} sesiones y llegaron ${sessions.size}.`);
+  const expectedSessionCount = EXPECTED_SESSIONS.length - FULLY_NOT_EVALUATED.length;
+  if (sessions.size !== expectedSessionCount) throw new Error(`Se esperaban ${expectedSessionCount} sesiones y llegaron ${sessions.size}.`);
+  FULLY_NOT_EVALUATED.forEach(sessionId => {
+    if (sessions.has(sessionId)) throw new Error(`${sessionId} no se evalúa y trae notas.`);
+  });
 
   const retiredPairs = notEvaluated.map(item => `${item.uid}/${item.sessionId}`);
   retiredPairs.forEach(pair => {

@@ -13,8 +13,20 @@ function firebaseCommand(args) {
   const executable = process.platform === 'win32' ? process.execPath : 'firebase';
   const cliArgs = process.platform === 'win32' ? [windowsCli, ...args] : args;
   const result = spawnSync(executable, cliArgs, { encoding: 'utf8', windowsHide: true });
-  if (result.status !== 0) throw new Error('No se pudo usar la sesión autenticada de Firebase CLI.');
+  if (result.status !== 0 && !reportsJsonSuccess(result.stdout)) {
+    throw new Error('No se pudo usar la sesión autenticada de Firebase CLI.');
+  }
   return result.stdout;
+}
+
+// La CLI puede terminar con código distinto de cero después de imprimir una
+// respuesta completa y exitosa; en ese caso la respuesta sigue siendo válida.
+function reportsJsonSuccess(stdout) {
+  try {
+    return JSON.parse(stdout).status === 'success';
+  } catch (_) {
+    return false;
+  }
 }
 
 function getAccessToken() {

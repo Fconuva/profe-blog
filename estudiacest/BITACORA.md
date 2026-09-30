@@ -8,6 +8,33 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, SIMCE NM2 Unidad 3: la Clase 8 queda sin evaluar en ambos cursos (r4)
+
+- Francisco confirmó que la Clase 8 tampoco se hizo en 2°B HC. La regla quedó
+  en `NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC', '2B-HC'] }` en el exportador y
+  en el publicador, y la auditoría la exige. El publicador ahora admite que una
+  clase completa quede fuera: espera 8 clases con nota y rechaza cualquier nota
+  de la Clase 8.
+- Publicación `laboriosidad-u3-c1-c10-2026-09-30-r4`: 664 registros; se
+  retiraron los 40 de 2°B HC (39 notas y el pendiente de la ruta personal). Sube
+  1 nota por un borrador nuevo y las otras 663 no cambian. Relectura
+  independiente: 0 notas de Clase 8 en los dos cursos y checksum
+  `e86bb74aa10fda6f116a1ea946f14896b79196b3ec7b52e07115887c77281bf7`.
+  Respaldo previo local e informe privado de NM2 regenerado.
+- `scripts/firebase-maintenance-db.js`: la CLI de Firebase empezó a terminar
+  con código 2 después de imprimir una respuesta `success` completa. Ahora se
+  acepta esa respuesta; cualquier otra salida con error sigue rechazándose. Aun
+  así, la CLI falló de forma intermitente: la relectura interna del publicador
+  no alcanzó a correr y la verificación se hizo por separado.
+- **Estado encontrado a las 12:30:** las clases 1 a 10 y el Ensayo N.º 3 estaban
+  otra vez con `activa: true` y `respuestas_bloqueadas: false`, conservando
+  `cerrada_at` de las 09:33, y con excepciones individuales nuevas para cuatro
+  estudiantes de 2°A HC. No hubo commits de SIMCE de otra sesión: parece una
+  reapertura hecha desde el admin. No se revirtió. Si se vuelve a cerrar, hay
+  que recalificar con `close-simce-u3-classes.js` y el publicador.
+
+---
+
 ## 2026-09-30, SIMCE NM2 Unidad 3: la Clase 8 queda sin evaluar en 2°A HC (r3)
 
 - Francisco informó que en 2°A HC la Clase 8 (ensayo parcial) no se hizo, así

@@ -61,6 +61,9 @@ if (/sesion-u3-9['"]\s*:/.test(exporter)) failures.push('Exportador: la Clase 9 
 ['function exclusionFor(uid, student)', 'UNIT_ENROLLMENT_CUTOFF', "sessionId.startsWith('personal-u3-')", 'function personalRouteRow(', 'LATE_COPY_GAP_MS'].forEach(fragment => {
   if (!exporter.includes(fragment)) failures.push(`Exportador: falta la regla ${fragment}.`);
 });
+const notEvaluatedRule = "const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC'] };";
+if (!exporter.includes(notEvaluatedRule)) failures.push('Exportador: falta la Clase 8 sin evaluar en 2A-HC.');
+if (publisher && !publisher.includes(notEvaluatedRule)) failures.push('Publicador: falta la Clase 8 sin evaluar en 2A-HC.');
 if (publisher && !publisher.includes("row.personalRoute === true && row.status === 'Pendiente ruta personal'")) {
   failures.push('Publicador: una nota vacía solo se admite en la ruta personal pendiente.');
 }

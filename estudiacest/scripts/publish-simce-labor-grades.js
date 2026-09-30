@@ -7,7 +7,9 @@ const { readPlatform, updatePlatform } = require('./firebase-maintenance-db');
 // Clases 1 a 8 y 10 de la Unidad 3; la Clase 9 es informativa y no lleva nota.
 const EXPECTED_SESSIONS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${number}`);
 const ALLOWED_GRADES = new Set([1, 3, 5, 7]);
-const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r2';
+const MODEL_VERSION = 'laboriosidad-u3-c1-c10-2026-09-30-r3';
+// Debe coincidir con el exportador: esas clases no se publican y su nota se retira.
+const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC'] };
 
 function parseArgs(argv) {
   const args = {};
@@ -82,7 +84,13 @@ function buildPublication(source, publishedAt, expectedStudents) {
   if (!Number.isInteger(expectedStudents) || expectedStudents <= 0) {
     throw new Error('Indica --expected-students con el número de estudiantes revisado en la simulación.');
   }
-  const expectedRows = expectedStudents * EXPECTED_SESSIONS.length;
+  const notEvaluated = Array.isArray(source.notEvaluated) ? source.notEvaluated : [];
+  notEvaluated.forEach(item => {
+    if (!(NOT_EVALUATED[item.sessionId] || []).includes(item.course)) {
+      throw new Error(`Clase sin evaluar no autorizada: ${item.sessionId} en ${item.course}.`);
+    }
+  });
+  const expectedRows = expectedStudents * EXPECTED_SESSIONS.length - notEvaluated.length;
   if (source.rows.length !== expectedRows) throw new Error(`Se esperaban ${expectedRows} registros y llegaron ${source.rows.length}.`);
 
   const students = new Set();
@@ -133,10 +141,17 @@ function buildPublication(source, publishedAt, expectedStudents) {
   if (students.size !== expectedStudents) throw new Error(`Se esperaban ${expectedStudents} estudiantes y llegaron ${students.size}.`);
   if (sessions.size !== EXPECTED_SESSIONS.length) throw new Error(`Se esperaban ${EXPECTED_SESSIONS.length} sesiones y llegaron ${sessions.size}.`);
 
+  const retiredPairs = notEvaluated.map(item => `${item.uid}/${item.sessionId}`);
+  retiredPairs.forEach(pair => {
+    if (pairs.has(pair)) throw new Error(`Una clase sin evaluar también trae nota: ${pair}.`);
+  });
+
   return {
     records,
+    retiredPairs,
     stats: {
       rows: pairs.size,
+      notEvaluated: retiredPairs.length,
       students: students.size,
       sessions: sessions.size,
       ...stats
@@ -151,6 +166,13 @@ function recordsFromObject(root, expectedPairs) {
     records[pair] = root[uid] && root[uid][sessionId] ? root[uid][sessionId] : null;
   });
   return records;
+}
+
+function stillPresent(root, pairs) {
+  return pairs.filter(pair => {
+    const [uid, sessionId] = pair.split('/');
+    return Boolean(root[uid] && root[uid][sessionId]);
+  });
 }
 
 function changesAgainst(currentRoot, records) {
@@ -191,7 +213,8 @@ async function main() {
     modelVersion: MODEL_VERSION,
     checksum: firstChecksum,
     ...first.stats,
-    changes: changesAgainst(currentRoot, first.records)
+    changes: changesAgainst(currentRoot, first.records),
+    gradesToRetire: stillPresent(currentRoot, first.retiredPairs).length
   };
   console.log(JSON.stringify(report, null, 2));
 
@@ -210,6 +233,8 @@ async function main() {
     if (snapshotChecksum !== firstChecksum) {
       throw new Error(`El respaldo leído no coincide: esperado ${firstChecksum}, recibido ${snapshotChecksum}.`);
     }
+    const leftover = stillPresent(snapshotData, first.retiredPairs);
+    if (leftover.length) throw new Error(`Quedan ${leftover.length} notas de clases sin evaluar.`);
     console.log(JSON.stringify({ verified: first.stats.rows, checksum: snapshotChecksum }, null, 2));
   }
   if (!args.apply) return;
@@ -224,6 +249,10 @@ async function main() {
   Object.entries(first.records).forEach(([pair, record]) => {
     update[`calificaciones_clase/${pair}`] = record;
   });
+  // Las clases sin evaluar retiran su nota; el respaldo previo la conserva.
+  first.retiredPairs.forEach(pair => {
+    update[`calificaciones_clase/${pair}`] = null;
+  });
   await updatePlatform(update);
 
   const after = await readPlatform();
@@ -232,8 +261,10 @@ async function main() {
   if (appliedChecksum !== firstChecksum) {
     throw new Error(`La lectura posterior no coincide: esperado ${firstChecksum}, recibido ${appliedChecksum}.`);
   }
+  const leftoverAfter = stillPresent(after.calificaciones_clase || {}, first.retiredPairs);
+  if (leftoverAfter.length) throw new Error(`La relectura conserva ${leftoverAfter.length} notas de clases sin evaluar.`);
 
-  console.log(JSON.stringify({ applied: first.stats.rows, verified: first.stats.rows, backupPath }, null, 2));
+  console.log(JSON.stringify({ applied: first.stats.rows, retired: first.retiredPairs.length, verified: first.stats.rows, backupPath }, null, 2));
 }
 
 main().catch(error => {

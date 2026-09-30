@@ -8,6 +8,27 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-09-30, SIMCE NM2 Unidad 3: la Clase 8 queda sin evaluar en 2°A HC (r3)
+
+- Francisco informó que en 2°A HC la Clase 8 (ensayo parcial) no se hizo, así
+  que queda sin evaluar para todo el curso, también para quienes alcanzaron a
+  responderla. 2°B HC conserva sus notas de esa clase.
+- La regla quedó en el exportador y en el publicador
+  (`NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC'] }`), y la auditoría de notas
+  exige que ambos la tengan, para que una nueva publicación no la vuelva a
+  crear. El publicador retira esas notas en la misma escritura multirruta y
+  comprueba en la relectura que no quede ninguna.
+- Publicación `laboriosidad-u3-c1-c10-2026-09-30-r3`: 704 registros, 43
+  retirados y ninguna otra nota cambió. Relectura independiente: 0 notas de
+  Clase 8 en 2°A HC, 40 registros en 2°B HC (39 con nota y uno pendiente de la
+  ruta personal), checksum
+  `86345723c8ffdaba6081f079901adb2ad886215b844d16b01e518a1ce2c23859`. Respaldo
+  previo local. Informe privado de NM2 regenerado.
+- La sesión sigue asignada a 2°A HC y cerrada: el panel la muestra bloqueada y
+  sin nota. Las respuestas de quienes la hicieron se conservan.
+
+---
+
 ## 2026-09-30, muebles desbloqueables por tareas y vista unificada de la casa
 
 - Se implementó un inventario de muebles validado por el servidor: los muebles

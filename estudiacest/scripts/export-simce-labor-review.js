@@ -10,6 +10,9 @@ const SESSION_IDS = [1, 2, 3, 4, 5, 6, 7, 8, 10].map(number => `sesion-u3-${numb
 const COURSES = new Set(['2A-HC', '2B-HC']);
 // Quien se incorpora después del cierre de la regularización (23-sep) no cursó la unidad.
 const UNIT_ENROLLMENT_CUTOFF = Date.parse('2026-09-24T00:00:00-03:00');
+// Clases que no se aplicaron a un curso: quedan sin evaluar para todo ese curso,
+// también para quien alcanzó a hacerlas. Decisión de Francisco del 30-sep-2026.
+const NOT_EVALUATED = { 'sesion-u3-8': ['2A-HC'] };
 
 const CONFIG = {
   'sesion-u3-1': { alternatives: 16, concepts: 0, writing: [['desarrollo', 60], ['desarrollo2', 60]] },
@@ -333,6 +336,7 @@ async function main() {
   const results = platform.resultados || {};
   const rows = [];
   const excluded = [];
+  const notEvaluated = [];
   Object.entries(students).forEach(([uid, student]) => {
     const course = String(student.curso || '').toUpperCase();
     if (!COURSES.has(course)) return;
@@ -343,6 +347,10 @@ async function main() {
     }
     const personalRoute = personalRouteFor(uid, sessions);
     SESSION_IDS.forEach(sessionId => {
+      if ((NOT_EVALUATED[sessionId] || []).includes(course)) {
+        notEvaluated.push({ uid, course, sessionId });
+        return;
+      }
       const personalSessionId = personalRoute[Number(sessionId.split('-').pop())];
       if (personalSessionId) {
         rows.push(personalRouteRow(student, uid, sessionId, sessions[sessionId] || {}, {
@@ -378,12 +386,13 @@ async function main() {
       writingAdjustment: 'La escritura ausente o incompleta baja una banda cuando corresponde.',
       timing: 'No se aplica rebaja por velocidad: las clases 1 a 6 no guardaron hora inicial confiable y el criterio no se amplió a 7, 8 y 10.',
       matches: 'Toda coincidencia textual superior al 90 % deja la nota de ambos estudiantes con máximo 5,0.',
-      scope: 'Clases 1 a 8 y 10; la Clase 9 es informativa y no lleva nota.'
+      scope: 'Clases 1 a 8 y 10; la Clase 9 es informativa y no lleva nota. En 2A-HC la Clase 8 no se aplicó y queda sin evaluar.'
     },
     sessionState,
     rows,
     matches,
-    excluded
+    excluded,
+    notEvaluated
   };
   fs.mkdirSync(path.dirname(output), { recursive: true });
   fs.writeFileSync(output, JSON.stringify(payload, null, 2), 'utf8');

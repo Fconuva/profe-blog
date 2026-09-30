@@ -65,9 +65,9 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
   `Revision_privada_laboriosidad_U3_C1-C10_2A-2B_2026-09-30.xlsx`.
 - Validaciones: auditoría de notas SIMCE, reconciliación en simulación,
   datos públicos, reenvío PAES y release académico (297 recursos) aprobados.
-  `npm run build` se detuvo en `audit-mi-espacio.js` por un cambio ajeno sin
-  confirmar en `api/_salas.js` (casas deshabilitadas); no forma parte de esta
-  tarea. Sin cambios de sitio: no requirió despliegue.
+  Un primer `npm run build` se detuvo en `audit-mi-espacio.js` por un cambio
+  ajeno aún sin confirmar en `api/_salas.js`; después de integrar `d89ea490`
+  el build completo pasó. Sin cambios de sitio: no requirió despliegue.
 
 ---
 

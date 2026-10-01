@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, cierre de premios y ajuste visual no publicado
+
+- La versión operativa de muebles/logros/ropa sigue siendo `b96011c2`, despliegue READY `dpl_Ht8pdYSD9phkKfPHUkhi5i7Wfsn6`. El admin publicado permite todos los premios pedidos; «Regalar logros y ropa» está al final del catálogo. Recargar una vez el admin actualiza sus controles sin borrar caché ni cerrar otras sesiones.
+- Relectura independiente final en 4°B HC: 36 perfiles, 35 con entregas, cero premios pendientes de G15–G21, después de los 142 nuevos entregados. Las nuevas entregas también siguen recibiendo sus premios automáticos.
+- El segundo despliegue `dpl_A2rovAuLsFszmN9vTcHL894bDNEP` se canceló y se verificó CANCELED: durante la subida apareció una edición de la Clase 4 NM3 todavía sin commit. Se preservó esa edición y no se promovió una fuente académica incompleta. No hubo rollback de producción ni pérdida de los premios.
+- Pendiente **solo de publicación**: el acceso plegable a logros/ropa junto al selector de estudiante y el conteo exacto de premios recibidos concurrentemente, preparados en `aaf53340` e integrados con el registro NM3 mediante `76dd8d01`. Publicar main cuando finalice la edición concurrente, exclusivamente con `npm run deploy:prod:safe`; no restaurar ni descartar el archivo NM3 modificado.
+
+---
+
 ## 2026-10-01, publicación y entrega confirmada de premios en 4°B HC
 
 - Publicado el commit `b96011c2` con `npm run deploy:prod:safe`: despliegue `dpl_Ht8pdYSD9phkKfPHUkhi5i7Wfsn6`, READY y alias público confirmado. Incluye los once muebles nuevos, cuatro tamaños/mapas de casa, premios PAES y diez logros/ropa, conservando la clase NM3 creada en paralelo. Los 59 archivos públicos contrastados respondieron 200 y coincidieron en SHA-256; las tres acciones de inventario/premios rechazaron acceso sin sesión con 401. La regla Firebase vigente mantiene `regalos` protegido. Navegador público sin desbordes en 390/1200/3840 y sin errores.

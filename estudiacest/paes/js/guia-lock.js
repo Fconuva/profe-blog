@@ -15,6 +15,25 @@
   var id = window.GUIA_LOCK_ID;
   if (!id) return;
 
+  // Los enlaces directos recuperan la misma cuenta desde el portal.
+  var page = window.location.pathname.split('/').pop();
+  if (/^guia(?:[1-9]|1[0-9]|2[01])(?:-guiada)?\.html$/.test(page)) {
+    var selected = null;
+    try { selected = JSON.parse(sessionStorage.getItem('paes_student') || 'null'); } catch (_) {}
+    if (!selected || !selected.rut) {
+      window.location.replace('/paes/?next=' + encodeURIComponent(page));
+      return;
+    }
+  }
+  document.addEventListener('click', function (event) {
+    var button = event.target.closest('button');
+    if (!button || button.textContent.trim() !== 'Cerrar sesión') return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    sessionStorage.removeItem('paes_student');
+    window.location.replace('/paes/?logout=1');
+  }, true);
+
   // Aviso con cuenta regresiva del bloqueo programado (aviso-cierre.js decide
   // si esta guía es de las que se bloquean).
   if (!document.querySelector('script[src*="aviso-cierre.js"]')) {

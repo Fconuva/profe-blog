@@ -77,5 +77,13 @@
   document.querySelectorAll('[data-dev]').forEach(el=>el.addEventListener('input',()=>{if(!student||isSubmitted||submitting)return;local.dev[el.dataset.dev]=el.value;changed();}));
   window.addEventListener('beforeunload',event=>{if(student&&!isSubmitted){store();if(submitting||$('savedState').textContent==='Cambios pendientes'||$('savedState').textContent==='Guardando…'){event.preventDefault();event.returnValue='';}}});
   $('loginForm').querySelector('button').disabled=true;
-  fetch('data/guia21.json').then(r=>{if(!r.ok)throw new Error('No se pudieron cargar las lecturas.');return r.json();}).then(data=>{activity=data;QUESTIONS=data.questions;render();$('loginForm').querySelector('button').disabled=false;}).catch(error=>{$('errorBox').textContent=error.message+' Recarga la página.';});
+  function restorePortalSession() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('paes_student') || 'null');
+      if (!saved || !saved.rut) return;
+      $('rutInput').value = saved.rut;
+      return login({ preventDefault() {}, submitter:$('loginForm').querySelector('button') });
+    } catch (_) {}
+  }
+  fetch('data/guia21.json').then(r=>{if(!r.ok)throw new Error('No se pudieron cargar las lecturas.');return r.json();}).then(data=>{activity=data;QUESTIONS=data.questions;render();$('loginForm').querySelector('button').disabled=false;restorePortalSession();}).catch(error=>{$('errorBox').textContent=error.message+' Recarga la página.';});
 })();

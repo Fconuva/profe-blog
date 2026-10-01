@@ -71,6 +71,15 @@
     catch(error){$('errorBox').textContent=error.message;}finally{button.disabled=false;}
   }
   $('loginForm').addEventListener('submit',login);$('submit').addEventListener('click',submitGuide);
+  function restorePortalSession() {
+    try {
+      const saved = JSON.parse(sessionStorage.getItem('paes_student') || 'null');
+      if (!saved || !saved.rut) return;
+      $('rutInput').value = saved.rut;
+      return login({ preventDefault() {}, submitter:$('loginForm').querySelector('button') });
+    } catch (_) { /* El formulario sigue disponible si no hay una selección válida. */ }
+  }
+  restorePortalSession();
   $('closeDialog').addEventListener('click',()=>{$('confirmDialog').hidden=true;$('deliveryConfirmation').scrollIntoView();});
   $('confirmDialog').addEventListener('keydown',event=>{if(event.key==='Tab'){event.preventDefault();$('closeDialog').focus();}if(event.key==='Escape')$('closeDialog').click();});
   document.querySelectorAll('[data-tab]').forEach(button=>button.addEventListener('click',()=>switchTab(button.dataset.tab)));

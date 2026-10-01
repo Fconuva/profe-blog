@@ -410,7 +410,7 @@
   $('closeDialog').addEventListener('click', () => $('confirmationDialog').classList.remove('show'));
   $('logout').addEventListener('click', () => {
     sessionStorage.removeItem('paes_student');
-    window.location.href = '/paes/';
+    window.location.href = '/paes/?logout=1';
   });
 
   const stored = sessionStorage.getItem('paes_student');

@@ -1563,7 +1563,10 @@
     // ============ LOGIN SUBMIT ============
     const loginForm = document.getElementById('loginForm');
     const passwordInput = document.getElementById('passwordInput');
-    const openSpaceAfterLogin = new URLSearchParams(window.location.search).get('next') === 'mi-espacio';
+    const entryParams = new URLSearchParams(window.location.search);
+    const next = entryParams.get('next') || '';
+    const nextPath = next === 'mi-espacio' ? '/paes/mi-espacio.html'
+      : /^guia(?:[1-9]|1[0-9]|2[01])(?:-guiada)?\.html$/.test(next) ? '/paes/' + next : '';
     function updatePasswordField() {
       const student = typeof NOMINAS_PAES === 'undefined' ? null
         : NOMINAS_PAES.find(item => cleanRut(item.rut) === cleanRut(rutInput.value));
@@ -1574,8 +1577,8 @@
     rutInput.addEventListener('input', updatePasswordField);
     function enterPortal(student) {
       sessionStorage.setItem('paes_student', JSON.stringify(student));
-      if (openSpaceAfterLogin && PaesStudentSession.hasSpace(student)) {
-        window.location.replace('/paes/mi-espacio.html');
+      if (nextPath && (next !== 'mi-espacio' || PaesStudentSession.hasSpace(student))) {
+        window.location.replace(nextPath);
         return;
       }
       document.getElementById('sessionLoading').hidden = true;
@@ -1897,6 +1900,10 @@
     // ============ CHECK SESSION ON LOAD ============
     window.addEventListener('DOMContentLoaded', async function() {
       try {
+        if (entryParams.get('logout') === '1') {
+          await PaesStudentSession.signOut();
+          window.history.replaceState(null, '', '/paes/');
+        }
         const session = await PaesStudentSession.restore();
         if (session) { PaesStudentSession.remember(session); enterPortal(session.student); return; }
         const stored = JSON.parse(sessionStorage.getItem('paes_student') || 'null');

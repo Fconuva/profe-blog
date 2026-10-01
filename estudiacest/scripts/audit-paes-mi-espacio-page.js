@@ -49,6 +49,48 @@ const scripts = [...page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
 assert.equal(scripts.length, 1);
 new vm.Script(scripts[0], { filename:'paes/mi-espacio.html' });
 new vm.Script(sessionSource, { filename:'paes/js/student-session.js' });
+for (const file of ['paes/js/guia-foundations.js', 'paes/js/guia20.js', 'paes/js/guia21.js']) {
+  const source = fs.readFileSync(path.join(root, file), 'utf8');
+  new vm.Script(source, { filename:file });
+  const restore = source.match(/function restorePortalSession\(\) \{[\s\S]*?\n  \}/);
+  assert.ok(restore, `${file}: falta recuperar la identidad del portal.`);
+  const input = { value:'' }, button = {};
+  for (const stored of [null, '{invalid', JSON.stringify({ rut:'111111111' })]) {
+    let calls = 0;
+    vm.runInNewContext(restore[0] + '\nrestorePortalSession();', {
+      sessionStorage:{ getItem:() => stored },
+      $:id => id === 'rutInput' ? input : { querySelector:() => button },
+      login:event => { event.preventDefault(); assert.equal(event.submitter, button); calls++; }
+    });
+    assert.equal(calls, stored && stored.startsWith('{"rut"') ? 1 : 0);
+  }
+}
+for (const number of [18, 19]) {
+  const source = fs.readFileSync(path.join(root, `paes/guia${number}.html`), 'utf8');
+  assert.match(source, /if\(saved&&saved\.rut\)login\(cleanRut\(saved\.rut\)\)/);
+}
+const exam14 = fs.readFileSync(path.join(root, 'paes/assets/guia14/guia14-app.js'), 'utf8');
+assert.match(exam14, /input\.hidden = true/);
+assert.match(exam14, /Comenzar miniensayo/);
+const lockSource = fs.readFileSync(path.join(root, 'paes/js/guia-lock.js'), 'utf8');
+const entryBlock = lockSource.slice(lockSource.indexOf('  var id ='), lockSource.indexOf('  // Aviso con cuenta'));
+function testGuideEntry(stored) {
+  let destination = '', click;
+  const storage = new Map(stored ? [['paes_student', JSON.stringify(stored)]] : []);
+  vm.runInNewContext('(function(){' + entryBlock + '})();', {
+    window:{ GUIA_LOCK_ID:'g1', location:{ pathname:'/paes/guia1.html', replace:value => { destination=value; } } },
+    sessionStorage:{ getItem:key => storage.get(key), removeItem:key => storage.delete(key) },
+    document:{ addEventListener:(name, callback) => { if (name === 'click') click=callback; } }
+  });
+  return { get destination() { return destination; }, click, storage };
+}
+assert.equal(testGuideEntry(null).destination, '/paes/?next=guia1.html');
+const guideSession = testGuideEntry({ rut:'111111111' });
+assert.equal(guideSession.destination, '');
+guideSession.click({ target:{ closest:() => ({ textContent:'Cerrar sesión' }) }, preventDefault() {}, stopImmediatePropagation() {} });
+assert.equal(guideSession.destination, '/paes/?logout=1');
+assert.equal(guideSession.storage.has('paes_student'), false);
+assert.match(portal, /entryParams\.get\('logout'\) === '1'/);
 
 async function testSession({ user = null, profile, selected = null, fallback = false, denied = false } = {}) {
   const saved = new Map(selected ? [['paes_student', JSON.stringify(selected)]] : []);

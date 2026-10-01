@@ -39,7 +39,8 @@ const students = [
 ];
 
 async function checkUI() {
-  const elements = Object.fromEntries(['Course','Student','Refresh','Give','Confirm','Catalog','Deliveries','Summary','Status','Search','Ownership','Chosen'].map(id => ['house' + id, new Element()]));
+  const elements = Object.fromEntries(['Mode','Guide','Set','Clear','Review','StudentField','Preview','PreviewName','PreviewImage','PreviewState','Orientation','Selected','Recipients','Course','Student','Refresh','Give','Confirm','Catalog','Deliveries','Summary','Status','Search','Ownership','Chosen'].map(id => ['house' + id, new Element()]));
+  elements.houseMode.value = 'student';
   elements.houseOwnership.value = 'all';
   let gifts = 0, owned = false, denied = false, readbackFails = false, pauseGift, releaseGift;
   const calls = [];
@@ -51,20 +52,22 @@ async function checkUI() {
       const action = url.includes('admin-house-students') ? 'students' : body.action;
       calls.push(action);
       if (action === 'students') return {ok:true,json:async () => ({success:true,estudiantes:students})};
-      if (action === 'salas-regalos-admin-entregar') {
-        gifts++;
-        if (pauseGift) await new Promise(resolve => { releaseGift = resolve; });
-        if (denied) return {ok:false,json:async () => ({error:'No se pudo entregar.'})};
-        assert.equal(body.estudiante, 'studentA'); assert.equal(body.mueble, 'playStation5'); owned = true;
-        return {ok:true,json:async () => ({ok:true,mueble:body.mueble})};
-      }
-      assert.equal(action, 'salas-regalos-admin-inventario');
-      if (readbackFails && owned) return {ok:false,json:async () => ({error:'Sin conexión al inventario.'})};
-      return {ok:true,json:async () => ({ok:true,estudiante:students.find(item => item.uid === body.estudiante), catalogo:[
+      const furniture = [
         {id:'playStation5',nombre:'PlayStation 5',familia:'estudio',tiene:owned},
         {id:'rugRound',nombre:'Alfombra',familia:'deco',tiene:true},
         {id:'../admins',nombre:'No válido',familia:'',tiene:false}
-      ]})};
+      ];
+      if (action === 'salas-recompensas-listar') return {ok:true,json:async () => ({ok:true,catalogo:furniture})};
+      assert.equal(action, 'salas-regalos-admin-paes-lote');
+      if (body.confirmar) {
+        gifts++;
+        if (pauseGift) await new Promise(resolve => { releaseGift = resolve; });
+        if (denied) return {ok:false,json:async () => ({error:'No se pudo entregar.'})};
+        assert.equal(body.estudiante, 'studentA'); assert.deepEqual(body.muebles,['playStation5']); owned = true;
+        return {ok:true,json:async () => ({ok:true,errores:0,destinatarios:[{uid:'studentA',confirmado:true,faltan:['playStation5']}]})};
+      }
+      if (readbackFails && owned) return {ok:false,json:async () => ({error:'Sin conexión al inventario.'})};
+      return {ok:true,json:async () => ({ok:true,destinatarios:[{uid:'studentA',nombre:students[0].nombre,faltan:owned ? [] : body.muebles,yaTiene:owned ? body.muebles : []}],catalogo:furniture})};
     }
   };
   vm.runInNewContext(source, context);
@@ -78,39 +81,115 @@ async function checkUI() {
     getGuideData:() => ({17:{111111111:{status:'sent'}},18:{111111111:{status:'draft'}}}),
     refreshGuides:async () => {}, reviewGuide:() => {}});
   await panel.load();
+  assert.equal(elements.houseCatalog.children.length,2,'Las imágenes se ven incluso antes de seleccionar un estudiante.');
   assert.equal(elements.houseStudent.options.length, 3);
   elements.houseCourse.value = '3B-HC'; await elements.houseCourse.fire('change');
   assert.equal(elements.houseStudent.options.length, 2);
   elements.houseStudent.value = 'studentA'; await elements.houseStudent.fire('change');
   assert.equal(elements.houseDeliveries.children.length, 1);
   assert.equal(elements.houseCatalog.children.length, 2);
-  assert.equal(elements.houseCatalog.children[1].disabled, true);
-  await elements.houseCatalog.children[0].fire('click');
+  const pick = card => card.children[3];
+  assert.equal(pick(elements.houseCatalog.children[1]).disabled, true);
+  await elements.houseCatalog.children[1].children[0].fire('click');
+  assert.match(elements.housePreviewImage.src,/rugRound_SE\.png$/,'También se pueden mirar muebles ya obtenidos.');
+  await elements.houseOrientation.children[3].fire('click');
+  assert.match(elements.housePreviewImage.src,/rugRound_NW\.png$/);
+  await pick(elements.houseCatalog.children[0]).fire('click');
+  assert.equal(elements.houseConfirm.hidden,true,'Elegir no basta para autorizar una entrega.');
+  await elements.houseReview.fire('click');
   assert.equal(elements.houseConfirm.hidden, false);
   denied = true; await elements.houseGive.fire('click');
   assert.match(elements.houseStatus.textContent, /No se pudo entregar/);
   assert.equal(owned,false);
   denied = false; pauseGift = true;
+  await elements.houseReview.fire('click');
   const gift = elements.houseGive.fire('click');
   await new Promise(setImmediate);
   assert.equal(elements.houseStudent.disabled,true);
   const before = gifts; await elements.houseGive.fire('click'); assert.equal(gifts,before);
   releaseGift(); await gift;
   assert.equal(owned,true);
-  assert.match(elements.houseStatus.textContent,/Regalo confirmado/);
-  assert.equal(elements.houseCatalog.children[0].disabled,true);
+  assert.match(elements.houseStatus.textContent,/Entrega confirmada/);
+  assert.equal(pick(elements.houseCatalog.children[0]).disabled,true);
   assert.equal(elements.houseConfirm.hidden,true);
-  assert.ok(calls.lastIndexOf('salas-regalos-admin-inventario') > calls.lastIndexOf('salas-regalos-admin-entregar'));
+  assert.equal(calls.at(-1),'salas-regalos-admin-paes-lote');
   await panel.load();
-  assert.equal(elements.houseCatalog.children[0].disabled,true,'Recargar conserva el mueble marcado.');
+  assert.equal(pick(elements.houseCatalog.children[0]).disabled,true,'Recargar conserva el mueble marcado.');
   elements.houseOwnership.value = 'available'; await elements.houseOwnership.fire('change');
   assert.equal(elements.houseCatalog.children[0].textContent,'No hay muebles que coincidan con este filtro.');
   owned = false; pauseGift = false; elements.houseOwnership.value = 'all'; await panel.load();
-  await elements.houseCatalog.children[0].fire('click'); readbackFails = true;
+  await pick(elements.houseCatalog.children[0]).fire('click'); await elements.houseReview.fire('click'); readbackFails = true;
   await elements.houseGive.fire('click');
-  assert.doesNotMatch(elements.houseStatus.textContent,/Regalo confirmado/);
+  assert.doesNotMatch(elements.houseStatus.textContent,/Entrega confirmada/);
   assert.match(elements.houseStatus.textContent,/No se pudo confirmar/);
   assert.equal(elements.houseGive.disabled,false);
+}
+
+function createHouseFixture() {
+  const profiles = {
+    studentA:{nombre:'Estudiante de prueba A',curso:'3B-HC',rut:'111111111'},
+    studentB:{nombre:'Estudiante de prueba B',curso:'3B-HC',rut:'222222222'},
+    studentC:{nombre:'Estudiante de prueba C',curso:'3B-HC',rut:'333333333'},
+    studentD:{nombre:'Estudiante de prueba D',curso:'4B-HC',rut:'444444444'},
+    hiddenAccount:{nombre:'Cuenta oculta de prueba',curso:'3B-HC',rut:'111111111',ocultarDeCasas:true}
+  };
+  const datos = {plataforma_estudiantes:{estudiantes:profiles,admins:{teacherA:true,teacherB:true},
+    docentes:{teacherA:{superadmin:true},teacherB:{cursos:['4B-HC']}},
+    avatar:{studentA:{regalos:{playStation5:{de:'Profe',tipo:'docente',ts:1}}}}},
+    plataforma_paes:{guia_respuestas:{17:{111111111:{status:'sent'},222222222:{status:'sent'},333333333:{status:'draft',submitted:true}},
+      10:{111111111:{submittedAt:1,answers:{1:'A'}},222222222:{submittedAt:1,answers:{}}}}}};
+  const state = {writes:0,failUid:null,failRead:false,profiles,datos};
+  const read = route => route.split('/').filter(Boolean).reduce((value,key) => value?.[key],datos);
+  const snapshot = value => ({val:() => value == null ? null : JSON.parse(JSON.stringify(value)), exists:() => value != null});
+  const db = {ref:route => ({
+    once:async () => { if (state.failRead && route.includes('/avatar/studentB/regalos')) return snapshot(null); return snapshot(read(route)); },
+    transaction:async callback => {
+      if (state.failUid && route.includes('/avatar/' + state.failUid + '/')) throw new Error('Fallo simulado');
+      const result = callback(snapshot(read(route)).val());
+      if (result === undefined) return {committed:false};
+      const parts = route.split('/'); let parent = datos;
+      parts.slice(0,-1).forEach(key => { parent = parent[key] ||= {}; }); parent[parts.at(-1)] = result; state.writes++;
+      return {committed:true};
+    }
+  })};
+  const salas = require(path.join(root,'api/_salas.js'));
+  async function request(body, uid = 'teacherA') {
+    let result;
+    const res = {setHeader(){},status(code){ this.code = code; return this; },json(data){ result = {status:this.code,data}; return this; }};
+    await salas.manejar({method:'POST',headers:{authorization:'Bearer fixture-token'},body},res,'regalos-admin-paes-lote',db,{verifyIdToken:async () => ({uid})});
+    return result;
+  }
+  return {state,db,request};
+}
+
+async function checkBatch() {
+  const fixture = createHouseFixture();
+  const payload = {curso:'3B-HC',guia:'17',muebles:['playStation5','rgbPartySpeaker']};
+  let response = await fixture.request(payload);
+  assert.equal(response.status,200); assert.equal(fixture.state.writes,0,'La simulación nunca escribe.');
+  assert.deepEqual(response.data.destinatarios.map(item => item.uid),['studentA','studentB']);
+  assert.equal(response.data.excluidos,1,'Un borrador con submitted no desbloquea premios.');
+  assert.deepEqual(response.data.destinatarios[0].yaTiene,['playStation5']);
+  const confirm = {...payload,confirmar:true,destinatarios:['studentA','studentB']};
+  response = await fixture.request({...confirm,destinatarios:['studentA']}); assert.equal(response.status,409); assert.equal(fixture.state.writes,0);
+  response = await fixture.request(confirm,'teacherB'); assert.equal(response.status,403); assert.equal(fixture.state.writes,0);
+  response = await fixture.request(confirm,'studentA'); assert.equal(response.status,403);
+  response = await fixture.request({...payload,muebles:['../admins']}); assert.equal(response.status,400);
+  response = await fixture.request({...payload,guia:'99'}); assert.equal(response.status,400);
+  fixture.state.failUid = 'studentB'; response = await fixture.request(confirm);
+  assert.equal(response.data.errores,1); assert.equal(response.data.destinatarios[0].confirmado,true); assert.equal(response.data.destinatarios[1].confirmado,false);
+  fixture.state.failUid = null; response = await fixture.request(confirm);
+  assert.equal(response.data.errores,0); assert.equal(response.data.destinatarios.every(item => item.confirmado),true);
+  assert.equal(response.data.destinatarios[0].faltan.length,0,'El reintento no duplica la entrega parcial.');
+  assert.equal(fixture.state.datos.plataforma_estudiantes.avatar.studentA.regalos.playStation5.ts,1,'Conserva el premio anterior.');
+  response = await fixture.request(payload);
+  assert.equal(response.data.catalogo.find(item => item.id === 'playStation5').tiene,true,'La relectura marca el set entregado.');
+  response = await fixture.request({...payload,guia:'10'}); assert.equal(response.data.destinatarios.length,1,'Compatibilidad final de G10, nunca respuestas vacías.');
+  response = await fixture.request({curso:'3B-HC',muebles:[]}); assert.equal(response.data.destinatarios.length,3,'También permite premiar el curso sin condición.');
+  response = await fixture.request({estudiante:'studentD',muebles:[]},'teacherB'); assert.equal(response.data.destinatarios.length,1);
+  fixture.state.profiles.duplicate = {...fixture.state.profiles.studentA}; response = await fixture.request(payload); assert.equal(response.status,409);
+  const fresh = createHouseFixture(); fresh.state.failRead = true;
+  response = await fresh.request(confirm); assert.equal(response.data.errores,1,'Un fallo de relectura no informa éxito.');
 }
 
 async function checkScope() {
@@ -145,5 +224,6 @@ async function checkAdminRecovery() {
   }
   }
 }
-(async () => { await checkUI(); await checkScope(); await checkAdminRecovery(); console.log('Admin casas PAES: sesión docente aislada, alcance, entregas finales, elección, rechazo, doble clic, regalo con relectura, persistencia y fallo de confirmación aprobados.'); })()
+module.exports = {createHouseFixture};
+if (require.main === module) (async () => { await checkUI(); await checkBatch(); await checkScope(); await checkAdminRecovery(); console.log('Admin casas PAES: vista previa y cuatro giros, set individual/curso/tarea, simulación sin escrituras, alcance, borradores, nómina exacta, doble clic, relectura, entrega parcial y reintento sin duplicación aprobados.'); })()
   .catch(error => { console.error(error); process.exit(1); });

@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, vistas previas y entrega de sets PAES por curso y tarea
+
+- `paes/admin/#casas` muestra el catálogo antes de seleccionar una cuenta, miniaturas mayores y una vista ampliada girable en cuatro ángulos, incluso para muebles obtenidos. Permite armar un set de hasta doce muebles o elegir sets gamer, música y sala.
+- Entrega individual o por curso HC, con filtro opcional por guía 1–21 enviada. «Revisar destinatarios» consulta el servidor y muestra la nómina, regalos nuevos y muebles ya obtenidos sin escribir. La confirmación valida nuevamente alcance docente, curso, entrega y nómina exacta. Excluye borradores y perfiles ocultos; los duplicados ambiguos impiden premiar por tarea. Transacciones y relectura por inventario conservan premios previos y permiten reintentar entregas parciales sin duplicación. No se crean nuevas funciones ni reglas Firebase.
+- Archivos: `paes/admin/index.html`, `paes/admin/casas.js`, `api/_salas.js`, `scripts/audit-paes-house-admin.js`. Auditoría ampliada: vistas y giros, selección individual, curso/tarea, simulación sin escritura, permisos, cambio de nómina, rechazo de borradores, fallo de confirmación y reintento. Build integral aprobado con 410 recursos críticos.
+- Navegador real y funciones locales con datos ficticios: set gamer por curso/G17, exclusión del borrador, conservación del premio existente, relectura y recarga; set música con fallo parcial y reintento. Vista ampliada y ausencia de desbordes a 390, 1200 y 3840 px; consola final limpia y ninguna imagen rota. No se entregaron premios ni se modificaron respuestas reales durante estas pruebas. Publicación y verificación pública pendientes de registrar al finalizar.
+
+---
+
 Registro para retomar el contexto entre sesiones, agentes y máquinas. El bloque más reciente va arriba.
 
 Esto complementa, no reemplaza, a `REGLAS.md`. Aquí va **qué se hizo, qué quedó y qué está pendiente**. Es una bitácora exclusiva de Estudia CEST: no contiene operaciones de portafolios docentes.

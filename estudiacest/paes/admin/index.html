@@ -761,18 +761,32 @@
     .house-deliveries button { background:var(--success-glow); border:1px solid #166534; border-radius:6px; color:#a7f3d0; padding:8px 10px; cursor:pointer; }
     .house-catalog { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:12px; margin:16px 0; }
     .house-item { display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:8px; min-height:165px; padding:12px; border:1px solid var(--border-color); border-radius:8px; background:#111827; color:var(--text-main); cursor:pointer; font:inherit; font-size:12px; }
-    .house-item img { width:84px; height:84px; object-fit:contain; image-rendering:pixelated; }
-    .house-item[aria-pressed="true"] { border-color:#2dd4bf; box-shadow:0 0 0 2px #0f766e; }
+    .house-item img { width:120px; height:120px; max-width:100%; object-fit:contain; image-rendering:pixelated; }
+    .house-item.selected { border-color:#2dd4bf; box-shadow:0 0 0 2px #0f766e; }
+    .house-image-button { background:none; border:0; color:inherit; cursor:zoom-in; width:100%; }
+    .house-pick { padding:9px 12px; width:100%; border:1px solid #0f766e; border-radius:6px; color:#a7f3d0; background:#042f2e; cursor:pointer; }
+    .house-pick:disabled { opacity:.65; cursor:default; }
     .house-item.owned { border-color:#166534; background:#052e25; opacity:1; cursor:default; }
     .house-item.owned strong { color:#6ee7b7; }
     .house-confirm { display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:16px; border:1px solid #0f766e; border-radius:8px; background:#042f2e; }
     .house-confirm[hidden] { display:none; }
     .house-confirm button { background:#0f766e; color:#fff; border:0; padding:12px 16px; border-radius:6px; font:inherit; font-weight:700; cursor:pointer; }
     .house-confirm button:disabled { opacity:.6; cursor:wait; }
+    .house-preview { display:grid; grid-template-columns:minmax(160px,260px) minmax(0,1fr); gap:20px; padding:20px; margin:16px 0; background:#111827; border:1px solid var(--border-color); border-radius:8px; }
+    .house-preview[hidden], .house-controls label[hidden] { display:none; }
+    .house-preview img { width:100%; height:240px; object-fit:contain; image-rendering:pixelated; background:repeating-conic-gradient(#1f2937 0% 25%,#182131 0% 50%) 50%/24px 24px; border-radius:8px; }
+    .house-preview h4 { margin:0 0 12px; }
+    .house-actions { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .house-actions button, .house-orientation button { border:1px solid var(--border-color); border-radius:6px; padding:10px 14px; background:#111827; color:var(--text-main); cursor:pointer; }
+    .house-orientation { display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; }
+    .house-orientation button[aria-pressed="true"] { background:#0f766e; border-color:#5eead4; }
+    .house-recipients { max-height:280px; overflow:auto; margin:12px 0; padding-left:24px; line-height:1.8; font-size:13px; }
+    #houseSelected { margin:12px 0; line-height:1.6; font-size:14px; }
     .house-status { min-height:22px; font-size:13px; line-height:1.6; margin:12px 0; }
     .house-item:focus-visible, .house-deliveries button:focus-visible { outline:3px solid #5eead4; outline-offset:3px; }
     @media(max-width:600px) {
       .house-controls { grid-template-columns:1fr; }
+      .house-preview { grid-template-columns:1fr; }
       body::before, body::after { width:80vw; }
       body::before { left:0; }
       body::after { right:0; }
@@ -1187,16 +1201,22 @@
 
     <section class="tab-view" id="viewCasas">
       <div class="card-panel">
-        <div class="card-header"><h3>Regalar un mueble</h3><button type="button" class="btn-primary" id="houseRefresh">Actualizar</button></div>
-        <p class="house-note">Revisa las guías entregadas y elige el premio de cada estudiante. Los muebles que ya tiene aparecen marcados y no se duplican.</p>
+        <div class="card-header"><h3>Entregar muebles y sets</h3><button type="button" class="btn-primary" id="houseRefresh">Actualizar</button></div>
+        <p class="house-note">Entrega un mueble o arma un set para un estudiante o un curso. Puedes premiar solo a quienes entregaron una tarea; los muebles que ya tienen no se duplican.</p>
         <div class="house-controls">
+          <label>Entregar a<select class="select-filter" id="houseMode"><option value="student">Un estudiante</option><option value="course">Un curso</option></select></label>
           <label>Curso<select class="select-filter" id="houseCourse"><option value="">Todos los cursos HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></label>
-          <label>Estudiante<select class="select-filter" id="houseStudent"><option value="">Selecciona un estudiante…</option></select></label>
+          <label id="houseStudentField">Estudiante<select class="select-filter" id="houseStudent"><option value="">Selecciona un estudiante…</option></select></label>
+          <label>Tarea requerida<select class="select-filter" id="houseGuide"><option value="">Sin condición de tarea</option></select></label>
         </div>
         <p class="house-note" id="houseSummary">Selecciona un estudiante para ver sus entregas y muebles.</p>
         <div class="house-deliveries" id="houseDeliveries" aria-label="Guías entregadas"></div>
         <div class="house-controls"><label>Buscar mueble<input class="search-input" type="search" id="houseSearch" placeholder="PS5, parlante, sofá…"></label><label>Mostrar<select class="select-filter" id="houseOwnership"><option value="all">Todos los muebles</option><option value="available">Solo los que no tiene</option><option value="owned">Los que ya tiene</option></select></label></div>
-        <div class="house-confirm" id="houseConfirm" hidden><p id="houseChosen"></p><button type="button" id="houseGive">Confirmar regalo</button></div>
+        <div class="house-controls"><label>Set de muebles<select class="select-filter" id="houseSet"><option value="custom">Armar mi set</option><option value="gamer">Set gamer · 4 muebles</option><option value="music">Set música · 3 muebles</option><option value="living">Set sala · 2 muebles</option></select></label></div>
+        <section class="house-preview" id="housePreview" aria-label="Vista previa del mueble" hidden><img id="housePreviewImage" alt=""><div><h4 id="housePreviewName"></h4><p class="house-note" id="housePreviewState"></p><div class="house-orientation" id="houseOrientation" aria-label="Girar vista previa"></div></div></section>
+        <p id="houseSelected">No hay muebles elegidos.</p>
+        <div class="house-actions"><button type="button" id="houseReview">Revisar destinatarios</button><button type="button" id="houseClear">Limpiar set</button></div>
+        <div class="house-confirm" id="houseConfirm" hidden><div><p id="houseChosen"></p><ul class="house-recipients" id="houseRecipients"></ul></div><button type="button" id="houseGive">Confirmar entrega</button></div>
         <p class="house-status" id="houseStatus" role="status" aria-live="polite"></p>
         <div class="house-catalog" id="houseCatalog"></div>
       </div>

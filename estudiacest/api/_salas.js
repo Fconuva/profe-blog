@@ -251,6 +251,92 @@ async function entregarRegaloDocente(req, res, db, yo) {
     return res.status(200).json({ ok: true, mueble, nombre: fichaMueble.nom });
 }
 
+function entregaPaesParaPremio(guia, valor) {
+    if (!valor || valor.status === 'draft') return false;
+    return valor.status === 'sent' || valor.submitted === true || valor.completada === true ||
+        (['10', '11', '12', '13'].includes(String(guia)) && Number(valor.submittedAt) > 0 && Object.keys(valor.answers || {}).length > 0);
+}
+
+// Primero simula; la confirmación vuelve a validar curso, tarea y la nómina exacta.
+// Cada inventario se actualiza con una transacción y se relee: reintentar no duplica premios.
+async function regalosPaesPorLote(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({ error:'Solo el profesor.' });
+    const { curso, estudiante, guia, confirmar } = req.body;
+    const courses = ['3A-HC', '3B-HC', '4A-HC', '4B-HC'];
+    if ((!estudiante && !courses.includes(curso)) || (guia && !/^(?:[1-9]|1[0-9]|2[01])$/.test(String(guia)))) {
+        return res.status(400).json({ error:'Selecciona un curso HC y una guía válida.' });
+    }
+    const raw = req.body.muebles;
+    if (!Array.isArray(raw) || raw.length > 12 || raw.some(id => !CATALOGO_POR_ID.has(id) || Number(CATALOGO_POR_ID.get(id).xp || 0) <= 0)) {
+        return res.status(400).json({ error:'Elige entre uno y doce muebles del catálogo.' });
+    }
+    const muebles = [...new Set(raw)];
+    const [profilesSnap, docenteSnap, entregaSnap] = await Promise.all([
+        db.ref(`${BASE}/estudiantes`).once('value'),
+        db.ref(`${BASE}/docentes/${yo.uid}`).once('value'),
+        guia ? db.ref(`plataforma_paes/guia_respuestas/${guia}`).once('value') : Promise.resolve(null)
+    ]);
+    const docente = docenteSnap.val();
+    const assigned = docente && (Array.isArray(docente.cursos) ? docente.cursos : Object.keys(docente.cursos || {}).filter(id => docente.cursos[id] === true));
+    const profiles = profilesSnap.val() || {};
+    if (estudiante && (!profiles[estudiante] || profiles[estudiante].ocultarDeCasas === true)) return res.status(404).json({ error:'Estudiante no disponible.' });
+    const targetCourse = estudiante ? profiles[estudiante].curso : curso;
+    if (!courses.includes(targetCourse) || (docente && docente.superadmin !== true && !assigned.includes(targetCourse))) {
+        return res.status(403).json({ error:'Ese curso no pertenece a tus cursos PAES.' });
+    }
+    const todos = Object.entries(profiles).filter(([uid, perfil]) => perfil && perfil.ocultarDeCasas !== true &&
+        perfil.curso === targetCourse && (!estudiante || uid === estudiante)).map(([uid, perfil]) => ({
+        uid, nombre:String(perfil.nombre || 'Estudiante'), curso:perfil.curso,
+        rut:String(perfil.rut || '').replace(/[.\s-]/g, '').toUpperCase()
+    }));
+    const entregas = entregaSnap ? entregaSnap.val() || {} : {};
+    if (guia && todos.some((perfil, index) => perfil.rut && todos.some((otro, otroIndex) => otroIndex !== index && otro.rut === perfil.rut))) {
+        return res.status(409).json({ error:'Hay cuentas duplicadas en la nómina. Revisa los perfiles antes de premiar por tarea.' });
+    }
+    const elegibles = todos.filter(perfil => !guia || (perfil.rut && entregaPaesParaPremio(guia, entregas[perfil.rut])));
+    if (confirmar === true) {
+        const esperados = req.body.destinatarios;
+        const actuales = elegibles.map(item => item.uid).sort();
+        if (!muebles.length || !actuales.length || !Array.isArray(esperados) ||
+            JSON.stringify([...new Set(esperados)].sort()) !== JSON.stringify(actuales)) {
+            return res.status(409).json({ error:'La nómina cambió o no hay destinatarios. Revisa la entrega de nuevo antes de confirmar.' });
+        }
+    }
+    const resultados = [], cuentas = Object.fromEntries(CATALOGO_CASA.map(item => [item.id, 0]));
+    // Acotar concurrencia para cursos completos, sin una escritura global de datos académicos.
+    for (let start = 0; start < elegibles.length; start += 6) {
+        const bloque = await Promise.all(elegibles.slice(start, start + 6).map(async perfil => {
+            const target = {uid:perfil.uid, nombre:perfil.nombre, curso:perfil.curso, esAdmin:false};
+            const inventario = await inventarioConRegalos(db, target);
+            const tiene = id => !!(inventario.regalos[id] || inventario.desbloqueados[id]);
+            Object.keys(cuentas).forEach(id => { if (tiene(id)) cuentas[id]++; });
+            const faltan = muebles.filter(id => !tiene(id));
+            const result = {uid:perfil.uid, nombre:perfil.nombre, faltan, yaTiene:muebles.filter(tiene), confirmado:false};
+            if (confirmar !== true || !faltan.length) { result.confirmado = confirmar === true; return result; }
+            try {
+                const ref = db.ref(`${BASE}/avatar/${perfil.uid}/regalos`);
+                await ref.transaction(actual => {
+                    const regalos = {...(actual || {})};
+                    faltan.forEach(id => { if (!regalos[id]) regalos[id] = {de:'Profe', ts:Date.now(), tipo:'docente', otorgadoPor:yo.uid, fuente:'paes', curso:targetCourse, guia:String(guia || '')}; });
+                    return regalos;
+                });
+                const releido = (await ref.once('value')).val() || {};
+                result.confirmado = faltan.every(id => !!releido[id]);
+                if (!result.confirmado) result.error = 'No se pudo confirmar el inventario. Actualiza antes de reintentar.';
+            } catch (_) { result.error = 'No se pudo confirmar esta entrega. Actualiza antes de reintentar.'; }
+            return result;
+        }));
+        resultados.push(...bloque);
+    }
+    const catalogo = CATALOGO_CASA.filter(item => Number(item.xp || 0) > 0).map(item => ({
+        id:item.id, nombre:item.nom, familia:item.fam, tienen:cuentas[item.id], tiene:elegibles.length > 0 && cuentas[item.id] === elegibles.length
+    }));
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.status(200).json({ ok:true, confirmar:confirmar === true, totalCurso:todos.length,
+        excluidos:todos.length - elegibles.length, destinatarios:resultados, catalogo,
+        errores:resultados.filter(item => item.error).length });
+}
+
 async function listarRecompensas(req, res, db, yo) {
     if (!yo.esAdmin) return res.status(403).json({ error: 'Solo el profesor.' });
     return res.status(200).json({
@@ -648,6 +734,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'recompensas-eliminar') return await eliminarRecompensa(req, res, db, yo);
         if (accion === 'regalos-admin-inventario') return await listarInventarioParaRegalo(req, res, db, yo);
         if (accion === 'regalos-admin-entregar') return await entregarRegaloDocente(req, res, db, yo);
+        if (accion === 'regalos-admin-paes-lote') return await regalosPaesPorLote(req, res, db, yo);
         if (accion === 'inventario') return res.status(200).json({ ok: true, ...(await inventarioConRegalos(db, yo)) });
         if (!['salir', 'atender'].includes(accion)) {
             const state = await estadoMiEspacio(db);

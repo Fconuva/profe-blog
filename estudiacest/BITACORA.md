@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, comprobación del ingreso PAES con ruta guiada
+
+- Ante un aviso de contraseña/cuenta rechazada, se contrastaron nómina, Auth y perfil por identidad exacta: una cuenta activa, un perfil único y curso concordante. La clave inicial vigente obtuvo sesión desde el endpoint publicado; no fue necesario restablecerla ni crear otra cuenta.
+- Navegador real en producción a 390 px: ingreso confirmado, tarjetas de la ruta individual presentes y Mi espacio abierto sin un segundo login, sin errores ni solicitudes fallidas. No se respondieron ni entregaron tareas, ni se modificaron calificaciones o perfiles. Se informó al docente cómo volver a ingresar.
+- Se retoma la publicación pendiente del acceso plegable a logros/ropa y del conteo concurrente de premios, conservando los cambios NM3 integrados en `640fe642`. La confirmación pública se agrega después del despliegue seguro.
+
+---
+
 ## 2026-10-01, cierre de premios y ajuste visual no publicado
 
 - La versión operativa de muebles/logros/ropa sigue siendo `b96011c2`, despliegue READY `dpl_Ht8pdYSD9phkKfPHUkhi5i7Wfsn6`. El admin publicado permite todos los premios pedidos; «Regalar logros y ropa» está al final del catálogo. Recargar una vez el admin actualiza sus controles sin borrar caché ni cerrar otras sesiones.

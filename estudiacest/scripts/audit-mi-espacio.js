@@ -106,15 +106,16 @@ exigir(leer('estudiantes/dashboard.html').includes('js/mapas-casa.js') && espaci
   'El panel debe cargar el mapa irregular y evitar muebles fuera al cambiar de habitación.');
 exigir(/RUTA = '\/estudiantes\/assets\/pieza\//.test(espacio),
   'La ruta de los sprites debe ser absoluta: si es relativa, falla al montarse desde otra carpeta.');
-exigir(espacio.includes('ref.set(valor)') && espacio.includes('ref.once('),
+exigir(espacio.includes('ref.set(copia)') && espacio.includes('ref.once('),
   'El guardado debe releer después de escribir: escribir no es haber guardado.');
 const avatarRules = JSON.parse(leer('firebase-rules.json')).rules.plataforma_estudiantes.avatar.$uid;
 exigir(avatarRules['.write'].includes("admins')") &&
   avatarRules.$campo['.write'].includes("$campo !== 'pieza'") &&
   avatarRules.$campo['.write'].includes("$campo !== 'regalos'") &&
   avatarRules.$campo['.write'].includes("$campo !== 'casa'") &&
-  espacio.includes("api(campo === 'pieza' ? 'guardar-pieza' : 'guardar-casa'") &&
-  espacio.includes("{ pieza:copia } : { casa:copia }"),
+  avatarRules.$campo['.write'].includes("$campo !== 'habitaciones'") &&
+  espacio.includes("api(campo === 'pieza' ? 'guardar-pieza' : campo==='casa'?'guardar-casa':'guardar-posicion'") &&
+  espacio.includes('Object.assign({habitacion:h},cuerpo)'),
   'La casa, la pieza y los regalos deben quedar bajo control del servidor, no de escrituras Firebase del estudiante.');
 exigir(espacio.includes('function ruta(') && espacio.includes('bloqueada('),
   'Falta el caminar con búsqueda de ruta que rodea los muebles.');
@@ -164,7 +165,7 @@ exigir(!fs.existsSync(path.join(root, 'api/salas.js')), 'api/salas.js no puede e
 exigir(leer('api/estudiantes.js').includes("require('./_salas.js')") && leer('api/estudiantes.js').includes("'salas-'"), 'api/estudiantes.js debe enrutar las acciones salas-* al módulo interno.');
 exigir(espacio.includes("var API = '/api/estudiantes'") && espacio.includes("'salas-' + action"), 'El cliente debe hablar con /api/estudiantes usando acciones salas-*.');
 exigir(/TOPE_SALA\s*=\s*30/.test(salasApi), 'El tope de la casa debe ser 30 personas.');
-exigir(salasApi.includes('posicionEnCasa(db, sala, req.body.col, req.body.fila)') &&
+exigir(salasApi.includes('posicionEnCasa(db, sala, req.body.col, req.body.fila,h)') &&
   salasApi.includes("tamano === '7x7'") && salasApi.includes('MAPAS_CASA.haySuelo'),
   'La presencia debe aceptar 7 × 7 y rechazar los huecos del salón en L.');
 exigir(salasApi.includes('bloqueados_chat') && salasApi.includes('alertas_chat'), 'Los bloqueos y las alertas deben quedar registrados para el profesor.');
@@ -214,7 +215,7 @@ exigir(!espacio.includes('<button data-p="muebles">') && espacio.includes('espMu
   'La casa y el catálogo de muebles deben estar en una sola vista, no en pestañas separadas.');
 exigir(!/cual === 'pieza'[^\n]*cual = 'personaje'/.test(espacio) && espacio.includes('Puedes mirar tus premios'),
   'Con el uso bloqueado se debe poder abrir la vista unificada y mirar los muebles con candado.');
-exigir(espacio.includes("if (!S.housesEnabled) { avisar('El uso de la casa está deshabilitado por ahora'); return; }") &&
+exigir(espacio.includes('if (!S.housesEnabled || S.cambiando || S.cargandoCasa)') &&
   espacio.includes('chatInput.disabled = !S.housesEnabled'),
   'Mirar la casa bloqueada no puede permitir caminar, decorar ni chatear.');
 
@@ -335,8 +336,8 @@ exigir(cuerpoDe('cargarPlacas').includes("ref.child('regalos').once('value')") &
   'Las placas de un visitante se validan contra sus logros antes de dibujarlas.');
 exigir(/placas: S\.placasDe\[uid\]/.test(cuerpoDe('personas')) && /placas: S\.placas/.test(cuerpoDe('personas')),
   'personas() debe llevar las placas propias y las de cada visitante.');
-exigir(/pendientes\[campo\]/.test(cuerpoDe('guardar')),
-  'guardar() espera por campo: con una sola espera, guardar el look cancela las placas.');
+exigir(/pendientes\[clave\]/.test(cuerpoDe('guardar')) && cuerpoDe('guardar').includes("clave=campo+':'+h"),
+  'guardar() espera por campo y habitación: guardar el look no cancela las placas ni otra sala.');
 
 // ---- Regalos (10-sep-2026) ----
 // El navegador solo elige; el servidor escribe en el avatar del que recibe.

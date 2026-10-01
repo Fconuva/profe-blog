@@ -1,5 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, Mi espacio: movilidad y dos habitaciones conectadas
+
+- Se aplica el primer lote autorizado: movimiento de ocho direcciones con rutas ponderadas, sin cortar esquinas; cambio de destino al completar la casilla actual, parada y ruta/destino visibles. «Caminar» es el modo inicial; «Decorar» muestra la grilla y la huella completa verde/roja. La selección respeta la transparencia del sprite.
+- Puerta nativa y botón accesible conectan Principal y Estudio, también durante una visita, sin otro ingreso. La sala principal conserva sus campos históricos; el estudio empieza vacío y se guarda de forma aditiva. Recarga conserva la sala elegida. Cada habitación tiene terreno, muebles, posición, presencia y chat separados; los controles docentes y el tope de treinta personas siguen cubriendo toda la casa.
+- Un premio no puede colocarse en las dos salas: la validación corre sobre el avatar completo en una transacción. Transferir un regalo autorizado lo retira de ambas salas; los premios docentes y por tarea siguen sin poder transferirse. El guardado captura campo y habitación, espera su cola antes de cruzar y relee. Un fallo impide la transición; una respuesta perdida después de cruzar recupera la presencia confirmada.
+- RTDB: se protege `avatar/$uid/habitaciones` contra escrituras directas del estudiante; la copia histórica se sincroniza únicamente tras comprobar que no había otra diferencia. La comparación con las reglas remotas encontró exclusivamente esta protección nueva. No se migra masivamente ni se modifican notas, XP, regalos, perfiles o tareas reales.
+- Validación con identidades ficticias: `audit-house-rooms`, `preview-house-rooms`, regresiones de terraza/XP y kit de avatar, 390/1200/3840 sin desbordes ni errores inesperados. Se comprueban ida/vuelta, visitas sin edición ajena, chat, traslado de una PS5, recarga, fallo/reintento, respuesta perdida y conservación de registros académicos. Auditoría nueva incorporada al prebuild y exceptuada en `.vercelignore`. Build integral de 589 recursos críticos aprobado; se repite tras el cierre del parche.
+- Alcance pendiente para otros lotes: salas comunes de curso, mecanismos/desafíos y más interacciones; no se declaran construidos. Publicación pendiente de la verificación final y del despliegue seguro.
+
+---
+
 ## 2026-10-01, NM3 Clase 4: el texto 2 pasa a ser un hilo viral de X
 
 - Francisco pidió mejorar el texto sobre Neruda, con formato de X: alguien publica el poema, se hace viral, todos comentan y funan a Neruda, su obra y su vida por algo que no fue real.

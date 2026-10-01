@@ -230,7 +230,7 @@
   function pintarVector(cx, centroX, baseY, look, escala, postura, gesto, movimiento){
     movimiento = movimiento || {};
     var tiempo = movimiento.t == null ? Date.now() : movimiento.t;
-    var espalda = /^(NE|NW)$/.test(movimiento.dir || 'SE');
+    var espalda = /^(NE|NW|N)$/.test(movimiento.dir || 'SE');
     var paso = movimiento.caminar && postura !== 'sentado' ? Math.sin(tiempo / 95) * 4 : 0;
     var e = escala || 1;
     var sentado = postura === 'sentado';
@@ -580,9 +580,9 @@
     movimiento = movimiento || {};
     var t = movimiento.t == null ? Date.now() : movimiento.t;
     var reducido = movimiento.reducido || (global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
-    var dir = /^(SE|SW|NE|NW)$/.test(movimiento.dir) ? movimiento.dir : 'SE';
+    var dir = /^(SE|SW|NE|NW|N|S|E|W)$/.test(movimiento.dir) ? movimiento.dir : 'SE';
     var frame = !reducido && (gesto || movimiento.caminar) ? Math.floor(t/110)%4 : 0;
-    var blink = !reducido && !/^(NE|NW)$/.test(dir) && t%4800<150;
+    var blink = !reducido && !/^(NE|NW|N)$/.test(dir) && t%4800<150;
     var motion = {dir:dir,t:frame*110,caminar:!reducido && !!movimiento.caminar,parpadeo:blink};
     if (!global.document || !global.document.createElement) { pintarVector(cx,centroX,baseY,look,escala,postura,gesto,motion); return; }
     var key = JSON.stringify([look,postura,gesto,dir,frame,blink,motion.caminar]);
@@ -590,7 +590,7 @@
     if (!cv) {
       cv=global.document.createElement('canvas'); cv.width=80; cv.height=132;
       var pen=cv.getContext('2d');
-      if (dir==='SW'||dir==='NW') { pen.translate(80,0); pen.scale(-1,1); }
+      if (dir==='SW'||dir==='NW'||dir==='W') { pen.translate(80,0); pen.scale(-1,1); }
       pintarVector(pen,40,124,look,1,postura,gesto,motion);
       if(fotogramas.size>=192) fotogramas.delete(fotogramas.keys().next().value);
       fotogramas.set(key,cv);

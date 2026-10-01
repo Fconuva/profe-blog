@@ -320,7 +320,7 @@
     var p = puntoMuro(m.pared, m.pos, m.nivel);
     var x = p.x - im.naturalWidth / 2, y = p.y - im.naturalHeight / 2;
     S.cx.drawImage(im, x, y);
-    return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight };
+    return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight,imagen:m.id+'_'+(m.pared==='izq'?'SW':'SE') };
   }
   function ranuraEn(px, py) {
     var mejor = null, dm = 46;
@@ -403,7 +403,7 @@
         cx.restore();
       }
     }
-    return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight };
+    return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight,imagen:nombre };
   }
   function paredes() {
     var cx = S.cx, q = esquinas(), mu = muroDe(S.casa.muro), H = mu.alto || 132;
@@ -540,13 +540,17 @@
     }
     paredes();
 
-    if (S.elegido && S.hover && !esDePared(S.elegido)) {
-      var ph = celda(S.hover.col, S.hover.fila);
-      cx.save(); cx.globalAlpha = .5; cx.fillStyle = '#38bdf8';
-      cx.beginPath(); cx.moveTo(ph.x + TW / 2, ph.y); cx.lineTo(ph.x + TW, ph.y + 53);
-      cx.lineTo(ph.x + TW / 2, ph.y + ROMBO); cx.lineTo(ph.x, ph.y + 53); cx.closePath();
-      cx.fill(); cx.restore();
+    if(S.decorando)for(var gf=0;gf<FILAS;gf++)for(var gc=0;gc<COLS;gc++)if(haySuelo(gc,gf))pintarCasilla({col:gc,fila:gf},'rgba(255,255,255,.03)','#64748b');
+    var mover=S.elegido?{id:S.elegido,dir:'SE'}:S.pieza[S.sel];
+    if (S.decorando && mover && S.hover && !esDePared(mover.id) && !mover.pared) {
+      var mal=estorbo(mover.id,S.hover.col,S.hover.fila,S.elegido?-1:S.sel,mover.dir);
+      global.MapasCasa.celdas(ficha(mover.id),{col:S.hover.col,fila:S.hover.fila,dir:mover.dir}).forEach(function(c){pintarCasilla(c,mal?'rgba(239,68,68,.55)':'rgba(34,197,94,.55)');});
+    }else if(!S.decorando){
+      (S.caminoVisible||[]).forEach(function(c){pintarCasilla(c,'rgba(56,189,248,.25)');});
+      if(S.destino)pintarCasilla(S.destino,'rgba(56,189,248,.6)','#e0f2fe');
+      else if(S.hover)pintarCasilla(S.hover,bloqueada(S.hover.col,S.hover.fila)?'rgba(239,68,68,.25)':'rgba(56,189,248,.25)');
     }
+    pintarPuerta();
 
     cajas = [];
 
@@ -689,8 +693,8 @@
         var v = S.vistos[uid];
         if (!v.camino) return;
         alguno = true;
-        var avance = Math.min(1, (ahora - v.t0) / PASO_MS);
         var a = v.camino[v.i], b = v.camino[v.i + 1];
+        var avance = Math.min(1, (ahora - v.t0) / (PASO_MS*Math.hypot(b.col-a.col,b.fila-a.fila)));
         v.dir=direccionPaso(a,b);
         v.col = a.col + (b.col - a.col) * avance;
         v.fila = a.fila + (b.fila - a.fila) * avance;
@@ -706,6 +710,22 @@
   }
 
   // ---------------- caminar ----------------
+  function pintarCasilla(c,color,borde){
+    var p=celda(c.col,c.fila),cx=S.cx;cx.save();cx.fillStyle=color;
+    cx.beginPath();cx.moveTo(p.x+TW/2,p.y);cx.lineTo(p.x+TW,p.y+53);cx.lineTo(p.x+TW/2,p.y+ROMBO);cx.lineTo(p.x,p.y+53);cx.closePath();cx.fill();
+    if(borde){cx.strokeStyle=borde;cx.lineWidth=1;cx.stroke();}cx.restore();
+  }
+  function puertaActual(){return global.MapasCasa.puerta(S.casa,S.pieza,POR_ID);}
+  function pintarPuerta(){
+    var puerta=puertaActual();S.cajaPuerta=null;if(!puerta)return;
+    var p=celda(puerta.col,puerta.fila),cx=S.cx,x=p.x+47,y=p.y-65;
+    cx.save();cx.fillStyle='#26374b';cx.strokeStyle='#94a3b8';cx.lineWidth=3;
+    cx.beginPath();cx.moveTo(x,y+45);cx.lineTo(x+48,y+77);cx.lineTo(x+48,y+163);cx.lineTo(x,y+131);cx.closePath();cx.fill();cx.stroke();
+    cx.fillStyle='#67e8f9';cx.beginPath();cx.arc(x+36,y+111,4,0,Math.PI*2);cx.fill();
+    cx.fillStyle='#164e63';cx.fillRect(p.x+TW/2-43,y+6,86,28);
+    cx.font='bold 16px sans-serif';cx.textAlign='center';cx.fillStyle='#e0f2fe';cx.fillText(S.habitacion==='estudio'?'Casa':'Estudio',p.x+TW/2,y+27);cx.restore();
+    S.cajaPuerta={x:x,y:y+45,w:48,h:118};
+  }
   function bloqueada(col, fila) {
     return !haySuelo(col, fila) || S.pieza.some(function (m) {
       if (m.pared || !global.MapasCasa.ocupa(ficha(m.id),m,col,fila)) return false;
@@ -715,6 +735,7 @@
   }
   function ruta(desde, hasta) {
     if (!haySuelo(desde.col, desde.fila) || !haySuelo(hasta.col, hasta.fila)) return null;
+    if(desde.col===hasta.col&&desde.fila===hasta.fila)return [desde];
     // Un asiento se puede elegir como destino: la ruta llega hasta un vecino
     // libre y el último paso es subirse.
     var asiento = sentableEn(hasta.col, hasta.fila);
@@ -729,64 +750,50 @@
       });
       return mejor ? mejor.concat([{ col: hasta.col, fila: hasta.fila }]) : null;
     }
-    var clave = function (c, f) { return c + ',' + f; };
-    var cola = [{ col: desde.col, fila: desde.fila }];
-    var previo = {}; previo[clave(desde.col, desde.fila)] = null;
-    var pasos = [[1,0],[-1,0],[0,1],[0,-1]];
-    while (cola.length) {
-      var act = cola.shift();
-      if (act.col === hasta.col && act.fila === hasta.fila) {
-        var camino = [], k = clave(act.col, act.fila);
-        while (k) { var par = k.split(','); camino.unshift({ col: +par[0], fila: +par[1] }); k = previo[k]; }
-        return camino;
-      }
-      for (var i = 0; i < pasos.length; i++) {
-        var nc = act.col + pasos[i][0], nf = act.fila + pasos[i][1];
-        if (!haySuelo(nc, nf)) continue;
-        var k2 = clave(nc, nf);
-        if (previo.hasOwnProperty(k2) || bloqueada(nc, nf)) continue;
-        previo[k2] = clave(act.col, act.fila);
-        cola.push({ col: nc, fila: nf });
-      }
-    }
-    return null;
+    return global.MapasCasa.ruta(desde,hasta,function(c,f){return !bloqueada(c,f);});
   }
   var caminando = null, PASO_MS = 300;
   function direccionPaso(a,b) {
-    return b.col>a.col ? 'SE' : b.col<a.col ? 'NW' : b.fila>a.fila ? 'SW' : 'NE';
+    return global.MapasCasa.direccion(a,b);
   }
-  function caminar(hasta) {
-    if (!haySuelo(hasta.col, hasta.fila)) return;
+  function caminar(hasta,alLlegar) {
+    if (S.cambiando || !haySuelo(hasta.col, hasta.fila)) return;
+    // Reorientar al terminar la casilla actual evita el salto de redondeo.
+    if(caminando){caminando.siguiente={hasta:hasta,alLlegar:alLlegar};return;}
     var camino = ruta({ col: Math.round(S.av.col), fila: Math.round(S.av.fila) }, hasta);
-    if (!camino || camino.length < 2) { if (!camino) avisar('Por ahí no se puede llegar'); return; }
-    if (caminando) cancelAnimationFrame(caminando.id);
+    if (!camino || camino.length < 2) { if (!camino) avisar('Por ahí no se puede llegar');else if(alLlegar)alLlegar();return; }
     // Los demás reciben el destino al partir, así me ven caminar a la par.
     S.destino = { col: hasta.col, fila: hasta.fila };
+    S.caminoVisible=camino;
     S.dir=direccionPaso(camino[0],camino[1]);
     avisarPosicion();
-    var i = 0, MS = PASO_MS, t0 = performance.now();
+    var i = 0, t0 = performance.now();
+    caminando={id:null};
+    function terminar(b){
+      caminando=null;S.caminoVisible=[];S.destino=null;S.av={col:b.col,fila:b.fila};dibujar();avisarPosicion();
+      if(!S.visitando){S.miAv={col:b.col,fila:b.fila};guardar('personajeEn',S.miAv);}
+    }
     function paso(ahora) {
-      var avance = Math.min(1, (ahora - t0) / MS);
       var a = camino[i], b = camino[i + 1];
+      if(bloqueada(b.col,b.fila)&&!sentableEn(b.col,b.fila)){terminar(a);avisar('El camino está ocupado');return;}
+      var MS=PASO_MS*Math.hypot(b.col-a.col,b.fila-a.fila),avance = Math.min(1, (ahora - t0) / MS);
       S.dir=direccionPaso(a,b);
       S.av.col = a.col + (b.col - a.col) * avance;
       S.av.fila = a.fila + (b.fila - a.fila) * avance;
       dibujar();
       if (avance >= 1) {
+        var siguiente=caminando.siguiente,detener=caminando.detener;
+        if(siguiente||detener){terminar(b);if(siguiente)caminar(siguiente.hasta,siguiente.alLlegar);return;}
         i++; t0 = ahora;
+        S.caminoVisible=camino.slice(i);
         if (i >= camino.length - 1) {
-          S.av.col = b.col; S.av.fila = b.fila;
-          caminando = null; dibujar();
-          if (!S.visitando) {
-            S.miAv = { col: b.col, fila: b.fila };
-            guardar('personajeEn', S.miAv);
-          }
+          terminar(b);if(alLlegar)alLlegar();
           return;
         }
       }
-      caminando = { id: requestAnimationFrame(paso) };
+      caminando.id=requestAnimationFrame(paso);
     }
-    caminando = { id: requestAnimationFrame(paso) };
+    caminando.id=requestAnimationFrame(paso);
   }
 
   // ---------------- guardado ----------------
@@ -796,37 +803,47 @@
   var piezaQueue = Promise.resolve();
   function guardar(campo, valor) {
     if (!S.db || !S.uid) return;
-    clearTimeout(pendientes[campo]);
-    pendientes[campo] = setTimeout(function () {
-      if (campo === 'pieza' || campo === 'casa') {
-        var copia = JSON.parse(JSON.stringify(valor));
-        piezaQueue = piezaQueue.catch(function () {}).then(function () {
-          return api(campo === 'pieza' ? 'guardar-pieza' : 'guardar-casa', campo === 'pieza' ? { pieza:copia } : { casa:copia });
-        }).then(function (data) {
+    var h=S.habitacion||'principal',clave=campo+':'+h,copia=JSON.parse(JSON.stringify(valor));
+    if(pendientes[clave])clearTimeout(pendientes[clave].timer);
+    var job={run:function(){
+      delete pendientes[clave];
+      piezaQueue = piezaQueue.then(function () {
+      if (campo === 'pieza' || campo === 'casa' || campo === 'personajeEn') {
+        var cuerpo=campo==='pieza'?{pieza:copia}:campo==='casa'?{casa:copia}:copia;
+        return api(campo === 'pieza' ? 'guardar-pieza' : campo==='casa'?'guardar-casa':'guardar-posicion',Object.assign({habitacion:h},cuerpo)).then(function (data) {
           if (!data || !data.ok) throw new Error((data && data.error) || 'No se pudo guardar');
+          var room=S.misHabitaciones[h];
           if(campo === 'pieza'){
-            S.miPieza = Array.isArray(data.pieza) ? data.pieza : [];
-            if (!S.visitando) S.pieza = S.miPieza;
-          }else{
-            S.miCasa=data.casa;
-            if(!S.visitando){S.casa=S.miCasa;aplicarTamano();dibujar();}
-          }
-          marcarEstado('Guardado', false);
-        }).catch(function (error) {
-          marcarEstado(error.message || 'No se pudo guardar', true);
-          sincronizarInventario();
-          if(campo==='casa')S.db.ref(S.base+'/avatar/'+S.uid+'/casa').once('value').then(function(snap){S.miCasa=snap.val()||{piso:'claro',muro:'blanco',tamano:'5x5'};if(!S.visitando){S.casa=S.miCasa;aplicarTamano();dibujar();}}).catch(function(){});
+            room.pieza = Array.isArray(data.pieza) ? data.pieza : [];
+            if (!S.visitando && S.habitacion===h) S.pieza=S.miPieza=room.pieza;
+          }else if(campo==='casa'){
+            room.casa=data.casa;
+            if(!S.visitando && S.habitacion===h){S.casa=S.miCasa=room.casa;aplicarTamano();dibujar();}
+          }else{room.personajeEn=data.personajeEn;}
+          delete S.saveErrors[clave];
+          pintarMuebles();marcarEstado('Guardado', false);
         });
-        return;
       }
       var ref = S.db.ref(S.base + '/avatar/' + S.uid + '/' + campo);
-      ref.set(valor).then(function () {
-        return ref.once('value');   // releer: escribir no es haber guardado
-      }).then(function (snap) {
-        var ok = snap.exists();
-        marcarEstado(ok ? 'Guardado' : 'No se pudo guardar', !ok);
-      }).catch(function () { marcarEstado('No se pudo guardar', true); });
-    }, 500);
+      return ref.set(copia).then(function () {return ref.once('value');}).then(function(snap){
+        if(!snap.exists())throw new Error('No se pudo confirmar el guardado');
+        delete S.saveErrors[clave];
+        marcarEstado('Guardado',false);
+      });
+      }).catch(function(error){
+        S.saveErrors[clave]=error;marcarEstado(error.message||'No se pudo guardar',true);
+        if(campo==='pieza'||campo==='casa'){
+          return api('habitaciones',{sala:S.uid}).then(function(data){
+            if(data.ok){S.misHabitaciones=data.habitaciones;if(!S.visitando)activarHabitacion(S.habitacion,S.misHabitaciones[S.habitacion],false);}
+          }).catch(function(){});
+        }
+      });
+    }};
+    pendientes[clave]=job;job.timer=setTimeout(job.run,500);
+  }
+  function esperarGuardado(){
+    Object.keys(pendientes).forEach(function(k){var job=pendientes[k];clearTimeout(job.timer);job.run();});
+    return piezaQueue.then(function(){var keys=Object.keys(S.saveErrors);if(keys.length)throw S.saveErrors[keys[0]];});
   }
   var tEstado;
   function marcarEstado(txt, malo) {
@@ -848,20 +865,21 @@
   // ---------------- salas: presencia y chat ----------------
   function api(action, cuerpo, keepalive) {
     if (!S.auth || !S.auth.currentUser) return Promise.reject(new Error('sin sesión'));
+    var payload=Object.assign({action:'salas-' + action,habitacion:S.habitacion||'principal'},cuerpo||{});
     return S.auth.currentUser.getIdToken().then(function (token) {
       return fetch(API, {
         method: 'POST', keepalive: !!keepalive,
         headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
-        body: JSON.stringify(Object.assign({ action: 'salas-' + action }, cuerpo || {}))
+        body: JSON.stringify(payload)
       });
     }).then(function (r) { return r.json(); });
   }
 
   var latidoTimer = null, burbujaTimer = null;
   function latido() {
-    if (!S.sala) return;
+    if (!S.sala || S.cambiando) return Promise.resolve();
     var p = S.destino || { col: Math.round(S.av.col), fila: Math.round(S.av.fila) };
-    api('latido', { sala: S.sala, col: p.col, fila: p.fila, look: S.look, dir:S.dir || 'SE',
+    return api('latido', { sala: S.sala, col: p.col, fila: p.fila, look: S.look, dir:S.dir || 'SE',
       gesto: S.gesto && S.gesto.hasta > Date.now() ? S.gesto.id : '' })
       .then(function (r) { if (r && r.fuera) conectarSala(S.sala, true); })
       .catch(function () {});
@@ -877,7 +895,7 @@
     }, Math.max(0, espera));
   }
 
-  function desconectarSala() {
+  function desconectarSala(sinSalir) {
     if (S.refPresentes) S.refPresentes.off();
     if (S.refChat) S.refChat.off();
     if (S.refCasaVisitada) S.refCasaVisitada.off();
@@ -885,13 +903,16 @@
     S.refPresentes = S.refChat = S.refCasaVisitada = S.refPiezaVisitada = null;
     clearInterval(latidoTimer); latidoTimer = null;
     clearInterval(burbujaTimer); burbujaTimer = null;
-    if (S.sala) api('salir', { sala: S.sala }, true).catch(function () {});
+    clearTimeout(avisoTimer);avisoTimer=null;
+    if (caminando){cancelAnimationFrame(caminando.id);caminando=null;}
+    S.caminoVisible=[];
+    if (S.sala && !sinSalir) api('salir', { sala: S.sala }, true).catch(function () {});
     S.sala = null; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
   }
 
-  function conectarSala(sala, silencioso) {
+  function conectarSala(sala, silencioso,confirmada) {
     if (!S.housesEnabled) return Promise.resolve(false);
-    return api('entrar', { sala: sala, look: S.look, col: Math.round(S.av.col), fila: Math.round(S.av.fila) })
+    return (confirmada?Promise.resolve({ok:true}):api('entrar', { sala: sala, look: S.look, col: Math.round(S.av.col), fila: Math.round(S.av.fila) }))
       .then(function (r) {
         if (!r || !r.ok) {
           avisar((r && r.error) || 'No se pudo entrar');
@@ -900,13 +921,14 @@
         S.sala = sala; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
         // El servidor devuelve cómo te ven los demás (con desempate si hace falta)
         if (r.yo) S.miNombre = r.yo;
-        S.refPresentes = S.db.ref(S.base + '/salas/' + sala + '/presentes');
+        var path=S.base+'/salas/'+sala+(S.habitacion==='estudio'?'/habitaciones/estudio':'');
+        S.refPresentes = S.db.ref(path+'/presentes');
         S.refPresentes.on('value', function (snap) {
           S.otros = snap.val() || {};
           seguirOtros();
           pintarCabecera(); dibujar();
         });
-        S.refChat = S.db.ref(S.base + '/salas/' + sala + '/chat').orderByChild('ts').limitToLast(40);
+        S.refChat = S.db.ref(path+'/chat').orderByChild('ts').limitToLast(40);
         var desde = Date.now() - 2000;
         S.refChat.on('child_added', function (snap) {
           var m = snap.val(); if (!m) return;
@@ -958,9 +980,10 @@
     var cab = S.host.querySelector('#espSalaCab');
     if (!cab) return;
     var n = Object.keys(S.otros || {}).length;
-    var titulo = S.visitando ? 'Casa de ' + esc(nombreCorto(S.duenoNombre)) : 'Mi casa';
+    var titulo = (S.visitando ? 'Casa de ' + esc(nombreCorto(S.duenoNombre)) : 'Mi casa')+' · '+(S.habitacion==='estudio'?'Estudio':'Principal');
     cab.innerHTML = '<span class="esp-sala-tit">' + titulo + '</span>' +
       '<span class="esp-sala-n">' + n + ' ' + (n === 1 ? 'persona' : 'personas') + '</span>' +
+      '<button class="esp-btn-chico esp-puerta" id="espPuerta"'+(!S.housesEnabled||S.cambiando?' disabled':'')+'>🚪 '+(S.habitacion==='estudio'?'Ir a principal':'Ir al estudio')+'</button>' +
       (S.visitando
         ? '<button class="esp-btn-chico" id="espRegalar">🎁 Regalar</button>' +
           '<button class="esp-btn-chico esp-btn-junto" id="espVolver">Volver a mi casa</button>'
@@ -969,7 +992,61 @@
     if (bv) bv.addEventListener('click', abrirVisitas);
     if (bb) bb.addEventListener('click', function () { irACasa(S.uid); });
     if (br) br.addEventListener('click', abrirRegalo);
+    cab.querySelector('#espPuerta').addEventListener('click',irPorPuerta);
   }
+
+  function activarHabitacion(h,room,llegada){
+    S.habitacion=h;S.casa=room.casa;S.pieza=room.pieza;
+    if(!S.visitando){S.miCasa=S.casa;S.miPieza=S.pieza;S.miAv=room.personajeEn;S.misHabitaciones[h]=room;}
+    aplicarTamano();S.av=llegada?puertaActual()||entrada():room.personajeEn;
+    if(!S.av||!haySuelo(S.av.col,S.av.fila))S.av=entrada();
+    S.av={col:S.av.col,fila:S.av.fila};S.pan={x:0,y:0};S.zoomFactor=1;S.panMode=false;
+    S.sel=-1;S.elegido=null;S.hover=null;S.destino=null;S.caminoVisible=[];S.decorando=false;
+    S.host.querySelector('#espTerreno').hidden=S.visitando;
+    S.host.querySelector('#espPaleta').hidden=true;
+    S.host.querySelector('#espMueblesBloque').hidden=S.visitando;
+    S.pieza.forEach(function(m){DIRS.forEach(function(d){cargar_(m.id+'_'+d);});});
+    modoDecorar(false);actualizarVista();pintarCabecera();pintarMuebles();botones();dibujar();
+  }
+  function observarHabitacion(uid){
+    if(!S.visitando)return;
+    var h=S.habitacion,path=S.base+'/avatar/'+uid+(h==='estudio'?'/habitaciones/estudio':'');
+    S.refCasaVisitada=S.db.ref(path+'/casa');S.refPiezaVisitada=S.db.ref(path+'/pieza');
+    S.refCasaVisitada.on('value',function(snap){if(S.sala!==uid||S.habitacion!==h)return;S.casa=snap.val()||{tamano:'5x5',piso:'claro',muro:'blanco'};aplicarTamano();if(!haySuelo(Math.round(S.av.col),Math.round(S.av.fila))){if(caminando){cancelAnimationFrame(caminando.id);caminando=null;}S.av=entrada();S.destino=null;}dibujar();});
+    S.refPiezaVisitada.on('value',function(snap){if(S.sala!==uid||S.habitacion!==h)return;S.pieza=Array.isArray(snap.val())?snap.val():[];S.pieza.forEach(function(m){DIRS.forEach(function(d){cargar_(m.id+'_'+d);});});dibujar();});
+  }
+  function irPorPuerta(){
+    if(!S.housesEnabled||!S.sala||S.cambiando)return;
+    var puerta=puertaActual();if(!puerta){avisar('Deja una casilla libre en el borde para la puerta');return;}
+    modoDecorar(false);
+    caminar(puerta,function(){
+      var sala=S.sala,h=S.habitacion;S.cambiando=true;pintarCabecera();
+      esperarGuardado().then(function(){return api('latido',{sala:sala,habitacion:h,col:puerta.col,fila:puerta.fila});})
+        .then(function(r){if(!r||!r.ok)throw new Error('No se pudo confirmar tu posición');return api('pasar-puerta',{sala:sala,habitacion:h});})
+        .then(function(r){if(!r||!r.ok)throw new Error(r&&r.error||'No se pudo abrir la puerta');desconectarSala(true);activarHabitacion(r.habitacion,r,false);return conectarSala(sala,true,true);})
+        .then(function(ok){if(ok){observarHabitacion(sala);avisar('Llegaste '+(S.habitacion==='estudio'?'al estudio':'a la sala principal'));}})
+        .catch(function(error){
+          // Si se perdió la respuesta después de cruzar, recuperar la sala
+          // confirmada en servidor; nunca reingresar a ciegas en la anterior.
+          return api('habitaciones',{sala:sala}).then(function(data){
+            if(data.ok&&data.presente&&data.presente!==h){desconectarSala(true);activarHabitacion(data.presente,data.habitaciones[data.presente],true);return conectarSala(sala,true,true).then(function(){observarHabitacion(sala);avisar('Entrada recuperada');});}
+            avisar(error.message||'No se pudo pasar: sigues en esta habitación');
+          }).catch(function(){avisar('Sin conexión. Reintenta la puerta cuando vuelva.');});
+        })
+        .finally(function(){S.cambiando=false;pintarCabecera();});
+    });
+  }
+
+  function modoDecorar(on){
+    S.decorando=!!on&&!S.visitando&&S.housesEnabled;
+    if(S.decorando&&caminando){caminando.detener=true;caminando.siguiente=null;}
+    if(!S.decorando){S.sel=-1;S.elegido=null;S.hover=null;}
+    S.host.querySelector('.esp-acciones').hidden=!S.decorando;
+    S.host.querySelector('#espCaminar').setAttribute('aria-pressed',String(!S.decorando));
+    var b=S.host.querySelector('#espDecorar');b.disabled=S.visitando||!S.housesEnabled;b.setAttribute('aria-pressed',String(S.decorando));
+    botones();dibujar();
+  }
+  function colocados(id){return Object.keys(S.misHabitaciones).reduce(function(n,h){return n+S.misHabitaciones[h].pieza.filter(function(p){return p.id===id;}).length;},0);}
 
   // ---------------- regalos ----------------
   // Un mueble que yo tengo y el dueño de la casa no. Lo escribe el servidor en
@@ -1021,7 +1098,8 @@
           api('regalar', { para: para, mueble: m.id }).then(function (res) {
             if (res && res.ok) {
               delete S.regalos[m.id];
-              S.miPieza = (S.miPieza || []).filter(function (pieza) { return pieza.id !== m.id; });
+              Object.keys(S.misHabitaciones).forEach(function(h){S.misHabitaciones[h].pieza=S.misHabitaciones[h].pieza.filter(function(p){return p.id!==m.id;});});
+              S.miPieza=S.misHabitaciones[S.habitacion].pieza;
               if (!S.visitando) S.pieza = S.miPieza;
               pintarMuebles(); botones(); dibujar();
               sincronizarInventario();
@@ -1122,58 +1200,22 @@
   // que trae el RUT.
   function irACasa(uid, nombreDueno) {
     if (!S.housesEnabled) { avisar('Las casas están deshabilitadas'); return; }
-    if (uid === S.sala) return;
+    if (uid === S.sala || S.cargandoCasa || S.cambiando) return;
+    S.cargandoCasa=true;
     var esMia = uid === S.uid;
-    var cargar = esMia
-      ? Promise.resolve({ pieza: S.miPieza, nombre: S.miNombre, casa: S.miCasa })
-      : S.db.ref(S.base + '/avatar/' + uid).once('value')
-          .then(function (snap) { var av = snap.val() || {}; return { pieza: av.pieza, nombre: nombreDueno || 'un compañero', casa: av.casa }; });
-    cargar.then(function (d) {
+    return esperarGuardado().then(function(){return api('habitaciones',{sala:uid});}).then(function (d) {
+      if(!d||!d.ok)throw new Error(d&&d.error||'No se pudo cargar la casa');
       desconectarSala();
       S.visitando = !esMia;
-      S.duenoNombre = d.nombre || '';
-      S.casa = (d.casa && typeof d.casa === 'object') ? d.casa : { piso: 'claro', muro: 'blanco' };
-      aplicarTamano();
-      S.pan = { x: 0, y: 0 }; S.zoomFactor = 1; S.panMode = false;
-      actualizarVista();
-      S.host.querySelector('#espTerreno').hidden = !esMia;
-      S.host.querySelector('#espPaleta').hidden = true;
-      S.pieza = esMia ? S.miPieza : (Array.isArray(d.pieza) ? d.pieza : []);
-      S.sel = -1; S.elegido = null; S.hover = null;
-      if (esMia) S.av = haySuelo(S.miAv.col, S.miAv.fila) ?
-        { col: S.miAv.col, fila: S.miAv.fila } : entrada();
-      else S.av = entrada();
-      S.host.querySelector('.esp-acciones').hidden = !esMia;
-      var mueblesBloque = S.host.querySelector('#espMueblesBloque');
-      if (mueblesBloque) mueblesBloque.hidden = !esMia;
-      S.pieza.forEach(function (m) { DIRS.forEach(function (d2) { cargar_(m.id + '_' + d2); }); });
-      botones(); pintarMuebles(); dibujar();
+      S.duenoNombre = nombreDueno || '';
+      if(esMia)S.misHabitaciones=d.habitaciones;
+      activarHabitacion(d.actual,d.habitaciones[d.actual],!esMia);
       return conectarSala(uid);
     }).then(function (ok) {
-      if (ok === false && !esMia) { irACasa(S.uid); return; }   // llena o caída: de vuelta a la mía
-      if (!ok || esMia || S.sala !== uid) return;
-      // La persona que nos recibe puede redecorar mientras estamos de visita.
-      // Solo se observan casa y pieza; el perfil personal no se descarga.
-      S.refCasaVisitada = S.db.ref(S.base + '/avatar/' + uid + '/casa');
-      S.refCasaVisitada.on('value', function (snap) {
-        if (S.sala !== uid) return;
-        var casa = snap.val();
-        S.casa = casa && typeof casa === 'object' ? casa : { piso: 'claro', muro: 'blanco' };
-        aplicarTamano();
-        if (!haySuelo(Math.round(S.av.col), Math.round(S.av.fila))) {
-          if (caminando) { cancelAnimationFrame(caminando.id); caminando = null; }
-          S.av = entrada(); S.destino = null; avisarPosicion();
-        }
-        S.pan = { x: 0, y: 0 }; S.zoomFactor = 1; actualizarVista(); dibujar();
-      });
-      S.refPiezaVisitada = S.db.ref(S.base + '/avatar/' + uid + '/pieza');
-      S.refPiezaVisitada.on('value', function (snap) {
-        if (S.sala !== uid) return;
-        S.pieza = Array.isArray(snap.val()) ? snap.val() : [];
-        S.pieza.forEach(function (m) { DIRS.forEach(function (dir) { cargar_(m.id + '_' + dir); }); });
-        dibujar();
-      });
-    }).catch(function () { avisar('No se pudo entrar a esa casa'); });
+      if(ok)observarHabitacion(uid);
+      else if(!esMia){S.cargandoCasa=false;return irACasa(S.uid);}
+    }).catch(function (error) { avisar(error.message||'No se pudo entrar a esa casa'); })
+      .finally(function(){S.cargandoCasa=false;});
   }
   function cargar_(n) { cargar(n, dibujar); }
 
@@ -1202,6 +1244,7 @@
     '</div>' +
     '<div class="esp-panel oculto" data-panel="pieza">' +
       '<div class="esp-sala-cab" id="espSalaCab"></div>' +
+      '<div class="esp-modos" aria-label="Modo de la habitación"><button type="button" id="espCaminar" aria-pressed="true">Caminar</button><button type="button" id="espDecorar" aria-pressed="false">Decorar</button><button type="button" id="espDetener">Detener</button></div>' +
       '<div class="esp-escena"><canvas id="espLienzo" tabindex="0" aria-label="Tu casa. Flechas para moverte, Tab para elegir un mueble."></canvas>' +
         '<div class="esp-acciones">' +
           '<button id="espAnt" title="Mueble anterior (Mayús+Tab)">◀</button>' +
@@ -1237,7 +1280,7 @@
         '<div class="esp-gestos" aria-label="Gestos del personaje">' + global.AvatarLookSystem.GESTOS.map(function(g){
           return '<button type="button" data-gesto="'+g.id+'"><img loading="lazy" src="'+g.imagen+'" alt=""><span>'+esc(g.nombre)+'</span></button>';
         }).join('')+'</div></details>' +
-      '<div class="esp-ayuda">Flechas o WASD: caminar · Tab: elegir mueble · E o Usar: interactuar · R gira · Supr guarda · Esc suelta</div>' +
+      '<div class="esp-ayuda">Toca el suelo para caminar o una silla para sentarte. La puerta conecta las dos salas. En «Decorar», selecciona y mueve muebles.</div>' +
       '<div class="esp-chat">' +
         '<div class="esp-chat-lista" id="espChatLista"></div>' +
         '<form class="esp-chat-form" id="espChatForm" autocomplete="off">' +
@@ -1308,7 +1351,7 @@
     S.host.querySelector('#espCuenta').textContent =
       CATALOGO.filter(function(m){return !m.acabado && tengo(m);}).length + ' de ' + CATALOGO.filter(function(m){return !m.acabado;}).length;
     cont.innerHTML = lista.map(function (m) {
-      var n = S.miPieza.filter(function (p) { return p.id === m.id; }).length;
+      var n = colocados(m.id),otra=Number(m.xp||0)>0 && Object.keys(S.misHabitaciones).find(function(h){return h!==S.habitacion&&S.misHabitaciones[h].pieza.some(function(p){return p.id===m.id;});});
       var regalo = S.regalos[m.id];
       return '<div class="esp-item' + (tengo(m) ? '' : ' blo') + (S.elegido === m.id ? ' sel' : '') +
         '" data-id="' + m.id + '">' +
@@ -1316,7 +1359,7 @@
         '<div class="esp-nom">' + esc(m.nom) + '</div>' +
         (tengo(m) ? ((S.recompensas && S.recompensas[m.id]) ? '<div class="esp-req">✓ Tarea completada</div>' : '') : '<div class="esp-req">🔒 ' + esc(requisitoDe(m)) + '</div>') +
         (regalo ? '<span class="esp-regalo" title="Regalo de ' + esc(regalo.de || 'un compañero') + '">🎁</span>' : '') +
-        (n ? '<span class="esp-cont">' + n + '</span>' : '') + '</div>';
+        (n ? '<span class="esp-cont">' + n + '</span>' : '') + (otra?'<div class="esp-req">En '+(otra==='estudio'?'Estudio':'Principal')+'</div>':'')+'</div>';
     }).join('');
     cont.querySelectorAll('.esp-item').forEach(function (el) {
       el.addEventListener('click', function () {
@@ -1324,6 +1367,8 @@
         if (!tengo(m)) { avisar(requisitoDe(m)); return; }
         if (!S.housesEnabled) { avisar('La decoración está deshabilitada por ahora'); return; }
         if (S.visitando) { avisar('Los muebles se ponen en tu casa'); return; }
+        if(Number(m.xp||0)>0 && colocados(m.id) && !S.pieza.some(function(p){return p.id===m.id;})){avisar('Guárdalo primero en la otra habitación para moverlo aquí');return;}
+        modoDecorar(true);
         DIRS.forEach(function (d) { cargar_(m.id + '_' + d); });
         S.elegido = (S.elegido === m.id) ? null : m.id;
         S.sel = -1; botones(); pintarMuebles();
@@ -1350,6 +1395,7 @@
                      w:[-1,-1], s:[1,1], a:[-1,1], d:[1,-1] };
   function elegirMueble(delta) {
     if (S.visitando) return;
+    modoDecorar(true);
     var n = S.pieza.length; if (!n) return;
     S.elegido = null;
     S.sel = S.sel < 0 ? (delta > 0 ? 0 : n - 1) : (S.sel + delta + n) % n;
@@ -1395,9 +1441,10 @@
     dibujar(); guardar('pieza', S.pieza);
   }
   function tecla(k, ev) {
-    if (!S.housesEnabled) return;
+    if (!S.housesEnabled || S.cambiando) return;
     if (k === 'Tab') { if (ev) ev.preventDefault(); elegirMueble(ev && ev.shiftKey ? -1 : 1); return; }
-    if (k === 'Escape') { soltar(); return; }
+    if (k === 'Escape') { if(caminando){caminando.detener=true;caminando.siguiente=null;}modoDecorar(false);return; }
+    if ((k==='e'||k==='E')&&S.sel<0){if(ev)ev.preventDefault();irPorPuerta();return;}
     if ((k === 'e' || k === 'E') && S.sel >= 0) { if (ev) ev.preventDefault(); usarSeleccion(); return; }
     if ((k === 'r' || k === 'R') && S.sel >= 0) { S.host.querySelector('#espRotar').click(); return; }
     if ((k === 'Delete' || k === 'Backspace') && S.sel >= 0) { if (ev) ev.preventDefault(); S.host.querySelector('#espQuitar').click(); return; }
@@ -1500,7 +1547,7 @@
       var changed = enabled !== S.housesEnabled;
       S.housesEnabled = enabled;
       aplicarDisponibilidad();
-      if (enabled && !S.sala) { conectarSala(S.uid, true); escucharRegalos(); }
+      if (enabled && !S.sala) { irACasa(S.uid); escucharRegalos(); }
       if (changed) anunciar(enabled ? '🔓 Casas y decoración habilitadas.' : '🔒 Casas y decoración deshabilitadas.');
     }).catch(function () { S.housesEnabled = false; aplicarDisponibilidad(); });
   }
@@ -1518,9 +1565,8 @@
     pintarRopero(); pintarFigura(); pintarPlacas();
     S.inventoryReady = true;
     if (!S.visitando) {
-      S.miPieza = (Array.isArray(S.miPieza) ? S.miPieza : []).filter(function (pieza) {
-        return !!POR_ID[pieza.id] && tengo(POR_ID[pieza.id]);
-      });
+      Object.keys(S.misHabitaciones).forEach(function(h){S.misHabitaciones[h].pieza=S.misHabitaciones[h].pieza.filter(function(p){return !!POR_ID[p.id]&&tengo(POR_ID[p.id]);});});
+      S.miPieza=S.misHabitaciones[S.habitacion].pieza;
       S.pieza = S.miPieza;
     }
     pintarMuebles(); botones(); dibujar();
@@ -1558,7 +1604,10 @@
   function muebleEn(x, y) {
     for (var i = cajas.length - 1; i >= 0; i--) {
       var c = cajas[i];
-      if (x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) return c.idx;
+      if (x < c.x || x >= c.x+c.w || y < c.y || y >= c.y+c.h)continue;
+      var im=imgs[c.imagen];
+      if(im&&!im.mascara){var cv=document.createElement('canvas');cv.width=c.w;cv.height=c.h;var pen=cv.getContext('2d',{willReadFrequently:true});pen.drawImage(im,0,0);im.mascara=pen.getImageData(0,0,c.w,c.h).data;}
+      if(!im||!im.mascara||im.mascara[(Math.floor(y-c.y)*c.w+Math.floor(x-c.x))*4+3]>24)return c.idx;
     }
     return -1;
   }
@@ -1570,20 +1619,21 @@
         S.pan.y = S.panStart.y + (ev.clientY - S.panStart.py) / (S.zoom || 1);
         dibujar(); return;
       }
-      if (!S.elegido) return;
       var p = punto(ev), c = aCelda(p.x, p.y);
       S.hover = haySuelo(c.col, c.fila) ? c : null;
       dibujar();
     });
     S.cv.addEventListener('pointerdown', function (ev) {
-      if (!S.housesEnabled) { avisar('El uso de la casa está deshabilitado por ahora'); return; }
+      if (!S.housesEnabled || S.cambiando || S.cargandoCasa) { avisar('Espera a que la habitación esté lista'); return; }
       if (S.panMode) {
         S.panStart = { id: ev.pointerId, px: ev.clientX, py: ev.clientY, x: S.pan.x, y: S.pan.y };
         S.cv.setPointerCapture(ev.pointerId); return;
       }
       var p = punto(ev);
+      var door=S.cajaPuerta;
+      if(!S.decorando&&door&&p.x>=door.x&&p.x<=door.x+door.w&&p.y>=door.y&&p.y<=door.y+door.h){irPorPuerta();return;}
       // De visita solo se camina: la casa es de otro.
-      if (S.visitando) {
+      if (S.visitando || !S.decorando) {
         var visitado = muebleEn(p.x, p.y);
         var asientoVisita = visitado >= 0 ? S.pieza[visitado] : null;
         var cv = asientoVisita && esSentable(asientoVisita.id)
@@ -1598,7 +1648,7 @@
       }
 
       if (S.elegido && esDePared(S.elegido)) {
-        if (Number(ficha(S.elegido).xp || 0) > 0 && S.pieza.some(function (pieza) { return pieza.id === S.elegido; })) {
+        if (Number(ficha(S.elegido).xp || 0) > 0 && colocados(S.elegido)) {
           avisar('Solo tienes una unidad de ese mueble. Muévela en vez de duplicarla.'); return;
         }
         var r = ranuraEn(p.x, p.y);
@@ -1627,7 +1677,7 @@
         return;
       }
       if (S.elegido) {
-        if (Number(ficha(S.elegido).xp || 0) > 0 && S.pieza.some(function (pieza) { return pieza.id === S.elegido; })) {
+        if (Number(ficha(S.elegido).xp || 0) > 0 && colocados(S.elegido)) {
           avisar('Solo tienes una unidad de ese mueble. Muévela en vez de duplicarla.'); return;
         }
         var no = estorbo(S.elegido, c.col, c.fila, -1);
@@ -1708,6 +1758,8 @@
   }
 
   function montar(cfg) {
+    S.habitacion='principal';S.decorando=false;S.cambiando=false;S.cargandoCasa=false;
+    S.saveErrors={};
     S.host = cfg.host; S.db = cfg.db; S.auth = cfg.auth; S.base = cfg.base; S.uid = cfg.uid;
     S.curso = cfg.curso || ''; S.miNombre = nombreCorto(cfg.nombre || '');
     S.xp = cfg.xp || 0; S.alCambiarLook = cfg.alCambiarLook;
@@ -1734,6 +1786,7 @@
            ? { col: cfg.personajeEn.col, fila: cfg.personajeEn.fila } : { col: 2, fila: 3 };
     S.av = { col: S.miAv.col, fila: S.miAv.fila };
     S.miCasa = (cfg.casa && typeof cfg.casa === 'object') ? cfg.casa : { piso: 'claro', muro: 'blanco' };
+    S.misHabitaciones={principal:{casa:S.miCasa,pieza:S.miPieza,personajeEn:S.miAv},estudio:global.MapasCasa.habitacion({},'estudio')};
     S.casa = S.miCasa;
     aplicarTamano();
     S.pan = { x: 0, y: 0 }; S.zoomFactor = 1; S.panMode = false; S.panStart = null;
@@ -1744,9 +1797,12 @@
     S.visitando = false; S.sala = null; S.otros = {}; S.vistos = {}; S.placasDe = {}; S.destino = null; S.burbujas = {};
 
     S.host.innerHTML = plantilla();
-    if (posicionCorregida) guardar('personajeEn', S.miAv);
     S.cv = S.host.querySelector('#espLienzo');
     S.cx = S.cv.getContext('2d');
+    S.host.querySelector('#espCaminar').addEventListener('click',function(){modoDecorar(false);});
+    S.host.querySelector('#espDecorar').addEventListener('click',function(){modoDecorar(true);});
+    S.host.querySelector('#espDetener').addEventListener('click',function(){if(caminando){caminando.detener=true;caminando.siguiente=null;}});
+    S.cv.addEventListener('pointerleave',function(){S.hover=null;dibujar();});
     PISOS.forEach(function (p) { if (p.id !== 'claro') cargar('floorFull__' + p.id + '_SE', dibujar); });
 
     S.host.querySelectorAll('.esp-tabs button').forEach(function (b) {

@@ -36,7 +36,7 @@ const root=path.join(__dirname,'..');
   await page.locator('#espTerreno [data-t="tamano"]').click();await page.locator('#espPaleta [data-id="5x5"]').click();await page.locator('.esp-aviso').filter({hasText:'quedarían fuera'}).waitFor();assert.equal(avatar.studentA.casa.tamano,'9x9');await page.locator('#espCerrarPal').click();
   await saveHouse('muro','terraza');
   for(const width of [390,1200,3840]){await page.setViewportSize({width,height:1000});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.locator('.esp-escena').screenshot({path:path.join(root,'../scratch/terraza-casa-'+width+'.png')});}
-  for(let i=0;i<6;i++)await page.locator('#espSig').click();await page.locator('#espUsar').click();await page.waitForTimeout(3000);await page.locator('.esp-escena').screenshot({path:path.join(root,'../scratch/terraza-tumbona.png')});
+  await page.locator('#espDecorar').click();for(let i=0;i<6;i++)await page.locator('#espSig').click();await page.locator('#espUsar').click();await page.waitForTimeout(3000);await page.locator('.esp-escena').screenshot({path:path.join(root,'../scratch/terraza-tumbona.png')});
   for(let i=0;i<7;i++)await page.locator('#espSig').click();await page.locator('#espUsar').click();await page.waitForTimeout(3000);await page.locator('.esp-escena').screenshot({path:path.join(root,'../scratch/terraza-mecedora.png')});
   // Visita: mismas paredes/agua, sin controles de edición ajena.
   avatar.studentB.casa={...avatar.studentA.casa};avatar.studentB.pieza=avatar.studentA.pieza;

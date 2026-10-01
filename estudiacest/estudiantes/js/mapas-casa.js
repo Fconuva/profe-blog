@@ -52,5 +52,46 @@
     var h=huella(ficha,item.dir);
     return !item.pared && col>=item.col && col<item.col+h.cols && fila>=item.fila && fila<item.fila+h.filas;
   }
-  return { obtener: obtener, haySuelo: haySuelo, huella:huella, celdas:celdas, ocupa:ocupa };
+  var HABITACIONES = ['principal', 'estudio'];
+  function idHabitacion(id) { return HABITACIONES.indexOf(id || 'principal') >= 0 ? (id || 'principal') : null; }
+  function habitacion(av, id) {
+    av = av || {};
+    var h = id === 'estudio' ? (av.habitaciones && av.habitaciones.estudio || {}) : av;
+    return {casa:h.casa || {tamano:'5x5',piso:'claro',muro:'blanco'},pieza:Array.isArray(h.pieza)?h.pieza:[],personajeEn:h.personajeEn || {col:2,fila:3}};
+  }
+  function suelo(casa,c,f) {
+    var id=casa && casa.tamano || '5x5',m=obtener(id),n=id==='7x7'?7:5;
+    return m ? haySuelo(id,c,f) : Number.isInteger(c)&&Number.isInteger(f)&&c>=0&&f>=0&&c<n&&f<n;
+  }
+  // La puerta se apoya en una casilla libre de borde: no desplaza mobiliario heredado.
+  function puerta(casa,pieza,catalogo) {
+    var m=obtener(casa && casa.tamano),n=casa && casa.tamano==='7x7'?7:5;
+    var cols=m?m.cols:n,filas=m?m.filas:n,libre=function(c,f){return suelo(casa,c,f)&&!(pieza||[]).some(function(p){var ficha=catalogo[p.id]||{};return !ficha.plano&&!p.sobre&&!/^pet/.test(p.id)&&ocupa(ficha,p,c,f);});};
+    for(var f=0;f<filas;f++)for(var c=cols-1;c>=0;c--)if((f===0||c===0||f===filas-1||c===cols-1)&&libre(c,f))return {col:c,fila:f};
+    return null;
+  }
+  function direccion(a,b) {
+    var c=Math.sign(b.col-a.col),f=Math.sign(b.fila-a.fila);
+    return c&&f ? (c===f?(c>0?'S':'N'):(c>0?'E':'W')) : c?(c>0?'SE':'NW'):f>0?'SW':'NE';
+  }
+  // Dijkstra: diagonales cuestan sqrt(2) y nunca atraviesan esquinas ocupadas.
+  function ruta(desde,hasta,libre) {
+    var key=function(p){return p.col+','+p.fila;},inicio=key(desde),fin=key(hasta);
+    if(!libre(hasta.col,hasta.fila)&&inicio!==fin)return null;
+    var cola=[{p:desde,d:0}],dist={},prev={};dist[inicio]=0;
+    while(cola.length){
+      cola.sort(function(a,b){return a.d-b.d;});var nodo=cola.shift(),p=nodo.p,k=key(p);
+      if(nodo.d!==dist[k])continue;
+      if(k===fin){var camino=[];while(k){var par=k.split(',');camino.unshift({col:+par[0],fila:+par[1]});k=prev[k];}return camino;}
+      for(var dc=-1;dc<=1;dc++)for(var df=-1;df<=1;df++){
+        if(!dc&&!df)continue;var q={col:p.col+dc,fila:p.fila+df};
+        if(!libre(q.col,q.fila)||(dc&&df&&(!libre(p.col+dc,p.fila)||!libre(p.col,p.fila+df))))continue;
+        var kk=key(q),dd=nodo.d+(dc&&df?Math.SQRT2:1);
+        if(dist[kk]===undefined||dd<dist[kk]){dist[kk]=dd;prev[kk]=k;cola.push({p:q,d:dd});}
+      }
+    }
+    return null;
+  }
+  return { obtener: obtener, haySuelo: haySuelo, huella:huella, celdas:celdas, ocupa:ocupa,
+    HABITACIONES:HABITACIONES,idHabitacion:idHabitacion,habitacion:habitacion,suelo:suelo,puerta:puerta,ruta:ruta,direccion:direccion };
 });

@@ -72,7 +72,7 @@ if (!canonico) {
   }
 
   const pe = reglas.plataforma_estudiantes || {};
-  for (const campo of ['regalos', 'pieza', 'casa']) {
+  for (const campo of ['regalos', 'pieza', 'casa', 'habitaciones']) {
     if (!pe.avatar?.$uid?.$campo?.['.write']?.includes("$campo !== '" + campo + "'")) {
       fallas.push(`avatar/$uid/${campo}: debe guardarse mediante el servidor validado, no por escritura directa del estudiante.`);
     }

@@ -1383,8 +1383,8 @@ async function cargarChatCasas(loadState=true){
     const bloqueados = []; blSnap.forEach(c=>{ bloqueados.push(Object.assign({id:c.key}, c.val())); }); bloqueados.reverse();
     const salas = saSnap.val()||{}; const ahora = Date.now();
     const activas = Object.keys(salas).map(u=>{
-        const pres = (salas[u] && salas[u].presentes)||{};
-        const vivos = Object.keys(pres).filter(k=> ahora-Number(pres[k].ts||0) < 60000);
+        const pres = {...salas[u]?.presentes,...salas[u]?.habitaciones?.estudio?.presentes};
+        const vivos = Object.keys(pres).filter(k=> pres[k] && ahora-Number(pres[k].ts||0) < 60000);
         return { dueno:u, n:vivos.length, quienes:vivos.map(k=>pres[k].nombre||k) };
     }).filter(s=>s.n>0).sort((a,b)=>b.n-a.n);
 
@@ -1396,7 +1396,7 @@ async function cargarChatCasas(loadState=true){
 
     document.getElementById('chatAlertasBody').innerHTML = alertas.length ? alertas.map(a=>
         `<tr style="${a.atendida?'opacity:.55':''}"><td>${fecha(a.ts)}</td><td>${escapa(a.nombre)}</td><td>${escapa(a.curso)}</td>`+
-        `<td style="max-width:420px;white-space:normal">${escapa(a.texto)}</td><td>${escapa(nombres[a.sala]||a.sala)}</td>`+
+        `<td style="max-width:420px;white-space:normal">${escapa(a.texto)}</td><td>${escapa(nombres[a.sala]||a.sala)}${a.habitacion==='estudio'?' · Estudio':''}</td>`+
         `<td>${a.atendida?'✓ vista':`<button class="btn btn-primary" style="padding:4px 10px;font-size:12px" onclick="atenderAlerta('${a.id}',this)">Marcar vista</button>`}</td></tr>`
     ).join('') : '<tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:18px">Sin alertas. Bien.</td></tr>';
 

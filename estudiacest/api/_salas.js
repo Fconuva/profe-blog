@@ -203,6 +203,7 @@ function validarPieza(raw, casa, regalos, desbloqueados) {
 
 async function guardarCasa(req,res,db,yo){
     if(yo.esAdmin)return res.status(403).json({error:'Solo estudiantes.'});
+    const h=idHabitacion(req),ruta= rutaAvatarHabitacion(h);
     const raw=req.body.casa;
     if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({error:'Habitación no válida.'});
     if(['piso','muro','tamano'].some(k=>raw[k]!==undefined&&(typeof raw[k]!=='string'||raw[k].length>40)))return res.status(400).json({error:'Habitación no válida.'});
@@ -213,34 +214,38 @@ async function guardarCasa(req,res,db,yo){
     const inventario=await inventarioPorTareas(db,yo),ref=db.ref(`${BASE}/avatar/${yo.uid}`);
     let error='No puedes usar un acabado no recibido o dejar muebles fuera.';
     const result=await ref.transaction(value=>{
-        const av=value||{},xp=EXPERIENCIA_DOCENTE.estado(av).xpTotal;
+        const av=value||{},room=MAPAS_CASA.habitacion(av,h),xp=EXPERIENCIA_DOCENTE.estado(av).xpTotal;
         const posee=id=>!!av.regalos?.[id]||!!inventario.desbloqueados[id];
         if(!['5x5','7x7'].includes(casa.tamano)&&!MAPAS_CASA.obtener(casa.tamano))return;
         if(casa.piso==='pasto'?!posee('terraceGrass'):!(Object.hasOwn(pisos,casa.piso)&&xp>=pisos[casa.piso]))return;
         if(acabado?!posee(acabado.id):!(Object.hasOwn(muros,casa.muro)&&xp>=muros[casa.muro]))return;
-        if((av.pieza||[]).some(p=>!p.pared&&!MAPAS_CASA.celdas(CATALOGO_POR_ID.get(p.id),p).every(c=>muebleEnSuelo(casa,c.col,c.fila))))return;
-        error='';return {...av,casa:{...(av.casa||{}),piso:casa.piso,muro:casa.muro,tamano:casa.tamano}};
+        if(room.pieza.some(p=>!p.pared&&!MAPAS_CASA.celdas(CATALOGO_POR_ID.get(p.id),p).every(c=>muebleEnSuelo(casa,c.col,c.fila))))return;
+        error='';return conHabitacion(av,h,{...room,casa:{...room.casa,...casa}});
     },undefined,false);
     if(!result.committed)return res.status(409).json({error});
-    const saved=(await ref.once('value')).val()?.casa;
+    const saved=(await db.ref(`${BASE}/avatar/${yo.uid}${ruta}/casa`).once('value')).val();
     if(!saved||saved.piso!==casa.piso||saved.muro!==casa.muro||saved.tamano!==casa.tamano)return res.status(500).json({error:'No se pudo confirmar la habitación.'});
     return res.status(200).json({ok:true,casa:saved});
 }
 
 async function guardarPieza(req, res, db, yo) {
     if (yo.esAdmin) return res.status(403).json({ error:'Solo estudiantes.' });
+    const h=idHabitacion(req);
     const inventario = await inventarioPorTareas(db, yo);
     const ref = db.ref(`${BASE}/avatar/${yo.uid}`);
     let motivo = 'No puedes colocar un mueble que no tienes ni duplicar un premio.';
     const resultado = await ref.transaction(actual => {
         const avatar = actual && typeof actual === 'object' ? actual : {};
-        const pieza = validarPieza(req.body.pieza, avatar.casa, avatar.regalos, inventario.desbloqueados);
+        const room=MAPAS_CASA.habitacion(avatar,h);
+        const pieza = validarPieza(req.body.pieza, room.casa, avatar.regalos, inventario.desbloqueados);
         if (!pieza) return;
+        const otro=MAPAS_CASA.habitacion(avatar,h==='principal'?'estudio':'principal').pieza;
+        if(pieza.some(p=>Number(CATALOGO_POR_ID.get(p.id)?.xp||0)>0&&otro.some(o=>o.id===p.id)))return;
         motivo = '';
-        return { ...avatar, pieza };
+        return conHabitacion(avatar,h,{...room,pieza});
     }, undefined, false);
     if (!resultado.committed) return res.status(409).json({ ok:false, error:motivo });
-    const releido = (await db.ref(`${BASE}/avatar/${yo.uid}/pieza`).once('value')).val();
+    const releido = (await db.ref(`${BASE}/avatar/${yo.uid}${rutaAvatarHabitacion(h)}/pieza`).once('value')).val();
     if (!Array.isArray(releido) && !(releido === null && req.body.pieza.length === 0)) {
         return res.status(500).json({ error:'No se pudo confirmar la habitación.' });
     }
@@ -517,8 +522,36 @@ async function nombreDe(db, yo) {
 }
 
 const idSala = (v) => (/^[A-Za-z0-9_-]{6,64}$/.test(String(v || '')) ? String(v) : null);
-async function posicionEnCasa(db, sala, col, fila) {
-    const casa = (await db.ref(`${BASE}/avatar/${sala}/casa`).once('value')).val() || {};
+function idHabitacion(req) {
+    const id=MAPAS_CASA.idHabitacion(req.body.habitacion);
+    if(!id){const e=new Error('Habitación no válida.');e.status=400;throw e;}return id;
+}
+function rutaAvatarHabitacion(h){return h==='principal'?'':'/habitaciones/estudio';}
+function rutaSala(sala,h){return `${BASE}/salas/${sala}${h==='principal'?'':'/habitaciones/estudio'}`;}
+function conHabitacion(av,h,room){return h==='principal'?{...av,...room}:{...av,habitaciones:{...av.habitaciones,estudio:room}};}
+async function accesoSala(db,sala,yo){
+    const p=(await db.ref(`${BASE}/estudiantes/${sala}`).once('value')).val();
+    return !!(p&&p.ocultarDeCasas!==true&&(yo.esAdmin||p.curso===yo.curso));
+}
+async function habitaciones(req,res,db,yo){
+    const sala=idSala(req.body.sala||yo.uid);
+    if(!sala||!await accesoSala(db,sala,yo))return res.status(404).json({error:'Casa no disponible.'});
+    const av=(await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{};
+    const rooms=Object.fromEntries(MAPAS_CASA.HABITACIONES.map(h=>[h,MAPAS_CASA.habitacion(av,h)]));
+    const presencias=await Promise.all(MAPAS_CASA.HABITACIONES.map(h=>db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`).once('value')));
+    const presente=MAPAS_CASA.HABITACIONES.find((h,i)=>{const p=presencias[i].val();return p&&Date.now()-Number(p.ts||0)<=VIDA_MS;})||null;
+    return res.status(200).json({ok:true,habitaciones:rooms,presente,actual:sala===yo.uid?MAPAS_CASA.idHabitacion(av.habitaciones?.actual)||'principal':'principal'});
+}
+async function guardarPosicion(req,res,db,yo){
+    if(yo.esAdmin)return res.status(403).json({error:'Solo estudiantes.'});
+    const h=idHabitacion(req),pos=await posicionEnCasa(db,yo.uid,req.body.col,req.body.fila,h);
+    const ref=db.ref(`${BASE}/avatar/${yo.uid}${rutaAvatarHabitacion(h)}/personajeEn`);
+    await ref.set(pos);
+    const saved=(await ref.once('value')).val();
+    return res.status(200).json({ok:!!saved&&saved.col===pos.col&&saved.fila===pos.fila,personajeEn:saved});
+}
+async function posicionEnCasa(db, sala, col, fila, h='principal') {
+    const casa = (await db.ref(`${BASE}/avatar/${sala}${rutaAvatarHabitacion(h)}/casa`).once('value')).val() || {};
     const tamano = String(casa.tamano || '5x5');
     const mapa = MAPAS_CASA.obtener(tamano);
     const max = mapa || (tamano === '7x7' ? { cols: 7, filas: 7 } : { cols: 5, filas: 5 });
@@ -546,15 +579,15 @@ async function existeSala(db, sala) {
 }
 
 // Limpia a los que ya no dan señales y devuelve a los que quedan.
-async function presentesVivos(db, sala) {
-    const ref = db.ref(`${BASE}/salas/${sala}/presentes`);
+async function presentesVivos(db, sala, h='principal') {
+    const ref = db.ref(`${rutaSala(sala,h)}/presentes`);
     const snap = await ref.once('value');
     const todos = snap.val() || {};
     const ahora = Date.now();
     const vivos = {};
     const borrar = {};
     Object.keys(todos).forEach((uid) => {
-        if (ahora - Number(todos[uid].ts || 0) > VIDA_MS) borrar[uid] = null;
+        if (!todos[uid] || ahora - Number(todos[uid].ts || 0) > VIDA_MS) borrar[uid] = null;
         else vivos[uid] = todos[uid];
     });
     if (Object.keys(borrar).length) await ref.update(borrar);
@@ -563,25 +596,53 @@ async function presentesVivos(db, sala) {
 
 async function entrar(req, res, db, yo) {
     const sala = idSala(req.body.sala);
+    const h=idHabitacion(req);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
-    if (!(await existeSala(db, sala))) return res.status(404).json({ error: 'Esa casa no existe' });
+    if (!(await accesoSala(db, sala,yo))) return res.status(404).json({ error: 'Esa casa no existe' });
+    // Las visitas acceden a la sala interior a través de la puerta, no por URL.
+    if(h!=='principal'&&sala!==yo.uid)return res.status(403).json({error:'Entra por la puerta de la casa.'});
 
-    const vivos = await presentesVivos(db, sala);
+    const vivos = {...await presentesVivos(db,sala,'principal'),...await presentesVivos(db,sala,'estudio')};
     const yaEstaba = !!vivos[yo.uid];
     if (!yaEstaba && Object.keys(vivos).length >= TOPE_SALA) {
         return res.status(200).json({ ok: false, lleno: true, presentes: Object.keys(vivos).length,
             error: `La casa está llena (${TOPE_SALA} personas). Intenta más tarde.` });
     }
     const visible = await nombreDe(db, yo);
-    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila);
-    await db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`).set({
+    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila,h);
+    await db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`).set({
         nombre: visible,
         curso: yo.curso,
         look: limpiaLook(req.body.look),
         ...posicion,
         ts: Date.now()
     });
+    await db.ref(`${rutaSala(sala,h==='principal'?'estudio':'principal')}/presentes/${yo.uid}`).remove();
     return res.status(200).json({ ok: true, yo: visible, presentes: Object.keys(vivos).length + (yaEstaba ? 0 : 1) });
+}
+
+async function pasarPuerta(req,res,db,yo){
+    const sala=idSala(req.body.sala),desde=idHabitacion(req),hasta=desde==='principal'?'estudio':'principal';
+    if(!sala||!await accesoSala(db,sala,yo))return res.status(404).json({error:'Casa no disponible.'});
+    const av=(await db.ref(`${BASE}/avatar/${sala}`).once('value')).val()||{};
+    const room=MAPAS_CASA.habitacion(av,desde),destino=MAPAS_CASA.habitacion(av,hasta);
+    const catalogo=Object.fromEntries(CATALOGO_POR_ID),puerta=MAPAS_CASA.puerta(room.casa,room.pieza,catalogo),entrada=MAPAS_CASA.puerta(destino.casa,destino.pieza,catalogo);
+    if(!puerta||!entrada)return res.status(409).json({error:'Deja una casilla libre en el borde para la puerta.'});
+    const ref=db.ref(`${BASE}/salas/${sala}`);
+    const result=await ref.transaction(actual=>{
+        const datos=actual||{},origen=desde==='principal'?datos:datos.habitaciones?.estudio||{};
+        const target=hasta==='principal'?datos:datos.habitaciones?.estudio||{};
+        const p=origen.presentes?.[yo.uid];
+        if(!p||Date.now()-Number(p.ts||0)>VIDA_MS||p.col!==puerta.col||p.fila!==puerta.fila)return;
+        const salida={...origen,presentes:{...origen.presentes}},llegada={...target,presentes:{...target.presentes,[yo.uid]:{...p,...entrada,ts:Date.now()}}};
+        delete salida.presentes[yo.uid];
+        return desde==='principal'?{...salida,habitaciones:{...datos.habitaciones,estudio:llegada}}:{...llegada,habitaciones:{...datos.habitaciones,estudio:salida}};
+    },undefined,false);
+    if(!result.committed)return res.status(409).json({error:'Camina hasta la puerta antes de pasar.'});
+    const confirmado=(await db.ref(`${rutaSala(sala,hasta)}/presentes/${yo.uid}`).once('value')).val();
+    if(!confirmado)return res.status(500).json({error:'No se pudo confirmar la entrada.'});
+    if(sala===yo.uid)await db.ref(`${BASE}/avatar/${yo.uid}/habitaciones/actual`).set(hasta);
+    return res.status(200).json({ok:true,habitacion:hasta,...destino,personajeEn:entrada});
 }
 
 // Casas que se pueden visitar: las del propio curso, con cuántos hay dentro.
@@ -604,9 +665,9 @@ async function lista(req, res, db, yo) {
 
     const ahora = Date.now();
     const cuentas = await Promise.all(uids.map((uid) =>
-        db.ref(`${BASE}/salas/${uid}/presentes`).once('value').then((s) => {
-            const p = s.val() || {};
-            return Object.keys(p).filter((k) => ahora - Number(p[k].ts || 0) <= VIDA_MS).length;
+        db.ref(`${BASE}/salas/${uid}`).once('value').then((s) => {
+            const sala = s.val() || {}, p={...sala.presentes,...sala.habitaciones?.estudio?.presentes};
+            return Object.keys(p).filter((k) => p[k] && ahora - Number(p[k].ts || 0) <= VIDA_MS).length;
         })));
 
     const casas = uids.map((uid, i) => ({ uid, nombre: visibles[uid] || 'Estudiante', n: cuentas[i] }))
@@ -617,12 +678,12 @@ async function lista(req, res, db, yo) {
 async function latido(req, res, db, yo) {
     const sala = idSala(req.body.sala);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
-    const ref = db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`);
+    const h=idHabitacion(req),ref = db.ref(`${rutaSala(sala,h)}/presentes/${yo.uid}`);
     const actual = (await ref.once('value')).val();
     if (!actual) return res.status(200).json({ ok: false, fuera: true });
-    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila);
+    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila,h);
     const cambios = { ts: Date.now(), ...posicion };
-    if (['SE','SW','NE','NW'].includes(req.body.dir)) cambios.dir=req.body.dir;
+    if (['SE','SW','NE','NW','N','S','E','W'].includes(req.body.dir)) cambios.dir=req.body.dir;
     const gesto = String(req.body.gesto || '');
     if (PERSONAJE.GESTOS.some(opcion=>opcion.id===gesto)) {
         cambios.gesto = gesto;
@@ -636,7 +697,7 @@ async function latido(req, res, db, yo) {
 async function salir(req, res, db, yo) {
     const sala = idSala(req.body.sala);
     if (!sala) return res.status(400).json({ error: 'Sala no válida' });
-    await db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`).remove();
+    await db.ref(`${rutaSala(sala,idHabitacion(req))}/presentes/${yo.uid}`).remove();
     return res.status(200).json({ ok: true });
 }
 
@@ -646,7 +707,7 @@ async function decir(req, res, db, yo) {
     const texto = String(req.body.texto || '').replace(/\s+/g, ' ').trim().slice(0, LARGO_MAX);
     if (!texto) return res.status(400).json({ error: 'Mensaje vacío' });
 
-    const refYo = db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`);
+    const path=rutaSala(sala,idHabitacion(req)),refYo = db.ref(`${path}/presentes/${yo.uid}`);
     const presente = (await refYo.once('value')).val();
     if (!presente) return res.status(403).json({ error: 'Tienes que estar en la casa para hablar.' });
 
@@ -659,21 +720,21 @@ async function decir(req, res, db, yo) {
     if (!veredicto.ok) {
         // No se publica, pero el profesor puede verlo: el intento también informa.
         await db.ref(`${BASE}/bloqueados_chat`).push({
-            sala, uid: yo.uid, nombre: yo.nombre, curso: yo.curso, texto, motivo: veredicto.motivo, ts: ahora
+            sala, habitacion:idHabitacion(req), uid: yo.uid, nombre: yo.nombre, curso: yo.curso, texto, motivo: veredicto.motivo, ts: ahora
         });
         await refYo.update({ ultimoMsg: ahora, ts: ahora });
         return res.status(200).json({ ok: false, bloqueado: true,
             error: 'Ese mensaje no se puede enviar. Aquí se habla sin garabatos.' });
     }
 
-    const chatRef = db.ref(`${BASE}/salas/${sala}/chat`);
+    const chatRef = db.ref(`${path}/chat`);
     const nuevo = chatRef.push();
     await nuevo.set({ uid: yo.uid, nombre: await nombreDe(db, yo), texto, ts: ahora, alerta: !!veredicto.alerta });
     await refYo.update({ ultimoMsg: ahora, ts: ahora });
 
     if (veredicto.alerta) {
         await db.ref(`${BASE}/alertas_chat`).push({
-            sala, uid: yo.uid, nombre: yo.nombre, curso: yo.curso, texto, ts: ahora, atendida: false, mensajeId: nuevo.key
+            sala, habitacion:idHabitacion(req), uid: yo.uid, nombre: yo.nombre, curso: yo.curso, texto, ts: ahora, atendida: false, mensajeId: nuevo.key
         });
     }
 
@@ -752,18 +813,21 @@ async function regalar(req, res, db, yo) {
         if (!cupo.committed) {
             return res.status(200).json({ ok:false, sinCupo:true, error:'Ya regalaste hoy. Mañana puedes regalar otro.' });
         }
-        const piezaDonante = (await db.ref(`${BASE}/avatar/${yo.uid}/pieza`).once('value')).val();
+        const avatarDonante = (await db.ref(`${BASE}/avatar/${yo.uid}`).once('value')).val()||{};
+        const piezaDonante = avatarDonante.pieza;
         const sinRegalo = Array.isArray(piezaDonante)
             ? piezaDonante.filter(pieza => pieza && pieza.id !== mueble) : piezaDonante;
         if ((await reservaRef.once('value')).val()?.id !== reservaId) {
             return res.status(409).json({ ok:false, error:'La reserva expiró. Intenta de nuevo.' });
         }
         // update() aplica juntas las tres rutas: nunca deja propiedad duplicada.
-        await db.ref(BASE).update({
+        const transferir={
             [`avatar/${para}/regalos/${mueble}`]: { de:await nombreDe(db, yo), ts:ahora, tipo:'estudiante' },
             [`avatar/${yo.uid}/regalos/${mueble}`]: null,
             [`avatar/${yo.uid}/pieza`]: sinRegalo || null
-        });
+        };
+        if(Array.isArray(avatarDonante.habitaciones?.estudio?.pieza))transferir[`avatar/${yo.uid}/habitaciones/estudio/pieza`]=avatarDonante.habitaciones.estudio.pieza.filter(p=>p&&p.id!==mueble);
+        await db.ref(BASE).update(transferir);
         const [recibido, conservado] = await Promise.all([
             destino.once('value'), db.ref(`${BASE}/avatar/${yo.uid}/regalos/${mueble}`).once('value')
         ]);
@@ -790,7 +854,7 @@ async function configurar(req, res, db, yo) {
     if (!enabled) {
         const salas = (await db.ref(`${BASE}/salas`).once('value')).val() || {};
         const update = {};
-        Object.keys(salas).forEach((uid) => { update[`${uid}/presentes`] = null; });
+        Object.keys(salas).forEach((uid) => { update[`${uid}/presentes`] = null;update[`${uid}/habitaciones/estudio/presentes`]=null; });
         if (Object.keys(update).length) await db.ref(`${BASE}/salas`).update(update);
     }
     return res.status(200).json({ ok: true, enabled, updatedAt: config.updatedAt });
@@ -828,6 +892,9 @@ async function manejar(req, res, accion, db, auth) {
             if (!state.enabled) return res.status(200).json({ ok: false, disabled: true, error: 'Las casas y la decoración están deshabilitadas por el profesor.' });
         }
         if (accion === 'entrar') return await entrar(req, res, db, yo);
+        if (accion === 'habitaciones') return await habitaciones(req,res,db,yo);
+        if (accion === 'pasar-puerta') return await pasarPuerta(req,res,db,yo);
+        if (accion === 'guardar-posicion') return await guardarPosicion(req,res,db,yo);
         if (accion === 'lista') return await lista(req, res, db, yo);
         if (accion === 'latido') return await latido(req, res, db, yo);
         if (accion === 'salir') return await salir(req, res, db, yo);

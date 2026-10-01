@@ -4,14 +4,8 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {chromium}=require('playwright');
 const {createHouseFixture}=require('./audit-paes-house-admin');
 const salas=require('../api/_salas');
-const root=path.join(__dirname,'..'),fixture=createHouseFixture(),{state,db}=fixture;
-const originalRef=db.ref;
-db.ref=route=>{
-  const ref=originalRef(route);
-  ref.set=value=>ref.transaction(()=>value);ref.update=value=>ref.transaction(old=>({...old,...value}));ref.remove=async()=>{const keys=route.split('/'),parent=keys.slice(0,-1).reduce((p,k)=>p?.[k],state.datos);if(parent)delete parent[keys.at(-1)];state.writes++;};
-  ref.orderByChild=field=>({equalTo:value=>({once:async()=>{const snap=await ref.once();return {val:()=>Object.fromEntries(Object.entries(snap.val()||{}).filter(([,p])=>p[field]===value))};}})});
-  return ref;
-};
+const {decorateFixture}=require('./audit-house-rooms');
+const root=path.join(__dirname,'..'),fixture=decorateFixture(createHouseFixture()),{state,db}=fixture;
 const academicBefore=JSON.stringify(state.datos.plataforma_paes);
 state.datos.plataforma_estudiantes.configuracion={mi_espacio:{enabled:true}};
 const raw=fs.readFileSync(path.join(root,'paes/admin/index.html'),'utf8');
@@ -19,8 +13,9 @@ const css=raw.match(/<style>([\s\S]*?)<\/style>/)[1];
 const section=raw.slice(raw.indexOf('<section class="tab-view" id="viewCasas">'),raw.indexOf('</main>',raw.indexOf('id="viewCasas"')));
 const adminPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main>${section.replace('class="tab-view"','class="tab-view active"')}</main><script src="/estudiantes/js/personaje-iso.js"></script><script src="/paes/admin/premios.js"></script><script src="/paes/admin/experiencia.js"></script><script src="/paes/admin/casas.js"></script><script>PaesCasasAdmin.mount({auth:{currentUser:{getIdToken:async()=> 'teacherA'}},getGuideData:()=>({}),refreshGuides:async()=>{},reviewGuide:()=>{}}).load();</script></body></html>`;
 const studentPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/estudiantes/css/mi-espacio.css"></head><body style="margin:0;background:#0f172a"><main id="host" style="max-width:1100px;margin:auto"></main>${['avatar-levels','catalogo-casa','personaje-iso','mapas-casa','mi-espacio'].map(n=>'<script src="/estudiantes/js/'+n+'.js"></script>').join('')}<script>
-const ref=key=>({once:async()=>{const v=await(await fetch('/qa-state?path='+encodeURIComponent(key))).json();return {val:()=>v,exists:()=>v!=null};},child:c=>ref(key+'/'+c),on:()=>{},off:()=>{},orderByChild:()=>ref(key),limitToLast:()=>ref(key),set:async value=>{const r=await fetch('/qa-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});if(!r.ok)throw Error('Guardado rechazado');}});
-(async()=>{const av=(await ref('plataforma_estudiantes/avatar/studentA').once()).val()||{};MiEspacio.montar({host:document.getElementById('host'),db:{ref},auth:{currentUser:{getIdToken:async()=> 'studentA'}},base:'plataforma_estudiantes',uid:'studentA',nombre:'Estudiante de prueba',curso:'3B-HC',xp:AvatarSystem.totalXP(av),look:av.look,regalos:av.regalos,logros:av.logros,placas:av.placas,pieza:av.pieza||[],casa:av.casa||{tamano:'9x9'}});})();</script></body></html>`;
+const listeners=new Map();
+const ref=key=>({once:async()=>{const v=await(await fetch('/qa-state?path='+encodeURIComponent(key))).json();return {val:()=>v,exists:()=>v!=null};},child:c=>ref(key+'/'+c),on:(event,callback)=>{let previous='',seen=new Set();const read=async()=>{const snap=await ref(key).once(),json=JSON.stringify(snap.val());if(event==='value'&&json!==previous){previous=json;callback(snap);}if(event==='child_added')Object.entries(snap.val()||{}).forEach(([id,value])=>{if(!seen.has(id)){seen.add(id);callback({key:id,val:()=>value});}});};const timer=setInterval(()=>read().catch(()=>{}),200);listeners.set(key,[...(listeners.get(key)||[]),timer]);read().catch(()=>{});},off:()=>{(listeners.get(key)||[]).forEach(clearInterval);listeners.delete(key);},orderByChild:()=>ref(key),limitToLast:()=>ref(key),set:async value=>{const r=await fetch('/qa-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});if(!r.ok)throw Error('Guardado rechazado');}});
+(async()=>{const av=(await ref('plataforma_estudiantes/avatar/studentA').once()).val()||{};MiEspacio.montar({host:document.getElementById('host'),db:{ref},auth:{currentUser:{getIdToken:async()=> 'studentA'}},base:'plataforma_estudiantes',uid:'studentA',nombre:'Estudiante de prueba',curso:'3B-HC',xp:AvatarSystem.totalXP(av),look:av.look,regalos:av.regalos,logros:av.logros,placas:av.placas,pieza:av.pieza||[],personajeEn:av.personajeEn,casa:av.casa||{tamano:'9x9'}});})();</script></body></html>`;
 async function start(){
   const server=http.createServer(async(req,res)=>{
     try{

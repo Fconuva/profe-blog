@@ -1,5 +1,31 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, NM3 Unidad 3 Clase 4: cómo se fabrica una noticia falsa
+
+- Francisco pidió para el viernes 2 de octubre (3°A, 3°B y 3°D TP) la clase de noticias falsas en formato **grupal**: un video de YouTube, dos textos en la página, preguntas en grupo y plenario de conclusiones.
+- Ruta nueva `/nm3/u3-clase4-noticias-falsas/`: portada y 9 pantallas, 90 min.
+  - **Inicio (15'):** reportaje «Fake News: Vinculan a famosos con falsas inversiones», de 24 Horas TVN (YouTube `fW-FiJFWvCE`, 3:35, inserción permitida según oEmbed y `playableInEmbed`), con enlace de respaldo. Después, activación con desinformación y error, y objetivo con cuatro roles de grupo.
+  - **Desarrollo (60'):** texto expositivo «Anatomía de una noticia falsa» (7 párrafos) y crónica «El poema que Neruda nunca escribió» (5 párrafos). Luego, modelado con la fórmula Respuesta + Evidencia + Explicación, 7 preguntas en grupo y un desafío extra con tres publicaciones inventadas.
+  - **Cierre (15'):** plenario con las respuestas esperadas plegadas, metacognición y ticket en el cuaderno.
+- No guarda ni entrega: el trabajo va al cuaderno (revisión del 23 de octubre), así que no aplica `CONTRATO_ENTREGA_CLASES.md`.
+- Datos verificados:
+  - estudio de Vosoughi, Roy y Aral (2018, *Science*);
+  - autoría de Martha Medeiros (2000) y aclaración de la Fundación Pablo Neruda;
+  - contenido del reportaje, leído en sus subtítulos.
+- Cada publicación inventada lleva el sello «Ejemplo inventado para la clase».
+- El caso de imagen fuera de contexto reutiliza la sala de lectura de la Clase 3 (letreros en inglés), comprimida a 1200 px: `img/biblioteca-fuera-de-contexto.jpg`.
+- `nm3/index.html`: la tarjeta 4 queda activa («Clase lista», viernes 2 de octubre). El manifiesto suma una entrada crítica.
+- Validación:
+  - navegador real a 390, 1440 y 3840 px: 10 pantallas, 0 errores de consola, 0 recursos fallidos, sin desborde, y pestañas del desafío funcionando;
+  - `npm run build` OK, con 460 recursos críticos;
+  - `auditar_lenguaje_chile.py`: 0 regionalismos. «Evidencia» se mantiene porque la clase la define y la modela.
+- Commits `16113fc4` y `c87165ca`.
+- Deploy aplazado. El guard bloqueó el primer intento porque `3cfca7ea` (muebles de gimnasio, Navidad y Halloween, de otro agente) está en `main` sin publicar, y ese agente prepara su release. Publicar antes habría sacado su trabajo, y su deploy posterior habría borrado esta clase. Además, a las 12:40 este PC perdió conexión con GitHub y Vercel. Se publica después de ese release con `npm run deploy:prod:safe` desde un worktree limpio en LF.
+- Material impreso fuera de este repositorio, en la carpeta de OneDrive `Lengua y Literatura 2026/NM3 - Lengua y Literatura/03 - Material de Clase/Unidad 3/Clase 4 - Noticias falsas/`: planificación, guía grupal, guía de acceso, tres guías adaptadas y pauta docente, en HTML y PDF.
+- Pendiente para Francisco: las tarjetas 5 a 8 de `/nm3/` todavía muestran fechas de septiembre ya pasadas, y el calendario de la unidad hasta el 23 de octubre se debe reordenar.
+
+---
+
 ## 2026-10-01, pestaña PAES con admin anterior
 
 - Ante la reiteración de que faltaban vistas previas y selección por curso/tarea, se compararon las dos pestañas abiertas de `/paes/admin/#casas`. Una tenía el catálogo y los controles publicados; la otra no tenía `housePreview`, `houseMode` ni imágenes del catálogo. La URL pública conservaba los recursos nuevos.

@@ -51,7 +51,7 @@
     body::after {
       content: '';
       position: absolute;
-      width: 500px;
+      width: min(500px, 80vw);
       height: 500px;
       border-radius: 50%;
       z-index: 0;
@@ -62,13 +62,13 @@
 
     body::before {
       top: -10%;
-      left: -5%;
+      left: 0;
       background: radial-gradient(circle, #4f46e5, transparent 70%);
     }
 
     body::after {
       bottom: -10%;
-      right: -5%;
+      right: 0;
       background: radial-gradient(circle, #7c3aed, transparent 70%);
     }
 
@@ -750,6 +750,33 @@
         width: 100%;
       }
     }
+    .house-controls { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-bottom:20px; }
+    #houseRefresh { border:1px solid var(--border-color); border-radius:6px; padding:9px 12px; background:#111827; color:var(--text-main); font:inherit; font-size:13px; cursor:pointer; }
+    #houseRefresh:disabled { opacity:.6; cursor:wait; }
+    .metrics-row[hidden] { display:none; }
+    .house-controls label { display:grid; gap:8px; font-size:13px; color:var(--text-muted); }
+    .house-controls select, .house-controls input { width:100%; min-width:0; }
+    .house-note { color:var(--text-muted); font-size:13px; line-height:1.6; margin:12px 0; }
+    .house-deliveries { display:flex; flex-wrap:wrap; gap:8px; margin:12px 0 24px; }
+    .house-deliveries button { background:var(--success-glow); border:1px solid #166534; border-radius:6px; color:#a7f3d0; padding:8px 10px; cursor:pointer; }
+    .house-catalog { display:grid; grid-template-columns:repeat(auto-fill,minmax(145px,1fr)); gap:12px; margin:16px 0; }
+    .house-item { display:flex; flex-direction:column; align-items:center; justify-content:space-between; gap:8px; min-height:165px; padding:12px; border:1px solid var(--border-color); border-radius:8px; background:#111827; color:var(--text-main); cursor:pointer; font:inherit; font-size:12px; }
+    .house-item img { width:84px; height:84px; object-fit:contain; image-rendering:pixelated; }
+    .house-item[aria-pressed="true"] { border-color:#2dd4bf; box-shadow:0 0 0 2px #0f766e; }
+    .house-item.owned { border-color:#166534; background:#052e25; opacity:1; cursor:default; }
+    .house-item.owned strong { color:#6ee7b7; }
+    .house-confirm { display:flex; gap:16px; align-items:center; justify-content:space-between; flex-wrap:wrap; padding:16px; border:1px solid #0f766e; border-radius:8px; background:#042f2e; }
+    .house-confirm[hidden] { display:none; }
+    .house-confirm button { background:#0f766e; color:#fff; border:0; padding:12px 16px; border-radius:6px; font:inherit; font-weight:700; cursor:pointer; }
+    .house-confirm button:disabled { opacity:.6; cursor:wait; }
+    .house-status { min-height:22px; font-size:13px; line-height:1.6; margin:12px 0; }
+    .house-item:focus-visible, .house-deliveries button:focus-visible { outline:3px solid #5eead4; outline-offset:3px; }
+    @media(max-width:600px) {
+      .house-controls { grid-template-columns:1fr; }
+      body::before, body::after { width:80vw; }
+      body::before { left:0; }
+      body::after { right:0; }
+    }
   </style>
   
   <!-- Inyección de nóminas oficiales (152 alumnos) -->
@@ -806,6 +833,11 @@
       <li>
         <button class="nav-btn" data-tab="libro">
           <span>📒</span> Libro de Notas
+        </button>
+      </li>
+      <li>
+        <button class="nav-btn" data-tab="casas">
+          <span>🏠</span> Casas y muebles
         </button>
       </li>
     </ul>
@@ -1153,6 +1185,22 @@
       </div>
     </section>
 
+    <section class="tab-view" id="viewCasas">
+      <div class="card-panel">
+        <div class="card-header"><h3>Regalar un mueble</h3><button type="button" class="btn-primary" id="houseRefresh">Actualizar</button></div>
+        <p class="house-note">Revisa las guías entregadas y elige el premio de cada estudiante. Los muebles que ya tiene aparecen marcados y no se duplican.</p>
+        <div class="house-controls">
+          <label>Curso<select class="select-filter" id="houseCourse"><option value="">Todos los cursos HC</option><option value="3A-HC">3°A HC</option><option value="3B-HC">3°B HC</option><option value="4A-HC">4°A HC</option><option value="4B-HC">4°B HC</option></select></label>
+          <label>Estudiante<select class="select-filter" id="houseStudent"><option value="">Selecciona un estudiante…</option></select></label>
+        </div>
+        <p class="house-note" id="houseSummary">Selecciona un estudiante para ver sus entregas y muebles.</p>
+        <div class="house-deliveries" id="houseDeliveries" aria-label="Guías entregadas"></div>
+        <div class="house-controls"><label>Buscar mueble<input class="search-input" type="search" id="houseSearch" placeholder="PS5, parlante, sofá…"></label><label>Mostrar<select class="select-filter" id="houseOwnership"><option value="all">Todos los muebles</option><option value="available">Solo los que no tiene</option><option value="owned">Los que ya tiene</option></select></label></div>
+        <div class="house-confirm" id="houseConfirm" hidden><p id="houseChosen"></p><button type="button" id="houseGive">Confirmar regalo</button></div>
+        <p class="house-status" id="houseStatus" role="status" aria-live="polite"></p>
+        <div class="house-catalog" id="houseCatalog"></div>
+      </div>
+    </section>
   </main>
 
   <!-- ================= DETAIL VIEW MODAL ================= -->
@@ -1295,6 +1343,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+  <script src="/paes/admin/casas.js"></script>
 
   <script>
     // ============ FIREBASE INIT ============
@@ -1308,9 +1357,34 @@
       appId: "1:999002169815:web:51203237bc77c2e74deb92"
     };
 
-    firebase.initializeApp(FIREBASE_CONFIG);
-    const auth = firebase.auth();
-    const db = firebase.database();
+    const legacyApp = firebase.initializeApp(FIREBASE_CONFIG);
+    const adminApp = firebase.initializeApp(FIREBASE_CONFIG, 'estudiacest-admin');
+    const auth = adminApp.auth();
+    const db = adminApp.database();
+    const persistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    let legacyMigrationAttempted = false;
+
+    async function recoverAdminSession() {
+      if (legacyMigrationAttempted || auth.currentUser) return false;
+      legacyMigrationAttempted = true;
+      const legacyAuth = legacyApp.auth();
+      const legacyUser = await new Promise(resolve => {
+        let unsubscribe = () => {};
+        unsubscribe = legacyAuth.onAuthStateChanged(user => { unsubscribe(); resolve(user); }, () => resolve(null));
+      });
+      if (!legacyUser) return false;
+      const response = await fetch('/api/estudiantes?action=admin-session-token', {
+        method:'POST', headers:{'Content-Type':'application/json', 'Authorization':'Bearer ' + await legacyUser.getIdToken()}, body:'{}'
+      });
+      if ([401, 403].includes(response.status)) return false;
+      if (!response.ok) throw new Error('No se pudo recuperar la sesión docente.');
+      const data = await response.json();
+      if (!data.token) return false;
+      await persistenceReady;
+      await auth.signInWithCustomToken(data.token);
+      await legacyAuth.signOut();
+      return true;
+    }
 
     // Node constants
     const STUDENT_BASE = 'plataforma_estudiantes';
@@ -1609,6 +1683,8 @@
       const gateDesc = document.getElementById('gateDescription');
 
       if (!user) {
+        try { if (await recoverAdminSession()) return; }
+        catch (_) { gateTitle.textContent = 'No se pudo recuperar la sesión'; gateDesc.textContent = 'Revisa tu conexión y recarga esta página.'; return; }
         // Redirigir al login general si no hay sesión
         gateTitle.textContent = "Acceso Denegado";
         gateDesc.textContent = "No hay sesión activa. Redirigiendo al inicio de sesión...";
@@ -1640,6 +1716,7 @@
 
         // Load dashboard central data
         await fetchResultsConsolidated();
+        if (location.hash === '#casas') document.querySelector('[data-tab="casas"]').click();
 
       } catch (error) {
         console.error('[Admin Auth Error]', error);
@@ -1677,10 +1754,13 @@
           renderStudentsTable();
           renderBloqueoTable();
           renderLibroTable();
+          return true;
         }
+        throw new Error('No se pudieron recuperar los datos PAES.');
       } catch (error) {
         console.error('[Fetch DB Error]', error);
         alert("Error al cargar datos en tiempo real de la base de datos central.");
+        return false;
       }
     }
 
@@ -2616,6 +2696,18 @@
       }
     }
 
+    const housesAdmin = PaesCasasAdmin.mount({ auth, getGuideData: () => databaseData.guiaResp,
+      refreshGuides: async () => {
+        if (!await fetchResultsConsolidated()) throw new Error('No se pudieron actualizar las entregas PAES.');
+      },
+      reviewGuide: (rut, guide) => {
+        document.querySelector('[data-tab="guiasint"]').click();
+        document.getElementById('selectGuia').value = guide;
+        document.getElementById('selectGuia').dispatchEvent(new Event('change'));
+        openGuiaModal(rut);
+      }
+    });
+
     // ============ VIEW INTERACTION CONTROL ============
     document.querySelectorAll('.nav-btn').forEach(btn => {
       btn.addEventListener('click', function() {
@@ -2623,6 +2715,7 @@
         this.classList.add('active');
 
         const tab = this.getAttribute('data-tab');
+        document.querySelector('.metrics-row').hidden = tab === 'casas';
         
         document.querySelectorAll('.tab-view').forEach(view => view.classList.remove('active'));
         if (tab === 'ensayos') {
@@ -2653,6 +2746,12 @@
           document.getElementById('dashTitle').textContent = "Libro de Notas";
           document.getElementById('dashSubtitle').textContent = "Notas por guía del Taller PAES. Edita una celda y se guarda automáticamente.";
           renderLibroTable();
+        } else if (tab === 'casas') {
+          document.getElementById('viewCasas').classList.add('active');
+          document.getElementById('dashTitle').textContent = 'Casas y muebles PAES';
+          document.getElementById('dashSubtitle').textContent = 'Revisa las tareas y entrega personalmente los muebles como premio.';
+          history.replaceState(null, '', '#casas');
+          housesAdmin.load();
         }
       });
     });

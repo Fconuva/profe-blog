@@ -8,6 +8,28 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-10-01, administración de casas dentro de PAES
+
+- Francisco pidió entregar personalmente los muebles conforme revisa las tareas y diferenciar «Mi espacio» por color. Nueva pestaña «Casas y muebles» en `/paes/admin/#casas`: filtro de los cuatro cursos HC, estudiante por UID, entregas finales G1–G21 con botón para abrir sus respuestas, búsqueda y filtros de muebles, selección y confirmación de regalo. Los muebles ya obtenidos se marcan y no se pueden volver a seleccionar.
+- `paes/admin/casas.js` utiliza las mismas acciones autenticadas de inventario y regalo docente de SIMCE, sin abrir reglas Firebase ni alterar tareas, calificaciones o premios automáticos. Antes de comunicar éxito relee el inventario; bloquea los controles y el doble clic durante la entrega y descarta respuestas antiguas de otra selección. La lista nueva `admin-house-students` se valida en servidor, limita los cursos del docente, excluye perfiles ocultos y no incluye correos ni otros campos del perfil.
+- El admin PAES comparte la app administrativa persistente `estudiacest-admin` con el admin SIMCE. Recupera una sesión administrativa heredada únicamente mediante `admin-session-token`; no confunde ni cierra una sesión de estudiante durante una recuperación rechazada. «Mi espacio» cambia a verde petróleo con contraste blanco y foco visible, sin mover las fichas de guías.
+- Auditoría nueva de comportamiento incorporada al prebuild y exceptuada en `.vercelignore`: alcance docente, recuperación autenticada, exclusión de borradores, selección, rechazo, doble clic, relectura, persistencia y fallo de confirmación. Auditorías focales e integral aprobaron con 410 recursos críticos. Navegador real en servidor de funciones aislado con datos ficticios: revisión de G17, regalo, recarga marcada y fallo de confirmación; cero errores de consola, imágenes rotas o desbordes a 390, 1200 y 3840 px. No se entregaron muebles reales durante estas pruebas. Servidor de prueba detenido.
+- Publicación y comprobación autenticada de producción pendientes del cierre de este despliegue.
+
+---
+
+## 2026-10-01, corrección del ingreso entre PAES y Mi espacio
+
+- Se reprodujo el bloqueo real: una cuenta autenticada que abría Mi espacio en otra pestaña recibía «Primero ingresa a PAES» porque no tenía la selección en `sessionStorage`. Además, el portal reconocía solo el RUT y la casa redirigía a un segundo formulario en Lecturas.
+- Commit funcional `60dc04d0`: `paes/js/student-session.js` comparte la sesión Firebase persistente, valida perfil, nómina y curso, y reconstruye la selección desde la identidad autenticada. PAES pide RUT y contraseña en un único formulario para los cuatro cursos HC habilitados; las contraseñas propias siguen vigentes. Mi espacio vuelve solo al ingreso de PAES cuando no hay sesión y conserva el destino. Las tarjetas y accesos a guías permanecen.
+- Auditoría focal incorporada al prebuild y exceptuada en `.vercelignore`: recuperación sin selección previa, selección antigua de otra cuenta, ingreso con clave inicial o propia, rechazo de credenciales y perfil de curso cruzado, y cierre. `npm run build` aprobó con 409 recursos críticos.
+- Navegador real con una cuenta existente y funciones de producción desde la vista local: ingresar una vez, abrir la casa, volver, recargar, abrir una pestaña nueva, cerrar la sesión e ingresar desde el enlace directo a la casa. Sin errores de consola ni desbordes a 390 px, escritorio y 3840 px. No se respondieron tareas ni se modificaron notas o muebles. El servidor temporal de prueba se detuvo y retiró.
+- Primera publicación `dpl_FPMgaPUKPyCBwPE7JbHj6QR89NQk`, estado READY: portal, casa y sesión compartida respondieron 200 y coincidieron en SHA-256. La cuenta que antes quedaba detenida abrió la casa y volvió al portal sin repetir el ingreso. La prueba de navegación reveló además que algunas guías volvían a pedir RUT.
+- Ampliación `e59982db`: las guías 1–9, 18, 19, 20 y 21 recuperan la selección del portal; G20/G21 esperan la carga de sus lecturas. G14 oculta la identificación repetida y conserva «Comenzar miniensayo» para no iniciar el tiempo automáticamente. Los enlaces directos G1–G21 vuelven al ingreso único y recuperan su destino; «Cerrar sesión» desde una guía cierra también Firebase en PAES. Navegador real y funciones de producción: G1, G18–G21, preparación de G14 sin iniciar tiempo, entrada directa y cierre completo aprobados; las pruebas locales bloquearon las escrituras de respuestas. Auditoría focal y build integral aprobados.
+- Segunda publicación `dpl_9Rv1NEn3pi8wXBCvTF2B4PRXzgYj`, estado READY: los nueve recursos modificados respondieron 200 y coincidieron en SHA-256. Navegador en la G1 publicada confirmó la guía abierta y el formulario de ingreso oculto tras recuperar la sesión.
+
+---
+
 ## 2026-10-01, publicación PAES Mi espacio, reenvíos y reconciliación de notas
 
 - Francisco autorizó publicar el lote local completo y la clave inicial de seis dígitos del RUT para las cuentas que no habían cambiado su contraseña. Se publicó el commit `3e84c1a5` en `main` y se desplegó Vercel producción `dpl_GJLE9f1TJA7Eoc7orbTSi2vv2s2F`; la compilación remota aprobó los 408 recursos críticos. Sitio, API y archivos de muestra (Mi espacio, portal, mapa, parlante y estatua) respondieron 200 y coincidieron en SHA-256 con la fuente. También se desplegaron las reglas RTDB y su relectura coincidió con `firebase-rules.json`.

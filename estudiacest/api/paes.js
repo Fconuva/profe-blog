@@ -888,6 +888,25 @@ async function handleGetStudentStatus(req, res) {
 
 // ============ ADMIN ACTIONS ============
 
+async function handleAdminHouseStudents(req, res, decoded) {
+    res.setHeader('Cache-Control', 'private, no-store');
+    const [studentsSnap, docenteSnap] = await Promise.all([
+        db.ref(`${ADMIN_BASE}/estudiantes`).once('value'),
+        db.ref(`${ADMIN_BASE}/docentes/${decoded.uid}`).once('value')
+    ]);
+    const docente = docenteSnap.val();
+    const assigned = docente && (Array.isArray(docente.cursos) ? docente.cursos :
+        Object.keys(docente.cursos || {}).filter(course => docente.cursos[course] === true));
+    const courses = new Set(['3A-HC', '3B-HC', '4A-HC', '4B-HC']);
+    const estudiantes = Object.entries(studentsSnap.val() || {}).filter(([, student]) =>
+        student && student.ocultarDeCasas !== true && courses.has(student.curso) &&
+        (!docente || docente.superadmin === true || assigned.includes(student.curso))
+    ).map(([uid, student]) => ({
+        uid, nombre: String(student.nombre || 'Estudiante'), curso: student.curso, rut: cleanRut(student.rut)
+    }));
+    return res.status(200).json({ success: true, estudiantes });
+}
+
 async function handleAdminGetResults(req, res) {
     const [resultadosSnap, guiasSnap, guiaRespSnap, nominaExtraSnap] = await Promise.all([
         db.ref(`${BASE}/resultados`).once('value'),
@@ -1122,6 +1141,7 @@ module.exports = async (req, res) => {
         }
 
         switch (action) {
+            case 'admin-house-students': return await handleAdminHouseStudents(req, res, decoded);
             case 'admin-get-results': return await handleAdminGetResults(req, res);
             case 'admin-reset-result': return await handleAdminResetResult(req, res);
             case 'admin-grade-guia': return await handleAdminGradeGuia(req, res, decoded);

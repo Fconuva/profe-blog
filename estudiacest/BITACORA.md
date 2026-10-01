@@ -8,6 +8,16 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-10-01, calificación PAES tras reapertura (datos de producción)
+
+- Se interpretaron como «últimas dos» las guías regulares G20 y G21; ambas quedaron sin calificar. G1–G9 no tenían entregas actuales pendientes; sus notas históricas y borradores se conservaron.
+- Se corrigieron 774 registros de entregas confirmadas de G10–G19 y 283 casillas del libro (272 altas y 11 cambios por reenvío). La segunda lectura encontró 26 entregas G14 vigentes sin campo de versión; se calificaron sin alterar las notas que ya constaban en el libro. La exclusión de G14 para 4°A HC se respetó.
+- Relectura independiente de Firebase: cero entregas confirmadas elegibles sin calificación ni casilla de libro en G10–G19; G20 y G21 siguen sin notas. Quedó una discrepancia preexistente entre calificación manual y libro, preservada para revisión docente, sin sobrescritura automática.
+- El calificador exige simulación con checksum, respaldos locales temporales y escritura condicional por registro; las pruebas sintéticas y `npm run build` pasaron. La portada pública PAES cargó sin errores de consola. No se abrió la publicación estudiantil de G18–G19 ni se desplegó código de la plataforma.
+- El lote local de Mi casa sigue excluido de commit, push y despliegue por instrucción vigente de Francisco.
+
+---
+
 ## 2026-09-30, sesión administrativa persistente y regalos manuales de muebles
 
 - La autenticación del panel docente quedó aislada de la sesión estudiantil

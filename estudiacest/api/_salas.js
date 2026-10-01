@@ -27,6 +27,7 @@ const { visiblesDeCurso } = require('./_nombre-visible.js');
 const CATALOGO_CASA = require('../estudiantes/js/catalogo-casa.js');
 const MAPAS_CASA = require('../estudiantes/js/mapas-casa.js');
 const PREMIOS_PAES = require('./_premios-paes.js');
+const EXPERIENCIA_DOCENTE = require('./_experiencia-docente.js');
 const PREMIOS_AVATAR = require('../estudiantes/js/personaje-iso.js').catalogoPremios();
 const PREMIOS_AVATAR_POR_ID = new Map(PREMIOS_AVATAR.map(p=>[p.id,p]));
 
@@ -129,16 +130,17 @@ async function inventarioPorTareas(db, yo) {
 async function inventarioConRegalos(db, yo) {
     const [porTareas, regalosSnap] = await Promise.all([
         inventarioPorTareas(db, yo),
-        db.ref(`${BASE}/avatar/${yo.uid}/regalos`).once('value')
+        db.ref(`${BASE}/avatar/${yo.uid}`).once('value')
     ]);
-    const regalosCrudos = regalosSnap.val() || {};
+    const avatar = regalosSnap.val() || {};
+    const regalosCrudos = avatar.regalos || {};
     const regalos = {};
     Object.keys(regalosCrudos).forEach(id => {
         if (CATALOGO_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id] === 'object') regalos[id] = regalosCrudos[id];
     });
     const requisitos = {...PREMIOS_PAES.requisitos(yo.curso), ...porTareas.requisitos};
     Object.keys(regalosCrudos).forEach(id=>{ if(PREMIOS_AVATAR_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id]==='object') regalos[id]=regalosCrudos[id]; });
-    return { ...porTareas, requisitos, regalos };
+    return { ...porTareas, requisitos, regalos, xpTotal:EXPERIENCIA_DOCENTE.estado(avatar).xpTotal };
 }
 
 async function premiosAvatarDocente(req,res,db,yo){
@@ -170,23 +172,57 @@ function validarPieza(raw, casa, regalos, desbloqueados) {
     const limpia = [];
     for (const p of raw) {
         const ficha = p && CATALOGO_POR_ID.get(String(p.id || ''));
-        if (!ficha) return null;
+        if (!ficha || ficha.acabado) return null;
         const n = (veces.get(ficha.id) || 0) + 1;
         veces.set(ficha.id, n);
         if (Number(ficha.xp || 0) > 0 &&
             (!(regalos && regalos[ficha.id]) && !(desbloqueados && desbloqueados[ficha.id]) || n > 1)) return null;
         if (p.pared) {
+            if(ficha.fam==='terraza')return null;
             if (!['izq', 'der'].includes(p.pared) || !Number.isInteger(p.pos) || p.pos < 0 || p.pos > 6 ||
                 !Number.isInteger(p.nivel) || p.nivel < 0 || p.nivel > 2) return null;
             limpia.push({ id:ficha.id, pared:p.pared, pos:p.pos, nivel:p.nivel });
         } else {
-            if (!muebleEnSuelo(casa, p.col, p.fila)) return null;
+            if(ficha.huella && p.sobre)return null;
+            if (!muebleEnSuelo(casa, p.col, p.fila) || !MAPAS_CASA.celdas(ficha,p).every(c=>muebleEnSuelo(casa,c.col,c.fila))) return null;
             limpia.push({ id:ficha.id, col:p.col, fila:p.fila,
                 dir:['SE','SW','NE','NW'].includes(p.dir) ? p.dir : 'SE',
                 sobre:p.sobre === true, encendido:p.encendido === true });
         }
     }
+    // Las piezas nuevas de varias casillas no pueden invadir otra pieza de
+    // su misma capa. No se invalida por esto un solapamiento histórico 1×1.
+    for(let i=0;i<limpia.length;i++)for(let j=i+1;j<limpia.length;j++){
+        const a=limpia[i],b=limpia[j],fa=CATALOGO_POR_ID.get(a.id),fb=CATALOGO_POR_ID.get(b.id);
+        if(a.pared||b.pared||a.sobre||b.sobre||!!fa.plano!==!!fb.plano||(!fa.huella&&!fb.huella))continue;
+        if(MAPAS_CASA.celdas(fa,a).some(c=>MAPAS_CASA.ocupa(fb,b,c.col,c.fila)))return null;
+    }
     return limpia;
+}
+
+async function guardarCasa(req,res,db,yo){
+    if(yo.esAdmin)return res.status(403).json({error:'Solo estudiantes.'});
+    const raw=req.body.casa;
+    if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({error:'Habitación no válida.'});
+    const casa={piso:raw.piso||'claro',muro:raw.muro||'blanco',tamano:raw.tamano||'5x5'};
+    const pisos={claro:0,roble:200,gris:200,azul:600,verde:600,rosa:1000,morado:1000,negro:1800};
+    const muros={blanco:0,crema:150,celeste:400,verde:400,lila:800,gris:800,rojo:1500,oscuro:1800};
+    const acabado=CATALOGO_CASA.find(m=>m.acabado?.id===casa.muro);
+    const inventario=await inventarioPorTareas(db,yo),ref=db.ref(`${BASE}/avatar/${yo.uid}`);
+    let error='No puedes usar un acabado no recibido o dejar muebles fuera.';
+    const result=await ref.transaction(value=>{
+        const av=value||{},xp=EXPERIENCIA_DOCENTE.estado(av).xpTotal;
+        const posee=id=>!!av.regalos?.[id]||!!inventario.desbloqueados[id];
+        if(!['5x5','7x7'].includes(casa.tamano)&&!MAPAS_CASA.obtener(casa.tamano))return;
+        if(casa.piso==='pasto'?!posee('terraceGrass'):!(Object.hasOwn(pisos,casa.piso)&&xp>=pisos[casa.piso]))return;
+        if(acabado?!posee(acabado.id):!(Object.hasOwn(muros,casa.muro)&&xp>=muros[casa.muro]))return;
+        if((av.pieza||[]).some(p=>!p.pared&&!MAPAS_CASA.celdas(CATALOGO_POR_ID.get(p.id),p).every(c=>muebleEnSuelo(casa,c.col,c.fila))))return;
+        error='';return {...av,casa:{...(av.casa||{}),piso:casa.piso,muro:casa.muro,tamano:casa.tamano}};
+    },undefined,false);
+    if(!result.committed)return res.status(409).json({error});
+    const saved=(await ref.once('value')).val()?.casa;
+    if(!saved||saved.piso!==casa.piso||saved.muro!==casa.muro||saved.tamano!==casa.tamano)return res.status(500).json({error:'No se pudo confirmar la habitación.'});
+    return res.status(200).json({ok:true,casa:saved});
 }
 
 async function guardarPieza(req, res, db, yo) {
@@ -775,6 +811,10 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'regalos-admin-paes-lote') return await regalosPaesPorLote(req, res, db, yo);
         if (accion === 'regalos-admin-paes-automaticos') return await regalosPaesAutomaticos(req,res,db,yo);
         if (accion === 'regalos-admin-avatar') return await premiosAvatarDocente(req,res,db,yo);
+        if (accion === 'experiencia-admin') {
+            const estudiante=await estudianteAdministrable(db,yo,req.body.estudiante);
+            return await EXPERIENCIA_DOCENTE.manejar(req,res,db,yo,estudiante);
+        }
         if (accion === 'inventario') {
             let premiosPendientes=false;
             if (!yo.esAdmin) try {await PREMIOS_PAES.sincronizarUid(db,yo.uid);} catch(_) {premiosPendientes=true;}
@@ -790,6 +830,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'salir') return await salir(req, res, db, yo);
         if (accion === 'decir') return await decir(req, res, db, yo);
         if (accion === 'guardar-pieza') return await guardarPieza(req, res, db, yo);
+        if (accion === 'guardar-casa') return await guardarCasa(req,res,db,yo);
         if (accion === 'atender') return await atender(req, res, db, yo);
         if (accion === 'regalar') return await regalar(req, res, db, yo);
         return res.status(400).json({ error: 'Acción no reconocida' });

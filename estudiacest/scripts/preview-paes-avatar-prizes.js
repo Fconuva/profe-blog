@@ -17,10 +17,10 @@ state.datos.plataforma_estudiantes.configuracion={mi_espacio:{enabled:true}};
 const raw=fs.readFileSync(path.join(root,'paes/admin/index.html'),'utf8');
 const css=raw.match(/<style>([\s\S]*?)<\/style>/)[1];
 const section=raw.slice(raw.indexOf('<section class="tab-view" id="viewCasas">'),raw.indexOf('</main>',raw.indexOf('id="viewCasas"')));
-const adminPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main>${section.replace('class="tab-view"','class="tab-view active"')}</main><script src="/estudiantes/js/personaje-iso.js"></script><script src="/paes/admin/premios.js"></script><script src="/paes/admin/casas.js"></script><script>PaesCasasAdmin.mount({auth:{currentUser:{getIdToken:async()=> 'teacherA'}},getGuideData:()=>({}),refreshGuides:async()=>{},reviewGuide:()=>{}}).load();</script></body></html>`;
-const studentPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/estudiantes/css/mi-espacio.css"></head><body style="margin:0;background:#0f172a"><main id="host" style="max-width:1100px;margin:auto"></main>${['catalogo-casa','personaje-iso','mapas-casa','mi-espacio'].map(n=>'<script src="/estudiantes/js/'+n+'.js"></script>').join('')}<script>
+const adminPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body><main>${section.replace('class="tab-view"','class="tab-view active"')}</main><script src="/estudiantes/js/personaje-iso.js"></script><script src="/paes/admin/premios.js"></script><script src="/paes/admin/experiencia.js"></script><script src="/paes/admin/casas.js"></script><script>PaesCasasAdmin.mount({auth:{currentUser:{getIdToken:async()=> 'teacherA'}},getGuideData:()=>({}),refreshGuides:async()=>{},reviewGuide:()=>{}}).load();</script></body></html>`;
+const studentPage=`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/estudiantes/css/mi-espacio.css"></head><body style="margin:0;background:#0f172a"><main id="host" style="max-width:1100px;margin:auto"></main>${['avatar-levels','catalogo-casa','personaje-iso','mapas-casa','mi-espacio'].map(n=>'<script src="/estudiantes/js/'+n+'.js"></script>').join('')}<script>
 const ref=key=>({once:async()=>{const v=await(await fetch('/qa-state?path='+encodeURIComponent(key))).json();return {val:()=>v,exists:()=>v!=null};},child:c=>ref(key+'/'+c),on:()=>{},off:()=>{},orderByChild:()=>ref(key),limitToLast:()=>ref(key),set:async value=>{const r=await fetch('/qa-state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});if(!r.ok)throw Error('Guardado rechazado');}});
-(async()=>{const av=(await ref('plataforma_estudiantes/avatar/studentA').once()).val()||{};MiEspacio.montar({host:document.getElementById('host'),db:{ref},auth:{currentUser:{getIdToken:async()=> 'studentA'}},base:'plataforma_estudiantes',uid:'studentA',nombre:'Estudiante de prueba',curso:'3B-HC',xp:0,look:av.look,regalos:av.regalos,logros:av.logros,placas:av.placas,pieza:[],casa:{tamano:'9x9'}});})();</script></body></html>`;
+(async()=>{const av=(await ref('plataforma_estudiantes/avatar/studentA').once()).val()||{};MiEspacio.montar({host:document.getElementById('host'),db:{ref},auth:{currentUser:{getIdToken:async()=> 'studentA'}},base:'plataforma_estudiantes',uid:'studentA',nombre:'Estudiante de prueba',curso:'3B-HC',xp:AvatarSystem.totalXP(av),look:av.look,regalos:av.regalos,logros:av.logros,placas:av.placas,pieza:av.pieza||[],casa:av.casa||{tamano:'9x9'}});})();</script></body></html>`;
 async function start(){
   const server=http.createServer(async(req,res)=>{
     try{
@@ -31,7 +31,7 @@ async function start(){
       if(url.pathname==='/qa-state'){
         res.setHeader('Content-Type','application/json');
         if(req.method==='GET'){const snap=await db.ref(url.searchParams.get('path')).once('value');res.end(JSON.stringify(snap.val()));return;}
-        if(!/^plataforma_estudiantes\/avatar\/studentA\/(look|placas|personajeEn|casa)$/.test(body.key)){res.writeHead(403).end('{}');return;}
+        if(!/^plataforma_estudiantes\/avatar\/studentA\/(look|placas|personajeEn)$/.test(body.key)){res.writeHead(403).end('{}');return;}
         await db.ref(body.key).transaction(()=>body.value);res.end('{}');return;
       }
       if(url.pathname==='/api/paes'){res.setHeader('Content-Type','application/json');res.end(JSON.stringify({success:true,estudiantes:Object.entries(state.profiles).filter(([,p])=>!p.ocultarDeCasas).map(([uid,p])=>({uid,...p}))}));return;}
@@ -45,7 +45,8 @@ async function start(){
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));return server;
 }
-(async()=>{
+module.exports={start,state,db};
+if(require.main===module)(async()=>{
   const server=await start(),browser=await chromium.launch({headless:true}),base='http://127.0.0.1:'+server.address().port;
   try{
     const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status());});

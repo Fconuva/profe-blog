@@ -8,12 +8,17 @@
   const fold = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const sets = {gamer:['gamerDesk','whiteGamerTower','gamerChair','playStation5'], music:['electricGuitarSet','drumKit','rgbPartySpeaker'], living:['loungeSofaThree','rgbPartySpeaker'],
     gym:['gymBench','gymDumbbells','gymTreadmill','gymBike'], christmas:['christmasTree'],
-    halloween:['halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern']};
+    halloween:['halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern'],
+    walls:['wallStone','wallWood','wallBrick','wallGarden','wallBlueTile','wallTerraceFence'],
+    terrace:['terracePoolSmall','terracePoolMedium','terracePoolLarge','terraceWaterfall','terraceGrass','terracePalm','terraceOak','terracePine','terraceRockingChair','terraceLounger','terraceTable','terraceParasol'],
+    garden:['terraceGrass','terracePalm','terraceOak','terracePine'],pools:['terracePoolSmall','terracePoolMedium','terracePoolLarge','terraceWaterfall'],
+    patio:['terraceRockingChair','terraceLounger','terraceTable','terraceParasol']};
   function mount({ auth, getGuideData, refreshGuides, reviewGuide }) {
     const el = id => document.getElementById('house' + id);
     let students = [], catalog = [], selected = [], preview = null, recipients = [], checked = null, run = 0, busy = false;
     let automaticPlan = null;
     const avatarPrizes = global.PaesPremiosAdmin ? global.PaesPremiosAdmin.mount({api,student:()=>students.find(item=>item.uid===el('Student').value),enabled:()=>!busy && el('Mode').value==='student'}) : null;
+    const teacherXp = global.PaesExperienciaAdmin ? global.PaesExperienciaAdmin.mount({api,student:()=>students.find(item=>item.uid===el('Student').value),enabled:()=>!busy && el('Mode').value==='student'}) : null;
     async function api(action, payload = {}, paes = false) {
       if (!auth.currentUser) throw new Error('La sesión docente venció. Recarga la página.');
       const token = await auth.currentUser.getIdToken();
@@ -109,6 +114,7 @@
     }
     async function consult(review = false) {
       if(avatarPrizes)avatarPrizes.load();
+      if(teacherXp)teacherXp.load();
       invalidate(); const request = ++run;
       if (!hasTarget()) {
         recipients = []; catalog = catalog.map(item => ({...item, tiene:false, tienen:0}));
@@ -152,6 +158,7 @@
       ['Mode','Course','Student','Guide','Refresh','Give','Review','Clear','Set'].forEach(id => { el(id).disabled = value; });
       ['AutoReview','AutoGive'].forEach(id => {if(el(id))el(id).disabled=value;});
       if(avatarPrizes)avatarPrizes.refresh();
+      if(teacherXp)teacherXp.refresh();
       renderSelection(); renderCatalog();
     }
     async function give() {

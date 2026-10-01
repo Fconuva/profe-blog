@@ -367,7 +367,7 @@
             currentCurso = student.curso;
 
             const avatar = avatarSnap.val() || {};
-            const xpTotal = avatar.xp_total || 0;
+            const xpTotal = AvatarSystem.totalXP(avatar);
             const lvl = AvatarSystem.getLevel(xpTotal);
             const stats = avatar.stats || { comprension: 0, constancia: 0, velocidad: 0 };
             const goldGloves = hasGoldenGloves(avatar);
@@ -454,7 +454,7 @@
             var s = allEst[uid];
             if (!pairCursos.includes(normalizeCourseKey(s.curso))) continue;
             var av = allAv[uid] || {};
-            var xp = av.xp_total || 0;
+            var xp = AvatarSystem.totalXP(av);
             var st = av.stats || { comprension: 0, constancia: 0, velocidad: 0 };
             var lvl = AvatarSystem.getLevel(xp);
             opponents.push({
@@ -1435,7 +1435,7 @@
             var newXP = currentXP + xpEarned;
             var newLevel = AvatarSystem.getLevel(newXP);
             await db.ref(BASE + '/avatar/' + currentUid).update({
-                xp_total: newXP,
+                xp_total: newXP - AvatarSystem.getManualXP(myAvatar.avatarData),
                 nivel: newLevel.level,
                 titulo: newLevel.title,
                 emoji: newLevel.emoji

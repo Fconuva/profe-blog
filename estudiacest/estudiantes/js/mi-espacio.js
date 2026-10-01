@@ -72,6 +72,7 @@
     { id:'gym',        nom:'Gimnasio' },
     { id:'navidad',    nom:'Navidad' },
     { id:'halloween',  nom:'Halloween' },
+    { id:'terraza',    nom:'Terraza y jardín' },
     { id:'baño',       nom:'Baño' }
   ];
 
@@ -90,13 +91,13 @@
 
   // Muebles en los que el personaje se puede sentar o acostar: al tocarlos, en
   // vez de rodearlos, camina hasta el lado y se sube.
-  var SENTABLES = /^(chair|gamerChair|gymBench|loungeChair|loungeSofa|bench|stoolBar|bedSingle|bedDouble|bedBunk)/;
+  var SENTABLES = /^(chair|gamerChair|gymBench|terraceRockingChair|terraceLounger|loungeChair|loungeSofa|bench|stoolBar|bedSingle|bedDouble|bedBunk)/;
   function esSentable(id) { return SENTABLES.test(String(id).split('__')[0]); }
   function esMascota(id) { return /^pet[A-Z]/.test(String(id)); }
   function posturaEn(col, fila) {
     var m = S.pieza.find(function (item) { return !item.pared && item.col === col && item.fila === fila && esSentable(item.id); });
     if (!m) return '';
-    return /^bed/.test(m.id) ? 'acostado' : 'sentado';
+    return /^(bed|terraceLounger)/.test(m.id) ? 'acostado' : 'sentado';
   }
 
   // Terreno: piso y muros. El piso sale de variantes teñidas del sprite; los
@@ -121,6 +122,10 @@
     { id:'rojo',    nom:'Ladrillo',xp:1500, izq:'#b2665c', der:'#c98479', canto:'#e2aea6' },
     { id:'oscuro',  nom:'Noche',   xp:1800, izq:'#3a4557', der:'#4c586c', canto:'#66748a' }
   ];
+  PISOS.push({id:'pasto',nom:'Pasto de jardín',xp:9999,regalo:'terraceGrass'});
+  CATALOGO.filter(function(m){return !!m.acabado;}).forEach(function(m){
+    MUROS.push(Object.assign({nom:m.nom,xp:9999,regalo:m.id},m.acabado));
+  });
   function pisoDe(id){ return PISOS.some(function(p){ return p.id===id; }) ? id : 'claro'; }
   function muroDe(id){ for (var i=0;i<MUROS.length;i++) if (MUROS[i].id===id) return MUROS[i]; return MUROS[0]; }
 
@@ -269,13 +274,19 @@
   function ocupacion(col, fila, salvo) {
     var r = { plano: -1, base: -1, encima: -1 };
     S.pieza.forEach(function (m, i) {
-      if (i === salvo || m.pared || m.col !== col || m.fila !== fila) return;
+      if (i === salvo || m.pared || !global.MapasCasa.ocupa(ficha(m.id),m,col,fila)) return;
       var f = ficha(m.id);
       if (f.plano) r.plano = i; else if (m.sobre) r.encima = i; else r.base = i;
     });
     return r;
   }
-  function estorbo(id, col, fila, salvo) {
+  function estorbo(id, col, fila, salvo, dir) {
+    var cells=global.MapasCasa.celdas(ficha(id),{col:col,fila:fila,dir:dir||'SE'});
+    if(!cells.every(function(c){return haySuelo(c.col,c.fila);}))return 'El mueble completo debe caber dentro del suelo';
+    if(cells.length>1){
+      var conflict=cells.some(function(c){var o=ocupacion(c.col,c.fila,salvo);return ficha(id).plano ? o.plano>=0 : o.base>=0;});
+      return conflict ? 'Ese espacio ya está ocupado' : null;
+    }
     var f = ficha(id), o = ocupacion(col, fila, salvo);
     if (f.plano) return o.plano >= 0 ? 'Ya hay una alfombra ahí' : null;
     if (o.base < 0) return null;
@@ -333,9 +344,10 @@
   function pintarSprite(nombre, col, fila, z, mueble) {
     var im = imgs[nombre];
     if (!im || !im.complete || !im.naturalWidth) return null;
-    var p = celda(col, fila), cx = S.cx;
+    var h = global.MapasCasa.huella(mueble && ficha(mueble.id),mueble && mueble.dir);
+    var p = celda(col+(h.cols-1)/2, fila+(h.filas-1)/2), cx = S.cx;
     var x = p.x + (TW - im.naturalWidth) / 2;
-    var y = p.y + ROMBO - im.naturalHeight - (z || 0);
+    var y = p.y + ROMBO + SY*(h.cols+h.filas-2)/2 - im.naturalHeight - (z || 0);
     if (mueble && esMascota(mueble.id) && S.housesEnabled) {
       var fase = (S.fxTime || 0) / 500 + col * 2 + fila;
       x += Math.sin(fase) * 7;
@@ -377,21 +389,46 @@
       });
       cx.restore();
     }
+    if(mueble && S.housesEnabled && !global.matchMedia('(prefers-reduced-motion: reduce)').matches){
+      var effect=ficha(mueble.id).efecto,phase=(S.fxTime||0)/1000;
+      if(effect==='agua'){
+        cx.save();cx.beginPath();cx.moveTo(x+im.naturalWidth*.5,y+im.naturalHeight*.24);
+        cx.lineTo(x+im.naturalWidth*.76,y+im.naturalHeight*.42);cx.lineTo(x+im.naturalWidth*.5,y+im.naturalHeight*.60);cx.lineTo(x+im.naturalWidth*.24,y+im.naturalHeight*.42);cx.closePath();cx.clip();
+        cx.strokeStyle='rgba(207,250,254,.62)';cx.lineWidth=1.5;
+        for(var wave=0;wave<4;wave++){var wy=y+im.naturalHeight*(.30+((phase*.035+wave*.075)% .30));cx.beginPath();cx.ellipse(x+im.naturalWidth*.5,wy,im.naturalWidth*(.12+.025*Math.sin(phase+wave)),3,0,0,Math.PI*2);cx.stroke();}
+        cx.restore();
+      }else if(effect==='cascada' && ['SE','SW'].indexOf(mueble.dir)>=0){
+        cx.save();cx.strokeStyle='rgba(225,251,255,.72)';cx.lineWidth=2;
+        for(var drop=0;drop<8;drop++){var dy=(phase*.8+drop*.13)%1,dx=x+im.naturalWidth*(.43+(drop%3)*.035);cx.beginPath();cx.moveTo(dx,y+im.naturalHeight*(.22+dy*.38));cx.lineTo(dx,y+im.naturalHeight*(.25+dy*.38));cx.stroke();}
+        cx.restore();
+      }
+    }
     return { x: x, y: y, w: im.naturalWidth, h: im.naturalHeight };
   }
   function paredes() {
-    var cx = S.cx, q = esquinas(), H = 132;
+    var cx = S.cx, q = esquinas(), mu = muroDe(S.casa.muro), H = mu.alto || 132;
     function plano(a, b, relleno, canto) {
       cx.beginPath();
       cx.moveTo(a.x, a.y); cx.lineTo(b.x, b.y);
       cx.lineTo(b.x, b.y - H); cx.lineTo(a.x, a.y - H); cx.closePath();
       cx.fillStyle = relleno; cx.fill();
+      if(mu.patron){
+        cx.save();cx.clip();cx.transform(b.x-a.x,b.y-a.y,0,-H,a.x,a.y);
+        cx.strokeStyle='rgba(30,41,59,.25)';cx.lineWidth=.006;
+        var rows=mu.patron==='madera'?1:8,cols=mu.patron==='madera'?20:12;
+        for(var row=0;row<=rows;row++){cx.beginPath();cx.moveTo(0,row/rows);cx.lineTo(1,row/rows);cx.stroke();}
+        for(var rr=0;rr<rows;rr++)for(var cc=0;cc<cols;cc++){
+          var xx=(cc+(mu.patron==='ladrillo'&&rr%2?.5:0))/cols;
+          cx.beginPath();cx.moveTo(xx,rr/rows);cx.lineTo(xx,(rr+1)/rows);cx.stroke();
+          if(mu.patron==='jardin'){cx.fillStyle=(rr+cc)%2?'#80b764':'#39633f';cx.beginPath();cx.ellipse(xx+.025,(rr+.5)/rows,.025,.037,-.5,0,Math.PI*2);cx.fill();}
+        }
+        cx.restore();
+      }
       cx.beginPath();
       cx.moveTo(a.x, a.y - H); cx.lineTo(b.x, b.y - H);
       cx.lineTo(b.x, b.y - H + 7); cx.lineTo(a.x, a.y - H + 7); cx.closePath();
       cx.fillStyle = canto; cx.fill();
     }
-    var mu = muroDe(S.casa.muro);
     if (S.mapa) {
       // En un mapa irregular cada borde posterior expuesto lleva su propio tramo.
       for (var f = 0; f < FILAS; f++) for (var c = 0; c < COLS; c++) {
@@ -404,6 +441,7 @@
       plano(q.W, q.N, mu.izq, mu.canto);
       plano(q.N, q.E, mu.der, mu.canto);
     }
+    if(H<100)return; // Una baranda de terraza no lleva una ventana flotante.
     var t = 0.55, m = { x: q.N.x + (q.E.x - q.N.x) * t, y: q.N.y + (q.E.y - q.N.y) * t };
     var dx = q.E.x - q.N.x, dy = q.E.y - q.N.y, L = Math.hypot(dx, dy), ux = dx / L, uy = dy / L, an = 62;
     cx.beginPath();
@@ -416,7 +454,9 @@
   // Un personaje parado en una celda (fraccionaria durante la caminata), con su
   // nombre y, si acaba de hablar, un globo sobre la cabeza.
   function pintarPersona(pers) {
-    var cx = S.cx, p = celda(pers.col, pers.fila);
+    var soporte = pers.postura && S.pieza.find(function(m){return !m.pared && m.col===pers.col && m.fila===pers.fila && esSentable(m.id);});
+    var huella = global.MapasCasa.huella(soporte && ficha(soporte.id),soporte && soporte.dir);
+    var cx = S.cx, p = celda(pers.col+(huella.cols-1)/2, pers.fila+(huella.filas-1)/2);
     var cxp = p.x + TW / 2;
     var base = p.y + 53 + 16 - (pers.postura === 'sentado' ? 14 : 0);
     if (pers.postura === 'acostado') {
@@ -539,7 +579,7 @@
     // baldosa de adelante se pinta encima de las piernas del personaje.
     S.pieza.forEach(function (m, i) {
       if (m.pared || !ficha(m.id).plano) return;
-      var cajaP = pintarSprite(m.id + '_' + m.dir, m.col, m.fila, 0);
+      var cajaP = pintarSprite(m.id + '_' + m.dir, m.col, m.fila, 0,m);
       if (cajaP) {
         cajaP.idx = i; cajas.push(cajaP);
         if (i === S.sel) {
@@ -555,10 +595,16 @@
     var cosas = [];
     S.pieza.forEach(function (m, i) {
       if (m.pared || ficha(m.id).plano) return;
-      cosas.push({ tipo: 'mueble', prof: m.col + m.fila, capa: m.sobre ? 2 : 1, m: m, i: i });
+      var h=global.MapasCasa.huella(ficha(m.id),m.dir);
+      cosas.push({ tipo: 'mueble', prof: m.col + m.fila + h.cols+h.filas-2, capa: m.sobre ? 2 : 1, m: m, i: i });
     });
     personas().forEach(function (pe) {
       var profundidad = pe.postura ? 0.03 : 0.01;
+      if(pe.postura){
+        var soporte=S.pieza.find(function(m){return !m.pared && m.col===pe.col && m.fila===pe.fila && esSentable(m.id);});
+        var h=global.MapasCasa.huella(soporte && ficha(soporte.id),soporte && soporte.dir);
+        profundidad+=h.cols+h.filas-2;
+      }
       cosas.push({ tipo: 'persona', prof: pe.col + pe.fila + profundidad, capa: 1, pe: pe });
     });
     cosas.sort(function (a, b) { return (a.prof - b.prof) || (a.capa - b.capa); });
@@ -659,7 +705,7 @@
   // ---------------- caminar ----------------
   function bloqueada(col, fila) {
     return !haySuelo(col, fila) || S.pieza.some(function (m) {
-      if (m.pared || m.col !== col || m.fila !== fila) return false;
+      if (m.pared || !global.MapasCasa.ocupa(ficha(m.id),m,col,fila)) return false;
       var f = ficha(m.id);
       return !f.plano && !m.sobre && !esMascota(m.id);
     });
@@ -744,18 +790,24 @@
     if (!S.db || !S.uid) return;
     clearTimeout(pendientes[campo]);
     pendientes[campo] = setTimeout(function () {
-      if (campo === 'pieza') {
+      if (campo === 'pieza' || campo === 'casa') {
         var copia = JSON.parse(JSON.stringify(valor));
         piezaQueue = piezaQueue.catch(function () {}).then(function () {
-          return api('guardar-pieza', { pieza: copia });
+          return api(campo === 'pieza' ? 'guardar-pieza' : 'guardar-casa', campo === 'pieza' ? { pieza:copia } : { casa:copia });
         }).then(function (data) {
           if (!data || !data.ok) throw new Error((data && data.error) || 'No se pudo guardar');
-          S.miPieza = Array.isArray(data.pieza) ? data.pieza : [];
-          if (!S.visitando) S.pieza = S.miPieza;
+          if(campo === 'pieza'){
+            S.miPieza = Array.isArray(data.pieza) ? data.pieza : [];
+            if (!S.visitando) S.pieza = S.miPieza;
+          }else{
+            S.miCasa=data.casa;
+            if(!S.visitando){S.casa=S.miCasa;aplicarTamano();dibujar();}
+          }
           marcarEstado('Guardado', false);
         }).catch(function (error) {
           marcarEstado(error.message || 'No se pudo guardar', true);
           sincronizarInventario();
+          if(campo==='casa')S.db.ref(S.base+'/avatar/'+S.uid+'/casa').once('value').then(function(snap){S.miCasa=snap.val()||{piso:'claro',muro:'blanco',tamano:'5x5'};if(!S.visitando){S.casa=S.miCasa;aplicarTamano();dibujar();}}).catch(function(){});
         });
         return;
       }
@@ -1232,11 +1284,12 @@
   function pintarMuebles() {
     var cont = S.host.querySelector('#espRejilla');
     var lista = CATALOGO.filter(function (m) {
+      if(m.acabado)return false;
       if (familia !== 'todo' && m.fam !== familia) return false;
       return filtro === 'tengo' ? tengo(m) : !tengo(m);
     });
     S.host.querySelector('#espCuenta').textContent =
-      CATALOGO.filter(tengo).length + ' de ' + CATALOGO.length;
+      CATALOGO.filter(function(m){return !m.acabado && tengo(m);}).length + ' de ' + CATALOGO.filter(function(m){return !m.acabado;}).length;
     cont.innerHTML = lista.map(function (m) {
       var n = S.miPieza.filter(function (p) { return p.id === m.id; }).length;
       var regalo = S.regalos[m.id];
@@ -1317,7 +1370,7 @@
     } else {
       var c = m.col + dc, f = m.fila + df;
       if (!haySuelo(c, f)) return;
-      var no = estorbo(m.id, c, f, S.sel);
+      var no = estorbo(m.id, c, f, S.sel,m.dir);
       if (no) { avisar(no); return; }
       var oc = ocupacion(c, f, S.sel);
       m.col = c; m.fila = f; m.sobre = oc.base >= 0 && !!ficha(m.id).apila;
@@ -1367,21 +1420,21 @@
     panel.hidden = false;
     panel.innerHTML = '<div class="esp-vis-cab"><b>' + (tipo === 'piso' ? 'Piso' : (tipo === 'muro' ? 'Muros' : 'Tamaño')) + '</b><button class="esp-btn-chico" id="espCerrarPal">Cerrar</button></div>' +
       '<div class="esp-vis-lista">' + lista.map(function (o) {
-        var blo = S.xp < o.xp;
+        var blo = o.regalo ? !tengo(ficha(o.regalo)) : S.xp < o.xp;
         var muestra = tipo === 'tamano' ? '<i class="esp-tamano-icono">◇</i>' : tipo === 'piso'
           ? '<img src="' + RUTA + (o.id === 'claro' ? 'floorFull_SE' : 'floorFull__' + o.id + '_SE') + '.png" alt="">'
-          : '<i style="background:linear-gradient(90deg,' + o.izq + ',' + o.der + ')"></i>';
+          : o.regalo ? '<img src="'+RUTA+o.regalo+'_SE.png" alt="">' : '<i style="background:linear-gradient(90deg,' + o.izq + ',' + o.der + ')"></i>';
         return '<button class="esp-vis-item' + (blo ? ' blo' : '') + (o.id === actual ? ' sel' : '') + '" data-id="' + o.id + '">' +
-          muestra + '<span>' + esc(o.nom) + '</span><em>' + (blo ? o.xp + ' XP' : (o.id === actual ? 'actual' : '')) + '</em></button>';
+          muestra + '<span>' + esc(o.nom) + '</span><em>' + (blo ? (o.regalo ? 'Premio del profesor' : o.xp + ' XP') : (o.id === actual ? 'actual' : o.regalo ? '🎁 Recibido' : '')) + '</em></button>';
       }).join('') + '</div>';
     panel.querySelector('#espCerrarPal').addEventListener('click', function () { panel.hidden = true; });
     panel.querySelectorAll('.esp-vis-item').forEach(function (b) {
       b.addEventListener('click', function () {
         var o = lista.filter(function (x) { return x.id === b.dataset.id; })[0];
         if (!o) return;
-        if (S.xp < o.xp) { avisar('Se abre con ' + o.xp + ' XP'); return; }
+        if (o.regalo ? !tengo(ficha(o.regalo)) : S.xp < o.xp) { avisar(o.regalo ? 'Este acabado se recibe del profesor' : 'Se abre con ' + o.xp + ' XP'); return; }
         if (tipo === 'tamano' && o.id !== actual) {
-          var fuera = S.pieza.some(function (m) { return !m.pared && !sueloEn(o, m.col, m.fila); });
+          var fuera = S.pieza.some(function (m) { return !m.pared && !global.MapasCasa.celdas(ficha(m.id),m).every(function(c){return sueloEn(o,c.col,c.fila);}); });
           if (fuera) { avisar('Guarda o mueve los muebles que quedarían fuera'); return; }
           if (caminando) { avisar('Termina de caminar antes de cambiar el tamaño'); return; }
           if (Object.keys(S.otros || {}).some(function (uid) {
@@ -1442,6 +1495,7 @@
     S.recompensas = (data && data.desbloqueados && typeof data.desbloqueados === 'object') ? data.desbloqueados : {};
     S.requisitos = (data && data.requisitos && typeof data.requisitos === 'object') ? data.requisitos : {};
     if (data && data.regalos && typeof data.regalos === 'object') S.regalos = data.regalos;
+    if(data && Number.isFinite(data.xpTotal))S.xp=data.xpTotal;
     S.logros=global.AvatarLookSystem.logrosConPremios(S.logros,S.regalos);
     S.placas=placasValidas(S.placas,S.logros);
     pintarRopero(); pintarFigura(); pintarPlacas();
@@ -1568,7 +1622,7 @@
         avisar('Puesto. Con ⟳ lo giras');
       } else if (S.sel >= 0) {
         var m = S.pieza[S.sel];
-        var no2 = estorbo(m.id, c.col, c.fila, S.sel);
+        var no2 = estorbo(m.id, c.col, c.fila, S.sel,m.dir);
         if (no2) { avisar(no2); return; }
         var oc2 = ocupacion(c.col, c.fila, S.sel);
         m.col = c.col; m.fila = c.fila;
@@ -1604,7 +1658,10 @@
         m.pared = m.pared === 'izq' ? 'der' : 'izq';
         if (ranuraOcupada(m, S.sel)) { m.pared = m.pared === 'izq' ? 'der' : 'izq'; avisar('El otro muro está ocupado ahí'); return; }
       } else {
-        m.dir = DIRS[(DIRS.indexOf(m.dir) + 1) % DIRS.length];
+        var nextDir=DIRS[(DIRS.indexOf(m.dir) + 1) % DIRS.length];
+        var problem=estorbo(m.id,m.col,m.fila,S.sel,nextDir);
+        if(problem){avisar(problem);return;}
+        m.dir = nextDir;
       }
       dibujar(); guardar('pieza', S.pieza);
     });
@@ -1703,7 +1760,7 @@
     global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); clearInterval(S.inventoryTimer); clearInterval(S.fxTimer); desconectarSala(); });
     setTimeout(dibujar, 80);
     S.fxTimer = setInterval(function () {
-      if (!S.housesEnabled || !(S.gesto && S.gesto.hasta > Date.now()) && !S.pieza.some(function (m) { return esMascota(m.id) || m.id === 'aquarium' || (m.id === 'rgbPartySpeaker' && m.encendido); })) return;
+      if (!S.housesEnabled || global.matchMedia('(prefers-reduced-motion: reduce)').matches || !(S.gesto && S.gesto.hasta > Date.now()) && !S.pieza.some(function (m) { return esMascota(m.id) || ficha(m.id).efecto || m.id === 'aquarium' || (m.id === 'rgbPartySpeaker' && m.encendido); })) return;
       S.fxTime = performance.now();
       dibujar();
     }, 120);

@@ -813,8 +813,8 @@
                 } catch(e) {}
                 function rankEmoji(euid) {
                     const av = allAvatarsData[euid];
-                    if (!av || !av.xp_total) return '';
-                    return AvatarSystem.getLevel(av.xp_total).emoji;
+                    if (!av || !AvatarSystem.totalXP(av)) return '';
+                    return AvatarSystem.getLevel(AvatarSystem.totalXP(av)).emoji;
                 }
 
                 let rankListHtml = '';
@@ -855,7 +855,7 @@
                     db.ref(BASE + '/avatar/' + uid).once('value')
                 ]);
                 const av = avatarSnap.val() || {};
-                const xpTotal = av.xp_total || 0;
+                const xpTotal = AvatarSystem.totalXP(av);
                 const { current, next } = getLevelInfo(xpTotal);
                 const look = AvatarLookSystem.normalizeLook(av.look, { xpTotal: xpTotal, avatarData: av });
 

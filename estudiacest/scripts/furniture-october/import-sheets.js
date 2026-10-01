@@ -7,9 +7,9 @@ const specs = require('./assets.json');
 const sourceDir = path.join(__dirname,'source');
 const outputDir = path.resolve(__dirname,'../../estudiantes/assets/pieza');
 const dirs = ['SE','SW','NE','NW'];
-async function main() {
-  for (const spec of specs) {
-    const input = path.join(sourceDir,spec.id + '.png');
+async function importSheets(specifications = specs, inputDir = sourceDir, targetDir = outputDir) {
+  for (const spec of specifications) {
+    const input = path.join(inputDir,spec.id + '.png');
     const metadata = await sharp(input).metadata();
     if (!metadata.hasAlpha || !metadata.width || !metadata.height) throw Error('Falta transparencia: ' + spec.id);
     const cells = [];
@@ -27,7 +27,7 @@ async function main() {
     }
     const scale = Math.min(...cells.map(cell=>Math.min(spec.maxWidth/cell.box.width,spec.maxHeight/cell.box.height)),1);
     for (let index = 0; index < 4; index++) {
-      const cell = cells[index], target = path.join(outputDir,spec.id + '_' + dirs[index] + '.png');
+      const cell = cells[index], target = path.join(targetDir,spec.id + '_' + dirs[index] + '.png');
       await sharp(cell.buffer,{raw:{width:cell.width,height:cell.height,channels:4}}).extract(cell.box)
         .resize(Math.max(1,Math.round(cell.box.width*scale)),Math.max(1,Math.round(cell.box.height*scale)),{kernel:'nearest'})
         .extend({top:2,bottom:2,left:2,right:2,background:{r:0,g:0,b:0,alpha:0}}).png().toFile(target);
@@ -35,4 +35,5 @@ async function main() {
     console.log(spec.id + ': cuatro vistas extraídas, alfa conservado.');
   }
 }
-main().catch(error=>{console.error(error.message);process.exit(1);});
+if (require.main === module) importSheets().catch(error=>{console.error(error.message);process.exit(1);});
+module.exports = {importSheets};

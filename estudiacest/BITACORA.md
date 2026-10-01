@@ -1,5 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, terraza, muros regalables y experiencia manual docente
+
+- Se añaden doce piezas propias: piscinas 2×2, 3×2 y 4×3, cascada, pasto, palmera, roble, pino, mecedora, tumbona, mesa y sombrilla. Arte RGBA generado con la herramienta integrada de IA; originales y prompts conservados en `scripts/furniture-terrace/`, 48 sprites y cuatro baldosas de pasto integrados. Los seis previews de muros se construyen con código nativo coherente con el Canvas.
+- Seis acabados regalables: piedra, madera, ladrillo blanco, jardín vertical, azulejo azul y paredes bajas de terraza. Admin PAES ofrece sets de muros, terraza completa, jardín, piscinas/cascada y muebles de patio. Se usan las entregas validadas existentes por estudiante, curso y tarea; todo este lote sigue siendo manual, fuera de los premios automáticos G15–G21.
+- Control «Dar experiencia o subir de nivel» junto al selector: consulta, motivo, simulación sin escritura, confirmación, autorización por docente/curso, identificador único, transacción y relectura. El bonus vive en regalos protegidos y se suma al XP académico sin modificarlo. Ranking, arena, logros y paneles muestran el XP efectivo; las tareas conservan el bonus sin duplicarlo. No se cambiaron notas, entregas ni XP reales en las pruebas.
+- Casa y pieza comparten cola serial y API validada. Los muros/pasto no recibidos quedan bloqueados; se valida la huella completa al colocar, girar o reducir la habitación. Agua y cascada animadas, movimiento reducido respetado, mecedora sentable y tumbona acostable. Se corrige el orden de dibujo del avatar sobre muebles de varias casillas.
+- Auditorías de terraza/XP, muebles, premios automáticos y ropa aprobadas; build integral aprobado. Navegador real contra funciones actuales y cuentas ficticias comprueba XP/nivel, doble clic sin duplicación, recarga, sets por curso/tarea, muros/pasto persistentes y piscinas animadas a 390/1200/3840 sin desbordes ni errores. Las comprobaciones finales de visitas y producción se registran al publicar.
+- Reglas remotas contrastadas: la única diferencia preparada es proteger `avatar/$uid/casa` contra escritura cliente directa, como ya ocurre con pieza/regalos. La copia histórica de reglas se sincroniza con la fuente canónica tras comparar esa única diferencia. Sitio y reglas requieren despliegues separados; no se considera publicado antes de confirmarlos.
+
+---
+
 ## 2026-10-01, comprobación del ingreso PAES con ruta guiada
 
 - Ante un aviso de contraseña/cuenta rechazada, se contrastaron nómina, Auth y perfil por identidad exacta: una cuenta activa, un perfil único y curso concordante. La clave inicial vigente obtuvo sesión desde el endpoint publicado; no fue necesario restablecerla ni crear otra cuenta.

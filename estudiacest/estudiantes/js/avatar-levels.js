@@ -112,6 +112,21 @@
         return info.current.level * 100 + Math.min(99, info.progress);
     }
 
+    // Los premios docentes se guardan en regalos, protegido contra escritura
+    // estudiantil. xp_total conserva la experiencia académica histórica.
+    function getManualXP(avatar) {
+        var gifts = avatar && avatar.regalos || {};
+        return Object.keys(gifts).reduce(function (total, key) {
+            var gift = gifts[key], delta = Number(gift && gift.delta);
+            return key.indexOf('xp__') === 0 && gift && gift.tipo === 'xp-docente' &&
+                Number.isSafeInteger(delta) && delta > 0 && delta <= 1000000 ? total + delta : total;
+        }, 0);
+    }
+    function totalXP(avatar) {
+        var base = Number(avatar && avatar.xp_total);
+        return (Number.isFinite(base) && base > 0 ? Math.floor(base) : 0) + getManualXP(avatar);
+    }
+
     // Export
     var AvatarSystem = {
         TIERS: TIERS,
@@ -120,7 +135,9 @@
         getLevel: getLevel,
         getLevelInfo: getLevelInfo,
         getTier: getTier,
-        getPower: getPower
+        getPower: getPower,
+        getManualXP: getManualXP,
+        totalXP: totalXP
     };
 
     if (typeof module !== 'undefined' && module.exports) {

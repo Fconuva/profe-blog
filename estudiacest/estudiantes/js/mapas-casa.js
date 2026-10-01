@@ -39,5 +39,18 @@
       col >= 0 && col < mapa.cols && fila >= 0 && fila < mapa.filas &&
       mapa.suelo[fila * mapa.cols + col] === 1);
   }
-  return { obtener: obtener, haySuelo: haySuelo };
+  function huella(ficha, dir) {
+    var h = ficha && ficha.huella || [1,1], cols = h[0], filas = h[1];
+    return dir === 'SW' || dir === 'NW' ? {cols:filas,filas:cols} : {cols:cols,filas:filas};
+  }
+  function celdas(ficha, item) {
+    var h=huella(ficha,item.dir), lista=[];
+    for(var f=0;f<h.filas;f++)for(var c=0;c<h.cols;c++)lista.push({col:item.col+c,fila:item.fila+f});
+    return lista;
+  }
+  function ocupa(ficha,item,col,fila) {
+    var h=huella(ficha,item.dir);
+    return !item.pared && col>=item.col && col<item.col+h.cols && fila>=item.fila && fila<item.fila+h.filas;
+  }
+  return { obtener: obtener, haySuelo: haySuelo, huella:huella, celdas:celdas, ocupa:ocupa };
 });

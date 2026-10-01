@@ -102,7 +102,7 @@ for (const id of ['gymBench','gymDumbbells','gymTreadmill','gymBike','christmasT
   exigir(hashes.size === 4,'Las cuatro vistas no deben ser copias idénticas: ' + id);
 }
 exigir(leer('estudiantes/dashboard.html').includes('js/mapas-casa.js') && espacio.includes("id: 'salon-l'") &&
-  espacio.includes('function haySuelo(') && espacio.includes('!sueloEn(o, m.col, m.fila)'),
+    espacio.includes('function haySuelo(') && espacio.includes('MapasCasa.celdas(ficha(m.id),m).every') && espacio.includes('sueloEn(o,c.col,c.fila)'),
   'El panel debe cargar el mapa irregular y evitar muebles fuera al cambiar de habitación.');
 exigir(/RUTA = '\/estudiantes\/assets\/pieza\//.test(espacio),
   'La ruta de los sprites debe ser absoluta: si es relativa, falla al montarse desde otra carpeta.');
@@ -112,8 +112,10 @@ const avatarRules = JSON.parse(leer('firebase-rules.json')).rules.plataforma_est
 exigir(avatarRules['.write'].includes("admins')") &&
   avatarRules.$campo['.write'].includes("$campo !== 'pieza'") &&
   avatarRules.$campo['.write'].includes("$campo !== 'regalos'") &&
-  espacio.includes("api('guardar-pieza', { pieza: copia })"),
-  'La pieza y los regalos deben quedar bajo control del servidor, no de escrituras Firebase del estudiante.');
+  avatarRules.$campo['.write'].includes("$campo !== 'casa'") &&
+  espacio.includes("api(campo === 'pieza' ? 'guardar-pieza' : 'guardar-casa'") &&
+  espacio.includes("{ pieza:copia } : { casa:copia }"),
+  'La casa, la pieza y los regalos deben quedar bajo control del servidor, no de escrituras Firebase del estudiante.');
 exigir(espacio.includes('function ruta(') && espacio.includes('bloqueada('),
   'Falta el caminar con búsqueda de ruta que rodea los muebles.');
 exigir(espacio.includes('esDePared') && espacio.includes('puntoMuro'),

@@ -386,8 +386,9 @@
             return {
                 avatar,
                 existingLogros: avatar.logros || {},
-                xpTotal: avatar.xp_total || 0,
-                level: avatar.nivel || 1,
+                xpBase: Math.max(0,Number(avatar.xp_total)||0),
+                xpTotal: AvatarSystem.totalXP(avatar),
+                level: AvatarSystem.getLevel(AvatarSystem.totalXP(avatar)).level,
                 completed,
                 totalActive,
                 scores,
@@ -427,13 +428,16 @@
                 updates['/avatar/' + uid + '/logros/' + l.id] = {timestamp:Date.now(), xp:l.xp};
             });
             if (xpGain > 0) {
-                const newTotal = data.xpTotal + xpGain;
+                const newBase = data.xpBase + xpGain;
+                const newTotal = newBase + AvatarSystem.getManualXP(data.avatar);
                 const lvl = getLevel(newTotal);
-                updates['/avatar/' + uid + '/xp_total'] = newTotal;
+                updates['/avatar/' + uid + '/xp_total'] = newBase;
                 updates['/avatar/' + uid + '/nivel'] = lvl.level;
                 updates['/avatar/' + uid + '/titulo'] = lvl.title;
                 updates['/avatar/' + uid + '/emoji'] = lvl.emoji;
                 data.xpTotal = newTotal; // update local state
+                data.xpBase = newBase;
+                data.avatar.xp_total = newBase;
             }
             await db.ref(BASE).update(updates);
             return newlyUnlocked;

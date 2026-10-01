@@ -1,5 +1,6 @@
 /* Geometría publicada de las habitaciones diseñadas en Tiled.
- * Fuente: scripts/mi-espacio-lab/sala-en-l.json (solo suelo y entrada).
+ * Fuentes: scripts/mi-espacio-lab/sala-en-l.json y estudiantes/assets/mapas/.
+ * Solo suelo y entrada; la auditoría compara cada casilla con los JSON de Tiled.
  * Los objetos de muestra del laboratorio NO son muebles regalados.
  */
 (function (raiz, fabrica) {
@@ -22,6 +23,15 @@
       ]
     }
   };
+  function registrar(id, cols, filas, hueco) {
+    var suelo = [];
+    for (var f = 0; f < filas; f++) for (var c = 0; c < cols; c++) suelo.push(hueco && hueco(c, f) ? 0 : 1);
+    mapas[id] = { cols:cols, filas:filas, entrada:{col:1,fila:1}, suelo:suelo };
+  }
+  registrar('9x9', 9, 9);
+  registrar('11x11', 11, 11);
+  registrar('9x7', 9, 7);
+  registrar('salon-l-grande', 9, 9, function (c, f) { return c >= 5 && f < 4; });
   function obtener(id) { return Object.prototype.hasOwnProperty.call(mapas, id) ? mapas[id] : null; }
   function haySuelo(id, col, fila) {
     var mapa = obtener(id);

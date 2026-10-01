@@ -66,9 +66,41 @@ exigir(catalogo.some(m => m.id === 'rgbPartySpeaker' && m.xp > 0),
 
 // ---- módulo de la casa ----
 const espacio = leer('estudiantes/js/mi-espacio.js');
+exigir(leer('estudiantes/css/mi-espacio.css').includes('.esp-terreno[hidden], .esp-acciones[hidden]{ display:none }'),
+  'Las herramientas del dueño deben permanecer ocultas durante las visitas.');
 const mapasCasa = require(path.join(root, 'estudiantes/js/mapas-casa.js'));
 exigir(mapasCasa.obtener('salon-l') && mapasCasa.haySuelo('salon-l', 6, 6) && !mapasCasa.haySuelo('salon-l', 6, 1),
   'El salón en L debe tener dos alas transitables y rechazar el hueco.');
+for (const [id, file] of [['9x9','salon-9x9.json'],['11x11','salon-11x11.json'],['9x7','salon-9x7.json'],['salon-l-grande','salon-l-9x9.json']]) {
+  const bruto = JSON.parse(leer('estudiantes/assets/mapas/' + file));
+  const mapa = mapasCasa.obtener(id);
+  exigir(mapa && mapa.cols === bruto.width && mapa.filas === bruto.height, 'Tamaño publicado distinto del mapa Tiled: ' + id);
+  exigir(bruto.orientation === 'isometric' && bruto.infinite === false && bruto.tilewidth === 151 && bruto.tileheight === 106, 'Formato Tiled no admitido: ' + id);
+  const data = bruto.layers.find(layer => layer.name === 'suelo').data;
+  exigir(data.length === mapa.cols * mapa.filas && JSON.stringify(data) === JSON.stringify(mapa.suelo), 'Suelo publicado distinto del mapa Tiled: ' + id);
+  const cola = [mapa.entrada], visitadas = new Set();
+  while (cola.length) {
+    const celda = cola.shift(), key = celda.col + ',' + celda.fila;
+    if (visitadas.has(key) || !mapasCasa.haySuelo(id,celda.col,celda.fila)) continue;
+    visitadas.add(key); [[1,0],[-1,0],[0,1],[0,-1]].forEach(([dc,df]) => cola.push({col:celda.col+dc,fila:celda.fila+df}));
+  }
+  exigir(visitadas.size === data.filter(Boolean).length,'Mapa con casillas aisladas: ' + id);
+  exigir(!mapasCasa.haySuelo(id,mapa.cols,0) && !mapasCasa.haySuelo(id,0,mapa.filas), 'El mapa debe rechazar posiciones fuera: ' + id);
+}
+exigir(!mapasCasa.haySuelo('salon-l-grande',8,1) && mapasCasa.haySuelo('salon-l-grande',8,8), 'La L grande debe mantener el hueco y ambas alas.');
+['gymBench','gymDumbbells','gymTreadmill','gymBike','christmasTree','halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern'].forEach(id =>
+  exigir(catalogo.some(m => m.id === id && m.xp > 0),'Falta el premio nuevo: ' + id));
+for (const id of ['gymBench','gymDumbbells','gymTreadmill','gymBike','christmasTree','halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern']) {
+  const hashes = new Set();
+  for (const dir of DIRS) {
+    const png = fs.readFileSync(path.join(dirAssets,id + '_' + dir + '.png'));
+    exigir(png.readUInt32BE(16) > 8 && png.readUInt32BE(16) <= 154 && png.readUInt32BE(20) > 8 && png.readUInt32BE(20) <= 214,
+      'Sprite nuevo fuera de escala: ' + id + '/' + dir);
+    exigir(png[25] === 6, 'El sprite debe conservar RGBA: ' + id + '/' + dir);
+    hashes.add(require('node:crypto').createHash('sha256').update(png).digest('hex'));
+  }
+  exigir(hashes.size === 4,'Las cuatro vistas no deben ser copias idénticas: ' + id);
+}
 exigir(leer('estudiantes/dashboard.html').includes('js/mapas-casa.js') && espacio.includes("id: 'salon-l'") &&
   espacio.includes('function haySuelo(') && espacio.includes('!sueloEn(o, m.col, m.fila)'),
   'El panel debe cargar el mapa irregular y evitar muebles fuera al cambiar de habitación.');
@@ -424,6 +456,13 @@ async function probarRegalos() {
   r = await pedir('uidLuisss', { para: 'uidAnaaaa', mueble: 'playStation5' });
   exigir(r.json && r.json.ok === false && /profesor/i.test(r.json.error) && !regalo('uidAnaaaa', 'playStation5'),
     'Un premio manual del profesor no se puede transferir a otro estudiante.');
+  for (const id of ['gymBench','gymDumbbells','gymTreadmill','gymBike','christmasTree','halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern']) {
+    exigir(!regalo('uidLuisss',id),'Los premios nuevos no se entregan automáticamente: ' + id);
+    r = await pedir('uidProfee',{estudiante:'uidLuisss',mueble:id},'regalos-admin-entregar');
+    exigir(r.json && r.json.ok && regalo('uidLuisss',id)?.tipo === 'docente','Premio nuevo entregado y releído: ' + id);
+    r = await pedir('uidLuisss',{para:'uidAnaaaa',mueble:id});
+    exigir(r.json && r.json.ok === false && !regalo('uidAnaaaa',id),'No transferir un premio docente nuevo: ' + id);
+  }
 
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
   exigir(r.json && r.json.ok === true && regalo('uidLuisss', 'lampSquareFloor') && regalo('uidLuisss', 'lampSquareFloor').de === 'Ana Perez',
@@ -462,6 +501,19 @@ async function probarRegalos() {
   exigir(r.json && r.json.ok === true &&
     db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 1,
     'El latido no puede persistir una posición sobre el hueco.');
+  for (const [id,col,fila] of [['9x9',8,8],['11x11',10,10],['9x7',8,6],['salon-l-grande',8,8]]) {
+    await db.ref('plataforma_estudiantes/avatar/uidAnaaaa/casa').set({tamano:id});
+    r = await pedir('uidLuisss',{sala:'uidAnaaaa',col,fila},'latido');
+    exigir(r.json && r.json.ok && db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === col,
+      'La API debe admitir el extremo de la casa grande: ' + id);
+    r = await pedir('uidAnaaaa',{pieza:[{id:'bedSingle',col,fila,dir:'SE'}]},'guardar-pieza');
+    exigir(r.json && r.json.ok && db.leerRuta('plataforma_estudiantes/avatar/uidAnaaaa/pieza')[0].col === col,
+      'Guardar y releer muebles en el borde de casa grande: ' + id);
+    r = await pedir('uidAnaaaa',{pieza:[{id:'bedSingle',col:20,fila,dir:'SE'}]},'guardar-pieza');
+    exigir(r.status === 409,'No colocar fuera de casa grande: ' + id);
+  }
+  r = await pedir('uidLuisss',{sala:'uidAnaaaa',col:8,fila:1},'latido');
+  exigir(db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 1,'La L grande recoloca las visitas que caen en el hueco.');
   await db.ref('plataforma_estudiantes/avatar/uidAnaaaa/casa').set({ tamano: '5x5' });
   r = await pedir('uidLuisss', { sala: 'uidAnaaaa', col: 6, fila: 6 }, 'latido');
   exigir(r.json && r.json.ok === true &&

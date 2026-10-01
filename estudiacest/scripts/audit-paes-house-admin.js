@@ -22,6 +22,13 @@ assert.match(page, /getElementById\('selectGuia'\)\.dispatchEvent/);
 assert.ok(manifest.criticalFiles.some(file => file.path === 'paes/admin/casas.js'));
 assert.ok(apiSource.indexOf('const decoded = await verifyAdmin(req);') < apiSource.indexOf("case 'admin-house-students'"));
 assert.doesNotMatch(source, /console\.|innerHTML|\.set\(|\.update\(/);
+const presets = vm.runInNewContext('(' + source.match(/const sets = (\{[\s\S]*?\});/)[1] + ')');
+const actualCatalog = require('../estudiantes/js/catalogo-casa.js');
+for (const [id,count] of [['gym',4],['christmas',1],['halloween',6]]) {
+  assert.equal(presets[id].length,count);
+  assert.ok(presets[id].every(furniture=>actualCatalog.some(item=>item.id===furniture && item.xp>0)));
+  assert.ok(page.includes('value="' + id + '"'),'El set debe ser seleccionable en el admin: ' + id);
+}
 
 class Element {
   constructor() { this.children = []; this.listeners = {}; this.value = ''; this.textContent = ''; this.style = {}; this.hidden = false; this.disabled = false; this.attrs = {}; }

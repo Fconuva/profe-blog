@@ -1,0 +1,20 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Prueba aislada de muebles y casas CEST</title><link rel="stylesheet" href="/estudiantes/css/mi-espacio.css"></head>
+<body style="margin:0;background:#0f172a;color:#fff;font-family:system-ui"><main style="max-width:1100px;margin:auto;padding:16px"><h1 style="font-size:18px">Prueba aislada · muebles y casas</h1><p id="qaResult" role="status"></p><div id="host"></div></main>
+<script src="/estudiantes/js/catalogo-casa.js"></script><script src="/estudiantes/js/personaje-iso.js"></script><script src="/estudiantes/js/mapas-casa.js"></script><script src="/estudiantes/js/mi-espacio.js"></script>
+<script>
+(async function(){
+  const uid = new URLSearchParams(location.search).get('visitor') ? 'qaStudentB' : 'qaStudentA';
+  const state = await (await fetch('/qa-state?uid='+uid)).json();
+  const snapshots = value => ({val:()=>value,exists:()=>value != null});
+  const listeners = new Map();
+  const ref = key => ({
+    once:async()=>snapshots(await (await fetch('/qa-read?key='+encodeURIComponent(key))).json()),
+    set:async value=>{const response=await fetch('/qa-store',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key,value})});if(!response.ok)throw Error('No se guardó la prueba');document.getElementById('qaResult').textContent='Guardado y relectura disponibles en la base ficticia.';},
+    on:(event,cb)=>{let previous;const seen=new Set();const poll=async()=>{const value=(await ref(key).once()).val();if(event==='child_added'){Object.entries(value||{}).forEach(([child,item])=>{if(!seen.has(child)){seen.add(child);cb({key:child,...snapshots(item)});}});}else{const signature=JSON.stringify(value);if(signature!==previous){previous=signature;cb(snapshots(value));}}};poll();const timer=setInterval(poll,800);listeners.set(key,timer);},
+    off:()=>{clearInterval(listeners.get(key));listeners.delete(key);},
+    child:child=>ref(key+'/'+child),orderByChild:()=>ref(key),limitToLast:()=>ref(key)
+  });
+  const auth={currentUser:{getIdToken:async()=>uid}};
+  MiEspacio.montar({host:document.getElementById('host'),db:{ref},auth,base:'plataforma_estudiantes',uid,curso:'2A-HC',nombre:uid==='qaStudentA'?'Estudiante de prueba A':'Estudiante de prueba B',xp:0,look:{},...state});
+})().catch(()=>{document.getElementById('qaResult').textContent='No se pudo abrir la prueba.';});
+</script></body></html>

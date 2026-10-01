@@ -6,7 +6,9 @@
       (['10', '11', '12', '13'].includes(String(id)) && Number(record.submittedAt) > 0 && Object.keys(record.answers || {}).length > 0);
   }
   const fold = value => String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
-  const sets = {gamer:['gamerDesk','whiteGamerTower','gamerChair','playStation5'], music:['electricGuitarSet','drumKit','rgbPartySpeaker'], living:['loungeSofaThree','rgbPartySpeaker']};
+  const sets = {gamer:['gamerDesk','whiteGamerTower','gamerChair','playStation5'], music:['electricGuitarSet','drumKit','rgbPartySpeaker'], living:['loungeSofaThree','rgbPartySpeaker'],
+    gym:['gymBench','gymDumbbells','gymTreadmill','gymBike'], christmas:['christmasTree'],
+    halloween:['halloweenPumpkin','halloweenCauldron','halloweenGhost','halloweenScarecrow','halloweenCandy','halloweenLantern']};
   function mount({ auth, getGuideData, refreshGuides, reviewGuide }) {
     const el = id => document.getElementById('house' + id);
     let students = [], catalog = [], selected = [], preview = null, recipients = [], checked = null, run = 0, busy = false;

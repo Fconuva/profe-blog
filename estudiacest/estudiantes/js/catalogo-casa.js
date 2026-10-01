@@ -9,6 +9,17 @@
   if (typeof module === 'object' && module.exports) module.exports = catalogo;
 })(typeof window !== 'undefined' ? window : null, function () {
 return [
+  {id:"gymBench",nom:"Banca de gimnasio",fam:"gym",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"gymDumbbells",nom:"Mancuernas con soporte",fam:"gym",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"gymTreadmill",nom:"Trotadora",fam:"gym",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"gymBike",nom:"Bicicleta estática",fam:"gym",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"christmasTree",nom:"Árbol de Navidad",fam:"navidad",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenPumpkin",nom:"Calabaza de Halloween",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenCauldron",nom:"Caldero de Halloween",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenGhost",nom:"Fantasma decorativo",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenScarecrow",nom:"Espantapájaros de Halloween",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenCandy",nom:"Canasto de dulces de Halloween",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"halloweenLantern",nom:"Farol de Halloween",fam:"halloween",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
   {id:"rgbPartySpeaker",nom:"Parlante RGB con luces",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
   {id:"gamerDesk",nom:"Estación gamer de dos pantallas",fam:"estudio",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
   {id:"whiteGamerTower",nom:"Torre gamer blanca",fam:"estudio",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},

@@ -27,10 +27,15 @@
   if (global.MapasCasa && global.MapasCasa.obtener('salon-l')) {
     TAMANOS.push({ id: 'salon-l', nom: 'Salón en L 7 × 7', cols: 7, filas: 7, xp: 0 });
   }
+  ['9x7','9x9','11x11','salon-l-grande'].forEach(function (id) {
+    var mapa = global.MapasCasa && global.MapasCasa.obtener(id);
+    if (mapa) TAMANOS.push({id:id, nom:id === 'salon-l-grande' ? 'Salón en L 9 × 9' :
+      (id === '9x7' ? 'Salón rectangular 9 × 7' : 'Salón ' + mapa.cols + ' × ' + mapa.filas), cols:mapa.cols, filas:mapa.filas, xp:0});
+  });
   function tamanoDe(id) { return TAMANOS.filter(function (t) { return t.id === id; })[0] || TAMANOS[0]; }
   function sueloEn(t, col, fila) {
     if (!Number.isInteger(col) || !Number.isInteger(fila) || col < 0 || col >= t.cols || fila < 0 || fila >= t.filas) return false;
-    return t.id !== 'salon-l' || !!(global.MapasCasa && global.MapasCasa.haySuelo(t.id, col, fila));
+    return !(global.MapasCasa && global.MapasCasa.obtener(t.id)) || global.MapasCasa.haySuelo(t.id, col, fila);
   }
   function haySuelo(col, fila) { return sueloEn(tamanoDe(S.casa && S.casa.tamano), col, fila); }
   function entrada() {
@@ -40,7 +45,7 @@
   function aplicarTamano() {
     var t = tamanoDe(S.casa && S.casa.tamano);
     COLS = t.cols; FILAS = t.filas;
-    S.mapa = t.id === 'salon-l' ? global.MapasCasa.obtener(t.id) : null;
+    S.mapa = global.MapasCasa ? global.MapasCasa.obtener(t.id) : null;
   }
   var DIRS = ['SE', 'SW', 'NE', 'NW'];
   var LATIDO_MS = 20000, BURBUJA_MS = 6000;
@@ -64,6 +69,9 @@
     { id:'cocina',     nom:'Cocina' },
     { id:'musica',     nom:'Música' },
     { id:'mascotas',   nom:'Mascotas' },
+    { id:'gym',        nom:'Gimnasio' },
+    { id:'navidad',    nom:'Navidad' },
+    { id:'halloween',  nom:'Halloween' },
     { id:'baño',       nom:'Baño' }
   ];
 
@@ -82,7 +90,7 @@
 
   // Muebles en los que el personaje se puede sentar o acostar: al tocarlos, en
   // vez de rodearlos, camina hasta el lado y se sube.
-  var SENTABLES = /^(chair|gamerChair|loungeChair|loungeSofa|bench|stoolBar|bedSingle|bedDouble|bedBunk)/;
+  var SENTABLES = /^(chair|gamerChair|gymBench|loungeChair|loungeSofa|bench|stoolBar|bedSingle|bedDouble|bedBunk)/;
   function esSentable(id) { return SENTABLES.test(String(id).split('__')[0]); }
   function esMascota(id) { return /^pet[A-Z]/.test(String(id)); }
   function posturaEn(col, fila) {

@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, pestaña PAES con admin anterior
+
+- Ante la reiteración de que faltaban vistas previas y selección por curso/tarea, se compararon las dos pestañas abiertas de `/paes/admin/#casas`. Una tenía el catálogo y los controles publicados; la otra no tenía `housePreview`, `houseMode` ni imágenes del catálogo. La URL pública conservaba los recursos nuevos.
+- Se recargó únicamente la pestaña anterior, sin borrar caché ni cerrar sesiones. Quedaron disponibles los 172 muebles, la vista ampliada de PS5 con imagen cargada y las opciones de curso, tarea G1–G21 y sets. No se confirmó ningún premio ni se alteró el set preparado en la otra pestaña. Auditoría focal aprobada; no hubo cambios funcionales ni un despliegue adicional.
+
+---
+
 ## 2026-10-01, vistas previas y entrega de sets PAES por curso y tarea
 
 - `paes/admin/#casas` muestra el catálogo antes de seleccionar una cuenta, miniaturas mayores y una vista ampliada girable en cuatro ángulos, incluso para muebles obtenidos. Permite armar un set de hasta doce muebles o elegir sets gamer, música y sala.

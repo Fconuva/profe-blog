@@ -8,11 +8,31 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-10-01, publicación PAES Mi espacio, reenvíos y reconciliación de notas
+
+- Francisco autorizó publicar el lote local completo y la clave inicial de seis dígitos del RUT para las cuentas que no habían cambiado su contraseña. Se publicó el commit `3e84c1a5` en `main` y se desplegó Vercel producción `dpl_GJLE9f1TJA7Eoc7orbTSi2vv2s2F`; la compilación remota aprobó los 408 recursos críticos. Sitio, API y archivos de muestra (Mi espacio, portal, mapa, parlante y estatua) respondieron 200 y coincidieron en SHA-256 con la fuente. También se desplegaron las reglas RTDB y su relectura coincidió con `firebase-rules.json`.
+- Mi espacio PAES quedó enlazado discretamente desde el portal para 3°A, 3°B, 4°A y 4°B HC. Se corrigieron condicionalmente 81 cursos invertidos, se crearon y activaron cuatro cuentas faltantes y se ocultó reversiblemente un perfil fantasma duplicado de 4°B sin borrar datos. Auditoría Auth+RTDB: las 153 personas tienen cuenta y perfil utilizable, cero cursos cruzados, cero cuentas deshabilitadas y cero casas fantasma visibles. Prueba autenticada de solo lectura con una cuenta nueva: inicio, inventario y casas del curso respondieron correctamente; no se probó una visita visual en navegador con sesión estudiantil.
+- Los regalos entre estudiantes se transfieren: el mueble sale del inventario y pieza del donante en la misma actualización en que entra al receptor; las reglas impiden escrituras directas de `pieza` y `regalos`. Los muebles docentes siguen bajo las restricciones vigentes. Se verificó que las PS5 existentes no estaban colocadas sin regalo ni duplicadas en una misma casa.
+- Se recuperaron 20 notas faltantes de G10 con marca de entrega y autoguardado antiguo ocurrido hasta 10 segundos después, más entregas nuevas de G1, G12, G13, G15 y G19; se releyeron intento y libro tras cada lote. Una edición de G10 26 segundos después de la entrega no acredita reenvío final y quedó sin recalificar. Las correcciones manuales se preservaron; la calificación manual del admin ahora guarda intento y libro juntos.
+- G1–G21 quedaron visibles y G22–G36 bloqueadas. Se abrió solo el reenvío G10–G19 hasta el 8 de octubre inclusive (`reenvio_cierra=2026-10-09`), con G20/G21 cerradas. La API pública confirmó que una entrega G10 histórica conserva su envío previo y ofrece un borrador editable. `npm run build`, auditorías focales, simulaciones con checksum, ETag y relecturas aprobaron.
+- Pendiente funcional: las guías PAES aún no son fuentes configurables de recompensa de muebles; los muebles gratuitos y regalos docentes sí funcionan. Para asignar premios automáticos PAES se debe definir la correspondencia guía→mueble/set. Las nuevas entregas posteriores a esta revisión no se autocalifican: volver a ejecutar el conciliador autorizado o acordar una política de calificación automática antes de prometer actualización inmediata.
+
+---
+
 ## 2026-10-01, bloqueo PAES: abiertas solo G1–G21 (datos de producción)
 
 - Se contrastó la configuración real antes de escribir: 19 de G1–G21 estaban bloqueadas y dos abiertas; las 15 guías posteriores/especiales estaban bloqueadas. Había un bloqueo programado vencido y sin marcar como aplicado, que podía volver a cerrar guías en la siguiente lectura.
 - Se habilitaron G1–G21 mediante escritura condicional con respaldo y relectura; se marcó el bloqueo programado como aplicado. Una edición posterior, ajena a ese script, dejó 36 guías abiertas. Francisco confirmó que quería **solo G1–G21**; se restauraron exactamente los 15 bloqueos restantes, preservando excepciones, reenvíos y notas.
 - Verificación independiente: API pública con G1–G21 sin bloqueo, G22–G31 y cinco especiales bloqueadas (21 abiertas, 15 bloqueadas). La consola del admin no mostró errores actuales al recargar con conexión. Los errores aportados (`ERR_INTERNET_DISCONNECTED`, `ERR_NETWORK_CHANGED`, `Failed to fetch` y cierre de WebSocket) corresponden al corte/cambio de red del navegador; el panel no puede guardar durante ese corte y muestra una alerta genérica. `node --check` del script y `npm run build` aprobaron. No se desplegó código ni se publicó el lote local de Mi casa/PAES avatar.
+
+---
+
+## 2026-10-01, Mi espacio para PAES (preparado en local; no publicado)
+
+- Se preparó `paes/mi-espacio.html` y una entrada desde el portal PAES. Reutiliza avatar, casa y muebles de `estudiantes/` con cuenta Firebase autenticada y perfil de la nómina PAES; un RUT escrito en el portal no autoriza por sí solo a editar una casa. Se añadió auditoría focalizada y el recurso crítico al manifiesto.
+- Auditoría agregada de producción: 221 registros de nómina PAES; cuatro sin perfil estudiantil coincidente, 81 perfiles de 3°A/3°B con el curso intercambiado respecto de nómina y libro, y una identidad con perfiles duplicados. La mayoría de los perfiles coincidentes no ha completado el cambio de contraseña.
+- **No publicar todavía:** la contraseña inicial de las cuentas sin activar es previsible a partir de un identificador público; antes de abrir avatar, casa y chat hay que acordar acceso individual seguro. También falta decisión sobre la corrección de cursos y prueba real autenticada. El lote local de muebles sigue sin autorización para commit, push o despliegue.
+- `node scripts/audit-paes-mi-espacio-page.js` y `npm run build` aprobaron; la prueba de navegador y la verificación de producción quedan pendientes.
 
 ---
 
@@ -23,6 +43,46 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 - Relectura independiente de Firebase: cero entregas confirmadas elegibles sin calificación ni casilla de libro en G10–G19; G20 y G21 siguen sin notas. Quedó una discrepancia preexistente entre calificación manual y libro, preservada para revisión docente, sin sobrescritura automática.
 - El calificador exige simulación con checksum, respaldos locales temporales y escritura condicional por registro; las pruebas sintéticas y `npm run build` pasaron. La portada pública PAES cargó sin errores de consola. No se abrió la publicación estudiantil de G18–G19 ni se desplegó código de la plataforma.
 - El lote local de Mi casa sigue excluido de commit, push y despliegue por instrucción vigente de Francisco.
+
+---
+
+## 2026-09-30, salón en L integrado en Mi casa (solo local)
+
+- Se conectó el mapa Tiled de 7 × 7 y 40 baldosas al panel de `Mi casa` como tercera forma, conservando las habitaciones 5 × 5 y 7 × 7. Muros, piso, ruta del avatar, clics y muebles respetan los huecos; no se importaron los muebles de muestra del laboratorio ni se modificó el esquema de premios.
+- Al cambiar de forma se impide dejar muebles o visitas fuera. La API valida la posición de presencia según la casa del dueño; las visitas observan cambios de casa y pieza en tiempo real. El mapa compilado se compara casilla por casilla con el JSON original de Tiled.
+- Pruebas locales: auditoría de 179 muebles y 407 recursos críticos, `npm run build`, panel real con API/Firebase simulados a 390 y 1200 px, recorrido y rechazo del hueco, paso por 5 × 5/7 × 7/L, bloqueo por mueble fuera y cambio de geometría durante una visita. Sin errores de consola ni desborde. Falta verificar dos cuentas reales, Firebase y reconexión antes de publicar.
+- Se mantiene el lote local por instrucción de Francisco: **sin commit, push ni despliegue** hasta autorización expresa.
+
+---
+
+## 2026-09-30, laboratorio Tiled y plan de expansión de Mi casa (solo local)
+
+- Se añadió `scripts/mi-espacio-lab/hoja-de-ruta.md` con cinco etapas: mapas irregulares, integración con casas guardadas, interacciones, avatar por capas y espacios sociales. Cada etapa tiene una prueba de salida; la casa estudiantil vigente no se modificó en esta iteración.
+- Se instaló Tiled 1.12.2 en el equipo de desarrollo y se creó `scripts/mi-espacio-lab/`: mapa isométrico JSON de 7 × 7 en forma de L, importador validado, vista Canvas y prueba automatizada. El editor reexportó el mapa y el adaptador conservó 40 casillas, tres muebles, entrada y ruta de 11 pasos.
+- Navegador real con clics a 390, 1200 y 3840 px: el hueco se rechaza, se camina entre las dos zonas, zoom/arrastre/centrado responden y no hay errores de consola, recursos fallidos ni desborde. El laboratorio no lee ni escribe Firebase y no está enlazado al dashboard.
+- El resultado confirma la viabilidad del **formato de mapas**, no la etapa de migración de habitaciones ni la concurrencia real. No hacer commit, push ni despliegue de este lote hasta autorización de Francisco.
+
+---
+
+## 2026-09-30, parlante RGB y primera ampliación de Mi casa (lote local, sin publicar)
+
+- Se añadió un parlante RGB de cuatro orientaciones como premio docente. Se puede seleccionar y encender/apagar; las luces laten mientras está encendido y el estado se guarda en la pieza.
+- La casa admite ahora 5 × 5 o 7 × 7 casillas. La API de presencia acepta las nuevas coordenadas; al reducir, la interfaz impide dejar muebles, al propietario o a las visitas fuera del piso. Para usar el salón en celular se agregaron zoom, arrastre de cámara y centrado.
+- Se añadieron tres gestos temporales visibles para quienes estén en la sala: saludar, aplaudir y bailar. El servidor valida los IDs y su duración; la animación no altera el atuendo guardado.
+- La carga de sprites pasó a demanda: se cargan las cuatro vistas de los muebles colocados y del que se elige, mientras los demás usan miniaturas diferidas. En la vista de prueba se solicitaron 53 imágenes de muebles, frente a las 716 que habría pedido la precarga completa del catálogo de 179.
+- Prueba local aislada en escritorio (1200 px) y celular (390 px): sentarse, acostarse, pasar a salón 7 × 7, sincronizar gesto, encender parlante, acercar, arrastrar y centrar; sin errores de JavaScript, recursos rotos ni desborde horizontal. Auditoría de 179 muebles y 406 recursos críticos; `npm run build` aprobado.
+- No se instaló un motor externo: la casa actual es Canvas 2D y una importación de PixiJS/Phaser sería una migración, no una mejora automática. Tiled con exportación JSON isométrica queda como candidato para una siguiente etapa de habitaciones no rectangulares; Colyseus requeriría un servicio multijugador persistente distinto de la presencia actual en Firebase.
+- Se mantiene la instrucción explícita de Francisco: **no hacer commit, push ni despliegue** de este lote hasta que autorice publicarlo.
+
+---
+
+## 2026-09-30, lote local de muebles temáticos y camisetas (sin publicar)
+
+- Se prepararon en local 23 muebles con cuatro orientaciones: estación y silla gamer, torre blanca, sofá de tres cuerpos, pecera, cinco mascotas, seis instrumentos/estaciones musicales, cinco alfombras temáticas y dos estatuas doradas simbólicas (CR7 y Messi). Se añadieron seis camisetas de clubes al editor de personaje.
+- El personaje puede usar sillas/sofás y camas con una postura visible; las mascotas se desplazan dentro de su baldosa y la pecera muestra peces animados cuando las casas están habilitadas.
+- Los muebles nuevos tienen requisito de recompensa/regalo docente, no desbloqueo automático por XP. La estatua CR7 reproduce en cuatro vistas el modelo que Francisco señaló como claramente reconocible; la de Messi se rehízo en el mismo estilo dorado, con rostro, el 10 y la copa levantada.
+- Auditoría de Mi espacio: 178 muebles con cuatro sprites; release local: 402 recursos críticos presentes. Prueba aislada de navegador en escritorio y celular: sin errores ni desbordes, mascotas/peces animados, sentarse y acostarse confirmados; seis camisetas inspeccionadas visualmente. `npm run build` pasó con todo el lote integrado.
+- Por instrucción explícita de Francisco, este lote permanece solo en el árbol local: no hacer commit, push ni deploy hasta que autorice subirlo. Las dos conservadoras preparadas previamente siguen sin comprobarse publicadas.
 
 ---
 

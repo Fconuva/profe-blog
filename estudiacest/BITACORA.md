@@ -1,5 +1,23 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, NM3 Clase 4: sin roles, textos justificados y zoom para la pantalla de la sala
+
+- Francisco pidió quitar de la pantalla C los cuatro roles de grupo y el recuadro «¿Cómo vamos a demostrar…?», y de la pantalla G el aviso «El profe va a pasar por los grupos preguntando…». La pantalla C queda solo con el objetivo. Las menciones restantes a «lector» y «vocero» pasan a «un integrante» y «cada grupo».
+- Textos 1 y 2: justificados, a todo el ancho y con separación en sílabas (`hyphens:auto`, `lang="es"`).
+- Barra de zoom fija en los dos textos:
+  - A− y A+ con porcentaje; el texto se reacomoda al ancho, sin scroll lateral;
+  - «Ajustar a la pantalla» oculta los rótulos de la diapositiva y calcula por búsqueda binaria el tamaño máximo con que el texto completo cabe sin scroll; desde 1200 px usa dos columnas y se recalcula al cambiar el tamaño o la pantalla completa;
+  - «Volver al tamaño normal»;
+  - teclas + y −.
+  En celular se oculta «Ajustar».
+- Validación en navegador real, sin desborde lateral en ningún caso y con 0 errores en 390, 1440 y 3840 px:
+  - 1366×768: el Texto 2 ajusta al 113 %;
+  - 1920×1080: el Texto 2 ajusta al 126 %;
+  - 4K: los textos ajustan al 195 % y al 281 %.
+- El material impreso de OneDrive se regeneró sin los roles: guía grupal y planificación.
+
+---
+
 ## 2026-10-01, publicación y entrega confirmada de premios en 4°B HC
 
 - Publicado el commit `b96011c2` con `npm run deploy:prod:safe`: despliegue `dpl_Ht8pdYSD9phkKfPHUkhi5i7Wfsn6`, READY y alias público confirmado. Incluye los once muebles nuevos, cuatro tamaños/mapas de casa, premios PAES y diez logros/ropa, conservando la clase NM3 creada en paralelo. Los 59 archivos públicos contrastados respondieron 200 y coincidieron en SHA-256; las tres acciones de inventario/premios rechazaron acceso sin sesión con 401. La regla Firebase vigente mantiene `regalos` protegido. Navegador público sin desbordes en 390/1200/3840 y sin errores.

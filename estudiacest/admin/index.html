@@ -539,10 +539,34 @@
 
     const STUDENT_BASE = 'plataforma_estudiantes';
 
-    firebase.initializeApp(FIREBASE_CONFIG);
-    const auth = firebase.auth();
-    auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-    const db = firebase.database();
+    const legacyApp = firebase.initializeApp(FIREBASE_CONFIG);
+    const adminApp = firebase.initializeApp(FIREBASE_CONFIG, 'estudiacest-admin');
+    const auth = adminApp.auth();
+    const persistenceReady = auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+    const db = adminApp.database();
+    let legacyMigrationAttempted = false;
+
+    async function recoverAdminSession() {
+      if (legacyMigrationAttempted || auth.currentUser) return false;
+      legacyMigrationAttempted = true;
+      const legacyAuth = legacyApp.auth();
+      const legacyUser = await new Promise(resolve => {
+        let unsubscribe = () => {};
+        unsubscribe = legacyAuth.onAuthStateChanged(user => { unsubscribe(); resolve(user); }, () => resolve(null));
+      });
+      if (!legacyUser) return false;
+      const response = await fetch('/api/estudiantes?action=admin-session-token', {
+        method:'POST', headers:{'Content-Type':'application/json', 'Authorization':'Bearer ' + await legacyUser.getIdToken()}, body:'{}'
+      });
+      if ([401, 403].includes(response.status)) return false;
+      if (!response.ok) throw new Error('No se pudo recuperar la sesión docente.');
+      const data = await response.json();
+      if (!data.token) return false;
+      await persistenceReady;
+      await auth.signInWithCustomToken(data.token);
+      await legacyAuth.signOut();
+      return true;
+    }
 
     const loginView = document.getElementById('loginView');
     const homeView = document.getElementById('homeView');
@@ -654,6 +678,7 @@
 
       setLoading(true);
       try {
+        await persistenceReady;
         await auth.signInWithEmailAndPassword(email, password);
       } catch (error) {
         console.error('[admin-gateway/login]', error);
@@ -670,6 +695,10 @@
 
     auth.onAuthStateChanged(async user => {
       if (!user) {
+        setLoading(true);
+        try { if (await recoverAdminSession()) return; }
+        catch (_) { showError('No se pudo recuperar la sesión docente. Revisa tu conexión y recarga.'); }
+        finally { setLoading(false); }
         showLogin();
         return;
       }

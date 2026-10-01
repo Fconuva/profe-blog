@@ -7,6 +7,10 @@ const root = path.join(__dirname, '..');
 const page = fs.readFileSync(path.join(root, 'paes/admin/index.html'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'paes/admin/casas.js'), 'utf8');
 const apiSource = fs.readFileSync(path.join(root, 'api/paes.js'), 'utf8');
+const gateway = fs.readFileSync(path.join(root, 'admin/index.html'), 'utf8');
+assert.match(gateway, /firebase\.initializeApp\(FIREBASE_CONFIG, 'estudiacest-admin'\)/);
+assert.doesNotMatch(gateway, /const auth = firebase\.auth\(\)/);
+for (const script of [...gateway.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]) new vm.Script(script[1]);
 const manifest = JSON.parse(fs.readFileSync(path.join(__dirname, 'academic-release-manifest.json'), 'utf8'));
 for (const script of [...page.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]) new vm.Script(script[1]);
 assert.match(page, /data-tab="casas"/);
@@ -124,7 +128,8 @@ async function checkScope() {
   }
 }
 async function checkAdminRecovery() {
-  const recovery = page.slice(page.indexOf('    async function recoverAdminSession()'), page.indexOf('    // Node constants'));
+  for (const html of [page, gateway]) {
+  const recovery = html.slice(html.indexOf('    async function recoverAdminSession()'), html === page ? html.indexOf('    // Node constants') : html.indexOf('    const loginView'));
   for (const status of [200,403,503]) {
     let signedIn = 0, signedOut = 0;
     const context = {legacyMigrationAttempted:false,auth:{currentUser:null,signInWithCustomToken:async token => {assert.equal(token,'test-admin-token');signedIn++;}},
@@ -137,6 +142,7 @@ async function checkAdminRecovery() {
     if(status===503) await assert.rejects(promise,/recuperar/); else assert.equal(await promise,status===200);
     assert.equal(signedIn,status===200?1:0);
     assert.equal(signedOut,status===200?1:0,'Nunca cerrar una sesión estudiantil durante la recuperación administrativa.');
+  }
   }
 }
 (async () => { await checkUI(); await checkScope(); await checkAdminRecovery(); console.log('Admin casas PAES: sesión docente aislada, alcance, entregas finales, elección, rechazo, doble clic, regalo con relectura, persistencia y fallo de confirmación aprobados.'); })()

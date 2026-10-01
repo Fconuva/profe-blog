@@ -204,6 +204,7 @@ async function guardarCasa(req,res,db,yo){
     if(yo.esAdmin)return res.status(403).json({error:'Solo estudiantes.'});
     const raw=req.body.casa;
     if(!raw||typeof raw!=='object'||Array.isArray(raw))return res.status(400).json({error:'Habitación no válida.'});
+    if(['piso','muro','tamano'].some(k=>raw[k]!==undefined&&(typeof raw[k]!=='string'||raw[k].length>40)))return res.status(400).json({error:'Habitación no válida.'});
     const casa={piso:raw.piso||'claro',muro:raw.muro||'blanco',tamano:raw.tamano||'5x5'};
     const pisos={claro:0,roble:200,gris:200,azul:600,verde:600,rosa:1000,morado:1000,negro:1800};
     const muros={blanco:0,crema:150,celeste:400,verde:400,lila:800,gris:800,rojo:1500,oscuro:1800};

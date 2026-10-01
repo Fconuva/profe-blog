@@ -47,6 +47,7 @@ async function checkGeometry(){
   assert.equal((await save([{...good[0],pared:'izq',pos:1,nivel:0}])).code,409);
   assert.equal((await save([{id:'wallStone',col:0,fila:0,dir:'SE'}])).code,409,'Los acabados no son muebles del piso.');
   const house=casa=>request('guardar-casa',{casa},'studentA');
+  assert.equal((await house({tamano:['9x9']})).code,400,'El tamaño no admite objetos ni listas.');
   assert.equal((await house({tamano:'9x9',muro:'piedra'})).code,409,'Un acabado no recibido está bloqueado.');
   avatar().regalos.wallStone={tipo:'docente'};
   assert.equal((await house({tamano:'9x9',muro:'piedra',piso:'pasto'})).code,200);
@@ -56,7 +57,8 @@ async function checkGeometry(){
   assert.equal((await house({tamano:'5x5',muro:'piedra',piso:'pasto'})).code,409,'Reducir valida todas las casillas del mueble.');
 }
 function checkAssets(){
-  const specs=require('./furniture-terrace/assets.json');assert.equal(specs.length,12);
+  const specs=catalog.filter(m=>m.fam==='terraza');assert.equal(specs.length,12);
+  assert.deepEqual(specs.map(m=>m.id).sort(),['terracePoolSmall','terracePoolMedium','terracePoolLarge','terraceWaterfall','terraceGrass','terracePalm','terraceOak','terracePine','terraceRockingChair','terraceLounger','terraceTable','terraceParasol'].sort());
   for(const item of specs)for(const view of ['SE','SW','NE','NW']){
     const bytes=fs.readFileSync(path.join(root,'estudiantes/assets/pieza/'+item.id+'_'+view+'.png'));
     assert.equal(bytes.readUInt32BE(0),0x89504e47);assert.equal(bytes[25],6,'RGBA: '+item.id);

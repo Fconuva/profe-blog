@@ -8,6 +8,14 @@ No registrar RUT, notas individuales, correos, credenciales, tokens ni informaci
 
 ---
 
+## 2026-10-01, bloqueo PAES: abiertas solo G1–G21 (datos de producción)
+
+- Se contrastó la configuración real antes de escribir: 19 de G1–G21 estaban bloqueadas y dos abiertas; las 15 guías posteriores/especiales estaban bloqueadas. Había un bloqueo programado vencido y sin marcar como aplicado, que podía volver a cerrar guías en la siguiente lectura.
+- Se habilitaron G1–G21 mediante escritura condicional con respaldo y relectura; se marcó el bloqueo programado como aplicado. Una edición posterior, ajena a ese script, dejó 36 guías abiertas. Francisco confirmó que quería **solo G1–G21**; se restauraron exactamente los 15 bloqueos restantes, preservando excepciones, reenvíos y notas.
+- Verificación independiente: API pública con G1–G21 sin bloqueo, G22–G31 y cinco especiales bloqueadas (21 abiertas, 15 bloqueadas). La consola del admin no mostró errores actuales al recargar con conexión. Los errores aportados (`ERR_INTERNET_DISCONNECTED`, `ERR_NETWORK_CHANGED`, `Failed to fetch` y cierre de WebSocket) corresponden al corte/cambio de red del navegador; el panel no puede guardar durante ese corte y muestra una alerta genérica. `node --check` del script y `npm run build` aprobaron. No se desplegó código ni se publicó el lote local de Mi casa/PAES avatar.
+
+---
+
 ## 2026-10-01, calificación PAES tras reapertura (datos de producción)
 
 - Se interpretaron como «últimas dos» las guías regulares G20 y G21; ambas quedaron sin calificar. G1–G9 no tenían entregas actuales pendientes; sus notas históricas y borradores se conservaron.

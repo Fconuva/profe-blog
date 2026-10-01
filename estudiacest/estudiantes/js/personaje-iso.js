@@ -227,7 +227,11 @@
   /* ---------- dibujo ----------
    * Caja de trabajo: 100 de ancho por 116 de alto, pies apoyados en baseY.
    */
-  function pintar(cx, centroX, baseY, look, escala, postura, gesto){
+  function pintarVector(cx, centroX, baseY, look, escala, postura, gesto, movimiento){
+    movimiento = movimiento || {};
+    var tiempo = movimiento.t == null ? Date.now() : movimiento.t;
+    var espalda = /^(NE|NW)$/.test(movimiento.dir || 'SE');
+    var paso = movimiento.caminar && postura !== 'sentado' ? Math.sin(tiempo / 95) * 4 : 0;
     var e = escala || 1;
     var sentado = postura === 'sentado';
     var piel   = color('piel', look.piel, '#f6d5bf');
@@ -250,7 +254,7 @@
     }
 
     cx.save();
-    cx.lineJoin='round';
+    cx.lineJoin='miter';
 
     // sombra
     cx.beginPath();
@@ -280,7 +284,7 @@
       caja(-12,-30,10,16,3,abajo); caja(2,-30,10,16,3,abajo);
       caja(-12,-16,10,16,3,piel);  caja(2,-16,10,16,3,piel);
     } else {
-      caja(-12,-30,10,30,3,abajo); caja(2,-30,10,30,3,abajo);
+      caja(-12,-30,10,30+paso,2,abajo); caja(2,-30,10,30-paso,2,abajo);
       if (ab==='buzo'){ caja(-12,-12,10,4,1.5,'#ffffff55',true); caja(2,-12,10,4,1.5,'#ffffff55',true); }
     }
 
@@ -290,13 +294,18 @@
     else if (zp==='botas'){ caja(-13,-12,12,12,3,calza); caja(1,-12,12,12,3,calza); }
     else if (zp==='sandalias'){ caja(-13,-4,12,4,2,calza); caja(1,-4,12,4,2,calza); }
     else if (zp==='formales'){ caja(-13,-5,13,5,1.5,calza); caja(0,-5,13,5,1.5,calza); }
-    else { caja(-13,-7,12,7,3,calza); caja(1,-7,12,7,3,calza);
-           caja(-13,-3,12,3,1.5,'#ffffff88',true); caja(1,-3,12,3,1.5,'#ffffff88',true); }
+    else { caja(-13,-7+paso,12,7,2,calza); caja(1,-7-paso,12,7,2,calza);
+           caja(-13,-3+paso,12,3,0,'#ffffffaa',true); caja(1,-3-paso,12,3,0,'#ffffffaa',true);
+           caja(-10,-6+paso,5,1,0,'#ffffff',true); caja(4,-6-paso,5,1,0,'#ffffff',true); }
 
     // ---- torso ----
     var ar = look.arriba;
-    caja(-16,-60,32,31,7,arriba);
-    if (camiseta) {
+    caja(-16,-60,32,31,3,arriba);
+    caja(-15,-58,3,25,0,'#ffffff30',true);
+    caja(12,-58,3,27,0,'#00000026',true);
+    caja(-12,-32,24,2,0,'#00000028',true);
+    caja(-10,-28,2,16,0,'#ffffff26',true); caja(3,-28,2,16,0,'#00000028',true);
+    if (camiseta && !espalda) {
       cx.save();
       cx.beginPath(); cx.roundRect(X(-16), Y(-60), 32*e, 31*e, 7*e); cx.clip();
       cx.fillStyle = camiseta.franja;
@@ -330,21 +339,31 @@
 
     // ---- brazos ----
     var mangaLarga = (ar==='manga'||ar==='poleron'||ar==='camisa');
-    if (gesto === 'saludar' || gesto === 'bailar') {
-      var subeIzquierdo = gesto === 'bailar' && Math.sin(Date.now() / 220) > 0;
+    if (gesto === 'saludar' || gesto === 'bailar' || gesto === 'celebrar') {
+      var subeIzquierdo = gesto === 'bailar' && Math.sin(tiempo / 220) > 0;
       var bx = subeIzquierdo ? -27 : 17;
       caja(-23,-58,8,24,4,arriba);
       caja(15,-58,8,24,4,arriba);
       caja(bx, -82, 8, 29, 4, mangaLarga ? arriba : piel);
       caja(bx + (subeIzquierdo ? -2 : 2), -88, 9, 9, 4, piel);
-      if (gesto === 'bailar') {
+      if (gesto === 'celebrar') {
+        caja(-25,-82,8,29,2,mangaLarga ? arriba : piel);
+        caja(-27,-89,9,9,2,piel);
+      } else if (gesto === 'bailar') {
         var abajoX = subeIzquierdo ? 17 : -25;
         caja(abajoX, -40, 9, 9, 4, piel);
       } else caja(-23,-36,8,8,4,piel);
-    } else if (gesto === 'aplaudir') {
+    } else if (gesto === 'aplaudir' || gesto === 'corazon') {
       caja(-22,-57,9,15,4,arriba); caja(13,-57,9,15,4,arriba);
       caja(-15,-48,15,8,4,piel); caja(0,-48,15,8,4,piel);
-      caja(-5,-51,10,12,4,piel);
+      var junta = gesto === 'aplaudir' && Math.sin(tiempo/120)<0 ? 4 : 0;
+      caja(-6-junta,-51,6,10,2,piel); caja(junta,-51,6,10,2,piel);
+      if (gesto === 'corazon') { caja(-3,-50,6,5,0,'#ed718f',true); }
+    } else if (gesto === 'pensar' || gesto === 'reir' || gesto === 'sorprender') {
+      caja(-23,-58,8,24,2,arriba); caja(-23,-36,8,8,2,piel);
+      caja(15,-58,8,14,2,arriba); caja(10,-65,8,22,2,mangaLarga ? arriba : piel);
+      caja(6,-71,9,9,2,piel);
+      if (gesto === 'sorprender') { caja(-18,-70,8,22,2,piel); }
     } else {
       if (mangaLarga){
         caja(-23,-58,8,24,4,arriba); caja(15,-58,8,24,4,arriba);
@@ -365,8 +384,15 @@
     }
 
     // ---- cabeza ----
-    caja(-18,-100,36,36,13,piel);
-    caja(-21,-86,5,9,2.5,piel); caja(16,-86,5,9,2.5,piel);
+    var cabeceo = gesto === 'asentir' ? Math.round(Math.sin(tiempo/140)*2) : 0;
+    cx.save(); cx.translate(gesto === 'negar' ? Math.round(Math.sin(tiempo/140)*2)*e : 0, cabeceo*e);
+    cx.beginPath();
+    [[-16,-98],[8,-103],[19,-95],[19,-72],[12,-65],[-13,-67],[-18,-74]].forEach(function(v,i){if(i)cx.lineTo(X(v[0]),Y(v[1]));else cx.moveTo(X(v[0]),Y(v[1]));});
+    cx.closePath();cx.fillStyle=piel;cx.fill();cx.strokeStyle=trazo;cx.lineWidth=1.2*e;cx.stroke();
+    cx.beginPath();cx.moveTo(X(-16),Y(-98));cx.lineTo(X(-10),Y(-94));cx.lineTo(X(-10),Y(-68));cx.lineTo(X(-16),Y(-72));cx.closePath();cx.fillStyle='#00000025';cx.fill();
+    caja(14,-90,3,15,0,'#ffffff25',true);
+    caja(-20,-86,6,10,2,piel); caja(17,-85,3,7,1,piel);
+    caja(-19,-84,2,5,0,'#00000040',true); caja(18,-83,1,3,0,'#00000030',true);
 
     // ---- pelo ----
     var p = look.pelo;
@@ -374,16 +400,21 @@
       cx.save();
       cx.fillStyle=pelo; cx.strokeStyle=trazo; cx.lineWidth=1.2*e;
       cx.beginPath();
-      if (p==='largo')        cx.roundRect(X(-20),Y(-103),40*e,19*e,10*e);
-      else if (p==='colita')  cx.roundRect(X(-20),Y(-103),40*e,18*e,9*e);
-      else if (p==='mono')    cx.roundRect(X(-20),Y(-103),40*e,18*e,9*e);
-      else if (p==='tazon')   cx.roundRect(X(-20),Y(-103),40*e,20*e,9*e);
-      else if (p==='crespo')  cx.roundRect(X(-21),Y(-105),42*e,20*e,10*e);
-      else if (p==='afro')    cx.roundRect(X(-24),Y(-108),48*e,26*e,13*e);
+      if (p==='largo')        cx.roundRect(X(-20),Y(-104),40*e,16*e,5*e);
+      else if (p==='colita')  cx.roundRect(X(-20),Y(-104),40*e,15*e,5*e);
+      else if (p==='mono')    cx.roundRect(X(-20),Y(-104),40*e,15*e,5*e);
+      else if (p==='tazon')   cx.roundRect(X(-20),Y(-104),40*e,17*e,6*e);
+      else if (p==='crespo')  cx.roundRect(X(-21),Y(-107),42*e,18*e,6*e);
+      else if (p==='afro')    cx.roundRect(X(-24),Y(-110),48*e,22*e,8*e);
       else if (p==='mohicano')cx.roundRect(X(-5),Y(-114),10*e,32*e,5*e);
-      else                    cx.roundRect(X(-19),Y(-102),38*e,17*e,8.5*e);
+      else {
+        [[-19,-89],[-20,-100],[-15,-104],[-9,-105],[-7,-108],[-2,-105],[5,-107],[9,-103],[15,-104],[20,-98],[18,-90],[13,-93],[9,-88],[5,-91],[1,-88],[-3,-92],[-7,-89],[-11,-92],[-15,-88]].forEach(function(v,i){if(i)cx.lineTo(X(v[0]),Y(v[1]));else cx.moveTo(X(v[0]),Y(v[1]));});cx.closePath();
+      }
       cx.fill(); cx.stroke();
-      if (p==='largo'){
+      if (p==='trenzas') {
+        for (var tz=0;tz<5;tz++) { caja(-22,-91+tz*5,7,6,1,pelo); caja(16,-91+tz*5,7,6,1,pelo); }
+        caja(-21,-68,5,3,0,'#bd739e',true); caja(17,-68,5,3,0,'#bd739e',true);
+      } else if (p==='largo'){
         cx.beginPath();
         cx.roundRect(X(-23),Y(-96),7*e,30*e,3.5*e);
         cx.roundRect(X(16),Y(-96),7*e,30*e,3.5*e);
@@ -407,6 +438,17 @@
       }
       cx.restore();
     }
+    // Mechones y volumen: pocos grupos de píxeles, no una superficie lisa.
+    var peloClaro = '#ffffff28';
+    if (p==='rapado') { caja(-16,-99,32,8,1,pelo,true); }
+    else if (p==='mohicano') { caja(-3,-112,2,17,0,peloClaro,true); }
+    else {
+      for (var mh=0;mh<5;mh++) {
+        caja(-15+mh*6,-100-(mh%2)*3,4,2,0,peloClaro,true);
+        caja(-14+mh*6,-98-(mh%2)*3,2,5,0,'#ffffff16',true);
+      }
+      if (p==='largo'||p==='trenzas') { caja(-21,-89,2,16,0,peloClaro,true); caja(19,-89,2,16,0,peloClaro,true); }
+    }
 
     // ---- cejas ----
     cx.strokeStyle=pelo; cx.lineCap='round';
@@ -419,9 +461,12 @@
     cx.stroke();
 
     // ---- ojos ----
-    var oj=look.ojos;
+    var oj = gesto === 'reir' ? 'alegres' : gesto === 'sorprender' ? 'grandes' : look.ojos;
+    var parpadeo = movimiento.parpadeo;
     cx.fillStyle='#232a35';
-    if (oj==='serios'){
+    if (oj==='serios' && !parpadeo){
+      [-7,7].forEach(function(ex){caja(ex-3,-82,7,4,0,'#fff4e4');caja(ex,-81,2,3,0,'#232a35',true);caja(ex-4,-84,8,2,0,pelo,true);});
+    } else if (oj==='dormidos' || parpadeo){
       cx.lineWidth=2.4*e; cx.strokeStyle='#232a35';
       cx.beginPath();
       cx.moveTo(X(-10),Y(-80)); cx.lineTo(X(-4),Y(-80));
@@ -434,20 +479,33 @@
       cx.arc(X(7),Y(-79),4*e, 1.15*Math.PI, 1.85*Math.PI);
       cx.stroke();
     } else {
-      var r = oj==='grandes' ? 4.2 : 2.8;
-      cx.beginPath(); cx.ellipse(X(-7),Y(-80), r*e, (r+1)*e, 0,0,Math.PI*2); cx.fill();
-      cx.beginPath(); cx.ellipse(X(7),Y(-80), r*e, (r+1)*e, 0,0,Math.PI*2); cx.fill();
-      cx.fillStyle='rgba(255,255,255,.9)';
-      var br = oj==='brillo' ? 1.7 : 1.1;
-      cx.beginPath(); cx.arc(X(-6),Y(-81.5), br*e,0,Math.PI*2); cx.fill();
-      cx.beginPath(); cx.arc(X(8),Y(-81.5), br*e,0,Math.PI*2); cx.fill();
+      [-7,7].forEach(function(ex, index){
+        if (oj==='guino' && index===0) { caja(ex-3,-80,6,2,0,'#232a35',true); return; }
+        var h = oj==='grandes' ? 9 : oj==='almendrados' ? 5 : 7;
+        caja(ex-3,-84,7,h,1,'#fff4e4');
+        var mira = oj==='curiosos' ? 1 : 0;
+        caja(ex-1+mira,-83,4,h-1,0,oj==='intensos' ? '#31556b' : '#755035',true);
+        caja(ex+mira,-82,2,h-2,0,'#171e29',true);
+        caja(ex+mira,-83,1,2,0,'#ffffff',true);
+        if (oj==='brillo') caja(ex+2,-79,1,1,0,'#ffffff',true);
+        caja(ex-3,-85,7,1,0,pelo,true);
+      });
     }
+    // Nariz, mejillas y barbilla, legibles también al reducir la figura.
+    caja(0,-80,3,7,0,'#00000020',true); caja(1,-79,1,4,0,'#ffffff45',true);
+    caja(-13,-74,4,2,0,'#d9665633',true); caja(10,-74,4,2,0,'#d9665633',true);
+    caja(-7,-67,14,1,0,'#00000020',true);
 
     // ---- boca ----
     cx.strokeStyle='#232a35'; cx.lineWidth=1.7*e;
-    var bo=look.boca;
+    var bo=gesto==='reir' ? 'risa' : gesto==='sorprender' ? 'asombro' : look.boca;
     cx.beginPath();
     if (bo==='seria'){ cx.moveTo(X(-4),Y(-72)); cx.lineTo(X(4),Y(-72)); }
+    else if (bo==='concentrada'){ cx.moveTo(X(-4),Y(-72)); cx.lineTo(X(2),Y(-73)); cx.lineTo(X(4),Y(-71)); }
+    else if (bo==='asombro') { caja(-2,-74,4,6,2,'#753846'); }
+    else if (bo==='abierta') { caja(-4,-74,8,5,1,'#753846'); caja(-3,-73,6,1,0,'#fff2df',true); }
+    else if (bo==='tranquila') { cx.moveTo(X(-3),Y(-72)); cx.lineTo(X(3),Y(-71)); }
+    else if (bo==='contenta') { caja(-5,-73,10,4,1,'#7f3843'); caja(-4,-73,8,2,0,'#fff2df',true); }
     else if (bo==='media'){ cx.arc(X(2),Y(-73), 4*e, 0.15*Math.PI, 0.7*Math.PI); }
     else if (bo==='picara'){ cx.arc(X(1),Y(-73), 5*e, 0.1*Math.PI, 0.65*Math.PI); }
     else if (bo==='risa'){
@@ -457,10 +515,16 @@
     }
     else { cx.arc(X(0),Y(-72), 5*e, 0.22*Math.PI, 0.78*Math.PI); }
     cx.stroke();
+    if (espalda) {
+      // Vista posterior verdadera: sin ojos/boca ni accesorios de la cara.
+      caja(-18,-100,36,36,4,pelo);
+      caja(-14,-97,3,19,0,peloClaro,true); caja(11,-93,3,21,0,'#00000030',true);
+      caja(-10,-66,20,2,0,piel,true);
+    }
 
     // ---- lentes ----
     var le=look.lentes;
-    if (le!=='nada' && le){
+    if (le!=='nada' && le && !espalda){
       cx.lineWidth=1.8*e;
       if (le==='sol'){
         caja(-14,-85,12,10,3,'#2b3240'); caja(2,-85,12,10,3,'#2b3240');
@@ -505,7 +569,35 @@
       caja(-15,-66,30,9,4,'#d95d4a'); caja(-4,-60,9,16,3,'#d95d4a');
     }
 
+    cx.restore(); // cabeza
     cx.restore();
+  }
+
+  // Raster de trabajo pequeño + escalado sin suavizado: píxeles reales, no
+  // curvas borrosas. Caché acotada por look, orientación y fotograma.
+  var fotogramas = new Map();
+  function pintar(cx, centroX, baseY, look, escala, postura, gesto, movimiento){
+    movimiento = movimiento || {};
+    var t = movimiento.t == null ? Date.now() : movimiento.t;
+    var reducido = movimiento.reducido || (global.matchMedia && global.matchMedia('(prefers-reduced-motion: reduce)').matches);
+    var dir = /^(SE|SW|NE|NW)$/.test(movimiento.dir) ? movimiento.dir : 'SE';
+    var frame = !reducido && (gesto || movimiento.caminar) ? Math.floor(t/110)%4 : 0;
+    var blink = !reducido && !/^(NE|NW)$/.test(dir) && t%4800<150;
+    var motion = {dir:dir,t:frame*110,caminar:!reducido && !!movimiento.caminar,parpadeo:blink};
+    if (!global.document || !global.document.createElement) { pintarVector(cx,centroX,baseY,look,escala,postura,gesto,motion); return; }
+    var key = JSON.stringify([look,postura,gesto,dir,frame,blink,motion.caminar]);
+    var cv = fotogramas.get(key);
+    if (!cv) {
+      cv=global.document.createElement('canvas'); cv.width=80; cv.height=132;
+      var pen=cv.getContext('2d');
+      if (dir==='SW'||dir==='NW') { pen.translate(80,0); pen.scale(-1,1); }
+      pintarVector(pen,40,124,look,1,postura,gesto,motion);
+      if(fotogramas.size>=192) fotogramas.delete(fotogramas.keys().next().value);
+      fotogramas.set(key,cv);
+    }
+    var e=escala||1;
+    cx.save(); cx.imageSmoothingEnabled=false;
+    cx.drawImage(cv,centroX-40*e,baseY-124*e,80*e,132*e); cx.restore();
   }
 
   function render(contenedor, opciones){
@@ -521,7 +613,11 @@
     var cx = cv.getContext('2d');
     cx.setTransform(dpr,0,0,dpr,0,0);
     var e = size/128;
-    pintar(cx, size/2, size - 7*e, look, e);
+    if(opciones.postura==='acostado') {
+      cx.save(); cx.translate(size/2,size/2); cx.rotate(-Math.PI/2);
+      pintar(cx,0,52*e,look,e,'',opciones.gesto,{dir:opciones.dir,t:opciones.t,caminar:opciones.caminar}); cx.restore();
+    } else pintar(cx, size/2, size - 7*e, look, e, opciones.postura, opciones.gesto,
+      {dir:opciones.dir,t:opciones.t,caminar:opciones.caminar,reducido:opciones.reducido});
     contenedor.innerHTML='';
     contenedor.classList.add('avatar-render-host');
     contenedor.appendChild(cv);
@@ -541,7 +637,435 @@
     });
   }
 
+  var KIT = [
+    {
+      "id": "ojos-normales",
+      "tipo": "ojos",
+      "opcion": "normales",
+      "nombre": "Ojos clásicos",
+      "url": "/estudiantes/assets/avatar-kit/ojos-normales.png"
+    },
+    {
+      "id": "ojos-grandes",
+      "tipo": "ojos",
+      "opcion": "grandes",
+      "nombre": "Ojos grandes",
+      "url": "/estudiantes/assets/avatar-kit/ojos-grandes.png"
+    },
+    {
+      "id": "ojos-alegres",
+      "tipo": "ojos",
+      "opcion": "alegres",
+      "nombre": "Ojos alegres",
+      "url": "/estudiantes/assets/avatar-kit/ojos-alegres.png"
+    },
+    {
+      "id": "ojos-serios",
+      "tipo": "ojos",
+      "opcion": "serios",
+      "nombre": "Ojos serios",
+      "url": "/estudiantes/assets/avatar-kit/ojos-serios.png"
+    },
+    {
+      "id": "ojos-brillo",
+      "tipo": "ojos",
+      "opcion": "brillo",
+      "nombre": "Ojos con brillo",
+      "url": "/estudiantes/assets/avatar-kit/ojos-brillo.png"
+    },
+    {
+      "id": "ojos-almendrados",
+      "tipo": "ojos",
+      "opcion": "almendrados",
+      "nombre": "Ojos almendrados",
+      "url": "/estudiantes/assets/avatar-kit/ojos-almendrados.png"
+    },
+    {
+      "id": "ojos-dormidos",
+      "tipo": "ojos",
+      "opcion": "dormidos",
+      "nombre": "Ojos soñolientos",
+      "url": "/estudiantes/assets/avatar-kit/ojos-dormidos.png"
+    },
+    {
+      "id": "ojos-guino",
+      "tipo": "ojos",
+      "opcion": "guino",
+      "nombre": "Guiño",
+      "url": "/estudiantes/assets/avatar-kit/ojos-guino.png"
+    },
+    {
+      "id": "ojos-curiosos",
+      "tipo": "ojos",
+      "opcion": "curiosos",
+      "nombre": "Ojos curiosos",
+      "url": "/estudiantes/assets/avatar-kit/ojos-curiosos.png"
+    },
+    {
+      "id": "ojos-intensos",
+      "tipo": "ojos",
+      "opcion": "intensos",
+      "nombre": "Mirada intensa",
+      "url": "/estudiantes/assets/avatar-kit/ojos-intensos.png"
+    },
+    {
+      "id": "boca-sonrisa",
+      "tipo": "boca",
+      "opcion": "sonrisa",
+      "nombre": "Sonrisa",
+      "url": "/estudiantes/assets/avatar-kit/boca-sonrisa.png"
+    },
+    {
+      "id": "boca-media",
+      "tipo": "boca",
+      "opcion": "media",
+      "nombre": "Media sonrisa",
+      "url": "/estudiantes/assets/avatar-kit/boca-media.png"
+    },
+    {
+      "id": "boca-seria",
+      "tipo": "boca",
+      "opcion": "seria",
+      "nombre": "Boca seria",
+      "url": "/estudiantes/assets/avatar-kit/boca-seria.png"
+    },
+    {
+      "id": "boca-risa",
+      "tipo": "boca",
+      "opcion": "risa",
+      "nombre": "Risa",
+      "url": "/estudiantes/assets/avatar-kit/boca-risa.png"
+    },
+    {
+      "id": "boca-picara",
+      "tipo": "boca",
+      "opcion": "picara",
+      "nombre": "Sonrisa pícara",
+      "url": "/estudiantes/assets/avatar-kit/boca-picara.png"
+    },
+    {
+      "id": "boca-abierta",
+      "tipo": "boca",
+      "opcion": "abierta",
+      "nombre": "Boca abierta",
+      "url": "/estudiantes/assets/avatar-kit/boca-abierta.png"
+    },
+    {
+      "id": "boca-asombro",
+      "tipo": "boca",
+      "opcion": "asombro",
+      "nombre": "Asombro",
+      "url": "/estudiantes/assets/avatar-kit/boca-asombro.png"
+    },
+    {
+      "id": "boca-tranquila",
+      "tipo": "boca",
+      "opcion": "tranquila",
+      "nombre": "Expresión tranquila",
+      "url": "/estudiantes/assets/avatar-kit/boca-tranquila.png"
+    },
+    {
+      "id": "boca-contenta",
+      "tipo": "boca",
+      "opcion": "contenta",
+      "nombre": "Sonrisa amplia",
+      "url": "/estudiantes/assets/avatar-kit/boca-contenta.png"
+    },
+    {
+      "id": "boca-concentrada",
+      "tipo": "boca",
+      "opcion": "concentrada",
+      "nombre": "Concentración",
+      "url": "/estudiantes/assets/avatar-kit/boca-concentrada.png"
+    },
+    {
+      "id": "pelo-corto",
+      "tipo": "pelo",
+      "opcion": "corto",
+      "nombre": "Pelo corto",
+      "url": "/estudiantes/assets/avatar-kit/pelo-corto.png"
+    },
+    {
+      "id": "pelo-rapado",
+      "tipo": "pelo",
+      "opcion": "rapado",
+      "nombre": "Pelo rapado",
+      "url": "/estudiantes/assets/avatar-kit/pelo-rapado.png"
+    },
+    {
+      "id": "pelo-tazon",
+      "tipo": "pelo",
+      "opcion": "tazon",
+      "nombre": "Pelo tazón",
+      "url": "/estudiantes/assets/avatar-kit/pelo-tazon.png"
+    },
+    {
+      "id": "pelo-crespo",
+      "tipo": "pelo",
+      "opcion": "crespo",
+      "nombre": "Pelo crespo",
+      "url": "/estudiantes/assets/avatar-kit/pelo-crespo.png"
+    },
+    {
+      "id": "pelo-largo",
+      "tipo": "pelo",
+      "opcion": "largo",
+      "nombre": "Pelo largo",
+      "url": "/estudiantes/assets/avatar-kit/pelo-largo.png"
+    },
+    {
+      "id": "pelo-colita",
+      "tipo": "pelo",
+      "opcion": "colita",
+      "nombre": "Colita",
+      "url": "/estudiantes/assets/avatar-kit/pelo-colita.png"
+    },
+    {
+      "id": "pelo-mono",
+      "tipo": "pelo",
+      "opcion": "mono",
+      "nombre": "Moño",
+      "url": "/estudiantes/assets/avatar-kit/pelo-mono.png"
+    },
+    {
+      "id": "pelo-afro",
+      "tipo": "pelo",
+      "opcion": "afro",
+      "nombre": "Afro",
+      "url": "/estudiantes/assets/avatar-kit/pelo-afro.png"
+    },
+    {
+      "id": "pelo-mohicano",
+      "tipo": "pelo",
+      "opcion": "mohicano",
+      "nombre": "Mohicano",
+      "url": "/estudiantes/assets/avatar-kit/pelo-mohicano.png"
+    },
+    {
+      "id": "pelo-trenzas",
+      "tipo": "pelo",
+      "opcion": "trenzas",
+      "nombre": "Trenzas",
+      "url": "/estudiantes/assets/avatar-kit/pelo-trenzas.png"
+    },
+    {
+      "id": "gesto-saludar",
+      "tipo": "gesto",
+      "opcion": "saludar",
+      "nombre": "Saludar",
+      "url": "/estudiantes/assets/avatar-kit/gesto-saludar.png"
+    },
+    {
+      "id": "gesto-aplaudir",
+      "tipo": "gesto",
+      "opcion": "aplaudir",
+      "nombre": "Aplaudir",
+      "url": "/estudiantes/assets/avatar-kit/gesto-aplaudir.png"
+    },
+    {
+      "id": "gesto-bailar",
+      "tipo": "gesto",
+      "opcion": "bailar",
+      "nombre": "Bailar",
+      "url": "/estudiantes/assets/avatar-kit/gesto-bailar.png"
+    },
+    {
+      "id": "gesto-reir",
+      "tipo": "gesto",
+      "opcion": "reir",
+      "nombre": "Reír",
+      "url": "/estudiantes/assets/avatar-kit/gesto-reir.png"
+    },
+    {
+      "id": "gesto-pensar",
+      "tipo": "gesto",
+      "opcion": "pensar",
+      "nombre": "Pensar",
+      "url": "/estudiantes/assets/avatar-kit/gesto-pensar.png"
+    },
+    {
+      "id": "gesto-sorprender",
+      "tipo": "gesto",
+      "opcion": "sorprender",
+      "nombre": "Sorprenderse",
+      "url": "/estudiantes/assets/avatar-kit/gesto-sorprender.png"
+    },
+    {
+      "id": "gesto-celebrar",
+      "tipo": "gesto",
+      "opcion": "celebrar",
+      "nombre": "Celebrar",
+      "url": "/estudiantes/assets/avatar-kit/gesto-celebrar.png"
+    },
+    {
+      "id": "gesto-corazon",
+      "tipo": "gesto",
+      "opcion": "corazon",
+      "nombre": "Corazón",
+      "url": "/estudiantes/assets/avatar-kit/gesto-corazon.png"
+    },
+    {
+      "id": "gesto-asentir",
+      "tipo": "gesto",
+      "opcion": "asentir",
+      "nombre": "Asentir",
+      "url": "/estudiantes/assets/avatar-kit/gesto-asentir.png"
+    },
+    {
+      "id": "gesto-negar",
+      "tipo": "gesto",
+      "opcion": "negar",
+      "nombre": "Negar",
+      "url": "/estudiantes/assets/avatar-kit/gesto-negar.png"
+    },
+    {
+      "id": "pose-reposoSE",
+      "tipo": "pose",
+      "opcion": "reposoSE",
+      "nombre": "Mirar al frente",
+      "url": "/estudiantes/assets/avatar-kit/pose-reposoSE.png"
+    },
+    {
+      "id": "pose-reposoSW",
+      "tipo": "pose",
+      "opcion": "reposoSW",
+      "nombre": "Mirar a la izquierda",
+      "url": "/estudiantes/assets/avatar-kit/pose-reposoSW.png"
+    },
+    {
+      "id": "pose-reposoNE",
+      "tipo": "pose",
+      "opcion": "reposoNE",
+      "nombre": "Mirar hacia atrás",
+      "url": "/estudiantes/assets/avatar-kit/pose-reposoNE.png"
+    },
+    {
+      "id": "pose-reposoNW",
+      "tipo": "pose",
+      "opcion": "reposoNW",
+      "nombre": "Mirar atrás a la izquierda",
+      "url": "/estudiantes/assets/avatar-kit/pose-reposoNW.png"
+    },
+    {
+      "id": "pose-pasoSE",
+      "tipo": "pose",
+      "opcion": "pasoSE",
+      "nombre": "Caminar al frente",
+      "url": "/estudiantes/assets/avatar-kit/pose-pasoSE.png"
+    },
+    {
+      "id": "pose-pasoSW",
+      "tipo": "pose",
+      "opcion": "pasoSW",
+      "nombre": "Caminar a la izquierda",
+      "url": "/estudiantes/assets/avatar-kit/pose-pasoSW.png"
+    },
+    {
+      "id": "pose-pasoNE",
+      "tipo": "pose",
+      "opcion": "pasoNE",
+      "nombre": "Caminar hacia atrás",
+      "url": "/estudiantes/assets/avatar-kit/pose-pasoNE.png"
+    },
+    {
+      "id": "pose-pasoNW",
+      "tipo": "pose",
+      "opcion": "pasoNW",
+      "nombre": "Caminar atrás a la izquierda",
+      "url": "/estudiantes/assets/avatar-kit/pose-pasoNW.png"
+    },
+    {
+      "id": "pose-sentado",
+      "tipo": "pose",
+      "opcion": "sentado",
+      "nombre": "Sentarse",
+      "url": "/estudiantes/assets/avatar-kit/pose-sentado.png"
+    },
+    {
+      "id": "pose-acostado",
+      "tipo": "pose",
+      "opcion": "acostado",
+      "nombre": "Acostarse",
+      "url": "/estudiantes/assets/avatar-kit/pose-acostado.png"
+    }
+  ];
+  var GESTOS = [
+    {
+      "id": "saludar",
+      "nombre": "Saludar",
+      "icono": "👋",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-saludar.png"
+    },
+    {
+      "id": "aplaudir",
+      "nombre": "Aplaudir",
+      "icono": "👏",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-aplaudir.png"
+    },
+    {
+      "id": "bailar",
+      "nombre": "Bailar",
+      "icono": "🎵",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-bailar.png"
+    },
+    {
+      "id": "reir",
+      "nombre": "Reír",
+      "icono": "😄",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-reir.png"
+    },
+    {
+      "id": "pensar",
+      "nombre": "Pensar",
+      "icono": "💭",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-pensar.png"
+    },
+    {
+      "id": "sorprender",
+      "nombre": "Sorprenderse",
+      "icono": "😮",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-sorprender.png"
+    },
+    {
+      "id": "celebrar",
+      "nombre": "Celebrar",
+      "icono": "🙌",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-celebrar.png"
+    },
+    {
+      "id": "corazon",
+      "nombre": "Corazón",
+      "icono": "♥",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-corazon.png"
+    },
+    {
+      "id": "asentir",
+      "nombre": "Asentir",
+      "icono": "✓",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-asentir.png"
+    },
+    {
+      "id": "negar",
+      "nombre": "Negar",
+      "icono": "↔",
+      "imagen": "/estudiantes/assets/avatar-kit/gesto-negar.png"
+    }
+  ];
+  CATALOGO.pelo.opciones.push({id:'trenzas',nom:'Trenzas'});
+  CATALOGO.ojos.opciones.push(
+    {id:'almendrados',nom:'Almendrados'}, {id:'dormidos',nom:'Dormidos'},
+    {id:'guino',nom:'Guiño'}, {id:'curiosos',nom:'Curiosos'}, {id:'intensos',nom:'Intensos'});
+  CATALOGO.boca.opciones.push(
+    {id:'abierta',nom:'Abierta'}, {id:'asombro',nom:'Asombro'}, {id:'tranquila',nom:'Tranquila'},
+    {id:'contenta',nom:'Contenta'}, {id:'concentrada',nom:'Concentrada'});
+
   global.AvatarLookSystem = {
+    KIT: KIT,
+    GESTOS: GESTOS,
+    getKitPreview: function(cat,id){
+      var item=KIT.find(function(p){return p.tipo===cat && p.opcion===id;});
+      return item ? item.url : '';
+    },
     getDefaultLook: function(){ return clonar(POR_DEFECTO); },
     getEditorCategories: getEditorCategories,
     getUnlockedOptions: function(cat,ctx){

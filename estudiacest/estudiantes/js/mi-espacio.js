@@ -463,15 +463,17 @@
       cx.save();
       cx.translate(cxp + 27, p.y + 59);
       cx.rotate(-Math.PI / 2);
-      global.AvatarLookSystem.pintar(cx, 0, 0, pers.look, 0.55);
+      global.AvatarLookSystem.pintar(cx, 0, 0, pers.look, 0.65, '', pers.gesto, {t:Date.now()});
       cx.restore();
     } else {
-      global.AvatarLookSystem.pintar(cx, cxp, base, pers.look, 0.62, pers.postura, pers.gesto);
+      global.AvatarLookSystem.pintar(cx, cxp, base, pers.look, 0.86, pers.postura, pers.gesto,
+        {dir:soporte ? soporte.dir : pers.dir, caminar:pers.caminar, t:Date.now()});
     }
     if (pers.gesto) {
       cx.save(); cx.font = '17px "Segoe UI Emoji", sans-serif'; cx.textAlign = 'center';
-      cx.fillText({ saludar:'👋', aplaudir:'👏', bailar:'🎵' }[pers.gesto],
-        cxp + 18 + Math.sin((S.fxTime || 0) / 230) * 4, base - 77);
+      var gestoMeta=global.AvatarLookSystem.GESTOS.find(function(g){return g.id===pers.gesto;});
+      cx.fillText(gestoMeta ? gestoMeta.icono : '',
+        cxp + 18 + Math.sin((S.fxTime || 0) / 230) * 4, base - 104);
       cx.restore();
     }
     if (pers.nombre) {
@@ -630,7 +632,7 @@
   function personas() {
     var lista = [{ uid: S.uid, look: S.look, col: S.av.col, fila: S.av.fila, nombre: S.miNombre, esYo: true,
                    gesto: S.gesto && S.gesto.hasta > Date.now() ? S.gesto.id : '',
-                   placas: S.placas,
+                   placas: S.placas, dir:S.dir || 'SE', caminar:!!caminando,
                    postura: !caminando ? posturaEn(Math.round(S.av.col), Math.round(S.av.fila)) : '' }];
     Object.keys(S.otros).forEach(function (uid) {
       if (uid === S.uid) return;
@@ -639,7 +641,7 @@
       if (!haySuelo(Math.round(c), Math.round(f))) return;
       lista.push({ uid: uid, look: global.AvatarLookSystem.normalizeLook(o.look, { xpTotal: 99999 }),
                    col: c, fila: f, nombre: nombreCorto(o.nombre), esYo: false, placas: S.placasDe[uid] || [],
-                   gesto: Number(o.gestoHasta) > Date.now() ? o.gesto : '',
+                   gesto: Number(o.gestoHasta) > Date.now() ? o.gesto : '', dir:v && v.dir || o.dir || 'SE', caminar:!!(v && v.camino),
                    postura: !(v && v.camino) ? posturaEn(Math.round(c), Math.round(f)) : '' });
     });
     return lista;
@@ -689,6 +691,7 @@
         alguno = true;
         var avance = Math.min(1, (ahora - v.t0) / PASO_MS);
         var a = v.camino[v.i], b = v.camino[v.i + 1];
+        v.dir=direccionPaso(a,b);
         v.col = a.col + (b.col - a.col) * avance;
         v.fila = a.fila + (b.fila - a.fila) * avance;
         if (avance >= 1) {
@@ -749,6 +752,9 @@
     return null;
   }
   var caminando = null, PASO_MS = 300;
+  function direccionPaso(a,b) {
+    return b.col>a.col ? 'SE' : b.col<a.col ? 'NW' : b.fila>a.fila ? 'SW' : 'NE';
+  }
   function caminar(hasta) {
     if (!haySuelo(hasta.col, hasta.fila)) return;
     var camino = ruta({ col: Math.round(S.av.col), fila: Math.round(S.av.fila) }, hasta);
@@ -756,11 +762,13 @@
     if (caminando) cancelAnimationFrame(caminando.id);
     // Los demás reciben el destino al partir, así me ven caminar a la par.
     S.destino = { col: hasta.col, fila: hasta.fila };
+    S.dir=direccionPaso(camino[0],camino[1]);
     avisarPosicion();
     var i = 0, MS = PASO_MS, t0 = performance.now();
     function paso(ahora) {
       var avance = Math.min(1, (ahora - t0) / MS);
       var a = camino[i], b = camino[i + 1];
+      S.dir=direccionPaso(a,b);
       S.av.col = a.col + (b.col - a.col) * avance;
       S.av.fila = a.fila + (b.fila - a.fila) * avance;
       dibujar();
@@ -853,7 +861,7 @@
   function latido() {
     if (!S.sala) return;
     var p = S.destino || { col: Math.round(S.av.col), fila: Math.round(S.av.fila) };
-    api('latido', { sala: S.sala, col: p.col, fila: p.fila, look: S.look,
+    api('latido', { sala: S.sala, col: p.col, fila: p.fila, look: S.look, dir:S.dir || 'SE',
       gesto: S.gesto && S.gesto.hasta > Date.now() ? S.gesto.id : '' })
       .then(function (r) { if (r && r.fuera) conectarSala(S.sala, true); })
       .catch(function () {});
@@ -1185,6 +1193,11 @@
           '<button class="esp-azar" type="button">Al azar</button></div>' +
         '<div class="esp-ropero" id="espRopero"></div>' +
       '</div>' +
+      '<details class="esp-kit"><summary>Probar poses y direcciones</summary>' +
+        '<p>Vista previa con tu ropa. En casa, camina hasta una silla o cama para usarla.</p>' +
+        '<div class="esp-kit-rejilla">' + global.AvatarLookSystem.KIT.filter(function(p){return p.tipo==='pose';}).map(function(p){
+          return '<button type="button" data-pose="'+p.opcion+'" aria-pressed="false"><img loading="lazy" src="'+p.url+'" alt=""><span>'+esc(p.nombre)+'</span></button>';
+        }).join('') + '</div></details>' +
       '<div class="esp-placas" id="espPlacas"></div>' +
     '</div>' +
     '<div class="esp-panel oculto" data-panel="pieza">' +
@@ -1220,10 +1233,10 @@
         '<button type="button" id="espPan" aria-pressed="false" title="Arrastra la habitación para ver otras zonas">Mover vista</button>' +
         '<button type="button" id="espCentrar" title="Volver a la vista completa">Centrar</button>' +
       '</div>' +
-      '<div class="esp-gestos" aria-label="Gestos del personaje"><span>Gestos</span>' +
-        '<button type="button" data-gesto="saludar">👋 Saludar</button>' +
-        '<button type="button" data-gesto="aplaudir">👏 Aplaudir</button>' +
-        '<button type="button" data-gesto="bailar">🎵 Bailar</button></div>' +
+      '<details class="esp-kit esp-kit-gestos"><summary>Gestos del personaje</summary>' +
+        '<div class="esp-gestos" aria-label="Gestos del personaje">' + global.AvatarLookSystem.GESTOS.map(function(g){
+          return '<button type="button" data-gesto="'+g.id+'"><img loading="lazy" src="'+g.imagen+'" alt=""><span>'+esc(g.nombre)+'</span></button>';
+        }).join('')+'</div></details>' +
       '<div class="esp-ayuda">Flechas o WASD: caminar · Tab: elegir mueble · E o Usar: interactuar · R gira · Supr guarda · Esc suelta</div>' +
       '<div class="esp-chat">' +
         '<div class="esp-chat-lista" id="espChatLista"></div>' +
@@ -1254,8 +1267,10 @@
         c.options.map(function (o) {
           var sel = S.look[c.id] === o.id ? ' sel' : '';
           var blo = o.locked ? ' blo' : '';
-          var muestra = o.color ? '<i style="background:' + o.color + '"></i>' : '<span>' + esc(o.name) + '</span>';
-          return '<button class="esp-op' + sel + blo + '" data-cat="' + c.id + '" data-op="' + o.id + '"' +
+          var preview=global.AvatarLookSystem.getKitPreview(c.id,o.id);
+          var muestra = o.color ? '<i style="background:' + o.color + '"></i>' :
+            (preview ? '<img loading="lazy" src="'+preview+'" alt="">' : '') + '<span>' + esc(o.name) + '</span>';
+          return '<button class="esp-op' + sel + blo + (preview ? ' esp-op-imagen' : '') + '" data-cat="' + c.id + '" data-op="' + o.id + '" aria-pressed="'+!!sel+'"' +
                  ' title="' + (o.locked ? 'Se abre con ' + o.minXp + ' XP' : esc(o.name)) + '">' +
                  muestra + (o.locked ? '<b>🔒</b>' : o.gifted ? '<b>🎁</b>' : '') + '</button>';
         }).join('') + '</div></div>';
@@ -1272,7 +1287,9 @@
     });
   }
   function pintarFigura() {
-    global.AvatarLookSystem.render(S.host.querySelector('#espFigura'), { look: S.look, xpTotal: S.xp, regalos:S.regalos, size: 170 });
+    var pose=S.previewPose||'reposoSE';
+    global.AvatarLookSystem.render(S.host.querySelector('#espFigura'), { look: S.look, xpTotal: S.xp, regalos:S.regalos, size: 170,
+      dir:pose.slice(-2), postura:pose==='sentado'||pose==='acostado' ? pose : '', caminar:pose.indexOf('paso')===0, t:Date.now() });
   }
   // El personaje también se muestra arriba, junto al nombre: si cambia acá,
   // tiene que cambiar allá en el mismo momento.
@@ -1755,12 +1772,28 @@
     ['floorFull_SE'].forEach(function (n) { cargar(n, dibujar); });
     S.pieza.forEach(function (m) { DIRS.forEach(function (d) { cargar(m.id + '_' + d, dibujar); }); });
 
+    S.previewPose='reposoSE';
+    S.host.querySelectorAll('[data-pose]').forEach(function(b){
+      b.addEventListener('click',function(){
+        S.previewPose=b.dataset.pose;
+        S.host.querySelectorAll('[data-pose]').forEach(function(op){op.setAttribute('aria-pressed',String(op===b));});
+        pintarFigura();
+      });
+    });
     pintarFigura(); pintarRopero(); pintarPlacas(); pintarMuebles(); botones(); conectarLienzo(); pintarCabecera(); aplicarDisponibilidad();
     global.addEventListener('resize', dibujar);
     global.addEventListener('pagehide', function () { clearInterval(S.stateTimer); clearInterval(S.inventoryTimer); clearInterval(S.fxTimer); desconectarSala(); });
     setTimeout(dibujar, 80);
     S.fxTimer = setInterval(function () {
-      if (!S.housesEnabled || global.matchMedia('(prefers-reduced-motion: reduce)').matches || !(S.gesto && S.gesto.hasta > Date.now()) && !S.pieza.some(function (m) { return esMascota(m.id) || ficha(m.id).efecto || m.id === 'aquarium' || (m.id === 'rgbPartySpeaker' && m.encendido); })) return;
+      if (document.hidden || global.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      if (S.previewPose && S.previewPose.indexOf('paso')===0 && !S.host.querySelector('[data-panel="personaje"]').classList.contains('oculto')) pintarFigura();
+      if (!S.housesEnabled || S.host.querySelector('[data-panel="pieza"]').classList.contains('oculto')) return;
+      var gestoActivo = S.gesto && S.gesto.hasta>Date.now() || Object.keys(S.otros).some(function(uid){return Number(S.otros[uid].gestoHasta)>Date.now();});
+      var efecto = S.pieza.some(function (m) { return esMascota(m.id) || ficha(m.id).efecto || m.id === 'aquarium' || (m.id === 'rgbPartySpeaker' && m.encendido); });
+      // El parpadeo solo requiere dos redibujos por ciclo, no un bucle continuo.
+      var blink=Math.floor(Date.now()%4800/150)===0;
+      if(!gestoActivo && !efecto && blink===S.blinkAnterior)return;
+      S.blinkAnterior=blink;
       S.fxTime = performance.now();
       dibujar();
     }, 120);

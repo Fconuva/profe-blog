@@ -128,8 +128,10 @@ exigir(espacio.includes("{ id: '7x7'") && espacio.includes('aplicarTamano()') &&
   'La habitación ampliada debe ofrecer tamaño variable y controles de cámara.');
 exigir(espacio.includes('rgbPartySpeaker') && espacio.includes('m.encendido = !m.encendido'),
   'El parlante RGB debe permitir encender y apagar sus luces.');
-exigir(espacio.includes('data-gesto="saludar"') && espacio.includes('data-gesto="aplaudir"') && espacio.includes('data-gesto="bailar"'),
-  'Deben existir los tres gestos de personaje.');
+const gestos = require('../estudiantes/js/personaje-iso.js').GESTOS;
+exigir(gestos.length===10 && ['saludar','aplaudir','bailar'].every(id=>gestos.some(g=>g.id===id)) &&
+  espacio.includes('global.AvatarLookSystem.GESTOS.map') && espacio.includes('data-gesto='),
+  'Los diez gestos deben generar controles reales, conservando los tres históricos.');
 
 // ---- personaje ----
 const personaje = leer('estudiantes/js/personaje-iso.js');

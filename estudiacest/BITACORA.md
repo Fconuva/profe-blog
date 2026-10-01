@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, kit de avatar de cincuenta imágenes y gestos
+
+- Cincuenta generaciones IA independientes: diez ojos, diez bocas, diez peinados, diez gestos y diez vistas/poses. Personaje original de pixel art inspirado en las referencias entregadas, sin extraer sprites oficiales. Originales RGBA y prompts en `scripts/avatar-kit/`; cincuenta derivados con transparencia en `estudiantes/assets/avatar-kit/`, menos de 1 MB en conjunto. El importador solo recorta margen y reduce sin suavizado.
+- Mi personaje integra treinta previews y un desplegable de poses con su propia ropa. El Canvas nativo añade silueta y mechones, volumen facial, iris/párpados/nariz, detalles de prendas/calzado, raster pixelado y caché acotada. Cuatro orientaciones, pasos alternados, parpadeo y diez gestos reales; controles y servidor comparten el catálogo. Se conserva la personalización, camisetas, premios, XP y datos académicos. Las poses de prueba no permiten saltarse colisiones ni conceden muebles.
+- Auditoría de cincuenta PNG únicos, alfa y márgenes transparentes; servidor probado con identidades ficticias, diez gestos y orientaciones válidos, entradas extrañas descartadas. Navegador real: treinta opciones persistidas/releídas, diez gestos visualmente distintos, poses con ropa propia, marcha, movimiento reducido, 390/1200/3840 sin errores ni desbordes. Regresiones de logros, camisetas, premios y terraza/XP aprobadas. Build integral: 589 recursos críticos. No se modifican notas, regalos ni XP de estudiantes reales.
+- Fuente preparada y validada; publicación segura y comprobación pública se registran al finalizar el despliegue. Cambios ajenos del repositorio padre preservados.
+
+---
+
 ## 2026-10-01, terraza, muros regalables y experiencia manual docente
 
 - Se añaden doce piezas propias: piscinas 2×2, 3×2 y 4×3, cascada, pasto, palmera, roble, pino, mecedora, tumbona, mesa y sombrilla. Arte RGBA generado con la herramienta integrada de IA; originales y prompts conservados en `scripts/furniture-terrace/`, 48 sprites y cuatro baldosas de pasto integrados. Los seis previews de muros se construyen con código nativo coherente con el Canvas.

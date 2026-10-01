@@ -28,7 +28,8 @@ const CATALOGO_CASA = require('../estudiantes/js/catalogo-casa.js');
 const MAPAS_CASA = require('../estudiantes/js/mapas-casa.js');
 const PREMIOS_PAES = require('./_premios-paes.js');
 const EXPERIENCIA_DOCENTE = require('./_experiencia-docente.js');
-const PREMIOS_AVATAR = require('../estudiantes/js/personaje-iso.js').catalogoPremios();
+const PERSONAJE = require('../estudiantes/js/personaje-iso.js');
+const PREMIOS_AVATAR = PERSONAJE.catalogoPremios();
 const PREMIOS_AVATAR_POR_ID = new Map(PREMIOS_AVATAR.map(p=>[p.id,p]));
 
 const BASE = 'plataforma_estudiantes';
@@ -621,8 +622,9 @@ async function latido(req, res, db, yo) {
     if (!actual) return res.status(200).json({ ok: false, fuera: true });
     const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila);
     const cambios = { ts: Date.now(), ...posicion };
+    if (['SE','SW','NE','NW'].includes(req.body.dir)) cambios.dir=req.body.dir;
     const gesto = String(req.body.gesto || '');
-    if (['saludar', 'aplaudir', 'bailar'].includes(gesto)) {
+    if (PERSONAJE.GESTOS.some(opcion=>opcion.id===gesto)) {
         cambios.gesto = gesto;
         cambios.gestoHasta = Date.now() + 3400;
     }

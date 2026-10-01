@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, NM3 Clase 4 publicada (corrige «deploy aplazado»)
+
+- La Clase 4 de NM3 ya está en producción. Salió en el release que otro agente publicó sobre `b96011c2`, que contiene los commits `16113fc4`, `c87165ca` y `4eb0d2d3`. No hubo deploy aparte.
+- Verificación pública:
+  - `/nm3/u3-clase4-noticias-falsas/`, su imagen y `/nm3/` coinciden en SHA-256 con Git;
+  - la tarjeta 4 enlaza a la clase;
+  - en navegador real a 390 y 1440 px: 10 pantallas, 0 errores, 0 recursos fallidos y sin desborde; el video de 24 Horas carga insertado desde youtube-nocookie.
+
+---
+
 ## 2026-10-01, premios PAES, ropa y diez logros docentes
 
 - Francisco pidió muebles automáticos desde la guía 15, comenzando por 4°B HC, sin entregar sus muebles personalizados; además, diez logros manuales y ropa del avatar con las camisetas de equipos visibles en el admin. G15–G21 usan exclusivamente siete objetos nativos: silla, escritorio, monitor, sofá básico, lámpara de pie, planta y televisor. Los once objetos nuevos de gimnasio, Navidad y Halloween del commit `3cfca7ea` permanecen manuales, junto con los demás personalizados. Las guías futuras no construidas no se habilitan.

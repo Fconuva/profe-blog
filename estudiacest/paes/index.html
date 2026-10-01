@@ -947,6 +947,10 @@
   
   <!-- Inyección de nóminas oficiales -->
   <script src="js/nominas.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+  <script src="/paes/js/student-session.js" defer></script>
 </head>
 <body>
 
@@ -966,7 +970,8 @@
     </header>
 
     <!-- 1. LOGIN SECTION -->
-    <section class="login-section" id="loginSection">
+    <p id="sessionLoading" role="status">Recuperando tu sesión…</p>
+    <section class="login-section" id="loginSection" style="display:none">
       <div class="login-card">
         <div class="login-header">
           <span class="login-badge">Ensayo Oficial</span>
@@ -976,15 +981,20 @@
 
         <div class="error-box" id="errorBox"></div>
 
-        <form id="loginForm" autocomplete="off">
+        <form id="loginForm">
           <div class="form-group">
             <label for="rutInput">RUT del Estudiante</label>
-            <input type="text" id="rutInput" placeholder="Ej: 22.456.789-K" maxlength="12" inputmode="text" autocapitalize="characters" autocomplete="off" required>
+            <input type="text" id="rutInput" placeholder="Ej: 22.456.789-K" maxlength="12" inputmode="text" autocapitalize="characters" autocomplete="username" required>
             <div class="input-hint">Ingresa tu RUT completo con puntos y guión. Si termina en K, escríbela igual.</div>
           </div>
           
+          <div class="form-group" id="passwordGroup" hidden>
+            <label for="passwordInput">Contraseña</label>
+            <input type="password" id="passwordInput" autocomplete="current-password" aria-describedby="passwordHint">
+            <div class="input-hint" id="passwordHint">Tu clave inicial son los primeros seis números de tu RUT. Si la cambiaste, usa tu clave actual.</div>
+          </div>
           <button type="submit" class="btn-submit" id="btnSubmit">
-            Ingresar a mis ensayos
+            Ingresar a PAES
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
         </form>
@@ -1552,7 +1562,27 @@
 
     // ============ LOGIN SUBMIT ============
     const loginForm = document.getElementById('loginForm');
-    loginForm.addEventListener('submit', function(e) {
+    const passwordInput = document.getElementById('passwordInput');
+    const openSpaceAfterLogin = new URLSearchParams(window.location.search).get('next') === 'mi-espacio';
+    function updatePasswordField() {
+      const student = typeof NOMINAS_PAES === 'undefined' ? null
+        : NOMINAS_PAES.find(item => cleanRut(item.rut) === cleanRut(rutInput.value));
+      const required = !!window.PaesStudentSession && PaesStudentSession.hasSpace(student);
+      document.getElementById('passwordGroup').hidden = !required;
+      passwordInput.required = required;
+    }
+    rutInput.addEventListener('input', updatePasswordField);
+    function enterPortal(student) {
+      sessionStorage.setItem('paes_student', JSON.stringify(student));
+      if (openSpaceAfterLogin && PaesStudentSession.hasSpace(student)) {
+        window.location.replace('/paes/mi-espacio.html');
+        return;
+      }
+      document.getElementById('sessionLoading').hidden = true;
+      showDashboard(student);
+      applyDashboardGuiaLock(student.rut);
+    }
+    loginForm.addEventListener('submit', async function(e) {
       e.preventDefault();
       hideError();
 
@@ -1580,10 +1610,22 @@
         return;
       }
 
-      // Login success
-      sessionStorage.setItem('paes_student', JSON.stringify(student));
-      showDashboard(student);
-      applyDashboardGuiaLock(student.rut);
+      updatePasswordField();
+      const button = document.getElementById('btnSubmit');
+      if (button.disabled) return;
+      button.disabled = true;
+      try {
+        if (PaesStudentSession.hasSpace(student)) {
+          if (!passwordInput.value) { showError('Ingresa tu contraseña para abrir PAES y Mi espacio.'); passwordInput.focus(); return; }
+          const session = await PaesStudentSession.signIn(student.rut, passwordInput.value);
+          passwordInput.value = '';
+          enterPortal(session.student);
+        } else {
+          enterPortal(student);
+        }
+      } catch (error) {
+        showError(PaesStudentSession.errorMessage(error));
+      } finally { button.disabled = false; }
     });
 
     // ============ DYNAMIC REAL-TIME SYNC ============
@@ -1796,9 +1838,12 @@
     }
 
     // ============ LOGOUT ============
-    document.getElementById('btnLogoutAction').addEventListener('click', function() {
-      sessionStorage.removeItem('paes_student');
-      window.location.reload();
+    document.getElementById('btnLogoutAction').addEventListener('click', async function() {
+      this.disabled = true;
+      try {
+        await PaesStudentSession.signOut();
+        window.location.replace('/paes/');
+      } catch (error) { this.disabled = false; showError(PaesStudentSession.errorMessage(error)); }
     });
 
     // ============ BLOQUEO DE GUÍAS EN EL PANEL ============
@@ -1850,17 +1895,20 @@
     }
 
     // ============ CHECK SESSION ON LOAD ============
-    window.addEventListener('DOMContentLoaded', function() {
-      const stored = sessionStorage.getItem('paes_student');
-      if (stored) {
-        try {
-          const student = JSON.parse(stored);
-          showDashboard(student);
-          applyDashboardGuiaLock(student.rut);
-        } catch(e) {
-          sessionStorage.removeItem('paes_student');
-        }
+    window.addEventListener('DOMContentLoaded', async function() {
+      try {
+        const session = await PaesStudentSession.restore();
+        if (session) { PaesStudentSession.remember(session); enterPortal(session.student); return; }
+        const stored = JSON.parse(sessionStorage.getItem('paes_student') || 'null');
+        const student = stored && PaesStudentSession.rosterEntry(stored.rut);
+        if (student && !PaesStudentSession.hasSpace(student)) { enterPortal(student); return; }
+        if (student) rutInput.value = formatRut(student.rut);
+      } catch (error) {
+        showError(window.PaesStudentSession ? PaesStudentSession.errorMessage(error) : 'No se pudo cargar el ingreso. Recarga la página.');
       }
+      document.getElementById('sessionLoading').hidden = true;
+      document.getElementById('loginSection').style.display = '';
+      updatePasswordField();
     });
   </script>
 

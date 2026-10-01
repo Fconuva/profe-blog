@@ -40,6 +40,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+  <script src="/paes/js/student-session.js" defer></script>
 </head>
 <body>
   <main class="wrap">
@@ -53,23 +54,9 @@
   <script>
     window.addEventListener('DOMContentLoaded', function () {
       'use strict';
-      const RETURN_PATH = '/paes/mi-espacio.html';
-      const LOGIN_URL = '/lecturas/?next=' + encodeURIComponent(RETURN_PATH);
+      const LOGIN_URL = '/paes/?next=mi-espacio';
       const BASE = 'plataforma_estudiantes';
-      const SPACE_COURSES = new Set(['3°A HC', '3°B HC', '4°A HC', '4°B HC']);
-      const FIREBASE_CONFIG = {
-        apiKey: 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',
-        authDomain: 'estudiacest.firebaseapp.com',
-        databaseURL: 'https://estudiacest-default-rtdb.firebaseio.com',
-        projectId: 'estudiacest',
-        storageBucket: 'estudiacest.firebasestorage.app',
-        messagingSenderId: '999002169815',
-        appId: '1:999002169815:web:51203237bc77c2e74deb92'
-      };
-      const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
       const $ = id => document.getElementById(id);
-      const auth = firebase.initializeApp(FIREBASE_CONFIG).auth();
-      const db = firebase.database();
       let mountedUid = '';
 
       function showMessage(text, allowSwitch) {
@@ -77,33 +64,23 @@
         $('switchAccount').hidden = !allowSwitch;
         $('message').hidden = false;
       }
-      function selectedPaesRut() {
-        try { return cleanRut(JSON.parse(sessionStorage.getItem('paes_student') || 'null')?.rut); }
-        catch (_) { return ''; }
-      }
       $('switchAccount').addEventListener('click', async () => {
-        await auth.signOut();
-        sessionStorage.removeItem('paes_student');
-        window.location.replace(LOGIN_URL);
+        try { await PaesStudentSession.signOut(); window.location.replace(LOGIN_URL); }
+        catch (_) { showMessage('No se pudo cerrar la sesión. Inténtalo nuevamente.', true); }
       });
 
-      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+      PaesStudentSession.client().then(({ auth, db }) => {
         auth.onAuthStateChanged(async user => {
           if (!user) { window.location.replace(LOGIN_URL); return; }
           if (mountedUid) { if (mountedUid !== user.uid) window.location.reload(); return; }
           try {
-            const snap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
-            const student = snap.val();
-            if (!student) { showMessage('Esta cuenta no tiene un perfil de estudiante habilitado.', true); return; }
-            const rut = cleanRut(student.rut);
-            const roster = typeof NOMINAS_PAES !== 'undefined' ? NOMINAS_PAES : [];
-            const paesStudent = roster.find(item => !item.es_prueba && cleanRut(item.rut) === rut);
-            if (!paesStudent || !SPACE_COURSES.has(paesStudent.curso)) {
+            const session = await PaesStudentSession.sessionFor(user);
+            if (!session) {
               showMessage('Mi espacio está disponible solo para los cursos habilitados.', true); return;
             }
-            const selected = selectedPaesRut();
-            if (!selected) { showMessage('Primero ingresa a PAES con tu RUT y abre Mi espacio desde tu panel.', false); return; }
-            if (selected !== rut) { showMessage('El RUT elegido en PAES y la cuenta abierta son diferentes. Cambia a tu propia cuenta antes de entrar.', true); return; }
+            PaesStudentSession.remember(session);
+            const student = session.profile;
+            const paesStudent = session.student;
             const avSnap = await db.ref(BASE + '/avatar/' + user.uid).once('value');
             const avatar = avSnap.val() || {};
             const xp = Number(avatar.xp_total) || 0;

@@ -58,16 +58,30 @@ exigir(sinSprite === 0, `Hay ${sinSprite} sprites declarados que no están en di
 exigir(conSuperficie >= 5, 'Deberían existir varias superficies donde apoyar cosas.');
 exigir(apilables >= 5, 'Deberían existir varios objetos apilables.');
 exigir(planos >= 4, 'Deberían existir alfombras.');
+exigir(catalogo.some(m => m.id === 'rgbPartySpeaker' && m.xp > 0),
+  'El parlante RGB debe existir y mantenerse como premio del profesor.');
 
 // Piso y muros que usa la escena
 ['floorFull_SE'].forEach(n => exigir(enDisco.has(n + '.png'), `Falta la baldosa base ${n}.png`));
 
 // ---- módulo de la casa ----
 const espacio = leer('estudiantes/js/mi-espacio.js');
+const mapasCasa = require(path.join(root, 'estudiantes/js/mapas-casa.js'));
+exigir(mapasCasa.obtener('salon-l') && mapasCasa.haySuelo('salon-l', 6, 6) && !mapasCasa.haySuelo('salon-l', 6, 1),
+  'El salón en L debe tener dos alas transitables y rechazar el hueco.');
+exigir(leer('estudiantes/dashboard.html').includes('js/mapas-casa.js') && espacio.includes("id: 'salon-l'") &&
+  espacio.includes('function haySuelo(') && espacio.includes('!sueloEn(o, m.col, m.fila)'),
+  'El panel debe cargar el mapa irregular y evitar muebles fuera al cambiar de habitación.');
 exigir(/RUTA = '\/estudiantes\/assets\/pieza\//.test(espacio),
   'La ruta de los sprites debe ser absoluta: si es relativa, falla al montarse desde otra carpeta.');
 exigir(espacio.includes('ref.set(valor)') && espacio.includes('ref.once('),
   'El guardado debe releer después de escribir: escribir no es haber guardado.');
+const avatarRules = JSON.parse(leer('firebase-rules.json')).rules.plataforma_estudiantes.avatar.$uid;
+exigir(avatarRules['.write'].includes("admins')") &&
+  avatarRules.$campo['.write'].includes("$campo !== 'pieza'") &&
+  avatarRules.$campo['.write'].includes("$campo !== 'regalos'") &&
+  espacio.includes("api('guardar-pieza', { pieza: copia })"),
+  'La pieza y los regalos deben quedar bajo control del servidor, no de escrituras Firebase del estudiante.');
 exigir(espacio.includes('function ruta(') && espacio.includes('bloqueada('),
   'Falta el caminar con búsqueda de ruta que rodea los muebles.');
 exigir(espacio.includes('esDePared') && espacio.includes('puntoMuro'),
@@ -76,6 +90,12 @@ exigir(espacio.includes("'Mi casa'") || espacio.includes('>Mi casa<'),
   'La sección debe llamarse Mi casa.');
 exigir(espacio.includes('alCambiarLook'),
   'El personaje del encabezado debe actualizarse al cambiarlo.');
+exigir(espacio.includes("{ id: '7x7'") && espacio.includes('aplicarTamano()') && espacio.includes('espCentrar'),
+  'La habitación ampliada debe ofrecer tamaño variable y controles de cámara.');
+exigir(espacio.includes('rgbPartySpeaker') && espacio.includes('m.encendido = !m.encendido'),
+  'El parlante RGB debe permitir encender y apagar sus luces.');
+exigir(espacio.includes('data-gesto="saludar"') && espacio.includes('data-gesto="aplaudir"') && espacio.includes('data-gesto="bailar"'),
+  'Deben existir los tres gestos de personaje.');
 
 // ---- personaje ----
 const personaje = leer('estudiantes/js/personaje-iso.js');
@@ -108,6 +128,9 @@ exigir(!fs.existsSync(path.join(root, 'api/salas.js')), 'api/salas.js no puede e
 exigir(leer('api/estudiantes.js').includes("require('./_salas.js')") && leer('api/estudiantes.js').includes("'salas-'"), 'api/estudiantes.js debe enrutar las acciones salas-* al módulo interno.');
 exigir(espacio.includes("var API = '/api/estudiantes'") && espacio.includes("'salas-' + action"), 'El cliente debe hablar con /api/estudiantes usando acciones salas-*.');
 exigir(/TOPE_SALA\s*=\s*30/.test(salasApi), 'El tope de la casa debe ser 30 personas.');
+exigir(salasApi.includes('posicionEnCasa(db, sala, req.body.col, req.body.fila)') &&
+  salasApi.includes("tamano === '7x7'") && salasApi.includes('MAPAS_CASA.haySuelo'),
+  'La presencia debe aceptar 7 × 7 y rechazar los huecos del salón en L.');
 exigir(salasApi.includes('bloqueados_chat') && salasApi.includes('alertas_chat'), 'Los bloqueos y las alertas deben quedar registrados para el profesor.');
 exigir(salasApi.includes('CONFIG_PATH') && salasApi.includes("accion === 'configurar'") && salasApi.includes('if (!state.enabled)'),
   'El servidor debe bloquear casas y decoración por configuración global y permitir que el admin cambie el estado.');
@@ -338,12 +361,13 @@ async function probarRegalos() {
       uidAnaaaa: { nombre: 'PEREZ SOTO ANA', curso: '2A-HC' },
       uidLuisss: { nombre: 'LARA ROJAS LUIS', curso: '2A-HC' },
       uidDianaa: { nombre: 'MORA VEGA DIANA', curso: '2A-HC' },
+      uidFantaa: { nombre: 'PERFIL DUPLICADO', curso: '2A-HC', ocultarDeCasas: true },
       uidEvaaaa: { nombre: 'MORA DIAZ EVA', curso: '3B-HC' }
     },
     admins: { uidProfee: true, uidProfe2: true },
     docentes: { uidProfee: { superadmin: true }, uidProfe2: { superadmin: false, cursos: ['2A-HC'] } },
     avatar: {
-      uidAnaaaa: { regalos: {
+      uidAnaaaa: { pieza: [{ id:'lampSquareFloor', col:1, fila:1, dir:'SE' }], regalos: {
         rugRound: { de: 'Alguien', ts: 1 },
         lampSquareFloor: { de: 'Alguien', ts: 1 },
         bookcaseOpen: { de: 'Alguien', ts: 1 }
@@ -363,6 +387,11 @@ async function probarRegalos() {
   let r = await pedir('uidAnaaaa', {}, 'inventario');
   exigir(r.json && r.json.desbloqueados.computerScreen && r.json.requisitos.computerKeyboard,
     'Una entrega canónica debe desbloquear todos los muebles de su set.');
+  r = await pedir('uidAnaaaa', {}, 'lista');
+  exigir(r.json && r.json.casas && !r.json.casas.some(casa => casa.uid === 'uidFantaa'),
+    'Un perfil duplicado oculto no debe aparecer en las casas del curso.');
+  r = await pedir('uidAnaaaa', { sala:'uidFantaa' }, 'entrar');
+  exigir(r.status === 404, 'Tampoco se debe entrar a una casa oculta conociendo su UID.');
   r = await pedir('uidLuisss', {}, 'inventario');
   exigir(r.json && !r.json.desbloqueados.computerScreen && r.json.requisitos.computerScreen,
     'Una sola marca de entrega no debe desbloquear el mueble.');
@@ -380,6 +409,15 @@ async function probarRegalos() {
   const ps5Despues = r.json && r.json.catalogo && r.json.catalogo.find(m => m.id === 'playStation5');
   exigir(ps5Despues && ps5Despues.tiene === true && /profesor/i.test(ps5Despues.origen),
     'Después de regalar, el mueble debe aparecer marcado como ya obtenido.');
+  r = await pedir('uidLuisss', { pieza:[
+    { id:'playStation5', col:1, fila:1, dir:'SE' },
+    { id:'playStation5', col:2, fila:1, dir:'SW' }
+  ] }, 'guardar-pieza');
+  exigir(r.status === 409 && !db.leerRuta('plataforma_estudiantes/avatar/uidLuisss/pieza'),
+    'Una PlayStation 5 recibida no se puede duplicar en la habitación.');
+  r = await pedir('uidLuisss', { pieza:[{ id:'playStation5', col:1, fila:1, dir:'SE' }] }, 'guardar-pieza');
+  exigir(r.json && r.json.ok === true && (db.leerRuta('plataforma_estudiantes/avatar/uidLuisss/pieza') || []).length === 1,
+    'Una sola PlayStation 5 sí se puede colocar y confirmar desde el servidor.');
   r = await pedir('uidProfe2', { estudiante: 'uidEvaaaa', mueble: 'playStation5' }, 'regalos-admin-entregar');
   exigir(r.status === 403 && !regalo('uidEvaaaa', 'playStation5'),
     'Un docente no puede regalar muebles fuera de sus cursos asignados.');
@@ -390,6 +428,9 @@ async function probarRegalos() {
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'lampSquareFloor' });
   exigir(r.json && r.json.ok === true && regalo('uidLuisss', 'lampSquareFloor') && regalo('uidLuisss', 'lampSquareFloor').de === 'Ana Perez',
     `Un regalo válido debe quedar en el avatar del que recibe, con el nombre visible del que regala: ${JSON.stringify(r)}.`);
+  exigir(!regalo('uidAnaaaa', 'lampSquareFloor') &&
+    !(db.leerRuta('plataforma_estudiantes/avatar/uidAnaaaa/pieza') || []).some(pieza => pieza.id === 'lampSquareFloor'),
+    'Transferir un mueble debe quitarlo del inventario y de la casa del donante.');
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'bookcaseOpen' });
   exigir(r.json && r.json.sinCupo === true && !regalo('uidLuisss', 'bookcaseOpen'), 'El segundo regalo del día se rechaza y no se escribe.');
   r = await pedir('uidLuisss', { para: 'uidEvaaaa', mueble: 'bookcaseOpen' });
@@ -407,6 +448,26 @@ async function probarRegalos() {
   r = await pedir('uidAnaaaa', { para: 'uidLuisss', mueble: 'computerScreen' });
   exigir(r.json && r.json.ok === false && !regalo('uidLuisss', 'computerScreen'),
     'Un mueble asociado a una tarea no se puede transferir a quien no la completó.');
+  await db.ref('plataforma_estudiantes/avatar/uidAnaaaa/casa').set({ tamano: 'salon-l' });
+  r = await pedir('uidLuisss', { sala: 'uidAnaaaa', col: 6, fila: 1 }, 'entrar');
+  exigir(r.json && r.json.ok === true &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 1 &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/fila') === 1,
+    'El servidor debe recolocar una visita que intente entrar en el hueco de la L.');
+  r = await pedir('uidLuisss', { sala: 'uidAnaaaa', col: 6, fila: 6 }, 'latido');
+  exigir(r.json && r.json.ok === true &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 6,
+    'El servidor debe permitir la segunda ala del salón en L.');
+  r = await pedir('uidLuisss', { sala: 'uidAnaaaa', col: 6, fila: 1 }, 'latido');
+  exigir(r.json && r.json.ok === true &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 1,
+    'El latido no puede persistir una posición sobre el hueco.');
+  await db.ref('plataforma_estudiantes/avatar/uidAnaaaa/casa').set({ tamano: '5x5' });
+  r = await pedir('uidLuisss', { sala: 'uidAnaaaa', col: 6, fila: 6 }, 'latido');
+  exigir(r.json && r.json.ok === true &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/col') === 2 &&
+    db.leerRuta('plataforma_estudiantes/salas/uidAnaaaa/presentes/uidLuisss/fila') === 3,
+    'Una habitación 5 × 5 antigua debe impedir posiciones fuera de su superficie.');
   r = await pedir('uidProfee', { enabled: false }, 'configurar');
   exigir(r.json && r.json.ok === true && r.json.enabled === false, 'El profesor debe poder deshabilitar casas y decoración.');
   r = await pedir('uidAnaaaa', {}, 'estado');

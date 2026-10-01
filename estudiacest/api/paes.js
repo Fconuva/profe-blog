@@ -413,6 +413,13 @@ async function handleSubmit(req, res) {
     return res.status(200).json({ success: true });
 }
 
+function isDeliveredGuiaRecord(guideId, record) {
+    if (!record || typeof record !== 'object') return false;
+    if (record.status === 'sent' || record.submitted === true || record.completada === true) return true;
+    return ['10', '11', '12', '13'].includes(String(guideId)) &&
+        Number(record.submittedAt) > 0 && Object.keys(record.answers || {}).length > 0;
+}
+
 async function handleSubmitGuia(req, res) {
     const { rut, nombre, curso, guiaId, answers, dev, correct, total, score, draft } = req.body;
     if (!rut || !nombre || !curso || !guiaId) {
@@ -474,7 +481,7 @@ async function handleSubmitGuia(req, res) {
     const tx = await ref.transaction((current) => {
         borradorDeReenvio = false;
         if (FOUNDATIONS.KEYS[guideId] && current && current.contentVersion !== FOUNDATIONS.VERSION) return;
-        const enviado = !!current && (current.status === 'sent' || current.completada === true);
+        const enviado = isDeliveredGuiaRecord(guideId, current);
         if (enviado && abierto) {
             if (draft) {
                 borradorDeReenvio = true;
@@ -484,7 +491,7 @@ async function handleSubmitGuia(req, res) {
                 intentosAnteriores: archivarIntento(current), reenviadoAt: now, grade: null, reenvioBorrador: null
             });
         }
-        if (!isPaesTestRut(rutLimpio) && current && (current.status === 'sent' || current.completada === true)) return;
+        if (!isPaesTestRut(rutLimpio) && isDeliveredGuiaRecord(guideId, current)) return;
         return Object.assign({}, current || {}, payload);
     });
     if (!tx.committed) {
@@ -517,8 +524,8 @@ async function handleGetGuiaDraft(req, res) {
         answers: normalizeStoredAnswers(v.answers),
         dev: v.dev || {},
         status: v.status || null,
-        submitted: v.submitted === true || v.status === 'sent',
-        completada: v.completada === true || v.status === 'sent',
+        submitted: isDeliveredGuiaRecord(guiaId, v),
+        completada: isDeliveredGuiaRecord(guiaId, v),
         submittedAt: v.submittedAt || null,
         completadaAt: v.completadaAt || null,
         lastSavedAt: v.lastSavedAt || v.submittedAt || null
@@ -549,15 +556,14 @@ async function handleGetGuiaState(req, res) {
         return res.status(409).json({error:'Existe una respuesta de una versión anterior. El docente debe resguardarla y restablecer el intento antes de usar esta guía.'});
     }
     const normalizedAnswers = normalizeStoredAnswers(value.answers);
-    const legacyCompleted = ['10','11','12','13'].includes(guideId) &&
-        Number(value.submittedAt) > 0 && Object.keys(normalizedAnswers).length > 0;
+    const delivered = isDeliveredGuiaRecord(guideId, value);
     const released = await isGuideReleased(guideId, value.curso, rut);
     const attempt = {
         answers: normalizedAnswers,
         dev: value.dev || {},
         status: value.status || 'draft',
-        submitted: value.submitted === true || value.status === 'sent' || legacyCompleted,
-        completada: value.completada === true || value.status === 'sent' || legacyCompleted,
+        submitted: delivered,
+        completada: delivered,
         submittedAt: value.submittedAt || null,
         completadaAt: value.completadaAt || null,
         lastSavedAt: value.lastSavedAt || null,
@@ -961,16 +967,40 @@ async function handleAdminGradeGuia(req, res, decoded) {
     }
 
     const rutLimpio = cleanRut(studentRut);
-    const gradeRef = db.ref(`${BASE}/guia_respuestas/${guiaId}/${rutLimpio}/grade`);
-
-    await gradeRef.set({
-        nota: (nota === undefined || nota === null || String(nota).trim() === '') ? null : String(nota).trim(),
+    const guideId = String(guiaId);
+    const rawGrade = String(nota ?? '').trim().replace(',', '.');
+    const numericGrade = rawGrade === '' ? null : Number(rawGrade);
+    if (numericGrade !== null && (!Number.isFinite(numericGrade) || numericGrade < 1 || numericGrade > 7 ||
+        Math.abs(numericGrade * 10 - Math.round(numericGrade * 10)) > 1e-9)) {
+        return res.status(400).json({ error: 'La nota debe estar entre 1,0 y 7,0, con un decimal.' });
+    }
+    const value = numericGrade === null ? null : numericGrade.toFixed(1);
+    const responseRef = db.ref(`${BASE}/guia_respuestas/${guideId}/${rutLimpio}`);
+    const bookRef = db.ref(`${BASE}/libro_notas/${rutLimpio}`);
+    const [responseSnap, bookSnap] = await Promise.all([responseRef.once('value'), bookRef.once('value')]);
+    if (!responseSnap.exists()) return res.status(404).json({ error: 'No hay una entrega para calificar.' });
+    const response = responseSnap.val() || {};
+    const book = bookSnap.val() || {};
+    const now = Date.now();
+    const updates = {};
+    updates[`guia_respuestas/${guideId}/${rutLimpio}/grade`] = {
+        nota: value,
         feedback: feedback ? String(feedback).trim() : '',
         gradedBy: (decoded && decoded.email) ? decoded.email : 'docente',
-        gradedAt: Date.now()
-    });
+        gradedAt: now
+    };
+    const course = String(book.curso || response.curso || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (!(guideId === '14' && course === '4AHC') && !isPaesTestRut(rutLimpio)) {
+        updates[`libro_notas/${rutLimpio}/notas/${guideId}`] = value;
+        updates[`libro_notas/${rutLimpio}/updatedAt`] = now;
+        if (!bookSnap.exists()) {
+            updates[`libro_notas/${rutLimpio}/nombre`] = response.nombre || '';
+            updates[`libro_notas/${rutLimpio}/curso`] = response.curso || '';
+        }
+    }
+    await db.ref(BASE).update(updates);
 
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, nota: value });
 }
 
 async function handleAdminResetGuia(req, res) {

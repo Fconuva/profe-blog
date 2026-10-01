@@ -5,6 +5,7 @@ const {
   buildPublication,
   gradeFromScore
 } = require('./publish-paes-semester-grades');
+const { buildPlan: buildReopenedGradePlan } = require('./grade-paes-reopened');
 
 const root = path.join(__dirname, '..');
 const portal = fs.readFileSync(path.join(root, 'paes', 'index.html'), 'utf8');
@@ -49,6 +50,22 @@ const testPublication = buildPublication(
 );
 assert.strictEqual(testPublication.students, 0, 'La cuenta de prueba no debe entrar al libro de notas.');
 
+const legacyG10 = { status:'draft', submittedAt:1000, lastSavedAt:3200,
+  answers:{ 1:'A',2:'D',3:'B',4:'C',5:'D',6:'C',7:'B',8:'B',9:'A' }, correct:9, total:9 };
+const legacyPlan = buildReopenedGradePlan({
+  books:{ '123456789':{ curso:'3°A HC', notas:{} } },
+  responses:{ 10:{ '123456789':legacyG10 } }
+});
+assert.strictEqual(legacyPlan.notes.length, 1, 'G10 debe recuperar una entrega que el autoguardado antiguo dejó como borrador.');
+assert.strictEqual(buildReopenedGradePlan({
+  books:{ '123456789':{ curso:'3°A HC', notas:{} } },
+  responses:{ 10:{ '123456789':{ ...legacyG10, lastSavedAt:27000 } } }
+}).notes.length, 0, 'Una edición tardía de G10 no demuestra reenvío final.');
+assert.strictEqual(buildReopenedGradePlan({
+  books:{ '123456789':{ curso:'3°A HC', notas:{ 10:'5.0' } } },
+  responses:{ 10:{ '123456789':legacyG10 } }
+}).notes.length, 0, 'La recuperación no debe sustituir una nota vigente del libro.');
+
 [
   'id="misNotasPanel"',
   'Mis notas del segundo semestre',
@@ -72,7 +89,9 @@ assert.ok(!/handleGetMisNotas[\s\S]{0,800}nombre\s*:/.test(api), 'La consulta p�
 ].forEach(marker => assert.ok(roster.includes(marker), `Falta la cuenta de prueba: ${marker}`));
 assert.ok(api.includes("const PAES_TEST_RUT = '111111111'"), 'La API debe reconocer la cuenta de prueba.');
 assert.ok(api.includes('if (isPaesTestRut(rut))'), 'La cuenta de prueba debe omitir los bloqueos de guías.');
-assert.ok(api.includes('!isPaesTestRut(rutLimpio) && current'), 'La cuenta de prueba debe poder reutilizar las guías genéricas.');
+assert.ok(api.includes('!isPaesTestRut(rutLimpio) && isDeliveredGuiaRecord(guideId, current)'), 'La cuenta de prueba debe poder reutilizar las guías genéricas.');
+assert.ok(api.includes('updates[`libro_notas/${rutLimpio}/notas/${guideId}`] = value'), 'La calificación manual debe sincronizar el libro.');
+assert.ok(api.includes('await db.ref(BASE).update(updates)'), 'La calificación manual y el libro deben guardarse juntos.');
 assert.ok(api.includes('!isPaesTestRut(rutLimpio) && previous.exists()'), 'La cuenta de prueba debe poder reutilizar el miniensayo.');
 assert.ok(admin.includes("const PAES_TEST_RUT = '111111111'"), 'El admin debe identificar la cuenta de prueba.');
 assert.ok(admin.includes('filter(([rut]) => rut !== PAES_TEST_RUT)'), 'La cuenta de prueba no debe alterar métricas.');

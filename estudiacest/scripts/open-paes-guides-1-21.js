@@ -14,7 +14,7 @@ const DATABASE = 'https://estudiacest-default-rtdb.firebaseio.com';
 const CONFIG_PATH = 'plataforma_paes/guias_config';
 const GUIDE_IDS = Array.from({ length:21 }, (_, index) => 'g' + (index + 1));
 const LATER_IDS = [
-  ...Array.from({ length:10 }, (_, index) => 'g' + (index + 22)),
+  ...Array.from({ length:15 }, (_, index) => 'g' + (index + 22)),
   'g4pie', 'g6pie', 'g7pie', 'g8pie', 'retro'
 ];
 

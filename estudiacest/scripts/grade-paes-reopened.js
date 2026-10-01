@@ -38,6 +38,16 @@ function submitted(id, record) {
   }
   return record.status === 'sent' || record.submitted === true || record.completada === true;
 }
+function recoverableLegacyG10(id, record) {
+  if (id !== '10' || !record || record.status !== 'draft' ||
+    record.submitted === true || record.completada === true ||
+    !Number.isFinite(Number(record.submittedAt)) || Number(record.submittedAt) <= 0 ||
+    !record.answers || Object.keys(record.answers).length === 0) return false;
+  // El autoguardado antiguo pisó el estado 2–7 s después de la entrega.
+  // Una edición más tardía no demuestra que el nuevo trabajo se haya enviado.
+  const lag = Number(record.lastSavedAt) - Number(record.submittedAt);
+  return Number.isFinite(lag) && lag >= 0 && lag <= 10000;
+}
 function stable(value) {
   if (Array.isArray(value)) return '[' + value.map(stable).join(',') + ']';
   if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(key =>
@@ -53,7 +63,9 @@ function buildPlan(state) {
   for (const id of IDS) for (const [rut, record] of Object.entries(state.responses[id] || {})) {
     if (rut === TEST_RUT || !record || typeof record !== 'object') continue;
     const book = state.books[rut] || {};
-    if (!submitted(id, record)) { skipped.draft++; continue; }
+    const recovered = recoverableLegacyG10(id, record);
+    if (!submitted(id, record) && !recovered) { skipped.draft++; continue; }
+    if (recovered && book.notas && book.notas[id] != null) { skipped.draft++; continue; }
     if (omitted(id, book, record)) { skipped.omitted14++; continue; }
     byGuide[id].submitted++;
     const checked = scoreChecked(id, record);
@@ -70,7 +82,8 @@ function buildPlan(state) {
       skipped.existingManualConflict++; continue;
     }
     const grade = manualGrade || (resent ? calculated : (bookGrade || calculated));
-    const source = manualGrade ? 'manual-vigente' : resent ? 'reenvio-verificado' : bookGrade ? 'libro-vigente' : 'puntaje-verificado';
+    const source = manualGrade ? 'manual-vigente' : recovered ? 'entrega-legacy-autoguardado' :
+      resent ? 'reenvio-verificado' : bookGrade ? 'libro-vigente' : 'puntaje-verificado';
     if (!manualGrade) {
       attempts.push({ id, rut, expected:digest(record), grade, source, correct:checked.correct, total:checked.total });
       byGuide[id].attemptsToGrade++;
@@ -138,7 +151,7 @@ async function applyPlan(plan, state) {
   const token = getAccessToken();
   const attemptResults = await pool(plan.attempts, async op => conditionalReplace(
     `guia_respuestas/${op.id}/${op.rut}`, token,
-    value => digest(value) === op.expected && submitted(op.id, value) &&
+    value => digest(value) === op.expected && (submitted(op.id, value) || recoverableLegacyG10(op.id, value)) &&
       scoreChecked(op.id, value).matches,
     value => ({ ...value, grade:{ nota:op.grade,
       feedback:op.source === 'libro-vigente'

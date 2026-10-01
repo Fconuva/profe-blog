@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Mi espacio PAES | Estudia CEST</title>
+  <link rel="stylesheet" href="/estudiantes/css/mi-espacio.css">
+  <style>
+    :root { color-scheme: dark; font-family: system-ui, sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #0b1220; color: #e8edf5; }
+    button, a { font: inherit; }
+    a { color: #c7d2fe; }
+    a:focus-visible, button:focus-visible { outline: 3px solid #fbbf24; outline-offset: 3px; }
+    .wrap { width: min(1120px, 100%); margin: 0 auto; padding: 24px 16px 60px; }
+    .top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 22px; }
+    .top a { text-decoration: none; font-weight: 700; }
+    .top span { font-size: 13px; color: #a5b4fc; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(28px, 5vw, 40px); }
+    .intro { margin: 8px 0 22px; color: #aebdd0; line-height: 1.5; }
+    .identity { display: flex; align-items: center; gap: 12px; margin: 0 0 16px; }
+    .identity[hidden], .message[hidden], .esp-caja[hidden] { display: none; }
+    .identity-figure { width: 54px; height: 54px; display: grid; place-items: center; background: #1e293b; border-radius: 14px; overflow: hidden; }
+    .identity strong { display: block; }
+    .identity small { color: #aebdd0; }
+    .message { padding: 18px; background: #1e293b; border: 1px solid #475569; border-radius: 12px; line-height: 1.5; }
+    .message p { margin: 0 0 12px; }
+    .message button { min-height: 44px; border: 0; border-radius: 8px; padding: 9px 16px; background: #a5b4fc; color: #111827; font-weight: 800; cursor: pointer; }
+    .message button[hidden] { display: none; }
+    .esp-caja { margin-top: 12px; }
+    @media (max-width: 600px) { .wrap { padding: 16px 10px 36px; } .esp-cab { padding-top: 16px; } }
+  </style>
+  <script src="/paes/js/nominas.js" defer></script>
+  <script src="/estudiantes/js/avatar-levels.js" defer></script>
+  <script src="/estudiantes/js/personaje-iso.js" defer></script>
+  <script src="/estudiantes/js/catalogo-casa.js" defer></script>
+  <script src="/estudiantes/js/mapas-casa.js" defer></script>
+  <script src="/estudiantes/js/mi-espacio.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <nav class="top" aria-label="Volver"><a href="/paes/">← Volver a PAES</a><span>Estudia CEST · PAES</span></nav>
+    <h1>Mi espacio</h1>
+    <p class="intro">Tu personaje, tu casa y tus muebles en un solo lugar.</p>
+    <div class="identity" id="identity" hidden><div class="identity-figure" id="identityFigure" aria-hidden="true"></div><div><strong id="studentName"></strong><small id="studentCourse"></small></div></div>
+    <div class="message" id="message" role="status"><p id="messageText">Comprobando tu cuenta…</p><button type="button" id="switchAccount" hidden>Cambiar cuenta de estudiante</button></div>
+    <section class="esp-caja" id="spaceShell" aria-label="Mi avatar y mi casa" hidden><div class="esp-cab"><div><h2>Avatar y casa</h2><p>Los muebles se ganan con tareas o se reciben del profesor.</p></div></div><div id="miEspacio"></div></section>
+  </main>
+  <script>
+    window.addEventListener('DOMContentLoaded', function () {
+      'use strict';
+      const RETURN_PATH = '/paes/mi-espacio.html';
+      const LOGIN_URL = '/lecturas/?next=' + encodeURIComponent(RETURN_PATH);
+      const BASE = 'plataforma_estudiantes';
+      const SPACE_COURSES = new Set(['3°A HC', '3°B HC', '4°A HC', '4°B HC']);
+      const FIREBASE_CONFIG = {
+        apiKey: 'AIzaSyCuDQ_iHDHmTd8bPeqUbsXQqdxw2SObt8w',
+        authDomain: 'estudiacest.firebaseapp.com',
+        databaseURL: 'https://estudiacest-default-rtdb.firebaseio.com',
+        projectId: 'estudiacest',
+        storageBucket: 'estudiacest.firebasestorage.app',
+        messagingSenderId: '999002169815',
+        appId: '1:999002169815:web:51203237bc77c2e74deb92'
+      };
+      const cleanRut = value => String(value || '').replace(/[^0-9kK]/g, '').toUpperCase();
+      const $ = id => document.getElementById(id);
+      const auth = firebase.initializeApp(FIREBASE_CONFIG).auth();
+      const db = firebase.database();
+      let mountedUid = '';
+
+      function showMessage(text, allowSwitch) {
+        $('messageText').textContent = text;
+        $('switchAccount').hidden = !allowSwitch;
+        $('message').hidden = false;
+      }
+      function selectedPaesRut() {
+        try { return cleanRut(JSON.parse(sessionStorage.getItem('paes_student') || 'null')?.rut); }
+        catch (_) { return ''; }
+      }
+      $('switchAccount').addEventListener('click', async () => {
+        await auth.signOut();
+        sessionStorage.removeItem('paes_student');
+        window.location.replace(LOGIN_URL);
+      });
+
+      auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(() => {
+        auth.onAuthStateChanged(async user => {
+          if (!user) { window.location.replace(LOGIN_URL); return; }
+          if (mountedUid) { if (mountedUid !== user.uid) window.location.reload(); return; }
+          try {
+            const snap = await db.ref(BASE + '/estudiantes/' + user.uid).once('value');
+            const student = snap.val();
+            if (!student) { showMessage('Esta cuenta no tiene un perfil de estudiante habilitado.', true); return; }
+            const rut = cleanRut(student.rut);
+            const roster = typeof NOMINAS_PAES !== 'undefined' ? NOMINAS_PAES : [];
+            const paesStudent = roster.find(item => !item.es_prueba && cleanRut(item.rut) === rut);
+            if (!paesStudent || !SPACE_COURSES.has(paesStudent.curso)) {
+              showMessage('Mi espacio está disponible solo para los cursos habilitados.', true); return;
+            }
+            const selected = selectedPaesRut();
+            if (!selected) { showMessage('Primero ingresa a PAES con tu RUT y abre Mi espacio desde tu panel.', false); return; }
+            if (selected !== rut) { showMessage('El RUT elegido en PAES y la cuenta abierta son diferentes. Cambia a tu propia cuenta antes de entrar.', true); return; }
+            const avSnap = await db.ref(BASE + '/avatar/' + user.uid).once('value');
+            const avatar = avSnap.val() || {};
+            const xp = Number(avatar.xp_total) || 0;
+            const look = AvatarLookSystem.normalizeLook(avatar.look, { xpTotal:xp, avatarData:avatar });
+            $('studentName').textContent = student.nombre || 'Estudiante';
+            $('studentCourse').textContent = paesStudent.curso;
+            $('identity').hidden = false;
+            AvatarLookSystem.render($('identityFigure'), { look, xpTotal:xp, avatarData:avatar, size:50, shape:'rounded' });
+            $('spaceShell').hidden = false;
+            $('message').hidden = true;
+            MiEspacio.montar({
+              host:$('miEspacio'), db, auth, base:BASE, uid:user.uid,
+              nombre:student.nombre || 'Estudiante', curso:paesStudent.curso,
+              xp, look, pieza:avatar.pieza, personajeEn:avatar.personajeEn,
+              casa:avatar.casa, logros:avatar.logros, placas:avatar.placas, regalos:avatar.regalos,
+              alCambiarLook(nuevo) {
+                AvatarLookSystem.render($('identityFigure'), { look:nuevo, xpTotal:xp, avatarData:avatar, size:50, shape:'rounded' });
+              }
+            });
+            mountedUid = user.uid;
+          } catch (error) {
+            console.error('[paes/mi-espacio]', error);
+            showMessage('No se pudo cargar tu espacio. Recarga la página o inténtalo más tarde.', false);
+          }
+        });
+      }).catch(() => showMessage('No se pudo recuperar la sesión. Recarga la página.', false));
+    });
+  </script>
+</body>
+</html>

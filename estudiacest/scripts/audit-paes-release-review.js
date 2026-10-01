@@ -12,13 +12,19 @@ const portal = read('paes/index.html');
 const materials = read('paes/guias.html');
 const guide16 = read('paes/guia16.html');
 const guide14App = read('paes/assets/guia14/guia14-app.js');
+const releaseMaintainer = read('scripts/open-paes-guides-1-21.js');
+assert(/length:15[^\n]*'g' \+ \(index \+ 22\)/.test(releaseMaintainer),
+  'El bloqueo de guías posteriores debe cubrir G22–G36.');
 
 for (const guide of [10, 11, 12, 13, 15, 16]) {
   assert(new RegExp(`const G${guide}_KEY =`).test(api), `Falta la clave de la Guía ${guide} en la API.`);
   assert(new RegExp(`'${guide}': G${guide}_KEY`).test(api), `La Guía ${guide} no está registrada para revisión.`);
 }
 
-assert(/legacyCompleted/.test(api), 'La API no reconoce entregas históricas anteriores al estado sent.');
+assert(/function isDeliveredGuiaRecord\(guideId, record\)/.test(api) &&
+  /Number\(record\.submittedAt\) > 0/.test(api) &&
+  /const delivered = isDeliveredGuiaRecord\(guideId, value\)/.test(api),
+  'La API no reconoce entregas históricas anteriores al estado sent.');
 assert(/const serverKey = guideKeyFor\(guideId, rutLimpio\)/.test(api), 'La API no recalcula resultados con clave de servidor.');
 assert(/fetchReleasedAttempt/.test(lock) && /enableReviewOnly/.test(lock), 'El candado no permite revisión de entregas publicadas.');
 assert(/data-paes-review-only/.test(lock) && /lockResponseControls/.test(lock), 'El modo de revisión no bloquea la edición.');

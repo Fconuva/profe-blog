@@ -990,6 +990,7 @@
       QUESTIONS.forEach(q => { if (answers[q.n] === q.correct) correct++; });
       const score = Math.round((correct / 9) * 100);
       setSendStatus('Enviando respuestas a tu profesor…', '#94a3b8');
+      clearTimeout(draftTimer);
       try {
         const resp = await fetch('/api/paes?action=submit-guia', {
           method: 'POST',
@@ -999,9 +1000,13 @@
             guiaId: '10', answers, dev, correct, total: 9, score
           })
         });
-        if (!resp.ok) throw new Error('submit error');
-        st.sent = true; setState(st);
-        setSendStatus('✓ Respuestas enviadas a tu profesor. Puedes seguir editando y reenviar.', '#6ee7b7');
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.submitted !== true || data.completada !== true) {
+          setSendStatus('⚠️ ' + (data.error || 'No se confirmó la entrega. Inténtalo de nuevo.'), '#fcd9a3');
+          return;
+        }
+        st.sent = true; localStorage.setItem(SKEY, JSON.stringify(st));
+        setSendStatus('✓ Entrega confirmada. Podrás reenviar solo mientras esté habilitado el reenvío.', '#6ee7b7');
       } catch (e) {
         console.error('[submitGuia]', e);
         setSendStatus('⚠️ No se pudo enviar (sin conexión). Tus respuestas siguen guardadas en este dispositivo.', '#fcd9a3');

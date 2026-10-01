@@ -1,7 +1,7 @@
-/* Catálogo de muebles de Mi casa. Generado por herramientas de carga.
- * Arte: Furniture Kit de Kenney (kenney.nl), licencia CC0.
- * Las variantes de color se obtienen rotando el matiz del PNG original.
- * No editar a mano: se regenera.
+/* Catálogo de muebles de Mi casa.
+ * La base proviene de Furniture Kit de Kenney (kenney.nl), licencia CC0;
+ * las piezas temáticas añadidas después usan arte propio generado para CEST.
+ * No regenerar la base sin conservar las entradas temáticas del inicio.
  */
 (function (root, factory) {
   var catalogo = factory();
@@ -9,6 +9,30 @@
   if (typeof module === 'object' && module.exports) module.exports = catalogo;
 })(typeof window !== 'undefined' ? window : null, function () {
 return [
+  {id:"rgbPartySpeaker",nom:"Parlante RGB con luces",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"gamerDesk",nom:"Estación gamer de dos pantallas",fam:"estudio",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"whiteGamerTower",nom:"Torre gamer blanca",fam:"estudio",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"gamerChair",nom:"Silla gamer",fam:"estudio",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"loungeSofaThree",nom:"Sofá de tres cuerpos",fam:"living",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"aquarium",nom:"Pecera animada",fam:"deco",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"statueCR7",nom:"Estatua dorada CR7",fam:"deco",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"statueMessi",nom:"Estatua dorada Messi",fam:"deco",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"petDachshund",nom:"Perro salchicha",fam:"mascotas",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"petPoodle",nom:"Poodle",fam:"mascotas",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"petTerrier",nom:"Terrier",fam:"mascotas",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"petCatOrange",nom:"Gato naranjo",fam:"mascotas",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"petCatBlack",nom:"Gato negro",fam:"mascotas",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"electricGuitarSet",nom:"Guitarra eléctrica, ampli y micrófono",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"drumKit",nom:"Batería",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"musicKeyboard",nom:"Teclado musical",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"uprightPiano",nom:"Piano vertical",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"electricBass",nom:"Bajo eléctrico",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"djStation",nom:"Estación de DJ",fam:"musica",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:false},
+  {id:"rugGryffindor",nom:"Alfombra Gryffindor",fam:"alfombra",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:true},
+  {id:"rugSlytherin",nom:"Alfombra Slytherin",fam:"alfombra",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:true},
+  {id:"rugRavenclaw",nom:"Alfombra Ravenclaw",fam:"alfombra",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:true},
+  {id:"rugHufflepuff",nom:"Alfombra Hufflepuff",fam:"alfombra",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:true},
+  {id:"rugRangers",nom:"Alfombra Rangers de Talca",fam:"alfombra",xp:9999,motivo:"Premio del profesor",sup:0,apila:false,plano:true},
   {id:"bedSingle",nom:"Cama",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},
   {id:"bedDouble",nom:"Cama de dos plazas",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},
   {id:"bedBunk",nom:"Camarote",fam:"dormitorio",xp:0,motivo:"Primeras clases",sup:0,apila:false,plano:false},

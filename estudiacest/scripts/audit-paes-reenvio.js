@@ -14,6 +14,18 @@ const ROOT = path.resolve(__dirname, '..');
 const leer = (rel) => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const fallas = [];
 const exigir = (cond, msg) => { if (!cond) fallas.push(msg); };
+const { plan: planWindow, CLOSES: reenvioCloses } = require('./open-paes-reenvio-oct8');
+
+const sampleConfig = { blocked:{ g22:true }, exceptions:{ g10:{ test:true } },
+  reenvio:{ g12:true, g20:true, g21:true }, reenvio_cierra:'2026-09-23' };
+const windowPlan = planWindow(sampleConfig);
+exigir(windowPlan.toOpen.join() === 'g10,g11,g13,g14,g15,g16,g17,g18,g19' &&
+  windowPlan.toClose.join() === 'g20,g21', 'La ventana debe abrir solo G10–G19.');
+exigir(reenvioCloses === '2026-10-09' && windowPlan.next.reenvio_cierra === reenvioCloses,
+  'El reenvío permitido hasta el 8-oct debe cerrar el 9-oct a las 00:00 de Chile.');
+exigir(windowPlan.next.blocked === sampleConfig.blocked &&
+  windowPlan.next.exceptions === sampleConfig.exceptions && sampleConfig.reenvio.g20 === true,
+  'La apertura no debe modificar bloqueos, excepciones ni el objeto original.');
 
 const api = leer('api/paes.js');
 const cuerpo = (nombre) => {
@@ -46,11 +58,24 @@ exigir(/guias_config\/reenvio_cierra/.test(cuerpo('reenvioAbierto')) && /America
   'reenvioAbierto debe leer guias_config/reenvio_cierra y comparar con la fecha de Chile.');
 
 const envio = cuerpo('handleSubmitGuia');
+const helperSource = (api.match(/function isDeliveredGuiaRecord\(guideId, record\) \{[\s\S]*?\n\}/) || [])[0];
+exigir(!!helperSource, 'Falta lector canónico de entrega histórica para G10–G13.');
+if (helperSource) {
+  const delivered = new Function(`${helperSource}; return isDeliveredGuiaRecord;`)();
+  exigir(delivered('10', { status:'draft', submittedAt:1000, answers:{ 1:'A' } }) === true,
+    'G10 con entrega histórica y borrador posterior debe seguir considerándose enviada.');
+  exigir(delivered('11', { status:'draft', answers:{ 1:'A' } }) === false,
+    'Un borrador sin entrega histórica no puede transformarse en nota.');
+  exigir(delivered('15', { status:'sent', answers:{} }) === true,
+    'La entrega actual debe seguir reconocida.');
+}
+exigir(/isDeliveredGuiaRecord\(guideId, current\)/.test(envio),
+  'handleSubmitGuia debe proteger también las entregas históricas de G10–G13.');
 exigir(/if \(enviado && abierto\) \{/.test(envio), 'handleSubmitGuia debe aceptar un segundo envío solo con reenvío abierto.');
 exigir(/reenvioBorrador: \{ answers: safeAnswers/.test(envio),
   'Con reenvío abierto, el autoguardado va a reenvioBorrador: si no, abrir la guía deshace una entrega.');
 exigir(/intentosAnteriores: archivarIntento\(current\)/.test(envio), 'Al reenviar, el intento anterior se archiva (con su nota).');
-exigir(/if \(!isPaesTestRut\(rutLimpio\) && current && \(current\.status === 'sent' \|\| current\.completada === true\)\) return;/.test(envio),
+exigir(/if \(!isPaesTestRut\(rutLimpio\) && isDeliveredGuiaRecord\(guideId, current\)\) return;/.test(envio),
   'Sin reenvío abierto, lo enviado sigue siendo inmutable (salvo la cuenta de prueba).');
 
 exigir(/reenvioAbierto\(guideId\)/.test(cuerpo('handleGetGuiaState')) && /answerKey: null, feedback: null, reenvio: true/.test(cuerpo('handleGetGuiaState')),
@@ -99,14 +124,17 @@ for (const pagina of ['paes/index.html', 'paes/guias.html']) {
 }
 
 // Guías antiguas: el motivo real del rechazo llega al estudiante.
-for (const n of [11, 12, 13]) {
+for (const n of [10, 11, 12, 13]) {
   const html = leer(`paes/guia${n}.html`);
   const i = html.indexOf('async function submitGuia()');
   const f = i < 0 ? '' : html.slice(i, html.indexOf('/* ============ AUTOGUARDADO', i));
-  exigir(/const faltan = QUESTIONS\.filter\(q => !answers\[q\.n\]\)/.test(f), `guia${n}.html: debe avisar qué preguntas faltan antes de enviar.`);
+  if (n !== 10) exigir(/const faltan = QUESTIONS\.filter\(q => !answers\[q\.n\]\)/.test(f),
+    `guia${n}.html: debe avisar qué preguntas faltan antes de enviar.`);
   exigir(/data\.error \|\|/.test(f), `guia${n}.html: debe mostrar el motivo que da el servidor, no "sin conexión".`);
   exigir(!/throw new Error\('submit error'\)/.test(f), `guia${n}.html: volvió el error genérico que se mostraba como "sin conexión".`);
-  exigir(new RegExp(`guiaId: "${n}"`).test(f), `guia${n}.html: el envío debe ir con guiaId ${n}.`);
+  exigir(new RegExp(`guiaId: ['"]${n}['"]`).test(f), `guia${n}.html: el envío debe ir con guiaId ${n}.`);
+  exigir(/clearTimeout\(draftTimer\)/.test(f) && /data\.submitted !== true \|\| data\.completada !== true/.test(f),
+    `guia${n}.html: debe cancelar el autoguardado pendiente y confirmar entrega real.`);
 }
 
 if (fallas.length) {

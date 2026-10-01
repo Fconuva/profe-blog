@@ -968,6 +968,7 @@
       QUESTIONS.forEach(q => { if (answers[q.n] === q.correct) correct++; });
       const score = Math.round((correct / TOTAL) * 100);
       setSendStatus("Enviando respuestas a tu profesor…", "var(--muted)");
+      clearTimeout(draftTimer);
       let resp;
       try {
         resp = await fetch("/api/paes?action=submit-guia", {
@@ -984,13 +985,13 @@
         return;
       }
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
+      if (!resp.ok || data.submitted !== true || data.completada !== true) {
         setSendStatus("⚠️ " + (data.error || "No se pudo enviar. Inténtalo de nuevo."), "var(--burgundy)");
         return;
       }
       st.sent = true;
       localStorage.setItem(SKEY, JSON.stringify(st)); // sin setState: no hace falta otro borrador
-      setSendStatus("✓ Respuestas enviadas a tu profesor. Puedes seguir editando y reenviar.", "var(--success)");
+      setSendStatus("✓ Entrega confirmada. Podrás reenviar solo mientras esté habilitado el reenvío.", "var(--success)");
     }
 
     /* ============ AUTOGUARDADO EN LA NUBE (borrador por alumno) ============ */

@@ -744,6 +744,12 @@
     .info-panel-text p { color: #24445b; }
     .welcome-text p { color: #536477; }
 
+    .paes-space-button { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 12px;
+      border: 1px solid #b9c9db; border-radius: 7px; background: #fff; color: #254568;
+      font-size: 13px; font-weight: 700; text-decoration: none; white-space: nowrap; }
+    .paes-space-button[hidden] { display: none; }
+    .paes-space-button:hover, .paes-space-button:focus-visible { background: #eef5fa; }
+
     .welcome-actions .btn-logout {
       min-height: 40px;
       padding: 8px 12px;
@@ -994,6 +1000,7 @@
         </div>
         <div class="welcome-actions">
           <span class="student-badge" id="studentCourseBadge">Curso</span>
+          <a class="paes-space-button" id="paesSpaceLink" href="/paes/mi-espacio.html" hidden>Mi espacio</a>
           <button type="button" class="btn-logout" id="btnLogoutAction">Cerrar sesión</button>
         </div>
       </div>
@@ -1659,6 +1666,10 @@
 
       document.getElementById('studentWelcomeName').textContent = `Bienvenido, ${student.nombre}`;
       document.getElementById('studentCourseBadge').textContent = student.curso;
+      const paesRosterEntry = typeof NOMINAS_PAES === 'undefined' ? null
+        : NOMINAS_PAES.find(item => !item.es_prueba && cleanRut(item.rut) === cleanRut(student.rut));
+      const spaceCourses = new Set(['3°A HC', '3°B HC', '4°A HC', '4°B HC']);
+      document.getElementById('paesSpaceLink').hidden = !paesRosterEntry || !spaceCourses.has(paesRosterEntry.curso);
       applyGuidedPaesRoute(student);
 
       // Update Ensayos state locally first

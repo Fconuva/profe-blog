@@ -604,7 +604,10 @@
 
     async function routeAfterLogin(uid, student) {
       const nextPath = await resolvePostLoginTarget(uid, student);
-      const finalPath = (student && !student.perfil_completo && !isAccessOnlyStudent(student))
+      // Mi espacio PAES admite la clave inicial de la cuenta existente. Esta
+      // excepción no cambia la exigencia de perfil para Lecturas ni SIMCE.
+      const paesSpace = nextPath === '/paes/mi-espacio.html' && isPaesCourse(student && student.curso);
+      const finalPath = (student && !student.perfil_completo && !isAccessOnlyStudent(student) && !paesSpace)
         ? getProfileUrl(nextPath)
         : nextPath;
 

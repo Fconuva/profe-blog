@@ -102,7 +102,13 @@
       { id:'manga',    nom:'Manga larga' },
       { id:'poleron',  nom:'Polerón',  xp:380 },
       { id:'camisa',   nom:'Camisa',   xp:620 },
-      { id:'chaleco',  nom:'Chaleco',  xp:1150 }
+      { id:'chaleco',  nom:'Chaleco',  xp:1150 },
+      { id:'camisetaRealMadrid', nom:'Real Madrid' },
+      { id:'camisetaBarcelona', nom:'Barcelona' },
+      { id:'camisetaColoColo', nom:'Colo-Colo' },
+      { id:'camisetaCatolica', nom:'Universidad Católica' },
+      { id:'camisetaUChile', nom:'Universidad de Chile' },
+      { id:'camisetaRangers', nom:'Rangers de Talca' }
     ]},
     arribaColor: { label:'Color de arriba', opciones: C.ropa },
     abajo: { label:'Ropa de abajo', opciones:[
@@ -150,6 +156,14 @@
     abajoColor:'jeans', zapatos:'zapatillas', zapatosColor:'negro',
     gorro:'nada', lentes:'nada', accesorio:'nada'
   };
+  var CAMISETAS = {
+    camisetaRealMadrid: { base:'#f8f8f5', franja:'#d5b663', tipo:'hombros', insignia:'RM', tinta:'#c8a64a' },
+    camisetaBarcelona: { base:'#173b8a', franja:'#8e183d', tipo:'vertical', insignia:'FCB', tinta:'#f8c548' },
+    camisetaColoColo: { base:'#f6f6f2', franja:'#1f2937', tipo:'escudo', insignia:'CC', tinta:'#111827' },
+    camisetaCatolica: { base:'#f7f8fa', franja:'#1657a5', tipo:'horizontal', insignia:'UC', tinta:'#1657a5' },
+    camisetaUChile: { base:'#174492', franja:'#c52336', tipo:'escudo', insignia:'U', tinta:'#ef3340' },
+    camisetaRangers: { base:'#bf1d2f', franja:'#171717', tipo:'vertical', insignia:'R', tinta:'#f4d35e' }
+  };
 
   function clonar(o){ var r={}; for (var k in o) if (o.hasOwnProperty(k)) r[k]=o[k]; return r; }
   function opcion(cat,id){
@@ -180,11 +194,14 @@
   /* ---------- dibujo ----------
    * Caja de trabajo: 100 de ancho por 116 de alto, pies apoyados en baseY.
    */
-  function pintar(cx, centroX, baseY, look, escala){
+  function pintar(cx, centroX, baseY, look, escala, postura, gesto){
     var e = escala || 1;
+    var sentado = postura === 'sentado';
     var piel   = color('piel', look.piel, '#f6d5bf');
     var pelo   = color('peloColor', look.peloColor, '#2b2320');
     var arriba = color('arribaColor', look.arribaColor, '#4fb0e0');
+    var camiseta = CAMISETAS[look.arriba];
+    if (camiseta) arriba = camiseta.base;
     var abajo  = color('abajoColor', look.abajoColor, '#3f5a80');
     var calza  = color('zapatosColor', look.zapatosColor, '#2c3340');
     var trazo  = 'rgba(28,34,44,.85)';
@@ -215,7 +232,11 @@
 
     // ---- piernas ----
     var ab = look.abajo;
-    if (ab==='falda'){
+    if (sentado){
+      // Muslos hacia delante: la figura se reconoce sentada y no atraviesa el asiento.
+      caja(-12,-30,10,17,3,abajo); caja(2,-30,10,17,3,abajo);
+      caja(-23,-15,23,9,3,abajo); caja(1,-15,23,9,3,abajo);
+    } else if (ab==='falda'){
       cx.beginPath();
       cx.moveTo(X(-15), Y(-31)); cx.lineTo(X(15), Y(-31));
       cx.lineTo(X(20), Y(-10)); cx.lineTo(X(-20), Y(-10));
@@ -232,7 +253,8 @@
 
     // ---- zapatos ----
     var zp = look.zapatos;
-    if (zp==='botas'){ caja(-13,-12,12,12,3,calza); caja(1,-12,12,12,3,calza); }
+    if (sentado){ caja(-25,-10,13,8,3,calza); caja(12,-10,13,8,3,calza); }
+    else if (zp==='botas'){ caja(-13,-12,12,12,3,calza); caja(1,-12,12,12,3,calza); }
     else if (zp==='sandalias'){ caja(-13,-4,12,4,2,calza); caja(1,-4,12,4,2,calza); }
     else if (zp==='formales'){ caja(-13,-5,13,5,1.5,calza); caja(0,-5,13,5,1.5,calza); }
     else { caja(-13,-7,12,7,3,calza); caja(1,-7,12,7,3,calza);
@@ -241,6 +263,25 @@
     // ---- torso ----
     var ar = look.arriba;
     caja(-16,-60,32,31,7,arriba);
+    if (camiseta) {
+      cx.save();
+      cx.beginPath(); cx.roundRect(X(-16), Y(-60), 32*e, 31*e, 7*e); cx.clip();
+      cx.fillStyle = camiseta.franja;
+      if (camiseta.tipo === 'vertical') {
+        for (var fr = -11; fr < 16; fr += 11) cx.fillRect(X(fr), Y(-60), 5*e, 31*e);
+      } else if (camiseta.tipo === 'horizontal') {
+        cx.fillRect(X(-16), Y(-49), 32*e, 7*e);
+      } else if (camiseta.tipo === 'hombros') {
+        cx.fillRect(X(-16), Y(-60), 32*e, 3*e);
+        cx.fillRect(X(-16), Y(-34), 32*e, 2*e);
+      }
+      cx.restore();
+      cx.fillStyle = camiseta.tinta;
+      cx.beginPath(); cx.roundRect(X(5), Y(-55), 8*e, 9*e, 2*e); cx.fill();
+      cx.font = 'bold ' + (camiseta.insignia.length > 2 ? 4.5*e : 5.5*e) + 'px sans-serif';
+      cx.textAlign = 'center'; cx.fillStyle = '#ffffff';
+      cx.fillText(camiseta.insignia, X(9), Y(-49));
+    }
     if (ar==='camisa'){
       caja(-2,-60,4,31,1,'#00000022',true);
       cx.beginPath();
@@ -256,13 +297,30 @@
 
     // ---- brazos ----
     var mangaLarga = (ar==='manga'||ar==='poleron'||ar==='camisa');
-    if (mangaLarga){
-      caja(-23,-58,8,24,4,arriba); caja(15,-58,8,24,4,arriba);
+    if (gesto === 'saludar' || gesto === 'bailar') {
+      var subeIzquierdo = gesto === 'bailar' && Math.sin(Date.now() / 220) > 0;
+      var bx = subeIzquierdo ? -27 : 17;
+      caja(-23,-58,8,24,4,arriba);
+      caja(15,-58,8,24,4,arriba);
+      caja(bx, -82, 8, 29, 4, mangaLarga ? arriba : piel);
+      caja(bx + (subeIzquierdo ? -2 : 2), -88, 9, 9, 4, piel);
+      if (gesto === 'bailar') {
+        var abajoX = subeIzquierdo ? 17 : -25;
+        caja(abajoX, -40, 9, 9, 4, piel);
+      } else caja(-23,-36,8,8,4,piel);
+    } else if (gesto === 'aplaudir') {
+      caja(-22,-57,9,15,4,arriba); caja(13,-57,9,15,4,arriba);
+      caja(-15,-48,15,8,4,piel); caja(0,-48,15,8,4,piel);
+      caja(-5,-51,10,12,4,piel);
     } else {
-      caja(-23,-58,8,12,4,arriba); caja(15,-58,8,12,4,arriba);
-      caja(-23,-47,8,13,4,piel);   caja(15,-47,8,13,4,piel);
+      if (mangaLarga){
+        caja(-23,-58,8,24,4,arriba); caja(15,-58,8,24,4,arriba);
+      } else {
+        caja(-23,-58,8,12,4,arriba); caja(15,-58,8,12,4,arriba);
+        caja(-23,-47,8,13,4,piel);   caja(15,-47,8,13,4,piel);
+      }
+      caja(-23,-36,8,8,4,piel); caja(15,-36,8,8,4,piel);
     }
-    caja(-23,-36,8,8,4,piel); caja(15,-36,8,8,4,piel);
 
     // cuello
     caja(-5,-66,10,8,2,piel);

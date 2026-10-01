@@ -21,9 +21,11 @@
 'use strict';
 
 const admin = require('firebase-admin');
+const { randomUUID } = require('node:crypto');
 const { revisar } = require('./_filtro-garabatos.js');
 const { visiblesDeCurso } = require('./_nombre-visible.js');
 const CATALOGO_CASA = require('../estudiantes/js/catalogo-casa.js');
+const MAPAS_CASA = require('../estudiantes/js/mapas-casa.js');
 
 const BASE = 'plataforma_estudiantes';
 const TOPE_SALA = 30;
@@ -132,6 +134,59 @@ async function inventarioConRegalos(db, yo) {
         if (CATALOGO_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id] === 'object') regalos[id] = regalosCrudos[id];
     });
     return { ...porTareas, regalos };
+}
+
+function muebleEnSuelo(casa, col, fila) {
+    const tamano = String((casa || {}).tamano || '5x5');
+    const mapa = MAPAS_CASA.obtener(tamano);
+    const max = mapa || (tamano === '7x7' ? { cols:7, filas:7 } : { cols:5, filas:5 });
+    return Number.isInteger(col) && Number.isInteger(fila) && col >= 0 && fila >= 0 &&
+        col < max.cols && fila < max.filas && (!mapa || MAPAS_CASA.haySuelo(tamano, col, fila));
+}
+
+function validarPieza(raw, casa, regalos, desbloqueados) {
+    if (!Array.isArray(raw) || raw.length > 80) return null;
+    const veces = new Map();
+    const limpia = [];
+    for (const p of raw) {
+        const ficha = p && CATALOGO_POR_ID.get(String(p.id || ''));
+        if (!ficha) return null;
+        const n = (veces.get(ficha.id) || 0) + 1;
+        veces.set(ficha.id, n);
+        if (Number(ficha.xp || 0) > 0 &&
+            (!(regalos && regalos[ficha.id]) && !(desbloqueados && desbloqueados[ficha.id]) || n > 1)) return null;
+        if (p.pared) {
+            if (!['izq', 'der'].includes(p.pared) || !Number.isInteger(p.pos) || p.pos < 0 || p.pos > 6 ||
+                !Number.isInteger(p.nivel) || p.nivel < 0 || p.nivel > 2) return null;
+            limpia.push({ id:ficha.id, pared:p.pared, pos:p.pos, nivel:p.nivel });
+        } else {
+            if (!muebleEnSuelo(casa, p.col, p.fila)) return null;
+            limpia.push({ id:ficha.id, col:p.col, fila:p.fila,
+                dir:['SE','SW','NE','NW'].includes(p.dir) ? p.dir : 'SE',
+                sobre:p.sobre === true, encendido:p.encendido === true });
+        }
+    }
+    return limpia;
+}
+
+async function guardarPieza(req, res, db, yo) {
+    if (yo.esAdmin) return res.status(403).json({ error:'Solo estudiantes.' });
+    const inventario = await inventarioPorTareas(db, yo);
+    const ref = db.ref(`${BASE}/avatar/${yo.uid}`);
+    let motivo = 'No puedes colocar un mueble que no tienes ni duplicar un premio.';
+    const resultado = await ref.transaction(actual => {
+        const avatar = actual && typeof actual === 'object' ? actual : {};
+        const pieza = validarPieza(req.body.pieza, avatar.casa, avatar.regalos, inventario.desbloqueados);
+        if (!pieza) return;
+        motivo = '';
+        return { ...avatar, pieza };
+    }, undefined, false);
+    if (!resultado.committed) return res.status(409).json({ ok:false, error:motivo });
+    const releido = (await db.ref(`${BASE}/avatar/${yo.uid}/pieza`).once('value')).val();
+    if (!Array.isArray(releido) && !(releido === null && req.body.pieza.length === 0)) {
+        return res.status(500).json({ error:'No se pudo confirmar la habitación.' });
+    }
+    return res.status(200).json({ ok:true, pieza:releido || [] });
 }
 
 async function estudianteAdministrable(db, yo, uidSolicitado) {
@@ -287,7 +342,8 @@ async function perfilesDeCurso(db, curso) {
     const guardado = cacheCurso.get(curso);
     if (guardado && Date.now() - guardado.t < CACHE_CURSO_MS) return guardado;
     const snap = await db.ref(`${BASE}/estudiantes`).orderByChild('curso').equalTo(curso).once('value');
-    const perfiles = snap.val() || {};
+    const perfiles = Object.fromEntries(Object.entries(snap.val() || {})
+        .filter(([, perfil]) => perfil && perfil.ocultarDeCasas !== true));
     const entrada = { t: Date.now(), perfiles, visibles: visiblesDeCurso(perfiles) };
     cacheCurso.set(curso, entrada);
     return entrada;
@@ -300,7 +356,17 @@ async function nombreDe(db, yo) {
 }
 
 const idSala = (v) => (/^[A-Za-z0-9_-]{6,64}$/.test(String(v || '')) ? String(v) : null);
-const celda = (v, max) => { const n = Math.round(Number(v)); return Number.isFinite(n) && n >= 0 && n < max ? n : 0; };
+async function posicionEnCasa(db, sala, col, fila) {
+    const casa = (await db.ref(`${BASE}/avatar/${sala}/casa`).once('value')).val() || {};
+    const tamano = String(casa.tamano || '5x5');
+    const mapa = MAPAS_CASA.obtener(tamano);
+    const max = mapa || (tamano === '7x7' ? { cols: 7, filas: 7 } : { cols: 5, filas: 5 });
+    const c = Math.round(Number(col));
+    const f = Math.round(Number(fila));
+    const valida = Number.isFinite(c) && Number.isFinite(f) && c >= 0 && c < max.cols &&
+        f >= 0 && f < max.filas && (!mapa || MAPAS_CASA.haySuelo(tamano, c, f));
+    return valida ? { col: c, fila: f } : (mapa ? { ...mapa.entrada } : { col: 2, fila: 3 });
+}
 
 // look: solo strings cortos, y solo claves conocidas; lo demás se descarta
 function limpiaLook(look) {
@@ -315,7 +381,7 @@ function limpiaLook(look) {
 
 async function existeSala(db, sala) {
     const snap = await db.ref(`${BASE}/estudiantes/${sala}`).once('value');
-    return snap.exists();
+    return snap.exists() && snap.val().ocultarDeCasas !== true;
 }
 
 // Limpia a los que ya no dan señales y devuelve a los que quedan.
@@ -346,11 +412,12 @@ async function entrar(req, res, db, yo) {
             error: `La casa está llena (${TOPE_SALA} personas). Intenta más tarde.` });
     }
     const visible = await nombreDe(db, yo);
+    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila);
     await db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`).set({
         nombre: visible,
         curso: yo.curso,
         look: limpiaLook(req.body.look),
-        col: celda(req.body.col, 5), fila: celda(req.body.fila, 5),
+        ...posicion,
         ts: Date.now()
     });
     return res.status(200).json({ ok: true, yo: visible, presentes: Object.keys(vivos).length + (yaEstaba ? 0 : 1) });
@@ -392,7 +459,13 @@ async function latido(req, res, db, yo) {
     const ref = db.ref(`${BASE}/salas/${sala}/presentes/${yo.uid}`);
     const actual = (await ref.once('value')).val();
     if (!actual) return res.status(200).json({ ok: false, fuera: true });
-    const cambios = { ts: Date.now(), col: celda(req.body.col, 5), fila: celda(req.body.fila, 5) };
+    const posicion = await posicionEnCasa(db, sala, req.body.col, req.body.fila);
+    const cambios = { ts: Date.now(), ...posicion };
+    const gesto = String(req.body.gesto || '');
+    if (['saludar', 'aplaudir', 'bailar'].includes(gesto)) {
+        cambios.gesto = gesto;
+        cambios.gestoHasta = Date.now() + 3400;
+    }
     if (req.body.look) cambios.look = limpiaLook(req.body.look);
     await ref.update(cambios);
     return res.status(200).json({ ok: true });
@@ -455,8 +528,9 @@ async function decir(req, res, db, yo) {
 }
 
 // ---- regalar un mueble ----
-// El regalo lo escribe el servidor en el avatar del que recibe: nadie puede
-// escribir el avatar ajeno. Un regalo al día por persona (hora de Chile), y el
+// El regalo transfiere la propiedad: desaparece del inventario y de la casa
+// del donante en la misma actualización que aparece en el receptor. Un regalo
+// al día por persona (hora de Chile), y el
 // contador vive en `regalos_log`, un nodo sin regla cliente: el estudiante no
 // puede leerlo ni reiniciarlo. Qué muebles tiene cada uno lo decide su XP, que
 // es del cliente; el servidor no la vuelve a juzgar.
@@ -491,18 +565,50 @@ async function regalar(req, res, db, yo) {
         return res.status(200).json({ ok: false, error: 'Un premio entregado por el profesor no se puede transferir.' });
     }
 
-    const ahora = Date.now();
-    const cupo = await db.ref(`${BASE}/regalos_log/${yo.uid}/${hoyEnChile()}`).transaction((actual) => {
-        const n = Number(actual && actual.n) || 0;
-        if (n >= REGALOS_POR_DIA) return;   // sin cupo: la transacción se aborta
-        return { n: n + 1, ultimo: { para, mueble, ts: ahora } };
+    // Dos donantes no pueden competir por el mismo mueble de una persona.
+    const reservaRef = db.ref(`${BASE}/regalos_reservas/${para}/${mueble}`);
+    const reservaId = randomUUID();
+    const reserva = await reservaRef.transaction(actual => {
+        if (actual && Number(actual.hasta) > Date.now()) return;
+        return { id:reservaId, hasta:Date.now() + 120000 };
     });
-    if (!cupo.committed) {
-        return res.status(200).json({ ok: false, sinCupo: true, error: 'Ya regalaste hoy. Mañana puedes regalar otro.' });
+    if (!reserva.committed) return res.status(409).json({ ok:false, error:'Ese regalo se está entregando. Intenta de nuevo.' });
+    try {
+        // Revalidar dentro de la reserva: las primeras lecturas pueden haber
+        // quedado obsoletas mientras otra solicitud terminaba.
+        if ((await destino.once('value')).exists()) return res.status(409).json({ ok:false, error:'Ya tiene ese mueble.' });
+        if (!(await db.ref(`${BASE}/avatar/${yo.uid}/regalos/${mueble}`).once('value')).exists()) {
+            return res.status(409).json({ ok:false, error:'Ese mueble ya no está en tu inventario.' });
+        }
+        const ahora = Date.now();
+        const cupo = await db.ref(`${BASE}/regalos_log/${yo.uid}/${hoyEnChile()}`).transaction((actual) => {
+            const n = Number(actual && actual.n) || 0;
+            if (n >= REGALOS_POR_DIA) return;
+            return { n: n + 1, ultimo: { para, mueble, ts: ahora } };
+        });
+        if (!cupo.committed) {
+            return res.status(200).json({ ok:false, sinCupo:true, error:'Ya regalaste hoy. Mañana puedes regalar otro.' });
+        }
+        const piezaDonante = (await db.ref(`${BASE}/avatar/${yo.uid}/pieza`).once('value')).val();
+        const sinRegalo = Array.isArray(piezaDonante)
+            ? piezaDonante.filter(pieza => pieza && pieza.id !== mueble) : piezaDonante;
+        if ((await reservaRef.once('value')).val()?.id !== reservaId) {
+            return res.status(409).json({ ok:false, error:'La reserva expiró. Intenta de nuevo.' });
+        }
+        // update() aplica juntas las tres rutas: nunca deja propiedad duplicada.
+        await db.ref(BASE).update({
+            [`avatar/${para}/regalos/${mueble}`]: { de:await nombreDe(db, yo), ts:ahora, tipo:'estudiante' },
+            [`avatar/${yo.uid}/regalos/${mueble}`]: null,
+            [`avatar/${yo.uid}/pieza`]: sinRegalo || null
+        });
+        const [recibido, conservado] = await Promise.all([
+            destino.once('value'), db.ref(`${BASE}/avatar/${yo.uid}/regalos/${mueble}`).once('value')
+        ]);
+        if (!recibido.exists() || conservado.exists()) return res.status(500).json({ error:'No se pudo confirmar la transferencia.' });
+        return res.status(200).json({ ok:true, transferido:true });
+    } finally {
+        if ((await reservaRef.once('value')).val()?.id === reservaId) await reservaRef.remove();
     }
-
-    await destino.set({ de: await nombreDe(db, yo), ts: ahora });
-    return res.status(200).json({ ok: true });
 }
 
 async function atender(req, res, db, yo) {
@@ -552,6 +658,7 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'latido') return await latido(req, res, db, yo);
         if (accion === 'salir') return await salir(req, res, db, yo);
         if (accion === 'decir') return await decir(req, res, db, yo);
+        if (accion === 'guardar-pieza') return await guardarPieza(req, res, db, yo);
         if (accion === 'atender') return await atender(req, res, db, yo);
         if (accion === 'regalar') return await regalar(req, res, db, yo);
         return res.status(400).json({ error: 'Acción no reconocida' });

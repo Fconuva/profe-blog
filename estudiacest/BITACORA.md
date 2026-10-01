@@ -1,5 +1,25 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, NM3 Clase 4: el texto 2 pasa a ser un hilo viral de X
+
+- Francisco pidió mejorar el texto sobre Neruda, con formato de X: alguien publica el poema, se hace viral, todos comentan y funan a Neruda, su obra y su vida por algo que no fue real.
+- Texto 2, «La funa a Neruda por un poema que nunca escribió»:
+  - **Hilo de X** hecho en HTML y CSS con el formato de la app: barra «Post», cuenta inventada con check azul (`@verdadsinfiltro_cl`), cuatro publicaciones unidas por la línea del hilo, hora, visualizaciones, totales y fila de íconos.
+  - **Respuestas «Más relevantes»** en una tarjeta aparte: tres cuentas inventadas se suman a la funa y la cuarta corrige con el dato real, con tres «me gusta».
+  - Ambas tarjetas llevan el sello «inventado para la clase».
+- **Crónica «Lo que pasó en realidad»** (5 párrafos): el caso real de Martha Medeiros (2000) y la aclaración de la Fundación Pablo Neruda. Explica la mezcla de la cita falsa con un dato verdadero (las tres casas de Neruda) y la corrección que nadie ve. Cierra con que criticar a un autor es legítimo con datos verificables y que lo dañino es funar sin verificar.
+- Preguntas modificadas y sus respuestas esperadas:
+  - 3: robots o personas, y cómo se ve en las respuestas del hilo;
+  - 5: lo falso y lo verdadero del hilo, y por qué la mezcla convence;
+  - 7: compartir o comentar una noticia o una funa.
+- Pantalla para la sala:
+  - en modo lectura, desde 1400 px, hilo, respuestas y crónica van en tres columnas; se ocultan los totales repetidos y «Respondiendo a», y el interlineado baja a 1,6;
+  - en 1920×1080, «Ajustar» deja el texto 2 completo sin scroll (80 %); en 4K, el texto 1 al 200 % y el texto 2 al 182 %;
+  - en 1366×768 el texto 2 no cabe a tamaño legible: se usa A+ y desplazamiento.
+- El material impreso de OneDrive se regeneró con el hilo en formato de X: guía grupal (4 páginas), guía de acceso, guías adaptadas, pauta y planificación. Validador y auditoría de lenguaje: aprobados, 0 regionalismos.
+
+---
+
 ## 2026-10-01, kit de avatar de cincuenta imágenes y gestos
 
 - Cincuenta generaciones IA independientes: diez ojos, diez bocas, diez peinados, diez gestos y diez vistas/poses. Personaje original de pixel art inspirado en las referencias entregadas, sin extraer sprites oficiales. Originales RGBA y prompts en `scripts/avatar-kit/`; cincuenta derivados con transparencia en `estudiantes/assets/avatar-kit/`, menos de 1 MB en conjunto. El importador solo recorta margen y reduce sin suavizado.

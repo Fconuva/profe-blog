@@ -17,6 +17,7 @@
   - en 1920×1080, «Ajustar» deja el texto 2 completo sin scroll (80 %); en 4K, el texto 1 al 200 % y el texto 2 al 182 %;
   - en 1366×768 el texto 2 no cabe a tamaño legible: se usa A+ y desplazamiento.
 - El material impreso de OneDrive se regeneró con el hilo en formato de X: guía grupal (4 páginas), guía de acceso, guías adaptadas, pauta y planificación. Validador y auditoría de lenguaje: aprobados, 0 regionalismos.
+- Publicado `2c2ad189` con `npm run deploy:prod:safe` desde un worktree limpio: `dpl_82iFyvo1pnAJdLzi2ah97WXSud4D`, READY. La página pública coincide en SHA-256 con Git; en navegador real a 390 y 1440 px: 10 pantallas, 0 errores, 0 recursos fallidos. Las portadas /nm3/, /paes/, /estudiantes/ y /nm4/ responden 200.
 
 ---
 

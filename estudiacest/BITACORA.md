@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, publicación y entrega confirmada de premios en 4°B HC
+
+- Publicado el commit `b96011c2` con `npm run deploy:prod:safe`: despliegue `dpl_Ht8pdYSD9phkKfPHUkhi5i7Wfsn6`, READY y alias público confirmado. Incluye los once muebles nuevos, cuatro tamaños/mapas de casa, premios PAES y diez logros/ropa, conservando la clase NM3 creada en paralelo. Los 59 archivos públicos contrastados respondieron 200 y coincidieron en SHA-256; las tres acciones de inventario/premios rechazaron acceso sin sesión con 401. La regla Firebase vigente mantiene `regalos` protegido. Navegador público sin desbordes en 390/1200/3840 y sin errores.
+- Revisión inicial de 4°B: 166 pendientes. Mientras se verificaba, los estudiantes comenzaron a recibir premios al abrir sus casas. Se canceló una aplicación cuyo conteo había cambiado, sin escribir. El conciliador valida ahora la misma nómina y guías mediante una revisión estable, tolerando que premios simulados ya hayan sido recibidos; conserva cada regalo previo con ETag/CAS y no admite agregar objetos fuera de la lista nativa.
+- Aplicación real: 142 muebles nuevos para completar los pendientes del curso; 35 cuentas con entregas y cero premios pendientes en la relectura. No se entregaron personalizados, ropa ni logros reales arbitrarios, ni se modificaron notas/respuestas. Las pruebas de estos últimos premios usaron únicamente datos ficticios.
+- Mejora de acceso: «Regalar logros y ropa del avatar» pasa a un desplegable junto al selector de estudiante, antes del catálogo de 190 muebles. Se añade una prueba de conteo para un premio recibido concurrentemente: no cuenta como nuevo y no se reemplaza. Build integral y navegador local nuevamente aprobados. Esta mejora final requiere un segundo deploy seguro, cuya confirmación se registra después.
+- Se retiró exclusivamente el worktree temporal `scratch/release-muebles-octubre-20261001` y sus archivos de publicación fallida; fuentes e imágenes originales conservadas en main/Git. No se tocaron otros worktrees.
+
+---
+
 ## 2026-10-01, premios PAES, ropa y diez logros docentes
 
 - Francisco pidió muebles automáticos desde la guía 15, comenzando por 4°B HC, sin entregar sus muebles personalizados; además, diez logros manuales y ropa del avatar con las camisetas de equipos visibles en el admin. G15–G21 usan exclusivamente siete objetos nativos: silla, escritorio, monitor, sofá básico, lámpara de pie, planta y televisor. Los once objetos nuevos de gimnasio, Navidad y Halloween del commit `3cfca7ea` permanecen manuales, junto con los demás personalizados. Las guías futuras no construidas no se habilitan.

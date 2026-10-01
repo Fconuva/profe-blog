@@ -49,6 +49,7 @@ async function test(){
   const page=fs.readFileSync(path.join(root,'paes/admin/index.html'),'utf8');
   for(const id of ['Type','Catalog','Status','Confirm','Give','Cancel','Chosen'])assert.ok(page.includes('id="avatarPrize'+id+'"'));
   assert.ok(page.indexOf('personaje-iso.js')<page.indexOf('/paes/admin/premios.js'));
+  assert.ok(page.indexOf('id="avatarPrizePanel"')<page.indexOf('id="houseCatalog"'),'El acceso a ropa/logros no debe quedar enterrado bajo 190 muebles.');
   const html=fs.readFileSync(path.join(root,'estudiantes/logros.html'),'utf8');
   for(const script of html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g))new vm.Script(script[1]);
   await checkUI();

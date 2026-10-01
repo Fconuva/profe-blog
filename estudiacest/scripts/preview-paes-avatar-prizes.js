@@ -50,12 +50,13 @@ async function start(){
   try{
     const page=await browser.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('response',r=>{if(r.status()>=400)errors.push('HTTP '+r.status());});
     await page.goto(base+'/preview-admin');await page.locator('#houseStudent').selectOption('studentA');
+    await page.locator('#avatarPrizePanel summary').click();
     await page.locator('#avatarPrizeStatus').filter({hasText:'Elige y confirma'}).waitFor();
     assert.equal(await page.locator('#avatarPrizeCatalog .house-item').count(),10);
     await page.locator('#avatarPrizeCatalog .house-item').first().getByRole('button',{name:'Regalar',exact:true}).click();await page.locator('#avatarPrizeGive').click();await page.locator('#avatarPrizeStatus').filter({hasText:'recibido'}).waitFor();
     await page.locator('#avatarPrizeType').selectOption('equipos');assert.equal(await page.locator('#avatarPrizeCatalog canvas').count(),6);
     const rangers=page.locator('#avatarPrizeCatalog .house-item').filter({hasText:'Rangers de Talca'});await rangers.getByRole('button',{name:'Regalar',exact:true}).click();await page.locator('#avatarPrizeGive').click();await page.locator('#avatarPrizeStatus').filter({hasText:'recibido'}).waitFor();
-    await page.reload();await page.locator('#houseStudent').selectOption('studentA');await page.locator('#avatarPrizeStatus').filter({hasText:'Elige y confirma'}).waitFor();await page.locator('#avatarPrizeType').selectOption('equipos');assert.equal(await rangers.getByRole('button',{name:'Ya recibido'}).isDisabled(),true);
+    await page.reload();await page.locator('#houseStudent').selectOption('studentA');await page.locator('#avatarPrizePanel summary').click();await page.locator('#avatarPrizeStatus').filter({hasText:'Elige y confirma'}).waitFor();await page.locator('#avatarPrizeType').selectOption('equipos');assert.equal(await rangers.getByRole('button',{name:'Ya recibido'}).isDisabled(),true);
     for(const width of [390,1200,3840]){await page.setViewportSize({width,height:900});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);await page.locator('#avatarPrizeCatalog').screenshot({path:path.join(root,'../scratch/premios-avatar-'+width+'.png')});}
     await page.goto(base+'/preview-student');await page.locator('#espRopero').waitFor();
     await Promise.all([page.waitForResponse(r=>r.url().endsWith('/qa-state')&&r.request().method()==='POST'&&r.request().postDataJSON().key.endsWith('/look')),page.locator('[data-cat="arriba"][data-op="camisetaRangers"]').click()]);

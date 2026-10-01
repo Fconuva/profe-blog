@@ -22,6 +22,7 @@ async function test() {
   academic[19]={'444444444':{status:'sent',grade:{nota:1}}};
   academic[20]={};academic[21]={};
   const academicCopy=beforeAcademics(),customCopy=JSON.stringify(state.datos.plataforma_estudiantes.avatar.studentD.regalos.playStation5);
+  assert.equal(await rewards.entregar(db,{uid:'studentD',premios:[{guia:'15',mueble:'chairDesk',yaTiene:false}]}),0,'Un premio recibido después de simular no cuenta como entrega nueva.');
   let writes=state.writes;
   const plan=await rewards.planCurso(db,'4B-HC');
   assert.equal(state.writes,writes,'Simular no entrega nada.');

@@ -38,17 +38,19 @@ async function evaluar(db, uid, perfil, entregas) {
 }
 async function entregar(db, row) {
   const faltan=row.premios.filter(item=>!item.yaTiene);
+  let nuevos=0;
   if(faltan.length) {
     const ref=db.ref(BASE+'/avatar/'+row.uid+'/regalos');
     await ref.transaction(actual=>{
       const regalos={...(actual||{})};
-      for(const item of faltan)if(!regalos[item.mueble])regalos[item.mueble]={de:'Guía PAES '+item.guia,tipo:'paes-automatico',guia:item.guia,automatico:true,ts:Date.now()};
-      return regalos;
+      nuevos=0;
+      for(const item of faltan)if(!regalos[item.mueble]){regalos[item.mueble]={de:'Guía PAES '+item.guia,tipo:'paes-automatico',guia:item.guia,automatico:true,ts:Date.now()};nuevos++;}
+      return nuevos ? regalos : undefined;
     });
   }
   const saved=(await db.ref(BASE+'/avatar/'+row.uid+'/regalos').once('value')).val()||{};
   if(!row.premios.every(item=>!!saved[item.mueble]))throw Error('No se pudo confirmar el premio.');
-  return faltan.length;
+  return nuevos;
 }
 async function sincronizarUid(db, uid) {
   const perfil=unicos(await perfiles(db))[uid];

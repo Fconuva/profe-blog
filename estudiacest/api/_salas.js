@@ -26,6 +26,9 @@ const { revisar } = require('./_filtro-garabatos.js');
 const { visiblesDeCurso } = require('./_nombre-visible.js');
 const CATALOGO_CASA = require('../estudiantes/js/catalogo-casa.js');
 const MAPAS_CASA = require('../estudiantes/js/mapas-casa.js');
+const PREMIOS_PAES = require('./_premios-paes.js');
+const PREMIOS_AVATAR = require('../estudiantes/js/personaje-iso.js').catalogoPremios();
+const PREMIOS_AVATAR_POR_ID = new Map(PREMIOS_AVATAR.map(p=>[p.id,p]));
 
 const BASE = 'plataforma_estudiantes';
 const TOPE_SALA = 30;
@@ -133,7 +136,24 @@ async function inventarioConRegalos(db, yo) {
     Object.keys(regalosCrudos).forEach(id => {
         if (CATALOGO_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id] === 'object') regalos[id] = regalosCrudos[id];
     });
-    return { ...porTareas, regalos };
+    const requisitos = {...PREMIOS_PAES.requisitos(yo.curso), ...porTareas.requisitos};
+    Object.keys(regalosCrudos).forEach(id=>{ if(PREMIOS_AVATAR_POR_ID.has(id) && regalosCrudos[id] && typeof regalosCrudos[id]==='object') regalos[id]=regalosCrudos[id]; });
+    return { ...porTareas, requisitos, regalos };
+}
+
+async function premiosAvatarDocente(req,res,db,yo){
+    const estudiante=await estudianteAdministrable(db,yo,req.body.estudiante);
+    const ref=db.ref(`${BASE}/avatar/${estudiante.uid}/regalos`);
+    if(req.body.confirmar===true){
+        const premio=PREMIOS_AVATAR_POR_ID.get(String(req.body.premio||''));
+        if(!premio)return res.status(400).json({error:'Premio no válido.'});
+        const regaloRef=db.ref(`${BASE}/avatar/${estudiante.uid}/regalos/${premio.id}`);
+        await regaloRef.transaction(actual=>actual || {de:'Profe',tipo:'docente',premio:premio.tipo,otorgadoPor:yo.uid,ts:Date.now()});
+        if(!(await regaloRef.once('value')).exists())return res.status(500).json({error:'No se pudo confirmar el premio.'});
+    }
+    const regalos=(await ref.once('value')).val()||{};
+    res.setHeader('Cache-Control','private, no-store');
+    return res.status(200).json({ok:true,estudiante,catalogo:PREMIOS_AVATAR.map(p=>({...p,tiene:!!regalos[p.id]}))});
 }
 
 function muebleEnSuelo(casa, col, fila) {
@@ -218,7 +238,7 @@ async function listarInventarioParaRegalo(req, res, db, yo) {
         const regalo = inventario.regalos[mueble.id];
         const tarea = inventario.desbloqueados[mueble.id];
         let origen = '';
-        if (regalo) origen = regalo.tipo === 'docente' ? 'Regalo del profesor' : `Regalo de ${String(regalo.de || 'un compañero').slice(0, 80)}`;
+        if (regalo) origen = regalo.tipo === 'paes-automatico' ? `Guía ${regalo.guia} PAES completada` : regalo.tipo === 'docente' ? 'Regalo del profesor' : `Regalo de ${String(regalo.de || 'un compañero').slice(0, 80)}`;
         else if (tarea) origen = `Tarea completada: ${String(tarea.titulo || tarea.nombreSet || '').slice(0, 120)}`;
         return { id: mueble.id, nombre: mueble.nom, familia: mueble.fam, tiene: !!(regalo || tarea), origen };
     });
@@ -252,9 +272,26 @@ async function entregarRegaloDocente(req, res, db, yo) {
 }
 
 function entregaPaesParaPremio(guia, valor) {
-    if (!valor || valor.status === 'draft') return false;
-    return valor.status === 'sent' || valor.submitted === true || valor.completada === true ||
-        (['10', '11', '12', '13'].includes(String(guia)) && Number(valor.submittedAt) > 0 && Object.keys(valor.answers || {}).length > 0);
+    return PREMIOS_PAES.completada(guia, valor);
+}
+
+async function regalosPaesAutomaticos(req, res, db, yo) {
+    if (!yo.esAdmin) return res.status(403).json({error:'Solo el profesor.'});
+    const curso=String(req.body.curso||'');
+    if (!PREMIOS_PAES.CURSOS.includes(curso)) return res.status(400).json({error:'Selecciona un curso PAES HC.'});
+    const docente=(await db.ref(`${BASE}/docentes/${yo.uid}`).once('value')).val();
+    const cursos=docente && (Array.isArray(docente.cursos)?docente.cursos:Object.keys(docente.cursos||{}).filter(id=>docente.cursos[id]===true));
+    if (docente && docente.superadmin!==true && !cursos.includes(curso)) return res.status(403).json({error:'Ese curso no pertenece a tus cursos.'});
+    const plan=await PREMIOS_PAES.planCurso(db,curso);
+    res.setHeader('Cache-Control','private, no-store');
+    if (req.body.confirmar!==true) return res.status(200).json({ok:true,...plan});
+    if (req.body.firma!==plan.firma) return res.status(409).json({error:'La nómina o sus premios cambiaron. Revisa nuevamente.'});
+    let entregados=0;const errores=[];
+    for(const row of plan.destinatarios) {
+        try {entregados+=await PREMIOS_PAES.entregar(db,row);} catch(_) {errores.push(row.uid);}
+    }
+    const releido=await PREMIOS_PAES.planCurso(db,curso);
+    return res.status(200).json({ok:true,...releido,entregados,errores:errores.length});
 }
 
 // Primero simula; la confirmación vuelve a validar curso, tarea y la nómina exacta.
@@ -632,6 +669,7 @@ async function regalar(req, res, db, yo) {
     if (!mueble) return res.status(400).json({ error: 'Mueble no válido.' });
     const fichaMueble = CATALOGO_POR_ID.get(mueble);
     if (!fichaMueble || Number(fichaMueble.xp || 0) === 0) return res.status(400).json({ error: 'Ese mueble no se puede regalar.' });
+    if (PREMIOS_PAES.CURSOS.includes(yo.curso) && Object.values(PREMIOS_PAES.PREMIOS).includes(mueble)) return res.status(200).json({ok:false,error:'Ese mueble es un premio de guía PAES y no se puede transferir.'});
 
     const perfil = (await db.ref(`${BASE}/estudiantes/${para}`).once('value')).val();
     if (!perfil || String(perfil.curso || '') !== yo.curso) {
@@ -735,7 +773,13 @@ async function manejar(req, res, accion, db, auth) {
         if (accion === 'regalos-admin-inventario') return await listarInventarioParaRegalo(req, res, db, yo);
         if (accion === 'regalos-admin-entregar') return await entregarRegaloDocente(req, res, db, yo);
         if (accion === 'regalos-admin-paes-lote') return await regalosPaesPorLote(req, res, db, yo);
-        if (accion === 'inventario') return res.status(200).json({ ok: true, ...(await inventarioConRegalos(db, yo)) });
+        if (accion === 'regalos-admin-paes-automaticos') return await regalosPaesAutomaticos(req,res,db,yo);
+        if (accion === 'regalos-admin-avatar') return await premiosAvatarDocente(req,res,db,yo);
+        if (accion === 'inventario') {
+            let premiosPendientes=false;
+            if (!yo.esAdmin) try {await PREMIOS_PAES.sincronizarUid(db,yo.uid);} catch(_) {premiosPendientes=true;}
+            return res.status(200).json({ok:true,premiosPendientes,...(await inventarioConRegalos(db,yo))});
+        }
         if (!['salir', 'atender'].includes(accion)) {
             const state = await estadoMiEspacio(db);
             if (!state.enabled) return res.status(200).json({ ok: false, disabled: true, error: 'Las casas y la decoración están deshabilitadas por el profesor.' });

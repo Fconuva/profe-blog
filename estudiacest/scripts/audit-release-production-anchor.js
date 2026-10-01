@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('node:assert/strict'),fs=require('node:fs');
+const {productionCommitFromInfo}=require('./verify-academic-release');
+const info={readyState:'READY',projectId:'test-project',meta:{gitCommitSha:'a'.repeat(40)}};
+assert.equal(productionCommitFromInfo(info,'test-project'),'a'.repeat(40));
+for(const bad of [{...info,readyState:'ERROR'},{...info,projectId:'other'}, {...info,meta:{gitCommitSha:'bad'}},null])assert.throws(()=>productionCommitFromInfo(bad,'test-project'));
+const source=fs.readFileSync(require.resolve('./verify-academic-release'),'utf8');
+assert.ok(source.includes('`${productionCommit}:${gitPath}`'));
+assert.ok(source.includes("['merge-base','--is-ancestor',productionCommit,'HEAD']"));
+assert.ok(source.includes('return inHead && !inProduction'));
+assert.ok(source.includes('response.status === 404 && isNewTrackedResource(entry.path)'));
+console.log('Release: alias READY, proyecto y SHA verificados; 404 antiguo sigue bloqueado y lote nuevo de varios commits reconocido.');

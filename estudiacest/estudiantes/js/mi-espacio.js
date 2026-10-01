@@ -171,6 +171,7 @@
     arena_streak_10: ['👑', 'Leyenda de la Arena', 'legendario']
   };
   var COLOR_RAREZA = { comun: '#94a3b8', poco_comun: '#22c55e', raro: '#3b82f6', epico: '#a855f7', legendario: '#f59e0b' };
+  Object.assign(PLACAS, global.AvatarLookSystem.LOGROS_DOCENTES || {});
   var MAX_PLACAS = 3;
   // Solo placas conocidas, ganadas y sin repetir, hasta 3.
   function placasValidas(lista, logros) {
@@ -625,8 +626,8 @@
     if (S.placasDe[uid]) return;
     S.placasDe[uid] = [];
     var ref = S.db.ref(S.base + '/avatar/' + uid);
-    Promise.all([ref.child('placas').once('value'), ref.child('logros').once('value')]).then(function (r) {
-      S.placasDe[uid] = placasValidas(r[0].val(), r[1].val());
+    Promise.all([ref.child('placas').once('value'), ref.child('logros').once('value'),ref.child('regalos').once('value')]).then(function (r) {
+      S.placasDe[uid] = placasValidas(r[0].val(), global.AvatarLookSystem.logrosConPremios(r[1].val(),r[2].val()));
       if (S.placasDe[uid].length) dibujar();
     }).catch(function () {});
   }
@@ -1195,7 +1196,7 @@
 
   function pintarRopero() {
     var cont = S.host.querySelector('#espRopero');
-    var cats = global.AvatarLookSystem.getEditorCategories({ xpTotal: S.xp });
+    var cats = global.AvatarLookSystem.getEditorCategories({ xpTotal: S.xp, regalos:S.regalos });
     cont.innerHTML = cats.map(function (c) {
       return '<div class="esp-cat"><h4>' + esc(c.label) + '</h4><div class="esp-ops">' +
         c.options.map(function (o) {
@@ -1204,7 +1205,7 @@
           var muestra = o.color ? '<i style="background:' + o.color + '"></i>' : '<span>' + esc(o.name) + '</span>';
           return '<button class="esp-op' + sel + blo + '" data-cat="' + c.id + '" data-op="' + o.id + '"' +
                  ' title="' + (o.locked ? 'Se abre con ' + o.minXp + ' XP' : esc(o.name)) + '">' +
-                 muestra + (o.locked ? '<b>🔒</b>' : '') + '</button>';
+                 muestra + (o.locked ? '<b>🔒</b>' : o.gifted ? '<b>🎁</b>' : '') + '</button>';
         }).join('') + '</div></div>';
     }).join('');
     cont.querySelectorAll('.esp-op').forEach(function (b) {
@@ -1219,12 +1220,12 @@
     });
   }
   function pintarFigura() {
-    global.AvatarLookSystem.render(S.host.querySelector('#espFigura'), { look: S.look, xpTotal: S.xp, size: 170 });
+    global.AvatarLookSystem.render(S.host.querySelector('#espFigura'), { look: S.look, xpTotal: S.xp, regalos:S.regalos, size: 170 });
   }
   // El personaje también se muestra arriba, junto al nombre: si cambia acá,
   // tiene que cambiar allá en el mismo momento.
   function avisarLook() {
-    if (typeof S.alCambiarLook === 'function') S.alCambiarLook(S.look);
+    if (typeof S.alCambiarLook === 'function') S.alCambiarLook(S.look,S.regalos);
   }
 
   var filtro = 'tengo', familia = 'todo';
@@ -1441,6 +1442,9 @@
     S.recompensas = (data && data.desbloqueados && typeof data.desbloqueados === 'object') ? data.desbloqueados : {};
     S.requisitos = (data && data.requisitos && typeof data.requisitos === 'object') ? data.requisitos : {};
     if (data && data.regalos && typeof data.regalos === 'object') S.regalos = data.regalos;
+    S.logros=global.AvatarLookSystem.logrosConPremios(S.logros,S.regalos);
+    S.placas=placasValidas(S.placas,S.logros);
+    pintarRopero(); pintarFigura(); pintarPlacas();
     S.inventoryReady = true;
     if (!S.visitando) {
       S.miPieza = (Array.isArray(S.miPieza) ? S.miPieza : []).filter(function (pieza) {
@@ -1633,9 +1637,9 @@
     S.host = cfg.host; S.db = cfg.db; S.auth = cfg.auth; S.base = cfg.base; S.uid = cfg.uid;
     S.curso = cfg.curso || ''; S.miNombre = nombreCorto(cfg.nombre || '');
     S.xp = cfg.xp || 0; S.alCambiarLook = cfg.alCambiarLook;
-    S.logros = (cfg.logros && typeof cfg.logros === 'object') ? cfg.logros : {};
-    S.placas = placasValidas(cfg.placas, S.logros);
     S.regalos = (cfg.regalos && typeof cfg.regalos === 'object') ? cfg.regalos : {};
+    S.logros = global.AvatarLookSystem.logrosConPremios(cfg.logros,S.regalos);
+    S.placas = placasValidas(cfg.placas, S.logros);
     S.recompensas = {};
     S.requisitos = {};
     S.inventoryReady = false;
@@ -1644,7 +1648,7 @@
     S.inventoryTimer = null;
     S.fxTimer = null;
     S.fxTime = 0;
-    S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp });
+    S.look = global.AvatarLookSystem.normalizeLook(cfg.look, { xpTotal: S.xp,regalos:S.regalos });
     S.miPieza = Array.isArray(cfg.pieza) ? cfg.pieza : [
       { id: 'rugRound', col: 2, fila: 2, dir: 'SE' },
       { id: 'bedSingle', col: 0, fila: 1, dir: 'SE' },
@@ -1687,7 +1691,7 @@
       });
     });
     S.host.querySelector('.esp-azar').addEventListener('click', function () {
-      S.look = global.AvatarLookSystem.randomizeLook({ xpTotal: S.xp });
+      S.look = global.AvatarLookSystem.randomizeLook({ xpTotal: S.xp,regalos:S.regalos });
       pintarFigura(); pintarRopero(); dibujar(); avisarLook(); guardar('look', S.look); latido();
     });
 

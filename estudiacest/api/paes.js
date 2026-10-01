@@ -9,6 +9,7 @@ const { GUIDED_GUIDE_KEYS, GUIDED_GUIDE_FEEDBACK } = require('./_paes-guided-cat
 const G20 = require('./_paes-g20');
 const G21 = require('./_paes-g21');
 const FOUNDATIONS = require('./_paes-foundations');
+const PREMIOS_PAES = require('./_premios-paes');
 Object.assign(GUIDED_GUIDE_KEYS, FOUNDATIONS.GUIDED_KEYS);
 Object.assign(GUIDED_GUIDE_FEEDBACK, FOUNDATIONS.GUIDED_FEEDBACK);
 
@@ -502,8 +503,13 @@ async function handleSubmitGuia(req, res) {
             submittedAt: null, completadaAt: null, reenvio: true });
     }
     const saved = tx.snapshot.val() || {};
+    let premioPendiente=false;
+    if (!draft && PREMIOS_PAES.completada(guideId,saved)) {
+        try {await PREMIOS_PAES.alEntregar(db,rutLimpio,guideId);} catch(_) {premioPendiente=true;}
+    }
     return res.status(200).json({
         success: true,
+        premioPendiente,
         status: saved.status,
         submitted: saved.submitted === true,
         completada: saved.completada === true,

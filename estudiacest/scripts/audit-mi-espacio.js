@@ -310,6 +310,9 @@ const logrosPagina = {};
 bloqueLogros.replace(/\{id:'([a-z0-9_]+)',\s*cat:'[^']*',\s*emoji:'([^']+)',\s*name:'([^']+)',[^}]*rarity:'([a-z_]+)'/g,
   (m, id, emoji, nombre, rareza) => { logrosPagina[id] = [emoji, nombre, rareza]; });
 const PLACAS = (cliente && cliente.PLACAS) || {};
+exigir(logrosHtml.includes('Object.entries(AvatarLookSystem.LOGROS_DOCENTES).forEach') && logrosHtml.includes('AvatarLookSystem.logrosConPremios(avatar.logros,avatar.regalos)'),
+  'La página de Logros debe mostrar los premios docentes desde el nodo protegido.');
+Object.assign(logrosPagina, ALS.LOGROS_DOCENTES);
 exigir(Object.keys(logrosPagina).length >= 30, `No pude leer los logros de logros.html (leí ${Object.keys(logrosPagina).length}).`);
 exigir(JSON.stringify(Object.keys(PLACAS).sort()) === JSON.stringify(Object.keys(logrosPagina).sort()),
   'Las placas de mi-espacio.js no son los mismos logros de logros.html.');
@@ -324,7 +327,7 @@ if (cliente && cliente.placasValidas) {
   exigir(cliente.placasValidas(['top5'], {}).length === 0, 'Una placa sin su logro no se muestra.');
   exigir(cliente.placasValidas({ 0: 'top5' }, { top5: {} }).length === 0, 'placasValidas solo acepta listas.');
 }
-exigir(/placasValidas\(r\[0\]\.val\(\), r\[1\]\.val\(\)\)/.test(cuerpoDe('cargarPlacas')),
+exigir(cuerpoDe('cargarPlacas').includes("ref.child('regalos').once('value')") && /placasValidas\(r\[0\]\.val\(\), global\.AvatarLookSystem\.logrosConPremios\(r\[1\]\.val\(\),r\[2\]\.val\(\)\)\)/.test(cuerpoDe('cargarPlacas')),
   'Las placas de un visitante se validan contra sus logros antes de dibujarlas.');
 exigir(/placas: S\.placasDe\[uid\]/.test(cuerpoDe('personas')) && /placas: S\.placas/.test(cuerpoDe('personas')),
   'personas() debe llevar las placas propias y las de cada visitante.');

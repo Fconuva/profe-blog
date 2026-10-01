@@ -272,15 +272,33 @@ async function validateProduction(manifest) {
     ? path.relative(gitRoot, ROOT).replaceAll("\\", "/")
     : path.basename(ROOT);
 
+  // Un lote puede ocupar varios commits: HEAD^ no identifica lo ya publicado.
+  // Consultar el alias real, con la CLI autenticada y el proyecto verificado.
+  let productionCommit;
+  try {
+    const host=new URL(manifest.project.productionOrigin).hostname;
+    if(!/^[a-z0-9.-]+$/i.test(host))throw new Error('Alias de producción no válido.');
+    const cli=process.platform==='win32'?'cmd.exe':'npx';
+    const args=process.platform==='win32'?['/d','/s','/c',`npx vercel api /v13/deployments/${host} --scope fconuvas-projects --raw`]:['vercel','api',`/v13/deployments/${host}`,'--scope','fconuvas-projects','--raw'];
+    const result=run(cli,args,{timeout:120000});
+    if(result.status!==0)throw new Error('No se pudo consultar el despliegue de producción.');
+    const expected=JSON.parse(fs.readFileSync(path.join(ROOT,'.vercel/project.json'),'utf8')).projectId;
+    productionCommit=productionCommitFromInfo(JSON.parse(result.stdout),expected);
+    if(run('git',['cat-file','-e',`${productionCommit}^{commit}`]).status!==0 || run('git',['merge-base','--is-ancestor',productionCommit,'HEAD']).status!==0)
+      throw new Error('La fuente no contiene el commit publicado: sincroniza main antes de desplegar.');
+  }catch(error){return [`No se pudo verificar la versión publicada: ${error.message}`];}
+
   function isNewTrackedResource(relativePath) {
     const gitPath = path.posix.join(projectPrefix, relativePath.replaceAll("\\", "/"));
     const inHead = run("git", ["cat-file", "-e", `HEAD:${gitPath}`]).status === 0;
-    const inOrigin = run("git", ["cat-file", "-e", `origin/main:${gitPath}`]).status === 0;
-    const inParent = run("git", ["cat-file", "-e", `HEAD^:${gitPath}`]).status === 0;
-    return inHead && (!inOrigin || !inParent);
+    const inProduction = run("git", ["cat-file", "-e", `${productionCommit}:${gitPath}`]).status === 0;
+    return inHead && !inProduction;
   }
 
-  for (const entry of manifest.criticalFiles) {
+  let next=0;
+  await Promise.all(Array.from({length:Math.min(8,manifest.criticalFiles.length)},async()=>{
+   while(next<manifest.criticalFiles.length){
+    const entry=manifest.criticalFiles[next++];
     const url = new URL(entry.url, manifest.project.productionOrigin);
     try {
       const response = await fetchWithRetry(url, {
@@ -298,9 +316,17 @@ async function validateProduction(manifest) {
     } catch (error) {
       failures.push(`No se pudo verificar produccion ${entry.url}: ${error.message}`);
     }
-  }
+   }
+  }));
 
   return failures;
+}
+
+function productionCommitFromInfo(info,expectedProject){
+  const sha=info && info.meta && (info.meta.gitCommitSha || info.meta.githubCommitSha);
+  if(!info || info.readyState!=='READY' || info.projectId!==expectedProject || !/^[a-f0-9]{40}$/i.test(sha||''))
+    throw new Error('El alias no confirma un despliegue READY del proyecto y un commit verificable.');
+  return sha;
 }
 
 function printFailures(failures) {
@@ -365,7 +391,8 @@ async function main() {
   process.exitCode = deployment.status ?? 1;
 }
 
-main().catch((error) => {
+if(require.main===module)main().catch((error) => {
   console.error(`Fallo inesperado del guard de deploy: ${error.stack || error.message}`);
   process.exitCode = 1;
 });
+module.exports={productionCommitFromInfo};

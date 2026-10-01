@@ -129,6 +129,7 @@
     <div class="toast" id="toast"></div>
 
     <script src="js/avatar-levels.js"></script>
+    <script src="js/personaje-iso.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
@@ -159,7 +160,8 @@
             {id:'experiencia', emoji:'⭐',name:'Experiencia'},
             {id:'arena',       emoji:'⚔️',name:'Arena'},
             {id:'social',      emoji:'🏅',name:'Social'},
-            {id:'secreto',     emoji:'🔒',name:'Secretos'}
+            {id:'secreto',     emoji:'🔒',name:'Secretos'},
+            {id:'docente',     emoji:'🎁',name:'Premios del profesor'}
         ];
 
         // ============ ALL MISSIONS (for counting) ============
@@ -227,9 +229,10 @@
             {id:'arena_streak_5',  cat:'arena',      emoji:'⚡', name:'Invicto',               desc:'Consigue una racha de 5 victorias seguidas',    rarity:'epico',       xp:80},
             {id:'arena_streak_10', cat:'arena',      emoji:'👑', name:'Leyenda de la Arena',   desc:'Consigue una racha de 10 victorias seguidas',   rarity:'legendario',  xp:150}
         ];
-        const TOTAL_LOGROS = LOGROS.length;
 
         // ============ STATE ============
+        Object.entries(AvatarLookSystem.LOGROS_DOCENTES).forEach(([id,p])=>LOGROS.push({id,cat:'docente',emoji:p[0],name:p[1],desc:'Reconocimiento entregado personalmente por el profesor.',rarity:p[2],xp:0}));
+        const TOTAL_LOGROS = LOGROS.length;
         let currentUID = null;
         let currentCurso = null;
         let currentPrograma = null;
@@ -385,7 +388,7 @@
 
             return {
                 avatar,
-                existingLogros: avatar.logros || {},
+                existingLogros: AvatarLookSystem.logrosConPremios(avatar.logros,avatar.regalos),
                 xpTotal: avatar.xp_total || 0,
                 level: avatar.nivel || 1,
                 completed,
@@ -453,7 +456,7 @@
             const allUnlocked = {...data.existingLogros};
             newlyUnlocked.forEach(l => allUnlocked[l.id] = true);
 
-            let totalUnlocked = Object.keys(allUnlocked).length;
+            let totalUnlocked = LOGROS.filter(l=>!!allUnlocked[l.id]).length;
             let totalXP = 0;
             LOGROS.forEach(l => { if (allUnlocked[l.id]) totalXP += (l.xp || 0); });
 

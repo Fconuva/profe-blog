@@ -171,21 +171,54 @@
     for (var i=0;i<c.opciones.length;i++) if (c.opciones[i].id===id) return c.opciones[i];
     return null;
   }
-  function abierta(op,xp){ return !op.xp || (xp||0) >= op.xp; }
+  // Los premios docentes viven bajo regalos, protegido contra escritura del alumno.
+  var LOGROS_DOCENTES = {
+    docente_constancia:['🔥','Constancia','raro'],
+    docente_superacion:['🌱','Superación','raro'],
+    docente_lectura:['📚','Lectura destacada','epico'],
+    docente_evidencia:['🔎','Cazador de evidencias','epico'],
+    docente_escritura:['✍️','Escritura destacada','epico'],
+    docente_argumentacion:['💬','Argumentación sólida','epico'],
+    docente_creatividad:['🎨','Creatividad','raro'],
+    docente_colaboracion:['🤝','Buen compañero','raro'],
+    docente_responsabilidad:['✅','Responsabilidad','raro'],
+    docente_excelencia:['🏆','Excelencia CEST','legendario']
+  };
+  var ROPA_CATEGORIAS = ['arriba','arribaColor','abajo','abajoColor','zapatos','zapatosColor','gorro','lentes','accesorio'];
+  function regalosDelContexto(ctx){ return (ctx && (ctx.regalos || (ctx.avatarData && ctx.avatarData.regalos))) || {}; }
+  function claveRopa(cat,id){ return 'ropa__' + cat + '__' + id; }
+  function abierta(op,xp,cat,ctx){ return !op.xp || (xp||0) >= op.xp || !!regalosDelContexto(ctx)[claveRopa(cat,op.id)]; }
+  function logrosConPremios(logros,regalos){
+    var salida=clonar(logros||{});
+    Object.keys(LOGROS_DOCENTES).forEach(function(id){
+      var premio=(regalos||{})['logro__'+id];
+      if(premio)salida[id]=Object.assign({},premio,{timestamp:premio.timestamp||premio.ts||0});
+      else delete salida[id];
+    });
+    return salida;
+  }
+  function catalogoPremios(){
+    var lista=Object.keys(LOGROS_DOCENTES).map(function(id){ var p=LOGROS_DOCENTES[id];return {id:'logro__'+id,tipo:'logro',nombre:p[1],emoji:p[0],rareza:p[2]}; });
+    ROPA_CATEGORIAS.forEach(function(cat){ CATALOGO[cat].opciones.forEach(function(op){
+      if(op.id==='nada')return;
+      lista.push({id:claveRopa(cat,op.id),tipo:'ropa',nombre:op.nom,categoria:cat,opcion:op.id,seccion:CATALOGO[cat].label,color:op.color||null});
+    }); });
+    return lista;
+  }
   function color(cat,id,fb){ var o=opcion(cat,id); return (o&&o.color)||fb; }
 
   function normalizeLook(look, ctx){
     var xp=(ctx&&ctx.xpTotal)||0, base=clonar(POR_DEFECTO);
     if (look) ORDEN.forEach(function(cat){
       var op=opcion(cat, look[cat]);
-      if (op && abierta(op,xp)) base[cat]=op.id;
+      if (op && abierta(op,xp,cat,ctx)) base[cat]=op.id;
     });
     return base;
   }
   function randomizeLook(ctx){
     var xp=(ctx&&ctx.xpTotal)||0, r={};
     ORDEN.forEach(function(cat){
-      var libres=CATALOGO[cat].opciones.filter(function(o){ return abierta(o,xp); });
+      var libres=CATALOGO[cat].opciones.filter(function(o){ return abierta(o,xp,cat,ctx); });
       r[cat]=libres[Math.floor(Math.random()*libres.length)].id;
     });
     return r;
@@ -479,7 +512,7 @@
     if (!contenedor) return null;
     opciones = opciones || {};
     var xp = opciones.xpTotal || 0;
-    var look = normalizeLook(opciones.look, { xpTotal: xp });
+    var look = normalizeLook(opciones.look, opciones);
     var size = opciones.size || 84;
     var dpr = global.devicePixelRatio || 1;
     var cv = document.createElement('canvas');
@@ -502,7 +535,7 @@
         id:cat, label:CATALOGO[cat].label,
         options: CATALOGO[cat].opciones.map(function(o){
           return { id:o.id, name:o.nom, color:o.color||null,
-                   locked:!abierta(o,xp), minXp:o.xp||0 };
+                   locked:!abierta(o,xp,cat,ctx), minXp:o.xp||0, gifted:!!regalosDelContexto(ctx)[claveRopa(cat,o.id)] };
         })
       };
     });
@@ -513,7 +546,7 @@
     getEditorCategories: getEditorCategories,
     getUnlockedOptions: function(cat,ctx){
       var xp=(ctx&&ctx.xpTotal)||0;
-      return (CATALOGO[cat]?CATALOGO[cat].opciones:[]).filter(function(o){ return abierta(o,xp); });
+      return (CATALOGO[cat]?CATALOGO[cat].opciones:[]).filter(function(o){ return abierta(o,xp,cat,ctx); });
     },
     getOptionMeta: function(cat,id){
       var o=opcion(cat,id);
@@ -524,6 +557,10 @@
     render: render,
     pintar: pintar,
     CATALOGO: CATALOGO,
-    ORDEN: ORDEN
+    ORDEN: ORDEN,
+    LOGROS_DOCENTES: LOGROS_DOCENTES,
+    logrosConPremios: logrosConPremios,
+    catalogoPremios: catalogoPremios
   };
-})(window);
+  if(typeof module==='object' && module.exports) module.exports=global.AvatarLookSystem;
+})(typeof window!=='undefined' ? window : globalThis);

@@ -12,6 +12,8 @@
   function mount({ auth, getGuideData, refreshGuides, reviewGuide }) {
     const el = id => document.getElementById('house' + id);
     let students = [], catalog = [], selected = [], preview = null, recipients = [], checked = null, run = 0, busy = false;
+    let automaticPlan = null;
+    const avatarPrizes = global.PaesPremiosAdmin ? global.PaesPremiosAdmin.mount({api,student:()=>students.find(item=>item.uid===el('Student').value),enabled:()=>!busy && el('Mode').value==='student'}) : null;
     async function api(action, payload = {}, paes = false) {
       if (!auth.currentUser) throw new Error('La sesión docente venció. Recarga la página.');
       const token = await auth.currentUser.getIdToken();
@@ -106,6 +108,7 @@
       if (preview && catalog.some(item => item.id === preview)) showPreview(catalog.find(item => item.id === preview));
     }
     async function consult(review = false) {
+      if(avatarPrizes)avatarPrizes.load();
       invalidate(); const request = ++run;
       if (!hasTarget()) {
         recipients = []; catalog = catalog.map(item => ({...item, tiene:false, tienen:0}));
@@ -147,6 +150,8 @@
     function lock(value) {
       busy = value;
       ['Mode','Course','Student','Guide','Refresh','Give','Review','Clear','Set'].forEach(id => { el(id).disabled = value; });
+      ['AutoReview','AutoGive'].forEach(id => {if(el(id))el(id).disabled=value;});
+      if(avatarPrizes)avatarPrizes.refresh();
       renderSelection(); renderCatalog();
     }
     async function give() {
@@ -166,7 +171,7 @@
     }
     for (let id = 1; id <= 21; id++) el('Guide').add(new Option('Guía ' + id, String(id)));
     el('Mode').addEventListener('change', () => { if (!busy) { el('StudentField').hidden = el('Mode').value === 'course'; el('Course').options[0].textContent = el('Mode').value === 'course' ? 'Selecciona un curso…' : 'Todos los cursos HC'; return consult(); } });
-    el('Course').addEventListener('change', () => { if (!busy) { el('Student').value = ''; renderStudents(); return consult(); } });
+    el('Course').addEventListener('change', () => { if (!busy) { automaticPlan=null;if(el('AutoConfirm'))el('AutoConfirm').hidden=true;el('Student').value = ''; renderStudents(); return consult(); } });
     el('Student').addEventListener('change', () => { if (!busy) return consult(); });
     el('Guide').addEventListener('change', () => { if (!busy) return consult(); });
     el('Set').addEventListener('change', () => {
@@ -177,6 +182,35 @@
     el('Clear').addEventListener('click', () => { if (!busy) { selected = []; el('Set').value = 'custom'; invalidate(); renderSelection(); renderCatalog(); } });
     el('Search').addEventListener('input', renderCatalog); el('Ownership').addEventListener('change', renderCatalog);
     el('Refresh').addEventListener('click', () => load(true)); el('Review').addEventListener('click', () => consult(true)); el('Give').addEventListener('click', give);
+    if(el('AutoReview'))el('AutoReview').addEventListener('click',async()=>{
+      if(busy)return;
+      automaticPlan=null;el('AutoConfirm').hidden=true;
+      const course=el('Course').value;
+      if(!course){el('AutoStatus').textContent='Selecciona un curso HC arriba.';return;}
+      lock(true);el('AutoStatus').textContent='Revisando guías 15–21 y premios ya obtenidos, sin entregar todavía…';
+      try {
+        const plan=await api('regalos-admin-paes-automaticos',{curso:course});
+        if(el('Course').value!==course)return;
+        automaticPlan={curso:course,firma:plan.firma};
+        el('AutoSummary').textContent=plan.destinatarios.length+' estudiantes con entregas · '+plan.pendientes+' muebles pendientes.';
+        el('AutoRecipients').replaceChildren();
+        plan.destinatarios.forEach(item=>{const row=document.createElement('li');row.textContent=item.nombre+' · '+item.premios.filter(p=>!p.yaTiene).length+' nuevos · '+item.premios.filter(p=>p.yaTiene).length+' ya obtenidos';el('AutoRecipients').append(row);});
+        el('AutoConfirm').hidden=false;el('AutoStatus').textContent=plan.pendientes?'Revisa y confirma. No se han entregado premios.':'Todos los premios de esas entregas ya están obtenidos.';
+      } catch(error){el('AutoStatus').textContent=error.message;}
+      finally{lock(false);}
+    });
+    if(el('AutoGive'))el('AutoGive').addEventListener('click',async()=>{
+      if(busy||!automaticPlan||automaticPlan.curso!==el('Course').value)return;
+      const plan={...automaticPlan};lock(true);el('AutoStatus').textContent='Entregando y releyendo cada inventario…';
+      try {
+        const result=await api('regalos-admin-paes-automaticos',{...plan,confirmar:true});
+        if(result.errores||result.pendientes)throw Error('Quedan premios sin confirmar. Revisa de nuevo y reintenta; los obtenidos no se duplican.');
+        automaticPlan=null;el('AutoConfirm').hidden=true;
+        await consult();
+        el('AutoStatus').textContent='Entrega confirmada: '+result.entregados+' muebles nuevos para '+result.destinatarios.length+' estudiantes con guías entregadas. Sin premios personalizados.';
+      }catch(error){automaticPlan=null;el('AutoConfirm').hidden=true;el('AutoStatus').textContent=error.message;}
+      finally{lock(false);}
+    });
     return { load };
   }
   global.PaesCasasAdmin = { mount, delivered };

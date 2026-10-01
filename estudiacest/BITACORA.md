@@ -1,5 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-01, premios PAES, ropa y diez logros docentes
+
+- Francisco pidió muebles automáticos desde la guía 15, comenzando por 4°B HC, sin entregar sus muebles personalizados; además, diez logros manuales y ropa del avatar con las camisetas de equipos visibles en el admin. G15–G21 usan exclusivamente siete objetos nativos: silla, escritorio, monitor, sofá básico, lámpara de pie, planta y televisor. Los once objetos nuevos de gimnasio, Navidad y Halloween del commit `3cfca7ea` permanecen manuales, junto con los demás personalizados. Las guías futuras no construidas no se habilitan.
+- `api/_premios-paes.js` verifica envío final, identidad única por RUT/UID y curso; excluye borradores y una nota sin entrega. Entrega al envío y recupera al abrir Mi espacio. El admin simula por curso antes de confirmar con firma de nómina; conserva regalos anteriores, verifica inventarios y permite reintento sin duplicación. Los premios automáticos no se transfieren para impedir que regalar y reabrir la casa los duplique. No se modifican notas ni respuestas.
+- Admin `paes/admin/#casas`: diez logros docentes, catálogo de ropa/accesorios y seis camisetas (Real Madrid, Barcelona, Colo-Colo, Católica, U. de Chile y Rangers), con vista previa, confirmación individual y «Ya recibido». Una prenda regalada habilita su uso sin exigir XP. Los logros aparecen en Logros y pueden equiparse como placas. Se guardan bajo `avatar/UID/regalos`, ya protegido contra escritura estudiantil; no se abren reglas Firebase ni se permite transferirlos como muebles.
+- Auditorías focales y build integral aprobados con 461 recursos críticos. Navegador real y funciones locales: solo identidades ficticias; regalo, relectura y recarga marcadas, camiseta y placa equipadas persistentes, vistas 390/1200/3840 sin desbordes ni errores. Capturas locales `scratch/premios-avatar-*.png`. El servidor y navegador de esta prueba se cerraron.
+- El primer intento de publicar los muebles falló en Vercel por conversión de saltos de línea en un checkout aislado; no se promovió. No se publica ese árbol atrasado. Se corrigió el guard para comparar recursos con el commit del alias de producción READY, verificado por Vercel y proyecto, y exigir que sea antecesor del main actual. Un 404 de recurso ya publicado sigue bloqueando; los nuevos de un lote de varios commits pueden publicarse sin desactivar auditorías. Se conserva la clase NM3 incorporada en paralelo.
+- Simulación real de solo lectura en 4°B HC: 36 cuentas visibles, 35 con entregas y 166 muebles pendientes. La aplicación y publicación todavía quedan pendientes de confirmación; cierre con despliegue y relectura se agrega después.
+
+---
+
 ## 2026-10-01, NM3 Unidad 3 Clase 4: cómo se fabrica una noticia falsa
 
 - Francisco pidió para el viernes 2 de octubre (3°A, 3°B y 3°D TP) la clase de noticias falsas en formato **grupal**: un video de YouTube, dos textos en la página, preguntas en grupo y plenario de conclusiones.

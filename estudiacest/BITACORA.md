@@ -1,5 +1,24 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, regla: panel para anotar en todas las páginas de NM3 y NM4
+
+- Francisco decidió que todas las páginas de NM3 y NM4 en Estudia CEST tengan el panel para anotar sobre la pizarra táctil (lápiz, destacador y goma).
+- **Módulo único `assets/anotar-pizarra.js`.** Reemplaza a `nm3/u3-anotar.js`, que se elimina. Es genérico y funciona en dos modos:
+  - **presentación:** si `.deck` tiene varias `.slide` y la deck es fija o muestra una diapositiva a la vez, guarda los trazos por diapositiva visible (la detecta por estilo calculado, no por nombre de clase) y sigue el contenedor que se desplaza;
+  - **página:** en el resto, los trazos siguen el desplazamiento de la página.
+- **Botón:** donde hay `.nav-bar` va como ✏️ en la barra; en el resto, como pestaña en el borde izquierdo.
+- **Mientras se dibuja:** un toque sobre un botón de una barra fija o adherida (Siguiente, Atrás, zoom) llega al botón, y deslizar el dedo no cambia de diapositiva.
+- **Alcance:** 50 páginas cargan `<script src="/assets/anotar-pizarra.js" defer></script>` antes de `</body>`. Se exceptúan 9 paneles docentes: `calificar/`, `revisar/` y `*admin.html`.
+- **Para que la regla se cumpla sola:**
+  - REGLAS.md, sección 12;
+  - `scripts/audit-anotar-pizarra.js` en `npm run build` (en las dos claves `build` de package.json) y exceptuado en `.vercelignore`; falla si una página de NM3 o NM4 no carga el panel;
+  - manifiesto con `assets/anotar-pizarra.js`.
+- **Validación en navegador real:**
+  - las 50 páginas a 1920×1080 muestran el botón, abren el panel y dibujan, sin errores de JavaScript;
+  - con dedo real (CDP) en NM3 Clase 1, NM4 Clase 4 y NM4 Clase 6: dibujar no cambia de diapositiva, cada diapositiva guarda lo suyo y lo recupera, «Siguiente» se toca a través del lienzo y con el panel cerrado el deslizamiento funciona;
+  - en modo página (tríptico de NM3, y NM4 Clase 4 a 900 px) el trazo sigue el desplazamiento;
+  - la batería de NM3 Clase 4 se repite idéntica;
+  - `npm run build` OK, con 590 recursos críticos.
 ## 2026-10-02, Termas: inscripción libre y administración completa
 
 - Por decisión posterior de Francisco, la inscripción queda libre: se retiraron del servidor las 97 huellas de la nómina, la validación de pertenencia y los avisos que podían sugerir un padrón previo. Esta entrada reemplaza la regla operativa de la entrada «inscripción limitada a la nómina docente vigente» del mismo día. La organización revisará y corregirá los registros después desde el panel.
@@ -8,6 +27,9 @@
 - Auditoría automatizada integrada al prebuild: autenticación, inscripción libre, alta, edición, conflictos de correo y asiento, eliminación, papelera, restauración y presencia del panel aprobadas. Build integral aprobado con 590 recursos críticos.
 - Publicados `ad91c972` y la corrección definitiva `cdc790e5` mediante `npm run deploy:prod:safe`. La versión final es `dpl_3jeezikg8HBYQvJf4Lyd1VnVrx1B`, READY y asociada a `www.estudiacest.com`; reemplazó inmediatamente el despliegue transitorio que aún conservaba el control de nómina.
 - Verificación de producción: los HTML público y administrativo coinciden en SHA-256 con la fuente; no aparece la restricción por nómina; una persona ficticia con nombres válidos avanza hasta la validación de correo y recibe 400 sin escribir; los tres endpoints administrativos responden 401 sin sesión. El estado real permaneció sin cambios en 1 asistente y 44 asientos libres. Revisión visual móvil y escritorio sin desborde; no se envió ningún formulario ni se alteró una inscripción real.
+
+---
+
 
 ---
 

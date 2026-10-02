@@ -263,3 +263,20 @@ Antes de declarar una tarea terminada:
 - Respetar la fórmula recuperada de los libros y los formatos acordados,
   documentados en ese plan. Antes de reutilizar la serie otro año, revisar el
   temario oficial del proceso correspondiente y el calendario real.
+
+## 12. Panel para anotar en NM3 y NM4
+
+- Por decisión de Francisco (2-oct-2026), toda página de `nm3/` y `nm4/` carga el
+  panel para anotar sobre la pizarra táctil de la sala:
+  `<script src="/assets/anotar-pizarra.js" defer></script>` antes de `</body>`.
+  Vale también para toda página nueva de esas áreas.
+- Se exceptúan solo los paneles docentes de corrección y administración: las
+  carpetas `calificar/` y `revisar/` y los archivos `*admin.html`.
+- El panel ofrece lápiz, destacador, goma, tres grosores, deshacer, borrar página
+  y ✋ «Página», para usar la página sin dibujar. En las presentaciones con
+  `.nav-bar` el botón ✏️ va en la barra; en el resto aparece como pestaña en el
+  borde izquierdo. Mientras se dibuja, deslizar el dedo no cambia de diapositiva.
+- No se copia el módulo dentro de las páginas ni se crean variantes: cualquier
+  mejora se hace en `assets/anotar-pizarra.js`.
+- `npm run build` ejecuta `scripts/audit-anotar-pizarra.js` y falla si alguna
+  página de NM3 o NM4 no carga el panel.

@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, Termas: inscripción limitada a la nómina docente vigente
+
+- La nómina recibida contiene 97 registros completos de docentes titulares y suplentes. La fila final, que traía solo un apellido, se excluyó por estar incompleta; un cero final evidentemente tipográfico se normalizó como letra «o».
+- El control se ejecuta en el servidor antes de validar correo, teléfono o guardar datos. Solo admite la combinación completa de nombres y apellidos de la nómina; tolera mayúsculas, minúsculas, tildes y separadores como espacios o guiones. Una identidad ajena recibe 403 y no alcanza la escritura en Firebase.
+- Para no exponer el listado en el HTML ni dejar los nombres legibles en la fuente del servidor, se conservaron 97 huellas SHA-256 de las formas normalizadas. La página explica junto a los datos personales que deben escribirse todos los nombres y apellidos tal como aparecen en la nómina y que quien no esté en ella no podrá inscribirse.
+- Pruebas locales: 97 huellas únicas, casos con tildes y guion, rechazo de identidad ajena, aceptación de identidad vigente hasta el siguiente control, sintaxis, `git diff --check` y build integral con 590 recursos críticos, todo aprobado. La nómina no aparece como texto legible en el archivo del servidor.
+- Publicado el cambio `11a6d3c8` con `npm run deploy:prod:safe`: despliegue `dpl_Cy6EGyHa667EuajQYFD6HFYGSqcS`, READY y alias `www.estudiacest.com` confirmado. El HTML público coincide exactamente en SHA-256 con la fuente. En la API pública, una identidad ajena devuelve 403 y una identidad vigente sin correo avanza al control de correo y devuelve 400; ambas pruebas omiten los datos necesarios para guardar. El estado real permaneció en 1 asistente y 44 asientos libres antes y después. Revisión pública responsive en perfiles de 320 y 1440 px: aviso, fecha, tres opciones y botón fijo visibles, sin desborde.
+
+---
+
 ## 2026-10-02, NM3: panel para anotar sobre la pizarra táctil
 
 - Francisco pidió un panel desplegable para destacar, anotar y escribir encima de las diapositivas con el dedo, porque la pizarra de la sala es táctil. Herramientas pedidas: goma, destacador y lápiz.

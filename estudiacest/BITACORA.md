@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, NM3 Clase 4: cierre directo con preguntas para el cuaderno
+
+- Francisco dijo que no se entendía el cierre entre las pantallas 10 y 11, y pidió algo directo: «respondan estas preguntas de cierre en su cuaderno».
+- **Pantalla 10, plenario en voz alta (8 min):** quedan solo tres pasos (un grupo del texto 1 explica las cuatro piezas; uno del texto 2 cuenta la funa a Neruda; cada grupo lee su conclusión, pregunta 8) y el aviso «Después: preguntas de cierre en el cuaderno →». Se quitó el recuadro «Conclusión del curso», que repetía el contenido del cuaderno. Las respuestas esperadas siguen plegadas para el docente.
+- **Pantalla 11, preguntas de cierre (7 min):** la orden «📓 Respondan estas preguntas de cierre en su cuaderno» y cinco preguntas numeradas: desinformación y error; dos piezas y cómo se descubren; qué aprendió del texto del otro grupo; qué parte de la clase le ayudó más y por qué; qué revisará antes de compartir. Reemplaza los tres paneles de qué, cómo y para qué y el ticket. Tiene zoom y ajuste automático: 158 % en 1366×768, 175 % en 1920×1080 (letra de 47 px) y 368 % en 4K, sin scroll.
+- Validación en navegador real a 390, 1440 y 3840 px: 11 pantallas, 0 errores y sin desborde. Auditoría de lenguaje: 0 regionalismos. En OneDrive, la planificación y la pauta (criterios de las 5 preguntas de cierre) quedaron regeneradas y aprobadas.
+
+---
+
 ## 2026-10-02, Termas: confirmación visible y tres opciones de alimentación
 
 - Francisco indicó que faltaba un botón de confirmación claro, el día del paseo y una elección inequívoca entre tres alternativas. El cierre del formulario deja de verse como una barra pegada al fondo y pasa a ser un último bloque visible, con resumen y botón de ancho completo en móvil: «Confirmar inscripción».

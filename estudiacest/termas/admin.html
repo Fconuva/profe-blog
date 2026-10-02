@@ -85,7 +85,7 @@
         </div>
         <div class="tabla">
           <table>
-            <thead><tr><th>Apellidos</th><th>Nombres</th><th>Correo</th><th>Teléfono</th><th>Contacto de emergencia</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Desayuno u once</th><th>Actualizado</th><th></th></tr></thead>
+            <thead><tr><th>Apellidos</th><th>Nombres</th><th>Correo</th><th>Teléfono</th><th>Contacto de emergencia</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Alimentación</th><th>Actualizado</th><th></th></tr></thead>
             <tbody id="filas"><tr><td colspan="11" class="muted">Cargando…</td></tr></tbody>
           </table>
         </div>
@@ -107,7 +107,7 @@
     const $ = id => document.getElementById(id);
     let datos = null;
 
-    const COMIDA = { desayuno: 'Desayuno', once: 'Once', cualquiera: 'Me da lo mismo', ninguna: 'No agregar', '': '—' };
+    const COMIDA = { desayuno: 'Con desayuno', once: 'Con once', cualquiera: 'Por definir (registro anterior)', ninguna: 'Solo almuerzo', '': 'Sin elección' };
     const fecha = ms => ms ? new Date(ms).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
 
     async function llamar(accion, cuerpo) {
@@ -130,8 +130,8 @@
       $('metricas').innerHTML = [
         metrica('Inscritos', datos.filas.length), metrica('Asisten', t.asisten), metrica('No asisten', t.noAsisten),
         metrica('En bus', t.bus + ' / ' + datos.capacidad), metrica('Transporte propio', t.personal),
-        metrica('Prefieren desayuno', cuenta('desayuno')), metrica('Prefieren once', cuenta('once')),
-        metrica('Les da lo mismo', cuenta('cualquiera')), metrica('No agregar', cuenta('ninguna'))
+        metrica('Con desayuno', cuenta('desayuno')), metrica('Con once', cuenta('once')),
+        metrica('Solo almuerzo', cuenta('ninguna'))
       ].join('');
       const filtro = $('filtro').value;
       const filas = datos.filas.filter(f => !filtro || (filtro === 'si' || filtro === 'no' ? f.asiste === filtro : f.asiste === 'si' && f.transporte === filtro));
@@ -169,7 +169,7 @@
     function csv() {
       if (!datos) return;
       const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-      const lineas = [['Apellidos', 'Nombres', 'Correo', 'Teléfono', 'Contacto de emergencia', 'Teléfono de emergencia', 'Asiste', 'Transporte', 'Asiento', 'Desayuno u once', 'Actualizado'].map(esc).join(';')];
+      const lineas = [['Apellidos', 'Nombres', 'Correo', 'Teléfono', 'Contacto de emergencia', 'Teléfono de emergencia', 'Asiste', 'Transporte', 'Asiento', 'Alimentación', 'Actualizado'].map(esc).join(';')];
       datos.filas.forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.telefono, f.emergenciaNombre, f.emergenciaTelefono, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
       const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'termas-panimavida-inscripciones.csv'; a.click();

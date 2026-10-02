@@ -281,18 +281,21 @@
     .pase-nomina { grid-column: 1 / -1; margin: 2px 0 0; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); font-size: 14px; color: rgba(255,255,255,.82); }
     .preferencia { margin-top: 18px; }
     .preferencia > p { font-weight: 700; margin: 0; font-size: 16px; }
-    .pildoras { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-    .pildora { position: relative; }
+    .pildoras { display: grid; gap: 10px; margin-top: 12px; }
+    .pildora { position: relative; min-width: 0; }
     .pildora input { position: absolute; opacity: 0; pointer-events: none; }
-    .pildora label { display: inline-block; min-height: 44px; padding: 10px 14px; border-radius: 999px; border: 1.5px solid #cfc7b9; background: #fff; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .15s; }
+    .pildora label { display: grid; align-content: center; min-height: 78px; padding: 14px 16px; border-radius: var(--radio-control); border: 1.5px solid #cfc7b9; background: #fff; cursor: pointer; transition: background .2s, border-color .2s, color .2s, transform .15s, box-shadow .2s; }
+    .pildora label strong { display: block; font-size: 16px; font-weight: 800; line-height: 1.25; }
+    .pildora label small { display: block; margin-top: 4px; color: var(--gris); font-size: 13px; font-weight: 600; line-height: 1.35; }
     .pildora label:active { transform: scale(.98); }
-    .pildora input:checked + label { background: var(--pino); border-color: var(--pino); color: #fff; }
+    .pildora input:checked + label { background: var(--pino); border-color: var(--pino); color: #fff; box-shadow: 0 10px 20px -15px rgba(15,76,74,.9); }
+    .pildora input:checked + label small { color: rgba(255,255,255,.82); }
     .pildora input:focus-visible + label { outline: 3px solid var(--noche); outline-offset: 2px; }
 
     /* ---------- barra de confirmación ---------- */
     .barra {
-      position: sticky; bottom: 0; z-index: 20; margin: 24px -16px 0; padding: 13px 16px calc(13px + env(safe-area-inset-bottom));
-      background: rgba(246,241,232,.95); backdrop-filter: blur(12px); border-top: 1px solid var(--linea); box-shadow: 0 -12px 28px -24px rgba(19,34,43,.45);
+      margin-top: 20px; padding: 18px; border: 1.5px solid #c7ded9; border-radius: var(--radio);
+      background: #f2fbf9; box-shadow: 0 16px 32px -28px rgba(19,34,43,.6);
     }
     .barra-in { display: flex; align-items: center; gap: 12px; }
     .resumen { flex: 1; min-width: 0; font-size: 14px; color: var(--gris); line-height: 1.3; }
@@ -362,10 +365,11 @@
       .zona-bus { grid-template-columns: minmax(0, 380px) minmax(0, 1fr); align-items: start; gap: 36px; }
       .panel-asiento { position: sticky; top: 20px; }
       .comidas { grid-template-columns: 1fr 1fr; }
+      .pildoras { grid-template-columns: repeat(3, minmax(0, 1fr)); }
       .escena-media { aspect-ratio: 16 / 6; }
       .escena figcaption { padding: 15px 18px 16px; }
       .escena figcaption strong { font-size: 17px; }
-      .barra { margin: 22px -32px 0; padding-left: 32px; padding-right: 32px; }
+      .barra { margin-top: 22px; padding: 20px; }
       .pase-datos { grid-template-columns: repeat(4, 1fr); }
     }
     @media (max-width: 520px) {
@@ -374,7 +378,8 @@
       .escena figcaption small { max-width: none; text-align: left; }
       .barra-in { align-items: stretch; }
       .resumen { align-self: center; }
-      .boton { padding-left: 16px; padding-right: 16px; }
+      .barra-in { display: grid; }
+      .boton { width: 100%; padding-left: 16px; padding-right: 16px; }
     }
     @media (max-width: 360px) {
       .asiento { font-size: 12px; border-radius: 10px 10px 8px 8px; }
@@ -410,7 +415,7 @@
 
   <section class="estado-paseo" aria-label="Datos principales del paseo">
     <div class="estado-in" aria-live="polite">
-      <div class="dato-clave"><span>Fecha</span><strong>Sábado 14 de noviembre</strong></div>
+      <div class="dato-clave"><span>Día del paseo</span><strong>Sábado 14 de noviembre de 2026</strong></div>
       <div class="dato-clave vivo-clave"><span>Estado</span><strong><span class="punto" id="puntoVivo"></span><span id="estadoVivo">Conectando…</span></strong></div>
       <div class="dato-clave"><span>Asistentes</span><strong><span id="chipAsisten">…</span> confirmados</strong></div>
       <div class="dato-clave"><span>Bus</span><strong><span id="chipLibres">…</span> asientos libres</strong></div>
@@ -555,25 +560,24 @@
       </section>
 
       <section class="tarjeta oculto" data-paso id="pasoComida" aria-labelledby="t-comida">
-        <div class="titulo-paso"><span class="paso"><b></b></span><div><span class="tema-paso">Desayuno u once</span><h2 id="t-comida">Estamos viendo sumar desayuno u once</h2></div></div>
-        <p class="sub">Las termas ofrecen estas dos opciones, cada una con su horario y con un costo adicional por persona. Antes de decidir queremos que veas qué incluye cada una y saber qué prefieres.</p>
+        <div class="titulo-paso"><span class="paso"><b></b></span><div><span class="tema-paso">Alimentación</span><h2 id="t-comida">Elige una de estas 3 opciones</h2></div></div>
+        <p class="sub"><strong>El almuerzo está incluido en las tres.</strong> Elige si quieres sumar desayuno, sumar once o mantener solo el almuerzo.</p>
         <div class="comidas" id="comidas"></div>
         <p class="nota">Si se contrata, se reserva para todo el grupo inscrito y se paga aunque alguien no lo consuma.</p>
         <div class="preferencia" role="radiogroup" aria-labelledby="t-pref">
-          <p id="t-pref">¿Qué te acomoda más? <span style="font-weight:500;color:var(--gris)">(opcional)</span></p>
+          <p id="t-pref">Selecciona una opción para continuar</p>
           <div class="pildoras">
-            <span class="pildora"><input type="radio" name="comida" id="c-desayuno" value="desayuno"><label for="c-desayuno">Desayuno</label></span>
-            <span class="pildora"><input type="radio" name="comida" id="c-once" value="once"><label for="c-once">Once</label></span>
-            <span class="pildora"><input type="radio" name="comida" id="c-cualquiera" value="cualquiera"><label for="c-cualquiera">Me da lo mismo</label></span>
-            <span class="pildora"><input type="radio" name="comida" id="c-ninguna" value="ninguna"><label for="c-ninguna">Prefiero no agregar</label></span>
+            <span class="pildora"><input type="radio" name="comida" id="c-desayuno" value="desayuno"><label for="c-desayuno"><strong>Con desayuno</strong><small>Desayuno buffet + almuerzo incluido</small></label></span>
+            <span class="pildora"><input type="radio" name="comida" id="c-once" value="once"><label for="c-once"><strong>Con once</strong><small>Almuerzo incluido + once continental</small></label></span>
+            <span class="pildora"><input type="radio" name="comida" id="c-ninguna" value="ninguna"><label for="c-ninguna"><strong>Solo almuerzo</strong><small>Almuerzo buffet de 13:00 a 15:00</small></label></span>
           </div>
         </div>
       </section>
 
       <div class="barra">
         <div class="barra-in">
-          <div class="resumen"><strong id="resumenTitulo">Completa tu inscripción</strong><span id="resumenDetalle">Tus datos y si asistes</span></div>
-          <button class="boton" type="submit" id="btnConfirmar">Confirmar</button>
+          <div class="resumen"><strong id="resumenTitulo">Revisa y confirma tu inscripción</strong><span id="resumenDetalle">Completa tus datos y elecciones</span></div>
+          <button class="boton" type="submit" id="btnConfirmar" aria-describedby="resumenDetalle">Confirmar inscripción</button>
         </div>
         <p class="mensaje" id="mensaje" role="status" aria-live="polite"></p>
       </div>
@@ -779,21 +783,21 @@
     }
 
     function actualizarResumen() {
-      const asiste = valor('asiste'); const transporte = valor('transporte'); const btn = $('btnConfirmar');
-      let titulo = 'Completa tu inscripción'; let detalle = 'Tus datos y si asistes'; let boton = 'Confirmar';
-      if (asiste === 'no') { titulo = 'No asistes'; detalle = 'Igual queda registrado'; boton = 'Confirmar'; }
+      const asiste = valor('asiste'); const transporte = valor('transporte'); const comida = valor('comida'); const btn = $('btnConfirmar');
+      let titulo = 'Revisa y confirma tu inscripción'; let detalle = 'Completa tus datos y elecciones'; let boton = 'Confirmar inscripción';
+      if (asiste === 'no') { titulo = 'Registrar que no asistes'; detalle = 'Tu respuesta también queda guardada'; }
       else if (asiste === 'si' && !transporte) { titulo = 'Asistes'; detalle = 'Falta cómo llegas'; }
-      else if (asiste === 'si' && transporte === 'personal') { titulo = 'Asistes · transporte propio'; detalle = 'Listo para confirmar'; }
+      else if (asiste === 'si' && transporte === 'personal') { titulo = 'Asistes · transporte propio'; detalle = comida ? 'Listo para confirmar' : 'Falta elegir una opción de alimentación'; }
       else if (asiste === 'si' && transporte === 'bus') {
-        if (estado.asiento) { titulo = 'Bus · asiento ' + estado.asiento; detalle = ubicacion(estado.asiento); boton = 'Reservar asiento'; }
+        if (estado.asiento) { titulo = 'Bus · asiento ' + estado.asiento; detalle = comida ? ubicacion(estado.asiento) + ' · listo para confirmar' : 'Falta elegir una opción de alimentación'; }
         else { titulo = 'Asistes en bus'; detalle = 'Falta elegir asiento'; }
       }
-      if (estado.mia) boton = boton === 'Reservar asiento' ? 'Guardar cambio' : 'Guardar cambios';
+      if (estado.mia) boton = 'Guardar cambios';
       $('resumenTitulo').textContent = titulo; $('resumenDetalle').textContent = detalle; btn.textContent = estado.enviando ? 'Guardando…' : boton;
     }
 
     form.addEventListener('change', e => {
-      if (e.target.name === 'asiste' || e.target.name === 'transporte') {
+      if (e.target.name === 'asiste' || e.target.name === 'transporte' || e.target.name === 'comida') {
         if (e.target.name === 'transporte' && e.target.value === 'bus' && !estado.asiento && estado.mia && estado.mia.asiento) estado.asiento = estado.mia.asiento;
         mostrarPasos(); mensaje('');
         if (e.target.value === 'bus') setTimeout(() => $('pasoAsiento').scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
@@ -821,7 +825,9 @@
       const transporte = asiste === 'si' ? valor('transporte') : '';
       if (asiste === 'si' && !transporte) return { error: 'Elige cómo llegas a las termas.', foco: $('tr-bus') };
       if (transporte === 'bus' && !estado.asiento) return { error: 'Toca un asiento libre del bus.', foco: $('filas') };
-      return { datos: { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento: transporte === 'bus' ? estado.asiento : null, comida: asiste === 'si' ? valor('comida') : '' } };
+      const comida = asiste === 'si' ? valor('comida') : '';
+      if (asiste === 'si' && !comida) return { error: 'Elige una opción de alimentación: con desayuno, con once o solo almuerzo.', foco: $('c-desayuno') };
+      return { datos: { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento: transporte === 'bus' ? estado.asiento : null, comida } };
     }
 
     form.addEventListener('submit', async e => {
@@ -856,7 +862,7 @@
       const s = document.createElement('small'); s.textContent = etiqueta; const b = document.createElement('b'); b.textContent = texto;
       d.append(s, b); return d;
     }
-    const TEXTO_COMIDA = { desayuno: 'Desayuno', once: 'Once', cualquiera: 'Me da lo mismo', ninguna: 'No agregar', '': 'Sin responder' };
+    const TEXTO_COMIDA = { desayuno: 'Con desayuno y almuerzo', once: 'Con almuerzo y once', cualquiera: 'Por definir', ninguna: 'Solo almuerzo', '': 'Sin responder' };
 
     function mostrarPase(desplazar) {
       const m = estado.mia; if (!m) return;
@@ -866,7 +872,7 @@
       if (m.asiste === 'si') {
         if (m.transporte === 'bus') { datos.append(dato('Asiento', String(m.asiento), 'grande'), dato('Ubicación', ubicacion(m.asiento))); }
         else datos.append(dato('Transporte', 'Propio'));
-        datos.append(dato('Fecha', 'Sábado 14 de noviembre'), dato('Almuerzo', '13:00 a 15:00'), dato('Desayuno u once', TEXTO_COMIDA[m.comida || '']));
+        datos.append(dato('Día del paseo', 'Sábado 14 de noviembre de 2026'), dato('Almuerzo', '13:00 a 15:00'), dato('Alimentación', TEXTO_COMIDA[m.comida || '']));
         const nomina = document.createElement('p'); nomina.className = 'pase-nomina';
         nomina.textContent = 'Tu nombre va en la nómina que se entrega en la recepción de las termas.';
         datos.appendChild(nomina);

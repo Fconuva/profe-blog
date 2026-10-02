@@ -36,7 +36,7 @@ const TOPE_INSCRIPCIONES = 300;
 const RE_CORREO = /^[a-z0-9][a-z0-9._%+-]{0,63}@[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)*\.[a-z]{2,}$/;
 const RE_NOMBRE = /^\p{L}[\p{L}'’.\- ]{0,79}$/u;
 const RE_TELEFONO = /^\+?[0-9 ()-]{8,20}$/;
-const COMIDAS = new Set(['', 'desayuno', 'once', 'cualquiera', 'ninguna']);
+const COMIDAS = new Set(['desayuno', 'once', 'ninguna']);
 
 function fallo(status, mensaje, extra) {
     const e = new Error(mensaje);
@@ -156,7 +156,7 @@ async function inscribir(req, res, db) {
     const asiento = transporte === 'bus' ? Number(body.asiento) : null;
     if (transporte === 'bus' && !(Number.isInteger(asiento) && asiento >= 1 && asiento <= CAPACIDAD)) throw fallo(400, 'Elige un asiento del bus.');
     const comida = asiste === 'si' ? String(body.comida || '') : '';
-    if (!COMIDAS.has(comida)) throw fallo(400, 'Opción de desayuno u once no válida.');
+    if (asiste === 'si' && !COMIDAS.has(comida)) throw fallo(400, 'Elige una opción de alimentación: con desayuno, con once o solo almuerzo.');
 
     const clave = claveDe(correo);
     const llaveRecibida = String(body.llave || '');

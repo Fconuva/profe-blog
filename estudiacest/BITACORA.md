@@ -1,5 +1,20 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, NM3 Clase 4: preguntas divididas por texto y visibles en una pantalla
+
+- Francisco cambió la organización: 4 o 5 grupos responden solo el texto 1 y los otros 4 o 5, solo el texto 2. Pidió que la pantalla de preguntas las separe (solo texto 1, solo texto 2 y de ambos) y que se puedan proyectar todas a la vez.
+- La pantalla G tiene tres columnas de colores:
+  - **Grupos del texto 1:** 1, las cuatro piezas; 2, el reportaje; 3, robots o personas.
+  - **Grupos del texto 2:** 4, fechas; 5, lo falso y lo verdadero del hilo; 6, nueva: los 3 «me gusta» de la corrección contra los miles de la funa.
+  - **Todos los grupos:** 7, la cadena de WhatsApp con lo aprendido en su texto; 8, la conclusión.
+  - Cada grupo responde 5 preguntas.
+- La pantalla G tiene barra de zoom y se ajusta sola al entrar en pantallas de 1100 px o más. Si el docente usa A−, A+ o «Volver al tamaño normal», se respeta. Ajuste automático medido: 84 % en 1366×768, 97 % en 1920×1080 y 233 % en 4K, con las 8 preguntas visibles sin scroll.
+- Lectura en paralelo: D y E duran 15 minutos al mismo tiempo; las preguntas, 40 minutos. Se ajustaron la portada y el objetivo («uno de dos textos»), los avisos de lectura por grupo, el plenario (cada mitad cuenta su texto a la otra; conclusión = pregunta 8) y las respuestas esperadas, rotuladas por grupo.
+- Material impreso de OneDrive regenerado: guía grupal y de acceso con secciones por texto y logro sobre 5; pauta con 8 filas; planificación con lectura en paralelo. Validador aprobado: «D y E. Lectura» activaba el detector de alternativas E y se cambió a «D y E · Lectura».
+- Navegador real a 390, 1440 y 3840 px: 10 pantallas, 0 errores y sin desborde.
+
+---
+
 ## 2026-10-01, Mi espacio: movilidad y dos habitaciones conectadas
 
 - Se aplica el primer lote autorizado: movimiento de ocho direcciones con rutas ponderadas, sin cortar esquinas; cambio de destino al completar la casilla actual, parada y ruta/destino visibles. «Caminar» es el modo inicial; «Decorar» muestra la grilla y la huella completa verde/roja. La selección respeta la transparencia del sprite.

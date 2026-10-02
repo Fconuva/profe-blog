@@ -19,6 +19,7 @@
   - en modo página (tríptico de NM3, y NM4 Clase 4 a 900 px) el trazo sigue el desplazamiento;
   - la batería de NM3 Clase 4 se repite idéntica;
   - `npm run build` OK, con 590 recursos críticos.
+- Publicado `378f0a83` con `npm run deploy:prod:safe` desde un worktree limpio: `dpl_23BshQtSCib85xqKNdwXLcdo4s8F`, READY; el build remoto también pasó la auditoría nueva. `assets/anotar-pizarra.js` coincide en SHA-256 con Git, y la batería de las 50 páginas, repetida contra producción, dio 0 fallas. /nm3/, /nm4/, /paes/, /estudiantes/ y /termas/ responden 200.
 ## 2026-10-02, Termas: inscripción libre y administración completa
 
 - Por decisión posterior de Francisco, la inscripción queda libre: se retiraron del servidor las 97 huellas de la nómina, la validación de pertenencia y los avisos que podían sugerir un padrón previo. Esta entrada reemplaza la regla operativa de la entrada «inscripción limitada a la nómina docente vigente» del mismo día. La organización revisará y corregirá los registros después desde el panel.

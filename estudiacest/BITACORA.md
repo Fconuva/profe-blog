@@ -8,6 +8,7 @@
   - cinco bloques numerados: desinformación y error; las cuatro piezas con la pregunta que descubre cada una; la emoción como motor; funa; y las cinco preguntas antes de compartir.
 - Formato de hoja de cuaderno con margen rojo y dos columnas desde 1100 px. Tiene barra de zoom y ajuste automático al entrar (atributo `data-autofit`, que ahora comparte con la pantalla de preguntas): 110 % en 1366×768, 124 % en 1920×1080 y 263 % en 4K, sin scroll.
 - La clase pasa a 11 pantallas. Validación en navegador real a 390, 1440 y 3840 px: 0 errores y sin desborde. Auditoría de lenguaje: 0 regionalismos. La planificación de OneDrive suma el paso «Contenido para el cuaderno (15 min)».
+- Publicado `3839e38b` con `npm run deploy:prod:safe` desde un worktree limpio: `dpl_4LtZsfcPu8re4QHnUY8t4to9qC82`, READY. La página pública coincide en SHA-256 con Git, y el ajuste automático de contenido y preguntas se comprobó en producción. /nm3/, /paes/, /estudiantes/ y /nm4/ responden 200.
 
 ---
 

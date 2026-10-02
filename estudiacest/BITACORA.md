@@ -1,5 +1,28 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, NM3: panel para anotar sobre la pizarra táctil
+
+- Francisco pidió un panel desplegable para destacar, anotar y escribir encima de las diapositivas con el dedo, porque la pizarra de la sala es táctil. Herramientas pedidas: goma, destacador y lápiz.
+- Módulo nuevo y reutilizable `/nm3/u3-anotar.js`, cargado en la Clase 4. Agrega un botón ✏️ en la barra inferior que despliega el panel:
+  - lápiz con 4 colores, destacador translúcido (35 %) con 4 colores y goma real, que borra pixeles;
+  - tres grosores, deshacer y «Borrar página», que pide un segundo toque;
+  - ✋ «Página», para tocar botones, el video o bajar en el texto sin dibujar;
+  - ⇄ para cambiar el panel de lado; ✕ o Escape lo cierran y los trazos quedan visibles.
+- Funcionamiento:
+  - dos lienzos fijos sobre la presentación, con Pointer Events y `touch-action:none`, que reciben dedo, lápiz óptico y mouse;
+  - mientras se dibuja, el deslizamiento no cambia de diapositiva (se detiene la propagación de `touch*`); con el panel cerrado o en ✋, la página funciona igual que antes;
+  - los trazos se guardan por diapositiva en la sesión, se redibujan al volver y se mueven con el contenido al desplazar; la rueda del mouse sigue bajando la diapositiva.
+- Registrado en el manifiesto (`nm3/u3-anotar.js`).
+- Validación en navegador real a 1920×1080, con mouse y toques reales por CDP:
+  - lápiz con mouse y con dedo, sin cambio de diapositiva al deslizar dibujando;
+  - destacador con alfa 89/255; deshacer y goma restauran exactamente el estado anterior;
+  - otra diapositiva aparece limpia y al volver el trazo es idéntico; borrar con doble toque deja 0;
+  - en ✋ el lienzo no recibe eventos; con el panel cerrado, deslizar cambia de diapositiva;
+  - al bajar 200 px el trazo se mueve con el texto.
+  - Pasada completa a 390, 1440 y 3840 px: 0 errores.
+
+---
+
 ## 2026-10-02, NM3 Clase 4: cierre directo con preguntas para el cuaderno
 
 - Francisco dijo que no se entendía el cierre entre las pantallas 10 y 11, y pidió algo directo: «respondan estas preguntas de cierre en su cuaderno».

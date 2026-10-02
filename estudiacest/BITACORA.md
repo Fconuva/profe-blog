@@ -1,5 +1,15 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, Termas: confirmación visible y tres opciones de alimentación
+
+- Francisco indicó que faltaba un botón de confirmación claro, el día del paseo y una elección inequívoca entre tres alternativas. El cierre del formulario deja de verse como una barra pegada al fondo y pasa a ser un último bloque visible, con resumen y botón de ancho completo en móvil: «Confirmar inscripción».
+- La fecha se presenta como «Día del paseo: Sábado 14 de noviembre de 2026» tanto en el encabezado como en el pase. Alimentación ahora exige exactamente una de tres tarjetas: **Con desayuno**, **Con once** o **Solo almuerzo**; las tres explicitan que incluyen almuerzo. Se retiraron «Me da lo mismo» y el carácter opcional.
+- La validación existe en cliente y servidor; el panel y su CSV usan los mismos nombres. Los valores históricos se siguen mostrando como anteriores, pero una inscripción nueva o modificada debe escoger una de las tres opciones vigentes.
+- Build integral aprobado con 589 recursos críticos. Navegador real local y público a 320, 390, 1440 y 3840 px: botón visible, tres opciones exactas, validación sin elección, cambio de resumen al escoger y 0 desborde.
+- Publicado el cambio `77d15945` dentro de la fuente sincronizada `f2b1a391` mediante `npm run deploy:prod:safe`: `dpl_AfrAUV53APVAwvwEw5Pj8HUKxt9z` READY y alias `www.estudiacest.com` confirmado. `termas/index.html` y `termas/admin.html` coinciden byte por byte con producción. El estado público real se releyó sin escribir: 1 asistente y 44 asientos libres; no se enviaron inscripciones de prueba. El trabajo concurrente de NM3 y los cambios ajenos del repositorio padre quedaron preservados.
+
+---
+
 ## 2026-10-02, NM3 Clase 4: contenido para copiar en el cuaderno
 
 - Francisco pidió, pensando en 3°D (curso difícil y con 45 minutos más), agregar después del objetivo el contenido para que lo escriban en el cuaderno, visible y con la mecánica de zoom.

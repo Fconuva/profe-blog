@@ -12,6 +12,7 @@
 - Lectura en paralelo: D y E duran 15 minutos al mismo tiempo; las preguntas, 40 minutos. Se ajustaron la portada y el objetivo («uno de dos textos»), los avisos de lectura por grupo, el plenario (cada mitad cuenta su texto a la otra; conclusión = pregunta 8) y las respuestas esperadas, rotuladas por grupo.
 - Material impreso de OneDrive regenerado: guía grupal y de acceso con secciones por texto y logro sobre 5; pauta con 8 filas; planificación con lectura en paralelo. Validador aprobado: «D y E. Lectura» activaba el detector de alternativas E y se cambió a «D y E · Lectura».
 - Navegador real a 390, 1440 y 3840 px: 10 pantallas, 0 errores y sin desborde.
+- Publicado `b8b3af02` con `npm run deploy:prod:safe` desde un worktree limpio: `dpl_6qbfV7KxENoEBrxu6d3fqjHfiMY8`, READY. La página pública coincide en SHA-256 con Git; el ajuste automático se comprobó en producción (84 % en 1366×768 y 97 % en 1920×1080, sin scroll). /nm3/, /paes/, /estudiantes/ y /nm4/ responden 200.
 
 ---
 

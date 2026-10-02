@@ -1,5 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, Termas: inscripción libre y administración completa
+
+- Por decisión posterior de Francisco, la inscripción queda libre: se retiraron del servidor las 97 huellas de la nómina, la validación de pertenencia y los avisos que podían sugerir un padrón previo. Esta entrada reemplaza la regla operativa de la entrada «inscripción limitada a la nómina docente vigente» del mismo día. La organización revisará y corregirá los registros después desde el panel.
+- La página conserva el aviso de acceso, pero con lenguaje inequívoco: la lista de personas inscritas se entrega en recepción y quien no se haya inscrito en el formulario no podrá asistir. Se mantienen visibles el sábado 14 de noviembre de 2026, el botón «Confirmar inscripción» y la elección obligatoria entre «Con desayuno», «Con once» o «Solo almuerzo»; las tres incluyen almuerzo.
+- Se amplió `/termas/admin` para administrar el evento con autenticación de administrador: totales y porcentajes de asistencia, transporte y alimentación; búsqueda y filtros; exportación CSV; alta manual; edición completa; eliminación con confirmación; papelera recuperable durante 30 días y restauración. El servidor protege correos y asientos duplicados mediante transacciones y no entrega datos privados al público.
+- Auditoría automatizada integrada al prebuild: autenticación, inscripción libre, alta, edición, conflictos de correo y asiento, eliminación, papelera, restauración y presencia del panel aprobadas. Build integral aprobado con 590 recursos críticos.
+- Publicados `ad91c972` y la corrección definitiva `cdc790e5` mediante `npm run deploy:prod:safe`. La versión final es `dpl_3jeezikg8HBYQvJf4Lyd1VnVrx1B`, READY y asociada a `www.estudiacest.com`; reemplazó inmediatamente el despliegue transitorio que aún conservaba el control de nómina.
+- Verificación de producción: los HTML público y administrativo coinciden en SHA-256 con la fuente; no aparece la restricción por nómina; una persona ficticia con nombres válidos avanza hasta la validación de correo y recibe 400 sin escribir; los tres endpoints administrativos responden 401 sin sesión. El estado real permaneció sin cambios en 1 asistente y 44 asientos libres. Revisión visual móvil y escritorio sin desborde; no se envió ningún formulario ni se alteró una inscripción real.
+
+---
+
 ## 2026-10-02, Termas: inscripción limitada a la nómina docente vigente
 
 - La nómina recibida contiene 97 registros completos de docentes titulares y suplentes. La fila final, que traía solo un apellido, se excluyó por estar incompleta; un cero final evidentemente tipográfico se normalizó como letra «o».

@@ -7,6 +7,7 @@
 - La validación existe en cliente y servidor; el panel y su CSV usan los mismos nombres. Los valores históricos se siguen mostrando como anteriores, pero una inscripción nueva o modificada debe escoger una de las tres opciones vigentes.
 - Build integral aprobado con 589 recursos críticos. Navegador real local y público a 320, 390, 1440 y 3840 px: botón visible, tres opciones exactas, validación sin elección, cambio de resumen al escoger y 0 desborde.
 - Publicado el cambio `77d15945` dentro de la fuente sincronizada `f2b1a391` mediante `npm run deploy:prod:safe`: `dpl_AfrAUV53APVAwvwEw5Pj8HUKxt9z` READY y alias `www.estudiacest.com` confirmado. `termas/index.html` y `termas/admin.html` coinciden byte por byte con producción. El estado público real se releyó sin escribir: 1 asistente y 44 asientos libres; no se enviaron inscripciones de prueba. El trabajo concurrente de NM3 y los cambios ajenos del repositorio padre quedaron preservados.
+- Ajuste posterior por verificación visual: al desplegar transporte y alimentación, el cierre quedaba a más de 2.600 px en móvil. El commit `4d642fd8` convierte el bloque de confirmación en una barra fija inferior durante todo el formulario y anuncia las tres alternativas también en el encabezado. Publicado con `npm run deploy:prod:safe`: `dpl_26qMoSAN3F7kwnsZRHHo2A6KsCTs` READY. HTML público idéntico a la fuente; botón completamente visible y 0 desborde en 320, 390, 1440 y 3840 px, sin enviar formularios de prueba.
 
 ---
 

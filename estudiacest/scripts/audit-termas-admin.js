@@ -58,12 +58,11 @@ function response() {
   };
 }
 
-async function call(db, action, body, authenticated = true, nominaFicticia = false) {
+async function call(db, action, body, authenticated = true) {
   const res = response();
   const req = { method: action === 'admin-lista' ? 'GET' : 'POST', body: body || {}, headers: authenticated ? { authorization: 'Bearer token-ficticio' } : {} };
   const auth = { async verifyIdToken() { return { uid: 'admin-1' }; } };
-  const opciones = nominaFicticia ? { comprobarNomina: () => true } : undefined;
-  await termas.manejar(req, res, action, db, auth, opciones);
+  await termas.manejar(req, res, action, db, auth);
   return res;
 }
 
@@ -84,28 +83,24 @@ const baseB = {
   const sinSesion = await call(db, 'admin-lista', null, false);
   assert.strictEqual(sinSesion.code, 401, 'El listado administrativo debe exigir sesión.');
 
-  const fuera = await call(db, 'admin-guardar', { ...baseA, nombre: 'Persona', apellido: 'Fuera de Nomina' });
-  assert.strictEqual(fuera.code, 403, 'El alta administrativa no puede omitir la nómina.');
-  assert.strictEqual(getAt(db.state, 'eventos_docentes/termas_2026/inscripciones'), undefined, 'Un rechazo no debe escribir.');
-
-  const creada = await call(db, 'admin-guardar', baseA, true, true);
-  assert.strictEqual(creada.code, 200, 'El admin debe poder inscribir manualmente.');
+  const creada = await call(db, 'admin-guardar', baseA);
+  assert.strictEqual(creada.code, 200, 'El admin debe poder inscribir libremente a una persona.');
   let guardada = getAt(db.state, 'eventos_docentes/termas_2026/inscripciones/uno@example,test');
   assert.strictEqual(guardada.gestionAdmin, true);
   assert.match(guardada.llave, /^[a-f0-9]{64}$/);
   const creadaEn = guardada.creado;
   const llave = guardada.llave;
 
-  const correoDuplicado = await call(db, 'admin-guardar', { ...baseB, correo: baseA.correo }, true, true);
+  const correoDuplicado = await call(db, 'admin-guardar', { ...baseB, correo: baseA.correo });
   assert.strictEqual(correoDuplicado.code, 409, 'No puede repetirse el correo.');
 
-  const asientoOcupado = await call(db, 'admin-guardar', { ...baseB, asiento: 7 }, true, true);
+  const asientoOcupado = await call(db, 'admin-guardar', { ...baseB, asiento: 7 });
   assert.strictEqual(asientoOcupado.code, 409, 'No puede repetirse el asiento.');
 
-  const segunda = await call(db, 'admin-guardar', baseB, true, true);
+  const segunda = await call(db, 'admin-guardar', baseB);
   assert.strictEqual(segunda.code, 200);
 
-  const editada = await call(db, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, correo: 'uno.nuevo@example.test', transporte: 'personal', asiento: null, comida: 'ninguna' }, true, true);
+  const editada = await call(db, 'admin-guardar', { ...baseA, originalCorreo: baseA.correo, correo: 'uno.nuevo@example.test', transporte: 'personal', asiento: null, comida: 'ninguna' });
   assert.strictEqual(editada.code, 200, 'El admin debe poder editar una inscripción.');
   assert.strictEqual(getAt(db.state, 'eventos_docentes/termas_2026/inscripciones/uno@example,test'), undefined, 'Cambiar correo debe retirar la clave anterior.');
   guardada = getAt(db.state, 'eventos_docentes/termas_2026/inscripciones/uno,nuevo@example,test');
@@ -125,7 +120,7 @@ const baseB = {
   assert.strictEqual(lista.payload.filas.length, 1);
   assert.strictEqual(lista.payload.eliminadas.length, 1);
 
-  const restaurada = await call(db, 'admin-restaurar', { id: ids[0] }, true, true);
+  const restaurada = await call(db, 'admin-restaurar', { id: ids[0] });
   assert.strictEqual(restaurada.code, 200, 'Restaurar debe recuperar la inscripción.');
   assert.ok(getAt(db.state, 'eventos_docentes/termas_2026/inscripciones/uno,nuevo@example,test'));
   assert.strictEqual(Object.keys(getAt(db.state, 'eventos_docentes/termas_2026/papelera') || {}).length, 0);
@@ -139,13 +134,19 @@ const baseB = {
   }
   assert.ok(html.includes('Gestionada por admin'));
   assert.ok(html.includes('Los asientos ocupados aparecen deshabilitados.'));
+  assert.ok(!html.includes('Nómina oficial'), 'El panel no debe anunciar una restricción por nómina.');
+
+  const api = fs.readFileSync(path.join(ROOT, 'api', '_termas.js'), 'utf8');
+  for (const marcador of ['HUELLAS_NOMINA', 'estaEnNomina', 'nómina vigente']) {
+    assert.ok(!api.includes(marcador), `La API todavía conserva la restricción: ${marcador}`);
+  }
 
   const packageJson = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
   assert.ok(String(packageJson.scripts.prebuild || '').includes('node scripts/audit-termas-admin.js'), 'La auditoría no está integrada al prebuild.');
   const vercelIgnore = fs.readFileSync(path.join(ROOT, '.vercelignore'), 'utf8');
   assert.ok(vercelIgnore.includes('!scripts/audit-termas-admin.js'), 'Vercel excluiría la auditoría del prebuild.');
 
-  console.log('Termas admin: autenticación, nómina, alta, edición, conflictos, papelera, restauración y panel verificados.');
+  console.log('Termas admin: autenticación, inscripción libre, alta, edición, conflictos, papelera, restauración y panel verificados.');
 })().catch(error => {
   console.error(error.stack || error.message);
   process.exit(1);

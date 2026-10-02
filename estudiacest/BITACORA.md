@@ -1,5 +1,16 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-02, NM3 Clase 4: contenido para copiar en el cuaderno
+
+- Francisco pidió, pensando en 3°D (curso difícil y con 45 minutos más), agregar después del objetivo el contenido para que lo escriban en el cuaderno, visible y con la mecánica de zoom.
+- Pantalla nueva «Contenido para el cuaderno» después de C:
+  - título para copiar: «Noticias falsas: cómo se fabrican y cómo se descubren»;
+  - cinco bloques numerados: desinformación y error; las cuatro piezas con la pregunta que descubre cada una; la emoción como motor; funa; y las cinco preguntas antes de compartir.
+- Formato de hoja de cuaderno con margen rojo y dos columnas desde 1100 px. Tiene barra de zoom y ajuste automático al entrar (atributo `data-autofit`, que ahora comparte con la pantalla de preguntas): 110 % en 1366×768, 124 % en 1920×1080 y 263 % en 4K, sin scroll.
+- La clase pasa a 11 pantallas. Validación en navegador real a 390, 1440 y 3840 px: 0 errores y sin desborde. Auditoría de lenguaje: 0 regionalismos. La planificación de OneDrive suma el paso «Contenido para el cuaderno (15 min)».
+
+---
+
 ## 2026-10-02, NM3 Clase 4: preguntas divididas por texto y visibles en una pantalla
 
 - Francisco cambió la organización: 4 o 5 grupos responden solo el texto 1 y los otros 4 o 5, solo el texto 2. Pidió que la pantalla de preguntas las separe (solo texto 1, solo texto 2 y de ambos) y que se puedan proyectar todas a la vez.

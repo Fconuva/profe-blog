@@ -4,50 +4,125 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <title>Admin · Paseo Termas de Panimávida</title>
-  <link rel="icon" href="/estudiantes/assets/logo-cest.png">
+  <title>Administrar inscripciones · Termas de Panimávida</title>
+  <link rel="icon" href="/termas/assets/logo-cest-96.webp">
+  <link rel="preload" href="/termas/assets/plus-jakarta-sans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <style>
-    :root { --noche:#0b2233; --pino:#0f4c4a; --termal:#1fa594; --claro:#dff4ef; --arena:#f6f1e8; --tinta:#13222b; --gris:#5c6b73; --linea:#e4ddcf; --coral:#f0603f; --rojo:#b3261e; }
+    @font-face { font-family: "Plus Jakarta Sans"; src: url("/termas/assets/plus-jakarta-sans-latin.woff2") format("woff2"); font-display: swap; }
+    :root {
+      --noche:#0b2233; --pino:#0f4c4a; --termal:#1fa594; --termal-claro:#dff4ef;
+      --arena:#f6f1e8; --tinta:#13222b; --gris:#5c6b73; --linea:#ded8cd;
+      --coral:#d9472c; --coral-claro:#fff0eb; --rojo:#a52821; --azul:#246a9a;
+      --sombra:0 16px 38px -28px rgba(11,34,51,.55);
+    }
     * { box-sizing: border-box; }
-    body { margin: 0; background: var(--arena); color: var(--tinta); font: 15px/1.45 system-ui, -apple-system, "Segoe UI", sans-serif; }
-    .wrap { width: min(1200px, 100%); margin: 0 auto; padding: 24px 16px 48px; }
+    html { color-scheme: light; }
+    body { margin: 0; background: linear-gradient(180deg, #e8f3ef 0, var(--arena) 280px); color: var(--tinta); font: 15px/1.5 "Plus Jakarta Sans", system-ui, sans-serif; }
+    button, input, select { font: inherit; }
+    button { min-height: 42px; padding: 0 16px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 800; }
+    button:disabled { cursor: wait; opacity: .58; }
+    button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid rgba(31,165,148,.28); outline-offset: 2px; }
+    a { color: var(--pino); font-weight: 800; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 4px; font-size: clamp(24px, 3vw, 34px); line-height: 1.12; }
+    h2 { margin-bottom: 5px; font-size: 20px; }
+    h3 { margin-bottom: 4px; font-size: 16px; }
+    .wrap { width: min(1380px, 100%); margin: 0 auto; padding: 24px 16px 56px; }
     .oculto { display: none !important; }
-    .panel { background: #fff; border: 1px solid var(--linea); border-radius: 14px; padding: 20px; box-shadow: 0 10px 26px -20px rgba(19,34,43,.4); }
-    h1 { margin: 0; font-size: 24px; }
-    .sub { margin: 6px 0 0; color: var(--gris); }
-    .login { max-width: 420px; margin: 40px auto; }
+    .panel { background: rgba(255,255,255,.96); border: 1px solid var(--linea); border-radius: 18px; padding: 20px; box-shadow: var(--sombra); }
+    .login { max-width: 430px; margin: 48px auto; }
+    .marca { display: flex; gap: 11px; align-items: center; margin-bottom: 20px; color: var(--pino); font-weight: 800; }
+    .marca img { width: 38px; height: 38px; border-radius: 50%; }
+    .sub, .muted { color: var(--gris); }
+    .sub { margin-bottom: 0; }
     .campo { margin-top: 14px; }
-    .campo label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; }
-    .campo input, select { width: 100%; min-height: 44px; padding: 10px 12px; border: 1.5px solid var(--linea); border-radius: 10px; font: inherit; background: #fcfbf8; }
-    button { font: inherit; min-height: 42px; padding: 0 16px; border-radius: 10px; border: 0; cursor: pointer; font-weight: 700; }
+    .campo label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; }
+    .campo input, .campo select { width: 100%; min-height: 46px; padding: 10px 12px; border: 1.5px solid #cbc6bd; border-radius: 10px; background: #fff; color: var(--tinta); }
+    .campo small { display: block; margin-top: 5px; color: var(--gris); }
     .pri { background: var(--pino); color: #fff; }
+    .cta { background: var(--coral); color: #fff; box-shadow: 0 8px 20px -12px var(--coral); }
     .sec { background: #fff; color: var(--pino); border: 1.5px solid var(--linea); }
-    .peligro { background: #fff; color: var(--rojo); border: 1.5px solid #efc9c6; min-height: 34px; padding: 0 10px; font-size: 13px; }
-    .error { color: var(--rojo); font-weight: 600; margin-top: 10px; min-height: 1em; }
-    .cabeza { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: flex-end; }
+    .peligro { background: #fff; color: var(--rojo); border: 1.5px solid #e9bbb6; min-height: 36px; padding: 0 11px; font-size: 13px; }
+    .editar { background: #eef7ff; color: #18597f; border: 1.5px solid #c4dded; min-height: 36px; padding: 0 11px; font-size: 13px; }
+    .error { color: var(--rojo); font-weight: 700; margin-top: 10px; min-height: 1em; }
+    .exito { color: var(--pino); font-weight: 700; }
+    .cabeza { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 18px; align-items: flex-start; }
     .acciones { display: flex; flex-wrap: wrap; gap: 8px; }
-    .metricas { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-top: 18px; }
-    .metrica { background: #fcfbf8; border: 1px solid var(--linea); border-radius: 12px; padding: 12px 14px; }
-    .metrica small { display: block; font-size: 12px; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .06em; }
-    .metrica strong { display: block; font-size: 26px; font-variant-numeric: tabular-nums; margin-top: 2px; }
-    .barra { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; margin-top: 18px; }
-    .barra .campo { margin: 0; min-width: 200px; }
-    .tabla { width: 100%; overflow: auto; margin-top: 14px; border: 1px solid var(--linea); border-radius: 12px; background: #fff; }
-    table { width: 100%; border-collapse: collapse; min-width: 860px; }
-    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #efe9dd; vertical-align: middle; }
-    th { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--gris); background: #faf7f0; position: sticky; top: 0; }
+    .metricas { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 10px; margin-top: 20px; }
+    .metrica { background: #fcfbf8; border: 1px solid var(--linea); border-radius: 14px; padding: 13px 14px; }
+    .metrica small { display: block; font-size: 11px; font-weight: 800; color: var(--gris); text-transform: uppercase; letter-spacing: .07em; }
+    .metrica strong { display: block; font-size: 27px; font-variant-numeric: tabular-nums; margin-top: 3px; line-height: 1.1; }
+    .seccion { margin-top: 18px; }
+    .seccion-cabeza { display: flex; justify-content: space-between; gap: 14px; align-items: end; margin-bottom: 12px; }
+    .resultados { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .resultado { background: #fff; border: 1px solid var(--linea); border-radius: 15px; padding: 15px; box-shadow: var(--sombra); }
+    .resultado-total { color: var(--gris); font-size: 12px; margin-bottom: 12px; }
+    .opcion { margin-top: 10px; }
+    .opcion-linea { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+    .opcion-linea strong { font-variant-numeric: tabular-nums; }
+    .progreso { height: 9px; border-radius: 99px; background: #e9e5de; overflow: hidden; margin-top: 5px; }
+    .progreso span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--pino), var(--termal)); min-width: 0; }
+    .barra { display: grid; grid-template-columns: minmax(230px, 1fr) minmax(190px, 280px) auto; gap: 10px; align-items: end; }
+    .barra .campo { margin: 0; }
+    .conteo { min-height: 46px; display: flex; align-items: center; color: var(--gris); font-weight: 700; }
+    .tabla { width: 100%; overflow: auto; margin-top: 14px; border: 1px solid var(--linea); border-radius: 14px; background: #fff; }
+    table { width: 100%; border-collapse: collapse; min-width: 1110px; }
+    th, td { text-align: left; padding: 11px 12px; border-bottom: 1px solid #eee9df; vertical-align: middle; }
+    th { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--gris); background: #faf7f0; position: sticky; top: 0; z-index: 1; }
     tr:last-child td { border-bottom: 0; }
-    .tag { display: inline-block; padding: 3px 9px; border-radius: 999px; font-size: 12px; font-weight: 700; }
-    .si { background: var(--claro); color: var(--pino); }
+    td strong { display: block; }
+    td small { display: block; color: var(--gris); }
+    .tag { display: inline-block; padding: 4px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .si { background: var(--termal-claro); color: var(--pino); }
     .no { background: #eceff1; color: #4a5a62; }
-    .asiento { display: inline-grid; place-items: center; min-width: 32px; height: 26px; border-radius: 8px; background: #2d4652; color: #fff; font-weight: 800; font-size: 12px; }
-    .muted { color: var(--gris); }
-    .nota { color: var(--gris); font-size: 13px; margin-top: 12px; }
+    .manual { background: #eef7ff; color: var(--azul); margin-top: 5px; }
+    .asiento { display: inline-grid; place-items: center; min-width: 32px; height: 27px; border-radius: 8px; background: #2d4652; color: #fff; font-weight: 800; font-size: 12px; }
+    .acciones-fila { display: flex; gap: 6px; white-space: nowrap; }
+    .nota { color: var(--gris); font-size: 13px; margin: 12px 0 0; }
+    .papelera { margin-top: 18px; border: 1px dashed #cfc6b7; border-radius: 14px; padding: 15px; background: rgba(255,255,255,.62); }
+    .papelera-lista { display: grid; gap: 8px; margin-top: 10px; }
+    .eliminada { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: #fff; border: 1px solid var(--linea); border-radius: 11px; }
+    .eliminada p { margin: 0; }
+    .eliminada strong, .eliminada small { display: block; }
+    .eliminada small { color: var(--gris); }
+    dialog { width: min(760px, calc(100% - 24px)); max-height: calc(100vh - 24px); border: 0; border-radius: 18px; padding: 0; color: var(--tinta); box-shadow: 0 28px 80px rgba(0,0,0,.3); }
+    dialog::backdrop { background: rgba(6,24,35,.64); backdrop-filter: blur(3px); }
+    .editor-cabeza { display: flex; justify-content: space-between; gap: 16px; padding: 19px 20px 14px; border-bottom: 1px solid var(--linea); }
+    .editor-cabeza h2 { margin: 0; }
+    .cerrar { width: 40px; min-height: 40px; padding: 0; background: #f3f0ea; color: var(--tinta); font-size: 20px; }
+    .editor-cuerpo { padding: 4px 20px 20px; overflow: auto; max-height: calc(100vh - 170px); }
+    .grilla { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14px; }
+    .bloque { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--linea); }
+    .bloque h3 { margin: 0; }
+    .editor-pie { position: sticky; bottom: 0; display: flex; justify-content: flex-end; gap: 8px; margin: 20px -20px -20px; padding: 13px 20px; background: rgba(255,255,255,.96); border-top: 1px solid var(--linea); }
+    .aviso-nomina { margin-top: 14px; padding: 11px 13px; border-radius: 11px; background: #eef7ff; color: #173a5c; font-size: 13px; }
+    .estado-panel { min-height: 22px; margin: 10px 0 0; }
+    @media (max-width: 900px) {
+      .resultados { grid-template-columns: 1fr; }
+      .barra { grid-template-columns: 1fr 1fr; }
+      .conteo { grid-column: 1 / -1; min-height: auto; }
+    }
+    @media (max-width: 620px) {
+      body { background: var(--arena); }
+      .wrap { padding: 12px 10px 38px; }
+      .panel { padding: 16px; border-radius: 15px; }
+      .cabeza, .seccion-cabeza { align-items: stretch; flex-direction: column; }
+      .acciones { display: grid; grid-template-columns: 1fr 1fr; }
+      .acciones .cta { grid-column: 1 / -1; }
+      .barra, .grilla { grid-template-columns: 1fr; }
+      .conteo { grid-column: auto; }
+      .eliminada { align-items: flex-start; flex-direction: column; }
+      .eliminada button { width: 100%; }
+      dialog { width: calc(100% - 12px); max-height: calc(100vh - 12px); }
+      .editor-cuerpo { padding-left: 15px; padding-right: 15px; }
+      .editor-pie { margin-left: -15px; margin-right: -15px; padding-left: 15px; padding-right: 15px; }
+    }
   </style>
 </head>
 <body>
   <main class="wrap">
     <section class="panel login" id="vistaLogin">
+      <div class="marca"><img src="/termas/assets/logo-cest-96.webp" alt=""><span>Administración CEST</span></div>
       <h1>Paseo docente · Termas</h1>
       <p class="sub">Ingresa con tu cuenta administrativa de Estudia CEST.</p>
       <form id="formLogin">
@@ -62,17 +137,35 @@
       <div class="panel">
         <div class="cabeza">
           <div>
-            <h1>Inscripción · Termas de Panimávida</h1>
-            <p class="sub">Formulario público: <a href="/termas" target="_blank" rel="noopener">estudiacest.com/termas</a>. Lo que ves aquí incluye correos, teléfonos y contactos de emergencia; no lo compartas.</p>
+            <div class="marca"><img src="/termas/assets/logo-cest-96.webp" alt=""><span>Administración CEST</span></div>
+            <h1>Inscripciones · Termas de Panimávida</h1>
+            <p class="sub">Administra respuestas, votos, datos y asientos. La información de contacto es privada.</p>
           </div>
           <div class="acciones">
+            <button class="cta" id="btnNueva" type="button">+ Inscribir persona</button>
             <button class="pri" id="btnActualizar" type="button">Actualizar</button>
             <button class="sec" id="btnCsv" type="button">Descargar CSV</button>
             <button class="sec" id="btnSalir" type="button">Cerrar sesión</button>
           </div>
         </div>
+        <p class="estado-panel" id="estadoPanel" role="status" aria-live="polite"></p>
         <div class="metricas" id="metricas"></div>
+      </div>
+
+      <section class="seccion" aria-labelledby="tituloResultados">
+        <div class="seccion-cabeza">
+          <div><h2 id="tituloResultados">Resultados de la votación</h2><p class="sub">Los porcentajes de transporte y alimentación se calculan entre quienes asisten.</p></div>
+        </div>
+        <div class="resultados" id="resultados"></div>
+      </section>
+
+      <section class="panel seccion" aria-labelledby="tituloListado">
+        <div class="seccion-cabeza">
+          <div><h2 id="tituloListado">Personas inscritas</h2><p class="sub">Busca, filtra, edita o elimina una inscripción.</p></div>
+          <a href="/termas" target="_blank" rel="noopener">Abrir formulario público ↗</a>
+        </div>
         <div class="barra">
+          <div class="campo"><label for="buscar">Buscar</label><input id="buscar" type="search" placeholder="Nombre, correo o teléfono"></div>
           <div class="campo"><label for="filtro">Mostrar</label>
             <select id="filtro">
               <option value="">Todas las inscripciones</option>
@@ -80,20 +173,74 @@
               <option value="no">No asisten</option>
               <option value="bus">Van en bus</option>
               <option value="personal">Transporte propio</option>
+              <option value="desayuno">Con desayuno</option>
+              <option value="once">Con once</option>
+              <option value="ninguna">Solo almuerzo</option>
             </select>
           </div>
+          <div class="conteo" id="conteoFilas"></div>
         </div>
         <div class="tabla">
           <table>
-            <thead><tr><th>Apellidos</th><th>Nombres</th><th>Correo</th><th>Teléfono</th><th>Contacto de emergencia</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Alimentación</th><th>Actualizado</th><th></th></tr></thead>
-            <tbody id="filas"><tr><td colspan="11" class="muted">Cargando…</td></tr></tbody>
+            <thead><tr><th>Persona</th><th>Teléfono</th><th>Contacto de emergencia</th><th>Asiste</th><th>Transporte</th><th>Asiento</th><th>Alimentación</th><th>Actualizado</th><th>Acciones</th></tr></thead>
+            <tbody id="filas"><tr><td colspan="9" class="muted">Cargando…</td></tr></tbody>
           </table>
         </div>
-        <p class="nota">«Quitar» borra la inscripción y libera su asiento. Úsalo cuando alguien perdió el acceso desde su navegador o para limpiar un registro que no corresponde: la persona puede inscribirse de nuevo.</p>
+        <p class="nota">Al eliminar, la inscripción pasa a la papelera y libera el asiento. Puede restaurarse mientras su correo y asiento sigan disponibles.</p>
         <div class="error" id="errorPanel" role="alert"></div>
-      </div>
+
+        <div class="papelera" aria-labelledby="tituloPapelera">
+          <h3 id="tituloPapelera">Papelera reciente</h3>
+          <p class="sub">Últimas 30 inscripciones eliminadas. Restaurar vuelve a incorporarlas al listado.</p>
+          <div class="papelera-lista" id="papelera"></div>
+        </div>
+      </section>
     </section>
   </main>
+
+  <dialog id="editor" aria-labelledby="editorTitulo">
+    <form id="formEditor">
+      <div class="editor-cabeza">
+        <div><h2 id="editorTitulo">Inscribir persona</h2><p class="sub" id="editorSubtitulo">Completa los datos obligatorios.</p></div>
+        <button class="cerrar" id="btnCerrarEditor" type="button" aria-label="Cerrar">×</button>
+      </div>
+      <div class="editor-cuerpo">
+        <input id="originalCorreo" type="hidden">
+        <div class="aviso-nomina"><strong>Nómina oficial:</strong> el servidor solo permitirá guardar nombres y apellidos incluidos en el listado vigente.</div>
+        <div class="grilla">
+          <div class="campo"><label for="edNombre">Nombres</label><input id="edNombre" autocomplete="off" maxlength="80" required></div>
+          <div class="campo"><label for="edApellido">Apellidos</label><input id="edApellido" autocomplete="off" maxlength="80" required></div>
+          <div class="campo"><label for="edCorreo">Correo</label><input id="edCorreo" type="email" autocomplete="off" maxlength="100" required></div>
+          <div class="campo"><label for="edTelefono">Teléfono</label><input id="edTelefono" type="tel" autocomplete="off" placeholder="+56 9 1234 5678" maxlength="20" required></div>
+        </div>
+        <div class="bloque">
+          <h3>Contacto de emergencia</h3>
+          <div class="grilla">
+            <div class="campo"><label for="edEmergenciaNombre">Nombre y parentesco</label><input id="edEmergenciaNombre" maxlength="80" required></div>
+            <div class="campo"><label for="edEmergenciaTelefono">Teléfono</label><input id="edEmergenciaTelefono" type="tel" placeholder="+56 9 1234 5678" maxlength="20" required></div>
+          </div>
+        </div>
+        <div class="bloque">
+          <h3>Respuesta del paseo</h3>
+          <div class="grilla">
+            <div class="campo"><label for="edAsiste">¿Asiste?</label><select id="edAsiste" required><option value="">Selecciona</option><option value="si">Sí, asiste</option><option value="no">No asiste</option></select></div>
+          </div>
+          <div id="opcionesAsistencia">
+            <div class="grilla">
+              <div class="campo"><label for="edTransporte">Transporte</label><select id="edTransporte"><option value="">Selecciona</option><option value="bus">Bus</option><option value="personal">Transporte propio</option></select></div>
+              <div class="campo oculto" id="campoAsiento"><label for="edAsiento">Asiento del bus</label><select id="edAsiento"><option value="">Selecciona</option></select><small>Los asientos ocupados aparecen deshabilitados.</small></div>
+              <div class="campo"><label for="edComida">Alimentación</label><select id="edComida"><option value="">Selecciona una opción</option><option value="desayuno">Con desayuno y almuerzo</option><option value="once">Con almuerzo y once</option><option value="ninguna">Solo almuerzo</option></select></div>
+            </div>
+          </div>
+        </div>
+        <div class="error" id="errorEditor" role="alert"></div>
+        <div class="editor-pie">
+          <button class="sec" id="btnCancelarEditor" type="button">Cancelar</button>
+          <button class="cta" id="btnGuardar" type="submit">Guardar inscripción</button>
+        </div>
+      </div>
+    </form>
+  </dialog>
 
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -105,10 +252,12 @@
     const auth = firebase.auth();
     auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
     const $ = id => document.getElementById(id);
+    const COMIDA = { desayuno: 'Con desayuno', once: 'Con once', cualquiera: 'Por definir (anterior)', ninguna: 'Solo almuerzo', '': 'Sin elección' };
     let datos = null;
 
-    const COMIDA = { desayuno: 'Con desayuno', once: 'Con once', cualquiera: 'Por definir (registro anterior)', ninguna: 'Solo almuerzo', '': 'Sin elección' };
     const fecha = ms => ms ? new Date(ms).toLocaleString('es-CL', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+    const normalizar = valor => String(valor || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+    const crear = (tag, clase, texto) => { const el = document.createElement(tag); if (clase) el.className = clase; if (texto != null) el.textContent = texto; return el; };
 
     async function llamar(accion, cuerpo) {
       if (!auth.currentUser) throw new Error('Sesión no disponible.');
@@ -117,53 +266,179 @@
       if (cuerpo) { opciones.method = 'POST'; opciones.headers['Content-Type'] = 'application/json'; opciones.body = JSON.stringify(cuerpo); }
       const r = await fetch('/api/estudiantes?action=termas-' + accion, opciones);
       const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(d.error || 'No se pudo cargar.');
+      if (!r.ok) { const e = new Error(d.error || 'No se pudo completar la acción.'); e.status = r.status; throw e; }
       return d;
     }
 
-    function metrica(etiqueta, valor) { return '<div class="metrica"><small>' + etiqueta + '</small><strong>' + valor + '</strong></div>'; }
+    function metrica(etiqueta, valor) {
+      const caja = crear('div', 'metrica'); caja.append(crear('small', '', etiqueta), crear('strong', '', valor)); return caja;
+    }
 
-    function pintar() {
-      if (!datos) return;
-      const t = datos.totales; const asisten = datos.filas.filter(f => f.asiste === 'si');
+    function pintarMetricas() {
+      const t = datos.totales;
+      const asisten = datos.filas.filter(f => f.asiste === 'si');
       const cuenta = v => asisten.filter(f => f.comida === v).length;
-      $('metricas').innerHTML = [
-        metrica('Inscritos', datos.filas.length), metrica('Asisten', t.asisten), metrica('No asisten', t.noAsisten),
-        metrica('En bus', t.bus + ' / ' + datos.capacidad), metrica('Transporte propio', t.personal),
-        metrica('Con desayuno', cuenta('desayuno')), metrica('Con once', cuenta('once')),
-        metrica('Solo almuerzo', cuenta('ninguna'))
-      ].join('');
+      const contenedor = $('metricas'); contenedor.innerHTML = '';
+      [
+        ['Inscritos', datos.filas.length], ['Asisten', t.asisten], ['No asisten', t.noAsisten],
+        ['En bus', t.bus + ' / ' + datos.capacidad], ['Transporte propio', t.personal],
+        ['Con desayuno', cuenta('desayuno')], ['Con once', cuenta('once')], ['Solo almuerzo', cuenta('ninguna')]
+      ].forEach(([e, v]) => contenedor.appendChild(metrica(e, v)));
+    }
+
+    function tarjetaResultado(titulo, total, opciones) {
+      const card = crear('article', 'resultado');
+      card.appendChild(crear('h3', '', titulo));
+      card.appendChild(crear('div', 'resultado-total', total + (total === 1 ? ' respuesta considerada' : ' respuestas consideradas')));
+      opciones.forEach(([etiqueta, cantidad]) => {
+        const porcentaje = total ? Math.round(cantidad * 100 / total) : 0;
+        const opcion = crear('div', 'opcion');
+        const linea = crear('div', 'opcion-linea');
+        linea.append(crear('span', '', etiqueta), crear('strong', '', cantidad + ' · ' + porcentaje + '%'));
+        const progreso = crear('div', 'progreso'); const relleno = crear('span'); relleno.style.width = porcentaje + '%';
+        progreso.appendChild(relleno); opcion.append(linea, progreso); card.appendChild(opcion);
+      });
+      return card;
+    }
+
+    function pintarResultados() {
+      const filas = datos.filas;
+      const asisten = filas.filter(f => f.asiste === 'si');
+      const contenedor = $('resultados'); contenedor.innerHTML = '';
+      contenedor.append(
+        tarjetaResultado('Asistencia', filas.length, [['Asisten', asisten.length], ['No asisten', filas.filter(f => f.asiste === 'no').length]]),
+        tarjetaResultado('Transporte', asisten.length, [['Bus', asisten.filter(f => f.transporte === 'bus').length], ['Propio', asisten.filter(f => f.transporte === 'personal').length]]),
+        tarjetaResultado('Alimentación', asisten.length, [['Con desayuno', asisten.filter(f => f.comida === 'desayuno').length], ['Con once', asisten.filter(f => f.comida === 'once').length], ['Solo almuerzo', asisten.filter(f => f.comida === 'ninguna').length]])
+      );
+    }
+
+    function coincideFiltro(f, filtro) {
+      if (!filtro) return true;
+      if (filtro === 'si' || filtro === 'no') return f.asiste === filtro;
+      if (filtro === 'bus' || filtro === 'personal') return f.asiste === 'si' && f.transporte === filtro;
+      return f.asiste === 'si' && f.comida === filtro;
+    }
+
+    function pintarFilas() {
       const filtro = $('filtro').value;
-      const filas = datos.filas.filter(f => !filtro || (filtro === 'si' || filtro === 'no' ? f.asiste === filtro : f.asiste === 'si' && f.transporte === filtro));
+      const consulta = normalizar($('buscar').value.trim());
+      const filas = datos.filas.filter(f => coincideFiltro(f, filtro) && (!consulta || normalizar([f.nombre, f.apellido, f.correo, f.telefono].join(' ')).includes(consulta)));
+      $('conteoFilas').textContent = filas.length + (filas.length === 1 ? ' resultado' : ' resultados');
       const cuerpo = $('filas'); cuerpo.innerHTML = '';
-      if (!filas.length) { cuerpo.innerHTML = '<tr><td colspan="11" class="muted">Sin inscripciones en este filtro.</td></tr>'; return; }
+      if (!filas.length) { const tr = document.createElement('tr'); const td = crear('td', 'muted', 'No hay inscripciones que coincidan.'); td.colSpan = 9; tr.appendChild(td); cuerpo.appendChild(tr); return; }
       filas.forEach(f => {
         const tr = document.createElement('tr');
-        const celdas = [f.apellido, f.nombre, f.correo, f.telefono, [f.emergenciaNombre, f.emergenciaTelefono].filter(Boolean).join(' · ')];
-        celdas.forEach(c => { const td = document.createElement('td'); td.textContent = c; tr.appendChild(td); });
-        const tdA = document.createElement('td'); tdA.innerHTML = f.asiste === 'si' ? '<span class="tag si">Asiste</span>' : '<span class="tag no">No asiste</span>'; tr.appendChild(tdA);
-        const tdT = document.createElement('td'); tdT.textContent = f.asiste !== 'si' ? '—' : f.transporte === 'bus' ? 'Bus' : 'Propio'; tr.appendChild(tdT);
-        const tdS = document.createElement('td'); if (f.asiento) { const s = document.createElement('span'); s.className = 'asiento'; s.textContent = f.asiento; tdS.appendChild(s); } else tdS.textContent = '—'; tr.appendChild(tdS);
-        const tdC = document.createElement('td'); tdC.textContent = f.asiste === 'si' ? COMIDA[f.comida || ''] : '—'; tr.appendChild(tdC);
-        const tdF = document.createElement('td'); tdF.textContent = fecha(f.actualizado); tdF.className = 'muted'; tr.appendChild(tdF);
-        const tdB = document.createElement('td'); const b = document.createElement('button'); b.type = 'button'; b.className = 'peligro'; b.textContent = 'Quitar';
-        b.addEventListener('click', () => quitar(f)); tdB.appendChild(b); tr.appendChild(tdB);
+        const persona = document.createElement('td'); persona.append(crear('strong', '', f.nombre + ' ' + f.apellido), crear('small', '', f.correo));
+        if (f.gestionAdmin) persona.appendChild(crear('span', 'tag manual', 'Gestionada por admin'));
+        const telefono = crear('td', '', f.telefono || '—');
+        const emergencia = document.createElement('td'); emergencia.append(crear('strong', '', f.emergenciaNombre || '—'), crear('small', '', f.emergenciaTelefono || ''));
+        const asistencia = document.createElement('td'); asistencia.appendChild(crear('span', 'tag ' + (f.asiste === 'si' ? 'si' : 'no'), f.asiste === 'si' ? 'Asiste' : 'No asiste'));
+        const transporte = crear('td', '', f.asiste !== 'si' ? '—' : f.transporte === 'bus' ? 'Bus' : 'Propio');
+        const asiento = document.createElement('td'); asiento.appendChild(f.asiento ? crear('span', 'asiento', String(f.asiento)) : document.createTextNode('—'));
+        const comida = crear('td', '', f.asiste === 'si' ? (COMIDA[f.comida || ''] || 'Sin elección') : '—');
+        const actualizada = crear('td', 'muted', fecha(f.actualizado));
+        const acciones = crear('td', 'acciones-fila');
+        const editar = crear('button', 'editar', 'Editar'); editar.type = 'button'; editar.addEventListener('click', () => abrirEditar(f));
+        const quitar = crear('button', 'peligro', 'Eliminar'); quitar.type = 'button'; quitar.addEventListener('click', () => eliminar(f, quitar));
+        acciones.append(editar, quitar);
+        tr.append(persona, telefono, emergencia, asistencia, transporte, asiento, comida, actualizada, acciones);
         cuerpo.appendChild(tr);
       });
     }
 
-    async function cargar() {
-      $('errorPanel').textContent = ''; $('btnActualizar').disabled = true;
-      try { datos = await llamar('admin-lista'); pintar(); }
-      catch (e) { $('errorPanel').textContent = e.message; }
-      finally { $('btnActualizar').disabled = false; }
+    function pintarPapelera() {
+      const contenedor = $('papelera'); contenedor.innerHTML = '';
+      const eliminadas = datos.eliminadas || [];
+      if (!eliminadas.length) { contenedor.appendChild(crear('p', 'muted', 'La papelera está vacía.')); return; }
+      eliminadas.forEach(f => {
+        const fila = crear('div', 'eliminada');
+        const info = document.createElement('p'); info.append(crear('strong', '', f.nombre + ' ' + f.apellido), crear('small', '', f.correo + ' · eliminada ' + fecha(f.eliminado)));
+        const boton = crear('button', 'sec', 'Restaurar'); boton.type = 'button'; boton.addEventListener('click', () => restaurar(f, boton));
+        fila.append(info, boton); contenedor.appendChild(fila);
+      });
     }
 
-    async function quitar(f) {
+    function pintar() {
+      if (!datos) return;
+      pintarMetricas(); pintarResultados(); pintarFilas(); pintarPapelera();
+    }
+
+    async function cargar(mensaje) {
+      $('errorPanel').textContent = ''; $('btnActualizar').disabled = true;
+      try {
+        datos = await llamar('admin-lista'); pintar();
+        $('estadoPanel').textContent = mensaje || ('Actualizado · ' + new Date().toLocaleTimeString('es-CL', { hour: '2-digit', minute: '2-digit' }));
+        $('estadoPanel').className = 'estado-panel exito';
+      } catch (e) {
+        $('errorPanel').textContent = e.message; $('estadoPanel').textContent = '';
+      } finally { $('btnActualizar').disabled = false; }
+    }
+
+    function pintarAsientos(valorActual) {
+      const select = $('edAsiento'); const original = $('originalCorreo').value;
+      const ocupados = new Set((datos ? datos.filas : []).filter(f => f.correo !== original && f.asiste === 'si' && f.transporte === 'bus' && f.asiento).map(f => Number(f.asiento)));
+      select.innerHTML = '<option value="">Selecciona</option>';
+      for (let n = 1; n <= (datos ? datos.capacidad : 45); n += 1) {
+        const opcion = document.createElement('option'); opcion.value = String(n); opcion.textContent = 'Asiento ' + n + (ocupados.has(n) ? ' · ocupado' : ''); opcion.disabled = ocupados.has(n); select.appendChild(opcion);
+      }
+      select.value = valorActual ? String(valorActual) : '';
+    }
+
+    function sincronizarEditor() {
+      const asiste = $('edAsiste').value === 'si';
+      $('opcionesAsistencia').classList.toggle('oculto', !asiste);
+      $('edTransporte').required = asiste; $('edComida').required = asiste;
+      const bus = asiste && $('edTransporte').value === 'bus';
+      $('campoAsiento').classList.toggle('oculto', !bus); $('edAsiento').required = bus;
+    }
+
+    function abrirNuevo() {
+      $('formEditor').reset(); $('originalCorreo').value = ''; $('editorTitulo').textContent = 'Inscribir persona';
+      $('editorSubtitulo').textContent = 'La inscripción quedará marcada como gestionada por administración.';
+      $('btnGuardar').textContent = 'Guardar inscripción'; $('errorEditor').textContent = '';
+      pintarAsientos(null); sincronizarEditor(); $('editor').showModal();
+    }
+
+    function abrirEditar(f) {
+      $('formEditor').reset(); $('originalCorreo').value = f.correo; $('editorTitulo').textContent = 'Editar inscripción';
+      $('editorSubtitulo').textContent = 'Puedes corregir datos, respuesta, transporte, asiento o alimentación.';
+      $('btnGuardar').textContent = 'Guardar cambios'; $('errorEditor').textContent = '';
+      $('edNombre').value = f.nombre || ''; $('edApellido').value = f.apellido || ''; $('edCorreo').value = f.correo || '';
+      $('edTelefono').value = f.telefono || ''; $('edEmergenciaNombre').value = f.emergenciaNombre || ''; $('edEmergenciaTelefono').value = f.emergenciaTelefono || '';
+      $('edAsiste').value = f.asiste || ''; $('edTransporte').value = f.transporte || ''; $('edComida').value = f.comida || '';
+      pintarAsientos(f.asiento); sincronizarEditor(); $('editor').showModal();
+    }
+
+    function cerrarEditor() { if ($('editor').open) $('editor').close(); }
+
+    async function guardar(e) {
+      e.preventDefault(); $('errorEditor').textContent = ''; $('btnGuardar').disabled = true;
+      const asiste = $('edAsiste').value;
+      const transporte = asiste === 'si' ? $('edTransporte').value : '';
+      const cuerpo = {
+        originalCorreo: $('originalCorreo').value, nombre: $('edNombre').value, apellido: $('edApellido').value,
+        correo: $('edCorreo').value, telefono: $('edTelefono').value, emergenciaNombre: $('edEmergenciaNombre').value,
+        emergenciaTelefono: $('edEmergenciaTelefono').value, asiste,
+        transporte, asiento: transporte === 'bus' ? Number($('edAsiento').value) : null,
+        comida: asiste === 'si' ? $('edComida').value : ''
+      };
+      try { await llamar('admin-guardar', cuerpo); cerrarEditor(); await cargar(cuerpo.originalCorreo ? 'Cambios guardados.' : 'Persona inscrita manualmente.'); }
+      catch (error) { $('errorEditor').textContent = error.message; }
+      finally { $('btnGuardar').disabled = false; }
+    }
+
+    async function eliminar(f, boton) {
       const detalle = f.asiento ? ' y liberar el asiento ' + f.asiento : '';
-      if (!confirm('¿Quitar la inscripción de ' + f.nombre + ' ' + f.apellido + detalle + '? Podrá volver a inscribirse.')) return;
-      try { await llamar('admin-quitar', { correo: f.correo }); await cargar(); }
-      catch (e) { $('errorPanel').textContent = e.message; }
+      if (!confirm('¿Eliminar la inscripción de ' + f.nombre + ' ' + f.apellido + detalle + '? Quedará en la papelera para poder restaurarla.')) return;
+      boton.disabled = true; $('errorPanel').textContent = '';
+      try { await llamar('admin-quitar', { correo: f.correo }); await cargar('Inscripción eliminada y enviada a la papelera.'); }
+      catch (e) { $('errorPanel').textContent = e.message; boton.disabled = false; }
+    }
+
+    async function restaurar(f, boton) {
+      boton.disabled = true; $('errorPanel').textContent = '';
+      try { await llamar('admin-restaurar', { id: f.id }); await cargar('Inscripción restaurada.'); }
+      catch (e) { $('errorPanel').textContent = e.message; boton.disabled = false; }
     }
 
     function csv() {
@@ -171,7 +446,7 @@
       const esc = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
       const lineas = [['Apellidos', 'Nombres', 'Correo', 'Teléfono', 'Contacto de emergencia', 'Teléfono de emergencia', 'Asiste', 'Transporte', 'Asiento', 'Alimentación', 'Actualizado'].map(esc).join(';')];
       datos.filas.forEach(f => lineas.push([f.apellido, f.nombre, f.correo, f.telefono, f.emergenciaNombre, f.emergenciaTelefono, f.asiste === 'si' ? 'Sí' : 'No', f.asiste === 'si' ? (f.transporte === 'bus' ? 'Bus' : 'Propio') : '', f.asiento || '', f.asiste === 'si' ? COMIDA[f.comida || ''] : '', fecha(f.actualizado)].map(esc).join(';')));
-      const blob = new Blob(['﻿' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+      const blob = new Blob(['\ufeff' + lineas.join('\r\n')], { type: 'text/csv;charset=utf-8' });
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'termas-panimavida-inscripciones.csv'; a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     }
@@ -182,15 +457,23 @@
       catch (_) { $('errorLogin').textContent = 'Correo o contraseña incorrectos.'; }
       finally { $('btnLogin').disabled = false; }
     });
-    $('btnActualizar').addEventListener('click', cargar);
+    $('formEditor').addEventListener('submit', guardar);
+    $('btnNueva').addEventListener('click', abrirNuevo);
+    $('btnCerrarEditor').addEventListener('click', cerrarEditor);
+    $('btnCancelarEditor').addEventListener('click', cerrarEditor);
+    $('btnActualizar').addEventListener('click', () => cargar());
     $('btnCsv').addEventListener('click', csv);
     $('btnSalir').addEventListener('click', () => auth.signOut());
-    $('filtro').addEventListener('change', pintar);
+    $('filtro').addEventListener('change', pintarFilas);
+    $('buscar').addEventListener('input', pintarFilas);
+    $('edAsiste').addEventListener('change', sincronizarEditor);
+    $('edTransporte').addEventListener('change', () => { pintarAsientos($('edAsiento').value); sincronizarEditor(); });
+    $('editor').addEventListener('cancel', e => { e.preventDefault(); cerrarEditor(); });
 
     auth.onAuthStateChanged(usuario => {
       $('vistaLogin').classList.toggle('oculto', !!usuario);
       $('vistaPanel').classList.toggle('oculto', !usuario);
-      if (usuario) cargar();
+      if (usuario) cargar(); else { datos = null; $('formLogin').reset(); }
     });
   })();
   </script>

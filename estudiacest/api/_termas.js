@@ -3,7 +3,8 @@
 //
 // No es una función de Vercel por sí misma: el plan Hobby admite 12 y ya están
 // ocupadas. Se enruta desde api/estudiantes.js con las acciones `termas-estado`,
-// `termas-mia`, `termas-inscribir`, `termas-admin-lista` y `termas-admin-quitar`.
+// `termas-mia`, `termas-inscribir`, `termas-admin-lista`,
+// `termas-admin-guardar`, `termas-admin-quitar` y `termas-admin-restaurar`.
 //
 // Los datos viven en `eventos_docentes/termas_2026`, fuera de
 // `plataforma_estudiantes`. La raíz de firebase-rules.json niega lectura y
@@ -32,6 +33,7 @@ const crypto = require('crypto');
 
 const BASE = process.env.TERMAS_BASE || 'eventos_docentes/termas_2026';
 const INSCRIPCIONES = `${BASE}/inscripciones`;
+const PAPELERA = `${BASE}/papelera`;
 const CAPACIDAD = 45;
 const TOPE_INSCRIPCIONES = 300;
 // Sin # $ [ ] / en el correo: es la clave en Firebase.
@@ -235,6 +237,28 @@ function validarTelefono(valor, mensaje) {
     return telefono;
 }
 
+function validarDatosInscripcion(body, comprobarNomina = estaEnNomina) {
+    const nombre = texto(body.nombre, 80);
+    const apellido = texto(body.apellido, 80);
+    if (!RE_NOMBRE.test(nombre)) throw fallo(400, 'Escribe los nombres.');
+    if (!RE_NOMBRE.test(apellido)) throw fallo(400, 'Escribe los apellidos.');
+    if (!comprobarNomina(nombre, apellido)) throw fallo(403, 'No encontramos esos nombres y apellidos en la nómina vigente de docentes titulares y suplentes. Escríbelos completos, tal como aparecen en la nómina.');
+    const correo = validarCorreo(body.correo);
+    const telefono = validarTelefono(body.telefono, 'Revisa el teléfono: por ejemplo, +56 9 1234 5678.');
+    const emergenciaNombre = texto(body.emergenciaNombre, 80);
+    if (emergenciaNombre.length < 2) throw fallo(400, 'Escribe el nombre del contacto de emergencia.');
+    const emergenciaTelefono = validarTelefono(body.emergenciaTelefono, 'Revisa el teléfono del contacto de emergencia.');
+    const asiste = String(body.asiste || '');
+    if (!['si', 'no'].includes(asiste)) throw fallo(400, 'Indica si asiste.');
+    const transporte = asiste === 'si' ? String(body.transporte || '') : '';
+    if (asiste === 'si' && !['bus', 'personal'].includes(transporte)) throw fallo(400, 'Indica cómo llega a las termas.');
+    const asiento = transporte === 'bus' ? Number(body.asiento) : null;
+    if (transporte === 'bus' && !(Number.isInteger(asiento) && asiento >= 1 && asiento <= CAPACIDAD)) throw fallo(400, 'Elige un asiento del bus.');
+    const comida = asiste === 'si' ? String(body.comida || '') : '';
+    if (asiste === 'si' && !COMIDAS.has(comida)) throw fallo(400, 'Elige una opción de alimentación: con desayuno, con once o solo almuerzo.');
+    return { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento, comida };
+}
+
 async function estado(req, res, db) {
     const snap = await db.ref(INSCRIPCIONES).once('value');
     // El mapa se consulta cada pocos segundos: unos segundos de caché en el CDN
@@ -254,24 +278,7 @@ async function mia(req, res, db) {
 
 async function inscribir(req, res, db) {
     const body = cuerpo(req);
-    const nombre = texto(body.nombre, 80);
-    const apellido = texto(body.apellido, 80);
-    if (!RE_NOMBRE.test(nombre)) throw fallo(400, 'Escribe tus nombres.');
-    if (!RE_NOMBRE.test(apellido)) throw fallo(400, 'Escribe tus apellidos.');
-    if (!estaEnNomina(nombre, apellido)) throw fallo(403, 'No encontramos tus nombres y apellidos en la nómina vigente de docentes titulares y suplentes. Escríbelos completos, tal como aparecen en la nómina.');
-    const correo = validarCorreo(body.correo);
-    const telefono = validarTelefono(body.telefono, 'Revisa tu teléfono: por ejemplo, +56 9 1234 5678.');
-    const emergenciaNombre = texto(body.emergenciaNombre, 80);
-    if (emergenciaNombre.length < 2) throw fallo(400, 'Escribe el nombre de tu contacto de emergencia.');
-    const emergenciaTelefono = validarTelefono(body.emergenciaTelefono, 'Revisa el teléfono de tu contacto de emergencia.');
-    const asiste = String(body.asiste || '');
-    if (!['si', 'no'].includes(asiste)) throw fallo(400, 'Indica si asistes.');
-    const transporte = asiste === 'si' ? String(body.transporte || '') : '';
-    if (asiste === 'si' && !['bus', 'personal'].includes(transporte)) throw fallo(400, 'Indica cómo llegas a las termas.');
-    const asiento = transporte === 'bus' ? Number(body.asiento) : null;
-    if (transporte === 'bus' && !(Number.isInteger(asiento) && asiento >= 1 && asiento <= CAPACIDAD)) throw fallo(400, 'Elige un asiento del bus.');
-    const comida = asiste === 'si' ? String(body.comida || '') : '';
-    if (asiste === 'si' && !COMIDAS.has(comida)) throw fallo(400, 'Elige una opción de alimentación: con desayuno, con once o solo almuerzo.');
+    const { nombre, apellido, correo, telefono, emergenciaNombre, emergenciaTelefono, asiste, transporte, asiento, comida } = validarDatosInscripcion(body);
 
     const clave = claveDe(correo);
     const llaveRecibida = String(body.llave || '');
@@ -340,30 +347,133 @@ async function verificarAdmin(req, db, auth) {
 
 async function adminLista(req, res, db, auth) {
     await verificarAdmin(req, db, auth);
-    const snap = await db.ref(INSCRIPCIONES).once('value');
-    const todas = snap.val() || {};
+    const snap = await db.ref(BASE).once('value');
+    const base = snap.val() || {};
+    const todas = base.inscripciones || {};
     const filas = Object.values(todas)
-        .map(i => ({ ...inscripcionPropia(i), creado: i.creado || null }))
+        .map(i => ({ ...inscripcionPropia(i), creado: i.creado || null, gestionAdmin: !!i.gestionAdmin }))
         .sort((a, b) => `${a.apellido} ${a.nombre}`.localeCompare(`${b.apellido} ${b.nombre}`, 'es'));
-    return res.status(200).json({ ok: true, filas, ...estadoPublico(todas) });
+    const eliminadas = Object.entries(base.papelera || {})
+        .map(([id, i]) => ({ id, ...inscripcionPropia(i), eliminado: i.eliminado || null }))
+        .sort((a, b) => Number(b.eliminado || 0) - Number(a.eliminado || 0))
+        .slice(0, 30);
+    return res.status(200).json({ ok: true, filas, eliminadas, ...estadoPublico(todas) });
 }
 
 async function adminQuitar(req, res, db, auth) {
     await verificarAdmin(req, db, auth);
     const correo = validarCorreo(cuerpo(req).correo);
-    await db.ref(`${INSCRIPCIONES}/${claveDe(correo)}`).remove();
-    const snap = await db.ref(INSCRIPCIONES).once('value');
-    return res.status(200).json({ ok: true, ...estadoPublico(snap.val()) });
+    const clave = claveDe(correo);
+    const idPapelera = `${Date.now()}-${crypto.randomBytes(4).toString('hex')}`;
+    let motivo = '';
+    const resultado = await db.ref(BASE).transaction(actual => {
+        motivo = '';
+        const base = actual || {};
+        const todas = base.inscripciones || {};
+        const previa = todas[clave];
+        if (!previa) { motivo = 'no-encontrada'; return; }
+        base.papelera = base.papelera || {};
+        base.papelera[idPapelera] = { ...previa, eliminado: Date.now() };
+        delete todas[clave];
+        base.inscripciones = todas;
+        return base;
+    });
+    if (!resultado.committed || motivo === 'no-encontrada') throw fallo(404, 'La inscripción ya no existe. Actualiza la lista.');
+    const base = resultado.snapshot.val() || {};
+    return res.status(200).json({ ok: true, papeleraId: idPapelera, ...estadoPublico(base.inscripciones) });
 }
 
-async function manejar(req, res, accion, db, auth) {
+async function adminGuardar(req, res, db, auth, comprobarNomina) {
+    await verificarAdmin(req, db, auth);
+    const body = cuerpo(req);
+    const datos = validarDatosInscripcion(body, comprobarNomina);
+    const originalCorreo = String(body.originalCorreo || '').trim() ? validarCorreo(body.originalCorreo) : '';
+    const claveOriginal = originalCorreo ? claveDe(originalCorreo) : '';
+    const claveNueva = claveDe(datos.correo);
+    let motivo = '';
+    const resultado = await db.ref(INSCRIPCIONES).transaction(actual => {
+        motivo = '';
+        const todas = actual || {};
+        const previa = claveOriginal ? todas[claveOriginal] : null;
+        if (claveOriginal && !previa) { motivo = 'no-encontrada'; return; }
+        if ((!claveOriginal || claveOriginal !== claveNueva) && todas[claveNueva]) { motivo = 'correo'; return; }
+        if (!previa && Object.keys(todas).length >= TOPE_INSCRIPCIONES) { motivo = 'tope'; return; }
+        if (datos.transporte === 'bus') {
+            const ocupado = Object.entries(todas).some(([k, v]) => k !== claveOriginal && vaEnBus(v) && Number(v.asiento) === datos.asiento);
+            if (ocupado) { motivo = 'ocupado'; return; }
+        }
+        const ahora = Date.now();
+        if (claveOriginal && claveOriginal !== claveNueva) delete todas[claveOriginal];
+        todas[claveNueva] = {
+            ...datos,
+            llave: previa ? previa.llave : hashLlave(crypto.randomBytes(18).toString('base64url')),
+            creado: previa ? previa.creado : ahora,
+            actualizado: ahora,
+            gestionAdmin: true
+        };
+        return todas;
+    });
+    if (!resultado.committed) {
+        if (motivo === 'no-encontrada') throw fallo(404, 'La inscripción que intentabas editar ya no existe. Actualiza la lista.');
+        if (motivo === 'correo') throw fallo(409, 'Ya existe una inscripción con ese correo.');
+        if (motivo === 'ocupado') throw fallo(409, 'Ese asiento acaba de ser ocupado. Elige otro.');
+        if (motivo === 'tope') throw fallo(409, 'La inscripción alcanzó su tope.');
+        throw fallo(500, 'No se pudo guardar la inscripción.');
+    }
+    const todas = resultado.snapshot.val() || {};
+    return res.status(200).json({ ok: true, inscripcion: inscripcionPropia(todas[claveNueva]), ...estadoPublico(todas) });
+}
+
+async function adminRestaurar(req, res, db, auth, comprobarNomina) {
+    await verificarAdmin(req, db, auth);
+    const id = String(cuerpo(req).id || '').trim();
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(id)) throw fallo(400, 'Registro de papelera inválido.');
+    const papeleraSnap = await db.ref(`${PAPELERA}/${id}`).once('value');
+    const candidata = papeleraSnap.val();
+    if (!candidata) throw fallo(404, 'Ese registro ya no está en la papelera.');
+    validarDatosInscripcion(candidata, comprobarNomina);
+    const clave = claveDe(candidata.correo);
+    let motivo = '';
+    const resultado = await db.ref(BASE).transaction(actual => {
+        motivo = '';
+        const base = actual || {};
+        const archivada = base.papelera && base.papelera[id];
+        if (!archivada) { motivo = 'no-encontrada'; return; }
+        const todas = base.inscripciones || {};
+        if (Object.keys(todas).length >= TOPE_INSCRIPCIONES) { motivo = 'tope'; return; }
+        if (todas[clave]) { motivo = 'correo'; return; }
+        if (vaEnBus(archivada)) {
+            const ocupado = Object.values(todas).some(v => vaEnBus(v) && Number(v.asiento) === Number(archivada.asiento));
+            if (ocupado) { motivo = 'ocupado'; return; }
+        }
+        const restaurada = { ...archivada, actualizado: Date.now(), gestionAdmin: true };
+        delete restaurada.eliminado;
+        todas[clave] = restaurada;
+        delete base.papelera[id];
+        base.inscripciones = todas;
+        return base;
+    });
+    if (!resultado.committed) {
+        if (motivo === 'no-encontrada') throw fallo(404, 'Ese registro ya no está en la papelera.');
+        if (motivo === 'tope') throw fallo(409, 'La inscripción alcanzó su tope.');
+        if (motivo === 'correo') throw fallo(409, 'Ya existe una inscripción con ese correo.');
+        if (motivo === 'ocupado') throw fallo(409, 'El asiento de esa inscripción ahora está ocupado. Edítala manualmente para asignar otro.');
+        throw fallo(500, 'No se pudo restaurar la inscripción.');
+    }
+    const base = resultado.snapshot.val() || {};
+    return res.status(200).json({ ok: true, ...estadoPublico(base.inscripciones) });
+}
+
+async function manejar(req, res, accion, db, auth, opciones = {}) {
     try {
         if (accion === 'estado' && req.method === 'GET') return await estado(req, res, db);
         if (accion === 'admin-lista' && req.method === 'GET') return await adminLista(req, res, db, auth);
         if (req.method !== 'POST') return res.status(405).json({ error: 'Método no permitido.' });
         if (accion === 'mia') return await mia(req, res, db);
         if (accion === 'inscribir') return await inscribir(req, res, db);
+        if (accion === 'admin-guardar') return await adminGuardar(req, res, db, auth, opciones.comprobarNomina || estaEnNomina);
         if (accion === 'admin-quitar') return await adminQuitar(req, res, db, auth);
+        if (accion === 'admin-restaurar') return await adminRestaurar(req, res, db, auth, opciones.comprobarNomina || estaEnNomina);
         return res.status(400).json({ error: 'Acción no válida.' });
     } catch (error) {
         const status = error.status || 500;
@@ -372,4 +482,4 @@ async function manejar(req, res, accion, db, auth) {
     }
 }
 
-module.exports = { manejar, CAPACIDAD, estadoPublico, claveDe, normalizarPersona, estaEnNomina, NOMINA_DOCENTES_TOTAL: HUELLAS_NOMINA.size };
+module.exports = { manejar, CAPACIDAD, estadoPublico, claveDe, normalizarPersona, estaEnNomina, validarDatosInscripcion, NOMINA_DOCENTES_TOTAL: HUELLAS_NOMINA.size };

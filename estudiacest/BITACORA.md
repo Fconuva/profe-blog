@@ -30,6 +30,7 @@
   - en ✋ el lienzo no recibe eventos; con el panel cerrado, deslizar cambia de diapositiva;
   - al bajar 200 px el trazo se mueve con el texto.
   - Pasada completa a 390, 1440 y 3840 px: 0 errores.
+- Publicado `61cd7e86` con `npm run deploy:prod:safe` desde un worktree limpio: `dpl_AZokoJj2dqgS7HQLwyrVrXJqhCRz`, READY. La Clase 4 y `u3-anotar.js` coinciden en SHA-256 con Git. La misma batería del panel, repetida contra producción, dio resultados idénticos. /nm3/, /paes/, /estudiantes/ y /nm4/ responden 200.
 
 ---
 

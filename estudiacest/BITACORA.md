@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: membrete completo recuperado del primer semestre
+
+- Francisco advierte que faltan datos del membrete y pide buscarlos en las guías antiguas de `Lengua y Literatura 2026`. Se leen, sin modificar, `FORMATO INSTITUCIONAL/formato membrete.docx` y `FORMATO TABLA.docx`, y dos PDF NM4 de Unidad 1. El formato original confirma las dos sedes y sus cuatro teléfonos, sitio web, correo, Talca/Región del Maule/Chile y lema institucional. Se conserva la asignatura, NM4, año 2026, docente y ambos logos de las guías actuales; no se copian unidad ni semestre antiguos.
+- Se reponen todos esos datos en las tres hojas del borrador y seis del manual final para 4°A, 4°B, 4°C y 4°E. El lema acompaña el número de página. Se compactan exclusivamente márgenes y separación de membrete/tabla/pie: las actividades, 60 renglones del borrador y todos los renglones de 7 mm se conservan, así como las tres diapositivas iniciales y la norma de celular.
+- Se regeneran los ocho PDF A4. El generador exige membretes completos, logos cargados, renglones de 7 mm, pies dentro del área útil y tres/seis páginas sin cortes. Extracción con Poppler confirma contactos y lema en las 36 páginas. Se abren las tres hojas del borrador de 4°B, la tabla de su manual final y la revisión final de 4°E; sin cortes ni solapamientos. Evidencia `%TEMP%/nm4-membrete-581a79446684486b87251ce020f86896`. No se afirma prueba física de impresora.
+- Auditoría focalizada y build integral aprobados, con 633 recursos críticos y panel táctil conservado en 57 páginas. Auditoría y navegador ahora exigen también el contenido completo del membrete recuperado en todas las hojas.
+
 ## 2026-10-04, NM4: norma de celular en los cuatro cursos
 
 - Francisco reemplaza «No operen equipos: hoy trabajamos con textos e imágenes» por «No se permite el uso de celular». Se actualiza la diapositiva independiente de normas, compartida por 4°A, 4°B, 4°C y 4°E, y las normas de las cuatro sesiones de planificación docente. Se conservan las indicaciones y advertencias de seguridad de las actividades y fuentes; no se cambian tareas, tiempos, objetivos ni PDF.

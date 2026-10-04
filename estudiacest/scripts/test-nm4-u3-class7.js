@@ -27,6 +27,7 @@ async function main(){
     if(await page.locator('.slide[data-opening="norms"] .steps>li').last().textContent()!=='No se permite el uso de celular.')failures.push(`${width}/${course}: norma de uso de celular incorrecta`);checks++;
     for(let slide=0;slide<10;slide++){
      await page.locator('.slide.active').waitFor();
+     await page.waitForFunction(()=>[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),{},{timeout:10000});
      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),counter:document.querySelector('#counter').textContent}));
      if(layout.overflow||!layout.images||layout.counter!==`${slide+1} / 10`)failures.push(`${width}/${course}/pantalla ${slide+1}: ${JSON.stringify(layout)}`);
      if(slide<3&&[390,1440,3840].includes(width))await page.screenshot({path:path.join(output,`${course}-${width}${['','-normas','-objetivo'][slide]}.png`),fullPage:true});
@@ -63,6 +64,8 @@ async function main(){
      }
      if(['plantilla.html','manual-final.html'].includes(doc)){
       const expected=doc==='plantilla.html'?3:6,kind=doc==='plantilla.html'?'borrador':'final';
+      const fullLetterhead=await page.evaluate(()=>[...document.querySelectorAll('.guide-sheet')].every(sheet=>{const header=sheet.querySelector('.school-letterhead');return header?.querySelectorAll('.school-contact').length===4&&['2 SUR 1147','2615416 · 2615410','11 ORIENTE 1751','2615454 · 2615457','www.salesianostalca.cl','cest@salesianostalca.cl','TALCA - REGIÓN DEL MAULE - CHILE'].every(text=>header.textContent.includes(text))&&sheet.querySelector('.school-motto')?.textContent==='EDUCAR EVANGELIZANDO Y EVANGELIZAR EDUCANDO, MEDIANTE UNA FORMACIÓN CONTINUA Y DE CALIDAD';}));
+      if(!fullLetterhead)failures.push(`${width}/${course}/${doc}: membrete del primer semestre incompleto`);checks++;
       const printable=await page.evaluate(()=>({headers:document.querySelectorAll('.school-letterhead').length,logos:[...document.querySelectorAll('.school-letterhead')].every(el=>el.querySelectorAll('img').length===2),students:document.querySelectorAll('.student-line').length,backgroundRulers:document.querySelectorAll('.writing-space').length,objective:[...document.querySelectorAll('.guide-objective')].every(el=>/Objetivo:\s*(Reescribir|Elaborar)/.test(el.textContent))}));
       if(printable.headers!==expected||!printable.logos||printable.students!==3||printable.backgroundRulers||!printable.objective)failures.push(`${width}/${course}/${doc}: no tiene formato de guía institucional`);checks++;
       const pdfDownloadPromise=page.waitForEvent('download');await page.locator('[data-course-pdf]').click();const pdfDownload=await pdfDownloadPromise;

@@ -59,6 +59,13 @@ for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','d
 expect((read('plantilla.html').match(/class="sheet(?: [^"]*)?"/g)||[]).length===3,'El borrador debe tener tres páginas con espacio de escritura.');
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
 const finalGuide=read('manual-final.html');
+const institutionalContact=['TÉCNICO PROFESIONAL: 2 SUR 1147 – FONOS (71) 2615416 · 2615410','BÁSICA y LICEO: 11 ORIENTE 1751 – FONOS (71) 2615454 · 2615457','www.salesianostalca.cl – cest@salesianostalca.cl','TALCA - REGIÓN DEL MAULE - CHILE'];
+const institutionalMotto='EDUCAR EVANGELIZANDO Y EVANGELIZAR EDUCANDO, MEDIANTE UNA FORMACIÓN CONTINUA Y DE CALIDAD';
+for(const [file,pages] of [['plantilla.html',3],['manual-final.html',6]]){
+ const html=read(file),headers=[...html.matchAll(/<header class="school-letterhead">([\s\S]*?)<\/header>/g)];
+ expect(headers.length===pages&&headers.every(header=>institutionalContact.every(text=>header[1].includes(text))),`${file}: debe conservar completo el membrete del formato institucional del primer semestre.`);
+ expect((html.match(/class="school-motto"/g)||[]).length===pages&&html.split(institutionalMotto).length-1===pages,`${file}: falta el lema institucional en una hoja.`);
+}
 expect((finalGuide.match(/class="sheet(?: [^"]*)?"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 expect((finalGuide.match(/class="school-letterhead"/g)||[]).length===6&&(finalGuide.match(/class="student-line"/g)||[]).length===3&&!finalGuide.includes('class="writing-space"'),'La guía final debe tener membrete, identificación y renglones reales.');
 for(const [file,kind] of [['plantilla.html','borrador'],['manual-final.html','final']])expect(read(file).includes(`data-course-pdf="${kind}"`),`${file}: falta el PDF listo para imprimir por curso.`);

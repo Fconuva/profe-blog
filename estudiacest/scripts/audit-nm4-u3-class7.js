@@ -23,6 +23,11 @@ expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(
 expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
 expect(main.includes('Completen la hoja 1')&&main.includes('Completen la hoja 2')&&main.includes('Ejemplo de respuesta individual'),'Debe explicitarse dónde escribir y un ejemplo de reflexión.');
 expect(read('plantilla.html').includes('Muestren el borrador al docente y guárdenlo')&&!read('plantilla.html').includes('Entreguen estas dos páginas'),'El borrador se muestra y conserva; no es la entrega final.');
+const guide=read('plantilla.html');
+expect((guide.match(/class="school-letterhead"/g)||[]).length===2,'Las dos hojas del borrador deben llevar membrete institucional.');
+for(const logo of ['insignia_talca_1.png','sdb-logo-big.png'])expect(guide.split(`src="/estudiantes/assets/${logo}"`).length-1===2,`El logo ${logo} debe estar en ambas hojas.`);
+for(const element of ['CENTRO EDUCATIVO SALESIANOS TALCA','Departamento de Lengua y Literatura','Docente: Francisco Núñez','Integrantes del grupo:','Fecha:','Grupo:','Objetivo:','Instrucciones:','OA 5 y OA 6'])expect(guide.includes(element),`La guía imprimible debe conservar ${element}`);
+expect((guide.match(/class="student-line"/g)||[]).length===3,'Deben existir tres espacios para identificar a los integrantes.');
 expect(read('modelo.html').includes('no formato final')&&read('manual-final.html').includes('Usen cajas y flechas.'),'El modelo debe distinguirse del producto final y enseñar la ruta de consulta.');
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
 for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
@@ -34,7 +39,7 @@ for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','d
   expect(fs.existsSync(target),`${page}: recurso ausente ${url}`);
  }
 }
-expect((read('plantilla.html').match(/class="sheet"/g)||[]).length===2,'La plantilla debe tener dos páginas.');
+expect((read('plantilla.html').match(/class="sheet(?: [^"]*)?"/g)||[]).length===2,'La plantilla debe tener dos páginas.');
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
 expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
@@ -49,6 +54,7 @@ for(const course of ['4A','4B','4C','4E']){
 }
 for(const specialty of ['industrial','automotriz','tecnico','electronica'])expect(home.includes(`/nm4/u3-clase6-informe-${specialty}/informe/`),`Se perdió el informe ${specialty}.`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));
+for(const logo of ['insignia_talca_1.png','sdb-logo-big.png'])expect(manifest.criticalFiles.some(entry=>entry.path===`estudiantes/assets/${logo}`),`Logo institucional sin registro crítico: ${logo}`);
 const receipt=JSON.parse(read('assets/imagenes-ia.json'));const hashes=new Set();
 expect(receipt.provider==='image_gen'&&receipt.mode==='built-in'&&receipt.images.length===9,'Deben estar guardadas nueve imágenes generadas con IA y sus prompts.');
 for(const item of receipt.images){

@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: borrador imprimible con formato institucional
+
+- Francisco pidió que el borrador tenga los elementos de una guía, membrete del colegio y sus logos. Se modifica únicamente la plantilla de dos hojas del manual ilustrado; las presentaciones, lecturas, modelo, manual final y datos académicos se conservan.
+- Ambas hojas llevan el membrete del Centro Educativo Salesianos Talca, Departamento de Lengua y Literatura, docente, año e imágenes oficiales existentes de la insignia institucional y Salesianos Don Bosco. No se recrean los logos con IA. La primera hoja incorpora tres líneas de integrantes, curso que responde al selector, fecha y grupo, unidad, clase, duración, objetivo, OA 5 y OA 6 e instrucciones breves. La segunda identifica la continuidad del grupo. Se numeran las siete actividades y se conserva la indicación de mostrar y guardar el borrador.
+- El plano y la leyenda se organizan lado a lado en impresión para mantener espacio de escritura y dos páginas A4; en celular se apilan. Los estilos nuevos se limitan a `.guide-sheet`, sin alterar las otras plantillas. Los dos logos se incorporan al manifiesto crítico y se refuerzan las auditorías de membrete, imágenes, identificación, campos, curso y número de páginas.
+- Prueba preliminar de los cuatro cursos: dos páginas por PDF y sin cortes; evidencias en `%TEMP%/nm4-guia-membrete-n8AakU`, inspección visual de 4°A aprobada. Build integral aprobado con 625 recursos críticos y panel táctil en 57 páginas. Prueba integral local: `node scripts/test-nm4-u3-class7.js`, 464 comprobaciones sin fallas en 320, 390, 1440 y 3840 px para los cuatro cursos, incluidos membrete, dos logos por hoja, curso, campos de la guía, imágenes, descargas y PDF sin cortes. Evidencias: `%TEMP%/nm4-manual-qa-VyUyud`.
+- Publicación y verificación pública pendientes del despliegue seguro.
+
 ## 2026-10-04, NM4: nueve ilustraciones de IA para el manual
 
 - Francisco pidió reemplazar la mayor cantidad de imágenes, incluidos los SVG. Se sustituyen las cinco ilustraciones SVG activas y las cuatro vistas generales por nueve imágenes generadas con `image_gen`, modo integrado: cuatro equipos, cuatro esquemas de seis partes y la linterna del ejemplo con cuatro partes. Se revisa visualmente la correspondencia entre números, flechas y piezas de cada equipo.

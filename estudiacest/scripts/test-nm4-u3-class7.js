@@ -54,6 +54,8 @@ async function main(){
      }
      if(doc==='plantilla.html'){
       if(!(await page.locator('main').textContent()).includes('Muestren el borrador al docente y guárdenlo'))failures.push('Entrega del borrador ambigua.');checks++;
+      const guide=await page.evaluate(()=>({headers:[...document.querySelectorAll('.school-letterhead')].map(el=>({school:el.textContent.includes('CENTRO EDUCATIVO SALESIANOS TALCA'),logos:[...el.querySelectorAll('img')].map(img=>new URL(img.src).pathname),loaded:[...el.querySelectorAll('img')].every(img=>img.complete&&img.naturalWidth>0)})),students:document.querySelectorAll('.student-line').length,fields:['Fecha:','Grupo:','Objetivo:','Instrucciones:','OA 5 y OA 6'].every(text=>document.querySelector('main').textContent.includes(text)),course:[...document.querySelectorAll('[data-course-name]')].every(el=>el.textContent===document.querySelector('#course option:checked').textContent)}));
+      if(guide.headers.length!==2||guide.headers.some(h=>!h.school||!h.loaded||h.logos.join(',')!=='/estudiantes/assets/insignia_talca_1.png,/estudiantes/assets/sdb-logo-big.png')||guide.students!==3||!guide.fields||!guide.course)failures.push(`${width}/${course}: membrete o elementos de la guía incompletos`);checks++;
      }
      if(width===1440&&['plantilla.html','modelo.html','manual-final.html'].includes(doc)){
       await page.emulateMedia({media:'print'});

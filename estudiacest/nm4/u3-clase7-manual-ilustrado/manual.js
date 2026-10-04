@@ -16,6 +16,7 @@
     }
     all('[data-source]').forEach(link=>{link.href=item.source;link.textContent=item.sourceName;});
     all('[data-original-photo]').forEach(link=>{link.href=item.originalPhoto;});
+    all('[data-course-pdf]').forEach(link=>{const kind=link.dataset.coursePdf;link.href=`assets/guia-${course.toLowerCase()}-${kind}.pdf`;link.download=`guia-${course.toLowerCase()}-${kind}.pdf`;});
     all('[data-course-link]').forEach(link=>{
       const target=new URL(link.getAttribute('href'),location.href);target.searchParams.set('curso',course);link.href=target.pathname+target.search+target.hash;
     });

@@ -18,6 +18,15 @@ for(const session of [...teacher.matchAll(/<section class="reading" data-project
  const phases=[...session[2].matchAll(/data-phase="([a-z]+)" data-minutes="(\d+)"/g)];
  expect(phases.map(x=>x[1]).join(',')==='inicio,desarrollo,cierre'&&phases.map(x=>Number(x[2])).join(',')==='10,70,10',`Clase ${session[1]}: faltan las tres fases de 90 minutos.`);
  expect(session[2].includes('Objetivo:')&&session[2].includes('Comprobación:'),`Clase ${session[1]}: falta objetivo o comprobación.`);
+ expect([...session[2].matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective',`Clase ${session[1]}: el inicio debe seguir activación, normas y objetivo.`);
+ expect(session[2].includes('Modelamiento')&&session[2].includes('monitoreo')&&session[2].includes('data-closing="review"')&&session[2].includes('data-closing="synthesis"'),`Clase ${session[1]}: deben explicitarse modelamiento, monitoreo, revisión y sistematización/metacognición.`);
+}
+expect([...main.matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective'&&main.includes('data-monitoring')&&['review','synthesis','metacognition'].every(key=>main.includes(`data-closing="${key}"`)),'La presentación debe conservar la estructura didáctica acordada.');
+const lessonObjective='Reescribir información técnica para un principiante, conservando su sentido y apoyándola con imágenes.';
+for(const file of ['index.html','plantilla.html','docente.html'])expect(read(file).includes(`<span data-lesson-objective>${lessonObjective}</span>`),`${file}: debe mostrar el mismo objetivo en infinitivo.`);
+for(const file of ['docente.html','plantilla.html','manual-final.html','index.html']){
+ const objectives=[...read(file).matchAll(/<strong>Objetivo:<\/strong>\s*(?:<span[^>]*>)?([A-Za-zÁÉÍÓÚáéíóúñÑ]+)/g)].map(x=>x[1]);
+ expect(objectives.length>0&&objectives.every(word=>/r$/i.test(word)),`${file}: los objetivos deben comenzar con un verbo en infinitivo.`);
 }
 expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(/<ol class="steps">/g)||[]).length===5,'La consigna abreviada debe conservar cuatro listas de acciones, un resultado por clase y las seis páginas.');
 expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
@@ -45,7 +54,10 @@ for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','d
 }
 expect((read('plantilla.html').match(/class="sheet(?: [^"]*)?"/g)||[]).length===3,'El borrador debe tener tres páginas con espacio de escritura.');
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
-expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
+const finalGuide=read('manual-final.html');
+expect((finalGuide.match(/class="sheet(?: [^"]*)?"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
+expect((finalGuide.match(/class="school-letterhead"/g)||[]).length===6&&(finalGuide.match(/class="student-line"/g)||[]).length===3&&!finalGuide.includes('class="writing-space"'),'La guía final debe tener membrete, identificación y renglones reales.');
+for(const [file,kind] of [['plantilla.html','borrador'],['manual-final.html','final']])expect(read(file).includes(`data-course-pdf="${kind}"`),`${file}: falta el PDF listo para imprimir por curso.`);
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
 for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
@@ -55,6 +67,7 @@ for(const course of ['4A','4B','4C','4E']){
  expect(fs.existsSync(path.join(base,item.originalPhoto)),`${course}: se perdió la referencia real del fabricante.`);
  expect(item.source.startsWith('https://')&&item.reference,`${course}: falta fuente primaria.`);
  expect(home.includes(`/nm4/u3-clase7-manual-ilustrado/?curso=${course}`),`${course}: falta acceso en NM4.`);
+ for(const kind of ['borrador','final']){const bytes=fs.readFileSync(path.join(base,'assets',`guia-${course.toLowerCase()}-${kind}.pdf`));expect(bytes.subarray(0,5).toString()==='%PDF-'&&bytes.length>100000,`${course}/${kind}: PDF imprimible ausente o inválido.`);}
 }
 for(const specialty of ['industrial','automotriz','tecnico','electronica'])expect(home.includes(`/nm4/u3-clase6-informe-${specialty}/informe/`),`Se perdió el informe ${specialty}.`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));

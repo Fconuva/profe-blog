@@ -6,7 +6,7 @@ const courses=['4A','4B','4C','4E'];
 const diagrams={'4A':'plano-taladro-ia.webp','4B':'plano-gato-ia.webp','4C':'plano-multimetro-ia.webp','4E':'plano-estacion-ia.webp'};
 const originals={'4A':'taladro.png','4B':'gato-dimensiones.png','4C':'multimetro.jpg','4E':'estacion-soldadura.jpg'};
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'nm4-manual-qa-'));
-const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
+const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2','.pdf':'application/pdf'};
 let server;const requested=process.argv.find(x=>x.startsWith('--origin='));
 async function main(){
  let origin=requested?.slice(9);
@@ -22,6 +22,8 @@ async function main(){
     if(await page.locator('#course option').count()!==4)failures.push('No están los cuatro cursos en el selector.');
     const flow=await page.evaluate(()=>[...document.querySelectorAll('.slide')].map(el=>({stage:el.dataset.stage,minutes:Number(el.dataset.minutes),commands:el.querySelectorAll('ol.steps>li').length})));
     if(flow.map(x=>x.stage).join(',')!=='inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'||flow.reduce((total,x)=>total+x.minutes,0)!==90||flow.some(x=>x.commands<3))failures.push(`${width}/${course}: secuencia o consignas incompletas`);checks++;
+    const teaching=await page.evaluate(()=>({opening:[...document.querySelectorAll('[data-opening]')].map(el=>el.dataset.opening).join(','),objective:document.querySelector('[data-lesson-objective]').textContent,monitoring:!!document.querySelector('[data-monitoring]'),closing:[...document.querySelectorAll('[data-closing]')].map(el=>el.dataset.closing).join(',')}));
+    if(teaching.opening!=='activation,norms,objective'||!teaching.objective.startsWith('Reescribir ')||!teaching.monitoring||teaching.closing!=='review,synthesis,metacognition')failures.push(`${width}/${course}: estructura didáctica o infinitivo incorrectos`);checks++;
     for(let slide=0;slide<8;slide++){
      await page.locator('.slide.active').waitFor();
      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),counter:document.querySelector('#counter').textContent}));
@@ -44,8 +46,8 @@ async function main(){
       if(await page.locator('[id^="sesion-"] .lesson-result').count()!==4||await page.locator('[id^="sesion-"] ol.steps').count()!==4)failures.push('Falta una consigna o resultado de las cuatro clases.');checks++;
      }
      if(doc==='docente.html'){
-      const lessons=await page.locator('[data-project-session]').evaluateAll(elements=>elements.map(el=>({objective:el.textContent.includes('Objetivo:'),check:el.textContent.includes('Comprobación:'),phases:[...el.querySelectorAll('[data-phase]')].map(x=>x.dataset.phase).join(','),minutes:[...el.querySelectorAll('[data-minutes]')].reduce((sum,x)=>sum+Number(x.dataset.minutes),0)})));
-      if(lessons.length!==4||lessons.some(x=>!x.objective||!x.check||x.phases!=='inicio,desarrollo,cierre'||x.minutes!==90))failures.push('Planificación incompleta.');checks++;
+      const lessons=await page.locator('[data-project-session]').evaluateAll(elements=>elements.map(el=>({objective:el.textContent.includes('Objetivo:'),check:el.textContent.includes('Comprobación:'),phases:[...el.querySelectorAll('[data-phase]')].map(x=>x.dataset.phase).join(','),minutes:[...el.querySelectorAll('[data-minutes]')].reduce((sum,x)=>sum+Number(x.dataset.minutes),0),opening:[...el.querySelectorAll('[data-opening]')].map(x=>x.dataset.opening).join(','),closing:[...el.querySelectorAll('[data-closing]')].map(x=>x.dataset.closing).join(',')})));
+      if(lessons.length!==4||lessons.some(x=>!x.objective||!x.check||x.phases!=='inicio,desarrollo,cierre'||x.minutes!==90||x.opening!=='activation,norms,objective'||x.closing!=='review,synthesis'))failures.push('Planificación incompleta.');checks++;
      }
      if(doc==='lectura.html'){
       if(await page.locator('[data-vocabulary]>p').count()!==4)failures.push('Glosario incompleto.');checks++;
@@ -57,6 +59,16 @@ async function main(){
       const guide=await page.evaluate(()=>({headers:[...document.querySelectorAll('.school-letterhead')].map(el=>({school:el.textContent.includes('CENTRO EDUCATIVO SALESIANOS TALCA'),logos:[...el.querySelectorAll('img')].map(img=>new URL(img.src).pathname),loaded:[...el.querySelectorAll('img')].every(img=>img.complete&&img.naturalWidth>0)})),students:document.querySelectorAll('.student-line').length,fields:['Fecha:','Grupo:','Objetivo:','Instrucciones:','OA 5 y OA 6'].every(text=>document.querySelector('main').textContent.includes(text)),course:[...document.querySelectorAll('[data-course-name]')].every(el=>el.textContent===document.querySelector('#course option:checked').textContent)}));
       if(guide.headers.length!==3||guide.headers.some(h=>!h.school||!h.loaded||h.logos.join(',')!=='/estudiantes/assets/insignia_talca_1.png,/estudiantes/assets/sdb-logo-big.png')||guide.students!==3||!guide.fields||!guide.course)failures.push(`${width}/${course}: membrete o elementos de la guía incompletos`);checks++;
      }
+     if(['plantilla.html','manual-final.html'].includes(doc)){
+      const expected=doc==='plantilla.html'?3:6,kind=doc==='plantilla.html'?'borrador':'final';
+      const printable=await page.evaluate(()=>({headers:document.querySelectorAll('.school-letterhead').length,logos:[...document.querySelectorAll('.school-letterhead')].every(el=>el.querySelectorAll('img').length===2),students:document.querySelectorAll('.student-line').length,backgroundRulers:document.querySelectorAll('.writing-space').length,objective:[...document.querySelectorAll('.guide-objective')].every(el=>/Objetivo:\s*(Reescribir|Elaborar)/.test(el.textContent))}));
+      if(printable.headers!==expected||!printable.logos||printable.students!==3||printable.backgroundRulers||!printable.objective)failures.push(`${width}/${course}/${doc}: no tiene formato de guía institucional`);checks++;
+      const pdfDownloadPromise=page.waitForEvent('download');await page.locator('[data-course-pdf]').click();const pdfDownload=await pdfDownloadPromise;
+      const localPDF=fs.readFileSync(path.join(root,prefix.slice(1),'assets',`guia-${course.toLowerCase()}-${kind}.pdf`));
+      if(await pdfDownload.failure()||!fs.readFileSync(await pdfDownload.path()).equals(localPDF))failures.push(`${course}/${kind}: PDF descargado incorrecto`);
+      const saved=await PDFDocument.load(localPDF);
+      if(saved.getPageCount()!==expected||!saved.getTitle().includes(course)||saved.getPages().some(p=>Math.abs(p.getWidth()-595.28)>1||Math.abs(p.getHeight()-841.89)>1))failures.push(`${course}/${kind}: el PDF no es A4 o no corresponde al curso`);checks++;
+     }
      if(width===1440&&['plantilla.html','modelo.html','manual-final.html'].includes(doc)){
       await page.emulateMedia({media:'print'});
       const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});fs.writeFileSync(path.join(output,`${course}-${doc.replace('.html','.pdf')}`),pdf);
@@ -67,6 +79,11 @@ async function main(){
        const handwriting=await page.evaluate(()=>({lines:[...document.querySelectorAll('.answer-lines>span')].map(el=>({height:el.getBoundingClientRect().height,border:getComputedStyle(el).borderBottomStyle})),functions:[...document.querySelectorAll('.part-function')].map(el=>({width:el.getBoundingClientRect().width,lines:el.children.length})),full:[...document.querySelectorAll('.guide-task .answer-lines')].every(el=>el.getBoundingClientRect().width>=640),table:document.querySelector('.parts-answer-table').scrollWidth<=document.querySelector('.parts-answer-table').clientWidth+1}));
        if(handwriting.lines.length<50||handwriting.lines.some(x=>x.height<26||x.border!=='solid')||handwriting.functions.length!==6||handwriting.functions.some(x=>x.width<390||x.lines!==3)||!handwriting.full||!handwriting.table)failures.push(`${course}: espacios de escritura insuficientes ${JSON.stringify(handwriting)}`);checks++;
        const noBackground=await page.pdf({preferCSSPageSize:true,printBackground:false});fs.writeFileSync(path.join(output,`${course}-plantilla-sin-fondos.pdf`),noBackground);if((await PDFDocument.load(noBackground)).getPageCount()!==3)failures.push(`${course}: impresión sin fondos distinta de tres páginas`);checks++;
+      }
+      if(doc==='manual-final.html'){
+       const realLines=await page.locator('.answer-lines>span').evaluateAll(els=>els.every(el=>el.getBoundingClientRect().height>=26&&getComputedStyle(el).borderBottomStyle==='solid'));
+       if(!realLines)failures.push(`${course}: la guía final tiene renglones insuficientes`);
+       const noBackground=await page.pdf({preferCSSPageSize:true,printBackground:false});fs.writeFileSync(path.join(output,`${course}-final-sin-fondos.pdf`),noBackground);if((await PDFDocument.load(noBackground)).getPageCount()!==6)failures.push(`${course}: guía final sin fondos distinta de seis páginas`);checks++;
       }
       await page.emulateMedia({media:'screen'});
       await page.screenshot({path:path.join(output,`${course}-${doc.replace('.html','.png')}`),fullPage:true});

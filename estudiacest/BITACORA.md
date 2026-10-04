@@ -3,7 +3,9 @@
 ## 2026-10-04, NM4: norma de celular en los cuatro cursos
 
 - Francisco reemplaza «No operen equipos: hoy trabajamos con textos e imágenes» por «No se permite el uso de celular». Se actualiza la diapositiva independiente de normas, compartida por 4°A, 4°B, 4°C y 4°E, y las normas de las cuatro sesiones de planificación docente. Se conservan las indicaciones y advertencias de seguridad de las actividades y fuentes; no se cambian tareas, tiempos, objetivos ni PDF.
-- Auditoría y prueba del navegador incorporan la comprobación exacta de la nueva norma. Build integral aprobado: 633 recursos críticos y panel táctil en 57 páginas. Prueba focalizada local: 224 comprobaciones sin fallas, cuatro cursos y anchos 320/390/1440/3840; evidencia `%TEMP%/nm4-manual-qa-Yp1Ipw`. Se abre la captura móvil de normas de 4°B y se comprueba la frase completa. Publicación y verificación pública pendientes.
+- Auditoría y prueba del navegador incorporan la comprobación exacta de la nueva norma. Build integral aprobado: 633 recursos críticos y panel táctil en 57 páginas. Prueba focalizada local: 224 comprobaciones sin fallas, cuatro cursos y anchos 320/390/1440/3840; evidencia `%TEMP%/nm4-manual-qa-Yp1Ipw`. Se abre la captura móvil de normas de 4°B y se comprueba la frase completa.
+- Publicado `794aa18555189f4a952c3ddf9ce15ffa745689cf` mediante `npm run deploy:prod:safe`: `dpl_4kcr4BJ18MBum5THyVvKGHmiswaM`, READY, alias `https://www.estudiacest.com`. La consulta del alias confirma proyecto y SHA exactos; 44/44 archivos del proyecto, portada NM4 y logos coinciden en SHA-256 y responden 200; los siete portales principales responden 200.
+- Prueba pública focalizada: 224 comprobaciones sin fallas para los cuatro cursos y cuatro anchos, incluida la frase exacta en normas y navegación de diez pantallas. Evidencia `%TEMP%/nm4-manual-qa-CCkO1m`; se abren las normas públicas de 4°A en escritorio y 4°E en celular, completas y legibles. Se entrega el enlace directo a la diapositiva 2 con selector de curso.
 
 ## 2026-10-04, NM4: inicio en tres diapositivas para los cuatro cursos
 

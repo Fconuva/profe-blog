@@ -40,7 +40,11 @@ async function main(){
       await page.screenshot({path:path.join(output,`${course}-${doc.replace('.html','.png')}`),fullPage:true});
      }
     }
-    await page.goto(`${origin}${prefix}lectura.html?curso=${course}`,{waitUntil:'networkidle'});const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Descargar plano',exact:true}).click();const download=await downloadPromise;if(!download.suggestedFilename().startsWith(course))failures.push('La descarga no corresponde al curso');checks++;
+    await page.goto(`${origin}${prefix}lectura.html?curso=${course}`,{waitUntil:'networkidle'});const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Descargar plano',exact:true}).click();const download=await downloadPromise;
+    const expectedFile=course==='4C'?'plano-multimetro.svg':'plano-estacion.svg';
+    if(![`${course}-diagram.svg`,expectedFile].includes(download.suggestedFilename()))failures.push('El nombre de la descarga no corresponde al curso');
+    if(await download.failure())failures.push('Falló la descarga del plano');
+    else if(!fs.readFileSync(await download.path()).equals(fs.readFileSync(path.join(root,'nm4/u3-clase7-manual-ilustrado/assets',expectedFile))))failures.push('El contenido del plano descargado no corresponde al curso');checks++;
    }
    if(errors.length)failures.push(...errors);await page.close();
   }

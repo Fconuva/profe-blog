@@ -70,6 +70,10 @@ expect((finalGuide.match(/class="sheet(?: [^"]*)?"/g)||[]).length===6,'La planti
 expect((finalGuide.match(/class="school-letterhead"/g)||[]).length===6&&(finalGuide.match(/class="student-line"/g)||[]).length===3&&!finalGuide.includes('class="writing-space"'),'La guía final debe tener membrete, identificación y renglones reales.');
 for(const [file,kind] of [['plantilla.html','borrador'],['manual-final.html','final']])expect(read(file).includes(`data-course-pdf="${kind}"`),`${file}: falta el PDF listo para imprimir por curso.`);
 for(const file of ['lectura.html','plantilla.html'])expect(read(file).includes('data-course-pdf="completa"')&&read(file).includes('lectura y borrador (5 hojas)'),`${file}: falta la guía completa de lectura y respuestas.`);
+const printGenerator=fs.readFileSync(path.join(root,'scripts/generate-nm4-manual-pdfs.js'),'utf8');
+for(const label of ['Identificación del grupo','Nombre y apellido','Fecha:','Grupo:','Objetivo','Instrucciones'])expect(printGenerator.includes(label),`La guía completa debe abrir con ${label}.`);
+expect(printGenerator.includes('content.names!==3')&&printGenerator.includes('content.instructions!==4')&&printGenerator.includes('getBoundingClientRect().height>=26')&&printGenerator.includes('layout.boxes'),'La generación debe validar tres nombres, cuatro instrucciones y cuadros imprimibles con espacio de escritura.');
+expect(read('manual.css').includes('.reading-guide .print-box{border:.6pt solid')&&read('manual.css').includes('.reading-guide .identity-name{height:8mm}'),'La guía completa debe tener cuadros de bordes reales y espacios de nombres de 8 mm.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
 for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);

@@ -1,5 +1,10 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: norma de celular en los cuatro cursos
+
+- Francisco reemplaza «No operen equipos: hoy trabajamos con textos e imágenes» por «No se permite el uso de celular». Se actualiza la diapositiva independiente de normas, compartida por 4°A, 4°B, 4°C y 4°E, y las normas de las cuatro sesiones de planificación docente. Se conservan las indicaciones y advertencias de seguridad de las actividades y fuentes; no se cambian tareas, tiempos, objetivos ni PDF.
+- Auditoría y prueba del navegador incorporan la comprobación exacta de la nueva norma. Build integral aprobado: 633 recursos críticos y panel táctil en 57 páginas. Prueba focalizada local: 224 comprobaciones sin fallas, cuatro cursos y anchos 320/390/1440/3840; evidencia `%TEMP%/nm4-manual-qa-Yp1Ipw`. Se abre la captura móvil de normas de 4°B y se comprueba la frase completa. Publicación y verificación pública pendientes.
+
 ## 2026-10-04, NM4: inicio en tres diapositivas para los cuatro cursos
 
 - Francisco aclara que 4°B era el ejemplo, no el alcance exclusivo, y que activación de conocimientos previos, normas y objetivo deben ir en diapositivas distintas. La presentación compartida de 4°A, 4°B, 4°C y 4°E comienza ahora con tres pantallas independientes y ordenadas: activación (5 minutos), normas (2) y objetivo en infinitivo (3). Se mantienen los 90 minutos, el desarrollo de 70 minutos, el cierre de 10, los ejemplos por especialidad, las cuatro sesiones y las guías imprimibles ya publicadas. El total pasa de ocho a diez pantallas; no se cambian notas, cuentas ni entregas.

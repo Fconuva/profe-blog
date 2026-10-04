@@ -16,11 +16,13 @@ const stages=[...main.matchAll(/data-stage="([a-z]+)"/g)].map(x=>x[1]);
 expect(stages.join(',')==='inicio,inicio,inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations.slice(0,3).join(',')==='5,2,3'&&durations[9]===10,'Inicio en tres pantallas, modelado/práctica y cierre deben estar visibles y sumar 10/70/10 minutos.');
 const presentationSlides=[...main.matchAll(/<section class="slide(?: active)?"([^>]*)>([\s\S]*?)<\/section>/g)];
 expect(presentationSlides.slice(0,3).map(slide=>(slide[1].match(/data-opening="([a-z]+)"/)||[])[1]).join(',')==='activation,norms,objective'&&presentationSlides.slice(3).every(slide=>!slide[0].includes('data-opening=')),'Activación, normas y objetivo deben ocupar tres diapositivas distintas, en ese orden.');
+expect(presentationSlides[1]?.[2].includes('<li>No se permite el uso de celular.</li>')&&!main.includes('No operen equipos: hoy trabajamos con textos e imágenes.'),'La diapositiva de normas debe mostrar la prohibición de celular solicitada.');
 for(const session of [...teacher.matchAll(/<section class="reading" data-project-session="([1-4])" data-total-minutes="90">([\s\S]*?)<\/section>/g)]){
  const phases=[...session[2].matchAll(/data-phase="([a-z]+)" data-minutes="(\d+)"/g)];
  expect(phases.map(x=>x[1]).join(',')==='inicio,desarrollo,cierre'&&phases.map(x=>Number(x[2])).join(',')==='10,70,10',`Clase ${session[1]}: faltan las tres fases de 90 minutos.`);
  expect(session[2].includes('Objetivo:')&&session[2].includes('Comprobación:'),`Clase ${session[1]}: falta objetivo o comprobación.`);
  expect([...session[2].matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective',`Clase ${session[1]}: el inicio debe seguir activación, normas y objetivo.`);
+ expect((session[2].match(/<li data-opening="norms">([\s\S]*?)<\/li>/)||[])[1]?.includes('No se permite el uso de celular.'),`Clase ${session[1]}: falta la norma de uso de celular.`);
  expect(session[2].includes('Modelamiento')&&session[2].includes('monitoreo')&&session[2].includes('data-closing="review"')&&session[2].includes('data-closing="synthesis"'),`Clase ${session[1]}: deben explicitarse modelamiento, monitoreo, revisión y sistematización/metacognición.`);
 }
 expect([...main.matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective'&&main.includes('data-monitoring')&&['review','synthesis','metacognition'].every(key=>main.includes(`data-closing="${key}"`)),'La presentación debe conservar la estructura didáctica acordada.');

@@ -1,5 +1,5 @@
 'use strict';
-const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'..'),base=path.join(root,'nm4/u3-clase7-manual-ilustrado');
 const failures=[];const expect=(condition,message)=>{if(!condition)failures.push(message);};
 const read=(file)=>fs.readFileSync(path.join(base,file),'utf8');
@@ -27,6 +27,7 @@ expect(read('modelo.html').includes('no formato final')&&read('manual-final.html
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
 for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
  const html=read(page);expect(html.includes('<script src="/assets/anotar-pizarra.js" defer></script>'),`${page}: falta el panel táctil.`);
+ expect(!/(?:src|href)="[^"?#]+\.svg(?:["?#])/.test(html),`${page}: sigue usando un SVG como imagen de la clase.`);
  for(const match of html.matchAll(/(?:src|href)="([^"?#]+)[^"]*"/g)){
   const url=match[1];if(/^(https?:|#)/.test(url)||url==='/nm4/')continue;
   const target=url.startsWith('/')?path.join(root,url.slice(1)):path.join(base,url);
@@ -41,11 +42,23 @@ for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
  expect(item?.vocabulary.length===4,`${course}: deben estar disponibles los cuatro términos del glosario.`);
  for(const key of ['photo','detail','diagram'])expect(fs.statSync(path.join(base,item[key])).size>1000,`${course}: recurso visual incompleto.`);
+ expect(item.photo.endsWith('-ia.webp')&&item.diagram.endsWith('-ia.webp')&&item.credit.includes('IA'),`${course}: deben usarse y atribuirse las ilustraciones IA.`);
+ expect(fs.existsSync(path.join(base,item.originalPhoto)),`${course}: se perdió la referencia real del fabricante.`);
  expect(item.source.startsWith('https://')&&item.reference,`${course}: falta fuente primaria.`);
  expect(home.includes(`/nm4/u3-clase7-manual-ilustrado/?curso=${course}`),`${course}: falta acceso en NM4.`);
 }
 for(const specialty of ['industrial','automotriz','tecnico','electronica'])expect(home.includes(`/nm4/u3-clase6-informe-${specialty}/informe/`),`Se perdió el informe ${specialty}.`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));
+const receipt=JSON.parse(read('assets/imagenes-ia.json'));const hashes=new Set();
+expect(receipt.provider==='image_gen'&&receipt.mode==='built-in'&&receipt.images.length===9,'Deben estar guardadas nueve imágenes generadas con IA y sus prompts.');
+for(const item of receipt.images){
+ const bytes=fs.readFileSync(path.join(base,'assets',item.file));
+ expect(bytes.subarray(0,4).toString()==='RIFF'&&bytes.subarray(8,12).toString()==='WEBP'&&bytes.length>=50000&&bytes.length<250000,`${item.file}: formato o peso web inválido.`);
+ expect(item.prompt&&item.sourceArtifact&&item.references.length,`${item.file}: falta trazabilidad.`);
+ expect(item.callouts.join(',')===(item.file.startsWith('plano-')?'1,2,3,4,5,6':item.file.startsWith('linterna-')?'1,2,3,4':''),`${item.file}: numeración declarada incompatible.`);
+ hashes.add(crypto.createHash('sha256').update(bytes).digest('hex'));
+}
+expect(hashes.size===9,'Las nueve imágenes IA deben ser distintas.');
 const files=fs.readdirSync(base,{recursive:true}).filter(file=>fs.statSync(path.join(base,file)).isFile());
 for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`nm4/u3-clase7-manual-ilustrado/${file.replaceAll('\\','/')}`),`Recurso crítico sin registro: ${file}`);
 expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');

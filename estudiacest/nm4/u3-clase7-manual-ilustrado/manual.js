@@ -12,9 +12,10 @@
     if(select)select.value=course;
     fill('[data-course-name]',item.name);fill('[data-equipment]',item.equipment);fill('[data-credit]',item.credit);fill('[data-reference]',item.reference);
     for(const [attribute,key,alt] of [['photo','photo','alt'],['detail','detail','detailAlt'],['diagram','diagram',null]]){
-      all(`[data-${attribute}]`).forEach(img=>{img.src=item[key];img.alt=alt?item[alt]:`Plano de identificación de ${item.equipment}, con seis números y sin escala`;});
+      all(`[data-${attribute}]`).forEach(img=>{img.src=item[key];img.alt=alt?item[alt]:`Ilustración didáctica de IA para identificar seis partes de ${item.equipment}; sin escala`;});
     }
     all('[data-source]').forEach(link=>{link.href=item.source;link.textContent=item.sourceName;});
+    all('[data-original-photo]').forEach(link=>{link.href=item.originalPhoto;});
     all('[data-course-link]').forEach(link=>{
       const target=new URL(link.getAttribute('href'),location.href);target.searchParams.set('curso',course);link.href=target.pathname+target.search+target.hash;
     });

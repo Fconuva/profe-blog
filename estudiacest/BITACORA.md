@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: nueve ilustraciones de IA para el manual
+
+- Francisco pidió reemplazar la mayor cantidad de imágenes, incluidos los SVG. Se sustituyen las cinco ilustraciones SVG activas y las cuatro vistas generales por nueve imágenes generadas con `image_gen`, modo integrado: cuatro equipos, cuatro esquemas de seis partes y la linterna del ejemplo con cuatro partes. Se revisa visualmente la correspondencia entre números, flechas y piezas de cada equipo.
+- Las imágenes de IA se identifican como ilustraciones didácticas, no fotografías reales ni planos de instalación. Se conservan las cuatro imágenes de detalle originales, las fuentes oficiales y un acceso plegado a la referencia real del fabricante. Los SVG y las vistas generales originales se conservan para recuperación, sin usarlos como ilustraciones activas. No se cambian las lecturas, consignas, currículo, sesiones, notas, cuentas ni datos de estudiantes.
+- Nueve WebP de 1536 × 1024 px, 921.956 bytes en total. La conversión de formato mantiene tamaño y contenido, sin recortar ni redibujar; los PNG originales permanecen en la carpeta local del generador. `assets/imagenes-ia.json` registra proveedor, modo, nueve prompts, referencias y números esperados; `scripts/prepare-nm4-manual-ai.js` prepara los WebP y conserva los archivos existentes.
+- Validación local: auditoría focalizada y build integral aprobados, 623 recursos críticos y panel de pizarra en 57 páginas. Prueba en navegador: 448 comprobaciones sin fallas para los cuatro cursos, en 320, 390, 1440 y 3840 px, incluidas imágenes, referencias, descargas y PDF A4 de dos y seis páginas sin cortes. Evidencias: `%TEMP%/nm4-manual-qa-WnWjFA`; inspección visual del móvil de 4°E aprobada. Se corrige una expectativa de enlaces relativos en la prueba, sin debilitar la comprobación del archivo original correspondiente al curso.
+- Publicación y verificación pública pendientes del despliegue seguro.
+
 ## 2026-10-04, NM4: consignas directas y currículo del manual ilustrado
 
 - Francisco pidió quitar el exceso de texto y usar acciones concretas. Se abrevia la presentación y la consigna de `/nm4/u3-clase7-manual-ilustrado/`: lean, respondan en sus hojas, completen, revisen y muestren el avance. Se conserva el proyecto de cuatro sesiones de 90 minutos, grupos de tres y manual final de seis páginas para 4°A, 4°B, 4°C y 4°E; no se modifican informes, notas ni datos de estudiantes.

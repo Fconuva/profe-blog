@@ -3,9 +3,10 @@ const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),
 const {chromium}=require('playwright');const {PDFDocument}=require('pdf-lib');
 const root=path.resolve(__dirname,'..'),prefix='/nm4/u3-clase7-manual-ilustrado/';
 const courses=['4A','4B','4C','4E'];
-const diagrams={'4A':'plano-taladro.svg','4B':'plano-gato.svg','4C':'plano-multimetro.svg','4E':'plano-estacion.svg'};
+const diagrams={'4A':'plano-taladro-ia.webp','4B':'plano-gato-ia.webp','4C':'plano-multimetro-ia.webp','4E':'plano-estacion-ia.webp'};
+const originals={'4A':'taladro.png','4B':'gato-dimensiones.png','4C':'multimetro.jpg','4E':'estacion-soldadura.jpg'};
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'nm4-manual-qa-'));
-const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2'};
+const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.webp':'image/webp','.woff2':'font/woff2'};
 let server;const requested=process.argv.find(x=>x.startsWith('--origin='));
 async function main(){
  let origin=requested?.slice(9);
@@ -37,6 +38,8 @@ async function main(){
      await page.goto(`${origin}${prefix}${doc}?curso=${course}`,{waitUntil:'networkidle'});
      const healthy=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&[...document.images].every(img=>img.complete&&img.naturalWidth>0));
      if(!healthy)failures.push(`${width}/${course}/${doc}: desborde o imagen rota`);checks++;
+     const visuals=await page.evaluate(()=>({svg:[...document.images].some(img=>new URL(img.src).pathname.endsWith('.svg')),ai:[...document.images].filter(img=>img.src.includes('-ia.webp')).every(img=>img.naturalWidth===1536&&img.naturalHeight===1024)}));
+     if(visuals.svg||!visuals.ai)failures.push(`${width}/${course}/${doc}: imagen antigua o dimensión IA inválida`);checks++;
      if(doc==='proyecto.html'){
       if(await page.locator('[id^="sesion-"] .lesson-result').count()!==4||await page.locator('[id^="sesion-"] ol.steps').count()!==4)failures.push('Falta una consigna o resultado de las cuatro clases.');checks++;
      }
@@ -46,6 +49,8 @@ async function main(){
      }
      if(doc==='lectura.html'){
       if(await page.locator('[data-vocabulary]>p').count()!==4)failures.push('Glosario incompleto.');checks++;
+      const reference=new URL(await page.locator('[data-original-photo]').getAttribute('href'),page.url());
+      if(!reference.pathname.endsWith('/assets/'+originals[course]))failures.push('La referencia original no corresponde al curso.');checks++;
      }
      if(doc==='plantilla.html'){
       if(!(await page.locator('main').textContent()).includes('Muestren el borrador al docente y guárdenlo'))failures.push('Entrega del borrador ambigua.');checks++;
@@ -62,7 +67,7 @@ async function main(){
     }
     await page.goto(`${origin}${prefix}lectura.html?curso=${course}`,{waitUntil:'networkidle'});const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Descargar plano',exact:true}).click();const download=await downloadPromise;
     const expectedFile=diagrams[course];
-    if(![`${course}-diagram.svg`,expectedFile].includes(download.suggestedFilename()))failures.push('El nombre de la descarga no corresponde al curso');
+    if(![`${course}-diagram.webp`,expectedFile].includes(download.suggestedFilename()))failures.push('El nombre de la descarga no corresponde al curso');
     if(await download.failure())failures.push('Falló la descarga del plano');
     else if(!fs.readFileSync(await download.path()).equals(fs.readFileSync(path.join(root,'nm4/u3-clase7-manual-ilustrado/assets',expectedFile))))failures.push('El contenido del plano descargado no corresponde al curso');checks++;
    }

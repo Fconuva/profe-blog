@@ -53,6 +53,9 @@ async function main(){
       if(lessons.length!==4||lessons.some(x=>!x.objective||!x.check||x.phases!=='inicio,desarrollo,cierre'||x.minutes!==90||x.opening!=='activation,norms,objective'||x.closing!=='review,synthesis'))failures.push('Planificación incompleta.');checks++;
      }
      if(doc==='lectura.html'){
+      const completeDownloadPromise=page.waitForEvent('download');await page.locator('[data-course-pdf="completa"]').click();const completeDownload=await completeDownloadPromise;
+      const completeBytes=fs.readFileSync(path.join(root,prefix.slice(1),'assets',`guia-${course.toLowerCase()}-completa.pdf`)),completePDF=await PDFDocument.load(completeBytes);
+      if(await completeDownload.failure()||!fs.readFileSync(await completeDownload.path()).equals(completeBytes)||completePDF.getPageCount()!==5||!completePDF.getTitle().includes(course)||completePDF.getPages().some(p=>Math.abs(p.getWidth()-595.28)>1||Math.abs(p.getHeight()-841.89)>1))failures.push(`${width}/${course}: lectura y borrador no descargan la guía A4 de cinco páginas correcta`);checks++;
       if(await page.locator('[data-vocabulary]>p').count()!==4)failures.push('Glosario incompleto.');checks++;
       const reference=new URL(await page.locator('[data-original-photo]').getAttribute('href'),page.url());
       if(!reference.pathname.endsWith('/assets/'+originals[course]))failures.push('La referencia original no corresponde al curso.');checks++;
@@ -68,7 +71,7 @@ async function main(){
       if(!fullLetterhead)failures.push(`${width}/${course}/${doc}: membrete del primer semestre incompleto`);checks++;
       const printable=await page.evaluate(()=>({headers:document.querySelectorAll('.school-letterhead').length,logos:[...document.querySelectorAll('.school-letterhead')].every(el=>el.querySelectorAll('img').length===2),students:document.querySelectorAll('.student-line').length,backgroundRulers:document.querySelectorAll('.writing-space').length,objective:[...document.querySelectorAll('.guide-objective')].every(el=>/Objetivo:\s*(Reescribir|Elaborar)/.test(el.textContent))}));
       if(printable.headers!==expected||!printable.logos||printable.students!==3||printable.backgroundRulers||!printable.objective)failures.push(`${width}/${course}/${doc}: no tiene formato de guía institucional`);checks++;
-      const pdfDownloadPromise=page.waitForEvent('download');await page.locator('[data-course-pdf]').click();const pdfDownload=await pdfDownloadPromise;
+      const pdfDownloadPromise=page.waitForEvent('download');await page.locator(`[data-course-pdf="${kind}"]`).click();const pdfDownload=await pdfDownloadPromise;
       const localPDF=fs.readFileSync(path.join(root,prefix.slice(1),'assets',`guia-${course.toLowerCase()}-${kind}.pdf`));
       if(await pdfDownload.failure()||!fs.readFileSync(await pdfDownload.path()).equals(localPDF))failures.push(`${course}/${kind}: PDF descargado incorrecto`);
       const saved=await PDFDocument.load(localPDF);

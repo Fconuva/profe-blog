@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: cuatro guías completas de lectura y borrador
+
+- Francisco pide las cuatro guías listas para imprimir, con lo que leen y completan. Se preparan cuatro PDF para clase 1: `guia-4a-completa.pdf`, `guia-4b-completa.pdf`, `guia-4c-completa.pdf` y `guia-4e-completa.pdf`. Cada uno contiene dos hojas de lectura/recursos y las tres del borrador, cinco páginas A4 numeradas de forma continua. Las hojas de respuesta se identifican además como hojas 1/2/3 del borrador, para conservar las referencias de las diapositivas.
+- El generador reutiliza íntegros `contenidos.js`, las imágenes por especialidad y el borrador vigente: cuatro secciones, seis partes, cuatro términos, referencias y créditos, sin nuevas actividades ni alteración de la lectura. Mantiene 60 renglones de 7 mm, membresía escolar completa y dos logos en las cinco hojas. La versión final de seis páginas y los ocho PDF anteriores se conservan sin regenerarse. Se añade `--completa` para producir únicamente estos cuatro archivos.
+- Lectura y borrador ofrecen descarga por el curso seleccionado; el borrador distingue la guía completa de cinco hojas, las tres de respuestas y la impresión de solo el borrador. Los cuatro PDF se agregan al manifiesto crítico. Auditoría focalizada y build integral aprobados: 637 recursos críticos y panel táctil conservado en 57 páginas.
+- Generación aprobada: cuatro PDF de cinco páginas, membretes/logos cargados, pies dentro del área útil y sin cortes. Extracción con Poppler contrasta los 25 fragmentos de origen de cada curso sin omisiones; confirma formato A4, cinco membretes y numeración 1 a 5. Se rasterizan y abren las dos hojas de lectura de los cuatro cursos y las hojas 3/5 de 4°B. Evidencia `%TEMP%/nm4-guias-completas-a1f974f6d7114624aff36b62a0059c54`. No se afirma prueba física de impresora.
+- Prueba integral local aprobada: 652 comprobaciones sin fallas, cuatro cursos y anchos 320/390/1440/3840, incluida la descarga exacta de cada guía completa, sus cinco páginas A4 y la conservación de borrador/manual final. Evidencia `%TEMP%/nm4-manual-qa-joujly`.
+
 ## 2026-10-04, NM4: membrete completo recuperado del primer semestre
 
 - Francisco advierte que faltan datos del membrete y pide buscarlos en las guías antiguas de `Lengua y Literatura 2026`. Se leen, sin modificar, `FORMATO INSTITUCIONAL/formato membrete.docx` y `FORMATO TABLA.docx`, y dos PDF NM4 de Unidad 1. El formato original confirma las dos sedes y sus cuatro teléfonos, sitio web, correo, Talca/Región del Maule/Chile y lema institucional. Se conserva la asignatura, NM4, año 2026, docente y ambos logos de las guías actuales; no se copian unidad ni semestre antiguos.

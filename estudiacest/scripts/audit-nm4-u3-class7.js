@@ -69,6 +69,7 @@ for(const [file,pages] of [['plantilla.html',3],['manual-final.html',6]]){
 expect((finalGuide.match(/class="sheet(?: [^"]*)?"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 expect((finalGuide.match(/class="school-letterhead"/g)||[]).length===6&&(finalGuide.match(/class="student-line"/g)||[]).length===3&&!finalGuide.includes('class="writing-space"'),'La guía final debe tener membrete, identificación y renglones reales.');
 for(const [file,kind] of [['plantilla.html','borrador'],['manual-final.html','final']])expect(read(file).includes(`data-course-pdf="${kind}"`),`${file}: falta el PDF listo para imprimir por curso.`);
+for(const file of ['lectura.html','plantilla.html'])expect(read(file).includes('data-course-pdf="completa"')&&read(file).includes('lectura y borrador (5 hojas)'),`${file}: falta la guía completa de lectura y respuestas.`);
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
 for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
@@ -78,7 +79,7 @@ for(const course of ['4A','4B','4C','4E']){
  expect(fs.existsSync(path.join(base,item.originalPhoto)),`${course}: se perdió la referencia real del fabricante.`);
  expect(item.source.startsWith('https://')&&item.reference,`${course}: falta fuente primaria.`);
  expect(home.includes(`/nm4/u3-clase7-manual-ilustrado/?curso=${course}`),`${course}: falta acceso en NM4.`);
- for(const kind of ['borrador','final']){const bytes=fs.readFileSync(path.join(base,'assets',`guia-${course.toLowerCase()}-${kind}.pdf`));expect(bytes.subarray(0,5).toString()==='%PDF-'&&bytes.length>100000,`${course}/${kind}: PDF imprimible ausente o inválido.`);}
+ for(const kind of ['borrador','final','completa']){const bytes=fs.readFileSync(path.join(base,'assets',`guia-${course.toLowerCase()}-${kind}.pdf`));expect(bytes.subarray(0,5).toString()==='%PDF-'&&bytes.length>100000,`${course}/${kind}: PDF imprimible ausente o inválido.`);}
 }
 for(const specialty of ['industrial','automotriz','tecnico','electronica'])expect(home.includes(`/nm4/u3-clase6-informe-${specialty}/informe/`),`Se perdió el informe ${specialty}.`);
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));

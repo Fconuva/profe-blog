@@ -1,5 +1,11 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: inicio en tres diapositivas para los cuatro cursos
+
+- Francisco aclara que 4°B era el ejemplo, no el alcance exclusivo, y que activación de conocimientos previos, normas y objetivo deben ir en diapositivas distintas. La presentación compartida de 4°A, 4°B, 4°C y 4°E comienza ahora con tres pantallas independientes y ordenadas: activación (5 minutos), normas (2) y objetivo en infinitivo (3). Se mantienen los 90 minutos, el desarrollo de 70 minutos, el cierre de 10, los ejemplos por especialidad, las cuatro sesiones y las guías imprimibles ya publicadas. El total pasa de ocho a diez pantallas; no se cambian notas, cuentas ni entregas.
+- Se refuerzan la auditoría y las pruebas del navegador para exigir tres pantallas distintas de inicio en los cuatro cursos, navegación de diez diapositivas y persistencia del contador. Se guardan capturas independientes de activación, normas y objetivo en celular, escritorio y 4K. La marca crítica del manifiesto se actualiza al nuevo título de apertura; no se reduce su inventario ni se desactiva ninguna auditoría.
+- Auditoría focalizada y build integral aprobados, con 633 recursos críticos y panel táctil en 57 páginas. Prueba integral local: 588 comprobaciones sin fallas, cuatro cursos y anchos 320/390/1440/3840, guías y descargas conservadas; evidencias `%TEMP%/nm4-manual-qa-SzGqSa`. Se abren las tres capturas iniciales de escritorio de 4°A y la activación móvil de 4°E: pantallas independientes y legibles. Publicación y verificación pública pendientes.
+
 ## 2026-10-04, NM4: estructura de clase y guías PDF por curso
 
 - Francisco corrigió el objetivo imperativo de la presentación y pidió inicio con activación de conocimientos previos, normas y objetivo; desarrollo con modelamiento, ejemplo, actividad y monitoreo; cierre con revisión/plenario y sistematización/metacognición. La presentación conserva ocho pantallas y 90 minutos, con el objetivo en infinitivo idéntico al del borrador y la clase 1 docente. Las cuatro sesiones docentes explicitan esa secuencia, comprobaciones y preguntas de monitoreo; los objetivos comienzan en infinitivo. Se mantienen cuatro cursos, tríos, borrador de tres hojas y manual final de seis.

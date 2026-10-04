@@ -5,15 +5,17 @@ const failures=[];const expect=(condition,message)=>{if(!condition)failures.push
 const read=(file)=>fs.readFileSync(path.join(base,file),'utf8');
 const main=read('index.html'),home=fs.readFileSync(path.join(root,'nm4/index.html'),'utf8');
 const durations=[...main.matchAll(/data-minutes="(\d+)"/g)].map(x=>Number(x[1]));
-expect(durations.length===8&&durations.reduce((a,b)=>a+b,0)===90,'La presentación debe tener ocho pantallas y sumar 90 minutos.');
-expect(main.includes('1 / 8'),'Contador de ocho pantallas ausente.');
+expect(durations.length===10&&durations.reduce((a,b)=>a+b,0)===90,'La presentación debe tener diez pantallas y sumar 90 minutos.');
+expect(main.includes('1 / 10'),'Contador de diez pantallas ausente.');
 expect(main.includes('Esta página no recibe archivos ni registra entregas.'),'La modalidad de entrega presencial debe estar explícita.');
 expect(main.includes('cuatro sesiones de 90 minutos')&&main.includes('primer borrador'),'El encargo es un proyecto extendido, no una entrega de una clase.');
 const project=read('proyecto.html'),teacher=read('docente.html');
 expect((project.match(/id="sesion-[1-4]"/g)||[]).length===4,'Deben estar operativas las cuatro etapas del proyecto.');
 expect((teacher.match(/data-project-session="[1-4]" data-total-minutes="90"/g)||[]).length===4,'Deben existir cuatro sesiones de 90 minutos planificadas.');
 const stages=[...main.matchAll(/data-stage="([a-z]+)"/g)].map(x=>x[1]);
-expect(stages.join(',')==='inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations[0]===10&&durations[7]===10,'Inicio, modelado/práctica en desarrollo y cierre deben estar visibles y temporizados.');
+expect(stages.join(',')==='inicio,inicio,inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations.slice(0,3).join(',')==='5,2,3'&&durations[9]===10,'Inicio en tres pantallas, modelado/práctica y cierre deben estar visibles y sumar 10/70/10 minutos.');
+const presentationSlides=[...main.matchAll(/<section class="slide(?: active)?"([^>]*)>([\s\S]*?)<\/section>/g)];
+expect(presentationSlides.slice(0,3).map(slide=>(slide[1].match(/data-opening="([a-z]+)"/)||[])[1]).join(',')==='activation,norms,objective'&&presentationSlides.slice(3).every(slide=>!slide[0].includes('data-opening=')),'Activación, normas y objetivo deben ocupar tres diapositivas distintas, en ese orden.');
 for(const session of [...teacher.matchAll(/<section class="reading" data-project-session="([1-4])" data-total-minutes="90">([\s\S]*?)<\/section>/g)]){
  const phases=[...session[2].matchAll(/data-phase="([a-z]+)" data-minutes="(\d+)"/g)];
  expect(phases.map(x=>x[1]).join(',')==='inicio,desarrollo,cierre'&&phases.map(x=>Number(x[2])).join(',')==='10,70,10',`Clase ${session[1]}: faltan las tres fases de 90 minutos.`);
@@ -24,7 +26,7 @@ for(const session of [...teacher.matchAll(/<section class="reading" data-project
 expect([...main.matchAll(/data-opening="([a-z]+)"/g)].map(x=>x[1]).join(',')==='activation,norms,objective'&&main.includes('data-monitoring')&&['review','synthesis','metacognition'].every(key=>main.includes(`data-closing="${key}"`)),'La presentación debe conservar la estructura didáctica acordada.');
 const lessonObjective='Reescribir información técnica para un principiante, conservando su sentido y apoyándola con imágenes.';
 for(const file of ['index.html','plantilla.html','docente.html'])expect(read(file).includes(`<span data-lesson-objective>${lessonObjective}</span>`),`${file}: debe mostrar el mismo objetivo en infinitivo.`);
-for(const file of ['docente.html','plantilla.html','manual-final.html','index.html']){
+for(const file of ['docente.html','plantilla.html','manual-final.html']){
  const objectives=[...read(file).matchAll(/<strong>Objetivo:<\/strong>\s*(?:<span[^>]*>)?([A-Za-zÁÉÍÓÚáéíóúñÑ]+)/g)].map(x=>x[1]);
  expect(objectives.length>0&&objectives.every(word=>/r$/i.test(word)),`${file}: los objetivos deben comenzar con un verbo en infinitivo.`);
 }
@@ -87,4 +89,4 @@ for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`
 expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');
 expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cuatro cursos y evitar caer en otro curso.');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 4 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 10 pantallas con activación/normas/objetivo separados, 4 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

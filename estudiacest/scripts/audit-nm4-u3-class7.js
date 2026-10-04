@@ -25,7 +25,7 @@ expect((read('plantilla.html').match(/class="sheet"/g)||[]).length===2,'La plant
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
 expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
-for(const course of ['4C','4E']){
+for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
  for(const key of ['photo','detail','diagram'])expect(fs.statSync(path.join(base,item[key])).size>1000,`${course}: recurso visual incompleto.`);
  expect(item.source.startsWith('https://')&&item.reference,`${course}: falta fuente primaria.`);
@@ -36,4 +36,6 @@ const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-relea
 const files=fs.readdirSync(base,{recursive:true}).filter(file=>fs.statSync(path.join(base,file)).isFile());
 for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`nm4/u3-clase7-manual-ilustrado/${file.replaceAll('\\','/')}`),`Recurso crítico sin registro: ${file}`);
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 2 cursos, borrador de 2 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');
+expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cuatro cursos y evitar caer en otro curso.');
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 4 cursos, borrador de 2 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

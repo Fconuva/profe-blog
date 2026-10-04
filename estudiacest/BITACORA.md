@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: manual también operativo para 4°A y 4°B
+
+- Francisco pidió habilitar de inmediato el mismo proyecto para 4°A y 4°B. Se incorporan Mecánica Industrial y Mecánica Automotriz, sin sustituir ni modificar los informes, entregas o notas anteriores; las versiones de 4°C y 4°E se conservan.
+- Material diferenciado: taladro de columna Bosch PBD 40 para 4°A y gato hidráulico Bahco BH12000 para 4°B. Lecturas adaptadas, vocabulario, seis partes, ejemplo de reescritura y fuentes oficiales del fabricante. Se agregan seis recursos: dos imágenes Bosch, dibujo dimensional y una ilustración original del manual Bahco, y dos esquemas propios de identificación sin escala. Las imágenes del fabricante mantienen su atribución; no se reproducen los manuales completos.
+- Los siete documentos permiten seleccionar cualquiera de los cuatro cursos. La portada NM4 tiene accesos directos para todos. Se mantienen grupos de tres, cuatro sesiones de 90 minutos, avances, revisión, borrador inicial de dos páginas y manual final de seis páginas. La actividad sigue siendo documental, sin operar equipos, login, recepción de archivos ni calificación automática.
+- Validación local: auditoría focalizada aprobada, build integral aprobado con 613 recursos críticos y panel canónico en 57 páginas. Navegador real en 320, 390, 1440 y 3840 px: 240 comprobaciones, cero fallas; evidencias en `%TEMP%/nm4-manual-qa-yBkS3Y`. Verificados curso, navegación, imágenes, documentos, descarga exacta del plano y PDF A4 de dos y seis páginas sin cortes. Inspección visual de 4°B en 1440 px aprobada.
+- Publicación y comprobación pública pendientes al registrar esta implementación.
+
 ## 2026-10-04, NM4: manual ilustrado para 4°C y 4°E
 
 - Francisco autorizó dejar operativo un proyecto de manual con imágenes y planos para 4°C y 4°E, no una actividad limitada a una clase. 4°A y 4°B continúan con el informe existente. La primera implementación redujo erróneamente el alcance; se corrige a cuatro sesiones de 90 minutos y manual final de seis páginas, en grupos de tres.

@@ -2,6 +2,8 @@
 const http=require('node:http'),fs=require('node:fs'),path=require('node:path'),os=require('node:os');
 const {chromium}=require('playwright');const {PDFDocument}=require('pdf-lib');
 const root=path.resolve(__dirname,'..'),prefix='/nm4/u3-clase7-manual-ilustrado/';
+const courses=['4A','4B','4C','4E'];
+const diagrams={'4A':'plano-taladro.svg','4B':'plano-gato.svg','4C':'plano-multimetro.svg','4E':'plano-estacion.svg'};
 const output=fs.mkdtempSync(path.join(os.tmpdir(),'nm4-manual-qa-'));
 const mime={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.jpg':'image/jpeg','.png':'image/png','.woff2':'font/woff2'};
 let server;const requested=process.argv.find(x=>x.startsWith('--origin='));
@@ -13,9 +15,10 @@ async function main(){
   for(const width of [320,390,1440,3840]){
    const page=await browser.newPage({viewport:{width,height:width===3840?2160:width===1440?900:844},acceptDownloads:true});const errors=[];
    page.on('pageerror',error=>errors.push(error.message));page.on('response',response=>{if(response.url().startsWith(origin)&&response.status()>=400)errors.push(`HTTP ${response.status()} ${new URL(response.url()).pathname}`);});
-   for(const course of ['4C','4E']){
+   for(const course of courses){
     await page.goto(`${origin}${prefix}?curso=${course}`,{waitUntil:'networkidle'});
     if(await page.locator('#course').inputValue()!==course)throw new Error('Curso inicial incorrecto');
+    if(await page.locator('#course option').count()!==4)failures.push('No están los cuatro cursos en el selector.');
     for(let slide=0;slide<8;slide++){
      await page.locator('.slide.active').waitFor();
      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),counter:document.querySelector('#counter').textContent}));
@@ -24,7 +27,7 @@ async function main(){
      if(slide<7)await page.getByRole('button',{name:'Diapositiva siguiente'}).click();checks++;
     }
     await page.reload({waitUntil:'networkidle'});if(await page.locator('#counter').textContent()!=='8 / 8')failures.push('No persiste la pantalla al recargar.');
-    const other=course==='4C'?'4E':'4C';await page.locator('#course').selectOption(other);
+    const other=courses[(courses.indexOf(course)+1)%courses.length];await page.locator('#course').selectOption(other);
     if(!page.url().includes(`curso=${other}`)||await page.locator('#counter').textContent()!=='8 / 8')failures.push('El cambio de curso perdió la pantalla.');
     for(const doc of ['lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
      await page.goto(`${origin}${prefix}${doc}?curso=${course}`,{waitUntil:'networkidle'});
@@ -41,14 +44,14 @@ async function main(){
      }
     }
     await page.goto(`${origin}${prefix}lectura.html?curso=${course}`,{waitUntil:'networkidle'});const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Descargar plano',exact:true}).click();const download=await downloadPromise;
-    const expectedFile=course==='4C'?'plano-multimetro.svg':'plano-estacion.svg';
+    const expectedFile=diagrams[course];
     if(![`${course}-diagram.svg`,expectedFile].includes(download.suggestedFilename()))failures.push('El nombre de la descarga no corresponde al curso');
     if(await download.failure())failures.push('Falló la descarga del plano');
     else if(!fs.readFileSync(await download.path()).equals(fs.readFileSync(path.join(root,'nm4/u3-clase7-manual-ilustrado/assets',expectedFile))))failures.push('El contenido del plano descargado no corresponde al curso');checks++;
    }
    if(errors.length)failures.push(...errors);await page.close();
   }
-  const page=await browser.newPage();await page.goto(`${origin}/nm4/`,{waitUntil:'networkidle'});for(const course of ['4C','4E'])if(await page.locator(`a[href="${prefix}?curso=${course}"]`).count()!==1)failures.push(`Portada: acceso ausente ${course}`);await page.close();
+  const page=await browser.newPage();await page.goto(`${origin}/nm4/`,{waitUntil:'networkidle'});for(const course of courses)if(await page.locator(`a[href="${prefix}?curso=${course}"]`).count()!==1)failures.push(`Portada: acceso ausente ${course}`);await page.close();
  }finally{await browser.close();if(server)await new Promise(resolve=>server.close(resolve));}
  console.log(JSON.stringify({origin,checks,output,failures},null,2));if(failures.length)process.exitCode=1;
 }

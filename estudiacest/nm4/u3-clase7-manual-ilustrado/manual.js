@@ -1,8 +1,10 @@
 (function(){
   'use strict';
   const params=new URLSearchParams(location.search);
-  let course=params.get('curso')==='4E'?'4E':'4C';
+  const validCourse=value=>Object.hasOwn(window.MANUAL_COURSES,String(value||'').toUpperCase())?String(value).toUpperCase():'4C';
+  let course=validCourse(params.get('curso'));
   const select=document.getElementById('course');
+  if(select)select.replaceChildren(...Object.entries(window.MANUAL_COURSES).map(([code,item])=>{const option=document.createElement('option');option.value=code;option.textContent=item.name;return option;}));
   const all=(selector)=>[...document.querySelectorAll(selector)];
   const fill=(selector,value)=>all(selector).forEach(element=>{element.textContent=value;});
   function showCourse(){
@@ -16,7 +18,7 @@
     all('[data-course-link]').forEach(link=>{
       const target=new URL(link.getAttribute('href'),location.href);target.searchParams.set('curso',course);link.href=target.pathname+target.search+target.hash;
     });
-    all('[data-download]').forEach(link=>{link.href=item[link.dataset.download];link.download=`${course}-${link.dataset.download}.${link.dataset.download==='diagram'?'svg':'jpg'}`;});
+    all('[data-download]').forEach(link=>{const resource=item[link.dataset.download];link.href=resource;link.download=`${course}-${link.dataset.download}.${resource.split('.').pop()}`;});
     all('[data-reading]').forEach(container=>{
       container.replaceChildren();
       item.sections.forEach(([title,content])=>{const section=document.createElement('section');const heading=document.createElement('h2');const p=document.createElement('p');heading.textContent=title;p.textContent=content;section.append(heading,p);container.append(section);});
@@ -26,7 +28,7 @@
     fill('[data-guided-original]',item.guidedOriginal);fill('[data-guided-question]',item.guidedQuestion);fill('[data-guided-answer]',item.guidedAnswer);
     params.set('curso',course);history.replaceState(null,'',location.pathname+'?'+params.toString()+location.hash);
   }
-  if(select)select.addEventListener('change',()=>{course=select.value==='4E'?'4E':'4C';showCourse();});
+  if(select)select.addEventListener('change',()=>{course=validCourse(select.value);showCourse();});
   showCourse();
   all('[data-print]').forEach(button=>button.addEventListener('click',()=>window.print()));
   const slides=all('.slide');

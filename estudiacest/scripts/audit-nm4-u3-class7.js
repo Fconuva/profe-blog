@@ -8,8 +8,12 @@ const durations=[...main.matchAll(/data-minutes="(\d+)"/g)].map(x=>Number(x[1]))
 expect(durations.length===8&&durations.reduce((a,b)=>a+b,0)===90,'La presentación debe tener ocho pantallas y sumar 90 minutos.');
 expect(main.includes('1 / 8'),'Contador de ocho pantallas ausente.');
 expect(main.includes('Esta página no recibe archivos ni registra entregas.'),'La modalidad de entrega presencial debe estar explícita.');
+expect(main.includes('cuatro sesiones de 90 minutos')&&main.includes('primer borrador'),'El encargo es un proyecto extendido, no una entrega de una clase.');
+const project=read('proyecto.html'),teacher=read('docente.html');
+expect((project.match(/id="sesion-[1-4]"/g)||[]).length===4,'Deben estar operativas las cuatro etapas del proyecto.');
+expect((teacher.match(/data-project-session="[1-4]" data-total-minutes="90"/g)||[]).length===4,'Deben existir cuatro sesiones de 90 minutos planificadas.');
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
-for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html']){
+for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
  const html=read(page);expect(html.includes('<script src="/assets/anotar-pizarra.js" defer></script>'),`${page}: falta el panel táctil.`);
  for(const match of html.matchAll(/(?:src|href)="([^"?#]+)[^"]*"/g)){
   const url=match[1];if(/^(https?:|#)/.test(url)||url==='/nm4/')continue;
@@ -19,6 +23,7 @@ for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','d
 }
 expect((read('plantilla.html').match(/class="sheet"/g)||[]).length===2,'La plantilla debe tener dos páginas.');
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
+expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
 for(const course of ['4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
@@ -31,4 +36,4 @@ const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-relea
 const files=fs.readdirSync(base,{recursive:true}).filter(file=>fs.statSync(path.join(base,file)).isFile());
 for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`nm4/u3-clase7-manual-ilustrado/${file.replaceAll('\\','/')}`),`Recurso crítico sin registro: ${file}`);
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: 8 pantallas, 90 minutos, 2 cursos, 2 páginas por manual, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 2 cursos, borrador de 2 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

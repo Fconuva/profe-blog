@@ -26,14 +26,15 @@ async function main(){
     await page.reload({waitUntil:'networkidle'});if(await page.locator('#counter').textContent()!=='8 / 8')failures.push('No persiste la pantalla al recargar.');
     const other=course==='4C'?'4E':'4C';await page.locator('#course').selectOption(other);
     if(!page.url().includes(`curso=${other}`)||await page.locator('#counter').textContent()!=='8 / 8')failures.push('El cambio de curso perdió la pantalla.');
-    for(const doc of ['lectura.html','plantilla.html','modelo.html','docente.html']){
+    for(const doc of ['lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
      await page.goto(`${origin}${prefix}${doc}?curso=${course}`,{waitUntil:'networkidle'});
      const healthy=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&[...document.images].every(img=>img.complete&&img.naturalWidth>0));
      if(!healthy)failures.push(`${width}/${course}/${doc}: desborde o imagen rota`);checks++;
-     if(width===1440&&['plantilla.html','modelo.html'].includes(doc)){
+     if(width===1440&&['plantilla.html','modelo.html','manual-final.html'].includes(doc)){
       await page.emulateMedia({media:'print'});
       const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});fs.writeFileSync(path.join(output,`${course}-${doc.replace('.html','.pdf')}`),pdf);
-      if((await PDFDocument.load(pdf)).getPageCount()!==2)failures.push(`${course}/${doc}: impresión distinta de dos páginas`);
+      const expectedPages=doc==='manual-final.html'?6:2;
+      if((await PDFDocument.load(pdf)).getPageCount()!==expectedPages)failures.push(`${course}/${doc}: impresión distinta de ${expectedPages} páginas`);
       const cuts=await page.evaluate(()=>[...document.querySelectorAll('.sheet')].map(el=>({overflow:el.scrollHeight>el.clientHeight+2,scroll:el.scrollHeight,height:el.clientHeight})));if(cuts.some(x=>x.overflow))failures.push(`${course}/${doc}: contenido cortado ${JSON.stringify(cuts)}`);
       await page.emulateMedia({media:'screen'});
       await page.screenshot({path:path.join(output,`${course}-${doc.replace('.html','.png')}`),fullPage:true});

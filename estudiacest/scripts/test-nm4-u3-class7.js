@@ -55,14 +55,19 @@ async function main(){
      if(doc==='plantilla.html'){
       if(!(await page.locator('main').textContent()).includes('Muestren el borrador al docente y guárdenlo'))failures.push('Entrega del borrador ambigua.');checks++;
       const guide=await page.evaluate(()=>({headers:[...document.querySelectorAll('.school-letterhead')].map(el=>({school:el.textContent.includes('CENTRO EDUCATIVO SALESIANOS TALCA'),logos:[...el.querySelectorAll('img')].map(img=>new URL(img.src).pathname),loaded:[...el.querySelectorAll('img')].every(img=>img.complete&&img.naturalWidth>0)})),students:document.querySelectorAll('.student-line').length,fields:['Fecha:','Grupo:','Objetivo:','Instrucciones:','OA 5 y OA 6'].every(text=>document.querySelector('main').textContent.includes(text)),course:[...document.querySelectorAll('[data-course-name]')].every(el=>el.textContent===document.querySelector('#course option:checked').textContent)}));
-      if(guide.headers.length!==2||guide.headers.some(h=>!h.school||!h.loaded||h.logos.join(',')!=='/estudiantes/assets/insignia_talca_1.png,/estudiantes/assets/sdb-logo-big.png')||guide.students!==3||!guide.fields||!guide.course)failures.push(`${width}/${course}: membrete o elementos de la guía incompletos`);checks++;
+      if(guide.headers.length!==3||guide.headers.some(h=>!h.school||!h.loaded||h.logos.join(',')!=='/estudiantes/assets/insignia_talca_1.png,/estudiantes/assets/sdb-logo-big.png')||guide.students!==3||!guide.fields||!guide.course)failures.push(`${width}/${course}: membrete o elementos de la guía incompletos`);checks++;
      }
      if(width===1440&&['plantilla.html','modelo.html','manual-final.html'].includes(doc)){
       await page.emulateMedia({media:'print'});
       const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});fs.writeFileSync(path.join(output,`${course}-${doc.replace('.html','.pdf')}`),pdf);
-      const expectedPages=doc==='manual-final.html'?6:2;
+      const expectedPages=doc==='manual-final.html'?6:doc==='plantilla.html'?3:2;
       if((await PDFDocument.load(pdf)).getPageCount()!==expectedPages)failures.push(`${course}/${doc}: impresión distinta de ${expectedPages} páginas`);
       const cuts=await page.evaluate(()=>[...document.querySelectorAll('.sheet')].map(el=>({overflow:el.scrollHeight>el.clientHeight+2,scroll:el.scrollHeight,height:el.clientHeight})));if(cuts.some(x=>x.overflow))failures.push(`${course}/${doc}: contenido cortado ${JSON.stringify(cuts)}`);
+      if(doc==='plantilla.html'){
+       const handwriting=await page.evaluate(()=>({lines:[...document.querySelectorAll('.answer-lines>span')].map(el=>({height:el.getBoundingClientRect().height,border:getComputedStyle(el).borderBottomStyle})),functions:[...document.querySelectorAll('.part-function')].map(el=>({width:el.getBoundingClientRect().width,lines:el.children.length})),full:[...document.querySelectorAll('.guide-task .answer-lines')].every(el=>el.getBoundingClientRect().width>=640),table:document.querySelector('.parts-answer-table').scrollWidth<=document.querySelector('.parts-answer-table').clientWidth+1}));
+       if(handwriting.lines.length<50||handwriting.lines.some(x=>x.height<26||x.border!=='solid')||handwriting.functions.length!==6||handwriting.functions.some(x=>x.width<390||x.lines!==3)||!handwriting.full||!handwriting.table)failures.push(`${course}: espacios de escritura insuficientes ${JSON.stringify(handwriting)}`);checks++;
+       const noBackground=await page.pdf({preferCSSPageSize:true,printBackground:false});fs.writeFileSync(path.join(output,`${course}-plantilla-sin-fondos.pdf`),noBackground);if((await PDFDocument.load(noBackground)).getPageCount()!==3)failures.push(`${course}: impresión sin fondos distinta de tres páginas`);checks++;
+      }
       await page.emulateMedia({media:'screen'});
       await page.screenshot({path:path.join(output,`${course}-${doc.replace('.html','.png')}`),fullPage:true});
      }

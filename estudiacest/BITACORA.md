@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: espacios reales de escritura en el borrador
+
+- Francisco advirtió que el borrador imprimible tenía líneas y cuadros mal resueltos y poco espacio para responder. La validación anterior de dos páginas y ausencia de desbordes no comprobaba la suficiencia del espacio de escritura ni la impresión sin fondos. Se reemplazan guiones bajos, renglones de fondo y respuestas estrechas junto a imágenes por bordes reales y áreas de escritura con medidas físicas.
+- El borrador pasa de dos a tres páginas A4, sin cambiar las siete actividades, cuatro cursos, proyecto de cuatro sesiones ni manual final de seis páginas. Hoja 1: función e indicaciones; hoja 2: plano y tabla de seis partes; hoja 3: seguridad, imágenes y fuente. Se conserva el membrete y los dos logos oficiales en las tres hojas. Se sincronizan las referencias a hojas y páginas en presentación, lectura, proyecto y planificación docente.
+- Sesenta renglones de 7 mm, sin depender de imprimir gráficos de fondo. Respuestas de función, indicaciones, seguridad e imágenes a todo el ancho; cada función de la tabla dispone de tres renglones y más de 10 cm de ancho útil. Curso, fecha y grupo alineados; las imágenes tienen sus explicaciones fuera de cuadros estrechos. No se cambian fuentes técnicas, equipos, imágenes, datos ni notas.
+- Se amplían las pruebas para exigir altura mínima de renglón, ancho útil, seis funciones, bordes visibles, tres membretes, PDF de tres páginas con y sin fondos y ausencia de referencias al borrador de dos hojas. Auditoría y build integral aprobados: 625 recursos críticos y panel de pizarra en 57 páginas. Prueba integral local: 472 comprobaciones sin fallas; evidencias `%TEMP%/nm4-manual-qa-cZNZhp`.
+- Prueba local focalizada: 16 combinaciones de curso/ancho, ocho PDF (cuatro cursos, fondos activados y desactivados), 60 renglones por versión, altura mínima 26,45 px y ancho mínimo de función 413,78 px; tres páginas y cero cortes en todos los casos. Evidencias: `%TEMP%/nm4-escritura-qa-xYSlyo`. Se rasterizan los PDF reales sin fondos con Poppler a 140 dpi y se inspeccionan páginas de 4°A y 4°E, incluyendo identificación, tabla y respuestas de seguridad. No se afirma una prueba física en impresora.
+- Publicación y verificación pública pendientes del despliegue seguro.
+
 ## 2026-10-04, NM4: borrador imprimible con formato institucional
 
 - Francisco pidió que el borrador tenga los elementos de una guía, membrete del colegio y sus logos. Se modifica únicamente la plantilla de dos hojas del manual ilustrado; las presentaciones, lecturas, modelo, manual final y datos académicos se conservan.

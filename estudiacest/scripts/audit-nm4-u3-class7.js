@@ -21,13 +21,17 @@ for(const session of [...teacher.matchAll(/<section class="reading" data-project
 }
 expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(/<ol class="steps">/g)||[]).length===5,'La consigna abreviada debe conservar cuatro listas de acciones, un resultado por clase y las seis páginas.');
 expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
-expect(main.includes('Completen la hoja 1')&&main.includes('Completen la hoja 2')&&main.includes('Ejemplo de respuesta individual'),'Debe explicitarse dónde escribir y un ejemplo de reflexión.');
+expect(main.includes('Completen las hojas 1 y 2')&&main.includes('Completen la hoja 3')&&main.includes('Ejemplo de respuesta individual'),'Debe explicitarse dónde escribir en las tres hojas y un ejemplo de reflexión.');
 expect(read('plantilla.html').includes('Muestren el borrador al docente y guárdenlo')&&!read('plantilla.html').includes('Entreguen estas dos páginas'),'El borrador se muestra y conserva; no es la entrega final.');
 const guide=read('plantilla.html');
-expect((guide.match(/class="school-letterhead"/g)||[]).length===2,'Las dos hojas del borrador deben llevar membrete institucional.');
-for(const logo of ['insignia_talca_1.png','sdb-logo-big.png'])expect(guide.split(`src="/estudiantes/assets/${logo}"`).length-1===2,`El logo ${logo} debe estar en ambas hojas.`);
+expect((guide.match(/class="school-letterhead"/g)||[]).length===3,'Las tres hojas del borrador deben llevar membrete institucional.');
+for(const logo of ['insignia_talca_1.png','sdb-logo-big.png'])expect(guide.split(`src="/estudiantes/assets/${logo}"`).length-1===3,`El logo ${logo} debe estar en las tres hojas.`);
 for(const element of ['CENTRO EDUCATIVO SALESIANOS TALCA','Departamento de Lengua y Literatura','Docente: Francisco Núñez','Integrantes del grupo:','Fecha:','Grupo:','Objetivo:','Instrucciones:','OA 5 y OA 6'])expect(guide.includes(element),`La guía imprimible debe conservar ${element}`);
 expect((guide.match(/class="student-line"/g)||[]).length===3,'Deben existir tres espacios para identificar a los integrantes.');
+expect(!/_{3}/.test(guide.replace(/<[^>]+>/g,''))&&!guide.includes('class="writing-space"'),'El borrador no debe usar guiones bajos ni líneas como fondos de impresión.');
+expect((guide.match(/class="answer-lines part-function"/g)||[]).length===6&&(guide.match(/<tr><th scope="row">[1-6]<\/th>/g)||[]).length===6,'La tabla debe conservar seis partes y espacio para explicar su función.');
+expect(read('manual.css').includes('.guide-sheet .answer-lines>span{display:block;height:7mm;border-bottom:.5pt solid'),'Los renglones del borrador deben ser bordes reales separados por 7 mm.');
+for(const file of ['index.html','lectura.html','proyecto.html','docente.html'])expect(!/dos (?:hojas|páginas)/.test(read(file)),`${file}: quedó una referencia al borrador antiguo de dos hojas.`);
 expect(read('modelo.html').includes('no formato final')&&read('manual-final.html').includes('Usen cajas y flechas.'),'El modelo debe distinguirse del producto final y enseñar la ruta de consulta.');
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
 for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
@@ -39,7 +43,7 @@ for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','d
   expect(fs.existsSync(target),`${page}: recurso ausente ${url}`);
  }
 }
-expect((read('plantilla.html').match(/class="sheet(?: [^"]*)?"/g)||[]).length===2,'La plantilla debe tener dos páginas.');
+expect((read('plantilla.html').match(/class="sheet(?: [^"]*)?"/g)||[]).length===3,'El borrador debe tener tres páginas con espacio de escritura.');
 expect((read('modelo.html').match(/class="sheet"/g)||[]).length===2,'El modelo debe tener dos páginas.');
 expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La plantilla final debe tener seis páginas.');
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
@@ -70,4 +74,4 @@ for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`
 expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');
 expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cuatro cursos y evitar caer en otro curso.');
 if(failures.length){console.error(failures.join('\n'));process.exit(1);}
-console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 4 cursos, borrador de 2 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);
+console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 4 cursos, borrador de 3 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

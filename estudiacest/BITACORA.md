@@ -1,5 +1,14 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: manual ilustrado para 4°C y 4°E
+
+- Francisco autorizó dejar operativa una sola clase de 90 minutos, en grupos de tres, con imágenes y planos: convertir una lectura técnica en un manual propio de dos páginas. 4°A y 4°B continúan con el informe existente.
+- Nueva ruta `/nm4/u3-clase7-manual-ilustrado/`, con selección de curso y ocho pantallas que suman 90 minutos. Secuencia de modelo docente, práctica guiada, lectura, escritura de las dos páginas, revisión entre grupos y cierre individual en cuaderno. Integra el panel táctil canónico.
+- Materiales: lecturas adaptadas del multímetro Fluke 101 (4°C) y la estación HAKKO FX-888DX (4°E), cuatro fotografías locales de los fabricantes con atribución, dos esquemas originales de identificación sin escala, modelo completo de una linterna, plantilla imprimible y planificación docente. No se reproducen los manuales completos: se enlazan las fuentes oficiales.
+- La modalidad conserva la entrega al docente en clase. No hay login, formulario, guardado, recepción de archivos ni nota automática; no se escriben datos de estudiantes. Los esquemas no son planos de instalación y la actividad no requiere operar equipos.
+- Portada NM4 actualizada en la tarjeta del 5 de octubre, con acceso directo por curso y conservación de todos los enlaces a los informes. Auditoría de la Clase 5 actualizada para comprobar las dos actividades actuales diferenciadas y las dos fechas restantes por planificar; no se retiran comprobaciones.
+- Validación local: auditoría focalizada, build integral (605 recursos críticos), navegador real en 320, 390, 1440 y 3840 px, 104 comprobaciones sin fallas tras corregir el desborde móvil de la plantilla; modelo y plantilla generan dos páginas A4 para ambos cursos. Publicación y comprobación pública pendientes de cierre.
+
 ## 2026-10-02, regla: panel para anotar en todas las páginas de NM3 y NM4
 
 - Francisco decidió que todas las páginas de NM3 y NM4 en Estudia CEST tengan el panel para anotar sobre la pizarra táctil (lápiz, destacador y goma).

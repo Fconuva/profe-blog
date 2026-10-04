@@ -37,10 +37,11 @@ const unitCards = [...unitGrid.matchAll(/<article class="([^"]*\bu3-card\b[^"]*)
 expect(articleDepth === 0 && !articleUnderflow, 'La portada NM4 tiene etiquetas <article> desbalanceadas en la Unidad 3.');
 expect(maxArticleDepth === 1, 'La portada NM4 tiene tarjetas de la Unidad 3 anidadas entre sí.');
 expect(unitCards.length === 13, `Se esperaban 13 tarjetas cronológicas en la Unidad 3 y se encontraron ${unitCards.length}.`);
-expect(unitCards.filter(classes => classes.includes('activa')).length === 1, 'Debe existir una sola tarjeta marcada como clase actual.');
+expect(unitCards.filter(classes => classes.includes('activa')).length === 2, 'Deben existir dos actividades actuales diferenciadas: informe (4°A/4°B) y manual (4°C/4°E).');
 expect(portal.includes('Clases y cierre de la unidad, en orden de fecha.'), 'La portada no explica el orden cronológico de la Unidad 3.');
 expect(!portal.includes('Cierre Semestral: 4 Tareas de Octubre'), 'La portada conserva la planificación de cierre descartada.');
-expect((portal.match(/<h3>Actividad por planificar<\/h3>/g) || []).length === 3, 'Deben quedar tres fechas de octubre sin contenido inventado.');
+expect((portal.match(/<h3>Actividad por planificar<\/h3>/g) || []).length === 2, 'Deben quedar dos fechas de octubre por planificar, después de la clase autorizada del 5.');
+expect(portal.includes('/nm4/u3-clase7-manual-ilustrado/?curso=4C') && portal.includes('/nm4/u3-clase7-manual-ilustrado/?curso=4E'), 'La actividad del 5 de octubre debe abrir el manual de cada curso.');
 [
   'Martes 22 de septiembre · 90 min',
   'Lunes 28 de septiembre · 90 min',

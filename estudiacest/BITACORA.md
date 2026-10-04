@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, estándar para las próximas planificaciones, clases y guías
+
+- Francisco pide dejar como regla el estilo de planificación, clase y formatos recién aprobado. Se registra en `REGLAS.md`, sección 13, única fuente normativa; no se crean reglas paralelas en OneDrive, Portabot o la Bóveda.
+- Se establece inicio con activación/normas/objetivo en tres diapositivas, desarrollo con modelamiento/actividad/monitoreo y cierre con revisión/plenario más sistematización/metacognición. Objetivo en infinitivo, alineación curricular, instrucciones directas y adaptación al curso y duración real.
+- Se fija identificación al inicio, objetivo e instrucciones en cuadros, membrete completo con ambos logos, lectura y respuestas ordenadas, campos de nombres de 8 mm y renglones de al menos 7 mm, PDF A4 al 100 % y comprobación de las páginas renderizadas. La referencia editable es el manual ilustrado NM4 vigente; no se convierten cinco páginas, tres integrantes ni 90 minutos en requisitos universales.
+- Cambio exclusivamente documental y prospectivo: no modifica clases, PDF, notas, datos ni el sitio publicado. Se conserva la publicación verificada `65ba7fe773b5e59053ab5f48c507b82dfab6e469`, sin un despliegue innecesario por registrar la regla.
+- `AGENTS.md` incorpora una referencia a la sección 13 para que los agentes siguientes encuentren el estándar al entrar. Auditoría NM4, build integral y revisión de referencias aprobados; se confirma solo documentación y se sincroniza con `origin/main` mediante commit acotado y push.
+
 ## 2026-10-04, NM4: identificación inicial y formato en cuadros para las cuatro guías
 
 - Francisco pide identificación, objetivo e instrucciones visibles al comienzo y un orden en cuadros semejante a los ensayos PAES/SIMCE. Se revisan, sin modificar, los formatos genéricos `Ensayo_PAES_Oficial_2026` y `SIMCE_2025_NM2_Forma_P_DOCENTES_IMPRIMIBLE` de Lengua y Literatura 2026. Se toma su jerarquía de bloques, no sus preguntas ni objetivos.

@@ -280,3 +280,83 @@ Antes de declarar una tarea terminada:
   mejora se hace en `assets/anotar-pizarra.js`.
 - `npm run build` ejecuta `scripts/audit-anotar-pizarra.js` y falla si alguna
   página de NM3 o NM4 no carga el panel.
+
+## 13. Estándar de planificación, clases y guías imprimibles
+
+Por decisión de Francisco (4-oct-2026), el estilo aprobado del manual ilustrado
+NM4 se usa como patrón para las siguientes clases, planificaciones,
+presentaciones y guías de todos los cursos. Se reutiliza el formato, no el tema,
+la cantidad de integrantes, las cinco páginas ni los 90 minutos de ese proyecto.
+Las reglas específicas de PAES, SIMCE y cada nivel siguen vigentes. Una excepción
+al estilo requiere una indicación explícita de Francisco. Esta decisión no
+autoriza a rehacer automáticamente materiales o evaluaciones ya publicados.
+
+### Planificación y presentación de la clase
+
+- **Inicio:** activación de conocimientos previos, normas y objetivo, en ese
+  orden. En la presentación ocupan **tres diapositivas distintas**; no reunirlos
+  en una sola pantalla.
+- **Desarrollo:** modelamiento con un ejemplo concreto, actividad del estudiante
+  y monitoreo docente. Indicar qué hacen, dónde responden, qué producto elaboran
+  y qué evidencia revisa el docente durante el trabajo.
+- **Cierre:** revisión o plenario, seguido de sistematización o metacognición.
+  Explicitar una conclusión o pregunta de reflexión vinculada al objetivo.
+- El objetivo comienza con un verbo **en infinitivo**, se alinea con el OA y el
+  currículo chileno correspondiente y coincide entre planificación,
+  presentación y guía. No redactarlo como una orden («Reescriban»).
+- Dar instrucciones breves, numeradas y directas: «Lean», «Respondan»,
+  «Observen», «Escriban», «Revisen». Evitar exceso de texto, tarjetas, etiquetas,
+  rutas o información administrativa que distraiga de la tarea.
+- Distribuir tiempos según la duración real de la sesión. Adaptar contenido,
+  ejemplos y vocabulario al nivel, curso y especialidad; no copiar una actividad
+  técnica a otro curso sin revisar su pertinencia curricular.
+- En las clases presenciales, mantener la norma «No se permite el uso de
+  celular», salvo autorización explícita de Francisco. Las advertencias de
+  seguridad de equipos o fuentes se conservan por separado.
+- En proyectos de varias clases, distinguir el avance de cada sesión del
+  producto final e indicar qué se muestra, conserva o entrega. No convertir un
+  borrador en entrega final por cambiar el formato.
+
+### Guía lista para imprimir
+
+- La **primera página** lleva identificación en un cuadro: nombre y apellido,
+  curso y fecha; si es grupal, espacio para cada integrante y número de grupo.
+  No dejar la identificación únicamente en una hoja posterior. Las hojas
+  siguientes llevan una identificación breve para reconocerlas si se separan.
+- Incluir al comienzo el **objetivo** y las **instrucciones**, en cuadros
+  separados, antes de la lectura o las actividades.
+- Usar membrete institucional completo y ambos logos, como en las guías
+  aprobadas: colegio, sedes/contactos, ciudad/región/país, departamento,
+  asignatura/nivel, año y docente; conservar lema y numeración en el pie. No
+  reconstruir un membrete abreviado ni inventar datos institucionales.
+- Ordenar lectura, recursos, vocabulario, consignas y respuestas en cuadros o
+  tablas de bordes reales, con jerarquía clara y buena impresión en blanco y
+  negro. Tomar como referencia el orden visual de los ensayos PAES y SIMCE,
+  sin copiar preguntas, claves ni condiciones de evaluación ajenas.
+- Incluir lo que deben **leer** y lo que deben **completar**, junto con imágenes,
+  planos y fuentes cuando correspondan. Distinguir ejemplos, borradores y
+  producto final para que el estudiante no confunda lo que debe entregar.
+- Reservar espacio suficiente para la respuesta esperada: renglones de al
+  menos **7 mm** y campos de nombres de al menos **8 mm** de alto. Usar bordes
+  imprimibles, no fondos rayados ni largas cadenas de guiones bajos. No reducir
+  letra o escritura para forzar una cantidad de páginas; ajustar la distribución.
+- Preparar PDF A4 al 100 %, sin depender de activar fondos ni encabezados del
+  navegador. Mantener bloques y tablas sin cortes, imágenes legibles, márgenes
+  útiles, pie dentro de la página y numeración continua. La cantidad de páginas
+  se determina por el contenido, no se fija en cinco para todas las guías.
+- Comprobar consistencia entre la vista imprimible y el PDF descargable, curso
+  correcto y enlaces vigentes. Abrir las páginas renderizadas antes de decir
+  «listo para imprimir»; revisar identificación, objetivo, instrucciones,
+  espacios, bordes, saltos y pies. Una revisión digital no es una prueba física
+  de impresora ni una validación automática de Evaluación Docente.
+
+### Referencia editable aprobada
+
+- `nm4/u3-clase7-manual-ilustrado/index.html`: secuencia de clase y tres
+  diapositivas independientes de inicio.
+- `nm4/u3-clase7-manual-ilustrado/docente.html`: planificación por sesión.
+- `scripts/generate-nm4-manual-pdfs.js` y
+  `nm4/u3-clase7-manual-ilustrado/manual.css`: identificación inicial, cuadros y
+  distribución de las guías completas.
+- `nm4/u3-clase7-manual-ilustrado/assets/guia-4*-completa.pdf`: muestra aprobada
+  de lectura y respuestas por curso; reutilizar su estilo, no sus contenidos.

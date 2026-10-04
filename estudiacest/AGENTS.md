@@ -16,6 +16,9 @@ portafolios, cartera o WhatsApp no se aplican a una tarea limitada a
 locales y las instrucciones especializadas de PAES, SIMCE, NM3 o NM4 cuando
 corresponda.
 
+Para las próximas planificaciones, presentaciones y guías de todos los cursos,
+aplicar el estándar de `REGLAS.md`, sección 13, basado en el formato NM4 aprobado.
+
 Al cerrar una tarea que cambie comportamiento, datos, contenido académico,
 administración o producción, agregar una entrada a `BITACORA.md`. No registrar
 RUT, notas individuales, correos, credenciales ni otros datos personales.

@@ -19,6 +19,8 @@ async function main(){
     await page.goto(`${origin}${prefix}?curso=${course}`,{waitUntil:'networkidle'});
     if(await page.locator('#course').inputValue()!==course)throw new Error('Curso inicial incorrecto');
     if(await page.locator('#course option').count()!==4)failures.push('No están los cuatro cursos en el selector.');
+    const flow=await page.evaluate(()=>[...document.querySelectorAll('.slide')].map(el=>({stage:el.dataset.stage,minutes:Number(el.dataset.minutes),commands:el.querySelectorAll('ol.steps>li').length})));
+    if(flow.map(x=>x.stage).join(',')!=='inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'||flow.reduce((total,x)=>total+x.minutes,0)!==90||flow.some(x=>x.commands<3))failures.push(`${width}/${course}: secuencia o consignas incompletas`);checks++;
     for(let slide=0;slide<8;slide++){
      await page.locator('.slide.active').waitFor();
      const layout=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+1,images:[...document.querySelectorAll('.slide.active img')].every(img=>img.complete&&img.naturalWidth>0),counter:document.querySelector('#counter').textContent}));
@@ -29,10 +31,25 @@ async function main(){
     await page.reload({waitUntil:'networkidle'});if(await page.locator('#counter').textContent()!=='8 / 8')failures.push('No persiste la pantalla al recargar.');
     const other=courses[(courses.indexOf(course)+1)%courses.length];await page.locator('#course').selectOption(other);
     if(!page.url().includes(`curso=${other}`)||await page.locator('#counter').textContent()!=='8 / 8')failures.push('El cambio de curso perdió la pantalla.');
+    await page.getByRole('link',{name:'Qué hacemos en la clase 2'}).click();
+    if(!page.url().includes(`curso=${other}`)||new URL(page.url()).hash!=='#sesion-2')failures.push('El enlace a clase 2 perdió el curso o la etapa.');checks++;
     for(const doc of ['lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
      await page.goto(`${origin}${prefix}${doc}?curso=${course}`,{waitUntil:'networkidle'});
      const healthy=await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1&&[...document.images].every(img=>img.complete&&img.naturalWidth>0));
      if(!healthy)failures.push(`${width}/${course}/${doc}: desborde o imagen rota`);checks++;
+     if(doc==='proyecto.html'){
+      if(await page.locator('[id^="sesion-"] .lesson-result').count()!==4||await page.locator('[id^="sesion-"] ol.steps').count()!==4)failures.push('Falta una consigna o resultado de las cuatro clases.');checks++;
+     }
+     if(doc==='docente.html'){
+      const lessons=await page.locator('[data-project-session]').evaluateAll(elements=>elements.map(el=>({objective:el.textContent.includes('Objetivo:'),check:el.textContent.includes('Comprobación:'),phases:[...el.querySelectorAll('[data-phase]')].map(x=>x.dataset.phase).join(','),minutes:[...el.querySelectorAll('[data-minutes]')].reduce((sum,x)=>sum+Number(x.dataset.minutes),0)})));
+      if(lessons.length!==4||lessons.some(x=>!x.objective||!x.check||x.phases!=='inicio,desarrollo,cierre'||x.minutes!==90))failures.push('Planificación incompleta.');checks++;
+     }
+     if(doc==='lectura.html'){
+      if(await page.locator('[data-vocabulary]>p').count()!==4)failures.push('Glosario incompleto.');checks++;
+     }
+     if(doc==='plantilla.html'){
+      if(!(await page.locator('main').textContent()).includes('Muestren el borrador al docente y guárdenlo'))failures.push('Entrega del borrador ambigua.');checks++;
+     }
      if(width===1440&&['plantilla.html','modelo.html','manual-final.html'].includes(doc)){
       await page.emulateMedia({media:'print'});
       const pdf=await page.pdf({preferCSSPageSize:true,printBackground:true});fs.writeFileSync(path.join(output,`${course}-${doc.replace('.html','.pdf')}`),pdf);

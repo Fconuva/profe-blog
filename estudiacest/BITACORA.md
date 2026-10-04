@@ -1,5 +1,13 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-04, NM4: consignas directas y currículo del manual ilustrado
+
+- Francisco pidió quitar el exceso de texto y usar acciones concretas. Se abrevia la presentación y la consigna de `/nm4/u3-clase7-manual-ilustrado/`: lean, respondan en sus hojas, completen, revisen y muestren el avance. Se conserva el proyecto de cuatro sesiones de 90 minutos, grupos de tres y manual final de seis páginas para 4°A, 4°B, 4°C y 4°E; no se modifican informes, notas ni datos de estudiantes.
+- Se separan INICIO (10), DESARROLLO (70) y CIERRE (10), con objetivo y comprobación por clase. Modelo breve, reescritura conjunta y trabajo del grupo. La guía docente identifica OA 5 y OA 6 de Lengua y Literatura, formación general de 4° medio, con enlaces oficiales; el tema técnico corresponde a la especialidad y la Unidad 3 CEST se identifica como secuencia local, no título oficial del programa.
+- Se indica dónde escribir: dos hojas o plantilla impresa en la clase 1 y seis páginas desde la clase 2. El borrador se muestra y conserva; la entrega final se hace al docente en la clase 4. Se incorpora ejemplo individual de cambio, ejemplo de ruta de consulta y cuarto término de vocabulario por curso, basado en las partes ya documentadas. Se conserva la atribución y la información técnica del fabricante; no se operan equipos ni se agregan cuentas o formularios.
+- Se reduce el texto fijo de la presentación de 666 a 499 palabras (25 %) y de la consigna de 836 a 497 (41 %), contando el HTML sin etiquetas, cabecera ni scripts; la lectura técnica dinámica no forma parte de ese conteo. Se ajusta el mínimo de bytes del proyecto abreviado y se refuerza la auditoría de cuatro etapas, resultados, fases, ejemplos, OA y glosario; no se eliminan verificaciones.
+- Validación local: auditoría focalizada y build integral aprobados, 613 recursos críticos y panel canónico en 57 páginas. `node scripts/test-nm4-u3-class7.js`: 336 comprobaciones, cero fallas, en 320, 390, 1440 y 3840 px. Verificados curso, fases, enlace a clase 2 con curso y ancla, imágenes, cuatro consignas y resultados, vocabulario, conservación del borrador, descargas y PDF A4 de dos y seis páginas sin cortes. Evidencias: `%TEMP%/nm4-manual-qa-KDTqRO`; inspección visual de 4°C en escritorio y 4°A en móvil aprobada. Publicación y verificación pública pendientes en esta entrada.
+
 ## 2026-10-04, NM4: manual también operativo para 4°A y 4°B
 
 - Francisco pidió habilitar de inmediato el mismo proyecto para 4°A y 4°B. Se incorporan Mecánica Industrial y Mecánica Automotriz, sin sustituir ni modificar los informes, entregas o notas anteriores; las versiones de 4°C y 4°E se conservan.

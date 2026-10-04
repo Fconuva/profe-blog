@@ -12,6 +12,18 @@ expect(main.includes('cuatro sesiones de 90 minutos')&&main.includes('primer bor
 const project=read('proyecto.html'),teacher=read('docente.html');
 expect((project.match(/id="sesion-[1-4]"/g)||[]).length===4,'Deben estar operativas las cuatro etapas del proyecto.');
 expect((teacher.match(/data-project-session="[1-4]" data-total-minutes="90"/g)||[]).length===4,'Deben existir cuatro sesiones de 90 minutos planificadas.');
+const stages=[...main.matchAll(/data-stage="([a-z]+)"/g)].map(x=>x[1]);
+expect(stages.join(',')==='inicio,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,desarrollo,cierre'&&durations[0]===10&&durations[7]===10,'Inicio, modelado/práctica en desarrollo y cierre deben estar visibles y temporizados.');
+for(const session of [...teacher.matchAll(/<section class="reading" data-project-session="([1-4])" data-total-minutes="90">([\s\S]*?)<\/section>/g)]){
+ const phases=[...session[2].matchAll(/data-phase="([a-z]+)" data-minutes="(\d+)"/g)];
+ expect(phases.map(x=>x[1]).join(',')==='inicio,desarrollo,cierre'&&phases.map(x=>Number(x[2])).join(',')==='10,70,10',`Clase ${session[1]}: faltan las tres fases de 90 minutos.`);
+ expect(session[2].includes('Objetivo:')&&session[2].includes('Comprobación:'),`Clase ${session[1]}: falta objetivo o comprobación.`);
+}
+expect((project.match(/class="lesson-result"/g)||[]).length===4&&(project.match(/<ol class="steps">/g)||[]).length===5,'La consigna abreviada debe conservar cuatro listas de acciones, un resultado por clase y las seis páginas.');
+expect(teacher.includes('w3-article-91149.html')&&teacher.includes('w3-article-91150.html')&&teacher.includes('formación general'),'La planificación debe identificar OA 5 y OA 6 de Lengua y Literatura de 4° medio.');
+expect(main.includes('Completen la hoja 1')&&main.includes('Completen la hoja 2')&&main.includes('Ejemplo de respuesta individual'),'Debe explicitarse dónde escribir y un ejemplo de reflexión.');
+expect(read('plantilla.html').includes('Muestren el borrador al docente y guárdenlo')&&!read('plantilla.html').includes('Entreguen estas dos páginas'),'El borrador se muestra y conserva; no es la entrega final.');
+expect(read('modelo.html').includes('no formato final')&&read('manual-final.html').includes('Usen cajas y flechas.'),'El modelo debe distinguirse del producto final y enseñar la ruta de consulta.');
 expect(!/firebase|<form|localStorage|sessionStorage/.test(main+read('manual.js')),'No se autorizó un login, formulario o guardado de estudiantes en esta clase.');
 for(const page of ['index.html','lectura.html','plantilla.html','modelo.html','docente.html','proyecto.html','manual-final.html']){
  const html=read(page);expect(html.includes('<script src="/assets/anotar-pizarra.js" defer></script>'),`${page}: falta el panel táctil.`);
@@ -27,6 +39,7 @@ expect((read('manual-final.html').match(/class="sheet"/g)||[]).length===6,'La pl
 const context={window:{}};vm.runInNewContext(read('contenidos.js'),context);const data=context.window.MANUAL_COURSES;
 for(const course of ['4A','4B','4C','4E']){
  const item=data[course];expect(item?.sections.length===4,`${course}: lectura incompleta.`);expect(item?.parts.length===6,`${course}: deben existir seis partes del plano.`);
+ expect(item?.vocabulary.length===4,`${course}: deben estar disponibles los cuatro términos del glosario.`);
  for(const key of ['photo','detail','diagram'])expect(fs.statSync(path.join(base,item[key])).size>1000,`${course}: recurso visual incompleto.`);
  expect(item.source.startsWith('https://')&&item.reference,`${course}: falta fuente primaria.`);
  expect(home.includes(`/nm4/u3-clase7-manual-ilustrado/?curso=${course}`),`${course}: falta acceso en NM4.`);
@@ -35,7 +48,7 @@ for(const specialty of ['industrial','automotriz','tecnico','electronica'])expec
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'scripts/academic-release-manifest.json'),'utf8'));
 const files=fs.readdirSync(base,{recursive:true}).filter(file=>fs.statSync(path.join(base,file)).isFile());
 for(const file of files)expect(manifest.criticalFiles.some(entry=>entry.path===`nm4/u3-clase7-manual-ilustrado/${file.replaceAll('\\','/')}`),`Recurso crítico sin registro: ${file}`);
-if(failures.length){console.error(failures.join('\n'));process.exit(1);}
 expect(Object.keys(data).length===4,'Los cuatro cursos deben tener materiales propios.');
 expect(read('manual.js').includes('Object.hasOwn(window.MANUAL_COURSES'),'La selección debe validar los cuatro cursos y evitar caer en otro curso.');
+if(failures.length){console.error(failures.join('\n'));process.exit(1);}
 console.log(`Manual ilustrado NM4 auditado: proyecto de 4 sesiones de 90 minutos, 8 pantallas iniciales, 4 cursos, borrador de 2 páginas y manual final de 6, ${files.length} recursos y todos los informes conservados.`);

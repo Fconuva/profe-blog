@@ -15,7 +15,7 @@ window.MANUAL_COURSES = {
       ['Límite de esta lectura','La clase analiza y reescribe información, sin perforar ni conectar equipos. El manual final es un producto escolar: no reemplaza la capacitación ni todas las instrucciones del fabricante.']
     ],
     parts:['Base: sostiene el equipo y la pieza de trabajo.','Columna: guía el desplazamiento vertical.','Portabrocas: sujeta la broca.','Tensor rápido: fija la pieza de trabajo.','Rueda giratoria: controla el avance de la unidad.','Pantalla: indica velocidad o profundidad.'],
-    vocabulary:[['Portabrocas','Elemento que sujeta la broca.'],['Virutas','Fragmentos que se desprenden del material al perforarlo.'],['Tensor rápido','Dispositivo para fijar la pieza; no se reemplaza por la mano.']],
+    vocabulary:[['Portabrocas','Elemento que sujeta la broca.'],['Virutas','Fragmentos que se desprenden del material al perforarlo.'],['Tensor rápido','Dispositivo para fijar la pieza; no se reemplaza por la mano.'],['Columna','Parte que guía el desplazamiento vertical del taladro.']],
     guidedOriginal:'La sujeción manual de la pieza durante el funcionamiento puede provocar lesiones; corresponde asegurarla mediante el dispositivo de fijación.',
     guidedQuestion:'¿Cómo explicarías la diferencia entre sujetar la pieza y sujetarla con la mano, sin perder la advertencia?',
     guidedAnswer:'Fija la pieza con el tensor rápido. No la sostengas con la mano mientras gira la broca.'
@@ -35,7 +35,7 @@ window.MANUAL_COURSES = {
       ['Límite de esta lectura','En esta clase solo investigamos y escribimos: no elevamos vehículos. Las imágenes no forman por sí solas un procedimiento completo. Se deben conservar las advertencias y consultar también el manual del vehículo.']
     ],
     parts:['Plato o cabezal: recibe la carga en el punto de apoyo.','Brazo de elevación: modifica la altura del plato.','Bastidor: estructura que sostiene el conjunto.','Mango: mando para las acciones indicadas en el manual.','Pedal: mando de aproximación rápida.','Ruedas: permiten posicionar el gato sobre el suelo.'],
-    vocabulary:[['Capacidad nominal','Carga máxima declarada para el modelo.'],['Bastidor','Estructura del equipo.'],['Caballete de apoyo','Soporte para sostener una carga; no es lo mismo que un gato.']],
+    vocabulary:[['Capacidad nominal','Carga máxima declarada para el modelo.'],['Bastidor','Estructura del equipo.'],['Caballete de apoyo','Soporte para sostener una carga; no es lo mismo que un gato.'],['Plato','Parte del gato que recibe la carga en el punto de apoyo.']],
     guidedOriginal:'El dispositivo está destinado a elevar; inmediatamente después de la elevación, la carga debe quedar asegurada mediante soportes apropiados.',
     guidedQuestion:'¿Cómo explicarías por qué elevar un vehículo no significa que ya sea seguro trabajar debajo?',
     guidedAnswer:'El gato eleva el vehículo, pero no reemplaza los soportes de apoyo. No te coloques debajo de una carga sostenida solo por el gato.'
@@ -55,7 +55,7 @@ window.MANUAL_COURSES = {
       ['Límite de esta lectura','Este resumen apoya la escritura: no autoriza mediciones ni sustituye la capacitación y las advertencias del fabricante.']
     ],
     parts:['Pantalla: muestra valores, unidades e indicadores.','HOLD: conserva la lectura visible.','Botón amarillo: cambia opciones de la función seleccionada.','Selector rotatorio: elige la función y OFF.','COM: terminal común.','Terminal de entrada: recibe la señal de medición.'],
-    vocabulary:[['Terminal','Punto de conexión de una punta de prueba.'],['Unidad','Indicación que permite interpretar qué representa el valor.'],['Aislamiento','Material protector que separa las partes conductoras del contacto exterior.']],
+    vocabulary:[['Terminal','Punto de conexión de una punta de prueba.'],['Unidad','Indicación que permite interpretar qué representa el valor.'],['Aislamiento','Material protector que separa las partes conductoras del contacto exterior.'],['Selector rotatorio','Mando que permite elegir la función del multímetro.']],
     guidedOriginal:'La activación de la retención de datos mantiene el valor indicado, sin implicar la desenergización del circuito.',
     guidedQuestion:'¿Cómo explicarías HOLD a un principiante sin hacerle creer que el circuito queda apagado?',
     guidedAnswer:'HOLD mantiene el número en la pantalla. No corta la energía del circuito.'
@@ -75,7 +75,7 @@ window.MANUAL_COURSES = {
       ['Límite de esta lectura','Esta adaptación sirve para redactar el manual de clase, no para operar o reparar el equipo. No sustituye las precauciones completas del fabricante.']
     ],
     parts:['Estación: controla el calentamiento del cautín.','Pantalla: informa temperatura y estado.','Perilla: permite seleccionar y confirmar ajustes.','Cautín: herramienta cuya punta transmite calor.','Soporte: mantiene el cautín en una posición segura.','Elementos de limpieza: esponja y lana metálica.'],
-    vocabulary:[['Cautín','Herramienta que aporta calor en el proceso de soldadura.'],['Temperatura establecida','Valor configurado para el control del equipo.'],['Ventilación','Renovación del aire del puesto de trabajo.']],
+    vocabulary:[['Cautín','Herramienta que aporta calor en el proceso de soldadura.'],['Temperatura establecida','Valor configurado para el control del equipo.'],['Ventilación','Renovación del aire del puesto de trabajo.'],['Soporte','Elemento para dejar el cautín cuando no se está usando.']],
     guidedOriginal:'La permanencia del cautín fuera de operación requiere su disposición en el soporte previsto, debido a la temperatura de sus partes metálicas.',
     guidedQuestion:'¿Cómo explicarías dónde dejar el cautín y por qué, sin omitir el riesgo?',
     guidedAnswer:'Cuando no uses el cautín, déjalo en su soporte. Su punta puede estar caliente y causar quemaduras.'

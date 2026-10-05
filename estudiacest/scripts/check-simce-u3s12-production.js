@@ -59,6 +59,8 @@ async function main() {
       await page.waitForFunction(() => !document.getElementById('submit').disabled);
       assert.equal(await page.locator('[data-question]').count(), 24);
       assert.equal(await page.locator('[data-reading]').count(), 3);
+      assert.equal(await page.locator('#cierre textarea').count(), 1);
+      assert.equal(await page.locator('textarea').count(), 7);
       console.log('Panel público: Clase 12 visible, tres textos, 24 preguntas y seis productos escritos en celular.');
     } finally { await browser.close(); }
 

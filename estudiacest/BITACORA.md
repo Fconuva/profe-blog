@@ -5,6 +5,7 @@
 - A solicitud docente, `/termas/admin` inicia con primera inscripción a última, usando `creado` y sin confundirlo con `actualizado`. Selector adicional: última a primera o apellidos A–Z. Desempate estable por nombre/correo; registros sin fecha al final de ambos órdenes cronológicos, sin inventar su fecha.
 - Se muestra la fecha de inscripción junto a cada persona. Búsqueda y filtros siguen combinándose; CSV completo respeta el orden elegido. No se modifican inscripciones, votos, asientos, autenticación ni datos de Firebase.
 - Auditoría focalizada incorpora regresión de fechas originales pese a edición posterior, orden inverso, A–Z y conservación del arreglo. Navegador con datos ficticios 390/1440/3840: orden, búsqueda, filtros y diseño sin errores ni desbordes; cero escrituras. Publicación y prueba pública se registran al concluir.
+- Publicado `44c02b48` mediante `npm run deploy:prod:safe`: `dpl_7u2R1XVwtZDjWPryFPbQSVYFtsmz`, READY, proceso finalizado con código 0 y alias/SHA confirmados. Build integral aprobado, 662 recursos críticos. Prueba del HTML público con autenticación/API sustituidas por datos ficticios: selector y orden cronológico/inverso/A–Z, búsqueda y filtros aprobados en 390/1440/3840, sin errores, desbordes ni escrituras reales. Se entrega el enlace del admin al docente.
 
 ## 2026-10-05, manual ilustrado de impresora 3D y guía imprimible de 4°D
 

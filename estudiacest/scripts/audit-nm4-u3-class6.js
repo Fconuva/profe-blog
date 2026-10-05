@@ -125,7 +125,7 @@ function auditSpecialty({ label, route, version, course, sessionKey, caseTokens,
   expect(api.includes(`base: 'plataforma_nm4/informe_${version}_2026'`) && api.includes(`cursos: ['${course}', 'PRUEBA']`), `${label}: la API no separa base y curso.`);
   expect(api.includes(`'${course}': '${version}'`), `${label}: COURSE_VERSION no dirige el curso a su versión.`);
 
-  ['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'join-pair', 'Trabajo compartido:', 'sin perder lo que ya escribiste', 'syncFromServer', 'setInterval', 'changedFields', 'Completa las 20 casillas obligatorias'].forEach(token =>
+  ['id="pairMode"', 'id="partnerRut"', 'id="addPartner"', 'join-pair', 'Trabajo compartido:', 'sin perder lo que ya escribiste', 'syncFromServer', 'setInterval', 'changedFields', 'Puedes entregar aunque queden casillas sin completar', 'payload(clean, [...dirtyFields])'].forEach(token =>
     expect(specialtyStudent.includes(token), `${label}: la interfaz de estudiante no contiene ${token}.`));
   ['Registrar una pareja', 'id="pairFirst"', 'id="pairSecond"', "call('admin-pair'", 'Modalidad', 'Pareja con'].forEach(token =>
     expect(specialtyPanel.includes(token), `${label}: el panel docente no contiene ${token}.`));
@@ -162,6 +162,7 @@ const industrialAudit = auditSpecialty({
   assets: ['i1-conjunto-motor-bomba.png', 'i2-acoplamiento-fuga.png', 'i3-medicion-vibracion.png']
 });
 const industrialStudent = read('nm4/u3-clase6-informe-industrial/informe/index.html');
+expect((api.match(/allowPartialSubmit: true/g) || []).length === 2 && api.includes('submit && !version.allowPartialSubmit'), 'Solo Industrial y Automotriz deben permitir entrega sin mínimo.');
 ['PREVIEW_TEACHERS', "versions: ['industrial', 'automotriz']", "role: 'docente'", 'previewOnly: true', "action !== 'get-guia-state'", 'La vista docente es solo de lectura.', 'previewExample', 'PREVIEW_MODELS'].forEach(token =>
   expect(api.includes(token), `Vista docente: falta el permiso acotado de servidor ${token}.`));
 ['industrial', 'automotriz'].forEach(version => {

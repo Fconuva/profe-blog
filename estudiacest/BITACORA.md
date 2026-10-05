@@ -1,5 +1,12 @@
 # Bitácora de Estudia CEST
 
+## 2026-10-05, entrega flexible urgente del informe de 4°A y 4°B TP
+
+- Francisco informa que un estudiante ve 20/20 y no puede entregar; solicita flexibilizar inmediatamente. Se modifica únicamente la entrega de Industrial y Automotriz. Las veinte partes siguen siendo recomendaciones de contenido, no condiciones que bloquean el envío; no se inventan respuestas ni se aumenta el avance.
+- El botón envía los campos pendientes directamente en la transacción de entrega, sin exigir un autoguardado previo exitoso. Se conserva la combinación por campos modificados para no borrar el trabajo paralelo. La respuesta debe confirmar `submitted` y `completada`; se mantienen la relectura de Firebase, la fecha de entrega y el bloqueo de guardados tardíos. Las otras tres versiones conservan su política.
+- Auditoría focalizada y build integral aprobados. Prueba focalizada añadida con identidades ficticias de PRUEBA y función real sobre base simulada: 65 comprobaciones aprobadas, entrega 20/20, entrega incompleta, conservación de edición pendiente y campo paralelo, rechazo de guardado tardío, recarga de solo lectura y visibilidad administrativa. Verificación de interfaz en celular, escritorio y pantalla amplia, incluido autoguardado fallido. Evidencia `%TEMP%/nm4-entrega-jxQXvD`.
+- Publicación y verificación pública pendientes; no se cambian informes, notas ni cuentas de estudiantes reales durante estas pruebas. Para usar el nuevo botón será necesario recargar la página.
+
 ## 2026-10-05, portada de Termas animada con Higgsfield
 
 - A solicitud de Francisco se integra la portada animada del paseo en `/termas/`. Clip de 5,04 segundos, 1470 × 630, sin audio, generado con Seedance 2.5 en su cuenta de Higgsfield desde la ilustración existente. Se identifica como ilustración referencial animada con IA.
@@ -16,7 +23,8 @@
 - Cada vista docente abre un ejemplo didáctico con sus 27 campos completos, autor genérico y etiqueta explícita de modelo, no de entrega. Un botón permite alternar con el formulario vacío de solo lectura. Las respuestas permanecen en el servidor y no se incluyen en archivos públicos del estudiante. Se mantienen todas las acciones de escritura bloqueadas y cero consultas a la base para estos accesos.
 - Los modelos conservan la evidencia BP-04 y V-17: valores medidos, criterios internos, hallazgos y decisiones coherentes. Se distingue alerta de detención por vibración, se calcula el atraso de 70 h y se evita atribuir causas no comprobadas. Las fechas de intervención se identifican como propuestas del ejemplo, no hechos realizados.
 - Auditoría focalizada y build integral aprobados. Prueba local con función real y base simulada: 236 comprobaciones, tres combinaciones de docente/especialidad y anchos 320/390/1440/3840. Se verifican 27 respuestas válidas y visibles, doce páginas, libreta, alternancia completo/vacío, recarga, salida, bloqueo de escrituras y especialidades no autorizadas, consola y recursos sin errores. Dos estudiantes ficticios conservan su formulario editable sin el modelo.
-- Evidencia `%TEMP%/nm4-preview-hyWJ74`: se abren capturas del modelo Industrial, Automotriz móvil y hallazgos. Archivos propios: API, dos páginas de informe, auditoría, prueba focalizada y esta entrada. Se preservan cambios concurrentes ajenos de Termas y su manifiesto; publicación pendiente de la verificación segura del árbol compartido.
+- Evidencia `%TEMP%/nm4-preview-hyWJ74`: se abren capturas del modelo Industrial, Automotriz móvil y hallazgos. Archivos propios: API, dos páginas de informe, auditoría, prueba focalizada y esta entrada. Se preservan cambios concurrentes ajenos de Termas y su manifiesto.
+- Código `e5a59be0` sincronizado con `origin/main`, incluido en la publicación segura `dpl_FJ9no7j7yBhNWUQP82uZdnn9aL13` y en el alias posterior de Termas, ambos con fuente `a17fe6a4`. Verificación pública: 230 comprobaciones aprobadas para tres accesos/especialidades y cuatro anchos; modelos de 27 respuestas, alternancia vacío/completo, recarga, bloqueo de escrituras y permisos, consola y recursos sin errores. Dieciséis recursos coinciden en SHA-256, ocho portales responden 200 y se mantienen ambas nóminas. Evidencia `%TEMP%/nm4-preview-EcAYvT`; los modelos completos y el acceso de Francisco a ambos informes quedan operativos.
 
 ## 2026-10-05, acceso docente al informe de mantenimiento de 4°A TP
 

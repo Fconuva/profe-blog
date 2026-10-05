@@ -45,6 +45,7 @@ const VERSIONS = {
     base: 'plataforma_nm4/informe_industrial_2026',
     cursos: ['4ATP', 'PRUEBA'],
     nombre: 'informe de Mecánica Industrial (4°A)',
+    allowPartialSubmit: true,
     ruta: '/nm4/u3-clase6-informe-industrial/informe/',
     supportsPairs: true
   },
@@ -53,6 +54,7 @@ const VERSIONS = {
     base: 'plataforma_nm4/informe_automotriz_2026',
     cursos: ['4BTP', 'PRUEBA'],
     nombre: 'informe de Mecánica Automotriz (4°B)',
+    allowPartialSubmit: true,
     ruta: '/nm4/u3-clase6-informe-automotriz/informe/',
     supportsPairs: true
   },
@@ -414,7 +416,7 @@ async function handleSave(req, res, db, version, submit) {
       }
     }
     const { score, total } = CAMPOS.progress(answers);
-    if (submit && Array.isArray(CAMPOS.activity.requiredForSubmit)) {
+    if (submit && !version.allowPartialSubmit && Array.isArray(CAMPOS.activity.requiredForSubmit)) {
       const required = new Set(CAMPOS.activity.requiredForSubmit);
       missingForSubmit = CAMPOS.questions.filter(question => required.has(question.id) && !CAMPOS.isComplete(question, answers[question.id]));
       if (missingForSubmit.length) return;

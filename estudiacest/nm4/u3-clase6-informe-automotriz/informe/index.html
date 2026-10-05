@@ -165,7 +165,7 @@
       </nav>
       <main>
         <p class="banner done" id="teamBanner" hidden><span id="teamText"></span><button class="btn team-action" type="button" id="addPartner" hidden>Agregar compañero</button></p>
-        <p class="banner" id="banner"><b>Completa las 20 casillas obligatorias.</b> Trabaja en este orden: mediciones (p. 6), fotografías (p. 8–9), hallazgos (p. 11) y cierre (p. 1, 3, 4 y 12). Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. Las casillas marcadas <b>Ampliación</b> son opcionales.</p>
+        <p class="banner" id="banner"><b>Puedes entregar aunque queden casillas sin completar.</b> Trabaja en este orden: mediciones (p. 6), fotografías (p. 8–9), hallazgos (p. 11) y cierre (p. 1, 3, 4 y 12). Busca los datos en la <b>Libreta</b> y usa el Hallazgo 1 como modelo. Las 20 partes recomendadas orientan tu trabajo, pero no bloquean la entrega.</p>
         <div class="preview-tools" id="previewTools" hidden><button class="btn ghost" id="previewToggle" type="button">Ver formulario vacío</button></div>
         <div class="report" id="report"></div>
         <section class="deliver" id="deliverBox">
@@ -426,6 +426,7 @@
       if (previewOnly) answers = previewShowExample ? C.sanitize(previewExample && previewExample.answers) : {};
       const exampleVisible = previewOnly && previewShowExample;
       R.render($('report'), { answers, editable: !delivered && !exampleVisible, student: previewOnly ? { nombre: exampleVisible ? previewExample.nombre : '', curso: courseName(student.curso) } : reportStudent(), assetBase: '../assets/' });
+      $('report').querySelectorAll('.fill-tag').forEach(tag => { if (tag.textContent === 'Obligatorio') tag.textContent = 'Recomendado'; });
       $('report').querySelectorAll('[data-q]').forEach(control => {
         if (previewOnly) { control.disabled = true; control.setAttribute('aria-readonly', 'true'); return; }
         const handler = () => onChange(control.dataset.q, control.value);
@@ -469,7 +470,7 @@
       const clean = C.sanitize(answers);
       const { score, missing } = C.progress(clean);
       const requiredDone = C.questions.filter(q => REQUIRED.has(q.id) && C.isComplete(q, clean[q.id])).length;
-      $('progText').textContent = `${requiredDone} de ${REQUIRED_TOTAL} mínimos`;
+      $('progText').textContent = `${requiredDone} de ${REQUIRED_TOTAL} recomendadas`;
       $('progBar').style.width = `${Math.round(requiredDone / REQUIRED_TOTAL * 100)}%`;
       C.questions.forEach(q => {
         const wrap = $('report').querySelector(`[data-wrap="${q.id}"]`);
@@ -496,11 +497,9 @@
       const requiredMissing = missing.filter(q => REQUIRED.has(q.id));
       $('missingList').innerHTML = requiredMissing.length
         ? requiredMissing.slice(0, 5).map(q => `<li>${q.label}</li>`).join('') + (requiredMissing.length > 5 ? `<li>y ${requiredMissing.length - 5} más</li>` : '')
-        : '<li>El mínimo obligatorio está completo. Revisa la redacción antes de entregar.</li>';
-      $('deliverText').textContent = requiredMissing.length
-        ? `Faltan ${requiredMissing.length} partes obligatorias. Sigue el orden indicado arriba y revisa la página señalada en la lista.`
-        : 'Ya puedes entregar. El resumen y la conclusión amplían el informe, pero no bloquean la entrega.';
-      $('submit').textContent = `Entregar informe (${requiredDone} de ${REQUIRED_TOTAL} mínimos)`;
+        : '<li>Completaste las partes recomendadas. Revisa la redacción antes de entregar.</li>';
+      $('deliverText').textContent = 'Puedes entregar lo realizado aunque falten partes. La lista es una orientación y no bloquea el envío.';
+      $('submit').textContent = 'Entregar informe';
     }
 
     function applyServerAttempt(attempt, announce) {
@@ -593,21 +592,11 @@
       $('submit').disabled = true; $('submit').textContent = 'Entregando…';
       try {
         await saveQueue;
-        if (dirty) await saveDraft(true);
-        if (dirty) throw new Error('No se pudo guardar el último cambio. Revisa internet e inténtalo otra vez.');
-        await syncFromServer(true);
         if (delivered) return;
         const clean = C.sanitize(answers);
-        const requiredMissing = C.questions.filter(q => REQUIRED.has(q.id) && !C.isComplete(q, clean[q.id]));
-        if (requiredMissing.length) {
-          submitting = false;
-          $('submit').disabled = false;
-          updateProgress();
-          $('deliverError').textContent = `Completa primero las ${requiredMissing.length} partes obligatorias indicadas arriba.`;
-          return;
-        }
         const now = Date.now();
-        const data = await post('submit', { ...payload(clean, []), submitted: true, completada: true, submittedAt: now, completadaAt: now });
+        // La transacción final guarda los cambios pendientes y conserva los de la pareja.
+        const data = await post('submit', { ...payload(clean, [...dirtyFields]), submitted: true, completada: true, submittedAt: now, completadaAt: now });
         const attempt = data.attempt;
         if (!attempt || attempt.completada !== true || attempt.submitted !== true) throw new Error('El servidor no confirmó la entrega.');
         finish(attempt);
@@ -644,7 +633,7 @@
       showTeamStatus();
       try { sessionStorage.removeItem(backupKey()); } catch (_) {}
       draw();
-      $('doneText').textContent = `Cumpliste el mínimo obligatorio. Tu informe quedó guardado con ${attempt.score} de ${attempt.total} partes completas y aparece como Entregado en el panel del profesor. Entrega confirmada.`;
+      $('doneText').textContent = `Tu informe quedó guardado y entregado con ${attempt.score} de ${attempt.total} partes recomendadas completas. Aparece como Entregado en el panel del profesor.`;
       $('doneDialog').hidden = false;
       $('doneBack').focus();
     }

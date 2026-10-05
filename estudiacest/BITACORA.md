@@ -5,6 +5,8 @@
 - A solicitud docente se añade narración sintética en español al modelo de 35 segundos: cinco intervenciones HeyGen, voz Lenny, sin música. Se conservan las cinco escenas, la clase ampliada y todos los registros académicos.
 - Catorce subtítulos integrados al MP4 y copia WebVTT, derivados de los tiempos de palabras del proveedor. Fuente reproducible y audios en `videos/modelo-entrevista-nm2/`; el video ocupa la misma ruta pública en guía y presentación.
 - HyperFrames: cero errores y advertencias, contraste 57/57; lámina de seis fotogramas inspeccionada, subtítulos legibles y separados del contenido. Build integral aprobado con 652 recursos críticos. Verificación del MP4, publicación segura y comprobación pública se registran al concluir.
+- Publicado `205fb646` mediante `npm run deploy:prod:safe`, proceso finalizado con código 0; despliegue `dpl_FHJzJqU3UJJjS5dSy5hMYBCJHxth`, READY y alias `www.estudiacest.com` comprobados. MP4 1920 × 1080, 35 segundos, AAC estéreo: volumen medio −19,6 dB y máximo −1,5 dB. Fotograma extraído del MP4 inspeccionado: subtítulo visible y sin tapar los cuadros.
+- Pruebas local y pública aprobadas en 390/1440/3840 px: 21 pantallas sin desborde ni errores, reproducción con avance confirmado y seis recursos coincidentes en SHA-256. Prueba local conserva tres lecturas, 24 ítems y nueve campos; no se escribe en registros académicos. El test espera avance real del decodificador, no una pausa fija de 250 ms. Cierre posterior solo documental y del test, sin segundo despliegue.
 
 ## 2026-10-05, seguimiento del anuario 4°D TP y plazo de impresión
 

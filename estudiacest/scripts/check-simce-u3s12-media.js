@@ -56,7 +56,13 @@ async function main() {
           await page.waitForFunction(() => document.querySelector('video').readyState >= 2);
           const result = await video.evaluate(async element => {
             await element.play();
-            await new Promise(resolve => setTimeout(resolve, 250));
+            // El decodificador de audio puede tardar más que 250 ms en iniciar.
+            await new Promise((resolve,reject) => {
+              const timeout=setTimeout(()=>reject(new Error('El video no avanzó en 10 segundos')),10000);
+              const onTime=()=>{if(element.currentTime>0){clearTimeout(timeout);element.removeEventListener('timeupdate',onTime);resolve();}};
+              element.addEventListener('timeupdate',onTime);
+              onTime();
+            });
             const data = { duration:element.duration, width:element.videoWidth, height:element.videoHeight, playing:!element.paused, current:element.currentTime };
             element.pause();
             return data;
